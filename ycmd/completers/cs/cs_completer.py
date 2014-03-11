@@ -85,7 +85,11 @@ class CsharpCompleter( Completer ):
         request_data ) ),
     'GoToDeclaration': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
-    'GoTo': ( lambda self, request_data: self._GoToDefinition( request_data ) )
+    'GoTo': ( lambda self, request_data: self._GoToDefinition( request_data ) ),
+    'GoToDefinitionElseDeclaration': ( lambda self, request_data: 
+        self._GoToDefinition( request_data ) ),
+    'GoToImplementation': ( lambda self, request_data:
+        self._GoToImplementation( request_data ) ),
   }
 
   def __init__( self, user_options ):
@@ -308,6 +312,25 @@ class CsharpCompleter( Completer ):
                                           definition[ 'Column' ] )
     else:
       raise RuntimeError( 'Can\'t jump to definition' )
+
+
+  def _GoToImplementation( self, request_data ):
+    """ Jump to implementation of identifier under cursor """
+    implementation = self._GetResponse( '/findimplementations',
+                                    self._DefaultParameters( request_data ) )
+    if implementation[ 'QuickFixes' ] != None:
+      if len( implementation[ 'QuickFixes' ] ) == 1:
+        return responses.BuildGoToResponse( implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
+                                            implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
+                                            implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] )
+      elif len( implementation[ 'QuickFixes' ] ) == 0:
+        raise RuntimeError( 'No implementations found' )
+      else:
+        return [ responses.BuildGoToResponse( x[ 'FileName' ],
+                                              x[ 'Line' ],
+                                              x[ 'Column' ] ) for x in implementation[ 'QuickFixes' ] ]
+    else:
+      raise RuntimeError( 'Can\'t jump to implementation' )
 
 
   def _DefaultParameters( self, request_data ):
