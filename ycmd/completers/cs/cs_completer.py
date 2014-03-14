@@ -89,7 +89,9 @@ class CsharpCompleter( Completer ):
     'GoToDefinitionElseDeclaration': ( lambda self, request_data: 
         self._GoToDefinition( request_data ) ),
     'GoToImplementation': ( lambda self, request_data:
-        self._GoToImplementation( request_data ) ),
+        self._GoToImplementation( request_data, False ) ),
+    'GoToImplementationElseDeclaration': ( lambda self, request_data:
+        self._GoToImplementation( request_data, True ) ),
   }
 
   def __init__( self, user_options ):
@@ -314,23 +316,26 @@ class CsharpCompleter( Completer ):
       raise RuntimeError( 'Can\'t jump to definition' )
 
 
-  def _GoToImplementation( self, request_data ):
+  def _GoToImplementation( self, request_data, fallback_to_declaration ):
     """ Jump to implementation of identifier under cursor """
     implementation = self._GetResponse( '/findimplementations',
-                                    self._DefaultParameters( request_data ) )
-    if implementation[ 'QuickFixes' ] != None:
+                                        self._DefaultParameters( request_data ) )
+    if implementation[ 'QuickFixes' ]:
       if len( implementation[ 'QuickFixes' ] ) == 1:
         return responses.BuildGoToResponse( implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
                                             implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
                                             implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] )
-      elif len( implementation[ 'QuickFixes' ] ) == 0:
-        raise RuntimeError( 'No implementations found' )
       else:
         return [ responses.BuildGoToResponse( x[ 'FileName' ],
                                               x[ 'Line' ],
                                               x[ 'Column' ] ) for x in implementation[ 'QuickFixes' ] ]
     else:
-      raise RuntimeError( 'Can\'t jump to implementation' )
+      if ( fallback_to_declaration ):
+        return self._GoToDefinition( request_data )
+      elif implementation[ 'QuickFixes' ] == None:
+        raise RuntimeError( 'Can\'t jump to implementation' )
+      else:
+        raise RuntimeError( 'No implementations found' )
 
 
   def _DefaultParameters( self, request_data ):
