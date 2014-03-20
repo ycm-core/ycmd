@@ -276,6 +276,9 @@ class CsharpCompleter( Completer ):
     """ Stop the OmniSharp server """
     self._GetResponse( '/stopserver' )
     self._omnisharp_port = None
+    if ( not self.user_options[ 'server_keep_logfiles' ] ):
+      os.unlink( self._filename_stdout );
+      os.unlink( self._filename_stderr );
     self._logger.info( 'Stopping OmniSharp server' )
 
 
