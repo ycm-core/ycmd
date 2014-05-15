@@ -4,3 +4,6 @@
 [submodule "third_party/jedi"]
 	path = third_party/jedi
 	url = https://github.com/davidhalter/jedi
+[submodule "third_party/argparse"]
+	path = third_party/argparse
+	url = https://github.com/bewest/argparse
