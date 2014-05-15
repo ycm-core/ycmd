@@ -1,3 +1,6 @@
 [submodule "third_party/OmniSharpServer"]
 	path = third_party/OmniSharpServer
 	url = https://github.com/nosami/OmniSharpServer
+[submodule "third_party/jedi"]
+	path = third_party/jedi
+	url = https://github.com/davidhalter/jedi
