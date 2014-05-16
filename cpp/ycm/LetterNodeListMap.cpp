@@ -21,11 +21,6 @@
 
 namespace YouCompleteMe {
 
-const int kNumLetters = NUM_LETTERS;
-static const int kLettersIndexStart = 0;
-static const int kNumbersIndexStart = 26;
-
-
 bool IsUppercase( char letter ) {
   return 'A' <= letter && letter <= 'Z';
 }

@@ -28,8 +28,6 @@ namespace YouCompleteMe {
 
 class LetterNode;
 
-extern const int kNumLetters;
-
 int IndexForChar( char letter );
 bool IsUppercase( char letter );
 
