@@ -72,7 +72,7 @@ class WatchdogPlugin( object ):
 
 
   def _TimeSinceLastWakeup( self ):
-    return time.time() - self._last_wakeup_time()
+    return time.time() - self._last_wakeup_time
 
 
   def _UpdateLastWakeupTime( self ):
