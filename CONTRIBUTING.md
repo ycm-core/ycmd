@@ -101,5 +101,5 @@ Creating good pull requests
 
 
 [build-bots]: https://travis-ci.org/Valloric/YouCompleteMe
-[ycm-users]: https://groups.google.com/forum/?hl=en#!forum/ycm-users
+[ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [cla]: https://developers.google.com/open-source/cla/individual
