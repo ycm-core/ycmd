@@ -73,7 +73,7 @@ Creating good pull requests
     makes it easier to review your changes, which means they will be merged
     faster.
 
-4.  **Write tests for your code**. You're pull request is unlikely to be merged
+4.  **Write tests for your code**. Your pull request is unlikely to be merged
     without tests.
 
 5.  **Explain in detail why your pull request makes sense.** Ask yourself, would
