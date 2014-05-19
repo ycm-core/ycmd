@@ -85,7 +85,8 @@ class CsharpCompleter( Completer ):
         request_data ) ),
     'GoToDeclaration': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
-    'GoTo': ( lambda self, request_data: self._GoToDefinition( request_data ) ),
+    'GoTo': ( lambda self, request_data: self._GoToImplementation( 
+        request_data, True ) ),
     'GoToDefinitionElseDeclaration': ( lambda self, request_data: 
         self._GoToDefinition( request_data ) ),
     'GoToImplementation': ( lambda self, request_data:
