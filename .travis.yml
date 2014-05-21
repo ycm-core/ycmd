@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+before_install:
+  - git submodule update --init --recursive
+install:
+  - pip install -r test_requirements.txt --use-mirrors
+  - sudo apt-get install mono-devel
+compiler:
+  - gcc
+  - clang
+script: ./run_tests.sh
+env:
+  - USE_CLANG_COMPLETER="true"
+  - USE_CLANG_COMPLETER="false"
