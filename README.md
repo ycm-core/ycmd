@@ -20,7 +20,8 @@ API notes
   header. The HMAC is computed from the shared secret passed to the server on
   startup and the request/response body. The digest algorithm is SHA-256. The
   server will also include the HMAC in its responses; you _must_ verify it
-  before using the response. See `example_client.py` to see how it's done.
+  before using the response. See `example_client.py` _[NOTE: Which I haven't yet
+  written]_ to see how it's done.
 
 Backwards compatibility
 -----------------------
