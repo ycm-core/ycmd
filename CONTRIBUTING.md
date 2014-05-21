@@ -100,6 +100,6 @@ Creating good pull requests
     only need to sign the CLA once).
 
 
-[build-bots]: https://travis-ci.org/Valloric/YouCompleteMe
+[build-bots]: https://travis-ci.org/Valloric/ycmd
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [cla]: https://developers.google.com/open-source/cla/individual
