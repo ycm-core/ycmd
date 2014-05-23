@@ -19,109 +19,79 @@
 
 from nose.tools import eq_
 from ycmd.completers.all import identifier_completer
+from ycmd.request_wrap import RequestWrap
+from ycmd.tests.test_utils import BuildRequest
+
+def RequestWrapForColumnAndContents( column_num, contents ):
+  return RequestWrap( BuildRequest( column_num = column_num,
+                                    contents = contents ) )
 
 
 def GetCursorIdentifier_StartOfLine_test():
   eq_( 'foo',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 1,
-           'line_value': 'foo'
-         } ) )
+         RequestWrapForColumnAndContents( 1, 'foo' ) ) )
 
   eq_( 'fooBar',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 1,
-           'line_value': 'fooBar'
-         } ) )
+         RequestWrapForColumnAndContents( 1, 'fooBar' ) ) )
 
 
 def GetCursorIdentifier_EndOfLine_test():
   eq_( 'foo',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 3,
-           'line_value': 'foo'
-         } ) )
+         RequestWrapForColumnAndContents( 3, 'foo' ) ) )
 
 
 def GetCursorIdentifier_PastEndOfLine_test():
   eq_( '',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 11,
-           'line_value': 'foo'
-         } ) )
+         RequestWrapForColumnAndContents( 11, 'foo' ) ) )
 
 
 def GetCursorIdentifier_NegativeColumn_test():
   eq_( '',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': -10,
-           'line_value': 'foo'
-         } ) )
+         RequestWrapForColumnAndContents( -10, 'foo' ) ) )
 
 
 def GetCursorIdentifier_StartOfLine_StopsAtNonIdentifierChar_test():
   eq_( 'foo',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 1,
-           'line_value': 'foo(goo)'
-         } ) )
+         RequestWrapForColumnAndContents( 1, 'foo(goo)' ) ) )
 
 
 def GetCursorIdentifier_AtNonIdentifier_test():
   eq_( 'goo',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 4,
-           'line_value': 'foo(goo)'
-         } ) )
+         RequestWrapForColumnAndContents( 4, 'foo(goo)' ) ) )
 
 
 def GetCursorIdentifier_WalksForwardForIdentifier_test():
   eq_( 'foo',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 1,
-           'line_value': '       foo'
-         } ) )
+         RequestWrapForColumnAndContents( 1, '       foo' ) ) )
 
 
 def GetCursorIdentifier_FindsNothingForward_test():
   eq_( '',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 5,
-           'line_value': 'foo   ()***()'
-         } ) )
+         RequestWrapForColumnAndContents( 5, 'foo   ()***()' ) ) )
 
 
 def GetCursorIdentifier_SingleCharIdentifier_test():
   eq_( 'f',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 1,
-           'line_value': '    f    '
-         } ) )
+         RequestWrapForColumnAndContents( 1, '    f    ' ) ) )
 
 
 def GetCursorIdentifier_StartsInMiddleOfIdentifier_test():
   eq_( 'foobar',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 4,
-           'line_value': 'foobar'
-         } ) )
+         RequestWrapForColumnAndContents( 4, 'foobar' ) ) )
 
 
 def GetCursorIdentifier_LineEmpty_test():
   eq_( '',
        identifier_completer._GetCursorIdentifier(
-         {
-           'column_num': 12,
-           'line_value': ''
-         } ) )
+         RequestWrapForColumnAndContents( 12, '' ) ) )

@@ -46,6 +46,10 @@ class RequestWrap( object ):
   def _CurrentLine( self ):
     current_file = self._request[ 'filepath' ]
     contents = self._request[ 'file_data' ][ current_file ][ 'contents' ]
+
+    # Handling ''.splitlines() returning [] instead of ['']
+    if contents is not None and len( contents ) == 0:
+      return ''
     return contents.splitlines()[ self._request[ 'line_num' ] - 1 ]
 
 
