@@ -30,7 +30,7 @@ def LineValue_OneLine_test():
     }
   }
 
-  eq_( 'zoo', RequestWrap( request)[ 'line_value' ] )
+  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
 
 
 def LineValue_LastLine_test():
@@ -44,7 +44,7 @@ def LineValue_LastLine_test():
     }
   }
 
-  eq_( 'zoo', RequestWrap( request)[ 'line_value' ] )
+  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
 
 
 def LineValue_MiddleLine_test():
@@ -58,7 +58,7 @@ def LineValue_MiddleLine_test():
     }
   }
 
-  eq_( 'zoo', RequestWrap( request)[ 'line_value' ] )
+  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
 
 
 def LineValue_WindowsLines_test():
@@ -72,7 +72,7 @@ def LineValue_WindowsLines_test():
     }
   }
 
-  eq_( 'zoo', RequestWrap( request)[ 'line_value' ] )
+  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
 
 
 def LineValue_MixedFormatLines_test():
@@ -86,4 +86,4 @@ def LineValue_MixedFormatLines_test():
     }
   }
 
-  eq_( 'zoo', RequestWrap( request)[ 'line_value' ] )
+  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
