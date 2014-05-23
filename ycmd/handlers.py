@@ -40,6 +40,7 @@ from ycmd import user_options_store
 from ycmd.responses import BuildExceptionResponse
 from ycmd import hmac_plugin
 from ycmd import extra_conf_store
+from ycmd.request_wrap import RequestWrap
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -55,7 +56,7 @@ app = bottle.Bottle()
 @app.post( '/event_notification' )
 def EventNotification():
   LOGGER.info( 'Received event notification' )
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   event_name = request_data[ 'event_name' ]
   LOGGER.debug( 'Event name: %s', event_name )
 
@@ -75,7 +76,7 @@ def EventNotification():
 @app.post( '/run_completer_command' )
 def RunCompleterCommand():
   LOGGER.info( 'Received command request' )
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
   return _JsonResponse( completer.OnUserCommand(
@@ -86,7 +87,7 @@ def RunCompleterCommand():
 @app.post( '/completions' )
 def GetCompletions():
   LOGGER.info( 'Received completion request' )
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   do_filetype_completion = SERVER_STATE.ShouldUseFiletypeCompleter(
     request_data )
   LOGGER.debug( 'Using filetype completion: %s', do_filetype_completion )
@@ -120,13 +121,13 @@ def SetUserOptions():
 def FiletypeCompletionAvailable():
   LOGGER.info( 'Received filetype completion available request' )
   return _JsonResponse( SERVER_STATE.FiletypeCompletionAvailable(
-      request.json[ 'filetypes' ] ) )
+      RequestWrap( request.json )[ 'filetypes' ] ) )
 
 
 @app.post( '/defined_subcommands' )
 def DefinedSubcommands():
   LOGGER.info( 'Received defined subcommands request' )
-  completer = _GetCompleterForRequestData( request.json )
+  completer = _GetCompleterForRequestData( RequestWrap( request.json ) )
 
   return _JsonResponse( completer.DefinedSubcommands() )
 
@@ -134,7 +135,7 @@ def DefinedSubcommands():
 @app.post( '/detailed_diagnostic' )
 def GetDetailedDiagnostic():
   LOGGER.info( 'Received detailed diagnostic request' )
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
   return _JsonResponse( completer.GetDetailedDiagnostic( request_data ) )
@@ -143,14 +144,14 @@ def GetDetailedDiagnostic():
 @app.post( '/load_extra_conf_file' )
 def LoadExtraConfFile():
   LOGGER.info( 'Received extra conf load request' )
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   extra_conf_store.Load( request_data[ 'filepath' ], force = True )
 
 
 @app.post( '/ignore_extra_conf_file' )
 def IgnoreExtraConfFile():
   LOGGER.info( 'Received extra conf ignore request' )
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   extra_conf_store.Disable( request_data[ 'filepath' ] )
 
 
@@ -166,7 +167,7 @@ def DebugInfo():
   if has_clang_support:
     output.append( 'Clang version: ' + ycm_core.ClangVersion() )
 
-  request_data = request.json
+  request_data = RequestWrap( request.json )
   try:
     output.append(
         _GetCompleterForRequestData( request_data ).DebugInfo( request_data) )
