@@ -34,7 +34,6 @@ def BuildRequest( **kwargs ):
     'start_column': 1,
     'filetypes': [ filetype ],
     'filepath': filepath,
-    'line_value': contents,
     'file_data': {
       filepath: {
         'contents': contents,
@@ -47,12 +46,6 @@ def BuildRequest( **kwargs ):
     if key in [ 'contents', 'filetype', 'filepath' ]:
       continue
     request[ key ] = value
-
-    if key == 'line_num':
-      lines = contents.splitlines()
-      if len( lines ) > 1:
-        # NOTE: assumes 1-based line_num
-        request[ 'line_value' ] = lines[ value - 1 ]
 
   return request
 
