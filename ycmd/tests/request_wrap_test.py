@@ -18,161 +18,83 @@
 from nose.tools import eq_
 from ..request_wrap import RequestWrap
 
-
-def LineValue_OneLine_test():
-  request = {
-    'line_num': 1,
+def PrepareJson( contents = '', line_num = 1, column_num = 1 ):
+  return {
+    'line_num': line_num,
+    'column_num': column_num,
     'filepath': '/foo',
     'file_data': {
       '/foo': {
-        'contents': 'zoo'
+        'contents': contents
       }
     }
   }
 
-  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
+def LineValue_OneLine_test():
+  eq_( 'zoo',
+       RequestWrap( PrepareJson( line_num = 1,
+                                 contents = 'zoo' ) )[ 'line_value' ] )
 
 
 def LineValue_LastLine_test():
-  request = {
-    'line_num': 3,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'goo\nbar\nzoo'
-      }
-    }
-  }
-
-  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
+  eq_( 'zoo',
+       RequestWrap(
+          PrepareJson( line_num = 3,
+                       contents = 'goo\nbar\nzoo' ) )[ 'line_value' ] )
 
 
 def LineValue_MiddleLine_test():
-  request = {
-    'line_num': 2,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'goo\nzoo\nbar'
-      }
-    }
-  }
-
-  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
+  eq_( 'zoo',
+       RequestWrap(
+          PrepareJson( line_num = 2,
+                       contents = 'goo\nzoo\nbar' ) )[ 'line_value' ] )
 
 
 def LineValue_WindowsLines_test():
-  request = {
-    'line_num': 3,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'goo\r\nbar\r\nzoo'
-      }
-    }
-  }
-
-  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
+  eq_( 'zoo',
+       RequestWrap(
+          PrepareJson( line_num = 3,
+                       contents = 'goo\r\nbar\r\nzoo' ) )[ 'line_value' ] )
 
 
 def LineValue_MixedFormatLines_test():
-  request = {
-    'line_num': 3,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'goo\nbar\r\nzoo'
-      }
-    }
-  }
-
-  eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
+  eq_( 'zoo',
+       RequestWrap(
+          PrepareJson( line_num = 3,
+                       contents = 'goo\nbar\r\nzoo' ) )[ 'line_value' ] )
 
 
 def LineValue_EmptyContents_test():
-  request = {
-    'line_num': 1,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': ''
-      }
-    }
-  }
-
-  eq_( '', RequestWrap( request )[ 'line_value' ] )
+  eq_( '',
+       RequestWrap( PrepareJson( line_num = 1,
+                                 contents = '' ) )[ 'line_value' ] )
 
 
 def StartColumn_RightAfterDot_test():
-  request = {
-    'line_num': 1,
-    'column_num': 5,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'foo.'
-      }
-    }
-  }
-
-  eq_( 5, RequestWrap( request )[ 'start_column' ] )
+  eq_( 5,
+       RequestWrap( PrepareJson( column_num = 5,
+                                 contents = 'foo.') )[ 'start_column' ] )
 
 
 def StartColumn_Dot_test():
-  request = {
-    'line_num': 1,
-    'column_num': 8,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'foo.bar'
-      }
-    }
-  }
-
-  eq_( 5, RequestWrap( request )[ 'start_column' ] )
+  eq_( 5,
+       RequestWrap( PrepareJson( column_num = 8,
+                                 contents = 'foo.bar') )[ 'start_column' ] )
 
 
 def StartColumn_Paren_test():
-  request = {
-    'line_num': 1,
-    'column_num': 8,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'foo(bar'
-      }
-    }
-  }
-
-  eq_( 5, RequestWrap( request )[ 'start_column' ] )
+  eq_( 5,
+       RequestWrap( PrepareJson( column_num = 8,
+                                 contents = 'foo(bar') )[ 'start_column' ] )
 
 
 def StartColumn_AfterWholeWord_test():
-  request = {
-    'line_num': 1,
-    'column_num': 7,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'foobar'
-      }
-    }
-  }
-
-  eq_( 1, RequestWrap( request )[ 'start_column' ] )
+  eq_( 1,
+       RequestWrap( PrepareJson( column_num = 7,
+                                 contents = 'foobar') )[ 'start_column' ] )
 
 
 def StartColumn_InMiddleOfWholeWord_test():
-  request = {
-    'line_num': 1,
-    'column_num': 4,
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'contents': 'foobar'
-      }
-    }
-  }
-
-  eq_( 1, RequestWrap( request )[ 'start_column' ] )
+  eq_( 1,
+       RequestWrap( PrepareJson( column_num = 4,
+                                 contents = 'foobar') )[ 'start_column' ] )
