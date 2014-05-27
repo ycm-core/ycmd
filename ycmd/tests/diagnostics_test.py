@@ -224,11 +224,10 @@ def GetDetailedDiagnostic_CsCompleter_Works_test():
   app.post_json( '/event_notification', event_data )
 
   diag_data = BuildRequest( filepath = filepath,
-                                  filetype = 'cs',
-                                  contents = contents,
-                                  line_num = 10,
-                                  column_num = 2,
-                                  start_column = 2 )
+                            filetype = 'cs',
+                            contents = contents,
+                            line_num = 10,
+                            column_num = 2 )
 
   results = app.post_json( '/detailed_diagnostic', diag_data ).json
   assert_that( results,

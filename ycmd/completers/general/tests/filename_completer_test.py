@@ -49,7 +49,7 @@ class FilenameCompleter_test( object ):
 
   def _CompletionResultsForLine( self, contents ):
     request = REQUEST_DATA.copy()
-    request[ 'start_column' ] = len( contents ) + 1
+    request[ 'column_num' ] = len( contents ) + 1
     request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = contents
     request = RequestWrap( request )
     candidates = self._filename_completer.ComputeCandidatesInner( request )

@@ -74,8 +74,7 @@ def GetCompletions_CsCompleter_Works_test():
                                   filetype = 'cs',
                                   contents = contents,
                                   line_num = 9,
-                                  column_num = 12,
-                                  start_column = 12 )
+                                  column_num = 12 )
 
   results = app.post_json( '/completions', completion_data ).json
   assert_that( results, has_items( CompletionEntryMatcher( 'CursorLeft' ),
@@ -168,13 +167,11 @@ int main()
 }
 """
 
-  # 0-based line and column!
   completion_data = BuildRequest( filepath = '/foo.cpp',
                                   filetype = 'cpp',
                                   contents = contents,
                                   line_num = 11,
                                   column_num = 7,
-                                  start_column = 7,
                                   compilation_flags = ['-x', 'c++'] )
 
   results = app.post_json( '/completions', completion_data ).json
@@ -200,13 +197,11 @@ int main()
 }
 """
 
-  # 0-based line and column!
   completion_data = BuildRequest( filepath = '/foo.cpp',
                                   filetype = 'cpp',
                                   contents = contents,
                                   line_num = 11,
                                   column_num = 7,
-                                  start_column = 7,
                                   compilation_flags = ['-x', 'c++'] )
 
   results = app.post_json( '/completions', completion_data ).json
@@ -222,7 +217,6 @@ def GetCompletions_ClangCompleter_UnknownExtraConfException_test():
                                   contents = open( filepath ).read(),
                                   line_num = 11,
                                   column_num = 7,
-                                  start_column = 7,
                                   force_semantic = True )
 
   response = app.post_json( '/completions',
@@ -258,8 +252,7 @@ def GetCompletions_ClangCompleter_WorksWhenExtraConfExplicitlyAllowed_test():
                                   filetype = 'cpp',
                                   contents = open( filepath ).read(),
                                   line_num = 11,
-                                  column_num = 7,
-                                  start_column = 7 )
+                                  column_num = 7 )
 
   results = app.post_json( '/completions', completion_data ).json
   assert_that( results, has_items( CompletionEntryMatcher( 'c' ),
@@ -279,8 +272,7 @@ def GetCompletions_ClangCompleter_ExceptionWhenNoFlagsFromExtraConf_test():
                                   filetype = 'cpp',
                                   contents = open( filepath ).read(),
                                   line_num = 11,
-                                  column_num = 7,
-                                  start_column = 7 )
+                                  column_num = 7 )
 
   response = app.post_json( '/completions',
                             completion_data,
@@ -306,14 +298,12 @@ int main()
 }
 """
 
-  # 0-based line and column!
   completion_data = BuildRequest( filepath = '/foo.cpp',
                                   filetype = 'cpp',
                                   force_semantic = True,
                                   contents = contents,
                                   line_num = 9,
                                   column_num = 8,
-                                  start_column = 8,
                                   query = 'fooar',
                                   compilation_flags = ['-x', 'c++'] )
 
@@ -349,7 +339,6 @@ def GetCompletions_ClangCompleter_ClientDataGivenToExtraConf_test():
                                   contents = open( filepath ).read(),
                                   line_num = 9,
                                   column_num = 7,
-                                  start_column = 7,
                                   extra_conf_data = {
                                     'flags': ['-x', 'c++']
                                   })

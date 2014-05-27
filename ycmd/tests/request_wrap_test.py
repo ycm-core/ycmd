@@ -87,3 +87,92 @@ def LineValue_MixedFormatLines_test():
   }
 
   eq_( 'zoo', RequestWrap( request )[ 'line_value' ] )
+
+
+def LineValue_EmptyContents_test():
+  request = {
+    'line_num': 1,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'contents': ''
+      }
+    }
+  }
+
+  eq_( '', RequestWrap( request )[ 'line_value' ] )
+
+
+def StartColumn_RightAfterDot_test():
+  request = {
+    'line_num': 1,
+    'column_num': 5,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'contents': 'foo.'
+      }
+    }
+  }
+
+  eq_( 5, RequestWrap( request )[ 'start_column' ] )
+
+
+def StartColumn_Dot_test():
+  request = {
+    'line_num': 1,
+    'column_num': 8,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'contents': 'foo.bar'
+      }
+    }
+  }
+
+  eq_( 5, RequestWrap( request )[ 'start_column' ] )
+
+
+def StartColumn_Paren_test():
+  request = {
+    'line_num': 1,
+    'column_num': 8,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'contents': 'foo(bar'
+      }
+    }
+  }
+
+  eq_( 5, RequestWrap( request )[ 'start_column' ] )
+
+
+def StartColumn_AfterWholeWord_test():
+  request = {
+    'line_num': 1,
+    'column_num': 7,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'contents': 'foobar'
+      }
+    }
+  }
+
+  eq_( 1, RequestWrap( request )[ 'start_column' ] )
+
+
+def StartColumn_InMiddleOfWholeWord_test():
+  request = {
+    'line_num': 1,
+    'column_num': 4,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'contents': 'foobar'
+      }
+    }
+  }
+
+  eq_( 1, RequestWrap( request )[ 'start_column' ] )

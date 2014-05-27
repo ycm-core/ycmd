@@ -42,7 +42,7 @@ class Completer( object ):
   ShouldUseNow() is called with the start column of where a potential completion
   string should start and the current line (string) the cursor is on. For
   instance, if the user's input is 'foo.bar' and the cursor is on the 'r' in
-  'bar', start_column will be the 0-based index of 'b' in the line. Your
+  'bar', start_column will be the 1-based index of 'b' in the line. Your
   implementation of ShouldUseNow() should return True if your semantic completer
   should be used and False otherwise.
 
