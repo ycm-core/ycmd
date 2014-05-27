@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.utils import Memoize, IsIdentifierChar
+from ycmd.utils import IsIdentifierChar
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
 # the object.
@@ -27,6 +27,10 @@ class RequestWrap( object ):
       'start_column': self._CompletionStartColumn,
       'query': self._Query,
     }
+
+    self._query = None
+    self._line_value = None
+    self._start_column = None
 
 
   def __getitem__( self, key ):
@@ -46,26 +50,34 @@ class RequestWrap( object ):
       return default
 
 
-  @Memoize
   def _CurrentLine( self ):
+    if self._line_value is not None:
+      return self._line_value
     current_file = self._request[ 'filepath' ]
     contents = self._request[ 'file_data' ][ current_file ][ 'contents' ]
 
     # Handling ''.splitlines() returning [] instead of ['']
     if contents is not None and len( contents ) == 0:
-      return ''
-    return contents.splitlines()[ self._request[ 'line_num' ] - 1 ]
+      self._line_value = ''
+      return self._line_value
+    self._line_value = contents.splitlines()[ self._request[ 'line_num' ] - 1 ]
+    return self._line_value
 
 
-  @Memoize
   def _CompletionStartColumn( self ):
-    return CompletionStartColumn( self[ 'line_value' ], self[ 'column_num' ] )
+    if self._start_column is not None:
+      return self._start_column
+    self._start_column = CompletionStartColumn( self[ 'line_value' ],
+                                                self[ 'column_num' ] )
+    return self._start_column
 
 
-  @Memoize
   def _Query( self ):
-    return self[ 'line_value' ][
+    if self._query is not None:
+      return self._query
+    self._query = self[ 'line_value' ][
         self[ 'start_column' ] - 1 : self[ 'column_num' ] - 1 ]
+    return self._query
 
 
 def CompletionStartColumn( line_value, column_num ):
