@@ -57,10 +57,11 @@ function python_finder {
 
 function num_cores {
   if [[ -n ${YCM_CORES} ]]; then
-      # Useful while building on machines with lot of CPUs but small amount of memory/swap
-      num_cpus=${YCM_CORES};
+    # Useful while building on machines with lot of CPUs but small amount of
+    # memory/swap
+    num_cpus=${YCM_CORES};
   elif command_exists nproc; then
-   num_cpus=$(nproc)
+    num_cpus=$(nproc)
   else
     num_cpus=1
     if [[ `uname -s` == "Linux" ]]; then
