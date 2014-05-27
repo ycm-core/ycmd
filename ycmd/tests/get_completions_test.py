@@ -48,8 +48,8 @@ def GetCompletions_IdentifierCompleter_Works_test():
 
   app.post_json( '/event_notification', event_data )
 
+  # query is 'oo'
   completion_data = BuildRequest( contents = 'oo foo foogoo ba',
-                                  query = 'oo',
                                   column_num = 3 )
 
   eq_( [ BuildCompletionData( 'foo' ),
@@ -304,7 +304,6 @@ int main()
                                   contents = contents,
                                   line_num = 9,
                                   column_num = 8,
-                                  query = 'fooar',
                                   compilation_flags = ['-x', 'c++'] )
 
   results = app.post_json( '/completions', completion_data ).json
@@ -356,7 +355,6 @@ def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test():
   app.post_json( '/event_notification', event_data )
 
   completion_data = BuildRequest( contents =  'oo ',
-                                  query = 'oo',
                                   column_num = 3 )
 
   eq_( [ BuildCompletionData( 'foo' ),
@@ -377,7 +375,6 @@ def GetCompletions_UltiSnipsCompleter_Works_test():
   app.post_json( '/event_notification', event_data )
 
   completion_data = BuildRequest( contents =  'oo ',
-                                  query = 'oo',
                                   column_num = 3 )
 
   eq_( [ BuildCompletionData( 'foo', '<snip> bar' ),
@@ -400,7 +397,6 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test():
   app.post_json( '/event_notification', event_data )
 
   completion_data = BuildRequest( contents = 'oo ',
-                                  query = 'oo',
                                   column_num = 3 )
 
   eq_( [], app.post_json( '/completions', completion_data ).json )

@@ -24,7 +24,8 @@ class RequestWrap( object ):
     self._request = request
     self._computed_key = {
       'line_value': self._CurrentLine,
-      'start_column': self._CompletionStartColumn
+      'start_column': self._CompletionStartColumn,
+      'query': self._Query,
     }
 
 
@@ -58,7 +59,13 @@ class RequestWrap( object ):
 
   @Memoize
   def _CompletionStartColumn( self ):
-    return CompletionStartColumn( self[ 'line_value'], self[ 'column_num'] )
+    return CompletionStartColumn( self[ 'line_value' ], self[ 'column_num' ] )
+
+
+  @Memoize
+  def _Query( self ):
+    return self[ 'line_value' ][
+        self[ 'start_column' ] - 1 : self[ 'column_num' ] - 1 ]
 
 
 def CompletionStartColumn( line_value, column_num ):

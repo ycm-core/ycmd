@@ -104,3 +104,33 @@ def StartColumn_ColumnOne_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 1,
                                  contents = 'foobar') )[ 'start_column' ] )
+
+
+def Query_AtWordEnd_test():
+  eq_( 'foo',
+       RequestWrap( PrepareJson( column_num = 4,
+                                 contents = 'foo') )[ 'query' ] )
+
+
+def Query_InWordMiddle_test():
+  eq_( 'foo',
+       RequestWrap( PrepareJson( column_num = 4,
+                                 contents = 'foobar') )[ 'query' ] )
+
+
+def Query_StartOfLine_test():
+  eq_( '',
+       RequestWrap( PrepareJson( column_num = 1,
+                                 contents = 'foobar') )[ 'query' ] )
+
+
+def Query_StopsAtParen_test():
+  eq_( 'bar',
+       RequestWrap( PrepareJson( column_num = 8,
+                                 contents = 'foo(bar') )[ 'query' ] )
+
+
+def Query_InWhiteSpace_test():
+  eq_( '',
+       RequestWrap( PrepareJson( column_num = 8,
+                                 contents = 'foo       ') )[ 'query' ] )

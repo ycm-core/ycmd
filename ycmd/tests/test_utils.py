@@ -28,7 +28,6 @@ def BuildRequest( **kwargs ):
   filetype = kwargs[ 'filetype' ] if 'filetype' in kwargs else 'foo'
 
   request = {
-    'query': '',
     'line_num': 1,
     'column_num': 1,
     'filetypes': [ filetype ],
