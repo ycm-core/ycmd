@@ -98,3 +98,9 @@ def StartColumn_InMiddleOfWholeWord_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 4,
                                  contents = 'foobar') )[ 'start_column' ] )
+
+
+def StartColumn_ColumnOne_test():
+  eq_( 1,
+       RequestWrap( PrepareJson( column_num = 1,
+                                 contents = 'foobar') )[ 'start_column' ] )
