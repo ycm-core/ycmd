@@ -41,13 +41,15 @@ const char *const COMMENT_AND_STRING_REGEX =
   //  1. that the starting single quote is not escaped
   //  2. the escaped slash (\\)
   //  3. the escaped single quote inside the string
-  "(?<!\\\\)'(?:\\\\\\\\|\\\\'|.)*?'"
+  //  4. (?-s) means dot won't match newline char
+  "(?<!\\\\)'(?:\\\\\\\\|\\\\'|(?-s).)*?'"
   "|"
   // Anything inside double quotes, "...", but mind:
   //  1. that the starting double quote is not escaped
   //  2. the escaped slash (\\)
   //  3. the escaped double quote inside the string
-  "(?<!\\\\)\"(?:\\\\\\\\|\\\\\"|.)*?\"";
+  //  4. (?-s) means dot won't match newline char
+  "(?<!\\\\)\"(?:\\\\\\\\|\\\\\"|(?-s).)*?\"";
 
 const char *const IDENTIFIER_REGEX = "[_a-zA-Z]\\w*";
 
