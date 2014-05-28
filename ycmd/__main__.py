@@ -41,15 +41,14 @@ def YcmCoreSanityCheck():
 
 # We manually call sys.exit() on SIGTERM and SIGINT so that atexit handlers are
 # properly executed.
-def SetUpSignalHandler(stdout, stderr, keep_logfiles):
+def SetUpSignalHandler( stdout, stderr, keep_logfiles ):
   def SignalHandler( signum, frame ):
+    # We reset stderr & stdout, just in case something tries to use them
     if stderr:
-      # Reset stderr, just in case something tries to use it
       tmp = sys.stderr
       sys.stderr = sys.__stderr__
       tmp.close()
     if stdout:
-      # Reset stdout, just in case something tries to use it
       tmp = sys.stdout
       sys.stdout = sys.__stdout__
       tmp.close()
