@@ -41,7 +41,6 @@ const char *const COMMENT_AND_STRING_REGEX =
   //  1. that the starting single quote is not escaped
   //  2. the escaped slash (\\)
   //  3. the escaped single quote inside the string
-  // "(?<!\\\\)'(?:\\\\\\\\|\\\\'|.)*?'"
   "(?<!\\\\)'(?:\\\\\\\\|\\\\'|.)*?'"
   "|"
   // Anything inside double quotes, "...", but mind:
