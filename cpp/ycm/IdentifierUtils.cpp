@@ -37,6 +37,12 @@ const char *const COMMENT_AND_STRING_REGEX =
   "|"
   "/\\*.*?\\*/"  // C-style comments, '/* ... */'
   "|"
+  // Python-style multi-line single-quote string
+  "'''.*?'''"
+  "|"
+  // Python-style multi-line double-quote string
+  "\"\"\".*?\"\"\""
+  "|"
   // Anything inside single quotes, '...', but mind:
   //  1. that the starting single quote is not escaped
   //  2. the escaped slash (\\)

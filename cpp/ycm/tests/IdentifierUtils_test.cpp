@@ -142,7 +142,7 @@ TEST( IdentifierUtilsTest, RemoveIdentifierFreeTextEscapedQuotesStartStrings ) {
 }
 
 
-TEST( IdentifierUtilsTest, RemoveIdentifierFreeTextMultilineString ) {
+TEST( IdentifierUtilsTest, RemoveIdentifierFreeTextNoMultilineString ) {
   EXPECT_STREQ( RemoveIdentifierFreeText(
                   "'\n"
                   "let x = 'foo'\n"
@@ -160,6 +160,25 @@ TEST( IdentifierUtilsTest, RemoveIdentifierFreeTextMultilineString ) {
                 "\"\n"
                 "let x = \n"
                 "let y = ");
+}
+
+
+TEST( IdentifierUtilsTest, RemoveIdentifierFreeTextPythonMultilineString ) {
+  EXPECT_STREQ( RemoveIdentifierFreeText(
+                  "\"\"\"\n"
+                  "foobar\n"
+                  "\"\"\"\n"
+                  "zoo"
+                ).c_str(),
+                "\nzoo");
+
+  EXPECT_STREQ( RemoveIdentifierFreeText(
+                  "'''\n"
+                  "foobar\n"
+                  "'''\n"
+                  "zoo"
+                ).c_str(),
+                "\nzoo");
 }
 
 
