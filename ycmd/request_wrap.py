@@ -26,6 +26,7 @@ class RequestWrap( object ):
       'line_value': self._CurrentLine,
       'start_column': self._CompletionStartColumn,
       'query': self._Query,
+      'filetypes': self._Filetypes,
     }
 
     self._query = None
@@ -78,6 +79,11 @@ class RequestWrap( object ):
     self._query = self[ 'line_value' ][
         self[ 'start_column' ] - 1 : self[ 'column_num' ] - 1 ]
     return self._query
+
+
+  def _Filetypes( self ):
+    path = self[ 'filepath' ]
+    return self[ 'file_data' ][ path ][ 'filetypes' ]
 
 
 def CompletionStartColumn( line_value, column_num ):

@@ -30,7 +30,6 @@ def BuildRequest( **kwargs ):
   request = {
     'line_num': 1,
     'column_num': 1,
-    'filetypes': [ filetype ],
     'filepath': filepath,
     'file_data': {
       filepath: {

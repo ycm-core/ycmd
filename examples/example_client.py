@@ -272,7 +272,6 @@ def BuildRequestData( test_filename = None,
   contents = open( test_path ).read()
 
   return {
-    'filetypes': [ filetype ],
     'line_num': line_num,
     'column_num': column_num,
     'filepath': test_path,

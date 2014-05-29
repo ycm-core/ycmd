@@ -32,7 +32,12 @@ bottle.debug( True )
 def SemanticCompletionAvailable_Works_test():
   app = TestApp( handlers.app )
   request_data = {
-    'filetypes': ['python']
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'filetypes': ['python'],
+      }
+    }
   }
 
   ok_( app.post_json( '/semantic_completion_available',
