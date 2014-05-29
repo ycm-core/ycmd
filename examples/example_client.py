@@ -31,6 +31,8 @@ import urlparse
 import time
 
 import requests
+# enum34 on PyPi
+from enum import Enum
 
 HEADERS = {'content-type': 'application/json'}
 HMAC_HEADER = 'x-ycm-hmac'
@@ -39,8 +41,16 @@ SERVER_IDLE_SUICIDE_SECONDS = 10800  # 3 hours
 MAX_SERVER_WAIT_TIME_SECONDS = 5
 INCLUDE_YCMD_OUTPUT = True
 CODE_COMPLETIONS_HANDLER = '/completions'
+EVENT_HANDLER = '/event_notification'
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
 PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..', 'ycmd' )
+
+class Event( Enum ):
+  FileReadyToParse = 1
+  BufferUnload = 2
+  BufferVisit = 3
+  InsertLeave = 4
+  CurrentIdentifierFinished = 5
 
 
 class ServerError( Exception ):
@@ -48,6 +58,7 @@ class ServerError( Exception ):
     super( ServerError, self ).__init__( message )
 
 
+# Wrapper around ycmd's HTTP+JSON API
 class YcmdHandle( object ):
   def __init__( self, popen_handle, port, hmac_secret ):
     self._popen_handle = popen_handle
@@ -130,6 +141,45 @@ class YcmdHandle( object ):
     if response.text:
       return response.json()
     return None
+
+
+  def SendCodeCompletionRequest( self,
+                                 test_filename,
+                                 filetype,
+                                 line_num,
+                                 column_num ):
+    request_json = BuildRequestData( test_filename = test_filename,
+                                     filetype = filetype,
+                                     line_num = line_num,
+                                     column_num = column_num )
+    response_json = self.ReceiveJsonForData( request_json,
+                                             CODE_COMPLETIONS_HANDLER )
+    LogRequestAndResponse( request_json,
+                           response_json,
+                           CODE_COMPLETIONS_HANDLER )
+
+
+  def SendEventNotification( self,
+                             event_enum,
+                             test_filename,
+                             filetype,
+                             line_num = 1,  # just placeholder values
+                             column_num = 1,
+                             extra_data = None ):
+    request_json = BuildRequestData( test_filename = test_filename,
+                                     filetype = filetype,
+                                     line_num = line_num,
+                                     column_num = column_num )
+    if extra_data:
+      request_json.update( extra_data )
+
+    request_json[ 'event_name' ] = event_enum.name
+
+    response_json = self.ReceiveJsonForData( request_json,
+                                             EVENT_HANDLER )
+    LogRequestAndResponse( request_json,
+                           response_json,
+                           EVENT_HANDLER )
 
 
   def WaitUntilReady( self ):
@@ -291,21 +341,34 @@ def LogRequestAndResponse( request_json, response_json, handler ):
 
 
 def PythonSemanticCompletionResults( server ):
-  request_json = BuildRequestData( test_filename = 'some_python.py',
-                                   filetype = 'python',
-                                   line_num = 30,
-                                   column_num = 6 )
-  response_json = server.ReceiveJsonForData( request_json,
-                                             CODE_COMPLETIONS_HANDLER )
-  LogRequestAndResponse( request_json,
-                         response_json,
-                         CODE_COMPLETIONS_HANDLER )
+  server.SendEventNotification( Event.FileReadyToParse,
+                                test_filename = 'some_python.py',
+                                filetype = 'python' )
+
+  server.SendCodeCompletionRequest( test_filename = 'some_python.py',
+                                    filetype = 'python',
+                                    line_num = 30,
+                                    column_num = 6 )
+
+
+def LanguageAgnosticIdentifierCompletion( server ):
+  # We're using JavaScript here, but the language doesn't matter; the identifier
+  # completion engine just extracts identifiers.
+  server.SendEventNotification( Event.FileReadyToParse,
+                                test_filename = 'some_javascript.js',
+                                filetype = 'javascript' )
+
+  server.SendCodeCompletionRequest( test_filename = 'some_javascript.js',
+                                    filetype = 'javascript',
+                                    line_num = 24,
+                                    column_num = 6 )
 
 
 def Main():
   print 'Trying to start server...'
   server = YcmdHandle.StartYcmdAndReturnHandle()
   server.WaitUntilReady()
+  LanguageAgnosticIdentifierCompletion( server )
   PythonSemanticCompletionResults( server )
   server.Shutdown()
 
