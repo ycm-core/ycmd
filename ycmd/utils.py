@@ -76,11 +76,14 @@ def ToUtf8Json( data ):
 
 def PathToTempDir():
   tempdir = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
-  if not os.path.exists( tempdir ):
+  try:
     os.makedirs( tempdir )
     # Needed to support multiple users working on the same machine;
     # see issue 606.
     MakeFolderAccessibleToAll( tempdir )
+  except OSError:
+    # Folder already exists, skip folder creation.
+    pass
   return tempdir
 
 
