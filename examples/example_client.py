@@ -264,7 +264,8 @@ def GetUnusedLocalhostPort():
 
 def PrettyPrintDict( value ):
   # Sad that this works better than pprint...
-  return json.dumps( value, sort_keys = True, indent = 2 )
+  return json.dumps( value, sort_keys = True, indent = 2 ).replace(
+        '\\n', '\n')
 
 
 def BuildRequestData( test_filename = None,
