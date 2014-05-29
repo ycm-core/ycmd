@@ -44,8 +44,11 @@ MAX_SERVER_WAIT_TIME_SECONDS = 5
 INCLUDE_YCMD_OUTPUT = False
 CODE_COMPLETIONS_HANDLER = '/completions'
 EVENT_HANDLER = '/event_notification'
+EXTRA_CONF_HANDLER = '/load_extra_conf_file'
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
 PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..', 'ycmd' )
+PATH_TO_EXTRA_CONF = os.path.join( DIR_OF_THIS_SCRIPT, '.ycm_extra_conf.py' )
+
 
 class Event( Enum ):
   FileReadyToParse = 1
@@ -172,14 +175,21 @@ class YcmdHandle( object ):
                                      column_num = column_num )
     if extra_data:
       request_json.update( extra_data )
-
     request_json[ 'event_name' ] = event_enum.name
-
     response_json = self.ReceiveJsonForData( request_json,
                                              EVENT_HANDLER )
     LogRequestAndResponse( request_json,
                            response_json,
                            EVENT_HANDLER )
+
+
+  def LoadExtraConfFile( self, extra_conf_filename ):
+    request_json = { 'filepath': extra_conf_filename }
+    response_json = self.ReceiveJsonForData( request_json, EXTRA_CONF_HANDLER )
+
+    LogRequestAndResponse( request_json,
+                           response_json,
+                           EXTRA_CONF_HANDLER )
 
 
   def WaitUntilReady( self ):
@@ -364,12 +374,27 @@ def LanguageAgnosticIdentifierCompletion( server ):
                                     column_num = 6 )
 
 
+def CppSemanticCompletionResults( server ):
+  # TODO: document this better
+  server.LoadExtraConfFile( PATH_TO_EXTRA_CONF )
+
+  server.SendEventNotification( Event.FileReadyToParse,
+                                test_filename = 'some_cpp.cpp',
+                                filetype = 'cpp' )
+
+  server.SendCodeCompletionRequest( test_filename = 'some_cpp.cpp',
+                                    filetype = 'cpp',
+                                    line_num = 28,
+                                    column_num = 7 )
+
+
 def Main():
   print 'Trying to start server...'
   server = YcmdHandle.StartYcmdAndReturnHandle()
   server.WaitUntilReady()
   LanguageAgnosticIdentifierCompletion( server )
   PythonSemanticCompletionResults( server )
+  CppSemanticCompletionResults( server )
   server.Shutdown()
 
 
