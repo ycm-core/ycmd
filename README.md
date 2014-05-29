@@ -11,7 +11,7 @@ ycmd was originally part of [YouCompleteMe][ycm]'s codebase, but has been split
 out into a separate project so that it can be used in editors other than Vim.
 
 The best way to learn how to interact with ycmd is by reading through the
-`example_client.py` file _[NOTE: Which I haven't yet written]_.
+[`example_client.py`][example-client] file.
 
 API notes
 ---------
@@ -22,8 +22,7 @@ API notes
   header. The HMAC is computed from the shared secret passed to the server on
   startup and the request/response body. The digest algorithm is SHA-256. The
   server will also include the HMAC in its responses; you _must_ verify it
-  before using the response. See `example_client.py` _[NOTE: Which I haven't yet
-  written]_ to see how it's done.
+  before using the response. See [`example_client.py`][example-client] to see how it's done.
 
 Backwards compatibility
 -----------------------
@@ -79,3 +78,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [semver]: http://semver.org/
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
+[example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
