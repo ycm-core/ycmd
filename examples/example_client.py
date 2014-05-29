@@ -191,13 +191,10 @@ def CreateHexHmac( content, hmac_secret ):
 def SecureCompareStrings( a, b ):
   """Returns the equivalent of 'a == b', but avoids content based short
   circuiting to reduce the vulnerability to timing attacks."""
-  # Consistent timing matters more here than data type flexibility
   if not ( isinstance( a, str ) and isinstance( b, str ) ):
     raise TypeError( "inputs must be str instances" )
 
-  # We assume the length of the expected digest is public knowledge,
-  # thus this early return isn't leaking anything an attacker wouldn't
-  # already know
+  # The length of the expected digest is public knowledge.
   if len( a ) != len( b ):
     return False
 
