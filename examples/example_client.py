@@ -39,7 +39,9 @@ HMAC_HEADER = 'x-ycm-hmac'
 HMAC_SECRET_LENGTH = 16
 SERVER_IDLE_SUICIDE_SECONDS = 10800  # 3 hours
 MAX_SERVER_WAIT_TIME_SECONDS = 5
-INCLUDE_YCMD_OUTPUT = True
+
+# Set this to True to see ycmd's output interleaved with the client's
+INCLUDE_YCMD_OUTPUT = False
 CODE_COMPLETIONS_HANDLER = '/completions'
 EVENT_HANDLER = '/event_notification'
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
@@ -85,9 +87,7 @@ class YcmdHandle( object ):
                     '--idle_suicide_seconds={0}'.format(
                       SERVER_IDLE_SUICIDE_SECONDS ) ]
 
-      std_handles = ( None if 'YCMD_EXAMPLE_INCLUDE_SERVER_OUTPUT' in os.environ
-                      else subprocess.PIPE )
-
+      std_handles = None if INCLUDE_YCMD_OUTPUT else subprocess.PIPE
       child_handle = subprocess.Popen( ycmd_args,
                                        stdout = std_handles,
                                        stderr = std_handles )
