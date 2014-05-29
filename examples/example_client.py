@@ -71,7 +71,13 @@ class YcmdHandle( object ):
                     '--options_file={0}'.format( options_file.name ),
                     '--idle_suicide_seconds={0}'.format(
                       SERVER_IDLE_SUICIDE_SECONDS ) ]
-      child_handle = subprocess.Popen( ycmd_args )
+
+      std_handles = ( None if 'YCMD_EXAMPLE_INCLUDE_SERVER_OUTPUT' in os.environ
+                      else subprocess.PIPE )
+
+      child_handle = subprocess.Popen( ycmd_args,
+                                       stdout = std_handles,
+                                       stderr = std_handles )
       return cls( child_handle, server_port, hmac_secret )
 
 
