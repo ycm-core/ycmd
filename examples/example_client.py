@@ -39,6 +39,8 @@ SERVER_IDLE_SUICIDE_SECONDS = 10800  # 3 hours
 MAX_SERVER_WAIT_TIME_SECONDS = 5
 INCLUDE_YCMD_OUTPUT = True
 CODE_COMPLETIONS_HANDLER = '/completions'
+DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
+PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..', 'ycmd' )
 
 
 class ServerError( Exception ):
@@ -66,7 +68,7 @@ class YcmdHandle( object ):
       options_file.flush()
       server_port = GetUnusedLocalhostPort()
       ycmd_args = [ sys.executable,
-                    PathToYcmd(),
+                    PATH_TO_YCMD,
                     '--port={0}'.format( server_port ),
                     '--options_file={0}'.format( options_file.name ),
                     '--idle_suicide_seconds={0}'.format(
@@ -228,20 +230,12 @@ def ToUtf8Json( data ):
                      encoding = 'utf-8' )
 
 
-def DirectoryOfThisScript():
-  return os.path.dirname( os.path.abspath( __file__ ) )
-
-
 def PathToTestFile( filename ):
-  return os.path.join( DirectoryOfThisScript(), filename )
-
-
-def PathToYcmd():
-  return os.path.join( DirectoryOfThisScript(), '..', 'ycmd' )
+  return os.path.join( DIR_OF_THIS_SCRIPT, filename )
 
 
 def DefaultSettings():
-  default_options_path = os.path.join( DirectoryOfThisScript(),
+  default_options_path = os.path.join( DIR_OF_THIS_SCRIPT,
                                        '..',
                                       'ycmd',
                                       'default_settings.json' )
