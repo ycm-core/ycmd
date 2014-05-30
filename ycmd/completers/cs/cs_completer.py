@@ -85,9 +85,9 @@ class CsharpCompleter( Completer ):
         request_data ) ),
     'GoToDeclaration': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
-    'GoTo': ( lambda self, request_data: self._GoToImplementation( 
+    'GoTo': ( lambda self, request_data: self._GoToImplementation(
         request_data, True ) ),
-    'GoToDefinitionElseDeclaration': ( lambda self, request_data: 
+    'GoToDefinitionElseDeclaration': ( lambda self, request_data:
         self._GoToDefinition( request_data ) ),
     'GoToImplementation': ( lambda self, request_data:
         self._GoToImplementation( request_data, False ) ),
@@ -319,17 +319,21 @@ class CsharpCompleter( Completer ):
 
   def _GoToImplementation( self, request_data, fallback_to_declaration ):
     """ Jump to implementation of identifier under cursor """
-    implementation = self._GetResponse( '/findimplementations',
-                                        self._DefaultParameters( request_data ) )
+    implementation = self._GetResponse(
+        '/findimplementations',
+        self._DefaultParameters( request_data ) )
+
     if implementation[ 'QuickFixes' ]:
       if len( implementation[ 'QuickFixes' ] ) == 1:
-        return responses.BuildGoToResponse( implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
-                                            implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
-                                            implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] )
+        return responses.BuildGoToResponse(
+            implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
+            implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
+            implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] )
       else:
         return [ responses.BuildGoToResponse( x[ 'FileName' ],
                                               x[ 'Line' ],
-                                              x[ 'Column' ] ) for x in implementation[ 'QuickFixes' ] ]
+                                              x[ 'Column' ] )
+                 for x in implementation[ 'QuickFixes' ] ]
     else:
       if ( fallback_to_declaration ):
         return self._GoToDefinition( request_data )
