@@ -275,7 +275,7 @@ def ToUtf8Json( data ):
 
 
 def PathToTestFile( filename ):
-  return os.path.join( DIR_OF_THIS_SCRIPT, filename )
+  return os.path.join( DIR_OF_THIS_SCRIPT, 'samples', filename )
 
 
 def DefaultSettings():
@@ -362,7 +362,6 @@ def CppSemanticCompletionResults( server ):
                                     filetype = 'cpp',
                                     line_num = 28,
                                     column_num = 7 )
-
 
 def Main():
   print 'Trying to start server...'
