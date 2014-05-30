@@ -34,8 +34,7 @@ import requests
 # enum34 on PyPi
 from enum import Enum
 
-HEADERS = {'content-type': 'application/json'}
-HMAC_HEADER = 'x-ycm-hmac'
+HMAC_HEADER = 'X-Ycm-Hmac'
 HMAC_SECRET_LENGTH = 16
 SERVER_IDLE_SUICIDE_SECONDS = 10800  # 3 hours
 MAX_SERVER_WAIT_TIME_SECONDS = 5
@@ -101,7 +100,7 @@ class YcmdHandle( object ):
   def IsHealthy( self ):
     if not self.IsAlive():
       return False
-    response = self.GetFromHandlerAndLog( 'healthy' )
+    response = self.GetFromHandler( 'healthy' )
     response.raise_for_status()
     return response.json()
 
@@ -111,20 +110,17 @@ class YcmdHandle( object ):
       self._popen_handle.terminate()
 
 
-  def PostToHandlerAndLog( self, data, handler ):
-    sent_data = ToUtf8Json( data )
-    response = requests.post( self._BuildUri( handler ),
-                              data = sent_data,
-                              headers = self._ExtraHeaders( sent_data ) )
-    LogRequestAndResponse( response )
-    self._ValidateResponseObject( response )
-    return response
+  def PostToHandlerAndLog( self, handler, data ):
+    self._CallHttpie( 'post', handler, data )
 
 
   def GetFromHandlerAndLog( self, handler ):
+    self._CallHttpie( 'get', handler )
+
+
+  def GetFromHandler( self, handler ):
     response = requests.get( self._BuildUri( handler ),
                              headers = self._ExtraHeaders() )
-    LogRequestAndResponse( response )
     self._ValidateResponseObject( response )
     return response
 
@@ -138,8 +134,8 @@ class YcmdHandle( object ):
                                      filetype = filetype,
                                      line_num = line_num,
                                      column_num = column_num )
-    response_json = self.PostToHandlerAndLog( request_json,
-                                              CODE_COMPLETIONS_HANDLER )
+    print '==== Sending code-completion request ===='
+    self.PostToHandlerAndLog( CODE_COMPLETIONS_HANDLER, request_json )
 
 
   def SendEventNotification( self,
@@ -156,13 +152,13 @@ class YcmdHandle( object ):
     if extra_data:
       request_json.update( extra_data )
     request_json[ 'event_name' ] = event_enum.name
-    response_json = self.PostToHandlerAndLog( request_json,
-                                              EVENT_HANDLER )
+    print '==== Sending event notification ===='
+    self.PostToHandlerAndLog( EVENT_HANDLER, request_json )
 
 
   def LoadExtraConfFile( self, extra_conf_filename ):
     request_json = { 'filepath': extra_conf_filename }
-    response_json = self.PostToHandlerAndLog( request_json, EXTRA_CONF_HANDLER )
+    self.PostToHandlerAndLog( EXTRA_CONF_HANDLER, request_json )
 
 
   def WaitUntilReady( self ):
@@ -184,12 +180,13 @@ class YcmdHandle( object ):
 
 
   def _ExtraHeaders( self, request_body = None ):
+    return { HMAC_HEADER: self._HmacForBody( request_body ) }
+
+
+  def _HmacForBody( self, request_body = None ):
     if not request_body:
       request_body = ''
-    headers = dict( HEADERS )
-    headers[ HMAC_HEADER ] = b64encode(
-        CreateHexHmac( request_body, self._hmac_secret ) )
-    return headers
+    return b64encode( CreateHexHmac( request_body, self._hmac_secret ) )
 
 
   def _BuildUri( self, handler ):
@@ -205,24 +202,23 @@ class YcmdHandle( object ):
     return True
 
 
-def LogRequestAndResponse( response ):
-  def RequestAsString( request ):
-    headers = '\n'.join( '{}: {}'.format( k, v )
-                         for k, v in request.headers.items() )
+  # Use httpie instead of Requests directly so that we get the nice json
+  # pretty-printing, output colorization and full request/response logging for
+  # free
+  def _CallHttpie( self, method, handler, data = None ):
+    method = method.upper()
+    args = [ 'http', '-v', method, self._BuildUri( handler ) ]
+    if isinstance( data, collections.Mapping ):
+      args.append( 'content-type:application/json' )
+      data = ToUtf8Json( data )
 
-    return '{} {}\n{}\n\n{}'.format( request.method,
-                                    request.url,
-                                    headers,
-                                    request.body )
-
-  def ResponseAsString( response ):
-    return response.text
-
-  print '====== Request ====='
-  print RequestAsString( response.request )
-  print '====== Response ====='
-  print ResponseAsString( response )
-  print '\n'
+    args.append( HMAC_HEADER + ':' + self._HmacForBody( data ) )
+    if method == 'GET':
+      popen = subprocess.Popen( args )
+    else:
+      popen = subprocess.Popen( args, stdin = subprocess.PIPE )
+      popen.communicate( data )
+    popen.wait()
 
 
 def ContentHexHmacValid( content, hmac, hmac_secret ):
@@ -372,9 +368,12 @@ def Main():
   print 'Trying to start server...'
   server = YcmdHandle.StartYcmdAndReturnHandle()
   server.WaitUntilReady()
+
   LanguageAgnosticIdentifierCompletion( server )
   PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
+
+  print 'Shutting down server...'
   server.Shutdown()
 
 
