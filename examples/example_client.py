@@ -58,11 +58,6 @@ class Event( Enum ):
   CurrentIdentifierFinished = 5
 
 
-class ServerError( Exception ):
-  def __init__( self, message ):
-    super( ServerError, self ).__init__( message )
-
-
 # Wrapper around ycmd's HTTP+JSON API
 class YcmdHandle( object ):
   def __init__( self, popen_handle, port, hmac_secret ):
@@ -106,7 +101,7 @@ class YcmdHandle( object ):
   def IsHealthy( self ):
     if not self.IsAlive():
       return False
-    response = self.HandlerGet( 'healthy' )
+    response = self.GetFromHandlerAndLog( 'healthy' )
     response.raise_for_status()
     return response.json()
 
@@ -116,34 +111,22 @@ class YcmdHandle( object ):
       self._popen_handle.terminate()
 
 
-  def HandlerPost( self, data, handler ):
+  def PostToHandlerAndLog( self, data, handler ):
     sent_data = ToUtf8Json( data )
     response = requests.post( self._BuildUri( handler ),
                               data = sent_data,
                               headers = self._ExtraHeaders( sent_data ) )
+    LogRequestAndResponse( response )
     self._ValidateResponseObject( response )
     return response
 
 
-  def HandlerGet( self, handler ):
+  def GetFromHandlerAndLog( self, handler ):
     response = requests.get( self._BuildUri( handler ),
                              headers = self._ExtraHeaders() )
+    LogRequestAndResponse( response )
     self._ValidateResponseObject( response )
     return response
-
-
-  def ReceiveJsonForData( self, data, handler ):
-    response = self.HandlerPost( data, handler )
-    if response.status_code == requests.codes.server_error:
-      RaiseExceptionForData( response.json() )
-
-    # We let Requests handle the other status types, we only handle the 500
-    # error code.
-    response.raise_for_status()
-
-    if response.text:
-      return response.json()
-    return None
 
 
   def SendCodeCompletionRequest( self,
@@ -155,11 +138,8 @@ class YcmdHandle( object ):
                                      filetype = filetype,
                                      line_num = line_num,
                                      column_num = column_num )
-    response_json = self.ReceiveJsonForData( request_json,
-                                             CODE_COMPLETIONS_HANDLER )
-    LogRequestAndResponse( request_json,
-                           response_json,
-                           CODE_COMPLETIONS_HANDLER )
+    response_json = self.PostToHandlerAndLog( request_json,
+                                              CODE_COMPLETIONS_HANDLER )
 
 
   def SendEventNotification( self,
@@ -176,20 +156,13 @@ class YcmdHandle( object ):
     if extra_data:
       request_json.update( extra_data )
     request_json[ 'event_name' ] = event_enum.name
-    response_json = self.ReceiveJsonForData( request_json,
-                                             EVENT_HANDLER )
-    LogRequestAndResponse( request_json,
-                           response_json,
-                           EVENT_HANDLER )
+    response_json = self.PostToHandlerAndLog( request_json,
+                                              EVENT_HANDLER )
 
 
   def LoadExtraConfFile( self, extra_conf_filename ):
     request_json = { 'filepath': extra_conf_filename }
-    response_json = self.ReceiveJsonForData( request_json, EXTRA_CONF_HANDLER )
-
-    LogRequestAndResponse( request_json,
-                           response_json,
-                           EXTRA_CONF_HANDLER )
+    response_json = self.PostToHandlerAndLog( request_json, EXTRA_CONF_HANDLER )
 
 
   def WaitUntilReady( self ):
@@ -232,9 +205,24 @@ class YcmdHandle( object ):
     return True
 
 
-def RaiseExceptionForData( data ):
-  raise ServerError( '{0}: {1}'.format( data[ 'exception' ][ 'TYPE' ],
-                                        data[ 'message' ] ) )
+def LogRequestAndResponse( response ):
+  def RequestAsString( request ):
+    headers = '\n'.join( '{}: {}'.format( k, v )
+                         for k, v in request.headers.items() )
+
+    return '{} {}\n{}\n\n{}'.format( request.method,
+                                    request.url,
+                                    headers,
+                                    request.body )
+
+  def ResponseAsString( response ):
+    return response.text
+
+  print '====== Request ====='
+  print RequestAsString( response.request )
+  print '====== Response ====='
+  print ResponseAsString( response )
+  print '\n'
 
 
 def ContentHexHmacValid( content, hmac, hmac_secret ):
@@ -340,14 +328,6 @@ def BuildRequestData( test_filename = None,
       }
     }
   }
-
-
-def LogRequestAndResponse( request_json, response_json, handler ):
-  print 'Json sent to server handler:', handler
-  print PrettyPrintDict( request_json )
-  print '=================='
-  print 'Json received from server:'
-  print PrettyPrintDict( response_json )
 
 
 def PythonSemanticCompletionResults( server ):
