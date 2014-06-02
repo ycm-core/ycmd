@@ -24,7 +24,7 @@ class RequestWrap( object ):
     self._request = request
     self._computed_key = {
       'line_value': self._CurrentLine,
-      'start_column': self._CompletionStartColumn,
+      'start_column': self.CompletionStartColumn,
       'query': self._Query,
       'filetypes': self._Filetypes,
     }
@@ -65,7 +65,7 @@ class RequestWrap( object ):
     return self._line_value
 
 
-  def _CompletionStartColumn( self ):
+  def CompletionStartColumn( self ):
     if self._start_column is not None:
       return self._start_column
     self._start_column = CompletionStartColumn( self[ 'line_value' ],

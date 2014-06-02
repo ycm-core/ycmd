@@ -37,7 +37,7 @@ import httplib
 from bottle import request, response
 import server_state
 from ycmd import user_options_store
-from ycmd.responses import BuildExceptionResponse
+from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
 from ycmd import hmac_plugin
 from ycmd import extra_conf_store
 from ycmd.request_wrap import RequestWrap
@@ -96,7 +96,9 @@ def GetCompletions():
                 do_filetype_completion else
                 SERVER_STATE.GetGeneralCompleter() )
 
-  return _JsonResponse( completer.ComputeCandidates( request_data ) )
+  return _JsonResponse( BuildCompletionResponse(
+      completer.ComputeCandidates( request_data ),
+      request_data.CompletionStartColumn() ) )
 
 
 @app.get( '/user_options' )

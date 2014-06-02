@@ -51,10 +51,20 @@ def GetCompletions_IdentifierCompleter_Works_test():
   # query is 'oo'
   completion_data = BuildRequest( contents = 'oo foo foogoo ba',
                                   column_num = 3 )
+  response_data = app.post_json( '/completions', completion_data ).json
 
   eq_( [ BuildCompletionData( 'foo' ),
-         BuildCompletionData( 'foogoo' ) ],
-       app.post_json( '/completions', completion_data ).json )
+         BuildCompletionData( 'foogoo' ) ], response_data[ 'completions' ] )
+  eq_( 1, response_data[ 'completion_start_column' ] )
+
+
+@with_setup( Setup )
+def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test():
+  app = TestApp( handlers.app )
+  completion_data = BuildRequest( contents = 'oo foo foogoo ba',
+                                  column_num = 11 )
+  response_data = app.post_json( '/completions', completion_data ).json
+  eq_( 8, response_data[ 'completion_start_column' ] )
 
 
 @with_setup( Setup )
@@ -75,10 +85,12 @@ def GetCompletions_CsCompleter_Works_test():
                                   contents = contents,
                                   line_num = 9,
                                   column_num = 12 )
+  response_data = app.post_json( '/completions', completion_data ).json
+  assert_that( response_data[ 'completions' ],
+               has_items( CompletionEntryMatcher( 'CursorLeft' ),
+                          CompletionEntryMatcher( 'CursorSize' ) ) )
+  eq_( 12, response_data[ 'completion_start_column' ] )
 
-  results = app.post_json( '/completions', completion_data ).json
-  assert_that( results, has_items( CompletionEntryMatcher( 'CursorLeft' ),
-                                   CompletionEntryMatcher( 'CursorSize' ) ) )
   StopOmniSharpServer( app )
 
 
@@ -174,10 +186,12 @@ int main()
                                   column_num = 7,
                                   compilation_flags = ['-x', 'c++'] )
 
-  results = app.post_json( '/completions', completion_data ).json
-  assert_that( results, has_items( CompletionEntryMatcher( 'c' ),
-                                   CompletionEntryMatcher( 'x' ),
-                                   CompletionEntryMatcher( 'y' ) ) )
+  response_data = app.post_json( '/completions', completion_data ).json
+  assert_that( response_data[ 'completions'],
+               has_items( CompletionEntryMatcher( 'c' ),
+                          CompletionEntryMatcher( 'x' ),
+                          CompletionEntryMatcher( 'y' ) ) )
+  eq_( 7, response_data[ 'completion_start_column' ] )
 
 @with_setup( Setup )
 def GetCompletions_ClangCompleter_NoCompletionsWhenAutoTriggerOff_test():
@@ -204,7 +218,8 @@ int main()
                                   column_num = 7,
                                   compilation_flags = ['-x', 'c++'] )
 
-  results = app.post_json( '/completions', completion_data ).json
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
   assert_that( results, empty() )
 
 
@@ -254,7 +269,8 @@ def GetCompletions_ClangCompleter_WorksWhenExtraConfExplicitlyAllowed_test():
                                   line_num = 11,
                                   column_num = 7 )
 
-  results = app.post_json( '/completions', completion_data ).json
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
   assert_that( results, has_items( CompletionEntryMatcher( 'c' ),
                                    CompletionEntryMatcher( 'x' ),
                                    CompletionEntryMatcher( 'y' ) ) )
@@ -306,7 +322,8 @@ int main()
                                   column_num = 8,
                                   compilation_flags = ['-x', 'c++'] )
 
-  results = app.post_json( '/completions', completion_data ).json
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
   assert_that( results,
                contains_inanyorder( CompletionEntryMatcher( 'foobar' ),
                                     CompletionEntryMatcher( 'floozar' ) ) )
@@ -319,7 +336,8 @@ def GetCompletions_ForceSemantic_Works_test():
   completion_data = BuildRequest( filetype = 'python',
                                   force_semantic = True )
 
-  results = app.post_json( '/completions', completion_data ).json
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
   assert_that( results, has_items( CompletionEntryMatcher( 'abs' ),
                                    CompletionEntryMatcher( 'open' ),
                                    CompletionEntryMatcher( 'bool' ) ) )
@@ -342,7 +360,8 @@ def GetCompletions_ClangCompleter_ClientDataGivenToExtraConf_test():
                                     'flags': ['-x', 'c++']
                                   })
 
-  results = app.post_json( '/completions', completion_data ).json
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
   assert_that( results, has_item( CompletionEntryMatcher( 'x' ) ) )
 
 
@@ -359,7 +378,7 @@ def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test():
 
   eq_( [ BuildCompletionData( 'foo' ),
          BuildCompletionData( 'zoo' ) ],
-       app.post_json( '/completions', completion_data ).json )
+       app.post_json( '/completions', completion_data ).json[ 'completions' ] )
 
 
 @with_setup( Setup )
@@ -379,7 +398,7 @@ def GetCompletions_UltiSnipsCompleter_Works_test():
 
   eq_( [ BuildCompletionData( 'foo', '<snip> bar' ),
          BuildCompletionData( 'zoo', '<snip> goo' ) ],
-       app.post_json( '/completions', completion_data ).json )
+       app.post_json( '/completions', completion_data ).json[ 'completions' ] )
 
 
 @with_setup( Setup )
@@ -399,6 +418,7 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test():
   completion_data = BuildRequest( contents = 'oo ',
                                   column_num = 3 )
 
-  eq_( [], app.post_json( '/completions', completion_data ).json )
+  eq_( [],
+       app.post_json( '/completions', completion_data ).json[ 'completions' ] )
 
 
