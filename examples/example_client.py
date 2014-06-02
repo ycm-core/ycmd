@@ -97,10 +97,11 @@ class YcmdHandle( object ):
     return returncode is None
 
 
-  def IsHealthy( self ):
+  def IsReady( self, include_subservers = False ):
     if not self.IsAlive():
       return False
-    response = self.GetFromHandler( 'healthy' )
+    params = { 'include_subservers': 1 } if include_subservers else None
+    response = self.GetFromHandler( 'ready', params )
     response.raise_for_status()
     return response.json()
 
@@ -118,9 +119,10 @@ class YcmdHandle( object ):
     self._CallHttpie( 'get', handler )
 
 
-  def GetFromHandler( self, handler ):
+  def GetFromHandler( self, handler, params = None ):
     response = requests.get( self._BuildUri( handler ),
-                             headers = self._ExtraHeaders() )
+                             headers = self._ExtraHeaders(),
+                             params = params )
     self._ValidateResponseObject( response )
     return response
 
@@ -161,7 +163,7 @@ class YcmdHandle( object ):
     self.PostToHandlerAndLog( EXTRA_CONF_HANDLER, request_json )
 
 
-  def WaitUntilReady( self ):
+  def WaitUntilReady( self, include_subservers = False ):
     total_slept = 0
     time.sleep( 0.5 )
     total_slept += 0.5
@@ -169,12 +171,14 @@ class YcmdHandle( object ):
       try:
         if total_slept > MAX_SERVER_WAIT_TIME_SECONDS:
           raise RuntimeError(
-              'ycmd hasn\'t started after {0} seconds, aborting'.format(
+              'waited for the server for {0} seconds, aborting'.format(
                     MAX_SERVER_WAIT_TIME_SECONDS ) )
 
-        if self.IsHealthy():
+        if self.IsReady( include_subservers ):
           return
       except requests.exceptions.ConnectionError:
+        pass
+      finally:
         time.sleep( 0.1 )
         total_slept += 0.1
 
@@ -363,6 +367,23 @@ def CppSemanticCompletionResults( server ):
                                     line_num = 28,
                                     column_num = 7 )
 
+
+def CsharpSemanticCompletionResults( server ):
+  # First such request starts the OmniSharpServer
+  server.SendEventNotification( Event.FileReadyToParse,
+                                test_filename = 'some_csharp.cs',
+                                filetype = 'cs' )
+
+  # We have to wait until OmniSharpServer has started and loaded the solution
+  # file
+  print 'Waiting for OmniSharpServer to become ready...'
+  server.WaitUntilReady( include_subservers = True )
+  server.SendCodeCompletionRequest( test_filename = 'some_csharp.cs',
+                                    filetype = 'cs',
+                                    line_num = 10,
+                                    column_num = 15 )
+
+
 def Main():
   print 'Trying to start server...'
   server = YcmdHandle.StartYcmdAndReturnHandle()
@@ -371,6 +392,7 @@ def Main():
   LanguageAgnosticIdentifierCompletion( server )
   PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
+  CsharpSemanticCompletionResults( server )
 
   print 'Shutting down server...'
   server.Shutdown()
