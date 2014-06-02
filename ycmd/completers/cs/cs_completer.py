@@ -79,8 +79,8 @@ class CsharpCompleter( Completer ):
     'RestartServer': ( lambda self, request_data: self._RestartServer(
         request_data ) ),
     'ReloadSolution': ( lambda self, request_data: self._ReloadSolution() ),
-    'ServerRunning': ( lambda self, request_data: self._ServerIsRunning() ),
-    'ServerReady': ( lambda self, request_data: self._ServerIsReady() ),
+    'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
+    'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
     'GoToDefinition': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
     'GoToDeclaration': ( lambda self, request_data: self._GoToDefinition(
@@ -110,7 +110,7 @@ class CsharpCompleter( Completer ):
 
   def Shutdown( self ):
     if ( self.user_options[ 'auto_stop_csharp_server' ] and
-         self._ServerIsRunning() ):
+         self.ServerIsRunning() ):
       self._StopServer()
 
 
@@ -208,7 +208,7 @@ class CsharpCompleter( Completer ):
 
 
   def DebugInfo( self ):
-    if self._ServerIsRunning():
+    if self.ServerIsRunning():
       return 'Server running at: {0}\nLogfiles:\n{1}\n{2}'.format(
         self._ServerLocation(), self._filename_stdout, self._filename_stderr )
     else:
@@ -287,7 +287,7 @@ class CsharpCompleter( Completer ):
 
   def _RestartServer ( self, request_data ):
     """ Restarts the OmniSharp server """
-    if self._ServerIsRunning():
+    if self.ServerIsRunning():
       self._StopServer()
     return self._StartServer( request_data )
 
@@ -355,8 +355,8 @@ class CsharpCompleter( Completer ):
     return parameters
 
 
-  def _ServerIsRunning( self ):
-    """ Check if our OmniSharp server is running """
+  def ServerIsRunning( self ):
+    """ Check if our OmniSharp server is running (up and serving)."""
     try:
       return bool( self._omnisharp_port and
                   self._GetResponse( '/checkalivestatus', silent = True ) )
@@ -364,8 +364,8 @@ class CsharpCompleter( Completer ):
       return False
 
 
-  def _ServerIsReady( self ):
-    """ Check if our OmniSharp server is ready """
+  def ServerIsReady( self ):
+    """ Check if our OmniSharp server is ready (loaded solution file)."""
     try:
       return bool( self._omnisharp_port and
                    self._GetResponse( '/checkreadystatus', silent = True ) )

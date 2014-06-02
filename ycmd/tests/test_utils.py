@@ -72,12 +72,10 @@ def StopOmniSharpServer( app ):
                                command_arguments = ['StopServer'],
                                filetype = 'cs' ) )
 
+
 def WaitUntilOmniSharpServerReady( app ):
   while True:
-    result = app.post_json( '/run_completer_command',
-                            BuildRequest( completer_target = 'filetype_default',
-                                          command_arguments = ['ServerReady'],
-                                          filetype = 'cs' ) ).json
+    result = app.get( '/ready', { 'include_subservers': 1 } ).json
     if result:
       break
     time.sleep( 0.2 )

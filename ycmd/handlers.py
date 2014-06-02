@@ -108,6 +108,18 @@ def GetUserOptions():
 @app.get( '/healthy' )
 def GetHealthy():
   LOGGER.info( 'Received health request' )
+  if request.query.include_subservers:
+    cs_completer = SERVER_STATE.GetFiletypeCompleter( ['cs'] )
+    return _JsonResponse( cs_completer.ServerIsRunning() )
+  return _JsonResponse( True )
+
+
+@app.get( '/ready' )
+def GetReady():
+  LOGGER.info( 'Received ready request' )
+  if request.query.include_subservers:
+    cs_completer = SERVER_STATE.GetFiletypeCompleter( ['cs'] )
+    return _JsonResponse( cs_completer.ServerIsReady() )
   return _JsonResponse( True )
 
 
