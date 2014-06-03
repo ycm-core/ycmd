@@ -125,6 +125,12 @@ BOOST_PYTHON_MODULE(ycm_core)
   class_< std::vector< Range > >( "RangeVec" )
     .def( vector_indexing_suite< std::vector< Range > >() );
 
+  enum_< DiagnosticKind >( "DiagnosticKind" )
+    .value( "ERROR", ERROR )
+    .value( "WARNING", WARNING )
+    .value( "INFORMATION", INFORMATION )
+    .export_values();
+
   class_< Diagnostic >( "Diagnostic" )
     .def_readonly( "ranges_", &Diagnostic::ranges_ )
     .def_readonly( "location_", &Diagnostic::location_ )

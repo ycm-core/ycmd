@@ -27,6 +27,13 @@
 
 namespace YouCompleteMe {
 
+enum DiagnosticKind {
+  INFORMATION = 0,
+  ERROR,
+  WARNING
+};
+
+
 struct Diagnostic {
   bool operator== ( const Diagnostic &other ) const {
     return
@@ -41,11 +48,7 @@ struct Diagnostic {
 
   std::vector< Range > ranges_;
 
-  // Vim's error "kind"
-  //  'I' -> informational
-  //  'W' -> warning
-  //  'E' -> error
-  char kind_;
+  DiagnosticKind kind_;
 
   std::string text_;
 

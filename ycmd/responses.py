@@ -122,12 +122,15 @@ def BuildDiagnosticData( diagnostic ):
       'filepath': location.filename_,
     }
 
+  kind = ( diagnostic.kind_.name if hasattr( diagnostic.kind_, 'name' )
+           else diagnostic.kind_ )
+
   return {
     'ranges': [ BuildRangeData( x ) for x in diagnostic.ranges_ ],
     'location': BuildLocationData( diagnostic.location_ ),
     'location_extent': BuildRangeData( diagnostic.location_extent_ ),
     'text': diagnostic.text_,
-    'kind': diagnostic.kind_
+    'kind': kind
   }
 
 

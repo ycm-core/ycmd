@@ -288,7 +288,7 @@ void TranslationUnit::UpdateLatestDiagnostics() {
                         clang_disposeDiagnostic ),
         clang_translation_unit_ );
 
-    if ( diagnostic.kind_ != 'I' )
+    if ( diagnostic.kind_ != INFORMATION )
       latest_diagnostics_.push_back( diagnostic );
   }
 }

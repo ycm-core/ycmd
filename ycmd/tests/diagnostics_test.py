@@ -24,7 +24,7 @@ from .test_utils import ( Setup, BuildRequest, PathToTestFile,
 from webtest import TestApp
 from nose.tools import with_setup, eq_
 from hamcrest import ( assert_that, contains, contains_string, has_entries,
-                       has_entry, empty )
+                       has_entry, empty, equal_to )
 from ..responses import NoDiagnosticSupport
 from .. import handlers
 import bottle
@@ -52,6 +52,7 @@ void foo() {
   assert_that( results,
                contains(
                   has_entries( {
+                    'kind': equal_to( 'ERROR'),
                     'text': contains_string( 'cannot initialize' ),
                     'ranges': contains( has_entries( {
                       'start': has_entries( {
@@ -160,6 +161,7 @@ def Diagnostics_CsCompleter_ZeroBasedLineAndColumn_test():
   assert_that( results,
                contains(
                   has_entries( {
+                    'kind': equal_to( 'ERROR'),
                     'text': contains_string(
                         "Unexpected symbol `}'', expecting identifier" ),
                     'location': has_entries( {

@@ -167,7 +167,7 @@ class CsharpCompleter( Completer ):
                              location,
                              location_range,
                              syntax_error[ "Message" ],
-                             "E" )
+                             "ERROR" )
 
 
   def GetDetailedDiagnostic( self, request_data ):

@@ -63,21 +63,19 @@ std::string FullDiagnosticText( CXDiagnostic cxdiagnostic ) {
 }
 
 
-char DiagnosticSeverityToType( CXDiagnosticSeverity severity ) {
+DiagnosticKind DiagnosticSeverityToType( CXDiagnosticSeverity severity ) {
   switch ( severity ) {
     case CXDiagnostic_Ignored:
     case CXDiagnostic_Note:
-      return 'I';
+      return INFORMATION;
 
     case CXDiagnostic_Warning:
-      return 'W';
+      return WARNING;
 
     case CXDiagnostic_Error:
     case CXDiagnostic_Fatal:
-      return 'E';
-
     default:
-      return 'E';
+      return ERROR;
   }
 }
 
@@ -212,7 +210,7 @@ Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
 
   // If this is an "ignored" diagnostic, there's no point in continuing since we
   // won't display those to the user
-  if ( diagnostic.kind_ == 'I' )
+  if ( diagnostic.kind_ == INFORMATION )
     return diagnostic;
 
   CXSourceLocation source_location =
