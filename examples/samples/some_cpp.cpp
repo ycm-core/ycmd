@@ -17,7 +17,7 @@
 
 struct Foo {
   int x;
-  int y;
+  int y  // There's a missing semicolon here
   char c;
 };
 

@@ -358,6 +358,10 @@ def CppSemanticCompletionResults( server ):
   # TODO: document this better
   server.LoadExtraConfFile( PATH_TO_EXTRA_CONF )
 
+  # NOTE: The server will return diagnostic information about an error in the
+  # some_cpp.cpp file that we placed there intentionally (as an example).
+  # Clang will recover from this error and still manage to parse the file
+  # though.
   server.SendEventNotification( Event.FileReadyToParse,
                                 test_filename = 'some_cpp.cpp',
                                 filetype = 'cpp' )

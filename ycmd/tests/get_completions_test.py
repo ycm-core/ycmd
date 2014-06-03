@@ -420,5 +420,3 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test():
 
   eq_( [],
        app.post_json( '/completions', completion_data ).json[ 'completions' ] )
-
-
