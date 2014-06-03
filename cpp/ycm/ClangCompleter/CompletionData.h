@@ -24,6 +24,20 @@
 
 namespace YouCompleteMe {
 
+enum CompletionKind {
+  STRUCT = 0,
+  CLASS,
+  ENUM,
+  TYPE,
+  MEMBER,
+  FUNCTION,
+  VARIABLE,
+  MACRO,
+  PARAMETER,
+  NAMESPACE,
+  UNKNOWN
+};
+
 // This class holds pieces of information about a single completion coming from
 // clang. These pieces are shown in Vim's UI in different ways.
 //
@@ -83,13 +97,7 @@ struct CompletionData {
 
   std::string return_type_;
 
-  // Vim's completion string "kind"
-  //  'v' -> variable
-  //  'f' -> function or method
-  //  'm' -> member of struct/class (data member)
-  //  't' -> typedef (but we're going to use it for types in general)
-  //  'd' -> #define or macro
-  char kind_;
+  CompletionKind kind_;
 
   // The original, raw completion string. For a function like "int foo(int x)",
   // the original string is "foo". For a member data variable like "foo_", this

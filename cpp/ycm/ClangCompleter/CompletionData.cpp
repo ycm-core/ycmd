@@ -21,27 +21,29 @@
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/move/move.hpp>
 
+namespace YouCompleteMe {
+
 namespace {
 
-char CursorKindToVimKind( CXCursorKind kind ) {
+CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
   switch ( kind ) {
     case CXCursor_StructDecl:
-      return 's';
+      return STRUCT;
 
     case CXCursor_ClassDecl:
     case CXCursor_ClassTemplate:
-      return 'c';
+      return CLASS;
 
     case CXCursor_EnumDecl:
-      return 'e';
+      return ENUM;
 
     case CXCursor_UnexposedDecl:
     case CXCursor_UnionDecl:
     case CXCursor_TypedefDecl:
-      return 't';
+      return TYPE;
 
     case CXCursor_FieldDecl:
-      return 'm';
+      return MEMBER;
 
     case CXCursor_FunctionDecl:
     case CXCursor_CXXMethod:
@@ -49,23 +51,23 @@ char CursorKindToVimKind( CXCursorKind kind ) {
     case CXCursor_ConversionFunction:
     case CXCursor_Constructor:
     case CXCursor_Destructor:
-      return 'f';
+      return FUNCTION;
 
     case CXCursor_VarDecl:
-      return 'v';
+      return VARIABLE;
 
     case CXCursor_MacroDefinition:
-      return 'd';
+      return MACRO;
 
     case CXCursor_ParmDecl:
-      return 'p';
+      return PARAMETER;
 
     case CXCursor_Namespace:
     case CXCursor_NamespaceAlias:
-      return 'n';
+      return NAMESPACE;
 
     default:
-      return 'u'; // for 'unknown', 'unsupported'... whatever you like
+      return UNKNOWN;
   }
 }
 
@@ -150,8 +152,6 @@ std::string RemoveTwoConsecutiveUnderscores( std::string text ) {
 } // unnamed namespace
 
 
-namespace YouCompleteMe {
-
 CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   CXCompletionString completion_string = completion_result.CompletionString;
 
@@ -169,7 +169,7 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
                           saw_function_params );
   }
 
-  kind_ = CursorKindToVimKind( completion_result.CursorKind );
+  kind_ = CursorKindToCompletionKind( completion_result.CursorKind );
 
   // We remove any two consecutive underscores from the function definition
   // since identifiers with them are ugly, compiler-reserved names. Functions

@@ -100,6 +100,20 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "CandidatesForLocationInFile",
           &ClangCompleter::CandidatesForLocationInFile );
 
+  enum_< CompletionKind >( "CompletionKind" )
+    .value( "STRUCT", STRUCT )
+    .value( "CLASS", CLASS )
+    .value( "ENUM", ENUM )
+    .value( "TYPE", TYPE )
+    .value( "MEMBER", MEMBER )
+    .value( "FUNCTION", FUNCTION )
+    .value( "VARIABLE", VARIABLE )
+    .value( "MACRO", MACRO )
+    .value( "PARAMETER", PARAMETER )
+    .value( "NAMESPACE", NAMESPACE )
+    .value( "UNKNOWN", UNKNOWN )
+    .export_values();
+
   class_< CompletionData >( "CompletionData" )
     .def( "TextToInsertInBuffer", &CompletionData::TextToInsertInBuffer )
     .def( "MainCompletionText", &CompletionData::MainCompletionText )

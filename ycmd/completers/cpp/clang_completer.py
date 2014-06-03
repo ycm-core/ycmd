@@ -266,7 +266,7 @@ def ConvertCompletionData( completion_data ):
     insertion_text = completion_data.TextToInsertInBuffer(),
     menu_text = completion_data.MainCompletionText(),
     extra_menu_info = completion_data.ExtraMenuInfo(),
-    kind = completion_data.kind_,
+    kind = completion_data.kind_.name,
     detailed_info = completion_data.DetailedInfoForPreviewWindow() )
 
 
