@@ -173,5 +173,10 @@ else()
     "Your C++ compiler does NOT support C++11, compiling in C++03 mode." )
 endif()
 
-add_subdirectory( BoostParts )
+option( USE_SYSTEM_BOOST "Set to ON to use the system boost libraries" OFF )
+
+if (NOT USE_SYSTEM_BOOST)
+    add_subdirectory( BoostParts )
+endif()
+
 add_subdirectory( ycm )
