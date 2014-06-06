@@ -20,7 +20,7 @@
 
 from collections import defaultdict
 import os
-import glob
+from ycmd import extra_conf_store
 from ycmd.completers.completer import Completer
 from ycmd import responses
 from ycmd import utils
@@ -29,6 +29,7 @@ import urllib
 import urlparse
 import json
 import logging
+import solutiondetection
 
 SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +
                          'Did you compile it? You can do so by running ' +
@@ -81,6 +82,7 @@ class CsharpCompleter( Completer ):
     'ReloadSolution': ( lambda self, request_data: self._ReloadSolution() ),
     'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
     'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
+    'SolutionFile': (lambda self, request_data: self._SolutionFile() ),
     'GoToDefinition': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
     'GoToDeclaration': ( lambda self, request_data: self._GoToDefinition(
@@ -99,6 +101,7 @@ class CsharpCompleter( Completer ):
     super( CsharpCompleter, self ).__init__( user_options )
     self._omnisharp_port = None
     self._logger = logging.getLogger( __name__ )
+    self._solution_path = None
     self._diagnostic_store = None
     self._max_diagnostics_to_display = user_options[
       'max_diagnostics_to_display' ]
@@ -214,39 +217,26 @@ class CsharpCompleter( Completer ):
     else:
       return 'Server is not running'
 
-
   def _StartServer( self, request_data ):
     """ Start the OmniSharp server """
     self._logger.info( 'startup' )
 
+    # try to load ycm_extra_conf
+    # if it needs to be verified, abort here and try again later
+    filepath = request_data[ 'filepath' ]
+    module = extra_conf_store.ModuleForSourceFile( filepath )
+    path_to_solutionfile, preferred_name = solutiondetection.PollModule(module, filepath)
+
     self._omnisharp_port = utils.GetUnusedLocalhostPort()
-    solution_files, folder = _FindSolutionFiles( request_data[ 'filepath' ] )
 
-    if len( solution_files ) == 0:
-      raise RuntimeError(
-        'Error starting OmniSharp server: no solutionfile found' )
-    elif len( solution_files ) == 1:
-      solutionfile = solution_files[ 0 ]
-    else:
-      # multiple solutions found : if there is one whose name is the same
-      # as the folder containing the file we edit, use this one
-      # (e.g. if we have bla/Project.sln and we are editing
-      # bla/Project/Folder/File.cs, use bla/Project.sln)
-      filepath_components = _PathComponents( request_data[ 'filepath' ] )
-      solutionpath = _PathComponents( folder )
-      foldername = ''
-      if len( filepath_components ) > len( solutionpath ):
-          foldername = filepath_components[ len( solutionpath ) ]
-      solution_file_candidates = [ sfile for sfile in solution_files
-        if _GetFilenameWithoutExtension( sfile ) == foldername ]
-      if len( solution_file_candidates ) == 1:
-        solutionfile = solution_file_candidates[ 0 ]
-      else:
-        raise RuntimeError(
-          'Found multiple solution files instead of one!\n{0}'.format(
-            solution_files ) )
+    if not path_to_solutionfile:
+      # no solution file provided, try to find one
+      path_to_solutionfile = solutiondetection.GuessFile( request_data[ 'filepath' ], preferred_name )
 
-    path_to_solutionfile = os.path.join( folder, solutionfile )
+    if not path_to_solutionfile:
+      raise RuntimeError( 'Autodetection of solution file failed.\n' )
+    self._logger.info( 'Loading solution file {0}'.format( path_to_solutionfile ) )
+
     # we need to pass the command to Popen as a string since we're passing
     # shell=True (as recommended by Python's doc)
     command = ' '.join( [ PATH_TO_OMNISHARP_BINARY,
@@ -264,6 +254,7 @@ class CsharpCompleter( Completer ):
     filename_format = os.path.join( utils.PathToTempDir(),
                                    'omnisharp_{port}_{sln}_{std}.log' )
 
+    solutionfile = os.path.basename( path_to_solutionfile )
     self._filename_stdout = filename_format.format(
         port=self._omnisharp_port, sln=solutionfile, std='stdout' )
     self._filename_stderr = filename_format.format(
@@ -274,6 +265,8 @@ class CsharpCompleter( Completer ):
         # shell=True is needed for Windows so OmniSharp does not spawn
         # in a new visible window
         utils.SafePopen( command, stdout=fstdout, stderr=fstderr, shell=True )
+
+    self._solution_path = path_to_solutionfile
 
     self._logger.info( 'Starting OmniSharp server' )
 
@@ -372,6 +365,9 @@ class CsharpCompleter( Completer ):
     except:
       return False
 
+  def _SolutionFile( self ):
+    """ Find out which solution file server was started with """
+    return self._solution_path
 
   def _ServerLocation( self ):
     return 'http://localhost:' + str( self._omnisharp_port )
@@ -386,36 +382,6 @@ class CsharpCompleter( Completer ):
     return json.loads( response.read() )
 
 
-def _FindSolutionFiles( filepath ):
-  """ Find solution files by searching upwards in the file tree """
-  folder = os.path.dirname( filepath )
-  solutionfiles = glob.glob1( folder, '*.sln' )
-  while not solutionfiles:
-    lastfolder = folder
-    folder = os.path.dirname( folder )
-    if folder == lastfolder:
-      break
-    solutionfiles = glob.glob1( folder, '*.sln' )
-  return solutionfiles, folder
-
-
-def _PathComponents( path ):
-  path_components = []
-  while True:
-    path, folder = os.path.split( path )
-    if folder:
-      path_components.append( folder )
-    else:
-      if path:
-        path_components.append( path )
-      break
-  path_components.reverse()
-  return path_components
-
-
-def _GetFilenameWithoutExtension( path ):
-    return os.path.splitext( os.path.basename ( path ) )[ 0 ]
-
 
 def DiagnosticsToDiagStructure( diagnostics ):
   structure = defaultdict( lambda : defaultdict( list ) )
@@ -423,3 +389,4 @@ def DiagnosticsToDiagStructure( diagnostics ):
     structure[ diagnostic.location_.filename_ ][
       diagnostic.location_.line_number_ ].append( diagnostic )
   return structure
+

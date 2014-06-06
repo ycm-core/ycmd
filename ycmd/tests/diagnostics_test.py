@@ -141,6 +141,8 @@ struct Foo {
 @with_setup( Setup )
 def Diagnostics_CsCompleter_ZeroBasedLineAndColumn_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -214,6 +216,8 @@ struct Foo {
 @with_setup( Setup )
 def GetDetailedDiagnostic_CsCompleter_Works_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,

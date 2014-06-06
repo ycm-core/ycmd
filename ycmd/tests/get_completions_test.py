@@ -70,6 +70,8 @@ def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test():
 @with_setup( Setup )
 def GetCompletions_CsCompleter_Works_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -97,6 +99,8 @@ def GetCompletions_CsCompleter_Works_test():
 @with_setup( Setup )
 def GetCompletions_CsCompleter_ReloadSolutionWorks_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -111,30 +115,148 @@ def GetCompletions_CsCompleter_ReloadSolutionWorks_test():
                                         command_arguments = ['ReloadSolution'],
                                         filetype = 'cs' ) ).json
 
-  eq_(result, True)
   StopOmniSharpServer( app )
+  eq_(result, True)
 
-@with_setup( Setup )
-def GetCompletions_CsCompleter_StartsWithUnambiguousMultipleSolutions_test():
-  app = TestApp( handlers.app )
-  filepath = PathToTestFile( ('testy-multiple-solutions/'
-                              'solution-named-like-folder/'
-                              'testy/Program.cs') )
-  contents = open( filepath ).read()
-  event_data = BuildRequest( filepath = filepath,
+def _CsCompleter_SolutionSelectCheck( app, sourcefile, reference_solution,
+                                      extra_conf_store=None ):
+  # reusable test: verify that the correct solution (reference_solution) is
+  #   detected for a given source file (and optionally a given extra_conf)
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  if extra_conf_store:
+    app.post_json( '/load_extra_conf_file', { 'filepath': extra_conf_store } )
+  contents = open( sourcefile ).read()
+  event_data = BuildRequest( filepath = sourcefile,
                              filetype = 'cs',
                              contents = contents,
                              event_name = 'FileReadyToParse' )
 
-  # Here the server will raise an exception if it can't start
+  # Here the server should raise an exception if it can't start
   app.post_json( '/event_notification', event_data )
-
+  # Assuming we have a successful launch
+  result = app.post_json( '/run_completer_command',
+                          BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = ['SolutionFile'],
+                                        filetype = 'cs' ) ).json
+  # We don't want the server to linger around, stop it once start completed
   WaitUntilOmniSharpServerReady( app )
   StopOmniSharpServer( app )
+  # Now that cleanup is done, verify solution file
+  eq_( reference_solution , result)
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_UsesSubfolderHint_test():
+  app = TestApp( handlers.app )
+  _CsCompleter_SolutionSelectCheck( app,
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-named-like-folder/'
+                                      'testy/Program.cs'),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-named-like-folder/'
+                                      'testy.sln' ) )
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_UsesSuperfolderHint_test():
+  app = TestApp( handlers.app )
+  _CsCompleter_SolutionSelectCheck( app,
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-named-like-folder/'
+                                      'not-testy/Program.cs' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-named-like-folder/'
+                                      'solution-named-like-folder.sln' ) )
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ExtraConfStoreAbsolute_test():
+  app = TestApp( handlers.app )
+  _CsCompleter_SolutionSelectCheck( app,
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-abs/'
+                                      'testy/Program.cs' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'testy2.sln' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-abs/'
+                                      '.ycm_extra_conf.py' ) )
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ExtraConfStoreRelative_test():
+  app = TestApp( handlers.app )
+  _CsCompleter_SolutionSelectCheck( app,
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-rel/'
+                                      'testy/Program.cs' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-rel/'
+                                      'testy2.sln' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-rel/'
+                                      '.ycm_extra_conf.py' ) )
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ExtraConfStoreHint_test():
+  app = TestApp( handlers.app )
+  _CsCompleter_SolutionSelectCheck( app,
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-hint/'
+                                      'testy/Program.cs' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-hint/'
+                                      'testy1.sln' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-hint/'
+                                      'testy/'
+                                      '.ycm_extra_conf.py' ) )
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ExtraConfStoreNonexisting_test():
+  app = TestApp( handlers.app )
+  _CsCompleter_SolutionSelectCheck( app,
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-bad/'
+                                      'testy/Program.cs' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-bad/'
+                                      'testy2.sln' ),
+                                    PathToTestFile(
+                                      'testy-multiple-solutions/'
+                                      'solution-not-named-like-folder/'
+                                      'extra-conf-bad/'
+                                      'testy/'
+                                      '.ycm_extra_conf.py' ) )
 
 @with_setup( Setup )
 def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( ('testy-multiple-solutions/'
                               'solution-not-named-like-folder/'
                               'testy/Program.cs') )
@@ -148,7 +270,7 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   try:
     app.post_json( '/event_notification', event_data )
   except AppError as e:
-    if 'Found multiple solution files' in str(e):
+    if 'Autodetection of solution file failed' in str(e):
       exception_caught = True
 
   # the test passes if we caught an exception when trying to start it,
@@ -165,6 +287,8 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
 @with_setup( Setup )
 def GetCompletions_ClangCompleter_WorksWithExplicitFlags_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   contents = """
 struct Foo {
   int x;
@@ -197,6 +321,8 @@ int main()
 def GetCompletions_ClangCompleter_NoCompletionsWhenAutoTriggerOff_test():
   ChangeSpecificOptions( { 'auto_trigger': False } )
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   contents = """
 struct Foo {
   int x;
