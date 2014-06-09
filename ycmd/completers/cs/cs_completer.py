@@ -20,7 +20,6 @@
 
 from collections import defaultdict
 import os
-from ycmd import extra_conf_store
 from ycmd.completers.completer import Completer
 from ycmd import responses
 from ycmd import utils
@@ -221,21 +220,14 @@ class CsharpCompleter( Completer ):
     """ Start the OmniSharp server """
     self._logger.info( 'startup' )
 
-    # try to load ycm_extra_conf
-    # if it needs to be verified, abort here and try again later
-    filepath = request_data[ 'filepath' ]
-    module = extra_conf_store.ModuleForSourceFile( filepath )
-    path_to_solutionfile, preferred_name = solutiondetection.PollModule(module, filepath)
-
-    self._omnisharp_port = utils.GetUnusedLocalhostPort()
-
-    if not path_to_solutionfile:
-      # no solution file provided, try to find one
-      path_to_solutionfile = solutiondetection.GuessFile( request_data[ 'filepath' ], preferred_name )
+    #Note: detection could throw an exception if an extra_conf_store needs to be confirmed
+    path_to_solutionfile = solutiondetection.Detect( request_data[ 'filepath' ] )
 
     if not path_to_solutionfile:
       raise RuntimeError( 'Autodetection of solution file failed.\n' )
     self._logger.info( 'Loading solution file {0}'.format( path_to_solutionfile ) )
+
+    self._omnisharp_port = utils.GetUnusedLocalhostPort()
 
     # we need to pass the command to Popen as a string since we're passing
     # shell=True (as recommended by Python's doc)
