@@ -25,7 +25,20 @@ if ( COMPILER_IS_CLANG )
     "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-variadic-macros -Wno-missing-field-initializers -Wno-unused-private-field" )
 endif()
 
-add_subdirectory( gmock )
+
+option( USE_SYSTEM_GMOCK "Set to ON to use the system gmock/gtest libraries" OFF )
+
+if ( USE_SYSTEM_GMOCK )
+  set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}" )
+  find_package( GTest REQUIRED )
+  find_package( GMock REQUIRED )
+else()
+  add_subdirectory( gmock )
+  set( GTEST_INCLUDE_DIRS ${gtest_SOURCE_DIR} ${gtest_SOURCE_DIR}/include )
+  set( GMOCK_INCLUDE_DIRS ${gmock_SOURCE_DIR} ${gmock_SOURCE_DIR}/include )
+  set( GTEST_LIBRARIES "" )
+  set( GMOCK_LIBRARIES gmock )
+endif()
 
 include_directories(
   ${ycm_support_libs_SOURCE_DIR}
@@ -33,10 +46,8 @@ include_directories(
 
 include_directories(
   SYSTEM
-  ${gtest_SOURCE_DIR}
-  ${gtest_SOURCE_DIR}/include
-  ${gmock_SOURCE_DIR}
-  ${gmock_SOURCE_DIR}/include
+  ${GMOCK_INCLUDE_DIRS}
+  ${GTEST_INCLUDE_DIRS}
   )
 
 link_directories(
@@ -69,7 +80,8 @@ add_executable( ${PROJECT_NAME}
 target_link_libraries( ${PROJECT_NAME}
                        ${SERVER_LIB}
                        ${CLIENT_LIB}
-                       gmock )
+                       ${GTEST_LIBRARIES}
+                       ${GMOCK_LIBRARIES} )
 
 
 if ( NOT CMAKE_GENERATOR_IS_XCODE )

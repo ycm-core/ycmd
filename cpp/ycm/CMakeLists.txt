@@ -138,13 +138,20 @@ if ( APPLE )
   set( CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem " )
 endif()
 
+if ( USE_SYSTEM_BOOST )
+  find_package( Boost REQUIRED COMPONENTS python filesystem system regex thread )
+else()
+  set( Boost_INCLUDE_DIR ${BoostParts_SOURCE_DIR} )
+  set( Boost_LIBRARIES BoostParts )
+endif()
+
 # The SYSTEM flag makes sure that -isystem[header path] is passed to the
 # compiler instead of the standard -I[header path]. Headers included with
 # -isystem do not generate warnings (and they shouldn't; e.g. boost warnings are
 # just noise for us since we won't be changing them).
 include_directories(
   SYSTEM
-  ${BoostParts_SOURCE_DIR}
+  ${Boost_INCLUDE_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
   )
@@ -248,7 +255,7 @@ add_library( ${CLIENT_LIB} SHARED
            )
 
 target_link_libraries( ${CLIENT_LIB}
-                       BoostParts
+                       ${Boost_LIBRARIES}
                        ${PYTHON_LIBRARIES}
                        ${EXTRA_LIBS}
                      )
@@ -260,7 +267,7 @@ add_library( ${SERVER_LIB} SHARED
            )
 
 target_link_libraries( ${SERVER_LIB}
-                       BoostParts
+                       ${Boost_LIBRARIES}
                        ${PYTHON_LIBRARIES}
                        ${LIBCLANG_TARGET}
                        ${EXTRA_LIBS}
