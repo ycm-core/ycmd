@@ -1,4 +1,4 @@
 
-def CSharpSolutionFile(path):
+def CSharpSolutionFile( path, **kwargs ):
   return "testy1.sln"
 

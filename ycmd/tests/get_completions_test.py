@@ -112,14 +112,14 @@ def GetCompletions_CsCompleter_ReloadSolutionWorks_test():
   WaitUntilOmniSharpServerReady( app )
   result = app.post_json( '/run_completer_command',
                           BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = ['ReloadSolution'],
+                                        command_arguments = [ 'ReloadSolution' ],
                                         filetype = 'cs' ) ).json
 
   StopOmniSharpServer( app )
-  eq_(result, True)
+  eq_( result, True )
 
 def _CsCompleter_SolutionSelectCheck( app, sourcefile, reference_solution,
-                                      extra_conf_store=None ):
+                                      extra_conf_store = None ):
   # reusable test: verify that the correct solution (reference_solution) is
   #   detected for a given source file (and optionally a given extra_conf)
   app.post_json( '/ignore_extra_conf_file',
@@ -137,7 +137,7 @@ def _CsCompleter_SolutionSelectCheck( app, sourcefile, reference_solution,
   # Assuming we have a successful launch
   result = app.post_json( '/run_completer_command',
                           BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = ['SolutionFile'],
+                                        command_arguments = [ 'SolutionFile' ],
                                         filetype = 'cs' ) ).json
   # We don't want the server to linger around, stop it once start completed
   WaitUntilOmniSharpServerReady( app )
@@ -257,9 +257,9 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( ('testy-multiple-solutions/'
+  filepath = PathToTestFile( ( 'testy-multiple-solutions/'
                               'solution-not-named-like-folder/'
-                              'testy/Program.cs') )
+                              'testy/Program.cs' ) )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -270,7 +270,7 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   try:
     app.post_json( '/event_notification', event_data )
   except AppError as e:
-    if 'Autodetection of solution file failed' in str(e):
+    if 'Autodetection of solution file failed' in str( e ):
       exception_caught = True
 
   # the test passes if we caught an exception when trying to start it,
@@ -278,11 +278,11 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   if not exception_caught:
     WaitUntilOmniSharpServerReady( app )
     StopOmniSharpServer( app )
-    raise Exception( ('The Omnisharp server started, despite us not being able '
+    raise Exception( ( 'The Omnisharp server started, despite us not being able '
                       'to find a suitable solution file to feed it. Did you '
                       'fiddle with the solution finding code in '
                       'cs_completer.py? Hopefully you\'ve enhanced it: you need'
-                      'to update this test then :)') )
+                      'to update this test then :)' ) )
 
 @with_setup( Setup )
 def GetCompletions_ClangCompleter_WorksWithExplicitFlags_test():

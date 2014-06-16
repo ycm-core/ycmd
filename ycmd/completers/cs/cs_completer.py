@@ -81,7 +81,7 @@ class CsharpCompleter( Completer ):
     'ReloadSolution': ( lambda self, request_data: self._ReloadSolution() ),
     'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
     'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
-    'SolutionFile': (lambda self, request_data: self._SolutionFile() ),
+    'SolutionFile': ( lambda self, request_data: self._SolutionFile() ),
     'GoToDefinition': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
     'GoToDeclaration': ( lambda self, request_data: self._GoToDefinition(
@@ -248,15 +248,15 @@ class CsharpCompleter( Completer ):
 
     solutionfile = os.path.basename( path_to_solutionfile )
     self._filename_stdout = filename_format.format(
-        port=self._omnisharp_port, sln=solutionfile, std='stdout' )
+        port = self._omnisharp_port, sln = solutionfile, std = 'stdout' )
     self._filename_stderr = filename_format.format(
-        port=self._omnisharp_port, sln=solutionfile, std='stderr' )
+        port = self._omnisharp_port, sln = solutionfile, std = 'stderr' )
 
     with open( self._filename_stderr, 'w' ) as fstderr:
       with open( self._filename_stdout, 'w' ) as fstdout:
         # shell=True is needed for Windows so OmniSharp does not spawn
         # in a new visible window
-        utils.SafePopen( command, stdout=fstdout, stderr=fstderr, shell=True )
+        utils.SafePopen( command, stdout = fstdout, stderr = fstderr, shell = True )
 
     self._solution_path = path_to_solutionfile
 

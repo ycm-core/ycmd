@@ -23,8 +23,8 @@ def Detect( filepath ):
 
 def PollModule( module, filepath ):
   """ Try to use passed module in the selection process by calling CSharpSolutionFile on it """
-  path_to_solutionfile=None
-  preferred_name=None
+  path_to_solutionfile = None
+  preferred_name = None
   if module:
     try:
       preferred_name = module.CSharpSolutionFile( filepath )
@@ -45,12 +45,12 @@ def PollModule( module, filepath ):
                 path_to_solutionfile) )
             break
         # if no solution file found, use the filename as hint later on
-        preferred_name=os.path.basename(preferred_name)
+        preferred_name = os.path.basename( preferred_name )
     except AttributeError, e:
       # the config script might not provide solution file locations
       __logger.error(
           'Could not retrieve solution for {0} from extra_conf_store: {1}'.format(
-          filepath, str( e )) )
+          filepath, str( e ) ) )
       preferred_name = None
   return path_to_solutionfile, preferred_name
 
@@ -60,7 +60,7 @@ def GuessFile( filepath, preferred_name ):
   selection = None
   first_hit = True
   for i in reversed( range( len( tokens ) - 1 ) ):
-    path = os.path.join( *tokens[:i + 1] )
+    path = os.path.join( *tokens[ : i + 1 ] )
     candidates = glob.glob1( path, "*.sln" )
     if len( candidates ) > 0:
       # if a name was provided, try hard to find something matching
@@ -82,7 +82,7 @@ def _SolutionTestCheckPreferred( path, candidates, preferred_name ):
     check = [ c for c in candidates
         if ( preferred_name == c ) ]
     if len( check ) == 1:
-      selection = os.path.join( path, check[0] )
+      selection = os.path.join( path, check[ 0 ] )
       __logger.info(
           'Selected solution file {0} as it matches {1} (from extra_conf_store)'.format(
           selection, preferred_name ) )
@@ -97,25 +97,25 @@ def _SolutionTestCheckPreferred( path, candidates, preferred_name ):
 
 def _SolutionTestCheckHeuristics( candidates, tokens, i ):
   """ Test if one of the candidate files stands out """
-  path = os.path.join( *tokens[:i + 1] )
-  selection=None
+  path = os.path.join( *tokens[ : i + 1 ] )
+  selection = None
   # if there is just one file here, use that
   if len( candidates ) == 1 :
-    selection = os.path.join( path, candidates[0] )
+    selection = os.path.join( path, candidates[ 0 ] )
     __logger.info(
         'Selected solution file {0} as it is the first one found'.format(
         selection ) )
   # there is more than one file, try some hints to decide
   # 1. is there a solution named just like the subdirectory with the source?
   if (not selection and i < len( tokens ) - 1 and
-      "{0}.sln".format( tokens[i + 1] ) in candidates ):
-    selection = os.path.join( path, "{0}.sln".format( tokens[i + 1] ) )
+      "{0}.sln".format( tokens[ i + 1 ] ) in candidates ):
+    selection = os.path.join( path, "{0}.sln".format( tokens[ i + 1 ] ) )
     __logger.info(
         'Selected solution file {0} as it matches source subfolder'.format(
         selection ) )
   # 2. is there a solution named just like the directory containing the solution?
-  if not selection and "{0}.sln".format( tokens[i] ) in candidates:
-    selection = os.path.join( path, "{0}.sln".format( tokens[i] ) )
+  if not selection and "{0}.sln".format( tokens[ i ] ) in candidates:
+    selection = os.path.join( path, "{0}.sln".format( tokens[ i ] ) )
     __logger.info(
         'Selected solution file {0} as it matches containing folder'.format(
         selection ) )
