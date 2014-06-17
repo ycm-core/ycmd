@@ -211,27 +211,6 @@ def GetCompletions_CsCompleter_ExtraConfStoreRelative_test():
                                       '.ycm_extra_conf.py' ) )
 
 @with_setup( Setup )
-def GetCompletions_CsCompleter_ExtraConfStoreHint_test():
-  app = TestApp( handlers.app )
-  _CsCompleter_SolutionSelectCheck( app,
-                                    PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-hint/'
-                                      'testy/Program.cs' ),
-                                    PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-hint/'
-                                      'testy1.sln' ),
-                                    PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-hint/'
-                                      'testy/'
-                                      '.ycm_extra_conf.py' ) )
-
-@with_setup( Setup )
 def GetCompletions_CsCompleter_ExtraConfStoreNonexisting_test():
   app = TestApp( handlers.app )
   _CsCompleter_SolutionSelectCheck( app,

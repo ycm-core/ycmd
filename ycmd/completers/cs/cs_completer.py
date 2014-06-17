@@ -221,7 +221,7 @@ class CsharpCompleter( Completer ):
     self._logger.info( 'startup' )
 
     #Note: detection could throw an exception if an extra_conf_store needs to be confirmed
-    path_to_solutionfile = solutiondetection.Detect( request_data[ 'filepath' ] )
+    path_to_solutionfile = solutiondetection.FindSolutionPath( request_data[ 'filepath' ] )
 
     if not path_to_solutionfile:
       raise RuntimeError( 'Autodetection of solution file failed.\n' )
