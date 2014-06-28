@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.utils import IsIdentifierChar
+from ycmd.utils import IsIdentifierChar, ToUtf8IfNeeded
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
 # the object.
@@ -61,7 +61,8 @@ class RequestWrap( object ):
     if contents is not None and len( contents ) == 0:
       self._line_value = ''
       return self._line_value
-    self._line_value = contents.splitlines()[ self._request[ 'line_num' ] - 1 ]
+    self._line_value = ToUtf8IfNeeded(contents.splitlines()[ self._request[ 'line_num' ] - 1 ])
+
     return self._line_value
 
 
