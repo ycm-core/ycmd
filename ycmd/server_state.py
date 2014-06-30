@@ -109,5 +109,8 @@ class ServerState( object ):
   def CurrentFiletypeCompletionEnabled( self, current_filetypes ):
     filetype_to_disable = self._user_options[
         'filetype_specific_completion_to_disable' ]
-    return not all([ x in filetype_to_disable for x in current_filetypes ])
+    if '*' in filetype_to_disable:
+      return False
+    else:
+      return not all([ x in filetype_to_disable for x in current_filetypes ])
 
