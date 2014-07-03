@@ -74,30 +74,30 @@ function num_cores {
 
 function install {
   build_dir=`mktemp -d -t ycm_build.XXXXXX`
-  pushd $build_dir
+  pushd "${build_dir}"
 
   if [[ `uname -s` == "Darwin" ]]; then
-    cmake -G "Unix Makefiles" $(python_finder) "$@" . $SCRIPT_DIR/cpp
+    cmake -G "Unix Makefiles" $(python_finder) "$@" . "${SCRIPT_DIR}/cpp"
   else
-    cmake -G "Unix Makefiles" "$@" . $SCRIPT_DIR/cpp
+    cmake -G "Unix Makefiles" "$@" . "${SCRIPT_DIR}/cpp"
   fi
 
   make -j $(num_cores) ycm_support_libs
   popd
-  rm -rf $build_dir
+  rm -rf "${build_dir}"
 }
 
 function testrun {
   build_dir=`mktemp -d -t ycm_build.XXXXXX`
-  pushd $build_dir
+  pushd "${build_dir}"
 
-  cmake -G "Unix Makefiles" "$@" . $SCRIPT_DIR/cpp
+  cmake -G "Unix Makefiles" "$@" . "${SCRIPT_DIR}/cpp"
   make -j $(num_cores) ycm_core_tests
   cd ycm/tests
-  LD_LIBRARY_PATH=$SCRIPT_DIR ./ycm_core_tests
+  LD_LIBRARY_PATH="${SCRIPT_DIR}" ./ycm_core_tests
 
   popd
-  rm -rf $build_dir
+  rm -rf "${build_dir}"
 }
 
 function linux_cmake_install {
@@ -112,8 +112,8 @@ function usage {
 
 function check_third_party_libs {
   libs_present=true
-  for folder in $SCRIPT_DIR/third_party/*; do
-    num_files_in_folder=$(find $folder -maxdepth 1 -mindepth 1 | wc -l)
+  for folder in "${SCRIPT_DIR}"/third_party/*; do
+    num_files_in_folder=$(find "${folder}" -maxdepth 1 -mindepth 1 | wc -l)
     if [[ $num_files_in_folder -eq 0 ]]; then
       libs_present=false
     fi
@@ -176,9 +176,9 @@ if $omnisharp_completer; then
     fi
   fi
 
-  build_dir=$SCRIPT_DIR"/third_party/OmniSharpServer"
+  build_dir="${SCRIPT_DIR}/third_party/OmniSharpServer"
 
-  cd $build_dir
+  cd "${build_dir}"
   $buildcommand
-  cd $ycm_dir
+  cd "${ycm_dir}"
 fi
