@@ -85,7 +85,8 @@ def BuildCompletionData( insertion_text,
                          extra_menu_info = None,
                          detailed_info = None,
                          menu_text = None,
-                         kind = None ):
+                         kind = None,
+                         extra_data = None ):
   completion_data = {
     'insertion_text': insertion_text
   }
@@ -98,6 +99,8 @@ def BuildCompletionData( insertion_text,
     completion_data[ 'detailed_info' ] = detailed_info
   if kind:
     completion_data[ 'kind' ] = kind
+  if extra_data:
+    completion_data[ 'extra_data' ] = extra_data
   return completion_data
 
 
