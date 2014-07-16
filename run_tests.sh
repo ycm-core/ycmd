@@ -9,7 +9,7 @@ function usage {
   exit 0
 }
 
-flake8 --select=F,C9 --max-complexity=10 $SCRIPT_DIR/ycmd
+flake8 --select=F,C9 --max-complexity=10 "${SCRIPT_DIR}/ycmd"
 
 use_clang_completer=true
 for flag in $@; do
@@ -34,16 +34,16 @@ else
 fi
 
 EXTRA_CMAKE_ARGS=$extra_cmake_args YCM_TESTRUN=1 \
-   $SCRIPT_DIR/build.sh --omnisharp-completer
+   "${SCRIPT_DIR}/build.sh" --omnisharp-completer
 
-for directory in $SCRIPT_DIR/third_party/*; do
+for directory in "${SCRIPT_DIR}"/third_party/*; do
   if [ -d "${directory}" ]; then
     export PYTHONPATH=${directory}:$PYTHONPATH
   fi
 done
 
 if $use_clang_completer; then
-  nosetests -v $SCRIPT_DIR/ycmd
+  nosetests -v "${SCRIPT_DIR}/ycmd"
 else
-  nosetests -v --exclude=".*Clang.*" $SCRIPT_DIR/ycmd
+  nosetests -v --exclude=".*Clang.*" "${SCRIPT_DIR}/ycmd"
 fi
