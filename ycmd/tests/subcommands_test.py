@@ -90,6 +90,8 @@ int main()
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_CsCompleter_Works_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -121,6 +123,8 @@ def RunCompleterCommand_GoTo_CsCompleter_Works_test():
 @with_setup( Setup )
 def RunCompleterCommand_GoToImplementation_CsCompleter_Works_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -152,6 +156,8 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_Works_test():
 @with_setup( Setup )
 def RunCompleterCommand_GoToImplementation_CsCompleter_NoImplementation_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -185,6 +191,8 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_NoImplementation_test():
 @with_setup( Setup )
 def RunCompleterCommand_GoToImplementation_CsCompleter_InvalidLocation_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -218,6 +226,8 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_InvalidLocation_test():
 @with_setup( Setup )
 def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_NoImplementation_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -249,6 +259,8 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_NoImplemen
 @with_setup( Setup )
 def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_SingleImplementation_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
@@ -280,6 +292,8 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_SingleImpl
 @with_setup( Setup )
 def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleImplementations_test():
   app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
