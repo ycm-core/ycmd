@@ -52,6 +52,15 @@ def ToUtf8IfNeeded( value ):
   return str( value )
 
 
+def ToUnicodeIfNeeded( value ):
+  if isinstance( value, unicode ):
+    return value
+  if isinstance( value, str ):
+    # All incoming text should be utf8
+    return unicode( value, 'utf8' )
+  return unicode( value )
+
+
 # Recurses through the object if it's a dict/iterable and converts all the
 # unicode objects to utf-8 strings.
 def RecursiveEncodeUnicodeToUtf8( value ):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2014 Google Inc.
 #
@@ -81,6 +82,11 @@ def StartColumn_Dot_test():
        RequestWrap( PrepareJson( column_num = 8,
                                  contents = 'foo.bar') )[ 'start_column' ] )
 
+def StartColumn_DotWithUnicode_test():
+  eq_( 7,
+       RequestWrap( PrepareJson( column_num = 11,
+                                 contents = 'fäö.bär') )[ 'start_column' ] )
+
 
 def StartColumn_Paren_test():
   eq_( 5,
@@ -92,6 +98,12 @@ def StartColumn_AfterWholeWord_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 7,
                                  contents = 'foobar') )[ 'start_column' ] )
+
+
+def StartColumn_AfterWholeUnicodeWord_test():
+  eq_( 1,
+       RequestWrap( PrepareJson( column_num = 5,
+                                 contents = u'äö') )[ 'start_column' ] )
 
 
 def StartColumn_InMiddleOfWholeWord_test():
