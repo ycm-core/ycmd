@@ -448,6 +448,7 @@ def Main():
   PythonGetSupportedCommands( server )
 
   # GoTo is an example of a completer subcommand.
+  # Python and C# completers also support the GoTo subcommand.
   CppGotoDeclaration( server )
 
   print 'Shutting down server...'
