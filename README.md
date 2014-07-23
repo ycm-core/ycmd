@@ -26,6 +26,56 @@ API notes
   server will also include the HMAC in its responses; you _must_ verify it
   before using the response. See [`example_client.py`][example-client] to see how it's done.
 
+How ycmd works
+--------------
+
+ycmd has several completion engines. The most basic one is an identifier-based
+completer that collects all of the identifiers in provided file and other
+provided files of the same filetype (and any tags files produced by ctags). This
+engine is non-semantic.
+
+There are also several semantic engines in YCM. There's a libclang-based
+completer that provides semantic completion for C-family languages.  There's a
+Jedi-based completer for semantic completion for Python and an OmniSharp-based
+completer for C#. More will be added with time.
+
+There are also other completion engines, like the filepath completer (part of
+the identifier completer).
+
+ycmd automatically detects which completion engine would be the best in any
+situation. On occasion, it queries several of them at once, merges the
+outputs and presents the results.
+
+Semantic engines are triggered only after semantic "triggers" are inserted in
+the code. If the request received shows that the user's cursor is after the last
+character in `string foo; foo.` in a C# file, this would trigger the semantic
+engine to
+examine members of `foo` because `.` is a [default semantic
+trigger][trigger-defaults] for C# (triggers can be changed dynamically). If the
+text were `string foo; foo.zoo`, semantic completion would still be triggered
+(the trigger is behind the `zoo` word the user is typing) and the results would
+be filtered with the `zoo` query.
+
+Semantic completion can also be forced by setting `force_semantic: true` in
+the JSON data for the completion request, _but you should only do this if the
+user explicitly requested semantic completion with a keyboard shortcut_;
+otherwise, leave it up to ycmd to decide when to use which engine.
+
+The reason why semantic completion isn't always used even when available is
+because the semantic engines can be slow and because most of the time, the
+user doesn't actually need semantic completion.
+
+There are two main use-cases for code-completion:
+
+1. The user knows which name they're looking for, they just don't want to type
+   the whole name.
+2. The user either doesn't know the name they need or isn't sure what the name
+   is. This is also known as the "API exploration" use-case.
+
+The first use case is the most common one and is trivially addressed with the
+identifier completion engine (which BTW is blazing fast). The second one needs
+semantic completion.
+
 Backwards compatibility
 -----------------------
 
@@ -81,3 +131,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
 [example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
+[trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L24
