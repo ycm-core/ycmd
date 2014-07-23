@@ -48,9 +48,9 @@ Without the HMAC auth, it's possible for a malicious website to impersonate the
 user. Don't forget that evil.com can send requests to servers listening on
 localhost if the user visits evil.com in a browser.
 
-**This is not a theoretical concern**; a working proof-of-concept remote code
-execution exploit [was created][exploit] for ycmd running on localhost. The HMAC
-auth was added to block this attack vector.
+**This is not merely a theoretical concern**; a working proof-of-concept remote
+code execution exploit [was created][exploit] for ycmd running on localhost. The
+HMAC auth was added to block this attack vector.
 
 Contact
 -------
