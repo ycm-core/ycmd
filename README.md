@@ -17,7 +17,8 @@ API notes
 ---------
 
 - All strings going into and out of the server are UTF-8 encoded.
-- All line and column numbers are 1-based, not 0-based.
+- All line and column numbers are 1-based, not 0-based. They are also byte
+  offsets, _not_ Unicode codepoint offsets.
 - All file paths are full, absolute paths.
 - All requests to the server _must_ include an [HMAC][] in the `x-ycm-hmac` HTTP
   header. The HMAC is computed from the shared secret passed to the server on
