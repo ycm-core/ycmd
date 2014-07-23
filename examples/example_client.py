@@ -41,7 +41,9 @@ MAX_SERVER_WAIT_TIME_SECONDS = 5
 
 # Set this to True to see ycmd's output interleaved with the client's
 INCLUDE_YCMD_OUTPUT = False
+DEFINED_SUBCOMMANDS_HANDLER = '/defined_subcommands'
 CODE_COMPLETIONS_HANDLER = '/completions'
+COMPLETER_COMMANDS_HANDLER = '/run_completer_command'
 EVENT_HANDLER = '/event_notification'
 EXTRA_CONF_HANDLER = '/load_extra_conf_file'
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
@@ -127,6 +129,12 @@ class YcmdHandle( object ):
     return response
 
 
+  def SendDefinedSubcommandsRequest( self, completer_target ):
+    request_json = BuildRequestData( completer_target = completer_target )
+    print '==== Sending defined subcommands request ===='
+    self.PostToHandlerAndLog( DEFINED_SUBCOMMANDS_HANDLER, request_json )
+
+
   def SendCodeCompletionRequest( self,
                                  test_filename,
                                  filetype,
@@ -138,6 +146,20 @@ class YcmdHandle( object ):
                                      column_num = column_num )
     print '==== Sending code-completion request ===='
     self.PostToHandlerAndLog( CODE_COMPLETIONS_HANDLER, request_json )
+
+
+  def SendGoToRequest( self,
+                       test_filename,
+                       filetype,
+                       line_num,
+                       column_num ):
+    request_json = BuildRequestData( test_filename = test_filename,
+                                     command_arguments = ['GoTo'],
+                                     filetype = filetype,
+                                     line_num = line_num,
+                                     column_num = column_num )
+    print '==== Sending GoTo request ===='
+    self.PostToHandlerAndLog( COMPLETER_COMMANDS_HANDLER, request_json )
 
 
   def SendEventNotification( self,
@@ -310,14 +332,16 @@ def PrettyPrintDict( value ):
 def BuildRequestData( test_filename = None,
                       filetype = None,
                       line_num = None,
-                      column_num = None ):
-  test_path = PathToTestFile( test_filename )
+                      column_num = None,
+                      command_arguments = None,
+                      completer_target = None ):
+  test_path = PathToTestFile( test_filename ) if test_filename else ''
 
   # Normally, this would be the contents of the file as loaded in the editor
   # (possibly unsaved data).
-  contents = open( test_path ).read()
+  contents = open( test_path ).read() if test_path else ''
 
-  return {
+  data = {
     'line_num': line_num,
     'column_num': column_num,
     'filepath': test_path,
@@ -328,6 +352,13 @@ def BuildRequestData( test_filename = None,
       }
     }
   }
+
+  if command_arguments:
+    data[ 'command_arguments' ] = command_arguments
+  if completer_target:
+    data[ 'completer_target' ] = completer_target
+
+  return data
 
 
 def PythonSemanticCompletionResults( server ):
@@ -372,6 +403,20 @@ def CppSemanticCompletionResults( server ):
                                     column_num = 7 )
 
 
+def PythonGetSupportedCommands( server ):
+  server.SendDefinedSubcommandsRequest( completer_target = 'python' )
+
+
+def CppGotoDeclaration( server ):
+  # NOTE: No need to load extra conf file or send FileReadyToParse event, it was
+  # already done in CppSemanticCompletionResults.
+
+  server.SendGoToRequest( test_filename = 'some_cpp.cpp',
+                          filetype = 'cpp',
+                          line_num = 26,
+                          column_num = 4 )
+
+
 def CsharpSemanticCompletionResults( server ):
   # First such request starts the OmniSharpServer
   server.SendEventNotification( Event.FileReadyToParse,
@@ -397,6 +442,13 @@ def Main():
   PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
   CsharpSemanticCompletionResults( server )
+
+  # This will ask the server for a list of subcommands supported by a given
+  # language completer.
+  PythonGetSupportedCommands( server )
+
+  # GoTo is an example of a completer subcommand.
+  CppGotoDeclaration( server )
 
   print 'Shutting down server...'
   server.Shutdown()
