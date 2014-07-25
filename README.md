@@ -77,6 +77,27 @@ The first use case is the most common one and is trivially addressed with the
 identifier completion engine (which BTW is blazing fast). The second one needs
 semantic completion.
 
+### Completion string filtering
+
+A critical thing to note is that the completion **filtering is NOT based on
+the input being a string prefix of the completion** (but that works too). The
+input needs to be a _[subsequence][] match_ of a completion. This is a fancy way
+of saying that any input characters need to be present in a completion string in
+the order in which they appear in the input. So `abc` is a subsequence of
+`xaybgc`, but not of `xbyxaxxc`.
+
+### Completion string ranking
+
+The subsequence filter removes any completions that do not match the input, but
+then the sorting system kicks in. It's a bit involved, but roughly speaking
+"word boundary" (WB) subsequence character matches are "worth" more than non-WB
+matches. In effect, this means given an input of "gua", the completion
+"getUserAccount" would be ranked higher in the list than the "Fooguxa"
+completion (both of which are subsequence matches). A word-boundary character
+are all capital characters, characters preceded by an underscore and the first
+letter character in the completion string.
+
+
 Backwards compatibility
 -----------------------
 
@@ -133,3 +154,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
 [example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
 [trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L24
+[subsequence]: http://en.wikipedia.org/wiki/Subsequence
