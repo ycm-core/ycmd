@@ -2,20 +2,17 @@
 #
 # Copyright (C) 2014  Google Inc.
 #
-# This file is part of YouCompleteMe.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# YouCompleteMe is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# YouCompleteMe is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from base64 import b64encode, b64decode
 import collections
@@ -368,7 +365,7 @@ def PythonSemanticCompletionResults( server ):
 
   server.SendCodeCompletionRequest( test_filename = 'some_python.py',
                                     filetype = 'python',
-                                    line_num = 30,
+                                    line_num = 27,
                                     column_num = 6 )
 
 
@@ -381,7 +378,7 @@ def LanguageAgnosticIdentifierCompletion( server ):
 
   server.SendCodeCompletionRequest( test_filename = 'some_javascript.js',
                                     filetype = 'javascript',
-                                    line_num = 24,
+                                    line_num = 21,
                                     column_num = 6 )
 
 
@@ -399,7 +396,7 @@ def CppSemanticCompletionResults( server ):
 
   server.SendCodeCompletionRequest( test_filename = 'some_cpp.cpp',
                                     filetype = 'cpp',
-                                    line_num = 28,
+                                    line_num = 25,
                                     column_num = 7 )
 
 
@@ -413,7 +410,7 @@ def CppGotoDeclaration( server ):
 
   server.SendGoToRequest( test_filename = 'some_cpp.cpp',
                           filetype = 'cpp',
-                          line_num = 26,
+                          line_num = 23,
                           column_num = 4 )
 
 

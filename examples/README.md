@@ -13,4 +13,8 @@ shut everything down.
 The best way to learn how to use ycmd is to play around with the example client;
 tweak the code, send other requests etc.
 
+NOTE: Everything in this folder and below is licensed under the [Apache2
+license][apache], not the GPLv3 like the rest of ycmd.
+
 [pip]: http://pip.readthedocs.org/en/latest/
+[apache]: http://www.apache.org/licenses/LICENSE-2.0
