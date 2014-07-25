@@ -29,10 +29,11 @@ API notes
 How ycmd works
 --------------
 
-ycmd has several completion engines. The most basic one is an identifier-based
-completer that collects all of the identifiers in provided file and other
-provided files of the same filetype (and any tags files produced by ctags). This
-engine is non-semantic.
+There are several completion engines in ycmd. The most basic one is an
+identifier-based completer that collects all of the identifiers in the file
+provided in the completion request, other files of the same filetype that were
+provided previously and any tags files produced by ctags. This engine is
+non-semantic.
 
 There are also several semantic engines in YCM. There's a libclang-based
 completer that provides semantic completion for C-family languages.  There's a
@@ -42,8 +43,8 @@ completer for C#. More will be added with time.
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
 
-ycmd automatically detects which completion engine would be the best in any
-situation. On occasion, it queries several of them at once, merges the
+The server will automatically detect which completion engine would be the best
+in any situation. On occasion, it queries several of them at once, merges the
 outputs and presents the results.
 
 Semantic engines are triggered only after semantic "triggers" are inserted in
