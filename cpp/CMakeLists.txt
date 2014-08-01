@@ -71,6 +71,11 @@ endif()
 
 #############################################################################
 
+# To shut up the warning about CMake policy CMP0042
+set( CMAKE_MACOSX_RPATH ON )
+
+#############################################################################
+
 if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
   set( COMPILER_IS_CLANG true )
 
