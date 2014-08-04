@@ -1,6 +1,8 @@
 # ycmd example client
 
-First, install all the Python requirements with [pip][]:
+First make sure you have built ycmd; see the top-level README for details.
+
+Then install all the Python requirements with [pip][]:
 
 ```
 pip install -r requirements.txt --use-mirrors
