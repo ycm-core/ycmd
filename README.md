@@ -16,10 +16,19 @@ The best way to learn how to interact with ycmd is by reading through the
 Building
 --------
 
-The simplest way is to run `./build.sh --clang-completer --omnisharp-completer`.
-This should get you going. There's far more detail on how to build & install
-ycmd in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
+This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can be
+found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
 
+First, install the dependencies:
+```
+sudo apt-get install build-essential cmake python-dev
+```
+
+Then run `./build.sh --clang-completer --omnisharp-completer`.  This should get
+you going.
+
+For more detailed instructions on building ycmd, see [YCM's
+instructions][ycm-install] (ignore the Vim-specific parts).
 
 API notes
 ---------
