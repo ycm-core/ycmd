@@ -16,7 +16,7 @@ The best way to learn how to interact with ycmd is by reading through the
 Building
 --------
 
-The simplest way is to run `build.sh --clang-completer --omnisharp-completer`.
+The simplest way is to run `./build.sh --clang-completer --omnisharp-completer`.
 This should get you going. There's far more detail on how to build & install
 ycmd in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
 
