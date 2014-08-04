@@ -13,6 +13,14 @@ out into a separate project so that it can be used in editors other than Vim.
 The best way to learn how to interact with ycmd is by reading through the
 [`example_client.py`][example-client] file.
 
+Building
+--------
+
+The simplest way is to run `build.sh --clang-completer`. This should get you
+going. There's far more detail on how to build & install ycmd in [YCM's
+instructions][ycm-install] (ignore the Vim-specific parts).
+
+
 API notes
 ---------
 
@@ -155,3 +163,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
 [trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L24
 [subsequence]: http://en.wikipedia.org/wiki/Subsequence
+[ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x-super-quick-installation
