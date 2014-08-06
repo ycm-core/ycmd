@@ -20,11 +20,13 @@
 from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from .test_utils import ( Setup, BuildRequest, PathToTestFile, StopOmniSharpServer,
-                          WaitUntilOmniSharpServerReady )
+                          WaitUntilOmniSharpServerReady, ChangeSpecificOptions )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from .. import handlers
 import bottle
+import re
+import os.path
 
 bottle.debug( True )
 
@@ -324,6 +326,49 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleIm
       app.post_json( '/run_completer_command', goto_data ).json )
 
   StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles_test():
+  yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, True
+  yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, False
+
+
+def _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles( keeping_log_files ):
+  ChangeSpecificOptions( { 'server_keep_logfiles': keeping_log_files } )
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  event_data = BuildRequest( filetype = 'cs' )
+
+  debuginfo = app.post_json( '/debug_info', event_data ).json
+
+  log_files_match = re.search( "^OmniSharp logfiles:\n(.*)\n(.*)", debuginfo, re.MULTILINE )
+  stdout_logfiles_location = log_files_match.group( 1 )
+  stderr_logfiles_location = log_files_match.group( 2 )
+
+  try:
+    assert os.path.exists( stdout_logfiles_location ), "Logfile should exist at " + stdout_logfiles_location
+    assert os.path.exists( stderr_logfiles_location ), "Logfile should exist at " + stderr_logfiles_location
+  finally:
+    StopOmniSharpServer( app )
+
+  if ( keeping_log_files ):
+    assert os.path.exists( stdout_logfiles_location ), "Logfile should still exist at " + stdout_logfiles_location
+    assert os.path.exists( stderr_logfiles_location ), "Logfile should still exist at " + stderr_logfiles_location
+  else:
+    assert not os.path.exists( stdout_logfiles_location ), "Logfile should no longer exist at " + stdout_logfiles_location
+    assert not os.path.exists( stderr_logfiles_location ), "Logfile should no longer exist at " + stderr_logfiles_location
 
 
 @with_setup( Setup )
