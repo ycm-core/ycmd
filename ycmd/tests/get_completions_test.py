@@ -26,7 +26,7 @@ from .test_utils import ( Setup, BuildRequest, PathToTestFile,
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
-                       contains_inanyorder, empty )
+                       contains_inanyorder, empty, greater_than )
 from ..responses import ( BuildCompletionData, UnknownExtraConf,
                           NoExtraConfDetected )
 from .. import handlers
@@ -93,6 +93,72 @@ def GetCompletions_CsCompleter_Works_test():
                           CompletionEntryMatcher( 'CursorSize' ) ) )
   eq_( 12, response_data[ 'completion_start_column' ] )
 
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_HasBothImportsAndNonImport_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/ImportTest.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 12,
+                                  force_semantic = True,
+                                  query = 'Date' )
+  response_data = app.post_json( '/completions', completion_data ).json
+
+  assert_that( response_data[ 'completions' ],
+               has_items( CompletionEntryMatcher( 'DateTime' ),
+                          CompletionEntryMatcher( 'DateTimeStyles' ) ) )
+
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ImportsOrderedAfter_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/ImportTest.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 12,
+                                  force_semantic = True,
+                                  query = 'Date' )
+  response_data = app.post_json( '/completions', completion_data ).json
+
+  min_import_index = min( loc for loc, val
+                          in enumerate( response_data[ 'completions' ] )
+                          if val[ 'extra_data' ][ 'required_namespace_import' ] )
+  max_nonimport_index = max( loc for loc, val
+                            in enumerate( response_data[ 'completions' ] )
+                            if not val[ 'extra_data' ][ 'required_namespace_import' ] )
+
+  assert_that( min_import_index, greater_than( max_nonimport_index ) ),
   StopOmniSharpServer( app )
 
 
