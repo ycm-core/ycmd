@@ -218,12 +218,12 @@ class CsharpCompleter( Completer ):
       raise ValueError( self.UserCommandsHelpMessage() )
 
 
-  def DebugInfo( self ):
+  def DebugInfo( self, request_data ):
     if self.ServerIsRunning():
-      return 'Server running at: {0}\nLogfiles:\n{1}\n{2}'.format(
+      return 'OmniSharp Server running at: {0}\nOmniSharp logfiles:\n{1}\n{2}'.format(
         self._ServerLocation(), self._filename_stdout, self._filename_stderr )
     else:
-      return 'Server is not running'
+      return 'OmniSharp Server is not running'
 
   def _StartServer( self, request_data ):
     """ Start the OmniSharp server """
