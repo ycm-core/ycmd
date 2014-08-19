@@ -30,6 +30,10 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 
+#if defined _MSC_VER
+#include<algorithm>
+#endif
+
 namespace boost { 
 namespace archive {
 namespace iterators {
