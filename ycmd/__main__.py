@@ -89,9 +89,9 @@ def Main():
   args = parser.parse_args()
 
   if args.stdout is not None:
-    sys.stdout = open(args.stdout, "w")
+    sys.stdout = open( args.stdout, 'w' )
   if args.stderr is not None:
-    sys.stderr = open(args.stderr, "w")
+    sys.stderr = open( args.stderr, 'w' )
 
   numeric_level = getattr( logging, args.log.upper(), None )
   if not isinstance( numeric_level, int ):
