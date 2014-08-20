@@ -10,8 +10,9 @@ certain filetypes, ycmd can also provide diagnostic errors and warnings.
 ycmd was originally part of [YouCompleteMe][ycm]'s codebase, but has been split
 out into a separate project so that it can be used in editors other than Vim.
 
-The best way to learn how to interact with ycmd is by reading through the
-[`example_client.py`][example-client] file.
+The best way to learn how to interact with ycmd is by reading through (and
+running) the [`example_client.py`][example-client] file. See the [README for the
+examples][example-readme] folder for details on how to run the example client.
 
 Building
 --------
@@ -170,6 +171,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
 [example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
+[example-readme]: https://github.com/Valloric/ycmd/blob/master/examples/README.md
 [trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L24
 [subsequence]: http://en.wikipedia.org/wiki/Subsequence
 [ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x-super-quick-installation
