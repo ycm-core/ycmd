@@ -12,7 +12,9 @@ out into a separate project so that it can be used in editors other than Vim.
 
 The best way to learn how to interact with ycmd is by reading through (and
 running) the [`example_client.py`][example-client] file. See the [README for the
-examples][example-readme] folder for details on how to run the example client.
+examples][example-readme] folder for details on how to run the example client. You
+will need [httpie](https://github.com/jakubroztocil/httpie) installed to run the
+example client as well.
 
 Building
 --------
