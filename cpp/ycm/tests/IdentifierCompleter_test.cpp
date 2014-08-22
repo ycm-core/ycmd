@@ -235,17 +235,6 @@ TEST( IdentifierCompleterTest, ShorterAndLowercaseWins ) {
                             "STDIN_FILENO" ) );
 }
 
-TEST( IdentifierCompleterTest, AddIdentifiersToDatabaseFromBufferWorks ) {
-  IdentifierCompleter completer;
-  completer.AddIdentifiersToDatabaseFromBuffer( "foo foogoo ba",
-                                                "foo",
-                                                "/foo/bar",
-                                                false );
-
-  EXPECT_THAT( completer.CandidatesForQueryAndType( "oo", "foo" ),
-               ElementsAre( "foo",
-                            "foogoo" ) );
-}
 
 TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
   IdentifierCompleter completer;
