@@ -77,7 +77,7 @@ def PossiblyDetachFromTerminal():
       pass
 
 
-def Main():
+def ParseArguments():
   parser = argparse.ArgumentParser()
   # Not using 'localhost' on purpose; see #987 and #1130
   parser.add_argument( '--host', type = str, default = '127.0.0.1',
@@ -98,27 +98,38 @@ def Main():
                        help = 'optional file to use for stderr' )
   parser.add_argument( '--keep_logfiles', action = 'store_true', default = None,
                        help = 'retain logfiles after the server exits' )
-  args = parser.parse_args()
+  return parser.parse_args()
+
+
+def SetupLogging( log_level ):
+  numeric_level = getattr( logging, log_level.upper(), None )
+  if not isinstance( numeric_level, int ):
+    raise ValueError( 'Invalid log level: %s' % log_level )
+
+  # Has to be called before any call to logging.getLogger()
+  logging.basicConfig( format = '%(asctime)s - %(levelname)s - %(message)s',
+                       level = numeric_level )
+
+def SetupOptions( options_file ):
+  options = ( json.load( open( options_file, 'r' ) )
+              if options_file
+              else user_options_store.DefaultOptions() )
+  utils.RemoveIfExists( options_file )
+  options[ 'hmac_secret' ] = base64.b64decode( options[ 'hmac_secret' ] )
+  user_options_store.SetAll( options )
+  return options
+
+
+def Main():
+  args = ParseArguments()
 
   if args.stdout is not None:
     sys.stdout = open( args.stdout, 'w' )
   if args.stderr is not None:
     sys.stderr = open( args.stderr, 'w' )
 
-  numeric_level = getattr( logging, args.log.upper(), None )
-  if not isinstance( numeric_level, int ):
-    raise ValueError( 'Invalid log level: %s' % args.log )
-
-  # Has to be called before any call to logging.getLogger()
-  logging.basicConfig( format = '%(asctime)s - %(levelname)s - %(message)s',
-                       level = numeric_level )
-
-  options = ( json.load( open( args.options_file, 'r' ) )
-              if args.options_file
-              else user_options_store.DefaultOptions() )
-  utils.RemoveIfExists( args.options_file )
-  options[ 'hmac_secret' ] = base64.b64decode( options[ 'hmac_secret' ] )
-  user_options_store.SetAll( options )
+  SetupLogging( args.log )
+  options = SetupOptions( args.options_file )
 
   # This ensures that ycm_core is not loaded before extra conf
   # preload was run.
