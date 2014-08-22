@@ -66,6 +66,17 @@ def SetUpSignalHandler( stdout, stderr, keep_logfiles ):
     signal.signal( sig, SignalHandler )
 
 
+def PossiblyDetachFromTerminal():
+  # If not on windows, detach from controlling terminal to prevent
+  # SIGINT from killing us.
+  if not utils.OnWindows():
+    try:
+      os.setsid()
+    # setsid() can fail if the user started ycmd directly from a shell.
+    except OSError:
+      pass
+
+
 def Main():
   parser = argparse.ArgumentParser()
   # Not using 'localhost' on purpose; see #987 and #1130
@@ -113,15 +124,7 @@ def Main():
   # preload was run.
   YcmCoreSanityCheck()
   extra_conf_store.CallGlobalExtraConfYcmCorePreloadIfExists()
-
-  # If not on windows, detach from controlling terminal to prevent
-  # SIGINT from killing us.
-  if not utils.OnWindows():
-    try:
-      os.setsid()
-    # setsid() can fail if the user started ycmd directly from a shell.
-    except OSError:
-      pass
+  PossiblyDetachFromTerminal()
 
   # This can't be a top-level import because it transitively imports
   # ycm_core which we want to be imported ONLY after extra conf
