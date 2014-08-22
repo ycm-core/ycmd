@@ -57,6 +57,15 @@ void IdentifierCompleter::AddIdentifiersToDatabase(
 }
 
 
+void IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase(
+    const std::vector< std::string > &new_candidates,
+    const std::string &filetype,
+    const std::string &filepath ) {
+  identifier_database_.ClearCandidatesStoredForFile( filetype, filepath );
+  AddIdentifiersToDatabase(new_candidates, filetype, filepath);
+}
+
+
 void IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles(
   const std::vector< std::string > &absolute_paths_to_tag_files ) {
   ReleaseGil unlock;
@@ -64,26 +73,6 @@ void IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles(
     identifier_database_.AddIdentifiers(
       ExtractIdentifiersFromTagsFile( path ) );
   }
-}
-
-
-void IdentifierCompleter::AddIdentifiersToDatabaseFromBuffer(
-  const std::string &buffer_contents,
-  const std::string &filetype,
-  const std::string &filepath,
-  bool collect_from_comments_and_strings ) {
-  ReleaseGil unlock;
-  identifier_database_.ClearCandidatesStoredForFile( filetype, filepath );
-
-  std::string new_contents =
-    collect_from_comments_and_strings ?
-    buffer_contents :
-    RemoveIdentifierFreeText( buffer_contents );
-
-  identifier_database_.AddIdentifiers(
-    ExtractIdentifiersFromText( new_contents ),
-    filetype,
-    filepath );
 }
 
 

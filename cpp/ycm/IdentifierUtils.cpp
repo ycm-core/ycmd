@@ -30,35 +30,6 @@ namespace fs = boost::filesystem;
 
 namespace {
 
-const char *const COMMENT_AND_STRING_REGEX =
-  "//.*?$" // Anything following '//'
-  "|"
-  "#.*?$"  // Anything following '#'
-  "|"
-  "/\\*.*?\\*/"  // C-style comments, '/* ... */'
-  "|"
-  // Python-style multi-line single-quote string
-  "'''.*?'''"
-  "|"
-  // Python-style multi-line double-quote string
-  "\"\"\".*?\"\"\""
-  "|"
-  // Anything inside single quotes, '...', but mind:
-  //  1. that the starting single quote is not escaped
-  //  2. the escaped slash (\\)
-  //  3. the escaped single quote inside the string
-  //  4. (?-s) means dot won't match newline char
-  "(?<!\\\\)'(?:\\\\\\\\|\\\\'|(?-s).)*?'"
-  "|"
-  // Anything inside double quotes, "...", but mind:
-  //  1. that the starting double quote is not escaped
-  //  2. the escaped slash (\\)
-  //  3. the escaped double quote inside the string
-  //  4. (?-s) means dot won't match newline char
-  "(?<!\\\\)\"(?:\\\\\\\\|\\\\\"|(?-s).)*?\"";
-
-const char *const IDENTIFIER_REGEX = "[_a-zA-Z]\\w*";
-
 // For details on the tag format supported, see here for details:
 // http://ctags.sourceforge.net/FORMAT
 // TL;DR: The only supported format is the one Exuberant Ctags emits.
@@ -138,31 +109,6 @@ const boost::unordered_map < const char *,
 const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 
 }  // unnamed namespace
-
-
-std::string RemoveIdentifierFreeText( std::string text ) {
-  boost::erase_all_regex( text, boost::regex( COMMENT_AND_STRING_REGEX ) );
-  return text;
-}
-
-
-std::vector< std::string > ExtractIdentifiersFromText(
-  const std::string &text ) {
-  std::string::const_iterator start = text.begin();
-  std::string::const_iterator end   = text.end();
-
-  boost::smatch matches;
-  const boost::regex expression( IDENTIFIER_REGEX );
-
-  std::vector< std::string > identifiers;
-
-  while ( boost::regex_search( start, end, matches, expression ) ) {
-    identifiers.push_back( matches[ 0 ] );
-    start = matches[ 0 ].second;
-  }
-
-  return identifiers;
-}
 
 
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(

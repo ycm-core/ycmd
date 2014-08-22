@@ -27,16 +27,6 @@
 
 namespace YouCompleteMe {
 
-// NOTE: this function accepts the text param by value on purpose; it internally
-// needs a copy before processing the text so the copy might as well be made on
-// the parameter BUT if this code is compiled in C++11 mode a move constructor
-// can be called on the passed-in value. This is not possible if we accept the
-// param by const ref.
-std::string RemoveIdentifierFreeText( std::string text );
-
-std::vector< std::string > ExtractIdentifiersFromText(
-  const std::string &text );
-
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const boost::filesystem::path &path_to_tag_file );
 

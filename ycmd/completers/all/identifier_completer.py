@@ -22,6 +22,7 @@ import logging
 import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
+from ycmd.completers.all import identifier_utils
 from ycmd import utils
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd import responses
@@ -68,8 +69,8 @@ class IdentifierCompleter( GeneralCompleter ):
     vector.append( ToUtf8IfNeeded( identifier ) )
     self._logger.info( 'Adding ONE buffer identifier for file: %s', filepath )
     self._completer.AddIdentifiersToDatabase( vector,
-                                             ToUtf8IfNeeded( filetype ),
-                                             ToUtf8IfNeeded( filepath ) )
+                                              ToUtf8IfNeeded( filetype ),
+                                              ToUtf8IfNeeded( filepath ) )
 
 
   def AddPreviousIdentifier( self, request_data ):
@@ -99,11 +100,10 @@ class IdentifierCompleter( GeneralCompleter ):
 
     text = request_data[ 'file_data' ][ filepath ][ 'contents' ]
     self._logger.info( 'Adding buffer identifiers for file: %s', filepath )
-    self._completer.AddIdentifiersToDatabaseFromBuffer(
-      ToUtf8IfNeeded( text ),
-      ToUtf8IfNeeded( filetype ),
-      ToUtf8IfNeeded( filepath ),
-      collect_from_comments_and_strings )
+    self._completer.ClearForFileAndAddIdentifiersToDatabase(
+        _IdentifiersFromBuffer( text, collect_from_comments_and_strings ),
+        ToUtf8IfNeeded( filetype ),
+        ToUtf8IfNeeded( filepath ) )
 
 
   def AddIdentifiersFromTagFiles( self, tag_files ):
@@ -137,8 +137,8 @@ class IdentifierCompleter( GeneralCompleter ):
 
     filepath = SYNTAX_FILENAME + filetypes[ 0 ]
     self._completer.AddIdentifiersToDatabase( keyword_vector,
-                                             ToUtf8IfNeeded( filetypes[ 0 ] ),
-                                             ToUtf8IfNeeded( filepath ) )
+                                              ToUtf8IfNeeded( filetypes[ 0 ] ),
+                                              ToUtf8IfNeeded( filepath ) )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -235,3 +235,12 @@ def _GetCursorIdentifier( request_data ):
   except:
     return ''
 
+
+def _IdentifiersFromBuffer( text, collect_from_comments_and_strings ):
+  if not collect_from_comments_and_strings:
+    text = identifier_utils.RemoveIdentifierFreeText( text )
+  idents = identifier_utils.ExtractIdentifiersFromText( text )
+  vector = ycm_core.StringVec()
+  for ident in idents:
+    vector.append( ToUtf8IfNeeded( ident ) )
+  return vector

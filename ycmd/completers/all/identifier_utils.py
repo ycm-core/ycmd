@@ -62,6 +62,3 @@ def RemoveIdentifierFreeText( text ):
 def ExtractIdentifiersFromText( text, filetype = None ):
   return re.findall( _IdentifierRegexForFiletype( filetype ), text )
 
-
-def ExtractIdentifiersFromTagsFile( path_to_tag_file ):
-  pass
