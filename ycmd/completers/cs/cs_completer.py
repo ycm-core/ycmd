@@ -375,7 +375,8 @@ class CsharpCompleter( Completer ):
     return self._solution_path
 
   def _ServerLocation( self ):
-    return 'http://localhost:' + str( self._omnisharp_port )
+    # Not using 'localhost' on purpose; see #987 and #1130
+    return 'http://127.0.0.1:' + str( self._omnisharp_port )
 
 
   def _GetResponse( self, handler, parameters = {}, silent = False ):

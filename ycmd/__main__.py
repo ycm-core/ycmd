@@ -68,7 +68,8 @@ def SetUpSignalHandler( stdout, stderr, keep_logfiles ):
 
 def Main():
   parser = argparse.ArgumentParser()
-  parser.add_argument( '--host', type = str, default = 'localhost',
+  # Not using 'localhost' on purpose; see #987 and #1130
+  parser.add_argument( '--host', type = str, default = '127.0.0.1',
                        help = 'server hostname')
   # Default of 0 will make the OS pick a free port for us
   parser.add_argument( '--port', type = int, default = 0,
