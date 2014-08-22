@@ -104,3 +104,8 @@ def RemoveIdentifierFreeText_PythonMultilineString_test():
        identifier_utils.RemoveIdentifierFreeText(
            "'''\nfoobar\n'''\nzoo" ) )
 
+
+def ExtractIdentifiersFromText_test():
+  eq_( [ "foo", "_bar", "BazGoo", "FOO", "_", "x", "one", "two", "moo", "qqq" ],
+       identifier_utils.ExtractIdentifiersFromText(
+           "foo $_bar \n&BazGoo\n FOO= !!! '-' - _ (x) one-two !moo [qqq]" ) )

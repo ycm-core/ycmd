@@ -19,6 +19,8 @@
 
 import re
 
+# TODO: utils.IsIdentifierChar() needs to be language-aware as well
+
 COMMENT_AND_STRING_REGEX = re.compile(
   r"//.*?$" # Anything following '//'
   r"|"
@@ -44,13 +46,21 @@ COMMENT_AND_STRING_REGEX = re.compile(
   #  3. the escaped double quote inside the string
   r'(?<!\\)"(?:\\\\|\\"|.)*?"', re.MULTILINE )
 
+DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*" )
+
+FILETYPE_TO_IDENTIFIER_REGEX = {}
+
+
+def _IdentifierRegexForFiletype( filetype ):
+  return FILETYPE_TO_IDENTIFIER_REGEX.get( filetype, DEFAULT_IDENTIFIER_REGEX )
+
 
 def RemoveIdentifierFreeText( text ):
   return COMMENT_AND_STRING_REGEX.sub( '', text )
 
 
-def ExtractIdentifiersFromText( text ):
-  pass
+def ExtractIdentifiersFromText( text, filetype = None ):
+  return re.findall( _IdentifierRegexForFiletype( filetype ), text )
 
 
 def ExtractIdentifiersFromTagsFile( path_to_tag_file ):
