@@ -19,7 +19,9 @@
 
 import re
 
-# TODO: utils.IsIdentifierChar() needs to be language-aware as well
+# TODO: utils.IsIdentifierChar() needs to be language-aware as well. It will
+# also need to be replaced by something that tests the whole identifier, not a
+# single char.
 
 COMMENT_AND_STRING_REGEX = re.compile(
   r"//.*?$" # Anything following '//'
@@ -48,7 +50,13 @@ COMMENT_AND_STRING_REGEX = re.compile(
 
 DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*" )
 
-FILETYPE_TO_IDENTIFIER_REGEX = {}
+FILETYPE_TO_IDENTIFIER_REGEX = {
+    # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
+    'css': re.compile( r"[-_a-zA-Z][-\w]*"),
+    # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
+    # This is close enough.
+    'html': re.compile( r"[a-zA-Z][^\s/>]*")
+}
 
 
 def _IdentifierRegexForFiletype( filetype ):

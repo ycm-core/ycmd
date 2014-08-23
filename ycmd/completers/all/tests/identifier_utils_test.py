@@ -109,3 +109,15 @@ def ExtractIdentifiersFromText_test():
   eq_( [ "foo", "_bar", "BazGoo", "FOO", "_", "x", "one", "two", "moo", "qqq" ],
        identifier_utils.ExtractIdentifiersFromText(
            "foo $_bar \n&BazGoo\n FOO= !!! '-' - _ (x) one-two !moo [qqq]" ) )
+
+
+def ExtractIdentifiersFromText_Css_test():
+  eq_( [ "foo", "-zoo", "font-size", "a99" ],
+       identifier_utils.ExtractIdentifiersFromText(
+           "foo -zoo font-size a99", "css" ) )
+
+
+def ExtractIdentifiersFromText_Html_test():
+  eq_( [ "foo", "goo-foo", "b@g" ],
+       identifier_utils.ExtractIdentifiersFromText(
+           "<foo> <goo-foo/> b@g", "html" ) )
