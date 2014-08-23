@@ -18,7 +18,7 @@ pushd "$1"
 
 boost_part_dir=`mktemp -d -t boost_parts.XXXXXX`
 
-dist/bin/bcp boost/utility.hpp boost/python.hpp boost/bind.hpp boost/lambda/lambda.hpp boost/exception/all.hpp boost/tuple/tuple_io.hpp boost/tuple/tuple_comparison.hpp boost/regex.hpp boost/foreach.hpp boost/smart_ptr.hpp boost/algorithm/string_regex.hpp boost/thread.hpp boost/unordered_map.hpp boost/unordered_set.hpp boost/format.hpp boost/ptr_container/ptr_container.hpp boost/filesystem.hpp boost/filesystem/fstream.hpp boost/utility.hpp boost/algorithm/cxx11/any_of.hpp atomic lockfree assign $boost_part_dir
+dist/bin/bcp boost/utility.hpp boost/python.hpp boost/bind.hpp boost/lambda/lambda.hpp boost/exception/all.hpp boost/tuple/tuple_io.hpp boost/tuple/tuple_comparison.hpp boost/regex.hpp boost/foreach.hpp boost/smart_ptr.hpp boost/algorithm/string_regex.hpp boost/thread.hpp boost/unordered_map.hpp boost/unordered_set.hpp boost/format.hpp boost/ptr_container/ptr_container.hpp boost/filesystem.hpp boost/filesystem/fstream.hpp boost/utility.hpp boost/algorithm/cxx11/any_of.hpp atomic lockfree assign system $boost_part_dir
 
 pushd "${boost_part_dir}"
 
@@ -28,6 +28,9 @@ set +e
 find libs \( -name assign -o -name mpi -o -name config -o -name lockfree \) -exec rm -rf '{}' \;
 find libs \( -name doc -o -name test -o -name examples -o -name build \) -exec rm -rf '{}' \;
 find libs -not \( -name "*.hpp" -o -name "*.cpp" -o -name "*.ipp" -o -name "*.inl" \) -type f -delete
+
+# Breaks the build for some reason and doesn't seem necessary at all.
+rm libs/serialization/src/shared_ptr_helper.cpp
 
 # Exit if error
 set -e
