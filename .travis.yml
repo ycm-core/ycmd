@@ -15,6 +15,8 @@ install:
   - export C_INCLUDE_PATH=$MONO_PREFIX/include:$C_INCLUDE_PATH
   - export PKG_CONFIG_PATH=$MONO_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH
   - export PATH=$MONO_PREFIX/bin:$PATH
+  # Travis can run out of RAM when compiling if don't prevent parallelization.
+  - export YCM_CORES=1
 compiler:
   - gcc
   - clang
