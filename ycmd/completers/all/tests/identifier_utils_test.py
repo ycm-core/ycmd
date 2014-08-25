@@ -118,6 +118,6 @@ def ExtractIdentifiersFromText_Css_test():
 
 
 def ExtractIdentifiersFromText_Html_test():
-  eq_( [ "foo", "goo-foo", "b@g" ],
+  eq_( [ "foo", "goo-foo", "zoo", "bar", "aa", "z", "b@g" ],
        identifier_utils.ExtractIdentifiersFromText(
-           "<foo> <goo-foo/> b@g", "html" ) )
+           '<foo> <goo-foo zoo=bar aa="" z=\'\'/> b@g', "html" ) )

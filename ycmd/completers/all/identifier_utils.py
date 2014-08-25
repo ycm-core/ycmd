@@ -53,9 +53,11 @@ DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*" )
 FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
     'css': re.compile( r"[-_a-zA-Z][-\w]*"),
+
     # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
-    # This is close enough.
-    'html': re.compile( r"[a-zA-Z][^\s/>]*")
+    # But not quite since not everything we want to pull out is a tag name. We
+    # also want attribute names (and probably unquoted values).
+    'html': re.compile( r"[a-zA-Z][^\s/>='\"]*")
 }
 
 
