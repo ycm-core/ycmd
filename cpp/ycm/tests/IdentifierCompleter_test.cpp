@@ -236,6 +236,16 @@ TEST( IdentifierCompleterTest, ShorterAndLowercaseWins ) {
 }
 
 
+TEST( IdentifierCompleterTest, NonAlnumCharsWorks ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "font-family",
+                   "font-face" ) ).CandidatesForQuery( "fo" ),
+               ElementsAre( "font-face",
+                            "font-family" ) );
+}
+
+
 TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
   IdentifierCompleter completer;
   std::vector< std::string > tag_files;

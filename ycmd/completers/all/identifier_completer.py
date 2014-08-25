@@ -101,7 +101,9 @@ class IdentifierCompleter( GeneralCompleter ):
     text = request_data[ 'file_data' ][ filepath ][ 'contents' ]
     self._logger.info( 'Adding buffer identifiers for file: %s', filepath )
     self._completer.ClearForFileAndAddIdentifiersToDatabase(
-        _IdentifiersFromBuffer( text, collect_from_comments_and_strings ),
+        _IdentifiersFromBuffer( text,
+                                filetype,
+                                collect_from_comments_and_strings ),
         ToUtf8IfNeeded( filetype ),
         ToUtf8IfNeeded( filepath ) )
 
@@ -236,11 +238,14 @@ def _GetCursorIdentifier( request_data ):
     return ''
 
 
-def _IdentifiersFromBuffer( text, collect_from_comments_and_strings ):
+def _IdentifiersFromBuffer( text,
+                            filetype,
+                            collect_from_comments_and_strings ):
+  text = ToUtf8IfNeeded( text )
   if not collect_from_comments_and_strings:
     text = identifier_utils.RemoveIdentifierFreeText( text )
-  idents = identifier_utils.ExtractIdentifiersFromText( text )
+  idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
   vector = ycm_core.StringVec()
   for ident in idents:
-    vector.append( ToUtf8IfNeeded( ident ) )
+    vector.append( ident )
   return vector

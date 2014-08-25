@@ -112,9 +112,9 @@ def ExtractIdentifiersFromText_test():
 
 
 def ExtractIdentifiersFromText_Css_test():
-  eq_( [ "foo", "-zoo", "font-size", "a99" ],
+  eq_( [ "foo", "-zoo", "font-size", "px", "a99" ],
        identifier_utils.ExtractIdentifiersFromText(
-           "foo -zoo font-size a99", "css" ) )
+           "foo -zoo {font-size: 12px;} a99", "css" ) )
 
 
 def ExtractIdentifiersFromText_Html_test():
