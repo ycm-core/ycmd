@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
+from nose.tools import eq_, ok_
 from ycmd.completers.all import identifier_utils
 
 
@@ -121,3 +121,17 @@ def ExtractIdentifiersFromText_Html_test():
   eq_( [ "foo", "goo-foo", "zoo", "bar", "aa", "z", "b@g" ],
        identifier_utils.ExtractIdentifiersFromText(
            '<foo> <goo-foo zoo=bar aa="" z=\'\'/> b@g', "html" ) )
+
+
+def IsIdentifier_generic_test():
+  ok_( identifier_utils.IsIdentifier( 'foo' ) )
+  ok_( identifier_utils.IsIdentifier( 'foo129' ) )
+
+  ok_( not identifier_utils.IsIdentifier( '1foo129' ) )
+  ok_( not identifier_utils.IsIdentifier( '-foo' ) )
+  ok_( not identifier_utils.IsIdentifier( 'foo-' ) )
+  ok_( not identifier_utils.IsIdentifier( 'font-face' ) )
+
+
+def IsIdentifier_Css_test():
+  ok_( identifier_utils.IsIdentifier( 'font-face', 'css' ) )

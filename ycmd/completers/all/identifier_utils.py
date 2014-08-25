@@ -72,3 +72,11 @@ def RemoveIdentifierFreeText( text ):
 def ExtractIdentifiersFromText( text, filetype = None ):
   return re.findall( _IdentifierRegexForFiletype( filetype ), text )
 
+
+def IsIdentifier( text, filetype = None ):
+  regex = _IdentifierRegexForFiletype( filetype )
+  match = regex.match( text )
+  return match and match.end() == len( text )
+
+
+
