@@ -131,6 +131,8 @@ def IsIdentifier_generic_test():
   ok_( not identifier_utils.IsIdentifier( '-foo' ) )
   ok_( not identifier_utils.IsIdentifier( 'foo-' ) )
   ok_( not identifier_utils.IsIdentifier( 'font-face' ) )
+  ok_( not identifier_utils.IsIdentifier( None ) )
+  ok_( not identifier_utils.IsIdentifier( '' ) )
 
 
 def IsIdentifier_Css_test():

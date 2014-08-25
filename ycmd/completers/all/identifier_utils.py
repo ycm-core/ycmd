@@ -74,9 +74,8 @@ def ExtractIdentifiersFromText( text, filetype = None ):
 
 
 def IsIdentifier( text, filetype = None ):
+  if not text:
+    return False
   regex = _IdentifierRegexForFiletype( filetype )
   match = regex.match( text )
   return match and match.end() == len( text )
-
-
-
