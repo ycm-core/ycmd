@@ -236,13 +236,21 @@ TEST( IdentifierCompleterTest, ShorterAndLowercaseWins ) {
 }
 
 
-TEST( IdentifierCompleterTest, NonAlnumCharsWorks ) {
+TEST( IdentifierCompleterTest, NonAlnumChars ) {
   EXPECT_THAT( IdentifierCompleter(
                  StringVector(
                    "font-family",
                    "font-face" ) ).CandidatesForQuery( "fo" ),
                ElementsAre( "font-face",
                             "font-family" ) );
+}
+
+
+TEST( IdentifierCompleterTest, NonAlnumStartChar ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "-zoo-foo" ) ).CandidatesForQuery( "-z" ),
+               ElementsAre( "-zoo-foo" ) );
 }
 
 
