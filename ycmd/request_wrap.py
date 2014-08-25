@@ -68,8 +68,8 @@ class RequestWrap( object ):
   def CompletionStartColumn( self ):
     if self._start_column is not None:
       return self._start_column
-    self._start_column = CompletionStartColumn( self[ 'line_value' ],
-                                                self[ 'column_num' ] )
+    self._start_column = _CompletionStartColumn( self[ 'line_value' ],
+                                                 self[ 'column_num' ] )
     return self._start_column
 
 
@@ -86,7 +86,7 @@ class RequestWrap( object ):
     return self[ 'file_data' ][ path ][ 'filetypes' ]
 
 
-def CompletionStartColumn( line_value, column_num ):
+def _CompletionStartColumn( line_value, column_num ):
   """Returns the 1-based index where the completion query should start. So if
   the user enters:
     foo.bar^
