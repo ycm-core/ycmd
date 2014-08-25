@@ -24,10 +24,10 @@ import re
 # single char.
 
 COMMENT_AND_STRING_REGEX = re.compile(
-  r"//.*?$" # Anything following '//'
-  r"|"
-  r"#.*?$"  # Anything following '#'
-  r"|"
+  "//.*?$" # Anything following '//'
+  "|"
+  "#.*?$"  # Anything following '#'
+  "|"
   "/\*(?:\n|.)*?\*/"  # C-style comments, '/* ... */'
   "|"
   # Python-style multi-line single-quote string
