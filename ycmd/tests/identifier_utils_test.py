@@ -161,6 +161,11 @@ def StartOfLongestIdentifierEndingAtIndex_Punctuation_test():
   eq_( 2, iu.StartOfLongestIdentifierEndingAtIndex( '...', 2 ) )
 
 
+def StartOfLongestIdentifierEndingAtIndex_PunctuationWithUnicode_test():
+  eq_( 1, iu.StartOfLongestIdentifierEndingAtIndex( u'(fäö', 4 ) )
+  eq_( 2, iu.StartOfLongestIdentifierEndingAtIndex( u'  fäö', 5 ) )
+
+
 # Not a test, but a test helper function
 def LoopExpect( ident, expected, end_index ):
   eq_( expected, iu.StartOfLongestIdentifierEndingAtIndex( ident, end_index ) )
@@ -189,3 +194,8 @@ def StartOfLongestIdentifierEndingAtIndex_Entire_SubIdentifierValid_test():
   for i in range( len( ident ) ):
     yield LoopExpect, ident, 0, i
 
+
+def StartOfLongestIdentifierEndingAtIndex_Entire_Unicode_test():
+  ident = u'fäöttccoö'
+  for i in range( len( ident ) ):
+    yield LoopExpect, ident, 0, i
