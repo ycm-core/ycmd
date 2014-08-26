@@ -25,6 +25,11 @@ First, install the dependencies:
 sudo apt-get install build-essential cmake python-dev
 ```
 
+When you first clone the repository you'll need to update the submodules:
+```
+git submodule update --init --recursive
+```
+
 Then run `./build.sh --clang-completer --omnisharp-completer`.  This should get
 you going.
 
