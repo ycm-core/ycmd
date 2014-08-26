@@ -160,6 +160,8 @@ class IdentifierCompleter( GeneralCompleter ):
     self.AddPreviousIdentifier( request_data )
 
 
+# This looks for the previous identifier and returns it; this might mean looking
+# at last identifier on the previous line if a new line has just been created.
 def _PreviousIdentifier( min_num_completion_start_chars, request_data ):
   line_num = request_data[ 'line_num' ] - 1
   column_num = request_data[ 'column_num' ] - 1
