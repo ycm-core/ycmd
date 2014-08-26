@@ -18,6 +18,7 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+import math
 
 # TODO: utils.IsIdentifierChar() needs to be language-aware as well. It will
 # also need to be replaced by something that tests the whole identifier, not a
@@ -85,11 +86,15 @@ def IsIdentifier( text, filetype = None ):
 def StartOfLongestIdentifierEndingAtIndex( text, index, filetype = None ):
   if not text or index < 1:
     return 0
-  start = index - 1
+  end = index
+  start = 0
+  current = None
 
-  while start >= 0:
-    if not IsIdentifier( text[ start : index ], filetype ):
-      break
-    start -= 1
-  return start + 1
+  while start < end:
+    current = (start + end) / 2
+    if IsIdentifier( text[ current : index ], filetype ):
+      end = current - 1
+    else:
+      start = current + 1
+  return start
 

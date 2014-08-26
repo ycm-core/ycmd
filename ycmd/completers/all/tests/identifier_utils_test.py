@@ -152,8 +152,9 @@ def StartOfLongestIdentifierEndingAtIndex_BadInput_test():
 
 
 def StartOfLongestIdentifierEndingAtIndex_Punctuation_test():
-  eq_( 1, iu.StartOfLongestIdentifierEndingAtIndex( '.foo', 4 ) )
-  eq_( 4, iu.StartOfLongestIdentifierEndingAtIndex( 'gar.foo', 7 ) )
+  eq_( 1, iu.StartOfLongestIdentifierEndingAtIndex( '(foo', 4 ) )
+  eq_( 6, iu.StartOfLongestIdentifierEndingAtIndex( '      foo', 9 ) )
+  eq_( 4, iu.StartOfLongestIdentifierEndingAtIndex( 'gar;foo', 7 ) )
   eq_( 2, iu.StartOfLongestIdentifierEndingAtIndex( '...', 2 ) )
 
 
@@ -169,3 +170,5 @@ def StartOfLongestIdentifierEndingAtIndex_WholeIdentifierRange_test():
   ident = '....'
   for i in range( len( ident ) ):
     yield tester, ident, i, i
+
+
