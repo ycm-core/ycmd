@@ -243,11 +243,10 @@ def _GetCursorIdentifier( request_data ):
 def _IdentifiersFromBuffer( text,
                             filetype,
                             collect_from_comments_and_strings ):
-  text = ToUtf8IfNeeded( text )
   if not collect_from_comments_and_strings:
     text = identifier_utils.RemoveIdentifierFreeText( text )
   idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
   vector = ycm_core.StringVec()
   for ident in idents:
-    vector.append( ident )
+    vector.append( ToUtf8IfNeeded( ident ) )
   return vector
