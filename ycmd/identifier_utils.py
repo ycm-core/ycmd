@@ -18,7 +18,6 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-import math
 
 # TODO: utils.IsIdentifierChar() needs to be language-aware as well. It will
 # also need to be replaced by something that tests the whole identifier, not a
@@ -57,7 +56,7 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
 
     # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
     # But not quite since not everything we want to pull out is a tag name. We
-    # also want attribute names (and probably unquoted values).
+    # also want attribute names (and probably unquoted attribute values).
     'html': re.compile( r"[a-zA-Z][^\s/>='\"]*")
 }
 
