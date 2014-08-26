@@ -22,7 +22,7 @@ import logging
 import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
-from ycmd.completers.all import identifier_utils
+from ycmd import identifier_utils
 from ycmd import utils
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd import responses
