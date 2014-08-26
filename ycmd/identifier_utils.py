@@ -82,18 +82,14 @@ def IsIdentifier( text, filetype = None ):
 
 
 # index is 0-based and EXCLUSIVE, so ("foo.", 3) -> 0
+# Works with both unicode and str objects.
+# Returns the index on bad input.
 def StartOfLongestIdentifierEndingAtIndex( text, index, filetype = None ):
-  if not text or index < 1:
-    return 0
-  end = index
-  start = 0
-  current = None
+  if not text or index < 1 or index > len( text ):
+    return index
 
-  while start < end:
-    current = (start + end) / 2
-    if IsIdentifier( text[ current : index ], filetype ):
-      end = current - 1
-    else:
-      start = current + 1
-  return start
+  for i in xrange( index ):
+    if IsIdentifier( text[ i : index ], filetype ):
+      return i
+  return index
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2013  Google Inc.
 #
@@ -18,7 +19,7 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_, ok_
-from ycmd.completers.all import identifier_utils as iu
+from ycmd import identifier_utils as iu
 
 
 def RemoveIdentifierFreeText_CppComments_test():
@@ -126,6 +127,7 @@ def ExtractIdentifiersFromText_Html_test():
 def IsIdentifier_generic_test():
   ok_( iu.IsIdentifier( 'foo' ) )
   ok_( iu.IsIdentifier( 'foo129' ) )
+  ok_( iu.IsIdentifier( 'f12' ) )
 
   ok_( not iu.IsIdentifier( '1foo129' ) )
   ok_( not iu.IsIdentifier( '-foo' ) )
@@ -141,13 +143,14 @@ def IsIdentifier_Css_test():
 
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', 3 ) )
+  eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'f12', 3 ) )
 
 
 def StartOfLongestIdentifierEndingAtIndex_BadInput_test():
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( '', 0 ) )
-  eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( '', 1 ) )
-  eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( None, 5 ) )
-  eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', -1 ) )
+  eq_( 1, iu.StartOfLongestIdentifierEndingAtIndex( '', 1 ) )
+  eq_( 5, iu.StartOfLongestIdentifierEndingAtIndex( None, 5 ) )
+  eq_( -1, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', -1 ) )
   eq_( 10, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', 10 ) )
 
 
@@ -158,17 +161,31 @@ def StartOfLongestIdentifierEndingAtIndex_Punctuation_test():
   eq_( 2, iu.StartOfLongestIdentifierEndingAtIndex( '...', 2 ) )
 
 
-def StartOfLongestIdentifierEndingAtIndex_WholeIdentifierRange_test():
-  def tester( ident, expected, end_index ):
-    eq_( expected,
-         iu.StartOfLongestIdentifierEndingAtIndex( ident, end_index ) )
+# Not a test, but a test helper function
+def LoopExpect( ident, expected, end_index ):
+  eq_( expected, iu.StartOfLongestIdentifierEndingAtIndex( ident, end_index ) )
 
+
+def StartOfLongestIdentifierEndingAtIndex_Entire_Simple_test():
   ident = 'foobar'
   for i in range( len( ident ) ):
-    yield tester, ident, 0, i
+    yield LoopExpect, ident, 0, i
 
+
+def StartOfLongestIdentifierEndingAtIndex_Entire_AllBad_test():
   ident = '....'
   for i in range( len( ident ) ):
-    yield tester, ident, i, i
+    yield LoopExpect, ident, i, i
 
+
+def StartOfLongestIdentifierEndingAtIndex_Entire_FirstCharNotNumber_test():
+  ident = 'f12341234'
+  for i in range( len( ident ) ):
+    yield LoopExpect, ident, 0, i
+
+
+def StartOfLongestIdentifierEndingAtIndex_Entire_SubIdentifierValid_test():
+  ident = 'f123f1234'
+  for i in range( len( ident ) ):
+    yield LoopExpect, ident, 0, i
 
