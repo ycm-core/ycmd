@@ -167,35 +167,85 @@ def StartOfLongestIdentifierEndingAtIndex_PunctuationWithUnicode_test():
 
 
 # Not a test, but a test helper function
-def LoopExpect( ident, expected, end_index ):
+def LoopExpectLongestIdentifier( ident, expected, end_index ):
   eq_( expected, iu.StartOfLongestIdentifierEndingAtIndex( ident, end_index ) )
 
 
 def StartOfLongestIdentifierEndingAtIndex_Entire_Simple_test():
   ident = 'foobar'
   for i in range( len( ident ) ):
-    yield LoopExpect, ident, 0, i
+    yield LoopExpectLongestIdentifier, ident, 0, i
 
 
 def StartOfLongestIdentifierEndingAtIndex_Entire_AllBad_test():
   ident = '....'
   for i in range( len( ident ) ):
-    yield LoopExpect, ident, i, i
+    yield LoopExpectLongestIdentifier, ident, i, i
 
 
 def StartOfLongestIdentifierEndingAtIndex_Entire_FirstCharNotNumber_test():
   ident = 'f12341234'
   for i in range( len( ident ) ):
-    yield LoopExpect, ident, 0, i
+    yield LoopExpectLongestIdentifier, ident, 0, i
 
 
 def StartOfLongestIdentifierEndingAtIndex_Entire_SubIdentifierValid_test():
   ident = 'f123f1234'
   for i in range( len( ident ) ):
-    yield LoopExpect, ident, 0, i
+    yield LoopExpectLongestIdentifier, ident, 0, i
 
 
 def StartOfLongestIdentifierEndingAtIndex_Entire_Unicode_test():
   ident = u'fäöttccoö'
   for i in range( len( ident ) ):
-    yield LoopExpect, ident, 0, i
+    yield LoopExpectLongestIdentifier, ident, 0, i
+
+
+# Not a test, but a test helper function
+def LoopExpectIdentfierAtIndex( ident, index, expected ):
+  eq_( expected, iu.IdentifierAtIndex( ident, index ) )
+
+
+def IdentifierAtIndex_Entire_Simple_test():
+  ident = u'foobar'
+  for i in range( len( ident ) ):
+    yield LoopExpectIdentfierAtIndex, ident, i, ident
+
+
+def IdentifierAtIndex_Entire_Unicode_test():
+  ident = u'fäöttccoö'
+  for i in range( len( ident ) ):
+    yield LoopExpectIdentfierAtIndex, ident, i, ident
+
+
+def IdentifierAtIndex_BadInput_test():
+  eq_( '', iu.IdentifierAtIndex( '', 0 ) )
+  eq_( '', iu.IdentifierAtIndex( '', 5 ) )
+  eq_( '', iu.IdentifierAtIndex( 'foo', 5 ) )
+  eq_( 'foo', iu.IdentifierAtIndex( 'foo', -5 ) )
+
+
+def IdentifierAtIndex_IndexPastIdent_test():
+  eq_( '', iu.IdentifierAtIndex( 'foo    ', 5 ) )
+
+
+def IdentifierAtIndex_StopsAtNonIdentifier_test():
+  eq_( 'foo', iu.IdentifierAtIndex( 'foo(goo)', 0 ) )
+  eq_( 'goo', iu.IdentifierAtIndex( 'foo(goo)', 5 ) )
+
+
+def IdentifierAtIndex_LooksAhead_Success_test():
+  eq_( 'goo', iu.IdentifierAtIndex( 'foo(goo)', 3 ) )
+  eq_( 'goo', iu.IdentifierAtIndex( '   goo', 0 ) )
+
+
+def IdentifierAtIndex_LooksAhead_Failure_test():
+  eq_( '', iu.IdentifierAtIndex( 'foo    ()***()', 5 ) )
+
+
+def IdentifierAtIndex_SingleCharIdent_test():
+  eq_( 'f', iu.IdentifierAtIndex( '    f    ', 1 ) )
+
+
+def IdentifierAtIndex_Css_test():
+  eq_( 'font-face', iu.IdentifierAtIndex( 'font-face', 0, 'css' ) )

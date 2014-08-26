@@ -203,41 +203,14 @@ def _RemoveSmallCandidates( candidates, min_num_candidate_size_chars ):
   return [ x for x in candidates if len( x ) >= min_num_candidate_size_chars ]
 
 
-# This is meant to behave like 'expand("<cword")' in Vim, thus starting at the
-# cursor column and returning the "cursor word". If the cursor is not on a valid
-# character, it searches forward until a valid identifier is found.
 def _GetCursorIdentifier( request_data ):
-  def FindFirstValidChar( line, column ):
-    current_column = column
-    while not utils.IsIdentifierChar( line[ current_column ] ):
-      current_column += 1
-    return current_column
-
-
-  def FindIdentifierStart( line, valid_char_column ):
-    identifier_start = valid_char_column
-    while identifier_start > 0 and utils.IsIdentifierChar( line[
-      identifier_start - 1 ] ):
-      identifier_start -= 1
-    return identifier_start
-
-
-  def FindIdentifierEnd( line, valid_char_column ):
-    identifier_end = valid_char_column
-    while identifier_end < len( line ) - 1 and utils.IsIdentifierChar( line[
-      identifier_end + 1 ] ):
-      identifier_end += 1
-    return identifier_end + 1
-
-  column_num = request_data[ 'column_num' ] - 1
-  line = request_data[ 'line_value' ]
-
   try:
-    valid_char_column = FindFirstValidChar( line, column_num )
-    return line[ FindIdentifierStart( line, valid_char_column ) :
-                 FindIdentifierEnd( line, valid_char_column ) ]
-  except:
-    return ''
+    filetype = request_data[ 'filetypes' ][ 0 ]
+  except KeyError:
+    filetype = None
+  return identifier_utils.IdentifierAtIndex( request_data[ 'line_value' ],
+                                             request_data[ 'column_num' ] - 1,
+                                             filetype )
 
 
 def _IdentifiersFromBuffer( text,

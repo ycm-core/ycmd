@@ -93,3 +93,15 @@ def StartOfLongestIdentifierEndingAtIndex( text, index, filetype = None ):
       return i
   return index
 
+
+# If the index is not on a valid identifer, it searches forward until a valid
+# identifier is found.
+def IdentifierAtIndex( text, index, filetype = None ):
+  if index > len( text ):
+    return ''
+
+  for match in _IdentifierRegexForFiletype( filetype ).finditer( text ):
+    if match.end() > index:
+      return match.group()
+  return ''
+
