@@ -48,16 +48,16 @@ COMMENT_AND_STRING_REGEX = re.compile(
   #  3. the escaped double quote inside the string
   r'(?<!\\)"(?:\\\\|\\"|.)*?"', re.MULTILINE )
 
-DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*" )
+DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*", re.UNICODE )
 
 FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
-    'css': re.compile( r"[-_a-zA-Z][-\w]*"),
+    'css': re.compile( r"[-_a-zA-Z][-\w]*", re.UNICODE ),
 
     # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
     # But not quite since not everything we want to pull out is a tag name. We
     # also want attribute names (and probably unquoted attribute values).
-    'html': re.compile( r"[a-zA-Z][^\s/>='\"]*")
+    'html': re.compile( r"[a-zA-Z][^\s/>='\"]*", re.UNICODE )
 }
 
 

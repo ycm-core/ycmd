@@ -102,8 +102,8 @@ def StartColumn_AfterWholeWord_test():
 
 def StartColumn_AfterWholeUnicodeWord_test():
   eq_( 1,
-       RequestWrap( PrepareJson( column_num = 5,
-                                 contents = u'äö') )[ 'start_column' ] )
+       RequestWrap( PrepareJson( column_num = 6,
+                                 contents = u'fäö') )[ 'start_column' ] )
 
 
 def StartColumn_InMiddleOfWholeWord_test():
