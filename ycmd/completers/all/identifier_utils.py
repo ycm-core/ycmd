@@ -79,3 +79,17 @@ def IsIdentifier( text, filetype = None ):
   regex = _IdentifierRegexForFiletype( filetype )
   match = regex.match( text )
   return match and match.end() == len( text )
+
+
+# index is 0-based and EXCLUSIVE, so ("foo.", 3) -> 0
+def StartOfLongestIdentifierEndingAtIndex( text, index, filetype = None ):
+  if not text or index < 1:
+    return 0
+  start = index - 1
+
+  while start >= 0:
+    if not IsIdentifier( text[ start : index ], filetype ):
+      break
+    start -= 1
+  return start + 1
+
