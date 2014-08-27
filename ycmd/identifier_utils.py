@@ -19,10 +19,6 @@
 
 import re
 
-# TODO: utils.IsIdentifierChar() needs to be language-aware as well. It will
-# also need to be replaced by something that tests the whole identifier, not a
-# single char.
-
 COMMENT_AND_STRING_REGEX = re.compile(
   "//.*?$" # Anything following '//'
   "|"
@@ -61,7 +57,7 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
 }
 
 
-def _IdentifierRegexForFiletype( filetype ):
+def IdentifierRegexForFiletype( filetype ):
   return FILETYPE_TO_IDENTIFIER_REGEX.get( filetype, DEFAULT_IDENTIFIER_REGEX )
 
 
@@ -70,13 +66,13 @@ def RemoveIdentifierFreeText( text ):
 
 
 def ExtractIdentifiersFromText( text, filetype = None ):
-  return re.findall( _IdentifierRegexForFiletype( filetype ), text )
+  return re.findall( IdentifierRegexForFiletype( filetype ), text )
 
 
 def IsIdentifier( text, filetype = None ):
   if not text:
     return False
-  regex = _IdentifierRegexForFiletype( filetype )
+  regex = IdentifierRegexForFiletype( filetype )
   match = regex.match( text )
   return match and match.end() == len( text )
 
@@ -100,7 +96,7 @@ def IdentifierAtIndex( text, index, filetype = None ):
   if index > len( text ):
     return ''
 
-  for match in _IdentifierRegexForFiletype( filetype ).finditer( text ):
+  for match in IdentifierRegexForFiletype( filetype ).finditer( text ):
     if match.end() > index:
       return match.group()
   return ''

@@ -77,6 +77,10 @@ def PreviousIdentifier_Simple_test():
   eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo', 4 ) ) )
 
 
+def PreviousIdentifier_ColumnInMiddleStillWholeIdent_test():
+  eq_( 'foobar', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar', 4 ) ) )
+
+
 def PreviousIdentifier_IgnoreForwardIdents_test():
   eq_( 'foo',
        ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo bar zoo', 4 ) ) )
@@ -87,7 +91,7 @@ def PreviousIdentifier_IgnoreTooSmallIdent_test():
 
 
 def PreviousIdentifier_IgnoreTooSmallIdent_DontContinueLooking_test():
-  eq_( '', ic._PreviousIdentifier( 4, BuildRequestWrap( 'abcde foo', 9 ) ) )
+  eq_( '', ic._PreviousIdentifier( 4, BuildRequestWrap( 'abcde foo', 10 ) ) )
 
 
 def PreviousIdentifier_WhitespaceAfterIdent_test():
