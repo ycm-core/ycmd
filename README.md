@@ -118,8 +118,8 @@ letter character in the completion string.
 User-level customization
 -----------------------
 
-You can provide settings to ycmd on startup. There's a
-[default_settings.json][def-settings] file that you can tweak. See the
+You can provide settings to ycmd on server startup. There's a
+[`default_settings.json`][def-settings] file that you can tweak. See the
 [_Options_ section in YCM's _User Guide_][options] for a description on what
 each option does. Pass the path to the modified settings file to ycmd as an
 `--options-file=/path/to/file` flag.  Note that you must set the `hmac_secret`
