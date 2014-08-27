@@ -115,6 +115,27 @@ completion (both of which are subsequence matches). A word-boundary character
 are all capital characters, characters preceded by an underscore and the first
 letter character in the completion string.
 
+User-level customization
+-----------------------
+
+You can provide settings to ycmd on startup. There's a
+[default_settings.json][def-settings] file that you can tweak. See the
+[_Options_ section in YCM's _User Guide_][options] for a description on what
+each option does. Pass the path to the modified settings file to ycmd as an
+`--options-file=/path/to/file` flag.  Note that you must set the `hmac_secret`
+setting (encode the value with [base64][]). Because the file you are passing
+contains a secret token, ensure that you are creating the temporary file in a
+secure way (the [`mkstemp()`][mkstemp] Linux system call is a good idea; use
+something similar for other OS's).
+
+After it starts up, ycmd will _delete_ the settings file you provided after
+it reads it.
+
+The settings file is something your editor should produce based on values your
+user has configured. There's also an extra file (`.ycm_extra_conf.py`) your user
+is supposed to provide to configure certain semantic completers. More
+information on it can also be found in the [corresponding section of YCM's _User
+Guide_][extra-conf-doc].
 
 Backwards compatibility
 -----------------------
@@ -175,3 +196,8 @@ This software is licensed under the [GPL v3 license][gpl].
 [trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L24
 [subsequence]: http://en.wikipedia.org/wiki/Subsequence
 [ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x-super-quick-installation
+[def-settings]: https://github.com/Valloric/ycmd/blob/master/ycmd/default_settings.json
+[base64]: http://en.wikipedia.org/wiki/Base64
+[mkstemp]: http://man7.org/linux/man-pages/man3/mkstemp.3.html
+[options]: https://github.com/Valloric/YouCompleteMe#options
+[extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion-engine-usage
