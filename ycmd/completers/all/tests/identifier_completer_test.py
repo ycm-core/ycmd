@@ -77,6 +77,19 @@ def PreviousIdentifier_Simple_test():
   eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo', 4 ) ) )
 
 
+def PreviousIdentifier_IgnoreForwardIdents_test():
+  eq_( 'foo',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo bar zoo', 4 ) ) )
+
+
+def PreviousIdentifier_IgnoreTooSmallIdent_test():
+  eq_( '', ic._PreviousIdentifier( 4, BuildRequestWrap( 'foo', 4 ) ) )
+
+
+def PreviousIdentifier_IgnoreTooSmallIdent_DontContinueLooking_test():
+  eq_( '', ic._PreviousIdentifier( 4, BuildRequestWrap( 'abcde foo', 9 ) ) )
+
+
 def PreviousIdentifier_WhitespaceAfterIdent_test():
   eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo     ', 6 ) ) )
 
@@ -92,5 +105,19 @@ def PreviousIdentifier_IdentInMiddleOfJunk_test():
 
 
 def PreviousIdentifier_IdentOnPreviousLine_test():
-  eq_( 'aa',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo  ;;(aa)**   ', 13 ) ) )
+  eq_( 'foo',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo\n   ',
+                                                    column_num = 3,
+                                                    line_num = 2 ) ) )
+
+  eq_( 'foo',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo\n',
+                                                    column_num = 1,
+                                                    line_num = 2 ) ) )
+
+
+def PreviousIdentifier_IdentOnPreviousLine_JunkAfterIdent_test():
+  eq_( 'foo',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo **;()\n   ',
+                                                    column_num = 3,
+                                                    line_num = 2 ) ) )
