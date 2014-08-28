@@ -62,8 +62,13 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     #   - '.' followed by digit
     #   - digit
     #   - '_'
-    'r': re.compile( r"(?!(?:\.\d|\d|_))[\._\w]+",
-                     re.UNICODE )
+    'r': re.compile( r"(?!(?:\.\d|\d|_))[\._\w]+", re.UNICODE ),
+
+    # Spec: http://clojure.org/reader
+    # Section: Symbols
+    'clojure': re.compile(
+         r"[-\*\+!_\?:\.a-zA-Z][-\*\+!_\?:\.\w]*/?[-\*\+!_\?:\.\w]*",
+         re.UNICODE ),
 }
 
 

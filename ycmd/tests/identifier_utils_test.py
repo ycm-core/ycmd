@@ -174,6 +174,32 @@ def IsIdentifier_R_test():
   ok_( not iu.IsIdentifier( '_a' , 'r' ) )
 
 
+def IsIdentifier_Clojure_test():
+  ok_( iu.IsIdentifier( 'foo', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'f9', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'f9', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a.b.c', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a.c', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a/c', 'clojure' ) )
+  ok_( iu.IsIdentifier( '*', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a*b', 'clojure' ) )
+  ok_( iu.IsIdentifier( '?', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a?b', 'clojure' ) )
+  ok_( iu.IsIdentifier( ':', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a:b', 'clojure' ) )
+  ok_( iu.IsIdentifier( '+', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a+b', 'clojure' ) )
+  ok_( iu.IsIdentifier( '-', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a-b', 'clojure' ) )
+  ok_( iu.IsIdentifier( '!', 'clojure' ) )
+  ok_( iu.IsIdentifier( 'a!b', 'clojure' ) )
+
+  ok_( not iu.IsIdentifier( '9f', 'clojure' ) )
+  ok_( not iu.IsIdentifier( '9', 'clojure' ) )
+  ok_( not iu.IsIdentifier( 'a/b/c', 'clojure' ) )
+  ok_( not iu.IsIdentifier( '(a)', 'clojure' ) )
+
+
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', 3 ) )
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'f12', 3 ) )
