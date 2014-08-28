@@ -91,7 +91,7 @@ def StartOfLongestIdentifierEndingAtIndex( text, index, filetype = None ):
 
 
 # If the index is not on a valid identifer, it searches forward until a valid
-# identifier is found.
+# identifier is found. Returns the identifier.
 def IdentifierAtIndex( text, index, filetype = None ):
   if index > len( text ):
     return ''
