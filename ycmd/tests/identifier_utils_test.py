@@ -151,6 +151,8 @@ def IsIdentifier_R_test():
   ok_( iu.IsIdentifier( '.a'   , 'r' ) )
   ok_( iu.IsIdentifier( '.a_b' , 'r' ) )
   ok_( iu.IsIdentifier( '.a1'  , 'r' ) )
+  ok_( iu.IsIdentifier( '...'  , 'r' ) )
+  ok_( iu.IsIdentifier( '..1'  , 'r' ) )
 
   ok_( not iu.IsIdentifier( '.1a', 'r' ) )
   ok_( not iu.IsIdentifier( '.1' , 'r' ) )
