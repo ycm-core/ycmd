@@ -59,7 +59,10 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddIdentifier( self, identifier, request_data ):
-    filetype = request_data[ 'filetypes' ][ 0 ]
+    try:
+      filetype = request_data[ 'filetypes' ][ 0 ]
+    except KeyError:
+      filetype = None
     filepath = request_data[ 'filepath' ]
 
     if not filetype or not filepath or not identifier:
@@ -90,7 +93,10 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddBufferIdentifiers( self, request_data ):
-    filetype = request_data[ 'filetypes' ][ 0 ]
+    try:
+      filetype = request_data[ 'filetypes' ][ 0 ]
+    except KeyError:
+      filetype = None
     filepath = request_data[ 'filepath' ]
     collect_from_comments_and_strings = bool( self.user_options[
       'collect_identifiers_from_comments_and_strings' ] )
