@@ -141,6 +141,25 @@ def IsIdentifier_Css_test():
   ok_( iu.IsIdentifier( 'font-face', 'css' ) )
 
 
+def IsIdentifier_R_test():
+  ok_( iu.IsIdentifier( 'a'    , 'r' ) )
+  ok_( iu.IsIdentifier( 'a.b'  , 'r' ) )
+  ok_( iu.IsIdentifier( 'a.b.c', 'r' ) )
+  ok_( iu.IsIdentifier( 'a_b'  , 'r' ) )
+  ok_( iu.IsIdentifier( 'a1'   , 'r' ) )
+  ok_( iu.IsIdentifier( 'a_1'  , 'r' ) )
+  ok_( iu.IsIdentifier( '.a'   , 'r' ) )
+  ok_( iu.IsIdentifier( '.a_b' , 'r' ) )
+  ok_( iu.IsIdentifier( '.a1'  , 'r' ) )
+
+  ok_( not iu.IsIdentifier( '.1a', 'r' ) )
+  ok_( not iu.IsIdentifier( '.1' , 'r' ) )
+  ok_( not iu.IsIdentifier( '1a' , 'r' ) )
+  ok_( not iu.IsIdentifier( '123', 'r' ) )
+  ok_( not iu.IsIdentifier( '_1a', 'r' ) )
+  ok_( not iu.IsIdentifier( '_a' , 'r' ) )
+
+
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', 3 ) )
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'f12', 3 ) )
