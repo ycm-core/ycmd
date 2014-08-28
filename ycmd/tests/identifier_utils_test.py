@@ -177,7 +177,6 @@ def IsIdentifier_R_test():
 def IsIdentifier_Clojure_test():
   ok_( iu.IsIdentifier( 'foo', 'clojure' ) )
   ok_( iu.IsIdentifier( 'f9', 'clojure' ) )
-  ok_( iu.IsIdentifier( 'f9', 'clojure' ) )
   ok_( iu.IsIdentifier( 'a.b.c', 'clojure' ) )
   ok_( iu.IsIdentifier( 'a.c', 'clojure' ) )
   ok_( iu.IsIdentifier( 'a/c', 'clojure' ) )
