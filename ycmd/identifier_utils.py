@@ -61,7 +61,7 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     #   - '.' followed by digit
     #   - digit
     #   - '_'
-    'r': re.compile( r"(?!(?:\.\d|\d|_))[\._\w\d]+",
+    'r': re.compile( r"(?!(?:\.\d|\d|_))[\._\w]+",
                      re.UNICODE )
 }
 
