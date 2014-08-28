@@ -64,7 +64,13 @@ class RequestWrap( object ):
 
 
   def CompletionStartColumn( self ):
-    return CompletionStartColumn( self[ 'line_value' ], self[ 'column_num' ] )
+    try:
+      filetype = self[ 'filetypes' ][ 0 ]
+    except (KeyError, IndexError):
+      filetype = None
+    return CompletionStartColumn( self[ 'line_value' ],
+                                  self[ 'column_num' ],
+                                  filetype )
 
 
   def _Query( self ):
@@ -77,7 +83,7 @@ class RequestWrap( object ):
     return self[ 'file_data' ][ path ][ 'filetypes' ]
 
 
-def CompletionStartColumn( line_value, column_num ):
+def CompletionStartColumn( line_value, column_num, filetype ):
   """Returns the 1-based index where the completion query should start. So if
   the user enters:
     foo.bar^
@@ -94,7 +100,7 @@ def CompletionStartColumn( line_value, column_num ):
   # -1 and then +1 to account for difference betwen 0-based and 1-based
   # indices/columns
   codepoint_start_column = StartOfLongestIdentifierEndingAtIndex(
-      unicode_line_value, codepoint_column_num - 1 ) + 1
+      unicode_line_value, codepoint_column_num - 1, filetype ) + 1
 
   return len(
       unicode_line_value[ : codepoint_start_column - 1 ].encode( 'utf8' ) ) + 1
