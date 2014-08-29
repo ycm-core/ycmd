@@ -18,18 +18,19 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
-from nose.tools import eq_
-from ycmd.completers import completer_utils
+from nose.tools import eq_, ok_
+from ycmd.completers import completer_utils as cu
 
 
 def FiletypeTriggerDictFromSpec_Works_test():
   eq_( defaultdict( set, {
-         'foo': set(['zoo', 'bar']),
-         'goo': set(['moo']),
-         'moo': set(['moo']),
-         'qux': set(['q'])
+         'foo': set( [ cu._PrepareTrigger( 'zoo'),
+                       cu._PrepareTrigger( 'bar' ) ] ),
+         'goo': set( [ cu._PrepareTrigger( 'moo' ) ] ),
+         'moo': set( [ cu._PrepareTrigger( 'moo' ) ] ),
+         'qux': set( [ cu._PrepareTrigger( 'q' ) ] )
        } ),
-       completer_utils._FiletypeTriggerDictFromSpec( {
+       cu._FiletypeTriggerDictFromSpec( {
          'foo': ['zoo', 'bar'],
          'goo,moo': ['moo'],
          'qux': ['q']
@@ -43,7 +44,7 @@ def FiletypeDictUnion_Works_test():
          'bla': set(['boo']),
          'qux': set(['q'])
        } ),
-       completer_utils._FiletypeDictUnion( defaultdict( set, {
+       cu._FiletypeDictUnion( defaultdict( set, {
          'foo': set(['zoo', 'bar']),
          'goo': set(['moo']),
          'qux': set(['q'])
@@ -54,3 +55,72 @@ def FiletypeDictUnion_Works_test():
        } ) ) )
 
 
+def MatchesSemanticTrigger_Basic_test():
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 7, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 6, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 5, ['.'] ) )
+
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 4, ['.'] ) )
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 3, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 2, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 1, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 0, ['.'] ) )
+
+
+def MatchesSemanticTrigger_JustTrigger_test():
+  ok_( cu._MatchesSemanticTrigger( '.', 1, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( '.', 0, ['.'] ) )
+
+
+def MatchesSemanticTrigger_TriggerBetweenWords_test():
+  ok_( cu._MatchesSemanticTrigger( 'foo . bar', 5, ['.'] ) )
+
+
+def MatchesSemanticTrigger_BadInput_test():
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 10, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', -1, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( '', -1, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( '', 0, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( '', 1, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [] ) )
+
+
+def MatchesSemanticTrigger_TriggerIsWrong_test():
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [':'] ) )
+
+
+def MatchesSemanticTrigger_LongerTrigger_test():
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, ['::'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 4, ['::'] ) )
+
+
+def MatchesSemanticTrigger_OneTriggerMatches_test():
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, ['.', ';', '::'] ) )
+
+
+def MatchesSemanticTrigger_RegexTrigger_test():
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar',
+                                   4,
+                                   [ cu._PrepareTrigger( r're!\w+\.' ) ] ) )
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo . bar',
+                                       5,
+                                       [ cu._PrepareTrigger( r're!\w+\.' ) ] ) )
+
+
+def PreparedTriggers_Basic_test():
+  triggers = cu.PreparedTriggers()
+  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'c' ) )
+  ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'cpp' ) )
+
+
+def PreparedTriggers_OnlySomeFiletypesSelected_test():
+  triggers = cu.PreparedTriggers( filetype_set = set( 'c' ) )
+  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'c' ) )
+  ok_( not triggers.MatchesForFiletype( 'foo->bar', 5, 'cpp' ) )
+
+
+def PreparedTriggers_UserTriggers_test():
+  triggers = cu.PreparedTriggers( user_trigger_map = { 'c': ['->'] } )
+  ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'c' ) )

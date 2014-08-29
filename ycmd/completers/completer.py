@@ -19,7 +19,6 @@
 
 import abc
 import threading
-from collections import defaultdict
 from ycmd.utils import ToUtf8IfNeeded, ForceSemanticCompletion, RunningInsideVim
 
 if RunningInsideVim():
@@ -27,7 +26,7 @@ if RunningInsideVim():
 else:
   from ycm_core import FilterAndSortCandidates
 
-from ycmd.completers.completer_utils import TriggersForFiletype
+from ycmd.completers import completer_utils
 from ycmd.responses import NoDiagnosticSupport
 
 NO_USER_COMMANDS = 'This completer does not define any commands.'
@@ -103,9 +102,11 @@ class Completer( object ):
   def __init__( self, user_options ):
     self.user_options = user_options
     self.min_num_chars = user_options[ 'min_num_of_chars_for_completion' ]
-    self.triggers_for_filetype = (
-        TriggersForFiletype( user_options[ 'semantic_triggers' ] )
-        if user_options[ 'auto_trigger' ] else defaultdict( set ) )
+    self.prepared_triggers = (
+        completer_utils.PreparedTriggers(
+            user_trigger_map = user_options[ 'semantic_triggers' ],
+            filetype_set = set( self.SupportedFiletypes() ) )
+        if user_options[ 'auto_trigger' ] else None )
     self._completions_cache = CompletionsCache()
 
 
@@ -132,27 +133,14 @@ class Completer( object ):
 
 
   def ShouldUseNowInner( self, request_data ):
+    if not self.prepared_triggers:
+      return False
     current_line = request_data[ 'line_value' ]
     start_column = request_data[ 'start_column' ] - 1
-    line_length = len( current_line )
-    if not line_length or start_column - 1 >= line_length:
-      return False
-
     filetype = self._CurrentFiletype( request_data[ 'filetypes' ] )
-    triggers = self.triggers_for_filetype[ filetype ]
 
-    for trigger in triggers:
-      index = -1
-      trigger_length = len( trigger )
-      while True:
-        line_index = start_column + index
-        if line_index < 0 or current_line[ line_index ] != trigger[ index ]:
-          break
-
-        if abs( index ) == trigger_length:
-          return True
-        index -= 1
-    return False
+    return self.prepared_triggers.MatchesForFiletype(
+        current_line, start_column, filetype )
 
 
   def QueryLengthAboveMinThreshold( self, request_data ):
@@ -274,7 +262,7 @@ class Completer( object ):
 
   @abc.abstractmethod
   def SupportedFiletypes( self ):
-    pass
+    return set()
 
 
   def DebugInfo( self, request_data ):
