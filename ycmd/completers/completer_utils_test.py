@@ -124,3 +124,11 @@ def PreparedTriggers_OnlySomeFiletypesSelected_test():
 def PreparedTriggers_UserTriggers_test():
   triggers = cu.PreparedTriggers( user_trigger_map = { 'c': ['->'] } )
   ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'c' ) )
+
+
+def PreparedTriggers_VimTriggerIgnoresConcatOperator_test():
+  triggers = cu.PreparedTriggers()
+  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'vim' ) )
+  ok_( not triggers.MatchesForFiletype( 'foo . bar', 4, 'vim' ) )
+  ok_( not triggers.MatchesForFiletype( 'foo . bar', 5, 'vim' ) )
+  ok_( not triggers.MatchesForFiletype( 'foo . bar', 6, 'vim' ) )
