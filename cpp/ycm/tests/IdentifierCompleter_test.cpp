@@ -235,17 +235,24 @@ TEST( IdentifierCompleterTest, ShorterAndLowercaseWins ) {
                             "STDIN_FILENO" ) );
 }
 
-TEST( IdentifierCompleterTest, AddIdentifiersToDatabaseFromBufferWorks ) {
-  IdentifierCompleter completer;
-  completer.AddIdentifiersToDatabaseFromBuffer( "foo foogoo ba",
-                                                "foo",
-                                                "/foo/bar",
-                                                false );
 
-  EXPECT_THAT( completer.CandidatesForQueryAndType( "oo", "foo" ),
-               ElementsAre( "foo",
-                            "foogoo" ) );
+TEST( IdentifierCompleterTest, NonAlnumChars ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "font-family",
+                   "font-face" ) ).CandidatesForQuery( "fo" ),
+               ElementsAre( "font-face",
+                            "font-family" ) );
 }
+
+
+TEST( IdentifierCompleterTest, NonAlnumStartChar ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "-zoo-foo" ) ).CandidatesForQuery( "-z" ),
+               ElementsAre( "-zoo-foo" ) );
+}
+
 
 TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
   IdentifierCompleter completer;

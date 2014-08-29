@@ -20,7 +20,7 @@ namespace YouCompleteMe {
 int YcmCoreVersion() {
   // We increment this every time when we want to force users to recompile
   // ycm_core.
-  return 11;
+  return 12;
 }
 
 }  // namespace YouCompleteMe

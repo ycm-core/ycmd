@@ -68,6 +68,32 @@ def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test():
 
 
 @with_setup( Setup )
+def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test():
+  app = TestApp( handlers.app )
+  contents = """
+    textarea {
+      font-family: sans-serif;
+      font-size: 12px;
+    }"""
+  event_data = BuildRequest( contents = contents,
+                             filetype = 'css',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+
+  # query is 'fo'
+  completion_data = BuildRequest( contents = 'fo ' + contents,
+                                  filetype = 'css',
+                                  column_num = 3 )
+  response_data = app.post_json( '/completions', completion_data ).json
+
+  eq_( [ BuildCompletionData( 'font-size' ),
+         BuildCompletionData( 'font-family' ) ],
+       response_data[ 'completions' ] )
+
+
+
+@with_setup( Setup )
 def GetCompletions_CsCompleter_Works_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',

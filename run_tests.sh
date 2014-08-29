@@ -5,17 +5,21 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 function usage {
-  echo "Usage: $0 [--no-clang-completer]"
+  echo "Usage: $0 [--no-clang-completer] [--skip-build]"
   exit 0
 }
 
 flake8 --select=F,C9 --max-complexity=10 "${SCRIPT_DIR}/ycmd"
 
 use_clang_completer=true
+skip_build=false
 for flag in $@; do
   case "$flag" in
     --no-clang-completer)
       use_clang_completer=false
+      ;;
+    --skip-build)
+      skip_build=true
       ;;
     *)
       usage
@@ -33,8 +37,10 @@ else
   extra_cmake_args="-DUSE_DEV_FLAGS=ON"
 fi
 
-EXTRA_CMAKE_ARGS=$extra_cmake_args YCM_TESTRUN=1 \
-   "${SCRIPT_DIR}/build.sh" --omnisharp-completer
+if ! $skip_build; then
+  EXTRA_CMAKE_ARGS=$extra_cmake_args YCM_TESTRUN=1 \
+    "${SCRIPT_DIR}/build.sh" --omnisharp-completer
+fi
 
 for directory in "${SCRIPT_DIR}"/third_party/*; do
   if [ -d "${directory}" ]; then

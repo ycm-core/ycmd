@@ -47,6 +47,13 @@ public:
     const std::string &filetype,
     const std::string &filepath );
 
+  // Same as above, but clears all identifiers stored for the file before adding
+  // new identifiers.
+  void ClearForFileAndAddIdentifiersToDatabase(
+    const std::vector< std::string > &new_candidates,
+    const std::string &filetype,
+    const std::string &filepath );
+
   void AddIdentifiersToDatabaseFromTagFiles(
     const std::vector< std::string > &absolute_paths_to_tag_files );
 

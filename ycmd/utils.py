@@ -35,10 +35,6 @@ WIN_PYTHON27_PATH = 'C:\python27\pythonw.exe'
 WIN_PYTHON26_PATH = 'C:\python26\pythonw.exe'
 
 
-def IsIdentifierChar( char ):
-  return char.isalnum() or char == '_'
-
-
 def SanitizeQuery( query ):
   return query.strip()
 

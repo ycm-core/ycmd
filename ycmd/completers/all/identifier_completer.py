@@ -22,6 +22,7 @@ import logging
 import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
+from ycmd import identifier_utils
 from ycmd import utils
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd import responses
@@ -58,7 +59,10 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddIdentifier( self, identifier, request_data ):
-    filetype = request_data[ 'filetypes' ][ 0 ]
+    try:
+      filetype = request_data[ 'filetypes' ][ 0 ]
+    except KeyError:
+      filetype = None
     filepath = request_data[ 'filepath' ]
 
     if not filetype or not filepath or not identifier:
@@ -68,8 +72,8 @@ class IdentifierCompleter( GeneralCompleter ):
     vector.append( ToUtf8IfNeeded( identifier ) )
     self._logger.info( 'Adding ONE buffer identifier for file: %s', filepath )
     self._completer.AddIdentifiersToDatabase( vector,
-                                             ToUtf8IfNeeded( filetype ),
-                                             ToUtf8IfNeeded( filepath ) )
+                                              ToUtf8IfNeeded( filetype ),
+                                              ToUtf8IfNeeded( filepath ) )
 
 
   def AddPreviousIdentifier( self, request_data ):
@@ -89,7 +93,10 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddBufferIdentifiers( self, request_data ):
-    filetype = request_data[ 'filetypes' ][ 0 ]
+    try:
+      filetype = request_data[ 'filetypes' ][ 0 ]
+    except KeyError:
+      filetype = None
     filepath = request_data[ 'filepath' ]
     collect_from_comments_and_strings = bool( self.user_options[
       'collect_identifiers_from_comments_and_strings' ] )
@@ -99,11 +106,12 @@ class IdentifierCompleter( GeneralCompleter ):
 
     text = request_data[ 'file_data' ][ filepath ][ 'contents' ]
     self._logger.info( 'Adding buffer identifiers for file: %s', filepath )
-    self._completer.AddIdentifiersToDatabaseFromBuffer(
-      ToUtf8IfNeeded( text ),
-      ToUtf8IfNeeded( filetype ),
-      ToUtf8IfNeeded( filepath ),
-      collect_from_comments_and_strings )
+    self._completer.ClearForFileAndAddIdentifiersToDatabase(
+        _IdentifiersFromBuffer( text,
+                                filetype,
+                                collect_from_comments_and_strings ),
+        ToUtf8IfNeeded( filetype ),
+        ToUtf8IfNeeded( filepath ) )
 
 
   def AddIdentifiersFromTagFiles( self, tag_files ):
@@ -137,8 +145,8 @@ class IdentifierCompleter( GeneralCompleter ):
 
     filepath = SYNTAX_FILENAME + filetypes[ 0 ]
     self._completer.AddIdentifiersToDatabase( keyword_vector,
-                                             ToUtf8IfNeeded( filetypes[ 0 ] ),
-                                             ToUtf8IfNeeded( filepath ) )
+                                              ToUtf8IfNeeded( filetypes[ 0 ] ),
+                                              ToUtf8IfNeeded( filepath ) )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -158,38 +166,39 @@ class IdentifierCompleter( GeneralCompleter ):
     self.AddPreviousIdentifier( request_data )
 
 
-def _PreviousIdentifier( min_num_completion_start_chars, request_data ):
+# This looks for the previous identifier and returns it; this might mean looking
+# at last identifier on the previous line if a new line has just been created.
+def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
+  def PreviousIdentifierOnLine( line, column ):
+    nearest_ident = ''
+    for match in identifier_utils.IdentifierRegexForFiletype(
+        filetype ).finditer( line ):
+      if match.end() <= column:
+        nearest_ident = match.group()
+    return nearest_ident
+
   line_num = request_data[ 'line_num' ] - 1
   column_num = request_data[ 'column_num' ] - 1
   filepath = request_data[ 'filepath' ]
+  try:
+    filetype = request_data[ 'filetypes' ][ 0 ]
+  except KeyError:
+    filetype = None
+
   contents_per_line = (
     request_data[ 'file_data' ][ filepath ][ 'contents' ].split( '\n' ) )
-  line = contents_per_line[ line_num ]
 
-  end_column = column_num
+  ident = PreviousIdentifierOnLine( contents_per_line[ line_num ], column_num )
+  if ident:
+    if len( ident ) < min_num_candidate_size_chars:
+      return ''
+    return ident
 
-  while end_column > 0 and not utils.IsIdentifierChar( line[ end_column - 1 ] ):
-    end_column -= 1
-
-  # Look at the previous line if we reached the end of the current one
-  if end_column == 0:
-    try:
-      line = contents_per_line[ line_num - 1 ]
-    except:
-      return ""
-    end_column = len( line )
-    while end_column > 0 and not utils.IsIdentifierChar(
-      line[ end_column - 1 ] ):
-      end_column -= 1
-
-  start_column = end_column
-  while start_column > 0 and utils.IsIdentifierChar( line[ start_column - 1 ] ):
-    start_column -= 1
-
-  if end_column - start_column < min_num_completion_start_chars:
-    return ""
-
-  return line[ start_column : end_column ]
+  prev_line = contents_per_line[ line_num - 1 ]
+  ident = PreviousIdentifierOnLine( prev_line, len( prev_line ) )
+  if len( ident ) < min_num_candidate_size_chars:
+    return ''
+  return ident
 
 
 def _RemoveSmallCandidates( candidates, min_num_candidate_size_chars ):
@@ -199,39 +208,23 @@ def _RemoveSmallCandidates( candidates, min_num_candidate_size_chars ):
   return [ x for x in candidates if len( x ) >= min_num_candidate_size_chars ]
 
 
-# This is meant to behave like 'expand("<cword")' in Vim, thus starting at the
-# cursor column and returning the "cursor word". If the cursor is not on a valid
-# character, it searches forward until a valid identifier is found.
 def _GetCursorIdentifier( request_data ):
-  def FindFirstValidChar( line, column ):
-    current_column = column
-    while not utils.IsIdentifierChar( line[ current_column ] ):
-      current_column += 1
-    return current_column
-
-
-  def FindIdentifierStart( line, valid_char_column ):
-    identifier_start = valid_char_column
-    while identifier_start > 0 and utils.IsIdentifierChar( line[
-      identifier_start - 1 ] ):
-      identifier_start -= 1
-    return identifier_start
-
-
-  def FindIdentifierEnd( line, valid_char_column ):
-    identifier_end = valid_char_column
-    while identifier_end < len( line ) - 1 and utils.IsIdentifierChar( line[
-      identifier_end + 1 ] ):
-      identifier_end += 1
-    return identifier_end + 1
-
-  column_num = request_data[ 'column_num' ] - 1
-  line = request_data[ 'line_value' ]
-
   try:
-    valid_char_column = FindFirstValidChar( line, column_num )
-    return line[ FindIdentifierStart( line, valid_char_column ) :
-                 FindIdentifierEnd( line, valid_char_column ) ]
-  except:
-    return ''
+    filetype = request_data[ 'filetypes' ][ 0 ]
+  except KeyError:
+    filetype = None
+  return identifier_utils.IdentifierAtIndex( request_data[ 'line_value' ],
+                                             request_data[ 'column_num' ] - 1,
+                                             filetype )
 
+
+def _IdentifiersFromBuffer( text,
+                            filetype,
+                            collect_from_comments_and_strings ):
+  if not collect_from_comments_and_strings:
+    text = identifier_utils.RemoveIdentifierFreeText( text )
+  idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
+  vector = ycm_core.StringVec()
+  for ident in idents:
+    vector.append( ToUtf8IfNeeded( ident ) )
+  return vector

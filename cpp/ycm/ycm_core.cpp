@@ -58,10 +58,10 @@ BOOST_PYTHON_MODULE(ycm_core)
   class_< IdentifierCompleter, boost::noncopyable >( "IdentifierCompleter" )
     .def( "AddIdentifiersToDatabase",
           &IdentifierCompleter::AddIdentifiersToDatabase )
+    .def( "ClearForFileAndAddIdentifiersToDatabase",
+          &IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase )
     .def( "AddIdentifiersToDatabaseFromTagFiles",
           &IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles )
-    .def( "AddIdentifiersToDatabaseFromBuffer",
-          &IdentifierCompleter::AddIdentifiersToDatabaseFromBuffer )
     .def( "CandidatesForQueryAndType",
           &IdentifierCompleter::CandidatesForQueryAndType );
 

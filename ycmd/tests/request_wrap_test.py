@@ -19,13 +19,14 @@
 from nose.tools import eq_
 from ..request_wrap import RequestWrap
 
-def PrepareJson( contents = '', line_num = 1, column_num = 1 ):
+def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
   return {
     'line_num': line_num,
     'column_num': column_num,
     'filepath': '/foo',
     'file_data': {
       '/foo': {
+        'filetypes': [ filetype ],
         'contents': contents
       }
     }
@@ -100,10 +101,17 @@ def StartColumn_AfterWholeWord_test():
                                  contents = 'foobar') )[ 'start_column' ] )
 
 
+def StartColumn_AfterWholeWord_Html_test():
+  eq_( 1,
+       RequestWrap( PrepareJson( column_num = 7,
+                                 filetype = 'html',
+                                 contents = 'fo-bar') )[ 'start_column' ] )
+
+
 def StartColumn_AfterWholeUnicodeWord_test():
   eq_( 1,
-       RequestWrap( PrepareJson( column_num = 5,
-                                 contents = u'äö') )[ 'start_column' ] )
+       RequestWrap( PrepareJson( column_num = 6,
+                                 contents = u'fäö') )[ 'start_column' ] )
 
 
 def StartColumn_InMiddleOfWholeWord_test():
