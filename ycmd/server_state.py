@@ -19,8 +19,10 @@
 
 import imp
 import os
+import threading
 from ycmd.utils import ForceSemanticCompletion
-from ycmd.completers.general.general_completer_store import GeneralCompleterStore
+from ycmd.completers.general.general_completer_store import (
+    GeneralCompleterStore )
 from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
 
 
@@ -28,6 +30,7 @@ class ServerState( object ):
   def __init__( self, user_options ):
     self._user_options = user_options
     self._filetype_completers = {}
+    self._filetype_completers_lock = threading.Lock()
     self._gencomp = GeneralCompleterStore( self._user_options )
 
 
@@ -37,31 +40,33 @@ class ServerState( object ):
 
 
   def Shutdown( self ):
-    for completer in self._filetype_completers.itervalues():
-      if completer:
-        completer.Shutdown()
+    with self._filetype_completers_lock:
+      for completer in self._filetype_completers.itervalues():
+        if completer:
+          completer.Shutdown()
 
     self._gencomp.Shutdown()
 
 
   def _GetFiletypeCompleterForFiletype( self, filetype ):
-    try:
-      return self._filetype_completers[ filetype ]
-    except KeyError:
-      pass
+    with self._filetype_completers_lock:
+      try:
+        return self._filetype_completers[ filetype ]
+      except KeyError:
+        pass
 
-    module_path = PathToFiletypeCompleterPluginLoader( filetype )
-    completer = None
-    supported_filetypes = [ filetype ]
-    if os.path.exists( module_path ):
-      module = imp.load_source( filetype, module_path )
-      completer = module.GetCompleter( self._user_options )
-      if completer:
-        supported_filetypes.extend( completer.SupportedFiletypes() )
+      module_path = PathToFiletypeCompleterPluginLoader( filetype )
+      completer = None
+      supported_filetypes = [ filetype ]
+      if os.path.exists( module_path ):
+        module = imp.load_source( filetype, module_path )
+        completer = module.GetCompleter( self._user_options )
+        if completer:
+          supported_filetypes.extend( completer.SupportedFiletypes() )
 
-    for supported_filetype in supported_filetypes:
-      self._filetype_completers[ supported_filetype ] = completer
-    return completer
+      for supported_filetype in supported_filetypes:
+        self._filetype_completers[ supported_filetype ] = completer
+      return completer
 
 
   def GetFiletypeCompleter( self, current_filetypes ):
