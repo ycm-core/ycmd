@@ -49,7 +49,7 @@ DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*", re.UNICODE )
 FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
     # Good summary: http://stackoverflow.com/a/449000/1672783
-    'css': re.compile( r"-?[_a-zA-Z]+[_\w-]+", re.UNICODE ),
+    'css': re.compile( r"[@-]?[_a-zA-Z]+[_\w-]+", re.UNICODE ),
 
     # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
     # But not quite since not everything we want to pull out is a tag name. We

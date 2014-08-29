@@ -138,15 +138,17 @@ def IsIdentifier_generic_test():
 
 
 def IsIdentifier_Css_test():
-  ok_( iu.IsIdentifier( 'foo'      , 'css' ) )
-  ok_( iu.IsIdentifier( 'a1'       , 'css' ) )
-  ok_( iu.IsIdentifier( 'a-'       , 'css' ) )
-  ok_( iu.IsIdentifier( 'a-b'      , 'css' ) )
-  ok_( iu.IsIdentifier( '_b'       , 'css' ) )
-  ok_( iu.IsIdentifier( '-ms-foo'  , 'css' ) )
-  ok_( iu.IsIdentifier( '-_o'      , 'css' ) )
-  ok_( iu.IsIdentifier( 'font-face', 'css' ) )
+  ok_( iu.IsIdentifier( 'foo'       , 'css' ) )
+  ok_( iu.IsIdentifier( 'a1'        , 'css' ) )
+  ok_( iu.IsIdentifier( 'a-'        , 'css' ) )
+  ok_( iu.IsIdentifier( 'a-b'       , 'css' ) )
+  ok_( iu.IsIdentifier( '_b'        , 'css' ) )
+  ok_( iu.IsIdentifier( '-ms-foo'   , 'css' ) )
+  ok_( iu.IsIdentifier( '-_o'       , 'css' ) )
+  ok_( iu.IsIdentifier( 'box-shadow', 'css' ) )
+  ok_( iu.IsIdentifier( '@font-face', 'css' ) )
 
+  ok_( not iu.IsIdentifier( '@-b', 'css' ) )
   ok_( not iu.IsIdentifier( '-3b', 'css' ) )
   ok_( not iu.IsIdentifier( '-3' , 'css' ) )
   ok_( not iu.IsIdentifier( '3'  , 'css' ) )
