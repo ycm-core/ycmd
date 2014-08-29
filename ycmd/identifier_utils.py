@@ -69,6 +69,10 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     'clojure': re.compile(
          r"[-\*\+!_\?:\.a-zA-Z][-\*\+!_\?:\.\w]*/?[-\*\+!_\?:\.\w]*",
          re.UNICODE ),
+
+    # Spec: http://www.haskell.org/onlinereport/lexemes.html
+    # Section 2.4
+    'haskell': re.compile( r"[_a-zA-Z][\w']*", re.UNICODE ),
 }
 
 FILETYPE_TO_IDENTIFIER_REGEX[ 'scss' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]

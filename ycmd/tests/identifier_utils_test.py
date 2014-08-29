@@ -199,6 +199,19 @@ def IsIdentifier_Clojure_test():
   ok_( not iu.IsIdentifier( '(a)'  , 'clojure' ) )
 
 
+def IsIdentifier_Haskell_test():
+  ok_( iu.IsIdentifier( 'foo' , 'haskell' ) )
+  ok_( iu.IsIdentifier( "foo'", 'haskell' ) )
+  ok_( iu.IsIdentifier( "x'"  , 'haskell' ) )
+  ok_( iu.IsIdentifier( "_x'" , 'haskell' ) )
+  ok_( iu.IsIdentifier( "_x"  , 'haskell' ) )
+  ok_( iu.IsIdentifier( "x9"  , 'haskell' ) )
+
+  ok_( not iu.IsIdentifier( "'x", 'haskell' ) )
+  ok_( not iu.IsIdentifier( "9x", 'haskell' ) )
+  ok_( not iu.IsIdentifier( "9" , 'haskell' ) )
+
+
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', 3 ) )
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'f12', 3 ) )
