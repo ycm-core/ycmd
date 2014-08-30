@@ -130,7 +130,7 @@ TRIGGER_REGEX_PREFIX = 're!'
 
 DEFAULT_FILETYPE_TRIGGERS = {
   'c' : ['->', '.'],
-  'objc' : ['->', '.'],
+  'objc' : ['->', '.', r're!\[[_a-zA-Z]+\w*\s'],
   'ocaml' : ['.', '#'],
   'cpp,objcpp' : ['->', '.', '::'],
   'perl' : ['->'],
