@@ -21,8 +21,6 @@ struct Foo {
 int main()
 {
   Foo foo;
-  // The location after the dot is line 28, col 7
+  // The location after the dot is line 25, col 7
   foo.
 }
-
-
