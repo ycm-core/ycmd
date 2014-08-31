@@ -390,14 +390,14 @@ def CppSemanticCompletionResults( server ):
   # some_cpp.cpp file that we placed there intentionally (as an example).
   # Clang will recover from this error and still manage to parse the file
   # though.
-  server.SendEventNotification( Event.FileReadyToParse,
-                                test_filename = 'some_cpp.cpp',
-                                filetype = 'cpp' )
+  # server.SendEventNotification( Event.FileReadyToParse,
+  #                               test_filename = 'some_cpp.cpp',
+  #                               filetype = 'cpp' )
 
   server.SendCodeCompletionRequest( test_filename = 'some_cpp.cpp',
                                     filetype = 'cpp',
-                                    line_num = 25,
-                                    column_num = 7 )
+                                    line_num = 5,
+                                    column_num = 9 )
 
 
 def PythonGetSupportedCommands( server ):
@@ -435,18 +435,18 @@ def Main():
   server = YcmdHandle.StartYcmdAndReturnHandle()
   server.WaitUntilReady()
 
-  LanguageAgnosticIdentifierCompletion( server )
-  PythonSemanticCompletionResults( server )
+  #LanguageAgnosticIdentifierCompletion( server )
+  #PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
-  CsharpSemanticCompletionResults( server )
+  #CsharpSemanticCompletionResults( server )
 
   # This will ask the server for a list of subcommands supported by a given
   # language completer.
-  PythonGetSupportedCommands( server )
+  #PythonGetSupportedCommands( server )
 
   # GoTo is an example of a completer subcommand.
   # Python and C# completers also support the GoTo subcommand.
-  CppGotoDeclaration( server )
+  #CppGotoDeclaration( server )
 
   print 'Shutting down server...'
   server.Shutdown()
