@@ -41,6 +41,22 @@ def CompletionEntryMatcher( insertion_text ):
 
 
 @with_setup( Setup )
+def GetCompletions_RequestValidation_NoLineNumException_test():
+  app = TestApp( handlers.app )
+  response = app.post_json( '/semantic_completion_available', {
+    'column_num': 0,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'filetypes': [ 'text' ],
+        'contents': 'zoo'
+      }
+    }
+  }, status = '5*', expect_errors = True )
+  response.mustcontain( 'missing', 'line_num' )
+
+
+@with_setup( Setup )
 def GetCompletions_IdentifierCompleter_Works_test():
   app = TestApp( handlers.app )
   event_data = BuildRequest( contents = 'foo foogoo ba',

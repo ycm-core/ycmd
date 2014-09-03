@@ -17,11 +17,14 @@
 
 from ycmd.utils import ToUnicodeIfNeeded, ToUtf8IfNeeded
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
+from ycmd.request_validation import EnsureRequestValid
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
 # the object.
 class RequestWrap( object ):
-  def __init__( self, request ):
+  def __init__( self, request, validate = True ):
+    if validate:
+      EnsureRequestValid( request )
     self._request = request
     self._computed_key = {
       'line_value': self._CurrentLine,
@@ -104,4 +107,5 @@ def CompletionStartColumn( line_value, column_num, filetype ):
 
   return len(
       unicode_line_value[ : codepoint_start_column - 1 ].encode( 'utf8' ) ) + 1
+
 

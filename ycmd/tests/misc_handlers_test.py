@@ -22,7 +22,7 @@ SetUpPythonPath()
 from webtest import TestApp
 from .. import handlers
 from nose.tools import ok_, eq_, with_setup
-from .test_utils import Setup
+from .test_utils import Setup, BuildRequest
 import bottle
 
 bottle.debug( True )
@@ -31,15 +31,7 @@ bottle.debug( True )
 @with_setup( Setup )
 def SemanticCompletionAvailable_Works_test():
   app = TestApp( handlers.app )
-  request_data = {
-    'filepath': '/foo',
-    'file_data': {
-      '/foo': {
-        'filetypes': ['python'],
-      }
-    }
-  }
-
+  request_data = BuildRequest( filetype = 'python' )
   ok_( app.post_json( '/semantic_completion_available',
                       request_data ).json )
 

@@ -158,14 +158,14 @@ def GetDetailedDiagnostic():
 @app.post( '/load_extra_conf_file' )
 def LoadExtraConfFile():
   LOGGER.info( 'Received extra conf load request' )
-  request_data = RequestWrap( request.json )
+  request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Load( request_data[ 'filepath' ], force = True )
 
 
 @app.post( '/ignore_extra_conf_file' )
 def IgnoreExtraConfFile():
   LOGGER.info( 'Received extra conf ignore request' )
-  request_data = RequestWrap( request.json )
+  request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Disable( request_data[ 'filepath' ] )
 
 
