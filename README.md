@@ -120,6 +120,20 @@ completion (both of which are subsequence matches). A word-boundary character
 are all capital characters, characters preceded by an underscore and the first
 letter character in the completion string.
 
+### Auto-shutdown if no requests for a while
+
+If the server hasn't received any requests for a while (controlled by the
+`--idle_suicide_seconds` ycmd flag), it will shut itself down. This is useful
+for cases where the process that started ycmd dies without telling ycmd to die
+too or if ycmd hangs (this should be extremely rare).
+
+If you're implementing a client for ycmd, ensure that you have some sort of
+keep-alive background thread that periodically pings ycmd (just call the
+`/healthy` handler, although any handler will do).
+
+You can also turn this off by passing `--idle_suicide_seconds=0`, although that
+isn't recommended.
+
 User-level customization
 -----------------------
 
@@ -141,6 +155,7 @@ user has configured. There's also an extra file (`.ycm_extra_conf.py`) your user
 is supposed to provide to configure certain semantic completers. More
 information on it can also be found in the [corresponding section of YCM's _User
 Guide_][extra-conf-doc].
+
 
 Backwards compatibility
 -----------------------
