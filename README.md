@@ -14,8 +14,20 @@ The best way to learn how to interact with ycmd is by reading through (and
 running) the [`example_client.py`][example-client] file. See the [README for the
 examples][example-readme] folder for details on how to run the example client.
 
+Known ycmd clients:
+------------------
+
+- [YouCompleteMe][ycm]: Vim client, stable and exposes all ycmd features.
+- [emacs-ycmd][]: Emacs client, still a bit experimental.
+
+Feel free to send a pull request adding a link to your client here if you've
+built one.
+
 Building
 --------
+
+[Clients commonly build and set up ycmd for you; you are unlikely to need to
+build ycmd yourself unless you want to build a new client.]
 
 This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can be
 found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
@@ -221,3 +233,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [mkstemp]: http://man7.org/linux/man-pages/man3/mkstemp.3.html
 [options]: https://github.com/Valloric/YouCompleteMe#options
 [extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion-engine-usage
+[emacs-ycmd]: https://github.com/abingham/emacs-ycmd
