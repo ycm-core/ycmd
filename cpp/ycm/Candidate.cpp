@@ -45,17 +45,17 @@ std::string GetWordBoundaryChars( const std::string &text ) {
   std::string result;
 
   for ( uint i = 0; i < text.size(); ++i ) {
-    bool is_first_char_but_not_underscore = i == 0 && text[ i ] != '_';
+    bool is_first_char_but_not_punctuation = i == 0 && !ispunct( text[ i ] );
     bool is_good_uppercase = i > 0 &&
                              IsUppercase( text[ i ] ) &&
                              !IsUppercase( text[ i - 1 ] );
-    bool is_alpha_after_underscore = i > 0 &&
-                                     text[ i - 1 ] == '_' &&
-                                     isalpha( text[ i ] );
+    bool is_alpha_after_punctuation = i > 0 &&
+                                      ispunct( text[ i - 1 ] ) &&
+                                      isalpha( text[ i ] );
 
-    if ( is_first_char_but_not_underscore ||
+    if ( is_first_char_but_not_punctuation ||
          is_good_uppercase ||
-         is_alpha_after_underscore ) {
+         is_alpha_after_punctuation ) {
       result.push_back( tolower( text[ i ] ) );
     }
   }

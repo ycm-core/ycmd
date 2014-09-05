@@ -104,6 +104,20 @@ TEST( IdentifierCompleterTest, CompleteMatchForWordBoundaryCharsWins ) {
                    "FooBarRux" ) ).CandidatesForQuery( "fbr" ),
                ElementsAre( "FooBarRux",
                             "FooBar" ) );
+
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "foo-bar",
+                   "foo-bar-rux" ) ).CandidatesForQuery( "fbr" ),
+               ElementsAre( "foo-bar-rux",
+                            "foo-bar" ) );
+
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "foo.bar",
+                   "foo.bar.rux" ) ).CandidatesForQuery( "fbr" ),
+               ElementsAre( "foo.bar.rux",
+                            "foo.bar" ) );
 }
 
 TEST( IdentifierCompleterTest, RatioUtilizationTieBreak ) {

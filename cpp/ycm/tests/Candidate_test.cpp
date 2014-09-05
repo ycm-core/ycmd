@@ -25,24 +25,36 @@ TEST( GetWordBoundaryCharsTest, SimpleOneWord ) {
   EXPECT_EQ( "s", GetWordBoundaryChars( "simple" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, UnderscoreInMiddle ) {
+TEST( GetWordBoundaryCharsTest, PunctuationInMiddle ) {
   EXPECT_EQ( "sf", GetWordBoundaryChars( "simple_foo" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, UnderscoreStart ) {
+TEST( GetWordBoundaryCharsTest, PunctuationStart ) {
   EXPECT_EQ( "s", GetWordBoundaryChars( "_simple" ) );
+  EXPECT_EQ( "s", GetWordBoundaryChars( ".simple" ) );
+  EXPECT_EQ( "s", GetWordBoundaryChars( "/simple" ) );
+  EXPECT_EQ( "s", GetWordBoundaryChars( ":simple" ) );
+  EXPECT_EQ( "s", GetWordBoundaryChars( "-simple" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, ManyUnderscoreStart ) {
+TEST( GetWordBoundaryCharsTest, PunctuationStartButFirstDigit ) {
+  EXPECT_EQ( "", GetWordBoundaryChars( "_1simple" ) );
+  EXPECT_EQ( "p", GetWordBoundaryChars( "_1simPle" ) );
+}
+
+TEST( GetWordBoundaryCharsTest, ManyPunctuationStart ) {
   EXPECT_EQ( "s", GetWordBoundaryChars( "___simple" ) );
+  EXPECT_EQ( "s", GetWordBoundaryChars( ".;/simple" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, UnderscoreStartAndInMiddle ) {
+TEST( GetWordBoundaryCharsTest, PunctuationStartAndInMiddle ) {
   EXPECT_EQ( "sf", GetWordBoundaryChars( "_simple_foo" ) );
+  EXPECT_EQ( "sf", GetWordBoundaryChars( "/simple.foo" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, ManyUnderscoreStartAndInMiddle ) {
+TEST( GetWordBoundaryCharsTest, ManyPunctuationStartAndInMiddle ) {
   EXPECT_EQ( "sf", GetWordBoundaryChars( "___simple__foo" ) );
+  EXPECT_EQ( "sf", GetWordBoundaryChars( "./;:simple..foo" ) );
 }
 
 TEST( GetWordBoundaryCharsTest, SimpleCapitalStart ) {
@@ -53,7 +65,7 @@ TEST( GetWordBoundaryCharsTest, SimpleCapitalTwoWord ) {
   EXPECT_EQ( "ss", GetWordBoundaryChars( "SimpleStuff" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, SimpleCapitalTwoWordUnderscoreMiddle ) {
+TEST( GetWordBoundaryCharsTest, SimpleCapitalTwoWordPunctuationMiddle ) {
   EXPECT_EQ( "ss", GetWordBoundaryChars( "Simple_Stuff" ) );
 }
 
@@ -69,28 +81,33 @@ TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddle ) {
   EXPECT_EQ( "ss", GetWordBoundaryChars( "simpleSTUFFfoo" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddleUnderscore ) {
+TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddlePunctuation ) {
   EXPECT_EQ( "ssf", GetWordBoundaryChars( "simpleSTUFF_Foo" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddleUnderscoreLowercase ) {
+TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddlePunctuationLowercase )
+{
   EXPECT_EQ( "ssf", GetWordBoundaryChars( "simpleSTUFF_foo" ) );
+  EXPECT_EQ( "ssf", GetWordBoundaryChars( "simpleSTUFF.foo" ) );
 }
 
 TEST( GetWordBoundaryCharsTest, AllCapsSimple ) {
   EXPECT_EQ( "s", GetWordBoundaryChars( "SIMPLE" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, AllCapsUnderscoreStart ) {
+TEST( GetWordBoundaryCharsTest, AllCapsPunctuationStart ) {
   EXPECT_EQ( "s", GetWordBoundaryChars( "_SIMPLE" ) );
+  EXPECT_EQ( "s", GetWordBoundaryChars( ".SIMPLE" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, AllCapsUnderscoreMiddle ) {
+TEST( GetWordBoundaryCharsTest, AllCapsPunctuationMiddle ) {
   EXPECT_EQ( "ss", GetWordBoundaryChars( "SIMPLE_STUFF" ) );
+  EXPECT_EQ( "ss", GetWordBoundaryChars( "SIMPLE/STUFF" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, AllCapsUnderscoreMiddleAndStart ) {
+TEST( GetWordBoundaryCharsTest, AllCapsPunctuationMiddleAndStart ) {
   EXPECT_EQ( "ss", GetWordBoundaryChars( "_SIMPLE_STUFF" ) );
+  EXPECT_EQ( "ss", GetWordBoundaryChars( ":SIMPLE.STUFF" ) );
 }
 
 TEST( CandidateTest, TextValid ) {

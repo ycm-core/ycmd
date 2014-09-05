@@ -56,7 +56,6 @@ public:
                            bool case_sensitive ) const;
 
 private:
-
   std::string text_;
   std::string word_boundary_chars_;
   bool text_is_lowercase_;
