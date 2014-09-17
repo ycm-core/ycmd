@@ -126,14 +126,6 @@ def PreparedTriggers_UserTriggers_test():
   ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'c' ) )
 
 
-def PreparedTriggers_VimTriggerIgnoresConcatOperator_test():
-  triggers = cu.PreparedTriggers()
-  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'vim' ) )
-  ok_( not triggers.MatchesForFiletype( 'foo . bar', 4, 'vim' ) )
-  ok_( not triggers.MatchesForFiletype( 'foo . bar', 5, 'vim' ) )
-  ok_( not triggers.MatchesForFiletype( 'foo . bar', 6, 'vim' ) )
-
-
 def PreparedTriggers_ObjectiveC_test():
   triggers = cu.PreparedTriggers()
   ok_( triggers.MatchesForFiletype( '[foo ', 5, 'objc' ) )
