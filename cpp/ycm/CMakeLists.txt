@@ -40,26 +40,25 @@ if ( USE_CLANG_COMPLETER AND
      NOT USE_SYSTEM_LIBCLANG AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
-  message( "Downloading Clang 3.4" )
+  message( "Downloading Clang 3.5" )
 
-  set( CLANG_URL "http://llvm.org/releases/3.4" )
+  set( CLANG_URL "http://llvm.org/releases/3.5.0" )
 
   if ( APPLE )
-    set( CLANG_DIRNAME "clang+llvm-3.4-x86_64-apple-darwin10.9" )
-    set( CLANG_MD5 "4f43ea0e87090ae5e7bec12373ca4927" )
-    set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.gz" )
+    set( CLANG_DIRNAME "clang+llvm-3.5.0-macosx-apple-darwin" )
+    set( CLANG_MD5 "e580c8b8c64ca5442ac15a4343447500" )
+    set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-3.4-x86_64-unknown-ubuntu12.04" )
-      set( CLANG_MD5 "6077459d20a7ff412eefc6ce3b9f5c85" )
+      set( CLANG_DIRNAME "clang+llvm-3.5.0-x86_64-linux-gnu-ubuntu-14.04" )
+      set( CLANG_MD5 "904e96e6f51e57b58de546a7324910c3" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
-      message( "No pre-built Clang 3.4 binaries for 32 bit linux, "
-               "downloading Clang 3.3" )
-      set( CLANG_URL "http://llvm.org/releases/3.3" )
-      set( CLANG_DIRNAME "clang+llvm-3.3-i386-debian6" )
-      set( CLANG_MD5 "415d033b60659433d4631df894673802" )
-      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.bz2" )
+      # Clang 3.3 is the last version with pre-built x86 binaries upstream.
+      # That's too old now.
+      message( FATAL_ERROR "No pre-built Clang 3.5 binaries for 32 bit linux. "
+        "You'll have to compile Clang 3.5 from source. "
+        "See the YCM docs for details on how to use a user-compiled libclang." )
     endif()
   endif()
 
@@ -76,8 +75,12 @@ if ( USE_CLANG_COMPLETER AND
     execute_process( COMMAND tar -xzf ${CLANG_FILENAME} )
   endif()
 
-  # And set PATH_TO_LLVM_ROOT
-  set( PATH_TO_LLVM_ROOT "${CMAKE_CURRENT_BINARY_DIR}/../${CLANG_DIRNAME}" )
+  # We need to set PATH_TO_LLVM_ROOT. To do that, we first have to find the
+  # folder name the archive produced. It isn't the archive base name.
+  execute_process( COMMAND
+    find ${CMAKE_CURRENT_BINARY_DIR}/.. -maxdepth 1 -type d -name clang*
+    OUTPUT_VARIABLE PATH_TO_LLVM_ROOT
+    OUTPUT_STRIP_TRAILING_WHITESPACE )
 endif()
 
 if ( PATH_TO_LLVM_ROOT OR USE_SYSTEM_LIBCLANG OR EXTERNAL_LIBCLANG_PATH )
