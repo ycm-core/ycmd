@@ -99,6 +99,7 @@ class CsharpCompleter( Completer ):
   def __init__( self, user_options ):
     super( CsharpCompleter, self ).__init__( user_options )
     self._omnisharp_port = None
+    self._omnisharp_phandle = None
     self._logger = logging.getLogger( __name__ )
     self._solution_path = None
     self._diagnostic_store = None
@@ -244,7 +245,7 @@ class CsharpCompleter( Completer ):
                          '-p',
                          str( self._omnisharp_port ),
                          '-s',
-                         '"{0}"'.format(path_to_solutionfile) ] )
+                         '"{0}"'.format( path_to_solutionfile ) ] )
 
     if not utils.OnWindows() and not utils.OnCygwin():
       command = 'mono ' + command
@@ -265,7 +266,8 @@ class CsharpCompleter( Completer ):
       with open( self._filename_stdout, 'w' ) as fstdout:
         # shell=True is needed for Windows so OmniSharp does not spawn
         # in a new visible window
-        utils.SafePopen( command, stdout = fstdout, stderr = fstderr, shell = True )
+        self._omnisharp_phandle = utils.SafePopen(
+            command, stdout = fstdout, stderr = fstderr, shell = True )
 
     self._solution_path = path_to_solutionfile
 
@@ -276,6 +278,7 @@ class CsharpCompleter( Completer ):
     """ Stop the OmniSharp server """
     self._GetResponse( '/stopserver' )
     self._omnisharp_port = None
+    self._omnisharp_phandle = None
     if ( not self.user_options[ 'server_keep_logfiles' ] ):
       os.unlink( self._filename_stdout );
       os.unlink( self._filename_stderr );
@@ -355,6 +358,9 @@ class CsharpCompleter( Completer ):
 
   def ServerIsRunning( self ):
     """ Check if our OmniSharp server is running (up and serving)."""
+    if self._omnisharp_phandle is not None and not self._omnisharp_phandle.poll() is None:
+      # Server process has terminated, notify caller it won't be running anymore
+      raise Exception('Testing a terminated server for activity')
     try:
       return bool( self._omnisharp_port and
                   self._GetResponse( '/checkalivestatus', silent = True ) )
@@ -364,6 +370,9 @@ class CsharpCompleter( Completer ):
 
   def ServerIsReady( self ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
+    if self._omnisharp_phandle is not None and not self._omnisharp_phandle.poll() is None:
+      # Server process has terminated,  notify caller it won't be running anymore
+      raise Exception('Testing a terminated server for readiness')
     try:
       return bool( self._omnisharp_port and
                    self._GetResponse( '/checkreadystatus', silent = True ) )

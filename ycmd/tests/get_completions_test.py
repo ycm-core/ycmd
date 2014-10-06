@@ -137,6 +137,34 @@ def GetCompletions_CsCompleter_Works_test():
 
   StopOmniSharpServer( app )
 
+@with_setup( Setup )
+def GetCompletions_CsCompleter_PathWithSpace_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'cs spacetest/Program.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 12 )
+  response_data = app.post_json( '/completions', completion_data ).json
+  assert_that( response_data[ 'completions' ],
+               has_items( CompletionEntryMatcher( 'CursorLeft' ),
+                          CompletionEntryMatcher( 'CursorSize' ) ) )
+  eq_( 12, response_data[ 'completion_start_column' ] )
+
+  StopOmniSharpServer( app )
+
 
 @with_setup( Setup )
 def GetCompletions_CsCompleter_HasBothImportsAndNonImport_test():
