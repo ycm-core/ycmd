@@ -244,7 +244,7 @@ class CsharpCompleter( Completer ):
                          '-p',
                          str( self._omnisharp_port ),
                          '-s',
-                         path_to_solutionfile ] )
+                         '"{0}"'.format(path_to_solutionfile) ] )
 
     if not utils.OnWindows() and not utils.OnCygwin():
       command = 'mono ' + command
