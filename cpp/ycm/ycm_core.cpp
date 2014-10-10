@@ -65,9 +65,8 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "CandidatesForQueryAndType",
           &IdentifierCompleter::CandidatesForQueryAndType );
 
-  // TODO: rename these *Vec classes to *Vector; don't forget the python file
   class_< std::vector< std::string >,
-      boost::shared_ptr< std::vector< std::string > > >( "StringVec" )
+      boost::shared_ptr< std::vector< std::string > > >( "StringVector" )
     .def( vector_indexing_suite< std::vector< std::string > >() );
 
 #ifdef USE_CLANG_COMPLETER
@@ -88,7 +87,7 @@ BOOST_PYTHON_MODULE(ycm_core)
                    return_value_policy< reference_existing_object >() ) )
     .def_readwrite( "length_", &UnsavedFile::length_ );
 
-  class_< std::vector< UnsavedFile > >( "UnsavedFileVec" )
+  class_< std::vector< UnsavedFile > >( "UnsavedFileVector" )
     .def( vector_indexing_suite< std::vector< UnsavedFile > >() );
 
   class_< ClangCompleter, boost::noncopyable >( "ClangCompleter" )
@@ -123,7 +122,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "kind_", &CompletionData::kind_ );
 
   class_< std::vector< CompletionData >,
-      boost::shared_ptr< std::vector< CompletionData > > >( "CompletionVec" )
+      boost::shared_ptr< std::vector< CompletionData > > >( "CompletionVector" )
     .def( vector_indexing_suite< std::vector< CompletionData > >() );
 
   class_< Location >( "Location" )
@@ -136,7 +135,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "start_", &Range::start_ )
     .def_readonly( "end_", &Range::end_ );
 
-  class_< std::vector< Range > >( "RangeVec" )
+  class_< std::vector< Range > >( "RangeVector" )
     .def( vector_indexing_suite< std::vector< Range > >() );
 
   enum_< DiagnosticKind >( "DiagnosticKind" )
@@ -153,7 +152,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "text_", &Diagnostic::text_ )
     .def_readonly( "long_formatted_text_", &Diagnostic::long_formatted_text_ );
 
-  class_< std::vector< Diagnostic > >( "DiagnosticVec" )
+  class_< std::vector< Diagnostic > >( "DiagnosticVector" )
     .def( vector_indexing_suite< std::vector< Diagnostic > >() );
 
   class_< CompilationDatabase, boost::noncopyable >(
