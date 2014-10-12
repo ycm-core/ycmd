@@ -81,6 +81,8 @@ class CsharpCompleter( Completer ):
     'ReloadSolution': ( lambda self, request_data: self._ReloadSolution() ),
     'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
     'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
+    'ServerTerminated': ( lambda self, request_data:
+        self.ServerTerminated() ),
     'SolutionFile': ( lambda self, request_data: self._SolutionFile() ),
     'GoToDefinition': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
@@ -99,6 +101,7 @@ class CsharpCompleter( Completer ):
   def __init__( self, user_options ):
     super( CsharpCompleter, self ).__init__( user_options )
     self._omnisharp_port = None
+    self._omnisharp_phandle = None
     self._logger = logging.getLogger( __name__ )
     self._solution_path = None
     self._diagnostic_store = None
@@ -244,7 +247,7 @@ class CsharpCompleter( Completer ):
                          '-p',
                          str( self._omnisharp_port ),
                          '-s',
-                         path_to_solutionfile ] )
+                         '"{0}"'.format( path_to_solutionfile ) ] )
 
     if not utils.OnWindows() and not utils.OnCygwin():
       command = 'mono ' + command
@@ -265,7 +268,8 @@ class CsharpCompleter( Completer ):
       with open( self._filename_stdout, 'w' ) as fstdout:
         # shell=True is needed for Windows so OmniSharp does not spawn
         # in a new visible window
-        utils.SafePopen( command, stdout = fstdout, stderr = fstderr, shell = True )
+        self._omnisharp_phandle = utils.SafePopen(
+            command, stdout = fstdout, stderr = fstderr, shell = True )
 
     self._solution_path = path_to_solutionfile
 
@@ -276,6 +280,7 @@ class CsharpCompleter( Completer ):
     """ Stop the OmniSharp server """
     self._GetResponse( '/stopserver' )
     self._omnisharp_port = None
+    self._omnisharp_phandle = None
     if ( not self.user_options[ 'server_keep_logfiles' ] ):
       os.unlink( self._filename_stdout );
       os.unlink( self._filename_stderr );
@@ -369,6 +374,13 @@ class CsharpCompleter( Completer ):
                    self._GetResponse( '/checkreadystatus', silent = True ) )
     except:
       return False
+
+
+  def ServerTerminated( self ):
+    """ Check if the server process has already terminated. """
+    return ( self._omnisharp_phandle is not None and
+             self._omnisharp_phandle.poll() is not None )
+
 
   def _SolutionFile( self ):
     """ Find out which solution file server was started with """

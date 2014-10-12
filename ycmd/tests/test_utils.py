@@ -78,6 +78,12 @@ def WaitUntilOmniSharpServerReady( app ):
     result = app.get( '/ready', { 'include_subservers': 1 } ).json
     if result:
       break
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'ServerTerminated' ],
+                            filetype = 'cs' )
+    result = app.post_json( '/run_completer_command', request ).json
+    if result:
+      raise RuntimeError( "OmniSharp failed during startup." )
     time.sleep( 0.2 )
 
 
