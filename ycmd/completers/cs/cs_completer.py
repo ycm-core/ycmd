@@ -81,6 +81,8 @@ class CsharpCompleter( Completer ):
     'ReloadSolution': ( lambda self, request_data: self._ReloadSolution() ),
     'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
     'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
+    'ServerTerminated': ( lambda self, request_data:
+        self.ServerTerminated() ),
     'SolutionFile': ( lambda self, request_data: self._SolutionFile() ),
     'GoToDefinition': ( lambda self, request_data: self._GoToDefinition(
         request_data ) ),
@@ -358,9 +360,6 @@ class CsharpCompleter( Completer ):
 
   def ServerIsRunning( self ):
     """ Check if our OmniSharp server is running (up and serving)."""
-    if self._omnisharp_phandle is not None and not self._omnisharp_phandle.poll() is None:
-      # Server process has terminated, notify caller it won't be running anymore
-      raise Exception('Testing a terminated server for activity')
     try:
       return bool( self._omnisharp_port and
                   self._GetResponse( '/checkalivestatus', silent = True ) )
@@ -370,14 +369,18 @@ class CsharpCompleter( Completer ):
 
   def ServerIsReady( self ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
-    if self._omnisharp_phandle is not None and not self._omnisharp_phandle.poll() is None:
-      # Server process has terminated,  notify caller it won't be running anymore
-      raise Exception('Testing a terminated server for readiness')
     try:
       return bool( self._omnisharp_port and
                    self._GetResponse( '/checkreadystatus', silent = True ) )
     except:
       return False
+
+
+  def ServerTerminated( self ):
+    """ Check if the server process has already terminated. """
+    return ( self._omnisharp_phandle is not None and
+             self._omnisharp_phandle.poll() is not None )
+
 
   def _SolutionFile( self ):
     """ Find out which solution file server was started with """
