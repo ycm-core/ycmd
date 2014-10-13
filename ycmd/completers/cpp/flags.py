@@ -136,7 +136,7 @@ def _SanitizeFlags( flags ):
 
     sanitized_flags.append( flag )
 
-  vector = ycm_core.StringVec()
+  vector = ycm_core.StringVector()
   for flag in sanitized_flags:
     vector.append( ToUtf8IfNeeded( flag ) )
   return vector

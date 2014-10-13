@@ -54,7 +54,7 @@ class ClangCompleter( Completer ):
 
 
   def GetUnsavedFilesVector( self, request_data ):
-    files = ycm_core.UnsavedFileVec()
+    files = ycm_core.UnsavedFileVector()
     for filename, file_data in request_data[ 'file_data' ].iteritems():
       if not ClangAvailableForFiletypes( file_data[ 'filetypes' ] ):
         continue

@@ -68,7 +68,7 @@ class IdentifierCompleter( GeneralCompleter ):
     if not filetype or not filepath or not identifier:
       return
 
-    vector = ycm_core.StringVec()
+    vector = ycm_core.StringVector()
     vector.append( ToUtf8IfNeeded( identifier ) )
     self._logger.info( 'Adding ONE buffer identifier for file: %s', filepath )
     self._completer.AddIdentifiersToDatabase( vector,
@@ -115,7 +115,7 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddIdentifiersFromTagFiles( self, tag_files ):
-    absolute_paths_to_tag_files = ycm_core.StringVec()
+    absolute_paths_to_tag_files = ycm_core.StringVector()
     for tag_file in tag_files:
       try:
         current_mtime = os.path.getmtime( tag_file )
@@ -139,7 +139,7 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddIdentifiersFromSyntax( self, keyword_list, filetypes ):
-    keyword_vector = ycm_core.StringVec()
+    keyword_vector = ycm_core.StringVector()
     for keyword in keyword_list:
       keyword_vector.append( ToUtf8IfNeeded( keyword ) )
 
@@ -224,7 +224,7 @@ def _IdentifiersFromBuffer( text,
   if not collect_from_comments_and_strings:
     text = identifier_utils.RemoveIdentifierFreeText( text )
   idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
-  vector = ycm_core.StringVec()
+  vector = ycm_core.StringVector()
   for ident in idents:
     vector.append( ToUtf8IfNeeded( ident ) )
   return vector
