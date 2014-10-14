@@ -159,11 +159,11 @@ class CsharpCompleter( Completer ):
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
 
-    syntax_errors = self._GetResponse( '/syntaxerrors',
+    errors = self._GetResponse( '/codecheck',
                                      self._DefaultParameters( request_data ) )
 
-    diagnostics = [ self._SyntaxErrorToDiagnostic( x ) for x in
-                    syntax_errors[ "Errors" ] ]
+    diagnostics = [ self._QuickFixToDiagnostic( x ) for x in
+                    errors[ "QuickFixes" ] ]
 
     self._diagnostic_store = DiagnosticsToDiagStructure( diagnostics )
 
@@ -171,17 +171,17 @@ class CsharpCompleter( Completer ):
              diagnostics[ : self._max_diagnostics_to_display ] ]
 
 
-  def _SyntaxErrorToDiagnostic( self, syntax_error ):
-    filename = syntax_error[ "FileName" ]
+  def _QuickFixToDiagnostic( self, quick_fix ):
+    filename = quick_fix[ "FileName" ]
 
-    location = CsharpDiagnosticLocation( syntax_error[ "Line" ],
-                                         syntax_error[ "Column" ], filename )
+    location = CsharpDiagnosticLocation( quick_fix[ "Line" ],
+                                         quick_fix[ "Column" ], filename )
     location_range = CsharpDiagnosticRange( location, location )
     return CsharpDiagnostic( list(),
                              location,
                              location_range,
-                             syntax_error[ "Message" ],
-                             "ERROR" )
+                             quick_fix[ "Text" ],
+                             quick_fix[ "LogLevel" ].upper() )
 
 
   def GetDetailedDiagnostic( self, request_data ):
