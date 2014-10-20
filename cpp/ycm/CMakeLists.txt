@@ -212,7 +212,7 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
                   /usr/lib
                   /usr/lib/llvm
                   ${SYS_LLVM_PATHS}
-                  /Library/Developer/CommandLineTools/usr/lib,
+                  /Library/Developer/CommandLineTools/usr/lib
                   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib )
     set( EXTERNAL_LIBCLANG_PATH ${TEMP} )
   else()
