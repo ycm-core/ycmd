@@ -88,8 +88,7 @@ private:
 
 template< class T >
 struct ResultAnd {
-  // TODO: Swap the order of these parameters
-  ResultAnd( T extra_object, const Result &result )
+  ResultAnd( const Result &result, T extra_object )
     : extra_object_( extra_object ), result_( result ) {}
 
   bool operator< ( const ResultAnd &other ) const {
@@ -102,7 +101,7 @@ struct ResultAnd {
 
 template< class T >
 struct ResultAnd<T * > {
-  ResultAnd( const T *extra_object, const Result &result )
+  ResultAnd( const Result &result, const T *extra_object )
     : extra_object_( extra_object ), result_( result ) {}
 
   bool operator< ( const ResultAnd &other ) const {

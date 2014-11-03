@@ -84,7 +84,7 @@ boost::python::list FilterAndSortCandidates(
   std::vector< const Candidate * > repository_candidates =
     CandidatesFromObjectList( candidates, candidate_property );
 
-  std::vector< ResultAnd< int > > object_and_results;
+  std::vector< ResultAnd< int > > result_and_objects;
   {
     ReleaseGil unlock;
     Bitset query_bitset = LetterBitsetFromString( query );
@@ -100,17 +100,17 @@ boost::python::list FilterAndSortCandidates(
                                                    query_has_uppercase_letters );
 
       if ( result.IsSubsequence() ) {
-        ResultAnd< int > object_and_result( i, result );
-        object_and_results.push_back( boost::move( object_and_result ) );
+        ResultAnd< int > result_and_object( result, i );
+        result_and_objects.push_back( boost::move( result_and_object ) );
       }
     }
 
-    std::sort( object_and_results.begin(), object_and_results.end() );
+    std::sort( result_and_objects.begin(), result_and_objects.end() );
   }
 
-  foreach ( const ResultAnd< int > &object_and_result,
-            object_and_results ) {
-    filtered_candidates.append( candidates[ object_and_result.extra_object_ ] );
+  foreach ( const ResultAnd< int > &result_and_object,
+            result_and_objects ) {
+    filtered_candidates.append( candidates[ result_and_object.extra_object_ ] );
   }
 
   return filtered_candidates;
