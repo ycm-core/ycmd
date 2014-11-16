@@ -236,8 +236,8 @@ if ( EXTRA_RPATH )
   set( CMAKE_INSTALL_RPATH "${EXTRA_RPATH}:${CMAKE_INSTALL_RPATH}" )
 endif()
 
-# Needed on Linux machines, but not on Macs
-if ( UNIX AND NOT APPLE )
+# Needed on Linux machines, but not on Macs and OpenBSD
+if ( UNIX AND NOT ( APPLE OR SYSTEM_IS_OPENBSD ) )
   set( EXTRA_LIBS rt )
 endif()
 
@@ -391,6 +391,10 @@ endif()
 if( SYSTEM_IS_SUNOS )
   # SunOS needs this setting for thread support
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthreads" )
+endif()
+
+if( SYSTEM_IS_OPENBSD )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
 endif()
 
 add_subdirectory( tests )
