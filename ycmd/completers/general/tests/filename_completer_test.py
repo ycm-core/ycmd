@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2014  Davit Samvelyan <davitsamvelyan@gmail.com>
 #
@@ -60,13 +61,14 @@ class FilenameCompleter_test( object ):
   def QuotedIncludeCompletion_test( self ):
     data = self._CompletionResultsForLine( '#include "' )
     eq_( [
-          ( 'include',  '[Dir]' ),
-          ( 'Qt',       '[Dir]' ),
-          ( 'QtGui',    '[File&Dir]' ),
-          ( 'QDialog',  '[File]' ),
-          ( 'QWidget',  '[File]' ),
-          ( 'test.cpp', '[File]' ),
-          ( 'test.hpp', '[File]' ),
+          ( 'bbbüro.txt', '[File]' ),
+          ( 'include',    '[Dir]' ),
+          ( 'Qt',         '[Dir]' ),
+          ( 'QtGui',      '[File&Dir]' ),
+          ( 'QDialog',    '[File]' ),
+          ( 'QWidget',    '[File]' ),
+          ( 'test.cpp',   '[File]' ),
+          ( 'test.hpp',   '[File]' ),
         ], data )
 
     data = self._CompletionResultsForLine( '#include "include/' )
@@ -97,9 +99,10 @@ class FilenameCompleter_test( object ):
     # on different systems
     data = sorted( self._CompletionResultsForLine( 'const char* c = "./' ) )
     eq_( [
-          ( 'include',  '[Dir]' ),
-          ( 'test.cpp', '[File]' ),
-          ( 'test.hpp', '[File]' ),
+          ( 'bbbüro.txt', '[File]' ),
+          ( 'include',    '[Dir]' ),
+          ( 'test.cpp',   '[File]' ),
+          ( 'test.hpp',   '[File]' ),
         ], data )
 
     data = sorted(
