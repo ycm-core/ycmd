@@ -35,6 +35,10 @@ if ( ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" )
   set( SYSTEM_IS_FREEBSD true )
 endif()
 
+if ( ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD" )
+  set( SYSTEM_IS_OPENBSD true )
+endif()
+
 if ( ${CMAKE_SYSTEM_NAME} MATCHES "SunOS" )
   set( SYSTEM_IS_SUNOS true )
 endif()

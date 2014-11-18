@@ -65,7 +65,7 @@ function num_cores {
   elif [[ `uname -s` == "Linux" ]]; then
     num_cpus=$(grep -c ^processor /proc/cpuinfo)
   else
-    # Works on Mac and FreeBSD
+    # Works on Mac, FreeBSD and OpenBSD
     num_cpus=$(sysctl -n hw.ncpu)
   fi
   echo $num_cpus
@@ -106,7 +106,7 @@ function linux_cmake_install {
 }
 
 function usage {
-  echo "Usage: $0 [--clang-completer [--system-libclang]] [--omnisharp-completer]"
+  echo "Usage: $0 [--clang-completer [--system-libclang]] [--system-boost] [--omnisharp-completer]"
   exit 0
 }
 
@@ -135,6 +135,9 @@ for flag in $@; do
       ;;
     --system-libclang)
       cmake_args="$cmake_args -DUSE_SYSTEM_LIBCLANG=ON"
+      ;;
+    --system-boost)
+      cmake_args="$cmake_args -DUSE_SYSTEM_BOOST=ON"
       ;;
     --omnisharp-completer)
       omnisharp_completer=true
