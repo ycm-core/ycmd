@@ -661,3 +661,19 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test():
 
   eq_( [],
        app.post_json( '/completions', completion_data ).json[ 'completions' ] )
+
+
+@with_setup( Setup )
+def GetCompletions_JediCompleter_Basic_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'basic.py' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'python',
+                                  contents = open( filepath ).read(),
+                                  line_num = 7,
+                                  column_num = 3)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'a' ),
+                                   CompletionEntryMatcher( 'b' ) ) )
