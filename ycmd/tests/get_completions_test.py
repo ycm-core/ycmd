@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2013  Google Inc.
 #
@@ -26,7 +27,8 @@ from .test_utils import ( Setup, BuildRequest, PathToTestFile,
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
-                       contains_inanyorder, empty, greater_than )
+                       contains_inanyorder, empty, greater_than,
+                       contains_string )
 from ..responses import ( BuildCompletionData, UnknownExtraConf,
                           NoExtraConfDetected )
 from .. import handlers
@@ -677,3 +679,22 @@ def GetCompletions_JediCompleter_Basic_test():
                            completion_data ).json[ 'completions' ]
   assert_that( results, has_items( CompletionEntryMatcher( 'a' ),
                                    CompletionEntryMatcher( 'b' ) ) )
+
+
+@with_setup( Setup )
+def GetCompletions_JediCompleter_UnicodeDescription_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'unicode.py' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'python',
+                                  contents = open( filepath ).read(),
+                                  force_semantic = True,
+                                  line_num = 5,
+                                  column_num = 3)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  print results
+  assert_that( results, has_item(
+                          has_entry( 'detailed_info',
+                            contains_string( u'aafäö' ) ) ) )
