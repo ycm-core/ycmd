@@ -140,7 +140,7 @@ def _GetPathsStandardCase( path_dir, use_working_dir, filepath ):
 
 
 def _GenerateCandidatesForPaths( absolute_paths ):
-  extra_info = defaultdict(int)
+  extra_info = defaultdict( int )
   basenames = []
   for absolute_path in absolute_paths:
     basename = os.path.basename( absolute_path )
