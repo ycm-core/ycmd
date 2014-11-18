@@ -47,3 +47,12 @@ def UserOptions_Works_test():
   app.post_json( '/user_options', options )
   eq_( options, app.get( '/user_options' ).json )
 
+
+
+@with_setup( Setup )
+def EventNotification_AlwaysJsonResponse_test():
+  app = TestApp( handlers.app )
+  event_data = BuildRequest( contents = 'foo foogoo ba',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data ).json

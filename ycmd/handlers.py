@@ -71,6 +71,7 @@ def EventNotification():
 
   if response_data:
     return _JsonResponse( response_data )
+  return _JsonResponse( {} )
 
 
 @app.post( '/run_completer_command' )

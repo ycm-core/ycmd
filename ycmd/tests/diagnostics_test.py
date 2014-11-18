@@ -134,8 +134,8 @@ struct Foo {
                              filepath = '/foo.h',
                              filetype = 'cpp' )
 
-  response = app.post_json( '/event_notification', event_data )
-  assert_that( response.body, empty() )
+  response = app.post_json( '/event_notification', event_data ).json
+  assert_that( response, empty() )
 
 
 @with_setup( Setup )
