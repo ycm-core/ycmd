@@ -114,9 +114,9 @@ class JediCompleter( Completer ):
     script = self._GetJediScript( request_data )
     try:
       if declaration:
-        definitions = script.goto_definitions()
-      else:
         definitions = script.goto_assignments()
+      else:
+        definitions = script.goto_definitions()
     except jedi.NotFoundError:
       raise RuntimeError(
                   'Cannot follow nothing. Put your cursor on a valid name.' )
