@@ -160,7 +160,7 @@ class CsharpCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     errors = self._GetResponse( '/codecheck',
-                                     self._DefaultParameters( request_data ) )
+                                self._DefaultParameters( request_data ) )
 
     diagnostics = [ self._QuickFixToDiagnostic( x ) for x in
                     errors[ "QuickFixes" ] ]
