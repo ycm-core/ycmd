@@ -59,7 +59,7 @@ class FilenameCompleter( Completer ):
   def AtIncludeStatementStart( self, request_data ):
     start_column = request_data[ 'start_column' ] - 1
     current_line = request_data[ 'line_value' ]
-    filepath = ToUtf8IfNeeded( request_data[ 'filepath' ] )
+    filepath = request_data[ 'filepath' ]
     filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
     return ( InCFamilyFile( filetypes ) and
              self._include_start_regex.match(
@@ -80,9 +80,10 @@ class FilenameCompleter( Completer ):
   def ComputeCandidatesInner( self, request_data ):
     current_line = request_data[ 'line_value' ]
     start_column = request_data[ 'start_column' ] - 1
-    filepath = ToUtf8IfNeeded( request_data[ 'filepath' ] )
-    filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
+    orig_filepath = request_data[ 'filepath' ]
+    filetypes = request_data[ 'file_data' ][ orig_filepath ][ 'filetypes' ]
     line = current_line[ :start_column ]
+    utf8_filepath = ToUtf8IfNeeded( orig_filepath )
 
     if InCFamilyFile( filetypes ):
       include_match = self._include_regex.search( line )
@@ -94,7 +95,7 @@ class FilenameCompleter( Completer ):
         return _GenerateCandidatesForPaths(
           self.GetPathsIncludeCase( path_dir,
                                     include_current_file_dir,
-                                    filepath ) )
+                                    utf8_filepath ) )
 
     path_match = self._path_regex.search( line )
     path_dir = os.path.expanduser( path_match.group() ) if path_match else ''
@@ -103,7 +104,7 @@ class FilenameCompleter( Completer ):
       _GetPathsStandardCase(
         path_dir,
         self.user_options[ 'filepath_completion_use_working_dir' ],
-        filepath ) )
+        utf8_filepath ) )
 
 
   def GetPathsIncludeCase( self, path_dir, include_current_file_dir, filepath ):
