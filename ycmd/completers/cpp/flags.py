@@ -25,7 +25,7 @@ from ycmd.utils import ToUtf8IfNeeded
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
-                  '-include' ]
+                  '-include', '-iframework', '-F' ]
 
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
