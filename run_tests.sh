@@ -9,7 +9,8 @@ function usage {
   exit 0
 }
 
-flake8 --select=F,C9 --max-complexity=10 "${SCRIPT_DIR}/ycmd"
+echo "Running flake8.."
+flake8 --select=F,C9 --max-complexity=10 --exclude=testdata "${SCRIPT_DIR}/ycmd"
 
 use_clang_completer=true
 skip_build=false
