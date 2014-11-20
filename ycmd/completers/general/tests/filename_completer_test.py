@@ -61,7 +61,7 @@ class FilenameCompleter_test( object ):
   def QuotedIncludeCompletion_test( self ):
     data = self._CompletionResultsForLine( '#include "' )
     eq_( [
-          ( 'bbbüro.txt', '[File]' ),
+          ( u'foo漢字.txt', '[File]' ),
           ( 'include',    '[Dir]' ),
           ( 'Qt',         '[Dir]' ),
           ( 'QtGui',      '[File&Dir]' ),
@@ -99,7 +99,7 @@ class FilenameCompleter_test( object ):
     # on different systems
     data = sorted( self._CompletionResultsForLine( 'const char* c = "./' ) )
     eq_( [
-          ( 'bbbüro.txt', '[File]' ),
+          ( u'foo漢字.txt', '[File]' ),
           ( 'include',    '[Dir]' ),
           ( 'test.cpp',   '[File]' ),
           ( 'test.hpp',   '[File]' ),

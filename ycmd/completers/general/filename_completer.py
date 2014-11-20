@@ -23,7 +23,7 @@ from collections import defaultdict
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
-from ycmd.utils import ToUtf8IfNeeded
+from ycmd.utils import ToUtf8IfNeeded, ToUnicodeIfNeeded
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
@@ -115,8 +115,11 @@ class FilenameCompleter( Completer ):
       include_paths.append( os.path.dirname( filepath ) )
 
     for include_path in include_paths:
+      unicode_path = ToUnicodeIfNeeded( os.path.join( include_path, path_dir ) )
       try:
-        relative_paths = os.listdir( os.path.join( include_path, path_dir ) )
+        # We need to pass a unicode string to get unicode strings out of
+        # listdir.
+        relative_paths = os.listdir( unicode_path )
       except:
         relative_paths = []
 
@@ -132,7 +135,9 @@ def _GetPathsStandardCase( path_dir, use_working_dir, filepath ):
                              path_dir )
 
   try:
-    relative_paths = os.listdir( path_dir )
+    # We need to pass a unicode string to get unicode strings out of
+    # listdir.
+    relative_paths = os.listdir( ToUnicodeIfNeeded( path_dir ) )
   except:
     relative_paths = []
 
