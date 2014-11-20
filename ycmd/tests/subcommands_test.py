@@ -51,7 +51,7 @@ foo()
   eq_( {
          'filepath': '/foo.py',
          'line_num': 2,
-         'column_num': 5
+         'column_num': 1
        },
        app.post_json( '/run_completer_command', goto_data ).json )
 
