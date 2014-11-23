@@ -44,7 +44,7 @@ def PollModule( module, filepath ):
                 'Using solution file {0} selected by extra_conf_store'.format(
                 path_to_solutionfile ) )
             break
-    except AttributeError, e:
+    except AttributeError as e:
       # the config script might not provide solution file locations
       __logger.error(
           'Could not retrieve solution for {0} from extra_conf_store: {1}'.format(
