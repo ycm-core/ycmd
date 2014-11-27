@@ -27,21 +27,44 @@ function homebrew_cmake_install {
   fi
 }
 
+function get_python_config() {
+  if command_exists python2-config; then
+    echo python2-config
+  else
+    echo python-config
+  fi
+}
+
+function get_python() {
+  if command_exists python2; then
+    echo python2
+  else
+    echo python
+  fi
+}
+
 function python_finder {
+  # The CMake 'FindPythonLibs' Module does not work properly.
+  # So we are forced to do its job for it.
   python_library="-DPYTHON_LIBRARY="
   python_include="-DPYTHON_INCLUDE_DIR="
 
-  # The CMake 'FindPythonLibs' Module does not work properly.
-  # So we are forced to do its job for it.
-  python_prefix=$(python-config --prefix | sed 's/^[ \t]*//')
+  # Prefer python2-config over python-config.
+  python_prefix=$($(get_python_config) --prefix | sed 's/^[ \t]*//')
+
   if [ -f "${python_prefix}/Python" ]; then
     python_library+="${python_prefix}/Python"
     python_include+="${python_prefix}/Headers"
   else
-    which_python=$(python -c 'import sys;print(sys.version)' | sed 's/^[ \t]*//')
+    # Prefer python2 over python.
+    which_python=$($(get_python) -c 'import sys;print(sys.version)' | sed 's/^[ \t]*//')
     which_python="python${which_python:0:3}"
     lib_python="${python_prefix}/lib/lib${which_python}"
-    if [ -f "${lib_python}.a" ]; then
+
+    # Look for and prefer shared object.
+    if [ -f "${lib_python}.so" ]; then
+      python_library+="${lib_python}.so"
+    elif [ -f "${lib_python}.a" ]; then
       python_library+="${lib_python}.a"
     # This check is for for CYGWIN
     elif [ -f "${lib_python}.dll.a" ]; then
@@ -76,11 +99,7 @@ function install {
   build_dir=`mktemp -d -t ycm_build.XXXXXX`
   pushd "${build_dir}"
 
-  if [[ `uname -s` == "Darwin" ]]; then
-    cmake -G "Unix Makefiles" $(python_finder) "$@" . "${SCRIPT_DIR}/cpp"
-  else
-    cmake -G "Unix Makefiles" "$@" . "${SCRIPT_DIR}/cpp"
-  fi
+  cmake -G "Unix Makefiles" $(python_finder) "$@" . "${SCRIPT_DIR}/cpp"
 
   make -j $(num_cores) ycm_support_libs
   popd
@@ -113,8 +132,12 @@ function usage {
 function check_third_party_libs {
   libs_present=true
   for folder in "${SCRIPT_DIR}"/third_party/*; do
+    if ! [[ -d $folder ]]; then
+      continue
+    fi
     num_files_in_folder=$(find "${folder}" -maxdepth 1 -mindepth 1 | wc -l)
     if [[ $num_files_in_folder -eq 0 ]]; then
+      echo "Missing libs in: $folder"
       libs_present=false
     fi
   done
