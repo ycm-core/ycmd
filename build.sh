@@ -132,8 +132,12 @@ function usage {
 function check_third_party_libs {
   libs_present=true
   for folder in "${SCRIPT_DIR}"/third_party/*; do
+    if ! [[ -d $folder ]]; then
+      continue
+    fi
     num_files_in_folder=$(find "${folder}" -maxdepth 1 -mindepth 1 | wc -l)
     if [[ $num_files_in_folder -eq 0 ]]; then
+      echo "Missing libs in: $folder"
       libs_present=false
     fi
   done
