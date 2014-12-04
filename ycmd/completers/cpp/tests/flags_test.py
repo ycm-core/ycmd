@@ -92,6 +92,22 @@ def RemoveUnusedFlags_RemoveDashO_test():
          expected[ :1 ] + to_remove + expected[ -1: ], filename ) )
 
 
+def RemoveUnusedFlags_RemoveMP_test():
+  expected = [ '-foo', '-bar' ]
+  to_remove = [ '-MP' ]
+  filename = 'file'
+
+  eq_( expected,
+       flags._RemoveUnusedFlags( expected + to_remove, filename ) )
+
+  eq_( expected,
+       flags._RemoveUnusedFlags( to_remove + expected, filename ) )
+
+  eq_( expected,
+       flags._RemoveUnusedFlags(
+         expected[ :1 ] + to_remove + expected[ -1: ], filename ) )
+
+
 def RemoveUnusedFlags_RemoveFilename_test():
   expected = [ '-foo', '-bar' ]
   to_remove = [ 'file' ]

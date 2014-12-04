@@ -27,6 +27,13 @@ from ycmd.responses import NoExtraConfDetected
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
                   '-include', '-iframework', '-F' ]
 
+STATE_FLAGS_TO_SKIP = set(['-c', '-MP'])
+
+# The -M* flags spec:
+#   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
+FILE_FLAGS_TO_SKIP = set(['-MD', '-MMD', '-MF', '-MT', '-MQ', '-o'])
+
+
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
   The flags are loaded from user-created python files (hereafter referred to as
@@ -145,7 +152,7 @@ def _SanitizeFlags( flags ):
 def _RemoveUnusedFlags( flags, filename ):
   """Given an iterable object that produces strings (flags for Clang), removes
   the '-c' and '-o' options that Clang does not like to see when it's producing
-  completions for a file.
+  completions for a file. Same for '-MD' etc.
 
   Also removes the first flag in the list if it does not
   start with a '-' (it's highly likely to be the compiler name/path).
@@ -172,10 +179,10 @@ def _RemoveUnusedFlags( flags, filename ):
       skip_next = False
       continue
 
-    if flag == '-c':
+    if flag in STATE_FLAGS_TO_SKIP:
       continue
 
-    if flag == '-o':
+    if flag in FILE_FLAGS_TO_SKIP:
       skip_next = True;
       continue
 
