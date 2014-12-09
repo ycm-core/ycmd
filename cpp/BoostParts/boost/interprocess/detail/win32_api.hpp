@@ -8,8 +8,12 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_INTERPROCESS_WIN32_PRIMITIVES_HPP
-#define BOOST_INTERPROCESS_WIN32_PRIMITIVES_HPP
+#ifndef BOOST_INTERPROCESS_WIN32_API_HPP
+#define BOOST_INTERPROCESS_WIN32_API_HPP
+
+#if defined(_MSC_VER)
+#  pragma once
+#endif
 
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
@@ -651,7 +655,7 @@ typedef OVERLAPPED interprocess_overlapped;
 
 typedef FILETIME interprocess_filetime;
 
-typedef WIN32_FIND_DATA win32_find_data;
+typedef WIN32_FIND_DATAA win32_find_data;
 
 typedef SECURITY_ATTRIBUTES interprocess_security_attributes;
 
@@ -685,8 +689,8 @@ typedef FARPROC farproc_t;
 
 struct interprocess_semaphore_basic_information
 {
-	unsigned int count;		// current semaphore count
-	unsigned int limit;		// max semaphore count
+   unsigned int count;      // current semaphore count
+   unsigned int limit;      // max semaphore count
 };
 
 struct interprocess_section_basic_information
@@ -1522,7 +1526,7 @@ struct function_address_holder
    }
 
    public:
-   static void *get(const unsigned int id)
+   static farproc_t get(const unsigned int id)
    {
       BOOST_ASSERT(id < (unsigned int)NumFunction);
       for(unsigned i = 0; FunctionStates[id] < 2; ++i){
@@ -1900,7 +1904,7 @@ inline bool unlink_file(const char *filename)
                                     , const_cast<wchar_t*>(empty_str)
                                     };
          object_attributes_t object_attr;
-	      initialize_object_attributes(&object_attr, &ustring, 0, fh, 0);
+         initialize_object_attributes(&object_attr, &ustring, 0, fh, 0);
          void* fh2 = 0;
          io_status_block_t io;
          pNtOpenFile( &fh2, delete_flag, &object_attr, &io
@@ -2263,10 +2267,10 @@ inline bool get_last_bootup_time(std::string &stamp)
 
 inline bool is_directory(const char *path)
 {
-	unsigned long attrib = GetFileAttributesA(path);
+   unsigned long attrib = GetFileAttributesA(path);
 
-	return (attrib != invalid_file_attributes &&
-	        (attrib & file_attribute_directory));
+   return (attrib != invalid_file_attributes &&
+           (attrib & file_attribute_directory));
 }
 
 inline bool get_file_mapping_size(void *file_mapping_hnd, __int64 &size)
@@ -2330,4 +2334,4 @@ inline unsigned long get_tick_count()
 
 #include <boost/interprocess/detail/config_end.hpp>
 
-#endif //#ifdef BOOST_INTERPROCESS_WIN32_PRIMITIVES_HPP
+#endif //#ifdef BOOST_INTERPROCESS_WIN32_API_HPP

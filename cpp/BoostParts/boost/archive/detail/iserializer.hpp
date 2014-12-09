@@ -57,12 +57,12 @@ namespace std{
 #include <boost/type_traits/is_polymorphic.hpp>
 
 #include <boost/serialization/assume_abstract.hpp>
-
-#if ! (                                                \
+#define DONT_USE_HAS_NEW_OPERATOR (                    \
     defined(__BORLANDC__)                              \
     || BOOST_WORKAROUND(__IBMCPP__, < 1210)            \
     || defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x590)   \
 )
+#if ! DONT_USE_HAS_NEW_OPERATOR
 #include <boost/type_traits/has_new_operator.hpp>
 #endif
 
@@ -210,8 +210,8 @@ struct heap_allocation {
         static T * invoke_new(){
             return static_cast<T *>(operator new(sizeof(T)));
         }
-        static viod invoke_delete(){
-            (operator delete(sizeof(T)));
+        static void invoke_delete(T *t){
+            (operator delete(t));
         }
     #else
         // note: we presume that a true value for has_new_operator

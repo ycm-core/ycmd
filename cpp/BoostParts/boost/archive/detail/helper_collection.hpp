@@ -17,7 +17,6 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <cstddef> // NULL
-#include <typeinfo>
 #include <vector>
 #include <utility>
 #include <memory>
@@ -45,7 +44,7 @@ class helper_collection
 
     #ifndef BOOST_NO_CXX11_SMART_PTR
         typedef std::pair<
-            const std::type_info *,
+            const void *,
             std::shared_ptr<void>
         > helper_value_type;
         template<class T>
@@ -54,7 +53,7 @@ class helper_collection
         }
     #else
         typedef std::pair<
-            const std::type_info *,
+            const void *,
             boost::shared_ptr<void>
         > helper_value_type;
         template<class T>
@@ -66,11 +65,11 @@ class helper_collection
     collection m_collection;
 
     struct predicate {
-        const std::type_info * m_ti;
+        const void * const m_ti;
         bool operator()(helper_value_type const &rhs) const {
-            return *m_ti == *rhs.first;
+            return m_ti == rhs.first;
         }
-        predicate(const std::type_info * ti) :
+        predicate(const void * ti) :
             m_ti(ti)
         {}
     };
@@ -79,21 +78,19 @@ protected:
     ~helper_collection(){}
 public:
     template<typename Helper>
-    Helper& get_helper(Helper * = NULL) {
-
-        const std::type_info * eti = & typeid(Helper);
+    Helper& get_helper(void * const id = 0) {
 
         collection::const_iterator it =
             std::find_if(
                 m_collection.begin(),
                 m_collection.end(),
-                predicate(eti)
+                predicate(id)
             );
 
         void * rval;
         if(it == m_collection.end()){
             m_collection.push_back(
-                std::make_pair(eti, make_helper_ptr<Helper>())
+                std::make_pair(id, make_helper_ptr<Helper>())
             );
             rval = m_collection.back().second.get();
         }

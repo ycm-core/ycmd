@@ -35,16 +35,16 @@ namespace archive {
 
 namespace detail {
     template<class CharType>
-    bool is_whitespace(CharType c);
+    static inline bool is_whitespace(CharType c);
 
     template<>
-    bool is_whitespace(char t){
+    inline bool is_whitespace(char t){
         return 0 != std::isspace(t);
     }
 
     #ifndef BOOST_NO_CWCHAR
     template<>
-    bool is_whitespace(wchar_t t){
+    inline bool is_whitespace(wchar_t t){
         return 0 != std::iswspace(t);
     }
     #endif
