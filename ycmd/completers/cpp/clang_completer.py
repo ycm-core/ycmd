@@ -24,6 +24,7 @@ from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
+from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
 MIN_LINES_IN_FILE_TO_PARSE = 5
@@ -47,6 +48,7 @@ class ClangCompleter( Completer ):
     self._completer = ycm_core.ClangCompleter()
     self._flags = Flags()
     self._diagnostic_store = None
+    self._files_being_compiled = EphemeralValuesSet()
 
 
   def SupportedFiletypes( self ):
@@ -87,12 +89,13 @@ class ClangCompleter( Completer ):
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
     column = request_data[ 'start_column' ]
-    results = self._completer.CandidatesForLocationInFile(
-        ToUtf8IfNeeded( filename ),
-        line,
-        column,
-        files,
-        flags )
+    with self._files_being_compiled.GetExclusive( filename ):
+      results = self._completer.CandidatesForLocationInFile(
+          ToUtf8IfNeeded( filename ),
+          line,
+          column,
+          files,
+          flags )
 
     if not results:
       raise RuntimeError( NO_COMPLETIONS_MESSAGE )
@@ -200,10 +203,11 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
-    diagnostics = self._completer.UpdateTranslationUnit(
-      ToUtf8IfNeeded( filename ),
-      self.GetUnsavedFilesVector( request_data ),
-      flags )
+    with self._files_being_compiled.GetExclusive( filename ):
+      diagnostics = self._completer.UpdateTranslationUnit(
+        ToUtf8IfNeeded( filename ),
+        self.GetUnsavedFilesVector( request_data ),
+        flags )
 
     diagnostics = _FilterDiagnostics( diagnostics )
     self._diagnostic_store = DiagnosticsToDiagStructure( diagnostics )
