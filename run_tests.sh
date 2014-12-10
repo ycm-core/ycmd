@@ -33,9 +33,9 @@ if [ -n "$USE_CLANG_COMPLETER" ]; then
 fi
 
 if $use_clang_completer; then
-  extra_cmake_args="-DUSE_CLANG_COMPLETER=ON -DUSE_DEV_FLAGS=ON"
+  extra_cmake_args="-DUSE_CLANG_COMPLETER=ON -DDEV_MODE=ON"
 else
-  extra_cmake_args="-DUSE_DEV_FLAGS=ON"
+  extra_cmake_args="-DDEV_MODE=ON"
 fi
 
 if ! $skip_build; then
