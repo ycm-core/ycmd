@@ -112,6 +112,14 @@ class FooInterface {
 #endif  // GTEST_OS_WINDOWS
 };
 
+// Const qualifiers on arguments were once (incorrectly) considered
+// significant in determining whether two virtual functions had the same
+// signature. This was fixed in Visual Studio 2008. However, the compiler
+// still emits a warning that alerts about this change in behavior.
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4373)
+#endif
 class MockFoo : public FooInterface {
  public:
   MockFoo() {}
@@ -129,9 +137,16 @@ class MockFoo : public FooInterface {
 
   MOCK_METHOD1(TakesNonConstReference, bool(int&));  // NOLINT
   MOCK_METHOD1(TakesConstReference, string(const int&));
+
 #ifdef GMOCK_ALLOWS_CONST_PARAM_FUNCTIONS
   MOCK_METHOD1(TakesConst, bool(const int));  // NOLINT
-#endif  // GMOCK_ALLOWS_CONST_PARAM_FUNCTIONS
+#endif
+
+  // Tests that the function return type can contain unprotected comma.
+  MOCK_METHOD0(ReturnTypeWithComma, std::map<int, string>());
+  MOCK_CONST_METHOD1(ReturnTypeWithComma,
+                     std::map<int, string>(int));  // NOLINT
+
   MOCK_METHOD0(OverloadedOnArgumentNumber, int());  // NOLINT
   MOCK_METHOD1(OverloadedOnArgumentNumber, int(int));  // NOLINT
 
@@ -143,6 +158,7 @@ class MockFoo : public FooInterface {
 
   MOCK_METHOD1(TypeWithHole, int(int (*)()));  // NOLINT
   MOCK_METHOD1(TypeWithComma, int(const std::map<int, string>&));  // NOLINT
+
 #if GTEST_OS_WINDOWS
   MOCK_METHOD0_WITH_CALLTYPE(STDMETHODCALLTYPE, CTNullary, int());
   MOCK_METHOD1_WITH_CALLTYPE(STDMETHODCALLTYPE, CTUnary, bool(int));
@@ -150,11 +166,18 @@ class MockFoo : public FooInterface {
       short d, int e, long f, float g, double h, unsigned i, char* j,
       const string& k));
   MOCK_CONST_METHOD1_WITH_CALLTYPE(STDMETHODCALLTYPE, CTConst, char(int));
+
+  // Tests that the function return type can contain unprotected comma.
+  MOCK_METHOD0_WITH_CALLTYPE(STDMETHODCALLTYPE, CTReturnTypeWithComma,
+                             std::map<int, string>());
 #endif  // GTEST_OS_WINDOWS
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFoo);
 };
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
 
 class FunctionMockerTest : public testing::Test {
  protected:
@@ -267,6 +290,17 @@ TEST_F(FunctionMockerTest, MocksFunctionsOverloadedOnConstnessOfThis) {
   EXPECT_EQ('a', Const(*foo_).OverloadedOnConstness());
 }
 
+TEST_F(FunctionMockerTest, MocksReturnTypeWithComma) {
+  const std::map<int, string> a_map;
+  EXPECT_CALL(mock_foo_, ReturnTypeWithComma())
+      .WillOnce(Return(a_map));
+  EXPECT_CALL(mock_foo_, ReturnTypeWithComma(42))
+      .WillOnce(Return(a_map));
+
+  EXPECT_EQ(a_map, mock_foo_.ReturnTypeWithComma());
+  EXPECT_EQ(a_map, mock_foo_.ReturnTypeWithComma(42));
+}
+
 #if GTEST_OS_WINDOWS
 // Tests mocking a nullary function with calltype.
 TEST_F(FunctionMockerTest, MocksNullaryFunctionWithCallType) {
@@ -304,6 +338,14 @@ TEST_F(FunctionMockerTest, MocksFunctionsConstFunctionWithCallType) {
       .WillOnce(Return('a'));
 
   EXPECT_EQ('a', Const(*foo_).CTConst(0));
+}
+
+TEST_F(FunctionMockerTest, MocksReturnTypeWithCommaAndCallType) {
+  const std::map<int, string> a_map;
+  EXPECT_CALL(mock_foo_, CTReturnTypeWithComma())
+      .WillOnce(Return(a_map));
+
+  EXPECT_EQ(a_map, mock_foo_.CTReturnTypeWithComma());
 }
 
 #endif  // GTEST_OS_WINDOWS
@@ -362,6 +404,10 @@ class MockStack : public StackInterface<T> {
   MOCK_CONST_METHOD0_T(GetSize, int());  // NOLINT
   MOCK_CONST_METHOD0_T(GetTop, const T&());
 
+  // Tests that the function return type can contain unprotected comma.
+  MOCK_METHOD0_T(ReturnTypeWithComma, std::map<int, int>());
+  MOCK_CONST_METHOD1_T(ReturnTypeWithComma, std::map<int, int>(int));  // NOLINT
+
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockStack);
 };
@@ -387,6 +433,19 @@ TEST(TemplateMockTest, Works) {
   EXPECT_EQ(5, mock.GetTop());
   mock.Pop();
   EXPECT_EQ(0, mock.GetSize());
+}
+
+TEST(TemplateMockTest, MethodWithCommaInReturnTypeWorks) {
+  MockStack<int> mock;
+
+  const std::map<int, int> a_map;
+  EXPECT_CALL(mock, ReturnTypeWithComma())
+      .WillOnce(Return(a_map));
+  EXPECT_CALL(mock, ReturnTypeWithComma(1))
+      .WillOnce(Return(a_map));
+
+  EXPECT_EQ(a_map, mock.ReturnTypeWithComma());
+  EXPECT_EQ(a_map, mock.ReturnTypeWithComma(1));
 }
 
 #if GTEST_OS_WINDOWS
@@ -535,6 +594,19 @@ TEST(MockFunctionTest, WorksFor10Arguments) {
   EXPECT_EQ(1, foo.Call(false, 'a', 0, 0, 0, 0, 0, 'b', 0, true));
   EXPECT_EQ(2, foo.Call(true, 'a', 0, 0, 0, 0, 0, 'b', 1, false));
 }
+
+#if GTEST_HAS_STD_FUNCTION_
+TEST(MockFunctionTest, AsStdFunction) {
+  MockFunction<int(int)> foo;
+  auto call = [](const std::function<int(int)> &f, int i) {
+    return f(i);
+  };
+  EXPECT_CALL(foo, Call(1)).WillOnce(Return(-1));
+  EXPECT_CALL(foo, Call(2)).WillOnce(Return(-2));
+  EXPECT_EQ(-1, call(foo.AsStdFunction(), 1));
+  EXPECT_EQ(-2, call(foo.AsStdFunction(), 2));
+}
+#endif  // GTEST_HAS_STD_FUNCTION_
 
 }  // namespace gmock_generated_function_mockers_test
 }  // namespace testing

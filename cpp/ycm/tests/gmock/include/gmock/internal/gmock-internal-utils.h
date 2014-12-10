@@ -361,17 +361,30 @@ template <typename T> struct DecayArray<T[]> {
   typedef const T* type;
 };
 
-// Invalid<T>() returns an invalid value of type T.  This is useful
+// Disable MSVC warnings for infinite recursion, since in this case the
+// the recursion is unreachable.
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable:4717)
+#endif
+
+// Invalid<T>() is usable as an expression of type T, but will terminate
+// the program with an assertion failure if actually run.  This is useful
 // when a value of type T is needed for compilation, but the statement
 // will not really be executed (or we don't care if the statement
 // crashes).
 template <typename T>
 inline T Invalid() {
-  return const_cast<typename remove_reference<T>::type&>(
-      *static_cast<volatile typename remove_reference<T>::type*>(NULL));
+  Assert(false, "", -1, "Internal error: attempt to return invalid value");
+  // This statement is unreachable, and would never terminate even if it
+  // could be reached. It is provided only to placate compiler warnings
+  // about missing return statements.
+  return Invalid<T>();
 }
-template <>
-inline void Invalid<void>() {}
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
 
 // Given a raw type (i.e. having no top-level reference or const
 // modifier) RawContainer that's either an STL-style container or a
@@ -434,16 +447,17 @@ class StlContainerView<Element[N]> {
     //     ConstReference(const char * (&)[4])')
     // (and though the N parameter type is mismatched in the above explicit
     // conversion of it doesn't help - only the conversion of the array).
-    return type(const_cast<Element*>(&array[0]), N, kReference);
+    return type(const_cast<Element*>(&array[0]), N,
+                RelationToSourceReference());
 #else
-    return type(array, N, kReference);
+    return type(array, N, RelationToSourceReference());
 #endif  // GTEST_OS_SYMBIAN
   }
   static type Copy(const Element (&array)[N]) {
 #if GTEST_OS_SYMBIAN
-    return type(const_cast<Element*>(&array[0]), N, kCopy);
+    return type(const_cast<Element*>(&array[0]), N, RelationToSourceCopy());
 #else
-    return type(array, N, kCopy);
+    return type(array, N, RelationToSourceCopy());
 #endif  // GTEST_OS_SYMBIAN
   }
 };
@@ -451,7 +465,7 @@ class StlContainerView<Element[N]> {
 // This specialization is used when RawContainer is a native array
 // represented as a (pointer, size) tuple.
 template <typename ElementPointer, typename Size>
-class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
+class StlContainerView< ::testing::tuple<ElementPointer, Size> > {
  public:
   typedef GTEST_REMOVE_CONST_(
       typename internal::PointeeOf<ElementPointer>::type) RawElement;
@@ -459,19 +473,31 @@ class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
   typedef const type const_reference;
 
   static const_reference ConstReference(
-      const ::std::tr1::tuple<ElementPointer, Size>& array) {
-    using ::std::tr1::get;
-    return type(get<0>(array), get<1>(array), kReference);
+      const ::testing::tuple<ElementPointer, Size>& array) {
+    return type(get<0>(array), get<1>(array), RelationToSourceReference());
   }
-  static type Copy(const ::std::tr1::tuple<ElementPointer, Size>& array) {
-    using ::std::tr1::get;
-    return type(get<0>(array), get<1>(array), kCopy);
+  static type Copy(const ::testing::tuple<ElementPointer, Size>& array) {
+    return type(get<0>(array), get<1>(array), RelationToSourceCopy());
   }
 };
 
 // The following specialization prevents the user from instantiating
 // StlContainer with a reference type.
 template <typename T> class StlContainerView<T&>;
+
+// A type transform to remove constness from the first part of a pair.
+// Pairs like that are used as the value_type of associative containers,
+// and this transform produces a similar but assignable pair.
+template <typename T>
+struct RemoveConstFromKey {
+  typedef T type;
+};
+
+// Partially specialized to remove constness from std::pair<const K, V>.
+template <typename K, typename V>
+struct RemoveConstFromKey<std::pair<const K, V> > {
+  typedef std::pair<K, V> type;
+};
 
 // Mapping from booleans to types. Similar to boost::bool_<kValue> and
 // std::integral_constant<bool, kValue>.
@@ -482,3 +508,4 @@ struct BooleanConstant {};
 }  // namespace testing
 
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_INTERNAL_UTILS_H_
+

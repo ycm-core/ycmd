@@ -72,7 +72,7 @@ Getting the Source
 
 There are two primary ways of getting Google Test's source code: you
 can download a stable source release in your preferred archive format,
-or directly check out the source from our Subversion (SVN) repositary.
+or directly check out the source from our Subversion (SVN) repository.
 The SVN checkout requires a few extra steps and some extra software
 packages on your system, but lets you track the latest development and
 make patches much more easily, so we highly encourage it.
@@ -119,21 +119,22 @@ and Xcode) to compile
 
   ${GTEST_DIR}/src/gtest-all.cc
 
-with
-
-  ${GTEST_DIR}/include and ${GTEST_DIR}
-
-in the header search path.  Assuming a Linux-like system and gcc,
+with ${GTEST_DIR}/include in the system header search path and ${GTEST_DIR}
+in the normal header search path.  Assuming a Linux-like system and gcc,
 something like the following will do:
 
-  g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
+  g++ -isystem ${GTEST_DIR}/include -I${GTEST_DIR} \
+      -pthread -c ${GTEST_DIR}/src/gtest-all.cc
   ar -rv libgtest.a gtest-all.o
 
-Next, you should compile your test source file with
-${GTEST_DIR}/include in the header search path, and link it with gtest
-and any other necessary libraries:
+(We need -pthread as Google Test uses threads.)
 
-  g++ -I${GTEST_DIR}/include path/to/your_test.cc libgtest.a -o your_test
+Next, you should compile your test source file with
+${GTEST_DIR}/include in the system header search path, and link it
+with gtest and any other necessary libraries:
+
+  g++ -isystem ${GTEST_DIR}/include -pthread path/to/your_test.cc libgtest.a \
+      -o your_test
 
 As an example, the make/ directory contains a Makefile that you can
 use to build Google Test on systems where GNU make is available
@@ -156,7 +157,7 @@ it.
 ### Using CMake ###
 
 Google Test comes with a CMake build script (CMakeLists.txt) that can
-be used on a wide range of platforms ("C" stands for cross-platofrm.).
+be used on a wide range of platforms ("C" stands for cross-platform.).
 If you don't have CMake installed already, you can download it for
 free from http://www.cmake.org/.
 
@@ -176,7 +177,7 @@ last command with
 If you are on a *nix system, you should now see a Makefile in the
 current directory.  Just type 'make' to build gtest.
 
-If you use Windows and have Vistual Studio installed, a gtest.sln file
+If you use Windows and have Visual Studio installed, a gtest.sln file
 and several .vcproj files will be created.  You can then build them
 using Visual Studio.
 

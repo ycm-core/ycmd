@@ -1,4 +1,4 @@
-// Copyright 2009, Google Inc.
+// Copyright 2013, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,25 +27,32 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Author: wan@google.com (Zhanyong Wan)
+// Author: marcus.boerger@google.com (Marcus Boerger)
+
+// Google Mock - a framework for writing C++ mock classes.
 //
-// Tests for Google C++ Mocking Framework (Google Mock)
+// This file implements some matchers that depend on gmock-generated-matchers.h.
 //
-// Some users use a build system that Google Mock doesn't support directly,
-// yet they still want to build and run Google Mock's own tests.  This file
-// includes most such tests, making it easier for these users to maintain
-// their build scripts (they just need to build this file, even though the
-// below list of actual *_test.cc files might change).
-#include "test/gmock-actions_test.cc"
-#include "test/gmock-cardinalities_test.cc"
-#include "test/gmock-generated-actions_test.cc"
-#include "test/gmock-generated-function-mockers_test.cc"
-#include "test/gmock-generated-internal-utils_test.cc"
-#include "test/gmock-generated-matchers_test.cc"
-#include "test/gmock-internal-utils_test.cc"
-#include "test/gmock-matchers_test.cc"
-#include "test/gmock-more-actions_test.cc"
-#include "test/gmock-nice-strict_test.cc"
-#include "test/gmock-port_test.cc"
-#include "test/gmock-spec-builders_test.cc"
-#include "test/gmock_test.cc"
+// Note that tests are implemented in gmock-matchers_test.cc rather than
+// gmock-more-matchers-test.cc.
+
+#ifndef GMOCK_GMOCK_MORE_MATCHERS_H_
+#define GMOCK_GMOCK_MORE_MATCHERS_H_
+
+#include "gmock/gmock-generated-matchers.h"
+
+namespace testing {
+
+// Defines a matcher that matches an empty container. The container must
+// support both size() and empty(), which all STL-like containers provide.
+MATCHER(IsEmpty, negation ? "isn't empty" : "is empty") {
+  if (arg.empty()) {
+    return true;
+  }
+  *result_listener << "whose size is " << arg.size();
+  return false;
+}
+
+}  // namespace testing
+
+#endif  // GMOCK_GMOCK_MORE_MATCHERS_H_

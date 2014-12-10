@@ -46,10 +46,10 @@ namespace gmock_generated_actions_test {
 
 using ::std::plus;
 using ::std::string;
-using ::std::tr1::get;
-using ::std::tr1::make_tuple;
-using ::std::tr1::tuple;
-using ::std::tr1::tuple_element;
+using testing::get;
+using testing::make_tuple;
+using testing::tuple;
+using testing::tuple_element;
 using testing::_;
 using testing::Action;
 using testing::ActionInterface;
@@ -376,7 +376,7 @@ class SubstractAction : public ActionInterface<int(int, int)> {  // NOLINT
 TEST(WithArgsTest, NonInvokeAction) {
   Action<int(const string&, int, int)> a =  // NOLINT
       WithArgs<2, 1>(MakeAction(new SubstractAction));
-  EXPECT_EQ(8, a.Perform(make_tuple(CharPtr("hi"), 2, 10)));
+  EXPECT_EQ(8, a.Perform(make_tuple(string("hi"), 2, 10)));
 }
 
 // Tests using WithArgs to pass all original arguments in the original order.
@@ -639,7 +639,7 @@ TEST(ActionMacroTest, CanReferenceArgumentType) {
 // Tests that the body of ACTION() can reference the argument tuple
 // via args_type and args.
 ACTION(Sum2) {
-  StaticAssertTypeEq< ::std::tr1::tuple<int, char, int*>, args_type>();
+  StaticAssertTypeEq<tuple<int, char, int*>, args_type>();
   args_type args_copy = args;
   return get<0>(args_copy) + get<1>(args_copy);
 }
@@ -900,7 +900,9 @@ template <typename T1, typename T2>
 // pattern requires the user to use it directly.
 ConcatImplActionP3<std::string, T1, T2>
 Concat(const std::string& a, T1 b, T2 c) {
+  GTEST_INTENTIONAL_CONST_COND_PUSH_()
   if (true) {
+  GTEST_INTENTIONAL_CONST_COND_POP_()
     // This branch verifies that ConcatImpl() can be invoked without
     // explicit template arguments.
     return ConcatImpl(a, b, c);
@@ -956,6 +958,19 @@ TEST(ActionPnMacroTest, TypesAreCorrect) {
       Plus(1, 2, 3, 4, 5, 6, 7, 8, '9');
   PlusActionP10<int, int, int, int, int, int, int, int, int, char> a10 =
       Plus(1, 2, 3, 4, 5, 6, 7, 8, 9, '0');
+
+  // Avoid "unused variable" warnings.
+  (void)a0;
+  (void)a1;
+  (void)a2;
+  (void)a3;
+  (void)a4;
+  (void)a5;
+  (void)a6;
+  (void)a7;
+  (void)a8;
+  (void)a9;
+  (void)a10;
 }
 
 // Tests that an ACTION_P*() action can be explicitly instantiated
@@ -1083,7 +1098,7 @@ TEST(ActionTemplateTest, WorksWithValueParams) {
 ACTION_TEMPLATE(MyDeleteArg,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_0_VALUE_PARAMS()) {
-  delete std::tr1::get<k>(args);
+  delete get<k>(args);
 }
 
 // Resets a bool variable in the destructor.

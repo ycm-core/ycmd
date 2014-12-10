@@ -213,7 +213,7 @@ def GetShellCommandOutput(env_cmd):
   # Set and save the environment properly.
   environ = os.environ.copy()
   environ.update(env_cmd[0])
-  p = gtest_test_utils.Subprocess(env_cmd[1], env=environ, capture_stderr=False)
+  p = gtest_test_utils.Subprocess(env_cmd[1], env=environ)
 
   return p.output
 
@@ -252,8 +252,8 @@ SUPPORTS_STACK_TRACES = False
 
 CAN_GENERATE_GOLDEN_FILE = (SUPPORTS_DEATH_TESTS and
                             SUPPORTS_TYPED_TESTS and
-                            SUPPORTS_THREADS)
-
+                            SUPPORTS_THREADS and
+                            not IS_WINDOWS)
 
 class GTestOutputTest(gtest_test_utils.TestCase):
   def RemoveUnsupportedTests(self, test_output):

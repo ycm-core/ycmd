@@ -61,6 +61,43 @@ using std::pair;
 namespace testing {
 namespace internal {
 
+TEST(IsXDigitTest, WorksForNarrowAscii) {
+  EXPECT_TRUE(IsXDigit('0'));
+  EXPECT_TRUE(IsXDigit('9'));
+  EXPECT_TRUE(IsXDigit('A'));
+  EXPECT_TRUE(IsXDigit('F'));
+  EXPECT_TRUE(IsXDigit('a'));
+  EXPECT_TRUE(IsXDigit('f'));
+
+  EXPECT_FALSE(IsXDigit('-'));
+  EXPECT_FALSE(IsXDigit('g'));
+  EXPECT_FALSE(IsXDigit('G'));
+}
+
+TEST(IsXDigitTest, ReturnsFalseForNarrowNonAscii) {
+  EXPECT_FALSE(IsXDigit(static_cast<char>(0x80)));
+  EXPECT_FALSE(IsXDigit(static_cast<char>('0' | 0x80)));
+}
+
+TEST(IsXDigitTest, WorksForWideAscii) {
+  EXPECT_TRUE(IsXDigit(L'0'));
+  EXPECT_TRUE(IsXDigit(L'9'));
+  EXPECT_TRUE(IsXDigit(L'A'));
+  EXPECT_TRUE(IsXDigit(L'F'));
+  EXPECT_TRUE(IsXDigit(L'a'));
+  EXPECT_TRUE(IsXDigit(L'f'));
+
+  EXPECT_FALSE(IsXDigit(L'-'));
+  EXPECT_FALSE(IsXDigit(L'g'));
+  EXPECT_FALSE(IsXDigit(L'G'));
+}
+
+TEST(IsXDigitTest, ReturnsFalseForWideNonAscii) {
+  EXPECT_FALSE(IsXDigit(static_cast<wchar_t>(0x80)));
+  EXPECT_FALSE(IsXDigit(static_cast<wchar_t>(L'0' | 0x80)));
+  EXPECT_FALSE(IsXDigit(static_cast<wchar_t>(L'0' | 0x100)));
+}
+
 class Base {
  public:
   // Copy constructor and assignment operator do exactly what we need, so we
@@ -968,7 +1005,7 @@ TEST(ThreadLocalTest, ValueDefaultContructorIsNotRequiredForParamVersion) {
 }
 
 TEST(ThreadLocalTest, GetAndPointerReturnSameValue) {
-  ThreadLocal<String> thread_local_string;
+  ThreadLocal<std::string> thread_local_string;
 
   EXPECT_EQ(thread_local_string.pointer(), &(thread_local_string.get()));
 
@@ -978,8 +1015,9 @@ TEST(ThreadLocalTest, GetAndPointerReturnSameValue) {
 }
 
 TEST(ThreadLocalTest, PointerAndConstPointerReturnSameValue) {
-  ThreadLocal<String> thread_local_string;
-  const ThreadLocal<String>& const_thread_local_string = thread_local_string;
+  ThreadLocal<std::string> thread_local_string;
+  const ThreadLocal<std::string>& const_thread_local_string =
+      thread_local_string;
 
   EXPECT_EQ(thread_local_string.pointer(), const_thread_local_string.pointer());
 
@@ -1024,11 +1062,13 @@ class AtomicCounterWithMutex {
     MutexLock lock(mutex_);
     int temp = value_;
     {
-      // Locking a mutex puts up a memory barrier, preventing reads and
-      // writes to value_ rearranged when observed from other threads.
-      //
-      // We cannot use Mutex and MutexLock here or rely on their memory
-      // barrier functionality as we are testing them here.
+      // We need to put up a memory barrier to prevent reads and writes to
+      // value_ rearranged with the call to SleepMilliseconds when observed
+      // from other threads.
+#if GTEST_HAS_PTHREAD
+      // On POSIX, locking a mutex puts up a memory barrier.  We cannot use
+      // Mutex and MutexLock here or rely on their memory barrier
+      // functionality as we are testing them here.
       pthread_mutex_t memory_barrier_mutex;
       GTEST_CHECK_POSIX_SUCCESS_(
           pthread_mutex_init(&memory_barrier_mutex, NULL));
@@ -1038,6 +1078,15 @@ class AtomicCounterWithMutex {
 
       GTEST_CHECK_POSIX_SUCCESS_(pthread_mutex_unlock(&memory_barrier_mutex));
       GTEST_CHECK_POSIX_SUCCESS_(pthread_mutex_destroy(&memory_barrier_mutex));
+#elif GTEST_OS_WINDOWS
+      // On Windows, performing an interlocked access puts up a memory barrier.
+      volatile LONG dummy = 0;
+      ::InterlockedIncrement(&dummy);
+      SleepMilliseconds(random_.Generate(30));
+      ::InterlockedIncrement(&dummy);
+#else
+# error "Memory barrier not implemented on this platform."
+#endif  // GTEST_HAS_PTHREAD
     }
     value_ = temp + 1;
   }
@@ -1089,44 +1138,94 @@ void RunFromThread(void (func)(T), T param) {
   thread.Join();
 }
 
-void RetrieveThreadLocalValue(pair<ThreadLocal<String>*, String*> param) {
+void RetrieveThreadLocalValue(
+    pair<ThreadLocal<std::string>*, std::string*> param) {
   *param.second = param.first->get();
 }
 
 TEST(ThreadLocalTest, ParameterizedConstructorSetsDefault) {
-  ThreadLocal<String> thread_local_string("foo");
+  ThreadLocal<std::string> thread_local_string("foo");
   EXPECT_STREQ("foo", thread_local_string.get().c_str());
 
   thread_local_string.set("bar");
   EXPECT_STREQ("bar", thread_local_string.get().c_str());
 
-  String result;
+  std::string result;
   RunFromThread(&RetrieveThreadLocalValue,
                 make_pair(&thread_local_string, &result));
   EXPECT_STREQ("foo", result.c_str());
 }
 
+// Keeps track of whether of destructors being called on instances of
+// DestructorTracker.  On Windows, waits for the destructor call reports.
+class DestructorCall {
+ public:
+  DestructorCall() {
+    invoked_ = false;
+#if GTEST_OS_WINDOWS
+    wait_event_.Reset(::CreateEvent(NULL, TRUE, FALSE, NULL));
+    GTEST_CHECK_(wait_event_.Get() != NULL);
+#endif
+  }
+
+  bool CheckDestroyed() const {
+#if GTEST_OS_WINDOWS
+    if (::WaitForSingleObject(wait_event_.Get(), 1000) != WAIT_OBJECT_0)
+      return false;
+#endif
+    return invoked_;
+  }
+
+  void ReportDestroyed() {
+    invoked_ = true;
+#if GTEST_OS_WINDOWS
+    ::SetEvent(wait_event_.Get());
+#endif
+  }
+
+  static std::vector<DestructorCall*>& List() { return *list_; }
+
+  static void ResetList() {
+    for (size_t i = 0; i < list_->size(); ++i) {
+      delete list_->at(i);
+    }
+    list_->clear();
+  }
+
+ private:
+  bool invoked_;
+#if GTEST_OS_WINDOWS
+  AutoHandle wait_event_;
+#endif
+  static std::vector<DestructorCall*>* const list_;
+
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(DestructorCall);
+};
+
+std::vector<DestructorCall*>* const DestructorCall::list_ =
+    new std::vector<DestructorCall*>;
+
 // DestructorTracker keeps track of whether its instances have been
 // destroyed.
-static std::vector<bool> g_destroyed;
-
 class DestructorTracker {
  public:
   DestructorTracker() : index_(GetNewIndex()) {}
   DestructorTracker(const DestructorTracker& /* rhs */)
       : index_(GetNewIndex()) {}
   ~DestructorTracker() {
-    // We never access g_destroyed concurrently, so we don't need to
-    // protect the write operation under a mutex.
-    g_destroyed[index_] = true;
+    // We never access DestructorCall::List() concurrently, so we don't need
+    // to protect this acccess with a mutex.
+    DestructorCall::List()[index_]->ReportDestroyed();
   }
 
  private:
   static int GetNewIndex() {
-    g_destroyed.push_back(false);
-    return g_destroyed.size() - 1;
+    DestructorCall::List().push_back(new DestructorCall);
+    return DestructorCall::List().size() - 1;
   }
   const int index_;
+
+  GTEST_DISALLOW_ASSIGN_(DestructorTracker);
 };
 
 typedef ThreadLocal<DestructorTracker>* ThreadParam;
@@ -1138,77 +1237,87 @@ void CallThreadLocalGet(ThreadParam thread_local_param) {
 // Tests that when a ThreadLocal object dies in a thread, it destroys
 // the managed object for that thread.
 TEST(ThreadLocalTest, DestroysManagedObjectForOwnThreadWhenDying) {
-  g_destroyed.clear();
+  DestructorCall::ResetList();
 
   {
     // The next line default constructs a DestructorTracker object as
     // the default value of objects managed by thread_local_tracker.
     ThreadLocal<DestructorTracker> thread_local_tracker;
-    ASSERT_EQ(1U, g_destroyed.size());
-    ASSERT_FALSE(g_destroyed[0]);
+    ASSERT_EQ(1U, DestructorCall::List().size());
+    ASSERT_FALSE(DestructorCall::List()[0]->CheckDestroyed());
 
     // This creates another DestructorTracker object for the main thread.
     thread_local_tracker.get();
-    ASSERT_EQ(2U, g_destroyed.size());
-    ASSERT_FALSE(g_destroyed[0]);
-    ASSERT_FALSE(g_destroyed[1]);
+    ASSERT_EQ(2U, DestructorCall::List().size());
+    ASSERT_FALSE(DestructorCall::List()[0]->CheckDestroyed());
+    ASSERT_FALSE(DestructorCall::List()[1]->CheckDestroyed());
   }
 
   // Now thread_local_tracker has died.  It should have destroyed both the
   // default value shared by all threads and the value for the main
   // thread.
-  ASSERT_EQ(2U, g_destroyed.size());
-  EXPECT_TRUE(g_destroyed[0]);
-  EXPECT_TRUE(g_destroyed[1]);
+  ASSERT_EQ(2U, DestructorCall::List().size());
+  EXPECT_TRUE(DestructorCall::List()[0]->CheckDestroyed());
+  EXPECT_TRUE(DestructorCall::List()[1]->CheckDestroyed());
 
-  g_destroyed.clear();
+  DestructorCall::ResetList();
 }
 
 // Tests that when a thread exits, the thread-local object for that
 // thread is destroyed.
 TEST(ThreadLocalTest, DestroysManagedObjectAtThreadExit) {
-  g_destroyed.clear();
+  DestructorCall::ResetList();
 
   {
     // The next line default constructs a DestructorTracker object as
     // the default value of objects managed by thread_local_tracker.
     ThreadLocal<DestructorTracker> thread_local_tracker;
-    ASSERT_EQ(1U, g_destroyed.size());
-    ASSERT_FALSE(g_destroyed[0]);
+    ASSERT_EQ(1U, DestructorCall::List().size());
+    ASSERT_FALSE(DestructorCall::List()[0]->CheckDestroyed());
 
     // This creates another DestructorTracker object in the new thread.
     ThreadWithParam<ThreadParam> thread(
         &CallThreadLocalGet, &thread_local_tracker, NULL);
     thread.Join();
 
-    // Now the new thread has exited.  The per-thread object for it
-    // should have been destroyed.
-    ASSERT_EQ(2U, g_destroyed.size());
-    ASSERT_FALSE(g_destroyed[0]);
-    ASSERT_TRUE(g_destroyed[1]);
+    // The thread has exited, and we should have another DestroyedTracker
+    // instance created for it. But it may not have been destroyed yet.
+    // The instance for the main thread should still persist.
+    ASSERT_EQ(2U, DestructorCall::List().size());
+    ASSERT_FALSE(DestructorCall::List()[0]->CheckDestroyed());
   }
 
-  // Now thread_local_tracker has died.  The default value should have been
-  // destroyed too.
-  ASSERT_EQ(2U, g_destroyed.size());
-  EXPECT_TRUE(g_destroyed[0]);
-  EXPECT_TRUE(g_destroyed[1]);
+  // The thread has exited and thread_local_tracker has died.  The default
+  // value should have been destroyed too.
+  ASSERT_EQ(2U, DestructorCall::List().size());
+  EXPECT_TRUE(DestructorCall::List()[0]->CheckDestroyed());
+  EXPECT_TRUE(DestructorCall::List()[1]->CheckDestroyed());
 
-  g_destroyed.clear();
+  DestructorCall::ResetList();
 }
 
 TEST(ThreadLocalTest, ThreadLocalMutationsAffectOnlyCurrentThread) {
-  ThreadLocal<String> thread_local_string;
+  ThreadLocal<std::string> thread_local_string;
   thread_local_string.set("Foo");
   EXPECT_STREQ("Foo", thread_local_string.get().c_str());
 
-  String result;
+  std::string result;
   RunFromThread(&RetrieveThreadLocalValue,
                 make_pair(&thread_local_string, &result));
-  EXPECT_TRUE(result.c_str() == NULL);
+  EXPECT_TRUE(result.empty());
 }
 
 #endif  // GTEST_IS_THREADSAFE
+
+#if GTEST_OS_WINDOWS
+TEST(WindowsTypesTest, HANDLEIsVoidStar) {
+  StaticAssertTypeEq<HANDLE, void*>();
+}
+
+TEST(WindowsTypesTest, CRITICAL_SECTIONIs_RTL_CRITICAL_SECTION) {
+  StaticAssertTypeEq<CRITICAL_SECTION, _RTL_CRITICAL_SECTION>();
+}
+#endif  // GTEST_OS_WINDOWS
 
 }  // namespace internal
 }  // namespace testing
