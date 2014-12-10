@@ -33,11 +33,11 @@ if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
     "python2.\n" )
 endif()
 
-option( DEV_MODE "Use compilation flags meant for YCM developers. Also build tests." OFF )
-option( USE_CLANG_COMPLETER "Use Clang semantic completer for C/C++/ObjC." OFF )
-option( USE_SYSTEM_LIBCLANG "Set to ON to use the system libclang library." OFF )
-set( PATH_TO_LLVM_ROOT "" CACHE PATH "Path to the root of a LLVM+Clang binary distribution." )
-set( EXTERNAL_LIBCLANG_PATH "" CACHE PATH "Path to the libclang library to use." )
+option( USE_DEV_FLAGS "Use compilation flags meant for YCM developers" OFF )
+option( USE_CLANG_COMPLETER "Use Clang semantic completer for C/C++/ObjC" OFF )
+option( USE_SYSTEM_LIBCLANG "Set to ON to use the system libclang library" OFF )
+set( PATH_TO_LLVM_ROOT "" CACHE PATH "Path to the root of a LLVM+Clang binary distribution" )
+set( EXTERNAL_LIBCLANG_PATH "" CACHE PATH "Path to the libclang library to use" )
 
 if ( USE_CLANG_COMPLETER AND
      NOT USE_SYSTEM_LIBCLANG AND
@@ -373,7 +373,7 @@ set_target_properties( ${SERVER_LIB} PROPERTIES
 
 # For some reason, Xcode is too dumb to understand the -isystem flag and thus
 # borks on warnings in Boost.
-if ( DEV_MODE AND ( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG ) AND
+if ( USE_DEV_FLAGS AND ( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG ) AND
      NOT CMAKE_GENERATOR_IS_XCODE )
   # We want all warnings, and warnings should be treated as errors
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror" )
@@ -384,7 +384,7 @@ endif()
 # We want warnings if we accidentally use C++11 features
 # We can't use this warning on FreeBSD because std headers on that OS are dumb.
 # See here: https://github.com/Valloric/YouCompleteMe/issues/260
-if ( DEV_MODE AND COMPILER_IS_CLANG AND NOT CMAKE_GENERATOR_IS_XCODE AND
+if ( USE_DEV_FLAGS AND COMPILER_IS_CLANG AND NOT CMAKE_GENERATOR_IS_XCODE AND
      NOT SYSTEM_IS_FREEBSD )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wc++98-compat" )
 endif()
@@ -400,6 +400,4 @@ if( SYSTEM_IS_OPENBSD )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
 endif()
 
-if ( DEV_MODE )
-  add_subdirectory( tests )
-endif()
+add_subdirectory( tests )
