@@ -11,6 +11,7 @@ install:
   - sudo apt-get -qq update
   - sudo apt-get -qq install monodevelop-current
   - sudo apt-get -qq install g++-4.8
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
   - MONO_PREFIX=/opt/monodevelop
   - export DYLD_LIBRARY_FALLBACK_PATH=$MONO_PREFIX/lib:$DYLD_LIBRARY_FALLBACK_PATH
   - export LD_LIBRARY_PATH=$MONO_PREFIX/lib:$LD_LIBRARY_PATH
