@@ -120,6 +120,11 @@ def SetupOptions( options_file ):
   return options
 
 
+def CloseStdin():
+  sys.stdin.close()
+  os.close(0)
+
+
 def Main():
   args = ParseArguments()
 
@@ -145,6 +150,7 @@ def Main():
   SetUpSignalHandler(args.stdout, args.stderr, args.keep_logfiles)
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds ) )
   handlers.app.install( HmacPlugin( options[ 'hmac_secret' ] ) )
+  CloseStdin()
   waitress.serve( handlers.app,
                   host = args.host,
                   port = args.port,
