@@ -22,7 +22,7 @@ cmake_minimum_required( VERSION 2.8 )
 # us to fix gtest warnings, it's up to upstream.
 if ( COMPILER_IS_CLANG )
   set( CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-variadic-macros -Wno-missing-field-initializers -Wno-unused-private-field" )
+    "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-variadic-macros -Wno-missing-field-initializers -Wno-unused-private-field -Wno-c++98-compat" )
 endif()
 
 
