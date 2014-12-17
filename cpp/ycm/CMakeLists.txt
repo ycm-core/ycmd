@@ -308,10 +308,18 @@ add_custom_target( ${PROJECT_NAME}
 # @rpath/libclang.dylib in the final ycm_core.so. If we use the
 # @rpath version, then it may load the system libclang which the user
 # explicitely does not want (otherwise the user would specify
-# USE_SYSTEM_LIBCLANG). With @loader_path, we make sure that only the
-# libclang.dylib present in the same directory as our ycm_core.so
-# is used.
+# USE_SYSTEM_LIBCLANG). If we hardcode with `@loader_path/libclang.dylib`,
+# it guarantees to search `@loader_path` for libclang.dylib first and use it
+# only. So with `@loader_path`, we make sure that only the libclang.dylib
+# present in the same directory as our ycm_core.so is used.
+# And the extra `rpath` is helpful to find libclang.dylib's dependencies
+# if it is built with `--enable-shared` flag.
 if ( EXTERNAL_LIBCLANG_PATH AND APPLE )
+  get_filename_component(EXTRA_LIB_PATH ${EXTERNAL_LIBCLANG_PATH} DIRECTORY)
+
+  set_target_properties(${SERVER_LIB}
+    PROPERTIES LINK_FLAGS "-Wl,-rpath,${EXTRA_LIB_PATH}")
+
   add_custom_command( TARGET ${SERVER_LIB}
                       POST_BUILD
                       COMMAND install_name_tool
