@@ -312,12 +312,18 @@ add_custom_target( ${PROJECT_NAME}
 # libclang.dylib present in the same directory as our ycm_core.so
 # is used.
 if ( EXTERNAL_LIBCLANG_PATH AND APPLE )
+  get_filename_component(EXTRA_LIB_PATH ${EXTERNAL_LIBCLANG_PATH} DIRECTORY)
+
   add_custom_command( TARGET ${SERVER_LIB}
                       POST_BUILD
                       COMMAND install_name_tool
                       "-change"
                       "@rpath/libclang.dylib"
                       "@loader_path/libclang.dylib"
+                      "$<TARGET_FILE:${SERVER_LIB}>"
+                      COMMAND install_name_tool
+                      -add_rpath
+                      ${EXTRA_LIB_PATH}
                       "$<TARGET_FILE:${SERVER_LIB}>"
                     )
 endif()
