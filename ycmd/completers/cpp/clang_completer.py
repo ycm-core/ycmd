@@ -193,7 +193,9 @@ class ClangCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]
     contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-    if contents.count( '\n' ) < MIN_LINES_IN_FILE_TO_PARSE:
+    is_forced = request_data.get( 'is_forced', False )
+
+    if is_forced and contents.count( '\n' ) < MIN_LINES_IN_FILE_TO_PARSE:
       raise ValueError( FILE_TOO_SHORT_MESSAGE )
 
     if not filename:
