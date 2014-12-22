@@ -1,22 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 set -e
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-function command_exists {
+command_exists() {
   hash "$1" 2>/dev/null ;
 }
 
-function cmake_install {
-  if [[ `uname -s` == "Darwin" ]]; then
+cmake_install() {
+  if [ `uname -s` = "Darwin" ]; then
     homebrew_cmake_install
   else
     linux_cmake_install
   fi
 }
 
-function homebrew_cmake_install {
+homebrew_cmake_install() {
   if command_exists brew; then
     brew install cmake
   else
@@ -27,42 +27,38 @@ function homebrew_cmake_install {
   fi
 }
 
-function python_finder {
-  python_library="-DPYTHON_LIBRARY="
-  python_include="-DPYTHON_INCLUDE_DIR="
-
+python_finder() {
   # The CMake 'FindPythonLibs' Module does not work properly.
   # So we are forced to do its job for it.
   python_prefix=$(python-config --prefix | sed 's/^[ \t]*//')
   if [ -f "${python_prefix}/Python" ]; then
-    python_library+="${python_prefix}/Python"
-    python_include+="${python_prefix}/Headers"
+    python_library="${python_prefix}/Python"
+    python_include="${python_prefix}/Headers"
   else
-    which_python=$(python -c 'import sys;print(sys.version)' | sed 's/^[ \t]*//')
-    which_python="python${which_python:0:3}"
+    which_python=$(python -c 'import sys;i=sys.version_info;print "python%d.%d" % (i.major, i.minor)')
     lib_python="${python_prefix}/lib/lib${which_python}"
     if [ -f "${lib_python}.a" ]; then
-      python_library+="${lib_python}.a"
+      python_library="${lib_python}.a"
     # This check is for for CYGWIN
     elif [ -f "${lib_python}.dll.a" ]; then
-      python_library+="${lib_python}.dll.a"
+      python_library="${lib_python}.dll.a"
     else
-      python_library+="${lib_python}.dylib"
+      python_library="${lib_python}.dylib"
     fi
-    python_include+="${python_prefix}/include/${which_python}"
+    python_include="${python_prefix}/include/${which_python}"
   fi
 
-  echo "${python_library} ${python_include}"
+  echo "-DPYTHON_LIBRARY=${python_library} -DPYTHON_INCLUDE_DIR=${python_include}"
 }
 
-function num_cores {
-  if [[ -n ${YCM_CORES} ]]; then
+num_cores() {
+  if [ -n ${YCM_CORES} ]; then
     # Useful while building on machines with lot of CPUs but small amount of
     # memory/swap
     num_cpus=${YCM_CORES};
   elif command_exists nproc; then
     num_cpus=$(nproc)
-  elif [[ `uname -s` == "Linux" ]]; then
+  elif [ `uname -s` = "Linux" ]; then
     num_cpus=$(grep -c ^processor /proc/cpuinfo)
   else
     # Works on Mac, FreeBSD and OpenBSD
@@ -72,49 +68,49 @@ function num_cores {
 }
 
 
-function install {
+install() {
   build_dir=`mktemp -d -t ycm_build.XXXXXX`
-  pushd "${build_dir}"
+  cd "${build_dir}"
 
-  if [[ `uname -s` == "Darwin" ]]; then
+  if [ `uname -s` = "Darwin" ]; then
     cmake -G "Unix Makefiles" $(python_finder) "$@" . "${SCRIPT_DIR}/cpp"
   else
     cmake -G "Unix Makefiles" "$@" . "${SCRIPT_DIR}/cpp"
   fi
 
   make -j $(num_cores) ycm_support_libs
-  popd
+  cd -
   rm -rf "${build_dir}"
 }
 
-function testrun {
+testrun() {
   build_dir=`mktemp -d -t ycm_build.XXXXXX`
-  pushd "${build_dir}"
+  cd "${build_dir}"
 
   cmake -G "Unix Makefiles" "$@" . "${SCRIPT_DIR}/cpp"
   make -j $(num_cores) ycm_core_tests
   cd ycm/tests
   LD_LIBRARY_PATH="${SCRIPT_DIR}" ./ycm_core_tests
 
-  popd
+  cd -
   rm -rf "${build_dir}"
 }
 
-function linux_cmake_install {
+linux_cmake_install() {
   echo "Please install CMake using your package manager and retry."
   exit 1
 }
 
-function usage {
+usage() {
   echo "Usage: $0 [--clang-completer [--system-libclang]] [--system-boost] [--omnisharp-completer]"
   exit 0
 }
 
-function check_third_party_libs {
+check_third_party_libs() {
   libs_present=true
   for folder in "${SCRIPT_DIR}"/third_party/*; do
     num_files_in_folder=$(find "${folder}" -maxdepth 1 -mindepth 1 | wc -l)
-    if [[ $num_files_in_folder -eq 0 ]]; then
+    if [ $num_files_in_folder -eq 0 ]; then
       libs_present=false
     fi
   done
@@ -148,8 +144,8 @@ for flag in $@; do
   esac
 done
 
-if [[ $cmake_args == *-DUSE_SYSTEM_LIBCLANG=ON* ]] && \
-   [[ $cmake_args != *-DUSE_CLANG_COMPLETER=ON* ]]; then
+if [ $cmake_args = *-DUSE_SYSTEM_LIBCLANG=ON* ] && \
+   [ $cmake_args != *-DUSE_CLANG_COMPLETER=ON* ]; then
   usage
 fi
 
