@@ -167,16 +167,16 @@ def Diagnostics_CsCompleter_ZeroBasedLineAndColumn_test():
                     'text': contains_string(
                         "Unexpected symbol `}'', expecting identifier" ),
                     'location': has_entries( {
-                      'line_num': 10,
+                      'line_num': 11,
                       'column_num': 2
                     } ),
                     'location_extent': has_entries( {
                       'start': has_entries( {
-                        'line_num': 10,
+                        'line_num': 11,
                         'column_num': 2,
                       } ),
                       'end': has_entries( {
-                        'line_num': 10,
+                        'line_num': 11,
                         'column_num': 2,
                       } ),
                     } )
@@ -232,7 +232,7 @@ def GetDetailedDiagnostic_CsCompleter_Works_test():
   diag_data = BuildRequest( filepath = filepath,
                             filetype = 'cs',
                             contents = contents,
-                            line_num = 10,
+                            line_num = 11,
                             column_num = 2 )
 
   results = app.post_json( '/detailed_diagnostic', diag_data ).json

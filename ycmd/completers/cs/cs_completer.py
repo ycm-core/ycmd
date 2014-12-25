@@ -23,10 +23,8 @@ import os
 from ycmd.completers.completer import Completer
 from ycmd import responses
 from ycmd import utils
-import urllib2
-import urllib
+import requests
 import urlparse
-import json
 import logging
 import solutiondetection
 
@@ -237,7 +235,7 @@ class CsharpCompleter( Completer ):
 
     if not path_to_solutionfile:
       raise RuntimeError( 'Autodetection of solution file failed.\n' )
-    self._logger.info( 'Loading solution file {0}'.format( path_to_solutionfile ) )
+    self._logger.info( u'Loading solution file {0}'.format( path_to_solutionfile ) )
 
     self._omnisharp_port = utils.GetUnusedLocalhostPort()
 
@@ -247,16 +245,16 @@ class CsharpCompleter( Completer ):
                          '-p',
                          str( self._omnisharp_port ),
                          '-s',
-                         '"{0}"'.format( path_to_solutionfile ) ] )
+                         u'"{0}"'.format( path_to_solutionfile ) ] )
 
     if not utils.OnWindows() and not utils.OnCygwin():
-      command = 'mono ' + command
+      command = u'mono ' + command
 
     if utils.OnCygwin():
       command = command + ' --client-path-mode Cygwin'
 
     filename_format = os.path.join( utils.PathToTempDir(),
-                                   'omnisharp_{port}_{sln}_{std}.log' )
+                                   u'omnisharp_{port}_{sln}_{std}.log' )
 
     solutionfile = os.path.basename( path_to_solutionfile )
     self._filename_stdout = filename_format.format(
@@ -392,11 +390,9 @@ class CsharpCompleter( Completer ):
 
   def _GetResponse( self, handler, parameters = {}, silent = False ):
     """ Handle communication with server """
-    # TODO: Replace usage of urllib with Requests
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    parameters = urllib.urlencode( parameters )
-    response = urllib2.urlopen( target, parameters )
-    return json.loads( response.read() )
+    response = requests.post( target, data = parameters )
+    return response.json()
 
 
 
