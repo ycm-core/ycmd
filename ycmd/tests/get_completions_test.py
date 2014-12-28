@@ -129,7 +129,7 @@ def GetCompletions_CsCompleter_Works_test():
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cs',
                                   contents = contents,
-                                  line_num = 9,
+                                  line_num = 10,
                                   column_num = 12 )
   response_data = app.post_json( '/completions', completion_data ).json
   assert_that( response_data[ 'completions' ],
@@ -144,7 +144,7 @@ def GetCompletions_CsCompleter_PathWithSpace_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'cs spacetest/Program.cs' )
+  filepath = PathToTestFile( 'неприличное слово/Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',

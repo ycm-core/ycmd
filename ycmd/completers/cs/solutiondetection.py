@@ -28,8 +28,8 @@ def PollModule( module, filepath ):
   if module:
     try:
       module_hint = module.CSharpSolutionFile( filepath )
-      __logger.info( 'extra_conf_store suggests {0} as solution file'.format(
-          str( module_hint ) ) )
+      __logger.info( u'extra_conf_store suggests {0} as solution file'.format(
+          unicode( module_hint ) ) )
       if module_hint:
         # received a full path or one relative to the config's location?
         candidates = [ module_hint,
@@ -41,14 +41,14 @@ def PollModule( module, filepath ):
             # path seems to point to a solution
             path_to_solutionfile = path
             __logger.info(
-                'Using solution file {0} selected by extra_conf_store'.format(
+                u'Using solution file {0} selected by extra_conf_store'.format(
                 path_to_solutionfile ) )
             break
     except AttributeError as e:
       # the config script might not provide solution file locations
       __logger.error(
-          'Could not retrieve solution for {0} from extra_conf_store: {1}'.format(
-          filepath, str( e ) ) )
+          u'Could not retrieve solution for {0} from extra_conf_store: {1}'.format(
+          filepath, unicode( e ) ) )
   return path_to_solutionfile
 
 def GuessFile( filepath ):
@@ -56,7 +56,7 @@ def GuessFile( filepath ):
   tokens = _PathComponents( filepath )
   for i in reversed( range( len( tokens ) - 1 ) ):
     path = os.path.join( *tokens[ : i + 1 ] )
-    candidates = glob.glob1( path, "*.sln" )
+    candidates = glob.glob1( path, '*.sln' )
     if len( candidates ) > 0:
       # do the whole procedure only for the first solution file(s) you find
       return _SolutionTestCheckHeuristics( candidates, tokens, i )
@@ -70,25 +70,25 @@ def _SolutionTestCheckHeuristics( candidates, tokens, i ):
   if len( candidates ) == 1 :
     selection = os.path.join( path, candidates[ 0 ] )
     __logger.info(
-        'Selected solution file {0} as it is the first one found'.format(
+        u'Selected solution file {0} as it is the first one found'.format(
         selection ) )
   # there is more than one file, try some hints to decide
   # 1. is there a solution named just like the subdirectory with the source?
   if ( not selection and i < len( tokens ) - 1 and
-      "{0}.sln".format( tokens[ i + 1 ] ) in candidates ) :
-    selection = os.path.join( path, "{0}.sln".format( tokens[ i + 1 ] ) )
+      u'{0}.sln'.format( tokens[ i + 1 ] ) in candidates ) :
+    selection = os.path.join( path, u'{0}.sln'.format( tokens[ i + 1 ] ) )
     __logger.info(
-        'Selected solution file {0} as it matches source subfolder'.format(
+        u'Selected solution file {0} as it matches source subfolder'.format(
         selection ) )
   # 2. is there a solution named just like the directory containing the solution?
-  if not selection and "{0}.sln".format( tokens[ i ] ) in candidates :
-    selection = os.path.join( path, "{0}.sln".format( tokens[ i ] ) )
+  if not selection and u'{0}.sln'.format( tokens[ i ] ) in candidates :
+    selection = os.path.join( path, u'{0}.sln'.format( tokens[ i ] ) )
     __logger.info(
-        'Selected solution file {0} as it matches containing folder'.format(
+        u'Selected solution file {0} as it matches containing folder'.format(
         selection ) )
   if not selection:
     __logger.error(
-        'Could not decide between multiple solution files:\n{0}'.format(
+        u'Could not decide between multiple solution files:\n{0}'.format(
         candidates ) )
   return selection
 
