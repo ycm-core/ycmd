@@ -52,7 +52,7 @@ python_finder() {
 }
 
 num_cores() {
-  if [ -n ${YCM_CORES} ]; then
+  if [ -n "${YCM_CORES}" ]; then
     # Useful while building on machines with lot of CPUs but small amount of
     # memory/swap
     num_cpus=${YCM_CORES};
