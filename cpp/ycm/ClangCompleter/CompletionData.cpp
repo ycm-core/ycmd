@@ -185,6 +185,9 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   .append( " " )
   .append( everything_except_return_type_ )
   .append( "\n" );
+
+  doc_string_ = YouCompleteMe::CXStringToString(
+                  clang_getCompletionBriefComment( completion_string ) );
 }
 
 

@@ -271,7 +271,8 @@ def ConvertCompletionData( completion_data ):
     menu_text = completion_data.MainCompletionText(),
     extra_menu_info = completion_data.ExtraMenuInfo(),
     kind = completion_data.kind_.name,
-    detailed_info = completion_data.DetailedInfoForPreviewWindow() )
+    detailed_info = completion_data.DetailedInfoForPreviewWindow(),
+    extra_data = { 'doc_string': completion_data.DocString() } if completion_data.DocString() else None )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):

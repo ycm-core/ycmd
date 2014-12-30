@@ -1,5 +1,5 @@
 struct Foo {
-  int x;
+  int x; //!< A docstring.
   int y;
   char c;
 };

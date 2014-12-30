@@ -36,8 +36,14 @@ namespace YouCompleteMe {
 namespace {
 
 unsigned editingOptions() {
-  return CXTranslationUnit_DetailedPreprocessingRecord |
-      clang_defaultEditingTranslationUnitOptions();
+  return ( CXTranslationUnit_DetailedPreprocessingRecord |
+           clang_defaultEditingTranslationUnitOptions() ) |
+         CXTranslationUnit_IncludeBriefCommentsInCodeCompletion;
+}
+
+unsigned completionOptions() {
+  return clang_defaultCodeCompleteOptions() |
+         CXCodeComplete_IncludeBriefComments;
 }
 
 }  // unnamed namespace
@@ -60,7 +66,7 @@ TranslationUnit::TranslationUnit(
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
-  foreach ( const std::string & flag, flags ) {
+  foreach ( const std::string &flag, flags ) {
     pointer_flags.push_back( flag.c_str() );
   }
 
@@ -175,7 +181,7 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
                           column,
                           const_cast<CXUnsavedFile *>( unsaved ),
                           cxunsaved_files.size(),
-                          clang_defaultCodeCompleteOptions() ),
+                          completionOptions() ),
     clang_disposeCodeCompleteResults );
 
   std::vector< CompletionData > candidates = ToCompletionDataVector(
@@ -188,8 +194,9 @@ Location TranslationUnit::GetDeclarationLocation(
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
   bool reparse ) {
-  if (reparse)
+  if ( reparse )
     ReparseForIndexing( unsaved_files );
+
   unique_lock< mutex > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ )
@@ -213,8 +220,9 @@ Location TranslationUnit::GetDefinitionLocation(
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
   bool reparse ) {
-  if (reparse)
+  if ( reparse )
     ReparseForIndexing( unsaved_files );
+
   unique_lock< mutex > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ )
