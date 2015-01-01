@@ -144,8 +144,8 @@ for flag in $@; do
   esac
 done
 
-if [ $cmake_args = *-DUSE_SYSTEM_LIBCLANG=ON* ] && \
-   [ $cmake_args != *-DUSE_CLANG_COMPLETER=ON* ]; then
+if echo $cmake_args | grep -q ".*-DUSE_SYSTEM_LIBCLANG=ON.*" &&
+   ! echo $cmake_args | grep -q ".*-DUSE_CLANG_COMPLETER=ON.*"; then
   usage
 fi
 
