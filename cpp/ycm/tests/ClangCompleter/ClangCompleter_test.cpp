@@ -60,4 +60,23 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   EXPECT_EQ( Location( filename, 1, 8 ), actual_location );
 }
 
+TEST( ClangCompleterTest, GetDocString ) {
+  ClangCompleter completer;
+
+  std::vector< CompletionData > completions =
+    completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
+      11,
+      7,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  for ( size_t i = 0; i < completions.size(); ++i ) {
+    if ( completions[i].TextToInsertInBuffer() == "x" ) {
+      EXPECT_STREQ( "A docstring.", completions[i].DocString().c_str() );
+      break;
+    }
+  }
+}
+
 } // namespace YouCompleteMe

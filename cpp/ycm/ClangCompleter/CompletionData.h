@@ -84,6 +84,10 @@ struct CompletionData {
     return detailed_info_;
   }
 
+  std::string DocString() {
+    return doc_string_;
+  }
+
   bool operator== ( const CompletionData &other ) const {
     return
       kind_ == other.kind_ &&
@@ -106,6 +110,8 @@ struct CompletionData {
   std::string original_string_;
 
   std::string everything_except_return_type_;
+
+  std::string doc_string_;
 
 private:
 
