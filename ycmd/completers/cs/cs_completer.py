@@ -22,6 +22,7 @@ from collections import defaultdict
 import os
 import time
 from ycmd.completers.completer import Completer
+from ycmd.utils import ForceSemanticCompletion
 from ycmd import responses
 from ycmd import utils
 import requests
@@ -107,8 +108,17 @@ class CsharpCompleter( Completer ):
     return self._completer_per_solution[ solution ]
 
 
+  def ShouldUseNowInner( self, request_data ):
+    return True
+
+
+  def CompletionType( self, request_data ):
+    return ForceSemanticCompletion( request_data )
+
+
   def ComputeCandidatesInner( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
+    completion_type = self.CompletionType( request_data )
     return [ responses.BuildCompletionData(
                 completion[ 'CompletionText' ],
                 completion[ 'DisplayText' ],
@@ -118,7 +128,8 @@ class CsharpCompleter( Completer ):
                 { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
              for completion
-             in solutioncompleter._GetCompletions( request_data ) ]
+             in solutioncompleter._GetCompletions( request_data, 
+                                                   completion_type ) ]
 
 
   def FilterAndSortCandidates( self, candidates, query ):
@@ -404,10 +415,15 @@ class CsharpSolutionCompleter:
     return self._GetResponse( '/reloadsolution' )
 
 
-  def _GetCompletions( self, request_data ):
+  def CompletionType( self, request_data ):
+    return ForceSemanticCompletion( request_data )
+
+  def _GetCompletions( self, request_data, completion_type ):
     """ Ask server for completions """
     parameters = self._DefaultParameters( request_data )
-    parameters[ 'WantImportableTypes' ] = True
+    parameters[ 'WantImportableTypes' ] = completion_type
+    parameters[ 'ForceSemanticCompletion' ] = completion_type
+    parameters[ 'WantDocumentationForEveryCompletionResult' ] = True
     completions = self._GetResponse( '/autocomplete', parameters )
     return completions if completions != None else []
 
