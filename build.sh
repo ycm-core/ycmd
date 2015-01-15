@@ -5,7 +5,7 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 command_exists() {
-  hash "$1" 2>/dev/null ;
+  command -v "$1" 2>/dev/null ;
 }
 
 cmake_install() {
