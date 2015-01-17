@@ -128,6 +128,51 @@ def PreparedTriggers_UserTriggers_test():
 
 def PreparedTriggers_ObjectiveC_test():
   triggers = cu.PreparedTriggers()
+  # bracketed calls
   ok_( triggers.MatchesForFiletype( '[foo ', 5, 'objc' ) )
   ok_( not triggers.MatchesForFiletype( '[foo', 4, 'objc' ) )
   ok_( not triggers.MatchesForFiletype( '[3foo ', 6, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '[f3oo ', 6, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '[[foo ', 6, 'objc' ) )
+
+  # bracketless calls
+  ok_( not triggers.MatchesForFiletype( '3foo ', 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'foo3 ', 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'foo ', 4, 'objc' ) )
+
+  # method composition
+  ok_( triggers.MatchesForFiletype(
+      '[NSString stringWithFormat:@"Test %@", stuff] ', 46, 'objc' ) )
+  ok_( triggers.MatchesForFiletype(
+      '   [NSString stringWithFormat:@"Test"] ', 39, 'objc' ) )
+  ok_( triggers.MatchesForFiletype(
+      '   [[NSString stringWithFormat:@"Test"] stringByAppendingString:%@] ',
+      68,
+      'objc' ) )
+
+  # literals
+  ok_( triggers.MatchesForFiletype( '@"" ', 4, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@3.14F ', 7, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@3 ', 3, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@YES ', 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@(3) ', 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@( )', 3, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@{} ', 4, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@{ } ', 3, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@[] ', 4, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@[ ] ', 3, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '@\'Z\' ', 5, 'objc' ) )
+  ok_( not triggers.MatchesForFiletype( '@"foo "', 6, 'objc' ) )
+  ok_( not triggers.MatchesForFiletype( '@[@"Test" ]', 10, 'objc' ) )
+  ok_( not triggers.MatchesForFiletype( '@"@"Test" "', 10, 'objc' ) )
+
+  # variables
+  ok_( triggers.MatchesForFiletype( 'NSString stringWithFormat:', 26, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'NSString stringWithFormat: ', 27, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'foo = ', 6, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'foo =', 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'NSLog(@"%@", )', 13, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '#ifdef ', 7, 'objc' ) )
+
+  ok_( not triggers.MatchesForFiletype( '// foo ', 8, 'objc' ) )
+
