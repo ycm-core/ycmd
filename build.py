@@ -155,13 +155,13 @@ def BuildYcmdLibs( cmake_args ):
 
 
 def BuildOmniSharp():
-  build_comamnd = PathToFirstExistingExecutable(
+  build_command = PathToFirstExistingExecutable(
     [ 'msbuild', 'msbuild.exe', 'xbuild' ] )
-  if not build_comamnd:
+  if not build_command:
     sys.exit( 'msbuild or xbuild is required to build Omnisharp' )
 
   sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party/OmniSharpServer' ) )
-  sh.Command( build_comamnd )( _out = sys.stdout )
+  sh.Command( build_command )( _out = sys.stdout )
 
 
 def Main():
