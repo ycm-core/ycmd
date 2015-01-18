@@ -40,7 +40,7 @@ fi
 
 if ! $skip_build; then
   EXTRA_CMAKE_ARGS=$extra_cmake_args YCM_TESTRUN=1 \
-    "${SCRIPT_DIR}/build.sh" --omnisharp-completer
+    "${SCRIPT_DIR}/build.py" --omnisharp-completer
 fi
 
 for directory in "${SCRIPT_DIR}"/third_party/*; do

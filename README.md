@@ -42,7 +42,7 @@ When you first clone the repository you'll need to update the submodules:
 git submodule update --init --recursive
 ```
 
-Then run `./build.sh --clang-completer --omnisharp-completer`.  This should get
+Then run `./build.py --clang-completer --omnisharp-completer`.  This should get
 you going.
 
 For more detailed instructions on building ycmd, see [YCM's
