@@ -16,8 +16,10 @@ for folder in os.listdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) ):
               'you probably forgot to run:'
               '\n\tgit submodule update --init --recursive\n\n' )
 
-sys.path.insert( 0, p.abspath( 'third_party/sh' ) )
-sys.path.insert( 0, p.abspath( 'third_party/argparse' ) )
+sys.path.insert(
+  0, p.abspath( p.join( DIR_OF_THIS_SCRIPT, 'third_party/sh' ) ) )
+sys.path.insert(
+  0, p.abspath( p.join( DIR_OF_THIS_SCRIPT, 'third_party/argparse' ) ) )
 
 import sh
 import platform
