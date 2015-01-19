@@ -9,17 +9,17 @@ if major != 2 or minor < 6:
   sys.exit( 'The build script requires Python version > 2.6 and < 3.0.' )
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
+DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
-for folder in os.listdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) ):
-  if p.isdir( folder ) and not os.listdir( folder ):
-    sys.exit( 'Some folders in ./third_party are empty; '
+for folder in os.listdir( DIR_OF_THIRD_PARTY ):
+  abs_folder_path = p.join( DIR_OF_THIRD_PARTY, folder )
+  if p.isdir( abs_folder_path ) and not os.listdir( abs_folder_path ):
+    sys.exit( 'Some folders in ' + DIR_OF_THIRD_PARTY + ' are empty; '
               'you probably forgot to run:'
               '\n\tgit submodule update --init --recursive\n\n' )
 
-sys.path.insert(
-  0, p.abspath( p.join( DIR_OF_THIS_SCRIPT, 'third_party/sh' ) ) )
-sys.path.insert(
-  0, p.abspath( p.join( DIR_OF_THIS_SCRIPT, 'third_party/argparse' ) ) )
+sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'sh' ) ) )
+sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
 
 import sh
 import platform
