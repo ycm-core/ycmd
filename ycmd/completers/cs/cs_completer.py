@@ -237,7 +237,7 @@ class CsharpCompleter( Completer ):
       raise RuntimeError( 'Autodetection of solution file failed.\n' )
     self._logger.info( u'Loading solution file {0}'.format( path_to_solutionfile ) )
 
-    self._omnisharp_port = utils.GetUnusedLocalhostPort()
+    self._omnisharp_port = int( self.user_options.get( 'csharp_server_port', utils.GetUnusedLocalhostPort() ) )
 
     # we need to pass the command to Popen as a string since we're passing
     # shell=True (as recommended by Python's doc)
