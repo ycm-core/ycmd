@@ -237,7 +237,7 @@ class CsharpCompleter( Completer ):
       raise RuntimeError( 'Autodetection of solution file failed.\n' )
     self._logger.info( u'Loading solution file {0}'.format( path_to_solutionfile ) )
 
-    self._omnisharp_port = utils.GetUnusedLocalhostPort()
+    self._ChooseOmnisharpPort()
 
     # we need to pass the command to Popen as a string since we're passing
     # shell=True (as recommended by Python's doc)
@@ -277,6 +277,7 @@ class CsharpCompleter( Completer ):
   def _StopServer( self ):
     """ Stop the OmniSharp server """
     self._GetResponse( '/stopserver' )
+    self._omnisharp_phandle.wait()
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if ( not self.user_options[ 'server_keep_logfiles' ] ):
@@ -393,6 +394,12 @@ class CsharpCompleter( Completer ):
     target = urlparse.urljoin( self._ServerLocation(), handler )
     response = requests.post( target, data = parameters )
     return response.json()
+
+  def _ChooseOmnisharpPort( self ):
+    self._omnisharp_port = int( self.user_options.get( 'csharp_server_port', 0 ) )
+    if not self._omnisharp_port:
+        self._omnisharp_port = utils.GetUnusedLocalhostPort()
+    self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
 
 
 
