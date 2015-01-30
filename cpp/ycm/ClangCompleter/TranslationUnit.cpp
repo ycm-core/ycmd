@@ -38,7 +38,8 @@ namespace {
 unsigned editingOptions() {
   return ( CXTranslationUnit_DetailedPreprocessingRecord |
            clang_defaultEditingTranslationUnitOptions() ) |
-         CXTranslationUnit_IncludeBriefCommentsInCodeCompletion;
+         CXTranslationUnit_IncludeBriefCommentsInCodeCompletion |
+         CXTranslationUnit_Incomplete;
 }
 
 unsigned completionOptions() {
