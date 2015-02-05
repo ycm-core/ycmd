@@ -67,7 +67,7 @@ def CustomPythonCmakeArgs():
   else:
     which_python = sh.python(
       '-c',
-      'import sys;i=sys.version_info;print "python%d.%d" % (i.major, i.minor)'
+      'import sys;i=sys.version_info;print "python%d.%d" % (i[0], i[1])'
       ).strip()
     lib_python = '{0}/lib/lib{1}'.format( python_prefix, which_python ).strip()
 
