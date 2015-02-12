@@ -74,7 +74,8 @@ Creating good pull requests
     faster.
 
 4.  **Write tests for your code**. Your pull request is unlikely to be merged
-    without tests.
+    without tests. See [ycmd-tests][TESTS.md] for instructions on running the 
+    tests.
 
 5.  **Explain in detail why your pull request makes sense.** Ask yourself, would
     this feature be helpful to others? Not just a few people, but a lot of
@@ -103,3 +104,4 @@ Creating good pull requests
 [build-bots]: https://travis-ci.org/Valloric/ycmd
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [cla]: https://developers.google.com/open-source/cla/individual
+[ycmd-tests] https://github.com/Valloric/ycmd/blob/master/TESTS.md

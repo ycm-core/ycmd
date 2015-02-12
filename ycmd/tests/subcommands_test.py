@@ -59,19 +59,8 @@ foo()
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_Clang_ZeroBasedLineAndColumn_test():
   app = TestApp( handlers.app )
-  contents = """
-struct Foo {
-  int x;
-  int y;
-  char c;
-};
-
-int main()
-{
-  Foo foo;
-  return 0;
-}
-"""
+  contents = open( \
+        PathToTestFile( 'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) ).read()
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToDefinition'],
@@ -87,6 +76,338 @@ int main()
         'column_num': 8
       },
       app.post_json( '/run_completer_command', goto_data ).json )
+
+def RunSubcommandGoToBatch(contents, tests, command):
+  app = TestApp( handlers.app )
+  common_request = {
+    'completer_target'  : 'filetype_default',
+    'command_arguments' : command,
+    'compilation_flags' : ['-x', 
+                           'c++', 
+                           '-std=c++11'],
+    'line_num'          : 10,
+    'column_num'        : 3,
+    'contents'          : contents,
+    'filetype'          : 'cpp'
+  }
+  common_response = {
+    'filepath'  : '/foo',
+  }
+
+  for test in tests:
+    print test 
+
+    request = common_request
+    request.update({
+      'line_num'  : test['request'][0],
+      'column_num': test['request'][1],
+    })
+    response = common_response
+    response.update({
+      'line_num'  : test['response'][0],
+      'column_num': test['response'][1],
+    })
+
+    goto_data = BuildRequest( **request ) 
+
+    eq_( response,
+         app.post_json( '/run_completer_command', goto_data ).json )
+
+    
+
+@with_setup( Setup )
+def RunCompleterCommand_GoTo_all_Clang_test():
+  contents = open( PathToTestFile( 'GoTo_all_Clang_test.cc' ) ).read()
+
+  # GoToDeclaration
+  #
+  # the semantics of this seem the wrong way round to me. GoToDeclaration should
+  # go to where a method is declared, not where it is defined.
+  #
+  tests = [
+    # Local::x -> declaration of x
+    { 'request': [24,25], 'response': [5 ,9 ] },
+    # Local::in_line -> declaration of Local::inline
+    { 'request': [25,29], 'response': [7 ,10] },
+    # Local -> declaration of Local
+    { 'request': [25,19], 'response': [3 ,11] },
+    # sic: Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    # sic: GoToDeclaration on definition of out_of_line moves to itself
+    { 'request': [15,13], 'response': [15,13] }, # sic
+    # main -> definition of main (not declaration)
+    { 'request': [22,7 ], 'response': [22,5] }, # sic
+  ]
+
+  RunSubcommandGoToBatch(contents, tests, ['GoToDeclaration']);
+
+  # GoToDefinition - identical to GoToDeclaration
+  #
+  # the semantics of this seem the wrong way round to me. GoToDefinition should
+  # go to where a method is implemented, not where it is declared.
+  #
+  tests = [
+    # Local::x -> declaration of x
+    { 'request': [24,25], 'response': [5 ,9 ] },
+    # Local::in_line -> declaration of Local::inline
+    { 'request': [25,29], 'response': [7 ,10] },
+    # Local -> declaration of Local
+    { 'request': [25,19], 'response': [3 ,11] },
+    # sic: Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    # sic: GoToDeclaration on definition of out_of_line moves to itself
+    { 'request': [15,13], 'response': [15,13] }, # sic
+    # main -> definition of main (not declaration)
+    { 'request': [22,7 ], 'response': [22,5] }, # sic
+  ]
+
+  RunSubcommandGoToBatch(contents, tests, ['GoToDefinition']);
+
+  # GoTo - identical to GoToDeclaration
+  #
+  # the semantics of this seem the wrong way round to me. GoToDefinition should
+  # go to where a method is implemented, not where it is declared.
+  #
+  tests = [
+    # Local::x -> declaration of x
+    { 'request': [24,25], 'response': [5 ,9 ] },
+    # Local::in_line -> declaration of Local::inline
+    { 'request': [25,29], 'response': [7 ,10] },
+    # Local -> declaration of Local
+    { 'request': [25,19], 'response': [3 ,11] },
+    # sic: Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    # sic: GoToDeclaration on definition of out_of_line moves to itself
+    { 'request': [15,13], 'response': [15,13] }, # sic
+    # main -> definition of main (not declaration)
+    { 'request': [22,7 ], 'response': [22,5] }, # sic
+  ]
+
+  RunSubcommandGoToBatch(contents, tests, ['GoTo']);
+
+  # GoToImprecise - identical to GoToDeclaration
+  #
+  # the semantics of this seem the wrong way round to me. GoToDefinition should
+  # go to where a method is implemented, not where it is declared.
+  #
+  tests = [
+    # Local::x -> declaration of x
+    { 'request': [24,25], 'response': [5 ,9 ] },
+    # Local::in_line -> declaration of Local::inline
+    { 'request': [25,29], 'response': [7 ,10] },
+    # Local -> declaration of Local
+    { 'request': [25,19], 'response': [3 ,11] },
+    # sic: Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    # sic: GoToDeclaration on definition of out_of_line moves to itself
+    { 'request': [15,13], 'response': [15,13] }, # sic
+    # main -> definition of main (not declaration)
+    { 'request': [22,7 ], 'response': [22,5] }, # sic
+  ]
+
+  RunSubcommandGoToBatch(contents, tests, ['GoToImprecise']);
+
+def RunSubcommandMessageBatch(contents, tests, command):
+  app = TestApp( handlers.app )
+
+  common_args = {
+    'completer_target'  : 'filetype_default',
+    'command_arguments' : command,
+    'compilation_flags' : ['-x', 
+                           'c++', 
+                           '-std=c++11'],
+    'line_num'          : 10,
+    'column_num'        : 3,
+    'contents'          : contents,
+    'filetype'          : 'cpp'
+  }
+
+  for test in tests:
+    args = test[0]
+    expected = test[1];
+
+    # helps when the test fails to see which one failed
+    print test
+
+    request = common_args
+    request.update( args )
+
+    request_data = BuildRequest( **request )
+
+    eq_( {'message': expected},
+         app.post_json( '/run_completer_command', request_data ).json )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_Clang_test():
+  contents = open( PathToTestFile( 'GetType_Clang_test.cc' ) ).read()
+
+  tests = [
+  # basic pod types
+    [{'line_num' : 12, 'column_num': 3} , 'Foo'],
+    [{'line_num' : 1,  'column_num': 1} , 'Internal error: cursor not valid'],
+    [{'line_num' : 4,  'column_num': 2} , 'Foo'],
+    [{'line_num' : 4,  'column_num': 8} , 'Foo'],
+    [{'line_num' : 4,  'column_num': 9} , 'Foo'],
+    [{'line_num' : 4,  'column_num': 10} , 'Foo'],
+    [{'line_num' : 5,  'column_num': 3} , 'int'],
+    [{'line_num' : 5,  'column_num': 7} , 'int'],
+    [{'line_num' : 7,  'column_num': 7} , 'char'],
+
+  # function
+    [{'line_num' : 10, 'column_num': 2} , 'int ()'],
+    [{'line_num' : 10, 'column_num': 6} , 'int ()'],
+
+  # std::string and canonical type
+    # on std:: (Unknown)
+    [{'line_num' : 13, 'column_num': 3} , 'Unknown type'], # sic
+    # on string (string)
+    [{'line_num' : 13, 'column_num': 8} , 
+                                  'string => std::basic_string<char>'], # sic
+    # on a (std::string)
+    [{'line_num' : 13, 'column_num': 15} , 
+                                  'std::string => std::basic_string<char>'],
+    [{'line_num' : 14, 'column_num': 16} , 
+                                  'std::string => std::basic_string<char>'],
+
+  # cursor on decl for refs & pointers
+    [{'line_num' : 27, 'column_num': 3} ,  'Foo'],
+    [{'line_num' : 27, 'column_num': 11} , 'Foo &'],
+    [{'line_num' : 27, 'column_num': 15} , 'Foo'],
+    [{'line_num' : 28, 'column_num': 3} ,  'Foo'],
+    [{'line_num' : 28, 'column_num': 11} , 'Foo *'],
+    [{'line_num' : 28, 'column_num': 18} , 'Foo'],
+    [{'line_num' : 30, 'column_num': 3} ,  'const Foo &'], 
+    [{'line_num' : 30, 'column_num': 16} , 'const Foo &'], 
+    [{'line_num' : 31, 'column_num': 3} ,  'const Foo *'], 
+    [{'line_num' : 31, 'column_num': 16} , 'const Foo *'], 
+  # cursor on usage
+    [{'line_num' : 33, 'column_num': 17} , 'const Foo'],
+    [{'line_num' : 33, 'column_num': 21} , 'const int'],
+    [{'line_num' : 34, 'column_num': 17} , 'const Foo *'],
+    [{'line_num' : 34, 'column_num': 22} , 'const int'],
+    [{'line_num' : 35, 'column_num': 17} , 'Foo'],
+    [{'line_num' : 35, 'column_num': 21} , 'int'],
+    [{'line_num' : 36, 'column_num': 17} , 'Foo *'],
+    [{'line_num' : 36, 'column_num': 22} , 'int'],
+
+  # auto behaves strangely (bug in libclang)
+    [{'line_num' : 16, 'column_num': 3} ,  'auto &'], # sic
+    [{'line_num' : 16, 'column_num': 11} , 'auto &'], # sic
+    [{'line_num' : 16, 'column_num': 18} , 'Foo'],
+    [{'line_num' : 17, 'column_num': 3} ,  'auto *'], # sic
+    [{'line_num' : 17, 'column_num': 11} , 'auto *'], # sic
+    [{'line_num' : 17, 'column_num': 18} , 'Foo'],
+    [{'line_num' : 19, 'column_num': 3} ,  'const auto &'], # sic
+    [{'line_num' : 19, 'column_num': 16} , 'const auto &'], # sic
+    [{'line_num' : 20, 'column_num': 3} ,  'const auto *'], # sic
+    [{'line_num' : 20, 'column_num': 16} , 'const auto *'], # sic
+  # auto sort of works in usage (but canonical types apparently differ)
+    [{'line_num' : 22, 'column_num': 17} , 'const Foo => const Foo'], #sic
+    [{'line_num' : 22, 'column_num': 23} , 'const int'],
+    [{'line_num' : 23, 'column_num': 17} , 'const Foo * => const Foo *'], #sic
+    [{'line_num' : 23, 'column_num': 24} , 'const int'],
+    [{'line_num' : 24, 'column_num': 17} , 'Foo => Foo'], #sic
+    [{'line_num' : 24, 'column_num': 22} , 'int'],
+    [{'line_num' : 25, 'column_num': 17} , 'Foo * => Foo *'], #sic
+    [{'line_num' : 25, 'column_num': 23} , 'int'],
+    
+  ]
+
+  RunSubcommandMessageBatch( contents, tests, ['GetType'])
+
+@with_setup( Setup )
+def RunCompleterCommand_GetParent_Clang_test():
+  contents = """
+#include <iostream>
+struct A {
+    struct B {
+        int x;
+        char do_x();
+
+        char do_z_inline()
+        {
+            return 'z';
+        }
+
+        template<typename T>
+        char do_anything(T &t)
+        {
+            std::cout << t;
+        }
+    };
+
+    int y;
+    char do_y();
+
+    char do_Z_inline()
+    {
+        return 'Z';
+    }
+ 
+    template<typename T>
+    char do_anything(T &t);
+};
+
+template<typename T>
+char A::do_anything(T &t)
+{
+    std::cout << t;
+}
+
+char A::B::do_x()
+{
+    return 'x';
+}
+
+char A::do_y()
+{
+    return 'y';
+}
+
+int main()
+{
+    auto l = [](){ 
+        std::cout << "lambda";
+    };
+
+    l();
+
+    return 0;
+}
+"""
+
+  tests = [
+    [{'line_num' : 1 ,  'column_num': 1 } , 'Internal error: cursor not valid'],
+  # would be file name if we had one:
+    [{'line_num' : 3 ,  'column_num': 8 } , '/foo'],
+
+  # the reported scope does not include parents
+    [{'line_num' : 4 ,  'column_num': 11} , 'A'],
+    [{'line_num' : 5 ,  'column_num': 13} , 'B'],
+    [{'line_num' : 6 ,  'column_num': 13} , 'B'],
+    [{'line_num' : 10,  'column_num': 17} , 'do_z_inline()'],
+    [{'line_num' : 16,  'column_num': 22} , 'do_anything(T &)'],
+    [{'line_num' : 20,  'column_num': 9 } , 'A'],
+    [{'line_num' : 21,  'column_num': 9 } , 'A'],
+    [{'line_num' : 23,  'column_num': 12} , 'A'],
+    [{'line_num' : 24,  'column_num': 5 } , 'do_Z_inline()'],
+    [{'line_num' : 25,  'column_num': 12} , 'do_Z_inline()'],
+    [{'line_num' : 29,  'column_num': 14} , 'A'],
+
+    [{'line_num' : 35,  'column_num': 1 } , 'do_anything(T &)'],
+    [{'line_num' : 40,  'column_num': 1 } , 'do_x()'],
+    [{'line_num' : 45,  'column_num': 1 } , 'do_y()'],
+    [{'line_num' : 50,  'column_num': 1 } , 'main()'],
+
+  # lambdas report the name of the variable
+    [{'line_num' : 50,  'column_num': 14} , 'l'],
+    [{'line_num' : 51,  'column_num': 19} , 'l'],
+    [{'line_num' : 52,  'column_num': 16} , 'main()'],
+  
+  ]
+
+  RunSubcommandMessageBatch(contents, tests, ['GetParent'])
 
 
 @with_setup( Setup )

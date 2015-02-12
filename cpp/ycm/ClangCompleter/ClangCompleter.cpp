@@ -165,6 +165,46 @@ Location ClangCompleter::GetDefinitionLocation(
   return unit->GetDefinitionLocation( line, column, unsaved_files, reparse );
 }
 
+std::string ClangCompleter::GetTypeAtLocation(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse ) {
+
+  ReleaseGil unlock;
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
+
+  if ( !unit ) {
+    return "no unit";
+  }
+
+  return unit->GetTypeAtLocation( line, column, unsaved_files, reparse );
+}
+
+std::string ClangCompleter::GetEnclosingFunctionAtLocation(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse ) {
+
+  ReleaseGil unlock;
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
+
+  if ( !unit ) {
+    return "no unit";
+  }
+
+  return unit->GetEnclosingFunctionAtLocation( line, 
+                                               column, 
+                                               unsaved_files, 
+                                               reparse );
+}
 
 void ClangCompleter::DeleteCachesForFile( const std::string &filename ) {
   ReleaseGil unlock;
