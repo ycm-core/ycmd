@@ -23,6 +23,12 @@
 
 namespace YouCompleteMe {
 
+/**
+ * Return a std::string from the supplied CXString.
+ *
+ * Takes ownership of, and destroys, the supplied CXString which must not be used
+ * subsequently.
+ */
 std::string CXStringToString( CXString text );
 
 bool CursorIsValid( CXCursor cursor );
