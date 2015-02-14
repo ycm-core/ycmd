@@ -41,6 +41,7 @@ from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
 from ycmd import hmac_plugin
 from ycmd import extra_conf_store
 from ycmd.request_wrap import RequestWrap
+from sys import maxint
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -235,6 +236,14 @@ def UpdateUserOptions( options ):
 
   if not options:
     return
+
+  # Fix up MEMFILE_MAX for overridden max filesize.
+  if 'disable_for_files_larger_than_kb' in options:
+    max_size_kb = options['disable_for_files_larger_than_kb']
+    if(max_size_kb >= 0):
+      bottle.Request.MEMFILE_MAX = max_size_kb * 1024
+    else:
+      bottle.Request.MEMFILE_MAX = maxint
 
   user_options_store.SetAll( options )
   SERVER_STATE = server_state.ServerState( options )
