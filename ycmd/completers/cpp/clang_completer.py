@@ -108,26 +108,64 @@ class ClangCompleter( Completer ):
              'GoToDeclaration',
              'GoTo',
              'GoToImprecise',
-             'ClearCompilationFlagCache']
+             'ClearCompilationFlagCache',
+             'GetType',
+             'GetParent']
 
 
   def OnUserCommand( self, arguments, request_data ):
     if not arguments:
       raise ValueError( self.UserCommandsHelpMessage() )
 
-    command = arguments[ 0 ]
-    if command == 'GoToDefinition':
-      return self._GoToDefinition( request_data )
-    elif command == 'GoToDeclaration':
-      return self._GoToDeclaration( request_data )
-    elif command == 'GoTo':
-      return self._GoTo( request_data )
-    elif command == 'GoToImprecise':
-      return self._GoToImprecise( request_data )
-    elif command == 'ClearCompilationFlagCache':
-      return self._ClearCompilationFlagCache()
-    raise ValueError( self.UserCommandsHelpMessage() )
+    # command_map maps: command -> { method, args }
+    #
+    # where:
+    #  "command" is the completer command entered by the user
+    #            (e.g. GoToDefinition)
+    #  "method"  is a method to call for that command 
+    #            (e.g. self._GoToDefinition)
+    #  "args"    is a dictionary of
+    #               "method_argument" : "value" ...
+    #            which defines the kwargs (via the ** double splat) 
+    #            when calling "method" 
+    command_map = {
+        'GoToDefinition' : { 
+            'method' : self._GoToDefinition,
+            'args'   : { 'request_data' : request_data } 
+         },
+        'GoToDeclaration' : {
+            'method' : self._GoToDeclaration,
+            'args'   : { 'request_data' : request_data } 
+        },
+        'GoTo' : {
+            'method' : self._GoTo,
+            'args'   : { 'request_data' : request_data } 
+        },
+        'GoToImprecise' : {
+            'method' : self._GoToImprecise,
+            'args'   : { 'request_data' : request_data } 
+        },
+        'ClearCompilationFlagCache' : {
+            'method' : self._ClearCompilationFlagCache,
+            'args'   : { }
+        },
+        'GetType' : {
+            'method' : self._GetSemanticInfo,
+            'args'   : { 'request_data' : request_data,  
+                         'func'         : 'GetTypeAtLocation' }
+        },
+        'GetParent' : {
+            'method' : self._GetSemanticInfo,
+            'args'   : { 'request_data' : request_data,  
+                         'func'         : 'GetEnclosingFunctionAtLocation' }
+        },
+    }
 
+    try:
+        command_def = command_map[arguments[0]]
+        return command_def['method']( **(command_def['args']) )
+    except KeyError:
+        raise ValueError( self.UserCommandsHelpMessage() )
 
   def _LocationForGoTo( self, goto_function, request_data, reparse = True ):
     filename = request_data[ 'filepath' ]
@@ -185,10 +223,34 @@ class ClangCompleter( Completer ):
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
 
+  def _GetSemanticInfo( self, request_data, func, reparse = True ):
+    filename = request_data[ 'filepath' ]
+    if not filename:
+      raise ValueError( INVALID_FILE_MESSAGE )
+
+    flags = self._FlagsForRequest( request_data )
+    if not flags:
+      raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
+
+    files = self.GetUnsavedFilesVector( request_data )
+    line = request_data[ 'line_num' ]
+    column = request_data[ 'column_num' ]
+
+    message = getattr( self._completer, func )(
+        ToUtf8IfNeeded( filename ),
+        line,
+        column,
+        files,
+        flags,
+        reparse)
+
+    if not message:
+      message = "No semantic information available"
+
+    return responses.BuildDisplayMessageResponse( message )
 
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()
-
 
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]
