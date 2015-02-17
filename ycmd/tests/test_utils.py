@@ -74,9 +74,12 @@ def StopOmniSharpServer( app ):
 
 
 def WaitUntilOmniSharpServerReady( app ):
-  while True:
+  retries = 100;
+  success = False;
+  while retries > 0:
     result = app.get( '/ready', { 'include_subservers': 1 } ).json
     if result:
+      success = True;
       break
     request = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = [ 'ServerTerminated' ],
@@ -85,5 +88,9 @@ def WaitUntilOmniSharpServerReady( app ):
     if result:
       raise RuntimeError( "OmniSharp failed during startup." )
     time.sleep( 0.2 )
+    retries = retries - 1
+
+  if not success:
+    raise RuntimeError( "Timeout waiting for OmniSharpServer" )
 
 
