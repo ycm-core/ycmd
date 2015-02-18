@@ -135,21 +135,6 @@ DEFAULT_FILETYPE_TRIGGERS = {
             r're!\[[_a-zA-Z]+\w*\s',    # bracketed calls
             r're!^\s*[^\W\d]\w*\s',     # bracketless calls
             r're!\[.*\]\s',             # method composition
-            # literals
-            r're!\@"\.*"\s',
-            r're!\@\w+\.*\w*\s',
-            r're!\@\(\w+\.*\w*\)\s',
-            r're!\@\(\s*',
-            r're!\@\[.*\]\s',
-            r're!\@\[\s*',
-            r're!\@\{.*\}\s',
-            r're!\@\{\s*',
-            r're!\@\'.*\'\s',
-            # variables
-            '#ifdef ',
-            r're!:\s*',
-            r're!=\s*',
-            r're!,\s*',
            ],
   'ocaml' : ['.', '#'],
   'cpp,objcpp' : ['->', '.', '::'],
