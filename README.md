@@ -153,7 +153,7 @@ You can provide settings to ycmd on server startup. There's a
 [`default_settings.json`][def-settings] file that you can tweak. See the
 [_Options_ section in YCM's _User Guide_][options] for a description on what
 each option does. Pass the path to the modified settings file to ycmd as an
-`--options-file=/path/to/file` flag.  Note that you must set the `hmac_secret`
+`--options_file=/path/to/file` flag.  Note that you must set the `hmac_secret`
 setting (encode the value with [base64][]). Because the file you are passing
 contains a secret token, ensure that you are creating the temporary file in a
 secure way (the [`mkstemp()`][mkstemp] Linux system call is a good idea; use
