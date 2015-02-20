@@ -146,7 +146,7 @@ def BuildYcmdLibs( cmake_args ):
 
     build_target = ( 'ycm_support_libs' if 'YCM_TESTRUN' not in os.environ else
                      'ycm_core_tests' )
-    sh.make( '-j', NumCores(), build_target, _out = sys.stdout )
+    sh.make( '-j', NumCores(), build_target, _out = sys.stdout, _err = sys.stderr )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
