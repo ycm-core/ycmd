@@ -21,9 +21,7 @@
 
 import subprocess
 import json
-from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
-from ycmd import responses
 
 class HackCompleter( Completer ):
   """
