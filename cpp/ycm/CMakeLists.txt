@@ -45,22 +45,22 @@ if ( USE_CLANG_COMPLETER AND
      NOT EXTERNAL_LIBCLANG_PATH )
   message( "Downloading Clang 3.5" )
 
-  set( CLANG_URL "http://llvm.org/releases/3.5.0" )
+  set( CLANG_URL "http://llvm.org/releases/3.6.0" )
 
   if ( APPLE )
-    set( CLANG_DIRNAME "clang+llvm-3.5.0-macosx-apple-darwin" )
-    set( CLANG_MD5 "e580c8b8c64ca5442ac15a4343447500" )
+    set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-apple-darwin" )
+    set( CLANG_MD5 "103e06006c88d391c9c369a4671e3363" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-3.5.0-x86_64-linux-gnu-ubuntu-14.04" )
-      set( CLANG_MD5 "904e96e6f51e57b58de546a7324910c3" )
+      set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04" )
+      set( CLANG_MD5 "cfb2ebc01573e666770b9c5f72deb04e" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
       # That's too old now.
-      message( FATAL_ERROR "No pre-built Clang 3.5 binaries for 32 bit linux. "
-        "You'll have to compile Clang 3.5 from source. "
+      message( FATAL_ERROR "No pre-built Clang 3.6 binaries for 32 bit linux. "
+        "You'll have to compile Clang 3.6 from source. "
         "See the YCM docs for details on how to use a user-compiled libclang." )
     endif()
   endif()
