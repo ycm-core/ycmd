@@ -73,7 +73,7 @@ def CustomPythonCmakeArgs():
 
     if p.isfile( '{0}.a'.format( lib_python ) ):
       python_library = '{0}.a'.format( lib_python )
-    # This check is for for CYGWIN
+    # This check is for CYGWIN
     elif p.isfile( '{0}.dll.a'.format( lib_python ) ):
       python_library = '{0}.dll.a'.format( lib_python )
     else:
@@ -146,7 +146,8 @@ def BuildYcmdLibs( cmake_args ):
 
     build_target = ( 'ycm_support_libs' if 'YCM_TESTRUN' not in os.environ else
                      'ycm_core_tests' )
-    sh.make( '-j', NumCores(), build_target, _out = sys.stdout, _err = sys.stderr )
+    sh.make( '-j', NumCores(), build_target, _out = sys.stdout,
+             _err = sys.stderr )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
