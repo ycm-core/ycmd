@@ -404,7 +404,7 @@ if( SYSTEM_IS_SUNOS )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthreads" )
 endif()
 
-if( SYSTEM_IS_OPENBSD )
+if( SYSTEM_IS_OPENBSD OR SYSTEM_IS_FREEBSD )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
 endif()
 
