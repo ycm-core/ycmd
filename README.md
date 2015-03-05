@@ -225,7 +225,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
 [example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
 [example-readme]: https://github.com/Valloric/ycmd/blob/master/examples/README.md
-[trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L24
+[trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L143
 [subsequence]: http://en.wikipedia.org/wiki/Subsequence
 [ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x-super-quick-installation
 [def-settings]: https://github.com/Valloric/ycmd/blob/master/ycmd/default_settings.json
@@ -234,3 +234,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [options]: https://github.com/Valloric/YouCompleteMe#options
 [extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion-engine-usage
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
+[gpl]: http://www.gnu.org/copyleft/gpl.html
