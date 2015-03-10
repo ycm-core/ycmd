@@ -55,12 +55,38 @@ extern "C" {
   // Otherwise returns 0.
   int __asan_address_is_poisoned(void const volatile *addr);
 
-  // If at least on byte in [beg, beg+size) is poisoned, return the address
+  // If at least one byte in [beg, beg+size) is poisoned, return the address
   // of the first such byte. Otherwise return 0.
   void *__asan_region_is_poisoned(void *beg, size_t size);
 
   // Print the description of addr (useful when debugging in gdb).
   void __asan_describe_address(void *addr);
+
+  // Useful for calling from a debugger to get information about an ASan error.
+  // Returns 1 if an error has been (or is being) reported, otherwise returns 0.
+  int __asan_report_present();
+
+  // Useful for calling from a debugger to get information about an ASan error.
+  // If an error has been (or is being) reported, the following functions return
+  // the pc, bp, sp, address, access type (0 = read, 1 = write), access size and
+  // bug description (e.g. "heap-use-after-free"). Otherwise they return 0.
+  void *__asan_get_report_pc();
+  void *__asan_get_report_bp();
+  void *__asan_get_report_sp();
+  void *__asan_get_report_address();
+  int __asan_get_report_access_type();
+  size_t __asan_get_report_access_size();
+  const char *__asan_get_report_description();
+
+  // Useful for calling from the debugger to get information about a pointer.
+  // Returns the category of the given pointer as a constant string.
+  // Possible return values are "global", "stack", "stack-fake", "heap",
+  // "heap-invalid", "shadow-low", "shadow-gap", "shadow-high", "unknown".
+  // If global or stack, tries to also return the variable name, address and
+  // size. If heap, tries to return the chunk address and size. 'name' should
+  // point to an allocated buffer of size 'name_size'.
+  const char *__asan_locate_address(void *addr, char *name, size_t name_size,
+                                    void **region_address, size_t *region_size);
 
   // Useful for calling from the debugger to get the allocation stack trace
   // and thread ID for a heap address. Stores up to 'size' frames into 'trace',
@@ -88,8 +114,7 @@ extern "C" {
   // Returns the old value.
   int __asan_set_error_exit_code(int exit_code);
 
-  // Sets the callback to be called right before death on error.
-  // Passing 0 will unset the callback.
+  // Deprecated. Call __sanitizer_set_death_callback instead.
   void __asan_set_death_callback(void (*callback)(void));
 
   void __asan_set_error_report_callback(void (*callback)(const char*));
@@ -99,61 +124,12 @@ extern "C" {
   // the program crashes before ASan report is printed.
   void __asan_on_error();
 
-  // Returns the estimated number of bytes that will be reserved by allocator
-  // for request of "size" bytes. If ASan allocator can't allocate that much
-  // memory, returns the maximal possible allocation size, otherwise returns
-  // "size".
-  /* DEPRECATED: Use __sanitizer_get_estimated_allocated_size instead. */
-  size_t __asan_get_estimated_allocated_size(size_t size);
-
-  // Returns 1 if p was returned by the ASan allocator and is not yet freed.
-  // Otherwise returns 0.
-  /* DEPRECATED: Use __sanitizer_get_ownership instead. */
-  int __asan_get_ownership(const void *p);
-
-  // Returns the number of bytes reserved for the pointer p.
-  // Requires (get_ownership(p) == true) or (p == 0).
-  /* DEPRECATED: Use __sanitizer_get_allocated_size instead. */
-  size_t __asan_get_allocated_size(const void *p);
-
-  // Number of bytes, allocated and not yet freed by the application.
-  /* DEPRECATED: Use __sanitizer_get_current_allocated_bytes instead. */
-  size_t __asan_get_current_allocated_bytes();
-
-  // Number of bytes, mmaped by asan allocator to fulfill allocation requests.
-  // Generally, for request of X bytes, allocator can reserve and add to free
-  // lists a large number of chunks of size X to use them for future requests.
-  // All these chunks count toward the heap size. Currently, allocator never
-  // releases memory to OS (instead, it just puts freed chunks to free lists).
-  /* DEPRECATED: Use __sanitizer_get_heap_size instead. */
-  size_t __asan_get_heap_size();
-
-  // Number of bytes, mmaped by asan allocator, which can be used to fulfill
-  // allocation requests. When a user program frees memory chunk, it can first
-  // fall into quarantine and will count toward __asan_get_free_bytes() later.
-  /* DEPRECATED: Use __sanitizer_get_free_bytes instead. */
-  size_t __asan_get_free_bytes();
-
-  // Number of bytes in unmapped pages, that are released to OS. Currently,
-  // always returns 0.
-  /* DEPRECATED: Use __sanitizer_get_unmapped_bytes instead. */
-  size_t __asan_get_unmapped_bytes();
-
   // Prints accumulated stats to stderr. Used for debugging.
   void __asan_print_accumulated_stats();
 
   // This function may be optionally provided by user and should return
   // a string containing ASan runtime options. See asan_flags.h for details.
   const char* __asan_default_options();
-
-  // Malloc hooks that may be optionally provided by user.
-  // __asan_malloc_hook(ptr, size) is called immediately after
-  //   allocation of "size" bytes, which returned "ptr".
-  // __asan_free_hook(ptr) is called immediately before
-  //   deallocation of "ptr".
-  /* DEPRECATED: Use __sanitizer_malloc_hook / __sanitizer_free_hook instead. */
-  void __asan_malloc_hook(void *ptr, size_t size);
-  void __asan_free_hook(void *ptr);
 
   // The following 2 functions facilitate garbage collection in presence of
   // asan's fake stack.
