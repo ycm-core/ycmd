@@ -55,7 +55,7 @@ dnl @category InstalledPackages
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 dnl @version 2006-05-29
 dnl @license GPLWithACException
-dnl 
+dnl
 dnl Checks for GCC shared/pthread inconsistency based on work by
 dnl Marcin Owsiany <marcin@owsiany.pl>
 
@@ -285,7 +285,7 @@ if test "x$acx_pthread_ok" = xyes; then
 	      pthread_attr_init(0); pthread_cleanup_push(0, 0);
 	      pthread_create(0,0,0,0); pthread_cleanup_pop(0); ],
 	      [done=yes])
-	   
+	
 	   if test "x$done" = xyes; then
 	      AC_MSG_RESULT([yes])
 	   else

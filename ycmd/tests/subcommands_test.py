@@ -83,8 +83,8 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
   common_request = {
     'completer_target'  : 'filetype_default',
     'command_arguments' : command,
-    'compilation_flags' : ['-x', 
-                           'c++', 
+    'compilation_flags' : ['-x',
+                           'c++',
                            '-std=c++11'],
     'line_num'          : 10,
     'column_num'        : 3,
@@ -106,7 +106,7 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
       'column_num': test['response'][1],
   })
 
-  goto_data = BuildRequest( **request ) 
+  goto_data = BuildRequest( **request )
 
   eq_( response,
        app.post_json( '/run_completer_command', goto_data ).json )
@@ -224,8 +224,8 @@ def _RunCompleterCommand_Message_Clang(filename, test, command):
   common_args = {
     'completer_target'  : 'filetype_default',
     'command_arguments' : command,
-    'compilation_flags' : ['-x', 
-                           'c++', 
+    'compilation_flags' : ['-x',
+                           'c++',
                            '-std=c++11'],
     'line_num'          : 10,
     'column_num'        : 3,
@@ -267,12 +267,12 @@ def RunCompleterCommand_GetType_Clang_test():
     # on std:: (Unknown)
     [{'line_num' : 13, 'column_num': 3} , 'Unknown type'], # sic
     # on string (string)
-    [{'line_num' : 13, 'column_num': 8} , 
+    [{'line_num' : 13, 'column_num': 8} ,
                                   'string => std::basic_string<char>'], # sic
     # on a (std::string)
-    [{'line_num' : 13, 'column_num': 15} , 
+    [{'line_num' : 13, 'column_num': 15} ,
                                   'std::string => std::basic_string<char>'],
-    [{'line_num' : 14, 'column_num': 16} , 
+    [{'line_num' : 14, 'column_num': 16} ,
                                   'std::string => std::basic_string<char>'],
 
   # cursor on decl for refs & pointers
@@ -282,10 +282,10 @@ def RunCompleterCommand_GetType_Clang_test():
     [{'line_num' : 28, 'column_num': 3} ,  'Foo'],
     [{'line_num' : 28, 'column_num': 11} , 'Foo *'],
     [{'line_num' : 28, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 30, 'column_num': 3} ,  'const Foo &'], 
-    [{'line_num' : 30, 'column_num': 16} , 'const Foo &'], 
-    [{'line_num' : 31, 'column_num': 3} ,  'const Foo *'], 
-    [{'line_num' : 31, 'column_num': 16} , 'const Foo *'], 
+    [{'line_num' : 30, 'column_num': 3} ,  'const Foo &'],
+    [{'line_num' : 30, 'column_num': 16} , 'const Foo &'],
+    [{'line_num' : 31, 'column_num': 3} ,  'const Foo *'],
+    [{'line_num' : 31, 'column_num': 16} , 'const Foo *'],
   # cursor on usage
     [{'line_num' : 33, 'column_num': 17} , 'const Foo'],
     [{'line_num' : 33, 'column_num': 21} , 'const int'],
@@ -316,7 +316,7 @@ def RunCompleterCommand_GetType_Clang_test():
     [{'line_num' : 24, 'column_num': 22} , 'int'],
     [{'line_num' : 25, 'column_num': 17} , 'Foo * => Foo *'], #sic
     [{'line_num' : 25, 'column_num': 23} , 'int'],
-    
+
   ]
 
   for test in tests:
@@ -354,7 +354,7 @@ def RunCompleterCommand_GetParent_Clang_test():
     [{'line_num' : 50,  'column_num': 14} , 'l'],
     [{'line_num' : 51,  'column_num': 19} , 'l'],
     [{'line_num' : 52,  'column_num': 16} , 'main()'],
-  
+
   ]
 
   for test in tests:
