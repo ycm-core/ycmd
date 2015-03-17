@@ -166,7 +166,14 @@ def BuildOmniSharp():
   sh.Command( build_command )( _out = sys.stdout )
 
 
+def ApplyWorkarounds():
+  # Some OSs define a 'make' ENV VAR and this confuses sh when we try to do
+  # sh.make. See https://github.com/Valloric/YouCompleteMe/issues/1401
+  os.environ.pop('make', None)
+
+
 def Main():
+  ApplyWorkarounds()
   CheckDeps()
   args = ParseArguments()
   BuildYcmdLibs( GetCmakeArgs( args ) )
