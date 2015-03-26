@@ -27,7 +27,9 @@ from ycmd.responses import NoExtraConfDetected
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
                   '-include', '-iframework', '-F' ]
 
-STATE_FLAGS_TO_SKIP = set(['-c', '-MP'])
+# We need to remove --fcolor-diagnostics because it will cause shell escape
+# sequences to show up in editors, which is bad. See Valloric/YouCompleteMe#1421
+STATE_FLAGS_TO_SKIP = set(['-c', '-MP', '--fcolor-diagnostics'])
 
 # The -M* flags spec:
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html

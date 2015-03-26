@@ -76,6 +76,22 @@ def RemoveUnusedFlags_RemoveDashC_test():
          expected[ :1 ] + to_remove + expected[ -1: ], filename ) )
 
 
+def RemoveUnusedFlags_RemoveColor_test():
+  expected = [ '-foo', '-bar' ]
+  to_remove = [ '--fcolor-diagnostics' ]
+  filename = 'file'
+
+  eq_( expected,
+       flags._RemoveUnusedFlags( expected + to_remove, filename ) )
+
+  eq_( expected,
+       flags._RemoveUnusedFlags( to_remove + expected, filename ) )
+
+  eq_( expected,
+       flags._RemoveUnusedFlags(
+         expected[ :1 ] + to_remove + expected[ -1: ], filename ) )
+
+
 def RemoveUnusedFlags_RemoveDashO_test():
   expected = [ '-foo', '-bar' ]
   to_remove = [ '-o', 'output_name' ]
