@@ -19,6 +19,7 @@ Known ycmd clients:
 
 - [YouCompleteMe][ycm]: Vim client, stable and exposes all ycmd features.
 - [emacs-ycmd][]: Emacs client, still a bit experimental.
+- [you-complete-me][atom-you-complete-me]: Atom client.
 
 Feel free to send a pull request adding a link to your client here if you've
 built one.
@@ -220,6 +221,7 @@ This software is licensed under the [GPL v3 license][gpl].
 
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycm-users
 [ycm]: http://valloric.github.io/YouCompleteMe/
+[atom-you-complete-me]: https://atom.io/packages/you-complete-me
 [semver]: http://semver.org/
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
