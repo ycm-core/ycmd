@@ -110,13 +110,15 @@ class GoCodeCompleter_test( object ):
 
 
 class MockSubprocess(object):
-  def __init__( self, returncode, stdin ):
+  def __init__( self, returncode, stdout, stderr ):
     self.returncode = returncode
+    self.stdout = stdout
+    self.stderr = stderr
+
+
+  def communicate( self, stdin ):
     self.stdin = stdin
-
-
-  def wait( self ):
-    return self.returncode
+    return (self.stdout, self.stderr)
 
 
 
@@ -125,18 +127,10 @@ class MockPopen(object):
     self._returncode = returncode
     self._stdout = stdout
     self._stderr = stderr
-    # cmd and stdin will be populated when a subprocess is created.
+    # cmd will be populated when a subprocess is created.
     self.cmd = None
-    self.stdin = None
 
 
   def __call__(self, cmd, stdout=None, stderr=None, stdin=None):
     self.cmd = cmd
-    self.stdin = StringIO.StringIO()
-    if stdout is not None:
-      stdout.write(self._stdout)
-      stdout.close()
-    if stderr is not None:
-      stderr.write(self._stderr)
-      stderr.close()
-    return MockSubprocess( self._returncode, self.stdin )
+    return MockSubprocess( self._returncode, self._stdout, self._stderr )

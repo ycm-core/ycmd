@@ -54,30 +54,23 @@ class GoCodeCompleter( Completer ):
     offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                             request_data[ 'column_num' ] )
 
-    filename_format = os.path.join( utils.PathToTempDir(), u'gocode_{std}.log' )
-    stdout_file = filename_format.format( std='stdout' )
-    stderr_file = filename_format.format( std='stderr' )
+    cmd = ['gocode', '-f=json', 'autocomplete', filename, str( offset )]
+    proc = self._popener( cmd, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdoutdata, stderrdata = proc.communicate( contents )
+    if proc.returncode:
+      _logger.error( "gocode failed with code %i stderr: %s",
+                    proc.returncode, stderrdata)
+      raise RuntimeError( COMPLETION_ERROR_MESSAGE )
 
-    with open( stdout_file, 'w' ) as stdout:
-      with open( stderr_file, 'w' ) as stderr:
-        cmd = ['gocode', '-f=json', 'autocomplete', filename, str( offset )]
-        proc = self._popener( cmd, stdout=stdout, stderr=stderr, stdin=subprocess.PIPE )
-        proc.stdin.write( contents )
-        proc.stdin.close( )
-        retcode = proc.wait()
-        if retcode:
-          _logger.error( "gocode failed with code %i" % retcode )
-          raise RuntimeError( COMPLETION_ERROR_MESSAGE )
-
-    with open( stdout_file, 'r' ) as results_file:
-      try:
-        resultdata = json.load( results_file )
-      except ValueError:
-        _logger.error( "gocode failed to parse results json" )
-        raise RuntimeError( PARSE_ERROR_MESSAGE )
-      if not resultdata:
-        _logger.error( "gocode got an empty response" )
-        raise RuntimeError( NO_COMPLETIONS_MESSAGE )
+    try:
+      resultdata = json.loads( stdoutdata )
+    except ValueError:
+      _logger.error( "gocode failed to parse results json" )
+      raise RuntimeError( PARSE_ERROR_MESSAGE )
+    if not resultdata:
+      _logger.error( "gocode got an empty response" )
+      raise RuntimeError( NO_COMPLETIONS_MESSAGE )
 
     return [ _ConvertCompletionData( x ) for x in resultdata[1] ]
 
