@@ -19,7 +19,6 @@
 
 import logging
 import json
-import os
 import subprocess
 
 from ycmd import responses

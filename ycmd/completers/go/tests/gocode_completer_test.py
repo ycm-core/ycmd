@@ -20,7 +20,6 @@
 
 import os
 from nose.tools import eq_, raises
-import StringIO
 from ycmd.completers.go.gocode_completer import GoCodeCompleter
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
