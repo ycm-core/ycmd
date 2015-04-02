@@ -28,14 +28,15 @@ from ycmd.completers.completer import Completer
 
 GO_FILETYPES = set( [ 'go' ] )
 COMPLETION_ERROR_MESSAGE = "gocode call failed"
+PARSE_ERROR_MESSAGE = "gocode result parsing failed"
 NO_COMPLETIONS_MESSAGE = "gocode failed returned no completions"
 
 _logger = logging.getLogger( __name__ )
 
 class GoCodeCompleter( Completer ):
   def __init__( self, user_options ):
-    _logger.info("initializing gocode")
     super( GoCodeCompleter, self ).__init__( user_options )
+    self._popener = utils.SafePopen # Overridden in test.
 
 
   def SupportedFiletypes( self ):
@@ -44,54 +45,49 @@ class GoCodeCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     filename = request_data[ 'filepath' ]
-    _logger.info("gocode completion request %s" % filename)
+    _logger.info( "gocode completion request %s" % filename )
     if not filename:
-      _logger.info("blarg")
       return
 
-    _logger.info("converting contests for %s bytes" % len( request_data['file_data'][ filename ][ 'contents' ] ))
-    contents = utils.ToUtf8IfNeeded( request_data['file_data'][ filename ][ 'contents' ] )
-    _logger.info("converted contests")
-    offset = _ComputeOffset( contents, request_data[ 'line_num' ], 
+    contents = utils.ToUtf8IfNeeded(
+        request_data['file_data'][ filename ][ 'contents' ] )
+    offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                             request_data[ 'column_num' ] )
-    _logger.info("got offset at %s" % offset)
 
     filename_format = os.path.join( utils.PathToTempDir(), u'gocode_{std}.log' )
-    stdout_file = filename_format.format(std='stdout')
-    stderr_file = filename_format.format(std='stderr')
-    
-    _logger.info("stdout %s %s" % (stdout_file, stderr_file))
+    stdout_file = filename_format.format( std='stdout' )
+    stderr_file = filename_format.format( std='stderr' )
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
-        cmd = ['gocode', '-f=json', 'autocomplete', filename, str(offset)]
-        _logger.info("spawning gocode command %s" % cmd)
-        proc = utils.SafePopen(cmd, stdout=stdout, stderr=stderr, stdin=subprocess.PIPE)
-        _logger.info("writing")
-        proc.stdin.write(contents)
-        _logger.info("closing")
-        proc.stdin.close()
-        _logger.info("waiting")
+    with open( stdout_file, 'w' ) as stdout:
+      with open( stderr_file, 'w' ) as stderr:
+        cmd = ['gocode', '-f=json', 'autocomplete', filename, str( offset )]
+        proc = self._popener( cmd, stdout=stdout, stderr=stderr, stdin=subprocess.PIPE )
+        proc.stdin.write( contents )
+        proc.stdin.close( )
         retcode = proc.wait()
-        _logger.info("done %i" % retcode)
         if retcode:
-          _logger.error("gocode failed with code %i" % retcode)
+          _logger.error( "gocode failed with code %i" % retcode )
           raise RuntimeError( COMPLETION_ERROR_MESSAGE )
 
-    with open(stdout_file, 'r') as results_file:
-      resultdata = json.load(results_file)
+    with open( stdout_file, 'r' ) as results_file:
+      try:
+        resultdata = json.load( results_file )
+      except ValueError:
+        _logger.error( "gocode failed to parse results json" )
+        raise RuntimeError( PARSE_ERROR_MESSAGE )
       if not resultdata:
-        _logger.error("gocode failed to parse results")
+        _logger.error( "gocode got an empty response" )
         raise RuntimeError( NO_COMPLETIONS_MESSAGE )
 
-    _logger.error("gocode results done")
     return [ _ConvertCompletionData( x ) for x in resultdata[1] ]
 
 
-def _ComputeOffset(contents, line, col):
+# Compute the byte offset in the file given the line and column.
+def _ComputeOffset( contents, line, col ):
+  _logger.info("line %s col %s" % (line, col))
   curline = 1
   curcol = 1
-  for i, byte in enumerate(contents):
+  for i, byte in enumerate( contents ):
     if curline == line and curcol == col:
       return i
     curcol += 1
@@ -105,6 +101,6 @@ def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data[ 'name' ],
     menu_text = completion_data[ 'name' ],
-    extra_menu_info = completion_data[ 'type' ])
+    extra_menu_info = completion_data[ 'type' ] )
 
 
