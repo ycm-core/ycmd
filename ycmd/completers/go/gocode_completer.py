@@ -26,9 +26,9 @@ from ycmd import utils
 from ycmd.completers.completer import Completer
 
 GO_FILETYPES = set( [ 'go' ] )
-COMPLETION_ERROR_MESSAGE = "gocode call failed"
-PARSE_ERROR_MESSAGE = "gocode result parsing failed"
-NO_COMPLETIONS_MESSAGE = "gocode failed returned no completions"
+COMPLETION_ERROR_MESSAGE = "Gocode shell call failed."
+PARSE_ERROR_MESSAGE = "Gocode returned invalid JSON response."
+NO_COMPLETIONS_MESSAGE = "Gocode returned empty JSON response."
 
 _logger = logging.getLogger( __name__ )
 
@@ -58,25 +58,26 @@ class GoCodeCompleter( Completer ):
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdoutdata, stderrdata = proc.communicate( contents )
     if proc.returncode:
-      _logger.error( "gocode failed with code %i stderr: %s",
+      _logger.error( COMPLETION_ERROR_MESSAGE + " code %i stderr: %s",
                     proc.returncode, stderrdata)
       raise RuntimeError( COMPLETION_ERROR_MESSAGE )
 
     try:
       resultdata = json.loads( stdoutdata )
     except ValueError:
-      _logger.error( "gocode failed to parse results json" )
+      _logger.error( PARSE_ERROR_MESSAGE )
       raise RuntimeError( PARSE_ERROR_MESSAGE )
-    if not resultdata:
-      _logger.error( "gocode got an empty response" )
+    if len(resultdata) != 2:
+      _logger.error( NO_COMPLETIONS_MESSAGE )
       raise RuntimeError( NO_COMPLETIONS_MESSAGE )
 
     return [ _ConvertCompletionData( x ) for x in resultdata[1] ]
 
 
 # Compute the byte offset in the file given the line and column.
+# TODO(ekfriis): If this is slow, consider moving this to C++ ycm_core,
+# perhaps in RequestWrap.
 def _ComputeOffset( contents, line, col ):
-  _logger.info("line %s col %s" % (line, col))
   curline = 1
   curcol = 1
   for i, byte in enumerate( contents ):
