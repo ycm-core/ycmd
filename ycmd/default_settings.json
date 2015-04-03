@@ -36,5 +36,6 @@
   "use_ultisnips_completer": 1,
   "csharp_server_port": 0,
   "hmac_secret": "",
-  "server_keep_logfiles": 0
+  "server_keep_logfiles": 0,
+  "gocode_binary_path": ""
 }

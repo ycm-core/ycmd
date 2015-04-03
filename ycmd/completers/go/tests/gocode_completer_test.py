@@ -44,6 +44,7 @@ class GoCodeCompleter_test( object ):
   def setUp( self ):
     self._completer = GoCodeCompleter(
       user_options_store.DefaultOptions() )
+    self._complter._binary = 'THE_BINARY'
 
 
   def _BuildRequest( self, line_num, column_num ):
@@ -61,7 +62,7 @@ class GoCodeCompleter_test( object ):
     self._completer._popener = mock
     # Col 8 corresponds to cursor at log.Pr^int("Line 7 ...
     self._completer.ComputeCandidatesInner(self._BuildRequest(7, 8))
-    eq_(mock.cmd, ['gocode', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "121"])
+    eq_(mock.cmd, ['THE_BINARY', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "121"])
 
   # Test line-col to offset in the file after a unicode occurrences.
   def ComputeCandidatesInnerAfterUnicode_test( self ):
@@ -70,7 +71,7 @@ class GoCodeCompleter_test( object ):
     self._completer._popener = mock
     # Col 9 corresponds to cursor at log.Pri^nt("Line 7 ...
     self._completer.ComputeCandidatesInner(self._BuildRequest(9, 9))
-    eq_(mock.cmd, ['gocode', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "215"])
+    eq_(mock.cmd, ['THE_BINARY', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "215"])
 
   # Test end to end parsing of completed results.
   def ComputeCandidatesInner_test( self ):
@@ -79,7 +80,7 @@ class GoCodeCompleter_test( object ):
     self._completer._popener = mock
     # Col 40 corresponds to cursor at ..., log.Prefi^x ...
     result = self._completer.ComputeCandidatesInner(self._BuildRequest(10, 40))
-    eq_(mock.cmd, ['gocode', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "292"])
+    eq_(mock.cmd, ['THE_BINARY', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "292"])
     eq_(result, [{
         'menu_text': u'Prefix',
         'insertion_text': u'Prefix',

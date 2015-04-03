@@ -17,8 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.completers.go.gocode_completer import GoCodeCompleter
+from ycmd.completers.go.gocode_completer import \
+    GoCodeCompleter, FindGoCodeBinary
 
 def GetCompleter( user_options ):
-  return GoCodeCompleter( user_options )
+  if FindGoCodeBinary( user_options ):
+    return GoCodeCompleter( user_options )
+  return None
 

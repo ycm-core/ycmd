@@ -17,8 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import json
+import logging
+import os
 import subprocess
 
 from ycmd import responses
@@ -29,13 +30,46 @@ GO_FILETYPES = set( [ 'go' ] )
 COMPLETION_ERROR_MESSAGE = "Gocode shell call failed."
 PARSE_ERROR_MESSAGE = "Gocode returned invalid JSON response."
 NO_COMPLETIONS_MESSAGE = "Gocode returned empty JSON response."
+PATH_TO_GOCODE_BINARY = os.path.join(
+  os.path.abspath( os.path.dirname( __file__ ) ),
+  '../../../third_party/gocode/gocode' )
 
 _logger = logging.getLogger( __name__ )
+
+
+def FindGoCodeBinary( user_options ):
+  ''' Find the path to the gocode binary.
+
+  TODO(ekfriis): Test.
+
+  If 'gocode_binary_path' in the options is blank,
+  use the version installed with YCM, if it exists,
+  then the one on the path, if not.
+
+  If the 'gocode_binary_path' is specified, use it
+  as an absolute path.
+
+  If the resolved binary exists, return the path,
+  otherwise return None.
+  '''
+  if user_options[ 'gocode_binary_path' ]:
+    # The user has explicitly specified a path.
+    if os.path.exists( user_options[ 'gocode_binary_path' ] ):
+      return user_options[ 'gocode_binary_path' ]
+    else:
+      return None
+  # Try to use the bundled binary or one on the path.
+  if os.path.exists( PATH_TO_GOCODE_BINARY ):
+    return PATH_TO_GOCODE_BINARY
+  return utils.PathToFirstExistingExecutable( [ 'gocode' ] )
+
+
 
 class GoCodeCompleter( Completer ):
   def __init__( self, user_options ):
     super( GoCodeCompleter, self ).__init__( user_options )
     self._popener = utils.SafePopen # Overridden in test.
+    self._binary = FindGoCodeBinary( user_options )
 
 
   def SupportedFiletypes( self ):
@@ -53,7 +87,7 @@ class GoCodeCompleter( Completer ):
     offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                             request_data[ 'column_num' ] )
 
-    cmd = ['gocode', '-f=json', 'autocomplete', filename, str( offset )]
+    cmd = [self._binary, '-f=json', 'autocomplete', filename, str( offset )]
     proc = self._popener( cmd, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdoutdata, stderrdata = proc.communicate( contents )
