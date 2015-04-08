@@ -19,6 +19,7 @@
 #include "ClangUtils.h"
 
 #include <boost/algorithm/string/erase.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/move/move.hpp>
 
 namespace YouCompleteMe {
@@ -178,9 +179,9 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
                           saw_function_params,
                           saw_placeholder );
   }
-  if ( original_string_.size() > 0 && 
-      original_string_[ original_string_.size() - 1 ] == '(' ) {
-    original_string_.erase( original_string_.size() - 1, 1 );
+
+  if ( boost::ends_with( original_string_, "(" ) ) {
+    boost::erase_tail( original_string_, 1 );
   }
 
   kind_ = CursorKindToCompletionKind( completion_result.CursorKind );
@@ -252,7 +253,7 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
       break;
     case CXCompletionChunk_TypedText:
     case CXCompletionChunk_Text:
-      // need to add paren to insert string 
+      // need to add paren to insert string
       // when implementing inherited methods or declared methods in objc.
     case CXCompletionChunk_LeftParen:
     case CXCompletionChunk_RightParen:
