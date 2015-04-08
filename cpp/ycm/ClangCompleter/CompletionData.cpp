@@ -32,6 +32,8 @@ CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
 
     case CXCursor_ClassDecl:
     case CXCursor_ClassTemplate:
+    case CXCursor_ObjCInterfaceDecl:
+    case CXCursor_ObjCImplementationDecl:
       return CLASS;
 
     case CXCursor_EnumDecl:
@@ -43,6 +45,9 @@ CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
       return TYPE;
 
     case CXCursor_FieldDecl:
+    case CXCursor_ObjCIvarDecl:
+    case CXCursor_ObjCPropertyDecl:
+    case CXCursor_EnumConstantDecl:
       return MEMBER;
 
     case CXCursor_FunctionDecl:
@@ -51,6 +56,8 @@ CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
     case CXCursor_ConversionFunction:
     case CXCursor_Constructor:
     case CXCursor_Destructor:
+    case CXCursor_ObjCClassMethodDecl:
+    case CXCursor_ObjCInstanceMethodDecl:
       return FUNCTION;
 
     case CXCursor_VarDecl:
@@ -90,7 +97,8 @@ bool IsMainCompletionTextInfo( CXCompletionChunkKind kind ) {
     kind == CXCompletionChunk_SemiColon    ||
     kind == CXCompletionChunk_Equal        ||
     kind == CXCompletionChunk_Informative  ||
-    kind == CXCompletionChunk_HorizontalSpace;
+    kind == CXCompletionChunk_HorizontalSpace ||
+    kind == CXCompletionChunk_Text;
 
 }
 
@@ -161,12 +169,18 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   uint num_chunks = clang_getNumCompletionChunks( completion_string );
   bool saw_left_paren = false;
   bool saw_function_params = false;
+  bool saw_placeholder = false;
 
   for ( uint j = 0; j < num_chunks; ++j ) {
     ExtractDataFromChunk( completion_string,
                           j,
                           saw_left_paren,
-                          saw_function_params );
+                          saw_function_params,
+                          saw_placeholder );
+  }
+  if ( original_string_.size() > 0 && 
+      original_string_[ original_string_.size() - 1 ] == '(' ) {
+    original_string_.erase( original_string_.size() - 1, 1 );
   }
 
   kind_ = CursorKindToCompletionKind( completion_result.CursorKind );
@@ -194,7 +208,8 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
 void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
                                            uint chunk_num,
                                            bool &saw_left_paren,
-                                           bool &saw_function_params ) {
+                                           bool &saw_function_params,
+                                           bool &saw_placeholder ) {
   CXCompletionChunkKind kind = clang_getCompletionChunkKind(
                                  completion_string, chunk_num );
 
@@ -212,6 +227,8 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
     }
 
     else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
+      saw_left_paren = false;
+      saw_function_params = false; // fix objc have more than one ()
       everything_except_return_type_.append( " " );
     }
 
@@ -226,11 +243,27 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
     }
   }
 
-  if ( kind == CXCompletionChunk_ResultType )
-    return_type_ = ChunkToString( completion_string, chunk_num );
-
-  if ( kind == CXCompletionChunk_TypedText )
-    original_string_ = ChunkToString( completion_string, chunk_num );
+  switch ( kind ) {
+    case CXCompletionChunk_ResultType:
+      return_type_ = ChunkToString( completion_string, chunk_num );
+      break;
+    case CXCompletionChunk_Placeholder:
+      saw_placeholder = true;
+      break;
+    case CXCompletionChunk_TypedText:
+    case CXCompletionChunk_Text:
+      // need to add paren to insert string 
+      // when implementing inherited methods or declared methods in objc.
+    case CXCompletionChunk_LeftParen:
+    case CXCompletionChunk_RightParen:
+    case CXCompletionChunk_HorizontalSpace:
+      if ( !saw_placeholder ) {
+        original_string_ += ChunkToString( completion_string, chunk_num );
+      }
+      break;
+    default:
+      break;
+  }
 }
 
 } // namespace YouCompleteMe
