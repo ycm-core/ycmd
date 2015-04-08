@@ -44,7 +44,7 @@ class GoCodeCompleter_test( object ):
   def setUp( self ):
     self._completer = GoCodeCompleter(
       user_options_store.DefaultOptions() )
-    self._complter._binary = 'THE_BINARY'
+    self._completer._binary = 'THE_BINARY'
 
 
   def _BuildRequest( self, line_num, column_num ):
