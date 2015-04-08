@@ -24,7 +24,6 @@ from ycmd.completers.go.gocode_completer import \
 _logger = logging.getLogger( __name__ )
 
 def GetCompleter( user_options ):
-  _logger.info(user_options)
   binary = FindGoCodeBinary( user_options )
   if binary:
     _logger.info("Enabling go completion using %s", binary)
