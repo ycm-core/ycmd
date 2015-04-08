@@ -52,7 +52,7 @@ def FindGoCodeBinary( user_options ):
   If the resolved binary exists, return the path,
   otherwise return None.
   '''
-  if user_options[ 'gocode_binary_path' ]:
+  if user_options.get( 'gocode_binary_path' ):
     # The user has explicitly specified a path.
     if os.path.exists( user_options[ 'gocode_binary_path' ] ):
       return user_options[ 'gocode_binary_path' ]
@@ -121,6 +121,8 @@ def _ComputeOffset( contents, line, col ):
     if byte == '\n':
       curline += 1
       curcol = 1
+  _logger.error( "GoCode completer - could not compute byte offset " +
+                "corresponding to L%i C%i", line, col )
   return -1
 
 
