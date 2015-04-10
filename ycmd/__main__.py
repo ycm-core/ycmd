@@ -111,9 +111,10 @@ def SetupLogging( log_level ):
                        level = numeric_level )
 
 def SetupOptions( options_file ):
-  options = ( json.load( open( options_file, 'r' ) )
-              if options_file
-              else user_options_store.DefaultOptions() )
+  options = user_options_store.DefaultOptions()
+  if options_file:
+    user_options = json.load( open( options_file, 'r' ) )
+    options.update( user_options )
   utils.RemoveIfExists( options_file )
   options[ 'hmac_secret' ] = base64.b64decode( options[ 'hmac_secret' ] )
   user_options_store.SetAll( options )
