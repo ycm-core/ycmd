@@ -43,8 +43,8 @@ When you first clone the repository you'll need to update the submodules:
 git submodule update --init --recursive
 ```
 
-Then run `./build.py --clang-completer --omnisharp-completer`.  This should get
-you going.
+Then run `./build.py --clang-completer --omnisharp-completer --gocode-completer`.
+This should get you going.
 
 For more detailed instructions on building ycmd, see [YCM's
 instructions][ycm-install] (ignore the Vim-specific parts).
@@ -72,9 +72,10 @@ provided previously and any tags files produced by ctags. This engine is
 non-semantic.
 
 There are also several semantic engines in YCM. There's a libclang-based
-completer that provides semantic completion for C-family languages.  There's a
-Jedi-based completer for semantic completion for Python and an OmniSharp-based
-completer for C#. More will be added with time.
+completer that provides semantic completion for C-family languages.  There's also a
+Jedi-based completer for semantic completion for Python, an OmniSharp-based
+completer for C#, and a [Gocode][gocode]-based completer for Go.
+More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -237,3 +238,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion-engine-usage
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
+[gocode]: https://github.com/nsf/gocode
