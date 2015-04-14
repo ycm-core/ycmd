@@ -713,7 +713,6 @@ def GetCompletions_GoCodeCompleter_test():
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
-  print results
   assert_that( results, has_item(
                           has_entry( 'insertion_text',
                             contains_string( u'Logger' ) ) ) )
