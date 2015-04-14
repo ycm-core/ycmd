@@ -95,6 +95,8 @@ def ParseArguments():
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
                        help = 'Build C# semantic completion engine.' )
+  parser.add_argument( '--gocode-completer', action = 'store_true',
+                       help = 'Build Go semantic completion engine.' )
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
@@ -166,6 +168,14 @@ def BuildOmniSharp():
   sh.Command( build_command )( _out = sys.stdout )
 
 
+def BuildGoCode():
+  if not find_executable( 'go' ):
+    sys.exit( 'go is required to build gocode' )
+
+  sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party/gocode' ) )
+  sh.Command( 'go' )( 'build', _out = sys.stdout )
+
+
 def ApplyWorkarounds():
   # Some OSs define a 'make' ENV VAR and this confuses sh when we try to do
   # sh.make. See https://github.com/Valloric/YouCompleteMe/issues/1401
@@ -179,6 +189,8 @@ def Main():
   BuildYcmdLibs( GetCmakeArgs( args ) )
   if args.omnisharp_completer:
     BuildOmniSharp()
+  if args.gocode_completer:
+    BuildGoCode()
 
 if __name__ == "__main__":
   Main()
