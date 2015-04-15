@@ -48,6 +48,12 @@ def UserOptions_Works_test():
   eq_( options, app.get( '/user_options' ).json )
 
 
+@with_setup( Setup )
+def UserOptions_HmacSecretNotReturned_test():
+  app = TestApp( handlers.app )
+  options = app.get( '/user_options' ).json
+  ok_( 'hmac_secret' not in options )
+
 
 @with_setup( Setup )
 def EventNotification_AlwaysJsonResponse_test():
