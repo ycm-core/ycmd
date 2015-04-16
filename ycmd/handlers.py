@@ -102,12 +102,6 @@ def GetCompletions():
       request_data.CompletionStartColumn() ) )
 
 
-@app.get( '/user_options' )
-def GetUserOptions():
-  _logger.info( 'Received user options GET request' )
-  return _JsonResponse( dict( _server_state.user_options ) )
-
-
 @app.get( '/healthy' )
 def GetHealthy():
   _logger.info( 'Received health request' )
@@ -124,12 +118,6 @@ def GetReady():
     cs_completer = _server_state.GetFiletypeCompleter( ['cs'] )
     return _JsonResponse( cs_completer.ServerIsReady() )
   return _JsonResponse( True )
-
-
-@app.post( '/user_options' )
-def SetUserOptions():
-  _logger.info( 'Received user options POST request' )
-  UpdateUserOptions( request.json )
 
 
 @app.post( '/semantic_completion_available' )

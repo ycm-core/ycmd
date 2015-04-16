@@ -21,7 +21,7 @@ from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from webtest import TestApp
 from .. import handlers
-from nose.tools import ok_, eq_, with_setup
+from nose.tools import ok_, with_setup
 from .test_utils import Setup, BuildRequest
 import bottle
 
@@ -34,25 +34,6 @@ def SemanticCompletionAvailable_Works_test():
   request_data = BuildRequest( filetype = 'python' )
   ok_( app.post_json( '/semantic_completion_available',
                       request_data ).json )
-
-
-@with_setup( Setup )
-def UserOptions_Works_test():
-  app = TestApp( handlers.app )
-  options = app.get( '/user_options' ).json
-  ok_( len( options ) )
-
-  options[ 'foobar' ] = 'zoo'
-
-  app.post_json( '/user_options', options )
-  eq_( options, app.get( '/user_options' ).json )
-
-
-@with_setup( Setup )
-def UserOptions_HmacSecretNotReturned_test():
-  app = TestApp( handlers.app )
-  options = app.get( '/user_options' ).json
-  ok_( 'hmac_secret' not in options )
 
 
 @with_setup( Setup )
