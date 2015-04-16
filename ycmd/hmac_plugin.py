@@ -58,6 +58,9 @@ class HmacPlugin( object ):
 
 
 def RequestAuthenticated( body, hmac_secret ):
+  if _HMAC_HEADER not in request.headers:
+    return False
+
   return utils.ContentHexHmacValid(
       body,
       b64decode( request.headers[ _HMAC_HEADER ] ),
