@@ -19,11 +19,13 @@
 
 import logging
 import httplib
+from urlparse import urlparse
 from base64 import b64decode, b64encode
 from bottle import request, response, abort
 from ycmd import utils
 
 _HMAC_HEADER = 'x-ycm-hmac'
+_HOST_HEADER = 'host'
 
 # This class implements the Bottle plugin API:
 # http://bottlepy.org/docs/dev/plugindev.html
@@ -46,15 +48,25 @@ class HmacPlugin( object ):
 
   def __call__( self, callback ):
     def wrapper( *args, **kwargs ):
+      if not HostHeaderCorrect( request ):
+        self._logger.info( 'Dropping request with bad Host header.' )
+        abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad Host header.' )
+        return
+
       body = request.body.read()
       if not RequestAuthenticated( body, self._hmac_secret ):
         self._logger.info( 'Dropping request with bad HMAC.' )
-        abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad HMAC.')
+        abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad HMAC.' )
         return
       body = callback( *args, **kwargs )
       SetHmacHeader( body, self._hmac_secret )
       return body
     return wrapper
+
+
+def HostHeaderCorrect( request ):
+  host = urlparse( 'http://' + request.headers[ _HOST_HEADER ] ).hostname
+  return host == '127.0.0.1' or host == 'localhost'
 
 
 def RequestAuthenticated( body, hmac_secret ):
