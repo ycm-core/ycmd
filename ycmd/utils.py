@@ -189,6 +189,10 @@ def OnMac():
   return sys.platform == 'darwin'
 
 
+def OnTravis():
+  return 'TRAVIS' in os.environ
+
+
 # From here: http://stackoverflow.com/a/8536476/1672783
 def TerminateProcess( pid ):
   if OnWindows():
