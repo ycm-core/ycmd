@@ -20,6 +20,7 @@
 
 from collections import defaultdict
 import os
+import time
 from ycmd.completers.completer import Completer
 from ycmd import responses
 from ycmd import utils
@@ -286,7 +287,18 @@ class CsharpCompleter( Completer ):
   def _StopServer( self ):
     """ Stop the OmniSharp server """
     self._GetResponse( '/stopserver' )
-    self._omnisharp_phandle.wait()
+
+    # Give OmniSharp 5 seconds to cleanly stop, then kill it if it's still up
+    still_running = True
+    for _ in range( 5 ):
+      still_running = self.ServerIsRunning()
+      if not still_running:
+        break
+      time.sleep( 1 )
+
+    if still_running:
+      self._omnisharp_phandle.kill()
+
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if ( not self.user_options[ 'server_keep_logfiles' ] ):
@@ -370,7 +382,7 @@ class CsharpCompleter( Completer ):
     """ Check if our OmniSharp server is running (up and serving)."""
     try:
       return bool( self._omnisharp_port and
-                  self._GetResponse( '/checkalivestatus', silent = True ) )
+                   self._GetResponse( '/checkalivestatus', silent = True ) )
     except:
       return False
 
