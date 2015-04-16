@@ -42,7 +42,7 @@ PATH_TO_OMNISHARP_BINARY = os.path.join(
   '../../../third_party/OmniSharpServer/OmniSharp/bin/Debug/OmniSharp.exe' )
 
 
-#TODO: Handle this better than dummy classes
+# TODO: Handle this better than dummy classes
 class CsharpDiagnostic:
   def __init__ ( self, ranges, location, location_extent, text, kind ):
     self.ranges_ = ranges
@@ -129,12 +129,14 @@ class CsharpCompleter( Completer ):
                 completion[ 'Description' ],
                 None,
                 None,
-                { "required_namespace_import" : completion[ 'RequiredNamespaceImport' ] } )
+                { "required_namespace_import" :
+                   completion[ 'RequiredNamespaceImport' ] } )
              for completion in self._GetCompletions( request_data ) ]
 
 
   def FilterAndSortCandidates( self, candidates, query ):
-    result = super(CsharpCompleter, self).FilterAndSortCandidates( candidates, query )
+    result = super(CsharpCompleter, self).FilterAndSortCandidates( candidates,
+                                                                   query )
     result.sort( _CompleteSorterByImport );
     return result
 
@@ -221,21 +223,28 @@ class CsharpCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     if self.ServerIsRunning():
-      return 'OmniSharp Server running at: {0}\nOmniSharp logfiles:\n{1}\n{2}'.format(
-        self._ServerLocation(), self._filename_stdout, self._filename_stderr )
+      return ( 'OmniSharp Server running at: {0}\n'
+               'OmniSharp logfiles:\n{1}\n{2}' ).format(
+                   self._ServerLocation(),
+                   self._filename_stdout,
+                   self._filename_stderr )
     else:
       return 'OmniSharp Server is not running'
+
 
   def _StartServer( self, request_data ):
     """ Start the OmniSharp server """
     self._logger.info( 'startup' )
 
-    #Note: detection could throw an exception if an extra_conf_store needs to be confirmed
-    path_to_solutionfile = solutiondetection.FindSolutionPath( request_data[ 'filepath' ] )
+    # NOTE: detection could throw an exception if an extra_conf_store needs to
+    # be confirmed
+    path_to_solutionfile = solutiondetection.FindSolutionPath( request_data[
+        'filepath' ] )
 
     if not path_to_solutionfile:
       raise RuntimeError( 'Autodetection of solution file failed.\n' )
-    self._logger.info( u'Loading solution file {0}'.format( path_to_solutionfile ) )
+    self._logger.info(
+        u'Loading solution file {0}'.format( path_to_solutionfile ) )
 
     self._ChooseOmnisharpPort()
 
@@ -254,7 +263,7 @@ class CsharpCompleter( Completer ):
       command = command + ' --client-path-mode Cygwin'
 
     filename_format = os.path.join( utils.PathToTempDir(),
-                                   u'omnisharp_{port}_{sln}_{std}.log' )
+                                    u'omnisharp_{port}_{sln}_{std}.log' )
 
     solutionfile = os.path.basename( path_to_solutionfile )
     self._filename_stdout = filename_format.format(
@@ -396,7 +405,8 @@ class CsharpCompleter( Completer ):
     return response.json()
 
   def _ChooseOmnisharpPort( self ):
-    self._omnisharp_port = int( self.user_options.get( 'csharp_server_port', 0 ) )
+    self._omnisharp_port = int( self.user_options.get( 'csharp_server_port',
+                                                       0 ) )
     if not self._omnisharp_port:
         self._omnisharp_port = utils.GetUnusedLocalhostPort()
     self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
