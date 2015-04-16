@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 2.8.12 )
 
 # Disable CMake legacy mode for Cygwin, since the build doesn't depend on
 # WIN32 being set for Cygwin, and this property being unset causes a
