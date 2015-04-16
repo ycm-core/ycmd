@@ -84,7 +84,8 @@ class GoCodeCompleter_test( object ):
     eq_(result, [{
         'menu_text': u'Prefix',
         'insertion_text': u'Prefix',
-        'extra_menu_info': u'func() string'
+        'extra_menu_info': u'func() string',
+        'kind': u'func'
     }])
 
   # Test gocode failure.
