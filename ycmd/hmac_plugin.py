@@ -22,7 +22,7 @@ import httplib
 from urlparse import urlparse
 from base64 import b64decode, b64encode
 from bottle import request, response, abort
-from ycmd import utils
+from ycmd import hmac_utils
 
 _HMAC_HEADER = 'x-ycm-hmac'
 _HOST_HEADER = 'host'
@@ -54,7 +54,8 @@ class HmacPlugin( object ):
         return
 
       body = request.body.read()
-      if not RequestAuthenticated( body, self._hmac_secret ):
+      if not RequestAuthenticated( request.method, request.path, body,
+                                   self._hmac_secret ):
         self._logger.info( 'Dropping request with bad HMAC.' )
         abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad HMAC.' )
         return
@@ -69,16 +70,15 @@ def HostHeaderCorrect( request ):
   return host == '127.0.0.1' or host == 'localhost'
 
 
-def RequestAuthenticated( body, hmac_secret ):
+def RequestAuthenticated( method, path, body, hmac_secret ):
   if _HMAC_HEADER not in request.headers:
     return False
 
-  return utils.ContentHexHmacValid(
-      body,
-      b64decode( request.headers[ _HMAC_HEADER ] ),
-      hmac_secret )
+  return hmac_utils.SecureStringsEqual(
+      hmac_utils.CreateRequestHmac( method, path, body, hmac_secret ),
+      b64decode( request.headers[ _HMAC_HEADER ] ) )
 
 
 def SetHmacHeader( body, hmac_secret ):
   response.headers[ _HMAC_HEADER ] = b64encode(
-      utils.CreateHexHmac( body, hmac_secret ) )
+      hmac_utils.CreateHmac( body, hmac_secret ) )
