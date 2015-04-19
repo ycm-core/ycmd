@@ -4,7 +4,7 @@
 // bring a towel.
 package main
 
-import {
+import { // <-- should be (, not {
 	"fmt"
 	"net/http"
 }
