@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import subprocess
 import os.path as p
 import sys
 
@@ -19,10 +20,10 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
               'you probably forgot to run:'
               '\n\tgit submodule update --init --recursive\n\n' )
 
-sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'sh' ) ) )
-sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
+sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
 
-import sh
+from tempfile import mkdtemp
+from shutil import rmtree
 import platform
 import argparse
 import multiprocessing
@@ -60,15 +61,19 @@ def CustomPythonCmakeArgs():
   # The CMake 'FindPythonLibs' Module does not work properly.
   # So we are forced to do its job for it.
 
-  python_prefix = sh.python_config( '--prefix' ).strip()
+  python_prefix = subprocess.check_output( [
+      'python-config',
+      '--prefix'
+  ] ).strip()
   if p.isfile( p.join( python_prefix, '/Python' ) ):
     python_library = p.join( python_prefix, '/Python' )
     python_include = p.join( python_prefix, '/Headers' )
   else:
-    which_python = sh.python(
+    which_python = subprocess.check_output( [
+      'python',
       '-c',
       'import sys;i=sys.version_info;print "python%d.%d" % (i[0], i[1])'
-      ).strip()
+    ] ).strip()
     lib_python = '{0}/lib/lib{1}'.format( python_prefix, which_python ).strip()
 
     if p.isfile( '{0}.a'.format( lib_python ) ):
@@ -125,16 +130,15 @@ def GetCmakeArgs( parsed_args ):
 
 
 def RunYcmdTests( build_dir ):
-  tests_dir = p.join( build_dir, 'ycm/tests' )
-  sh.cd( tests_dir )
+  tests_dir = p.join( build_dir, 'ycm', 'tests' )
+  os.chdir( tests_dir )
   new_env = os.environ.copy()
   new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
-  sh.Command( p.join( tests_dir, 'ycm_core_tests' ) )(
-    _env = new_env, _out = sys.stdout )
+  subprocess.check_call( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
 
 
 def BuildYcmdLibs( cmake_args ):
-  build_dir = unicode( sh.mktemp( '-d', '-t', 'ycm_build.XXXXXX' ) ).strip()
+  build_dir = mkdtemp( prefix = 'ycm_build.' )
 
   try:
     full_cmake_args = [ '-G', 'Unix Makefiles' ]
@@ -143,19 +147,22 @@ def BuildYcmdLibs( cmake_args ):
     full_cmake_args.extend( cmake_args )
     full_cmake_args.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
 
-    sh.cd( build_dir )
-    sh.cmake( *full_cmake_args, _out = sys.stdout )
+    os.chdir( build_dir )
+    subprocess.check_call( [ 'cmake' ] + full_cmake_args )
 
     build_target = ( 'ycm_support_libs' if 'YCM_TESTRUN' not in os.environ else
                      'ycm_core_tests' )
-    sh.make( '-j', NumCores(), build_target, _out = sys.stdout,
-             _err = sys.stderr )
+
+    build_command = [ 'cmake', '--build', '.', '--target', build_target ]
+    build_command.extend( [ '--', '-j', str(NumCores()) ] )
+
+    subprocess.check_call( build_command )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
   finally:
-    sh.cd( DIR_OF_THIS_SCRIPT )
-    sh.rm( '-rf', build_dir )
+    os.chdir( DIR_OF_THIS_SCRIPT )
+    rmtree( build_dir )
 
 
 def BuildOmniSharp():
@@ -164,26 +171,19 @@ def BuildOmniSharp():
   if not build_command:
     sys.exit( 'msbuild or xbuild is required to build Omnisharp' )
 
-  sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party/OmniSharpServer' ) )
-  sh.Command( build_command )( "/property:Configuration=Release", _out = sys.stdout )
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'OmniSharpServer' ) )
+  subprocess.check_call( [ build_command, "/property:Configuration=Release" ] )
 
 
 def BuildGoCode():
   if not find_executable( 'go' ):
     sys.exit( 'go is required to build gocode' )
 
-  sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party/gocode' ) )
-  sh.Command( 'go' )( 'build', _out = sys.stdout )
-
-
-def ApplyWorkarounds():
-  # Some OSs define a 'make' ENV VAR and this confuses sh when we try to do
-  # sh.make. See https://github.com/Valloric/YouCompleteMe/issues/1401
-  os.environ.pop('make', None)
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
+  subprocess.check_call( [ 'go', 'build' ] )
 
 
 def Main():
-  ApplyWorkarounds()
   CheckDeps()
   args = ParseArguments()
   BuildYcmdLibs( GetCmakeArgs( args ) )
