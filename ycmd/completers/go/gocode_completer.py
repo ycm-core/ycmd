@@ -30,6 +30,8 @@ GO_FILETYPES = set( [ 'go' ] )
 COMPLETION_ERROR_MESSAGE = "Gocode shell call failed."
 PARSE_ERROR_MESSAGE = "Gocode returned invalid JSON response."
 NO_COMPLETIONS_MESSAGE = "Gocode returned empty JSON response."
+GOCODE_PANIC_MESSAGE = "Gocode panicked trying to find completions, "\
+    +"you likely have a syntax error."
 PATH_TO_GOCODE_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
   '../../../third_party/gocode/gocode' )
@@ -104,6 +106,9 @@ class GoCodeCompleter( Completer ):
     if len(resultdata) != 2:
       _logger.error( NO_COMPLETIONS_MESSAGE )
       raise RuntimeError( NO_COMPLETIONS_MESSAGE )
+    for result in resultdata[1]:
+      if result.get('class') == "PANIC":
+        raise RuntimeError( GOCODE_PANIC_MESSAGE )
 
     return [ _ConvertCompletionData( x ) for x in resultdata[1] ]
 

@@ -30,6 +30,8 @@ PATH_TO_TEST_FILE = os.path.join( DATA_DIR, "test.go" )
 PATH_TO_POS121_RES = os.path.join( DATA_DIR, "gocode_output_offset_121.json" )
 PATH_TO_POS215_RES = os.path.join( DATA_DIR, "gocode_output_offset_215.json" )
 PATH_TO_POS292_RES = os.path.join( DATA_DIR, "gocode_output_offset_292.json" )
+# Gocode output when a parsing error causes an internal panic.
+PATH_TO_PANIC_OUTPUT_RES = os.path.join( DATA_DIR, "gocode_dontpanic_output_offset_10.json" )
 EXPECTED_PRINT_COMPLETION = [ ]
 
 REQUEST_DATA = {
@@ -106,6 +108,14 @@ class GoCodeCompleter_test( object ):
   @raises(RuntimeError)
   def ComputeCandidatesInnerNoResultsFailure_test( self ):
     mock = MockPopen(returncode=0, stdout="[]", stderr="")
+    self._completer._popener = mock
+    self._completer.ComputeCandidatesInner(self._BuildRequest(1, 1))
+
+  # Test empty results error (different than no results).
+  @raises(RuntimeError)
+  def ComputeCandidatesGoCodePanic_test( self ):
+    with open(PATH_TO_PANIC_OUTPUT_RES, 'r') as gocodeoutput:
+      mock = MockPopen(returncode=0, stdout=gocodeoutput.read(), stderr="")
     self._completer._popener = mock
     self._completer.ComputeCandidatesInner(self._BuildRequest(1, 1))
 
