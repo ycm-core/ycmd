@@ -1,6 +1,7 @@
 #/usr/bin/env python
 # Copyright (C) 2015 Neo Mofoka <neo@jeteon.com>
 
+import logging
 from os.path import abspath, dirname, join
 import sys
 
@@ -9,18 +10,36 @@ from ycmd.completers.completer import Completer
 from ycmd import responses
 
 # Add CodeIntel to path. Assume is residing in third party
-REPO_ROOT = dirname(dirname(dirname(abspath(__file__))))
-sys.path.insert(0, join(REPO_ROOT, 'third_party', 'ci2', 'codeintel'))
+REPO_ROOT = dirname( dirname( dirname( dirname( abspath( __file__ ) ) ) ) )
+CI_BASE = join( REPO_ROOT, 'third_party', 'ci2')
+CI_DIR = join( CI_BASE, 'codeintel' )
+sys.path.insert( 0, CI_DIR )
+sys.path.insert( 0, CI_BASE )
 
 from codeintel2.manager import Manager
+from codeintel2.environment import SimplePrefsEnvironment
 
 # Remove the path we just added after importing the files we need
-sys.path.remove(0)
+#sys.path.remove( CI_DIR )
+#sys.path.remove( CI_BASE )
+
+# Set up logger
+logger = logging.getLogger(__name__)
+
+fh = logging.FileHandler('/tmp/cicompleter.log', 'a')
+fh.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+logger.addHandler(fh)
+logger.setLevel(logging.DEBUG)
 
 class CodeIntelCompleter( Completer ):
   """
   A Completer that uses the Code Intel code intelligence engine.
-  https://jedi.readthedocs.org/en/latest/
   """
 
   mgr = None
@@ -30,59 +49,74 @@ class CodeIntelCompleter( Completer ):
     
     # Initialize CodeIntel Manager on the class
     if CodeIntelCompleter.mgr is None:
-	  CodeIntelCompleter.mgr = Manager()
-	  self.mgr.upgrade()
+      env = SimplePrefsEnvironment()
+	  
+      CodeIntelCompleter.mgr = Manager( 
+		  db_base_dir = join( CI_DIR, 'db' ),
+		  extra_module_dirs = [ join( CI_DIR, 'codeintel2' ), ],
+		  db_import_everything_langs = None,
+		  db_catalog_dirs = [],
+		  env = env
+	  )
+      self.mgr.upgrade()
       self.mgr.initialize()
+      logger.debug('Manager initialized: %s' % user_options)
+
 
   def SupportedFiletypes( self ):
     """ Just PHP (for now) """
+    logger.debug('SupportedFiletypes called')
     return [ 'php' ]
 
 
-  def _GetJediScript( self, request_data ):
-      filename = request_data[ 'filepath' ]
-      contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-      line = request_data[ 'line_num' ]
-      # Jedi expects columns to start at 0, not 1
-      column = request_data[ 'column_num' ] - 1
+  #def _GetJediScript( self, request_data ):
+      #filename = request_data[ 'filepath' ]
+      #contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
+      #line = request_data[ 'line_num' ]
+      ## Jedi expects columns to start at 0, not 1
+      #column = request_data[ 'column_num' ] - 1
 
-      return jedi.Script( contents, line, column, filename )
+      #return jedi.Script( contents, line, column, filename )
 
 
   def ComputeCandidatesInner( self, request_data ):
+	
+	logger.debug('ComputeCandidatesInner called')
 	
 	filename = request_data[ 'filepath' ]
 	contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
 	line = request_data[ 'line_num' ]
 	column = request_data[ 'column_num' ]
 	
-	buf = self.mgr.buf_from_path( filename )
+	#buf = self.mgr.buf_from_path( filename, 'php' )
+	buf = self.mgr.buf_from_content(contents, 'PHP', path = filename, env = self.mgr.env )
+	logger.debug('Buffer obtained from filename: "%s"' % buf)
 	
 	# Calculate position from row, column
-	pos = sum([len(l) + 1 for l in contents.split('\n')[:(line-1)]]) + column - 1;
+	pos = sum([len(l) + 1 for l in contents.split('\n')[:(line-1)]]) + column;
+	logger.debug('Trigger pos: "%i"' % pos)
 
 	trg = buf.trg_from_pos(pos)
+	logger.debug('Trigger from buffer: "%s"' % trg)
 	
 	if trg is None:
 		return []
 	
 	cplns = buf.cplns_from_trg(trg)
+	logger.debug('Raw completions: "%s"' % cplns)
 	return [ responses.BuildCompletionData( 
 				ToUtf8IfNeeded( cpln[1] ),
 				kind = ToUtf8IfNeeded( cpln[0] ))
 			for cpln in cplns ]
-	
-    script = self._GetJediScript( request_data )
-    return [ responses.BuildCompletionData(
-                ToUtf8IfNeeded( completion.name ),
-                ToUtf8IfNeeded( completion.description ),
-                ToUtf8IfNeeded( completion.docstring() ) )
-             for completion in script.completions() ]
+
+  def ShouldUseNowInner( self, request_data ):
+	res = super( CodeIntelCompleter, self ).ShouldUseNowInner( request_data )
+	logger.debug('ShouldUseNowInner called. Returns %s' % res)
+	# TODO: Fix this to check request data
+	return True
 
   def DefinedSubcommands( self ):
-    return [ 'GoToDefinition',
-             'GoToDeclaration',
-             'GoTo' ]
+    return []
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -167,7 +201,13 @@ class CodeIntelCompleter( Completer ):
                                          definition.description ) )
       return defs
   
-  def Shutdown():
+  def Shutdown(self):
     if self.mgr:
 	  self.mgr.finalize()
 
+
+if __name__ == '__main__':
+	completer = CodeIntelCompleter({
+		'min_num_of_chars_for_completion' : 2,
+		'auto_trigger' : False
+	})
