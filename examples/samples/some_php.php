@@ -13,10 +13,9 @@ class Example {
 	}
 }
 
-ex = new Example();
+$ex = new Example();
 
 // location after the operator is line 19, column 5
-func
-ex->
+$ex->
 
 echo 'testing files';
