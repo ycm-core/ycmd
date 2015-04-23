@@ -277,6 +277,103 @@ def GetCompletions_CsCompleter_ImportsOrderedAfter_test():
 
 
 @with_setup( Setup )
+def GetCompletions_CsCompleter_ForcedReturnsResults_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/ContinuousTest.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app, filepath )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 21,
+                                  force_semantic = True,
+                                  query = 'Date' )
+  response_data = app.post_json( '/completions', completion_data ).json
+
+  assert_that( response_data[ 'completions' ],
+               has_items( CompletionEntryMatcher( 'String' ),
+                          CompletionEntryMatcher( 'StringBuilder' ) ) )
+  StopOmniSharpServer( app, filepath )
+
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_NonForcedReturnsNoResults_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/ContinuousTest.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app, filepath )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 21,
+                                  force_semantic = False,
+                                  query = 'Date' )
+  results = app.post_json( '/completions', completion_data ).json[ 'completions' ]
+
+  assert_that( results, empty() )
+  StopOmniSharpServer( app, filepath )
+
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ForcedDividesCache_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/ContinuousTest.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app, filepath )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 21,
+                                  force_semantic = True,
+                                  query = 'Date' )
+  results = app.post_json( '/completions', completion_data ).json[ 'completions' ]
+
+  assert_that( results, not(empty()) )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cs',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 21,
+                                  force_semantic = False,
+                                  query = 'Date' )
+  results = app.post_json( '/completions', completion_data ).json[ 'completions' ]
+
+  assert_that( results, empty() )
+  StopOmniSharpServer( app, filepath )
+
+
+@with_setup( Setup )
 def GetCompletions_CsCompleter_ReloadSolutionWorks_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
