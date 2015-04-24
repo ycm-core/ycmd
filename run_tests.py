@@ -38,6 +38,12 @@ def ParseArguments():
                        'semantic completion engine.' )
   parser.add_argument( '--skip-build', action = 'store_true',
                        help = 'Do not build ycmd before testing.' )
+  parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
+                       help = 'Choose the Microsoft Visual '
+                       'Studio version. (default: 12).' )
+  parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
+                       help = 'Force architecture to 32 or 64 bits on '
+                       'Windows (default: python interpreter architecture).' )
   parsed_args, nosetests_args = parser.parse_known_args()
 
   if 'USE_CLANG_COMPLETER' in os.environ:
@@ -62,6 +68,12 @@ def BuildYcmdLibs( args ):
       '--omnisharp-completer',
       '--gocode-completer'
     ]
+
+    if args.msvc:
+      build_cmd.extend( [ '--msvc', str( args.msvc ) ] )
+
+    if args.arch:
+      build_cmd.extend( [ '--arch', str( args.arch ) ] )
 
     subprocess.check_call( build_cmd )
 
