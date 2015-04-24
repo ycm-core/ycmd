@@ -44,39 +44,40 @@ TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
 
 
 TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
-    ClangCompleter completer;
-    std::vector< std::string > flags;
-    flags.push_back( "-x" );
-    flags.push_back( "objective-c" );
-    std::vector< CompletionData > completions =
-        completer.CandidatesForLocationInFile(
-            PathToTestFile( "SWObject.m" ).string(),
-            6,
-            16,
-            std::vector< UnsavedFile >(),
-            flags );
+  ClangCompleter completer;
+  std::vector< std::string > flags;
+  flags.push_back( "-x" );
+  flags.push_back( "objective-c" );
+  std::vector< CompletionData > completions =
+      completer.CandidatesForLocationInFile(
+          PathToTestFile( "SWObject.m" ).string(),
+          6,
+          16,
+          std::vector< UnsavedFile >(),
+          flags );
 
-    EXPECT_TRUE( !completions.empty() );
-    EXPECT_TRUE( completions[0].TextToInsertInBuffer() == "withArg2:" );
+  EXPECT_TRUE( !completions.empty() );
+  EXPECT_THAT( completions[0].TextToInsertInBuffer(), StrEq( "withArg2:" ) );
 }
 
 
 TEST( ClangCompleterTest, CandidatesObjCFuncForLocationInFile ) {
-    ClangCompleter completer;
-    std::vector< std::string > flags;
-    flags.push_back( "-x" );
-    flags.push_back( "objective-c" );
-    std::vector< CompletionData > completions =
-        completer.CandidatesForLocationInFile(
-            PathToTestFile( "SWObject.m" ).string(),
-            9,
-            3,
-            std::vector< UnsavedFile >(),
-            flags );
+  ClangCompleter completer;
+  std::vector< std::string > flags;
+  flags.push_back( "-x" );
+  flags.push_back( "objective-c" );
+  std::vector< CompletionData > completions =
+      completer.CandidatesForLocationInFile(
+          PathToTestFile( "SWObject.m" ).string(),
+          9,
+          3,
+          std::vector< UnsavedFile >(),
+          flags );
 
-    EXPECT_TRUE( !completions.empty() );
-    EXPECT_TRUE( completions[0].TextToInsertInBuffer() ==
-                 "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" );
+  EXPECT_TRUE( !completions.empty() );
+  EXPECT_THAT(
+      completions[0].TextToInsertInBuffer(),
+      StrEq( "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" ) );
 }
 
 
