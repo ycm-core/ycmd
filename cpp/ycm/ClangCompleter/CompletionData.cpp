@@ -164,9 +164,7 @@ std::string RemoveTwoConsecutiveUnderscores( std::string text ) {
 std::string RemoveTrailingParens( std::string text ) {
   if ( boost::ends_with( text, "(" ) ) {
     boost::erase_tail( text, 1 );
-  }
-
-  if ( boost::ends_with( text, "()" ) ) {
+  } else if ( boost::ends_with( text, "()" ) ) {
     boost::erase_tail( text, 2 );
   }
 
