@@ -29,6 +29,8 @@ namespace YouCompleteMe {
 using ::testing::ElementsAre;
 using ::testing::WhenSorted;
 using ::testing::StrEq;
+using ::testing::Property;
+using ::testing::Contains;
 
 TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
   ClangCompleter completer;
@@ -55,7 +57,10 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
       std::vector< std::string >() );
 
   EXPECT_TRUE( !completions.empty() );
-  EXPECT_THAT( completions[0].TextToInsertInBuffer(), StrEq( "foobar" ) );
+  EXPECT_THAT( completions,
+               Contains(
+                   Property( &CompletionData::TextToInsertInBuffer,
+                             StrEq( "foobar" ) ) ) );
 }
 
 
