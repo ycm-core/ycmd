@@ -228,8 +228,6 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
     }
 
     else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
-      saw_left_paren = false;
-      saw_function_params = false; // fix objc have more than one ()
       everything_except_return_type_.append( " " );
     }
 
