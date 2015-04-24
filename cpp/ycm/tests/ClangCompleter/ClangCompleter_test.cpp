@@ -41,35 +41,44 @@ TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
 
   EXPECT_TRUE( !completions.empty() );
 }
-    
+
+
 TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
     ClangCompleter completer;
+    std::vector< std::string > flags;
+    flags.push_back( "-x" );
+    flags.push_back( "objective-c" );
     std::vector< CompletionData > completions =
-    completer.CandidatesForLocationInFile(
-                                          PathToTestFile( "SWObject.m" ).string(),
-                                          6,
-                                          16,
-                                          std::vector< UnsavedFile >(),
-                                          std::vector< std::string >{"-x", "objective-c"} );
-    
-    EXPECT_TRUE( !completions.empty() && completions[0].TextToInsertInBuffer() == "withArg2:");
+        completer.CandidatesForLocationInFile(
+            PathToTestFile( "SWObject.m" ).string(),
+            6,
+            16,
+            std::vector< UnsavedFile >(),
+            flags );
+
+    EXPECT_TRUE( !completions.empty() );
+    EXPECT_TRUE( completions[0].TextToInsertInBuffer() == "withArg2:" );
 }
-    
+
+
 TEST( ClangCompleterTest, CandidatesObjCFuncForLocationInFile ) {
     ClangCompleter completer;
+    std::vector< std::string > flags;
+    flags.push_back( "-x" );
+    flags.push_back( "objective-c" );
     std::vector< CompletionData > completions =
-    completer.CandidatesForLocationInFile(
-                                          PathToTestFile( "SWObject.m" ).string(),
-                                          9,
-                                          3,
-                                          std::vector< UnsavedFile >(),
-                                          std::vector< std::string >{"-x", "objective-c"} );
-    
-    EXPECT_TRUE( !completions.empty() &&
-      completions[0].TextToInsertInBuffer()
-      == "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3");
+        completer.CandidatesForLocationInFile(
+            PathToTestFile( "SWObject.m" ).string(),
+            9,
+            3,
+            std::vector< UnsavedFile >(),
+            flags );
+
+    EXPECT_TRUE( !completions.empty() );
+    EXPECT_TRUE( completions[0].TextToInsertInBuffer() ==
+                 "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" );
 }
-    
+
 
 
 TEST( ClangCompleterTest, GetDefinitionLocation ) {
@@ -88,6 +97,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
 
   EXPECT_EQ( Location( filename, 1, 8 ), actual_location );
 }
+
 
 TEST( ClangCompleterTest, GetDocString ) {
   ClangCompleter completer;
