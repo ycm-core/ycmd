@@ -57,7 +57,7 @@ struct CompletionData {
   // What should actually be inserted into the buffer. For a function like
   // "int foo(int x)", this is just "foo". Same for a data member like "foo_":
   // we insert just "foo_".
-  std::string TextToInsertInBuffer() {
+  std::string TextToInsertInBuffer() const {
     return original_string_;
   }
 
@@ -66,25 +66,25 @@ struct CompletionData {
   // the completion is, say, a data member. So for a function like "int foo(int
   // x)", this would be "foo(int x)". For a data member like "count_", it would
   // be just "count_".
-  std::string MainCompletionText() {
+  std::string MainCompletionText() const {
     return everything_except_return_type_;
   }
 
   // This is extra info shown in the pop-up completion menu, after the
   // completion text and the kind. Currently we put the return type of the
   // function here, if any.
-  std::string ExtraMenuInfo() {
+  std::string ExtraMenuInfo() const {
     return return_type_;
   }
 
   // This is used to show extra information in vim's preview window. This is the
   // window that vim usually shows at the top of the buffer. This should be used
   // for extra information about the completion.
-  std::string DetailedInfoForPreviewWindow() {
+  std::string DetailedInfoForPreviewWindow() const {
     return detailed_info_;
   }
 
-  std::string DocString() {
+  std::string DocString() const {
     return doc_string_;
   }
 
