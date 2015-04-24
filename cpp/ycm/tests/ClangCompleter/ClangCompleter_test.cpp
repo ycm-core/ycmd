@@ -28,18 +28,34 @@ namespace YouCompleteMe {
 
 using ::testing::ElementsAre;
 using ::testing::WhenSorted;
+using ::testing::StrEq;
 
 TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
   ClangCompleter completer;
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      11,
+      15,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
 
   EXPECT_TRUE( !completions.empty() );
+}
+
+
+TEST( ClangCompleterTest, BufferTextNoParens ) {
+  ClangCompleter completer;
+  std::vector< CompletionData > completions =
+    completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
+      15,
+      7,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  EXPECT_TRUE( !completions.empty() );
+  EXPECT_THAT( completions[0].TextToInsertInBuffer(), StrEq( "foobar" ) );
 }
 
 
@@ -91,7 +107,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location =
     completer.GetDefinitionLocation(
       filename,
-      9,
+      13,
       3,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );

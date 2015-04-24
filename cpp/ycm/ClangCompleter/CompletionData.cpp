@@ -158,6 +158,21 @@ std::string RemoveTwoConsecutiveUnderscores( std::string text ) {
   return text;
 }
 
+
+// foo( -> foo
+// foo() -> foo
+std::string RemoveTrailingParens( std::string text ) {
+  if ( boost::ends_with( text, "(" ) ) {
+    boost::erase_tail( text, 1 );
+  }
+
+  if ( boost::ends_with( text, "()" ) ) {
+    boost::erase_tail( text, 2 );
+  }
+
+  return text;
+}
+
 } // unnamed namespace
 
 
@@ -180,10 +195,7 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
                           saw_placeholder );
   }
 
-  if ( boost::ends_with( original_string_, "(" ) ) {
-    boost::erase_tail( original_string_, 1 );
-  }
-
+  original_string_ = RemoveTrailingParens( boost::move( original_string_ ) );
   kind_ = CursorKindToCompletionKind( completion_result.CursorKind );
 
   // We remove any two consecutive underscores from the function definition
