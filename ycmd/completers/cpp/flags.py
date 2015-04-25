@@ -137,9 +137,30 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
 
 
 def PrepareFlagsForClang( flags, filename ):
+  flags = _RemoveXclangFlags( flags )
   flags = _RemoveUnusedFlags( flags, filename )
   flags = _SanitizeFlags( flags )
   return flags
+
+
+def _RemoveXclangFlags( flags ):
+  """Drops -Xclang flags.  These are typically used to pass in options to
+  clang cc1 which are not used in the front-end, so they are not needed for
+  code completion."""
+
+  sanitized_flags = []
+  saw_xclang = False
+  for i, flag in enumerate( flags ):
+    if flag == '-Xclang':
+      saw_xclang = True
+      continue
+    elif saw_xclang:
+      saw_xclang = False
+      continue
+
+    sanitized_flags.append( flag )
+
+  return sanitized_flags
 
 
 def _SanitizeFlags( flags ):
