@@ -19,20 +19,29 @@
 
 from nose.tools import eq_
 from ycmd.extra_conf_store import _PathsToAllParentFolders
+import os.path
 
 
 def PathsToAllParentFolders_Basic_test():
-  eq_( [ '/home/user/projects', '/home/user', '/home', '/' ],
-       list( _PathsToAllParentFolders( '/home/user/projects/test.c' ) ) )
+  eq_( [
+    os.path.normpath( '/home/user/projects' ),
+    os.path.normpath( '/home/user' ),
+    os.path.normpath( '/home' ),
+    os.path.normpath( '/' )
+  ], list( _PathsToAllParentFolders( '/home/user/projects/test.c' ) ) )
+
 
 def PathsToAllParentFolders_FileAtRoot_test():
-  eq_( [ '/' ],
+  eq_( [ os.path.normpath( '/' ) ],
        list( _PathsToAllParentFolders( '/test.c' ) ) )
+
 
 # We can't use backwards slashes in the paths because then the test would fail
 # on Unix machines
 def PathsToAllParentFolders_WindowsPath_test():
-  eq_( [ r'C:/foo/goo/zoo', r'C:/foo/goo', r'C:/foo', 'C:' ],
-       list( _PathsToAllParentFolders( r'C:/foo/goo/zoo/test.c' ) ) )
-
-
+  eq_( [
+    os.path.normpath( r'C:/foo/goo/zoo' ),
+    os.path.normpath( r'C:/foo/goo' ),
+    os.path.normpath( r'C:/foo' ),
+    os.path.normpath( r'C:/' )
+  ], list( _PathsToAllParentFolders( r'C:/foo/goo/zoo/test.c' ) ) )
