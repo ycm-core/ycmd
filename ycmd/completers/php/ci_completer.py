@@ -4,6 +4,7 @@
 import logging
 from os.path import abspath, dirname, join
 import sys
+from time import time
 
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
@@ -26,16 +27,16 @@ from codeintel2.environment import SimplePrefsEnvironment
 # Set up logger
 logger = logging.getLogger(__name__)
 
-fh = logging.FileHandler('/tmp/cicompleter.log', 'a')
-fh.setLevel(logging.DEBUG)
+#fh = logging.FileHandler('/tmp/cicompleter.log', 'a')
+#fh.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-fh.setFormatter(formatter)
-logger.addHandler(fh)
+#fh.setFormatter(formatter)
+#logger.addHandler(fh)
 
-logger.addHandler(fh)
-logger.setLevel(logging.DEBUG)
+#logger.addHandler(fh)
+logger.setLevel(logging.ERROR)
 
 class CodeIntelCompleter( Completer ):
   """
@@ -93,17 +94,19 @@ class CodeIntelCompleter( Completer ):
 	logger.debug('Buffer obtained from filename: "%s"' % buf)
 	
 	# Calculate position from row, column
-	pos = sum([len(l) + 1 for l in contents.split('\n')[:(line-1)]]) + column;
+	pos = sum([len(l) + 1 for l in contents.split('\n')[:(line-1)]]) + column - 1;
 	logger.debug('Trigger pos: "%i"' % pos)
 
-	trg = buf.trg_from_pos(pos)
+	trg = buf.preceding_trg_from_pos(pos, pos)
 	logger.debug('Trigger from buffer: "%s"' % trg)
 	
 	if trg is None:
 		return []
 	
+	pre = time()
+	
 	cplns = buf.cplns_from_trg(trg)
-	logger.debug('Raw completions: "%s"' % cplns)
+	logger.debug('Raw completions [%.2fs]: "%s"' % (time() - pre, cplns))
 	return [ responses.BuildCompletionData( 
 				ToUtf8IfNeeded( cpln[1] ),
 				kind = ToUtf8IfNeeded( cpln[0] ))
@@ -112,6 +115,11 @@ class CodeIntelCompleter( Completer ):
   def ShouldUseNowInner( self, request_data ):
 	res = super( CodeIntelCompleter, self ).ShouldUseNowInner( request_data )
 	logger.debug('ShouldUseNowInner called. Returns %s' % res)
+	
+	# Don't complete for empty lines
+	if not len( request_data[ 'line_value' ] ):
+	  return False
+	
 	# TODO: Fix this to check request data
 	return True
 
