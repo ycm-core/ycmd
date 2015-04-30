@@ -380,7 +380,12 @@ def PHPSemanticCompletionResults( server ):
   server.SendCodeCompletionRequest( test_filename = 'some_php.php',
                                     filetype = 'php',
                                     line_num = 19,
-                                    column_num = 5 )
+                                    column_num = 6 )
+  
+  server.SendCodeCompletionRequest( test_filename = 'some_php.php',
+                                    filetype = 'php',
+                                    line_num = 22,
+                                    column_num = 14 )
 
 
 def LanguageAgnosticIdentifierCompletion( server ):
