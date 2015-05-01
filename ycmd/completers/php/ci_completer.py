@@ -12,7 +12,7 @@ from ycmd import responses
 
 # Add CodeIntel to path. Assume is residing in third party
 REPO_ROOT = dirname( dirname( dirname( dirname( abspath( __file__ ) ) ) ) )
-CI_BASE = join( REPO_ROOT, 'third_party', 'ci2' )
+CI_BASE = join( REPO_ROOT, 'third_party', 'codeintel' )
 CI_DIR = join( CI_BASE, 'codeintel' )
 sys.path.insert( 0, CI_DIR )
 sys.path.insert( 0, CI_BASE )
