@@ -21,17 +21,34 @@ import ycm_core
 import os
 import inspect
 from ycmd import extra_conf_store
-from ycmd.utils import ToUtf8IfNeeded
+from ycmd.utils import ToUtf8IfNeeded, OnMac
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
                   '-include', '-iframework', '-F' ]
 
-STATE_FLAGS_TO_SKIP = set(['-c', '-MP'])
+# We need to remove --fcolor-diagnostics because it will cause shell escape
+# sequences to show up in editors, which is bad. See Valloric/YouCompleteMe#1421
+STATE_FLAGS_TO_SKIP = set(['-c', '-MP', '--fcolor-diagnostics'])
 
 # The -M* flags spec:
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
 FILE_FLAGS_TO_SKIP = set(['-MD', '-MMD', '-MF', '-MT', '-MQ', '-o'])
+
+# These are the standard header search paths that clang will use on Mac BUT
+# libclang won't, for unknown reasons. We add these paths when the user is on a
+# Mac because if we don't, libclang would fail to find <vector> etc.
+# This should be fixed upstream in libclang, but until it does, we need to help
+# users out.
+# See Valloric/YouCompleteMe#303 for details.
+MAC_INCLUDE_PATHS = [
+ '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1',
+ '/usr/local/include',
+ '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include',
+ '/usr/include',
+ '/System/Library/Frameworks',
+ '/Library/Frameworks',
+]
 
 
 class Flags( object ):
@@ -42,13 +59,13 @@ class Flags( object ):
   def __init__( self ):
     # It's caches all the way down...
     self.flags_for_file = {}
-    self.special_clang_flags = _SpecialClangIncludes()
+    self.extra_clang_flags = _ExtraClangFlags()
     self.no_extra_conf_file_warning_posted = False
 
 
   def FlagsForFile( self,
                     filename,
-                    add_special_clang_flags = True,
+                    add_extra_clang_flags = True,
                     client_data = None ):
     try:
       return self.flags_for_file[ filename ]
@@ -71,8 +88,8 @@ class Flags( object ):
       if not flags:
         return None
 
-      if add_special_clang_flags:
-        flags += self.special_clang_flags
+      if add_extra_clang_flags:
+        flags += self.extra_clang_flags
       sanitized_flags = PrepareFlagsForClang( flags, filename )
 
       if results[ 'do_cache' ]:
@@ -120,9 +137,30 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
 
 
 def PrepareFlagsForClang( flags, filename ):
+  flags = _RemoveXclangFlags( flags )
   flags = _RemoveUnusedFlags( flags, filename )
   flags = _SanitizeFlags( flags )
   return flags
+
+
+def _RemoveXclangFlags( flags ):
+  """Drops -Xclang flags.  These are typically used to pass in options to
+  clang cc1 which are not used in the front-end, so they are not needed for
+  code completion."""
+
+  sanitized_flags = []
+  saw_xclang = False
+  for i, flag in enumerate( flags ):
+    if flag == '-Xclang':
+      saw_xclang = True
+      continue
+    elif saw_xclang:
+      saw_xclang = False
+      continue
+
+    sanitized_flags.append( flag )
+
+  return sanitized_flags
 
 
 def _SanitizeFlags( flags ):
@@ -203,6 +241,14 @@ def _RemoveUnusedFlags( flags, filename ):
     new_flags.append( flag )
     previous_flag_is_include = flag in INCLUDE_FLAGS
   return new_flags
+
+
+def _ExtraClangFlags():
+  flags = _SpecialClangIncludes()
+  if OnMac():
+    for path in MAC_INCLUDE_PATHS:
+      flags.extend( [ '-isystem', path ] )
+  return flags
 
 
 def _SpecialClangIncludes():

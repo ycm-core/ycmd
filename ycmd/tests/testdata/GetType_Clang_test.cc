@@ -20,8 +20,8 @@ int main()
   const auto *acpFoo = &foo;
 
   std::cout << acrFoo.y
-            << acpFoo->x 
-            << arFoo.y 
+            << acpFoo->x
+            << arFoo.y
             << apFoo->x;
 
   Foo &rFoo = foo;
@@ -31,8 +31,8 @@ int main()
   const Foo *cpFoo = &foo;
 
   std::cout << crFoo.y
-            << cpFoo->x 
-            << rFoo.y 
+            << cpFoo->x
+            << rFoo.y
             << pFoo->x;
 
 

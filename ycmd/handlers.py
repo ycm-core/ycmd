@@ -47,26 +47,26 @@ from ycmd.request_wrap import RequestWrap
 # size is less than this
 bottle.Request.MEMFILE_MAX = 1000 * 1024
 
-# TODO: rename these to _lower_case
-SERVER_STATE = None
-LOGGER = logging.getLogger( __name__ )
+_server_state = None
+_hmac_secret = None
+_logger = logging.getLogger( __name__ )
 app = bottle.Bottle()
 
 
 @app.post( '/event_notification' )
 def EventNotification():
-  LOGGER.info( 'Received event notification' )
+  _logger.info( 'Received event notification' )
   request_data = RequestWrap( request.json )
   event_name = request_data[ 'event_name' ]
-  LOGGER.debug( 'Event name: %s', event_name )
+  _logger.debug( 'Event name: %s', event_name )
 
   event_handler = 'On' + event_name
-  getattr( SERVER_STATE.GetGeneralCompleter(), event_handler )( request_data )
+  getattr( _server_state.GetGeneralCompleter(), event_handler )( request_data )
 
   filetypes = request_data[ 'filetypes' ]
   response_data = None
-  if SERVER_STATE.FiletypeCompletionUsable( filetypes ):
-    response_data = getattr( SERVER_STATE.GetFiletypeCompleter( filetypes ),
+  if _server_state.FiletypeCompletionUsable( filetypes ):
+    response_data = getattr( _server_state.GetFiletypeCompleter( filetypes ),
                              event_handler )( request_data )
 
   if response_data:
@@ -76,7 +76,7 @@ def EventNotification():
 
 @app.post( '/run_completer_command' )
 def RunCompleterCommand():
-  LOGGER.info( 'Received command request' )
+  _logger.info( 'Received command request' )
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
@@ -87,61 +87,49 @@ def RunCompleterCommand():
 
 @app.post( '/completions' )
 def GetCompletions():
-  LOGGER.info( 'Received completion request' )
+  _logger.info( 'Received completion request' )
   request_data = RequestWrap( request.json )
-  do_filetype_completion = SERVER_STATE.ShouldUseFiletypeCompleter(
+  do_filetype_completion = _server_state.ShouldUseFiletypeCompleter(
     request_data )
-  LOGGER.debug( 'Using filetype completion: %s', do_filetype_completion )
+  _logger.debug( 'Using filetype completion: %s', do_filetype_completion )
   filetypes = request_data[ 'filetypes' ]
-  completer = ( SERVER_STATE.GetFiletypeCompleter( filetypes ) if
+  completer = ( _server_state.GetFiletypeCompleter( filetypes ) if
                 do_filetype_completion else
-                SERVER_STATE.GetGeneralCompleter() )
+                _server_state.GetGeneralCompleter() )
 
   return _JsonResponse( BuildCompletionResponse(
       completer.ComputeCandidates( request_data ),
       request_data.CompletionStartColumn() ) )
 
 
-@app.get( '/user_options' )
-def GetUserOptions():
-  LOGGER.info( 'Received user options GET request' )
-  return _JsonResponse( dict( SERVER_STATE.user_options ) )
-
-
 @app.get( '/healthy' )
 def GetHealthy():
-  LOGGER.info( 'Received health request' )
+  _logger.info( 'Received health request' )
   if request.query.include_subservers:
-    cs_completer = SERVER_STATE.GetFiletypeCompleter( ['cs'] )
+    cs_completer = _server_state.GetFiletypeCompleter( ['cs'] )
     return _JsonResponse( cs_completer.ServerIsRunning() )
   return _JsonResponse( True )
 
 
 @app.get( '/ready' )
 def GetReady():
-  LOGGER.info( 'Received ready request' )
+  _logger.info( 'Received ready request' )
   if request.query.include_subservers:
-    cs_completer = SERVER_STATE.GetFiletypeCompleter( ['cs'] )
+    cs_completer = _server_state.GetFiletypeCompleter( ['cs'] )
     return _JsonResponse( cs_completer.ServerIsReady() )
   return _JsonResponse( True )
 
 
-@app.post( '/user_options' )
-def SetUserOptions():
-  LOGGER.info( 'Received user options POST request' )
-  UpdateUserOptions( request.json )
-
-
 @app.post( '/semantic_completion_available' )
 def FiletypeCompletionAvailable():
-  LOGGER.info( 'Received filetype completion available request' )
-  return _JsonResponse( SERVER_STATE.FiletypeCompletionAvailable(
+  _logger.info( 'Received filetype completion available request' )
+  return _JsonResponse( _server_state.FiletypeCompletionAvailable(
       RequestWrap( request.json )[ 'filetypes' ] ) )
 
 
 @app.post( '/defined_subcommands' )
 def DefinedSubcommands():
-  LOGGER.info( 'Received defined subcommands request' )
+  _logger.info( 'Received defined subcommands request' )
   completer = _GetCompleterForRequestData( RequestWrap( request.json ) )
 
   return _JsonResponse( completer.DefinedSubcommands() )
@@ -149,7 +137,7 @@ def DefinedSubcommands():
 
 @app.post( '/detailed_diagnostic' )
 def GetDetailedDiagnostic():
-  LOGGER.info( 'Received detailed diagnostic request' )
+  _logger.info( 'Received detailed diagnostic request' )
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
@@ -158,21 +146,21 @@ def GetDetailedDiagnostic():
 
 @app.post( '/load_extra_conf_file' )
 def LoadExtraConfFile():
-  LOGGER.info( 'Received extra conf load request' )
+  _logger.info( 'Received extra conf load request' )
   request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Load( request_data[ 'filepath' ], force = True )
 
 
 @app.post( '/ignore_extra_conf_file' )
 def IgnoreExtraConfFile():
-  LOGGER.info( 'Received extra conf ignore request' )
+  _logger.info( 'Received extra conf ignore request' )
   request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Disable( request_data[ 'filepath' ] )
 
 
 @app.post( '/debug_info' )
 def DebugInfo():
-  LOGGER.info( 'Received debug info request' )
+  _logger.info( 'Received debug info request' )
 
   output = []
   has_clang_support = ycm_core.HasClangSupport()
@@ -196,7 +184,7 @@ def DebugInfo():
 def ErrorHandler( httperror ):
   body = _JsonResponse( BuildExceptionResponse( httperror.exception,
                                                 httperror.traceback ) )
-  hmac_plugin.SetHmacHeader( body, user_options_store.Value( 'hmac_secret' ) )
+  hmac_plugin.SetHmacHeader( body, _hmac_secret )
   return body
 
 
@@ -215,34 +203,41 @@ def _GetCompleterForRequestData( request_data ):
   completer_target = request_data.get( 'completer_target', None )
 
   if completer_target == 'identifier':
-    return SERVER_STATE.GetGeneralCompleter().GetIdentifierCompleter()
+    return _server_state.GetGeneralCompleter().GetIdentifierCompleter()
   elif completer_target == 'filetype_default' or not completer_target:
-    return SERVER_STATE.GetFiletypeCompleter( request_data[ 'filetypes' ] )
+    return _server_state.GetFiletypeCompleter( request_data[ 'filetypes' ] )
   else:
-    return SERVER_STATE.GetFiletypeCompleter( [ completer_target ] )
+    return _server_state.GetFiletypeCompleter( [ completer_target ] )
 
 
 @atexit.register
 def ServerShutdown():
-  LOGGER.info( 'Server shutting down' )
-  if SERVER_STATE:
-    SERVER_STATE.Shutdown()
+  _logger.info( 'Server shutting down' )
+  if _server_state:
+    _server_state.Shutdown()
     extra_conf_store.Shutdown()
 
 
+def SetHmacSecret( hmac_secret ):
+  global _hmac_secret
+  _hmac_secret = hmac_secret
+
+
 def UpdateUserOptions( options ):
-  global SERVER_STATE
+  global _server_state
 
   if not options:
     return
 
+  # This should never be passed in, but let's try to remove it just in case.
+  options.pop( 'hmac_secret', None )
   user_options_store.SetAll( options )
-  SERVER_STATE = server_state.ServerState( options )
+  _server_state = server_state.ServerState( options )
 
 
 def SetServerStateToDefaults():
-  global SERVER_STATE, LOGGER
-  LOGGER = logging.getLogger( __name__ )
+  global _server_state, _logger
+  _logger = logging.getLogger( __name__ )
   user_options_store.LoadDefaults()
-  SERVER_STATE = server_state.ServerState( user_options_store.GetAll() )
+  _server_state = server_state.ServerState( user_options_store.GetAll() )
   extra_conf_store.Reset()

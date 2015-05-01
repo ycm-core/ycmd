@@ -19,11 +19,13 @@
 
 import logging
 import httplib
+from urlparse import urlparse
 from base64 import b64decode, b64encode
 from bottle import request, response, abort
-from ycmd import utils
+from ycmd import hmac_utils
 
 _HMAC_HEADER = 'x-ycm-hmac'
+_HOST_HEADER = 'host'
 
 # This class implements the Bottle plugin API:
 # http://bottlepy.org/docs/dev/plugindev.html
@@ -46,10 +48,16 @@ class HmacPlugin( object ):
 
   def __call__( self, callback ):
     def wrapper( *args, **kwargs ):
+      if not HostHeaderCorrect( request ):
+        self._logger.info( 'Dropping request with bad Host header.' )
+        abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad Host header.' )
+        return
+
       body = request.body.read()
-      if not RequestAuthenticated( body, self._hmac_secret ):
+      if not RequestAuthenticated( request.method, request.path, body,
+                                   self._hmac_secret ):
         self._logger.info( 'Dropping request with bad HMAC.' )
-        abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad HMAC.')
+        abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad HMAC.' )
         return
       body = callback( *args, **kwargs )
       SetHmacHeader( body, self._hmac_secret )
@@ -57,13 +65,20 @@ class HmacPlugin( object ):
     return wrapper
 
 
-def RequestAuthenticated( body, hmac_secret ):
-  return utils.ContentHexHmacValid(
-      body,
-      b64decode( request.headers[ _HMAC_HEADER ] ),
-      hmac_secret )
+def HostHeaderCorrect( request ):
+  host = urlparse( 'http://' + request.headers[ _HOST_HEADER ] ).hostname
+  return host == '127.0.0.1' or host == 'localhost'
+
+
+def RequestAuthenticated( method, path, body, hmac_secret ):
+  if _HMAC_HEADER not in request.headers:
+    return False
+
+  return hmac_utils.SecureStringsEqual(
+      hmac_utils.CreateRequestHmac( method, path, body, hmac_secret ),
+      b64decode( request.headers[ _HMAC_HEADER ] ) )
 
 
 def SetHmacHeader( body, hmac_secret ):
   response.headers[ _HMAC_HEADER ] = b64encode(
-      utils.CreateHexHmac( body, hmac_secret ) )
+      hmac_utils.CreateHmac( body, hmac_secret ) )

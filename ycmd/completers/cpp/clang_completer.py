@@ -122,28 +122,28 @@ class ClangCompleter( Completer ):
     # where:
     #  "command" is the completer command entered by the user
     #            (e.g. GoToDefinition)
-    #  "method"  is a method to call for that command 
+    #  "method"  is a method to call for that command
     #            (e.g. self._GoToDefinition)
     #  "args"    is a dictionary of
     #               "method_argument" : "value" ...
-    #            which defines the kwargs (via the ** double splat) 
-    #            when calling "method" 
+    #            which defines the kwargs (via the ** double splat)
+    #            when calling "method"
     command_map = {
-        'GoToDefinition' : { 
+        'GoToDefinition' : {
             'method' : self._GoToDefinition,
-            'args'   : { 'request_data' : request_data } 
+            'args'   : { 'request_data' : request_data }
          },
         'GoToDeclaration' : {
             'method' : self._GoToDeclaration,
-            'args'   : { 'request_data' : request_data } 
+            'args'   : { 'request_data' : request_data }
         },
         'GoTo' : {
             'method' : self._GoTo,
-            'args'   : { 'request_data' : request_data } 
+            'args'   : { 'request_data' : request_data }
         },
         'GoToImprecise' : {
             'method' : self._GoToImprecise,
-            'args'   : { 'request_data' : request_data } 
+            'args'   : { 'request_data' : request_data }
         },
         'ClearCompilationFlagCache' : {
             'method' : self._ClearCompilationFlagCache,
@@ -151,12 +151,12 @@ class ClangCompleter( Completer ):
         },
         'GetType' : {
             'method' : self._GetSemanticInfo,
-            'args'   : { 'request_data' : request_data,  
+            'args'   : { 'request_data' : request_data,
                          'func'         : 'GetTypeAtLocation' }
         },
         'GetParent' : {
             'method' : self._GetSemanticInfo,
-            'args'   : { 'request_data' : request_data,  
+            'args'   : { 'request_data' : request_data,
                          'func'         : 'GetEnclosingFunctionAtLocation' }
         },
     }

@@ -73,7 +73,7 @@ def CustomPythonCmakeArgs():
 
     if p.isfile( '{0}.a'.format( lib_python ) ):
       python_library = '{0}.a'.format( lib_python )
-    # This check is for for CYGWIN
+    # This check is for CYGWIN
     elif p.isfile( '{0}.dll.a'.format( lib_python ) ):
       python_library = '{0}.dll.a'.format( lib_python )
     else:
@@ -95,6 +95,8 @@ def ParseArguments():
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
                        help = 'Build C# semantic completion engine.' )
+  parser.add_argument( '--gocode-completer', action = 'store_true',
+                       help = 'Build Go semantic completion engine.' )
   parser.add_argument( '--codeintel-completer', action = 'store_true',
                        help = 'Build CodeIntel semantic completion engine.' )
   parser.add_argument( '--system-boost', action = 'store_true',
@@ -148,7 +150,8 @@ def BuildYcmdLibs( cmake_args ):
 
     build_target = ( 'ycm_support_libs' if 'YCM_TESTRUN' not in os.environ else
                      'ycm_core_tests' )
-    sh.make( '-j', NumCores(), build_target, _out = sys.stdout, _err = sys.stderr )
+    sh.make( '-j', NumCores(), build_target, _out = sys.stdout,
+             _err = sys.stderr )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
@@ -167,6 +170,20 @@ def BuildOmniSharp():
   sh.Command( build_command )( _out = sys.stdout )
 
 
+def BuildGoCode():
+  if not find_executable( 'go' ):
+    sys.exit( 'go is required to build gocode' )
+
+  sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party/gocode' ) )
+  sh.Command( 'go' )( 'build', _out = sys.stdout )
+
+
+def ApplyWorkarounds():
+  # Some OSs define a 'make' ENV VAR and this confuses sh when we try to do
+  # sh.make. See https://github.com/Valloric/YouCompleteMe/issues/1401
+  os.environ.pop('make', None)
+
+
 def BuildCodeIntel():
   pip_command = find_executable( 'pip' )
   if not pip_command:
@@ -178,12 +195,14 @@ def BuildCodeIntel():
 
 
 def Main():
+  ApplyWorkarounds()
   CheckDeps()
   args = ParseArguments()
   BuildYcmdLibs( GetCmakeArgs( args ) )
   if args.omnisharp_completer:
     BuildOmniSharp()
-  
+  if args.gocode_completer:
+    BuildGoCode()
   if args.codeintel_completer:
 	BuildCodeIntel()
 

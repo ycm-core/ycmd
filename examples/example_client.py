@@ -119,8 +119,11 @@ class YcmdHandle( object ):
 
 
   def GetFromHandler( self, handler, params = None ):
-    response = requests.get( self._BuildUri( handler ),
-                             headers = self._ExtraHeaders(),
+    request_uri = self._BuildUri( handler )
+    extra_headers = self._ExtraHeaders(
+        'GET', urlparse.urlparse( request_uri ).path, '' )
+    response = requests.get( request_uri,
+                             headers = extra_headers,
                              params = params )
     self._ValidateResponseObject( response )
     return response
@@ -202,14 +205,13 @@ class YcmdHandle( object ):
         total_slept += 0.1
 
 
-  def _ExtraHeaders( self, request_body = None ):
-    return { HMAC_HEADER: self._HmacForBody( request_body ) }
+  def _ExtraHeaders( self, method, path, body ):
+    return { HMAC_HEADER: self._HmacForRequest( method, path, body ) }
 
 
-  def _HmacForBody( self, request_body = None ):
-    if not request_body:
-      request_body = ''
-    return b64encode( CreateHexHmac( request_body, self._hmac_secret ) )
+  def _HmacForRequest( self, method, path, body ):
+    return b64encode( CreateRequestHmac( method, path, body,
+                                         self._hmac_secret ) )
 
 
   def _BuildUri( self, handler ):
@@ -217,7 +219,7 @@ class YcmdHandle( object ):
 
 
   def _ValidateResponseObject( self, response ):
-    if not ContentHexHmacValid(
+    if not ContentHmacValid(
         response.content,
         b64decode( response.headers[ HMAC_HEADER ] ),
         self._hmac_secret ):
@@ -230,12 +232,16 @@ class YcmdHandle( object ):
   # free
   def _CallHttpie( self, method, handler, data = None ):
     method = method.upper()
-    args = [ 'http', '-v', method, self._BuildUri( handler ) ]
+    request_uri = self._BuildUri( handler )
+    args = [ 'http', '-v', method, request_uri ]
     if isinstance( data, collections.Mapping ):
       args.append( 'content-type:application/json' )
       data = ToUtf8Json( data )
 
-    args.append( HMAC_HEADER + ':' + self._HmacForBody( data ) )
+    hmac = self._HmacForRequest( method,
+                                 urlparse.urlparse( request_uri ).path,
+                                 data )
+    args.append( HMAC_HEADER + ':' + hmac )
     if method == 'GET':
       popen = subprocess.Popen( args )
     else:
@@ -244,15 +250,24 @@ class YcmdHandle( object ):
     popen.wait()
 
 
-def ContentHexHmacValid( content, hmac, hmac_secret ):
-  return SecureCompareStrings( CreateHexHmac( content, hmac_secret ), hmac )
+def ContentHmacValid( content, hmac, hmac_secret ):
+  return SecureCompareStrings( CreateHmac( content, hmac_secret ), hmac )
 
 
-def CreateHexHmac( content, hmac_secret ):
+def CreateRequestHmac( method, path, body, hmac_secret ):
+  method_hmac = CreateHmac( method, hmac_secret )
+  path_hmac = CreateHmac( path, hmac_secret )
+  body_hmac = CreateHmac( body, hmac_secret )
+
+  joined_hmac_input = ''.join( ( method_hmac, path_hmac, body_hmac ) )
+  return CreateHmac( joined_hmac_input, hmac_secret )
+
+
+def CreateHmac( content, hmac_secret ):
   # Must ensure that hmac_secret is str and not unicode
   return hmac.new( str( hmac_secret ),
                    msg = content,
-                   digestmod = hashlib.sha256 ).hexdigest()
+                   digestmod = hashlib.sha256 ).digest()
 
 
 # This is the compare_digest function from python 3.4, adapted for 2.7:

@@ -27,7 +27,6 @@ from ycmd import utils
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd import responses
 
-MAX_IDENTIFIER_COMPLETIONS_RETURNED = 10
 SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
 
 
@@ -37,6 +36,7 @@ class IdentifierCompleter( GeneralCompleter ):
     self._completer = ycm_core.IdentifierCompleter()
     self._tags_file_last_mtime = defaultdict( int )
     self._logger = logging.getLogger( __name__ )
+    self._max_candidates = user_options[ 'max_num_identifier_candidates' ]
 
 
   def ShouldUseNow( self, request_data ):
@@ -51,7 +51,7 @@ class IdentifierCompleter( GeneralCompleter ):
       ToUtf8IfNeeded( utils.SanitizeQuery( request_data[ 'query' ] ) ),
       ToUtf8IfNeeded( request_data[ 'filetypes' ][ 0 ] ) )
 
-    completions = completions[ : MAX_IDENTIFIER_COMPLETIONS_RETURNED ]
+    completions = completions[ : self._max_candidates ]
     completions = _RemoveSmallCandidates(
       completions, self.user_options[ 'min_num_identifier_candidate_chars' ] )
 

@@ -5,7 +5,7 @@
 //  examples.
 //  This file is based on the Xcode Configuration files in:
 //  http://code.google.com/p/google-toolbox-for-mac/
-// 
+//
 
 // Build for PPC and Intel, 32- and 64-bit
 ARCHS = i386 x86_64 ppc ppc64

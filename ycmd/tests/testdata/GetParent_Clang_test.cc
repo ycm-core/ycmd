@@ -24,7 +24,7 @@ struct A {
     {
         return 'Z';
     }
- 
+
     template<typename T>
     char do_anything(T &t);
 };
@@ -47,7 +47,7 @@ char A::do_y()
 
 int main()
 {
-    auto l = [](){ 
+    auto l = [](){
         std::cout << "lambda";
     };
 

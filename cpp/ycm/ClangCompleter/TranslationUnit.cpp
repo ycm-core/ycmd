@@ -264,12 +264,12 @@ std::string TranslationUnit::GetTypeAtLocation(
 
   CXType type = clang_getCursorType( cursor );
 
-  std::string type_description = 
+  std::string type_description =
                         CXStringToString( clang_getTypeSpelling( type ) );
 
   if ( type_description.empty() )
     return "Unknown type";
- 
+
   // We have a choice here; libClang provides clang_getCanonicalType which will
   // return the "underlying" type for the type returned by clang_getCursorType
   // e.g. for a typedef
@@ -283,7 +283,7 @@ std::string TranslationUnit::GetTypeAtLocation(
   // There is probably more semantic value in calling it MyType. Indeed, if we
   // opt for the more specific type, we can get very long or
   // confusing STL types even for simple usage. e.g. the following:
-  //     std::string test = "test"; <-- type = std::string; 
+  //     std::string test = "test"; <-- type = std::string;
   //                                    canonical type = std::basic_string<char>
   //
   // So as a compromise, we return both if and only if the types differ, like
@@ -321,7 +321,7 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
 
   CXCursor parent = clang_getCursorSemanticParent( cursor );
 
-  std::string parent_str = 
+  std::string parent_str =
                   CXStringToString( clang_getCursorDisplayName( parent ) );
 
   if (parent_str.empty())

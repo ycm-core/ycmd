@@ -41,7 +41,7 @@ test_executables=("$BUILT_PRODUCTS_DIR/gtest_unittest-framework"
                   "$BUILT_PRODUCTS_DIR/sample1_unittest-framework"
                   "$BUILT_PRODUCTS_DIR/sample1_unittest-static")
 
-# Now execute each one in turn keeping track of how many succeeded and failed. 
+# Now execute each one in turn keeping track of how many succeeded and failed.
 succeeded=0
 failed=0
 failed_list=()
