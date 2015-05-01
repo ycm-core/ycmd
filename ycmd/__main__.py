@@ -111,13 +111,15 @@ def SetupLogging( log_level ):
                        level = numeric_level )
 
 def SetupOptions( options_file ):
-  options = ( json.load( open( options_file, 'r' ) )
-              if options_file
-              else user_options_store.DefaultOptions() )
+  options = user_options_store.DefaultOptions()
+  if options_file:
+    user_options = json.load( open( options_file, 'r' ) )
+    options.update( user_options )
   utils.RemoveIfExists( options_file )
-  options[ 'hmac_secret' ] = base64.b64decode( options[ 'hmac_secret' ] )
+  hmac_secret = base64.b64decode( options[ 'hmac_secret' ] )
+  del options[ 'hmac_secret' ]
   user_options_store.SetAll( options )
-  return options
+  return options, hmac_secret
 
 
 def CloseStdin():
@@ -134,7 +136,7 @@ def Main():
     sys.stderr = open( args.stderr, 'w' )
 
   SetupLogging( args.log )
-  options = SetupOptions( args.options_file )
+  options, hmac_secret = SetupOptions( args.options_file )
 
   # This ensures that ycm_core is not loaded before extra conf
   # preload was run.
@@ -147,9 +149,10 @@ def Main():
   # preload has executed.
   from ycmd import handlers
   handlers.UpdateUserOptions( options )
-  SetUpSignalHandler(args.stdout, args.stderr, args.keep_logfiles)
+  handlers.SetHmacSecret( hmac_secret )
+  SetUpSignalHandler( args.stdout, args.stderr, args.keep_logfiles )
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds ) )
-  handlers.app.install( HmacPlugin( options[ 'hmac_secret' ] ) )
+  handlers.app.install( HmacPlugin( hmac_secret ) )
   CloseStdin()
   waitress.serve( handlers.app,
                   host = args.host,

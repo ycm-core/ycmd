@@ -21,6 +21,7 @@ import os
 import time
 from .. import handlers
 from ycmd import user_options_store
+from ycmd.utils import OnTravis
 
 def BuildRequest( **kwargs ):
   filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
@@ -76,7 +77,10 @@ def StopOmniSharpServer( app ):
 def WaitUntilOmniSharpServerReady( app ):
   retries = 100;
   success = False;
-  while retries > 0:
+
+  # If running on Travis CI, keep trying forever. Travis will kill the worker
+  # after 10 mins if nothing happens.
+  while retries > 0 or OnTravis():
     result = app.get( '/ready', { 'include_subservers': 1 } ).json
     if result:
       success = True;

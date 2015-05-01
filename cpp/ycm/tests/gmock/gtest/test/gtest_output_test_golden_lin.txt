@@ -142,7 +142,7 @@ Value of: n
 Expected: 1
 Google Test trace:
 gtest_output_test_.cc:#: n = 2
-gtest_output_test_.cc:#: 
+gtest_output_test_.cc:#:
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.CanBeNested
 [0;32m[ RUN      ] [mSCOPED_TRACETest.CanBeRepeated
 (expected to fail)

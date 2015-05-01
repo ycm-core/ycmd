@@ -200,9 +200,9 @@ std::string ClangCompleter::GetEnclosingFunctionAtLocation(
     return "no unit";
   }
 
-  return unit->GetEnclosingFunctionAtLocation( line, 
-                                               column, 
-                                               unsaved_files, 
+  return unit->GetEnclosingFunctionAtLocation( line,
+                                               column,
+                                               unsaved_files,
                                                reparse );
 }
 

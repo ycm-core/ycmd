@@ -44,5 +44,7 @@ def DefaultOptions():
   settings_path = os.path.join(
       os.path.dirname( os.path.abspath( __file__ ) ), 'default_settings.json' )
   with open( settings_path ) as f:
-    return json.loads( f.read() )
+    options = json.loads( f.read() )
+    options.pop( 'hmac_secret', None )
+    return options
 

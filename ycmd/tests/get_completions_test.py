@@ -698,3 +698,21 @@ def GetCompletions_JediCompleter_UnicodeDescription_test():
   assert_that( results, has_item(
                           has_entry( 'detailed_info',
                             contains_string( u'aafäö' ) ) ) )
+
+
+@with_setup( Setup )
+def GetCompletions_GoCodeCompleter_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'test.go' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'go',
+                                  contents = open( filepath ).read(),
+                                  force_semantic = True,
+                                  line_num = 9,
+                                  column_num = 11)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_item(
+                          has_entry( 'insertion_text',
+                            contains_string( u'Logger' ) ) ) )

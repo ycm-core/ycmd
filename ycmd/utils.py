@@ -25,8 +25,6 @@ import functools
 import socket
 import stat
 import json
-import hmac
-import hashlib
 from distutils.spawn import find_executable
 import subprocess
 import collections
@@ -185,6 +183,14 @@ def OnCygwin():
   return sys.platform == 'cygwin'
 
 
+def OnMac():
+  return sys.platform == 'darwin'
+
+
+def OnTravis():
+  return 'TRAVIS' in os.environ
+
+
 # From here: http://stackoverflow.com/a/8536476/1672783
 def TerminateProcess( pid ):
   if OnWindows():
@@ -241,36 +247,3 @@ def SafePopen( *args, **kwargs ):
 
   return subprocess.Popen( *args, **kwargs )
 
-
-def ContentHexHmacValid( content, hmac, hmac_secret ):
-  return SecureCompareStrings( CreateHexHmac( content, hmac_secret ), hmac )
-
-
-def CreateHexHmac( content, hmac_secret ):
-  # Must ensure that hmac_secret is str and not unicode
-  return hmac.new( str( hmac_secret ),
-                   msg = content,
-                   digestmod = hashlib.sha256 ).hexdigest()
-
-
-# This is the compare_digest function from python 3.4, adapted for 2.7:
-#   http://hg.python.org/cpython/file/460407f35aa9/Lib/hmac.py#l16
-def SecureCompareStrings( a, b ):
-  """Returns the equivalent of 'a == b', but avoids content based short
-  circuiting to reduce the vulnerability to timing attacks."""
-  # Consistent timing matters more here than data type flexibility
-  if not ( isinstance( a, str ) and isinstance( b, str ) ):
-    raise TypeError( "inputs must be str instances" )
-
-  # We assume the length of the expected digest is public knowledge,
-  # thus this early return isn't leaking anything an attacker wouldn't
-  # already know
-  if len( a ) != len( b ):
-    return False
-
-  # We assume that integers in the bytes range are all cached,
-  # thus timing shouldn't vary much due to integer object creation
-  result = 0
-  for x, y in zip( a, b ):
-    result |= ord( x ) ^ ord( y )
-  return result == 0

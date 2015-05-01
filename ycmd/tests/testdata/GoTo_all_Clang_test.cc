@@ -21,7 +21,7 @@ int main();
 
 int main()
 {
-    std::cout << Local::x 
+    std::cout << Local::x
               << Local::in_line()
               << Local::out_of_line();
     return 0;
