@@ -68,7 +68,7 @@ TranslationUnit::TranslationUnit(
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
-  foreach ( const std::string &flag, flags ) {
+  foreach ( const std::string & flag, flags ) {
     pointer_flags.push_back( flag.c_str() );
   }
 
@@ -249,7 +249,7 @@ std::string TranslationUnit::GetTypeAtLocation(
   const std::vector< UnsavedFile > &unsaved_files,
   bool reparse ) {
 
-  if (reparse)
+  if ( reparse )
     ReparseForIndexing( unsaved_files );
 
   unique_lock< mutex > lock( clang_access_mutex_ );
@@ -265,7 +265,7 @@ std::string TranslationUnit::GetTypeAtLocation(
   CXType type = clang_getCursorType( cursor );
 
   std::string type_description =
-                        CXStringToString( clang_getTypeSpelling( type ) );
+    CXStringToString( clang_getTypeSpelling( type ) );
 
   if ( type_description.empty() )
     return "Unknown type";
@@ -291,10 +291,9 @@ std::string TranslationUnit::GetTypeAtLocation(
 
   CXType canonical_type = clang_getCanonicalType( type );
 
-  if ( !clang_equalTypes( type, canonical_type ) )
-  {
+  if ( !clang_equalTypes( type, canonical_type ) ) {
     type_description += " => ";
-    type_description += CXStringToString(clang_getTypeSpelling(canonical_type));
+    type_description += CXStringToString( clang_getTypeSpelling( canonical_type ) );
   }
 
   return type_description;
@@ -306,7 +305,7 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
   const std::vector< UnsavedFile > &unsaved_files,
   bool reparse ) {
 
-  if (reparse)
+  if ( reparse )
     ReparseForIndexing( unsaved_files );
 
   unique_lock< mutex > lock( clang_access_mutex_ );
@@ -322,9 +321,9 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
   CXCursor parent = clang_getCursorSemanticParent( cursor );
 
   std::string parent_str =
-                  CXStringToString( clang_getCursorDisplayName( parent ) );
+    CXStringToString( clang_getCursorDisplayName( parent ) );
 
-  if (parent_str.empty())
+  if ( parent_str.empty() )
     return "Unknown semantic parent";
 
   return parent_str;
