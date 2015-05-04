@@ -124,13 +124,11 @@ class CsharpCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    return [ responses.BuildCompletionData(
-                completion[ 'CompletionText' ],
-                completion[ 'DisplayText' ],
-                completion[ 'Description' ],
-                None,
-                None,
-                { "required_namespace_import" :
+    return [ responses.BuildSimpleCompletionData(
+                completion_string = completion[ 'CompletionText' ],
+                display_string = completion[ 'DisplayText' ],
+                doc_string = completion[ 'Description' ],
+                extra_data = { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
              for completion in self._GetCompletions( request_data ) ]
 
