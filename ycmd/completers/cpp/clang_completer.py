@@ -327,14 +327,19 @@ class ClangCompleter( Completer ):
     return self._flags.FlagsForFile( filename, client_data = client_data )
 
 
+def ConvertCompletionPart( completion_part ):
+  return responses.BuildCompletionPart(
+    part = completion_part.Part(),
+    literal = completion_part.literal_ )
+
+
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
-    insertion_text = completion_data.TextToInsertInBuffer(),
-    menu_text = completion_data.MainCompletionText(),
-    extra_menu_info = completion_data.ExtraMenuInfo(),
+    completion_parts = [ ConvertCompletionPart( part ) for part in completion_data.CompletionParts() ],
+    display_string = completion_data.DisplayString(),
+    result_type = completion_data.ResultType(),
     kind = completion_data.kind_.name,
-    detailed_info = completion_data.DetailedInfoForPreviewWindow(),
-    extra_data = { 'doc_string': completion_data.DocString() } if completion_data.DocString() else None )
+    doc_string = completion_data.DocString() )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):
