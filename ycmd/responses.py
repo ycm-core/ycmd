@@ -81,24 +81,46 @@ def BuildDisplayMessageResponse( text ):
   }
 
 
-def BuildCompletionData( insertion_text,
-                         extra_menu_info = None,
-                         detailed_info = None,
-                         menu_text = None,
-                         kind = None,
-                         extra_data = None ):
-  completion_data = {
-    'insertion_text': insertion_text
+def BuildCompletionPart( part,
+                         literal = True ):
+  return {
+    'part': part,
+    'literal': literal,
   }
 
-  if extra_menu_info:
-    completion_data[ 'extra_menu_info' ] = extra_menu_info
-  if menu_text:
-    completion_data[ 'menu_text' ] = menu_text
-  if detailed_info:
-    completion_data[ 'detailed_info' ] = detailed_info
+def BuildSimpleCompletionData ( completion_string,
+                                display_string = None,
+                                result_type = None,
+                                kind = None,
+                                doc_string = None,
+                                extra_data = None ):
+  return BuildCompletionData(
+    completion_parts = [ BuildCompletionPart( completion_string ) ],
+    display_string = display_string,
+    result_type = result_type,
+    kind = kind,
+    doc_string = doc_string )
+
+
+def BuildCompletionData( completion_parts,
+                         display_string = None,
+                         result_type = None,
+                         kind = None,
+                         doc_string = None,
+                         extra_data = None ):
+  if display_string == None:
+    display_string = ''.join( map( lambda part: part[ 'part' ], completion_parts ) )
+  completion_data = {
+    'completion_parts': completion_parts,
+    'display_string': display_string,
+  }
+
+  if result_type:
+    completion_data[ 'result_type' ] = result_type
   if kind:
     completion_data[ 'kind' ] = kind
+  if doc_string:
+    completion_data[ 'doc_string' ] = doc_string
   if extra_data:
     completion_data[ 'extra_data' ] = extra_data
   return completion_data
