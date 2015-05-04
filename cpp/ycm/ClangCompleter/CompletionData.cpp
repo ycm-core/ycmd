@@ -79,7 +79,7 @@ CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
   }
 }
 
-
+//TODO: maybe not needed
 bool IsMainCompletionTextInfo( CXCompletionChunkKind kind ) {
   return
     kind == CXCompletionChunk_Optional     ||
@@ -113,41 +113,6 @@ std::string ChunkToString( CXCompletionString completion_string,
            clang_getCompletionChunkText( completion_string, chunk_num ) );
 }
 
-
-std::string OptionalChunkToString( CXCompletionString completion_string,
-                                   uint chunk_num ) {
-  std::string final_string;
-
-  if ( !completion_string )
-    return final_string;
-
-  CXCompletionString optional_completion_string =
-    clang_getCompletionChunkCompletionString( completion_string, chunk_num );
-
-  if ( !optional_completion_string )
-    return final_string;
-
-  uint optional_num_chunks = clang_getNumCompletionChunks(
-                               optional_completion_string );
-
-  for ( uint j = 0; j < optional_num_chunks; ++j ) {
-    CXCompletionChunkKind kind = clang_getCompletionChunkKind(
-                                   optional_completion_string, j );
-
-    if ( kind == CXCompletionChunk_Optional ) {
-      final_string.append( OptionalChunkToString( optional_completion_string,
-                                                  j ) );
-    }
-
-    else {
-      final_string.append( ChunkToString( optional_completion_string, j ) );
-    }
-  }
-
-  return final_string;
-}
-
-
 // NOTE: this function accepts the text param by value on purpose; it internally
 // needs a copy before processing the text so the copy might as well be made on
 // the parameter BUT if this code is compiled in C++11 mode a move constructor
@@ -158,121 +123,88 @@ std::string RemoveTwoConsecutiveUnderscores( std::string text ) {
   return text;
 }
 
-
-// foo( -> foo
-// foo() -> foo
-std::string RemoveTrailingParens( std::string text ) {
-  if ( boost::ends_with( text, "(" ) ) {
-    boost::erase_tail( text, 1 );
-  } else if ( boost::ends_with( text, "()" ) ) {
-    boost::erase_tail( text, 2 );
-  }
-
-  return text;
-}
-
 } // unnamed namespace
 
 
 CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
-  CXCompletionString completion_string = completion_result.CompletionString;
-
-  if ( !completion_string )
-    return;
-
-  uint num_chunks = clang_getNumCompletionChunks( completion_string );
-  bool saw_left_paren = false;
-  bool saw_function_params = false;
-  bool saw_placeholder = false;
-
-  for ( uint j = 0; j < num_chunks; ++j ) {
-    ExtractDataFromChunk( completion_string,
-                          j,
-                          saw_left_paren,
-                          saw_function_params,
-                          saw_placeholder );
-  }
-
-  original_string_ = RemoveTrailingParens( boost::move( original_string_ ) );
   kind_ = CursorKindToCompletionKind( completion_result.CursorKind );
 
-  // We remove any two consecutive underscores from the function definition
-  // since identifiers with them are ugly, compiler-reserved names. Functions
-  // from the standard library use parameter names like "__pos" and we want to
-  // show them as just "pos". This will never interfere with client code since
-  // ANY C++ identifier with two consecutive underscores in it is
-  // compiler-reserved.
-  everything_except_return_type_ =
-    RemoveTwoConsecutiveUnderscores(
-      boost::move( everything_except_return_type_ ) );
+  CXCompletionString completion_string = completion_result.CompletionString;
 
-  detailed_info_.append( return_type_ )
-  .append( " " )
-  .append( everything_except_return_type_ )
-  .append( "\n" );
-
-  doc_string_ = YouCompleteMe::CXStringToString(
-                  clang_getCompletionBriefComment( completion_string ) );
+  if ( completion_string ) {
+    doc_string_ = YouCompleteMe::CXStringToString(
+                    clang_getCompletionBriefComment( completion_string ) );
+    ExtractDataFromString( completion_string );
+  }
 }
 
+void CompletionData::ExtractDataFromString( CXCompletionString completion_string ) {
+  uint num_chunks = clang_getNumCompletionChunks( completion_string );
 
-void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
-                                           uint chunk_num,
-                                           bool &saw_left_paren,
-                                           bool &saw_function_params,
-                                           bool &saw_placeholder ) {
-  CXCompletionChunkKind kind = clang_getCompletionChunkKind(
-                                 completion_string, chunk_num );
+  for ( uint chunk_number = 0; chunk_number < num_chunks; chunk_number++ ) {
+    CXCompletionChunkKind kind = clang_getCompletionChunkKind( completion_string, chunk_number );
+    std::string part;
 
-  if ( IsMainCompletionTextInfo( kind ) ) {
-    if ( kind == CXCompletionChunk_LeftParen ) {
-      saw_left_paren = true;
-    }
-
-    else if ( saw_left_paren &&
-              !saw_function_params &&
-              kind != CXCompletionChunk_RightParen &&
-              kind != CXCompletionChunk_Informative ) {
-      saw_function_params = true;
-      everything_except_return_type_.append( " " );
-    }
-
-    else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
-      everything_except_return_type_.append( " " );
-    }
-
-    if ( kind == CXCompletionChunk_Optional ) {
-      everything_except_return_type_.append(
-        OptionalChunkToString( completion_string, chunk_num ) );
-    }
-
-    else {
-      everything_except_return_type_.append(
-        ChunkToString( completion_string, chunk_num ) );
-    }
-  }
-
-  switch ( kind ) {
-    case CXCompletionChunk_ResultType:
-      return_type_ = ChunkToString( completion_string, chunk_num );
-      break;
-    case CXCompletionChunk_Placeholder:
-      saw_placeholder = true;
-      break;
-    case CXCompletionChunk_TypedText:
-    case CXCompletionChunk_Text:
-      // need to add paren to insert string
-      // when implementing inherited methods or declared methods in objc.
-    case CXCompletionChunk_LeftParen:
-    case CXCompletionChunk_RightParen:
-    case CXCompletionChunk_HorizontalSpace:
-      if ( !saw_placeholder ) {
-        original_string_ += ChunkToString( completion_string, chunk_num );
+    switch ( kind ) {
+      case CXCompletionChunk_Optional: {
+        CXCompletionString optional_string = clang_getCompletionChunkCompletionString( completion_string, chunk_number );
+        ExtractDataFromString( optional_string );
+        break;
       }
-      break;
-    default:
-      break;
+
+      case CXCompletionChunk_TypedText:
+      case CXCompletionChunk_Text:
+      case CXCompletionChunk_LeftParen:
+      case CXCompletionChunk_RightParen:
+      case CXCompletionChunk_LeftBracket:
+      case CXCompletionChunk_RightBracket:
+      case CXCompletionChunk_LeftBrace:
+      case CXCompletionChunk_RightBrace:
+      case CXCompletionChunk_LeftAngle:
+      case CXCompletionChunk_RightAngle:
+      case CXCompletionChunk_Comma:
+      case CXCompletionChunk_Colon:
+      case CXCompletionChunk_SemiColon:
+      case CXCompletionChunk_Equal:
+      case CXCompletionChunk_HorizontalSpace:
+      case CXCompletionChunk_VerticalSpace:
+        part = ChunkToString( completion_string, chunk_number );
+
+        if ( kind == CXCompletionChunk_Comma )
+          part += " ";
+
+        if ( kind == CXCompletionChunk_TypedText )
+          typed_string_ += part;
+
+        display_string_ += part;
+
+        if ( completion_parts_.size() > 0 && completion_parts_.back().literal_ )
+          completion_parts_.back().part_ += part;
+        else
+          completion_parts_.push_back( boost::move( CompletionPart( part ) ) );
+
+        break;
+
+      case CXCompletionChunk_Placeholder:
+      case CXCompletionChunk_CurrentParameter:
+        part = ChunkToString( completion_string, chunk_number );
+        part = RemoveTwoConsecutiveUnderscores( boost::move( part ) );
+
+        display_string_ += part;
+        completion_parts_.push_back( boost::move( CompletionPart( part, false ) ) );
+
+        break;
+
+      case CXCompletionChunk_ResultType:
+        result_type_ += ChunkToString( completion_string, chunk_number );
+        break;
+
+      case CXCompletionChunk_Informative:
+        display_string_ += ChunkToString( completion_string, chunk_number );
+        break;
+    }
   }
 }
+
 
 } // namespace YouCompleteMe

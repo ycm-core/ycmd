@@ -116,12 +116,17 @@ BOOST_PYTHON_MODULE(ycm_core)
     .value( "UNKNOWN", UNKNOWN )
     .export_values();
 
+  class_< CompletionPart >( "CompletionPart" )
+    .def( "Part", &CompletionPart::Part )
+    .def_readonly( "literal_", &CompletionPart::literal_ );
+
+  class_< std::vector< CompletionPart > >( "CompletionPartVector" )
+    .def( vector_indexing_suite< std::vector< CompletionPart > >() );
+
   class_< CompletionData >( "CompletionData" )
-    .def( "TextToInsertInBuffer", &CompletionData::TextToInsertInBuffer )
-    .def( "MainCompletionText", &CompletionData::MainCompletionText )
-    .def( "ExtraMenuInfo", &CompletionData::ExtraMenuInfo )
-    .def( "DetailedInfoForPreviewWindow",
-          &CompletionData::DetailedInfoForPreviewWindow )
+    .def( "DisplayString", &CompletionData::DisplayString )
+    .def( "CompletionParts", &CompletionData::CompletionParts )
+    .def( "ResultType", &CompletionData::ResultType )
     .def( "DocString", &CompletionData::DocString )
     .def_readonly( "kind_", &CompletionData::kind_ );
 

@@ -95,11 +95,11 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
 
     foreach ( const CompletionData & data, datas ) {
       const Candidate *&candidate = GetValueElseInsert( candidate_holder_,
-                                                        data.original_string_,
+                                                        data.typed_string_,
                                                         NULL );
 
       if ( !candidate )
-        candidate = new Candidate( data.original_string_ );
+        candidate = new Candidate( data.typed_string_ );
 
       candidates.push_back( candidate );
     }
