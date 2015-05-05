@@ -170,9 +170,6 @@ void CompletionData::ExtractDataFromString( CXCompletionString completion_string
       case CXCompletionChunk_VerticalSpace:
         part = ChunkToString( completion_string, chunk_number );
 
-        if ( kind == CXCompletionChunk_Comma )
-          part += " ";
-
         if ( kind == CXCompletionChunk_TypedText )
           typed_string_ += part;
 
