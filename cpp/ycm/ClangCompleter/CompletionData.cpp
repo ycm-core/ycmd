@@ -79,30 +79,6 @@ CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
   }
 }
 
-//TODO: maybe not needed
-bool IsMainCompletionTextInfo( CXCompletionChunkKind kind ) {
-  return
-    kind == CXCompletionChunk_Optional     ||
-    kind == CXCompletionChunk_TypedText    ||
-    kind == CXCompletionChunk_Placeholder  ||
-    kind == CXCompletionChunk_LeftParen    ||
-    kind == CXCompletionChunk_RightParen   ||
-    kind == CXCompletionChunk_RightBracket ||
-    kind == CXCompletionChunk_LeftBracket  ||
-    kind == CXCompletionChunk_LeftBrace    ||
-    kind == CXCompletionChunk_RightBrace   ||
-    kind == CXCompletionChunk_RightAngle   ||
-    kind == CXCompletionChunk_LeftAngle    ||
-    kind == CXCompletionChunk_Comma        ||
-    kind == CXCompletionChunk_Colon        ||
-    kind == CXCompletionChunk_SemiColon    ||
-    kind == CXCompletionChunk_Equal        ||
-    kind == CXCompletionChunk_Informative  ||
-    kind == CXCompletionChunk_HorizontalSpace ||
-    kind == CXCompletionChunk_Text;
-
-}
-
 
 std::string ChunkToString( CXCompletionString completion_string,
                            uint chunk_num ) {
