@@ -41,3 +41,11 @@ cpp/BoostParts/libs/*/test
 
 # Exclude auto generated vim doc tags.
 doc/tags
+
+# Vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
