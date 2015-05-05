@@ -124,6 +124,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( vector_indexing_suite< std::vector< CompletionPart > >() );
 
   class_< CompletionData >( "CompletionData" )
+    .def( "TypedString", &CompletionData::TypedString )
     .def( "DisplayString", &CompletionData::DisplayString )
     .def( "CompletionParts", &CompletionData::CompletionParts )
     .def( "ResultType", &CompletionData::ResultType )

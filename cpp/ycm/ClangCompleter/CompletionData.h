@@ -65,10 +65,13 @@ struct CompletionData {
   CompletionData() {}
   CompletionData( const CXCompletionResult &completion_result );
 
+  // Text that users would be expected to type to get this completion result.
+  // It is used for filtering and sorting.
   std::string TypedString() const {
     return typed_string_;
   }
 
+  // Text that is displayed for users.
   // Currently, here we show the full function signature (without the return
   // type) if the current completion is a function or just the raw TypedText if
   // the completion is, say, a data member. So for a function like "int foo(int

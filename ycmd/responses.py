@@ -89,6 +89,7 @@ def BuildCompletionPart( part,
   }
 
 def BuildSimpleCompletionData ( completion_string,
+                                typed_string = None,
                                 display_string = None,
                                 result_type = None,
                                 kind = None,
@@ -96,6 +97,7 @@ def BuildSimpleCompletionData ( completion_string,
                                 extra_data = None ):
   return BuildCompletionData(
     completion_parts = [ BuildCompletionPart( completion_string ) ],
+    typed_string = typed_string,
     display_string = display_string,
     result_type = result_type,
     kind = kind,
@@ -103,15 +105,20 @@ def BuildSimpleCompletionData ( completion_string,
 
 
 def BuildCompletionData( completion_parts,
+                         typed_string = None,
                          display_string = None,
                          result_type = None,
                          kind = None,
                          doc_string = None,
                          extra_data = None ):
+  if typed_string == None:
+    typed_string = completion_parts[0]['part']
   if display_string == None:
     display_string = ''.join( map( lambda part: part[ 'part' ], completion_parts ) )
+
   completion_data = {
     'completion_parts': completion_parts,
+    'typed_string': typed_string,
     'display_string': display_string,
   }
 

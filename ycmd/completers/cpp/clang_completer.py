@@ -336,6 +336,7 @@ def ConvertCompletionPart( completion_part ):
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     completion_parts = [ ConvertCompletionPart( part ) for part in completion_data.CompletionParts() ],
+    typed_string = completion_data.TypedString(),
     display_string = completion_data.DisplayString(),
     result_type = completion_data.ResultType(),
     kind = completion_data.kind_.name,
