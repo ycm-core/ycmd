@@ -84,10 +84,14 @@ class GoCodeCompleter_test( object ):
     result = self._completer.ComputeCandidatesInner(self._BuildRequest(10, 40))
     eq_(mock.cmd, ['THE_BINARY', '-f=json', 'autocomplete', PATH_TO_TEST_FILE, "292"])
     eq_(result, [{
-        'menu_text': u'Prefix',
-        'insertion_text': u'Prefix',
-        'extra_menu_info': u'func() string',
-        'kind': u'func'
+      'typed_string': u'Prefix',
+      'kind': u'func',
+      'display_string': u'Prefix',
+      'completion_parts': [{
+        'literal': True,
+        'part': u'Prefix'
+      }],
+      'result_type': u'func() string'
     }])
 
   # Test gocode failure.
