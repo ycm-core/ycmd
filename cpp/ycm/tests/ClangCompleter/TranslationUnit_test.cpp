@@ -26,9 +26,6 @@
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
-using ::testing::ElementsAre;
-using ::testing::WhenSorted;
-
 namespace YouCompleteMe {
 
 class TranslationUnitTest : public ::testing::Test {
