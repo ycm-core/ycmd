@@ -114,16 +114,21 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   }
 }
 
-void CompletionData::ExtractDataFromString( CXCompletionString completion_string ) {
+void CompletionData::ExtractDataFromString(
+  CXCompletionString completion_string ) {
+
   uint num_chunks = clang_getNumCompletionChunks( completion_string );
 
   for ( uint chunk_number = 0; chunk_number < num_chunks; chunk_number++ ) {
-    CXCompletionChunkKind kind = clang_getCompletionChunkKind( completion_string, chunk_number );
+    CXCompletionChunkKind kind = clang_getCompletionChunkKind(
+                                   completion_string, chunk_number );
     std::string part;
 
     switch ( kind ) {
       case CXCompletionChunk_Optional: {
-        CXCompletionString optional_string = clang_getCompletionChunkCompletionString( completion_string, chunk_number );
+        CXCompletionString optional_string =
+          clang_getCompletionChunkCompletionString( completion_string,
+                                                    chunk_number );
         ExtractDataFromString( optional_string );
         break;
       }
@@ -164,7 +169,8 @@ void CompletionData::ExtractDataFromString( CXCompletionString completion_string
         part = RemoveTwoConsecutiveUnderscores( boost::move( part ) );
 
         display_string_ += part;
-        completion_parts_.push_back( boost::move( CompletionPart( part, false ) ) );
+        completion_parts_.push_back( boost::move(
+                                       CompletionPart( part, false ) ) );
 
         break;
 
