@@ -101,7 +101,8 @@ def BuildSimpleCompletionData ( completion_string,
     display_string = display_string,
     result_type = result_type,
     kind = kind,
-    doc_string = doc_string )
+    doc_string = doc_string,
+    extra_data = extra_data )
 
 
 def BuildCompletionData( completion_parts,
