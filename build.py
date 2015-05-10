@@ -185,13 +185,14 @@ def ApplyWorkarounds():
 
 
 def BuildCodeIntel():
-  pip_command = find_executable( 'pip' )
-  if not pip_command:
-    sys.exit( 'pip is required to install CodeIntel.' )
-  
-  sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) )
-  sh.Command( pip_command )( 'install', 'codeintel', U = True, t = 'codeintel', 
-								_out = sys.stdout )
+  codeintel_command = find_executable('codeintel');
+  if not codeintel_command:
+    pip_command = find_executable( 'pip' )
+    if not pip_command:
+      sys.exit( 'pip is required to install CodeIntel.' )
+
+    sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) )
+    sh.Command( pip_command )( 'install', 'codeintel', U = True, t = 'codeintel', _out = sys.stdout )
 
 
 def Main():
