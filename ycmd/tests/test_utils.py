@@ -98,3 +98,8 @@ def WaitUntilOmniSharpServerReady( app ):
     raise RuntimeError( "Timeout waiting for OmniSharpServer" )
 
 
+def StopGoCodeServer( app ):
+  app.post_json( '/run_completer_command',
+                 BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = ['StopServer'],
+                               filetype = 'go' ) )

@@ -23,7 +23,7 @@ SetUpPythonPath()
 import httplib
 from .test_utils import ( Setup, BuildRequest, PathToTestFile,
                           ChangeSpecificOptions, StopOmniSharpServer,
-                          WaitUntilOmniSharpServerReady )
+                          WaitUntilOmniSharpServerReady, StopGoCodeServer )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
@@ -728,3 +728,5 @@ def GetCompletions_GoCodeCompleter_test():
   assert_that( results, has_item(
                           has_entry( 'insertion_text',
                             contains_string( u'Logger' ) ) ) )
+
+  StopGoCodeServer( app )
