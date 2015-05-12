@@ -31,6 +31,9 @@ import collections
 
 WIN_PYTHON27_PATH = 'C:\python27\pythonw.exe'
 WIN_PYTHON26_PATH = 'C:\python26\pythonw.exe'
+# Creation flag to disable creating a console window on Windows. See
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
+CREATE_NO_WINDOW = 0x08000000
 
 
 def SanitizeQuery( query ):
@@ -239,11 +242,14 @@ def ForceSemanticCompletion( request_data ):
            bool( request_data[ 'force_semantic' ] ) )
 
 
-# A wrapper for subprocess.Popen that works around a Popen bug on Windows.
+# A wrapper for subprocess.Popen that fixes quirks on Windows.
 def SafePopen( *args, **kwargs ):
-  if kwargs.get( 'stdin' ) is None:
-    # We need this on Windows otherwise bad things happen. See issue #637.
-    kwargs[ 'stdin' ] = subprocess.PIPE if OnWindows() else None
+  if OnWindows():
+    # We need this otherwise bad things happen. See issue #637.
+    if kwargs.get( 'stdin' ) is None:
+      kwargs[ 'stdin' ] = subprocess.PIPE
+    # Do not create a console window
+    kwargs[ 'creationflags' ] = CREATE_NO_WINDOW
 
   return subprocess.Popen( *args, **kwargs )
 
