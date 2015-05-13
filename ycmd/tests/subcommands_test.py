@@ -620,16 +620,13 @@ def RunCompleterCommand_TypeLookup_CsCompleter_test():
   typelookup_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['TypeLookup'],
                             line_num = 5,
-                            column_num = 12,
+                            column_num = 5,
                             contents = contents,
                             filetype = 'cs',
                             filepath = filepath )
 
   eq_( {
-        u'message': u"""Determines whether the end of this string instance matches the specified string.\r
-Returns: true if value matches the end of this instance; otherwise, false.\r
-value: The string to compare to the substring at the end of this instance. \r
-System.ArgumentNullException: value is null. """
+        u'message': u"string str"
       },
       app.post_json( '/run_completer_command', typelookup_data ).json )
 

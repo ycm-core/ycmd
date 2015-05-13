@@ -369,9 +369,15 @@ class CsharpCompleter( Completer ):
 
 
   def _TypeLookup( self, request_data ):
-    result = self._GetResponse( '/typelookup',
-                                self._DefaultParameters( request_data ) )
-    return responses.BuildDisplayMessageResponse( result[ "Documentation" ] )
+    request = self._DefaultParameters( request_data )
+    request[ "IncludeDocumentation" ] = True
+
+    result = self._GetResponse( '/typelookup', request )
+    message = result[ "Type" ]
+    if ( result[ "Documentation" ] ):
+      message += "\n" + result[ "Documentation" ]
+
+    return responses.BuildDisplayMessageResponse( message )
 
 
   def _DefaultParameters( self, request_data ):
