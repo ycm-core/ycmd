@@ -603,6 +603,40 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleIm
 
 
 @with_setup( Setup )
+def RunCompleterCommand_TypeLookup_CsCompleter_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/TypeLookupTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  typelookup_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['TypeLookup'],
+                            line_num = 5,
+                            column_num = 12,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = filepath )
+
+  eq_( {
+        u'message': u"""Determines whether the end of this string instance matches the specified string.\r
+Returns: true if value matches the end of this instance; otherwise, false.\r
+value: The string to compare to the substring at the end of this instance. \r
+System.ArgumentNullException: value is null. """
+      },
+      app.post_json( '/run_completer_command', typelookup_data ).json )
+
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
 def RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles_test():
   yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, True
   yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, False

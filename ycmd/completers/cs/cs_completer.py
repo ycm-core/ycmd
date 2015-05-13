@@ -95,6 +95,8 @@ class CsharpCompleter( Completer ):
         self._GoToImplementation( request_data, False ) ),
     'GoToImplementationElseDeclaration': ( lambda self, request_data:
         self._GoToImplementation( request_data, True ) ),
+    'TypeLookup': ( lambda self, request_data: self._TypeLookup(
+        request_data ) ),
   }
 
   def __init__( self, user_options ):
@@ -364,6 +366,12 @@ class CsharpCompleter( Completer ):
         raise RuntimeError( 'Can\'t jump to implementation' )
       else:
         raise RuntimeError( 'No implementations found' )
+
+
+  def _TypeLookup( self, request_data ):
+    result = self._GetResponse( '/typelookup',
+                                self._DefaultParameters( request_data ) )
+    return responses.BuildDisplayMessageResponse( result[ "Documentation" ] )
 
 
   def _DefaultParameters( self, request_data ):
