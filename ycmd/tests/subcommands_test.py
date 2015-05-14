@@ -603,6 +603,130 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleIm
 
 
 @with_setup( Setup )
+def RunCompleterCommand_GetType_CsCompleter_EmptyMessage_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/GetTypeTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GetType'],
+                            line_num = 1,
+                            column_num = 1,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = filepath )
+
+  eq_( {
+        u'message': u""
+      },
+      app.post_json( '/run_completer_command', gettype_data ).json )
+
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_CsCompleter_VariableDeclaration_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/GetTypeTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GetType'],
+                            line_num = 4,
+                            column_num = 5,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = filepath )
+
+  eq_( {
+        u'message': u"string"
+      },
+      app.post_json( '/run_completer_command', gettype_data ).json )
+
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_CsCompleter_VariableUsage_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/GetTypeTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GetType'],
+                            line_num = 5,
+                            column_num = 5,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = filepath )
+
+  eq_( {
+        u'message': u"string str"
+      },
+      app.post_json( '/run_completer_command', gettype_data ).json )
+
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_CsCompleter_Constant_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/GetTypeTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GetType'],
+                            line_num = 4,
+                            column_num = 14,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = filepath )
+
+  eq_( {
+        u'message': u"System.String"
+      },
+      app.post_json( '/run_completer_command', gettype_data ).json )
+
+  StopOmniSharpServer( app )
+
+
+@with_setup( Setup )
 def RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles_test():
   yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, True
   yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, False
