@@ -603,11 +603,11 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleIm
 
 
 @with_setup( Setup )
-def RunCompleterCommand_TypeLookup_CsCompleter_test():
+def RunCompleterCommand_GetType_CsCompleter_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/TypeLookupTestCase.cs' )
+  filepath = PathToTestFile( 'testy/GetTypeTestCase.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -617,8 +617,8 @@ def RunCompleterCommand_TypeLookup_CsCompleter_test():
   app.post_json( '/event_notification', event_data )
   WaitUntilOmniSharpServerReady( app )
 
-  typelookup_data = BuildRequest( completer_target = 'filetype_default',
-                            command_arguments = ['TypeLookup'],
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GetType'],
                             line_num = 5,
                             column_num = 5,
                             contents = contents,
@@ -628,7 +628,7 @@ def RunCompleterCommand_TypeLookup_CsCompleter_test():
   eq_( {
         u'message': u"string str"
       },
-      app.post_json( '/run_completer_command', typelookup_data ).json )
+      app.post_json( '/run_completer_command', gettype_data ).json )
 
   StopOmniSharpServer( app )
 

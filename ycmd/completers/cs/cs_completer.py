@@ -95,7 +95,7 @@ class CsharpCompleter( Completer ):
         self._GoToImplementation( request_data, False ) ),
     'GoToImplementationElseDeclaration': ( lambda self, request_data:
         self._GoToImplementation( request_data, True ) ),
-    'TypeLookup': ( lambda self, request_data: self._TypeLookup(
+    'GetType': ( lambda self, request_data: self._GetType(
         request_data ) ),
   }
 
@@ -368,7 +368,7 @@ class CsharpCompleter( Completer ):
         raise RuntimeError( 'No implementations found' )
 
 
-  def _TypeLookup( self, request_data ):
+  def _GetType( self, request_data ):
     request = self._DefaultParameters( request_data )
     request[ "IncludeDocumentation" ] = True
 
