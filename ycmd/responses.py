@@ -81,11 +81,11 @@ def BuildDisplayMessageResponse( text ):
   }
 
 
-def BuildCompletionPart( part,
-                         literal = True ):
+def BuildCompletionChunk( chunk,
+                         placeholder = False ):
   return {
-    'part': part,
-    'literal': literal,
+    'chunk': chunk,
+    'placeholder': placeholder,
   }
 
 def BuildSimpleCompletionData ( completion_string,
@@ -96,7 +96,7 @@ def BuildSimpleCompletionData ( completion_string,
                                 doc_string = None,
                                 extra_data = None ):
   return BuildCompletionData(
-    completion_parts = [ BuildCompletionPart( completion_string ) ],
+    completion_chunks = [ BuildCompletionChunk( completion_string ) ],
     typed_string = typed_string,
     display_string = display_string,
     result_type = result_type,
@@ -105,7 +105,7 @@ def BuildSimpleCompletionData ( completion_string,
     extra_data = extra_data )
 
 
-def BuildCompletionData( completion_parts,
+def BuildCompletionData( completion_chunks,
                          typed_string = None,
                          display_string = None,
                          result_type = None,
@@ -113,12 +113,12 @@ def BuildCompletionData( completion_parts,
                          doc_string = None,
                          extra_data = None ):
   if typed_string == None:
-    typed_string = completion_parts[0]['part']
+    typed_string = completion_chunks[0]['chunk']
   if display_string == None:
-    display_string = ''.join( map( lambda part: part[ 'part' ], completion_parts ) )
+    display_string = ''.join( map( lambda chunk: chunk[ 'chunk' ], completion_chunks ) )
 
   completion_data = {
-    'completion_parts': completion_parts,
+    'completion_chunks': completion_chunks,
     'typed_string': typed_string,
     'display_string': display_string,
   }

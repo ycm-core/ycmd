@@ -122,7 +122,7 @@ void CompletionData::ExtractDataFromString(
   for ( uint chunk_number = 0; chunk_number < num_chunks; chunk_number++ ) {
     CXCompletionChunkKind kind = clang_getCompletionChunkKind(
                                    completion_string, chunk_number );
-    std::string part;
+    std::string chunk;
 
     switch ( kind ) {
       case CXCompletionChunk_Optional: {
@@ -149,28 +149,28 @@ void CompletionData::ExtractDataFromString(
       case CXCompletionChunk_Equal:
       case CXCompletionChunk_HorizontalSpace:
       case CXCompletionChunk_VerticalSpace:
-        part = ChunkToString( completion_string, chunk_number );
+        chunk = ChunkToString( completion_string, chunk_number );
 
         if ( kind == CXCompletionChunk_TypedText )
-          typed_string_ += part;
+          typed_string_ += chunk;
 
-        display_string_ += part;
+        display_string_ += chunk;
 
-        if ( completion_parts_.size() > 0 && completion_parts_.back().literal_ )
-          completion_parts_.back().part_ += part;
+        if ( completion_chunks_.size() > 0 && !completion_chunks_.back().placeholder_ )
+          completion_chunks_.back().chunk_ += chunk;
         else
-          completion_parts_.push_back( boost::move( CompletionPart( part ) ) );
+          completion_chunks_.push_back( boost::move( CompletionChunk( chunk ) ) );
 
         break;
 
       case CXCompletionChunk_Placeholder:
       case CXCompletionChunk_CurrentParameter:
-        part = ChunkToString( completion_string, chunk_number );
-        part = RemoveTwoConsecutiveUnderscores( boost::move( part ) );
+        chunk = ChunkToString( completion_string, chunk_number );
+        chunk = RemoveTwoConsecutiveUnderscores( boost::move( chunk ) );
 
-        display_string_ += part;
-        completion_parts_.push_back( boost::move(
-                                       CompletionPart( part, false ) ) );
+        display_string_ += chunk;
+        completion_chunks_.push_back( boost::move(
+                                       CompletionChunk( chunk, true ) ) );
 
         break;
 

@@ -87,9 +87,9 @@ class GoCodeCompleter_test( object ):
       'typed_string': u'Prefix',
       'kind': u'func',
       'display_string': u'Prefix',
-      'completion_parts': [{
-        'literal': True,
-        'part': u'Prefix'
+      'completion_chunks': [{
+        'placeholder': False,
+        'chunk': u'Prefix'
       }],
       'result_type': u'func() string'
     }])

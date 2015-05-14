@@ -327,15 +327,16 @@ class ClangCompleter( Completer ):
     return self._flags.FlagsForFile( filename, client_data = client_data )
 
 
-def ConvertCompletionPart( completion_part ):
-  return responses.BuildCompletionPart(
-    part = completion_part.Part(),
-    literal = completion_part.literal_ )
+def ConvertCompletionChunk( completion_chunk ):
+  return responses.BuildCompletionChunk(
+    chunk = completion_chunk.Chunk(),
+    placeholder = completion_chunk.placeholder_ )
 
 
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
-    completion_parts = [ ConvertCompletionPart( part ) for part in completion_data.CompletionParts() ],
+    completion_chunks = [ ConvertCompletionChunk( chunk )
+                            for chunk in completion_data.CompletionChunks() ],
     typed_string = completion_data.TypedString(),
     display_string = completion_data.DisplayString(),
     result_type = completion_data.ResultType(),

@@ -32,11 +32,11 @@ using ::testing::Property;
 using ::testing::Contains;
 
 // These two functions override the output for readability when gmock
-// prints CompletionData and CompletionPart objects.
-std::ostream &operator<<( std::ostream &os, CompletionPart const &part ) {
-  os << "\"" << part.Part() << "\"";
+// prints CompletionData and CompletionChunk objects.
+std::ostream &operator<<( std::ostream &os, CompletionChunk const &part ) {
+  os << "\"" << part.Chunk() << "\"";
 
-  if ( part.literal_ ) os << "(literal)";
+  if ( part.placeholder_ ) os << "(placeholder)";
 
   return os;
 }
@@ -44,10 +44,10 @@ std::ostream &operator<<( std::ostream &os, CompletionPart const &part ) {
 std::ostream &operator<<( std::ostream &os, CompletionData const &data ) {
   os << "\"" << data.TypedString() << "\"" << " ( " ;
 
-  for ( size_t i = 0; i < data.CompletionParts().size(); i++ ) {
+  for ( size_t i = 0; i < data.CompletionChunks().size(); i++ ) {
     if ( i > 0 ) os << " ";
 
-    os << data.CompletionParts()[i];
+    os << data.CompletionChunks()[i];
   }
 
   os << " )";
@@ -70,9 +70,9 @@ TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
                  AllOf(
                    Property( &CompletionData::TypedString,
                              StrEq( "foobar" ) ),
-                   Property( &CompletionData::CompletionParts,
+                   Property( &CompletionData::CompletionChunks,
                              ElementsAre(
-                               CompletionPart( "foobar()", true )
+                               CompletionChunk( "foobar()" )
                              ) )
                  ) ) );
 }
@@ -97,12 +97,12 @@ TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
                  AllOf(
                    Property( &CompletionData::TypedString,
                              StrEq( "withArg2:withArg3:" ) ),
-                   Property( &CompletionData::CompletionParts,
+                   Property( &CompletionData::CompletionChunks,
                              ElementsAre(
-                               CompletionPart( "withArg2:", true ),
-                               CompletionPart( "(int)", false ),
-                               CompletionPart( " withArg3:", true ),
-                               CompletionPart( "(int)", false )
+                               CompletionChunk( "withArg2:" ),
+                               CompletionChunk( "(int)", true ),
+                               CompletionChunk( " withArg3:" ),
+                               CompletionChunk( "(int)", true )
                              ) )
                  ) ) );
 }
@@ -127,9 +127,9 @@ TEST( ClangCompleterTest, CandidatesObjCFuncForLocationInFile ) {
                  AllOf(
                    Property( &CompletionData::TypedString,
                              StrEq( "test:withArg2:withArg3:" ) ),
-                   Property( &CompletionData::CompletionParts,
+                   Property( &CompletionData::CompletionChunks,
                              ElementsAre(
-                               CompletionPart( "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3", true )
+                               CompletionChunk( "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" )
                              ) )
                  ) ) );
 }

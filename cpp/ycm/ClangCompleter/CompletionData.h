@@ -39,23 +39,23 @@ enum CompletionKind {
   UNKNOWN
 };
 
-struct CompletionPart {
-  CompletionPart() {}
-  CompletionPart( const std::string &part, bool literal = true ): part_( part ), literal_( literal ) {}
+struct CompletionChunk {
+  CompletionChunk() {}
+  CompletionChunk( const std::string &chunk, bool placeholder = false ): chunk_( chunk ), placeholder_( placeholder ) {}
 
-  std::string Part() const {
-    return part_;
+  std::string Chunk() const {
+    return chunk_;
   }
 
-  bool operator== ( const CompletionPart &other ) const {
+  bool operator== ( const CompletionChunk &other ) const {
     return
-      part_ == other.part_ &&
-      literal_ == other.literal_;
+      chunk_ == other.chunk_ &&
+      placeholder_ == other.placeholder_;
   }
 
-  std::string part_;
+  std::string chunk_;
 
-  bool literal_;
+  bool placeholder_;
 
 };
 
@@ -82,11 +82,11 @@ struct CompletionData {
   }
 
   // What should actually be inserted into the buffer. For a function like
-  // "int foo(int x)", the CompletionPart for "for(" and ")" are literal and
-  // that for "int x" is not literal. Clients should insert literal parts as
-  // normal strings and non-literal parts as placeholders.
-  std::vector<CompletionPart> CompletionParts() const {
-    return completion_parts_;
+  // "int foo(int x)", the CompletionChunk for "for(" and ")" are not
+  // placeholders and that for "int x" is a placeholder where users should
+  // insert actual code.
+  std::vector<CompletionChunk> CompletionChunks() const {
+    return completion_chunks_;
   }
 
   // This is the type the completion expression would have.
@@ -112,7 +112,7 @@ struct CompletionData {
 
   std::string display_string_;
 
-  std::vector<CompletionPart> completion_parts_;
+  std::vector<CompletionChunk> completion_chunks_;
 
   std::string result_type_;
 
