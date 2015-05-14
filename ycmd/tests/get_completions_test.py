@@ -42,6 +42,12 @@ def CompletionEntryMatcher( insertion_text ):
   return has_entry( 'insertion_text', insertion_text )
 
 
+def CompletionLocationMatcher( location_type, value ):
+  return has_entry( 'extra_data',
+                    has_entry( 'location',
+                               has_entry( location_type, value ) ) )
+
+
 @with_setup( Setup )
 def GetCompletions_RequestValidation_NoLineNumException_test():
   app = TestApp( handlers.app )
@@ -677,8 +683,15 @@ def GetCompletions_JediCompleter_Basic_test():
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
-  assert_that( results, has_items( CompletionEntryMatcher( 'a' ),
-                                   CompletionEntryMatcher( 'b' ) ) )
+
+  assert_that( results,
+               has_items(
+                 CompletionEntryMatcher( 'a' ),
+                 CompletionEntryMatcher( 'b' ),
+                 CompletionLocationMatcher( 'line_num', 3 ),
+                 CompletionLocationMatcher( 'line_num', 4 ),
+                 CompletionLocationMatcher( 'column_num', 10 ),
+                 CompletionLocationMatcher( 'filepath', filepath ) ) )
 
 
 @with_setup( Setup )
