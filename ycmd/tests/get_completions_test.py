@@ -707,7 +707,6 @@ def GetCompletions_JediCompleter_UnicodeDescription_test():
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
-  print results
   assert_that( results, has_item(
                           has_entry( 'detailed_info',
                             contains_string( u'aafäö' ) ) ) )
