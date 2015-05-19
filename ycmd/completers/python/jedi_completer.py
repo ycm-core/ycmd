@@ -75,11 +75,11 @@ class JediCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     script = self._GetJediScript( request_data )
-    return [ responses.BuildCompletionData(
-                ToUtf8IfNeeded( completion.name ),
-                ToUtf8IfNeeded( completion.description ),
-                ToUtf8IfNeeded( completion.docstring() ),
-                extra_data = self._GetExtraData( completion ) )
+    return [ responses.BuildSimpleCompletionData(
+               completion_string = ToUtf8IfNeeded( completion.name ),
+               display_string = ToUtf8IfNeeded( completion.description ),
+               doc_string = ToUtf8IfNeeded( completion.docstring() ),
+               extra_data = self._GetExtraData( completion ) )
              for completion in script.completions() ]
 
   def DefinedSubcommands( self ):

@@ -54,7 +54,7 @@ class FilenameCompleter_test( object ):
     request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = contents
     request = RequestWrap( request )
     candidates = self._filename_completer.ComputeCandidatesInner( request )
-    return [ ( c[ 'insertion_text' ], c[ 'extra_menu_info' ] )
+    return [ ( c[ 'typed_string' ], c[ 'kind' ] )
             for c in candidates ]
 
 

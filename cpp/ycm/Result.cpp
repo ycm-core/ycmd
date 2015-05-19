@@ -32,25 +32,26 @@ namespace {
 char ChangeCharCase( char c ) {
   if ( std::isupper( c, std::locale() ) )
     return std::tolower( c, std::locale() );
+
   return std::toupper( c, std::locale() );
 }
 
 
-bool CharLessThanWithLowercasePriority(const char &first,
-                                       const char &second) {
+bool CharLessThanWithLowercasePriority( const char &first,
+                                        const char &second ) {
   char swap_first = ChangeCharCase( first );
   char swap_second = ChangeCharCase( second );
   return swap_first < swap_second;
 }
 
 
-bool StringLessThanWithLowercasePriority(const std::string &first,
-                                         const std::string &second) {
+bool StringLessThanWithLowercasePriority( const std::string &first,
+                                          const std::string &second ) {
   return std::lexicographical_compare(
-      first.begin(), first.end(),
-      second.begin(), second.end(),
-      boost::function< bool( const char&, const char& ) >(
-          &CharLessThanWithLowercasePriority ) );
+           first.begin(), first.end(),
+           second.begin(), second.end(),
+           boost::function< bool( const char &, const char & ) >(
+             &CharLessThanWithLowercasePriority ) );
 }
 
 

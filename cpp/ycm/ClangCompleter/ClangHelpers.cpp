@@ -99,7 +99,7 @@ std::vector< Range > GetRanges( const DiagnosticWrap &diagnostic_wrap ) {
 
   for ( uint i = 0; i < num_ranges; ++i ) {
     ranges.push_back(
-        Range( clang_getDiagnosticRange( diagnostic_wrap.get(), i ) ) );
+      Range( clang_getDiagnosticRange( diagnostic_wrap.get(), i ) ) );
   }
 
   return ranges;
@@ -116,19 +116,21 @@ Range GetLocationExtent( CXSourceLocation source_location,
   // situations.
 
   CXSourceRange range = clang_getCursorExtent(
-      clang_getCursor( translation_unit, source_location ) );
+                          clang_getCursor( translation_unit, source_location ) );
   CXToken *tokens;
   uint num_tokens;
   clang_tokenize( translation_unit, range, &tokens, &num_tokens );
 
   Location location( source_location );
   Range final_range;
+
   for ( uint i = 0; i < num_tokens; ++i ) {
     Location token_location( clang_getTokenLocation( translation_unit,
                                                      tokens[ i ] ) );
+
     if ( token_location == location ) {
       std::string name = CXStringToString(
-          clang_getTokenSpelling( translation_unit, tokens[ i ] ) );
+                           clang_getTokenSpelling( translation_unit, tokens[ i ] ) );
       Location end_location = location;
       end_location.column_number_ += name.length();
       final_range = Range( location, end_location );
@@ -165,7 +167,6 @@ std::vector< CompletionData > ToCompletionDataVector(
     return completions;
 
   completions.reserve( results->NumResults );
-  unordered_map< std::string, uint > seen_data;
 
   for ( uint i = 0; i < results->NumResults; ++i ) {
     CXCompletionResult completion_result = results->Results[ i ];
@@ -174,24 +175,7 @@ std::vector< CompletionData > ToCompletionDataVector(
       continue;
 
     CompletionData data( completion_result );
-    uint index = GetValueElseInsert( seen_data,
-                                     data.original_string_,
-                                     completions.size() );
-
-    if ( index == completions.size() ) {
-      completions.push_back( boost::move( data ) );
-    }
-
-    else {
-      // If we have already seen this completion, then this is an overload of a
-      // function we have seen. We add the signature of the overload to the
-      // detailed information.
-      completions[ index ].detailed_info_
-      .append( data.return_type_ )
-      .append( " " )
-      .append( data.everything_except_return_type_ )
-      .append( "\n" );
-    }
+    completions.push_back( boost::move( data ) );
   }
 
   return completions;
@@ -214,7 +198,7 @@ Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
     return diagnostic;
 
   CXSourceLocation source_location =
-      clang_getDiagnosticLocation( diagnostic_wrap.get() );
+    clang_getDiagnosticLocation( diagnostic_wrap.get() );
   diagnostic.location_ = Location( source_location );
   diagnostic.location_extent_ = GetLocationExtent( source_location,
                                                    translation_unit );

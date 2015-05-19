@@ -58,11 +58,11 @@ void IdentifierCompleter::AddIdentifiersToDatabase(
 
 
 void IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase(
-    const std::vector< std::string > &new_candidates,
-    const std::string &filetype,
-    const std::string &filepath ) {
+  const std::vector< std::string > &new_candidates,
+  const std::string &filetype,
+  const std::string &filepath ) {
   identifier_database_.ClearCandidatesStoredForFile( filetype, filepath );
-  AddIdentifiersToDatabase(new_candidates, filetype, filepath);
+  AddIdentifiersToDatabase( new_candidates, filetype, filepath );
 }
 
 
