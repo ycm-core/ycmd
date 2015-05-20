@@ -29,7 +29,7 @@ from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        contains_inanyorder, empty, greater_than,
                        contains_string )
-from ..responses import ( BuildCompletionData, UnknownExtraConf,
+from ..responses import ( BuildSimpleCompletionData, UnknownExtraConf,
                           NoExtraConfDetected )
 from .. import handlers
 import bottle
@@ -38,8 +38,8 @@ bottle.debug( True )
 
 
 # TODO: Make the other tests use this helper too instead of BuildCompletionData
-def CompletionEntryMatcher( insertion_text ):
-  return has_entry( 'insertion_text', insertion_text )
+def CompletionEntryMatcher( typed_string ):
+  return has_entry( 'typed_string', typed_string )
 
 
 def CompletionLocationMatcher( location_type, value ):
@@ -77,8 +77,8 @@ def GetCompletions_IdentifierCompleter_Works_test():
                                   column_num = 3 )
   response_data = app.post_json( '/completions', completion_data ).json
 
-  eq_( [ BuildCompletionData( 'foo' ),
-         BuildCompletionData( 'foogoo' ) ], response_data[ 'completions' ] )
+  eq_( [ BuildSimpleCompletionData( 'foo' ),
+         BuildSimpleCompletionData( 'foogoo' ) ], response_data[ 'completions' ] )
   eq_( 1, response_data[ 'completion_start_column' ] )
 
 
@@ -111,8 +111,8 @@ def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test():
                                   column_num = 3 )
   response_data = app.post_json( '/completions', completion_data ).json
 
-  eq_( [ BuildCompletionData( 'font-size' ),
-         BuildCompletionData( 'font-family' ) ],
+  eq_( [ BuildSimpleCompletionData( 'font-size' ),
+         BuildSimpleCompletionData( 'font-family' ) ],
        response_data[ 'completions' ] )
 
 
@@ -625,8 +625,8 @@ def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test():
   completion_data = BuildRequest( contents =  'oo ',
                                   column_num = 3 )
 
-  eq_( [ BuildCompletionData( 'foo' ),
-         BuildCompletionData( 'zoo' ) ],
+  eq_( [ BuildSimpleCompletionData( 'foo' ),
+         BuildSimpleCompletionData( 'zoo' ) ],
        app.post_json( '/completions', completion_data ).json[ 'completions' ] )
 
 
@@ -645,8 +645,8 @@ def GetCompletions_UltiSnipsCompleter_Works_test():
   completion_data = BuildRequest( contents =  'oo ',
                                   column_num = 3 )
 
-  eq_( [ BuildCompletionData( 'foo', '<snip> bar' ),
-         BuildCompletionData( 'zoo', '<snip> goo' ) ],
+  eq_( [ BuildSimpleCompletionData( 'foo', display_string = '<snip> bar' ),
+         BuildSimpleCompletionData( 'zoo', display_string = '<snip> goo' ) ],
        app.post_json( '/completions', completion_data ).json[ 'completions' ] )
 
 
@@ -708,7 +708,7 @@ def GetCompletions_JediCompleter_UnicodeDescription_test():
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
   assert_that( results, has_item(
-                          has_entry( 'detailed_info',
+                          has_entry( 'doc_string',
                             contains_string( u'aafäö' ) ) ) )
 
 
@@ -726,5 +726,5 @@ def GetCompletions_GoCodeCompleter_test():
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
   assert_that( results, has_item(
-                          has_entry( 'insertion_text',
+                          has_entry( 'typed_string',
                             contains_string( u'Logger' ) ) ) )
