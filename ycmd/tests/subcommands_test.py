@@ -666,3 +666,25 @@ def DefinedSubcommands_WorksWhenNoExplicitCompleterTargetSpecified_test():
          'GoTo' ],
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
+
+@with_setup( Setup )
+def RunCompleterCommand_GoTo_CodeIntelCompleter_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'basic.php' )
+  with open( filepath, 'r' ) as src_file:
+    contents = src_file.read()
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GoTo'],
+                            line_num = 14,
+                            column_num = 17,
+                            contents = contents,
+                            filetype = 'php',
+                            filepath = filepath )
+
+  eq_( {
+         'filepath': filepath,
+         'line_num': 3,
+         'column_num': 1
+       },
+       app.post_json( '/run_completer_command', goto_data ).json )
