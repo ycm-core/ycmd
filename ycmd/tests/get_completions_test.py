@@ -716,3 +716,18 @@ def GetCompletions_GoCodeCompleter_test():
   assert_that( results, has_item(
                           has_entry( 'insertion_text',
                             contains_string( u'Logger' ) ) ) )
+
+@with_setup( Setup )
+def GetCompletions_CodeIntelCompleter_Basic_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'basic.php' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'php',
+                                  contents = open( filepath ).read(),
+                                  line_num = 15,
+                                  column_num = 16)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'x' ),
+                                   CompletionEntryMatcher( 'y' ) ) )
