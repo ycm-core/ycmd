@@ -37,18 +37,7 @@ from codeintel2.manager import Manager
 from codeintel2.environment import SimplePrefsEnvironment
 
 # Set up logger
-logger = logging.getLogger(__name__)
-
-#fh = logging.FileHandler('/tmp/cicompleter.log', 'a')
-#fh.setLevel(logging.DEBUG)
-
-#formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-#fh.setFormatter(formatter)
-#logger.addHandler(fh)
-
-#logger.addHandler(fh)
-logger.setLevel(logging.ERROR)
+logger = logging.getLogger( __name__ )
 
 class CodeIntelCompleter( Completer ):
   """
