@@ -355,11 +355,13 @@ class CsharpSolutionCompleter:
 
   def _StopServer( self ):
     """ Stop the OmniSharp server """
-    self._GetResponse( '/stopserver' )
-
     # Give OmniSharp 5 seconds to cleanly stop, then kill it if it's still up
     still_running = True
     for _ in range( 5 ):
+      try:
+        self._GetResponse( '/stopserver' )
+      except:
+        pass
       still_running = self.ServerIsRunning()
       if not still_running:
         break
@@ -371,8 +373,10 @@ class CsharpSolutionCompleter:
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if ( not self._keep_logfiles ):
-      os.unlink( self._filename_stdout );
-      os.unlink( self._filename_stderr );
+      if self._filename_stdout:
+        os.unlink( self._filename_stdout );
+      if self._filename_stderr:
+        os.unlink( self._filename_stderr );
     self._logger.info( 'Stopping OmniSharp server' )
 
 

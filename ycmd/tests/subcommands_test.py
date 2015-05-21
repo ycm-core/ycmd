@@ -727,6 +727,16 @@ def RunCompleterCommand_GetType_CsCompleter_Constant_test():
 
 
 @with_setup( Setup )
+def RunCompleterCommand_StopServer_CsCompleter_NoErrorIfNotStarted_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/GotoTestCase.cs' )
+  StopOmniSharpServer( app, filepath )
+  # Success = no raise
+
+
+@with_setup( Setup )
 def RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles_test():
   yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, True
   yield  _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles, False
