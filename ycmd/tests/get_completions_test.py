@@ -337,23 +337,12 @@ def _CsCompleter_SolutionSelectCheck( app, sourcefile, reference_solution,
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   if extra_conf_store:
     app.post_json( '/load_extra_conf_file', { 'filepath': extra_conf_store } )
-  contents = open( sourcefile ).read()
-  event_data = BuildRequest( filepath = sourcefile,
-                             filetype = 'cs',
-                             contents = contents,
-                             event_name = 'FileReadyToParse' )
 
-  # Here the server should raise an exception if it can't start
-  app.post_json( '/event_notification', event_data )
-  # Assuming we have a successful launch
   result = app.post_json( '/run_completer_command',
                           BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'SolutionFile' ],
                                         filepath = sourcefile,
                                         filetype = 'cs' ) ).json
-  # We don't want the server to linger around, stop it once start completed
-  WaitUntilOmniSharpServerReady( app, sourcefile )
-  StopOmniSharpServer( app, sourcefile )
   # Now that cleanup is done, verify solution file
   eq_( reference_solution , result)
 
