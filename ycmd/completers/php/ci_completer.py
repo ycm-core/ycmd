@@ -21,7 +21,6 @@ import logging
 from os.path import abspath, dirname, join
 import sys
 from time import time
-
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
 from ycmd import responses
@@ -48,18 +47,18 @@ class CodeIntelCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( CodeIntelCompleter, self ).__init__( user_options )
-    
+
     # Initialize CodeIntel Manager on the class
     if CodeIntelCompleter.mgr is None:
       env = SimplePrefsEnvironment()
-	  
-      CodeIntelCompleter.mgr = Manager( 
-		  db_base_dir = join( CI_DIR, 'db' ),
-		  extra_module_dirs = [ join( CI_DIR, 'codeintel2' ), ],
-		  db_import_everything_langs = None,
-		  db_catalog_dirs = [],
-		  env = env
-	  )
+
+      CodeIntelCompleter.mgr = Manager(
+          db_base_dir = join( CI_DIR, 'db' ),
+          extra_module_dirs = [ join( CI_DIR, 'codeintel2' ), ],
+          db_import_everything_langs = None,
+          db_catalog_dirs = [],
+          env = env
+      )
       self.mgr.upgrade()
       self.mgr.initialize()
       logger.debug('Manager initialized: %s' % user_options)
@@ -72,51 +71,50 @@ class CodeIntelCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-	
-	logger.debug('ComputeCandidatesInner called')
-	
-	filename = request_data[ 'filepath' ]
-	contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-	line = request_data[ 'line_num' ]
-	column = request_data[ 'column_num' ]
-	
-	#buf = self.mgr.buf_from_path( filename, 'php' )
-	buf = self.mgr.buf_from_content(contents, 'PHP', path = filename, env = self.mgr.env )
-	logger.debug('Buffer obtained from filename: "%s"' % buf)
-	
-	# Calculate position from row, column
-	pos = sum([len(l) + 1 for l in contents.split('\n')[:(line-1)]]) + column - 1;
-	logger.debug('Trigger pos: "%i"' % pos)
+    logger.debug('ComputeCandidatesInner called')
 
-	trg = buf.preceding_trg_from_pos(pos, pos)
-	logger.debug('Trigger from buffer: "%s"' % trg)
-	
-	if trg is None:
-		return []
-	
-	pre = time()
-	
-	cplns = buf.cplns_from_trg(trg)
-	logger.debug('Raw completions [%.2fs]: "%s"' % (time() - pre, cplns))
-	return [ responses.BuildCompletionData( 
-				ToUtf8IfNeeded( cpln[1] ),
-				kind = ToUtf8IfNeeded( cpln[0] ))
-			for cpln in cplns ]
+    filename = request_data[ 'filepath' ]
+    contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
+    line = request_data[ 'line_num' ]
+    column = request_data[ 'column_num' ]
+
+    #buf = self.mgr.buf_from_path( filename, 'php' )
+    buf = self.mgr.buf_from_content(contents, 'PHP', path = filename, env = self.mgr.env )
+    logger.debug('Buffer obtained from filename: "%s"' % buf)
+
+    # Calculate position from row, column
+    pos = sum([len(l) + 1 for l in contents.split('\n')[:(line-1)]]) + column - 1;
+    logger.debug('Trigger pos: "%i"' % pos)
+
+    trg = buf.preceding_trg_from_pos(pos, pos)
+    logger.debug('Trigger from buffer: "%s"' % trg)
+
+    if trg is None:
+      return []
+
+    pre = time()
+
+    cplns = buf.cplns_from_trg(trg)
+    logger.debug('Raw completions [%.2fs]: "%s"' % (time() - pre, cplns))
+    return [ responses.BuildCompletionData(
+                ToUtf8IfNeeded( cpln[1] ),
+                kind = ToUtf8IfNeeded( cpln[0] ))
+            for cpln in cplns ]
 
   def ShouldUseNowInner( self, request_data ):
-	res = super( CodeIntelCompleter, self ).ShouldUseNowInner( request_data )
-	logger.debug('ShouldUseNowInner called. Returns %s' % res)
-	
-	# Don't complete for empty lines
-	if not len( request_data[ 'line_value' ] ):
-	  return False
-	
-	# TODO: Fix this to check request data
-	return True
+    res = super( CodeIntelCompleter, self ).ShouldUseNowInner( request_data )
+    logger.debug('ShouldUseNowInner called. Returns %s' % res)
+
+    # Don't complete for empty lines
+    if not len( request_data[ 'line_value' ] ):
+      return False
+
+    # TODO: Fix this to check request data
+    return True
 
   def DefinedSubcommands( self ):
     return []
 
   def Shutdown(self):
     if self.mgr:
-	  self.mgr.finalize()
+      self.mgr.finalize()
