@@ -151,7 +151,7 @@ def Diagnostics_CsCompleter_ZeroBasedLineAndColumn_test():
                              event_name = 'FileReadyToParse' )
 
   results = app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   event_data = BuildRequest( filepath = filepath,
                              event_name = 'FileReadyToParse',
@@ -182,7 +182,60 @@ def Diagnostics_CsCompleter_ZeroBasedLineAndColumn_test():
                     } )
                   } ) ) )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
+
+
+@with_setup( Setup )
+def Diagnostics_CsCompleter_MultipleSolution_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepaths = [ PathToTestFile( 'testy/Program.cs' ),
+                PathToTestFile( 'testy-multiple-solutions/'
+                                'solution-named-like-folder/'
+                                'testy/'
+                                'Program.cs' ) ]
+  lines = [ 11, 10 ]
+  for filepath, line in zip( filepaths, lines ):
+    contents = open( filepath ).read()
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'cs',
+                               contents = contents,
+                               event_name = 'FileReadyToParse' )
+
+    results = app.post_json( '/event_notification', event_data )
+    WaitUntilOmniSharpServerReady( app, filepath )
+
+    event_data = BuildRequest( filepath = filepath,
+                               event_name = 'FileReadyToParse',
+                               filetype = 'cs',
+                               contents = contents )
+
+    results = app.post_json( '/event_notification', event_data ).json
+
+    assert_that( results,
+                contains(
+                    has_entries( {
+                        'kind': equal_to( 'ERROR'),
+                        'text': contains_string(
+                            "Unexpected symbol `}'', expecting identifier" ),
+                        'location': has_entries( {
+                        'line_num': line,
+                        'column_num': 2
+                        } ),
+                        'location_extent': has_entries( {
+                        'start': has_entries( {
+                            'line_num': line,
+                            'column_num': 2,
+                        } ),
+                        'end': has_entries( {
+                            'line_num': line,
+                            'column_num': 2,
+                        } ),
+                        } )
+                    } ) ) )
+
+    StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -226,7 +279,7 @@ def GetDetailedDiagnostic_CsCompleter_Works_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
   app.post_json( '/event_notification', event_data )
 
   diag_data = BuildRequest( filepath = filepath,
@@ -242,7 +295,7 @@ def GetDetailedDiagnostic_CsCompleter_Works_test():
                   contains_string(
                      "Unexpected symbol `}'', expecting identifier" ) ) )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )

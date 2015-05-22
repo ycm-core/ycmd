@@ -67,14 +67,15 @@ def PathToTestFile( test_basename ):
   return os.path.join( PathToTestDataDir(), test_basename )
 
 
-def StopOmniSharpServer( app ):
+def StopOmniSharpServer( app, filename ):
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
                                command_arguments = ['StopServer'],
+                               filepath = filename,
                                filetype = 'cs' ) )
 
 
-def WaitUntilOmniSharpServerReady( app ):
+def WaitUntilOmniSharpServerReady( app, filename ):
   retries = 100;
   success = False;
 
@@ -87,6 +88,7 @@ def WaitUntilOmniSharpServerReady( app ):
       break
     request = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = [ 'ServerTerminated' ],
+                            filepath = filename,
                             filetype = 'cs' )
     result = app.post_json( '/run_completer_command', request ).json
     if result:
