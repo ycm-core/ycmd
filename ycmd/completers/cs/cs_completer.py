@@ -251,19 +251,17 @@ class CsharpCompleter( Completer ):
 
     self._ChooseOmnisharpPort()
 
-    # we need to pass the command to Popen as a string since we're passing
-    # shell=True (as recommended by Python's doc)
-    command = ' '.join( [ PATH_TO_OMNISHARP_BINARY,
-                         '-p',
-                         str( self._omnisharp_port ),
-                         '-s',
-                         u'"{0}"'.format( path_to_solutionfile ) ] )
+    command = [ PATH_TO_OMNISHARP_BINARY,
+                '-p',
+                str( self._omnisharp_port ),
+                '-s',
+                u'{0}'.format( path_to_solutionfile ) ]
 
     if not utils.OnWindows() and not utils.OnCygwin():
-      command = u'mono ' + command
+      command.insert( 0, 'mono' )
 
     if utils.OnCygwin():
-      command = command + ' --client-path-mode Cygwin'
+      command.extend( [ '--client-path-mode', 'Cygwin' ] )
 
     filename_format = os.path.join( utils.PathToTempDir(),
                                     u'omnisharp_{port}_{sln}_{std}.log' )
@@ -276,10 +274,8 @@ class CsharpCompleter( Completer ):
 
     with open( self._filename_stderr, 'w' ) as fstderr:
       with open( self._filename_stdout, 'w' ) as fstdout:
-        # shell=True is needed for Windows so OmniSharp does not spawn
-        # in a new visible window
         self._omnisharp_phandle = utils.SafePopen(
-            command, stdout = fstdout, stderr = fstderr, shell = True )
+            command, stdout = fstdout, stderr = fstderr )
 
     self._solution_path = path_to_solutionfile
 
