@@ -52,7 +52,7 @@ void foo() {
   assert_that( results,
                contains(
                   has_entries( {
-                    'kind': equal_to( 'ERROR'),
+                    'kind': equal_to( 'ERROR' ),
                     'text': contains_string( 'cannot initialize' ),
                     'ranges': contains( has_entries( {
                       'start': has_entries( {
@@ -163,7 +163,7 @@ def Diagnostics_CsCompleter_ZeroBasedLineAndColumn_test():
   assert_that( results,
                contains(
                   has_entries( {
-                    'kind': equal_to( 'ERROR'),
+                    'kind': equal_to( 'ERROR' ),
                     'text': contains_string(
                         "Unexpected symbol `}'', expecting identifier" ),
                     'location': has_entries( {
@@ -214,26 +214,26 @@ def Diagnostics_CsCompleter_MultipleSolution_test():
     results = app.post_json( '/event_notification', event_data ).json
 
     assert_that( results,
-                contains(
-                    has_entries( {
-                        'kind': equal_to( 'ERROR'),
-                        'text': contains_string(
-                            "Unexpected symbol `}'', expecting identifier" ),
-                        'location': has_entries( {
-                        'line_num': line,
-                        'column_num': 2
-                        } ),
-                        'location_extent': has_entries( {
-                        'start': has_entries( {
-                            'line_num': line,
-                            'column_num': 2,
-                        } ),
-                        'end': has_entries( {
-                            'line_num': line,
-                            'column_num': 2,
-                        } ),
-                        } )
-                    } ) ) )
+                 contains(
+                     has_entries( {
+                         'kind': equal_to( 'ERROR' ),
+                         'text': contains_string(
+                             "Unexpected symbol `}'', expecting identifier" ),
+                         'location': has_entries( {
+                         'line_num': line,
+                         'column_num': 2
+                         } ),
+                         'location_extent': has_entries( {
+                         'start': has_entries( {
+                             'line_num': line,
+                             'column_num': 2,
+                         } ),
+                         'end': has_entries( {
+                             'line_num': line,
+                             'column_num': 2,
+                         } ),
+                         } )
+                     } ) ) )
 
     StopOmniSharpServer( app, filepath )
 

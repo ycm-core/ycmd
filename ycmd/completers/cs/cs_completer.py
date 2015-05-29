@@ -87,9 +87,9 @@ class CsharpCompleter( Completer ):
 
   def Shutdown( self ):
     if ( self.user_options[ 'auto_stop_csharp_server' ] ):
-      for subcompleter in self._completer_per_solution.values():
-        if subcompleter.ServerIsRunning():
-          subcompleter._StopServer()
+      for solutioncompleter in self._completer_per_solution.values():
+        if solutioncompleter.ServerIsRunning():
+          solutioncompleter._StopServer()
 
 
   def SupportedFiletypes( self ):
@@ -97,7 +97,7 @@ class CsharpCompleter( Completer ):
     return [ 'cs' ]
 
 
-  def _GetSubCompleter( self, request_data ):
+  def _GetSolutionCompleter( self, request_data ):
     solution = self._GetSolutionFile( request_data[ "filepath" ] )
     if not solution in self._completer_per_solution:
       keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
@@ -108,7 +108,7 @@ class CsharpCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    subcompleter = self._GetSubCompleter( request_data )
+    solutioncompleter = self._GetSolutionCompleter( request_data )
     return [ responses.BuildCompletionData(
                 completion[ 'CompletionText' ],
                 completion[ 'DisplayText' ],
@@ -117,7 +117,8 @@ class CsharpCompleter( Completer ):
                 None,
                 { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
-             for completion in subcompleter._GetCompletions( request_data ) ]
+             for completion
+             in solutioncompleter._GetCompletions( request_data ) ]
 
 
   def FilterAndSortCandidates( self, candidates, query ):
@@ -132,14 +133,14 @@ class CsharpCompleter( Completer ):
 
 
   def OnFileReadyToParse( self, request_data ):
-    subcompleter = self._GetSubCompleter( request_data )
+    solutioncompleter = self._GetSolutionCompleter( request_data )
 
-    if ( not subcompleter.ServerIsRunning() and
+    if ( not solutioncompleter.ServerIsRunning() and
          self.user_options[ 'auto_start_csharp_server' ] ):
-      subcompleter._StartServer()
+      solutioncompleter._StartServer()
       return
 
-    errors = subcompleter.CodeCheck( request_data )
+    errors = solutioncompleter.CodeCheck( request_data )
 
     diagnostics = [ self._QuickFixToDiagnostic( x ) for x in
                     errors[ "QuickFixes" ] ]
@@ -194,20 +195,20 @@ class CsharpCompleter( Completer ):
 
     command = arguments[ 0 ]
     if command in CsharpSolutionCompleter.subcommands:
-      subcompleter = self._GetSubCompleter( request_data )
-      return subcompleter.Subcommand( command, arguments, request_data )
+      solutioncompleter = self._GetSolutionCompleter( request_data )
+      return solutioncompleter.Subcommand( command, arguments, request_data )
     else:
       raise ValueError( self.UserCommandsHelpMessage() )
 
 
   def DebugInfo( self, request_data ):
-    subcompleter = self._GetSubCompleter( request_data )
-    if subcompleter.ServerIsRunning():
+    solutioncompleter = self._GetSolutionCompleter( request_data )
+    if solutioncompleter.ServerIsRunning():
       return ( 'OmniSharp Server running at: {0}\n'
                'OmniSharp logfiles:\n{1}\n{2}' ).format(
-                   subcompleter._ServerLocation(),
-                   subcompleter._filename_stdout,
-                   subcompleter._filename_stderr )
+                   solutioncompleter._ServerLocation(),
+                   solutioncompleter._filename_stdout,
+                   solutioncompleter._filename_stderr )
     else:
       return 'OmniSharp Server is not running'
 
@@ -232,12 +233,12 @@ class CsharpCompleter( Completer ):
 
   def _CheckSingleOrAllActive( self, request_data, action ):
     if request_data is not None:
-      subcompleter = self._GetSubCompleter( request_data )
-      return action( subcompleter )
+      solutioncompleter = self._GetSolutionCompleter( request_data )
+      return action( solutioncompleter )
     else:
-      subcompleters = self._completer_per_solution.values()
-      active_subcompleters = [ i for i in subcompleters if i.ServerIsActive() ]
-      return all( action( completer ) for completer in active_subcompleters )
+      solutioncompleters = self._completer_per_solution.values()
+      return all( action( completer )
+        for completer in solutioncompleters if completer.ServerIsActive() )
 
 
   def _GetSolutionFile( self, filepath ):
