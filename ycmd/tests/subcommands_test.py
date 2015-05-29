@@ -376,7 +376,7 @@ def RunCompleterCommand_GoTo_CsCompleter_Works_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoTo'],
@@ -393,7 +393,7 @@ def RunCompleterCommand_GoTo_CsCompleter_Works_test():
       },
       app.post_json( '/run_completer_command', goto_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -409,7 +409,7 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_Works_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToImplementation'],
@@ -426,7 +426,7 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_Works_test():
       },
       app.post_json( '/run_completer_command', goto_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -442,7 +442,7 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_NoImplementation_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToImplementation'],
@@ -461,7 +461,7 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_NoImplementation_test():
     else:
       raise
   finally:
-    StopOmniSharpServer( app )
+    StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -477,7 +477,7 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_InvalidLocation_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToImplementation'],
@@ -496,7 +496,7 @@ def RunCompleterCommand_GoToImplementation_CsCompleter_InvalidLocation_test():
     else:
       raise
   finally:
-    StopOmniSharpServer( app )
+    StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -512,7 +512,7 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_NoImplemen
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToImplementationElseDeclaration'],
@@ -529,7 +529,7 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_NoImplemen
       },
       app.post_json( '/run_completer_command', goto_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -545,7 +545,7 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_SingleImpl
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToImplementationElseDeclaration'],
@@ -562,7 +562,7 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_SingleImpl
       },
       app.post_json( '/run_completer_command', goto_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -578,7 +578,7 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleIm
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToImplementationElseDeclaration'],
@@ -599,7 +599,7 @@ def RunCompleterCommand_GoToImplementationElseDeclaration_CsCompleter_MultipleIm
       }],
       app.post_json( '/run_completer_command', goto_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -615,7 +615,7 @@ def RunCompleterCommand_GetType_CsCompleter_EmptyMessage_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GetType'],
@@ -630,7 +630,7 @@ def RunCompleterCommand_GetType_CsCompleter_EmptyMessage_test():
       },
       app.post_json( '/run_completer_command', gettype_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -646,7 +646,7 @@ def RunCompleterCommand_GetType_CsCompleter_VariableDeclaration_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GetType'],
@@ -661,7 +661,7 @@ def RunCompleterCommand_GetType_CsCompleter_VariableDeclaration_test():
       },
       app.post_json( '/run_completer_command', gettype_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -677,7 +677,7 @@ def RunCompleterCommand_GetType_CsCompleter_VariableUsage_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GetType'],
@@ -692,7 +692,7 @@ def RunCompleterCommand_GetType_CsCompleter_VariableUsage_test():
       },
       app.post_json( '/run_completer_command', gettype_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -708,7 +708,7 @@ def RunCompleterCommand_GetType_CsCompleter_Constant_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GetType'],
@@ -723,7 +723,7 @@ def RunCompleterCommand_GetType_CsCompleter_Constant_test():
       },
       app.post_json( '/run_completer_command', gettype_data ).json )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -745,9 +745,9 @@ def _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles( keeping_log_files 
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
-  event_data = BuildRequest( filetype = 'cs' )
+  event_data = BuildRequest( filetype = 'cs', filepath = filepath )
 
   debuginfo = app.post_json( '/debug_info', event_data ).json
 
@@ -759,7 +759,7 @@ def _RunCompleterCommand_StopServer_CsCompleter_KeepLogFiles( keeping_log_files 
     assert os.path.exists( stdout_logfiles_location ), "Logfile should exist at " + stdout_logfiles_location
     assert os.path.exists( stderr_logfiles_location ), "Logfile should exist at " + stderr_logfiles_location
   finally:
-    StopOmniSharpServer( app )
+    StopOmniSharpServer( app, filepath )
 
   if ( keeping_log_files ):
     assert os.path.exists( stdout_logfiles_location ), "Logfile should still exist at " + stdout_logfiles_location

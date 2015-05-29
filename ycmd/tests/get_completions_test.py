@@ -130,7 +130,7 @@ def GetCompletions_CsCompleter_Works_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cs',
@@ -143,7 +143,43 @@ def GetCompletions_CsCompleter_Works_test():
                           CompletionEntryMatcher( 'CursorSize' ) ) )
   eq_( 12, response_data[ 'completion_start_column' ] )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
+
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_MultipleSolution_Works_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepaths = [ PathToTestFile( 'testy/Program.cs' ),
+                PathToTestFile( 'testy-multiple-solutions/'
+                                'solution-named-like-folder/'
+                                'testy/'
+                                'Program.cs' ) ]
+  lines = [ 10, 9 ]
+  for filepath, line in zip( filepaths, lines ):
+    contents = open( filepath ).read()
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'cs',
+                               contents = contents,
+                               event_name = 'FileReadyToParse' )
+
+    app.post_json( '/event_notification', event_data )
+    WaitUntilOmniSharpServerReady( app, filepath )
+
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'cs',
+                                    contents = contents,
+                                    line_num = line,
+                                    column_num = 12 )
+    response_data = app.post_json( '/completions', completion_data ).json
+    assert_that( response_data[ 'completions' ],
+                  has_items( CompletionEntryMatcher( 'CursorLeft' ),
+                             CompletionEntryMatcher( 'CursorSize' ) ) )
+    eq_( 12, response_data[ 'completion_start_column' ] )
+
+    StopOmniSharpServer( app, filepath )
+
 
 @with_setup( Setup )
 def GetCompletions_CsCompleter_PathWithSpace_test():
@@ -158,7 +194,7 @@ def GetCompletions_CsCompleter_PathWithSpace_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cs',
@@ -171,7 +207,7 @@ def GetCompletions_CsCompleter_PathWithSpace_test():
                           CompletionEntryMatcher( 'CursorSize' ) ) )
   eq_( 12, response_data[ 'completion_start_column' ] )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -187,7 +223,7 @@ def GetCompletions_CsCompleter_HasBothImportsAndNonImport_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cs',
@@ -202,7 +238,7 @@ def GetCompletions_CsCompleter_HasBothImportsAndNonImport_test():
                has_items( CompletionEntryMatcher( 'DateTime' ),
                           CompletionEntryMatcher( 'DateTimeStyles' ) ) )
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -218,7 +254,7 @@ def GetCompletions_CsCompleter_ImportsOrderedAfter_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cs',
@@ -237,7 +273,7 @@ def GetCompletions_CsCompleter_ImportsOrderedAfter_test():
                             if not val[ 'extra_data' ][ 'required_namespace_import' ] )
 
   assert_that( min_import_index, greater_than( max_nonimport_index ) ),
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
 
 
 @with_setup( Setup )
@@ -253,14 +289,45 @@ def GetCompletions_CsCompleter_ReloadSolutionWorks_test():
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
-  WaitUntilOmniSharpServerReady( app )
+  WaitUntilOmniSharpServerReady( app, filepath )
   result = app.post_json( '/run_completer_command',
                           BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'ReloadSolution' ],
+                                        filepath = filepath,
                                         filetype = 'cs' ) ).json
 
-  StopOmniSharpServer( app )
+  StopOmniSharpServer( app, filepath )
   eq_( result, True )
+
+
+@with_setup( Setup )
+def GetCompletions_CsCompleter_ReloadSolution_MultipleSolution_Works_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepaths = [ PathToTestFile( 'testy/Program.cs' ),
+                PathToTestFile( 'testy-multiple-solutions/'
+                                'solution-named-like-folder/'
+                                'testy/'
+                                'Program.cs' ) ]
+  for filepath in filepaths:
+    contents = open( filepath ).read()
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'cs',
+                               contents = contents,
+                               event_name = 'FileReadyToParse' )
+
+    app.post_json( '/event_notification', event_data )
+    WaitUntilOmniSharpServerReady( app, filepath )
+    result = app.post_json( '/run_completer_command',
+                            BuildRequest( completer_target = 'filetype_default',
+                                          command_arguments = [ 'ReloadSolution' ],
+                                          filepath = filepath,
+                                          filetype = 'cs' ) ).json
+
+    StopOmniSharpServer( app, filepath )
+    eq_( result, True )
+
 
 def _CsCompleter_SolutionSelectCheck( app, sourcefile, reference_solution,
                                       extra_conf_store = None ):
@@ -282,10 +349,11 @@ def _CsCompleter_SolutionSelectCheck( app, sourcefile, reference_solution,
   result = app.post_json( '/run_completer_command',
                           BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'SolutionFile' ],
+                                        filepath = sourcefile,
                                         filetype = 'cs' ) ).json
   # We don't want the server to linger around, stop it once start completed
-  WaitUntilOmniSharpServerReady( app )
-  StopOmniSharpServer( app )
+  WaitUntilOmniSharpServerReady( app, sourcefile )
+  StopOmniSharpServer( app, sourcefile )
   # Now that cleanup is done, verify solution file
   eq_( reference_solution , result)
 
@@ -399,8 +467,8 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   # the test passes if we caught an exception when trying to start it,
   # so raise one if it managed to start
   if not exception_caught:
-    WaitUntilOmniSharpServerReady( app )
-    StopOmniSharpServer( app )
+    WaitUntilOmniSharpServerReady( app, filepath )
+    StopOmniSharpServer( app, filepath )
     raise Exception( ( 'The Omnisharp server started, despite us not being able '
                       'to find a suitable solution file to feed it. Did you '
                       'fiddle with the solution finding code in '
