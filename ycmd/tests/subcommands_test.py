@@ -223,13 +223,18 @@ def _RunCompleterCommand_Message_Clang(filename, test, command):
   contents = open( PathToTestFile( filename ) ).read()
   app = TestApp( handlers.app )
 
+  # We use the -fno-delayed-template-parsing flag to not delay
+  # parsing of templates on Windows.  This is the default on
+  # other platforms.  See the _ExtraClangFlags function in
+  # ycmd/completers/cpp/flags.py file for more information.
   common_args = {
     'completer_target'  : 'filetype_default',
     'command_arguments' : command,
     'compilation_flags' : ['-x',
                            'c++',
                            # C++11 flag is needed for lambda functions
-                           '-std=c++11'],
+                           '-std=c++11',
+                           '-fno-delayed-template-parsing'],
     'line_num'          : 10,
     'column_num'        : 3,
     'contents'          : contents,
