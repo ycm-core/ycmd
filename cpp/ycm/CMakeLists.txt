@@ -46,12 +46,14 @@ if ( USE_CLANG_COMPLETER AND
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-apple-darwin" )
-    set( CLANG_MD5 "103e06006c88d391c9c369a4671e3363" )
+    set( CLANG_SHA256 
+         "b9f32e9657f3963e6b3f5071d03805444c7054042bd878f0d05c037ae29101b8" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04" )
-      set( CLANG_MD5 "cfb2ebc01573e666770b9c5f72deb04e" )
+      set( CLANG_SHA256 
+           "e8396103fbf794e6af671593659458dfe841c32234d3cd4f37be0b48cd6a9f8b" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
@@ -69,9 +71,9 @@ if ( USE_CLANG_COMPLETER AND
        "${CMAKE_SOURCE_DIR}/../clang_archives/${CLANG_FILENAME}" )
 
   if( EXISTS "${CLANG_LOCAL_FILE}" )
-    file( MD5 "${CLANG_LOCAL_FILE}" CLANG_LOCAL_MD5 )
+    file( SHA256 "${CLANG_LOCAL_FILE}" CLANG_LOCAL_SHA256 )
 
-    if( "${CLANG_LOCAL_MD5}" STREQUAL "${CLANG_MD5}" )
+    if( "${CLANG_LOCAL_SHA256}" STREQUAL "${CLANG_SHA256}" )
       set( CLANG_DOWNLOAD OFF )
     else()
       file( REMOVE "${CLANG_LOCAL_FILE}" )
@@ -84,7 +86,7 @@ if ( USE_CLANG_COMPLETER AND
     set( CLANG_URL "http://llvm.org/releases/3.6.0" )
     file(
       DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
-      SHOW_PROGRESS EXPECTED_MD5 "${CLANG_MD5}"
+      SHOW_PROGRESS EXPECTED_HASH SHA256="${CLANG_SHA256}"
     )
   else()
     message( "Using Clang archive: ${CLANG_LOCAL_FILE}" )
