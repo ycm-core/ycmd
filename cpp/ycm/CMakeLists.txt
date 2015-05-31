@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 2.8.7 )
 
 project( ycm_support_libs )
 set( CLIENT_LIB "ycm_client_support" )
@@ -43,9 +43,6 @@ if ( USE_CLANG_COMPLETER AND
      NOT USE_SYSTEM_LIBCLANG AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
-  message( "Downloading Clang 3.5" )
-
-  set( CLANG_URL "http://llvm.org/releases/3.6.0" )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-apple-darwin" )
@@ -65,11 +62,36 @@ if ( USE_CLANG_COMPLETER AND
     endif()
   endif()
 
-  file(
-    DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "./${CLANG_FILENAME}"
-    SHOW_PROGRESS EXPECTED_MD5 "${CLANG_MD5}"
-  )
+  # Check if the Clang archive is already downloaded and its checksum is correct.
+  # If this is not the case, remove it if needed and download it.
+  set( CLANG_DOWNLOAD ON )
+  set( CLANG_LOCAL_FILE 
+       "${CMAKE_SOURCE_DIR}/../clang_archives/${CLANG_FILENAME}" )
 
+  if( EXISTS "${CLANG_LOCAL_FILE}" )
+    file( MD5 "${CLANG_LOCAL_FILE}" CLANG_LOCAL_MD5 )
+
+    if( "${CLANG_LOCAL_MD5}" STREQUAL "${CLANG_MD5}" )
+      set( CLANG_DOWNLOAD OFF )
+    else()
+      file( REMOVE "${CLANG_LOCAL_FILE}" )
+    endif()
+  endif()
+
+  if( CLANG_DOWNLOAD )
+    message( "Downloading Clang 3.6" )
+
+    set( CLANG_URL "http://llvm.org/releases/3.6.0" )
+    file(
+      DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
+      SHOW_PROGRESS EXPECTED_MD5 "${CLANG_MD5}"
+    )
+  else()
+    message( "Using Clang archive: ${CLANG_LOCAL_FILE}" )
+  endif()
+
+  # Copy and extract the Clang archive in the building directory.
+  file( COPY "${CLANG_LOCAL_FILE}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../" )
   if ( CLANG_FILENAME MATCHES ".+bz2" )
     execute_process( COMMAND tar -xjf ${CLANG_FILENAME} )
   elseif( CLANG_FILENAME MATCHES ".+xz" )

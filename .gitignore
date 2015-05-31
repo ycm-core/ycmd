@@ -13,6 +13,9 @@
 *.la
 *.a
 
+# Clang archives
+clang_archives
+
 # CMake
 CMakeCache.txt
 CMakeFiles
