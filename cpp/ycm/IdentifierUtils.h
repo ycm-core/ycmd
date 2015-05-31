@@ -18,6 +18,7 @@
 #ifndef IDENTIFIERUTILS_CPP_WFFUZNET
 #define IDENTIFIERUTILS_CPP_WFFUZNET
 
+#include "DLLDefines.h"
 #include "IdentifierDatabase.h"
 
 #include <vector>
@@ -27,7 +28,7 @@
 
 namespace YouCompleteMe {
 
-FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
+YCM_DLL_EXPORT FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const boost::filesystem::path &path_to_tag_file );
 
 } // namespace YouCompleteMe

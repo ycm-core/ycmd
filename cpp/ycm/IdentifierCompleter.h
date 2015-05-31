@@ -18,6 +18,7 @@
 #ifndef COMPLETER_H_7AR4UGXE
 #define COMPLETER_H_7AR4UGXE
 
+#include "DLLDefines.h"
 #include "IdentifierDatabase.h"
 
 #include <boost/utility.hpp>
@@ -36,8 +37,9 @@ class Candidate;
 
 class IdentifierCompleter : boost::noncopyable {
 public:
-  IdentifierCompleter();
-  IdentifierCompleter( const std::vector< std::string > &candidates );
+  YCM_DLL_EXPORT IdentifierCompleter();
+  YCM_DLL_EXPORT IdentifierCompleter(
+    const std::vector< std::string > &candidates );
   IdentifierCompleter( const std::vector< std::string > &candidates,
                        const std::string &filetype,
                        const std::string &filepath );
@@ -54,7 +56,7 @@ public:
     const std::string &filetype,
     const std::string &filepath );
 
-  void AddIdentifiersToDatabaseFromTagFiles(
+  YCM_DLL_EXPORT void AddIdentifiersToDatabaseFromTagFiles(
     const std::vector< std::string > &absolute_paths_to_tag_files );
 
   void AddIdentifiersToDatabaseFromBuffer(
@@ -64,10 +66,10 @@ public:
     bool collect_from_comments_and_strings );
 
   // Only provided for tests!
-  std::vector< std::string > CandidatesForQuery(
+  YCM_DLL_EXPORT std::vector< std::string > CandidatesForQuery(
     const std::string &query ) const;
 
-  std::vector< std::string > CandidatesForQueryAndType(
+  YCM_DLL_EXPORT std::vector< std::string > CandidatesForQueryAndType(
     const std::string &query,
     const std::string &filetype ) const;
 

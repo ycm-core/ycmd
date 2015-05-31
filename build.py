@@ -161,7 +161,12 @@ def RunYcmdTests( build_dir ):
   tests_dir = p.join( build_dir, 'ycm', 'tests' )
   os.chdir( tests_dir )
   new_env = os.environ.copy()
-  new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
+
+  if OnWindows():
+    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT
+  else:
+    new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
+
   subprocess.check_call( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
 
 

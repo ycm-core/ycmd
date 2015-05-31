@@ -33,6 +33,11 @@ if ( USE_SYSTEM_GMOCK )
   find_package( GTest REQUIRED )
   find_package( GMock REQUIRED )
 else()
+  if ( WIN32 )
+    # Override BUILD_SHARED_LIBS option in gmock and gtest CMakeLists
+    set( BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (DLLs)." )
+  endif()
+
   add_subdirectory( gmock )
   set( GTEST_INCLUDE_DIRS ${gtest_SOURCE_DIR} ${gtest_SOURCE_DIR}/include )
   set( GMOCK_INCLUDE_DIRS ${gmock_SOURCE_DIR} ${gmock_SOURCE_DIR}/include )
@@ -77,12 +82,34 @@ add_executable( ${PROJECT_NAME}
                 ${SOURCES}
               )
 
+if ( MSVC )
+  # This is needed to compile tests with the gtest shared library
+  set_target_properties( ${PROJECT_NAME}
+                         PROPERTIES
+                         COMPILE_DEFINITIONS
+                         "GTEST_LINKED_AS_SHARED_LIBRARY=1" )
+
+  # Fix gtest build on MSVC 11.  See: http://stackoverflow.com/a/8274747
+  if ( MSVC_VERSION EQUAL 1700 )
+    add_definitions( /D _VARIADIC_MAX=10 )
+  endif()
+
+  # Build gmock and ycm_core_tests targets in cmake ycm/tests folder
+  foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    set_target_properties( ${GMOCK_LIBRARIES} PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR} )
+    set_target_properties( ${PROJECT_NAME} PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR} )
+  endforeach()
+endif()
+
 target_link_libraries( ${PROJECT_NAME}
+                       ${Boost_LIBRARIES}
                        ${SERVER_LIB}
                        ${CLIENT_LIB}
                        ${GTEST_LIBRARIES}
                        ${GMOCK_LIBRARIES} )
-
 
 if ( NOT CMAKE_GENERATOR_IS_XCODE )
   # The test executable expects a "testdata" dir in its working directory. Why?
