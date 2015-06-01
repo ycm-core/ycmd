@@ -20,6 +20,7 @@ Known ycmd clients:
 - [YouCompleteMe][ycm]: Vim client, stable and exposes all ycmd features.
 - [emacs-ycmd][]: Emacs client, still a bit experimental.
 - [you-complete-me][atom-you-complete-me]: Atom client.
+- [kak-ycmd][]: Kakoune client.
 
 Feel free to send a pull request adding a link to your client here if you've
 built one.
@@ -239,3 +240,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gocode]: https://github.com/nsf/gocode
+[kak-ycmd]: https://github.com/mawww/kak-ycmd

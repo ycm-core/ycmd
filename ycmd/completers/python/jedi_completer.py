@@ -56,12 +56,30 @@ class JediCompleter( Completer ):
       return jedi.Script( contents, line, column, filename )
 
 
+  def _GetExtraData( self, completion ):
+      location = {}
+      if completion.module_path:
+        location[ 'filepath' ] = ToUtf8IfNeeded( completion.module_path )
+      if completion.line:
+        location[ 'line_num' ] = completion.line
+      if completion.column:
+        location[ 'column_num' ] = completion.column + 1
+
+      if location:
+        extra_data = {}
+        extra_data[ 'location' ] = location
+        return extra_data
+      else:
+        return None
+
+
   def ComputeCandidatesInner( self, request_data ):
     script = self._GetJediScript( request_data )
     return [ responses.BuildCompletionData(
                 ToUtf8IfNeeded( completion.name ),
                 ToUtf8IfNeeded( completion.description ),
-                ToUtf8IfNeeded( completion.docstring() ) )
+                ToUtf8IfNeeded( completion.docstring() ),
+                extra_data = self._GetExtraData( completion ) )
              for completion in script.completions() ]
 
   def DefinedSubcommands( self ):

@@ -194,9 +194,12 @@ def _JsonResponse( data ):
 
 
 def _UniversalSerialize( obj ):
-  serialized = obj.__dict__.copy()
-  serialized[ 'TYPE' ] = type( obj ).__name__
-  return serialized
+  try:
+    serialized = obj.__dict__.copy()
+    serialized[ 'TYPE' ] = type( obj ).__name__
+    return serialized
+  except AttributeError:
+    return str( obj )
 
 
 def _GetCompleterForRequestData( request_data ):

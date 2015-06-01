@@ -29,8 +29,11 @@ from distutils.spawn import find_executable
 import subprocess
 import collections
 
-WIN_PYTHON27_PATH = 'C:\python27\pythonw.exe'
-WIN_PYTHON26_PATH = 'C:\python26\pythonw.exe'
+WIN_PYTHON27_PATH = 'C:\python27\python.exe'
+WIN_PYTHON26_PATH = 'C:\python26\python.exe'
+# Creation flag to disable creating a console window on Windows. See
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
+CREATE_NO_WINDOW = 0x08000000
 
 
 def SanitizeQuery( query ):
@@ -148,10 +151,6 @@ def PathToPythonInterpreter():
   # Arch Linux) have made the... interesting decision to point /usr/bin/python
   # to python3.
   python_names = [ 'python2', 'python' ]
-  if OnWindows():
-    # On Windows, 'pythonw' doesn't pop-up a console window like running
-    # 'python' does.
-    python_names.insert( 0, 'pythonw' )
 
   path_to_python = PathToFirstExistingExecutable( python_names )
   if path_to_python:
@@ -239,11 +238,14 @@ def ForceSemanticCompletion( request_data ):
            bool( request_data[ 'force_semantic' ] ) )
 
 
-# A wrapper for subprocess.Popen that works around a Popen bug on Windows.
+# A wrapper for subprocess.Popen that fixes quirks on Windows.
 def SafePopen( *args, **kwargs ):
-  if kwargs.get( 'stdin' ) is None:
-    # We need this on Windows otherwise bad things happen. See issue #637.
-    kwargs[ 'stdin' ] = subprocess.PIPE if OnWindows() else None
+  if OnWindows():
+    # We need this otherwise bad things happen. See issue #637.
+    if kwargs.get( 'stdin' ) is None:
+      kwargs[ 'stdin' ] = subprocess.PIPE
+    # Do not create a console window
+    kwargs[ 'creationflags' ] = CREATE_NO_WINDOW
 
   return subprocess.Popen( *args, **kwargs )
 
