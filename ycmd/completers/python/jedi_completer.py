@@ -56,6 +56,7 @@ class JediCompleter( Completer ):
     self._logger = logging.getLogger( __name__ )
     self._filename_stderr = None
     self._filename_stdout = None
+    self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
 
 
   def Shutdown( self ):
@@ -64,8 +65,15 @@ class JediCompleter( Completer ):
 
 
   def _StopServer( self ):
-    # TODO(vheon)
-    pass
+    self._jedihttp_phandle.kill()
+    self._jedihttp_phandle = None
+    self._jedihttp_port = None
+
+    if ( not self._keep_logfiles ):
+      os.unlink( self._filename_stdout );
+      os.unlink( self._filename_stderr );
+
+    self._logger.info( 'Stopping JediHTTP' )
 
 
   def ServerIsRunning( self ):
