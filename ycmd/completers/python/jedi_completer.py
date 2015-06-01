@@ -186,18 +186,20 @@ class JediCompleter( Completer ):
 
 
   def DefinedSubcommands( self ):
-    pass
+    return [ 'StopServer' ] # NOTE: it is actually useful only in tests
     # return [ 'GoToDefinition',
     #          'GoToDeclaration',
     #          'GoTo' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
-    pass
-    # if not arguments:
-    #   raise ValueError( self.UserCommandsHelpMessage() )
+    if not arguments:
+      raise ValueError( self.UserCommandsHelpMessage() )
 
-    # command = arguments[ 0 ]
+    command = arguments[ 0 ]
+    if command == 'StopServer':
+      return self._StopServer()
+
     # if command == 'GoToDefinition':
     #   return self._GoToDefinition( request_data )
     # elif command == 'GoToDeclaration':
