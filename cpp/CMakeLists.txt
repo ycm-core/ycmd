@@ -20,7 +20,7 @@ if ( DEFINED ENV{TRAVIS} )
   # Travis for, the old version of CMake that it has is good enough.
   cmake_minimum_required( VERSION 2.8 )
 else()
-  cmake_minimum_required( VERSION 2.8.12 )
+  cmake_minimum_required( VERSION 2.8.11 )
 endif()
 
 
