@@ -122,8 +122,10 @@ class JediCompleter( Completer ):
   def _GetResponse( self, handler, parameters = {} ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    response = requests.post( target, json = parameters )
-    return response.json()
+    response = requests.post( target, json = parameters ).json()
+    if response.status_code != requests.codes.ok:
+      raise RuntimeError( response[ 'message' ] )
+    return response
 
 
   def _ServerLocation( self ):
