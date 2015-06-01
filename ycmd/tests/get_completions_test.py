@@ -769,6 +769,8 @@ def GetCompletions_JediCompleter_Basic_test():
                  CompletionLocationMatcher( 'column_num', 10 ),
                  CompletionLocationMatcher( 'filepath', filepath ) ) )
 
+  StopJediHTTPServer( app )
+
 
 @with_setup( Setup )
 def GetCompletions_JediCompleter_UnicodeDescription_test():
@@ -797,6 +799,8 @@ def GetCompletions_JediCompleter_UnicodeDescription_test():
   assert_that( results, has_item(
                           has_entry( 'detailed_info',
                             contains_string( u'aafäö' ) ) ) )
+
+  StopJediHTTPServer( app )
 
 
 @with_setup( Setup )

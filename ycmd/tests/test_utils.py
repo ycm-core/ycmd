@@ -114,6 +114,13 @@ def WaitUntilJediHTTPServerReady( app ):
   raise RuntimeError( "Timeout waiting for JediHTTP" )
 
 
+def StopJediHTTPServer( app ):
+  app.post_json( '/run_completer_command',
+                 BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = ['StopServer'],
+                               filetype = 'python' ) )
+
+
 def StopGoCodeServer( app ):
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
