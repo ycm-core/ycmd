@@ -75,6 +75,15 @@ class JediCompleter( Completer ):
     except:
       return False
 
+
+  def ServerIsReady( self ):
+    """ Check if JediHTTP server is ready."""
+    try:
+      return bool( self._GetResponse( '/ready' ) )
+    except:
+      return False
+
+
   def _StartServer( self, request_data ):
     self._ChoosePort()
 

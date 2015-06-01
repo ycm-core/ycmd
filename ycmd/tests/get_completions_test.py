@@ -23,7 +23,9 @@ SetUpPythonPath()
 import httplib
 from .test_utils import ( Setup, BuildRequest, PathToTestFile,
                           ChangeSpecificOptions, StopOmniSharpServer,
-                          WaitUntilOmniSharpServerReady, StopGoCodeServer )
+                          WaitUntilOmniSharpServerReady,
+                          WaitUntilJediHTTPServerReady, StopJediHTTPServer,
+                          StopGoCodeServer )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry, has_entries,
@@ -35,7 +37,6 @@ import bottle
 
 bottle.debug( True )
 
-import time
 
 def CompletionEntryMatcher( insertion_text, extra_menu_info = None ):
   match = { 'insertion_text': insertion_text }
@@ -748,9 +749,7 @@ def GetCompletions_JediCompleter_Basic_test():
 
   app.post_json( '/event_notification', event_data )
 
-  # WaitUntilJediHTTPServerReady( app, filepath )
-  # TODO(vheon): implement WaitUntilJediHTTPServerReady
-  time.sleep( 2 )
+  WaitUntilJediHTTPServerReady( app )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'python',
@@ -784,9 +783,7 @@ def GetCompletions_JediCompleter_UnicodeDescription_test():
 
   app.post_json( '/event_notification', event_data )
 
-  # WaitUntilJediHTTPServerReady( app, filepath )
-  # TODO(vheon): implement WaitUntilJediHTTPServerReady
-  time.sleep( 2 )
+  WaitUntilJediHTTPServerReady( app )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'python',

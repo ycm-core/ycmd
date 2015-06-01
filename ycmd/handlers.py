@@ -91,7 +91,6 @@ def GetCompletions():
   request_data = RequestWrap( request.json )
   do_filetype_completion = _server_state.ShouldUseFiletypeCompleter(
     request_data )
-  _logger.debug( 'Using filetype completion: %s', do_filetype_completion )
   filetypes = request_data[ 'filetypes' ]
   completer = ( _server_state.GetFiletypeCompleter( filetypes ) if
                 do_filetype_completion else
