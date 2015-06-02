@@ -119,10 +119,13 @@ class JediCompleter( Completer ):
     self._logger.info( u'using port {0}'.format( self._jedihttp_port ) )
 
 
-  def _GetResponse( self, handler, request_data = {} ):
+  def _GetResponse( self, handler, parameters = {} ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    parameters = self._ConvertRequestForJediHTTP( request_data )
+
+    if parameters:
+      parameters = self._ConvertRequestForJediHTTP( parameters )
+
     response = requests.post( target, json = parameters )
     if response.status_code != 200:
       raise RuntimeError( response.text )
@@ -130,9 +133,6 @@ class JediCompleter( Completer ):
 
 
   def _ConvertRequestForJediHTTP( self, request_data ):
-    if not request_data:
-      return request_data
-
     path = request_data[ 'filepath' ]
     source = request_data[ 'file_data' ][ path ][ 'contents' ]
     line = request_data[ 'line_num' ]
