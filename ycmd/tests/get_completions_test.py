@@ -747,20 +747,17 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test():
 @with_setup( Setup )
 def GetCompletions_JediCompleter_Basic_test():
   app = TestApp( handlers.app )
-  filepath = PathToTestFile( 'basic.py' )
-  contents = open( filepath ).read()
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'python',
-                             contents = contents,
+  event_data = BuildRequest( filetype = 'python',
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
 
   WaitUntilJediHTTPServerReady( app )
 
+  filepath = PathToTestFile( 'basic.py' )
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'python',
-                                  contents = contents,
+                                  contents = open( filepath ).read(),
                                   line_num = 7,
                                   column_num = 3)
 
@@ -782,21 +779,18 @@ def GetCompletions_JediCompleter_Basic_test():
 @with_setup( Setup )
 def GetCompletions_JediCompleter_UnicodeDescription_test():
   app = TestApp( handlers.app )
-  filepath = PathToTestFile( 'unicode.py' )
-  contents = open( filepath ).read()
 
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'python',
-                             contents = contents,
+  event_data = BuildRequest( filetype = 'python',
                              event_name = 'FileReadyToParse' )
 
   app.post_json( '/event_notification', event_data )
 
   WaitUntilJediHTTPServerReady( app )
 
+  filepath = PathToTestFile( 'unicode.py' )
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'python',
-                                  contents = contents,
+                                  contents = open( filepath ).read(),
                                   force_semantic = True,
                                   line_num = 5,
                                   column_num = 3)
