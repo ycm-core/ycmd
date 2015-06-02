@@ -119,13 +119,30 @@ class JediCompleter( Completer ):
     self._logger.info( u'using port {0}'.format( self._jedihttp_port ) )
 
 
-  def _GetResponse( self, handler, parameters = {} ):
+  def _GetResponse( self, handler, request_data = {} ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    response = requests.post( target, json = parameters ).json()
-    if response.status_code != requests.codes.ok:
-      raise RuntimeError( response[ 'message' ] )
-    return response
+    parameters = _ConvertRequestForJediHTTP( request_data )
+    response = requests.post( target, json = parameters )
+    if response.status_code != 200:
+      # TODO(vheon): test this!
+      raise RuntimeError( response.text )
+    return response.json()
+
+
+  def _ConvertRequestForJediHTTP( self, request_data ):
+    path = request_data[ 'filepath' ]
+    source = request_data[ 'file_data' ][ path ][ 'contents' ]
+    line = request_data[ 'line_num' ]
+    # JediHTTP as Jedi itself expects columns to start at 0, not 1
+    col = request_data[ 'column_num' ] - 1
+
+    return {
+      'source': source,
+      'line': line,
+      'col': col,
+      'path': path
+    }
 
 
   def _ServerLocation( self ):
@@ -164,21 +181,10 @@ class JediCompleter( Completer ):
 
 
   def _JediCompletions( self, request_data ):
-    path = request_data[ 'filepath' ]
-    source = request_data[ 'file_data' ][ path ][ 'contents' ]
-    line = request_data[ 'line_num' ]
-    # JediHTTP as Jedi itself expects columns to start at 0, not 1
-    col = request_data[ 'column_num' ] - 1
-
-    request = {
-      'source': source,
-      'line': line,
-      'col': col,
-      'path': path
-    }
-
-    resp = self._GetResponse( '/completions', request )[ 'completions' ]
+    resp = self._GetResponse( '/completions', request_data )[ 'completions' ]
     return resp
+
+
 
 
   def OnFileReadyToParse( self, request_data ):
