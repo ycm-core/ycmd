@@ -76,6 +76,13 @@ class JediCompleter( Completer ):
     self._logger.info( 'Stopping JediHTTP' )
 
 
+  def _RestartServer ( self ):
+    """ Restarts the JediHTTP server """
+    if self.ServerIsRunning():
+      self._StopServer()
+    return self._StartServer()
+
+
   def ServerIsRunning( self ):
     """ Check if JediHTTP server is running (up and serving)."""
     try:
@@ -197,6 +204,7 @@ class JediCompleter( Completer ):
 
   def DefinedSubcommands( self ):
     return [ 'StopServer',  # NOTE: it is actually useful only in tests
+             'RestartServer',
              'GoToDefinition',
              'GoToDeclaration',
              'GoTo' ]
@@ -209,6 +217,8 @@ class JediCompleter( Completer ):
     command = arguments[ 0 ]
     if command == 'StopServer':
       return self._StopServer()
+    elif command == 'RestartServer':
+      return self._RestartServer()
     elif command == 'GoToDefinition':
       return self._GoToDefinition( request_data )
     elif command == 'GoToDeclaration':
