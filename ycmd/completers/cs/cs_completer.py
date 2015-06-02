@@ -357,10 +357,10 @@ class CsharpSolutionCompleter:
     """ Stop the OmniSharp server """
     self._logger.info( 'Stopping OmniSharp server' )
 
-    still_running = self._TryToStopServer()
+    self._TryToStopServer()
 
     # Kill it if it's still up
-    if still_running:
+    if not self.ServerTerminated() and self._omnisharp_phandle is not None:
       self._logger.info( 'Killing OmniSharp server' )
       self._omnisharp_phandle.kill()
 
@@ -376,11 +376,9 @@ class CsharpSolutionCompleter:
       except:
         pass
       for _ in range( 10 ):
-        if not self.ServerIsRunning():
-          return False
+        if self.ServerTerminated():
+          return
         time.sleep( .1 )
-
-    return True
 
 
   def _CleanupAfterServerStop( self ):
