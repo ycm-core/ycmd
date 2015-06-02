@@ -643,6 +643,13 @@ int main()
 def GetCompletions_ForceSemantic_Works_test():
   app = TestApp( handlers.app )
 
+  event_data = BuildRequest( filetype = 'python',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+
+  WaitUntilJediHTTPServerReady( app )
+
   completion_data = BuildRequest( filetype = 'python',
                                   force_semantic = True )
 
