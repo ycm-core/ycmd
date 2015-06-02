@@ -33,18 +33,22 @@ bottle.debug( True )
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR, "testdata" )
-PATH_TO_TEST_FILE = os.path.join( DATA_DIR, "test.php" )
+PATH_TO_BASIC_TEST_FILE = os.path.join( DATA_DIR, "test.php" )
+PATH_TO_INCL_TEST_FILE = os.path.join( DATA_DIR, "includes.php" )
 
-# TODO: Make the other tests use this helper too instead of BuildCompletionData
+# TODO: Test go to in current file
+# TODO: Test go to in included and required file
+# TODO: Test go to in general project file (? determine definition in ycmd)
+
 def CompletionEntryMatcher( insertion_text ):
   return has_entry( 'insertion_text', insertion_text )
 
 @with_setup( Setup )
 def GetClassAttributes_test():
   app = TestApp( handlers.app )
-  completion_data = BuildRequest( filepath = PATH_TO_TEST_FILE,
+  completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_TEST_FILE ).read(),
+                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
                                   line_num = 19,
                                   column_num = 16)
 
@@ -57,9 +61,9 @@ def GetClassAttributes_test():
 @with_setup( Setup )
 def GetStaticClassAttributes_test():
   app = TestApp( handlers.app )
-  completion_data = BuildRequest( filepath = PATH_TO_TEST_FILE,
+  completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_TEST_FILE ).read(),
+                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
                                   line_num = 23,
                                   column_num = 6)
 
@@ -72,9 +76,9 @@ def GetStaticClassAttributes_test():
 @with_setup( Setup )
 def CompleteBuiltinClass_test():
   app = TestApp( handlers.app )
-  completion_data = BuildRequest( filepath = PATH_TO_TEST_FILE,
+  completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_TEST_FILE ).read(),
+                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
                                   line_num = 46,
                                   column_num = 5)
 
@@ -90,9 +94,9 @@ def CompleteBuiltinClass_test():
 @with_setup( Setup )
 def CompleteBuiltinFunction_test():
   app = TestApp( handlers.app )
-  completion_data = BuildRequest( filepath = PATH_TO_TEST_FILE,
+  completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_TEST_FILE ).read(),
+                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
                                   line_num = 34,
                                   column_num = 7)
 
@@ -103,3 +107,46 @@ def CompleteBuiltinFunction_test():
                                    CompletionEntryMatcher( 'class_implements' ),
                                    CompletionEntryMatcher( 'class_parents' ),
                                    CompletionEntryMatcher( 'class_uses' ), ) )
+
+
+@with_setup( Setup )
+def CompleteFromIncludedFile_test():
+  app = TestApp( handlers.app )
+  
+  # Check variables
+  completion_data = BuildRequest( filepath = PATH_TO_INCL_TEST_FILE,
+                                  filetype = 'php',
+                                  contents = open( PATH_TO_INCL_TEST_FILE ).read(),
+                                  line_num = 8,
+                                  column_num = 11)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'variable_a' ),
+                                   CompletionEntryMatcher( 'variable_b' ),
+                                   CompletionEntryMatcher( 'variable_c' ),
+                                   CompletionEntryMatcher( 'variable_d' ), ) )
+  
+  # Check variables
+  completion_data = BuildRequest( filepath = PATH_TO_INCL_TEST_FILE,
+                                  filetype = 'php',
+                                  contents = open( PATH_TO_INCL_TEST_FILE ).read(),
+                                  line_num = 12,
+                                  column_num = 9)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'requiredFunction' ),
+                                   CompletionEntryMatcher( 'requiredClass' ), ) )
+  
+  # Check variables
+  completion_data = BuildRequest( filepath = PATH_TO_INCL_TEST_FILE,
+                                  filetype = 'php',
+                                  contents = open( PATH_TO_INCL_TEST_FILE ).read(),
+                                  line_num = 16,
+                                  column_num = 9)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'includedFunction' ),
+                                   CompletionEntryMatcher( 'includedClass' ), ) )
