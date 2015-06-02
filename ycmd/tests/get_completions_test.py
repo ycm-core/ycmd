@@ -24,8 +24,8 @@ import httplib
 from .test_utils import ( Setup, BuildRequest, PathToTestFile,
                           ChangeSpecificOptions, StopOmniSharpServer,
                           WaitUntilOmniSharpServerReady,
-                          WaitUntilJediHTTPServerReady, StopJediHTTPServer,
-                          StopGoCodeServer )
+                          ActivateJediHTTPServer, WaitUntilJediHTTPServerReady,
+                          StopJediHTTPServer, StopGoCodeServer )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry, has_entries,
@@ -643,11 +643,7 @@ int main()
 def GetCompletions_ForceSemantic_Works_test():
   app = TestApp( handlers.app )
 
-  event_data = BuildRequest( filetype = 'python',
-                             event_name = 'FileReadyToParse' )
-
-  app.post_json( '/event_notification', event_data )
-
+  ActivateJediHTTPServer( app )
   WaitUntilJediHTTPServerReady( app )
 
   completion_data = BuildRequest( filetype = 'python',
@@ -747,11 +743,7 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test():
 @with_setup( Setup )
 def GetCompletions_JediCompleter_Basic_test():
   app = TestApp( handlers.app )
-  event_data = BuildRequest( filetype = 'python',
-                             event_name = 'FileReadyToParse' )
-
-  app.post_json( '/event_notification', event_data )
-
+  ActivateJediHTTPServer( app )
   WaitUntilJediHTTPServerReady( app )
 
   filepath = PathToTestFile( 'basic.py' )
@@ -780,11 +772,7 @@ def GetCompletions_JediCompleter_Basic_test():
 def GetCompletions_JediCompleter_UnicodeDescription_test():
   app = TestApp( handlers.app )
 
-  event_data = BuildRequest( filetype = 'python',
-                             event_name = 'FileReadyToParse' )
-
-  app.post_json( '/event_notification', event_data )
-
+  ActivateJediHTTPServer( app )
   WaitUntilJediHTTPServerReady( app )
 
   filepath = PathToTestFile( 'unicode.py' )
