@@ -46,13 +46,13 @@ if ( USE_CLANG_COMPLETER AND
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-apple-darwin" )
-    set( CLANG_SHA256 
+    set( CLANG_SHA256
          "b9f32e9657f3963e6b3f5071d03805444c7054042bd878f0d05c037ae29101b8" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04" )
-      set( CLANG_SHA256 
+      set( CLANG_SHA256
            "e8396103fbf794e6af671593659458dfe841c32234d3cd4f37be0b48cd6a9f8b" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
@@ -67,7 +67,7 @@ if ( USE_CLANG_COMPLETER AND
   # Check if the Clang archive is already downloaded and its checksum is correct.
   # If this is not the case, remove it if needed and download it.
   set( CLANG_DOWNLOAD ON )
-  set( CLANG_LOCAL_FILE 
+  set( CLANG_LOCAL_FILE
        "${CMAKE_SOURCE_DIR}/../clang_archives/${CLANG_FILENAME}" )
 
   if( EXISTS "${CLANG_LOCAL_FILE}" )
@@ -86,7 +86,7 @@ if ( USE_CLANG_COMPLETER AND
     set( CLANG_URL "http://llvm.org/releases/3.6.0" )
     file(
       DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
-      SHOW_PROGRESS EXPECTED_HASH SHA256="${CLANG_SHA256}"
+      SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
     )
   else()
     message( "Using Clang archive: ${CLANG_LOCAL_FILE}" )
