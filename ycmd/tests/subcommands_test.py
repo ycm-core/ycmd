@@ -20,7 +20,8 @@
 from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from .test_utils import ( Setup, BuildRequest, PathToTestFile, StopOmniSharpServer,
-                          WaitUntilOmniSharpServerReady, ChangeSpecificOptions )
+                          WaitUntilOmniSharpServerReady, ChangeSpecificOptions,
+                          WaitUntilJediHTTPServerReady )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from .. import handlers
@@ -40,6 +41,12 @@ def foo():
 
 foo()
 """
+  event_data = BuildRequest( filetype = 'python',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+
+  WaitUntilJediHTTPServerReady( app )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = ['GoToDefinition'],

@@ -125,7 +125,6 @@ class JediCompleter( Completer ):
     parameters = _ConvertRequestForJediHTTP( request_data )
     response = requests.post( target, json = parameters )
     if response.status_code != 200:
-      # TODO(vheon): test this!
       raise RuntimeError( response.text )
     return response.json()
 
@@ -194,10 +193,10 @@ class JediCompleter( Completer ):
 
 
   def DefinedSubcommands( self ):
-    return [ 'StopServer' ] # NOTE: it is actually useful only in tests
-    # return [ 'GoToDefinition',
-    #          'GoToDeclaration',
-    #          'GoTo' ]
+    return [ 'StopServer',  # NOTE: it is actually useful only in tests
+             'GoToDefinition',
+             'GoToDeclaration',
+             'GoTo' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -207,81 +206,77 @@ class JediCompleter( Completer ):
     command = arguments[ 0 ]
     if command == 'StopServer':
       return self._StopServer()
-
-    # if command == 'GoToDefinition':
-    #   return self._GoToDefinition( request_data )
-    # elif command == 'GoToDeclaration':
-    #   return self._GoToDeclaration( request_data )
-    # elif command == 'GoTo':
-    #   return self._GoTo( request_data )
-    # raise ValueError( self.UserCommandsHelpMessage() )
-
-
-  # def _GoToDefinition( self, request_data ):
-    # definitions = self._GetDefinitionsList( request_data )
-    # if definitions:
-    #   return self._BuildGoToResponse( definitions )
-    # else:
-    #   raise RuntimeError( 'Can\'t jump to definition.' )
+    elif command == 'GoToDefinition':
+      return self._GoToDefinition( request_data )
+    elif command == 'GoToDeclaration':
+      return self._GoToDeclaration( request_data )
+    elif command == 'GoTo':
+      return self._GoTo( request_data )
+    raise ValueError( self.UserCommandsHelpMessage() )
 
 
-  # def _GoToDeclaration( self, request_data ):
-    # definitions = self._GetDefinitionsList( request_data, declaration = True )
-    # if definitions:
-    #   return self._BuildGoToResponse( definitions )
-    # else:
-    #   raise RuntimeError( 'Can\'t jump to declaration.' )
+  def _GoToDefinition( self, request_data ):
+    definitions = self._GetDefinitionsList( request_data )
+    if definitions:
+      return self._BuildGoToResponse( definitions )
+    else:
+      raise RuntimeError( 'Can\'t jump to definition.' )
 
 
-  # def _GoTo( self, request_data ):
-    # definitions = ( self._GetDefinitionsList( request_data ) or
-    #     self._GetDefinitionsList( request_data, declaration = True ) )
-    # if definitions:
-    #   return self._BuildGoToResponse( definitions )
-    # else:
-    #   raise RuntimeError( 'Can\'t jump to definition or declaration.' )
+  def _GoToDeclaration( self, request_data ):
+    definitions = self._GetDefinitionsList( request_data, declaration = True )
+    if definitions:
+      return self._BuildGoToResponse( definitions )
+    else:
+      raise RuntimeError( 'Can\'t jump to declaration.' )
 
 
-  # def _GetDefinitionsList( self, request_data, declaration = False ):
-  #   definitions = []
-  #   script = self._GetJediScript( request_data )
-  #   try:
-  #     if declaration:
-  #       definitions = script.goto_assignments()
-  #     else:
-  #       definitions = script.goto_definitions()
-  #   except jedi.NotFoundError:
-  #     raise RuntimeError(
-  #                 'Cannot follow nothing. Put your cursor on a valid name.' )
-
-  #   return definitions
+  def _GoTo( self, request_data ):
+    definitions = ( self._GetDefinitionsList( request_data ) or
+        self._GetDefinitionsList( request_data, declaration = True ) )
+    if definitions:
+      return self._BuildGoToResponse( definitions )
+    else:
+      raise RuntimeError( 'Can\'t jump to definition or declaration.' )
 
 
-  # def _BuildGoToResponse( self, definition_list ):
-  #   if len( definition_list ) == 1:
-  #     definition = definition_list[ 0 ]
-  #     if definition.in_builtin_module():
-  #       if definition.is_keyword:
-  #         raise RuntimeError(
-  #                 'Cannot get the definition of Python keywords.' )
-  #       else:
-  #         raise RuntimeError( 'Builtin modules cannot be displayed.' )
-  #     else:
-  #       return responses.BuildGoToResponse( definition.module_path,
-  #                                           definition.line,
-  #                                           definition.column + 1 )
-  #   else:
-  #     # multiple definitions
-  #     defs = []
-  #     for definition in definition_list:
-  #       if definition.in_builtin_module():
-  #         defs.append( responses.BuildDescriptionOnlyGoToResponse(
-  #                      'Builtin ' + definition.description ) )
-  #       else:
-  #         defs.append(
-  #           responses.BuildGoToResponse( definition.module_path,
-  #                                        definition.line,
-  #                                        definition.column + 1,
-  #                                        definition.description ) )
-  #     return defs
+  def _GetDefinitionsList( self, request_data, declaration = False ):
+    try:
+      if declaration:
+        response = self._GetResponse( '/gotoassignment', request_data )
+      else:
+        response = self._GetResponse( '/gotodefinition', request_data )
+      return response[ 'definitions' ]
+    except:
+      raise RuntimeError(
+                  'Cannot follow nothing. Put your cursor on a valid name.' )
+
+
+  def _BuildGoToResponse( self, definition_list ):
+    if len( definition_list ) == 1:
+      definition = definition_list[ 0 ]
+      if definition[ 'in_builtin_module' ]:
+        if definition[ 'is_keyword' ]:
+          raise RuntimeError(
+                  'Cannot get the definition of Python keywords.' )
+        else:
+          raise RuntimeError( 'Builtin modules cannot be displayed.' )
+      else:
+        return responses.BuildGoToResponse( definition[ 'module_path' ],
+                                            definition[ 'line' ],
+                                            definition[ 'column' ] + 1 )
+    else:
+      # multiple definitions
+      defs = []
+      for definition in definition_list:
+        if definition[ 'in_builtin_module' ]:
+          defs.append( responses.BuildDescriptionOnlyGoToResponse(
+                       'Builtin ' + definition[ 'description' ] ) )
+        else:
+          defs.append(
+            responses.BuildGoToResponse( definition[ 'module_path' ],
+                                         definition[ 'line' ],
+                                         definition[ 'column' ] + 1,
+                                         definition[ 'description' ] ) )
+      return defs
 
