@@ -515,7 +515,7 @@ class CsharpSolutionCompleter:
     return 'http://localhost:' + str( self._omnisharp_port )
 
 
-  def _GetResponse( self, handler, parameters = {}, timeout = 2 ):
+  def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
     response = requests.post( target, data = parameters, timeout = timeout )
