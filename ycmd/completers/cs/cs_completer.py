@@ -355,25 +355,40 @@ class CsharpSolutionCompleter:
 
   def _StopServer( self ):
     """ Stop the OmniSharp server """
-    self._GetResponse( '/stopserver' )
+    self._logger.info( 'Stopping OmniSharp server' )
 
-    # Give OmniSharp 5 seconds to cleanly stop, then kill it if it's still up
-    still_running = True
-    for _ in range( 5 ):
-      still_running = self.ServerIsRunning()
-      if not still_running:
-        break
-      time.sleep( 1 )
+    self._TryToStopServer()
 
-    if still_running:
+    # Kill it if it's still up
+    if not self.ServerTerminated() and self._omnisharp_phandle is not None:
+      self._logger.info( 'Killing OmniSharp server' )
       self._omnisharp_phandle.kill()
 
+    self._CleanupAfterServerStop()
+
+    self._logger.info( 'Stopped OmniSharp server' )
+
+
+  def _TryToStopServer( self ):
+    for _ in range( 5 ):
+      try:
+        self._GetResponse( '/stopserver', timeout = .1 )
+      except:
+        pass
+      for _ in range( 10 ):
+        if self.ServerTerminated():
+          return
+        time.sleep( .1 )
+
+
+  def _CleanupAfterServerStop( self ):
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if ( not self._keep_logfiles ):
-      os.unlink( self._filename_stdout );
-      os.unlink( self._filename_stderr );
-    self._logger.info( 'Stopping OmniSharp server' )
+      if self._filename_stdout:
+        os.unlink( self._filename_stdout );
+      if self._filename_stderr:
+        os.unlink( self._filename_stderr );
 
 
   def _RestartServer ( self ):
@@ -471,7 +486,7 @@ class CsharpSolutionCompleter:
     """ Check if our OmniSharp server is running (up and serving)."""
     try:
       return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkalivestatus', silent = True ) )
+                   self._GetResponse( '/checkalivestatus', timeout = .2 ) )
     except:
       return False
 
@@ -480,7 +495,7 @@ class CsharpSolutionCompleter:
     """ Check if our OmniSharp server is ready (loaded solution file)."""
     try:
       return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkreadystatus', silent = True ) )
+                   self._GetResponse( '/checkreadystatus', timeout = .2 ) )
     except:
       return False
 
@@ -500,10 +515,10 @@ class CsharpSolutionCompleter:
     return 'http://localhost:' + str( self._omnisharp_port )
 
 
-  def _GetResponse( self, handler, parameters = {}, silent = False ):
+  def _GetResponse( self, handler, parameters = {}, timeout = 2 ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    response = requests.post( target, data = parameters )
+    response = requests.post( target, data = parameters, timeout = timeout )
     return response.json()
 
 
