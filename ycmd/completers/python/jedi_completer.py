@@ -59,6 +59,11 @@ class JediCompleter( Completer ):
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
 
 
+  def SupportedFiletypes( self ):
+    """ Just python """
+    return [ 'python' ]
+
+
   def Shutdown( self ):
     if ( self.ServerIsRunning() ):
       self._StopServer()
@@ -158,17 +163,12 @@ class JediCompleter( Completer ):
     return 'http://localhost:' + str( self._jedihttp_port )
 
 
-  def SupportedFiletypes( self ):
-    """ Just python """
-    return [ 'python' ]
-
-
   def _GetExtraData( self, completion ):
       location = {}
       if completion[ 'module_path' ]:
         location[ 'filepath' ] = ToUtf8IfNeeded( completion[ 'module_path' ] )
       if completion[ 'line' ]:
-        location[ 'line_num' ] = completion['line']
+        location[ 'line_num' ] = completion[ 'line' ]
       if completion[ 'column' ]:
         location[ 'column_num' ] = completion[ 'column' ] + 1
 
@@ -182,9 +182,9 @@ class JediCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     return [ responses.BuildCompletionData(
-                ToUtf8IfNeeded( completion['name'] ),
-                ToUtf8IfNeeded( completion['description'] ),
-                ToUtf8IfNeeded( completion['docstring'] ),
+                ToUtf8IfNeeded( completion[ 'name' ] ),
+                ToUtf8IfNeeded( completion[ 'description' ] ),
+                ToUtf8IfNeeded( completion[ 'docstring' ] ),
                 extra_data = self._GetExtraData( completion ) )
              for completion in self._JediCompletions( request_data ) ]
 
@@ -192,8 +192,6 @@ class JediCompleter( Completer ):
   def _JediCompletions( self, request_data ):
     resp = self._GetResponse( '/completions', request_data )[ 'completions' ]
     return resp
-
-
 
 
   def OnFileReadyToParse( self, request_data ):
