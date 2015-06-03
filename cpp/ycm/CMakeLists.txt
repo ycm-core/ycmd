@@ -45,15 +45,15 @@ if ( USE_CLANG_COMPLETER AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
   if ( APPLE )
-    set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-apple-darwin" )
+    set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "b9f32e9657f3963e6b3f5071d03805444c7054042bd878f0d05c037ae29101b8" )
+         "b438a5e0aad3d9af0f21dc2c9a58f7dbc845740acea17c8fa69aa15e98457f74" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04" )
+      set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-linux-gnu-ubuntu-15.04" )
       set( CLANG_SHA256
-           "e8396103fbf794e6af671593659458dfe841c32234d3cd4f37be0b48cd6a9f8b" )
+           "374ce3b116e2aa1faa530604e6782b986c3b3296420bb15d366d0547833a9a3d" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
@@ -83,7 +83,7 @@ if ( USE_CLANG_COMPLETER AND
   if( CLANG_DOWNLOAD )
     message( "Downloading Clang 3.6" )
 
-    set( CLANG_URL "http://llvm.org/releases/3.6.0" )
+    set( CLANG_URL "http://llvm.org/releases/3.6.1" )
     file(
       DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
       SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
