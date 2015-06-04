@@ -787,3 +787,32 @@ def GetCompletions_GoCodeCompleter_test():
                             contains_string( u'Logger' ) ) ) )
 
   StopGoCodeServer( app )
+
+@with_setup( Setup )
+def GetCompletions_TypeScriptCompleter_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'test.ts' )
+  contents = open ( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+ 
+  app.post_json( '/event_notification', event_data )
+  
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'typescript',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 11,
+                                  column_num = 6 )
+
+  response_data = app.post_json( '/completions', completion_data ).json
+
+  assert_that( response_data[ 'completions' ],
+               has_items( CompletionEntryMatcher( 'methodA' ),
+                          CompletionEntryMatcher( 'methodB' ),
+                          CompletionEntryMatcher( 'methodC' ) ) )
+
+
