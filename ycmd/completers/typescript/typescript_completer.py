@@ -28,6 +28,9 @@ from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
 
+BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
+                             'TypeScript 1.5 or higher is required' )
+
 _logger = logging.getLogger( __name__ )
 
 
@@ -46,16 +49,24 @@ class TypeScriptCompleter( Completer ):
 
     binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
     if not binarypath:
-      raise RuntimeError(
-        'tsserver not found. TypeScript 1.5 or higher is required' )
+      _logger.error( BINARY_NOT_FOUND_MESSAGE )
+      raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
     self._sequenceid = 0
+
+    # TSServer ignores the fact that newlines are two characters on Windows
+    # (\r\n) instead of one on other platforms (\n), so we use the
+    # universal_newlines option to convert those newlines to \n. See the issue
+    # https://github.com/Microsoft/TypeScript/issues/3403
+    # TODO: remove this option when the issue is fixed.
+    # We also need to redirect the error stream to the output one on Windows.
     self._tsserver_handle = utils.SafePopen( binarypath,
-      stdout = subprocess.PIPE,
-      stdin  = subprocess.PIPE
-    )
+                                             stdout = subprocess.PIPE,
+                                             stdin = subprocess.PIPE,
+                                             stderr = subprocess.STDOUT,
+                                             universal_newlines = True )
 
     _logger.info( 'Enabling typescript completion' )
 
@@ -89,7 +100,8 @@ class TypeScriptCompleter( Completer ):
       headers[ key.strip() ] = value.strip()
 
     # The response message is a JSON object which comes back on one line.
-    # Since this might change in the future, we use the 'Content-Length' header.
+    # Since this might change in the future, we use the 'Content-Length'
+    # header.
     if 'Content-Length' not in headers:
       raise RuntimeError( "Missing 'Content-Length' header" )
     contentlength = int( headers[ 'Content-Length' ] )
