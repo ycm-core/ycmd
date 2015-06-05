@@ -201,11 +201,11 @@ class JediCompleter( Completer ):
 
 
   def DefinedSubcommands( self ):
-    return [ 'StopServer',  # NOTE: it is actually useful only in tests
-             'RestartServer',
-             'GoToDefinition',
+    return [ 'GoToDefinition',
              'GoToDeclaration',
-             'GoTo' ]
+             'GoTo',
+             'StopServer',  # NOTE: it is actually useful only in tests
+             'RestartServer' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -213,16 +213,16 @@ class JediCompleter( Completer ):
       raise ValueError( self.UserCommandsHelpMessage() )
 
     command = arguments[ 0 ]
-    if command == 'StopServer':
-      return self._StopServer()
-    elif command == 'RestartServer':
-      return self._RestartServer()
-    elif command == 'GoToDefinition':
+    if command == 'GoToDefinition':
       return self._GoToDefinition( request_data )
     elif command == 'GoToDeclaration':
       return self._GoToDeclaration( request_data )
     elif command == 'GoTo':
       return self._GoTo( request_data )
+    elif command == 'StopServer':
+      return self._StopServer()
+    elif command == 'RestartServer':
+      return self._RestartServer()
     raise ValueError( self.UserCommandsHelpMessage() )
 
 

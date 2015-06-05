@@ -787,11 +787,11 @@ def DefinedSubcommands_Works_test():
   app = TestApp( handlers.app )
   subcommands_data = BuildRequest( completer_target = 'python' )
 
-  eq_( [ 'StopServer',
-         'RestartServer',
-         'GoToDefinition',
+  eq_( [ 'GoToDefinition',
          'GoToDeclaration',
-         'GoTo' ],
+         'GoTo',
+         'StopServer',
+         'RestartServer' ],
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
@@ -800,10 +800,10 @@ def DefinedSubcommands_WorksWhenNoExplicitCompleterTargetSpecified_test():
   app = TestApp( handlers.app )
   subcommands_data = BuildRequest( filetype = 'python' )
 
-  eq_( [ 'StopServer',
-         'RestartServer',
-         'GoToDefinition',
+  eq_( [ 'GoToDefinition',
          'GoToDeclaration',
-         'GoTo' ],
+         'GoTo',
+         'StopServer',
+         'RestartServer' ],
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
