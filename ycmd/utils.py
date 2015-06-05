@@ -25,7 +25,6 @@ import functools
 import socket
 import stat
 import json
-from distutils.spawn import find_executable
 import subprocess
 import collections
 
@@ -34,6 +33,8 @@ WIN_PYTHON26_PATH = 'C:\python26\python.exe'
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
 CREATE_NO_WINDOW = 0x08000000
+# Executable extensions used on Windows
+WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
 
 
 def SanitizeQuery( query ):
@@ -168,9 +169,33 @@ def PathToPythonInterpreter():
 
 def PathToFirstExistingExecutable( executable_name_list ):
   for executable_name in executable_name_list:
-    path = find_executable( executable_name )
+    path = FindExecutable( executable_name )
     if path:
       return path
+  return None
+
+
+# On Windows, distutils.spawn.find_executable only works for .exe files
+# but .bat and .cmd files are also executables, so we use our own
+# implementation.
+def FindExecutable( executable ):
+  paths = os.environ[ 'PATH' ].split( os.pathsep )
+  base, extension = os.path.splitext( executable )
+
+  if OnWindows() and extension.lower() not in WIN_EXECUTABLE_EXTS:
+    extensions = WIN_EXECUTABLE_EXTS
+  else:
+    extensions = ['']
+
+  for extension in extensions:
+    executable_name = executable + extension
+    if not os.path.isfile( executable_name ):
+      for path in paths:
+        executable_path = os.path.join(path, executable_name )
+        if os.path.isfile( executable_path ):
+          return executable_path
+    else:
+      return executable_name
   return None
 
 
