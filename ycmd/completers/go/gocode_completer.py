@@ -196,7 +196,7 @@ def _ConvertCompletionData( completion_data ):
     menu_text = completion_data[ 'name' ],
     extra_menu_info = completion_data[ 'type' ],
     kind = completion_data[ 'class' ],
-    detailed_info = ' '.join([
+    detailed_info = ' '.join( [
         completion_data[ 'name' ],
         completion_data[ 'type' ],
-        completion_data[ 'class' ]]))
+        completion_data[ 'class' ] ] ) )
