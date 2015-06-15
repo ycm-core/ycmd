@@ -82,7 +82,7 @@ def WaitUntilOmniSharpServerReady( app, filename ):
   # If running on Travis CI, keep trying forever. Travis will kill the worker
   # after 10 mins if nothing happens.
   while retries > 0 or OnTravis():
-    result = app.get( '/ready', { 'include_subservers': 1 } ).json
+    result = app.get( '/ready', { 'subserver': 'cs' } ).json
     if result:
       success = True;
       break
