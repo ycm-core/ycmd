@@ -41,7 +41,6 @@ FILENAME_FORMAT = os.path.join( utils.PathToTempDir(),
                                 u'jedihttp_{port}_{std}.log' )
 
 
-
 class JediCompleter( Completer ):
   """
   A Completer that uses the Jedi engine HTTP Wrapper JediHTTP.
