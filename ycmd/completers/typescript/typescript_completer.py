@@ -31,6 +31,8 @@ from ycmd.completers.completer import Completer
 BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
                              'TypeScript 1.5 or higher is required' )
 
+MAX_DETAILED_COMPLETIONS = 100
+
 _logger = logging.getLogger( __name__ )
 
 
@@ -156,8 +158,29 @@ class TypeScriptCompleter( Completer ):
       'line':   request_data[ 'line_num' ],
       'offset': request_data[ 'column_num' ]
     })
-    response = self._ReadResponse( seq )
-    return map( _ConvertCompletionData, response[ 'body' ] )
+    entries = self._ReadResponse( seq )[ 'body' ]
+
+    # A less detailed version of the completion data is returned
+    # if there are too many entries. This improves responsiveness.
+    if len( entries ) > MAX_DETAILED_COMPLETIONS:
+      return [ _ConvertCompletionData(e) for e in entries ]
+
+    names = []
+    namelength = 0
+    for e in entries:
+      name = e[ 'name' ]
+      namelength = max( namelength, len( name ) )
+      names.append( name )
+
+    seq = self._SendRequest( 'completionEntryDetails', {
+      'file':       request_data[ 'filepath' ],
+      'line':       request_data[ 'line_num' ],
+      'offset':     request_data[ 'column_num' ],
+      'entryNames': names
+    })
+    detailed_entries = self._ReadResponse( seq )[ 'body' ]
+    return [ _ConvertDetailedCompletionData( e, namelength ) 
+             for e in detailed_entries ]
 
   def OnBufferVisit( self, request_data ):
     filename = request_data[ 'filepath' ]
@@ -208,4 +231,16 @@ def _ConvertCompletionData( completion_data ):
     menu_text      = utils.ToUtf8IfNeeded( completion_data[ 'name' ] ),
     kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] ),
     extra_data     = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
+  )
+
+
+def _ConvertDetailedCompletionData( completion_data, padding=0  ):
+  name = completion_data[ 'name' ]
+  display_parts = completion_data[ 'displayParts' ]
+  signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
+  menu_text = '{0} {1}'.format( name.ljust( padding ), signature )
+  return responses.BuildCompletionData(
+    insertion_text = utils.ToUtf8IfNeeded( name ),
+    menu_text      = utils.ToUtf8IfNeeded( menu_text ),
+    kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
   )
