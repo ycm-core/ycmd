@@ -110,7 +110,7 @@ class TypeScriptCompleter( Completer ):
     msgtype = message[ 'type' ]
     if msgtype == 'event':
       self._HandleEvent( message )
-      return self._ReadResponse()
+      return self._ReadResponse( expected_seq )
 
     if msgtype != 'response':
       raise RuntimeError( 'Unsuported message type {0}'.format( msgtype ) )
