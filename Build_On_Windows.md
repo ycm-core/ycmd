@@ -3,7 +3,7 @@
 Note: the relative path base in following text is ycmd git source code folder.
 
 
-1. Get the required tools.
+###1. Get the required tools.
 
 - Visual studio 2013 or later.
 
@@ -15,7 +15,7 @@ Note: the relative path base in following text is ycmd git source code folder.
 
 - LLVM Windows binary (Not sure, this will provide a compiler with clang (clang-cl.exe) for Visual Studio,you can choose `LLVM-vs2013` in Visual Studio. If error happens when build llvm/clang, you should install it. It's only 36.8MB.) Get it at: http://llvm.org/releases/3.6.1/LLVM-3.6.1-win32.exe 
 
-2. Build llvm/clang
+###2. Build llvm/clang
 
 Run `_build_llvm.bat` (Where? the relative path base..)
 
@@ -25,14 +25,14 @@ If no error, the batch should quit silently.go to `llvm-build`
 
 Now go to `llvm-build` folder, open `LLVM.svn` and change Debug mode to Release mode. In Solution Explorer, go to `ALL_BUILD`, right click on `ALL_BUILD` and choose build. It take about quite a long time to finish the build. CPU is 100% during the build. The `llvm-build` folder takes about 6.65GB disk space.
 
-3. Build ycmd
+###3. Build ycmd
 
 **Note**: Edit `_build_ycmd.bat`, and change `PYTHON_PATH` to a correct one.
 Run `_build_ycmd.bat`
 
 This batch generates `YouCompleteMe.sln` in ycmd_build folder. Open it with Visual Studio 2013. In Solution Explorer, select `ycm_support_libs` and right click on it choose build. (Note `ycm_core_tests` and `gmock_main` `gtest_main` etc will fail, so we cannot build the whole solution.) Now you should find `libclang.dll` and `ycm_client_support.pyd` and `ycm_core.pyd`.
 
-4. Test
+###4. Test
 
 Open gvim.exe, you maybe see,
 ```bash
@@ -51,6 +51,8 @@ You can follow:
 https://bitbucket.org/Haroogan/vim-youcompleteme-for-windows/
 
 In my case, it is `C:\Program Files (x86)\Intel\iCLS Client\msvcr90.dll`. Remove it from path. Now everything goes quite well.
+
+###note
 
 Note: [Haroogan](https://bitbucket.org/Haroogan)'s build is MingW-w64 based, while this instructions are Visual Studio based(I successfully build gvim.exe with all latest python2/3 perl ruby lua support in Visual Studio. Because all latest vim llvm/clang python2/3 perl ruby lua source codes with no extra patches can be built in Visual Studio 2013 x64 mode.).
 
