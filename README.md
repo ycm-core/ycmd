@@ -50,6 +50,8 @@ This should get you going.
 For more detailed instructions on building ycmd, see [YCM's
 instructions][ycm-install] (ignore the Vim-specific parts).
 
+If you want to build on windows visual studio, see [Build ycmd on Windows with Visual Studio](Build_On_Windows.md).
+
 API notes
 ---------
 
