@@ -5,8 +5,8 @@ SET PYTHON_PATH=C:\Python27
 
 SET LLVM_PATH=%~dp0\llvm_build\Release
 
-xcopy %~dp0\llvm-src\include %LLVM_PATH%\include  /D /E /H /I /Y %*
-xcopy %~dp0\llvm-src\tools\clang\include %LLVM_PATH%\include  /D /E /H /I /Y %*
+xcopy %~dp0\llvm-src\include %LLVM_PATH%\include  /D /E /H /I /Y
+xcopy %~dp0\llvm-src\tools\clang\include %LLVM_PATH%\include  /D /E /H /I /Y
 
 set PATH_BACKUP=%path%
 SET PATH=C:\Program Files (x86)\CMake\bin;
