@@ -8,7 +8,8 @@ SET LLVM_PATH=%~dp0\llvm_build\Release
 xcopy %~dp0\llvm-src\include %LLVM_PATH%\include  /D /E /H /I /Y %*
 xcopy %~dp0\llvm-src\tools\clang\include %LLVM_PATH%\include  /D /E /H /I /Y %*
 
-SET PATH=C:\Program Files (x86)\CMake\bin;%path%
+set PATH_BACKUP=%path%
+SET PATH=C:\Program Files (x86)\CMake\bin;
 
 if not exist ycmd_build mkdir ycmd_build
 cd ycmd_build
@@ -19,6 +20,7 @@ IF ERRORLEVEL 1 goto ERROR
 
 IF [%1]==[] goto QUIT
 
+SET PATH=%PATH_BACKUP%
 call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
 
 devenv YouCompleteMe.sln /build release /project ycm_support_libs
