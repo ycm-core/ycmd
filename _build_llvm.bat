@@ -13,11 +13,18 @@ cd ..\..
 if not exist llvm_build mkdir llvm_build
 cd llvm_build
 
-set PATH=C:\Program Files (x86)\CMake\bin;
+set PATH=C:\Program Files (x86)\CMake\bin;%path%
 
 REM open in Visual studio 2013 and build, it will take about 6.65GB disk space
 cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 12 2013 Win64" ..\llvm-src
 
+IF ERRORLEVEL 1 goto ERROR
+
+IF [%1]==[] goto QUIT
+
+call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
+
+devenv LLVM.sln /build release
 
 IF ERRORLEVEL 1 goto ERROR
 IF ERRORLEVEL 0 goto QUIT

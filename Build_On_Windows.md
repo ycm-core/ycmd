@@ -15,6 +15,10 @@ Note: the relative path base in following text is ycmd git source code folder.
 
 - LLVM Windows binary (Not sure, this will provide a compiler with clang (clang-cl.exe) for Visual Studio,you can choose `LLVM-vs2013` in Visual Studio. If error happens when build llvm/clang, you should install it. It's only 36.8MB.) Get it at: http://llvm.org/releases/3.6.1/LLVM-3.6.1-win32.exe 
 
+###1.5. Quick
+
+Click `_run_both.bat` and go out for a walk.
+
 ###2. Build llvm/clang
 
 Run `_build_llvm.bat` (Where? the relative path base..)
