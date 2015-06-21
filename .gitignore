@@ -44,3 +44,13 @@ cpp/BoostParts/libs/*/test
 
 # Exclude auto generated vim doc tags.
 doc/tags
+
+# Windows build
+ycmd_build/
+# Visual studio in debug mode generate ycmd_core.pdb and ycm_core.ilk
+*.pdb
+*.ilk
+# build llvm/clang on windows
+llvm-src/
+llvm_build/
+

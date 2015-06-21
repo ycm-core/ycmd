@@ -21,8 +21,21 @@ project( ycm_support_libs )
 set( CLIENT_LIB "ycm_client_support" )
 set( SERVER_LIB "ycm_core" )
 
-set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
-find_package( PythonLibs 2.6 REQUIRED )
+if( NOT WIN32 )
+    set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
+    find_package( PythonLibs 2.6 REQUIRED )
+else()
+    if( NOT ( DEFINED PYTHON_INCLUDE_DIRS ) OR
+        NOT ( DEFINED PYTHON_LIBRARIES ) OR
+        NOT ( DEFINED PYTHON_EXECUTABLE ) )
+      set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
+      find_package( PythonLibs 2.6 )
+      if( NOT PYTHONLIBS_FOUND)
+        message( FATAL_ERROR
+            "PYTHON_LIBRARIES and PYTHON_LIBRARIES and PYTHON_EXECUTABLE is needed" )
+      endif()
+    endif()
+endif()
 # The version of PythonInterp controls the version of boost.python which
 # is pulled in later, otherwise the highest python version is used
 find_package( PythonInterp 2.6 REQUIRED )
