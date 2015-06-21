@@ -23,14 +23,14 @@ This batch gets llvm/clang source code and generate a Visual Studio 2013 project
 
 If no error, the batch should quit silently.go to `llvm-build`
 
-Now go to `llvm-build` folder, open `LLVM.svn` and change Debug mode to Release mode. In Solution Explorer, go to `ALL_BUILD`, right click on `ALL_BUILD` and choose build. It take about quite a long time to finish the build. CPU is 100% during the build. The `llvm-build` folder takes about 6.65GB disk space.
+Now go to `llvm-build` folder, open `LLVM.svn` and change **Debug** mode to **Release** mode. In Solution Explorer, go to `ALL_BUILD`, right click on `ALL_BUILD` and choose build. It take about quite a long time to finish the build. CPU is 100% during the build. The `llvm-build` folder takes about 6.65GB disk space.
 
 ###3. Build ycmd
 
 **Note**: Edit `_build_ycmd.bat`, and change `PYTHON_PATH` to a correct one.
 Run `_build_ycmd.bat`
 
-This batch generates `YouCompleteMe.sln` in ycmd_build folder. Open it with Visual Studio 2013. In Solution Explorer, select `ycm_support_libs` and right click on it choose build. (Note `ycm_core_tests` and `gmock_main` `gtest_main` etc will fail, so we cannot build the whole solution.) Now you should find `libclang.dll` and `ycm_client_support.pyd` and `ycm_core.pyd`.
+This batch generates `YouCompleteMe.sln` in ycmd_build folder. Open it with Visual Studio 2013. Change **Debug** mode to **Release** mode. In Solution Explorer, select `ycm_support_libs` and right click on it choose build. (Note `ycm_core_tests` and `gmock_main` `gtest_main` etc will fail, so we cannot build the whole solution.) Now you should find `libclang.dll` and `ycm_client_support.pyd` and `ycm_core.pyd`.
 
 ###4. Test
 
@@ -50,7 +50,7 @@ You can follow:
 
 https://bitbucket.org/Haroogan/vim-youcompleteme-for-windows/
 
-In my case, it is `C:\Program Files (x86)\Intel\iCLS Client\msvcr90.dll`. Remove it from path. Now everything goes quite well.
+In my case, it is `C:\Program Files (x86)\Intel\iCLS Client\msvcr90.dll`. Remove `C:\Program Files (x86)\Intel\iCLS Client` from path. Now everything goes quite well.
 
 ###note
 
