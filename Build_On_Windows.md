@@ -17,6 +17,8 @@ Note: the relative path base in following text is ycmd git source code folder.
 
 ###1.5. Quick
 
+Edit `_build_ycmd.bat`, and change `PYTHON_PATH` to a correct one.
+
 Click `_run_both.bat` and go out for a walk.
 
 ###2. Build llvm/clang
@@ -25,13 +27,16 @@ Run `_build_llvm.bat` (Where? the relative path base..)
 
 This batch gets llvm/clang source code and generate a Visual Studio 2013 project files. So it maybe takes less than 10 minutes. The source code with .svn takes 360+MB disk space.
 
-If no error, the batch should quit silently.go to `llvm-build`
+If no error, the batch should quit silently.
 
-Now go to `llvm-build` folder, open `LLVM.svn` and change **Debug** mode to **Release** mode. In Solution Explorer, go to `ALL_BUILD`, right click on `ALL_BUILD` and choose build. It take about quite a long time to finish the build. CPU is 100% during the build. The `llvm-build` folder takes about 6.65GB disk space.
+Now go to `llvm_build` folder, open `LLVM.svn` and change **Debug** mode to **Release** mode. In Solution Explorer, go to `ALL_BUILD`, right click on `ALL_BUILD` and choose build. It take about quite a long time to finish the build. CPU is 100% during the build. The `llvm_build` folder takes about 6.65GB disk space.
+
+If error happens when svn clone code, we should delete `llvm-src` and run it again.
 
 ###3. Build ycmd
 
 **Note**: Edit `_build_ycmd.bat`, and change `PYTHON_PATH` to a correct one.
+
 Run `_build_ycmd.bat`
 
 This batch generates `YouCompleteMe.sln` in ycmd_build folder. Open it with Visual Studio 2013. Change **Debug** mode to **Release** mode. In Solution Explorer, select `ycm_support_libs` and right click on it choose build. (Note `ycm_core_tests` and `gmock_main` `gtest_main` etc will fail, so we cannot build the whole solution.) Now you should find `libclang.dll` and `ycm_client_support.pyd` and `ycm_core.pyd`.
@@ -55,6 +60,10 @@ You can follow:
 https://bitbucket.org/Haroogan/vim-youcompleteme-for-windows/
 
 In my case, it is `C:\Program Files (x86)\Intel\iCLS Client\msvcr90.dll`. Remove `C:\Program Files (x86)\Intel\iCLS Client` from path. Now everything goes quite well.
+
+###5. Cleanup
+
+You can safely delete `llvm_build\Release\lib`.
 
 ###note
 

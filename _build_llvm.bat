@@ -26,7 +26,7 @@ IF [%1]==[] goto QUIT
 SET PATH=%PATH_BACKUP%
 call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
 
-devenv LLVM.sln /build release
+devenv LLVM.sln /build release /project ALL_BUILD
 
 IF ERRORLEVEL 1 goto ERROR
 IF ERRORLEVEL 0 goto QUIT
