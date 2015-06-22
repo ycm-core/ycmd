@@ -19,7 +19,9 @@ Note: the relative path base in following text is ycmd git source code folder.
 
 Edit `_build_ycmd.bat`, and change `PYTHON_PATH` to a correct one.
 
-Click `_run_both.bat` and go out for a walk.
+Click `_run_both.bat` and go out for a walk. (It takes about 2.40GB disk space.)
+
+The following is manual way.
 
 ###2. Build llvm/clang
 
@@ -63,7 +65,7 @@ In my case, it is `C:\Program Files (x86)\Intel\iCLS Client\msvcr90.dll`. Remove
 
 ###5. Cleanup
 
-You can safely delete `llvm_build\Release\lib`.
+You can safely delete `llvm_build\Release\lib`. If you don't need to build again, `llvm_build`,`llvm-src` and `ycmd_build` can be deleted. You maybe need clang.exe etc, so backup `llvm_build\Release` folder.
 
 ###note
 
