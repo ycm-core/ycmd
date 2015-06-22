@@ -26,8 +26,20 @@ cmake_minimum_required( VERSION 2.8 )
 
 project( BoostParts )
 
-set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
-find_package( PythonLibs 2.6 REQUIRED )
+if( NOT WIN32 )
+    set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
+    find_package( PythonLibs 2.6 REQUIRED )
+else()
+    if( NOT ( DEFINED PYTHON_INCLUDE_DIRS ) OR
+        NOT ( DEFINED PYTHON_LIBRARIES ) )
+      set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
+      find_package( PythonLibs 2.6 )
+      if( NOT PYTHONLIBS_FOUND)
+        message( FATAL_ERROR
+            "PYTHON_LIBRARIES and PYTHON_LIBRARIES is needed" )
+      endif()
+    endif()
+endif()
 
 if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
   message( FATAL_ERROR
