@@ -20,7 +20,13 @@ if ( DEFINED ENV{TRAVIS} )
   # Travis for, the old version of CMake that it has is good enough.
   cmake_minimum_required( VERSION 2.8 )
 else()
-  cmake_minimum_required( VERSION 2.8.12 )
+  if ( APPLE )
+    # OSX requires CMake >= 2.8.12, see YCM issue #1439
+    cmake_minimum_required( VERSION 2.8.12 )
+  else()
+    # CMake 2.8.11 is the latest available version on RHEL/CentOS 7
+    cmake_minimum_required( VERSION 2.8.11 )
+  endif()
 endif()
 
 
