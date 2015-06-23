@@ -32,11 +32,7 @@ import solutiondetection
 SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +
                          'Did you compile it? You can do so by running ' +
                          '"./install.sh --omnisharp-completer".' )
-MIN_LINES_IN_FILE_TO_PARSE = 5
 INVALID_FILE_MESSAGE = 'File is invalid.'
-FILE_TOO_SHORT_MESSAGE = (
-  'File is less than {0} lines long; not parsing.'.format(
-    MIN_LINES_IN_FILE_TO_PARSE ) )
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PATH_TO_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
@@ -301,10 +297,6 @@ class CsharpSolutionCompleter:
 
   def CodeCheck( self, request_data ):
     filename = request_data[ 'filepath' ]
-    contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-    if contents.count( '\n' ) < MIN_LINES_IN_FILE_TO_PARSE:
-      raise ValueError( FILE_TOO_SHORT_MESSAGE )
-
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
 
