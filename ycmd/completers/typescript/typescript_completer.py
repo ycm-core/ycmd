@@ -22,6 +22,7 @@ import logging
 import os
 import subprocess
 
+from threading import Lock
 from tempfile import NamedTemporaryFile
 
 from ycmd import responses
@@ -48,6 +49,9 @@ class TypeScriptCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
+
+    # Used to prevent concurrent requests to TSServer.
+    self._lock = Lock()
 
     binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
     if not binarypath:
@@ -152,55 +156,60 @@ class TypeScriptCompleter( Completer ):
     return [ 'typescript' ]
 
   def ComputeCandidatesInner( self, request_data ):
-    self._Reload( request_data )
-    seq = self._SendRequest( 'completions', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
-    })
-    entries = self._ReadResponse( seq )[ 'body' ]
+    with self._lock:
+      self._Reload( request_data )
+      seq = self._SendRequest( 'completions', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      })
+      entries = self._ReadResponse( seq )[ 'body' ]
 
-    # A less detailed version of the completion data is returned
-    # if there are too many entries. This improves responsiveness.
-    if len( entries ) > MAX_DETAILED_COMPLETIONS:
-      return [ _ConvertCompletionData(e) for e in entries ]
+      # A less detailed version of the completion data is returned
+      # if there are too many entries. This improves responsiveness.
+      if len( entries ) > MAX_DETAILED_COMPLETIONS:
+        return [ _ConvertCompletionData(e) for e in entries ]
 
-    names = []
-    namelength = 0
-    for e in entries:
-      name = e[ 'name' ]
-      namelength = max( namelength, len( name ) )
-      names.append( name )
+      names = []
+      namelength = 0
+      for e in entries:
+        name = e[ 'name' ]
+        namelength = max( namelength, len( name ) )
+        names.append( name )
 
-    seq = self._SendRequest( 'completionEntryDetails', {
-      'file':       request_data[ 'filepath' ],
-      'line':       request_data[ 'line_num' ],
-      'offset':     request_data[ 'column_num' ],
-      'entryNames': names
-    })
-    detailed_entries = self._ReadResponse( seq )[ 'body' ]
-    return [ _ConvertDetailedCompletionData( e, namelength ) 
-             for e in detailed_entries ]
+      seq = self._SendRequest( 'completionEntryDetails', {
+        'file':       request_data[ 'filepath' ],
+        'line':       request_data[ 'line_num' ],
+        'offset':     request_data[ 'column_num' ],
+        'entryNames': names
+      })
+      detailed_entries = self._ReadResponse( seq )[ 'body' ]
+      return [ _ConvertDetailedCompletionData( e, namelength )
+               for e in detailed_entries ]
 
   def OnBufferVisit( self, request_data ):
-    filename = request_data[ 'filepath' ]
-    self._SendRequest( 'open', { 'file': filename } )
+    with self._lock:
+      filename = request_data[ 'filepath' ]
+      self._SendRequest( 'open', { 'file': filename } )
 
   def OnBufferUnload( self, request_data ):
-    filename = request_data[ 'filepath' ]
-    self._SendRequest( 'close', { 'file': filename } )
+    with self._lock:
+      filename = request_data[ 'filepath' ]
+      self._SendRequest( 'close', { 'file': filename } )
 
   def OnFileReadyToParse( self, request_data ):
-    self._Reload( request_data )
+    with self._lock:
+      self._Reload( request_data )
 
   def DefinedSubcommands( self ):
     return [ 'GoToDefinition' ]
 
   def OnUserCommand( self, arguments, request_data ):
-    command = arguments[ 0 ]
-    if command == 'GoToDefinition':
-      return self._GoToDefinition( request_data )
-    raise ValueError( self.UserCommandsHelpMessage() )
+    with self._lock:
+      command = arguments[ 0 ]
+      if command == 'GoToDefinition':
+        return self._GoToDefinition( request_data )
+      raise ValueError( self.UserCommandsHelpMessage() )
 
   def _GoToDefinition( self, request_data ):
     self._Reload( request_data )
@@ -222,7 +231,8 @@ class TypeScriptCompleter( Completer ):
     )
 
   def Shutdown( self ):
-    self._SendRequest( 'exit' )
+    with self._lock:
+      self._SendRequest( 'exit' )
 
 
 def _ConvertCompletionData( completion_data ):
