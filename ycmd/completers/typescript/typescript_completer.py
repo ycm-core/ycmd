@@ -188,13 +188,13 @@ class TypeScriptCompleter( Completer ):
                for e in detailed_entries ]
 
   def OnBufferVisit( self, request_data ):
+    filename = request_data[ 'filepath' ]
     with self._lock:
-      filename = request_data[ 'filepath' ]
       self._SendRequest( 'open', { 'file': filename } )
 
   def OnBufferUnload( self, request_data ):
+    filename = request_data[ 'filepath' ]
     with self._lock:
-      filename = request_data[ 'filepath' ]
       self._SendRequest( 'close', { 'file': filename } )
 
   def OnFileReadyToParse( self, request_data ):
@@ -205,30 +205,30 @@ class TypeScriptCompleter( Completer ):
     return [ 'GoToDefinition' ]
 
   def OnUserCommand( self, arguments, request_data ):
-    with self._lock:
-      command = arguments[ 0 ]
-      if command == 'GoToDefinition':
-        return self._GoToDefinition( request_data )
-      raise ValueError( self.UserCommandsHelpMessage() )
+    command = arguments[ 0 ]
+    if command == 'GoToDefinition':
+      return self._GoToDefinition( request_data )
+    raise ValueError( self.UserCommandsHelpMessage() )
 
   def _GoToDefinition( self, request_data ):
-    self._Reload( request_data )
-    seq = self._SendRequest( 'definition', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
-    })
+    with self._lock:
+      self._Reload( request_data )
+      seq = self._SendRequest( 'definition', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      })
 
-    filespans = self._ReadResponse( seq )[ 'body' ]
-    if not filespans:
-      raise RuntimeError( 'Could not find definition' )
+      filespans = self._ReadResponse( seq )[ 'body' ]
+      if not filespans:
+        raise RuntimeError( 'Could not find definition' )
 
-    span = filespans[0]
-    return responses.BuildGoToResponse(
-      filepath   = span[ 'file' ],
-      line_num   = span[ 'start' ][ 'line' ],
-      column_num = span[ 'start' ][ 'offset' ]
-    )
+      span = filespans[0]
+      return responses.BuildGoToResponse(
+        filepath   = span[ 'file' ],
+        line_num   = span[ 'start' ][ 'line' ],
+        column_num = span[ 'start' ][ 'offset' ]
+      )
 
   def Shutdown( self ):
     with self._lock:
