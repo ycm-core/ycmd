@@ -34,6 +34,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContinuousTest.cs" />
     <Compile Include="GetTypeTestCase.cs" />
     <Compile Include="GotoTestCase.cs" />
     <Compile Include="ImportTest.cs" />
