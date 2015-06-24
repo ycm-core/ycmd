@@ -76,7 +76,7 @@ class TypeScriptCompleter( Completer ):
 
     _logger.info( 'Enabling typescript completion' )
 
-  def _SendRequest( self, command, arguments=None ):
+  def _SendRequest( self, command, arguments = None ):
     """Send a request message to TSServer."""
 
     seq = self._sequenceid
@@ -223,7 +223,7 @@ class TypeScriptCompleter( Completer ):
       if not filespans:
         raise RuntimeError( 'Could not find definition' )
 
-      span = filespans[0]
+      span = filespans[ 0 ]
       return responses.BuildGoToResponse(
         filepath   = span[ 'file' ],
         line_num   = span[ 'start' ][ 'line' ],
@@ -244,7 +244,7 @@ def _ConvertCompletionData( completion_data ):
   )
 
 
-def _ConvertDetailedCompletionData( completion_data, padding=0  ):
+def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   name = completion_data[ 'name' ]
   display_parts = completion_data[ 'displayParts' ]
   signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
