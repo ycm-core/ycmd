@@ -50,7 +50,8 @@ class TypeScriptCompleter( Completer ):
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
 
-    # Used to prevent concurrent requests to TSServer.
+    # Used to prevent threads from concurrently reading and writing to
+    # the tsserver process' stdout and stdin
     self._lock = Lock()
 
     binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
