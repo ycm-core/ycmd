@@ -304,17 +304,19 @@ target_link_libraries( ${SERVER_LIB}
                      )
 
 if( LIBCLANG_TARGET )
-  if( NOT WIN32 )
+  # When building with MSVC, we need to copy libclang.dll instead of libclang.lib
+  if( MSVC )
     add_custom_command(
       TARGET ${SERVER_LIB}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
+      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
     )
   else()
     add_custom_command(
       TARGET ${SERVER_LIB}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${SERVER_LIB}>")
+      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
+    )
   endif()
 endif()
 
