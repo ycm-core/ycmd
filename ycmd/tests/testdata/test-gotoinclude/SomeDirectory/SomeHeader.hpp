@@ -1,0 +1,6 @@
+#ifndef SOMEDIRECTORY_SOMEHEADER_HPP
+#define SOMEDIRECTORY_SOMEHEADER_HPP
+
+void bar();
+
+#endif

@@ -77,6 +77,78 @@ def RunCompleterCommand_GoTo_Clang_ZeroBasedLineAndColumn_test():
       },
       app.post_json( '/run_completer_command', goto_data ).json )
 
+@with_setup( Setup )
+def RunCompleterCommand_GoToInclude_Clang_test():
+  #some interesting cases to test
+  #  column  1: the '#'
+  #  column  9: space between the include and the argument (eg, #include[here]<)
+  #  column 11: first letter of the filename (eg, #include "[here]Foo.h")
+  #FIXME: clang_getIncludedFile behaves weirdly with angle brackets, if the cursor
+  #is *inside* the include argument it may not find a valid location to jump.
+  #Also, if there is more than one angle bracket include, some of them might work
+  #depending on their order in the file.
+  tests = [
+    { 'request' : [1, 1], 'filepath' : 'test-gotoinclude/SysInclude/SysHeader.hpp' },
+    { 'request' : [1, 9], 'filepath' : 'test-gotoinclude/SysInclude/SysHeader.hpp' },
+    { 'request' : [1, 10], 'filepath' : 'test-gotoinclude/SysInclude/SysHeader.hpp' },
+    { 'request' : [2, 1], 'filepath' : 'test-gotoinclude/SomeHeader.hpp' },
+    { 'request' : [2, 9], 'filepath' : 'test-gotoinclude/SomeHeader.hpp' },
+    { 'request' : [2, 11], 'filepath' : 'test-gotoinclude/SomeHeader.hpp' },
+    { 'request' : [3, 1], 'filepath' : 'test-gotoinclude/SomeDirectory/SomeHeader.hpp' },
+    { 'request' : [3, 9], 'filepath' : 'test-gotoinclude/SomeDirectory/SomeHeader.hpp' },
+    { 'request' : [3, 11], 'filepath' : 'test-gotoinclude/SomeDirectory/SomeHeader.hpp' },
+    { 'request' : [4, 1], 'filepath' : 'test-gotoinclude/OtherDirectory/NestedHeader.hpp' },
+    { 'request' : [4, 9], 'filepath' : 'test-gotoinclude/OtherDirectory/NestedHeader.hpp' },
+    { 'request' : [4, 11], 'filepath' : 'test-gotoinclude/OtherDirectory/NestedHeader.hpp' },
+  ]
+
+  for test in tests:
+    yield _RunCompleterCommand_GoToInclude_Clang, \
+          'GoToInclude_Clang_test.cc',        \
+          test,                               \
+
+def _RunCompleterCommand_GoToInclude_Clang(filename, test):
+  contents = open( PathToTestFile( filename ) ).read()
+  app = TestApp( handlers.app )
+
+  include_dir = PathToTestFile('test-gotoinclude')
+  include_nested_dir = os.path.join(include_dir, 'OtherDirectory')
+  comp_flags = ['-x', 'c++',
+                '-I', include_dir,
+                '-I', include_nested_dir,
+                '-isystem', include_dir]
+
+  common_request = {
+    'completer_target'  : 'filetype_default',
+    'command_arguments' : ['GoToInclude'],
+    'compilation_flags' : comp_flags,
+    'line_num'          : 1,
+    'column_num'        : 1,
+    'contents'          : contents,
+    'filetype'          : 'cpp'
+  }
+  common_response = {
+    'line_num'  : 1,
+    'column_num'  : 1,
+  }
+
+  request = common_request
+  request.update({
+      'line_num'  : test['request'][0],
+      'column_num': test['request'][1],
+  })
+  response = common_response
+  response.update({
+    'filepath' : PathToTestFile(test['filepath'])
+  })
+
+  goto_data = BuildRequest( **request )
+
+  eq_( response,
+       app.post_json( '/run_completer_command', goto_data ).json )
+
+
+
 def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
   contents = open( PathToTestFile( filename ) ).read()
   app = TestApp( handlers.app )

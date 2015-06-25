@@ -106,7 +106,9 @@ class ClangCompleter( Completer ):
              'GoToImprecise',
              'ClearCompilationFlagCache',
              'GetType',
-             'GetParent']
+             'GetParent',
+             'GoToInclude'
+            ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -155,6 +157,10 @@ class ClangCompleter( Completer ):
             'args'   : { 'request_data' : request_data,
                          'func'         : 'GetEnclosingFunctionAtLocation' }
         },
+        'GoToInclude' : {
+            'method' : self._GoToInclude,
+            'args' : { 'request_data' : request_data }
+        }
     }
 
     try:
@@ -199,7 +205,9 @@ class ClangCompleter( Completer ):
 
 
   def _GoTo( self, request_data ):
-    location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
+    location = self._LocationForGoTo( 'GetIncludeLocation', request_data )
+    if not location or not location.IsValid():
+        location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
     if not location or not location.IsValid():
       location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
     if not location or not location.IsValid():
@@ -247,6 +255,12 @@ class ClangCompleter( Completer ):
 
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()
+
+  def _GoToInclude(self, request_data):
+    location = self._LocationForGoTo( 'GetIncludeLocation', request_data )
+    if not location or not location.IsValid():
+      raise RuntimeError( 'Can\'t jump to include.' )
+    return _ResponseForLocation( location )
 
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]

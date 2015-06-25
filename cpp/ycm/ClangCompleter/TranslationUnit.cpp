@@ -243,6 +243,30 @@ Location TranslationUnit::GetDefinitionLocation(
   return Location( clang_getCursorLocation( definition_cursor ) );
 }
 
+Location TranslationUnit::GetIncludeLocation(
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  bool reparse ) {
+  if ( reparse )
+    ReparseForIndexing ( unsaved_files );
+
+  unique_lock < mutex > lock( clang_access_mutex_ );
+
+  if ( !clang_translation_unit_ )
+    return Location();
+
+  CXCursor cursor = GetCursor( line, column );
+  CXFile include_file = clang_getIncludedFile( cursor );
+  if (include_file) {
+    const char* include_filename =
+                  clang_getCString( clang_getFileName ( include_file ) );
+    return Location(include_filename, 1, 1);
+  }
+  else
+    return Location();
+}
+
 std::string TranslationUnit::GetTypeAtLocation(
   int line,
   int column,

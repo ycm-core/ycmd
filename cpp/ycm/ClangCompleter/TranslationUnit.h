@@ -78,6 +78,12 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
+  Location GetIncludeLocation(
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    bool reparse = true );
+
   std::string GetTypeAtLocation(
     int line,
     int column,
