@@ -22,6 +22,7 @@ import logging
 import os
 import subprocess
 
+from threading import Lock
 from tempfile import NamedTemporaryFile
 
 from ycmd import responses
@@ -30,6 +31,8 @@ from ycmd.completers.completer import Completer
 
 BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
                              'TypeScript 1.5 or higher is required' )
+
+MAX_DETAILED_COMPLETIONS = 100
 
 _logger = logging.getLogger( __name__ )
 
@@ -46,6 +49,10 @@ class TypeScriptCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
+
+    # Used to prevent threads from concurrently reading and writing to
+    # the tsserver process' stdout and stdin
+    self._lock = Lock()
 
     binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
     if not binarypath:
@@ -70,7 +77,7 @@ class TypeScriptCompleter( Completer ):
 
     _logger.info( 'Enabling typescript completion' )
 
-  def _SendRequest( self, command, arguments=None ):
+  def _SendRequest( self, command, arguments = None ):
     """Send a request message to TSServer."""
 
     seq = self._sequenceid
@@ -110,7 +117,7 @@ class TypeScriptCompleter( Completer ):
     msgtype = message[ 'type' ]
     if msgtype == 'event':
       self._HandleEvent( message )
-      return self._ReadResponse()
+      return self._ReadResponse( expected_seq )
 
     if msgtype != 'response':
       raise RuntimeError( 'Unsuported message type {0}'.format( msgtype ) )
@@ -150,25 +157,50 @@ class TypeScriptCompleter( Completer ):
     return [ 'typescript' ]
 
   def ComputeCandidatesInner( self, request_data ):
-    self._Reload( request_data )
-    seq = self._SendRequest( 'completions', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
-    })
-    response = self._ReadResponse( seq )
-    return map( _ConvertCompletionData, response[ 'body' ] )
+    with self._lock:
+      self._Reload( request_data )
+      seq = self._SendRequest( 'completions', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      })
+      entries = self._ReadResponse( seq )[ 'body' ]
+
+      # A less detailed version of the completion data is returned
+      # if there are too many entries. This improves responsiveness.
+      if len( entries ) > MAX_DETAILED_COMPLETIONS:
+        return [ _ConvertCompletionData(e) for e in entries ]
+
+      names = []
+      namelength = 0
+      for e in entries:
+        name = e[ 'name' ]
+        namelength = max( namelength, len( name ) )
+        names.append( name )
+
+      seq = self._SendRequest( 'completionEntryDetails', {
+        'file':       request_data[ 'filepath' ],
+        'line':       request_data[ 'line_num' ],
+        'offset':     request_data[ 'column_num' ],
+        'entryNames': names
+      })
+      detailed_entries = self._ReadResponse( seq )[ 'body' ]
+      return [ _ConvertDetailedCompletionData( e, namelength )
+               for e in detailed_entries ]
 
   def OnBufferVisit( self, request_data ):
     filename = request_data[ 'filepath' ]
-    self._SendRequest( 'open', { 'file': filename } )
+    with self._lock:
+      self._SendRequest( 'open', { 'file': filename } )
 
   def OnBufferUnload( self, request_data ):
     filename = request_data[ 'filepath' ]
-    self._SendRequest( 'close', { 'file': filename } )
+    with self._lock:
+      self._SendRequest( 'close', { 'file': filename } )
 
   def OnFileReadyToParse( self, request_data ):
-    self._Reload( request_data )
+    with self._lock:
+      self._Reload( request_data )
 
   def DefinedSubcommands( self ):
     return [ 'GoToDefinition' ]
@@ -180,26 +212,28 @@ class TypeScriptCompleter( Completer ):
     raise ValueError( self.UserCommandsHelpMessage() )
 
   def _GoToDefinition( self, request_data ):
-    self._Reload( request_data )
-    seq = self._SendRequest( 'definition', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
-    })
+    with self._lock:
+      self._Reload( request_data )
+      seq = self._SendRequest( 'definition', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      })
 
-    filespans = self._ReadResponse( seq )[ 'body' ]
-    if not filespans:
-      raise RuntimeError( 'Could not find definition' )
+      filespans = self._ReadResponse( seq )[ 'body' ]
+      if not filespans:
+        raise RuntimeError( 'Could not find definition' )
 
-    span = filespans[0]
-    return responses.BuildGoToResponse(
-      filepath   = span[ 'file' ],
-      line_num   = span[ 'start' ][ 'line' ],
-      column_num = span[ 'start' ][ 'offset' ]
-    )
+      span = filespans[ 0 ]
+      return responses.BuildGoToResponse(
+        filepath   = span[ 'file' ],
+        line_num   = span[ 'start' ][ 'line' ],
+        column_num = span[ 'start' ][ 'offset' ]
+      )
 
   def Shutdown( self ):
-    self._SendRequest( 'exit' )
+    with self._lock:
+      self._SendRequest( 'exit' )
 
 
 def _ConvertCompletionData( completion_data ):
@@ -208,4 +242,16 @@ def _ConvertCompletionData( completion_data ):
     menu_text      = utils.ToUtf8IfNeeded( completion_data[ 'name' ] ),
     kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] ),
     extra_data     = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
+  )
+
+
+def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
+  name = completion_data[ 'name' ]
+  display_parts = completion_data[ 'displayParts' ]
+  signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
+  menu_text = '{0} {1}'.format( name.ljust( padding ), signature )
+  return responses.BuildCompletionData(
+    insertion_text = utils.ToUtf8IfNeeded( name ),
+    menu_text      = utils.ToUtf8IfNeeded( menu_text ),
+    kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
   )
