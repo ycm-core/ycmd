@@ -100,7 +100,9 @@ BOOST_PYTHON_MODULE(ycm_core)
           &ClangCompleter::CandidatesForLocationInFile )
     .def( "GetTypeAtLocation", &ClangCompleter::GetTypeAtLocation )
     .def( "GetEnclosingFunctionAtLocation",
-          &ClangCompleter::GetEnclosingFunctionAtLocation );
+          &ClangCompleter::GetEnclosingFunctionAtLocation )
+    .def( "GetFixItsForLocationInFile",
+          &ClangCompleter::GetFixItsForLocationInFile );
 
   enum_< CompletionKind >( "CompletionKind" )
     .value( "STRUCT", STRUCT )
@@ -142,6 +144,20 @@ BOOST_PYTHON_MODULE(ycm_core)
   class_< std::vector< Range > >( "RangeVector" )
     .def( vector_indexing_suite< std::vector< Range > >() );
 
+  class_< FixItChunk >( "FixItChunk" )
+    .def_readonly( "replacement_text", &FixItChunk::replacement_text )
+    .def_readonly( "range", &FixItChunk::range );
+
+  class_< std::vector< FixItChunk > >( "FixItChunkVector" )
+    .def( vector_indexing_suite< std::vector< FixItChunk > >() );
+
+  class_< FixIt >( "FixIt" )
+    .def_readonly( "chunks", &FixIt::chunks )
+    .def_readonly( "location", &FixIt::location );
+
+  class_< std::vector< FixIt > >( "FixItVector" )
+    .def( vector_indexing_suite< std::vector< FixIt > >() );
+
   enum_< DiagnosticKind >( "DiagnosticKind" )
     .value( "ERROR", ERROR )
     .value( "WARNING", WARNING )
@@ -154,7 +170,8 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "location_extent_", &Diagnostic::location_extent_ )
     .def_readonly( "kind_", &Diagnostic::kind_ )
     .def_readonly( "text_", &Diagnostic::text_ )
-    .def_readonly( "long_formatted_text_", &Diagnostic::long_formatted_text_ );
+    .def_readonly( "long_formatted_text_", &Diagnostic::long_formatted_text_ )
+    .def_readonly( "fixits_", &Diagnostic::fixits_ );
 
   class_< std::vector< Diagnostic > >( "DiagnosticVector" )
     .def( vector_indexing_suite< std::vector< Diagnostic > >() );

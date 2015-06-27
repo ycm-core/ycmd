@@ -19,17 +19,24 @@
 
 from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
-from .test_utils import ( Setup, BuildRequest, PathToTestFile, StopOmniSharpServer,
-                          WaitUntilOmniSharpServerReady, ChangeSpecificOptions )
+from .test_utils import ( Setup,
+                          BuildRequest,
+                          PathToTestFile,
+                          StopOmniSharpServer,
+                          WaitUntilOmniSharpServerReady,
+                          ChangeSpecificOptions )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from .. import handlers
 import bottle
 import re
 import os.path
+from pprint import pprint
+
+from hamcrest import ( assert_that, contains, has_entries, equal_to )
+
 
 bottle.debug( True )
-
 
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_Jedi_ZeroBasedLineAndColumn_test():
@@ -362,6 +369,288 @@ def RunCompleterCommand_GetParent_Clang_test():
           'GetParent_Clang_test.cc',          \
           test,                               \
           ['GetParent']
+
+
+def _RunFixItTest_Clang( line, column, lang, file_name, check ):
+  contents = open( PathToTestFile( file_name ) ).read()
+  app = TestApp( handlers.app )
+
+  language_options = {
+    'cpp11' : {
+      'compilation_flags' : ['-x',
+                             'c++',
+                             '-std=c++11',
+                             '-Wall',
+                             '-Wextra',
+                             '-pedantic'],
+      'filetype'          : 'cpp',
+    },
+
+    'objective-c' : {
+      'compilation_flags' : ['-x',
+                             'objective-c',
+                             '-Wall',
+                             '-Wextra'],
+      'filetype'          : 'objc',
+    },
+  }
+
+  # build the command arguments from the standard ones and the language-specific
+  # arguments
+  args = {
+    'completer_target'  : 'filetype_default',
+    'contents'          : contents,
+    'command_arguments' : ['FixIt'],
+    'line_num'          : line,
+    'column_num'        : column,
+  }
+  args.update(language_options[lang])
+
+  # get the diagnostics for the file
+  event_data = BuildRequest( **args )
+
+  results = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( results )
+  check( results )
+
+def _FixIt_Check_cpp11_Ins( results ):
+  # First fixit
+  #   switch(A()) { // expected-error{{explicit conversion to}}
+  assert_that( results, has_entries ( {
+    'fixits': contains ( has_entries ( {
+      'chunks' : contains (
+        has_entries( {
+          'replacement_text': equal_to('static_cast<int>('),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 16, 'column_num': 10 } ),
+            'end'  : has_entries( { 'line_num': 16, 'column_num': 10 } ),
+          } ),
+        } ),
+        has_entries( {
+          'replacement_text': equal_to(')'),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 16, 'column_num': 13 } ),
+            'end'  : has_entries( { 'line_num': 16, 'column_num': 13 } ),
+          } ),
+        } )
+      ),
+      'location' : has_entries( { 'line_num': 16, 'column_num': 3 } )
+    } ) )
+  } ) )
+
+def _FixIt_Check_cpp11_InsMultiLine( results ):
+  # Similar to _FixIt_Check_cpp11_1 but inserts split across lines
+  #
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries ( {
+      'chunks' : contains (
+        has_entries( {
+          'replacement_text': equal_to('static_cast<int>('),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 26, 'column_num': 7 } ),
+            'end'  : has_entries( { 'line_num': 26, 'column_num': 7 } ),
+          } ),
+        } ),
+        has_entries( {
+          'replacement_text': equal_to(')'),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 28, 'column_num': 2 } ),
+            'end'  : has_entries( { 'line_num': 28, 'column_num': 2 } ),
+          } ),
+        } )
+      ),
+      'location' : has_entries( { 'line_num': 25, 'column_num': 3 } )
+    } ) )
+  } ) )
+
+def _FixIt_Check_cpp11_Del( results ):
+  # Removal of ::
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries ( {
+      'chunks' : contains (
+        has_entries( {
+          'replacement_text': equal_to(''),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 35, 'column_num': 7 } ),
+            'end'  : has_entries( { 'line_num': 35, 'column_num': 9 } ),
+          } ),
+        } )
+      ),
+      'location' : has_entries( { 'line_num': 35, 'column_num': 7 } )
+    } ) )
+  } ) )
+
+def _FixIt_Check_cpp11_Repl( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries ( {
+      'chunks' : contains (
+        has_entries( {
+          'replacement_text': equal_to('foo'),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 40, 'column_num': 6 } ),
+            'end'  : has_entries( { 'line_num': 40, 'column_num': 9 } ),
+          } ),
+        } )
+      ),
+      'location' : has_entries( { 'line_num': 40, 'column_num': 6 } )
+    } ) )
+  } ) )
+
+def _FixIt_Check_cpp11_DelAdd( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries ( {
+      'chunks' : contains (
+        has_entries( {
+          'replacement_text': equal_to(''),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 48, 'column_num': 3 } ),
+            'end'  : has_entries( { 'line_num': 48, 'column_num': 4 } ),
+          } ),
+        } ),
+        has_entries( {
+          'replacement_text': equal_to('~'),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 48, 'column_num': 9 } ),
+            'end'  : has_entries( { 'line_num': 48, 'column_num': 9 } ),
+          } ),
+        } ),
+      ),
+      'location' : has_entries( { 'line_num': 48, 'column_num': 3 } )
+    } ) )
+  } ) )
+
+def _FixIt_Check_objc( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries ( {
+      'chunks' : contains (
+        has_entries( {
+          'replacement_text': equal_to('id'),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 5, 'column_num': 3 } ),
+            'end'  : has_entries( { 'line_num': 5, 'column_num': 3 } ),
+          } ),
+        } )
+      ),
+      'location' : has_entries( { 'line_num': 5, 'column_num': 3 } )
+    } ) )
+  } ) )
+
+def _FixIt_Check_objc_NoFixIt( results ):
+  # and finally, a warning with no fixits
+  assert_that( results, equal_to( { 'fixits' : [] } ) )
+
+def _FixIt_Check_cpp11_MultiFirst( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains(
+      # first fix-it at 54,16
+      has_entries ( {
+        'chunks' : contains (
+          has_entries( {
+            'replacement_text': equal_to('foo'),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 16 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 19 } ),
+            } ),
+          } )
+        ),
+        'location' : has_entries( { 'line_num': 54, 'column_num': 16 } )
+      } ),
+      # second fix-it at 54,52
+      has_entries ( {
+        'chunks' : contains (
+          has_entries( {
+            'replacement_text': equal_to(''),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 52 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 53 } ),
+            } ),
+          } ),
+          has_entries( {
+            'replacement_text': equal_to('~'),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 58 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 58 } ),
+            } ),
+          } ),
+        ),
+        'location' : has_entries( { 'line_num': 54, 'column_num': 52 } )
+      } )
+    )
+  } ) )
+
+def _FixIt_Check_cpp11_MultiSecond( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains(
+      # second fix-it at 54,52
+      has_entries ( {
+        'chunks' : contains (
+          has_entries( {
+            'replacement_text': equal_to(''),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 52 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 53 } ),
+            } ),
+          } ),
+          has_entries( {
+            'replacement_text': equal_to('~'),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 58 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 58 } ),
+            } ),
+          } ),
+        ),
+        'location' : has_entries( { 'line_num': 54, 'column_num': 52 } )
+      } ),
+      # first fix-it at 54,16
+      has_entries ( {
+        'chunks' : contains (
+          has_entries( {
+            'replacement_text': equal_to('foo'),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 16 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 19 } ),
+            } ),
+          } )
+        ),
+        'location' : has_entries( { 'line_num': 54, 'column_num': 16 } )
+      } )
+    )
+  } ) )
+
+@with_setup( Setup )
+def RunCompleterCommand_FixIt_all_Clang_test():
+  cfile = 'FixIt_Clang_cpp11.cpp'
+  mfile = 'FixIt_Clang_objc.m'
+
+  tests = [
+      [ 16, 0,  'cpp11', cfile, _FixIt_Check_cpp11_Ins ],
+      [ 16, 1,  'cpp11', cfile, _FixIt_Check_cpp11_Ins ],
+      [ 16, 10, 'cpp11', cfile, _FixIt_Check_cpp11_Ins ],
+      [ 25, 14, 'cpp11', cfile, _FixIt_Check_cpp11_InsMultiLine ],
+      [ 25, 0,  'cpp11', cfile, _FixIt_Check_cpp11_InsMultiLine ],
+      [ 35, 7,  'cpp11', cfile, _FixIt_Check_cpp11_Del ],
+      [ 40, 6,  'cpp11', cfile, _FixIt_Check_cpp11_Repl ],
+      [ 48, 3,  'cpp11', cfile, _FixIt_Check_cpp11_DelAdd ],
+
+      [ 5, 3,   'objective-c', mfile, _FixIt_Check_objc ],
+      [ 7, 1,   'objective-c', mfile, _FixIt_Check_objc_NoFixIt ],
+
+      # multiple errors on a single line; both with fixits
+      [ 54, 15, 'cpp11', cfile, _FixIt_Check_cpp11_MultiFirst ],
+      [ 54, 16, 'cpp11', cfile, _FixIt_Check_cpp11_MultiFirst ],
+      [ 54, 16, 'cpp11', cfile, _FixIt_Check_cpp11_MultiFirst ],
+      [ 54, 17, 'cpp11', cfile, _FixIt_Check_cpp11_MultiFirst ],
+      [ 54, 18, 'cpp11', cfile, _FixIt_Check_cpp11_MultiFirst ],
+
+      # should put closest fix-it first?
+      [ 54, 51, 'cpp11', cfile, _FixIt_Check_cpp11_MultiSecond ],
+      [ 54, 52, 'cpp11', cfile, _FixIt_Check_cpp11_MultiSecond ],
+      [ 54, 53, 'cpp11', cfile, _FixIt_Check_cpp11_MultiSecond ],
+  ]
+
+  for test in tests:
+    yield _RunFixItTest_Clang, test[0], test[1], test[2], test[3], test[4]
 
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_CsCompleter_Works_test():

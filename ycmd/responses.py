@@ -110,30 +110,50 @@ def BuildCompletionResponse( completion_datas, start_column ):
     'completion_start_column': start_column
   }
 
+def BuildLocationData( location ):
+  return {
+    'line_num': location.line_number_,
+    'column_num': location.column_number_,
+    'filepath': location.filename_,
+  }
+
+def BuildRangeData( source_range ):
+  return {
+    'start': BuildLocationData( source_range.start_ ),
+    'end': BuildLocationData( source_range.end_ ),
+  }
 
 def BuildDiagnosticData( diagnostic ):
-  def BuildRangeData( source_range ):
-    return {
-      'start': BuildLocationData( source_range.start_ ),
-      'end': BuildLocationData( source_range.end_ ),
-    }
-
-  def BuildLocationData( location ):
-    return {
-      'line_num': location.line_number_,
-      'column_num': location.column_number_,
-      'filepath': location.filename_,
-    }
 
   kind = ( diagnostic.kind_.name if hasattr( diagnostic.kind_, 'name' )
            else diagnostic.kind_ )
+
+  fixits = ( diagnostic.fixits_ if hasattr( diagnostic, 'fixits_' ) else [] )
 
   return {
     'ranges': [ BuildRangeData( x ) for x in diagnostic.ranges_ ],
     'location': BuildLocationData( diagnostic.location_ ),
     'location_extent': BuildRangeData( diagnostic.location_extent_ ),
     'text': diagnostic.text_,
-    'kind': kind
+    'kind': kind,
+    'fixit_available': len( fixits ) > 0,
+  }
+
+def BuildFixItResponse( fixits ):
+  def BuildFixitChunkData( chunk ):
+    return {
+      'replacement_text': chunk.replacement_text,
+      'range': BuildRangeData( chunk.range ),
+    }
+
+  def BuildFixItData( fixit ):
+    return {
+      'location': BuildLocationData( fixit.location ),
+      'chunks' : [ BuildFixitChunkData( x ) for x in fixit.chunks ],
+    }
+
+  return {
+    'fixits' : [ BuildFixItData( x ) for x in fixits ]
   }
 
 
@@ -143,4 +163,3 @@ def BuildExceptionResponse( exception, traceback ):
     'message': str( exception ),
     'traceback': traceback
   }
-

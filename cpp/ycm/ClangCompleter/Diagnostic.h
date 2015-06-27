@@ -33,6 +33,36 @@ enum DiagnosticKind {
   WARNING
 };
 
+/// Information about a replacement that can be made to the source to "fix" a
+/// diagnostic.
+struct FixItChunk {
+  /// The replacement string. This string should replace the source range
+  /// represented by 'range'.
+  std::string replacement_text;
+
+  /// The range within the file to replace with replacement_text.
+  Range range;
+
+  bool operator == ( const FixItChunk &other ) const {
+    return replacement_text == other.replacement_text &&
+           range == other.range;
+  }
+};
+
+/// Collection of FixItChunks which, when applied together, fix a particular
+/// diagnostic. This structure forms the reply to the "FixIt" subcommand, and
+/// represents a lightweight view of a diagnostic. The location is included to
+/// aid clients in applying the most appropriate FixIt based on context.
+struct FixIt {
+  std::vector< FixItChunk > chunks;
+
+  Location location;
+
+  bool operator==( const FixIt &other ) const {
+    return chunks == other.chunks &&
+           location == other.location;
+  }
+};
 
 struct Diagnostic {
   bool operator== ( const Diagnostic &other ) const {
@@ -53,6 +83,9 @@ struct Diagnostic {
   std::string text_;
 
   std::string long_formatted_text_;
+
+  /// The (cached) changes required to fix this diagnostic
+  std::vector< FixItChunk > fixits_;
 };
 
 } // namespace YouCompleteMe
