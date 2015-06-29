@@ -51,9 +51,12 @@ if ( USE_CLANG_COMPLETER AND
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-linux-gnu-ubuntu-15.04" )
+      # We MUST support the latest Ubuntu LTS release!
+      # At the time of writing, that's 14.04. Switch to next LTS ~6 months after
+      # it comes out.
+      set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-linux-gnu-ubuntu-14.04" )
       set( CLANG_SHA256
-           "374ce3b116e2aa1faa530604e6782b986c3b3296420bb15d366d0547833a9a3d" )
+           "469aee8769eb214bafb6e239e7b6bd99d53542d4d386c1ed4e3e6845c0cb85d5" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
