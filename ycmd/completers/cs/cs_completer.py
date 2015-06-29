@@ -98,7 +98,8 @@ class CsharpCompleter( Completer ):
     solution = self._GetSolutionFile( request_data[ "filepath" ] )
     if not solution in self._completer_per_solution:
       keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
-      completer = CsharpSolutionCompleter( solution, keep_logfiles )
+      desired_omnisharp_port = self.user_options.get( 'csharp_server_port' )
+      completer = CsharpSolutionCompleter( solution, keep_logfiles, desired_omnisharp_port )
       self._completer_per_solution[ solution ] = completer
 
     return self._completer_per_solution[ solution ]
@@ -287,7 +288,7 @@ class CsharpSolutionCompleter:
   }
 
 
-  def __init__( self, solution_path, keep_logfiles ):
+  def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
     self._logger = logging.getLogger( __name__ )
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
@@ -295,6 +296,7 @@ class CsharpSolutionCompleter:
     self._filename_stdout = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
+    self._desired_omnisharp_port = desired_omnisharp_port;
 
 
   def Subcommand( self, command, arguments, request_data ):
@@ -532,7 +534,10 @@ class CsharpSolutionCompleter:
 
   def _ChooseOmnisharpPort( self ):
     if not self._omnisharp_port:
-        self._omnisharp_port = utils.GetUnusedLocalhostPort()
+        if self._desired_omnisharp_port:
+            self._omnisharp_port = int( self._desired_omnisharp_port )
+        else:
+            self._omnisharp_port = utils.GetUnusedLocalhostPort()
     self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
 
 
