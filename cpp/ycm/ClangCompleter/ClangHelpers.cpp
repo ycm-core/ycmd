@@ -56,6 +56,7 @@ std::string FullDiagnosticText( CXDiagnostic cxdiagnostic ) {
     if ( !diagnostic )
       continue;
 
+    full_text.append( "\n" );
     full_text.append( FullDiagnosticText( diagnostic ) );
   }
 
