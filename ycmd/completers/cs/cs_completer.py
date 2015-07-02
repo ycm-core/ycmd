@@ -22,6 +22,7 @@ from collections import defaultdict
 import os
 import time
 from ycmd.completers.completer import Completer
+from ycmd.utils import ForceSemanticCompletion
 from ycmd import responses
 from ycmd import utils
 import requests
@@ -32,11 +33,7 @@ import solutiondetection
 SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +
                          'Did you compile it? You can do so by running ' +
                          '"./install.sh --omnisharp-completer".' )
-MIN_LINES_IN_FILE_TO_PARSE = 5
 INVALID_FILE_MESSAGE = 'File is invalid.'
-FILE_TOO_SHORT_MESSAGE = (
-  'File is less than {0} lines long; not parsing.'.format(
-    MIN_LINES_IN_FILE_TO_PARSE ) )
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PATH_TO_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
@@ -101,14 +98,24 @@ class CsharpCompleter( Completer ):
     solution = self._GetSolutionFile( request_data[ "filepath" ] )
     if not solution in self._completer_per_solution:
       keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
-      completer = CsharpSolutionCompleter( solution, keep_logfiles )
+      desired_omnisharp_port = self.user_options.get( 'csharp_server_port' )
+      completer = CsharpSolutionCompleter( solution, keep_logfiles, desired_omnisharp_port )
       self._completer_per_solution[ solution ] = completer
 
     return self._completer_per_solution[ solution ]
 
 
+  def ShouldUseNowInner( self, request_data ):
+    return True
+
+
+  def CompletionType( self, request_data ):
+    return ForceSemanticCompletion( request_data )
+
+
   def ComputeCandidatesInner( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
+    completion_type = self.CompletionType( request_data )
     return [ responses.BuildCompletionData(
                 completion[ 'CompletionText' ],
                 completion[ 'DisplayText' ],
@@ -118,7 +125,8 @@ class CsharpCompleter( Completer ):
                 { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
              for completion
-             in solutioncompleter._GetCompletions( request_data ) ]
+             in solutioncompleter._GetCompletions( request_data, 
+                                                   completion_type ) ]
 
 
   def FilterAndSortCandidates( self, candidates, query ):
@@ -280,7 +288,7 @@ class CsharpSolutionCompleter:
   }
 
 
-  def __init__( self, solution_path, keep_logfiles ):
+  def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
     self._logger = logging.getLogger( __name__ )
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
@@ -288,6 +296,7 @@ class CsharpSolutionCompleter:
     self._filename_stdout = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
+    self._desired_omnisharp_port = desired_omnisharp_port;
 
 
   def Subcommand( self, command, arguments, request_data ):
@@ -301,10 +310,6 @@ class CsharpSolutionCompleter:
 
   def CodeCheck( self, request_data ):
     filename = request_data[ 'filepath' ]
-    contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-    if contents.count( '\n' ) < MIN_LINES_IN_FILE_TO_PARSE:
-      raise ValueError( FILE_TOO_SHORT_MESSAGE )
-
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
 
@@ -355,25 +360,40 @@ class CsharpSolutionCompleter:
 
   def _StopServer( self ):
     """ Stop the OmniSharp server """
-    self._GetResponse( '/stopserver' )
+    self._logger.info( 'Stopping OmniSharp server' )
 
-    # Give OmniSharp 5 seconds to cleanly stop, then kill it if it's still up
-    still_running = True
-    for _ in range( 5 ):
-      still_running = self.ServerIsRunning()
-      if not still_running:
-        break
-      time.sleep( 1 )
+    self._TryToStopServer()
 
-    if still_running:
+    # Kill it if it's still up
+    if not self.ServerTerminated() and self._omnisharp_phandle is not None:
+      self._logger.info( 'Killing OmniSharp server' )
       self._omnisharp_phandle.kill()
 
+    self._CleanupAfterServerStop()
+
+    self._logger.info( 'Stopped OmniSharp server' )
+
+
+  def _TryToStopServer( self ):
+    for _ in range( 5 ):
+      try:
+        self._GetResponse( '/stopserver', timeout = .1 )
+      except:
+        pass
+      for _ in range( 10 ):
+        if self.ServerTerminated():
+          return
+        time.sleep( .1 )
+
+
+  def _CleanupAfterServerStop( self ):
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if ( not self._keep_logfiles ):
-      os.unlink( self._filename_stdout );
-      os.unlink( self._filename_stderr );
-    self._logger.info( 'Stopping OmniSharp server' )
+      if self._filename_stdout:
+        os.unlink( self._filename_stdout );
+      if self._filename_stderr:
+        os.unlink( self._filename_stderr );
 
 
   def _RestartServer ( self ):
@@ -389,10 +409,15 @@ class CsharpSolutionCompleter:
     return self._GetResponse( '/reloadsolution' )
 
 
-  def _GetCompletions( self, request_data ):
+  def CompletionType( self, request_data ):
+    return ForceSemanticCompletion( request_data )
+
+  def _GetCompletions( self, request_data, completion_type ):
     """ Ask server for completions """
     parameters = self._DefaultParameters( request_data )
-    parameters[ 'WantImportableTypes' ] = True
+    parameters[ 'WantImportableTypes' ] = completion_type
+    parameters[ 'ForceSemanticCompletion' ] = completion_type
+    parameters[ 'WantDocumentationForEveryCompletionResult' ] = True
     completions = self._GetResponse( '/autocomplete', parameters )
     return completions if completions != None else []
 
@@ -471,7 +496,7 @@ class CsharpSolutionCompleter:
     """ Check if our OmniSharp server is running (up and serving)."""
     try:
       return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkalivestatus', silent = True ) )
+                   self._GetResponse( '/checkalivestatus', timeout = .2 ) )
     except:
       return False
 
@@ -480,7 +505,7 @@ class CsharpSolutionCompleter:
     """ Check if our OmniSharp server is ready (loaded solution file)."""
     try:
       return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkreadystatus', silent = True ) )
+                   self._GetResponse( '/checkreadystatus', timeout = .2 ) )
     except:
       return False
 
@@ -500,16 +525,19 @@ class CsharpSolutionCompleter:
     return 'http://localhost:' + str( self._omnisharp_port )
 
 
-  def _GetResponse( self, handler, parameters = {}, silent = False ):
+  def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    response = requests.post( target, data = parameters )
+    response = requests.post( target, data = parameters, timeout = timeout )
     return response.json()
 
 
   def _ChooseOmnisharpPort( self ):
     if not self._omnisharp_port:
-        self._omnisharp_port = utils.GetUnusedLocalhostPort()
+        if self._desired_omnisharp_port:
+            self._omnisharp_port = int( self._desired_omnisharp_port )
+        else:
+            self._omnisharp_port = utils.GetUnusedLocalhostPort()
     self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
 
 

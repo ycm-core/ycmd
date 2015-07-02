@@ -29,6 +29,7 @@
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/throw_exception.hpp>
+#include <boost/serialization/type_info_implementation.hpp>
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/detail/decl.hpp>
 

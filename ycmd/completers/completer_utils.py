@@ -140,7 +140,7 @@ DEFAULT_FILETYPE_TRIGGERS = {
   'cpp,objcpp' : ['->', '.', '::'],
   'perl' : ['->'],
   'php' : ['->', '::'],
-  'cs,java,javascript,d,python,perl6,scala,vb,elixir,go' : ['.'],
+  'cs,java,javascript,typescript,d,python,perl6,scala,vb,elixir,go' : ['.'],
   'ruby' : ['.', '::'],
   'lua' : ['.', ':'],
   'erlang' : [':'],

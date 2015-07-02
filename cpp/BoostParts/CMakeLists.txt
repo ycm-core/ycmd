@@ -51,15 +51,14 @@ set( COMMON_SOURCES
 
 set( WIN_SOURCES
     libs/thread/src/win32/thread.cpp
-    libs/thread/src/win32/timeconv.inl
     libs/thread/src/win32/tss_dll.cpp
     libs/thread/src/win32/tss_pe.cpp
     )
 
 set( UNIX_SOURCES
     libs/thread/src/pthread/once.cpp
+    libs/thread/src/pthread/once_atomic.cpp
     libs/thread/src/pthread/thread.cpp
-    libs/thread/src/pthread/timeconv.inl
     )
 
 list( APPEND SOURCES ${COMMON_SOURCES} )

@@ -267,6 +267,35 @@ struct Foo {
 
 
 @with_setup( Setup )
+def GetDetailedDiagnostic_ClangCompleter_Multiline_test():
+  app = TestApp( handlers.app )
+  contents = """
+struct Foo {
+  Foo(int z) {}
+};
+
+int main() {
+  Foo foo("goo");
+}
+"""
+
+  diag_data = BuildRequest( compilation_flags = ['-x', 'c++'],
+                            line_num = 7,
+                            contents = contents,
+                            filetype = 'cpp' )
+
+  event_data = diag_data.copy()
+  event_data.update( {
+    'event_name': 'FileReadyToParse',
+  } )
+
+  app.post_json( '/event_notification', event_data )
+  results = app.post_json( '/detailed_diagnostic', diag_data ).json
+  assert_that( results,
+               has_entry( 'message', contains_string( "\n" ) ) )
+
+
+@with_setup( Setup )
 def GetDetailedDiagnostic_CsCompleter_Works_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',

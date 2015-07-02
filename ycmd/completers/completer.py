@@ -110,6 +110,10 @@ class Completer( object ):
     self._completions_cache = CompletionsCache()
 
 
+  def CompletionType( self, request_data ):
+    return 0
+
+
   # It's highly likely you DON'T want to override this function but the *Inner
   # version of it.
   def ShouldUseNow( self, request_data ):
@@ -122,7 +126,8 @@ class Completer( object ):
     # data.
     cache_completions = self._completions_cache.GetCompletionsIfCacheValid(
         request_data[ 'line_num' ],
-        request_data[ 'start_column' ] )
+        request_data[ 'start_column' ],
+        self.CompletionType( request_data ) )
 
     # If None, then the cache isn't valid and we know we should return true
     if cache_completions is None:
@@ -165,7 +170,8 @@ class Completer( object ):
   def _GetCandidatesFromSubclass( self, request_data ):
     cache_completions = self._completions_cache.GetCompletionsIfCacheValid(
           request_data[ 'line_num' ],
-          request_data[ 'start_column' ] )
+          request_data[ 'start_column' ],
+          self.CompletionType( request_data ) )
 
     if cache_completions:
       return cache_completions
@@ -174,6 +180,7 @@ class Completer( object ):
       self._completions_cache.Update(
           request_data[ 'line_num' ],
           request_data[ 'start_column' ],
+          self.CompletionType( request_data ),
           raw_completions )
       return raw_completions
 
@@ -283,13 +290,15 @@ class CompletionsCache( object ):
     with self._access_lock:
       self._line = -1
       self._column = -1
+      self._completion_type = -1
       self._completions = []
 
 
-  def Update( self, line, column, completions ):
+  def Update( self, line, column, completion_type, completions ):
     with self._access_lock:
       self._line = line
       self._column = column
+      self._completion_type = completion_type
       self._completions = completions
 
 
@@ -298,9 +307,9 @@ class CompletionsCache( object ):
       return self._completions
 
 
-  def GetCompletionsIfCacheValid( self, current_line, start_column ):
+  def GetCompletionsIfCacheValid( self, current_line, start_column, completion_type ):
     with self._access_lock:
-      if not self._CacheValidNoLock( current_line, start_column ):
+      if not self._CacheValidNoLock( current_line, start_column, completion_type ):
         return None
       return self._completions
 
@@ -310,6 +319,6 @@ class CompletionsCache( object ):
       return self._CacheValidNoLock( current_line, start_column )
 
 
-  def _CacheValidNoLock( self, current_line, start_column ):
-    return current_line == self._line and start_column == self._column
+  def _CacheValidNoLock( self, current_line, start_column, completion_type ):
+    return current_line == self._line and start_column == self._column and completion_type == self._completion_type
 

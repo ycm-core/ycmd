@@ -114,10 +114,17 @@ def GetHealthy():
 @app.get( '/ready' )
 def GetReady():
   _logger.info( 'Received ready request' )
+  if request.query.subserver:
+    filetype = request.query.subserver
+    return _JsonResponse( _IsSubserverReady( filetype ) )
   if request.query.include_subservers:
-    cs_completer = _server_state.GetFiletypeCompleter( ['cs'] )
-    return _JsonResponse( cs_completer.ServerIsReady() )
+    return _JsonResponse( _IsSubserverReady( 'cs' ) )
   return _JsonResponse( True )
+
+
+def _IsSubserverReady( filetype ):
+  completer = _server_state.GetFiletypeCompleter( [filetype] )
+  return completer.ServerIsReady()
 
 
 @app.post( '/semantic_completion_available' )
