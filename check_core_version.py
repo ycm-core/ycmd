@@ -26,9 +26,11 @@ VERSION_FILENAME = 'EXPECTED_CORE_VERSION'
 def DirectoryOfThisScript():
   return os.path.dirname( os.path.abspath( __file__ ) )
 
+
 def ExpectedCoreVersion():
   return int( open( os.path.join( DirectoryOfThisScript(),
                                   VERSION_FILENAME ) ).read() )
+
 
 def CompatibleWithCurrentCoreVersion():
   try:
@@ -36,6 +38,7 @@ def CompatibleWithCurrentCoreVersion():
   except AttributeError:
     return False
   return ExpectedCoreVersion() == current_core_version
+
 
 if not CompatibleWithCurrentCoreVersion():
   sys.exit( 2 )
