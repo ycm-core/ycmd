@@ -20,10 +20,33 @@
 import sys
 import os
 
+
+def DirectoryOfThisScript():
+  return os.path.dirname( os.path.abspath( __file__ ) )
+
+
 def SetUpPythonPath():
-  sys.path.insert( 0, os.path.join(
-                          os.path.dirname( os.path.abspath( __file__ ) ),
-                          '..' ) )
+  sys.path.insert( 0, os.path.join( DirectoryOfThisScript(), '..' ) )
 
   from ycmd import utils
   utils.AddNearestThirdPartyFoldersToSysPath( __file__ )
+
+
+VERSION_FILENAME = 'EXPECTED_CORE_VERSION'
+
+def ExpectedCoreVersion():
+  return int( open( os.path.join( DirectoryOfThisScript(), '..',
+                                  VERSION_FILENAME ) ).read() )
+
+CORE_NOT_COMPATIBLE_MESSAGE = (
+  'ycmd can\'t run: ycm_core lib too old, PLEASE RECOMPILE'
+)
+
+
+def CompatibleWithCurrentCoreVersion():
+  import ycm_core
+  try:
+    current_core_version = ycm_core.YcmCoreVersion()
+  except AttributeError:
+    return False
+  return ExpectedCoreVersion() == current_core_version

@@ -27,14 +27,10 @@ from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
-MIN_LINES_IN_FILE_TO_PARSE = 5
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
 NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags, no completions yet.'
 INVALID_FILE_MESSAGE = 'File is invalid.'
 NO_COMPLETIONS_MESSAGE = 'No completions found; errors in the file?'
-FILE_TOO_SHORT_MESSAGE = (
-  'File is less than {0} lines long; not compiling.'.format(
-    MIN_LINES_IN_FILE_TO_PARSE ) )
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PRAGMA_DIAG_TEXT_TO_IGNORE = '#pragma once in main file'
 TOO_MANY_ERRORS_DIAG_TEXT_TO_IGNORE = 'too many errors emitted, stopping now'
@@ -254,10 +250,6 @@ class ClangCompleter( Completer ):
 
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]
-    contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-    if contents.count( '\n' ) < MIN_LINES_IN_FILE_TO_PARSE:
-      raise ValueError( FILE_TOO_SHORT_MESSAGE )
-
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
 

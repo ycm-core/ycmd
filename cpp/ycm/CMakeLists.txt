@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 2.8.7 )
 
 project( ycm_support_libs )
 set( CLIENT_LIB "ycm_client_support" )
@@ -43,18 +43,20 @@ if ( USE_CLANG_COMPLETER AND
      NOT USE_SYSTEM_LIBCLANG AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
-  message( "Downloading Clang 3.5" )
-
-  set( CLANG_URL "http://llvm.org/releases/3.6.0" )
 
   if ( APPLE )
-    set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-apple-darwin" )
-    set( CLANG_MD5 "103e06006c88d391c9c369a4671e3363" )
+    set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-apple-darwin" )
+    set( CLANG_SHA256
+         "b438a5e0aad3d9af0f21dc2c9a58f7dbc845740acea17c8fa69aa15e98457f74" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04" )
-      set( CLANG_MD5 "cfb2ebc01573e666770b9c5f72deb04e" )
+      # We MUST support the latest Ubuntu LTS release!
+      # At the time of writing, that's 14.04. Switch to next LTS ~6 months after
+      # it comes out.
+      set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-linux-gnu-ubuntu-14.04" )
+      set( CLANG_SHA256
+           "469aee8769eb214bafb6e239e7b6bd99d53542d4d386c1ed4e3e6845c0cb85d5" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
@@ -65,11 +67,36 @@ if ( USE_CLANG_COMPLETER AND
     endif()
   endif()
 
-  file(
-    DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "./${CLANG_FILENAME}"
-    SHOW_PROGRESS EXPECTED_MD5 "${CLANG_MD5}"
-  )
+  # Check if the Clang archive is already downloaded and its checksum is correct.
+  # If this is not the case, remove it if needed and download it.
+  set( CLANG_DOWNLOAD ON )
+  set( CLANG_LOCAL_FILE
+       "${CMAKE_SOURCE_DIR}/../clang_archives/${CLANG_FILENAME}" )
 
+  if( EXISTS "${CLANG_LOCAL_FILE}" )
+    file( SHA256 "${CLANG_LOCAL_FILE}" CLANG_LOCAL_SHA256 )
+
+    if( "${CLANG_LOCAL_SHA256}" STREQUAL "${CLANG_SHA256}" )
+      set( CLANG_DOWNLOAD OFF )
+    else()
+      file( REMOVE "${CLANG_LOCAL_FILE}" )
+    endif()
+  endif()
+
+  if( CLANG_DOWNLOAD )
+    message( "Downloading Clang 3.6" )
+
+    set( CLANG_URL "http://llvm.org/releases/3.6.1" )
+    file(
+      DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
+      SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
+    )
+  else()
+    message( "Using Clang archive: ${CLANG_LOCAL_FILE}" )
+  endif()
+
+  # Copy and extract the Clang archive in the building directory.
+  file( COPY "${CLANG_LOCAL_FILE}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../" )
   if ( CLANG_FILENAME MATCHES ".+bz2" )
     execute_process( COMMAND tar -xjf ${CLANG_FILENAME} )
   elseif( CLANG_FILENAME MATCHES ".+xz" )
@@ -280,17 +307,19 @@ target_link_libraries( ${SERVER_LIB}
                      )
 
 if( LIBCLANG_TARGET )
-  if( NOT WIN32 )
+  # When building with MSVC, we need to copy libclang.dll instead of libclang.lib
+  if( MSVC )
     add_custom_command(
       TARGET ${SERVER_LIB}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
+      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
     )
   else()
     add_custom_command(
       TARGET ${SERVER_LIB}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${SERVER_LIB}>")
+      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
+    )
   endif()
 endif()
 

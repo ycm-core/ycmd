@@ -112,6 +112,7 @@ class GoCodeCompleter_test( object ):
         'menu_text': u'Prefix',
         'insertion_text': u'Prefix',
         'extra_menu_info': u'func() string',
+        'detailed_info': u'Prefix func() string func',
         'kind': u'func'
     } ] )
 
