@@ -45,6 +45,7 @@ class FilenameCompleter_test( object ):
       "-I", os.path.join( DATA_DIR, "include" ),
       "-I", os.path.join( DATA_DIR, "include", "Qt" ),
       "-I", os.path.join( DATA_DIR, "include", "QtGui" ),
+      "-F", os.path.join( DATA_DIR, "Frameworks" ),
     ]
 
 
@@ -60,7 +61,10 @@ class FilenameCompleter_test( object ):
 
   def QuotedIncludeCompletion_test( self ):
     data = self._CompletionResultsForLine( '#include "' )
+    print data
     eq_( [
+          ( 'Frameworks', '[Dir]' ),
+          ( 'UIKit',      '[Lib]'  ),
           ( u'foo漢字.txt', '[File]' ),
           ( 'include',    '[Dir]' ),
           ( 'Qt',         '[Dir]' ),
@@ -77,10 +81,18 @@ class FilenameCompleter_test( object ):
           ( 'QtGui',    '[Dir]' ),
         ], data )
 
+    data = self._CompletionResultsForLine( '#import "UIKit/' )
+    eq_( [
+          ( 'UIKit.h',   '[File]' ),
+          ( 'UILabel.h', '[File]' ),
+        ], data )
+
 
   def IncludeCompletion_test( self ):
     data = self._CompletionResultsForLine( '#include <' )
+    print data
     eq_( [
+          ( 'UIKit',    '[Lib]'  ),
           ( 'Qt',       '[Dir]' ),
           ( 'QtGui',    '[File&Dir]' ),
           ( 'QDialog',  '[File]' ),
@@ -93,12 +105,19 @@ class FilenameCompleter_test( object ):
           ( 'QWidget',  '[File]' ),
         ], data )
 
+    data = self._CompletionResultsForLine( '#import <UIKit/' )
+    eq_( [
+          ( 'UIKit.h',   '[File]' ),
+          ( 'UILabel.h', '[File]' ),
+        ], data )
+
 
   def SystemPathCompletion_test( self ):
     # Order of system path completion entries may differ
     # on different systems
     data = sorted( self._CompletionResultsForLine( 'const char* c = "./' ) )
     eq_( [
+          ( 'Frameworks', '[Dir]' ),
           ( u'foo漢字.txt', '[File]' ),
           ( 'include',    '[Dir]' ),
           ( 'test.cpp',   '[File]' ),
