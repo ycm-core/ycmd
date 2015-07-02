@@ -118,7 +118,8 @@ def GetReady():
     filetype = request.query.subserver
     return _JsonResponse( _IsSubserverReady( filetype ) )
   if request.query.include_subservers:
-    return _JsonResponse( _IsSubserverReady( 'cs' ) )
+    return _JsonResponse(
+        all( _IsSubserverReady( filetype ) for filetype in [ 'cs', 'python' ] ) )
   return _JsonResponse( True )
 
 

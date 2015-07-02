@@ -22,23 +22,40 @@
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
 from ycmd import responses
+from ycmd import utils
 
-try:
-  import jedi
-except ImportError:
-  raise ImportError(
-    'Error importing jedi. Make sure the jedi submodule has been checked out. '
-    'In the YouCompleteMe folder, run "git submodule update --init --recursive"')
+import urlparse
+import requests
+import logging
+
+import os
+import sys
+
+
+PATH_TO_PYTHON = sys.executable
+PATH_TO_JEDIHTTP = os.path.join(
+  os.path.abspath( os.path.dirname( __file__ ) ),
+  '..', '..', '..', 'third_party', 'JediHTTP', 'jedihttp' )
+
+FILENAME_FORMAT = os.path.join( utils.PathToTempDir(),
+                                u'jedihttp_{port}_{std}.log' )
 
 
 class JediCompleter( Completer ):
   """
-  A Completer that uses the Jedi completion engine.
+  A Completer that uses the Jedi engine HTTP Wrapper JediHTTP.
   https://jedi.readthedocs.org/en/latest/
+  https://github.com/vheon/JediHTTP
   """
 
   def __init__( self, user_options ):
     super( JediCompleter, self ).__init__( user_options )
+    self._jedihttp_port = None
+    self._jedihttp_phandle = None
+    self._logger = logging.getLogger( __name__ )
+    self._filename_stderr = None
+    self._filename_stdout = None
+    self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
 
 
   def SupportedFiletypes( self ):
@@ -46,24 +63,113 @@ class JediCompleter( Completer ):
     return [ 'python' ]
 
 
-  def _GetJediScript( self, request_data ):
-      filename = request_data[ 'filepath' ]
-      contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-      line = request_data[ 'line_num' ]
-      # Jedi expects columns to start at 0, not 1
-      column = request_data[ 'column_num' ] - 1
+  def Shutdown( self ):
+    if ( self.ServerIsRunning() ):
+      self._StopServer()
 
-      return jedi.Script( contents, line, column, filename )
+
+  def _StopServer( self ):
+    self._jedihttp_phandle.kill()
+    self._jedihttp_phandle = None
+    self._jedihttp_port = None
+
+    if ( not self._keep_logfiles ):
+      os.unlink( self._filename_stdout );
+      os.unlink( self._filename_stderr );
+
+    self._logger.info( 'Stopping JediHTTP' )
+
+
+  def _RestartServer ( self ):
+    """ Restarts the JediHTTP server """
+    if self.ServerIsRunning():
+      self._StopServer()
+    return self._StartServer()
+
+
+  def ServerIsRunning( self ):
+    """ Check if JediHTTP server is running (up and serving)."""
+    try:
+      return bool( self._GetResponse( '/healthy' ) )
+    except:
+      return False
+
+
+  def ServerIsReady( self ):
+    """ Check if JediHTTP server is ready."""
+    try:
+      return bool( self._GetResponse( '/ready' ) )
+    except:
+      return False
+
+
+  def _StartServer( self, request_data ):
+    self._ChoosePort()
+
+    command = [ PATH_TO_PYTHON,
+                PATH_TO_JEDIHTTP,
+                '--port',
+                str( self._jedihttp_port ) ]
+
+    self._filename_stdout = FILENAME_FORMAT.format(
+        port = self._jedihttp_port, std = 'stdout' )
+    self._filename_stderr = FILENAME_FORMAT.format(
+        port = self._jedihttp_port, std = 'stderr' )
+
+    with open( self._filename_stderr, 'w' ) as fstderr:
+      with open( self._filename_stdout, 'w' ) as fstdout:
+        self._jedihttp_phandle = utils.SafePopen(
+            command, stdout = fstdout, stderr = fstderr )
+
+    self._logger.info( 'starting JediHTTP server' )
+
+
+  def _ChoosePort( self ):
+    if not self._jedihttp_port:
+      self._jedihttp_port = utils.GetUnusedLocalhostPort()
+    self._logger.info( u'using port {0}'.format( self._jedihttp_port ) )
+
+
+  def _GetResponse( self, handler, parameters = {} ):
+    """ Handle communication with server """
+    target = urlparse.urljoin( self._ServerLocation(), handler )
+
+    if parameters:
+      parameters = self._ConvertRequestForJediHTTP( parameters )
+
+    response = requests.post( target, json = parameters )
+    if response.status_code != 200:
+      raise RuntimeError( response.text )
+    return response.json()
+
+
+  def _ConvertRequestForJediHTTP( self, request_data ):
+    path = request_data[ 'filepath' ]
+    source = request_data[ 'file_data' ][ path ][ 'contents' ]
+    line = request_data[ 'line_num' ]
+    # JediHTTP as Jedi itself expects columns to start at 0, not 1
+    col = request_data[ 'column_num' ] - 1
+
+    return {
+      'source': source,
+      'line': line,
+      'col': col,
+      'path': path
+    }
+
+
+  def _ServerLocation( self ):
+    return 'http://localhost:' + str( self._jedihttp_port )
 
 
   def _GetExtraData( self, completion ):
       location = {}
-      if completion.module_path:
-        location[ 'filepath' ] = ToUtf8IfNeeded( completion.module_path )
-      if completion.line:
-        location[ 'line_num' ] = completion.line
-      if completion.column:
-        location[ 'column_num' ] = completion.column + 1
+      if completion[ 'module_path' ]:
+        location[ 'filepath' ] = ToUtf8IfNeeded( completion[ 'module_path' ] )
+      if completion[ 'line' ]:
+        location[ 'line_num' ] = completion[ 'line' ]
+      if completion[ 'column' ]:
+        location[ 'column_num' ] = completion[ 'column' ] + 1
 
       if location:
         extra_data = {}
@@ -74,18 +180,31 @@ class JediCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    script = self._GetJediScript( request_data )
     return [ responses.BuildCompletionData(
-                ToUtf8IfNeeded( completion.name ),
-                ToUtf8IfNeeded( completion.description ),
-                ToUtf8IfNeeded( completion.docstring() ),
+                ToUtf8IfNeeded( completion[ 'name' ] ),
+                ToUtf8IfNeeded( completion[ 'description' ] ),
+                ToUtf8IfNeeded( completion[ 'docstring' ] ),
                 extra_data = self._GetExtraData( completion ) )
-             for completion in script.completions() ]
+             for completion in self._JediCompletions( request_data ) ]
+
+
+  def _JediCompletions( self, request_data ):
+    resp = self._GetResponse( '/completions', request_data )[ 'completions' ]
+    return resp
+
+
+  def OnFileReadyToParse( self, request_data ):
+    if( not self.ServerIsRunning() ):
+      self._StartServer( request_data )
+      return
+
 
   def DefinedSubcommands( self ):
     return [ 'GoToDefinition',
              'GoToDeclaration',
-             'GoTo' ]
+             'GoTo',
+             'StopServer',  # NOTE: it is actually useful only in tests
+             'RestartServer' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -99,6 +218,10 @@ class JediCompleter( Completer ):
       return self._GoToDeclaration( request_data )
     elif command == 'GoTo':
       return self._GoTo( request_data )
+    elif command == 'StopServer':
+      return self._StopServer()
+    elif command == 'RestartServer':
+      return self._RestartServer()
     raise ValueError( self.UserCommandsHelpMessage() )
 
 
@@ -128,45 +251,42 @@ class JediCompleter( Completer ):
 
 
   def _GetDefinitionsList( self, request_data, declaration = False ):
-    definitions = []
-    script = self._GetJediScript( request_data )
     try:
       if declaration:
-        definitions = script.goto_assignments()
+        response = self._GetResponse( '/gotoassignment', request_data )
       else:
-        definitions = script.goto_definitions()
-    except jedi.NotFoundError:
+        response = self._GetResponse( '/gotodefinition', request_data )
+      return response[ 'definitions' ]
+    except:
       raise RuntimeError(
                   'Cannot follow nothing. Put your cursor on a valid name.' )
-
-    return definitions
 
 
   def _BuildGoToResponse( self, definition_list ):
     if len( definition_list ) == 1:
       definition = definition_list[ 0 ]
-      if definition.in_builtin_module():
-        if definition.is_keyword:
+      if definition[ 'in_builtin_module' ]:
+        if definition[ 'is_keyword' ]:
           raise RuntimeError(
                   'Cannot get the definition of Python keywords.' )
         else:
           raise RuntimeError( 'Builtin modules cannot be displayed.' )
       else:
-        return responses.BuildGoToResponse( definition.module_path,
-                                            definition.line,
-                                            definition.column + 1 )
+        return responses.BuildGoToResponse( definition[ 'module_path' ],
+                                            definition[ 'line' ],
+                                            definition[ 'column' ] + 1 )
     else:
       # multiple definitions
       defs = []
       for definition in definition_list:
-        if definition.in_builtin_module():
+        if definition[ 'in_builtin_module' ]:
           defs.append( responses.BuildDescriptionOnlyGoToResponse(
-                       'Builtin ' + definition.description ) )
+                       'Builtin ' + definition[ 'description' ] ) )
         else:
           defs.append(
-            responses.BuildGoToResponse( definition.module_path,
-                                         definition.line,
-                                         definition.column + 1,
-                                         definition.description ) )
+            responses.BuildGoToResponse( definition[ 'module_path' ],
+                                         definition[ 'line' ],
+                                         definition[ 'column' ] + 1,
+                                         definition[ 'description' ] ) )
       return defs
 

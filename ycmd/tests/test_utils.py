@@ -100,6 +100,33 @@ def WaitUntilOmniSharpServerReady( app, filename ):
     raise RuntimeError( "Timeout waiting for OmniSharpServer" )
 
 
+def WaitUntilJediHTTPServerReady( app ):
+  retries = 100
+
+  while retries > 0:
+    result = app.get( '/ready', { 'subserver': 'python' } ).json
+    if result:
+      return
+
+    time.sleep( 0.2 )
+    retries = retries - 1
+
+  raise RuntimeError( "Timeout waiting for JediHTTP" )
+
+
+def ActivateJediHTTPServer( app ):
+  app.post_json( '/event_notification',
+                 BuildRequest( filetype = 'python',
+                               event_name = 'FileReadyToParse' ) )
+
+
+def StopJediHTTPServer( app ):
+  app.post_json( '/run_completer_command',
+                 BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = ['StopServer'],
+                               filetype = 'python' ) )
+
+
 def StopGoCodeServer( app ):
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
