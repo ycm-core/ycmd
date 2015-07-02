@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2015  Google Inc.
+# Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -17,30 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import os
-import ycm_client_support
-
-VERSION_FILENAME = 'CORE_VERSION'
+from ..server_utils import CompatibleWithCurrentCoreVersion
+from nose.tools import eq_
 
 
-def DirectoryOfThisScript():
-  return os.path.dirname( os.path.abspath( __file__ ) )
-
-
-def ExpectedCoreVersion():
-  return int( open( os.path.join( DirectoryOfThisScript(),
-                                  VERSION_FILENAME ) ).read() )
-
-
-def CompatibleWithCurrentCoreVersion():
-  try:
-    current_core_version = ycm_client_support.YcmCoreVersion()
-  except AttributeError:
-    return False
-  return ExpectedCoreVersion() == current_core_version
-
-
-if not CompatibleWithCurrentCoreVersion():
-  sys.exit( 2 )
-sys.exit( 0 )
+def CompatibleWithCurrentCoreVersion_test():
+  eq_( CompatibleWithCurrentCoreVersion(), True )

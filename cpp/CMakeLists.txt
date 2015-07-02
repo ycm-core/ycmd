@@ -38,6 +38,10 @@ set( CMAKE_LEGACY_CYGWIN_WIN32 0 )
 
 project( YouCompleteMe )
 
+# Get the core version
+file( STRINGS "../CORE_VERSION" YCMD_CORE_VERSION )
+add_definitions( -DYCMD_CORE_VERSION=${YCMD_CORE_VERSION} )
+
 option( UNIVERSAL "Build universal mac binary" OFF )
 
 if ( CMAKE_GENERATOR STREQUAL Xcode )
