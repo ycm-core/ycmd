@@ -269,10 +269,10 @@ def SafePopen( *args, **kwargs ):
     # We need this to start the server otherwise bad things happen.
     # See issue #637.
     if kwargs.get( 'stdin_windows' ) is subprocess.PIPE:
-      del kwargs[ 'stdin_windows' ]
       kwargs[ 'stdin' ] = subprocess.PIPE
     # Do not create a console window
     kwargs[ 'creationflags' ] = CREATE_NO_WINDOW
 
+  kwargs.pop( 'stdin_windows', None )
   return subprocess.Popen( *args, **kwargs )
 
