@@ -385,6 +385,14 @@ def Subcommands_GetType_test():
             test,
             [ 'GetType' ] )
 
+  # For every practical scenario, GetTypeImprecise is the same as GetType (it
+  # just skips the reparse)
+  for test in tests:
+    yield ( RunGetSemanticTest,
+            'GetType_Clang_test.cc',
+            test,
+            [ 'GetTypeImprecise' ] )
+
 
 def Subcommands_GetParent_test():
   tests = [
