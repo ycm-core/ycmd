@@ -224,6 +224,25 @@ Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
                        clang_getDiagnosticSpelling( diagnostic_wrap.get() ) );
   diagnostic.long_formatted_text_ = FullDiagnosticText( diagnostic_wrap.get() );
 
+  uint num_fixits = clang_getDiagnosticNumFixIts( diagnostic_wrap.get() );
+
+  // If there are any fixits supplied by libclang, cache them in the diagnostic
+  // object.
+  diagnostic.fixits_.reserve( num_fixits );
+  for ( uint fixit_idx = 0; fixit_idx < num_fixits; ++fixit_idx ) {
+    FixItChunk chunk;
+    CXSourceRange sourceRange;
+
+    chunk.replacement_text = CXStringToString(
+                                clang_getDiagnosticFixIt( diagnostic_wrap.get(),
+                                                          fixit_idx,
+                                                          &sourceRange) );
+
+    chunk.range = sourceRange;
+
+    diagnostic.fixits_.push_back( chunk );
+  }
+
   return diagnostic;
 }
 

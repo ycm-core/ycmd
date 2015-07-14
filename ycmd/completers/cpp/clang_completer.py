@@ -106,7 +106,8 @@ class ClangCompleter( Completer ):
              'GoToImprecise',
              'ClearCompilationFlagCache',
              'GetType',
-             'GetParent']
+             'GetParent',
+             'FixIt']
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -125,43 +126,48 @@ class ClangCompleter( Completer ):
     #            which defines the kwargs (via the ** double splat)
     #            when calling "method"
     command_map = {
-        'GoToDefinition' : {
-            'method' : self._GoToDefinition,
-            'args'   : { 'request_data' : request_data }
-         },
-        'GoToDeclaration' : {
-            'method' : self._GoToDeclaration,
-            'args'   : { 'request_data' : request_data }
-        },
-        'GoTo' : {
-            'method' : self._GoTo,
-            'args'   : { 'request_data' : request_data }
-        },
-        'GoToImprecise' : {
-            'method' : self._GoToImprecise,
-            'args'   : { 'request_data' : request_data }
-        },
-        'ClearCompilationFlagCache' : {
-            'method' : self._ClearCompilationFlagCache,
-            'args'   : { }
-        },
-        'GetType' : {
-            'method' : self._GetSemanticInfo,
-            'args'   : { 'request_data' : request_data,
-                         'func'         : 'GetTypeAtLocation' }
-        },
-        'GetParent' : {
-            'method' : self._GetSemanticInfo,
-            'args'   : { 'request_data' : request_data,
-                         'func'         : 'GetEnclosingFunctionAtLocation' }
-        },
+      'GoToDefinition' : {
+        'method' : self._GoToDefinition,
+        'args'   : { 'request_data' : request_data }
+      },
+      'GoToDeclaration' : {
+        'method' : self._GoToDeclaration,
+        'args'   : { 'request_data' : request_data }
+      },
+      'GoTo' : {
+        'method' : self._GoTo,
+        'args'   : { 'request_data' : request_data }
+      },
+      'GoToImprecise' : {
+        'method' : self._GoToImprecise,
+        'args'   : { 'request_data' : request_data }
+      },
+      'ClearCompilationFlagCache' : {
+        'method' : self._ClearCompilationFlagCache,
+        'args'   : { }
+      },
+      'GetType' : {
+        'method' : self._GetSemanticInfo,
+        'args'   : { 'request_data' : request_data,
+                     'func'         : 'GetTypeAtLocation' }
+      },
+      'GetParent' : {
+        'method' : self._GetSemanticInfo,
+        'args'   : { 'request_data' : request_data,
+                     'func'         : 'GetEnclosingFunctionAtLocation' }
+      },
+      'FixIt' : {
+        'method' : self._FixIt,
+        'args'   : { 'request_data' : request_data }
+      }
     }
 
     try:
-        command_def = command_map[arguments[0]]
-        return command_def['method']( **(command_def['args']) )
+      command_def = command_map[ arguments[ 0 ] ]
     except KeyError:
-        raise ValueError( self.UserCommandsHelpMessage() )
+      raise ValueError( self.UserCommandsHelpMessage() )
+
+    return command_def[ 'method' ]( **( command_def[ 'args' ] ) )
 
   def _LocationForGoTo( self, goto_function, request_data, reparse = True ):
     filename = request_data[ 'filepath' ]
@@ -247,6 +253,32 @@ class ClangCompleter( Completer ):
 
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()
+
+  def _FixIt( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    if not filename:
+      raise ValueError( INVALID_FILE_MESSAGE )
+
+    flags = self._FlagsForRequest( request_data )
+    if not flags:
+      raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
+
+    files = self.GetUnsavedFilesVector( request_data )
+    line = request_data[ 'line_num' ]
+    column = request_data[ 'column_num' ]
+
+    fixits = getattr( self._completer, "GetFixItsForLocationInFile" )(
+        ToUtf8IfNeeded( filename ),
+        line,
+        column,
+        files,
+        flags,
+        True )
+
+    # don't raise an error if not fixits: - leave that to the client to respond
+    # in a nice way
+
+    return responses.BuildFixItResponse( fixits )
 
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]
