@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContinuousTest.cs" />
+    <Compile Include="FixItTestCase.cs" />
     <Compile Include="GetTypeTestCase.cs" />
     <Compile Include="GotoTestCase.cs" />
     <Compile Include="ImportTest.cs" />
