@@ -185,8 +185,6 @@ def ApplyWorkarounds():
 
 
 def BuildCodeIntel():
-  if find_executable( 'codeintel' ):  # Global install available, use that.
-    return
   pip_command = find_executable( 'pip' )
   if not pip_command:
     sys.exit( 'pip is required to install CodeIntel.' )
