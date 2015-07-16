@@ -36,9 +36,6 @@ DATA_DIR = os.path.join( TEST_DIR, "testdata" )
 PATH_TO_BASIC_TEST_FILE = os.path.join( DATA_DIR, "test.php" )
 PATH_TO_INCL_TEST_FILE = os.path.join( DATA_DIR, "includes.php" )
 
-# TODO: Test go to in current file
-# TODO: Test go to in included and required file
-# TODO: Test go to in general project file (? determine definition in ycmd)
 
 def CompletionEntryMatcher( insertion_text ):
   return has_entry( 'insertion_text', insertion_text )
