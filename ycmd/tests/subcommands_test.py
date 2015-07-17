@@ -1089,16 +1089,16 @@ def RunCompleterCommand_FixIt_CsCompleter_MultipleLines_test():
         },
         u'chunks' : [
           {
-            u'replacement_text': "\r\n            return One();\r",
+            u'replacement_text': "return On",
             u'range' : {
               u'start': {
-                u'line_num': 19,
-                u'column_num': 27,
+                u'line_num': 20,
+                u'column_num': 13,
                 u'filepath': filepath
               },
               u'end': {
                 u'line_num': 21,
-                u'column_num': 39,
+                u'column_num': 35,
                 u'filepath': filepath
               },
             }

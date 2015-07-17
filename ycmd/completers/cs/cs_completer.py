@@ -592,6 +592,7 @@ def DiagnosticsToDiagStructure( diagnostics ):
 def _BuildChunks( request_data, new_buffer ):
   filepath = request_data[ 'filepath' ]
   old_buffer = request_data[ 'file_data' ][ filepath ][ 'contents' ]
+  new_buffer = _FixLineEndings( old_buffer, new_buffer )
 
   new_length = len( new_buffer )
   old_length = len( old_buffer )
@@ -621,6 +622,19 @@ def _BuildChunks( request_data, new_buffer ):
   end = CsharpDiagnosticLocation( end_line, end_column, filepath )
   return [ CsharpFixItChunk( replacement_text,
                              CsharpDiagnosticRange( start, end ) ) ]
+
+
+def _FixLineEndings( old_buffer, new_buffer ):
+  new_windows = "\r\n" in new_buffer
+  old_windows = "\r\n" in old_buffer
+  if new_windows != old_windows:
+    if new_windows:
+      new_buffer = new_buffer.replace( "\r\n", "\n" )
+      new_buffer = new_buffer.replace( "\r", "\n" )
+    else:
+      import re
+      new_buffer = re.sub( "\r(?!\n)|(?<!\r)\n", "\r\n", new_buffer )
+  return new_buffer
 
 
 # Adapted from http://stackoverflow.com/a/24495900  
