@@ -43,9 +43,11 @@ def CompletionEntryMatcher( insertion_text ):
 @with_setup( Setup )
 def GetClassAttributes_test():
   app = TestApp( handlers.app )
+  with open( PATH_TO_BASIC_TEST_FILE, 'r' ) as fin:
+    contents = fin.read()
   completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 19,
                                   column_num = 16)
 
@@ -58,9 +60,11 @@ def GetClassAttributes_test():
 @with_setup( Setup )
 def GetStaticClassAttributes_test():
   app = TestApp( handlers.app )
+  with open( PATH_TO_BASIC_TEST_FILE, 'r' ) as fin:
+    contents = fin.read()
   completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 23,
                                   column_num = 6)
 
@@ -73,9 +77,11 @@ def GetStaticClassAttributes_test():
 @with_setup( Setup )
 def CompleteBuiltinClass_test():
   app = TestApp( handlers.app )
+  with open( PATH_TO_BASIC_TEST_FILE, 'r' ) as fin:
+    contents = fin.read()
   completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 46,
                                   column_num = 5)
 
@@ -91,9 +97,11 @@ def CompleteBuiltinClass_test():
 @with_setup( Setup )
 def CompleteBuiltinFunction_test():
   app = TestApp( handlers.app )
+  with open( PATH_TO_BASIC_TEST_FILE, 'r' ) as fin:
+    contents = fin.read()
   completion_data = BuildRequest( filepath = PATH_TO_BASIC_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_BASIC_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 34,
                                   column_num = 7)
 
@@ -109,11 +117,14 @@ def CompleteBuiltinFunction_test():
 @with_setup( Setup )
 def CompleteFromIncludedFile_test():
   app = TestApp( handlers.app )
-  
+
+  with open( PATH_TO_INCL_TEST_FILE, 'r' ) as fin:
+    contents = fin.read()
+
   # Check variables
   completion_data = BuildRequest( filepath = PATH_TO_INCL_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_INCL_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 8,
                                   column_num = 11)
 
@@ -127,7 +138,7 @@ def CompleteFromIncludedFile_test():
   # Check variables
   completion_data = BuildRequest( filepath = PATH_TO_INCL_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_INCL_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 12,
                                   column_num = 9)
 
@@ -139,7 +150,7 @@ def CompleteFromIncludedFile_test():
   # Check variables
   completion_data = BuildRequest( filepath = PATH_TO_INCL_TEST_FILE,
                                   filetype = 'php',
-                                  contents = open( PATH_TO_INCL_TEST_FILE ).read(),
+                                  contents = contents,
                                   line_num = 16,
                                   column_num = 9)
 
