@@ -75,7 +75,7 @@ class CodeIntelCompleter( Completer ):
     if trg is None:
       return []
 
-    cplns = buf.cplns_from_trg( trg )
+    cplns = buf.cplns_from_trg( trg, ctlr = _CaptureEvalController()  )
 
     return [ responses.BuildCompletionData(
                 ToUtf8IfNeeded( cpln[1] ),
