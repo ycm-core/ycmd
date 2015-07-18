@@ -33,6 +33,7 @@ sys.path.insert( 0, CI_BASE )
 
 from codeintel2.common import EvalController
 from codeintel2.manager import Manager
+from codeintel2.environment import DefaultEnvironment
 
 PROJECT_ROOT_SENTINEL_NAME = '.codeintel'
 
@@ -115,12 +116,15 @@ class CodeIntelCompleter( Completer ):
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
 
-    # TODO: Cache project root lookup
+    # TODO: Cache project root lookup and resulting environment
     root = self._FindProjectRoot( filename )
     logger.debug( '_GetCodeIntelBufAndPos: _FindProjectRoot returns %s' % root )
-    self.mgr.env.get_proj_base_dir = lambda: root
+    env = self.mgr.env
+    if not root is None:
+	  env = DefaultEnvironment()
+	  env.get_proj_base_dir = lambda: root
 	
-    buf = self.mgr.buf_from_content(contents, 'PHP', path = filename, env = self.mgr.env )
+    buf = self.mgr.buf_from_content(contents, 'PHP', path = filename, env = env )
     pos = ( sum( [ 
 				   len( l ) + 1 for l in 
 				      contents.split( '\n' )[ : ( line - 1 ) ] ] )  + 
