@@ -34,9 +34,7 @@ PATH_TO_BASIC_TEST_FILE = os.path.join( DATA_DIR, "test.php" )
 PATH_TO_INCL_TEST_FILE = os.path.join( DATA_DIR, "includes.php" )
 PATH_TO_INCLUDED_TEST_FILE = os.path.join( DATA_DIR, "included.php" )
 PATH_TO_REQUIRED_TEST_FILE = os.path.join( DATA_DIR, "required.php" )
-
-# TODO: Test go to in included and required file
-# TODO: Test go to in general project file (? determine definition in ycmd)
+PATH_TO_PROJ_TEST_FILE = os.path.join( DATA_DIR, "project", "deep", "test.php" )
 
 
 @with_setup( Setup )
@@ -121,6 +119,59 @@ def RunCompleterCommand_GoTo_RequiredFile_CodeIntelCompleter_test():
   eq_( {
          'filepath': PATH_TO_REQUIRED_TEST_FILE,
          'line_num': 6,
+         'column_num': 1
+       },
+       app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GoTo_ProjectFile_CodeIntelCompleter_test():
+  app = TestApp( handlers.app )
+  filepath = PATH_TO_PROJ_TEST_FILE
+  with open( filepath, 'r' ) as src_file:
+    contents = src_file.read()
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GoTo'],
+                            line_num = 18,
+                            column_num = 19,
+                            contents = contents,
+                            filetype = 'php',
+                            filepath = filepath )
+
+  eq_( {
+         'filepath': os.path.join( DATA_DIR, "project", "orphaned_shallow.php" ),
+         'line_num': 16,
+         'column_num': 1
+       },
+       app.post_json( '/run_completer_command', goto_data ).json )
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GoTo'],
+                            line_num = 18,
+                            column_num = 47,
+                            contents = contents,
+                            filetype = 'php',
+                            filepath = filepath )
+
+  eq_( {
+         'filepath': os.path.join( DATA_DIR, "project/deep/orphaned_deep.php" ),
+         'line_num': 16,
+         'column_num': 1
+       },
+       app.post_json( '/run_completer_command', goto_data ).json )
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = ['GoTo'],
+                            line_num = 18,
+                            column_num = 72,
+                            contents = contents,
+                            filetype = 'php',
+                            filepath = filepath )
+
+  eq_( {
+         'filepath': os.path.join( DATA_DIR, "project/deep/deeper/orphaned_deeper.php" ),
+         'line_num': 16,
          'column_num': 1
        },
        app.post_json( '/run_completer_command', goto_data ).json )

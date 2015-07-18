@@ -16,3 +16,5 @@
 function orphan_shallow_func() {
 	return 'Special tricks needed to use me';
 }
+
+$shallow_var = orphan_shallow_func();

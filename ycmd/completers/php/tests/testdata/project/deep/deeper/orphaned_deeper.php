@@ -16,3 +16,5 @@
 function orphan_deeper_func() {
 	return 'Special tricks needed to use me';
 }
+
+$deeper_var = 10;

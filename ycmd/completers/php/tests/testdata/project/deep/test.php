@@ -7,3 +7,15 @@
  * should be: "orphan_func"
  */
 orphan_
+
+/*
+ * Functions defined at various levels within project
+ * 
+ * function up one level is at line 18 column 19
+ * function at same level is at line 18 column 47
+ * function one level deeper is at line 18 column 72
+ */
+if (orphan_shallow_func() === orphan_deep_func() === orphan_deeper_func()) 
+{
+	echo orphan_shallow_func() . "x3";
+}

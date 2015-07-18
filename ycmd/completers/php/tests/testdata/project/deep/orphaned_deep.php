@@ -16,3 +16,5 @@
 function orphan_deep_func() {
 	return 'Special tricks needed to use me';
 }
+
+$deep_var_b = 'C';
