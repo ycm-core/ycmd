@@ -190,7 +190,17 @@ def BuildCodeIntel():
     sys.exit( 'pip is required to install CodeIntel.' )
 
   sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) )
-  sh.Command( pip_command )( 'install', 'codeintel', U = True, t = 'codeintel', _out = sys.stdout )
+  sh.Command( pip_command )( 'install', 
+                             'codeintel', 
+                             U = True, 
+                             t = 'codeintel', 
+                             _out = sys.stdout )
+
+  # Add __init__.py to install if missing to avoid import warnings and errors
+  zope_init = p.join( DIR_OF_THIS_SCRIPT, 'third_party/codeintel/zope/__init__.py' )
+  if not p.exists( zope_init ):
+    with open( zope_init, 'w' ) as init_file:
+	  init_file.write('')
 
 
 def Main():
