@@ -35,6 +35,7 @@ TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR, "testdata" )
 PATH_TO_BASIC_TEST_FILE = os.path.join( DATA_DIR, "test.php" )
 PATH_TO_INCL_TEST_FILE = os.path.join( DATA_DIR, "includes.php" )
+PATH_TO_PROJ_TEST_FILE = os.path.join( DATA_DIR, "project", "deep", "test.php" )
 
 
 def CompletionEntryMatcher( insertion_text ):
@@ -158,3 +159,20 @@ def CompleteFromIncludedFile_test():
                            completion_data ).json[ 'completions' ]
   assert_that( results, has_items( CompletionEntryMatcher( 'includedFunction' ),
                                    CompletionEntryMatcher( 'includedClass' ), ) )
+
+@with_setup( Setup )
+def CompleteProjectFunction_test():
+  app = TestApp( handlers.app )
+  with open( PATH_TO_PROJ_TEST_FILE, 'r' ) as test_file:
+	  contents = test_file.read()
+  completion_data = BuildRequest( filepath = PATH_TO_PROJ_TEST_FILE,
+                                  filetype = 'php',
+                                  contents = contents,
+                                  line_num = 9,
+                                  column_num = 8)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'orphan_shallow_func' ),
+                                   CompletionEntryMatcher( 'orphan_deep_func' ),
+                                   CompletionEntryMatcher( 'orphan_deeper_func' ), ) )

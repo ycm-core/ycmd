@@ -18,7 +18,7 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, exists, join
 import sys
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
@@ -33,7 +33,8 @@ sys.path.insert( 0, CI_BASE )
 
 from codeintel2.common import EvalController
 from codeintel2.manager import Manager
-from codeintel2.environment import SimplePrefsEnvironment
+
+PROJECT_ROOT_SENTINEL_NAME = '.codeintel'
 
 # Set up logger
 logger = logging.getLogger( __name__ )
@@ -55,8 +56,7 @@ class CodeIntelCompleter( Completer ):
           db_base_dir = join( CI_DIR, 'db' ),
           extra_module_dirs = [ join( CI_DIR, 'codeintel2' ), ],
           db_import_everything_langs = None,
-          db_catalog_dirs = [],
-          env = SimplePrefsEnvironment()
+          db_catalog_dirs = []
       )
       self.mgr.upgrade()
       self.mgr.initialize()
@@ -115,7 +115,12 @@ class CodeIntelCompleter( Completer ):
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
 
-    buf = self.mgr.buf_from_content(contents, 'PHP', path = filename )
+    # TODO: Cache project root lookup
+    root = self._FindProjectRoot( filename )
+    logger.debug( '_GetCodeIntelBufAndPos: _FindProjectRoot returns %s' % root )
+    self.mgr.env.get_proj_base_dir = lambda: root
+	
+    buf = self.mgr.buf_from_content(contents, 'PHP', path = filename, env = self.mgr.env )
     pos = ( sum( [ 
 				   len( l ) + 1 for l in 
 				      contents.split( '\n' )[ : ( line - 1 ) ] ] )  + 
@@ -155,6 +160,22 @@ class CodeIntelCompleter( Completer ):
       return defs[0]
     return defs
 
+
+  def _FindProjectRoot( self, filename ):
+	filename = abspath( filename )
+	curr_dir = dirname( filename )
+	prev_dir = None
+	for i in range(255):        # Limit number of directories up one can go
+	  if exists( '%s/%s' % ( curr_dir, PROJECT_ROOT_SENTINEL_NAME ) ):
+	    return curr_dir
+	  
+	  prev_dir = curr_dir
+	  curr_dir = dirname( curr_dir )
+	  
+	  if prev_dir == curr_dir:  # Likely reached top of directory structure
+	    break
+
+	return None
 
   def Shutdown(self):
     if self.mgr:
