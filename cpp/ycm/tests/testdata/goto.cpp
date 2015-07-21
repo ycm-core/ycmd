@@ -11,6 +11,8 @@ struct Bar {
 struct Foo;
 struct Zoo;
 
+void func();
+
 void func() {
   Foo foo;
   foo.bar = 5;
