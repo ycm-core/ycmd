@@ -181,7 +181,12 @@ Location ClangCompleter::GetDefinitionLocation(
     return Location();
   }
 
-  return unit->GetDefinitionLocation( line, column, unsaved_files, reparse );
+  Location loc = unit->GetDefinitionLocation( line, column, unsaved_files, reparse );
+  if ( loc.IsValid() )
+      return loc;
+
+  std::string usr = unit->GetDefinitionUSR( line, column );
+  return translation_unit_store_.LocationForUsr(usr);
 }
 
 std::string ClangCompleter::GetTypeAtLocation(

@@ -115,6 +115,20 @@ shared_ptr< TranslationUnit > TranslationUnitStore::Get(
   return GetNoLock( filename );
 }
 
+Location TranslationUnitStore::LocationForUsr(const std::string& usr) {
+  lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
+  for (TranslationUnitForFilename::const_iterator
+           it(filename_to_translation_unit_.begin()),
+           end(filename_to_translation_unit_.end());
+        it != end;
+        ++it) {
+    Location location = it->second->GetLocationForUSR(usr);
+    if (location.IsValid())
+      return location;
+  }
+
+  return Location();
+}
 
 bool TranslationUnitStore::Remove( const std::string &filename ) {
   lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );

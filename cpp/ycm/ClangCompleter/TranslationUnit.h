@@ -26,6 +26,7 @@
 
 #include <clang-c/Index.h>
 #include <boost/utility.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <string>
@@ -84,6 +85,10 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
+  std::string GetDefinitionUSR( int line, int column );
+
+  Location GetLocationForUSR( const std::string& usr ) const;
+
   std::string GetTypeAtLocation(
     int line,
     int column,
@@ -116,6 +121,8 @@ private:
 
   void UpdateLatestDiagnostics();
 
+  static void IndexerDeclarationCallback( CXClientData rawData, const CXIdxDeclInfo* decl );
+
   CXCursor GetCursor( int line, int column );
 
   /////////////////////////////
@@ -127,8 +134,14 @@ private:
   boost::mutex diagnostics_mutex_;
   std::vector< Diagnostic > latest_diagnostics_;
 
+  // Maps a USR to the location of it's definition.
+  mutable boost::mutex usrs_mutex_;
+  typedef boost::unordered_map<std::string, Location> USRs;
+  USRs usrs_;
+
   mutable boost::mutex clang_access_mutex_;
   CXTranslationUnit clang_translation_unit_;
+  CXIndex clang_index_;
 };
 
 } // namespace YouCompleteMe

@@ -57,6 +57,8 @@ public:
   // not. You might end up getting a stale TU.
   boost::shared_ptr< TranslationUnit > Get( const std::string &filename );
 
+  Location LocationForUsr(const std::string& usr);
+
   bool Remove( const std::string &filename );
 
   void RemoveAll();
