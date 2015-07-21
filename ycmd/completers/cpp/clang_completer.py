@@ -140,7 +140,7 @@ class ClangCompleter( Completer ):
     }
 
 
-  def _LocationForGoTo( self, goto_function, request_data, reparse = True ):
+  def _CallOnCompleter( self, function_name, request_data, reparse = True ):
     filename = request_data[ 'filepath' ]
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
@@ -152,7 +152,7 @@ class ClangCompleter( Completer ):
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
-    return getattr( self._completer, goto_function )(
+    return getattr( self._completer, function_name )(
         ToUtf8IfNeeded( filename ),
         line,
         column,
@@ -162,14 +162,14 @@ class ClangCompleter( Completer ):
 
 
   def _GoToDefinition( self, request_data ):
-    location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
+    location = self._CallOnCompleter( 'GetDefinitionLocation', request_data )
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition.' )
     return _ResponseForLocation( location )
 
 
   def _GoToDeclaration( self, request_data ):
-    location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
+    location = self._CallOnCompleter( 'GetDeclarationLocation', request_data )
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to declaration.' )
     return _ResponseForLocation( location )
@@ -180,9 +180,15 @@ class ClangCompleter( Completer ):
     if include_response:
       return include_response
 
-    location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
-    if not location or not location.IsValid():
-      location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
+    location = self._CallOnCompleter( 'GetDefinitionLocation', request_data )
+    if (not location
+        or not location.IsValid()
+        or self._CallOnCompleter( 'IsLocationOnDefinition',
+                                  request_data,
+                                  reparse = False)):
+      location = self._CallOnCompleter( 'GetDeclarationLocation',
+                                         request_data,
+                                         reparse = False)
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
@@ -193,11 +199,15 @@ class ClangCompleter( Completer ):
     if include_response:
       return include_response
 
-    location = self._LocationForGoTo( 'GetDefinitionLocation',
+    location = self._CallOnCompleter( 'GetDefinitionLocation',
                                       request_data,
                                       reparse = False )
-    if not location or not location.IsValid():
-      location = self._LocationForGoTo( 'GetDeclarationLocation',
+    if (not location
+        or not location.IsValid()
+        or self._CallOnCompleter( 'IsLocationOnDefinition',
+                                  request_data,
+                                  reparse = False)):
+      location = self._CallOnCompleter( 'GetDeclarationLocation',
                                         request_data,
                                         reparse = False )
     if not location or not location.IsValid():

@@ -66,6 +66,12 @@ public:
     int column,
     const std::vector< UnsavedFile > &unsaved_files );
 
+  YCM_DLL_EXPORT bool IsLocationOnDefinition(
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    bool reparse = true );
+
   YCM_DLL_EXPORT Location GetDeclarationLocation(
     int line,
     int column,

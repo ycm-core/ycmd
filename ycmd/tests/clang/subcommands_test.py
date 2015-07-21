@@ -145,10 +145,12 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
       { 'request': [24, 16], 'response': [ 2, 11] },
       # sic: Local::out_of_line -> definition of Local::out_of_line
       { 'request': [25, 27], 'response': [14, 13] }, # sic
-      # sic: GoToDeclaration on definition of out_of_line moves to itself
-      { 'request': [14, 13], 'response': [14, 13] }, # sic
-      # main -> definition of main (not declaration)
-      { 'request': [21,  7], 'response': [21, 5] }, # sic
+      # GoTo on definition of out_of_line moves to declaration
+      { 'request': [14, 13], 'response': [11, 10] },
+      # GoTo in middle of definition of out_of_line moves to definition
+      { 'request': [14, 20], 'response': [11, 10] },
+      # definition of main -> declaration of main
+      { 'request': [21,  7], 'response': [19, 5] }, # sic
     ]
 
     for test in tests:
@@ -171,10 +173,12 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
       { 'request': [24, 16], 'response': [ 2, 11] },
       # sic: Local::out_of_line -> definition of Local::out_of_line
       { 'request': [25, 27], 'response': [14, 13] }, # sic
-      # sic: GoToDeclaration on definition of out_of_line moves to itself
-      { 'request': [14, 13], 'response': [14, 13] }, # sic
-      # main -> definition of main (not declaration)
-      { 'request': [21,  7], 'response': [21, 5] }, # sic
+      # GoToImprecise on definition of out_of_line moves to definition
+      { 'request': [14, 13], 'response': [11, 10] },
+      # GoToImprecise in middle of definition of out_of_line moves to definition
+      { 'request': [14, 20], 'response': [11, 10] },
+      # definition of main -> declaration of main
+      { 'request': [21,  7], 'response': [19, 5] }, # sic
     ]
 
     for test in tests:

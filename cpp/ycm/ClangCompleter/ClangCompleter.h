@@ -59,6 +59,14 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags );
 
+  bool IsLocationOnDefinition(
+    const std::string &filename,
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    const std::vector< std::string > &flags,
+    bool reparse = true );
+
   Location GetDeclarationLocation(
     const std::string &filename,
     int line,
