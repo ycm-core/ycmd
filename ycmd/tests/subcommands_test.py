@@ -175,8 +175,8 @@ def RunCompleterCommand_GoTo_all_Clang_test():
     { 'request': [25,19], 'response': [3 ,11] },
     # sic: Local::out_of_line -> definition of Local::out_of_line
     { 'request': [26,30], 'response': [15,13 ] }, # sic
-    # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [15,13], 'response': [15,13] }, # sic
+    # GoTo on definition of out_of_line moves to declaration
+    { 'request': [15,13], 'response': [12,10] },
     # main -> definition of main (not declaration)
     { 'request': [22,7 ], 'response': [22,5] }, # sic
   ]
@@ -201,8 +201,8 @@ def RunCompleterCommand_GoTo_all_Clang_test():
     { 'request': [25,19], 'response': [3 ,11] },
     # sic: Local::out_of_line -> definition of Local::out_of_line
     { 'request': [26,30], 'response': [15,13 ] }, # sic
-    # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [15,13], 'response': [15,13] }, # sic
+    #  GoToImprecise on definition of out_of_line moves to declaration
+    { 'request': [15,13], 'response': [12,10] },
     # main -> definition of main (not declaration)
     { 'request': [22,7 ], 'response': [22,5] }, # sic
   ]
