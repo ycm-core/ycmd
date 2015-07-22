@@ -1015,6 +1015,199 @@ def RunCompleterCommand_GetType_CsCompleter_Constant_test():
   StopOmniSharpServer( app, filepath )
 
 
+def _RunFixItTest_CsCompleter( line, column, expected_result ):
+  app = TestApp( handlers.app )
+  app.post_json( '/ignore_extra_conf_file',
+                 { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'testy/FixItTestCase.cs' )
+  contents = open( filepath ).read()
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilOmniSharpServerReady( app, filepath )
+
+  fixit_data = BuildRequest( completer_target = 'filetype_default',
+                             command_arguments = ['FixIt'],
+                             line_num = line,
+                             column_num = column,
+                             contents = contents,
+                             filetype = 'cs',
+                             filepath = filepath )
+
+  eq_( expected_result,
+       app.post_json( '/run_completer_command', fixit_data ).json )
+
+  StopOmniSharpServer( app, filepath )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_FixIt_CsCompleter_RemoveSingleLine_test():
+  filepath = PathToTestFile( 'testy/FixItTestCase.cs' )
+  _RunFixItTest_CsCompleter( 11, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 11,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks' : [
+          {
+            u'replacement_text': '',
+            u'range' : {
+              u'start': {
+                u'line_num': 10,
+                u'column_num': 20,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 11,
+                u'column_num': 30,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  })
+
+
+@with_setup( Setup )
+def RunCompleterCommand_FixIt_CsCompleter_MultipleLines_test():
+  filepath = PathToTestFile( 'testy/FixItTestCase.cs' )
+  _RunFixItTest_CsCompleter( 19, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 19,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks' : [
+          {
+            u'replacement_text': "return On",
+            u'range' : {
+              u'start': {
+                u'line_num': 20,
+                u'column_num': 13,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 21,
+                u'column_num': 35,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  })
+
+
+@with_setup( Setup )
+def RunCompleterCommand_FixIt_CsCompleter_SpanFileEdge_test():
+  filepath = PathToTestFile( 'testy/FixItTestCase.cs' )
+  _RunFixItTest_CsCompleter( 1, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 1,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks' : [
+          {
+            u'replacement_text': 'System',
+            u'range' : {
+              u'start': {
+                u'line_num': 1,
+                u'column_num': 7,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 3,
+                u'column_num': 18,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  })
+
+
+@with_setup( Setup )
+def RunCompleterCommand_FixIt_CsCompleter_AddTextInLine_test():
+  filepath = PathToTestFile( 'testy/FixItTestCase.cs' )
+  _RunFixItTest_CsCompleter( 9, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 9,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks' : [
+          {
+            u'replacement_text': ', StringComparison.Ordinal',
+            u'range' : {
+              u'start': {
+                u'line_num': 9,
+                u'column_num': 29,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 9,
+                u'column_num': 29,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_FixIt_CsCompleter_ReplaceTextInLine_test():
+  filepath = PathToTestFile( 'testy/FixItTestCase.cs' )
+  _RunFixItTest_CsCompleter( 10, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 10,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks' : [
+          {
+            u'replacement_text': 'const int',
+            u'range' : {
+              u'start': {
+                u'line_num': 10,
+                u'column_num': 13,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 10,
+                u'column_num': 16,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
 @with_setup( Setup )
 def RunCompleterCommand_StopServer_CsCompleter_NoErrorIfNotStarted_test():
   app = TestApp( handlers.app )

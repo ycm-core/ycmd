@@ -50,6 +50,18 @@ class CsharpDiagnostic:
     self.kind_ = kind
 
 
+class CsharpFixIt:
+  def __init__ ( self, location, chunks ):
+    self.location = location
+    self.chunks = chunks
+
+
+class CsharpFixItChunk:
+  def __init__ ( self, replacement_text, range ):
+    self.replacement_text = replacement_text
+    self.range = range
+
+
 class CsharpDiagnosticRange:
   def __init__ ( self, start, end ):
     self.start_ = start
@@ -282,6 +294,7 @@ class CsharpSolutionCompleter:
         self._GoToImplementation( request_data, True ) ),
     'GetType': ( lambda self, request_data: self._GetType(
         request_data ) ),
+    'FixIt': ( lambda self, request_data: self._FixIt( request_data ) ),
     'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
     'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
     'ServerTerminated': ( lambda self, request_data: self.ServerTerminated() ),
@@ -412,6 +425,7 @@ class CsharpSolutionCompleter:
   def CompletionType( self, request_data ):
     return ForceSemanticCompletion( request_data )
 
+
   def _GetCompletions( self, request_data, completion_type ):
     """ Ask server for completions """
     parameters = self._DefaultParameters( request_data )
@@ -470,6 +484,20 @@ class CsharpSolutionCompleter:
       message += "\n" + result[ "Documentation" ]
 
     return responses.BuildDisplayMessageResponse( message )
+
+
+  def _FixIt( self, request_data ):
+    request = self._DefaultParameters( request_data )
+
+    result = self._GetResponse( '/fixcodeissue', request )
+    replacement_text = result[ "Text" ]
+    location = CsharpDiagnosticLocation( request_data['line_num'],
+                                         request_data['column_num'],
+                                         request_data['filepath'] )
+    fixits = [ CsharpFixIt( location,
+                            _BuildChunks( request_data, replacement_text ) ) ]
+
+    return responses.BuildFixItResponse( fixits )
 
 
   def _DefaultParameters( self, request_data ):
@@ -560,3 +588,62 @@ def DiagnosticsToDiagStructure( diagnostics ):
       diagnostic.location_.line_number_ ].append( diagnostic )
   return structure
 
+
+def _BuildChunks( request_data, new_buffer ):
+  filepath = request_data[ 'filepath' ]
+  old_buffer = request_data[ 'file_data' ][ filepath ][ 'contents' ]
+  new_buffer = _FixLineEndings( old_buffer, new_buffer )
+
+  new_length = len( new_buffer )
+  old_length = len( old_buffer )
+  if new_length == old_length and new_buffer == old_buffer:
+    return []
+  min_length = min( new_length, old_length )
+  start_index = 0
+  end_index = min_length
+  for i in range( 0, min_length - 1 ):
+      if new_buffer[ i ] != old_buffer[ i ]:
+          start_index = i
+          break
+  for i in range( 1, min_length ):
+      if new_buffer[ new_length - i ] != old_buffer[ old_length - i ]:
+          end_index = i - 1
+          break
+  # To handle duplicates, i.e aba => a
+  if ( start_index + end_index > min_length ):
+    start_index -= start_index + end_index - min_length
+
+  replacement_text = new_buffer[ start_index : new_length - end_index ]
+
+  ( start_line, start_column ) = _IndexToLineColumn( old_buffer, start_index )
+  ( end_line, end_column ) = _IndexToLineColumn( old_buffer,
+                                                 old_length - end_index )
+  start = CsharpDiagnosticLocation( start_line, start_column, filepath )
+  end = CsharpDiagnosticLocation( end_line, end_column, filepath )
+  return [ CsharpFixItChunk( replacement_text,
+                             CsharpDiagnosticRange( start, end ) ) ]
+
+
+def _FixLineEndings( old_buffer, new_buffer ):
+  new_windows = "\r\n" in new_buffer
+  old_windows = "\r\n" in old_buffer
+  if new_windows != old_windows:
+    if new_windows:
+      new_buffer = new_buffer.replace( "\r\n", "\n" )
+      new_buffer = new_buffer.replace( "\r", "\n" )
+    else:
+      import re
+      new_buffer = re.sub( "\r(?!\n)|(?<!\r)\n", "\r\n", new_buffer )
+  return new_buffer
+
+
+# Adapted from http://stackoverflow.com/a/24495900  
+def _IndexToLineColumn( text, index ):
+  """Get (line_number, col) of `index` in `string`."""
+  lines = text.splitlines( True )
+  curr_pos = 0
+  for linenum, line in enumerate( lines ):
+    if curr_pos + len( line ) > index:
+      return linenum + 1, index - curr_pos + 1
+    curr_pos += len( line )
+  assert False
