@@ -111,3 +111,125 @@ class FilenameCompleter_test( object ):
           ( 'Qt',       '[Dir]' ),
           ( 'QtGui',    '[Dir]' ),
         ], data )
+
+  def EnvVar_AtStart_File_test( self ):
+    os.environ[ 'YCM_TEST_DATA_DIR' ] = DATA_DIR
+    data = sorted( self._CompletionResultsForLine(
+                            'set x = $YCM_TEST_DATA_DIR/include/QtGui/' ) )
+
+    os.environ.pop( 'YCM_TEST_DATA_DIR' )
+    eq_( [ ( 'QDialog', '[File]' ), ( 'QWidget', '[File]' ) ], data )
+
+
+  def EnvVar_AtStart_File_Partial_test( self ):
+    # The reason all entries in the directory are returned is that the
+    # RequestWrapper tells the completer to effectively return results for
+    # $YCM_TEST_DIR/testdata/filename_completer/ and the client filters based
+    # on the additional characters.
+    os.environ[ 'YCM_TEST_DIR' ] = TEST_DIR
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = $YCM_TEST_DIR/testdata/filename_completer/te' ) )
+    os.environ.pop( 'YCM_TEST_DIR' )
+
+    eq_( [
+          ( u'foo漢字.txt', '[File]' ),
+          ( 'include',    '[Dir]' ),
+          ( 'test.cpp',   '[File]' ),
+          ( 'test.hpp',   '[File]' ),
+        ], data )
+
+  def EnvVar_AtStart_Dir_test( self ):
+    os.environ[ 'YCMTESTDIR' ] = TEST_DIR
+
+    data = sorted( self._CompletionResultsForLine(
+                            'set x = $YCMTESTDIR/testdata/' ) )
+
+    os.environ.pop( 'YCMTESTDIR' )
+
+    eq_( [ ('filename_completer', '[Dir]') ], data )
+
+  def EnvVar_AtStart_Dir_Partial_test( self ):
+    os.environ[ 'ycm_test_dir' ] = TEST_DIR
+    data = sorted( self._CompletionResultsForLine(
+                            'set x = $ycm_test_dir/testdata/fil' ) )
+
+    os.environ.pop( 'ycm_test_dir' )
+    eq_( [ ('filename_completer', '[Dir]') ], data )
+
+  def EnvVar_InMiddle_File_test( self ):
+    os.environ[ 'YCM_TEST_filename_completer' ] = 'filename_completer'
+    data = sorted( self._CompletionResultsForLine(
+      'set x = ' + TEST_DIR + '/testdata/$YCM_TEST_filename_completer/' ) )
+    os.environ.pop( 'YCM_TEST_filename_completer' )
+    eq_( [
+          ( u'foo漢字.txt', '[File]' ),
+          ( 'include',    '[Dir]' ),
+          ( 'test.cpp',   '[File]' ),
+          ( 'test.hpp',   '[File]' ),
+        ], data )
+
+  def EnvVar_InMiddle_File_Partial_test( self ):
+    os.environ[ 'YCM_TEST_filename_c0mpleter' ] = 'filename_completer'
+    data = sorted( self._CompletionResultsForLine(
+      'set x = ' + TEST_DIR + '/testdata/$YCM_TEST_filename_c0mpleter/te' ) )
+    os.environ.pop( 'YCM_TEST_filename_c0mpleter' )
+    eq_( [
+          ( u'foo漢字.txt', '[File]' ),
+          ( 'include',    '[Dir]' ),
+          ( 'test.cpp',   '[File]' ),
+          ( 'test.hpp',   '[File]' ),
+        ], data )
+
+  def EnvVar_InMiddle_Dir_test( self ):
+    os.environ[ 'YCM_TEST_td' ] = 'testd'
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/${YCM_TEST_td}ata/' ) )
+
+    os.environ.pop( 'YCM_TEST_td' )
+    eq_( [ ('filename_completer', '[Dir]') ], data )
+
+  def EnvVar_InMiddle_Dir_Partial_test( self ):
+    os.environ[ 'YCM_TEST_td' ] = 'tdata'
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/tes${YCM_TEST_td}/' ) )
+    os.environ.pop( 'YCM_TEST_td' )
+
+    eq_( [ ('filename_completer', '[Dir]') ], data )
+
+  def EnvVar_Undefined_test( self ):
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/testdata${YCM_TEST_td}/' ) )
+
+    eq_( [ ], data )
+
+  def EnvVar_Empty_Matches_test( self ):
+    os.environ[ 'YCM_empty_var' ] = ''
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/testdata${YCM_empty_var}/' ) )
+    os.environ.pop( 'YCM_empty_var' )
+
+    eq_( [ ('filename_completer', '[Dir]') ], data )
+
+  def EnvVar_Undefined_Garbage_test( self ):
+    os.environ[ 'YCM_TEST_td' ] = 'testdata'
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/$YCM_TEST_td}/' ) )
+
+    os.environ.pop( 'YCM_TEST_td' )
+    eq_( [ ], data )
+
+  def EnvVar_Undefined_Garbage_2_test( self ):
+    os.environ[ 'YCM_TEST_td' ] = 'testdata'
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/${YCM_TEST_td/' ) )
+
+    os.environ.pop( 'YCM_TEST_td' )
+    eq_( [ ], data )
+
+  def EnvVar_Undefined_Garbage_3_test( self ):
+    os.environ[ 'YCM_TEST_td' ] = 'testdata'
+    data = sorted( self._CompletionResultsForLine(
+                    'set x = ' + TEST_DIR + '/$ YCM_TEST_td/' ) )
+
+    os.environ.pop( 'YCM_TEST_td' )
+    eq_( [ ], data )
