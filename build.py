@@ -190,6 +190,11 @@ def BuildCodeIntel():
     sys.exit( 'pip is required to install CodeIntel.' )
 
   sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) )
+
+  # Make sure directory "codeintel" exists
+  if not p.exists( 'codeintel' ):
+    os.mkdir( 'codeintel' )
+
   sh.Command( pip_command )( 'install', 
                              'codeintel', 
                              U = True, 
