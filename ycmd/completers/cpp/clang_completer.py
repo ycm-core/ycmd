@@ -206,7 +206,7 @@ class ClangCompleter( Completer ):
   def _GoTo( self, request_data ):
     location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
     if not location or not location.IsValid() or _LocationMatchesRequest(location, request_data):
-      location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
+      location = self._LocationForGoTo( 'GetDeclarationLocation', request_data, reparse = False )
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
