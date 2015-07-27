@@ -52,7 +52,7 @@ class CodeIntelCompleter( Completer ):
     super( CodeIntelCompleter, self ).__init__( user_options )
 
     # Initialize CodeIntel Manager on the class
-    if CodeIntelCompleter.mgr is None:
+    if CodeIntelCompleter.mgr is None and exists( CI_BASE ):
       CodeIntelCompleter.mgr = Manager(
           db_base_dir = join( CI_DIR, 'db' ),
           extra_module_dirs = [ join( CI_DIR, 'codeintel2' ), ],
@@ -86,18 +86,22 @@ class CodeIntelCompleter( Completer ):
 
   def ShouldUseNowInner( self, request_data ):
     res = super( CodeIntelCompleter, self ).ShouldUseNowInner( request_data )
-    logger.debug('ShouldUseNowInner called. Returns %s' % res)
+    logger.debug( 'ShouldUseNowInner called. Returns %s' % res )
 
     # Don't complete for empty lines
     if not len( request_data[ 'line_value' ] ):
       return False
+
+    # If the completer is not installed, then it shouldn't be used
+    if not exists( CI_BASE ):
+	  return False
 
     # TODO: Fix this to check request data
     return True
 
 
   def DefinedSubcommands( self ):
-    return ['GoTo']
+    return [ 'GoTo' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -128,7 +132,7 @@ class CodeIntelCompleter( Completer ):
     pos = ( sum( [ 
 				   len( l ) + 1 for l in 
 				      contents.split( '\n' )[ : ( line - 1 ) ] ] )  + 
-	        column - 1)
+	        column - 1 )
 
     return buf, pos 
 
@@ -157,11 +161,11 @@ class CodeIntelCompleter( Completer ):
     for definition in definition_list:
 	  # TODO: Prevent use for built in functions and Classes
 	  defs.append(
-	  responses.BuildGoToResponse( definition.path,
-									definition.line,
-									definition.scopestart ) )
-    if len(defs) == 1:
-      return defs[0]
+	    responses.BuildGoToResponse( definition.path,
+                                     definition.line,
+                                     definition.scopestart ) )
+    if len( defs ) == 1:
+      return defs[ 0 ]
     return defs
 
 
@@ -169,7 +173,7 @@ class CodeIntelCompleter( Completer ):
 	filename = abspath( filename )
 	curr_dir = dirname( filename )
 	prev_dir = None
-	for i in range(255):        # Limit number of directories up one can go
+	for i in range( 255 ):   # Limit number of directories up one can go
 	  if exists( '%s/%s' % ( curr_dir, PROJECT_ROOT_SENTINEL_NAME ) ):
 	    return curr_dir
 	  
@@ -181,13 +185,13 @@ class CodeIntelCompleter( Completer ):
 
 	return None
 
-  def Shutdown(self):
+  def Shutdown( self ):
     if self.mgr:
       self.mgr.finalize()
 
 
 class _CaptureEvalController( EvalController ):
-  def debug(self, msg, *args): logger.debug( msg, *args )
-  def  info(self, msg, *args): logger.info( msg, *args )
-  def  warn(self, msg, *args): logger.warn( msg, *args )
-  def error(self, msg, *args): logger.error( msg, *args )
+  def debug( self, msg, *args ): logger.debug( msg, *args )
+  def  info( self, msg, *args ): logger.info( msg, *args )
+  def  warn( self, msg, *args ): logger.warn( msg, *args )
+  def error( self, msg, *args ): logger.error( msg, *args )
