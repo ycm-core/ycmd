@@ -96,8 +96,8 @@ class CodeIntelCompleter( Completer ):
     if not exists( CI_BASE ):
 	  return False
 
-    # TODO: Fix this to check request data
-    return True
+    # Only remaining check is whether or not the file type is appropriate
+    return self._CurrentFiletype( request_data[ 'filetypes' ] ) in self.SupportedFiletypes()
 
 
   def DefinedSubcommands( self ):
