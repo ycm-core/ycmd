@@ -75,8 +75,8 @@ non-semantic.
 There are also several semantic engines in YCM. There's a libclang-based
 completer that provides semantic completion for C-family languages.  There's also a
 Jedi-based completer for semantic completion for Python, an OmniSharp-based
-completer for C#, and a [Gocode][gocode]-based completer for Go.
-More will be added with time.
+completer for C#, a [Gocode][gocode]-based completer for Go, and a TSServer-based
+completer for TypeScript. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
