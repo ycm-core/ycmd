@@ -203,12 +203,16 @@ class TypeScriptCompleter( Completer ):
       self._Reload( request_data )
 
   def DefinedSubcommands( self ):
-    return [ 'GoToDefinition' ]
+    return [ 'GoToDefinition',
+             'GetType']
 
   def OnUserCommand( self, arguments, request_data ):
     command = arguments[ 0 ]
     if command == 'GoToDefinition':
       return self._GoToDefinition( request_data )
+    if command == 'GetType':
+      return self._GetType( request_data )
+
     raise ValueError( self.UserCommandsHelpMessage() )
 
   def _GoToDefinition( self, request_data ):
@@ -230,6 +234,21 @@ class TypeScriptCompleter( Completer ):
         line_num   = span[ 'start' ][ 'line' ],
         column_num = span[ 'start' ][ 'offset' ]
       )
+
+  def _GetType( self, request_data ):
+    with self._lock:
+      self._Reload( request_data )
+      seq = self._SendRequest( 'quickinfo', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      })
+
+      info = self._ReadResponse( seq )[ 'body' ]
+      if not info:
+        raise RuntimeError( 'No type available' )
+
+      return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
 
   def Shutdown( self ):
     with self._lock:
