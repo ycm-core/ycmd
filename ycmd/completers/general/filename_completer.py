@@ -100,7 +100,7 @@ class FilenameCompleter( Completer ):
                                     client_data ) )
 
     path_match = self._path_regex.search( line )
-    path_dir = os.path.expanduser( 
+    path_dir = os.path.expanduser(
                 os.path.expandvars( path_match.group() ) ) if path_match else ''
 
     return _GenerateCandidatesForPaths(

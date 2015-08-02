@@ -27,14 +27,15 @@ from .test_utils import ( Setup, BuildRequest, PathToTestFile,
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from hamcrest import ( assert_that, has_item, has_items, has_entry, has_entries,
-                       contains_inanyorder, empty, greater_than,
+                       contains, contains_inanyorder, empty, greater_than,
                        contains_string )
 from ..responses import  UnknownExtraConf, NoExtraConfDetected
 from .. import handlers
+from ..completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 import bottle
+import pprint
 
 bottle.debug( True )
-
 
 def CompletionEntryMatcher( insertion_text, extra_menu_info = None ):
   match = { 'insertion_text': insertion_text }
@@ -48,6 +49,69 @@ def CompletionLocationMatcher( location_type, value ):
                     has_entry( 'location',
                                has_entry( location_type, value ) ) )
 
+
+def ErrorMatcher( cls, msg ):
+  return has_entries( {
+    'exception' : has_entry( 'TYPE', cls.__name__ ),
+    'message': msg,
+  } )
+
+NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
+
+@with_setup( Setup )
+def GetCompletions_RunTest( test ):
+  """
+  Method to run a simple completion test and verify the result
+
+  Note: uses the .ycm_extra_conf from general_fallback/ which:
+   - supports cpp, c and objc
+   - requires extra_conf_data containing 'filetype&' = the filetype
+
+  this should be sufficient for many standard test cases
+
+  test is a dictionary containing:
+    'request': kwargs for BuildRequest
+    'expect': {
+       'response': server response code (e.g. httplib.OK)
+       'data': matcher for the server response json
+    }
+  """
+  app = TestApp( handlers.app )
+  app.post_json( '/load_extra_conf_file',
+                 { 'filepath': PathToTestFile(
+                                  'general_fallback/.ycm_extra_conf.py' ) } )
+
+  contents = open( test[ 'request' ][ 'filepath' ] ).read()
+
+  def CombineRequest( request, data ):
+    kw = request
+    request.update( data )
+    return BuildRequest( **kw )
+
+  # Because we aren't testing this command, we *always* ignore errors. This is
+  # mainly because we (may) want to test scenarios where the completer throws
+  # an exception and the easiest way to do that is to throw from within the
+  # FlagsForFile function.
+  app.post_json( '/event_notification',
+                 CombineRequest( test[ 'request' ], {
+                                   'event_name': 'FileReadyToParse',
+                                   'contents': contents,
+                                 } ),
+                 expect_errors = True )
+
+  # We also ignore errors here, but then we check the response code ourself.
+  # This is to allow testing of requests returning errors.
+  response = app.post_json( '/completions',
+                            CombineRequest( test[ 'request' ], {
+                              'contents': contents
+                            } ),
+                            expect_errors = True )
+
+  print 'completer response: ' + pprint.pformat( response.json )
+
+  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+
+  assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 @with_setup( Setup )
 def GetCompletions_RequestValidation_NoLineNumException_test():
@@ -80,8 +144,8 @@ def GetCompletions_IdentifierCompleter_Works_test():
 
   eq_( 1, response_data[ 'completion_start_column' ] )
   assert_that( response_data[ 'completions' ],
-               has_items( CompletionEntryMatcher( 'foo' ),
-                          CompletionEntryMatcher( 'foogoo' ) ) )
+               has_items( CompletionEntryMatcher( 'foo', '[ID]' ),
+                          CompletionEntryMatcher( 'foogoo', '[ID]' ) ) )
 
 
 @with_setup( Setup )
@@ -115,9 +179,207 @@ def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test():
                            completion_data ).json[ 'completions' ]
 
   assert_that( results,
-               has_items( CompletionEntryMatcher( 'font-size' ),
-                          CompletionEntryMatcher( 'font-family' ) ) )
+               has_items( CompletionEntryMatcher( 'font-size', '[ID]' ),
+                          CompletionEntryMatcher( 'font-family', '[ID]' ) ) )
 
+@with_setup( Setup )
+def GetCompletions_ClangCompleter_Forced_With_No_Trigger_test():
+  GetCompletions_RunTest( {
+    'description': 'semantic completion with force query=DO_SO',
+    'request': {
+      'filetype':   'cpp',
+      'filepath':   PathToTestFile( 'general_fallback/lang_cpp.cc' ),
+      'line_num':   54,
+      'column_num': 8,
+      'extra_conf_data': { '&filetype': 'cpp' },
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
+          CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )  
+
+@with_setup( Setup )
+def GetCompletions_ClangCompleter_Fallback_NoSuggestions_test():
+  # TESTCASE1 (general_fallback/lang_c.c)
+  GetCompletions_RunTest( {
+    'description': 'Triggered, fallback but no query so no completions',
+    'request': {
+      'filetype':   'c',
+      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'line_num':   29,
+      'column_num': 21,
+      'extra_conf_data': { '&filetype': 'c' },
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': empty(),
+        'errors': has_item( NO_COMPLETIONS_ERROR ),
+      } )
+    },
+  } )
+
+@with_setup( Setup)
+def GetCompletions_ClangCompleter_Fallback_NoSuggestions_MinCh_test():
+  # TESTCASE1 (general_fallback/lang_cpp.cc)
+  GetCompletions_RunTest( {
+    'description': 'fallback general completion obeys min chars setting '
+                   ' (query="a")',
+    'request': {
+      'filetype':   'cpp',
+      'filepath':   PathToTestFile( 'general_fallback/lang_cpp.cc' ),
+      'line_num':   21,
+      'column_num': 22,
+      'extra_conf_data': { '&filetype': 'cpp' },
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': empty(),
+        'errors': has_item( NO_COMPLETIONS_ERROR ),
+      } )
+    },
+  } )
+
+@with_setup( Setup)
+def GetCompletions_ClangCompleter_Fallback_Suggestions_test():
+  # TESTCASE1 (general_fallback/lang_c.c)
+  GetCompletions_RunTest( {
+    'description': '. after macro with some query text (.a_)',
+    'request': {
+      'filetype':   'c',
+      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'line_num':   29,
+      'column_num': 23,
+      'extra_conf_data': { '&filetype': 'c' },
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': has_item( CompletionEntryMatcher( 'a_parameter',
+                                                         '[ID]' ) ),
+        'errors': has_item( NO_COMPLETIONS_ERROR ),
+      } )
+    },
+  } )
+
+@with_setup( Setup )
+def GetCompletions_ClangCompleter_Fallback_Exception_test():
+  # TESTCASE4 (general_fallback/lang_c.c)
+  # extra conf throws exception
+  GetCompletions_RunTest( {
+    'description': '. on struct returns identifier because of error',
+    'request': {
+      'filetype':   'c',
+      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'line_num':   62,
+      'column_num': 20,
+      'extra_conf_data': { '&filetype': 'c', 'throw': 'testy' },
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'a_parameter', '[ID]' ),
+          CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+        ),
+        'errors': has_item( ErrorMatcher( ValueError, 'testy' ) )
+      } )
+    },
+  } )
+
+@with_setup( Setup )
+def GetCompletions_ClangCompleter_Forced_NoFallback_test():
+  # TESTCASE2 (general_fallback/lang_c.c)
+  GetCompletions_RunTest( {
+    'description': '-> after macro with forced semantic',
+    'request': {
+      'filetype':   'c',
+      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'line_num':   41,
+      'column_num': 30,
+      'extra_conf_data': { '&filetype': 'c' },
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': httplib.INTERNAL_SERVER_ERROR,
+      'data': NO_COMPLETIONS_ERROR,
+    },
+  } )
+
+@with_setup( Setup )
+def GetCompletions_JediCompleter_NoSuggestions_Fallback_test():
+  # jedi completer doesn't raise NO_COMPLETIONS_MESSAGE, so this is a different
+  # code path to the ClangCompleter cases
+
+  # TESTCASE2 (general_fallback/lang_python.py)
+  GetCompletions_RunTest( {
+    'description': 'param jedi does not know about (id). query="a_p"',
+    'request': {
+      'filetype':   'python',
+      'filepath':   PathToTestFile( 'general_fallback/lang_python.py' ),
+      'line_num':   28,
+      'column_num': 20,
+      'extra_conf_data': { '&filetype': 'python' },
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'a_parameter', '[ID]' ),
+          CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+@with_setup( Setup )
+def GetCompletions_ClangCompleter_Filtered_No_Results_Fallback_test():
+  # no errors because the semantic completer returned results, but they
+  # were filtered out by the query, so this is considered working OK
+  # (whereas no completions from the semantic engine is considered an
+  # error)
+
+  # TESTCASE5 (general_fallback/lang_cpp.cc)
+  GetCompletions_RunTest( {
+    'description': '. on struct returns IDs after query=do_',
+    'request': {
+      'filetype':   'c',
+      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'line_num':   71,
+      'column_num': 18,
+      'extra_conf_data': { '&filetype': 'c' },
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'completions': contains_inanyorder(
+          # do_ is an identifier because it is already in the file when we
+          # load it
+          CompletionEntryMatcher( 'do_', '[ID]' ),
+          CompletionEntryMatcher( 'do_something', '[ID]' ),
+          CompletionEntryMatcher( 'do_another_thing', '[ID]' ),
+        ),
+        'errors': empty()
+      } )
+    },
+  } )
+  
 
 @with_setup( Setup )
 def GetCompletions_CsCompleter_Works_test():
@@ -330,9 +592,17 @@ def GetCompletions_CsCompleter_NonForcedReturnsNoResults_test():
                                   column_num = 21,
                                   force_semantic = False,
                                   query = 'Date' )
-  results = app.post_json( '/completions', completion_data ).json[ 'completions' ]
+  results = app.post_json( '/completions', completion_data ).json
 
-  assert_that( results, empty() )
+  # there are no semantic completions. However, we fall back to identifier
+  # completer in this case.
+  assert_that( results, has_entries( {
+    'completions' : has_item( has_entries( {
+      'insertion_text' : 'String',
+      'extra_menu_info': '[ID]',
+    } ) ),
+    'errors' : empty(),
+  } ) )
   StopOmniSharpServer( app, filepath )
 
 
@@ -358,9 +628,10 @@ def GetCompletions_CsCompleter_ForcedDividesCache_test():
                                   column_num = 21,
                                   force_semantic = True,
                                   query = 'Date' )
-  results = app.post_json( '/completions', completion_data ).json[ 'completions' ]
+  results = app.post_json( '/completions', completion_data ).json
 
-  assert_that( results, not(empty()) )
+  assert_that( results[ 'completions' ], not( empty() ) )
+  assert_that( results[ 'errors' ], empty() )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cs',
@@ -369,9 +640,17 @@ def GetCompletions_CsCompleter_ForcedDividesCache_test():
                                   column_num = 21,
                                   force_semantic = False,
                                   query = 'Date' )
-  results = app.post_json( '/completions', completion_data ).json[ 'completions' ]
+  results = app.post_json( '/completions', completion_data ).json
 
-  assert_that( results, empty() )
+  # there are no semantic completions. However, we fall back to identifier
+  # completer in this case.
+  assert_that( results, has_entries( {
+    'completions' : has_item( has_entries( {
+      'insertion_text' : 'String',
+      'extra_menu_info': '[ID]',
+    } ) ),
+    'errors' : empty(),
+  } ) )
   StopOmniSharpServer( app, filepath )
 
 
@@ -689,20 +968,22 @@ def GetCompletions_ClangCompleter_ExceptionWhenNoFlagsFromExtraConf_test():
                      'noflags/.ycm_extra_conf.py' ) } )
 
   filepath = PathToTestFile( 'noflags/basic.cpp' )
+
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cpp',
                                   contents = open( filepath ).read(),
                                   line_num = 11,
-                                  column_num = 7 )
+                                  column_num = 7,
+                                  force_semantic = True )
 
   response = app.post_json( '/completions',
                             completion_data,
                             expect_errors = True )
   eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+
   assert_that( response.json,
                has_entry( 'exception',
                           has_entry( 'TYPE', RuntimeError.__name__ ) ) )
-
 
 @with_setup( Setup )
 def GetCompletions_ClangCompleter_ForceSemantic_OnlyFileteredCompletions_test():
