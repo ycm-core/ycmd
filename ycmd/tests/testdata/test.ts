@@ -1,5 +1,6 @@
 
 class Foo {
+  // Unicode string: 说话
   methodA() {}
   methodB() {}
   methodC() {}
@@ -7,7 +8,7 @@ class Foo {
 
 var foo = new Foo();
 
-// line 11, column 6
+// line 12, column 6
 foo.m
 
 
