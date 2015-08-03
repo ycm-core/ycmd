@@ -58,7 +58,7 @@ def _FiletypeTriggerDictFromSpec( trigger_dict_spec ):
 
 
 def _FiletypeDictUnion( dict_one, dict_two ):
-  """Returns a new filetye dict that's a union of the provided two dicts.
+  """Returns a new filetype dict that's a union of the provided two dicts.
   Dict params are supposed to be type defaultdict(set)."""
   def UpdateDict( first, second ):
     for key, value in second.iteritems():
