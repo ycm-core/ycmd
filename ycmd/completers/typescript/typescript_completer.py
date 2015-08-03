@@ -144,7 +144,7 @@ class TypeScriptCompleter( Completer ):
     filename = request_data[ 'filepath' ]
     contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
     tmpfile = NamedTemporaryFile( delete=False )
-    tmpfile.write( contents )
+    tmpfile.write( utils.ToUtf8IfNeeded( contents ) )
     tmpfile.close()
     seq = self._SendRequest( 'reload', {
       'file':    filename,
