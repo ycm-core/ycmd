@@ -38,11 +38,11 @@ class FilenameCompleter( Completer ):
     self._flags = Flags()
 
     self._path_regex = re.compile( """
-      # 1 or more 'D:/'-like token or '/' or '~' or './' or '../'
-      (?:[A-z]+:/|[/~]|\./|\.+/)+
+      # 1 or more 'D:/'-like token or '/' or '~' or './' or '../' or '$var/'
+      (?:[A-z]+:/|[/~]|\./|\.+/|\$[A-Za-z0-9{}_]+/)+
 
-      # any alphanumeric symbal and space literal
-      (?:[ /a-zA-Z0-9()$+_~.\x80-\xff-\[\]]|
+      # any alphanumeric, symbol or space literal
+      (?:[ /a-zA-Z0-9(){}$+_~.\x80-\xff-\[\]]|
 
       # skip any special symbols
       [^\x20-\x7E]|
@@ -98,7 +98,8 @@ class FilenameCompleter( Completer ):
                                     utf8_filepath ) )
 
     path_match = self._path_regex.search( line )
-    path_dir = os.path.expanduser( path_match.group() ) if path_match else ''
+    path_dir = os.path.expanduser( 
+                os.path.expandvars( path_match.group() ) ) if path_match else ''
 
     return _GenerateCandidatesForPaths(
       _GetPathsStandardCase(
