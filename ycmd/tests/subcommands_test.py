@@ -121,10 +121,6 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_all_Clang_test():
   # GoToDeclaration
-  #
-  # the semantics of this seem the wrong way round to me. GoToDeclaration should
-  # go to where a method is declared, not where it is defined.
-  #
   tests = [
     # Local::x -> declaration of x
     { 'request': [24,25], 'response': [5 ,9 ] },
@@ -132,12 +128,12 @@ def RunCompleterCommand_GoTo_all_Clang_test():
     { 'request': [25,29], 'response': [7 ,10] },
     # Local -> declaration of Local
     { 'request': [25,19], 'response': [3 ,11] },
-    # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [26,30], 'response': [15,13 ] }, # sic
-    # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [15,13], 'response': [15,13] }, # sic
-    # main -> definition of main (not declaration)
-    { 'request': [22,7 ], 'response': [22,5] }, # sic
+    # Local::out_of_line -> declaration of Local::out_of_line
+    { 'request': [26,30], 'response': [12,10] },
+    # GoToDeclaration on definition of out_of_line moves to declaration
+    { 'request': [15,13], 'response': [12,10] },
+    # main -> declaration of main
+    { 'request': [22,7 ], 'response': [20,5] },
   ]
 
   for test in tests:
