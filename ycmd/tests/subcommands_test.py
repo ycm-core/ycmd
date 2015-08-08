@@ -1309,3 +1309,34 @@ def RunCompleterCommand_GetType_TypescriptCompleter_test():
          'message': 'var foo: Foo'
        },
        app.post_json( '/run_completer_command', gettype_data ).json )
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_HasNoType_TypescriptCompleter_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'test.ts' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = ['GetType'],
+                               line_num = 2,
+                               column_num = 1,
+                               contents = contents,
+                               filetype = 'typescript',
+                               filepath = filepath )
+
+  try:
+    app.post_json( '/run_completer_command', gettype_data ).json
+    raise Exception("Expected a 'No content available' error")
+  except AppError as e:
+    if 'No content available' in str(e):
+      pass
+    else:
+      raise

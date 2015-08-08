@@ -245,9 +245,6 @@ class TypeScriptCompleter( Completer ):
       })
 
       info = self._ReadResponse( seq )[ 'body' ]
-      if not info:
-        raise RuntimeError( 'No type available' )
-
       return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
 
   def Shutdown( self ):
