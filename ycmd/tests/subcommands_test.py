@@ -33,7 +33,7 @@ import re
 import os.path
 from pprint import pprint
 
-from hamcrest import ( assert_that, contains, has_entries, equal_to )
+from hamcrest import ( assert_that, contains, has_entries, equal_to, raises, calling )
 
 
 bottle.debug( True )
@@ -1332,11 +1332,5 @@ def RunCompleterCommand_GetType_HasNoType_TypescriptCompleter_test():
                                filetype = 'typescript',
                                filepath = filepath )
 
-  try:
-    app.post_json( '/run_completer_command', gettype_data ).json
-    raise Exception("Expected a 'No content available' error")
-  except AppError as e:
-    if 'No content available' in str(e):
-      pass
-    else:
-      raise
+  assert_that( calling( app.post_json ).with_args( '/run_completer_command', gettype_data ),
+               raises( AppError, 'RuntimeError.*No content available' ) )
