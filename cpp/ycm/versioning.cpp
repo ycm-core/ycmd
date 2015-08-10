@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "versioning.h"
+
 namespace YouCompleteMe {
 
 int YcmCoreVersion() {
-  // We increment this every time when we want to force users to recompile
-  // ycm_core.
-  return 17;
+  return YCMD_CORE_VERSION;
 }
 
 }  // namespace YouCompleteMe
