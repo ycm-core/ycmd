@@ -1295,7 +1295,7 @@ def RunCompleterCommand_GetType_TypescriptCompleter_test():
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                                command_arguments = ['GetType'],
-                               line_num = 11,
+                               line_num = 12,
                                column_num = 1,
                                contents = contents,
                                filetype = 'typescript',
