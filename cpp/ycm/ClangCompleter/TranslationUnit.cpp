@@ -214,7 +214,12 @@ Location TranslationUnit::GetDeclarationLocation(
   if ( !CursorIsValid( referenced_cursor ) )
     return Location();
 
-  return Location( clang_getCursorLocation( referenced_cursor ) );
+  CXCursor canonical_cursor = clang_getCanonicalCursor( referenced_cursor );
+
+  if ( !CursorIsValid( canonical_cursor ) )
+    return Location( clang_getCursorLocation( referenced_cursor ) );
+
+  return Location( clang_getCursorLocation( canonical_cursor ) );
 }
 
 Location TranslationUnit::GetDefinitionLocation(

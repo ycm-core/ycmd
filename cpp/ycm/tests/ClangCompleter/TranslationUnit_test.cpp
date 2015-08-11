@@ -70,7 +70,7 @@ TEST_F( TranslationUnitTest, GoToDefinitionWorks ) {
                         clang_index_ );
 
   Location location = unit.GetDefinitionLocation(
-                        15,
+                        17,
                         3,
                         std::vector< UnsavedFile >() );
 
@@ -89,7 +89,7 @@ TEST_F( TranslationUnitTest, GoToDefinitionFails ) {
                         clang_index_ );
 
   Location location = unit.GetDefinitionLocation(
-                        17,
+                        19,
                         3,
                         std::vector< UnsavedFile >() );
 
@@ -106,12 +106,31 @@ TEST_F( TranslationUnitTest, GoToDeclarationWorks ) {
                         clang_index_ );
 
   Location location = unit.GetDeclarationLocation(
-                        17,
+                        19,
                         3,
                         std::vector< UnsavedFile >() );
 
   EXPECT_EQ( 12, location.line_number_ );
   EXPECT_EQ( 8, location.column_number_ );
+  EXPECT_TRUE( !location.filename_.empty() );
+}
+
+TEST_F( TranslationUnitTest, GoToDeclarationWorksOnDefinition ) {
+  fs::path path_to_testdata = fs::current_path() / fs::path( "testdata" );
+  fs::path test_file = path_to_testdata / fs::path( "goto.cpp" );
+
+  TranslationUnit unit( test_file.string(),
+                        std::vector< UnsavedFile >(),
+                        std::vector< std::string >(),
+                        clang_index_ );
+
+  Location location = unit.GetDeclarationLocation(
+                        16,
+                        6,
+                        std::vector< UnsavedFile >() );
+
+  EXPECT_EQ( 14, location.line_number_ );
+  EXPECT_EQ( 6, location.column_number_ );
   EXPECT_TRUE( !location.filename_.empty() );
 }
 

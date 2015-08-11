@@ -2,7 +2,7 @@
 
 First make sure you have built ycmd; see the top-level README for details.
 
-Then install all the Python requirements with [pip][]:
+Then install all the Python requirements with [pip][] (run as admin/super user):
 
 ```
 pip install -r requirements.txt --use-mirrors

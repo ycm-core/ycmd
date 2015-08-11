@@ -75,8 +75,8 @@ non-semantic.
 There are also several semantic engines in YCM. There's a libclang-based
 completer that provides semantic completion for C-family languages.  There's also a
 Jedi-based completer for semantic completion for Python, an OmniSharp-based
-completer for C#, and a [Gocode][gocode]-based completer for Go.
-More will be added with time.
+completer for C#, a [Gocode][gocode]-based completer for Go, and a TSServer-based
+completer for TypeScript. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -206,20 +206,11 @@ If you have questions about the plugin or need help, please use the
 
 The author's homepage is <http://val.markovic.io>.
 
-Project Management
-------------------
-
-This open-source project is run by me, Strahinja Val Markovic. I also happen to
-work for Google and the code I write here is under Google copyright (for the
-sake of simplicity and other reasons). This does **NOT** mean that this is an
-official Google product (it isn't) or that Google has (or wants to have)
-anything to do with it.
-
 License
 -------
 
 This software is licensed under the [GPL v3 license][gpl].
-© 2014 Google Inc.
+© 2015 ycmd contributors
 
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycm-users
 [ycm]: http://valloric.github.io/YouCompleteMe/
