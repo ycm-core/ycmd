@@ -90,6 +90,12 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
+  std::vector< FixIt > GetFixItsForLocationInFile(
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    bool reparse = true );
+
 private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
 

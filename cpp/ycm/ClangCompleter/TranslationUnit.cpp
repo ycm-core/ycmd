@@ -214,7 +214,12 @@ Location TranslationUnit::GetDeclarationLocation(
   if ( !CursorIsValid( referenced_cursor ) )
     return Location();
 
-  return Location( clang_getCursorLocation( referenced_cursor ) );
+  CXCursor canonical_cursor = clang_getCanonicalCursor( referenced_cursor );
+
+  if ( !CursorIsValid( canonical_cursor ) )
+    return Location( clang_getCursorLocation( referenced_cursor ) );
+
+  return Location( clang_getCursorLocation( canonical_cursor ) );
 }
 
 Location TranslationUnit::GetDefinitionLocation(
@@ -368,7 +373,6 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
   UpdateLatestDiagnostics();
 }
 
-
 void TranslationUnit::UpdateLatestDiagnostics() {
   unique_lock< mutex > lock1( clang_access_mutex_ );
   unique_lock< mutex > lock2( diagnostics_mutex_ );
@@ -387,6 +391,65 @@ void TranslationUnit::UpdateLatestDiagnostics() {
     if ( diagnostic.kind_ != INFORMATION )
       latest_diagnostics_.push_back( diagnostic );
   }
+}
+
+namespace {
+  /// Sort a FixIt container by its location's distance from a given column
+  /// (such as the cursor location).
+  ///
+  /// PreCondition: All FixIts in the container are on the same line.
+  struct sort_by_location {
+    sort_by_location( int column ) : column_( column ) { }
+
+    bool operator()( const FixIt& a, const FixIt& b ) {
+      int a_distance = a.location.column_number_ - column_;
+      int b_distance = b.location.column_number_ - column_;
+
+      return std::abs( a_distance ) < std::abs( b_distance );
+    }
+
+  private:
+    int column_;
+  };
+}
+
+std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  bool reparse ) {
+
+  if ( reparse )
+    ReparseForIndexing( unsaved_files );
+
+  std::vector< FixIt > fixits;
+
+  {
+    unique_lock< mutex > lock( diagnostics_mutex_ );
+
+    for ( std::vector< Diagnostic >::const_iterator it
+                                        = latest_diagnostics_.begin();
+          it != latest_diagnostics_.end();
+          ++it) {
+
+      // Find all fixits for the supplied line
+      if ( it->fixits_.size() > 0 &&
+           it->location_.line_number_ == static_cast<uint>( line ) ) {
+        FixIt fixit;
+        fixit.chunks = it->fixits_;
+        fixit.location = it->location_;
+
+        fixits.push_back( fixit );
+      }
+    }
+  }
+
+  // Sort them by the distance to the supplied column
+  std::sort( fixits.begin(),
+             fixits.end(),
+             sort_by_location( column ) );
+
+  return fixits;
 }
 
 CXCursor TranslationUnit::GetCursor( int line, int column ) {

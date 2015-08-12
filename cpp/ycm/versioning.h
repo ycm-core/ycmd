@@ -15,8 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef VERSIONING_H_EEJUU0AH
+#define VERSIONING_H_EEJUU0AH
+
+// The true value of this preprocessor definition is set in a compiler
+// command-line flag. This is done in the main CMakeLists.txt file.
+#if !defined( YCMD_CORE_VERSION )
+  #define YCMD_CORE_VERSION 0
+#endif
+
 namespace YouCompleteMe {
 
 int YcmCoreVersion();
 
 }  // namespace YouCompleteMe
+
+#endif /* end of include guard: VERSIONING_H_EEJUU0AH */

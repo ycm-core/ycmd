@@ -908,7 +908,7 @@ def GetCompletions_TypeScriptCompleter_test():
                                   filetype = 'typescript',
                                   contents = contents,
                                   force_semantic = True,
-                                  line_num = 11,
+                                  line_num = 12,
                                   column_num = 6 )
 
   results = app.post_json( '/completions',

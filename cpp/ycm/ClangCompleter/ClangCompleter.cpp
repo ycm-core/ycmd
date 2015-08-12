@@ -206,6 +206,30 @@ std::string ClangCompleter::GetEnclosingFunctionAtLocation(
                                                reparse );
 }
 
+std::vector< FixIt >
+ClangCompleter::GetFixItsForLocationInFile(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse) {
+
+  ReleaseGil unlock;
+
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
+
+  if ( !unit )
+    return std::vector< FixIt >();
+
+  return unit->GetFixItsForLocationInFile( line,
+                                           column,
+                                           unsaved_files,
+                                           reparse );
+
+}
+
 void ClangCompleter::DeleteCachesForFile( const std::string &filename ) {
   ReleaseGil unlock;
   translation_unit_store_.Remove( filename );

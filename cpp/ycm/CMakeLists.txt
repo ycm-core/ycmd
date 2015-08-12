@@ -45,18 +45,18 @@ if ( USE_CLANG_COMPLETER AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
   if ( APPLE )
-    set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-apple-darwin" )
+    set( CLANG_DIRNAME "clang+llvm-3.6.2-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "b438a5e0aad3d9af0f21dc2c9a58f7dbc845740acea17c8fa69aa15e98457f74" )
+         "a796b60dbdf849a946ba142f7c05233975ec85bc04468a88e920dee02542a77d" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
       # We MUST support the latest Ubuntu LTS release!
       # At the time of writing, that's 14.04. Switch to next LTS ~6 months after
       # it comes out.
-      set( CLANG_DIRNAME "clang+llvm-3.6.1-x86_64-linux-gnu-ubuntu-14.04" )
+      set( CLANG_DIRNAME "clang+llvm-3.6.2-x86_64-linux-gnu-ubuntu-14.04" )
       set( CLANG_SHA256
-           "469aee8769eb214bafb6e239e7b6bd99d53542d4d386c1ed4e3e6845c0cb85d5" )
+           "70ff742456459ecad363462c72cba00aaa5473f699da29a2a6125ee7edfb967a" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
@@ -84,9 +84,9 @@ if ( USE_CLANG_COMPLETER AND
   endif()
 
   if( CLANG_DOWNLOAD )
-    message( "Downloading Clang 3.6" )
+    message( "Downloading Clang 3.6.2" )
 
-    set( CLANG_URL "http://llvm.org/releases/3.6.1" )
+    set( CLANG_URL "http://llvm.org/releases/3.6.2" )
     file(
       DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
       SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}

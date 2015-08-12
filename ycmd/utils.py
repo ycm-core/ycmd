@@ -266,11 +266,13 @@ def ForceSemanticCompletion( request_data ):
 # A wrapper for subprocess.Popen that fixes quirks on Windows.
 def SafePopen( *args, **kwargs ):
   if OnWindows():
-    # We need this otherwise bad things happen. See issue #637.
-    if kwargs.get( 'stdin' ) is None:
+    # We need this to start the server otherwise bad things happen.
+    # See issue #637.
+    if kwargs.get( 'stdin_windows' ) is subprocess.PIPE:
       kwargs[ 'stdin' ] = subprocess.PIPE
     # Do not create a console window
     kwargs[ 'creationflags' ] = CREATE_NO_WINDOW
 
+  kwargs.pop( 'stdin_windows', None )
   return subprocess.Popen( *args, **kwargs )
 
