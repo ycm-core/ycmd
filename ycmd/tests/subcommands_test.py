@@ -33,7 +33,7 @@ import re
 import os.path
 from pprint import pprint
 
-from hamcrest import ( assert_that, contains, has_entries, equal_to )
+from hamcrest import ( assert_that, contains, has_entries, equal_to, raises, calling )
 
 
 bottle.debug( True )
@@ -1278,3 +1278,55 @@ def DefinedSubcommands_WorksWhenNoExplicitCompleterTargetSpecified_test():
          'GoTo' ],
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_TypescriptCompleter_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'test.ts' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = ['GetType'],
+                               line_num = 12,
+                               column_num = 1,
+                               contents = contents,
+                               filetype = 'typescript',
+                               filepath = filepath )
+
+  eq_( {
+         'message': 'var foo: Foo'
+       },
+       app.post_json( '/run_completer_command', gettype_data ).json )
+
+@with_setup( Setup )
+def RunCompleterCommand_GetType_HasNoType_TypescriptCompleter_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'test.ts' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = ['GetType'],
+                               line_num = 2,
+                               column_num = 1,
+                               contents = contents,
+                               filetype = 'typescript',
+                               filepath = filepath )
+
+  assert_that( calling( app.post_json ).with_args( '/run_completer_command', gettype_data ),
+               raises( AppError, 'RuntimeError.*No content available' ) )
