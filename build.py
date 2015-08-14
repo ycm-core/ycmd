@@ -79,10 +79,12 @@ def CustomPythonCmakeArgs():
     else:
       python_library = '{0}.dylib'.format( lib_python )
     python_include = '{0}/include/{1}'.format( python_prefix, which_python )
+    python_executable = '{0}/bin/python'.format( python_prefix )
 
   return [
     '-DPYTHON_LIBRARY={0}'.format( python_library ),
-    '-DPYTHON_INCLUDE_DIR={0}'.format( python_include )
+    '-DPYTHON_INCLUDE_DIR={0}'.format( python_include ),
+    '-DPYTHON_EXECUTABLE={0}'.format(python_executable)
   ]
 
 
