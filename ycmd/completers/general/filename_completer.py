@@ -92,10 +92,12 @@ class FilenameCompleter( Completer ):
         # We do what GCC does for <> versus "":
         # http://gcc.gnu.org/onlinedocs/cpp/Include-Syntax.html
         include_current_file_dir = '<' not in include_match.group()
+        client_data = request_data.get( 'extra_conf_data', None )
         return _GenerateCandidatesForPaths(
           self.GetPathsIncludeCase( path_dir,
                                     include_current_file_dir,
-                                    utf8_filepath ) )
+                                    utf8_filepath,
+                                    client_data ) )
 
     path_match = self._path_regex.search( line )
     path_dir = os.path.expanduser( 
@@ -108,9 +110,10 @@ class FilenameCompleter( Completer ):
         utf8_filepath ) )
 
 
-  def GetPathsIncludeCase( self, path_dir, include_current_file_dir, filepath ):
+  def GetPathsIncludeCase( self, path_dir, include_current_file_dir, filepath,
+                           client_data ):
     paths = []
-    include_paths = self._flags.UserIncludePaths( filepath )
+    include_paths = self._flags.UserIncludePaths( filepath, client_data )
 
     if include_current_file_dir:
       include_paths.append( os.path.dirname( filepath ) )

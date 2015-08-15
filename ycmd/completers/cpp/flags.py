@@ -97,8 +97,8 @@ class Flags( object ):
       return sanitized_flags
 
 
-  def UserIncludePaths( self, filename ):
-    flags = self.FlagsForFile( filename, False )
+  def UserIncludePaths( self, filename, client_data ):
+    flags = self.FlagsForFile( filename, client_data = client_data )
     if not flags:
       return []
 
