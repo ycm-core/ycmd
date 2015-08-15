@@ -61,34 +61,68 @@ def CheckDeps():
     sys.exit( 'Please install CMake and retry.')
 
 
+# Shamelessly stolen from https://gist.github.com/edufelipe/1027906
+def _CheckOutput( *popen_args, **kwargs ):
+  """Run command with arguments and return its output as a byte string.
+  Backported from Python 2.7."""
+
+  process = subprocess.Popen( stdout=subprocess.PIPE, *popen_args, **kwargs )
+  output, unused_err = process.communicate()
+  retcode = process.poll()
+  if retcode:
+    command = kwargs.get( 'args' )
+    if command is None:
+      command = popen_args[ 0 ]
+    error = subprocess.CalledProcessError( retcode, command )
+    error.output = output
+    raise error
+  return output
+
+
 def CustomPythonCmakeArgs():
   # The CMake 'FindPythonLibs' Module does not work properly.
   # So we are forced to do its job for it.
 
-  python_prefix = subprocess.check_output( [
+  print( 'Searching for python libraries...' )
+
+  python_prefix = _CheckOutput( [
       'python-config',
       '--prefix'
   ] ).strip()
+
   if p.isfile( p.join( python_prefix, '/Python' ) ):
     python_library = p.join( python_prefix, '/Python' )
     python_include = p.join( python_prefix, '/Headers' )
+    print( 'Using OSX-style libs from {0}'.format( python_prefix ) )
   else:
-    which_python = subprocess.check_output( [
+    which_python = _CheckOutput( [
       'python',
       '-c',
-      'import sys;i=sys.version_info;print "python%d.%d" % (i[0], i[1])'
+      'import sys;i=sys.version_info;print( "python%d.%d" % (i[0], i[1]) )'
     ] ).strip()
     lib_python = '{0}/lib/lib{1}'.format( python_prefix, which_python ).strip()
+
+    print( 'Searching for python with prefix: {0} and lib {1}:'.format(
+      python_prefix, which_python ) )
 
     if p.isfile( '{0}.a'.format( lib_python ) ):
       python_library = '{0}.a'.format( lib_python )
     # This check is for CYGWIN
     elif p.isfile( '{0}.dll.a'.format( lib_python ) ):
       python_library = '{0}.dll.a'.format( lib_python )
-    else:
+    elif p.isfile( '{0}.dylib'.format( lib_python ) ):
       python_library = '{0}.dylib'.format( lib_python )
+    elif p.isfile( '/usr/lib/lib{0}.dylib'.format( which_python ) ):
+      # For no clear reason, python2.6 only exists in /usr/lib on OS X and
+      # not in the python prefix location
+      python_library = '/usr/lib/lib{0}.dylib'.format( which_python )
+    else:
+      sys.exit( 'ERROR: Unable to find an appropriate python library' )
+
     python_include = '{0}/include/{1}'.format( python_prefix, which_python )
 
+  print( 'Using PYTHON_LIBRARY={0} PYTHON_INCLUDE_DIR={1}'.format(
+      python_library, python_include ) )
   return [
     '-DPYTHON_LIBRARY={0}'.format( python_library ),
     '-DPYTHON_INCLUDE_DIR={0}'.format( python_include )
@@ -208,7 +242,7 @@ def BuildOmniSharp():
     sys.exit( 'msbuild or xbuild is required to build Omnisharp' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'OmniSharpServer' ) )
-  subprocess.check_call( [ build_command, "/property:Configuration=Release" ] )
+  subprocess.check_call( [ build_command, '/property:Configuration=Release' ] )
 
 
 def BuildGoCode():
@@ -228,5 +262,5 @@ def Main():
   if args.gocode_completer:
     BuildGoCode()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   Main()
