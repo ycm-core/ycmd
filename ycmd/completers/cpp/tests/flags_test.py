@@ -166,18 +166,17 @@ def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
   eq_( expected + expected,
        flags._RemoveUnusedFlags( expected + to_remove + expected, filename ) )
 
-def RemoveXclangFlags():
+
+def RemoveXclangFlags_test():
   expected = [ '-I', '/foo/bar', '-DMACRO=Value' ]
   to_remove = [ '-Xclang', 'load', '-Xclang', 'libplugin.so',
                 '-Xclang', '-add-plugin', '-Xclang', 'plugin-name' ]
-  filename = 'file'
 
   eq_( expected,
-       flags._RemoveXclangFlags( expected + to_remove, filename ) )
+       flags._RemoveXclangFlags( expected + to_remove ) )
 
   eq_( expected,
-       flags._RemoveXclangFlags( to_remove + expected, filename ) )
+       flags._RemoveXclangFlags( to_remove + expected ) )
 
   eq_( expected + expected,
-       flags._RemoveXclangFlags( expected + to_remove + expected, filename ) )
-
+       flags._RemoveXclangFlags( expected + to_remove + expected ) )
