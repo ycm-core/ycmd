@@ -29,7 +29,7 @@ from ycmd.completers.completer import Completer
 GO_FILETYPES = set( [ 'go' ] )
 BINARY_NOT_FOUND_MESSAGE = ( 'Gocode binary not found. Did you build it? ' +
                              'You can do so by running ' +
-                             '"./install.sh --gocode-completer".' )
+                             '"./install.py --gocode-completer".' )
 COMPLETION_ERROR_MESSAGE = 'Gocode shell call failed.'
 PARSE_ERROR_MESSAGE = 'Gocode returned invalid JSON response.'
 NO_COMPLETIONS_MESSAGE = 'Gocode returned empty JSON response.'
