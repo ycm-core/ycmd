@@ -450,7 +450,7 @@ def GetCompletions_CsCompleter_PathWithSpace_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'неприличное слово', 'Program.cs' )
+  filepath = PathToTestFile( u'неприличное слово', 'Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',

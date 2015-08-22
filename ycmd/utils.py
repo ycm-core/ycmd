@@ -264,7 +264,7 @@ def ForceSemanticCompletion( request_data ):
 
 
 # A wrapper for subprocess.Popen that fixes quirks on Windows.
-def SafePopen( *args, **kwargs ):
+def SafePopen( args, **kwargs ):
   if OnWindows():
     # We need this to start the server otherwise bad things happen.
     # See issue #637.
@@ -272,7 +272,47 @@ def SafePopen( *args, **kwargs ):
       kwargs[ 'stdin' ] = subprocess.PIPE
     # Do not create a console window
     kwargs[ 'creationflags' ] = CREATE_NO_WINDOW
+    # Python 2 fails to spawn a process from a command containing unicode
+    # characters on Windows.  See https://bugs.python.org/issue19264 and
+    # http://bugs.python.org/issue1759845.
+    # Since paths are likely to contains such characters, we convert them to
+    # short ones to obtain paths with only ascii characters.
+    args = ConvertArgsToShortPath( args )
 
   kwargs.pop( 'stdin_windows', None )
-  return subprocess.Popen( *args, **kwargs )
+  return subprocess.Popen( args, **kwargs )
 
+
+# Convert paths in arguments command to short path ones
+def ConvertArgsToShortPath( args ):
+  def ConvertIfPath( arg ):
+    if os.path.exists( arg ):
+      return GetShortPathName( arg )
+    return arg
+
+  if isinstance( args, basestring ):
+    return ConvertIfPath( args )
+  return [ ConvertIfPath( arg ) for arg in args ]
+
+
+# Get the Windows short path name.
+# Based on http://stackoverflow.com/a/23598461/200291
+def GetShortPathName( path ):
+  from ctypes import windll, wintypes, create_unicode_buffer
+
+  # Set the GetShortPathNameW prototype
+  _GetShortPathNameW = windll.kernel32.GetShortPathNameW
+  _GetShortPathNameW.argtypes = [ wintypes.LPCWSTR,
+                                  wintypes.LPWSTR,
+                                  wintypes.DWORD]
+  _GetShortPathNameW.restype = wintypes.DWORD
+
+  output_buf_size = 0
+
+  while True:
+    output_buf = create_unicode_buffer( output_buf_size )
+    needed = _GetShortPathNameW( path, output_buf, output_buf_size )
+    if output_buf_size >= needed:
+      return output_buf.value
+    else:
+      output_buf_size = needed
