@@ -771,6 +771,30 @@ def GetCompletions_ClangCompleter_ClientDataGivenToExtraConf_test():
 
 
 @with_setup( Setup )
+def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test():
+  app = TestApp( handlers.app )
+  app.post_json( '/load_extra_conf_file',
+                 { 'filepath': PathToTestFile(
+                                  'client_data/.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'client_data/include.cpp' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cpp',
+                                  contents = open( filepath ).read(),
+                                  line_num = 1,
+                                  column_num = 11,
+                                  extra_conf_data = {
+                                    'flags': ['-x', 'c++']
+                                  })
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_item(
+                 CompletionEntryMatcher( 'include.hpp',
+                                         extra_menu_info = '[File]' ) ) )
+
+
+@with_setup( Setup )
 def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test():
   app = TestApp( handlers.app )
   event_data = BuildRequest( event_name = 'FileReadyToParse',

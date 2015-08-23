@@ -167,7 +167,7 @@ def BuildOmniSharp():
     sys.exit( 'msbuild or xbuild is required to build Omnisharp' )
 
   sh.cd( p.join( DIR_OF_THIS_SCRIPT, 'third_party/OmniSharpServer' ) )
-  sh.Command( build_command )( _out = sys.stdout )
+  sh.Command( build_command )( "/property:Configuration=Release", _out = sys.stdout )
 
 
 def BuildGoCode():
