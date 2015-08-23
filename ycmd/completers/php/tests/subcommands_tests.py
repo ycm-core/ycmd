@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013  Google Inc.
+# Copyright (C) 2015  Neo Mofoka <neo@jeteon.com>.
 #
 # This file is part of YouCompleteMe.
 #
