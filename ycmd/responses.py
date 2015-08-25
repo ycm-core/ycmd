@@ -104,10 +104,13 @@ def BuildCompletionData( insertion_text,
   return completion_data
 
 
-def BuildCompletionResponse( completion_datas, start_column ):
+def BuildCompletionResponse( completion_datas,
+                             start_column,
+                             errors=None ):
   return {
     'completions': completion_datas,
-    'completion_start_column': start_column
+    'completion_start_column': start_column,
+    'errors': errors if errors else [],
   }
 
 def BuildLocationData( location ):
