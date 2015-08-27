@@ -78,8 +78,8 @@ def GetCompletions_RunTest( test ):
   """
   app = TestApp( handlers.app )
   app.post_json( '/load_extra_conf_file',
-                 { 'filepath': PathToTestFile(
-                                  'general_fallback/.ycm_extra_conf.py' ) } )
+                 { 'filepath': PathToTestFile( 'general_fallback',
+                                               '.ycm_extra_conf.py' ) } )
 
   contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
@@ -188,7 +188,7 @@ def GetCompletions_ClangCompleter_Forced_With_No_Trigger_test():
     'description': 'semantic completion with force query=DO_SO',
     'request': {
       'filetype':   'cpp',
-      'filepath':   PathToTestFile( 'general_fallback/lang_cpp.cc' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_cpp.cc' ),
       'line_num':   54,
       'column_num': 8,
       'extra_conf_data': { '&filetype': 'cpp' },
@@ -213,7 +213,7 @@ def GetCompletions_ClangCompleter_Fallback_NoSuggestions_test():
     'description': 'Triggered, fallback but no query so no completions',
     'request': {
       'filetype':   'c',
-      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_c.c' ),
       'line_num':   29,
       'column_num': 21,
       'extra_conf_data': { '&filetype': 'c' },
@@ -236,7 +236,7 @@ def GetCompletions_ClangCompleter_Fallback_NoSuggestions_MinCh_test():
                    ' (query="a")',
     'request': {
       'filetype':   'cpp',
-      'filepath':   PathToTestFile( 'general_fallback/lang_cpp.cc' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_cpp.cc' ),
       'line_num':   21,
       'column_num': 22,
       'extra_conf_data': { '&filetype': 'cpp' },
@@ -258,7 +258,7 @@ def GetCompletions_ClangCompleter_Fallback_Suggestions_test():
     'description': '. after macro with some query text (.a_)',
     'request': {
       'filetype':   'c',
-      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_c.c' ),
       'line_num':   29,
       'column_num': 23,
       'extra_conf_data': { '&filetype': 'c' },
@@ -282,7 +282,7 @@ def GetCompletions_ClangCompleter_Fallback_Exception_test():
     'description': '. on struct returns identifier because of error',
     'request': {
       'filetype':   'c',
-      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_c.c' ),
       'line_num':   62,
       'column_num': 20,
       'extra_conf_data': { '&filetype': 'c', 'throw': 'testy' },
@@ -307,7 +307,7 @@ def GetCompletions_ClangCompleter_Forced_NoFallback_test():
     'description': '-> after macro with forced semantic',
     'request': {
       'filetype':   'c',
-      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_c.c' ),
       'line_num':   41,
       'column_num': 30,
       'extra_conf_data': { '&filetype': 'c' },
@@ -329,7 +329,7 @@ def GetCompletions_JediCompleter_NoSuggestions_Fallback_test():
     'description': 'param jedi does not know about (id). query="a_p"',
     'request': {
       'filetype':   'python',
-      'filepath':   PathToTestFile( 'general_fallback/lang_python.py' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_python.py' ),
       'line_num':   28,
       'column_num': 20,
       'extra_conf_data': { '&filetype': 'python' },
@@ -359,7 +359,7 @@ def GetCompletions_ClangCompleter_Filtered_No_Results_Fallback_test():
     'description': '. on struct returns IDs after query=do_',
     'request': {
       'filetype':   'c',
-      'filepath':   PathToTestFile( 'general_fallback/lang_c.c' ),
+      'filepath':   PathToTestFile( 'general_fallback', 'lang_c.c' ),
       'line_num':   71,
       'column_num': 18,
       'extra_conf_data': { '&filetype': 'c' },
@@ -386,7 +386,7 @@ def GetCompletions_CsCompleter_Works_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/Program.cs' )
+  filepath = PathToTestFile( 'testy', 'Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -415,10 +415,10 @@ def GetCompletions_CsCompleter_MultipleSolution_Works_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepaths = [ PathToTestFile( 'testy/Program.cs' ),
-                PathToTestFile( 'testy-multiple-solutions/'
-                                'solution-named-like-folder/'
-                                'testy/'
+  filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
+                PathToTestFile( 'testy-multiple-solutions',
+                                'solution-named-like-folder',
+                                'testy',
                                 'Program.cs' ) ]
   lines = [ 10, 9 ]
   for filepath, line in zip( filepaths, lines ):
@@ -450,7 +450,7 @@ def GetCompletions_CsCompleter_PathWithSpace_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'неприличное слово/Program.cs' )
+  filepath = PathToTestFile( 'неприличное слово', 'Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -479,7 +479,7 @@ def GetCompletions_CsCompleter_HasBothImportsAndNonImport_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/ImportTest.cs' )
+  filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -510,7 +510,7 @@ def GetCompletions_CsCompleter_ImportsOrderedAfter_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/ImportTest.cs' )
+  filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -545,7 +545,7 @@ def GetCompletions_CsCompleter_ForcedReturnsResults_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/ContinuousTest.cs' )
+  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -575,7 +575,7 @@ def GetCompletions_CsCompleter_NonForcedReturnsNoResults_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/ContinuousTest.cs' )
+  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -611,7 +611,7 @@ def GetCompletions_CsCompleter_ForcedDividesCache_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/ContinuousTest.cs' )
+  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -659,7 +659,7 @@ def GetCompletions_CsCompleter_ReloadSolutionWorks_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'testy/Program.cs' )
+  filepath = PathToTestFile( 'testy', 'Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -683,10 +683,10 @@ def GetCompletions_CsCompleter_ReloadSolution_MultipleSolution_Works_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepaths = [ PathToTestFile( 'testy/Program.cs' ),
-                PathToTestFile( 'testy-multiple-solutions/'
-                                'solution-named-like-folder/'
-                                'testy/'
+  filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
+                PathToTestFile( 'testy-multiple-solutions',
+                                'solution-named-like-folder',
+                                'testy',
                                 'Program.cs' ) ]
   for filepath in filepaths:
     contents = open( filepath ).read()
@@ -729,12 +729,13 @@ def GetCompletions_CsCompleter_UsesSubfolderHint_test():
   app = TestApp( handlers.app )
   _CsCompleter_SolutionSelectCheck( app,
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-named-like-folder/'
-                                      'testy/Program.cs'),
+                                      'testy-multiple-solutions',
+                                      'solution-named-like-folder',
+                                      'testy',
+                                      'Program.cs' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-named-like-folder/'
+                                      'testy-multiple-solutions',
+                                      'solution-named-like-folder',
                                       'testy.sln' ) )
 
 @with_setup( Setup )
@@ -742,12 +743,13 @@ def GetCompletions_CsCompleter_UsesSuperfolderHint_test():
   app = TestApp( handlers.app )
   _CsCompleter_SolutionSelectCheck( app,
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-named-like-folder/'
-                                      'not-testy/Program.cs' ),
+                                      'testy-multiple-solutions',
+                                      'solution-named-like-folder',
+                                      'not-testy',
+                                      'Program.cs' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-named-like-folder/'
+                                      'testy-multiple-solutions',
+                                      'solution-named-like-folder',
                                       'solution-named-like-folder.sln' ) )
 
 @with_setup( Setup )
@@ -755,18 +757,19 @@ def GetCompletions_CsCompleter_ExtraConfStoreAbsolute_test():
   app = TestApp( handlers.app )
   _CsCompleter_SolutionSelectCheck( app,
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-abs/'
-                                      'testy/Program.cs' ),
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-abs',
+                                      'testy',
+                                      'Program.cs' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
                                       'testy2.sln' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-abs/'
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-abs',
                                       '.ycm_extra_conf.py' ) )
 
 @with_setup( Setup )
@@ -774,19 +777,20 @@ def GetCompletions_CsCompleter_ExtraConfStoreRelative_test():
   app = TestApp( handlers.app )
   _CsCompleter_SolutionSelectCheck( app,
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-rel/'
-                                      'testy/Program.cs' ),
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-rel',
+                                      'testy',
+                                      'Program.cs' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-rel/'
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-rel',
                                       'testy2.sln' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-rel/'
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-rel',
                                       '.ycm_extra_conf.py' ) )
 
 @with_setup( Setup )
@@ -794,20 +798,21 @@ def GetCompletions_CsCompleter_ExtraConfStoreNonexisting_test():
   app = TestApp( handlers.app )
   _CsCompleter_SolutionSelectCheck( app,
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-bad/'
-                                      'testy/Program.cs' ),
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-bad',
+                                      'testy',
+                                      'Program.cs' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-bad/'
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-bad',
                                       'testy2.sln' ),
                                     PathToTestFile(
-                                      'testy-multiple-solutions/'
-                                      'solution-not-named-like-folder/'
-                                      'extra-conf-bad/'
-                                      'testy/'
+                                      'testy-multiple-solutions',
+                                      'solution-not-named-like-folder',
+                                      'extra-conf-bad',
+                                      'testy',
                                       '.ycm_extra_conf.py' ) )
 
 @with_setup( Setup )
@@ -815,9 +820,9 @@ def GetCompletions_CsCompleter_DoesntStartWithAmbiguousMultipleSolutions_test():
   app = TestApp( handlers.app )
   app.post_json( '/ignore_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( ( 'testy-multiple-solutions/'
-                              'solution-not-named-like-folder/'
-                              'testy/Program.cs' ) )
+  filepath = PathToTestFile( 'testy-multiple-solutions',
+                             'solution-not-named-like-folder',
+                             'testy', 'Program.cs' )
   contents = open( filepath ).read()
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'cs',
@@ -964,10 +969,10 @@ def GetCompletions_ClangCompleter_WorksWhenExtraConfExplicitlyAllowed_test():
 def GetCompletions_ClangCompleter_ExceptionWhenNoFlagsFromExtraConf_test():
   app = TestApp( handlers.app )
   app.post_json( '/load_extra_conf_file',
-                 { 'filepath': PathToTestFile(
-                     'noflags/.ycm_extra_conf.py' ) } )
+                 { 'filepath': PathToTestFile( 'noflags',
+                                               '.ycm_extra_conf.py' ) } )
 
-  filepath = PathToTestFile( 'noflags/basic.cpp' )
+  filepath = PathToTestFile( 'noflags', 'basic.cpp' )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cpp',
@@ -1033,10 +1038,10 @@ def GetCompletions_ForceSemantic_Works_test():
 def GetCompletions_ClangCompleter_ClientDataGivenToExtraConf_test():
   app = TestApp( handlers.app )
   app.post_json( '/load_extra_conf_file',
-                 { 'filepath': PathToTestFile(
-                                  'client_data/.ycm_extra_conf.py' ) } )
+                 { 'filepath': PathToTestFile( 'client_data',
+                                               '.ycm_extra_conf.py' ) } )
 
-  filepath = PathToTestFile( 'client_data/main.cpp' )
+  filepath = PathToTestFile( 'client_data', 'main.cpp' )
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cpp',
                                   contents = open( filepath ).read(),
@@ -1055,9 +1060,9 @@ def GetCompletions_ClangCompleter_ClientDataGivenToExtraConf_test():
 def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test():
   app = TestApp( handlers.app )
   app.post_json( '/load_extra_conf_file',
-                 { 'filepath': PathToTestFile(
-                                  'client_data/.ycm_extra_conf.py' ) } )
-  filepath = PathToTestFile( 'client_data/include.cpp' )
+                 { 'filepath': PathToTestFile( 'client_data',
+                                               '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'client_data', 'include.cpp' )
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cpp',
                                   contents = open( filepath ).read(),
