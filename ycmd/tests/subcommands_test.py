@@ -56,7 +56,7 @@ foo()
                             filepath = '/foo.py' )
 
   eq_( {
-         'filepath': '/foo.py',
+         'filepath': os.path.abspath( '/foo.py' ),
          'line_num': 2,
          'column_num': 5
        },
@@ -78,7 +78,7 @@ def RunCompleterCommand_GoTo_Clang_ZeroBasedLineAndColumn_test():
                             filetype = 'cpp' )
 
   eq_( {
-        'filepath': '/foo',
+        'filepath': os.path.abspath( '/foo' ),
         'line_num': 2,
         'column_num': 8
       },
@@ -99,7 +99,7 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
     'filetype'          : 'cpp'
   }
   common_response = {
-    'filepath'  : '/foo',
+    'filepath'  : os.path.abspath( '/foo' ),
   }
 
   request = common_request
