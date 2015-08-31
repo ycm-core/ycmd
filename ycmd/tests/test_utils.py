@@ -63,8 +63,8 @@ def PathToTestDataDir():
   return os.path.join( dir_of_current_script, 'testdata' )
 
 
-def PathToTestFile( test_basename ):
-  return os.path.join( PathToTestDataDir(), test_basename )
+def PathToTestFile( *args ):
+  return os.path.join( PathToTestDataDir(), *args )
 
 
 def StopOmniSharpServer( app, filename ):

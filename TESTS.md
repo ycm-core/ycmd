@@ -29,27 +29,27 @@ A patch will be submitted upstream to read paths from the environment.
 
 ## Running the tests
 
-To run the full suite, just run `run_tests.sh`. Options are:
+To run the full suite, just run `run_tests.py`. Options are:
 
 * `--skip-build`: don't attempt to run the build `build.py`, e.g. if you use
 a non-standard build environment (e.g. `cmake28`, self-build of clang, etc.)
 * `--no-clang-completer`: don't attempt to test the clang completer. Can also
 be set via environment variable `USE_CLANG_COMPLETER`.
 
-Anything after a trailing -- is passed to "nosetests" directly. This means that
-you can run a specific script or a specific test as follows:
+Remaining arguments are passed to "nosetests" directly. This means that you 
+can run a specific script or a specific test as follows:
 
-* Specific test: `./run_tests.sh -- ycmd/tests/<module_name>.py:<function name>`
-* Specific script: `./run_tests.sh -- ycmd.tests.<module_name>`
+* Specific test: `./run_tests.py ycmd/tests/<module_name>.py:<function name>`
+* Specific script: `./run_tests.py ycmd.tests.<module_name>`
 
 For example:
 
-* `./run_tests.sh -- ycmd/tests/subcommands_test.py:RunCompleterCommand_GetType_test`
-* `./run_tests.sh -- ycmd.tests.subcommands_test`
+* `./run_tests.py ycmd/tests/subcommands_test.py:RunCompleterCommand_GetType_test`
+* `./run_tests.py ycmd.tests.subcommands_test`
 
 NOTE: you must have UTF8 support in your terminal when you do this, e.g.:
 
-    > LANG=en_GB.utf8 ./run_tests.sh --skip-build
+    > LANG=en_GB.utf8 ./run_tests.py --skip-build
 
 ## Troubleshooting
 

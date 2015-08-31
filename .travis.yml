@@ -24,7 +24,7 @@ install:
 compiler:
   - gcc
   - clang
-script: ./run_tests.sh
+script: ./run_tests.py
 env:
   - USE_CLANG_COMPLETER="true"
   - USE_CLANG_COMPLETER="false"

@@ -180,7 +180,7 @@ def _PathsToAllParentFolders( filename ):
 
   def PathFolderComponents( filename ):
     folders = []
-    path = os.path.dirname( filename )
+    path = os.path.normpath( os.path.dirname( filename ) )
     while True:
       path, folder = os.path.split( path )
       if folder:

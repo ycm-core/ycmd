@@ -26,7 +26,7 @@ except ImportError as e:
     'Error importing ycm_core. Are you sure you have placed a '
     'version 3.2+ libclang.[so|dll|dylib] in folder "{0}"? '
     'See the Installation Guide in the docs. Full error: {1}'.format(
-      path.realpath( path.join( path.abspath( __file__ ), '../..' ) ),
+      path.realpath( path.join( path.abspath( __file__ ), '..', '..' ) ),
       str( e ) ) )
 
 import atexit
@@ -34,6 +34,7 @@ import logging
 import json
 import bottle
 import httplib
+import traceback
 from bottle import request, response
 import server_state
 from ycmd import user_options_store
@@ -89,17 +90,40 @@ def RunCompleterCommand():
 def GetCompletions():
   _logger.info( 'Received completion request' )
   request_data = RequestWrap( request.json )
-  do_filetype_completion = _server_state.ShouldUseFiletypeCompleter(
-    request_data )
+  ( do_filetype_completion, forced_filetype_completion ) = (
+                    _server_state.ShouldUseFiletypeCompleter(request_data ) )
   _logger.debug( 'Using filetype completion: %s', do_filetype_completion )
-  filetypes = request_data[ 'filetypes' ]
-  completer = ( _server_state.GetFiletypeCompleter( filetypes ) if
-                do_filetype_completion else
-                _server_state.GetGeneralCompleter() )
 
-  return _JsonResponse( BuildCompletionResponse(
-      completer.ComputeCandidates( request_data ),
-      request_data.CompletionStartColumn() ) )
+  errors = None
+  completions = None
+
+  if do_filetype_completion:
+    try:
+      completions = ( _server_state.GetFiletypeCompleter(
+                                  request_data[ 'filetypes' ] )
+                                 .ComputeCandidates( request_data ) )
+
+    except Exception as exception:
+      if forced_filetype_completion:
+        # user explicitly asked for semantic completion, so just pass the error
+        # back
+        raise
+      else:
+        # store the error to be returned with results from the identifier
+        # completer
+        stack = traceback.format_exc()
+        _logger.error( 'Exception from semantic completer (using general): ' +
+                        "".join( stack ) )
+        errors = [ BuildExceptionResponse( exception, stack ) ]
+
+  if not completions and not forced_filetype_completion:
+    completions = ( _server_state.GetGeneralCompleter()
+                                 .ComputeCandidates( request_data ) )
+
+  return _JsonResponse(
+      BuildCompletionResponse( completions if completions else [],
+                               request_data.CompletionStartColumn(),
+                               errors = errors ) )
 
 
 @app.get( '/healthy' )

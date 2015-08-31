@@ -19,9 +19,6 @@
 [submodule "third_party/requests"]
 	path = third_party/requests
 	url = https://github.com/kennethreitz/requests
-[submodule "third_party/sh"]
-	path = third_party/sh
-	url = https://github.com/amoffat/sh
 [submodule "third_party/gocode"]
 	path = third_party/gocode
 	url = https://github.com/nsf/gocode.git
