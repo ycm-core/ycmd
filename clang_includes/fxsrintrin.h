@@ -1,4 +1,4 @@
-/*===---- rtmintrin.h - RTM intrinsics -------------------------------------===
+/*===---- fxsrintrin.h - FXSR intrinsic ------------------------------------===
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,38 +22,34 @@
  */
 
 #ifndef __IMMINTRIN_H
-#error "Never use <rtmintrin.h> directly; include <immintrin.h> instead."
+#error "Never use <fxsrintrin.h> directly; include <immintrin.h> instead."
 #endif
 
-#ifndef __RTMINTRIN_H
-#define __RTMINTRIN_H
+#ifndef __FXSRINTRIN_H
+#define __FXSRINTRIN_H
 
-#define _XBEGIN_STARTED   (~0u)
-#define _XABORT_EXPLICIT  (1 << 0)
-#define _XABORT_RETRY     (1 << 1)
-#define _XABORT_CONFLICT  (1 << 2)
-#define _XABORT_CAPACITY  (1 << 3)
-#define _XABORT_DEBUG     (1 << 4)
-#define _XABORT_NESTED    (1 << 5)
-#define _XABORT_CODE(x)   (((x) >> 24) & 0xFF)
-
-/* Define the default attributes for the functions in this file. */
 #define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__))
 
-static __inline__ unsigned int __DEFAULT_FN_ATTRS
-_xbegin(void)
-{
-  return __builtin_ia32_xbegin();
+static __inline__ void __DEFAULT_FN_ATTRS
+_fxsave(void *__p) {
+  return __builtin_ia32_fxsave(__p);
 }
 
 static __inline__ void __DEFAULT_FN_ATTRS
-_xend(void)
-{
-  __builtin_ia32_xend();
+_fxsave64(void *__p) {
+  return __builtin_ia32_fxsave64(__p);
 }
 
-#define _xabort(imm) __builtin_ia32_xabort((imm))
+static __inline__ void __DEFAULT_FN_ATTRS
+_fxrstor(void *__p) {
+  return __builtin_ia32_fxrstor(__p);
+}
+
+static __inline__ void __DEFAULT_FN_ATTRS
+_fxrstor64(void *__p) {
+  return __builtin_ia32_fxrstor64(__p);
+}
 
 #undef __DEFAULT_FN_ATTRS
 
-#endif /* __RTMINTRIN_H */
+#endif
