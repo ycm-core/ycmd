@@ -1,6 +1,19 @@
-// this file is used in RunCompleterCommand_GetType_Clang_test
+// This file is used in RunCompleterCommand_GetType_Clang_test
 #include <iostream>
 #include <string>
+
+namespace Std {
+  template< typename T >
+  struct BasicString
+  {
+      BasicString( const char * );
+  };
+
+  typedef BasicString< char > String;
+
+  std::ostream& operator << ( std::ostream& o, const String& s);
+}
+
 struct Foo {
   int x;
   int y;
@@ -10,7 +23,7 @@ struct Foo {
 int main()
 {
   Foo foo;
-  std::string a = "hello";
+  Std::String a = "hello";
   std::cout << a;
 
   auto &arFoo = foo;
@@ -34,7 +47,6 @@ int main()
             << cpFoo->x
             << rFoo.y
             << pFoo->x;
-
 
   return 0;
 }

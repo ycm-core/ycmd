@@ -252,73 +252,75 @@ def _RunCompleterCommand_Message_Clang(filename, test, command):
 def RunCompleterCommand_GetType_Clang_test():
   tests = [
   # basic pod types
-    [{'line_num' : 12, 'column_num': 3} , 'Foo'],
+    [{'line_num' : 25, 'column_num': 3} , 'Foo'],
     [{'line_num' : 1,  'column_num': 1} , 'Internal error: cursor not valid'],
-    [{'line_num' : 4,  'column_num': 2} , 'Foo'],
-    [{'line_num' : 4,  'column_num': 8} , 'Foo'],
-    [{'line_num' : 4,  'column_num': 9} , 'Foo'],
-    [{'line_num' : 4,  'column_num': 10} , 'Foo'],
-    [{'line_num' : 5,  'column_num': 3} , 'int'],
-    [{'line_num' : 5,  'column_num': 7} , 'int'],
-    [{'line_num' : 7,  'column_num': 7} , 'char'],
+    [{'line_num' : 17,  'column_num': 2} , 'Foo'],
+    [{'line_num' : 17,  'column_num': 8} , 'Foo'],
+    [{'line_num' : 17,  'column_num': 9} , 'Foo'],
+    [{'line_num' : 17,  'column_num': 10} , 'Foo'],
+    [{'line_num' : 18,  'column_num': 3} , 'int'],
+    [{'line_num' : 18,  'column_num': 7} , 'int'],
+    [{'line_num' : 20,  'column_num': 7} , 'char'],
 
   # function
-    [{'line_num' : 10, 'column_num': 2} , 'int ()'],
-    [{'line_num' : 10, 'column_num': 6} , 'int ()'],
+    [{'line_num' : 23, 'column_num': 2} , 'int ()'],
+    [{'line_num' : 23, 'column_num': 6} , 'int ()'],
 
-  # std::string and canonical type
-    # on std:: (Unknown)
-    [{'line_num' : 13, 'column_num': 3} , 'Unknown type'], # sic
-    # on string (string)
-    [{'line_num' : 13, 'column_num': 8} ,
-                                  'string => std::basic_string<char>'], # sic
-    # on a (std::string)
-    [{'line_num' : 13, 'column_num': 15} ,
-                                  'std::string => std::basic_string<char>'],
-    [{'line_num' : 14, 'column_num': 16} ,
-                                  'std::string => std::basic_string<char>'],
+  # Std::String and canonical type
+  # We use a dummy wrapper of std::string to not depend on implementation
+  # specifics.
+    # on Std:: (Unknown)
+    [{'line_num' : 26, 'column_num': 3} , 'Unknown type'], # sic
+    # on String (String)
+    [{'line_num' : 26, 'column_num': 8} ,
+                                  'String => Std::BasicString<char>'], # sic
+    # on "a" (Std::String)
+    [{'line_num' : 26, 'column_num': 15} ,
+                                  'Std::String => Std::BasicString<char>'],
+    [{'line_num' : 27, 'column_num': 16} ,
+                                  'Std::String => Std::BasicString<char>'],
 
   # cursor on decl for refs & pointers
-    [{'line_num' : 27, 'column_num': 3} ,  'Foo'],
-    [{'line_num' : 27, 'column_num': 11} , 'Foo &'],
-    [{'line_num' : 27, 'column_num': 15} , 'Foo'],
-    [{'line_num' : 28, 'column_num': 3} ,  'Foo'],
-    [{'line_num' : 28, 'column_num': 11} , 'Foo *'],
-    [{'line_num' : 28, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 30, 'column_num': 3} ,  'const Foo &'],
-    [{'line_num' : 30, 'column_num': 16} , 'const Foo &'],
-    [{'line_num' : 31, 'column_num': 3} ,  'const Foo *'],
-    [{'line_num' : 31, 'column_num': 16} , 'const Foo *'],
+    [{'line_num' : 40, 'column_num': 3} ,  'Foo'],
+    [{'line_num' : 40, 'column_num': 11} , 'Foo &'],
+    [{'line_num' : 40, 'column_num': 15} , 'Foo'],
+    [{'line_num' : 41, 'column_num': 3} ,  'Foo'],
+    [{'line_num' : 41, 'column_num': 11} , 'Foo *'],
+    [{'line_num' : 41, 'column_num': 18} , 'Foo'],
+    [{'line_num' : 43, 'column_num': 3} ,  'const Foo &'],
+    [{'line_num' : 43, 'column_num': 16} , 'const Foo &'],
+    [{'line_num' : 44, 'column_num': 3} ,  'const Foo *'],
+    [{'line_num' : 44, 'column_num': 16} , 'const Foo *'],
   # cursor on usage
-    [{'line_num' : 33, 'column_num': 17} , 'const Foo'],
-    [{'line_num' : 33, 'column_num': 21} , 'const int'],
-    [{'line_num' : 34, 'column_num': 17} , 'const Foo *'],
-    [{'line_num' : 34, 'column_num': 22} , 'const int'],
-    [{'line_num' : 35, 'column_num': 17} , 'Foo'],
-    [{'line_num' : 35, 'column_num': 21} , 'int'],
-    [{'line_num' : 36, 'column_num': 17} , 'Foo *'],
-    [{'line_num' : 36, 'column_num': 22} , 'int'],
+    [{'line_num' : 46, 'column_num': 17} , 'const Foo'],
+    [{'line_num' : 46, 'column_num': 21} , 'const int'],
+    [{'line_num' : 47, 'column_num': 17} , 'const Foo *'],
+    [{'line_num' : 47, 'column_num': 22} , 'const int'],
+    [{'line_num' : 48, 'column_num': 17} , 'Foo'],
+    [{'line_num' : 48, 'column_num': 21} , 'int'],
+    [{'line_num' : 49, 'column_num': 17} , 'Foo *'],
+    [{'line_num' : 49, 'column_num': 22} , 'int'],
 
   # auto behaves strangely (bug in libclang)
-    [{'line_num' : 16, 'column_num': 3} ,  'auto &'], # sic
-    [{'line_num' : 16, 'column_num': 11} , 'auto &'], # sic
-    [{'line_num' : 16, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 17, 'column_num': 3} ,  'auto *'], # sic
-    [{'line_num' : 17, 'column_num': 11} , 'auto *'], # sic
-    [{'line_num' : 17, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 19, 'column_num': 3} ,  'const auto &'], # sic
-    [{'line_num' : 19, 'column_num': 16} , 'const auto &'], # sic
-    [{'line_num' : 20, 'column_num': 3} ,  'const auto *'], # sic
-    [{'line_num' : 20, 'column_num': 16} , 'const auto *'], # sic
+    [{'line_num' : 29, 'column_num': 3} ,  'auto &'], # sic
+    [{'line_num' : 29, 'column_num': 11} , 'auto &'], # sic
+    [{'line_num' : 29, 'column_num': 18} , 'Foo'],
+    [{'line_num' : 30, 'column_num': 3} ,  'auto *'], # sic
+    [{'line_num' : 30, 'column_num': 11} , 'auto *'], # sic
+    [{'line_num' : 30, 'column_num': 18} , 'Foo'],
+    [{'line_num' : 32, 'column_num': 3} ,  'const auto &'], # sic
+    [{'line_num' : 32, 'column_num': 16} , 'const auto &'], # sic
+    [{'line_num' : 33, 'column_num': 3} ,  'const auto *'], # sic
+    [{'line_num' : 33, 'column_num': 16} , 'const auto *'], # sic
   # auto sort of works in usage (but canonical types apparently differ)
-    [{'line_num' : 22, 'column_num': 17} , 'const Foo => const Foo'], #sic
-    [{'line_num' : 22, 'column_num': 23} , 'const int'],
-    [{'line_num' : 23, 'column_num': 17} , 'const Foo * => const Foo *'], #sic
-    [{'line_num' : 23, 'column_num': 24} , 'const int'],
-    [{'line_num' : 24, 'column_num': 17} , 'Foo => Foo'], #sic
-    [{'line_num' : 24, 'column_num': 22} , 'int'],
-    [{'line_num' : 25, 'column_num': 17} , 'Foo * => Foo *'], #sic
-    [{'line_num' : 25, 'column_num': 23} , 'int'],
+    [{'line_num' : 35, 'column_num': 17} , 'const Foo => const Foo'], #sic
+    [{'line_num' : 35, 'column_num': 23} , 'const int'],
+    [{'line_num' : 36, 'column_num': 17} , 'const Foo * => const Foo *'], #sic
+    [{'line_num' : 36, 'column_num': 24} , 'const int'],
+    [{'line_num' : 37, 'column_num': 17} , 'Foo => Foo'], #sic
+    [{'line_num' : 37, 'column_num': 22} , 'int'],
+    [{'line_num' : 38, 'column_num': 17} , 'Foo * => Foo *'], #sic
+    [{'line_num' : 38, 'column_num': 23} , 'int'],
 
   ]
 
