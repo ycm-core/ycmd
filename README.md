@@ -47,6 +47,9 @@ git submodule update --init --recursive
 Then run `./build.py --clang-completer --omnisharp-completer --gocode-completer`.
 This should get you going.
 
+The `--python-executable` option can be used to pass the specific Python interpreter
+path to CMake as needed, or if CMake cannot find the proper Python interpreter.
+
 For more detailed instructions on building ycmd, see [YCM's
 instructions][ycm-install] (ignore the Vim-specific parts).
 

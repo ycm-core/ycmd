@@ -105,6 +105,9 @@ def ParseArguments():
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
+  parser.add_argument( '--python-executable', dest='python_executable',
+                       help = 'Path to the specific Python interpreter '
+                       'for cmake')
   args = parser.parse_args()
 
   if args.system_libclang and not args.clang_completer:
@@ -123,6 +126,10 @@ def GetCmakeArgs( parsed_args ):
 
   if parsed_args.system_boost:
     cmake_args.append( '-DUSE_SYSTEM_BOOST=ON' )
+
+  if parsed_args.python_executable:
+    cmake_args.append( '-DPYTHON_EXECUTABLE=%s' %
+                       parsed_args.python_executable )
 
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
   cmake_args.extend( extra_cmake_args.split() )
