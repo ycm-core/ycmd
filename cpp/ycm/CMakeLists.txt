@@ -257,9 +257,12 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     endif()
   endif()
 
-  set( LIBCLANG_TARGET ${EXTERNAL_LIBCLANG_PATH} )
+  # In Clang 3.7, the library target is a symlink of the soversion one.
+  # Since it will be copied in the project folder, we need the symlinked
+  # library.
+  get_filename_component( LIBCLANG_TARGET "${EXTERNAL_LIBCLANG_PATH}" REALPATH )
   message(
-    "Using external libclang: ${EXTERNAL_LIBCLANG_PATH}" )
+    "Using external libclang: ${LIBCLANG_TARGET}" )
 else()
   set( LIBCLANG_TARGET )
 endif()
