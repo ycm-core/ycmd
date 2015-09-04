@@ -22,19 +22,30 @@ from nose.tools import eq_, ok_
 from ycmd.completers import completer_utils as cu
 
 
+def _ExtractPatternsFromFiletypeTriggerDict( triggerDict ):
+  """Returns a copy of the dictionary with the _sre.SRE_Pattern instances in 
+  each set value replaced with the pattern strings. Needed for equality test of
+  two filetype trigger dictionaries."""
+  copy = triggerDict.copy()
+  for key, values in triggerDict.items():
+    copy[ key ] = set( [ sre_pattern.pattern for sre_pattern in values ] )
+  return copy
+
+
 def FiletypeTriggerDictFromSpec_Works_test():
   eq_( defaultdict( set, {
-         'foo': set( [ cu._PrepareTrigger( 'zoo'),
-                       cu._PrepareTrigger( 'bar' ) ] ),
-         'goo': set( [ cu._PrepareTrigger( 'moo' ) ] ),
-         'moo': set( [ cu._PrepareTrigger( 'moo' ) ] ),
-         'qux': set( [ cu._PrepareTrigger( 'q' ) ] )
+         'foo': set( [ cu._PrepareTrigger( 'zoo').pattern,
+                       cu._PrepareTrigger( 'bar' ).pattern ] ),
+         'goo': set( [ cu._PrepareTrigger( 'moo' ).pattern ] ),
+         'moo': set( [ cu._PrepareTrigger( 'moo' ).pattern ] ),
+         'qux': set( [ cu._PrepareTrigger( 'q' ).pattern ] )
        } ),
-       cu._FiletypeTriggerDictFromSpec( {
-         'foo': ['zoo', 'bar'],
-         'goo,moo': ['moo'],
-         'qux': ['q']
-       } ) )
+       _ExtractPatternsFromFiletypeTriggerDict(
+         cu._FiletypeTriggerDictFromSpec( {
+           'foo': ['zoo', 'bar'],
+           'goo,moo': ['moo'],
+           'qux': ['q']
+       } ) ) )
 
 
 def FiletypeDictUnion_Works_test():
