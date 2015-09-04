@@ -36,6 +36,11 @@ PRAGMA_DIAG_TEXT_TO_IGNORE = '#pragma once in main file'
 TOO_MANY_ERRORS_DIAG_TEXT_TO_IGNORE = 'too many errors emitted, stopping now'
 
 
+def _LocationMatchesRequest(location, request_data):
+  return (location.filename_ == request_data['filepath'] and
+          location.line_number_ == request_data['line_num'] and
+          location.column_number_ == request_data['column_num'])
+
 class ClangCompleter( Completer ):
   def __init__( self, user_options ):
     super( ClangCompleter, self ).__init__( user_options )
@@ -206,8 +211,8 @@ class ClangCompleter( Completer ):
 
   def _GoTo( self, request_data ):
     location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
-    if not location or not location.IsValid():
-      location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
+    if not location or not location.IsValid() or _LocationMatchesRequest(location, request_data):
+      location = self._LocationForGoTo( 'GetDeclarationLocation', request_data, reparse = False )
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
@@ -217,7 +222,7 @@ class ClangCompleter( Completer ):
     location = self._LocationForGoTo( 'GetDefinitionLocation',
                                       request_data,
                                       reparse = False )
-    if not location or not location.IsValid():
+    if not location or not location.IsValid() or _LocationMatchesRequest(location, request_data):
       location = self._LocationForGoTo( 'GetDeclarationLocation',
                                         request_data,
                                         reparse = False )
