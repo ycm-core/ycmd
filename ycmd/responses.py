@@ -73,11 +73,17 @@ def BuildDescriptionOnlyGoToResponse( text ):
   }
 
 
-# TODO: Look at all the callers and ensure they are not using this instead of an
-# exception.
 def BuildDisplayMessageResponse( text ):
   return {
     'message': text
+  }
+
+
+def BuildDetailedInfoResponse( text ):
+  """ Retuns the response object for displaying detailed information about types
+  and usage, suach as within a preview window"""
+  return {
+    'detailed_info': text
   }
 
 

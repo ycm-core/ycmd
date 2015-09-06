@@ -19,12 +19,17 @@
 
 from collections import defaultdict
 import ycm_core
+import re
+import textwrap
+import os
 from ycmd import responses
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
+
+import xml.etree.ElementTree
 
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
@@ -34,6 +39,7 @@ NO_COMPLETIONS_MESSAGE = 'No completions found; errors in the file?'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PRAGMA_DIAG_TEXT_TO_IGNORE = '#pragma once in main file'
 TOO_MANY_ERRORS_DIAG_TEXT_TO_IGNORE = 'too many errors emitted, stopping now'
+NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
 
 
 class ClangCompleter( Completer ):
@@ -107,7 +113,9 @@ class ClangCompleter( Completer ):
              'ClearCompilationFlagCache',
              'GetType',
              'GetParent',
-             'FixIt']
+             'FixIt'
+             'GetDoc',
+             'GetDocQuick' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -159,7 +167,21 @@ class ClangCompleter( Completer ):
       'FixIt' : {
         'method' : self._FixIt,
         'args'   : { 'request_data' : request_data }
-      }
+      },
+      'GetDoc' : {
+        'method' : self._GetSemanticInfo,
+        'args'   : { 'request_data'    : request_data,
+                     'reparse'         : True,
+                     'func'            : 'GetDocsForLocationInFile',
+                     'response_buider' : _BuildGetDocResponse, }
+      },
+      'GetDocQuick' : {
+        'method' : self._GetSemanticInfo,
+        'args'   : { 'request_data'    : request_data,
+                     'reparse'         : False,
+                     'func'            : 'GetDocsForLocationInFile',
+                     'response_buider' : _BuildGetDocResponse, }
+      },
     }
 
     try:
@@ -225,7 +247,11 @@ class ClangCompleter( Completer ):
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
 
-  def _GetSemanticInfo( self, request_data, func, reparse = True ):
+  def _GetSemanticInfo( self,
+                        request_data,
+                        func,
+                        response_buider = responses.BuildDisplayMessageResponse,
+                        reparse = True ):
     filename = request_data[ 'filepath' ]
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
@@ -249,7 +275,7 @@ class ClangCompleter( Completer ):
     if not message:
       message = "No semantic information available"
 
-    return responses.BuildDisplayMessageResponse( message )
+    return response_buider( message )
 
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()
@@ -399,3 +425,64 @@ def _ResponseForLocation( location ):
                                       location.column_number_ )
 
 
+# Strips the following leading strings from the raw comment:
+# - <whitespace>///
+# - <whitespace>///<
+# - <whitespace>//<
+# - <whitespace>//!
+# - <whitespace>/**
+# - <whitespace>/*!
+# - <whitespace>/*<
+# - <whitespace>/*
+# - <whitespace>*
+# - <whitespace>*/
+# - etc.
+# That is:
+#  - 2 or 3 '/' followed by '<' or '!'
+#  - '/' then 1 or 2 '*' followed by optional '<' or '!'
+#  - '*' followed by optional '/'
+STRIP_LEADING_COMMENT = re.compile( '^[ \t]*(/{2,3}[<!]?|/\*{1,2}[<!]?|\*/?)' )
+
+# And the following trailing strings
+# - <whitespace>*/
+# - <whitespace>
+STRIP_TRAILING_COMMENT = re.compile( '[ \t]*\*/[ \t]*$|[ \t]*$' )
+
+
+def _FormatRawComment( comment ):
+  """ Strips leading indentation and comment markers from the comment string """
+  return textwrap.dedent(
+      os.linesep.join( [ re.sub( STRIP_TRAILING_COMMENT, '',
+                         re.sub( STRIP_LEADING_COMMENT, '', line ) )
+                                for line in comment.split( os.linesep ) ] ) )
+
+
+def _BuildGetDocResponse( doc_data ):
+  """Builds a "DetailedInfoResponse" for a GetDoc request. doc_data is a
+  DocumentationData object returned from the ClangCompleter"""
+
+  # Parse the XML, as this is the only way to get the declaration text out of
+  # libclang. It seems quite wasteful, but while the contents of the XML
+  # provide fully parsed doxygen documentation tree, we actually don't want to
+  # ever lose any information from the comment, so we just want display
+  # the stripped comment. Arguably we could skip all of this XML generation and
+  # parsing, but having the raw declaration text is likely one of the most
+  # useful pieces of documentation available to the developer. Perhaps in
+  # future, we can use this XML for more interesting things.
+  try:
+    root = xml.etree.ElementTree.fromstring( doc_data.comment_xml )
+  except:
+    raise ValueError( NO_DOCUMENTATION_MESSAGE )
+
+  # Note: declaration is False-y if it has no child elements, hence the below
+  # (wordy) if not declaration is None
+  declaration = root.find( "Declaration" )
+
+  return responses.BuildDetailedInfoResponse(
+        '{0}{5}{1}{5}Type: {2}{5}Name: {3}{5}---{5}{4}'.format(
+              declaration.text if declaration is not None else "",
+              doc_data.brief_comment,
+              doc_data.canonical_type,
+              doc_data.display_name,
+              _FormatRawComment( doc_data.raw_comment ),
+              os.linesep ) )
