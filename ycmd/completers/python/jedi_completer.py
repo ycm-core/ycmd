@@ -85,7 +85,8 @@ class JediCompleter( Completer ):
   def DefinedSubcommands( self ):
     return [ 'GoToDefinition',
              'GoToDeclaration',
-             'GoTo' ]
+             'GoTo',
+             'GetDoc' ]
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -99,6 +100,8 @@ class JediCompleter( Completer ):
       return self._GoToDeclaration( request_data )
     elif command == 'GoTo':
       return self._GoTo( request_data )
+    elif command == 'GetDoc':
+      return self._GetDoc( request_data )
     raise ValueError( self.UserCommandsHelpMessage() )
 
 
@@ -125,6 +128,14 @@ class JediCompleter( Completer ):
       return self._BuildGoToResponse( definitions )
     else:
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
+
+
+  def _GetDoc( self, request_data ):
+    definitions = self._GetDefinitionsList( request_data )
+    if definitions:
+      return self._BuildDetailedInfoResponse( definitions )
+    else:
+      raise RuntimeError( 'Can\'t find a definition.' )
 
 
   def _GetDefinitionsList( self, request_data, declaration = False ):
@@ -169,4 +180,8 @@ class JediCompleter( Completer ):
                                          definition.column + 1,
                                          definition.description ) )
       return defs
+
+  def _BuildDetailedInfoResponse( self, definition_list ):
+    docs = [ definition.docstring() for definition in definition_list ]
+    return responses.BuildDetailedInfoResponse( '\n---\n'.join( docs ) )
 
