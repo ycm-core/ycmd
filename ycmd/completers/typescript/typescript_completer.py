@@ -47,6 +47,7 @@ class TypeScriptCompleter( Completer ):
   https://github.com/Microsoft/TypeScript/blob/2cb0dfd99dc2896958b75e44303d8a7a32e5dc33/src/server/protocol.d.ts
   """
 
+
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
 
@@ -77,6 +78,7 @@ class TypeScriptCompleter( Completer ):
 
     _logger.info( 'Enabling typescript completion' )
 
+
   def _SendRequest( self, command, arguments = None ):
     """Send a request message to TSServer."""
 
@@ -92,6 +94,7 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_handle.stdin.write( json.dumps( request ) )
     self._tsserver_handle.stdin.write( "\n" )
     return seq
+
 
   def _ReadResponse( self, expected_seq ):
     """Read a response message from TSServer."""
@@ -128,12 +131,14 @@ class TypeScriptCompleter( Completer ):
 
     return message
 
+
   def _HandleEvent( self, event ):
     """Handle event message from TSServer."""
 
     # We ignore events for now since we don't have a use for them.
     eventname = event[ 'event' ]
     _logger.info( 'Recieved {0} event from tsserver'.format( eventname ) )
+
 
   def _Reload( self, request_data ):
     """
@@ -149,12 +154,14 @@ class TypeScriptCompleter( Completer ):
     seq = self._SendRequest( 'reload', {
       'file':    filename,
       'tmpfile': tmpfile.name
-    })
+    } )
     self._ReadResponse( seq )
     os.unlink( tmpfile.name )
 
+
   def SupportedFiletypes( self ):
     return [ 'typescript' ]
+
 
   def ComputeCandidatesInner( self, request_data ):
     with self._lock:
@@ -163,7 +170,7 @@ class TypeScriptCompleter( Completer ):
         'file':   request_data[ 'filepath' ],
         'line':   request_data[ 'line_num' ],
         'offset': request_data[ 'column_num' ]
-      })
+      } )
       entries = self._ReadResponse( seq )[ 'body' ]
 
       # A less detailed version of the completion data is returned
@@ -183,28 +190,34 @@ class TypeScriptCompleter( Completer ):
         'line':       request_data[ 'line_num' ],
         'offset':     request_data[ 'column_num' ],
         'entryNames': names
-      })
+      } )
       detailed_entries = self._ReadResponse( seq )[ 'body' ]
       return [ _ConvertDetailedCompletionData( e, namelength )
                for e in detailed_entries ]
+
 
   def OnBufferVisit( self, request_data ):
     filename = request_data[ 'filepath' ]
     with self._lock:
       self._SendRequest( 'open', { 'file': filename } )
 
+
   def OnBufferUnload( self, request_data ):
     filename = request_data[ 'filepath' ]
     with self._lock:
       self._SendRequest( 'close', { 'file': filename } )
 
+
   def OnFileReadyToParse( self, request_data ):
     with self._lock:
       self._Reload( request_data )
 
+
   def DefinedSubcommands( self ):
     return [ 'GoToDefinition',
-             'GetType']
+             'GetType',
+             'GetDoc' ]
+
 
   def OnUserCommand( self, arguments, request_data ):
     command = arguments[ 0 ]
@@ -212,8 +225,11 @@ class TypeScriptCompleter( Completer ):
       return self._GoToDefinition( request_data )
     if command == 'GetType':
       return self._GetType( request_data )
+    if command == 'GetDoc':
+      return self._GetDoc( request_data )
 
     raise ValueError( self.UserCommandsHelpMessage() )
+
 
   def _GoToDefinition( self, request_data ):
     with self._lock:
@@ -222,7 +238,7 @@ class TypeScriptCompleter( Completer ):
         'file':   request_data[ 'filepath' ],
         'line':   request_data[ 'line_num' ],
         'offset': request_data[ 'column_num' ]
-      })
+      } )
 
       filespans = self._ReadResponse( seq )[ 'body' ]
       if not filespans:
@@ -235,6 +251,7 @@ class TypeScriptCompleter( Completer ):
         column_num = span[ 'start' ][ 'offset' ]
       )
 
+
   def _GetType( self, request_data ):
     with self._lock:
       self._Reload( request_data )
@@ -242,10 +259,26 @@ class TypeScriptCompleter( Completer ):
         'file':   request_data[ 'filepath' ],
         'line':   request_data[ 'line_num' ],
         'offset': request_data[ 'column_num' ]
-      })
+      } )
 
       info = self._ReadResponse( seq )[ 'body' ]
       return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
+
+
+  def _GetDoc( self, request_data ):
+    with self._lock:
+      self._Reload( request_data )
+      seq = self._SendRequest( 'quickinfo', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      } )
+
+      info = self._ReadResponse( seq )[ 'body' ]
+      message = '{0}\n\n{1}'.format( info[ 'displayString' ],
+                                     info[ 'documentation' ] )
+      return responses.BuildDetailedInfoResponse( message )
+
 
   def Shutdown( self ):
     with self._lock:
