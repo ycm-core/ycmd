@@ -1,5 +1,4 @@
 // this file is used in RunCompleterCommand_GetParent_Clang_test
-#include <iostream>
 struct A {
     struct B {
         int x;
@@ -13,7 +12,7 @@ struct A {
         template<typename T>
         char do_anything(T &t)
         {
-            std::cout << t;
+            return t;
         }
     };
 
@@ -32,7 +31,7 @@ struct A {
 template<typename T>
 char A::do_anything(T &t)
 {
-    std::cout << t;
+    return t;
 }
 
 char A::B::do_x()
@@ -48,7 +47,7 @@ char A::do_y()
 int main()
 {
     auto l = [](){
-        std::cout << "lambda";
+        return "lambda";
     };
 
     l();

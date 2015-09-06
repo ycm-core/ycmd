@@ -23,6 +23,7 @@ from .. import handlers
 from ycmd import user_options_store
 from ycmd.utils import OnTravis
 
+
 def BuildRequest( **kwargs ):
   filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
   contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''

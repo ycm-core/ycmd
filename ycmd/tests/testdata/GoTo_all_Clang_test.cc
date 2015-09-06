@@ -1,5 +1,4 @@
 // This file is used in RunCompleterCommand_GoTo_all_Clang_test
-#include <iostream>
 namespace Local
 {
     int x;
@@ -21,8 +20,9 @@ int main();
 
 int main()
 {
-    std::cout << Local::x
-              << Local::in_line()
-              << Local::out_of_line();
+    int ix = Local::x;
+    char cy = Local::in_line();
+    char cx = Local::out_of_line();
+
     return 0;
 }

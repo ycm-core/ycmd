@@ -44,25 +44,27 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
+  set( CLANG_VERSION "3.7.0" )
+
   if ( APPLE )
-    set( CLANG_DIRNAME "clang+llvm-3.6.2-x86_64-apple-darwin" )
+    set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "a796b60dbdf849a946ba142f7c05233975ec85bc04468a88e920dee02542a77d" )
+         "057e56b445ac5dfbf0d5475badab374edebe8db5428001c8829340e40724b50d" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
       # We MUST support the latest Ubuntu LTS release!
       # At the time of writing, that's 14.04. Switch to next LTS ~6 months after
       # it comes out.
-      set( CLANG_DIRNAME "clang+llvm-3.6.2-x86_64-linux-gnu-ubuntu-14.04" )
+      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-14.04" )
       set( CLANG_SHA256
-           "70ff742456459ecad363462c72cba00aaa5473f699da29a2a6125ee7edfb967a" )
+           "093a94ff8982ae78461f0d2604c98f6b454c15e2ef768d34c235c6676c336460" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.
       # That's too old now.
-      message( FATAL_ERROR "No pre-built Clang 3.6 binaries for 32 bit linux. "
-        "You'll have to compile Clang 3.6 from source. "
+      message( FATAL_ERROR "No pre-built Clang ${CLANG_VERSION} binaries for 32 bit linux. "
+        "You'll have to compile Clang ${CLANG_VERSION} from source. "
         "See the YCM docs for details on how to use a user-compiled libclang." )
     endif()
   endif()
@@ -84,9 +86,9 @@ if ( USE_CLANG_COMPLETER AND
   endif()
 
   if( CLANG_DOWNLOAD )
-    message( "Downloading Clang 3.6.2" )
+    message( "Downloading Clang ${CLANG_VERSION}" )
 
-    set( CLANG_URL "http://llvm.org/releases/3.6.2" )
+    set( CLANG_URL "http://llvm.org/releases/${CLANG_VERSION}" )
     file(
       DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
       SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
@@ -255,9 +257,12 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     endif()
   endif()
 
-  set( LIBCLANG_TARGET ${EXTERNAL_LIBCLANG_PATH} )
+  # In Clang 3.7, the library target is a symlink of the soversion one.
+  # Since it will be copied in the project folder, we need the symlinked
+  # library.
+  get_filename_component( LIBCLANG_TARGET "${EXTERNAL_LIBCLANG_PATH}" REALPATH )
   message(
-    "Using external libclang: ${EXTERNAL_LIBCLANG_PATH}" )
+    "Using external libclang: ${LIBCLANG_TARGET}" )
 else()
   set( LIBCLANG_TARGET )
 endif()

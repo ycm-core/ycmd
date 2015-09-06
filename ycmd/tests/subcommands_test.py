@@ -91,8 +91,7 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
     'completer_target'  : 'filetype_default',
     'command_arguments' : command,
     'compilation_flags' : ['-x',
-                           'c++',
-                           '-std=c++11'],
+                           'c++'],
     'line_num'          : 10,
     'column_num'        : 3,
     'contents'          : contents,
@@ -123,17 +122,17 @@ def RunCompleterCommand_GoTo_all_Clang_test():
   # GoToDeclaration
   tests = [
     # Local::x -> declaration of x
-    { 'request': [24,25], 'response': [5 ,9 ] },
-    # Local::in_line -> declaration of Local::inline
-    { 'request': [25,29], 'response': [7 ,10] },
+    { 'request': [23, 21], 'response': [ 4,  9] },
+    # Local::in_line -> declaration of Local::in_line
+    { 'request': [24, 26], 'response': [ 6, 10] },
     # Local -> declaration of Local
-    { 'request': [25,19], 'response': [3 ,11] },
+    { 'request': [24, 16], 'response': [ 2, 11] },
     # Local::out_of_line -> declaration of Local::out_of_line
-    { 'request': [26,30], 'response': [12,10] },
+    { 'request': [25, 27], 'response': [11, 10] },
     # GoToDeclaration on definition of out_of_line moves to declaration
-    { 'request': [15,13], 'response': [12,10] },
+    { 'request': [14, 13], 'response': [11, 10] },
     # main -> declaration of main
-    { 'request': [22,7 ], 'response': [20,5] },
+    { 'request': [21,  7], 'response': [19, 5] },
   ]
 
   for test in tests:
@@ -144,22 +143,22 @@ def RunCompleterCommand_GoTo_all_Clang_test():
 
   # GoToDefinition - identical to GoToDeclaration
   #
-  # the semantics of this seem the wrong way round to me. GoToDefinition should
+  # The semantics of this seem the wrong way round to me. GoToDefinition should
   # go to where a method is implemented, not where it is declared.
   #
   tests = [
     # Local::x -> declaration of x
-    { 'request': [24,25], 'response': [5 ,9 ] },
-    # Local::in_line -> declaration of Local::inline
-    { 'request': [25,29], 'response': [7 ,10] },
+    { 'request': [23, 21], 'response': [ 4,  9] },
+    # Local::in_line -> declaration of Local::in_line
+    { 'request': [24, 26], 'response': [ 6, 10] },
     # Local -> declaration of Local
-    { 'request': [25,19], 'response': [3 ,11] },
+    { 'request': [24, 16], 'response': [ 2, 11] },
     # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    { 'request': [25, 27], 'response': [14, 13] }, # sic
     # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [15,13], 'response': [15,13] }, # sic
+    { 'request': [14, 13], 'response': [14, 13] }, # sic
     # main -> definition of main (not declaration)
-    { 'request': [22,7 ], 'response': [22,5] }, # sic
+    { 'request': [21,  7], 'response': [21, 5] }, # sic
   ]
 
   for test in tests:
@@ -170,22 +169,22 @@ def RunCompleterCommand_GoTo_all_Clang_test():
 
   # GoTo - identical to GoToDeclaration
   #
-  # the semantics of this seem the wrong way round to me. GoToDefinition should
+  # The semantics of this seem the wrong way round to me. GoToDefinition should
   # go to where a method is implemented, not where it is declared.
   #
   tests = [
     # Local::x -> declaration of x
-    { 'request': [24,25], 'response': [5 ,9 ] },
-    # Local::in_line -> declaration of Local::inline
-    { 'request': [25,29], 'response': [7 ,10] },
+    { 'request': [23, 21], 'response': [ 4,  9] },
+    # Local::in_line -> declaration of Local::in_line
+    { 'request': [24, 26], 'response': [ 6, 10] },
     # Local -> declaration of Local
-    { 'request': [25,19], 'response': [3 ,11] },
+    { 'request': [24, 16], 'response': [ 2, 11] },
     # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    { 'request': [25, 27], 'response': [14, 13] }, # sic
     # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [15,13], 'response': [15,13] }, # sic
+    { 'request': [14, 13], 'response': [14, 13] }, # sic
     # main -> definition of main (not declaration)
-    { 'request': [22,7 ], 'response': [22,5] }, # sic
+    { 'request': [21,  7], 'response': [21, 5] }, # sic
   ]
 
   for test in tests:
@@ -196,22 +195,22 @@ def RunCompleterCommand_GoTo_all_Clang_test():
 
   # GoToImprecise - identical to GoToDeclaration
   #
-  # the semantics of this seem the wrong way round to me. GoToDefinition should
+  # The semantics of this seem the wrong way round to me. GoToDefinition should
   # go to where a method is implemented, not where it is declared.
   #
   tests = [
     # Local::x -> declaration of x
-    { 'request': [24,25], 'response': [5 ,9 ] },
-    # Local::in_line -> declaration of Local::inline
-    { 'request': [25,29], 'response': [7 ,10] },
+    { 'request': [23, 21], 'response': [ 4,  9] },
+    # Local::in_line -> declaration of Local::in_line
+    { 'request': [24, 26], 'response': [ 6, 10] },
     # Local -> declaration of Local
-    { 'request': [25,19], 'response': [3 ,11] },
+    { 'request': [24, 16], 'response': [ 2, 11] },
     # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [26,30], 'response': [15,13 ] }, # sic
+    { 'request': [25, 27], 'response': [14, 13] }, # sic
     # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [15,13], 'response': [15,13] }, # sic
+    { 'request': [14, 13], 'response': [14, 13] }, # sic
     # main -> definition of main (not declaration)
-    { 'request': [22,7 ], 'response': [22,5] }, # sic
+    { 'request': [21,  7], 'response': [21, 5] }, # sic
   ]
 
   for test in tests:
@@ -229,6 +228,7 @@ def _RunCompleterCommand_Message_Clang(filename, test, command):
     'command_arguments' : command,
     'compilation_flags' : ['-x',
                            'c++',
+                           # C++11 flag is needed for lambda functions
                            '-std=c++11'],
     'line_num'          : 10,
     'column_num'        : 3,
@@ -251,77 +251,73 @@ def _RunCompleterCommand_Message_Clang(filename, test, command):
 @with_setup( Setup )
 def RunCompleterCommand_GetType_Clang_test():
   tests = [
-  # basic pod types
-    [{'line_num' : 25, 'column_num': 3} , 'Foo'],
-    [{'line_num' : 1,  'column_num': 1} , 'Internal error: cursor not valid'],
-    [{'line_num' : 17,  'column_num': 2} , 'Foo'],
-    [{'line_num' : 17,  'column_num': 8} , 'Foo'],
-    [{'line_num' : 17,  'column_num': 9} , 'Foo'],
-    [{'line_num' : 17,  'column_num': 10} , 'Foo'],
-    [{'line_num' : 18,  'column_num': 3} , 'int'],
-    [{'line_num' : 18,  'column_num': 7} , 'int'],
-    [{'line_num' : 20,  'column_num': 7} , 'char'],
+    # Basic pod types
+    [{'line_num': 20, 'column_num':  3}, 'Foo'],
+    [{'line_num':  1, 'column_num':  1}, 'Internal error: cursor not valid'],
+    [{'line_num': 12, 'column_num':  2}, 'Foo'],
+    [{'line_num': 12, 'column_num':  8}, 'Foo'],
+    [{'line_num': 12, 'column_num':  9}, 'Foo'],
+    [{'line_num': 12, 'column_num': 10}, 'Foo'],
+    [{'line_num': 13, 'column_num':  3}, 'int'],
+    [{'line_num': 13, 'column_num':  7}, 'int'],
+    [{'line_num': 15, 'column_num':  7}, 'char'],
 
-  # function
-    [{'line_num' : 23, 'column_num': 2} , 'int ()'],
-    [{'line_num' : 23, 'column_num': 6} , 'int ()'],
+    # Function
+    [{'line_num': 18, 'column_num':  2}, 'int ()'],
+    [{'line_num': 18, 'column_num':  6}, 'int ()'],
 
-  # Std::String and canonical type
-  # We use a dummy wrapper of std::string to not depend on implementation
-  # specifics.
-    # on Std:: (Unknown)
-    [{'line_num' : 26, 'column_num': 3} , 'Unknown type'], # sic
-    # on String (String)
-    [{'line_num' : 26, 'column_num': 8} ,
-                                  'String => Std::BasicString<char>'], # sic
-    # on "a" (Std::String)
-    [{'line_num' : 26, 'column_num': 15} ,
-                                  'Std::String => Std::BasicString<char>'],
-    [{'line_num' : 27, 'column_num': 16} ,
-                                  'Std::String => Std::BasicString<char>'],
+    # Declared and canonical type
+    # On Ns:: (Unknown)
+    [{'line_num': 21, 'column_num':  3}, 'Unknown type'], # sic
+    # On Type (Type)
+    [{'line_num': 21, 'column_num':  8}, 'Type => Ns::BasicType<char>'], # sic
+    # On "a" (Ns::Type)
+    [{'line_num': 21, 'column_num': 15}, 'Ns::Type => Ns::BasicType<char>'],
+    [{'line_num': 22, 'column_num': 13}, 'Ns::Type => Ns::BasicType<char>'],
 
-  # cursor on decl for refs & pointers
-    [{'line_num' : 40, 'column_num': 3} ,  'Foo'],
-    [{'line_num' : 40, 'column_num': 11} , 'Foo &'],
-    [{'line_num' : 40, 'column_num': 15} , 'Foo'],
-    [{'line_num' : 41, 'column_num': 3} ,  'Foo'],
-    [{'line_num' : 41, 'column_num': 11} , 'Foo *'],
-    [{'line_num' : 41, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 43, 'column_num': 3} ,  'const Foo &'],
-    [{'line_num' : 43, 'column_num': 16} , 'const Foo &'],
-    [{'line_num' : 44, 'column_num': 3} ,  'const Foo *'],
-    [{'line_num' : 44, 'column_num': 16} , 'const Foo *'],
-  # cursor on usage
-    [{'line_num' : 46, 'column_num': 17} , 'const Foo'],
-    [{'line_num' : 46, 'column_num': 21} , 'const int'],
-    [{'line_num' : 47, 'column_num': 17} , 'const Foo *'],
-    [{'line_num' : 47, 'column_num': 22} , 'const int'],
-    [{'line_num' : 48, 'column_num': 17} , 'Foo'],
-    [{'line_num' : 48, 'column_num': 21} , 'int'],
-    [{'line_num' : 49, 'column_num': 17} , 'Foo *'],
-    [{'line_num' : 49, 'column_num': 22} , 'int'],
+    # Cursor on decl for refs & pointers
+    [{'line_num': 35, 'column_num':  3}, 'Foo'],
+    [{'line_num': 35, 'column_num': 11}, 'Foo &'],
+    [{'line_num': 35, 'column_num': 15}, 'Foo'],
+    [{'line_num': 36, 'column_num':  3}, 'Foo'],
+    [{'line_num': 36, 'column_num': 11}, 'Foo *'],
+    [{'line_num': 36, 'column_num': 18}, 'Foo'],
+    [{'line_num': 38, 'column_num':  3}, 'const Foo &'],
+    [{'line_num': 38, 'column_num': 16}, 'const Foo &'],
+    [{'line_num': 39, 'column_num':  3}, 'const Foo *'],
+    [{'line_num': 39, 'column_num': 16}, 'const Foo *'],
 
-  # auto behaves strangely (bug in libclang)
-    [{'line_num' : 29, 'column_num': 3} ,  'auto &'], # sic
-    [{'line_num' : 29, 'column_num': 11} , 'auto &'], # sic
-    [{'line_num' : 29, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 30, 'column_num': 3} ,  'auto *'], # sic
-    [{'line_num' : 30, 'column_num': 11} , 'auto *'], # sic
-    [{'line_num' : 30, 'column_num': 18} , 'Foo'],
-    [{'line_num' : 32, 'column_num': 3} ,  'const auto &'], # sic
-    [{'line_num' : 32, 'column_num': 16} , 'const auto &'], # sic
-    [{'line_num' : 33, 'column_num': 3} ,  'const auto *'], # sic
-    [{'line_num' : 33, 'column_num': 16} , 'const auto *'], # sic
-  # auto sort of works in usage (but canonical types apparently differ)
-    [{'line_num' : 35, 'column_num': 17} , 'const Foo => const Foo'], #sic
-    [{'line_num' : 35, 'column_num': 23} , 'const int'],
-    [{'line_num' : 36, 'column_num': 17} , 'const Foo * => const Foo *'], #sic
-    [{'line_num' : 36, 'column_num': 24} , 'const int'],
-    [{'line_num' : 37, 'column_num': 17} , 'Foo => Foo'], #sic
-    [{'line_num' : 37, 'column_num': 22} , 'int'],
-    [{'line_num' : 38, 'column_num': 17} , 'Foo * => Foo *'], #sic
-    [{'line_num' : 38, 'column_num': 23} , 'int'],
+    # Cursor on usage
+    [{'line_num': 41, 'column_num': 13}, 'const Foo'],
+    [{'line_num': 41, 'column_num': 19}, 'const int'],
+    [{'line_num': 42, 'column_num': 13}, 'const Foo *'],
+    [{'line_num': 42, 'column_num': 20}, 'const int'],
+    [{'line_num': 43, 'column_num': 12}, 'Foo'],
+    [{'line_num': 43, 'column_num': 17}, 'int'],
+    [{'line_num': 44, 'column_num': 12}, 'Foo *'],
+    [{'line_num': 44, 'column_num': 18}, 'int'],
 
+    # Auto behaves strangely (bug in libclang)
+    [{'line_num': 24, 'column_num':  3}, 'auto &'], # sic
+    [{'line_num': 24, 'column_num': 11}, 'auto &'], # sic
+    [{'line_num': 24, 'column_num': 18}, 'Foo'],
+    [{'line_num': 25, 'column_num':  3}, 'auto *'], # sic
+    [{'line_num': 25, 'column_num': 11}, 'auto *'], # sic
+    [{'line_num': 25, 'column_num': 18}, 'Foo'],
+    [{'line_num': 27, 'column_num':  3}, 'const auto &'], # sic
+    [{'line_num': 27, 'column_num': 16}, 'const auto &'], # sic
+    [{'line_num': 28, 'column_num':  3}, 'const auto *'], # sic
+    [{'line_num': 28, 'column_num': 16}, 'const auto *'], # sic
+
+    # Auto sort of works in usage (but canonical types apparently differ)
+    [{'line_num': 30, 'column_num': 14}, 'const Foo => const Foo'], #sic
+    [{'line_num': 30, 'column_num': 21}, 'const int'],
+    [{'line_num': 31, 'column_num': 14}, 'const Foo * => const Foo *'], #sic
+    [{'line_num': 31, 'column_num': 22}, 'const int'],
+    [{'line_num': 32, 'column_num': 13}, 'Foo => Foo'], #sic
+    [{'line_num': 32, 'column_num': 19}, 'int'],
+    [{'line_num': 33, 'column_num': 13}, 'Foo * => Foo *'], #sic
+    [{'line_num': 33, 'column_num': 20}, 'int'],
   ]
 
   for test in tests:
@@ -333,33 +329,32 @@ def RunCompleterCommand_GetType_Clang_test():
 @with_setup( Setup )
 def RunCompleterCommand_GetParent_Clang_test():
   tests = [
-    [{'line_num' : 1 ,  'column_num': 1 } , 'Internal error: cursor not valid'],
-  # would be file name if we had one:
-    [{'line_num' : 3 ,  'column_num': 8 } , '/foo'],
+    [{'line_num':  1,  'column_num':  1}, 'Internal error: cursor not valid'],
+    # Would be file name if we had one:
+    [{'line_num':  2,  'column_num':  8}, '/foo'],
 
-  # the reported scope does not include parents
-    [{'line_num' : 4 ,  'column_num': 11} , 'A'],
-    [{'line_num' : 5 ,  'column_num': 13} , 'B'],
-    [{'line_num' : 6 ,  'column_num': 13} , 'B'],
-    [{'line_num' : 10,  'column_num': 17} , 'do_z_inline()'],
-    [{'line_num' : 16,  'column_num': 22} , 'do_anything(T &)'],
-    [{'line_num' : 20,  'column_num': 9 } , 'A'],
-    [{'line_num' : 21,  'column_num': 9 } , 'A'],
-    [{'line_num' : 23,  'column_num': 12} , 'A'],
-    [{'line_num' : 24,  'column_num': 5 } , 'do_Z_inline()'],
-    [{'line_num' : 25,  'column_num': 12} , 'do_Z_inline()'],
-    [{'line_num' : 29,  'column_num': 14} , 'A'],
+    # The reported scope does not include parents
+    [{'line_num':  3,  'column_num': 11}, 'A'],
+    [{'line_num':  4,  'column_num': 13}, 'B'],
+    [{'line_num':  5,  'column_num': 13}, 'B'],
+    [{'line_num':  9,  'column_num': 17}, 'do_z_inline()'],
+    [{'line_num': 15,  'column_num': 22}, 'do_anything(T &)'],
+    [{'line_num': 19,  'column_num':  9}, 'A'],
+    [{'line_num': 20,  'column_num':  9}, 'A'],
+    [{'line_num': 22,  'column_num': 12}, 'A'],
+    [{'line_num': 23,  'column_num':  5}, 'do_Z_inline()'],
+    [{'line_num': 24,  'column_num': 12}, 'do_Z_inline()'],
+    [{'line_num': 28,  'column_num': 14}, 'A'],
 
-    [{'line_num' : 35,  'column_num': 1 } , 'do_anything(T &)'],
-    [{'line_num' : 40,  'column_num': 1 } , 'do_x()'],
-    [{'line_num' : 45,  'column_num': 1 } , 'do_y()'],
-    [{'line_num' : 50,  'column_num': 1 } , 'main()'],
+    [{'line_num': 34,  'column_num':  1}, 'do_anything(T &)'],
+    [{'line_num': 39,  'column_num':  1}, 'do_x()'],
+    [{'line_num': 44,  'column_num':  1}, 'do_y()'],
+    [{'line_num': 49,  'column_num':  1}, 'main()'],
 
-  # lambdas report the name of the variable
-    [{'line_num' : 50,  'column_num': 14} , 'l'],
-    [{'line_num' : 51,  'column_num': 19} , 'l'],
-    [{'line_num' : 52,  'column_num': 16} , 'main()'],
-
+    # Lambdas report the name of the variable
+    [{'line_num': 49,  'column_num': 14}, 'l'],
+    [{'line_num': 50,  'column_num': 19}, 'l'],
+    [{'line_num': 51,  'column_num': 16}, 'main()'],
   ]
 
   for test in tests:

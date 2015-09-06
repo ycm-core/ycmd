@@ -1,17 +1,12 @@
 // This file is used in RunCompleterCommand_GetType_Clang_test
-#include <iostream>
-#include <string>
+namespace Ns {
+    template< typename T >
+    struct BasicType
+    {
+        BasicType( const T * );
+    };
 
-namespace Std {
-  template< typename T >
-  struct BasicString
-  {
-      BasicString( const char * );
-  };
-
-  typedef BasicString< char > String;
-
-  std::ostream& operator << ( std::ostream& o, const String& s);
+    typedef BasicType< char > Type;
 }
 
 struct Foo {
@@ -23,8 +18,8 @@ struct Foo {
 int main()
 {
   Foo foo;
-  Std::String a = "hello";
-  std::cout << a;
+  Ns::Type a = "hello";
+  Ns::Type b = a;
 
   auto &arFoo = foo;
   auto *apFoo = &foo;
@@ -32,10 +27,10 @@ int main()
   const auto &acrFoo = foo;
   const auto *acpFoo = &foo;
 
-  std::cout << acrFoo.y
-            << acpFoo->x
-            << arFoo.y
-            << apFoo->x;
+  int acry = acrFoo.y;
+  int acpx = acpFoo->x;
+  int ary = arFoo.y;
+  int apx = apFoo->x;
 
   Foo &rFoo = foo;
   Foo *pFoo = &foo;
@@ -43,10 +38,10 @@ int main()
   const Foo &crFoo = foo;
   const Foo *cpFoo = &foo;
 
-  std::cout << crFoo.y
-            << cpFoo->x
-            << rFoo.y
-            << pFoo->x;
+  int cry = crFoo.y;
+  int cpx = cpFoo->x;
+  int ry = rFoo.y;
+  int px = pFoo->x;
 
   return 0;
 }
