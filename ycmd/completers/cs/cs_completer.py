@@ -138,7 +138,7 @@ class CsharpCompleter( Completer ):
                 { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
              for completion
-             in solutioncompleter._GetCompletions( request_data, 
+             in solutioncompleter._GetCompletions( request_data,
                                                    completion_type ) ]
 
 
@@ -296,6 +296,7 @@ class CsharpSolutionCompleter:
     'GetType': ( lambda self, request_data: self._GetType(
         request_data ) ),
     'FixIt': ( lambda self, request_data: self._FixIt( request_data ) ),
+    'GetDoc': ( lambda self, request_data: self._GetDoc( request_data ) ),
     'ServerRunning': ( lambda self, request_data: self.ServerIsRunning() ),
     'ServerReady': ( lambda self, request_data: self.ServerIsReady() ),
     'ServerTerminated': ( lambda self, request_data: self.ServerTerminated() ),
@@ -477,12 +478,10 @@ class CsharpSolutionCompleter:
 
   def _GetType( self, request_data ):
     request = self._DefaultParameters( request_data )
-    request[ "IncludeDocumentation" ] = True
+    request[ "IncludeDocumentation" ] = False
 
     result = self._GetResponse( '/typelookup', request )
     message = result[ "Type" ]
-    if ( result[ "Documentation" ] ):
-      message += "\n" + result[ "Documentation" ]
 
     return responses.BuildDisplayMessageResponse( message )
 
@@ -499,6 +498,18 @@ class CsharpSolutionCompleter:
                             _BuildChunks( request_data, replacement_text ) ) ]
 
     return responses.BuildFixItResponse( fixits )
+
+
+  def _GetDoc( self, request_data ):
+    request = self._DefaultParameters( request_data )
+    request[ "IncludeDocumentation" ] = True
+
+    result = self._GetResponse( '/typelookup', request )
+    message = result[ "Type" ]
+    if ( result[ "Documentation" ] ):
+      message += "\n" + result[ "Documentation" ]
+
+    return responses.BuildDetailedInfoResponse( message )
 
 
   def _DefaultParameters( self, request_data ):
@@ -638,7 +649,7 @@ def _FixLineEndings( old_buffer, new_buffer ):
   return new_buffer
 
 
-# Adapted from http://stackoverflow.com/a/24495900  
+# Adapted from http://stackoverflow.com/a/24495900
 def _IndexToLineColumn( text, index ):
   """Get (line_number, col) of `index` in `string`."""
   lines = text.splitlines( True )
