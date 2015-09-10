@@ -23,10 +23,11 @@ from collections import defaultdict
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
-from ycmd.utils import ToUtf8IfNeeded, ToUnicodeIfNeeded
+from ycmd.utils import ToUtf8IfNeeded, ToUnicodeIfNeeded, OnWindows
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
+
 
 class FilenameCompleter( Completer ):
   """
@@ -37,19 +38,34 @@ class FilenameCompleter( Completer ):
     super( FilenameCompleter, self ).__init__( user_options )
     self._flags = Flags()
 
+    # On Windows, backslashes are also valid path separators.
+    self._triggers = [ '/', '\\' ] if OnWindows() else [ '/' ]
+
     self._path_regex = re.compile( """
-      # 1 or more 'D:/'-like token or '/' or '~' or './' or '../' or '$var/'
-      (?:[A-z]+:/|[/~]|\./|\.+/|\$[A-Za-z0-9{}_]+/)+
+      # Head part
+      (?:
+        # 'D:/'-like token
+        [A-z]+:[%(sep)s]|
 
-      # any alphanumeric, symbol or space literal
-      (?:[ /a-zA-Z0-9(){}$+_~.\x80-\xff-\[\]]|
+        # '/', './', '../', or '~'
+        \.{0,2}[%(sep)s]|~|
 
-      # skip any special symbols
-      [^\x20-\x7E]|
+        # '$var/'
+        \$[A-Za-z0-9{}_]+[%(sep)s]
+      )+
 
-      # backslash and 1 char after it. + matches 1 or more of whole group
-      \\.)*$
-      """, re.X )
+      # Tail part
+      (?:
+        # any alphanumeric, symbol or space literal
+        [ %(sep)sa-zA-Z0-9(){}$+_~.\x80-\xff-\[\]]|
+
+        # skip any special symbols
+        [^\x20-\x7E]|
+
+        # backslash and 1 char after it
+        \\.
+      )*$
+      """ % { 'sep': '/\\\\' if OnWindows() else '/' }, re.X )
 
     include_regex_common = '^\s*#(?:include|import)\s*(?:"|<)'
     self._include_start_regex = re.compile( include_regex_common + '$' )
@@ -69,8 +85,9 @@ class FilenameCompleter( Completer ):
   def ShouldUseNowInner( self, request_data ):
     start_column = request_data[ 'start_column' ] - 1
     current_line = request_data[ 'line_value' ]
-    return ( start_column and ( current_line[ start_column - 1 ] == '/' or
-             self.AtIncludeStatementStart( request_data ) ) )
+    return ( start_column and
+             ( current_line[ start_column - 1 ] in self._triggers or
+               self.AtIncludeStatementStart( request_data ) ) )
 
 
   def SupportedFiletypes( self ):
@@ -101,7 +118,7 @@ class FilenameCompleter( Completer ):
 
     path_match = self._path_regex.search( line )
     path_dir = os.path.expanduser(
-                os.path.expandvars( path_match.group() ) ) if path_match else ''
+      os.path.expandvars( path_match.group() ) ) if path_match else ''
 
     # If the client supplied its working directory, use that instead of the
     # working directory of ycmd
@@ -147,8 +164,8 @@ def _GetAbsolutePathForCompletions( path_dir,
   (in the standard case).
   """
 
-  if path_dir.startswith( '/' ):
-    # Looks like an absolute path already, return it
+  if os.path.isabs( path_dir ):
+    # This is already an absolute path, return it
     return path_dir
   elif use_working_dir:
     # Return paths relative to the working directory of the client, if
