@@ -361,7 +361,8 @@ def Diagnostics_ClangCompleter_FixIt_Available_test():
   event_data = BuildRequest( contents = contents,
                              event_name = 'FileReadyToParse',
                              filetype = 'cpp',
-                             compilation_flags = [ '-x' , 'c++',
+                             compilation_flags = [ '-x', 'c++',
+                                                   '-std=c++03',
                                                    '-Wall',
                                                    '-Wextra',
                                                    '-pedantic' ] )

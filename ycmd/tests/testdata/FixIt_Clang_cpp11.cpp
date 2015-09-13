@@ -2,7 +2,7 @@
 // A selection of the tests from llvm/tools/clang/test/FixIt/fixit-cxx0x.cpp
 //
 // Modified to test fixits across multiple lines and ensure that the number of
-// diagnistics doesn't hit the compile threshold.
+// diagnostics doesn't hit the compile threshold.
 //
 
 /* This is a test of the various code modification hints that only
