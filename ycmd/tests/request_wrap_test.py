@@ -154,3 +154,31 @@ def Query_InWhiteSpace_test():
   eq_( '',
        RequestWrap( PrepareJson( column_num = 8,
                                  contents = 'foo       ') )[ 'query' ] )
+
+def Query_AtWordEnd_WithUtf8_test():
+    eq_( 'foo',
+        RequestWrap( PrepareJson( column_num = 13,
+                                  contents = 'Hélène foo') )[ 'query' ] )
+
+def Query_InWordMiddle_WithUtf8_test():
+    eq_( 'foo',
+        RequestWrap( PrepareJson( column_num = 13,
+                                  contents = 'Hélène foobar') )[ 'query' ] )
+
+
+def Query_StartOfLine_WithUtf8_test():
+  eq_( '',
+       RequestWrap( PrepareJson( column_num = 1,
+                                 contents = 'Hélène foobar') )[ 'query' ] )
+
+
+def Query_StopsAtParen_WithUtf8_test():
+  eq_( 'bar',
+       RequestWrap( PrepareJson( column_num = 17,
+                                 contents = 'Hélène foo(bar') )[ 'query' ] )
+
+
+def Query_InWhiteSpace_WithUtf8_test():
+  eq_( '',
+       RequestWrap( PrepareJson( column_num = 17,
+                                 contents = 'Hélène foo       ') )[ 'query' ] )
