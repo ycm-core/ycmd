@@ -77,7 +77,7 @@ class RequestWrap( object ):
 
 
   def _Query( self ):
-    return self[ 'line_value' ][
+    return ToUtf8IfNeeded(self[ 'line_value' ])[
              self[ 'start_column' ] - 1 : self[ 'column_num' ] - 1 ]
 
 
