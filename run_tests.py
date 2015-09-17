@@ -54,6 +54,7 @@ def BuildYcmdLibs( args ):
       extra_cmake_args.append( '-DUSE_CLANG_COMPLETER=ON' )
 
     os.environ[ 'EXTRA_CMAKE_ARGS' ] = ' '.join(extra_cmake_args)
+    os.environ[ 'YCM_TESTRUN' ] = '1'
 
     build_cmd = [
       sys.executable,
