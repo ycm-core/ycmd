@@ -21,7 +21,7 @@ import ycm_core
 import os
 import inspect
 from ycmd import extra_conf_store
-from ycmd.utils import ToUtf8IfNeeded, OnMac
+from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
@@ -248,6 +248,16 @@ def _ExtraClangFlags():
   if OnMac():
     for path in MAC_INCLUDE_PATHS:
       flags.extend( [ '-isystem', path ] )
+  # On Windows, parsing of templates is delayed until instantation time.
+  # This makes GetType and GetParent commands not returning the expected
+  # result when the cursor is in templates.
+  # Using the -fno-delayed-template-parsing flag disables this behavior.
+  # See http://clang.llvm.org/extra/PassByValueTransform.html#note-about-delayed-template-parsing
+  # for an explanation of the flag and
+  # https://code.google.com/p/include-what-you-use/source/detail?r=566
+  # for a similar issue.
+  if OnWindows():
+    flags.append( '-fno-delayed-template-parsing' )
   return flags
 
 
