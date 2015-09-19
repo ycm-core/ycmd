@@ -34,6 +34,10 @@ def OnMac():
   return platform.system() == 'Darwin'
 
 
+def OnWindows():
+  return platform.system() == 'Windows'
+
+
 def PathToFirstExistingExecutable( executable_name_list ):
   for executable_name in executable_name_list:
     path = find_executable( executable_name )
@@ -91,10 +95,28 @@ def CustomPythonCmakeArgs():
   ]
 
 
+def GetGenerator( args ):
+  if OnWindows():
+    if args.msvc == 14:
+      generator = 'Visual Studio 14 2015'
+    elif args.msvc == 12:
+      generator = 'Visual Studio 12 2013'
+    else:
+      generator = 'Visual Studio 11 2012'
+
+    if ( not args.arch and platform.architecture()[ 0 ] == '64bit'
+         or args.arch == 64 ):
+      generator = generator + ' Win64'
+
+    return generator
+
+  return 'Unix Makefiles'
+
+
 def ParseArguments():
   parser = argparse.ArgumentParser()
   parser.add_argument( '--clang-completer', action = 'store_true',
-                       help = 'Build C-family semantic completion engine.')
+                       help = 'Build C-family semantic completion engine.' )
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
@@ -105,6 +127,12 @@ def ParseArguments():
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
+  parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
+                       default = 12, help = 'Choose the Microsoft Visual '
+                       'Studio version (default: %(default)s).' )
+  parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
+                       help = 'Force architecture to 32 or 64 bits on '
+                       'Windows (default: python interpreter architecture).' )
   args = parser.parse_args()
 
   if args.system_libclang and not args.clang_completer:
@@ -137,14 +165,14 @@ def RunYcmdTests( build_dir ):
   subprocess.check_call( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
 
 
-def BuildYcmdLibs( cmake_args ):
+def BuildYcmdLibs( args ):
   build_dir = mkdtemp( prefix = 'ycm_build.' )
 
   try:
-    full_cmake_args = [ '-G', 'Unix Makefiles' ]
+    full_cmake_args = [ '-G', GetGenerator( args ) ]
     if OnMac():
       full_cmake_args.extend( CustomPythonCmakeArgs() )
-    full_cmake_args.extend( cmake_args )
+    full_cmake_args.extend( GetCmakeArgs( args ) )
     full_cmake_args.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
 
     os.chdir( build_dir )
@@ -154,7 +182,10 @@ def BuildYcmdLibs( cmake_args ):
                      'ycm_core_tests' )
 
     build_command = [ 'cmake', '--build', '.', '--target', build_target ]
-    build_command.extend( [ '--', '-j', str(NumCores()) ] )
+    if OnWindows():
+      build_command.extend( [ '--config', 'Release' ] )
+    else:
+      build_command.extend( [ '--', '-j', str( NumCores() ) ] )
 
     subprocess.check_call( build_command )
 
@@ -186,7 +217,7 @@ def BuildGoCode():
 def Main():
   CheckDeps()
   args = ParseArguments()
-  BuildYcmdLibs( GetCmakeArgs( args ) )
+  BuildYcmdLibs( args )
   if args.omnisharp_completer:
     BuildOmniSharp()
   if args.gocode_completer:
