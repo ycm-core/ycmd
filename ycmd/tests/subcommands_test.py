@@ -24,17 +24,20 @@ from .test_utils import ( Setup,
                           PathToTestFile,
                           StopOmniSharpServer,
                           WaitUntilOmniSharpServerReady,
-                          ChangeSpecificOptions )
+                          ChangeSpecificOptions,
+                          ErrorMatcher )
 from webtest import TestApp, AppError
 from nose.tools import eq_, with_setup
 from .. import handlers
 import bottle
 import re
 import os.path
+import httplib
 from pprint import pprint
 
 from hamcrest import ( assert_that, contains, has_entries, equal_to, raises, calling )
 
+from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
 
 bottle.debug( True )
 
@@ -1327,3 +1330,368 @@ def RunCompleterCommand_GetType_HasNoType_TypescriptCompleter_test():
 
   assert_that( calling( app.post_json ).with_args( '/run_completer_command', gettype_data ),
                raises( AppError, 'RuntimeError.*No content available' ) )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_ClangCompleter_Variable_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 70,
+                             column_num = 24,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+        'detailed_info': """\
+char a_global_variable
+This really is a global variable.
+Type: char
+Name: a_global_variable
+---
+This really is a global variable.
+
+The first line of comment is the brief.""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_ClangCompleter_Method_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 22,
+                             column_num = 13,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+      'detailed_info': """\
+char with_brief()
+brevity is for suckers
+Type: char ()
+Name: with_brief
+---
+
+This is not the brief.
+
+\\brief brevity is for suckers
+
+This is more information
+""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_ClangCompleter_Namespace_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 65,
+                             column_num = 14,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+      'detailed_info': """\
+namespace Test {}
+This is a test namespace
+Type: 
+Name: Test
+---
+This is a test namespace""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_ClangCompleter_Undocumented_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 81,
+                             column_num = 17,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+
+  assert_that( response.json,
+               ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_ClangCompleter_NoCursor_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 1,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+
+  assert_that( response.json,
+               ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+# Following tests repeat the tests above, but without re-parsing the file
+@with_setup( Setup )
+def RunCompleterCommand_GetDocQuick_ClangCompleter_Variable_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  app.post_json( '/event_notification',
+                 BuildRequest(filepath = filepath,
+                              filetype = 'cpp',
+                              compilation_flags = [ '-x', 'c++' ],
+                              contents = contents,
+                              event_name = 'FileReadyToParse' ) )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 70,
+                             column_num = 24,
+                             contents = contents,
+                             command_arguments = [ 'GetDocQuick' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+        'detailed_info': """\
+char a_global_variable
+This really is a global variable.
+Type: char
+Name: a_global_variable
+---
+This really is a global variable.
+
+The first line of comment is the brief.""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDocQuick_ClangCompleter_Method_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  app.post_json( '/event_notification',
+                 BuildRequest(filepath = filepath,
+                              filetype = 'cpp',
+                              compilation_flags = [ '-x', 'c++' ],
+                              contents = contents,
+                              event_name = 'FileReadyToParse' ) )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 22,
+                             column_num = 13,
+                             contents = contents,
+                             command_arguments = [ 'GetDocQuick' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+      'detailed_info': """\
+char with_brief()
+brevity is for suckers
+Type: char ()
+Name: with_brief
+---
+
+This is not the brief.
+
+\\brief brevity is for suckers
+
+This is more information
+""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDocQuick_ClangCompleter_Namespace_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  app.post_json( '/event_notification',
+                 BuildRequest(filepath = filepath,
+                              filetype = 'cpp',
+                              compilation_flags = [ '-x', 'c++' ],
+                              contents = contents,
+                              event_name = 'FileReadyToParse' ) )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 65,
+                             column_num = 14,
+                             contents = contents,
+                             command_arguments = [ 'GetDocQuick' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+      'detailed_info': """\
+namespace Test {}
+This is a test namespace
+Type: 
+Name: Test
+---
+This is a test namespace""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDocQuick_ClangCompleter_Undocumented_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  app.post_json( '/event_notification',
+                 BuildRequest(filepath = filepath,
+                              filetype = 'cpp',
+                              compilation_flags = [ '-x', 'c++' ],
+                              contents = contents,
+                              event_name = 'FileReadyToParse' ) )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 81,
+                             column_num = 17,
+                             contents = contents,
+                             command_arguments = [ 'GetDocQuick' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+
+  assert_that( response.json,
+               ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDocQuick_ClangCompleter_NoCursor_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  app.post_json( '/event_notification',
+                 BuildRequest(filepath = filepath,
+                              filetype = 'cpp',
+                              compilation_flags = [ '-x', 'c++' ],
+                              contents = contents,
+                              event_name = 'FileReadyToParse' ) )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 1,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GetDocQuick' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+
+  assert_that( response.json,
+               ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDocQuick_ClangCompleter_NoReadyToParse_test():
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 11,
+                             column_num = 18,
+                             contents = contents,
+                             command_arguments = [ 'GetDocQuick' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  eq_( response, {
+      'detailed_info': """\
+int get_a_global_variable(bool test)
+This is a method which is only pretend global
+Type: int (bool)
+Name: get_a_global_variable
+---
+This is a method which is only pretend global
+@param test Set this to true. Do it.""" } )

@@ -220,13 +220,38 @@ ClangCompleter::GetFixItsForLocationInFile(
   shared_ptr< TranslationUnit > unit =
     translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
 
-  if ( !unit )
+  if ( !unit ) {
     return std::vector< FixIt >();
+  }
 
   return unit->GetFixItsForLocationInFile( line,
                                            column,
                                            unsaved_files,
                                            reparse );
+
+}
+
+DocumentationData ClangCompleter::GetDocsForLocationInFile(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse) {
+
+  ReleaseGil unlock;
+
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
+
+  if ( !unit ) {
+    return DocumentationData();
+  }
+
+  return unit->GetDocsForLocationInFile( line,
+                                         column,
+                                         unsaved_files,
+                                         reparse );
 
 }
 

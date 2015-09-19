@@ -1,5 +1,5 @@
 def FlagsForFile( filename ):
   return {
-    'flags': ['-x', 'c++'],
+    'flags': ['-x', 'c++', '-I', '.'],
     'do_cache': True
   }

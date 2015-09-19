@@ -28,6 +28,7 @@
 #  include "Range.h"
 #  include "UnsavedFile.h"
 #  include "CompilationDatabase.h"
+#  include "Documentation.h"
 #endif // USE_CLANG_COMPLETER
 
 #include <boost/python.hpp>
@@ -102,7 +103,9 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "GetEnclosingFunctionAtLocation",
           &ClangCompleter::GetEnclosingFunctionAtLocation )
     .def( "GetFixItsForLocationInFile",
-          &ClangCompleter::GetFixItsForLocationInFile );
+          &ClangCompleter::GetFixItsForLocationInFile )
+    .def( "GetDocsForLocationInFile",
+          &ClangCompleter::GetDocsForLocationInFile );
 
   enum_< CompletionKind >( "CompletionKind" )
     .value( "STRUCT", STRUCT )
@@ -175,6 +178,13 @@ BOOST_PYTHON_MODULE(ycm_core)
 
   class_< std::vector< Diagnostic > >( "DiagnosticVector" )
     .def( vector_indexing_suite< std::vector< Diagnostic > >() );
+
+  class_< DocumentationData >( "DocumentationData" )
+    .def_readonly( "comment_xml", &DocumentationData::comment_xml )
+    .def_readonly( "raw_comment", &DocumentationData::raw_comment )
+    .def_readonly( "brief_comment", &DocumentationData::brief_comment )
+    .def_readonly( "canonical_type", &DocumentationData::canonical_type )
+    .def_readonly( "display_name", &DocumentationData::display_name );
 
   class_< CompilationDatabase, boost::noncopyable >(
       "CompilationDatabase", init< std::string >() )

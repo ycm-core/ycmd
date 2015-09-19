@@ -21,6 +21,7 @@
 #include "UnsavedFile.h"
 #include "Diagnostic.h"
 #include "TranslationUnitStore.h"
+#include "Documentation.h"
 
 #include <boost/utility.hpp>
 
@@ -90,6 +91,14 @@ public:
     bool reparse = true );
 
   std::vector< FixIt > GetFixItsForLocationInFile(
+    const std::string &filename,
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    const std::vector< std::string > &flags,
+    bool reparse = true);
+
+  DocumentationData GetDocsForLocationInFile(
     const std::string &filename,
     int line,
     int column,

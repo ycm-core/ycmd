@@ -22,6 +22,7 @@ import time
 from .. import handlers
 from ycmd import user_options_store
 from ycmd.utils import OnTravis
+from hamcrest import has_entries, has_entry
 
 
 def BuildRequest( **kwargs ):
@@ -106,3 +107,11 @@ def StopGoCodeServer( app ):
                  BuildRequest( completer_target = 'filetype_default',
                                command_arguments = ['StopServer'],
                                filetype = 'go' ) )
+
+
+def ErrorMatcher( cls, msg ):
+  """ Returns a hamcrest matcher for a server exception response """
+  return has_entries( {
+    'exception' : has_entry( 'TYPE', cls.__name__ ),
+    'message': msg,
+  } )
