@@ -113,7 +113,7 @@ class ClangCompleter( Completer ):
              'ClearCompilationFlagCache',
              'GetType',
              'GetParent',
-             'FixIt'
+             'FixIt',
              'GetDoc',
              'GetDocQuick' ]
 
