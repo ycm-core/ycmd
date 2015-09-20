@@ -109,7 +109,7 @@ def ClangCompleter_FormatRawComment_MultiOneLine_JavaDoc_test():
 def ClangCompleter_FormatRawComment_MultiLine_Doxygen_Inbalance_test():
   # The dedenting only applies to consistent indent
   # Note trailing whitespace is intentional
-  _Check_FormatRawComment( 
+  _Check_FormatRawComment(
   """
       /// This is
       ///    a
@@ -135,7 +135,7 @@ def ClangCompleter_FormatRawComment_MultiLine_JavaDoc_Inconsistent_test():
   # The dedenting only applies to consistent indent, and leaves any subsequent
   # indent intact
   # Note trailing whitespace is intentional
-  _Check_FormatRawComment( 
+  _Check_FormatRawComment(
   """
       /**  All of the 
     *  Lines in this	
@@ -156,7 +156,7 @@ def ClangCompleter_FormatRawComment_ZeroLine_test():
 
 def ClangCompleter_FormatRawComment_MultiLine_empty_test():
   # Note trailing whitespace is intentional
-  _Check_FormatRawComment( 
+  _Check_FormatRawComment(
   """
 	
 
