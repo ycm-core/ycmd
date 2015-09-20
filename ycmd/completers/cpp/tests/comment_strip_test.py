@@ -22,7 +22,6 @@ method/variable,etc. headers in order to remove non-data-ink from the raw
 comment"""
 
 from nose.tools import eq_
-import os
 from .. import clang_completer
 
 
@@ -31,17 +30,12 @@ def _Check_FormatRawComment( comment, expected ):
     result = clang_completer._FormatRawComment( comment )
     eq_( result, expected )
   except:
-    print ( "Failed while parsing:"
-            + os.linesep
-            + "'" + comment + "'"
-            + os.linesep
-            + "Expecting:"
-            + os.linesep
-            + "'" + expected + "'"
-            + os.linesep
-            + "But found: "
-            + os.linesep
-            + "'" + result + "'" )
+    print( "Failed while parsing:\n"
+           "'" + comment + "'\n"
+           "Expecting:\n"
+           "'" + expected + "'\n"
+           "But found:\n"
+           "'" + result + "'" )
     raise
 
 

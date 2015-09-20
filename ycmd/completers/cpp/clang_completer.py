@@ -21,7 +21,6 @@ from collections import defaultdict
 import ycm_core
 import re
 import textwrap
-import os
 from ycmd import responses
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded
@@ -450,11 +449,11 @@ STRIP_TRAILING_COMMENT = re.compile( '[ \t]*\*/[ \t]*$|[ \t]*$' )
 
 
 def _FormatRawComment( comment ):
-  """ Strips leading indentation and comment markers from the comment string """
+  """Strips leading indentation and comment markers from the comment string"""
   return textwrap.dedent(
-      os.linesep.join( [ re.sub( STRIP_TRAILING_COMMENT, '',
-                         re.sub( STRIP_LEADING_COMMENT, '', line ) )
-                                for line in comment.split( os.linesep ) ] ) )
+    '\n'.join( [ re.sub( STRIP_TRAILING_COMMENT, '',
+                 re.sub( STRIP_LEADING_COMMENT, '', line ) )
+                 for line in comment.splitlines() ] ) )
 
 
 def _BuildGetDocResponse( doc_data ):
@@ -479,10 +478,9 @@ def _BuildGetDocResponse( doc_data ):
   declaration = root.find( "Declaration" )
 
   return responses.BuildDetailedInfoResponse(
-        '{0}{5}{1}{5}Type: {2}{5}Name: {3}{5}---{5}{4}'.format(
-              declaration.text if declaration is not None else "",
-              doc_data.brief_comment,
-              doc_data.canonical_type,
-              doc_data.display_name,
-              _FormatRawComment( doc_data.raw_comment ),
-              os.linesep ) )
+    '{0}\n{1}\nType: {2}\nName: {3}\n---\n{4}'.format(
+      declaration.text if declaration is not None else "",
+      doc_data.brief_comment,
+      doc_data.canonical_type,
+      doc_data.display_name,
+      _FormatRawComment( doc_data.raw_comment ) ) )

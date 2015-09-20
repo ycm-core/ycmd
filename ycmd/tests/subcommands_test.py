@@ -1358,7 +1358,7 @@ def RunCompleterCommand_GetDoc_ClangCompleter_Variable_test():
   pprint( response )
 
   eq_( response, {
-        'detailed_info': """\
+    'detailed_info': """\
 char a_global_variable
 This really is a global variable.
 Type: char
@@ -1390,7 +1390,7 @@ def RunCompleterCommand_GetDoc_ClangCompleter_Method_test():
   pprint( response )
 
   eq_( response, {
-      'detailed_info': """\
+    'detailed_info': """\
 char with_brief()
 brevity is for suckers
 Type: char ()
@@ -1426,7 +1426,7 @@ def RunCompleterCommand_GetDoc_ClangCompleter_Namespace_test():
   pprint( response )
 
   eq_( response, {
-      'detailed_info': """\
+    'detailed_info': """\
 namespace Test {}
 This is a test namespace
 Type: 
@@ -1516,7 +1516,7 @@ def RunCompleterCommand_GetDocQuick_ClangCompleter_Variable_test():
   pprint( response )
 
   eq_( response, {
-        'detailed_info': """\
+    'detailed_info': """\
 char a_global_variable
 This really is a global variable.
 Type: char
@@ -1555,7 +1555,7 @@ def RunCompleterCommand_GetDocQuick_ClangCompleter_Method_test():
   pprint( response )
 
   eq_( response, {
-      'detailed_info': """\
+    'detailed_info': """\
 char with_brief()
 brevity is for suckers
 Type: char ()
@@ -1598,7 +1598,7 @@ def RunCompleterCommand_GetDocQuick_ClangCompleter_Namespace_test():
   pprint( response )
 
   eq_( response, {
-      'detailed_info': """\
+    'detailed_info': """\
 namespace Test {}
 This is a test namespace
 Type: 
@@ -1692,7 +1692,7 @@ def RunCompleterCommand_GetDocQuick_ClangCompleter_NoReadyToParse_test():
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-      'detailed_info': """\
+    'detailed_info': """\
 int get_a_global_variable(bool test)
 This is a method which is only pretend global
 Type: int (bool)
