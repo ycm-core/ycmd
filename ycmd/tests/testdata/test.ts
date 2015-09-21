@@ -12,4 +12,20 @@ var foo = new Foo();
 foo.m
 
 
+/**
+ * Class documentation
+ *
+ * Multi-line
+ */
+class Bar {
 
+  /**
+   * Method documentation
+   */
+  testMethod() {}
+}
+
+var bar = new Bar();
+bar.testMethod();
+
+Bar.apply()
