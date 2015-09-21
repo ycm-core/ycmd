@@ -87,6 +87,7 @@ def RunCompleterCommand_GoTo_Clang_ZeroBasedLineAndColumn_test():
       },
       app.post_json( '/run_completer_command', goto_data ).json )
 
+
 def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
   contents = open( PathToTestFile( filename ) ).read()
   app = TestApp( handlers.app )
@@ -119,6 +120,7 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
 
   eq_( response,
        app.post_json( '/run_completer_command', goto_data ).json )
+
 
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_all_Clang_test():
@@ -221,6 +223,7 @@ def RunCompleterCommand_GoTo_all_Clang_test():
           'GoTo_all_Clang_test.cc',            \
           ['GoToImprecise'],                   \
           test
+
 
 def _RunCompleterCommand_Message_Clang(filename, test, command):
   contents = open( PathToTestFile( filename ) ).read()
@@ -334,6 +337,7 @@ def RunCompleterCommand_GetType_Clang_test():
           test,                               \
           ['GetType']
 
+
 @with_setup( Setup )
 def RunCompleterCommand_GetParent_Clang_test():
   tests = [
@@ -415,6 +419,7 @@ def _RunFixItTest_Clang( line, column, lang, file_name, check ):
   pprint( results )
   check( results )
 
+
 def _FixIt_Check_cpp11_Ins( results ):
   # First fixit
   #   switch(A()) { // expected-error{{explicit conversion to}}
@@ -439,6 +444,7 @@ def _FixIt_Check_cpp11_Ins( results ):
       'location' : has_entries( { 'line_num': 16, 'column_num': 3 } )
     } ) )
   } ) )
+
 
 def _FixIt_Check_cpp11_InsMultiLine( results ):
   # Similar to _FixIt_Check_cpp11_1 but inserts split across lines
@@ -465,6 +471,7 @@ def _FixIt_Check_cpp11_InsMultiLine( results ):
     } ) )
   } ) )
 
+
 def _FixIt_Check_cpp11_Del( results ):
   # Removal of ::
   assert_that( results, has_entries( {
@@ -482,6 +489,7 @@ def _FixIt_Check_cpp11_Del( results ):
     } ) )
   } ) )
 
+
 def _FixIt_Check_cpp11_Repl( results ):
   assert_that( results, has_entries( {
     'fixits': contains( has_entries ( {
@@ -497,6 +505,7 @@ def _FixIt_Check_cpp11_Repl( results ):
       'location' : has_entries( { 'line_num': 40, 'column_num': 6 } )
     } ) )
   } ) )
+
 
 def _FixIt_Check_cpp11_DelAdd( results ):
   assert_that( results, has_entries( {
@@ -521,6 +530,7 @@ def _FixIt_Check_cpp11_DelAdd( results ):
     } ) )
   } ) )
 
+
 def _FixIt_Check_objc( results ):
   assert_that( results, has_entries( {
     'fixits': contains( has_entries ( {
@@ -537,9 +547,11 @@ def _FixIt_Check_objc( results ):
     } ) )
   } ) )
 
+
 def _FixIt_Check_objc_NoFixIt( results ):
   # and finally, a warning with no fixits
   assert_that( results, equal_to( { 'fixits' : [] } ) )
+
 
 def _FixIt_Check_cpp11_MultiFirst( results ):
   assert_that( results, has_entries( {
@@ -580,6 +592,7 @@ def _FixIt_Check_cpp11_MultiFirst( results ):
     )
   } ) )
 
+
 def _FixIt_Check_cpp11_MultiSecond( results ):
   assert_that( results, has_entries( {
     'fixits': contains(
@@ -618,6 +631,7 @@ def _FixIt_Check_cpp11_MultiSecond( results ):
       } )
     )
   } ) )
+
 
 @with_setup( Setup )
 def RunCompleterCommand_FixIt_all_Clang_test():
@@ -1367,7 +1381,8 @@ def DefinedSubcommands_Works_test():
 
   eq_( [ 'GoToDefinition',
          'GoToDeclaration',
-         'GoTo' ],
+         'GoTo',
+         'GetDoc' ],
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
@@ -1378,7 +1393,8 @@ def DefinedSubcommands_WorksWhenNoExplicitCompleterTargetSpecified_test():
 
   eq_( [ 'GoToDefinition',
          'GoToDeclaration',
-         'GoTo' ],
+         'GoTo',
+         'GetDoc' ],
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
@@ -1798,3 +1814,52 @@ Name: get_a_global_variable
 ---
 This is a method which is only pretend global
 @param test Set this to true. Do it.""" } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_Jedi_Works_Method_test():
+  # Testcase1
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Jedi.py' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'python',
+                             line_num = 17,
+                             column_num = 9,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  eq_( response, {
+       'detailed_info': '_ModuleMethod()\n\n'
+                        'Module method docs\n'
+                        'Are dedented, like you might expect',
+  } )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GetDoc_Jedi_Works_Class_test():
+  # Testcase1
+  app = TestApp( handlers.app )
+
+  filepath = PathToTestFile( 'GetDoc_Jedi.py' )
+  contents = open( filepath ).read()
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'python',
+                             line_num = 19,
+                             column_num = 2,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  eq_( response, {
+       'detailed_info': 'Class Documentation',
+  } )
+
