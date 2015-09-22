@@ -18,6 +18,7 @@
 #ifndef CLANGCOMPLETE_H_WLKDU0ZV
 #define CLANGCOMPLETE_H_WLKDU0ZV
 
+#include "../DLLDefines.h"
 #include "UnsavedFile.h"
 #include "Diagnostic.h"
 #include "TranslationUnitStore.h"
@@ -41,8 +42,8 @@ typedef std::vector< CompletionData > CompletionDatas;
 // All filename parameters must be absolute paths.
 class ClangCompleter : boost::noncopyable {
 public:
-  ClangCompleter();
-  ~ClangCompleter();
+  YCM_DLL_EXPORT ClangCompleter();
+  YCM_DLL_EXPORT ~ClangCompleter();
 
   bool UpdatingTranslationUnit( const std::string &filename );
 
@@ -51,7 +52,7 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags );
 
-  std::vector< CompletionData > CandidatesForLocationInFile(
+  YCM_DLL_EXPORT std::vector< CompletionData > CandidatesForLocationInFile(
     const std::string &filename,
     int line,
     int column,
@@ -66,7 +67,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  Location GetDefinitionLocation(
+  YCM_DLL_EXPORT Location GetDefinitionLocation(
     const std::string &filename,
     int line,
     int column,

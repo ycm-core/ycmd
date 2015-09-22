@@ -18,6 +18,7 @@
 #ifndef TRANSLATIONUNIT_H_XQ7I6SVA
 #define TRANSLATIONUNIT_H_XQ7I6SVA
 
+#include "../DLLDefines.h"
 #include "UnsavedFile.h"
 #include "Diagnostic.h"
 #include "Location.h"
@@ -43,13 +44,13 @@ public:
   // no callers try to rely on the invalid TU.
   TranslationUnit();
 
-  TranslationUnit(
+  YCM_DLL_EXPORT TranslationUnit(
     const std::string &filename,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags,
     CXIndex clang_index );
 
-  ~TranslationUnit();
+  YCM_DLL_EXPORT ~TranslationUnit();
 
   void Destroy();
 
@@ -67,13 +68,13 @@ public:
     int column,
     const std::vector< UnsavedFile > &unsaved_files );
 
-  Location GetDeclarationLocation(
+  YCM_DLL_EXPORT Location GetDeclarationLocation(
     int line,
     int column,
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
-  Location GetDefinitionLocation(
+  YCM_DLL_EXPORT Location GetDefinitionLocation(
     int line,
     int column,
     const std::vector< UnsavedFile > &unsaved_files,

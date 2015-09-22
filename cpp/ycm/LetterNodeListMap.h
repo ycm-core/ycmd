@@ -18,6 +18,8 @@
 #ifndef LETTERNODELISTMAP_H_BRK2UMC1
 #define LETTERNODELISTMAP_H_BRK2UMC1
 
+#include "DLLDefines.h"
+
 #include <list>
 #include <boost/utility.hpp>
 #include <boost/array.hpp>
@@ -28,13 +30,13 @@ namespace YouCompleteMe {
 
 class LetterNode;
 
-int IndexForChar( char letter );
-bool IsUppercase( char letter );
+YCM_DLL_EXPORT int IndexForChar( char letter );
+YCM_DLL_EXPORT bool IsUppercase( char letter );
 
 class LetterNodeListMap : boost::noncopyable {
 public:
   LetterNodeListMap();
-  ~LetterNodeListMap();
+  YCM_DLL_EXPORT ~LetterNodeListMap();
 
   bool HasLetter( char letter );
 

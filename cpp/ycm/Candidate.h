@@ -18,6 +18,7 @@
 #ifndef CANDIDATE_H_R5LZH6AC
 #define CANDIDATE_H_R5LZH6AC
 
+#include "DLLDefines.h"
 #include "LetterNode.h"
 
 #include <boost/scoped_ptr.hpp>
@@ -32,15 +33,15 @@ class Result;
 
 typedef std::bitset< NUM_LETTERS > Bitset;
 
-Bitset LetterBitsetFromString( const std::string &text );
+YCM_DLL_EXPORT Bitset LetterBitsetFromString( const std::string &text );
 
 // Public for tests
-std::string GetWordBoundaryChars( const std::string &text );
+YCM_DLL_EXPORT std::string GetWordBoundaryChars( const std::string &text );
 
 class Candidate : boost::noncopyable {
 public:
 
-  explicit Candidate( const std::string &text );
+  YCM_DLL_EXPORT explicit Candidate( const std::string &text );
 
   inline const std::string &Text() const {
     return text_;
@@ -52,8 +53,8 @@ public:
     return ( letters_present_ & query_bitset ) == query_bitset;
   }
 
-  Result QueryMatchResult( const std::string &query,
-                           bool case_sensitive ) const;
+  YCM_DLL_EXPORT Result QueryMatchResult( const std::string &query,
+                                          bool case_sensitive ) const;
 
 private:
   std::string text_;

@@ -18,6 +18,8 @@
 #ifndef CANDIDATEREPOSITORY_H_K9OVCMHG
 #define CANDIDATEREPOSITORY_H_K9OVCMHG
 
+#include "DLLDefines.h"
+
 #include <boost/utility.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/thread/mutex.hpp>
@@ -44,11 +46,11 @@ CandidateHolder;
 // This class is thread-safe.
 class CandidateRepository : boost::noncopyable {
 public:
-  static CandidateRepository &Instance();
+  YCM_DLL_EXPORT static CandidateRepository &Instance();
 
   int NumStoredCandidates();
 
-  std::vector< const Candidate * > GetCandidatesForStrings(
+  YCM_DLL_EXPORT std::vector< const Candidate * > GetCandidatesForStrings(
     const std::vector< std::string > &strings );
 
 #ifdef USE_CLANG_COMPLETER
