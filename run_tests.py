@@ -40,7 +40,7 @@ def ParseArguments():
                        help = 'Do not build ycmd before testing.' )
   parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
                        help = 'Choose the Microsoft Visual '
-                       'Studio version. (default: 12).' )
+                       'Studio version. (default: 14).' )
   parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
                        help = 'Force architecture to 32 or 64 bits on '
                        'Windows (default: python interpreter architecture).' )
