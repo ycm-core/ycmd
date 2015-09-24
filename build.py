@@ -128,7 +128,7 @@ def ParseArguments():
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
   parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
-                       default = 12, help = 'Choose the Microsoft Visual '
+                       default = 14, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
                        help = 'Force architecture to 32 or 64 bits on '
