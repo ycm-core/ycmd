@@ -100,10 +100,28 @@ if ( USE_CLANG_COMPLETER AND
     message( "Downloading Clang ${CLANG_VERSION}" )
 
     set( CLANG_URL "http://llvm.org/releases/${CLANG_VERSION}" )
-    file(
-      DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
-      SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
-    )
+
+    # Try to download Clang several times until successful to prevent failure
+    # from network issues on CI services.
+    set( DOWNLOAD_TRIES 3 )
+    set( DOWNLOAD_TRY 0 )
+    set( DOWNLOAD_ERROR 1 )
+
+    while( DOWNLOAD_ERROR AND DOWNLOAD_TRY LESS DOWNLOAD_TRIES )
+      file(
+        DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
+        STATUS DOWNLOAD_STATUS
+        SHOW_PROGRESS
+        EXPECTED_HASH SHA256=${CLANG_SHA256}
+      )
+      math( EXPR DOWNLOAD_TRY "${DOWNLOAD_TRY} + 1" )
+      list( GET DOWNLOAD_STATUS 0 DOWNLOAD_ERROR )
+    endwhile()
+
+    if( DOWNLOAD_ERROR )
+      message( FATAL_ERROR
+        "Could not download ${CLANG_URL}/${CLANG_FILENAME}" )
+    endif()
   else()
     message( "Using Clang archive: ${CLANG_LOCAL_FILE}" )
   endif()
