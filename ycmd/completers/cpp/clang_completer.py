@@ -20,6 +20,7 @@
 from collections import defaultdict
 import ycm_core
 import re
+import os.path
 import textwrap
 from ycmd import responses
 from ycmd import extra_conf_store
@@ -50,6 +51,7 @@ class ClangCompleter( Completer ):
     self._flags = Flags()
     self._diagnostic_store = None
     self._files_being_compiled = EphemeralValuesSet()
+    self._include_regex = re.compile('^\s*#(?:include|import)\s*(?:"|(<))(?P<file>.*)(?(1)>|")')
 
 
   def SupportedFiletypes( self ):
@@ -109,6 +111,7 @@ class ClangCompleter( Completer ):
              'GoToDeclaration',
              'GoTo',
              'GoToImprecise',
+             'GoToInclude',
              'ClearCompilationFlagCache',
              'GetType',
              'GetParent',
@@ -147,6 +150,10 @@ class ClangCompleter( Completer ):
       },
       'GoToImprecise' : {
         'method' : self._GoToImprecise,
+        'args'   : { 'request_data' : request_data }
+      },
+      'GoToInclude' : {
+        'method' : self._GoToInclude,
         'args'   : { 'request_data' : request_data }
       },
       'ClearCompilationFlagCache' : {
@@ -245,6 +252,31 @@ class ClangCompleter( Completer ):
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
+
+
+  def _GoToInclude( self, request_data ):
+    current_line = request_data[ 'line_value' ]
+    match = self._include_regex.search( current_line )
+    if not match:
+      raise RuntimeError( 'Not an include/import line.' )
+      return None
+
+    quoted_include = not match.group(1)
+    include_file = match.group('file')
+
+    current_file_path = ToUtf8IfNeeded( request_data[ 'filepath' ] )
+    client_data = request_data.get( 'extra_conf_data', None )
+    quoted_paths, paths = self._flags.UserIncludePaths( current_file_path, client_data )
+    if quoted_include:
+      f = _FindFile( include_file, quoted_paths )
+      if f:
+        return responses.BuildGoToResponse( f, 1, 1 )
+
+    f = _FindFile( include_file, paths )
+    if f:
+      return responses.BuildGoToResponse( f, 1, 1 )
+    raise RuntimeError( 'Include file not found.')
+
 
   def _GetSemanticInfo( self,
                         request_data,
@@ -484,3 +516,11 @@ def _BuildGetDocResponse( doc_data ):
       doc_data.canonical_type,
       doc_data.display_name,
       _FormatRawComment( doc_data.raw_comment ) ) )
+
+
+def _FindFile( file_name, paths ):
+  for path in paths:
+    fp = os.path.join( path, file_name )
+    if os.path.isfile( fp ):
+      return fp
+  return None

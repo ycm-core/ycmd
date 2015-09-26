@@ -122,6 +122,63 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
        app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def _RunCompleterCommand_GoToInclude_Clang( test ):
+  app = TestApp( handlers.app )
+  app.post_json( '/load_extra_conf_file',
+                 { 'filepath': PathToTestFile( 'test-include',
+                                               '.ycm_extra_conf.py' ) } )
+  filepath = PathToTestFile( 'test-include', 'main.cpp' )
+  common_request = {
+    'filepath'          : filepath,
+    'filetype'          : 'cpp',
+    'contents'          : open( filepath ).read() ,
+    'command_arguments' : ['GoToInclude'],
+  }
+  common_response = {
+    'line_num'   : 1,
+    'column_num' : 1,
+  }
+
+  request = common_request
+  request.update({
+      'line_num'   : test['request'][0],
+      'column_num' : test['request'][1],
+  })
+
+  response = common_response
+  response.update({
+      'filepath' : PathToTestFile( 'test-include', test['response']),
+  })
+
+  goto_data = BuildRequest( **request )
+
+  eq_( response,
+       app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@with_setup( Setup )
+def RunCompleterCommand_GoToInclude_Clang_test():
+  tests = [
+    { 'request': [1, 1], 'response': 'a.hpp' },
+    { 'request': [2, 1], 'response': 'system/a.hpp' },
+    { 'request': [3, 1], 'response': 'quote/b.hpp' },
+    { 'request': [5, 1], 'response': 'system/c.hpp' },
+    { 'request': [6, 1], 'response': 'system/c.hpp' },
+  ]
+  for test in tests:
+    yield _RunCompleterCommand_GoToInclude_Clang, test
+
+  try:
+    test = { 'request': [4, 1], 'response': 'quote/b.hpp' }
+    _RunCompleterCommand_GoToInclude_Clang( test )
+    raise Exception("Expecting 'Include file not found' error")
+  except AppError as e:
+    if 'Include file not found.' in str(e):
+      pass
+    else:
+      raise
+
+
 @with_setup( Setup )
 def RunCompleterCommand_GoTo_all_Clang_test():
   # GoToDeclaration
