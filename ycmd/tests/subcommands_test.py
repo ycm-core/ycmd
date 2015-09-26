@@ -160,10 +160,10 @@ def _RunCompleterCommand_GoToInclude_Clang( test ):
 def RunCompleterCommand_GoToInclude_Clang_test():
   tests = [
     { 'request': [1, 1], 'response': 'a.hpp' },
-    { 'request': [2, 1], 'response': 'system/a.hpp' },
-    { 'request': [3, 1], 'response': 'quote/b.hpp' },
-    { 'request': [5, 1], 'response': 'system/c.hpp' },
-    { 'request': [6, 1], 'response': 'system/c.hpp' },
+    { 'request': [2, 1], 'response': os.path.join('system', 'a.hpp') },
+    { 'request': [3, 1], 'response': os.path.join('quote', 'b.hpp') },
+    { 'request': [5, 1], 'response': os.path.join('system', 'c.hpp') },
+    { 'request': [6, 1], 'response': os.path.join('system', 'c.hpp') },
   ]
   for test in tests:
     yield _RunCompleterCommand_GoToInclude_Clang, test
