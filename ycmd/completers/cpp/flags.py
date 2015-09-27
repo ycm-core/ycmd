@@ -110,22 +110,25 @@ class Flags( object ):
       try:
         it = iter(flags)
         for flag in it:
-          fl = len( flag )
+          flag_len = len( flag )
           if flag.startswith( quote_flag ):
-            qfl = len( quote_flag )
-            # Add next flag to the include paths if current flag equals to '-iquote',
-            # or add remaining string otherwise.
-            quoted_include_paths.append( it.next() if fl == qfl else flag[ qfl: ] )
+            quote_flag_len = len( quote_flag )
+            # Add next flag to the include paths if current flag equals to
+            # '-iquote', or add remaining string otherwise.
+            quoted_include_paths.append( it.next() if flag_len == quote_flag_len
+                                                 else flag[ quote_flag_len: ] )
           else:
             for path_flag in path_flags:
               if flag.startswith( path_flag ):
-                pfl = len( path_flag )
-                include_paths.append( it.next() if fl == pfl else flag[ pfl: ] )
+                path_flag_len = len( path_flag )
+                include_paths.append( it.next() if flag_len == path_flag_len
+                                              else flag[ path_flag_len: ] )
                 break
       except StopIteration:
         pass
 
-    return [ x for x in quoted_include_paths if x ], [ x for x in include_paths if x ]
+    return [ x for x in quoted_include_paths if x ], \
+           [ x for x in include_paths if x ]
 
 
   def Clear( self ):

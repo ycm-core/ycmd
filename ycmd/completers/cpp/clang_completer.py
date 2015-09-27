@@ -51,7 +51,7 @@ class ClangCompleter( Completer ):
     self._flags = Flags()
     self._diagnostic_store = None
     self._files_being_compiled = EphemeralValuesSet()
-    self._include_regex = re.compile('^\s*#(?:include|import)\s*(?:"|(<))(?P<file>.*)(?(1)>|")')
+    self._include_regex = re.compile('^\s*#(?:include|import)\s*(?:"|(<))(?P<file>.+)(?(1)>|")')
 
 
   def SupportedFiletypes( self ):
@@ -259,22 +259,23 @@ class ClangCompleter( Completer ):
     match = self._include_regex.search( current_line )
     if not match:
       raise RuntimeError( 'Not an include/import line.' )
-      return None
 
     quoted_include = not match.group(1)
-    include_file = match.group('file')
+    include_file_name = match.group('file')
 
     current_file_path = ToUtf8IfNeeded( request_data[ 'filepath' ] )
     client_data = request_data.get( 'extra_conf_data', None )
-    quoted_paths, paths = self._flags.UserIncludePaths( current_file_path, client_data )
+    quoted_include_paths, include_paths = \
+            self._flags.UserIncludePaths( current_file_path, client_data )
     if quoted_include:
-      f = _FindFile( include_file, quoted_paths )
-      if f:
-        return responses.BuildGoToResponse( f, 1, 1 )
+      include_file_path = _GetAbsolutePath( include_file_name,
+                                            quoted_include_paths )
+      if include_file_path:
+        return responses.BuildGoToResponse( include_file_path, 1, 1 )
 
-    f = _FindFile( include_file, paths )
-    if f:
-      return responses.BuildGoToResponse( f, 1, 1 )
+    include_file_path = _GetAbsolutePath( include_file_name, include_paths )
+    if include_file_path:
+      return responses.BuildGoToResponse( include_file_path, 1, 1 )
     raise RuntimeError( 'Include file not found.')
 
 
@@ -518,9 +519,9 @@ def _BuildGetDocResponse( doc_data ):
       _FormatRawComment( doc_data.raw_comment ) ) )
 
 
-def _FindFile( file_name, paths ):
-  for path in paths:
-    fp = os.path.join( path, file_name )
-    if os.path.isfile( fp ):
-      return fp
+def _GetAbsolutePath( include_file_name, include_paths ):
+  for path in include_paths:
+    include_file_path = os.path.join( path, include_file_name )
+    if os.path.isfile( include_file_path ):
+      return include_file_path
   return None

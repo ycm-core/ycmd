@@ -135,7 +135,8 @@ class FilenameCompleter( Completer ):
   def GetPathsIncludeCase( self, path_dir, quoted_include, filepath,
                            client_data ):
     paths = []
-    quoted_include_paths, include_paths = self._flags.UserIncludePaths( filepath, client_data )
+    quoted_include_paths, include_paths = \
+            self._flags.UserIncludePaths( filepath, client_data )
 
     if quoted_include:
       include_paths.extend( quoted_include_paths )
