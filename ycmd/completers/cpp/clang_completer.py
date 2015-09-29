@@ -26,6 +26,7 @@ from ycmd import responses
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetIncludeStatementValue
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 
@@ -256,12 +257,10 @@ class ClangCompleter( Completer ):
 
   def _GoToInclude( self, request_data ):
     current_line = request_data[ 'line_value' ]
-    match = self._include_regex.search( current_line )
-    if not match:
+    include_file_name, quoted_include = \
+            GetIncludeStatementValue( current_line )
+    if not include_file_name:
       raise RuntimeError( 'Not an include/import line.' )
-
-    quoted_include = not match.group(1)
-    include_file_name = match.group('file')
 
     current_file_path = ToUtf8IfNeeded( request_data[ 'filepath' ] )
     client_data = request_data.get( 'extra_conf_data', None )
@@ -271,11 +270,15 @@ class ClangCompleter( Completer ):
       include_file_path = _GetAbsolutePath( include_file_name,
                                             quoted_include_paths )
       if include_file_path:
-        return responses.BuildGoToResponse( include_file_path, 1, 1 )
+        return responses.BuildGoToResponse( include_file_path,
+                                            line_num = 1,
+                                            column_num = 1 )
 
     include_file_path = _GetAbsolutePath( include_file_name, include_paths )
     if include_file_path:
-      return responses.BuildGoToResponse( include_file_path, 1, 1 )
+      return responses.BuildGoToResponse( include_file_path,
+                                          line_num = 1,
+                                          column_num = 1 )
     raise RuntimeError( 'Include file not found.')
 
 

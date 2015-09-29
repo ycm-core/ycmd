@@ -148,3 +148,30 @@ DEFAULT_FILETYPE_TRIGGERS = {
 
 PREPARED_DEFAULT_FILETYPE_TRIGGERS = _FiletypeTriggerDictFromSpec(
     DEFAULT_FILETYPE_TRIGGERS )
+
+
+INCLUDE_REGEX = re.compile( '\s*#(?:include|import)\s*("|<)' )
+
+
+def AtIncludeStatementStart( line ):
+  match = INCLUDE_REGEX.match( line )
+  if not match:
+    return False
+  # Check if the whole string matches the regex
+  return match.end() == len( line )
+
+
+def GetIncludeStatementValue( line, check_closing = True ):
+  match = INCLUDE_REGEX.match( line )
+  include_value = None
+  quoted_include = False
+  if match:
+    quoted_include = ( match.group( 1 ) == '"' )
+    if not check_closing:
+      include_value = line[ match.end(): ]
+    else:
+      close_char = '"' if quoted_include else '>'
+      close_char_pos = line.find( close_char, match.end() )
+      if close_char_pos != -1:
+        include_value = line[ match.end() : close_char_pos ]
+  return include_value, quoted_include

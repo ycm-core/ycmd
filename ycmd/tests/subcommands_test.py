@@ -128,29 +128,18 @@ def _RunCompleterCommand_GoToInclude_Clang( test ):
                  { 'filepath': PathToTestFile( 'test-include',
                                                '.ycm_extra_conf.py' ) } )
   filepath = PathToTestFile( 'test-include', 'main.cpp' )
-  common_request = {
-    'filepath'          : filepath,
-    'filetype'          : 'cpp',
-    'contents'          : open( filepath ).read() ,
-    'command_arguments' : ['GoToInclude'],
-  }
-  common_response = {
+  goto_data = BuildRequest( filepath = filepath,
+                            filetype = 'cpp',
+                            contents = open( filepath ).read(),
+                            command_arguments = [ 'GoToInclude' ],
+                            line_num = test[ 'request' ][ 0 ],
+                            column_num = test[ 'request' ][ 1 ] )
+
+  response = {
+    'filepath'   : PathToTestFile( 'test-include', test['response']),
     'line_num'   : 1,
     'column_num' : 1,
   }
-
-  request = common_request
-  request.update({
-      'line_num'   : test['request'][0],
-      'column_num' : test['request'][1],
-  })
-
-  response = common_response
-  response.update({
-      'filepath' : PathToTestFile( 'test-include', test['response']),
-  })
-
-  goto_data = BuildRequest( **request )
 
   eq_( response,
        app.post_json( '/run_completer_command', goto_data ).json )
@@ -168,15 +157,18 @@ def RunCompleterCommand_GoToInclude_Clang_test():
   for test in tests:
     yield _RunCompleterCommand_GoToInclude_Clang, test
 
-  try:
-    test = { 'request': [4, 1], 'response': 'quote/b.hpp' }
-    _RunCompleterCommand_GoToInclude_Clang( test )
-    raise Exception("Expecting 'Include file not found' error")
-  except AppError as e:
-    if 'Include file not found.' in str(e):
-      pass
-    else:
-      raise
+
+@with_setup( Setup )
+def RunCompleterCommand_GoToInclude_Clang_Fail_test():
+  test = { 'request': [4, 1], 'response': '' }
+  assert_that(
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( test ),
+    raises( AppError, 'Include file not found.' ) )
+
+  test = { 'request': [7, 1], 'response': '' }
+  assert_that(
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( test ),
+    raises( AppError, 'Not an include/import line.' ) )
 
 
 @with_setup( Setup )
