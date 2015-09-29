@@ -52,7 +52,6 @@ class ClangCompleter( Completer ):
     self._flags = Flags()
     self._diagnostic_store = None
     self._files_being_compiled = EphemeralValuesSet()
-    self._include_regex = re.compile('^\s*#(?:include|import)\s*(?:"|(<))(?P<file>.+)(?(1)>|")')
 
 
   def SupportedFiletypes( self ):
