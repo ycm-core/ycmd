@@ -262,8 +262,8 @@ class ClangCompleter( Completer ):
 
     current_file_path = ToUtf8IfNeeded( request_data[ 'filepath' ] )
     client_data = request_data.get( 'extra_conf_data', None )
-    quoted_include_paths, include_paths = \
-            self._flags.UserIncludePaths( current_file_path, client_data )
+    quoted_include_paths, include_paths = (
+            self._flags.UserIncludePaths( current_file_path, client_data ) )
     if quoted_include:
       include_file_path = _GetAbsolutePath( include_file_name,
                                             quoted_include_paths )
