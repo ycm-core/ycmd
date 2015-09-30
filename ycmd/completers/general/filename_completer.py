@@ -21,7 +21,8 @@ import re
 from collections import defaultdict
 
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import AtIncludeStatementStart, GetIncludeStatementValue
+from ycmd.completers.completer_utils import ( AtIncludeStatementStart,
+                                              GetIncludeStatementValue )
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
 from ycmd.utils import ToUtf8IfNeeded, ToUnicodeIfNeeded, OnWindows
@@ -99,8 +100,8 @@ class FilenameCompleter( Completer ):
     utf8_filepath = ToUtf8IfNeeded( orig_filepath )
 
     if InCFamilyFile( filetypes ):
-      path_dir, quoted_include = \
-              GetIncludeStatementValue( line, check_closing = False )
+      path_dir, quoted_include = (
+              GetIncludeStatementValue( line, check_closing = False ) )
       if path_dir is not None:
         # We do what GCC does for <> versus "":
         # http://gcc.gnu.org/onlinedocs/cpp/Include-Syntax.html

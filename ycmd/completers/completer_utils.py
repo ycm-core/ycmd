@@ -162,6 +162,11 @@ def AtIncludeStatementStart( line ):
 
 
 def GetIncludeStatementValue( line, check_closing = True ):
+  """Returns include statement value and boolean indicating whether
+     include statement is quoted.
+     If check_closing is True the string is scanned for statement closing
+     character (" or >) and substring between opening and closing characters is
+     returned. The whole string after opening character is returned otherwise"""
   match = INCLUDE_REGEX.match( line )
   include_value = None
   quoted_include = False

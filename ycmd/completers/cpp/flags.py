@@ -127,8 +127,8 @@ class Flags( object ):
       except StopIteration:
         pass
 
-    return [ x for x in quoted_include_paths if x ], \
-           [ x for x in include_paths if x ]
+    return ( [ x for x in quoted_include_paths if x ],
+             [ x for x in include_paths if x ] )
 
 
   def Clear( self ):

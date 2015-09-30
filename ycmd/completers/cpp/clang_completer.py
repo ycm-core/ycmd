@@ -256,8 +256,7 @@ class ClangCompleter( Completer ):
 
   def _GoToInclude( self, request_data ):
     current_line = request_data[ 'line_value' ]
-    include_file_name, quoted_include = \
-            GetIncludeStatementValue( current_line )
+    include_file_name, quoted_include = GetIncludeStatementValue( current_line )
     if not include_file_name:
       raise RuntimeError( 'Not an include/import line.' )
 
