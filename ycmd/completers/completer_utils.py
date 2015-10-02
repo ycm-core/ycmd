@@ -150,7 +150,7 @@ PREPARED_DEFAULT_FILETYPE_TRIGGERS = _FiletypeTriggerDictFromSpec(
     DEFAULT_FILETYPE_TRIGGERS )
 
 
-INCLUDE_REGEX = re.compile( '\s*#(?:include|import)\s*("|<)' )
+INCLUDE_REGEX = re.compile( '\s*#\s*(?:include|import)\s*("|<)' )
 
 
 def AtIncludeStatementStart( line ):

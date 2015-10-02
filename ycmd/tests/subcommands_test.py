@@ -122,7 +122,7 @@ def _RunCompleterCommand_GoTo_all_Clang(filename, command, test):
        app.post_json( '/run_completer_command', goto_data ).json )
 
 
-def _RunCompleterCommand_GoToInclude_Clang( test ):
+def _RunCompleterCommand_GoToInclude_Clang( command, test ):
   app = TestApp( handlers.app )
   app.post_json( '/load_extra_conf_file',
                  { 'filepath': PathToTestFile( 'test-include',
@@ -131,12 +131,12 @@ def _RunCompleterCommand_GoToInclude_Clang( test ):
   goto_data = BuildRequest( filepath = filepath,
                             filetype = 'cpp',
                             contents = open( filepath ).read(),
-                            command_arguments = [ 'GoToInclude' ],
+                            command_arguments = [ command ],
                             line_num = test[ 'request' ][ 0 ],
                             column_num = test[ 'request' ][ 1 ] )
 
   response = {
-    'filepath'   : PathToTestFile( 'test-include', test['response']),
+    'filepath'   : PathToTestFile( 'test-include', test[ 'response' ] ),
     'line_num'   : 1,
     'column_num' : 1,
   }
@@ -148,27 +148,47 @@ def _RunCompleterCommand_GoToInclude_Clang( test ):
 @with_setup( Setup )
 def RunCompleterCommand_GoToInclude_Clang_test():
   tests = [
-    { 'request': [1, 1], 'response': 'a.hpp' },
-    { 'request': [2, 1], 'response': os.path.join('system', 'a.hpp') },
-    { 'request': [3, 1], 'response': os.path.join('quote', 'b.hpp') },
-    { 'request': [5, 1], 'response': os.path.join('system', 'c.hpp') },
-    { 'request': [6, 1], 'response': os.path.join('system', 'c.hpp') },
+    { 'request': [ 1, 1 ], 'response': 'a.hpp' },
+    { 'request': [ 2, 1 ], 'response': os.path.join( 'system', 'a.hpp' ) },
+    { 'request': [ 3, 1 ], 'response': os.path.join( 'quote',  'b.hpp' ) },
+    { 'request': [ 5, 1 ], 'response': os.path.join( 'system', 'c.hpp' ) },
+    { 'request': [ 6, 1 ], 'response': os.path.join( 'system', 'c.hpp' ) },
   ]
   for test in tests:
-    yield _RunCompleterCommand_GoToInclude_Clang, test
+    yield _RunCompleterCommand_GoToInclude_Clang, 'GoToInclude', test
+    yield _RunCompleterCommand_GoToInclude_Clang, 'GoTo', test
+    yield _RunCompleterCommand_GoToInclude_Clang, 'GoToImprecise', test
 
 
 @with_setup( Setup )
 def RunCompleterCommand_GoToInclude_Clang_Fail_test():
-  test = { 'request': [4, 1], 'response': '' }
+  test = { 'request': [ 4, 1 ], 'response': '' }
   assert_that(
-    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( test ),
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoToInclude',
+                                                                  test ),
+    raises( AppError, 'Include file not found.' ) )
+  assert_that(
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoTo', test ),
+    raises( AppError, 'Include file not found.' ) )
+  assert_that(
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args(
+                                                        'GoToImprecise', test ),
     raises( AppError, 'Include file not found.' ) )
 
-  test = { 'request': [7, 1], 'response': '' }
+  test = { 'request': [ 7, 1 ], 'response': '' }
   assert_that(
-    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( test ),
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoToInclude',
+                                                                  test ),
     raises( AppError, 'Not an include/import line.' ) )
+  # This test somehow fails when 'Can\'t' is present at the message beginning,
+  # should be bug in testing framework.
+  assert_that(
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoTo', test ),
+    raises( AppError, 'jump to definition or declaration.' ) )
+  assert_that(
+    calling( _RunCompleterCommand_GoToInclude_Clang ).with_args(
+                                                        'GoToImprecise', test ),
+    raises( AppError, 'jump to definition or declaration.' ) )
 
 
 @with_setup( Setup )
