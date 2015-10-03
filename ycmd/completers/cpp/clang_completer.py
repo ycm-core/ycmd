@@ -292,7 +292,7 @@ class ClangCompleter( Completer ):
     raise RuntimeError( 'Include file not found.' )
 
 
-  def _GoToInclude(self, request_data):
+  def _GoToInclude( self, request_data ):
     include_response = self._ResponseForInclude( request_data )
     if not include_response:
       raise RuntimeError( 'Not an include/import line.' )
