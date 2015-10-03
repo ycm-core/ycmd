@@ -184,11 +184,11 @@ def RunCompleterCommand_GoToInclude_Clang_Fail_test():
   # should be bug in testing framework.
   assert_that(
     calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoTo', test ),
-    raises( AppError, 'jump to definition or declaration.' ) )
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
   assert_that(
     calling( _RunCompleterCommand_GoToInclude_Clang ).with_args(
                                                         'GoToImprecise', test ),
-    raises( AppError, 'jump to definition or declaration.' ) )
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
 
 @with_setup( Setup )
