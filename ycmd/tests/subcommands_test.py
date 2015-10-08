@@ -180,8 +180,6 @@ def RunCompleterCommand_GoToInclude_Clang_Fail_test():
     calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoToInclude',
                                                                   test ),
     raises( AppError, 'Not an include/import line.' ) )
-  # This test somehow fails when 'Can\'t' is present at the message beginning,
-  # should be bug in testing framework.
   assert_that(
     calling( _RunCompleterCommand_GoToInclude_Clang ).with_args( 'GoTo', test ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
