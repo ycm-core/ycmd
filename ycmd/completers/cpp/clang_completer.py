@@ -20,11 +20,13 @@
 from collections import defaultdict
 import ycm_core
 import re
+import os.path
 import textwrap
 from ycmd import responses
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetIncludeStatementValue
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 
@@ -109,6 +111,7 @@ class ClangCompleter( Completer ):
              'GoToDeclaration',
              'GoTo',
              'GoToImprecise',
+             'GoToInclude',
              'ClearCompilationFlagCache',
              'GetType',
              'GetParent',
@@ -147,6 +150,10 @@ class ClangCompleter( Completer ):
       },
       'GoToImprecise' : {
         'method' : self._GoToImprecise,
+        'args'   : { 'request_data' : request_data }
+      },
+      'GoToInclude' : {
+        'method' : self._GoToInclude,
         'args'   : { 'request_data' : request_data }
       },
       'ClearCompilationFlagCache' : {
@@ -226,6 +233,10 @@ class ClangCompleter( Completer ):
 
 
   def _GoTo( self, request_data ):
+    include_response = self._ResponseForInclude( request_data )
+    if include_response:
+      return include_response
+
     location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
     if not location or not location.IsValid():
       location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
@@ -235,6 +246,10 @@ class ClangCompleter( Completer ):
 
 
   def _GoToImprecise( self, request_data ):
+    include_response = self._ResponseForInclude( request_data )
+    if include_response:
+      return include_response
+
     location = self._LocationForGoTo( 'GetDefinitionLocation',
                                       request_data,
                                       reparse = False )
@@ -245,6 +260,44 @@ class ClangCompleter( Completer ):
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
+
+
+  def _ResponseForInclude( self, request_data ):
+    """Returns response for include file location if cursor is on the
+       include statement, None otherwise.
+       Throws RuntimeError if cursor is on include statement and corresponding
+       include file not found."""
+    current_line = request_data[ 'line_value' ]
+    include_file_name, quoted_include = GetIncludeStatementValue( current_line )
+    if not include_file_name:
+      return None
+
+    current_file_path = ToUtf8IfNeeded( request_data[ 'filepath' ] )
+    client_data = request_data.get( 'extra_conf_data', None )
+    quoted_include_paths, include_paths = (
+            self._flags.UserIncludePaths( current_file_path, client_data ) )
+    if quoted_include:
+      include_file_path = _GetAbsolutePath( include_file_name,
+                                            quoted_include_paths )
+      if include_file_path:
+        return responses.BuildGoToResponse( include_file_path,
+                                            line_num = 1,
+                                            column_num = 1 )
+
+    include_file_path = _GetAbsolutePath( include_file_name, include_paths )
+    if include_file_path:
+      return responses.BuildGoToResponse( include_file_path,
+                                          line_num = 1,
+                                          column_num = 1 )
+    raise RuntimeError( 'Include file not found.' )
+
+
+  def _GoToInclude( self, request_data ):
+    include_response = self._ResponseForInclude( request_data )
+    if not include_response:
+      raise RuntimeError( 'Not an include/import line.' )
+    return include_response
+
 
   def _GetSemanticInfo( self,
                         request_data,
@@ -484,3 +537,11 @@ def _BuildGetDocResponse( doc_data ):
       doc_data.canonical_type,
       doc_data.display_name,
       _FormatRawComment( doc_data.raw_comment ) ) )
+
+
+def _GetAbsolutePath( include_file_name, include_paths ):
+  for path in include_paths:
+    include_file_path = os.path.join( path, include_file_name )
+    if os.path.isfile( include_file_path ):
+      return include_file_path
+  return None

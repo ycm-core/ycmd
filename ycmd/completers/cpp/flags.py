@@ -99,27 +99,36 @@ class Flags( object ):
 
   def UserIncludePaths( self, filename, client_data ):
     flags = self.FlagsForFile( filename, client_data = client_data )
-    if not flags:
-      return []
 
+    quoted_include_paths = [ os.path.dirname( filename ) ]
     include_paths = []
-    path_flags = [ '-isystem', '-I', '-iquote' ]
 
-    next_flag_is_include_path = False
-    for flag in flags:
-      if next_flag_is_include_path:
-        next_flag_is_include_path = False
-        include_paths.append( flag )
+    if flags:
+      quote_flag = '-iquote'
+      path_flags = [ '-isystem', '-I' ]
 
-      for path_flag in path_flags:
-        if flag == path_flag:
-          next_flag_is_include_path = True
-          break
+      try:
+        it = iter(flags)
+        for flag in it:
+          flag_len = len( flag )
+          if flag.startswith( quote_flag ):
+            quote_flag_len = len( quote_flag )
+            # Add next flag to the include paths if current flag equals to
+            # '-iquote', or add remaining string otherwise.
+            quoted_include_paths.append( it.next() if flag_len == quote_flag_len
+                                                 else flag[ quote_flag_len: ] )
+          else:
+            for path_flag in path_flags:
+              if flag.startswith( path_flag ):
+                path_flag_len = len( path_flag )
+                include_paths.append( it.next() if flag_len == path_flag_len
+                                              else flag[ path_flag_len: ] )
+                break
+      except StopIteration:
+        pass
 
-        if flag.startswith( path_flag ):
-          path = flag[ len( path_flag ): ]
-          include_paths.append( path )
-    return [ x for x in include_paths if x ]
+    return ( [ x for x in quoted_include_paths if x ],
+             [ x for x in include_paths if x ] )
 
 
   def Clear( self ):

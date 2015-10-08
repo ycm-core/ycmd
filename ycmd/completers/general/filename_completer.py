@@ -21,6 +21,8 @@ import re
 from collections import defaultdict
 
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import ( AtIncludeStatementStart,
+                                              GetIncludeStatementValue )
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
 from ycmd.utils import ToUtf8IfNeeded, ToUnicodeIfNeeded, OnWindows
@@ -67,19 +69,14 @@ class FilenameCompleter( Completer ):
       )*$
       """ % { 'sep': '/\\\\' if OnWindows() else '/' }, re.X )
 
-    include_regex_common = '^\s*#(?:include|import)\s*(?:"|<)'
-    self._include_start_regex = re.compile( include_regex_common + '$' )
-    self._include_regex = re.compile( include_regex_common )
 
-
-  def AtIncludeStatementStart( self, request_data ):
+  def ShouldCompleteIncludeStatement( self, request_data ):
     start_column = request_data[ 'start_column' ] - 1
     current_line = request_data[ 'line_value' ]
     filepath = request_data[ 'filepath' ]
     filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
     return ( InCFamilyFile( filetypes ) and
-             self._include_start_regex.match(
-               current_line[ :start_column ] ) )
+             AtIncludeStatementStart( current_line[ :start_column ] ) )
 
 
   def ShouldUseNowInner( self, request_data ):
@@ -87,7 +84,7 @@ class FilenameCompleter( Completer ):
     current_line = request_data[ 'line_value' ]
     return ( start_column and
              ( current_line[ start_column - 1 ] in self._triggers or
-               self.AtIncludeStatementStart( request_data ) ) )
+               self.ShouldCompleteIncludeStatement( request_data ) ) )
 
 
   def SupportedFiletypes( self ):
@@ -103,16 +100,15 @@ class FilenameCompleter( Completer ):
     utf8_filepath = ToUtf8IfNeeded( orig_filepath )
 
     if InCFamilyFile( filetypes ):
-      include_match = self._include_regex.search( line )
-      if include_match:
-        path_dir = line[ include_match.end(): ]
+      path_dir, quoted_include = (
+              GetIncludeStatementValue( line, check_closing = False ) )
+      if path_dir is not None:
         # We do what GCC does for <> versus "":
         # http://gcc.gnu.org/onlinedocs/cpp/Include-Syntax.html
-        include_current_file_dir = '<' not in include_match.group()
         client_data = request_data.get( 'extra_conf_data', None )
         return _GenerateCandidatesForPaths(
           self.GetPathsIncludeCase( path_dir,
-                                    include_current_file_dir,
+                                    quoted_include,
                                     utf8_filepath,
                                     client_data ) )
 
@@ -132,13 +128,14 @@ class FilenameCompleter( Completer ):
         working_dir) )
 
 
-  def GetPathsIncludeCase( self, path_dir, include_current_file_dir, filepath,
+  def GetPathsIncludeCase( self, path_dir, quoted_include, filepath,
                            client_data ):
     paths = []
-    include_paths = self._flags.UserIncludePaths( filepath, client_data )
+    quoted_include_paths, include_paths = (
+            self._flags.UserIncludePaths( filepath, client_data ) )
 
-    if include_current_file_dir:
-      include_paths.append( os.path.dirname( filepath ) )
+    if quoted_include:
+      include_paths.extend( quoted_include_paths )
 
     for include_path in include_paths:
       unicode_path = ToUnicodeIfNeeded( os.path.join( include_path, path_dir ) )
