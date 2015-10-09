@@ -21,8 +21,9 @@ from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from webtest import TestApp
 from .. import handlers
-from nose.tools import ok_, with_setup
-from .test_utils import Setup, BuildRequest
+from hamcrest import assert_that, has_property
+from nose.tools import with_setup
+from .test_utils import Setup, BuildRequest, PathToTestFile
 import bottle
 
 bottle.debug( True )
@@ -32,14 +33,32 @@ bottle.debug( True )
 def SemanticCompletionAvailable_Works_test():
   app = TestApp( handlers.app )
   request_data = BuildRequest( filetype = 'python' )
-  ok_( app.post_json( '/semantic_completion_available',
-                      request_data ).json )
+  assert_that( app.post_json( '/semantic_completion_available', request_data ),
+               has_property('json') )
 
 
 @with_setup( Setup )
 def EventNotification_AlwaysJsonResponse_test():
   app = TestApp( handlers.app )
-  event_data = BuildRequest( contents = 'foo foogoo ba',
+  event_data = BuildRequest( filetype = 'python',
+                             filepath = PathToTestFile( '.ycm_extra_conf.py' ),
+                             contents = 'foo foogoo ba',
                              event_name = 'FileReadyToParse' )
+  assert_that( app.post_json( '/event_notification', event_data ),
+               has_property('json') )
 
-  app.post_json( '/event_notification', event_data ).json
+
+@with_setup( Setup )
+def LoadExtraConfFile_AlwaysJsonResponse_test():
+  app = TestApp( handlers.app )
+  data = { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) }
+  assert_that( app.post_json( '/load_extra_conf_file', data ),
+               has_property('json') )
+
+
+@with_setup( Setup )
+def IgnoreExtraConfFile_AlwaysJsonResponse_test():
+  app = TestApp( handlers.app )
+  data = { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) }
+  assert_that( app.post_json( '/ignore_extra_conf_file', data ),
+               has_property('json') )
