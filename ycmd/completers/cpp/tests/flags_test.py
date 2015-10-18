@@ -46,20 +46,6 @@ def RemoveUnusedFlags_Passthrough_test():
        flags._RemoveUnusedFlags( [ '-foo', '-bar' ], 'file' ) )
 
 
-def RemoveUnusedFlags_RemoveCompilerPathIfFirst_test():
-  def tester( path ):
-    eq_( expected,
-        flags._RemoveUnusedFlags( [ path ] + expected, filename ) )
-
-  compiler_paths = [ 'c++', 'c', 'gcc', 'g++', 'clang', 'clang++',
-                     '/usr/bin/c++', '/some/other/path', 'some_command' ]
-  expected = [ '-foo', '-bar' ]
-  filename = 'file'
-
-  for compiler in compiler_paths:
-    yield tester, compiler
-
-
 def RemoveUnusedFlags_RemoveDashC_test():
   expected = [ '-foo', '-bar' ]
   to_remove = [ '-c' ]
@@ -189,3 +175,34 @@ def RemoveXclangFlags_test():
 
   eq_( expected + expected,
        flags._RemoveXclangFlags( expected + to_remove + expected ) )
+
+
+def CompilerToLanguageFlag_Passthrough_test():
+  eq_( [ '-foo', '-bar' ],
+       flags._CompilerToLanguageFlag( [ '-foo', '-bar' ] ) )
+
+
+def CompilerToLanguageFlag_ReplaceCCompiler_test():
+  def tester( path ):
+    eq_( [ '-x', 'c' ] + expected,
+        flags._CompilerToLanguageFlag( [ path ] + expected ) )
+
+  compiler_paths = [ 'cc', 'gcc', 'clang', '/usr/bin/cc',
+                     '/some/other/path', 'some_command' ]
+  expected = [ '-foo', '-bar' ]
+
+  for compiler in compiler_paths:
+    yield tester, compiler
+
+
+def CompilerToLanguageFlag_ReplaceCppCompiler_test():
+  def tester( path ):
+    eq_( [ '-x', 'c++' ] + expected,
+        flags._CompilerToLanguageFlag( [ path ] + expected ) )
+
+  compiler_paths = [ 'c++', 'g++', 'clang++', '/usr/bin/c++',
+                     '/some/other/path++', 'some_command++' ]
+  expected = [ '-foo', '-bar' ]
+
+  for compiler in compiler_paths:
+    yield tester, compiler
