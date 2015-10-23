@@ -56,8 +56,8 @@ def NumCores():
     return 1
 
 
-def CheckDeps():
-  if not PathToFirstExistingExecutable( [ 'cmake' ] ):
+def CheckDeps( args ):
+  if not PathToFirstExistingExecutable( [ args.cmake ] ):
     sys.exit( 'Please install CMake and retry.')
 
 
@@ -79,7 +79,7 @@ def _CheckOutput( *popen_args, **kwargs ):
   return output
 
 
-def CustomPythonCmakeArgs():
+def CustomPythonCmakeArgsForMac():
   # The CMake 'FindPythonLibs' Module does not work properly.
   # So we are forced to do its job for it.
 
@@ -128,6 +128,19 @@ def CustomPythonCmakeArgs():
     '-DPYTHON_INCLUDE_DIR={0}'.format( python_include )
   ]
 
+def CustomPythonCmakeArgs( args ):
+  python_args = []
+
+  if args.python_include_dir:
+    python_args.append( '-DPYTHON_INCLUDE_DIR={0}'.format( args.python_include_dir ) )
+
+  if args.python_library:
+    python_args.append( '-DPYTHON_LIBRARY={0}'.format( args.python_library ) )
+
+  if OnMac() and len( python_args ) == 0:
+    return CustomPythonCmakeArgsForMac()
+
+  return python_args
 
 def GetGenerator( args ):
   if OnWindows():
@@ -167,6 +180,15 @@ def ParseArguments():
   parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
                        help = 'Force architecture to 32 or 64 bits on '
                        'Windows (default: python interpreter architecture).' )
+  parser.add_argument( '--python-include-dir', action = 'store',
+                       help = 'The path where Python headers are installed.' )
+  parser.add_argument( '--python-library', action = 'store',
+                       help = 'The path to the Python library.' )
+  parser.add_argument( '--cmake', default = 'cmake', action = 'store',
+                       help = 'The path of CMake binary.' )
+  parser.add_argument( '--path-to-llvm-root', action = 'store',
+                       help = 'The path where LLVM is installed.' )
+
   args = parser.parse_args()
 
   if args.system_libclang and not args.clang_completer:
@@ -185,6 +207,9 @@ def GetCmakeArgs( parsed_args ):
 
   if parsed_args.system_boost:
     cmake_args.append( '-DUSE_SYSTEM_BOOST=ON' )
+
+  if parsed_args.path_to_llvm_root:
+    cmake_args.append( '-DPATH_TO_LLVM_ROOT={0}'.format( parsed_args.path_to_llvm_root ) )
 
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
   cmake_args.extend( extra_cmake_args.split() )
@@ -209,18 +234,17 @@ def BuildYcmdLibs( args ):
 
   try:
     full_cmake_args = [ '-G', GetGenerator( args ) ]
-    if OnMac():
-      full_cmake_args.extend( CustomPythonCmakeArgs() )
+    full_cmake_args.extend( CustomPythonCmakeArgs( args ) )
     full_cmake_args.extend( GetCmakeArgs( args ) )
     full_cmake_args.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
 
     os.chdir( build_dir )
-    subprocess.check_call( [ 'cmake' ] + full_cmake_args )
+    subprocess.check_call( [ args.cmake ] + full_cmake_args )
 
     build_target = ( 'ycm_support_libs' if 'YCM_TESTRUN' not in os.environ else
                      'ycm_core_tests' )
 
-    build_command = [ 'cmake', '--build', '.', '--target', build_target ]
+    build_command = [ args.cmake, '--build', '.', '--target', build_target ]
     if OnWindows():
       build_command.extend( [ '--config', 'Release' ] )
     else:
@@ -254,8 +278,8 @@ def BuildGoCode():
 
 
 def Main():
-  CheckDeps()
   args = ParseArguments()
+  CheckDeps( args )
   BuildYcmdLibs( args )
   if args.omnisharp_completer:
     BuildOmniSharp()
