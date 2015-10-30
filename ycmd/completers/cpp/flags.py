@@ -197,25 +197,35 @@ def _SanitizeFlags( flags ):
   return vector
 
 
+def _RemoveFlagsPrecedingCompiler( flags ):
+  """Assuming that the flag just before the first flag starting with a dash is
+  the compiler path, removes all flags preceding it."""
+
+  for index, flag in enumerate( flags ):
+    if flag.startswith( '-' ):
+      return ( flags[ index - 1: ] if index > 1 else
+               flags )
+  return flags[ :-1 ]
+
+
 def _CompilerToLanguageFlag( flags ):
-  """When flags come from the compile_commands.json file, the first flag is
-  usually the path to the compiler that should be invoked. We want to replace
-  it with a corresponding language flag.
+  """When flags come from the compile_commands.json file, the flag preceding
+  the first flag starting with a dash is usually the path to the compiler that
+  should be invoked.  We want to replace it with a corresponding language flag.
   E.g., -x c for gcc and -x c++ for g++."""
 
-  # First flag doesn't start with a '-', so it's probably a compiler.
-  if not flags[ 0 ].startswith( '-' ):
+  flags = _RemoveFlagsPrecedingCompiler( flags )
 
-    # If the compiler ends with '++', it's probably a C++ compiler
-    # (E.g., c++, g++, clang++, etc).
-    if flags[ 0 ].endswith( '++' ):
-        language = 'c++'
-    else:
-        language = 'c'
+  # First flag is now the compiler path or a flag starting with a dash
+  if flags[ 0 ].startswith( '-' ):
+    return flags
 
-    flags = [ '-x', language ] + flags[ 1: ]
+  # If the compiler ends with '++', it's probably a C++ compiler
+  # (e.g., c++, g++, clang++, etc).
+  language = ( 'c++' if flags[ 0 ].endswith( '++' ) else
+               'c' )
 
-  return flags
+  return [ '-x', language ] + flags[ 1: ]
 
 
 def _RemoveUnusedFlags( flags, filename ):
