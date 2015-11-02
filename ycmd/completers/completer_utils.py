@@ -141,7 +141,7 @@ DEFAULT_FILETYPE_TRIGGERS = {
   'perl' : ['->'],
   'php' : ['->', '::'],
   'cs,java,javascript,typescript,d,python,perl6,scala,vb,elixir,go' : ['.'],
-  'ruby' : ['.', '::'],
+  'ruby,rust' : ['.', '::'],
   'lua' : ['.', ':'],
   'erlang' : [':'],
 }
