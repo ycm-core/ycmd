@@ -22,3 +22,6 @@
 [submodule "third_party/gocode"]
 	path = third_party/gocode
 	url = https://github.com/nsf/gocode.git
+[submodule "third_party/chardet"]
+	path = third_party/chardet
+	url = https://github.com/chardet/chardet.git
