@@ -32,6 +32,8 @@ from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 
 import xml.etree.ElementTree
 
+import chardet
+
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
 NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags, no completions yet.'
@@ -430,13 +432,20 @@ class ClangCompleter( Completer ):
 
 
 def ConvertCompletionData( completion_data ):
+  t = completion_data.DocString()
+  if t:
+    try:
+      t.decode('utf-8')
+    except UnicodeDecodeError:
+      t = t.decode(chardet.detect(t)['encoding']).encode('utf-8')
+
   return responses.BuildCompletionData(
     insertion_text = completion_data.TextToInsertInBuffer(),
     menu_text = completion_data.MainCompletionText(),
     extra_menu_info = completion_data.ExtraMenuInfo(),
     kind = completion_data.kind_.name,
     detailed_info = completion_data.DetailedInfoForPreviewWindow(),
-    extra_data = { 'doc_string': completion_data.DocString() } if completion_data.DocString() else None )
+    extra_data = { 'doc_string': t } if t else None )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):
