@@ -163,9 +163,13 @@ def _ExtraConfModuleSourceFilesForFile( filename ):
   If _GlobalYcmExtraConfFileLocation() exists it is returned as a fallback."""
 
   for folder in _PathsToAllParentFolders( filename ):
-    candidate = os.path.join( folder, YCM_EXTRA_CONF_FILENAME )
-    if os.path.exists( candidate ):
-      yield candidate
+    candidates = []
+    candidates.append( os.path.join( folder, YCM_EXTRA_CONF_FILENAME ) )
+    for hide in ['.svn', '.git']:
+      candidates.append( os.path.join( folder, hide, YCM_EXTRA_CONF_FILENAME ) )
+    for candidate in candidates:
+      if os.path.exists( candidate ):
+        yield candidate
   global_ycm_extra_conf = _GlobalYcmExtraConfFileLocation()
   if ( global_ycm_extra_conf
        and os.path.exists( global_ycm_extra_conf ) ):
