@@ -61,8 +61,6 @@ public:
   std::vector< Diagnostic > Reparse(
     const std::vector< UnsavedFile > &unsaved_files );
 
-  void ReparseForIndexing( const std::vector< UnsavedFile > &unsaved_files );
-
   std::vector< CompletionData > CandidatesForLocation(
     int line,
     int column,
