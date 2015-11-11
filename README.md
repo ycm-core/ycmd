@@ -213,7 +213,7 @@ License
 This software is licensed under the [GPL v3 license][gpl].
 © 2015 ycmd contributors
 
-[ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycm-users
+[ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycm]: http://valloric.github.io/YouCompleteMe/
 [atom-you-complete-me]: https://atom.io/packages/you-complete-me
 [semver]: http://semver.org/
