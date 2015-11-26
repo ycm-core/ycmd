@@ -166,7 +166,11 @@ def ParseArguments():
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
                        help = 'Force architecture to 32 or 64 bits on '
-                       'Windows (default: python interpreter architecture).' )
+                       'Windows (default: python interpreter architecture).' ),
+  parser.add_argument( '--tern-completer',
+                       action = 'store_true',
+                       help   = 'Enable tern javascript completer' ),
+
   args = parser.parse_args()
 
   if args.system_libclang and not args.clang_completer:
@@ -253,6 +257,16 @@ def BuildGoCode():
   subprocess.check_call( [ 'go', 'build' ] )
 
 
+def SetUpTern():
+  for exe in [ 'node', 'npm' ]:
+    if not find_executable( exe ):
+      sys.exit( '"' + exe + '" is required to set up ternjs' )
+
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern' ) )
+
+  subprocess.check_call( [ 'npm', 'install' ] )
+
+
 def Main():
   CheckDeps()
   args = ParseArguments()
@@ -261,6 +275,8 @@ def Main():
     BuildOmniSharp()
   if args.gocode_completer:
     BuildGoCode()
+  if args.tern_completer:
+    SetUpTern()
 
 if __name__ == '__main__':
   Main()
