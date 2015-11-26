@@ -266,13 +266,11 @@ def BuildYcmdLibs( args ):
 
 
 def BuildOmniSharp():
-  build_command = PathToFirstExistingExecutable(
-    [ 'msbuild', 'msbuild.exe', 'xbuild' ] )
-  if not build_command:
-    sys.exit( 'msbuild or xbuild is required to build Omnisharp' )
-
-  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'OmniSharpServer' ) )
-  subprocess.check_call( [ build_command, '/property:Configuration=Release' ] )
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'omnisharp-roslyn' ) )
+  if OnWindows():
+    subprocess.check_call( [ 'build.bat' ] )
+  else:
+    subprocess.check_call( [ './build.sh' ] )
 
 
 def BuildGoCode():
