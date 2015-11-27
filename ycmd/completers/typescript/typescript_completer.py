@@ -220,6 +220,9 @@ class TypeScriptCompleter( Completer ):
 
 
   def OnUserCommand( self, arguments, request_data ):
+    if not arguments:
+      raise ValueError( self.UserCommandsHelpMessage() )
+
     command = arguments[ 0 ]
     if command == 'GoToDefinition':
       return self._GoToDefinition( request_data )
