@@ -220,9 +220,10 @@ def _CompilerToLanguageFlag( flags ):
   if flags[ 0 ].startswith( '-' ):
     return flags
 
-  # If the compiler ends with '++', it's probably a C++ compiler
-  # (e.g., c++, g++, clang++, etc).
-  language = ( 'c++' if flags[ 0 ].endswith( '++' ) else
+  
+  # If the compiler contains '++' potentially followed by e.g. version numbers, it's probably a C++ compiler
+  # (e.g., c++, g++, clang++, c++-x.y, g++-x.y, clang++-x.y etc).
+  language = ( 'c++' if '++' in flags[ 0 ] else
                'c' )
 
   return [ '-x', language ] + flags[ 1: ]
