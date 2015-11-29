@@ -106,96 +106,39 @@ class ClangCompleter( Completer ):
     return [ ConvertCompletionData( x ) for x in results ]
 
 
-  def DefinedSubcommands( self ):
-    return [ 'GoToDefinition',
-             'GoToDeclaration',
-             'GoTo',
-             'GoToImprecise',
-             'GoToInclude',
-             'ClearCompilationFlagCache',
-             'GetType',
-             'GetParent',
-             'FixIt',
-             'GetDoc',
-             'GetDocQuick' ]
-
-
-  def OnUserCommand( self, arguments, request_data ):
-    if not arguments:
-      raise ValueError( self.UserCommandsHelpMessage() )
-
-    # command_map maps: command -> { method, args }
-    #
-    # where:
-    #  "command" is the completer command entered by the user
-    #            (e.g. GoToDefinition)
-    #  "method"  is a method to call for that command
-    #            (e.g. self._GoToDefinition)
-    #  "args"    is a dictionary of
-    #               "method_argument" : "value" ...
-    #            which defines the kwargs (via the ** double splat)
-    #            when calling "method"
-    command_map = {
-      'GoToDefinition' : {
-        'method' : self._GoToDefinition,
-        'args'   : { 'request_data' : request_data }
-      },
-      'GoToDeclaration' : {
-        'method' : self._GoToDeclaration,
-        'args'   : { 'request_data' : request_data }
-      },
-      'GoTo' : {
-        'method' : self._GoTo,
-        'args'   : { 'request_data' : request_data }
-      },
-      'GoToImprecise' : {
-        'method' : self._GoToImprecise,
-        'args'   : { 'request_data' : request_data }
-      },
-      'GoToInclude' : {
-        'method' : self._GoToInclude,
-        'args'   : { 'request_data' : request_data }
-      },
-      'ClearCompilationFlagCache' : {
-        'method' : self._ClearCompilationFlagCache,
-        'args'   : { }
-      },
-      'GetType' : {
-        'method' : self._GetSemanticInfo,
-        'args'   : { 'request_data' : request_data,
-                     'func'         : 'GetTypeAtLocation' }
-      },
-      'GetParent' : {
-        'method' : self._GetSemanticInfo,
-        'args'   : { 'request_data' : request_data,
-                     'func'         : 'GetEnclosingFunctionAtLocation' }
-      },
-      'FixIt' : {
-        'method' : self._FixIt,
-        'args'   : { 'request_data' : request_data }
-      },
-      'GetDoc' : {
-        'method' : self._GetSemanticInfo,
-        'args'   : { 'request_data'    : request_data,
-                     'reparse'         : True,
-                     'func'            : 'GetDocsForLocationInFile',
-                     'response_buider' : _BuildGetDocResponse, }
-      },
-      'GetDocQuick' : {
-        'method' : self._GetSemanticInfo,
-        'args'   : { 'request_data'    : request_data,
-                     'reparse'         : False,
-                     'func'            : 'GetDocsForLocationInFile',
-                     'response_buider' : _BuildGetDocResponse, }
-      },
+  def GetSubcommandsMap( self ):
+    return {
+      'GoToDefinition'           : ( lambda self, request_data:
+         self._GoToDefinition( request_data ) ),
+      'GoToDeclaration'          : ( lambda self, request_data:
+         self._GoToDeclaration( request_data ) ),
+      'GoTo'                     : ( lambda self, request_data:
+         self._GoTo( request_data ) ),
+      'GoToImprecise'            : ( lambda self, request_data:
+         self._GoToImprecise( request_data ) ),
+      'GoToInclude'              : ( lambda self, request_data:
+         self._GoToInclude( request_data ) ),
+      'ClearCompilationFlagCache': ( lambda self, request_data:
+         self._ClearCompilationFlagCache() ),
+      'GetType'                  : ( lambda self, request_data:
+         self._GetSemanticInfo( request_data, func = 'GetTypeAtLocation' ) ),
+      'GetParent'                : ( lambda self, request_data:
+         self._GetSemanticInfo( request_data,
+                                func = 'GetEnclosingFunctionAtLocation' ) ),
+      'FixIt'                    : ( lambda self, request_data:
+         self._FixIt( request_data ) ),
+      'GetDoc'                   : ( lambda self, request_data:
+         self._GetSemanticInfo( request_data,
+                                reparse = True,
+                                func = 'GetDocsForLocationInFile',
+                                response_builder = _BuildGetDocResponse ) ),
+      'GetDocQuick'              : ( lambda self, request_data:
+         self._GetSemanticInfo( request_data,
+                                reparse = False,
+                                func = 'GetDocsForLocationInFile',
+                                response_builder = _BuildGetDocResponse ) ),
     }
 
-    try:
-      command_def = command_map[ arguments[ 0 ] ]
-    except KeyError:
-      raise ValueError( self.UserCommandsHelpMessage() )
-
-    return command_def[ 'method' ]( **( command_def[ 'args' ] ) )
 
   def _LocationForGoTo( self, goto_function, request_data, reparse = True ):
     filename = request_data[ 'filepath' ]
@@ -302,7 +245,7 @@ class ClangCompleter( Completer ):
   def _GetSemanticInfo( self,
                         request_data,
                         func,
-                        response_buider = responses.BuildDisplayMessageResponse,
+                        response_builder = responses.BuildDisplayMessageResponse,
                         reparse = True ):
     filename = request_data[ 'filepath' ]
     if not filename:
@@ -327,7 +270,7 @@ class ClangCompleter( Completer ):
     if not message:
       message = "No semantic information available"
 
-    return response_buider( message )
+    return response_builder( message )
 
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()

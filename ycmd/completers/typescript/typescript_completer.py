@@ -196,6 +196,17 @@ class TypeScriptCompleter( Completer ):
                for e in detailed_entries ]
 
 
+  def GetSubcommandsMap( self ):
+    return {
+      'GoToDefinition': ( lambda self, request_data:
+                          self._GoToDefinition( request_data ) ),
+      'GetType'       : ( lambda self, request_data:
+                          self._GetType( request_data ) ),
+      'GetDoc'        : ( lambda self, request_data:
+                          self._GetDoc( request_data ) )
+    }
+
+
   def OnBufferVisit( self, request_data ):
     filename = request_data[ 'filepath' ]
     with self._lock:
@@ -211,24 +222,6 @@ class TypeScriptCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     with self._lock:
       self._Reload( request_data )
-
-
-  def DefinedSubcommands( self ):
-    return [ 'GoToDefinition',
-             'GetType',
-             'GetDoc' ]
-
-
-  def OnUserCommand( self, arguments, request_data ):
-    command = arguments[ 0 ]
-    if command == 'GoToDefinition':
-      return self._GoToDefinition( request_data )
-    if command == 'GetType':
-      return self._GetType( request_data )
-    if command == 'GetDoc':
-      return self._GetDoc( request_data )
-
-    raise ValueError( self.UserCommandsHelpMessage() )
 
 
   def _GoToDefinition( self, request_data ):

@@ -82,27 +82,18 @@ class JediCompleter( Completer ):
                 extra_data = self._GetExtraData( completion ) )
              for completion in script.completions() ]
 
-  def DefinedSubcommands( self ):
-    return [ 'GoToDefinition',
-             'GoToDeclaration',
-             'GoTo',
-             'GetDoc' ]
 
-
-  def OnUserCommand( self, arguments, request_data ):
-    if not arguments:
-      raise ValueError( self.UserCommandsHelpMessage() )
-
-    command = arguments[ 0 ]
-    if command == 'GoToDefinition':
-      return self._GoToDefinition( request_data )
-    elif command == 'GoToDeclaration':
-      return self._GoToDeclaration( request_data )
-    elif command == 'GoTo':
-      return self._GoTo( request_data )
-    elif command == 'GetDoc':
-      return self._GetDoc( request_data )
-    raise ValueError( self.UserCommandsHelpMessage() )
+  def GetSubcommandsMap( self ):
+    return {
+      'GoToDefinition' : ( lambda self, request_data:
+                           self._GoToDefinition( request_data ) ),
+      'GoToDeclaration': ( lambda self, request_data:
+                           self._GoToDeclaration( request_data ) ),
+      'GoTo'           : ( lambda self, request_data:
+                           self._GoTo( request_data ) ),
+      'GetDoc'         : ( lambda self, request_data:
+                           self._GetDoc( request_data ) )
+    }
 
 
   def _GoToDefinition( self, request_data ):
