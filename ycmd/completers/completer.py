@@ -96,7 +96,11 @@ class Completer( object ):
   more informations on how to implement it.
 
   Override the Shutdown() member function if your Completer subclass needs to do
-  custom cleanup logic on server shutdown."""
+  custom cleanup logic on server shutdown.
+
+  If your completer uses an external server process, then it can be useful to
+  implement the ServerIsReady member function to handle the /ready request. This
+  is very useful for the test suite."""
 
   __metaclass__ = abc.ABCMeta
 
@@ -301,6 +305,12 @@ class Completer( object ):
 
   def Shutdown( self ):
     pass
+
+
+  def ServerIsReady( self ):
+    """Called by the /ready handler to check if the underlying completion
+    server is started and ready to receive requests. Returns bool."""
+    return True
 
 
 class CompletionsCache( object ):

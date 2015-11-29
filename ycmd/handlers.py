@@ -205,8 +205,10 @@ def DebugInfo():
   try:
     output.append(
         _GetCompleterForRequestData( request_data ).DebugInfo( request_data) )
-  except:
-    pass
+  except Exception:
+    _logger.debug( 'Exception in debug info request: '
+                   + traceback.format_exc() )
+
   return _JsonResponse( '\n'.join( output ) )
 
 

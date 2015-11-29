@@ -53,8 +53,7 @@ def CompletionLocationMatcher( location_type, value ):
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
 
 
-@with_setup( Setup )
-def GetCompletions_RunTest( test ):
+def GetCompletions_RunTest( test, setup=None ):
   """
   Method to run a simple completion test and verify the result
 
@@ -72,9 +71,13 @@ def GetCompletions_RunTest( test ):
     }
   """
   app = TestApp( handlers.app )
-  app.post_json( '/load_extra_conf_file',
-                 { 'filepath': PathToTestFile( 'general_fallback',
-                                               '.ycm_extra_conf.py' ) } )
+
+  if setup:
+    setup( app )
+  else:
+    app.post_json( '/load_extra_conf_file',
+                   { 'filepath': PathToTestFile( 'general_fallback',
+                                                 '.ycm_extra_conf.py' ) } )
 
   contents = open( test[ 'request' ][ 'filepath' ] ).read()
 

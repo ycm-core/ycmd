@@ -1,6 +1,6 @@
 define( ['lamelib/lame_widget'], function( lame_widget ) {
 
-    $.widget( 'cool_widget', {
+    return {
 
         options: {
             'test': 200
@@ -12,6 +12,6 @@ define( ['lamelib/lame_widget'], function( lame_widget ) {
             }
         }
 
-     );
+    };
 
 } );
