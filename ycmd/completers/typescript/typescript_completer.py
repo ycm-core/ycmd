@@ -61,8 +61,10 @@ class TypeScriptCompleter( Completer ):
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
 
     self._logfile = _LogFileName()
+    tss_log = '-level {level} -file {path}'.format( level = _LogLevel(),
+                                                    path = self._logfile )
     self._environ = os.environ.copy()
-    self._environ[ 'TSS_LOG' ] = '-level verbose -file {0}'.format( self._logfile )
+    self._environ[ 'TSS_LOG' ] = tss_log
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
@@ -304,6 +306,9 @@ def _LogFileName():
                            delete = False ) as logfile:
     return logfile.name
 
+
+def _LogLevel():
+  return 'verbose' if _logger.isEnabledFor( logging.DEBUG ) else 'normal'
 
 
 def _ConvertCompletionData( completion_data ):
