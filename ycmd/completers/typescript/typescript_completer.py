@@ -64,7 +64,7 @@ class TypeScriptCompleter( Completer ):
     tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
                                                          level = _LogLevel() )
 
-    # TSServer get the configuration for the log file though the environment
+    # TSServer get the configuration for the log file through the environment
     # variable 'TSS_LOG'. This seems to be undocumented but looking at the
     # source code it seems like this is the way:
     # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
