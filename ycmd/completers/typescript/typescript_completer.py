@@ -61,10 +61,15 @@ class TypeScriptCompleter( Completer ):
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
 
     self._logfile = _LogFileName()
-    tss_log = '-level {level} -file {path}'.format( level = _LogLevel(),
-                                                    path = self._logfile )
+    tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
+                                                         level = _LogLevel() )
+
+    # TSServer get the configuration for the log file though the environment
+    # variable 'TSS_LOG'. This seems to be undocumented but looking at the
+    # source code it seems like this is the way:
+    # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
     self._environ = os.environ.copy()
-    self._environ[ 'TSS_LOG' ] = tss_log
+    self._environ[ 'TSS_LOG' ] = tsserver_log
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
