@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging, os, requests, traceback
+import logging, os, requests, traceback, threading
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
 
@@ -59,14 +59,20 @@ class TernCompleter( Completer ):
                                  u'tern_{port}_{std}.log' )
 
 
+  # Used to ensure that access to the members _server_port, _server_handle,
+  # _server_stdout, _server_stderr are synchronised.
+  server_state_mutex = threading.Lock()
+
+
   def __init__( self, user_options ):
     super( TernCompleter, self ).__init__( user_options )
 
     self._user_options = user_options
-    self._server_stdout = None
-    self._server_stderr = None
 
-    self._Reset()
+    with TernCompleter.server_state_mutex:
+      self._server_stdout = None
+      self._server_stderr = None
+      self._Reset()
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -120,21 +126,22 @@ class TernCompleter( Completer ):
   def DebugInfo( self, request_data ):
     # TODO: this method is ugly, refactor it
 
-    if self._server_handle is None:
-      if self._server_port > 0:
-        return ( ' -- Connected to external server on port: '
-                 + str( self._server_port ) )
+    with TernCompleter.server_state_mutex:
+      if self._server_handle is None:
+        if self._server_port > 0:
+          return ( ' -- Connected to external server on port: '
+                   + str( self._server_port ) )
 
-      return ' -- Tern server is not running'
+        return ' -- Tern server is not running'
 
-    return ( ' -- Tern server is running on port: '
-             + str( self._server_port )
-             + ' with PID: '
-             + str( self._server_handle.pid )
-             + '\n -- Server stdout: '
-             + self._server_stdout
-             + '\n -- Server stderr: '
-             + self._server_stderr )
+      return ( ' -- Tern server is running on port: '
+               + str( self._server_port )
+               + ' with PID: '
+               + str( self._server_handle.pid )
+               + '\n -- Server stdout: '
+               + self._server_stdout
+               + '\n -- Server stderr: '
+               + self._server_stderr )
 
 
   def Shutdown( self ):
@@ -151,6 +158,7 @@ class TernCompleter( Completer ):
 
 
   def _Reset( self ):
+    """Callers must hold TernCompleter.server_state_mutex"""
     if not self.user_options[ 'server_keep_logfiles' ]:
       if self._server_stdout:
         os.unlink( self._server_stdout )
@@ -171,10 +179,13 @@ class TernCompleter( Completer ):
     the files are being updated.
 
     The request block should contain the optional query block only. The file
-    data and timeout are are added automatically"""
+    data and timeout are are added automatically."""
 
-    # start the server on demand (if not already started)
-    self._StartServer()
+    # We access _server_port without the lock here because accessing the lock
+    # would be a big bottleneck
+
+    if self._server_port <= 0:
+      raise ValueError( 'Not connected to server' )
 
     target = 'http://localhost:' + str( self._server_port )
 
@@ -208,7 +219,7 @@ class TernCompleter( Completer ):
     just updating file data in which case _PostRequest should be used directly.
 
     The query block should contain the type and any parameters. The files,
-    position, timeout etc. are added automatically"""
+    position, timeout etc. are added automatically."""
 
     def MakeTernLocation( request_data ):
       return {
@@ -227,12 +238,21 @@ class TernCompleter( Completer ):
 
 
   def _StartServer( self ):
+    with TernCompleter.server_state_mutex:
+      self._StartServerNoLock()
+
+
+  def _StartServerNoLock( self ):
+    """Start the server, under the lock.
+
+    Callers must hold TernCompleter.server_state_mutex"""
+
     if self._server_handle is None and self._server_port <= 0:
       _logger.info( 'Starting Tern.js server...' )
 
       self._server_port = utils.GetUnusedLocalhostPort()
 
-      if _logger.isEnabledFor( logging.debug ):
+      if _logger.isEnabledFor( logging.DEBUG ):
         extra_args = [ '--verbose' ]
       else:
         extra_args = []
@@ -276,6 +296,14 @@ class TernCompleter( Completer ):
 
 
   def _StopServer( self ):
+    with TernCompleter.server_state_mutex:
+      self._StopServerNoLock()
+
+
+  def _StopServerNoLock( self ):
+    """Stop the server, under the lock.
+
+    Callers must hold TernCompleter.server_state_mutex"""
     if self._server_handle is not None:
       _logger.info( 'Stopping Tern.js server with pid '
                     + str( self._server_handle.pid )
@@ -292,9 +320,10 @@ class TernCompleter( Completer ):
     if not len( args ):
       raise ValueError( 'Usage ConnectTo <port>' )
 
-    self._StopServer()
-    _logger.info( 'Connecting to external server on port: ' + str( args[0] ) )
-    self._server_port = int( args[0] )
+    with TernCompleter.server_state_mutex:
+      self._StopServer()
+      _logger.info( 'Connecting to external server on port: ' + str( args[0] ) )
+      self._server_port = int( args[0] )
 
     return responses.BuildDisplayMessageResponse( 'Connected' )
 
