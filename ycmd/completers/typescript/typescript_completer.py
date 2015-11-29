@@ -60,6 +60,10 @@ class TypeScriptCompleter( Completer ):
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
 
+    self._logfile = _LogFileName()
+    self._environ = os.environ.copy()
+    self._environ[ 'TSS_LOG' ] = '-level verbose -file {0}'.format( self._logfile )
+
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
     self._sequenceid = 0
@@ -74,6 +78,7 @@ class TypeScriptCompleter( Completer ):
                                              stdout = subprocess.PIPE,
                                              stdin = subprocess.PIPE,
                                              stderr = subprocess.STDOUT,
+                                             env = self._environ,
                                              universal_newlines = True )
 
     _logger.info( 'Enabling typescript completion' )
@@ -283,6 +288,22 @@ class TypeScriptCompleter( Completer ):
   def Shutdown( self ):
     with self._lock:
       self._SendRequest( 'exit' )
+    if not self.user_options[ 'server_keep_logfiles' ]:
+      os.unlink( self._logfile )
+      self._logfile = None
+
+
+  def DebugInfo( self, request_data ):
+    return ( 'TSServer logfile:\n  {0}' ).format( self._logfile )
+
+
+def _LogFileName():
+  with NamedTemporaryFile( dir = utils.PathToTempDir(),
+                           prefix = 'tsserver_',
+                           suffix = '.log',
+                           delete = False ) as logfile:
+    return logfile.name
+
 
 
 def _ConvertCompletionData( completion_data ):
