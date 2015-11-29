@@ -45,11 +45,6 @@ _logger = logging.getLogger( __name__ )
 
 class GoCodeCompleter( Completer ):
 
-  subcommands = {
-    'StartServer': ( lambda self, request_data: self._StartServer() ),
-    'StopServer': ( lambda self, request_data: self._StopServer() ),
-  }
-
   def __init__( self, user_options ):
     super( GoCodeCompleter, self ).__init__( user_options )
     self._popener = utils.SafePopen # Overridden in test.
@@ -96,6 +91,13 @@ class GoCodeCompleter( Completer ):
     return [ _ConvertCompletionData( x ) for x in resultdata[1] ]
 
 
+  def GetSubcommandsMap( self ):
+    return {
+      'StartServer': ( lambda self, request_data: self._StartServer() ),
+      'StopServer': ( lambda self, request_data: self._StopServer() )
+    }
+
+
   def FindGoCodeBinary( self, user_options ):
     """ Find the path to the gocode binary.
 
@@ -120,24 +122,8 @@ class GoCodeCompleter( Completer ):
     return utils.PathToFirstExistingExecutable( [ 'gocode' ] )
 
 
-  def DefinedSubcommands( self ):
-    return GoCodeCompleter.subcommands.keys()
-
-
   def OnFileReadyToParse( self, request_data ):
     self._StartServer()
-
-
-  def OnUserCommand( self, arguments, request_data ):
-    if not arguments:
-      raise ValueError( self.UserCommandsHelpMessage() )
-
-    command = arguments[ 0 ]
-    if command in GoCodeCompleter.subcommands:
-      command_lamba = GoCodeCompleter.subcommands[ command ]
-      return command_lamba( self, request_data )
-    else:
-      raise ValueError( self.UserCommandsHelpMessage() )
 
 
   def Shutdown( self ):
