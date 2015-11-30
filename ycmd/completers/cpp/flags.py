@@ -20,6 +20,8 @@
 import ycm_core
 import os
 import inspect
+import re
+
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
@@ -220,9 +222,13 @@ def _CompilerToLanguageFlag( flags ):
   if flags[ 0 ].startswith( '-' ):
     return flags
 
-  # If the compiler ends with '++', it's probably a C++ compiler
-  # (e.g., c++, g++, clang++, etc).
-  language = ( 'c++' if flags[ 0 ].endswith( '++' ) else
+  # If the compiler ends with ++ and optionally with some version digits,
+  # it's probably a C++ compiler
+  # (e.g., c++, g++, clang++, g++-4.9, clang++-3.7, etc).
+
+  cpp_pattern_regex = r'\+\+(-\d+(\.\d+){0,2})?$'
+
+  language = ( 'c++' if re.search( cpp_pattern_regex, flags[ 0 ] ) else
                'c' )
 
   return [ '-x', language ] + flags[ 1: ]
