@@ -21,7 +21,6 @@ import ycm_core
 import os
 import inspect
 import re
-
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
