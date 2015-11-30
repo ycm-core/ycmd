@@ -205,7 +205,9 @@ def CompilerToLanguageFlag_ReplaceCCompiler_test():
 
 def CompilerToLanguageFlag_ReplaceCppCompiler_test():
   compilers = [ 'c++', 'g++', 'clang++', '/usr/bin/c++',
-                '/some/other/path++', 'some_command++' ]
+                '/some/other/path++', 'some_command++',
+                'c++-5', 'g++-5.1', 'clang++-3.7.3', '/usr/bin/c++-5',
+                '/some/other/path++-4.9.3', 'some_command++-5.1' ]
 
   for compiler in compilers:
     yield _ReplaceCompilerTester, compiler, 'c++'
