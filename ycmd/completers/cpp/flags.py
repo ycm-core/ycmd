@@ -51,6 +51,11 @@ MAC_INCLUDE_PATHS = [
  '/Library/Frameworks',
 ]
 
+# Use a regex to correctly detect c++/c language for both versioned and
+# non-versioned compiler executable names suffixes
+# (e.g., c++, g++, clang++, g++-4.9, clang++-3.7, c++-10.2 etc).
+# See Valloric/ycmd#266
+CPP_COMPILER_REGEX = re.compile( r'\+\+(-\d+(\.\d+){0,2})?$' )
 
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
@@ -221,13 +226,7 @@ def _CompilerToLanguageFlag( flags ):
   if flags[ 0 ].startswith( '-' ):
     return flags
 
-  # If the compiler ends with ++ and optionally with some version digits,
-  # it's probably a C++ compiler
-  # (e.g., c++, g++, clang++, g++-4.9, clang++-3.7, etc).
-
-  cpp_pattern_regex = r'\+\+(-\d+(\.\d+){0,2})?$'
-
-  language = ( 'c++' if re.search( cpp_pattern_regex, flags[ 0 ] ) else
+  language = ( 'c++' if CPP_COMPILER_REGEX.search( flags[ 0 ] ) else
                'c' )
 
   return [ '-x', language ] + flags[ 1: ]
