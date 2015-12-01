@@ -20,6 +20,7 @@
 import ycm_core
 import os
 import inspect
+import re
 from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
@@ -50,6 +51,11 @@ MAC_INCLUDE_PATHS = [
  '/Library/Frameworks',
 ]
 
+# Use a regex to correctly detect c++/c language for both versioned and
+# non-versioned compiler executable names suffixes
+# (e.g., c++, g++, clang++, g++-4.9, clang++-3.7, c++-10.2 etc).
+# See Valloric/ycmd#266
+CPP_COMPILER_REGEX = re.compile( r'\+\+(-\d+(\.\d+){0,2})?$' )
 
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
@@ -220,9 +226,7 @@ def _CompilerToLanguageFlag( flags ):
   if flags[ 0 ].startswith( '-' ):
     return flags
 
-  # If the compiler ends with '++', it's probably a C++ compiler
-  # (e.g., c++, g++, clang++, etc).
-  language = ( 'c++' if flags[ 0 ].endswith( '++' ) else
+  language = ( 'c++' if CPP_COMPILER_REGEX.search( flags[ 0 ] ) else
                'c' )
 
   return [ '-x', language ] + flags[ 1: ]
