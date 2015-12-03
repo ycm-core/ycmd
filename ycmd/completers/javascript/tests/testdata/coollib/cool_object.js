@@ -6,6 +6,16 @@ define( [], function() {
          */
         mine_bitcoin: function( how_much ) {
             return how_much * 0.001;
+        },
+
+        get_number: 10,
+        get_string: 'string',
+        get_thing: function( a ) {
+            if ( a ) {
+                return this.get_number;
+            } else {
+                return this.get_string;
+            }
         }
-    }
-} )
+    };
+} );

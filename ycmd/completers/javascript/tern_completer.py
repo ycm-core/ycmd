@@ -104,11 +104,6 @@ class TernCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     self._StartServer()
 
-    # Send a message with no "query" block. This just updates the status of all
-    # the files in the request_data. We also ignore the response, because at
-    # best it is an empty object.
-    self._PostRequest( {}, request_data )
-
 
   def OnUserCommand( self, arguments, request_data ):
     if not arguments or arguments[ 0 ] not in TernCompleter.subcommands:
@@ -124,23 +119,21 @@ class TernCompleter( Completer ):
 
 
   def DebugInfo( self, request_data ):
-    # TODO: this method is ugly, refactor it
-
     with TernCompleter.server_state_mutex:
       if self._server_handle is None:
         if self._server_port > 0:
-          return ( ' -- Connected to external server on port: '
+          return ( ' * Connected to external server on port: '
                    + str( self._server_port ) )
 
-        return ' -- Tern server is not running'
+        return ' * Tern server is not running'
 
-      return ( ' -- Tern server is running on port: '
+      return ( ' * Tern server is running on port: '
                + str( self._server_port )
                + ' with PID: '
                + str( self._server_handle.pid )
-               + '\n -- Server stdout: '
+               + '\n * Server stdout: '
                + self._server_stdout
-               + '\n -- Server stderr: '
+               + '\n * Server stderr: '
                + self._server_stderr )
 
 
@@ -150,10 +143,13 @@ class TernCompleter( Completer ):
 
   def ServerIsReady( self, request_data = {} ):
     try:
+      # TODO: There is an undocumented '/ping' target. Perhaps we should use
+      # that? It doesn't return JSON, though, just plain text 200 response
+      # "Pong"
       return bool(
           self._server_port > 0 and
           self._PostRequest( {'type': 'files'}, request_data ) is not None )
-    except Exception:
+    except requests.ConnectionError:
       return False
 
 
@@ -264,6 +260,9 @@ class TernCompleter( Completer ):
                   'localhost',
                   '--persistent',
                   '--no-port-file' ] + extra_args
+
+      if os.environ.get( 'YCM_TERN_DEBUG_TERNJS', 0 ):
+        command.insert( 0, 'node-debug' )
 
       self._server_stdout = TernCompleter.logfile_format.format(
           port = self._server_port,

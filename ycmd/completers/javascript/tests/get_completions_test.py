@@ -19,7 +19,7 @@
 from ycmd.server_utils import SetUpPythonPath
 SetUpPythonPath()
 
-import bottle, httplib, os, time
+import bottle, httplib, os, time, contextlib2
 
 from nose.tools import with_setup
 from hamcrest import ( contains,
@@ -34,8 +34,27 @@ from ycmd.tests.get_completions_test import ( CompletionEntryMatcher,
 bottle.debug( True )
 
 
+TEST_DATA_DIR = os.path.join( os.path.dirname( __file__ ), 'testdata' )
+
+
+# Sadly, the Tern.js server requires that its cwd is within the "project"
+# directory, so we have to set the working directory to our testdata directory
+# for each test. The following context manager just temporarily changes the
+# working directory to the supplied path.
+#
+# contextlib2 is used because it works in python 2.6 (as a decorator)
+@contextlib2.contextmanager
+def with_cwd( wd ):
+  prev_wd = os.getcwd()
+  os.chdir( wd )
+  try:
+    yield
+  finally:
+    os.chdir( prev_wd )
+
+
 def PathToTestFile( *args ):
-  return os.path.join( os.path.dirname( __file__ ), 'testdata', *args )
+  return os.path.abspath( os.path.join( TEST_DATA_DIR, *args ) )
 
 
 def WaitForTernServerReady( app ):
@@ -61,6 +80,7 @@ def WaitForTernServerReady( app ):
 
 
 @with_setup( Setup )
+@with_cwd( TEST_DATA_DIR )
 def GetCompletions_TernCompleter_Works_NoQuery_test():
   GetCompletions_RunTest( {
     'description': 'semantic completion works for simple object no query',
@@ -86,6 +106,7 @@ def GetCompletions_TernCompleter_Works_NoQuery_test():
 
 
 @with_setup( Setup )
+@with_cwd( TEST_DATA_DIR )
 def GetCompletions_TernCompleter_Works_Query_test():
   GetCompletions_RunTest( {
     'description': 'semantic completion works for simple object with query',
@@ -108,6 +129,7 @@ def GetCompletions_TernCompleter_Works_Query_test():
 
 
 @with_setup( Setup )
+@with_cwd( TEST_DATA_DIR )
 def GetCompletions_TernCompleter_Works_Require_NoQuery_test():
   GetCompletions_RunTest( {
     'description': 'semantic completion works for simple object no query',
@@ -122,28 +144,9 @@ def GetCompletions_TernCompleter_Works_Require_NoQuery_test():
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'mine_bitcoin', 'fn(how_much: ?) -> number' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  }, WaitForTernServerReady )
-
-
-@with_setup( Setup )
-def GetCompletions_TernCompleter_Works_Require_Query_test():
-  GetCompletions_RunTest( {
-    'description': 'semantic completion works for simple object with query',
-    'request': {
-      'filetype':   'javascript',
-      'filepath':   PathToTestFile( 'requirejs_test.js' ),
-      'line_num':   4,
-      'column_num': 17,
-    },
-    'expect': {
-      'response': httplib.OK,
-      'data': has_entries( {
-        'completions': contains(
-          CompletionEntryMatcher( 'mine_bitcoin', 'fn(how_much: ?) -> number' ),
+          CompletionEntryMatcher( 'get_number', 'number' ),
+          CompletionEntryMatcher( 'get_string', 'string' ),
+          CompletionEntryMatcher( 'get_thing', 'fn(a: ?) -> number|string' ),
         ),
         'errors': empty(),
       } )
