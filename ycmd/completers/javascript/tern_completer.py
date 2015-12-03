@@ -321,7 +321,7 @@ class TernCompleter( Completer ):
       raise ValueError( 'Usage ConnectTo <port>' )
 
     with TernCompleter.server_state_mutex:
-      self._StopServer()
+      self._StopServerNoLock()
       _logger.info( 'Connecting to external server on port: ' + str( args[0] ) )
       self._server_port = int( args[0] )
 
