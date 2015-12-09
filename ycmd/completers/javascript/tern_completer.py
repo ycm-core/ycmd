@@ -105,21 +105,13 @@ class TernCompleter( Completer ):
              for completion in completions ]
 
 
-  def DefinedSubcommands( self ):
-    return sorted( self.subcommands.keys() )
+
+  def GetSubcommandsMap( self ):
+    return TernCompleter.subcommands
 
 
   def OnFileReadyToParse( self, request_data ):
     self._StartServer()
-
-
-  def OnUserCommand( self, arguments, request_data ):
-    if not arguments or arguments[ 0 ] not in TernCompleter.subcommands:
-      raise ValueError( self.UserCommandsHelpMessage() )
-
-    return TernCompleter.subcommands[ arguments[ 0 ] ]( self,
-                                                        request_data,
-                                                        arguments[ 1: ] )
 
 
   def SupportedFiletypes( self ):

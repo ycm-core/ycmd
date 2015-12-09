@@ -202,10 +202,15 @@ class Completer( object ):
     """This method should return a dictionary where each key represents the
     completer command name and its value is a lambda function of this form:
 
-      ( self, request_data ) -> method
+      ( self, request_data, args ) -> method
 
     where "method" is the call to the completer method with corresponding
     parameters. See the already implemented completers for examples.
+
+    Arguments:
+     - request_data : the request data supplied by the client
+     - args: any additional command arguments (after the command name). Usually
+             empty.
     """
     return {}
 
@@ -269,7 +274,7 @@ class Completer( object ):
     except KeyError:
       raise ValueError( self.UserCommandsHelpMessage() )
 
-    return command( self, request_data )
+    return command( self, request_data, arguments[ 1: ] )
 
 
   def OnCurrentIdentifierFinished( self, request_data ):
