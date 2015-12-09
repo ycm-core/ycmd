@@ -1,13 +1,20 @@
-define( [ 'coollib/cool_object' ], function ( cool_object ) {
+require( [ 'coollib/cool_object' ], function ( cool_object ) {
   cool_object.
+  cool_object.min
+  cool_object.gn
 } );
 
-define( [ 'lamelib/lame_widget' ], function ( lame_widget ) {
+require( [ 'lamelib/lame_widget' ], function ( lame_widget ) {
   lame_widget.
   lame_widget.options.
 } );
 
-define( [ 'coollib/cool_widget' ], function ( cool_widget ) {
+require( [ 'coollib/cool_widget' ], function ( cool_widget ) {
   cool_widget.options.
   cool_widget.
+} );
+
+require( 'no_such_lib/no_such_file', function( whatsit ) {
+  whatsit.
+  whatsit.ben
 } );

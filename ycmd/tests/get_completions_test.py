@@ -38,10 +38,16 @@ import pprint
 
 bottle.debug( True )
 
-def CompletionEntryMatcher( insertion_text, extra_menu_info = None ):
+def CompletionEntryMatcher( insertion_text,
+                            extra_menu_info = None,
+                            extra_params = None ):
   match = { 'insertion_text': insertion_text }
   if extra_menu_info:
     match.update( { 'extra_menu_info': extra_menu_info } )
+
+  if extra_params:
+    match.update( extra_params )
+
   return has_entries( match )
 
 

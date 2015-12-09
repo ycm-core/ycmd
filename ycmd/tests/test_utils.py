@@ -45,7 +45,12 @@ def BuildRequest( **kwargs ):
   for key, value in kwargs.iteritems():
     if key in [ 'contents', 'filetype', 'filepath' ]:
       continue
-    request[ key ] = value
+
+    if key in request and isinstance( request[ key ], dict ):
+      # allow updating the 'file_data' entry
+      request[ key ].update( value )
+    else:
+      request[ key ] = value
 
   return request
 

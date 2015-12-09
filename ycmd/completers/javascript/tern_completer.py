@@ -73,6 +73,7 @@ class TernCompleter( Completer ):
       self._server_stdout = None
       self._server_stderr = None
       self._Reset()
+      self._StartServerNoLock()
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -82,7 +83,7 @@ class TernCompleter( Completer ):
       'docs': True,
       'filter': False,
       'caseInsensitive': True,
-      'guess': True,
+      'guess': False,
       'sort': False,
       'includeKeywords': False,
       'expandWordForward': False,
@@ -91,14 +92,21 @@ class TernCompleter( Completer ):
     completions = self._GetResponse( query,
                                      request_data ).get( 'completions', [] )
 
+    def BuildDoc( completion ):
+      doc = completion.get( 'type', 'Unknown type' )
+      if 'doc' in completion:
+        doc = doc + '\n' + completion[ 'doc' ]
+
+      return doc
+
     return [ responses.BuildCompletionData( completion[ 'name' ],
                                             completion.get( 'type', '?' ),
-                                            completion.get( 'doc', None ) )
+                                            BuildDoc( completion ) )
              for completion in completions ]
 
 
   def DefinedSubcommands( self ):
-    return self.subcommands.keys()
+    return sorted( self.subcommands.keys() )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -338,15 +346,23 @@ class TernCompleter( Completer ):
 
 
   def _GetDoc( self, request_data ):
+    # Note: we use the 'type' request, with docs: True because this is the best
+    # way to get the name, type and doc string. The 'documentation' request
+    # doesn't return the 'name' (strangely)
     query = {
-      'type':      'documentation',
+      'type':      'type',
       'docFormat': 'full',
+      'types':      True
     }
 
     response = self._GetResponse( query, request_data )
 
-    return responses.BuildDetailedInfoResponse(
-                    response.get( 'doc', 'No documentation available' ) )
+    doc_string = 'Name: {name}\nType: {type}\n\n{doc}'.format(
+        name = response.get( 'name', 'Unknown' ),
+        type = response.get( 'type', 'Unknown' ),
+        doc  = response.get( 'doc', 'No documentation available' ) )
+
+    return responses.BuildDetailedInfoResponse( doc_string )
 
 
   def _GoToDefinition( self, request_data ):
