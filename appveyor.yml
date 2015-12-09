@@ -27,7 +27,19 @@ install:
   - python C:\get-pip.py
   - pip install -r test_requirements.txt
   - npm install -g typescript
+  # The gnu rust compiler is used since, on windows 10, there is a workaround
+  # needed for the msvc versions. However, the workaround sets Omnisharp build
+  # config to 64-bit release mode which results in a failed build.
+  - ps: Start-FileDownload 'https://static.rust-lang.org/dist/rust-1.5.0-i686-pc-windows-gnu.exe'
+  - rust-1.5.0-i686-pc-windows-gnu.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+  # TODO MinGW can be removed once the msvc rust compiler is used.
+  - SET PATH=C:\Program Files (x86)\Rust\bin;C:\MinGW\bin;%PATH%
+  - rustc -Vv
+  - cargo -Vv
 build_script:
   - python run_tests.py --msvc %MSVC%
 # Disable automatic tests
 test: off
+cache:
+  - 'C:\Users\appveyor\.cargo -> third_party\racerd'
+  - 'third_party\racerd\target -> third_party\racerd'
