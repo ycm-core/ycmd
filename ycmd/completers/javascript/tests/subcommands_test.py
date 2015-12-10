@@ -23,7 +23,7 @@ import bottle, httplib, pprint
 
 from webtest import TestApp
 from nose.tools import ( eq_, with_setup )
-from hamcrest import ( assert_that, has_entries )
+from hamcrest import ( assert_that, contains_inanyorder, has_entries )
 
 from ycmd import handlers
 from ycmd.tests.test_utils import ( BuildRequest, Setup )
@@ -49,7 +49,8 @@ def Subcommands_TernCompleter_Defined_Subcommands_test():
                   'GetDoc',
                   'GetType',
                   'StartServer',
-                  'StopServer'] ),
+                  'StopServer',
+                  'GoToReferences' ] ),
         app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
@@ -96,7 +97,7 @@ def Subcommand_RunTest( test ):
 
 @with_setup( Setup )
 @with_cwd( TEST_DATA_DIR )
-def SubCommands_TernCompleter_GoToDefinition_test():
+def SubCommands_TernCompleter_GoToDefinition_Works_test():
   Subcommand_RunTest( {
     'description': 'GoToDefinition works within file',
     'request': {
@@ -118,18 +119,99 @@ def SubCommands_TernCompleter_GoToDefinition_test():
 
 @with_setup( Setup )
 @with_cwd( TEST_DATA_DIR )
-def SubCommands_TernCompleter_GoTo_test():
-  pass
+def SubCommands_TernCompleter_GoTo_Works_test():
+  Subcommand_RunTest( {
+    'description': 'GoTo works the same as GoToDefinition within file',
+    'request': {
+      'command': 'GoTo',
+      'line_num': 13,
+      'column_num': 25,
+      'filepath': PathToTestFile( 'simple_test.js' ),
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'filepath': PathToTestFile( 'simple_test.js' ),
+        'line_num': 1,
+        'column_num': 5,
+      } )
+    }
+  } )
 
 
 @with_setup( Setup )
 @with_cwd( TEST_DATA_DIR )
-def SubCommands_TernCompleter_GetDoc_test():
-  pass
+def SubCommands_TernCompleter_GetDoc_Works_test():
+  Subcommand_RunTest( {
+    'description': 'GetDoc works within file',
+    'request': {
+      'command': 'GetDoc',
+      'line_num': 7,
+      'column_num': 16,
+      'filepath': PathToTestFile( 'coollib/cool_object.js' ),
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'detailed_info': (
+          'Name: mine_bitcoin\n' +
+          'Type: fn(how_much: ?) -> number\n\n' +
+          'This function takes a number and invests it in bitcoin. ' +
+          'It returns\nthe expected value (in notional currency) after 1 year.'
+        )
+      } )
+    }
+  } )
 
 
 @with_setup( Setup )
 @with_cwd( TEST_DATA_DIR )
-def SubCommands_TernCompleter_GetType_test():
-  pass
+def SubCommands_TernCompleter_GetType_Works_test():
+  Subcommand_RunTest( {
+    'description': 'GetType works within file',
+    'request': {
+      'command': 'GetType',
+      'line_num': 11,
+      'column_num': 14,
+      'filepath': PathToTestFile( 'coollib/cool_object.js' ),
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': has_entries( {
+        'message': 'number'
+      } )
+    }
+  } )
 
+
+@with_setup( Setup )
+@with_cwd( TEST_DATA_DIR )
+def SubCommands_TernCompleter_GoToReferences_Works_test():
+  Subcommand_RunTest( {
+    'description': 'GoToReferences works within file',
+    'request': {
+      'command': 'GoToReferences',
+      'line_num': 17,
+      'column_num': 29,
+      'filepath': PathToTestFile( 'coollib/cool_object.js' ),
+    },
+    'expect': {
+      'response': httplib.OK,
+      'data': contains_inanyorder(
+        has_entries( {
+          'filepath': PathToTestFile( 'coollib/cool_objet.js' ),
+          'line_num':  17,
+          'column_num': 29,
+        } ),
+        has_entries( {
+          'filepath': PathToTestFile( 'coollib/cool_objet.js' ),
+          'line_num': 12,
+          'column_num': 9,
+        } )
+      )
+    }
+  } )
+
+# TODO:
+#
+#  - GetType/GetDoc/etc. requests on empty space/no idenfier

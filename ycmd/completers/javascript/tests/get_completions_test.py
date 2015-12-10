@@ -220,5 +220,3 @@ def GetCompletions_TernCompleter_Returns_Docs_In_Completions_test():
       } )
     },
   }, WaitForTernServerReady )
-
-

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging, os, requests, traceback, threading
+import httplib, logging, os, requests, traceback, threading
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
 
@@ -46,9 +46,11 @@ class TernCompleter( Completer ):
     'ConnectToServer': ( lambda self, request_data, args:
                                        self._ConnectToServer( args ) ),
     'GoToDefinition':  ( lambda self, request_data, args:
-                                        self._GoToDefinition( request_data) ),
+                                        self._GoToDefinition( request_data ) ),
     'GoTo':            ( lambda self, request_data, args:
-                                        self._GoToDefinition( request_data) ),
+                                        self._GoToDefinition( request_data ) ),
+    'GoToReferences':  ( lambda self, request_data, args:
+                                        self._GoToReferences( request_data ) ),
     'GetType':         ( lambda self, request_data, args:
                                         self._GetType( request_data) ),
     'GetDoc':          ( lambda self, request_data, args:
@@ -194,14 +196,16 @@ class TernCompleter( Completer ):
     file_data = request_data.get( 'file_data', {} )
 
     full_request = {
-      'files': [
-        MakeIncompleteFile( x, file_data[ x ] ) for x in file_data.keys()
-      ],
+      'files': [ MakeIncompleteFile( x, file_data[ x ] ) 
+                 for x in file_data.keys() ],
       'timeout': 500,
     }
     full_request.update( request )
 
     response = requests.post( target, data = utils.ToUtf8Json( full_request ) )
+
+    if response.status_code != httplib.OK:
+      raise RuntimeError( response.text )
 
     return response.json()
 
@@ -233,8 +237,10 @@ class TernCompleter( Completer ):
 
 
   def _StartServer( self ):
-    with TernCompleter.server_state_mutex:
-      self._StartServerNoLock()
+      with TernCompleter.server_state_mutex:
+        if ( self._server_handle is not None and
+             self._server_handle.poll() is not None ):
+          self._StartServerNoLock()
 
 
   def _StartServerNoLock( self ):
@@ -368,3 +374,15 @@ class TernCompleter( Completer ):
       response[ 'start' ][ 'line' ] + 1,
       response[ 'start' ][ 'ch' ] + 1
     )
+
+  def _GoToReferences( self, request_data ):
+    query = {
+      'type': 'refs',
+    }
+
+    response = self._GetResponse( query, request_data )
+
+    return [ responses.BuildGoToResponse( ref[ 'file' ],
+                                          ref[ 'start' ][ 'line' ] + 1,
+                                          ref[ 'start' ][ 'ch' ] + 1 )
+           for ref in response[ 'refs' ] ]
