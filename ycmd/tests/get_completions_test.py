@@ -208,7 +208,7 @@ def GetCompletions_ClangCompleter_Forced_With_No_Trigger_test():
         'errors': empty(),
       } )
     },
-  } )  
+  } )
 
 @with_setup( Setup )
 def GetCompletions_ClangCompleter_Fallback_NoSuggestions_test():
@@ -383,7 +383,7 @@ def GetCompletions_ClangCompleter_Filtered_No_Results_Fallback_test():
       } )
     },
   } )
-  
+
 
 @with_setup( Setup )
 def GetCompletions_CsCompleter_Works_test():

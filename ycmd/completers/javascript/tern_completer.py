@@ -105,7 +105,6 @@ class TernCompleter( Completer ):
              for completion in completions ]
 
 
-
   def GetSubcommandsMap( self ):
     return TernCompleter.subcommands
 
