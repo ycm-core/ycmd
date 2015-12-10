@@ -264,7 +264,7 @@ def SetUpTern():
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern' ) )
 
-  subprocess.check_call( [ 'npm', 'install' ] )
+  subprocess.check_call( [ 'npm', 'install', '--production' ] )
 
 
 def Main():
