@@ -35,7 +35,7 @@ def PathToTestFile( *args ):
 def StopOmniSharpServer( app, filename ):
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = ['StopServer'],
+                               command_arguments = [ 'StopServer' ],
                                filepath = filename,
                                filetype = 'cs' ) )
 

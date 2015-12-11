@@ -17,42 +17,35 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ...server_utils import SetUpPythonPath
-SetUpPythonPath()
-from ..test_utils import BuildRequest, CompletionEntryMatcher, Setup
+from ..test_utils import BuildRequest, CompletionEntryMatcher
 from .utils import PathToTestFile
-from webtest import TestApp
-from nose.tools import with_setup
 from hamcrest import assert_that, has_items
-from ... import handlers
-import bottle
-
-bottle.debug( True )
+from ..handlers_test import Handlers_test
 
 
-@with_setup( Setup )
-def GetCompletions_TypeScriptCompleter_test():
-  app = TestApp( handlers.app )
-  filepath = PathToTestFile( 'test.ts' )
-  contents = open( filepath ).read()
+class TypeScript_GetCompletions_test( Handlers_test ):
 
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'typescript',
-                             contents = contents,
-                             event_name = 'BufferVisit' )
+  def Basic_test( self ):
+    filepath = PathToTestFile( 'test.ts' )
+    contents = open( filepath ).read()
 
-  app.post_json( '/event_notification', event_data )
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'typescript',
+                               contents = contents,
+                               event_name = 'BufferVisit' )
 
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'typescript',
-                                  contents = contents,
-                                  force_semantic = True,
-                                  line_num = 12,
-                                  column_num = 6 )
+    self._app.post_json( '/event_notification', event_data )
 
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results,
-               has_items( CompletionEntryMatcher( 'methodA' ),
-                          CompletionEntryMatcher( 'methodB' ),
-                          CompletionEntryMatcher( 'methodC' ) ) )
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'typescript',
+                                    contents = contents,
+                                    force_semantic = True,
+                                    line_num = 12,
+                                    column_num = 6 )
+
+    results = self._app.post_json( '/completions',
+                                   completion_data ).json[ 'completions' ]
+    assert_that( results,
+                 has_items( CompletionEntryMatcher( 'methodA' ),
+                            CompletionEntryMatcher( 'methodB' ),
+                            CompletionEntryMatcher( 'methodC' ) ) )

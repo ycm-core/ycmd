@@ -1,45 +1,38 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013  Google Inc.
+# Copyright (C) 2013 Google Inc.
+#               2015 ycmd contributors
 #
-# This file is part of YouCompleteMe.
+# This file is part of ycmd.
 #
-# YouCompleteMe is free software: you can redistribute it and/or modify
+# ycmd is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# YouCompleteMe is distributed in the hope that it will be useful,
+# ycmd is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
+# along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..server_utils import SetUpPythonPath
-SetUpPythonPath()
-from webtest import TestApp
-from .. import handlers
-from nose.tools import ok_, with_setup
-from .test_utils import Setup, BuildRequest
-import bottle
-
-bottle.debug( True )
+from nose.tools import ok_
+from .test_utils import BuildRequest
+from .handlers_test import Handlers_test
 
 
-@with_setup( Setup )
-def SemanticCompletionAvailable_Works_test():
-  app = TestApp( handlers.app )
-  request_data = BuildRequest( filetype = 'python' )
-  ok_( app.post_json( '/semantic_completion_available',
-                      request_data ).json )
+class MiscHandlers_test( Handlers_test ):
+
+  def SemanticCompletionAvailable_test( self ):
+    request_data = BuildRequest( filetype = 'python' )
+    ok_( self._app.post_json( '/semantic_completion_available',
+                              request_data ).json )
 
 
-@with_setup( Setup )
-def EventNotification_AlwaysJsonResponse_test():
-  app = TestApp( handlers.app )
-  event_data = BuildRequest( contents = 'foo foogoo ba',
-                             event_name = 'FileReadyToParse' )
+  def EventNotification_AlwaysJsonResponse_test( self ):
+    event_data = BuildRequest( contents = 'foo foogoo ba',
+                               event_name = 'FileReadyToParse' )
 
-  app.post_json( '/event_notification', event_data ).json
+    self._app.post_json( '/event_notification', event_data ).json

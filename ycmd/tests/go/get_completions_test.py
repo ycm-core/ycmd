@@ -17,32 +17,27 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ...server_utils import SetUpPythonPath
-SetUpPythonPath()
-from ..test_utils import BuildRequest, CompletionEntryMatcher, Setup
+from ..test_utils import BuildRequest, CompletionEntryMatcher
 from .utils import PathToTestFile, StopGoCodeServer
-from webtest import TestApp
-from nose.tools import with_setup
 from hamcrest import assert_that, has_item
-from ... import handlers
-import bottle
-
-bottle.debug( True )
+from ..handlers_test import Handlers_test
 
 
-@with_setup( Setup )
-def GetCompletions_GoCodeCompleter_test():
-  app = TestApp( handlers.app )
-  filepath = PathToTestFile( 'test.go' )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'go',
-                                  contents = open( filepath ).read(),
-                                  force_semantic = True,
-                                  line_num = 9,
-                                  column_num = 11)
+class Go_GetCompletions_test( Handlers_test ):
 
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results, has_item( CompletionEntryMatcher( u'Logger' ) ) )
+  def tearDown( self ):
+    StopGoCodeServer( self._app )
 
-  StopGoCodeServer( app )
+
+  def Basic_test( self ):
+    filepath = PathToTestFile( 'test.go' )
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'go',
+                                    contents = open( filepath ).read(),
+                                    force_semantic = True,
+                                    line_num = 9,
+                                    column_num = 11 )
+
+    results = self._app.post_json( '/completions',
+                                   completion_data ).json[ 'completions' ]
+    assert_that( results, has_item( CompletionEntryMatcher( u'Logger' ) ) )

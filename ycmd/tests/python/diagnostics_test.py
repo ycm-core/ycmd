@@ -17,31 +17,27 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ...server_utils import SetUpPythonPath
-SetUpPythonPath()
-from ..test_utils import Setup, BuildRequest
-from webtest import TestApp
-from nose.tools import with_setup, eq_
+from ..test_utils import BuildRequest
+from nose.tools import eq_
 from hamcrest import assert_that, has_entry
 from ...responses import NoDiagnosticSupport
-from ... import handlers
-import bottle
+from ..handlers_test import Handlers_test
 import httplib
 
-bottle.debug( True )
 
+class Python_Diagnostics_test( Handlers_test ):
 
-@with_setup( Setup )
-def GetDetailedDiagnostic_JediCompleter_DoesntWork_test():
-  app = TestApp( handlers.app )
-  diag_data = BuildRequest( contents = "foo = 5",
-                            line_num = 2,
-                            filetype = 'python' )
-  response = app.post_json( '/detailed_diagnostic',
-                            diag_data,
-                            expect_errors = True )
+  def DoesntWork_test( self ):
+    diag_data = BuildRequest( contents = "foo = 5",
+                              line_num = 2,
+                              filetype = 'python' )
 
-  eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
-  assert_that( response.json,
-               has_entry( 'exception',
-                          has_entry( 'TYPE', NoDiagnosticSupport.__name__ ) ) )
+    response = self._app.post_json( '/detailed_diagnostic',
+                                    diag_data,
+                                    expect_errors = True )
+
+    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    assert_that( response.json,
+                 has_entry( 'exception',
+                            has_entry( 'TYPE',
+                                       NoDiagnosticSupport.__name__ ) ) )

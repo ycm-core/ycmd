@@ -18,126 +18,114 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ...server_utils import SetUpPythonPath
-SetUpPythonPath()
-import httplib
 from ..test_utils import ( BuildRequest, CompletionEntryMatcher,
-                           CompletionLocationMatcher, Setup )
+                           CompletionLocationMatcher )
 from .utils import PathToTestFile
-from webtest import TestApp
-from nose.tools import eq_, with_setup
+from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
-from ... import handlers
-import bottle
-
-bottle.debug( True )
+from ..handlers_test import Handlers_test
+import httplib
 
 
-@with_setup( Setup )
-def GetCompletions_RunTest( test ):
-  """
-  Method to run a simple completion test and verify the result
+class Python_GetCompletions_test( Handlers_test ):
 
-  test is a dictionary containing:
-    'request': kwargs for BuildRequest
-    'expect': {
-       'response': server response code (e.g. httplib.OK)
-       'data': matcher for the server response json
-    }
-  """
-  app = TestApp( handlers.app )
+  def _RunTest( self, test ):
+    """
+    Method to run a simple completion test and verify the result
 
-  contents = open( test[ 'request' ][ 'filepath' ] ).read()
+    test is a dictionary containing:
+      'request': kwargs for BuildRequest
+      'expect': {
+         'response': server response code (e.g. httplib.OK)
+         'data': matcher for the server response json
+      }
+    """
+    contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
+    def CombineRequest( request, data ):
+      kw = request
+      request.update( data )
+      return BuildRequest( **kw )
 
-  app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
-                                   'event_name': 'FileReadyToParse',
-                                   'contents': contents,
-                                 } ) )
-
-
-  # We ignore errors here and we check the response code ourself.
-  # This is to allow testing of requests returning errors.
-  response = app.post_json( '/completions',
-                            CombineRequest( test[ 'request' ], {
-                              'contents': contents
-                            } ),
-                            expect_errors = True )
-
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
-
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+    self._app.post_json( '/event_notification',
+                         CombineRequest( test[ 'request' ], {
+                                         'event_name': 'FileReadyToParse',
+                                         'contents': contents,
+                                         } ) )
 
 
-@with_setup( Setup )
-def GetCompletions_PythonCompleter_Basic_test():
-  app = TestApp( handlers.app )
-  filepath = PathToTestFile( 'basic.py' )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'python',
-                                  contents = open( filepath ).read(),
-                                  line_num = 7,
-                                  column_num = 3)
+    # We ignore errors here and we check the response code ourself.
+    # This is to allow testing of requests returning errors.
+    response = self._app.post_json( '/completions',
+                                    CombineRequest( test[ 'request' ], {
+                                      'contents': contents
+                                    } ),
+                                    expect_errors = True )
 
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
+    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
-  assert_that( results,
-               has_items(
-                 CompletionEntryMatcher( 'a' ),
-                 CompletionEntryMatcher( 'b' ),
-                 CompletionLocationMatcher( 'line_num', 3 ),
-                 CompletionLocationMatcher( 'line_num', 4 ),
-                 CompletionLocationMatcher( 'column_num', 10 ),
-                 CompletionLocationMatcher( 'filepath', filepath ) ) )
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@with_setup( Setup )
-def GetCompletions_PythonCompleter_UnicodeDescription_test():
-  app = TestApp( handlers.app )
-  filepath = PathToTestFile( 'unicode.py' )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'python',
-                                  contents = open( filepath ).read(),
-                                  force_semantic = True,
-                                  line_num = 5,
-                                  column_num = 3)
+  def Basic_test( self ):
+    filepath = PathToTestFile( 'basic.py' )
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'python',
+                                    contents = open( filepath ).read(),
+                                    line_num = 7,
+                                    column_num = 3)
 
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results, has_item(
-    has_entry( 'detailed_info', contains_string( u'aafäö' ) ) ) )
+    results = self._app.post_json( '/completions',
+                                   completion_data ).json[ 'completions' ]
+
+    assert_that( results,
+                 has_items(
+                   CompletionEntryMatcher( 'a' ),
+                   CompletionEntryMatcher( 'b' ),
+                   CompletionLocationMatcher( 'line_num', 3 ),
+                   CompletionLocationMatcher( 'line_num', 4 ),
+                   CompletionLocationMatcher( 'column_num', 10 ),
+                   CompletionLocationMatcher( 'filepath', filepath ) ) )
 
 
-@with_setup( Setup )
-def GetCompletions_PythonCompleter_NoSuggestions_Fallback_test():
-  # Python completer doesn't raise NO_COMPLETIONS_MESSAGE, so this is a
-  # different code path to the Clang completer cases
+  def UnicodeDescription_test( self ):
+    filepath = PathToTestFile( 'unicode.py' )
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'python',
+                                    contents = open( filepath ).read(),
+                                    force_semantic = True,
+                                    line_num = 5,
+                                    column_num = 3)
 
-  # TESTCASE2 (general_fallback/lang_python.py)
-  GetCompletions_RunTest( {
-    'description': 'param jedi does not know about (id). query="a_p"',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'general_fallback', 'lang_python.py' ),
-      'line_num'  : 28,
-      'column_num': 20,
-      'force_semantic': False,
-    },
-    'expect': {
-      'response': httplib.OK,
-      'data': has_entries( {
-        'completions': contains(
-          CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-          CompletionEntryMatcher( 'another_parameter', '[ID]' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
+    results = self._app.post_json( '/completions',
+                                   completion_data ).json[ 'completions' ]
+    assert_that( results, has_item(
+      has_entry( 'detailed_info', contains_string( u'aafäö' ) ) ) )
+
+
+  def NoSuggestions_Fallback_test( self ):
+    # Python completer doesn't raise NO_COMPLETIONS_MESSAGE, so this is a
+    # different code path to the Clang completer cases
+
+    # TESTCASE2 (general_fallback/lang_python.py)
+    self._RunTest( {
+      'description': 'param jedi does not know about (id). query="a_p"',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'general_fallback', 'lang_python.py' ),
+        'line_num'  : 28,
+        'column_num': 20,
+        'force_semantic': False,
+      },
+      'expect': {
+        'response': httplib.OK,
+        'data': has_entries( {
+          'completions': contains(
+            CompletionEntryMatcher( 'a_parameter', '[ID]' ),
+            CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
