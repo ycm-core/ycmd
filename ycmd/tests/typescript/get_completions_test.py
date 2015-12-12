@@ -18,15 +18,14 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..test_utils import BuildRequest, CompletionEntryMatcher
-from .utils import PathToTestFile
 from hamcrest import assert_that, has_items
-from ..handlers_test import Handlers_test
+from typescript_handlers_test import Typescript_Handlers_test
 
 
-class TypeScript_GetCompletions_test( Handlers_test ):
+class TypeScript_GetCompletions_test( Typescript_Handlers_test ):
 
   def Basic_test( self ):
-    filepath = PathToTestFile( 'test.ts' )
+    filepath = self._PathToTestFile( 'test.ts' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,

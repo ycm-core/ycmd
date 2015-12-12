@@ -17,13 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
+from ..handlers_test import Handlers_test
 
 
-def PathToTestDataDir():
-  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
-  return os.path.join( dir_of_current_script, 'testdata' )
+class Typescript_Handlers_test( Handlers_test ):
 
-
-def PathToTestFile( *args ):
-  return os.path.join( PathToTestDataDir(), *args )
+  def __init__( self ):
+    self._file = __file__

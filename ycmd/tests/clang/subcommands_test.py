@@ -18,23 +18,22 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..test_utils import BuildRequest, ErrorMatcher
-from .utils import PathToTestFile
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, calling, contains, equal_to,
                        has_entries, raises )
 from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
-from ..handlers_test import Handlers_test
+from clang_handlers_test import Clang_Handlers_test
 from pprint import pprint
 import os.path
 import httplib
 
 
-class Clang_Subcommands_test( Handlers_test ):
+class Clang_Subcommands_test( Clang_Handlers_test ):
 
   def GoTo_ZeroBasedLineAndColumn_test( self ):
-    contents = open(
-      PathToTestFile( 'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) ).read()
+    contents = open( self._PathToTestFile(
+      'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) ).read()
 
     goto_data = BuildRequest( completer_target = 'filetype_default',
                               command_arguments = ['GoToDefinition'],
@@ -52,7 +51,7 @@ class Clang_Subcommands_test( Handlers_test ):
 
 
   def _GoTo_all( self, filename, command, test ):
-    contents = open( PathToTestFile( filename ) ).read()
+    contents = open( self._PathToTestFile( filename ) ).read()
     common_request = {
       'completer_target' : 'filetype_default',
       'command_arguments': command,
@@ -189,9 +188,10 @@ class Clang_Subcommands_test( Handlers_test ):
   def _GoToInclude( self, command, test ):
     self._app.post_json(
       '/load_extra_conf_file',
-      { 'filepath': PathToTestFile( 'test-include', '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( 'test-include',
+                                          '.ycm_extra_conf.py' ) } )
 
-    filepath = PathToTestFile( 'test-include', 'main.cpp' )
+    filepath = self._PathToTestFile( 'test-include', 'main.cpp' )
     goto_data = BuildRequest( filepath = filepath,
                               filetype = 'cpp',
                               contents = open( filepath ).read(),
@@ -200,7 +200,7 @@ class Clang_Subcommands_test( Handlers_test ):
                               column_num = test[ 'request' ][ 1 ] )
 
     response = {
-      'filepath'   : PathToTestFile( 'test-include', test[ 'response' ] ),
+      'filepath'   : self._PathToTestFile( 'test-include', test[ 'response' ] ),
       'line_num'   : 1,
       'column_num' : 1,
     }
@@ -248,7 +248,7 @@ class Clang_Subcommands_test( Handlers_test ):
 
 
   def _Message( self, filename, test, command):
-    contents = open( PathToTestFile( filename ) ).read()
+    contents = open( self._PathToTestFile( filename ) ).read()
 
     # We use the -fno-delayed-template-parsing flag to not delay
     # parsing of templates on Windows.  This is the default on
@@ -396,7 +396,7 @@ class Clang_Subcommands_test( Handlers_test ):
 
 
   def _RunFixIt( self, line, column, lang, file_name, check ):
-    contents = open( PathToTestFile( file_name ) ).read()
+    contents = open( self._PathToTestFile( file_name ) ).read()
 
     language_options = {
       'cpp11': {
@@ -685,7 +685,7 @@ class Clang_Subcommands_test( Handlers_test ):
 
 
   def GetDoc_Variable_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,
@@ -714,7 +714,7 @@ The first line of comment is the brief.""" } )
 
 
   def GetDoc_Method_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,
@@ -747,7 +747,7 @@ This is more information
 
 
   def GetDoc_Namespace_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,
@@ -774,7 +774,7 @@ This is a test namespace""" } )
 
 
   def GetDoc_Undocumented_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,
@@ -797,7 +797,7 @@ This is a test namespace""" } )
 
 
   def GetDoc_NoCursor_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,
@@ -821,7 +821,7 @@ This is a test namespace""" } )
 
   # Following tests repeat the tests above, but without re-parsing the file
   def GetDocQuick_Variable_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     self._app.post_json( '/event_notification',
@@ -857,7 +857,7 @@ The first line of comment is the brief.""" } )
 
 
   def GetDocQuick_Method_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     self._app.post_json( '/event_notification',
@@ -897,7 +897,7 @@ This is more information
 
 
   def GetDocQuick_Namespace_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     self._app.post_json( '/event_notification',
@@ -931,7 +931,7 @@ This is a test namespace""" } )
 
 
   def GetDocQuick_Undocumented_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     self._app.post_json( '/event_notification',
@@ -961,7 +961,7 @@ This is a test namespace""" } )
 
 
   def GetDocQuick_NoCursor_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     self._app.post_json( '/event_notification',
@@ -991,7 +991,7 @@ This is a test namespace""" } )
 
 
   def GetDocQuick_NoReadyToParse_test( self ):
-    filepath = PathToTestFile( 'GetDoc_Clang.cc' )
+    filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,

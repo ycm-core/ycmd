@@ -18,13 +18,12 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..test_utils import BuildRequest
-from .utils import PathToTestFile
 from nose.tools import eq_
-from ..handlers_test import Handlers_test
+from python_handlers_test import Python_Handlers_test
 import os.path
 
 
-class Python_Subcommands_test( Handlers_test ):
+class Python_Subcommands_test( Python_Handlers_test ):
 
   def GoTo_ZeroBasedLineAndColumn_test( self ):
     contents = """
@@ -50,7 +49,7 @@ foo()
 
   def GetDoc_Method_test( self ):
     # Testcase1
-    filepath = PathToTestFile( 'GetDoc.py' )
+    filepath = self._PathToTestFile( 'GetDoc.py' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,
@@ -72,7 +71,7 @@ foo()
 
   def GetDoc_Class_test( self ):
     # Testcase1
-    filepath = PathToTestFile( 'GetDoc.py' )
+    filepath = self._PathToTestFile( 'GetDoc.py' )
     contents = open( filepath ).read()
 
     event_data = BuildRequest( filepath = filepath,

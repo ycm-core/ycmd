@@ -18,19 +18,14 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..test_utils import BuildRequest, CompletionEntryMatcher
-from .utils import PathToTestFile, StopGoCodeServer
 from hamcrest import assert_that, has_item
-from ..handlers_test import Handlers_test
+from go_handlers_test import Go_Handlers_test
 
 
-class Go_GetCompletions_test( Handlers_test ):
-
-  def tearDown( self ):
-    StopGoCodeServer( self._app )
-
+class Go_GetCompletions_test( Go_Handlers_test ):
 
   def Basic_test( self ):
-    filepath = PathToTestFile( 'test.go' )
+    filepath = self._PathToTestFile( 'test.go' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'go',
                                     contents = open( filepath ).read(),

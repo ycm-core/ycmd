@@ -19,7 +19,6 @@
 
 from ..test_utils import ( BuildRequest, ChangeSpecificOptions,
                            CompletionEntryMatcher, ErrorMatcher )
-from .utils import PathToTestFile
 from webtest import TestApp
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
@@ -27,13 +26,13 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
 from ...responses import UnknownExtraConf, NoExtraConfDetected
 from ... import handlers
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
-from ..handlers_test import Handlers_test
+from clang_handlers_test import Clang_Handlers_test
 import httplib
 
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
 
 
-class Clang_GetCompletions_test( Handlers_test ):
+class Clang_GetCompletions_test( Clang_Handlers_test ):
 
   def _RunTest( self, test ):
     """
@@ -53,8 +52,8 @@ class Clang_GetCompletions_test( Handlers_test ):
       }
     """
     self._app.post_json( '/load_extra_conf_file', {
-      'filepath': PathToTestFile( 'general_fallback',
-                                  '.ycm_extra_conf.py' ) } )
+      'filepath': self._PathToTestFile( 'general_fallback',
+                                        '.ycm_extra_conf.py' ) } )
 
     contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
@@ -92,7 +91,8 @@ class Clang_GetCompletions_test( Handlers_test ):
       'description': 'semantic completion with force query=DO_SO',
       'request': {
         'filetype'  : 'cpp',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_cpp.cc' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback',
+                                            'lang_cpp.cc' ),
         'line_num'  : 54,
         'column_num': 8,
         'extra_conf_data': { '&filetype': 'cpp' },
@@ -117,7 +117,7 @@ class Clang_GetCompletions_test( Handlers_test ):
       'description': 'Triggered, fallback but no query so no completions',
       'request': {
         'filetype'  : 'c',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_c.c' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback', 'lang_c.c' ),
         'line_num'  : 29,
         'column_num': 21,
         'extra_conf_data': { '&filetype': 'c' },
@@ -140,7 +140,8 @@ class Clang_GetCompletions_test( Handlers_test ):
                      ' (query="a")',
       'request': {
         'filetype'  : 'cpp',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_cpp.cc' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback',
+                                            'lang_cpp.cc' ),
         'line_num'  : 21,
         'column_num': 22,
         'extra_conf_data': { '&filetype': 'cpp' },
@@ -162,7 +163,7 @@ class Clang_GetCompletions_test( Handlers_test ):
       'description': '. after macro with some query text (.a_)',
       'request': {
         'filetype'  : 'c',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_c.c' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback', 'lang_c.c' ),
         'line_num'  : 29,
         'column_num': 23,
         'extra_conf_data': { '&filetype': 'c' },
@@ -186,7 +187,7 @@ class Clang_GetCompletions_test( Handlers_test ):
       'description': '. on struct returns identifier because of error',
       'request': {
         'filetype'  : 'c',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_c.c' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback', 'lang_c.c' ),
         'line_num'  : 62,
         'column_num': 20,
         'extra_conf_data': { '&filetype': 'c', 'throw': 'testy' },
@@ -211,7 +212,7 @@ class Clang_GetCompletions_test( Handlers_test ):
       'description': '-> after macro with forced semantic',
       'request': {
         'filetype'  : 'c',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_c.c' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback', 'lang_c.c' ),
         'line_num'  : 41,
         'column_num': 30,
         'extra_conf_data': { '&filetype': 'c' },
@@ -235,7 +236,7 @@ class Clang_GetCompletions_test( Handlers_test ):
       'description': '. on struct returns IDs after query=do_',
       'request': {
         'filetype':   'c',
-        'filepath':   PathToTestFile( 'general_fallback', 'lang_c.c' ),
+        'filepath':   self._PathToTestFile( 'general_fallback', 'lang_c.c' ),
         'line_num':   71,
         'column_num': 18,
         'extra_conf_data': { '&filetype': 'c' },
@@ -260,7 +261,7 @@ class Clang_GetCompletions_test( Handlers_test ):
   def WorksWithExplicitFlags_test( self ):
     self._app.post_json(
       '/ignore_extra_conf_file',
-      { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
     contents = """
 struct Foo {
   int x;
@@ -295,7 +296,7 @@ int main()
     self._app = TestApp( handlers.app )
     self._app.post_json(
       '/ignore_extra_conf_file',
-      { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
     contents = """
 struct Foo {
   int x;
@@ -323,7 +324,7 @@ int main()
 
 
   def UnknownExtraConfException_test( self ):
-    filepath = PathToTestFile( 'basic.cpp' )
+    filepath = self._PathToTestFile( 'basic.cpp' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cpp',
                                     contents = open( filepath ).read(),
@@ -342,7 +343,7 @@ int main()
 
     self._app.post_json(
       '/ignore_extra_conf_file',
-      { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
 
     response = self._app.post_json( '/completions',
                                     completion_data,
@@ -358,9 +359,9 @@ int main()
   def WorksWhenExtraConfExplicitlyAllowed_test( self ):
     self._app.post_json(
       '/load_extra_conf_file',
-      { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
 
-    filepath = PathToTestFile( 'basic.cpp' )
+    filepath = self._PathToTestFile( 'basic.cpp' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cpp',
                                     contents = open( filepath ).read(),
@@ -377,10 +378,10 @@ int main()
   def ExceptionWhenNoFlagsFromExtraConf_test( self ):
     self._app.post_json(
       '/load_extra_conf_file',
-      { 'filepath': PathToTestFile( 'noflags',
-                                    '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( 'noflags',
+                                          '.ycm_extra_conf.py' ) } )
 
-    filepath = PathToTestFile( 'noflags', 'basic.cpp' )
+    filepath = self._PathToTestFile( 'noflags', 'basic.cpp' )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cpp',
@@ -430,10 +431,10 @@ int main()
   def ClientDataGivenToExtraConf_test( self ):
     self._app.post_json(
       '/load_extra_conf_file',
-      { 'filepath': PathToTestFile( 'client_data',
-                                    '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( 'client_data',
+                                          '.ycm_extra_conf.py' ) } )
 
-    filepath = PathToTestFile( 'client_data', 'main.cpp' )
+    filepath = self._PathToTestFile( 'client_data', 'main.cpp' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cpp',
                                     contents = open( filepath ).read(),
@@ -451,10 +452,10 @@ int main()
   def FilenameCompleter_ClientDataGivenToExtraConf_test( self ):
     self._app.post_json(
       '/load_extra_conf_file',
-      { 'filepath': PathToTestFile( 'client_data',
-                                    '.ycm_extra_conf.py' ) } )
+      { 'filepath': self._PathToTestFile( 'client_data',
+                                          '.ycm_extra_conf.py' ) } )
 
-    filepath = PathToTestFile( 'client_data', 'include.cpp' )
+    filepath = self._PathToTestFile( 'client_data', 'include.cpp' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cpp',
                                     contents = open( filepath ).read(),

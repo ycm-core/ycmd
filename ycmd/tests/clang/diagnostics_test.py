@@ -20,14 +20,13 @@
 from ...server_utils import SetUpPythonPath
 SetUpPythonPath()
 from ..test_utils import BuildRequest
-from .utils import PathToTestFile
 from hamcrest import ( assert_that, contains, contains_string, has_entries,
                        has_entry, has_items, empty, equal_to )
-from ..handlers_test import Handlers_test
+from clang_handlers_test import Clang_Handlers_test
 from pprint import pprint
 
 
-class Clang_Diagnostics_test( Handlers_test ):
+class Clang_Diagnostics_test( Clang_Handlers_test ):
 
   def ZeroBasedLineAndColumn_test( self ):
     contents = """
@@ -183,7 +182,7 @@ int main() {
 
 
   def FixIt_Available_test( self ):
-    contents = open( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) ).read()
+    contents = open( self._PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) ).read()
 
     event_data = BuildRequest( contents = contents,
                                event_name = 'FileReadyToParse',

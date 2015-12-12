@@ -20,15 +20,14 @@
 
 from ..test_utils import ( BuildRequest, CompletionEntryMatcher,
                            CompletionLocationMatcher )
-from .utils import PathToTestFile
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
-from ..handlers_test import Handlers_test
+from python_handlers_test import Python_Handlers_test
 import httplib
 
 
-class Python_GetCompletions_test( Handlers_test ):
+class Python_GetCompletions_test( Python_Handlers_test ):
 
   def _RunTest( self, test ):
     """
@@ -69,7 +68,7 @@ class Python_GetCompletions_test( Handlers_test ):
 
 
   def Basic_test( self ):
-    filepath = PathToTestFile( 'basic.py' )
+    filepath = self._PathToTestFile( 'basic.py' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'python',
                                     contents = open( filepath ).read(),
@@ -90,7 +89,7 @@ class Python_GetCompletions_test( Handlers_test ):
 
 
   def UnicodeDescription_test( self ):
-    filepath = PathToTestFile( 'unicode.py' )
+    filepath = self._PathToTestFile( 'unicode.py' )
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'python',
                                     contents = open( filepath ).read(),
@@ -113,7 +112,8 @@ class Python_GetCompletions_test( Handlers_test ):
       'description': 'param jedi does not know about (id). query="a_p"',
       'request': {
         'filetype'  : 'python',
-        'filepath'  : PathToTestFile( 'general_fallback', 'lang_python.py' ),
+        'filepath'  : self._PathToTestFile( 'general_fallback',
+                                            'lang_python.py' ),
         'line_num'  : 28,
         'column_num': 20,
         'force_semantic': False,

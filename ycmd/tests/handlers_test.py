@@ -22,9 +22,19 @@ SetUpPythonPath()
 from webtest import TestApp
 from .. import handlers
 import bottle
+import os
 
 
 class Handlers_test( object ):
+
+  def __init__( self ):
+    self._file = __file__
+
+
+  def _PathToTestFile( self, *args ):
+    dir_of_current_script = os.path.dirname( os.path.abspath( self._file ) )
+    return os.path.join( dir_of_current_script, 'testdata', *args )
+
 
   def setUp( self ):
     bottle.debug( True )

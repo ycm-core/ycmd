@@ -19,19 +19,17 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..test_utils import BuildRequest, CompletionEntryMatcher
-from .utils import ( PathToTestFile, StopOmniSharpServer,
-                     WaitUntilOmniSharpServerReady )
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, empty, greater_than, has_item, has_items,
                        has_entries )
-from .cs_handlers_test import Cs_Handlers_test
+from cs_handlers_test import Cs_Handlers_test
 
 
 class Cs_GetCompletions_test( Cs_Handlers_test ):
 
   def Basic_test( self ):
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
+    filepath = self._PathToTestFile( 'testy', 'Program.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -39,7 +37,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -52,15 +50,15 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                             CompletionEntryMatcher( 'CursorSize' ) ) )
     eq_( 12, response_data[ 'completion_start_column' ] )
 
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def MultipleSolution_test( self ):
-    filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
-                  PathToTestFile( 'testy-multiple-solutions',
-                                  'solution-named-like-folder',
-                                  'testy',
-                                  'Program.cs' ) ]
+    filepaths = [ self._PathToTestFile( 'testy', 'Program.cs' ),
+                  self._PathToTestFile( 'testy-multiple-solutions',
+                                        'solution-named-like-folder',
+                                        'testy',
+                                        'Program.cs' ) ]
     lines = [ 10, 9 ]
     for filepath, line in zip( filepaths, lines ):
       contents = open( filepath ).read()
@@ -70,7 +68,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                  event_name = 'FileReadyToParse' )
 
       self._app.post_json( '/event_notification', event_data )
-      WaitUntilOmniSharpServerReady( self._app, filepath )
+      self._WaitUntilOmniSharpServerReady( filepath )
 
       completion_data = BuildRequest( filepath = filepath,
                                       filetype = 'cs',
@@ -84,11 +82,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                               CompletionEntryMatcher( 'CursorSize' ) ) )
       eq_( 12, response_data[ 'completion_start_column' ] )
 
-      StopOmniSharpServer( self._app, filepath )
+      self._StopOmniSharpServer( filepath )
 
 
   def PathWithSpace_test( self ):
-    filepath = PathToTestFile( u'неприличное слово', 'Program.cs' )
+    filepath = self._PathToTestFile( u'неприличное слово', 'Program.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -96,7 +94,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -109,11 +107,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                             CompletionEntryMatcher( 'CursorSize' ) ) )
     eq_( 12, response_data[ 'completion_start_column' ] )
 
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def HasBothImportsAndNonImport_test( self ):
-    filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
+    filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -121,7 +119,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -136,11 +134,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                  has_items( CompletionEntryMatcher( 'DateTime' ),
                             CompletionEntryMatcher( 'DateTimeStyles' ) ) )
 
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def ImportsOrderedAfter_test( self ):
-    filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
+    filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -148,7 +146,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -172,11 +170,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     )
 
     assert_that( min_import_index, greater_than( max_nonimport_index ) ),
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def ForcedReturnsResults_test( self ):
-    filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -184,7 +182,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -198,11 +196,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     assert_that( response_data[ 'completions' ],
                  has_items( CompletionEntryMatcher( 'String' ),
                             CompletionEntryMatcher( 'StringBuilder' ) ) )
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def NonForcedReturnsNoResults_test( self ):
-    filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -210,7 +208,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -230,11 +228,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
       } ) ),
       'errors': empty(),
     } ) )
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def ForcedDividesCache_test( self ):
-    filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -242,7 +240,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'cs',
@@ -274,11 +272,11 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
       } ) ),
       'errors': empty(),
     } ) )
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
 
 
   def ReloadSolution_Basic_test( self ):
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
+    filepath = self._PathToTestFile( 'testy', 'Program.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -286,7 +284,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data )
-    WaitUntilOmniSharpServerReady( self._app, filepath )
+    self._WaitUntilOmniSharpServerReady( filepath )
     result = self._app.post_json(
       '/run_completer_command',
       BuildRequest( completer_target = 'filetype_default',
@@ -294,16 +292,16 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                     filepath = filepath,
                     filetype = 'cs' ) ).json
 
-    StopOmniSharpServer( self._app, filepath )
+    self._StopOmniSharpServer( filepath )
     eq_( result, True )
 
 
   def ReloadSolution_MultipleSolution_test( self ):
-    filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
-                  PathToTestFile( 'testy-multiple-solutions',
-                                  'solution-named-like-folder',
-                                  'testy',
-                                  'Program.cs' ) ]
+    filepaths = [ self._PathToTestFile( 'testy', 'Program.cs' ),
+                  self._PathToTestFile( 'testy-multiple-solutions',
+                                        'solution-named-like-folder',
+                                        'testy',
+                                        'Program.cs' ) ]
     for filepath in filepaths:
       contents = open( filepath ).read()
       event_data = BuildRequest( filepath = filepath,
@@ -312,7 +310,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                  event_name = 'FileReadyToParse' )
 
       self._app.post_json( '/event_notification', event_data )
-      WaitUntilOmniSharpServerReady( self._app, filepath )
+      self._WaitUntilOmniSharpServerReady( filepath )
       result = self._app.post_json(
         '/run_completer_command',
         BuildRequest( completer_target = 'filetype_default',
@@ -320,7 +318,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                       filepath = filepath,
                       filetype = 'cs' ) ).json
 
-      StopOmniSharpServer( self._app, filepath )
+      self._StopOmniSharpServer( filepath )
       eq_( result, True )
 
 
@@ -345,62 +343,66 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
 
   def UsesSubfolderHint_test( self ):
     self._SolutionSelectCheck(
-      PathToTestFile( 'testy-multiple-solutions', 'solution-named-like-folder',
-                      'testy', 'Program.cs' ),
-      PathToTestFile( 'testy-multiple-solutions', 'solution-named-like-folder',
-                      'testy.sln' ) )
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-named-like-folder',
+                            'testy', 'Program.cs' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-named-like-folder',
+                            'testy.sln' ) )
 
 
   def UsesSuperfolderHint_test( self ):
     self._SolutionSelectCheck(
-      PathToTestFile( 'testy-multiple-solutions', 'solution-named-like-folder',
-                      'not-testy', 'Program.cs' ),
-      PathToTestFile( 'testy-multiple-solutions', 'solution-named-like-folder',
-                      'solution-named-like-folder.sln' ) )
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-named-like-folder',
+                            'not-testy', 'Program.cs' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-named-like-folder',
+                            'solution-named-like-folder.sln' ) )
 
 
   def ExtraConfStoreAbsolute_test( self ):
     self._SolutionSelectCheck(
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-abs',
-                      'testy', 'Program.cs' ),
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'testy2.sln' ),
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-abs',
-                      '.ycm_extra_conf.py' ) )
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-abs',
+                            'testy', 'Program.cs' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'testy2.sln' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-abs',
+                            '.ycm_extra_conf.py' ) )
 
 
   def ExtraConfStoreRelative_test( self ):
     self._SolutionSelectCheck(
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-rel',
-                      'testy', 'Program.cs' ),
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-rel',
-                      'testy2.sln' ),
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-rel',
-                      '.ycm_extra_conf.py' ) )
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-rel',
+                            'testy', 'Program.cs' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-rel',
+                            'testy2.sln' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-rel',
+                            '.ycm_extra_conf.py' ) )
 
 
   def ExtraConfStoreNonexisting_test( self ):
     self._SolutionSelectCheck(
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-bad',
-                      'testy', 'Program.cs' ),
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-bad',
-                      'testy2.sln' ),
-      PathToTestFile( 'testy-multiple-solutions',
-                      'solution-not-named-like-folder', 'extra-conf-bad',
-                      'testy', '.ycm_extra_conf.py' ) )
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-bad',
+                            'testy', 'Program.cs' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-bad',
+                            'testy2.sln' ),
+      self._PathToTestFile( 'testy-multiple-solutions',
+                            'solution-not-named-like-folder', 'extra-conf-bad',
+                            'testy', '.ycm_extra_conf.py' ) )
 
 
   def DoesntStartWithAmbiguousMultipleSolutions_test( self ):
-    filepath = PathToTestFile( 'testy-multiple-solutions',
-                               'solution-not-named-like-folder',
-                               'testy', 'Program.cs' )
+    filepath = self._PathToTestFile( 'testy-multiple-solutions',
+                                     'solution-not-named-like-folder',
+                                     'testy', 'Program.cs' )
     contents = open( filepath ).read()
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'cs',
@@ -417,8 +419,8 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     # The test passes if we caught an exception when trying to start it,
     # so raise one if it managed to start
     if not exception_caught:
-      WaitUntilOmniSharpServerReady( self._app, filepath )
-      StopOmniSharpServer( self._app, filepath )
+      self._WaitUntilOmniSharpServerReady( filepath )
+      self._StopOmniSharpServer( filepath )
       raise Exception( 'The Omnisharp server started, despite us not being '
                        'able to find a suitable solution file to feed it. Did '
                        'you fiddle with the solution finding code in '
