@@ -18,7 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from .test_utils import BuildRequest
 from nose.tools import eq_
 from .handlers_test import Handlers_test
 
@@ -26,7 +25,7 @@ from .handlers_test import Handlers_test
 class Subcommands_test( Handlers_test ):
 
   def Basic_test( self ):
-    subcommands_data = BuildRequest( completer_target = 'python' )
+    subcommands_data = self._BuildRequest( completer_target = 'python' )
 
     eq_( [ 'GetDoc',
            'GoTo',
@@ -36,7 +35,7 @@ class Subcommands_test( Handlers_test ):
 
 
   def NoExplicitCompleterTargetSpecified_test( self ):
-    subcommands_data = BuildRequest( filetype = 'python' )
+    subcommands_data = self._BuildRequest( filetype = 'python' )
 
     eq_( [ 'GetDoc',
            'GoTo',

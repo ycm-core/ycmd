@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import ( BuildRequest, CompletionEntryMatcher,
-                           CompletionLocationMatcher )
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
@@ -45,7 +43,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
     def CombineRequest( request, data ):
       kw = request
       request.update( data )
-      return BuildRequest( **kw )
+      return self._BuildRequest( **kw )
 
     self._app.post_json( '/event_notification',
                          CombineRequest( test[ 'request' ], {
@@ -69,33 +67,33 @@ class Python_GetCompletions_test( Python_Handlers_test ):
 
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'basic.py' )
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'python',
-                                    contents = open( filepath ).read(),
-                                    line_num = 7,
-                                    column_num = 3)
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'python',
+                                          contents = open( filepath ).read(),
+                                          line_num = 7,
+                                          column_num = 3)
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
 
     assert_that( results,
                  has_items(
-                   CompletionEntryMatcher( 'a' ),
-                   CompletionEntryMatcher( 'b' ),
-                   CompletionLocationMatcher( 'line_num', 3 ),
-                   CompletionLocationMatcher( 'line_num', 4 ),
-                   CompletionLocationMatcher( 'column_num', 10 ),
-                   CompletionLocationMatcher( 'filepath', filepath ) ) )
+                   self._CompletionEntryMatcher( 'a' ),
+                   self._CompletionEntryMatcher( 'b' ),
+                   self._CompletionLocationMatcher( 'line_num', 3 ),
+                   self._CompletionLocationMatcher( 'line_num', 4 ),
+                   self._CompletionLocationMatcher( 'column_num', 10 ),
+                   self._CompletionLocationMatcher( 'filepath', filepath ) ) )
 
 
   def UnicodeDescription_test( self ):
     filepath = self._PathToTestFile( 'unicode.py' )
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'python',
-                                    contents = open( filepath ).read(),
-                                    force_semantic = True,
-                                    line_num = 5,
-                                    column_num = 3)
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'python',
+                                          contents = open( filepath ).read(),
+                                          force_semantic = True,
+                                          line_num = 5,
+                                          column_num = 3)
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
@@ -122,8 +120,8 @@ class Python_GetCompletions_test( Python_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': contains(
-            CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-            CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+            self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
+            self._CompletionEntryMatcher( 'another_parameter', '[ID]' ),
           ),
           'errors': empty(),
         } )

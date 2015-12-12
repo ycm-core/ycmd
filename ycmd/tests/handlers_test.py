@@ -21,6 +21,8 @@ from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from webtest import TestApp
 from .. import handlers
+from ycmd import user_options_store
+from hamcrest import has_entries, has_entry
 import bottle
 import os
 
@@ -31,12 +33,69 @@ class Handlers_test( object ):
     self._file = __file__
 
 
-  def _PathToTestFile( self, *args ):
-    dir_of_current_script = os.path.dirname( os.path.abspath( self._file ) )
-    return os.path.join( dir_of_current_script, 'testdata', *args )
-
-
   def setUp( self ):
     bottle.debug( True )
     handlers.SetServerStateToDefaults()
     self._app = TestApp( handlers.app )
+
+
+  @staticmethod
+  def _BuildRequest( **kwargs ):
+    filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
+    contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''
+    filetype = kwargs[ 'filetype' ] if 'filetype' in kwargs else 'foo'
+
+    request = {
+      'line_num': 1,
+      'column_num': 1,
+      'filepath': filepath,
+      'file_data': {
+        filepath: {
+          'contents': contents,
+          'filetypes': [ filetype ]
+        }
+      }
+    }
+
+    for key, value in kwargs.iteritems():
+      if key in [ 'contents', 'filetype', 'filepath' ]:
+        continue
+      request[ key ] = value
+
+    return request
+
+
+  @staticmethod
+  def _CompletionEntryMatcher( insertion_text, extra_menu_info = None ):
+    match = { 'insertion_text': insertion_text }
+    if extra_menu_info:
+      match.update( { 'extra_menu_info': extra_menu_info } )
+    return has_entries( match )
+
+
+  @staticmethod
+  def _CompletionLocationMatcher( location_type, value ):
+    return has_entry( 'extra_data',
+                      has_entry( 'location',
+                                 has_entry( location_type, value ) ) )
+
+
+  @staticmethod
+  def _ChangeSpecificOptions( options ):
+    current_options = dict( user_options_store.GetAll() )
+    current_options.update( options )
+    handlers.UpdateUserOptions( current_options )
+
+
+  @staticmethod
+  def _ErrorMatcher( cls, msg ):
+    """ Returns a hamcrest matcher for a server exception response """
+    return has_entries( {
+      'exception': has_entry( 'TYPE', cls.__name__ ),
+      'message': msg,
+    } )
+
+
+  def _PathToTestFile( self, *args ):
+    dir_of_current_script = os.path.dirname( os.path.abspath( self._file ) )
+    return os.path.join( dir_of_current_script, 'testdata', *args )

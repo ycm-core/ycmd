@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import BuildRequest
 from nose.tools import eq_
 from python_handlers_test import Python_Handlers_test
 import os.path
@@ -33,12 +32,12 @@ def foo():
 foo()
 """
 
-    goto_data = BuildRequest( completer_target = 'filetype_default',
-                              command_arguments = ['GoToDefinition'],
-                              line_num = 5,
-                              contents = contents,
-                              filetype = 'python',
-                              filepath = '/foo.py' )
+    goto_data = self._BuildRequest( completer_target = 'filetype_default',
+                                    command_arguments = ['GoToDefinition'],
+                                    line_num = 5,
+                                    contents = contents,
+                                    filetype = 'python',
+                                    filepath = '/foo.py' )
 
     eq_( {
       'filepath': os.path.abspath( '/foo.py' ),
@@ -52,13 +51,13 @@ foo()
     filepath = self._PathToTestFile( 'GetDoc.py' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'python',
-                               line_num = 17,
-                               column_num = 9,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'python',
+                                     line_num = 17,
+                                     column_num = 9,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -74,13 +73,13 @@ foo()
     filepath = self._PathToTestFile( 'GetDoc.py' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'python',
-                               line_num = 19,
-                               column_num = 2,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'python',
+                                     line_num = 19,
+                                     column_num = 2,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 

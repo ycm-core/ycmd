@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import ( BuildRequest, ChangeSpecificOptions,
-                           CompletionEntryMatcher, ErrorMatcher )
 from webtest import TestApp
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
@@ -29,10 +27,14 @@ from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from clang_handlers_test import Clang_Handlers_test
 import httplib
 
-NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
-
 
 class Clang_GetCompletions_test( Clang_Handlers_test ):
+
+  def __init__( self ):
+    super( Clang_GetCompletions_test, self ).__init__()
+    self._no_completions_error = self._ErrorMatcher( RuntimeError,
+                                                     NO_COMPLETIONS_MESSAGE )
+
 
   def _RunTest( self, test ):
     """
@@ -60,7 +62,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
     def CombineRequest( request, data ):
       kw = request
       request.update( data )
-      return BuildRequest( **kw )
+      return self._BuildRequest( **kw )
 
     # Because we aren't testing this command, we *always* ignore errors. This
     # is mainly because we (may) want to test scenarios where the completer
@@ -102,8 +104,8 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': contains(
-            CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
-            CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
+            self._CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
+            self._CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
           ),
           'errors': empty(),
         } )
@@ -127,7 +129,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': empty(),
-          'errors': has_item( NO_COMPLETIONS_ERROR ),
+          'errors': has_item( self._ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE ) ),
         } )
       },
     } )
@@ -151,7 +153,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': empty(),
-          'errors': has_item( NO_COMPLETIONS_ERROR ),
+          'errors': has_item( self._no_completions_error ),
         } )
       },
     } )
@@ -172,9 +174,9 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
       'expect': {
         'response': httplib.OK,
         'data': has_entries( {
-          'completions': has_item( CompletionEntryMatcher( 'a_parameter',
-                                                           '[ID]' ) ),
-          'errors': has_item( NO_COMPLETIONS_ERROR ),
+          'completions': has_item( self._CompletionEntryMatcher( 'a_parameter',
+                                                                 '[ID]' ) ),
+          'errors': has_item( self._no_completions_error ),
         } )
       },
     } )
@@ -197,10 +199,10 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': contains(
-            CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-            CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+            self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
+            self._CompletionEntryMatcher( 'another_parameter', '[ID]' ),
           ),
-          'errors': has_item( ErrorMatcher( ValueError, 'testy' ) )
+          'errors': has_item( self._ErrorMatcher( ValueError, 'testy' ) )
         } )
       },
     } )
@@ -220,7 +222,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
       },
       'expect': {
         'response': httplib.INTERNAL_SERVER_ERROR,
-        'data': NO_COMPLETIONS_ERROR,
+        'data': self._no_completions_error,
       },
     } )
 
@@ -248,9 +250,9 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
           'completions': contains_inanyorder(
             # do_ is an identifier because it is already in the file when we
             # load it
-            CompletionEntryMatcher( 'do_', '[ID]' ),
-            CompletionEntryMatcher( 'do_something', '[ID]' ),
-            CompletionEntryMatcher( 'do_another_thing', '[ID]' ),
+            self._CompletionEntryMatcher( 'do_', '[ID]' ),
+            self._CompletionEntryMatcher( 'do_something', '[ID]' ),
+            self._CompletionEntryMatcher( 'do_another_thing', '[ID]' ),
           ),
           'errors': empty()
         } )
@@ -276,23 +278,23 @@ int main()
 }
 """
 
-    completion_data = BuildRequest( filepath = '/foo.cpp',
-                                    filetype = 'cpp',
-                                    contents = contents,
-                                    line_num = 11,
-                                    column_num = 7,
-                                    compilation_flags = ['-x', 'c++'] )
+    completion_data = self._BuildRequest( filepath = '/foo.cpp',
+                                          filetype = 'cpp',
+                                          contents = contents,
+                                          line_num = 11,
+                                          column_num = 7,
+                                          compilation_flags = ['-x', 'c++'] )
 
     response_data = self._app.post_json( '/completions', completion_data ).json
     assert_that( response_data[ 'completions'],
-                 has_items( CompletionEntryMatcher( 'c' ),
-                            CompletionEntryMatcher( 'x' ),
-                            CompletionEntryMatcher( 'y' ) ) )
+                 has_items( self._CompletionEntryMatcher( 'c' ),
+                            self._CompletionEntryMatcher( 'x' ),
+                            self._CompletionEntryMatcher( 'y' ) ) )
     eq_( 7, response_data[ 'completion_start_column' ] )
 
 
   def NoCompletionsWhenAutoTriggerOff_test( self ):
-    ChangeSpecificOptions( { 'auto_trigger': False } )
+    self._ChangeSpecificOptions( { 'auto_trigger': False } )
     self._app = TestApp( handlers.app )
     self._app.post_json(
       '/ignore_extra_conf_file',
@@ -311,12 +313,12 @@ int main()
 }
 """
 
-    completion_data = BuildRequest( filepath = '/foo.cpp',
-                                    filetype = 'cpp',
-                                    contents = contents,
-                                    line_num = 11,
-                                    column_num = 7,
-                                    compilation_flags = ['-x', 'c++'] )
+    completion_data = self._BuildRequest( filepath = '/foo.cpp',
+                                          filetype = 'cpp',
+                                          contents = contents,
+                                          line_num = 11,
+                                          column_num = 7,
+                                          compilation_flags = ['-x', 'c++'] )
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
@@ -325,12 +327,12 @@ int main()
 
   def UnknownExtraConfException_test( self ):
     filepath = self._PathToTestFile( 'basic.cpp' )
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cpp',
-                                    contents = open( filepath ).read(),
-                                    line_num = 11,
-                                    column_num = 7,
-                                    force_semantic = True )
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'cpp',
+                                          contents = open( filepath ).read(),
+                                          line_num = 11,
+                                          column_num = 7,
+                                          force_semantic = True )
 
     response = self._app.post_json( '/completions',
                                     completion_data,
@@ -362,17 +364,17 @@ int main()
       { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
 
     filepath = self._PathToTestFile( 'basic.cpp' )
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cpp',
-                                    contents = open( filepath ).read(),
-                                    line_num = 11,
-                                    column_num = 7 )
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'cpp',
+                                          contents = open( filepath ).read(),
+                                          line_num = 11,
+                                          column_num = 7 )
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
-    assert_that( results, has_items( CompletionEntryMatcher( 'c' ),
-                                     CompletionEntryMatcher( 'x' ),
-                                     CompletionEntryMatcher( 'y' ) ) )
+    assert_that( results, has_items( self._CompletionEntryMatcher( 'c' ),
+                                     self._CompletionEntryMatcher( 'x' ),
+                                     self._CompletionEntryMatcher( 'y' ) ) )
 
 
   def ExceptionWhenNoFlagsFromExtraConf_test( self ):
@@ -383,12 +385,12 @@ int main()
 
     filepath = self._PathToTestFile( 'noflags', 'basic.cpp' )
 
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cpp',
-                                    contents = open( filepath ).read(),
-                                    line_num = 11,
-                                    column_num = 7,
-                                    force_semantic = True )
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'cpp',
+                                          contents = open( filepath ).read(),
+                                          line_num = 11,
+                                          column_num = 7,
+                                          force_semantic = True )
 
     response = self._app.post_json( '/completions',
                                     completion_data,
@@ -413,19 +415,21 @@ int main()
 }
 """
 
-    completion_data = BuildRequest( filepath = '/foo.cpp',
-                                    filetype = 'cpp',
-                                    force_semantic = True,
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 8,
-                                    compilation_flags = ['-x', 'c++'] )
+    completion_data = self._BuildRequest( filepath = '/foo.cpp',
+                                          filetype = 'cpp',
+                                          force_semantic = True,
+                                          contents = contents,
+                                          line_num = 9,
+                                          column_num = 8,
+                                          compilation_flags = ['-x', 'c++'] )
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
-    assert_that( results,
-                 contains_inanyorder( CompletionEntryMatcher( 'foobar' ),
-                                      CompletionEntryMatcher( 'floozar' ) ) )
+    assert_that(
+      results,
+      contains_inanyorder( self._CompletionEntryMatcher( 'foobar' ),
+                           self._CompletionEntryMatcher( 'floozar' ) )
+    )
 
 
   def ClientDataGivenToExtraConf_test( self ):
@@ -435,18 +439,18 @@ int main()
                                           '.ycm_extra_conf.py' ) } )
 
     filepath = self._PathToTestFile( 'client_data', 'main.cpp' )
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cpp',
-                                    contents = open( filepath ).read(),
-                                    line_num = 9,
-                                    column_num = 7,
-                                    extra_conf_data = {
-                                      'flags': ['-x', 'c++']
-                                    })
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'cpp',
+                                          contents = open( filepath ).read(),
+                                          line_num = 9,
+                                          column_num = 7,
+                                          extra_conf_data = {
+                                            'flags': ['-x', 'c++']
+                                          } )
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
-    assert_that( results, has_item( CompletionEntryMatcher( 'x' ) ) )
+    assert_that( results, has_item( self._CompletionEntryMatcher( 'x' ) ) )
 
 
   def FilenameCompleter_ClientDataGivenToExtraConf_test( self ):
@@ -456,18 +460,19 @@ int main()
                                           '.ycm_extra_conf.py' ) } )
 
     filepath = self._PathToTestFile( 'client_data', 'include.cpp' )
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cpp',
-                                    contents = open( filepath ).read(),
-                                    line_num = 1,
-                                    column_num = 11,
-                                    extra_conf_data = {
-                                      'flags': ['-x', 'c++']
-                                    })
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'cpp',
+                                          contents = open( filepath ).read(),
+                                          line_num = 1,
+                                          column_num = 11,
+                                          extra_conf_data = {
+                                            'flags': ['-x', 'c++']
+                                          } )
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
-    assert_that( results,
-                 has_item(
-                   CompletionEntryMatcher( 'include.hpp',
-                                           extra_menu_info = '[File]' ) ) )
+    assert_that(
+      results,
+      has_item( self._CompletionEntryMatcher( 'include.hpp',
+                extra_menu_info = '[File]' ) )
+    )

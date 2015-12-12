@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import BuildRequest, CompletionEntryMatcher
 from hamcrest import assert_that, has_items
 from typescript_handlers_test import Typescript_Handlers_test
 
@@ -28,23 +27,23 @@ class TypeScript_GetCompletions_test( Typescript_Handlers_test ):
     filepath = self._PathToTestFile( 'test.ts' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'typescript',
-                               contents = contents,
-                               event_name = 'BufferVisit' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
 
     self._app.post_json( '/event_notification', event_data )
 
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'typescript',
-                                    contents = contents,
-                                    force_semantic = True,
-                                    line_num = 12,
-                                    column_num = 6 )
+    completion_data = self._BuildRequest( filepath = filepath,
+                                          filetype = 'typescript',
+                                          contents = contents,
+                                          force_semantic = True,
+                                          line_num = 12,
+                                          column_num = 6 )
 
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
     assert_that( results,
-                 has_items( CompletionEntryMatcher( 'methodA' ),
-                            CompletionEntryMatcher( 'methodB' ),
-                            CompletionEntryMatcher( 'methodC' ) ) )
+                 has_items( self._CompletionEntryMatcher( 'methodA' ),
+                            self._CompletionEntryMatcher( 'methodB' ),
+                            self._CompletionEntryMatcher( 'methodC' ) ) )

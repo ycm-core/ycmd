@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import BuildRequest, ErrorMatcher
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, calling, contains, equal_to,
@@ -35,13 +34,13 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
     contents = open( self._PathToTestFile(
       'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) ).read()
 
-    goto_data = BuildRequest( completer_target = 'filetype_default',
-                              command_arguments = ['GoToDefinition'],
-                              compilation_flags = ['-x', 'c++'],
-                              line_num = 10,
-                              column_num = 3,
-                              contents = contents,
-                              filetype = 'cpp' )
+    goto_data = self._BuildRequest( completer_target = 'filetype_default',
+                                    command_arguments = ['GoToDefinition'],
+                                    compilation_flags = ['-x', 'c++'],
+                                    line_num = 10,
+                                    column_num = 3,
+                                    contents = contents,
+                                    filetype = 'cpp' )
 
     eq_( {
       'filepath': os.path.abspath( '/foo' ),
@@ -77,7 +76,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
         'column_num': test['response'][1],
     })
 
-    goto_data = BuildRequest( **request )
+    goto_data = self._BuildRequest( **request )
 
     eq_( response,
          self._app.post_json( '/run_completer_command', goto_data ).json )
@@ -192,12 +191,12 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
                                           '.ycm_extra_conf.py' ) } )
 
     filepath = self._PathToTestFile( 'test-include', 'main.cpp' )
-    goto_data = BuildRequest( filepath = filepath,
-                              filetype = 'cpp',
-                              contents = open( filepath ).read(),
-                              command_arguments = [ command ],
-                              line_num = test[ 'request' ][ 0 ],
-                              column_num = test[ 'request' ][ 1 ] )
+    goto_data = self._BuildRequest( filepath = filepath,
+                                    filetype = 'cpp',
+                                    contents = open( filepath ).read(),
+                                    command_arguments = [ command ],
+                                    line_num = test[ 'request' ][ 0 ],
+                                    column_num = test[ 'request' ][ 1 ] )
 
     response = {
       'filepath'   : self._PathToTestFile( 'test-include', test[ 'response' ] ),
@@ -274,7 +273,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
     request = common_args
     request.update( args )
 
-    request_data = BuildRequest( **request )
+    request_data = self._BuildRequest( **request )
 
     eq_( { 'message': expected },
          self._app.post_json( '/run_completer_command', request_data ).json )
@@ -429,7 +428,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
     args.update( language_options[ lang ] )
 
     # get the diagnostics for the file
-    event_data = BuildRequest( **args )
+    event_data = self._BuildRequest( **args )
 
     results = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -688,14 +687,14 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 70,
-                               column_num = 24,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 70,
+                                     column_num = 24,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -717,14 +716,14 @@ The first line of comment is the brief.""" } )
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 22,
-                               column_num = 13,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 22,
+                                     column_num = 13,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -750,14 +749,14 @@ This is more information
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 65,
-                               column_num = 14,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 65,
+                                     column_num = 14,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -777,14 +776,14 @@ This is a test namespace""" } )
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 81,
-                               column_num = 17,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 81,
+                                     column_num = 17,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command',
                                     event_data,
@@ -793,21 +792,21 @@ This is a test namespace""" } )
     eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
-                 ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+                 self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
   def GetDoc_NoCursor_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 1,
-                               column_num = 1,
-                               contents = contents,
-                               command_arguments = [ 'GetDoc' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 1,
+                                     column_num = 1,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDoc' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command',
                                     event_data,
@@ -816,7 +815,7 @@ This is a test namespace""" } )
     eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
-                 ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+                 self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
   # Following tests repeat the tests above, but without re-parsing the file
@@ -825,20 +824,20 @@ This is a test namespace""" } )
     contents = open( filepath ).read()
 
     self._app.post_json( '/event_notification',
-                         BuildRequest( filepath = filepath,
-                                       filetype = 'cpp',
-                                       compilation_flags = [ '-x', 'c++' ],
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' ) )
+                         self._BuildRequest( filepath = filepath,
+                                             filetype = 'cpp',
+                                             compilation_flags = [ '-x', 'c++' ],
+                                             contents = contents,
+                                             event_name = 'FileReadyToParse' ) )
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 70,
-                               column_num = 24,
-                               contents = contents,
-                               command_arguments = [ 'GetDocQuick' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 70,
+                                     column_num = 24,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDocQuick' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -860,21 +859,23 @@ The first line of comment is the brief.""" } )
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification',
-                         BuildRequest( filepath = filepath,
-                                       filetype = 'cpp',
-                                       compilation_flags = [ '-x', 'c++' ],
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' ) )
+    self._app.post_json(
+      '/event_notification',
+      self._BuildRequest( filepath = filepath,
+                          filetype = 'cpp',
+                          compilation_flags = [ '-x', 'c++' ],
+                          contents = contents,
+                          event_name = 'FileReadyToParse' )
+    )
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 22,
-                               column_num = 13,
-                               contents = contents,
-                               command_arguments = [ 'GetDocQuick' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 22,
+                                     column_num = 13,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDocQuick' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -900,21 +901,23 @@ This is more information
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification',
-                         BuildRequest( filepath = filepath,
-                                       filetype = 'cpp',
-                                       compilation_flags = [ '-x', 'c++' ],
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' ) )
+    self._app.post_json(
+      '/event_notification',
+      self._BuildRequest( filepath = filepath,
+                          filetype = 'cpp',
+                          compilation_flags = [ '-x', 'c++' ],
+                          contents = contents,
+                          event_name = 'FileReadyToParse' )
+    )
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 65,
-                               column_num = 14,
-                               contents = contents,
-                               command_arguments = [ 'GetDocQuick' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 65,
+                                     column_num = 14,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDocQuick' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 
@@ -934,21 +937,23 @@ This is a test namespace""" } )
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification',
-                         BuildRequest( filepath = filepath,
-                                       filetype = 'cpp',
-                                       compilation_flags = [ '-x', 'c++' ],
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' ) )
+    self._app.post_json(
+      '/event_notification',
+      self._BuildRequest( filepath = filepath,
+                          filetype = 'cpp',
+                          compilation_flags = [ '-x', 'c++' ],
+                          contents = contents,
+                          event_name = 'FileReadyToParse' )
+    )
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 81,
-                               column_num = 17,
-                               contents = contents,
-                               command_arguments = [ 'GetDocQuick' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 81,
+                                     column_num = 17,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDocQuick' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command',
                                     event_data,
@@ -957,28 +962,30 @@ This is a test namespace""" } )
     eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
-                 ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+                 self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
   def GetDocQuick_NoCursor_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification',
-                         BuildRequest( filepath = filepath,
-                                       filetype = 'cpp',
-                                       compilation_flags = [ '-x', 'c++' ],
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' ) )
+    self._app.post_json(
+      '/event_notification',
+      self._BuildRequest( filepath = filepath,
+                          filetype = 'cpp',
+                          compilation_flags = [ '-x', 'c++' ],
+                          contents = contents,
+                          event_name = 'FileReadyToParse' )
+    )
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 1,
-                               column_num = 1,
-                               contents = contents,
-                               command_arguments = [ 'GetDocQuick' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 1,
+                                     column_num = 1,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDocQuick' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command',
                                     event_data,
@@ -987,21 +994,21 @@ This is a test namespace""" } )
     eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
-                 ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+                 self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
   def GetDocQuick_NoReadyToParse_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++' ],
-                               line_num = 11,
-                               column_num = 18,
-                               contents = contents,
-                               command_arguments = [ 'GetDocQuick' ],
-                               completer_target = 'filetype_default' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++' ],
+                                     line_num = 11,
+                                     column_num = 18,
+                                     contents = contents,
+                                     command_arguments = [ 'GetDocQuick' ],
+                                     completer_target = 'filetype_default' )
 
     response = self._app.post_json( '/run_completer_command', event_data ).json
 

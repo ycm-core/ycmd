@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import BuildRequest
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import assert_that, raises, calling
@@ -30,20 +29,20 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
     filepath = self._PathToTestFile( 'test.ts' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'typescript',
-                               contents = contents,
-                               event_name = 'BufferVisit' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
 
     self._app.post_json( '/event_notification', event_data )
 
-    gettype_data = BuildRequest( completer_target = 'filetype_default',
-                                 command_arguments = [ 'GetType' ],
-                                 line_num = 12,
-                                 column_num = 1,
-                                 contents = contents,
-                                 filetype = 'typescript',
-                                 filepath = filepath )
+    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                       command_arguments = [ 'GetType' ],
+                                       line_num = 12,
+                                       column_num = 1,
+                                       contents = contents,
+                                       filetype = 'typescript',
+                                       filepath = filepath )
 
     eq_( {
       'message': 'var foo: Foo'
@@ -54,20 +53,20 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
     filepath = self._PathToTestFile( 'test.ts' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'typescript',
-                               contents = contents,
-                               event_name = 'BufferVisit' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
 
     self._app.post_json( '/event_notification', event_data )
 
-    gettype_data = BuildRequest( completer_target = 'filetype_default',
-                                 command_arguments = [ 'GetType' ],
-                                 line_num = 2,
-                                 column_num = 1,
-                                 contents = contents,
-                                 filetype = 'typescript',
-                                 filepath = filepath )
+    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                       command_arguments = [ 'GetType' ],
+                                       line_num = 2,
+                                       column_num = 1,
+                                       contents = contents,
+                                       filetype = 'typescript',
+                                       filepath = filepath )
 
     assert_that( calling( self._app.post_json ).with_args(
                  '/run_completer_command', gettype_data ),
@@ -78,20 +77,20 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
     filepath = self._PathToTestFile( 'test.ts' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'typescript',
-                               contents = contents,
-                               event_name = 'BufferVisit' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
 
     self._app.post_json( '/event_notification', event_data )
 
-    gettype_data = BuildRequest( completer_target = 'filetype_default',
-                                 command_arguments = [ 'GetDoc' ],
-                                 line_num = 29,
-                                 column_num = 9,
-                                 contents = contents,
-                                 filetype = 'typescript',
-                                 filepath = filepath )
+    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                       command_arguments = [ 'GetDoc' ],
+                                       line_num = 29,
+                                       column_num = 9,
+                                       contents = contents,
+                                       filetype = 'typescript',
+                                       filepath = filepath )
 
     eq_( {
       'detailed_info': '(method) Bar.testMethod(): void\n\n'
@@ -103,20 +102,20 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
     filepath = self._PathToTestFile( 'test.ts' )
     contents = open( filepath ).read()
 
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'typescript',
-                               contents = contents,
-                               event_name = 'BufferVisit' )
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
 
     self._app.post_json( '/event_notification', event_data )
 
-    gettype_data = BuildRequest( completer_target = 'filetype_default',
-                                 command_arguments = [ 'GetDoc' ],
-                                 line_num = 31,
-                                 column_num = 2,
-                                 contents = contents,
-                                 filetype = 'typescript',
-                                 filepath = filepath )
+    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                       command_arguments = [ 'GetDoc' ],
+                                       line_num = 31,
+                                       column_num = 2,
+                                       contents = contents,
+                                       filetype = 'typescript',
+                                       filepath = filepath )
 
     eq_( {
       'detailed_info': 'class Bar\n\n'

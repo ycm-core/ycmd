@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import BuildRequest
 from nose.tools import eq_
 from hamcrest import assert_that, has_entry
 from ...responses import NoDiagnosticSupport
@@ -28,9 +27,9 @@ import httplib
 class Python_Diagnostics_test( Handlers_test ):
 
   def DoesntWork_test( self ):
-    diag_data = BuildRequest( contents = "foo = 5",
-                              line_num = 2,
-                              filetype = 'python' )
+    diag_data = self._BuildRequest( contents = "foo = 5",
+                                    line_num = 2,
+                                    filetype = 'python' )
 
     response = self._app.post_json( '/detailed_diagnostic',
                                     diag_data,

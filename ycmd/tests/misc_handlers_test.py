@@ -19,20 +19,19 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import ok_
-from .test_utils import BuildRequest
 from .handlers_test import Handlers_test
 
 
 class MiscHandlers_test( Handlers_test ):
 
   def SemanticCompletionAvailable_test( self ):
-    request_data = BuildRequest( filetype = 'python' )
+    request_data = self._BuildRequest( filetype = 'python' )
     ok_( self._app.post_json( '/semantic_completion_available',
                               request_data ).json )
 
 
   def EventNotification_AlwaysJsonResponse_test( self ):
-    event_data = BuildRequest( contents = 'foo foogoo ba',
-                               event_name = 'FileReadyToParse' )
+    event_data = self._BuildRequest( contents = 'foo foogoo ba',
+                                     event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data ).json

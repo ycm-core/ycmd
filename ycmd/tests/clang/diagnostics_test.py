@@ -19,7 +19,6 @@
 
 from ...server_utils import SetUpPythonPath
 SetUpPythonPath()
-from ..test_utils import BuildRequest
 from hamcrest import ( assert_that, contains, contains_string, has_entries,
                        has_entry, has_items, empty, equal_to )
 from clang_handlers_test import Clang_Handlers_test
@@ -37,10 +36,10 @@ void foo() {
 // Padding to 5 lines
 """
 
-    event_data = BuildRequest( compilation_flags = ['-x', 'c++'],
-                               event_name = 'FileReadyToParse',
-                               contents = contents,
-                               filetype = 'cpp' )
+    event_data = self._BuildRequest( compilation_flags = ['-x', 'c++'],
+                                     event_name = 'FileReadyToParse',
+                                     contents = contents,
+                                     filetype = 'cpp' )
 
     results = self._app.post_json( '/event_notification', event_data ).json
     assert_that( results,
@@ -84,10 +83,10 @@ void foo() {
 // Padding to 5 lines
 """
 
-    event_data = BuildRequest( compilation_flags = ['-x', 'c++'],
-                               event_name = 'FileReadyToParse',
-                               contents = contents,
-                               filetype = 'cpp' )
+    event_data = self._BuildRequest( compilation_flags = ['-x', 'c++'],
+                                     event_name = 'FileReadyToParse',
+                                     contents = contents,
+                                     filetype = 'cpp' )
 
     results = self._app.post_json( '/event_notification', event_data ).json
     assert_that( results,
@@ -118,11 +117,11 @@ struct Foo {
 };
 """
 
-    event_data = BuildRequest( compilation_flags = ['-x', 'c++'],
-                               event_name = 'FileReadyToParse',
-                               contents = contents,
-                               filepath = '/foo.h',
-                               filetype = 'cpp' )
+    event_data = self._BuildRequest( compilation_flags = ['-x', 'c++'],
+                                     event_name = 'FileReadyToParse',
+                                     contents = contents,
+                                     filepath = '/foo.h',
+                                     filetype = 'cpp' )
 
     response = self._app.post_json( '/event_notification', event_data ).json
     assert_that( response, empty() )
@@ -138,10 +137,10 @@ struct Foo {
 };
 """
 
-    diag_data = BuildRequest( compilation_flags = ['-x', 'c++'],
-                              line_num = 3,
-                              contents = contents,
-                              filetype = 'cpp' )
+    diag_data = self._BuildRequest( compilation_flags = ['-x', 'c++'],
+                                    line_num = 3,
+                                    contents = contents,
+                                    filetype = 'cpp' )
 
     event_data = diag_data.copy()
     event_data.update( {
@@ -165,10 +164,10 @@ int main() {
 }
 """
 
-    diag_data = BuildRequest( compilation_flags = [ '-x', 'c++' ],
-                              line_num = 7,
-                              contents = contents,
-                              filetype = 'cpp' )
+    diag_data = self._BuildRequest( compilation_flags = [ '-x', 'c++' ],
+                                    line_num = 7,
+                                    contents = contents,
+                                    filetype = 'cpp' )
 
     event_data = diag_data.copy()
     event_data.update( {
@@ -184,14 +183,14 @@ int main() {
   def FixIt_Available_test( self ):
     contents = open( self._PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) ).read()
 
-    event_data = BuildRequest( contents = contents,
-                               event_name = 'FileReadyToParse',
-                               filetype = 'cpp',
-                               compilation_flags = [ '-x', 'c++',
-                                                     '-std=c++03',
-                                                     '-Wall',
-                                                     '-Wextra',
-                                                     '-pedantic' ] )
+    event_data = self._BuildRequest( contents = contents,
+                                     event_name = 'FileReadyToParse',
+                                     filetype = 'cpp',
+                                     compilation_flags = [ '-x', 'c++',
+                                                           '-std=c++03',
+                                                           '-Wall',
+                                                           '-Wextra',
+                                                           '-pedantic' ] )
 
     response = self._app.post_json( '/event_notification', event_data ).json
 
