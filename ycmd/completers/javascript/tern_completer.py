@@ -33,6 +33,21 @@ PATH_TO_TERNJS_BINARY = os.path.join(
     'tern' )
 
 
+def ShouldEnableTernCompleter():
+  """Returns whether or not the tern compelter is 'installed'. That is whether
+  or not the tern submodule has a 'node_modules' directory. This is pretty much
+  the only way we can know if the user addded '--tern-completer' on
+  install or manually ran 'npm install' in the tern submodule directory."""
+  return os.path.exists(
+      os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
+                    '..',
+                    '..',
+                    '..',
+                    'third_party',
+                    'tern',
+                    'node_modules' ) )
+
+
 class TernCompleter( Completer ):
   """Completer for javascript using tern.js: http://ternjs.net.
 
@@ -120,22 +135,34 @@ class TernCompleter( Completer ):
 
 
   def DebugInfo( self, request_data ):
-    with TernCompleter.server_state_mutex:
-      if self._server_handle is None:
-        if self._server_port > 0:
-          return ( ' * Connected to external server on port: '
-                   + str( self._server_port ) )
-
+    if self._server_handle is None:
+      if self._server_port > 0:
+        # We haven't tried to start the server, but the port is set. This means
+        # we're connected to an external server.
+        return ( ' * Connected to external server on port: '
+                 + str( self._server_port ) )
+      else:
+        # server is not running because we haven't tried to start it.
         return ' * Tern server is not running'
 
-      return ( ' * Tern server is running on port: '
-               + str( self._server_port )
-               + ' with PID: '
-               + str( self._server_handle.pid )
+    if not self._ServerIsRunning():
+      # The handle is set, but the process isn't running. This means either it
+      # crashed or we failed to start it.
+      return ( ' * Tern server is not running (crashed)'
                + '\n * Server stdout: '
                + self._server_stdout
                + '\n * Server stderr: '
                + self._server_stderr )
+
+    # Server is up and running.
+    return ( ' * Tern server is running on port: '
+             + str( self._server_port )
+             + ' with PID: '
+             + str( self._server_handle.pid )
+             + '\n * Server stdout: '
+             + self._server_stdout
+             + '\n * Server stderr: '
+             + self._server_stderr )
 
 
   def Shutdown( self ):
@@ -156,6 +183,7 @@ class TernCompleter( Completer ):
 
   def _Reset( self ):
     """Callers must hold TernCompleter.server_state_mutex"""
+
     if not self.user_options[ 'server_keep_logfiles' ]:
       if self._server_stdout:
         os.unlink( self._server_stdout )
@@ -196,7 +224,7 @@ class TernCompleter( Completer ):
     file_data = request_data.get( 'file_data', {} )
 
     full_request = {
-      'files': [ MakeIncompleteFile( x, file_data[ x ] ) 
+      'files': [ MakeIncompleteFile( x, file_data[ x ] )
                  for x in file_data.keys() ],
       'timeout': 500,
     }
@@ -318,6 +346,11 @@ class TernCompleter( Completer ):
       _logger.info( 'Tern.js server killed.' )
 
       self._Reset()
+
+
+  def _ServerIsRunning( self ):
+    return ( self._server_handle is not None and
+             self._server_handle.poll() is None )
 
 
   def _ConnectToServer( self, args ):
