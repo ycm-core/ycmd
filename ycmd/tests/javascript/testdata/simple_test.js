@@ -12,3 +12,4 @@ var simple_test_obect = {
 
 var simple_assignment = simple_test_obect.
 var query_assignment = simple_test_obect.typ
+var query_assignment = simple_test_obect.asf

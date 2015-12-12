@@ -43,8 +43,7 @@ def Subcommands_TernCompleter_Defined_Subcommands_test():
 
   WaitForTernServerReady( app )
 
-  eq_( sorted ( [ 'ConnectToServer',
-                  'GoToDefinition',
+  eq_( sorted ( [ 'GoToDefinition',
                   'GoTo',
                   'GetDoc',
                   'GetType',
