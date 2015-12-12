@@ -27,7 +27,7 @@ from shutil import rmtree
 import platform
 import argparse
 import multiprocessing
-from distutils.spawn import find_executable
+from ycmd.utils import FindExecutable
 
 
 def OnMac():
@@ -40,7 +40,7 @@ def OnWindows():
 
 def PathToFirstExistingExecutable( executable_name_list ):
   for executable_name in executable_name_list:
-    path = find_executable( executable_name )
+    path = FindExecutable( executable_name )
     if path:
       return path
   return None
@@ -250,7 +250,7 @@ def BuildOmniSharp():
 
 
 def BuildGoCode():
-  if not find_executable( 'go' ):
+  if not FindExecutable( 'go' ):
     sys.exit( 'go is required to build gocode' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
@@ -259,7 +259,7 @@ def BuildGoCode():
 
 def SetUpTern():
   for exe in [ 'node', 'npm' ]:
-    if not find_executable( exe ):
+    if not FindExecutable( exe ):
       sys.exit( '"' + exe + '" is required to set up ternjs' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern' ) )
