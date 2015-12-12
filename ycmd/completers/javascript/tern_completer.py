@@ -278,9 +278,6 @@ class TernCompleter( Completer ):
                 '--persistent',
                 '--no-port-file' ] + extra_args
 
-    if os.environ.get( 'YCM_TERN_DEBUG_TERNJS', 0 ):
-      command.insert( 0, 'node-debug' )
-
     self._server_stdout = TernCompleter.logfile_format.format(
         port = self._server_port,
         std = 'stdout' )
