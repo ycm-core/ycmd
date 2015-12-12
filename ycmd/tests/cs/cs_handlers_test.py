@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..test_utils import BuildRequest
 from ..handlers_test import Handlers_test
 from ycmd.utils import OnTravis
 import time
@@ -37,11 +36,13 @@ class Cs_Handlers_test( Handlers_test ):
 
 
   def _StopOmniSharpServer( self, filename ):
-    self._app.post_json( '/run_completer_command',
-                         BuildRequest( completer_target = 'filetype_default',
-                                       command_arguments = [ 'StopServer' ],
-                                       filepath = filename,
-                                       filetype = 'cs' ) )
+    self._app.post_json(
+      '/run_completer_command',
+      self._BuildRequest( completer_target = 'filetype_default',
+                          command_arguments = [ 'StopServer' ],
+                          filepath = filename,
+                          filetype = 'cs' )
+    )
 
 
   def _WaitUntilOmniSharpServerReady( self, filename ):
@@ -55,10 +56,10 @@ class Cs_Handlers_test( Handlers_test ):
       if result:
         success = True
         break
-      request = BuildRequest( completer_target = 'filetype_default',
-                              command_arguments = [ 'ServerTerminated' ],
-                              filepath = filename,
-                              filetype = 'cs' )
+      request = self._BuildRequest( completer_target = 'filetype_default',
+                                    command_arguments = [ 'ServerTerminated' ],
+                                    filepath = filename,
+                                    filetype = 'cs' )
       result = self._app.post_json( '/run_completer_command', request ).json
       if result:
         raise RuntimeError( "OmniSharp failed during startup." )

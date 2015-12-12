@@ -23,6 +23,7 @@ from webtest import TestApp
 from .. import handlers
 from ycmd import user_options_store
 from hamcrest import has_entries, has_entry
+from test_utils import BuildRequest
 import bottle
 import os
 
@@ -41,28 +42,7 @@ class Handlers_test( object ):
 
   @staticmethod
   def _BuildRequest( **kwargs ):
-    filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
-    contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''
-    filetype = kwargs[ 'filetype' ] if 'filetype' in kwargs else 'foo'
-
-    request = {
-      'line_num': 1,
-      'column_num': 1,
-      'filepath': filepath,
-      'file_data': {
-        filepath: {
-          'contents': contents,
-          'filetypes': [ filetype ]
-        }
-      }
-    }
-
-    for key, value in kwargs.iteritems():
-      if key in [ 'contents', 'filetype', 'filepath' ]:
-        continue
-      request[ key ] = value
-
-    return request
+    return BuildRequest( **kwargs )
 
 
   @staticmethod

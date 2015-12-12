@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2015 ycmd contributors.
+# Copyright (C) 2013 Google Inc.
+#               2015 ycmd
 #
 # This file is part of ycmd.
 #
@@ -17,21 +18,27 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..handlers_test import Handlers_test
 
+def BuildRequest( **kwargs ):
+  filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
+  contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''
+  filetype = kwargs[ 'filetype' ] if 'filetype' in kwargs else 'foo'
 
-class Go_Handlers_test( Handlers_test ):
+  request = {
+    'line_num': 1,
+    'column_num': 1,
+    'filepath': filepath,
+    'file_data': {
+      filepath: {
+        'contents': contents,
+        'filetypes': [ filetype ]
+      }
+    }
+  }
 
-  def __init__( self ):
-    self._file = __file__
+  for key, value in kwargs.iteritems():
+    if key in [ 'contents', 'filetype', 'filepath' ]:
+      continue
+    request[ key ] = value
 
-
-  def tearDown( self ):
-    self._StopGoCodeServer()
-
-
-  def _StopGoCodeServer( self ):
-    self._app.post_json( '/run_completer_command',
-                         self._BuildRequest( completer_target = 'filetype_default',
-                                             command_arguments = [ 'StopServer' ],
-                                             filetype = 'go' ) )
+  return request
