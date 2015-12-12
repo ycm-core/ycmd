@@ -156,13 +156,13 @@ class TernCompleter( Completer ):
 
 
   def ServerIsReady( self, request_data = {} ):
+    if not self._ServerIsRunning():
+      return False
+
     try:
-      # TODO: There is an undocumented '/ping' target. Perhaps we should use
-      # that? It doesn't return JSON, though, just plain text 200 response
-      # "Pong"
-      return bool(
-          self._ServerIsRunning() and
-          self._PostRequest( {'type': 'files'}, request_data ) is not None )
+      target = 'http://localhost:' + str( self._server_port ) + '/ping'
+      response = requests.get( target )
+      return response.status_code == httplib.OK
     except requests.ConnectionError:
       return False
 

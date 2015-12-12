@@ -26,7 +26,7 @@ from nose.tools import ( eq_, with_setup )
 from hamcrest import ( assert_that, contains_inanyorder, has_entries )
 
 from ycmd import handlers
-from ycmd.tests.test_utils import ( BuildRequest, Setup )
+from ycmd.tests.test_utils import ( BuildRequest, ErrorMatcher, Setup )
 
 from .test_utils import ( with_cwd,
                           TEST_DATA_DIR,
@@ -211,6 +211,21 @@ def SubCommands_TernCompleter_GoToReferences_Works_test():
     }
   } )
 
-# TODO:
-#
-#  - GetType/GetDoc/etc. requests on empty space/no idenfier
+
+@with_setup( Setup )
+@with_cwd( TEST_DATA_DIR )
+def SubCommands_TernCompleter_DetDoc_With_No_Itendifier_test():
+  Subcommand_RunTest( {
+    'description': 'GetDoc works when no identifier',
+    'request': {
+      'command': 'GetDoc',
+      'filepath': PathToTestFile( 'simple_test.js' ),
+      'line_num': 12,
+      'column_num': 1,
+    },
+    'expect': {
+      'response': httplib.INTERNAL_SERVER_ERROR,
+      'data': ErrorMatcher( RuntimeError,
+                            'TernError: No type found at the given position.'),
+    }
+  } )
