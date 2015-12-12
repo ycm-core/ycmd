@@ -10,9 +10,12 @@ before_install:
 install:
   # source because it sets up env vars on some platforms
   - source travis/travis_install.sh
+  - pip install coveralls
 compiler:
   - gcc
-script: ./run_tests.py
+script: ./run_tests.py --with-coverage --cover-package=ycmd
+after_success:
+  - coveralls
 env:
   global:
     - MONO_THREADS_PER_CPU=2000

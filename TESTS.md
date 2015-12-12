@@ -3,7 +3,7 @@
 This readme documents instructions on running the test suite.
 
 An alternative (canonical) reference is the scripts used for running the tests
-on Travis CI. These can be found in `.travis.yaml` and `./travis` directory.
+on Travis CI. These can be found in `.travis.yml` and `./travis` directory.
 
 ## Requirements for running the tests
 
