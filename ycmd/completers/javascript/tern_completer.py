@@ -100,6 +100,7 @@ class TernCompleter( Completer ):
       'sort': False,
       'includeKeywords': False,
       'expandWordForward': False,
+      'omitObjectPrototype': False
     }
 
     completions = self._GetResponse( query,
@@ -380,6 +381,7 @@ class TernCompleter( Completer ):
       response[ 'start' ][ 'ch' ] + 1
     )
 
+
   def _GoToReferences( self, request_data ):
     query = {
       'type': 'refs',
@@ -390,4 +392,4 @@ class TernCompleter( Completer ):
     return [ responses.BuildGoToResponse( ref[ 'file' ],
                                           ref[ 'start' ][ 'line' ] + 1,
                                           ref[ 'start' ][ 'ch' ] + 1 )
-           for ref in response[ 'refs' ] ]
+             for ref in response[ 'refs' ] ]

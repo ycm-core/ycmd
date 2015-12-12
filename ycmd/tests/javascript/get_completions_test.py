@@ -38,6 +38,17 @@ from .test_utils import ( with_cwd,
 
 bottle.debug( True )
 
+# The following properties/methods are in Object.prototype, so are present
+# on all objects:
+#
+# toString()
+# toLocaleString()
+# valueOf()
+# hasOwnProperty()
+# propertyIsEnumerable()
+# isPrototypeOf()
+#
+
 @with_setup( Setup )
 @with_cwd( TEST_DATA_DIR )
 def GetCompletions_TernCompleter_Works_NoQuery_test():
@@ -57,6 +68,14 @@ def GetCompletions_TernCompleter_Works_NoQuery_test():
                                   'fn(param: ?) -> string' ),
           CompletionEntryMatcher( 'basic_type', 'number' ),
           CompletionEntryMatcher( 'object', 'object' ),
+          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+          CompletionEntryMatcher( 'hasOwnProperty',
+                                  'fn(prop: string) -> bool' ),
+          CompletionEntryMatcher( 'isPrototypeOf', 'fn(obj: ?) -> bool' ),
+          CompletionEntryMatcher( 'propertyIsEnumerable',
+                                  'fn(prop: string) -> bool' ),
         ),
         'errors': empty(),
       } )
@@ -80,6 +99,7 @@ def GetCompletions_TernCompleter_Works_Query_test():
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'basic_type', 'number' ),
+          CompletionEntryMatcher( 'isPrototypeOf', 'fn(obj: ?) -> bool' ),
         ),
         'errors': empty(),
       } )
@@ -106,6 +126,14 @@ def GetCompletions_TernCompleter_Works_Require_NoQuery_test():
           CompletionEntryMatcher( 'get_number', 'number' ),
           CompletionEntryMatcher( 'get_string', 'string' ),
           CompletionEntryMatcher( 'get_thing', 'fn(a: ?) -> number|string' ),
+          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+          CompletionEntryMatcher( 'hasOwnProperty',
+                                  'fn(prop: string) -> bool' ),
+          CompletionEntryMatcher( 'isPrototypeOf', 'fn(obj: ?) -> bool' ),
+          CompletionEntryMatcher( 'propertyIsEnumerable',
+                                  'fn(prop: string) -> bool' ),
         ),
         'errors': empty(),
       } )
@@ -127,7 +155,7 @@ def GetCompletions_TernCompleter_Works_Require_Query_test():
     'expect': {
       'response': httplib.OK,
       'data': has_entries( {
-        'completions': contains_inanyorder(
+        'completions': contains(
           CompletionEntryMatcher( 'mine_bitcoin', 'fn(how_much: ?) -> number' ),
         ),
         'errors': empty(),
@@ -150,10 +178,10 @@ def GetCompletions_TernCompleter_Works_Require_Query_LCS_test():
     'expect': {
       'response': httplib.OK,
       'data': has_entries( {
-        'completions': contains_inanyorder(
+        'completions': contains(
           CompletionEntryMatcher( 'get_number', 'number' ),
-          CompletionEntryMatcher( 'get_string', 'string' ),
           CompletionEntryMatcher( 'get_thing', 'fn(a: ?) -> number|string' ),
+          CompletionEntryMatcher( 'get_string', 'string' ),
         ),
         'errors': empty(),
       } )
@@ -186,6 +214,14 @@ def GetCompletions_TernCompleter_Dirty_Named_Buffers_test():
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'big_endian_node', 'number' ),
+          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+          CompletionEntryMatcher( 'hasOwnProperty',
+                                  'fn(prop: string) -> bool' ),
+          CompletionEntryMatcher( 'isPrototypeOf', 'fn(obj: ?) -> bool' ),
+          CompletionEntryMatcher( 'propertyIsEnumerable',
+                                  'fn(prop: string) -> bool' ),
         ),
         'errors': empty(),
       } )
@@ -215,6 +251,14 @@ def GetCompletions_TernCompleter_Returns_Docs_In_Completions_test():
                            + 'This is a short documentation string'),
           } ),
           CompletionEntryMatcher( 'options', 'options' ),
+          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+          CompletionEntryMatcher( 'hasOwnProperty',
+                                  'fn(prop: string) -> bool' ),
+          CompletionEntryMatcher( 'isPrototypeOf', 'fn(obj: ?) -> bool' ),
+          CompletionEntryMatcher( 'propertyIsEnumerable',
+                                  'fn(prop: string) -> bool' ),
         ),
         'errors': empty(),
       } )
