@@ -31,6 +31,11 @@ pip install -U pip wheel setuptools
 pip install -r test_requirements.txt
 npm install -g typescript
 
+# We run coverage tests only on a single build, where COVERAGE=true
+if [ x"${COVERAGE}" = x"true" ]; then
+  pip install coveralls
+fi
+
 # The build infrastructure prints a lot of spam after this script runs, so make
 # sure to disable printing, and failing on non-zero exit code after this script
 # finishes

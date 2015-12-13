@@ -1,6 +1,9 @@
 # Running ycmd tests
 
-This readme documents instructions on running the test suite
+This readme documents instructions on running the test suite.
+
+An alternative (canonical) reference is the scripts used for running the tests
+on Travis CI. These can be found in `.travis.yml` and `./travis` directory.
 
 ## Requirements for running the tests
 
@@ -12,20 +15,30 @@ You need to have installed:
 * webtest (pip install webtest)
 * hamcrest (pip install PyHamcrest)
 
-See test_requirements.txt for specific minimum versions
+See `test_requirements.txt` for specific versions. The simplest way to set this
+up is to use a virtualenv, for example:
 
-You also need to have build requirements for all of:
+```bash
+$ mkdir ~/YouCompleteMe/tests
+$ virtualenv ~/YouCompleteMe/tests
+$ source ~/YouCompleteMe/tests/bin/activate
+$ pip install -r test_requirements.txt
+```
 
-* ycmd + libClang. See https://github.com/Valloric/YouCompleteMe
-* OmniSharpServer. See https://github.com/OmniSharp/omnisharp-server
+You also need to have all of ycmd's completers' requirements. See the
+installation guide for details, but typically this involves manually installing:
+
+* mono
+* gocode
+* typescript
+* node
+* npm
 
 ### mono non-standard path
 
 Note: if your installation of mono is in a non-standard location,
 OmniSharpServer will not start. Ensure that it is in a standard location, or
 change the paths in `OmniSharpServer/OmniSharp/Solution/CSharpProject.cs`
-
-A patch will be submitted upstream to read paths from the environment.
 
 ## Running the tests
 
@@ -36,7 +49,7 @@ a non-standard build environment (e.g. `cmake28`, self-build of clang, etc.)
 * `--no-clang-completer`: don't attempt to test the clang completer. Can also
 be set via environment variable `USE_CLANG_COMPLETER`.
 
-Remaining arguments are passed to "nosetests" directly. This means that you 
+Remaining arguments are passed to "nosetests" directly. This means that you
 can run a specific script or a specific test as follows:
 
 * Specific test: `./run_tests.py ycmd/tests/<module_name>.py:<function name>`
@@ -50,6 +63,24 @@ For example:
 NOTE: you must have UTF8 support in your terminal when you do this, e.g.:
 
     > LANG=en_GB.utf8 ./run_tests.py --skip-build
+
+## Coverage testing
+
+There's a coverage module for Python which works nicely with `nosetests`. This
+is very useful for highlighting areas of your code which are not covered by the
+automated integration tests.
+
+Run it like this:
+
+```
+$ pip install coverage
+$ ./run_tests.py --coverage --cover-html
+```
+
+This will print a summary and generate HTML output in `./cover`
+
+More information: https://coverage.readthedocs.org and
+https://nose.readthedocs.org/en/latest/plugins/cover.html
 
 ## Troubleshooting
 
@@ -74,9 +105,3 @@ Likely to be a problem with the OmniSharpServer.
     FAIL: ycmd.completers.general.tests.filename_completer_test.FilenameCompleter_test.SystemPathCompletion_test
 
 Ensure that you have UTF-8 support in your environment (see above)
-
-### Some of the CsCompleter tests just hang
-
-I think this is a timing issue of some sort because running the test suite
-again appears to work.
-
