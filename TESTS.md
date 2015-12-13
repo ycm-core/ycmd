@@ -74,7 +74,7 @@ Run it like this:
 
 ```
 $ pip install coverage
-$ ./run_tests.py --skip-build --with-coverage --cover-package=ycmd --cover-html
+$ ./run_tests.py --coverage --cover-html
 ```
 
 This will print a summary and generate HTML output in `./cover`

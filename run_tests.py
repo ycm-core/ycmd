@@ -44,11 +44,17 @@ def ParseArguments():
   parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
                        help = 'Force architecture to 32 or 64 bits on '
                        'Windows (default: python interpreter architecture).' )
+  parser.add_argument( '--coverage', action = 'store_true',
+                       help = 'Enable coverage report (requires coverage pkg)' )
+
   parsed_args, nosetests_args = parser.parse_known_args()
 
   if 'USE_CLANG_COMPLETER' in os.environ:
     parsed_args.no_clang_completer = ( os.environ[ 'USE_CLANG_COMPLETER' ]
                                        == 'false' )
+
+  if 'COVERAGE' in os.environ:
+    parsed_args.coverage = ( os.environ[ 'COVERAGE' ] == 'true' )
 
   return parsed_args, nosetests_args
 
@@ -82,6 +88,10 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   nosetests_args = [ '-v' ]
   if parsed_args.no_clang_completer:
     nosetests_args.append( '--exclude=.*Clang.*' )
+
+  if parsed_args.coverage:
+    nosetests_args += [ '--with-coverage', '--cover-package=ycmd' ]
+
   if extra_nosetests_args:
     nosetests_args.extend( extra_nosetests_args )
   else:

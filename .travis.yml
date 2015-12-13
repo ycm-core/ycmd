@@ -10,12 +10,11 @@ before_install:
 install:
   # source because it sets up env vars on some platforms
   - source travis/travis_install.sh
-  - pip install coveralls
 compiler:
   - gcc
 script: ./run_tests.py --with-coverage --cover-package=ycmd
 after_success:
-  - coveralls
+  - if [ x"${COVERAGE}" = x"true" ]; then coveralls; fi
 env:
   global:
     - MONO_THREADS_PER_CPU=2000
@@ -27,6 +26,11 @@ env:
     - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.7
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
     - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
+matrix:
+  exclude:
+    - os: osx
+      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
 addons:
   apt:
     sources:
