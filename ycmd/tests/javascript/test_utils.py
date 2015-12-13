@@ -62,3 +62,13 @@ def WaitForTernServerReady( app ):
     retries = retries - 1
 
   raise RuntimeError( 'Timeout waiting for Tern.js server to be ready' )
+
+
+def StopTernServer( app ):
+  try:
+    app.post_json( '/run_completer_command',
+                   BuildRequest( command_arguments = [ 'StopServer' ],
+                                 filetype = 'javascript',
+                                 completer_target = 'filetype_default' ) )
+  except:
+    pass

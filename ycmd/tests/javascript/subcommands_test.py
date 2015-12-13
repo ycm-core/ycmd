@@ -28,9 +28,10 @@ from hamcrest import ( assert_that, contains_inanyorder, has_entries )
 from ycmd import handlers
 from ycmd.tests.test_utils import ( BuildRequest, ErrorMatcher, Setup )
 
-from .test_utils import ( with_cwd,
-                          TEST_DATA_DIR,
+from .test_utils import ( TEST_DATA_DIR,
                           PathToTestFile,
+                          StopTernServer,
+                          with_cwd,
                           WaitForTernServerReady  )
 
 bottle.debug( True )
@@ -39,60 +40,69 @@ bottle.debug( True )
 @with_cwd( TEST_DATA_DIR )
 def Subcommands_TernCompleter_Defined_Subcommands_test():
   app = TestApp( handlers.app )
-  subcommands_data = BuildRequest( completer_target = 'javascript' )
 
-  WaitForTernServerReady( app )
+  try:
+    subcommands_data = BuildRequest( completer_target = 'javascript' )
 
-  eq_( sorted ( [ 'GoToDefinition',
-                  'GoTo',
-                  'GetDoc',
-                  'GetType',
-                  'StartServer',
-                  'StopServer',
-                  'GoToReferences' ] ),
-        app.post_json( '/defined_subcommands', subcommands_data ).json )
+    WaitForTernServerReady( app )
+
+    eq_( sorted ( [ 'GoToDefinition',
+                    'GoTo',
+                    'GetDoc',
+                    'GetType',
+                    'StartServer',
+                    'StopServer',
+                    'GoToReferences' ] ),
+          app.post_json( '/defined_subcommands', subcommands_data ).json )
+  finally:
+    StopTernServer( app )
 
 
 def Subcommand_RunTest( test ):
   app = TestApp( handlers.app )
-  WaitForTernServerReady( app )
 
-  contents = open( test[ 'request' ][ 'filepath' ] ).read()
+  try:
+    WaitForTernServerReady( app )
 
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
+    contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
-  # Because we aren't testing this command, we *always* ignore errors. This is
-  # mainly because we (may) want to test scenarios where the completer throws
-  # an exception and the easiest way to do that is to throw from within the
-  # FlagsForFile function.
-  app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
-                                   'event_name': 'FileReadyToParse',
-                                   'contents': contents,
-                                 } ),
-                 expect_errors = True )
+    def CombineRequest( request, data ):
+      kw = request
+      request.update( data )
+      return BuildRequest( **kw )
 
-  # We also ignore errors here, but then we check the response code ourself.
-  # This is to allow testing of requests returning errors.
-  response = app.post_json( '/run_completer_command',
-                            CombineRequest( test[ 'request' ], {
-                              'completer_target': 'filetype_default',
-                              'contents': contents,
-                              'filetype': 'javascript',
-                              'command_arguments': (
-                                [ test['request' ][ 'command' ] ]
-                                + test[ 'request'].get( 'arguments', [] ) )
-                            } ),
-                            expect_errors = True )
+    # Because we aren't testing this command, we *always* ignore errors. This is
+    # mainly because we (may) want to test scenarios where the completer throws
+    # an exception and the easiest way to do that is to throw from within the
+    # FlagsForFile function.
+    app.post_json( '/event_notification',
+                   CombineRequest( test[ 'request' ], {
+                                     'event_name': 'FileReadyToParse',
+                                     'contents': contents,
+                                   } ),
+                   expect_errors = True )
 
-  print 'completer response: ' + pprint.pformat( response.json )
+    # We also ignore errors here, but then we check the response code ourself.
+    # This is to allow testing of requests returning errors.
+    response = app.post_json( '/run_completer_command',
+                              CombineRequest( test[ 'request' ], {
+                                'completer_target': 'filetype_default',
+                                'contents': contents,
+                                'filetype': 'javascript',
+                                'command_arguments': (
+                                  [ test['request' ][ 'command' ] ]
+                                  + test[ 'request'].get( 'arguments', [] ) )
+                              } ),
+                              expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+    print 'completer response: ' + pprint.pformat( response.json )
 
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  finally:
+    StopTernServer( app )
+
 
 @with_setup( Setup )
 @with_cwd( TEST_DATA_DIR )

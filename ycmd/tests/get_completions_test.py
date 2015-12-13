@@ -59,7 +59,7 @@ def CompletionLocationMatcher( location_type, value ):
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
 
 
-def GetCompletions_RunTest( test, setup=None ):
+def GetCompletions_RunTest( test, setup=None, Teardown=None ):
   """
   Method to run a simple completion test and verify the result
 
@@ -78,44 +78,48 @@ def GetCompletions_RunTest( test, setup=None ):
   """
   app = TestApp( handlers.app )
 
-  if setup:
-    setup( app )
-  else:
-    app.post_json( '/load_extra_conf_file',
-                   { 'filepath': PathToTestFile( 'general_fallback',
-                                                 '.ycm_extra_conf.py' ) } )
+  try:
+    if setup:
+      setup( app )
+    else:
+      app.post_json( '/load_extra_conf_file',
+                     { 'filepath': PathToTestFile( 'general_fallback',
+                                                   '.ycm_extra_conf.py' ) } )
 
-  contents = open( test[ 'request' ][ 'filepath' ] ).read()
+    contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
+    def CombineRequest( request, data ):
+      kw = request
+      request.update( data )
+      return BuildRequest( **kw )
 
-  # Because we aren't testing this command, we *always* ignore errors. This is
-  # mainly because we (may) want to test scenarios where the completer throws
-  # an exception and the easiest way to do that is to throw from within the
-  # FlagsForFile function.
-  app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
-                                   'event_name': 'FileReadyToParse',
-                                   'contents': contents,
-                                 } ),
-                 expect_errors = True )
+    # Because we aren't testing this command, we *always* ignore errors. This is
+    # mainly because we (may) want to test scenarios where the completer throws
+    # an exception and the easiest way to do that is to throw from within the
+    # FlagsForFile function.
+    app.post_json( '/event_notification',
+                   CombineRequest( test[ 'request' ], {
+                                     'event_name': 'FileReadyToParse',
+                                     'contents': contents,
+                                   } ),
+                   expect_errors = True )
 
-  # We also ignore errors here, but then we check the response code ourself.
-  # This is to allow testing of requests returning errors.
-  response = app.post_json( '/completions',
-                            CombineRequest( test[ 'request' ], {
-                              'contents': contents
-                            } ),
-                            expect_errors = True )
+    # We also ignore errors here, but then we check the response code ourself.
+    # This is to allow testing of requests returning errors.
+    response = app.post_json( '/completions',
+                              CombineRequest( test[ 'request' ], {
+                                'contents': contents
+                              } ),
+                              expect_errors = True )
 
-  print 'completer response: ' + pprint.pformat( response.json )
+    print 'completer response: ' + pprint.pformat( response.json )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  finally:
+    if Teardown:
+      Teardown( app )
 
 @with_setup( Setup )
 def GetCompletions_RequestValidation_NoLineNumException_test():

@@ -31,9 +31,10 @@ from ycmd.tests.test_utils import Setup
 from ycmd.tests.get_completions_test import ( CompletionEntryMatcher,
                                               GetCompletions_RunTest )
 
-from .test_utils import ( with_cwd,
-                          TEST_DATA_DIR,
+from .test_utils import ( TEST_DATA_DIR,
                           PathToTestFile,
+                          StopTernServer,
+                          with_cwd,
                           WaitForTernServerReady  )
 
 bottle.debug( True )
@@ -80,7 +81,7 @@ def GetCompletions_TernCompleter_Works_NoQuery_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer )
 
 
 @with_setup( Setup )
@@ -104,7 +105,7 @@ def GetCompletions_TernCompleter_Works_Query_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer  )
 
 
 @with_setup( Setup )
@@ -138,7 +139,7 @@ def GetCompletions_TernCompleter_Works_Require_NoQuery_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer  )
 
 
 @with_setup( Setup )
@@ -161,7 +162,7 @@ def GetCompletions_TernCompleter_Works_Require_Query_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer  )
 
 
 @with_setup( Setup )
@@ -186,7 +187,7 @@ def GetCompletions_TernCompleter_Works_Require_Query_LCS_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer  )
 
 
 @with_setup( Setup )
@@ -226,7 +227,7 @@ def GetCompletions_TernCompleter_Dirty_Named_Buffers_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer  )
 
 
 @with_setup( Setup )
@@ -263,4 +264,4 @@ def GetCompletions_TernCompleter_Returns_Docs_In_Completions_test():
         'errors': empty(),
       } )
     },
-  }, WaitForTernServerReady )
+  }, WaitForTernServerReady, StopTernServer  )

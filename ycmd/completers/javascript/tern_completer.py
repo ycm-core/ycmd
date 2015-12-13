@@ -215,6 +215,7 @@ class TernCompleter( Completer ):
 
 
   def Shutdown( self ):
+    _logger.debug( "Shutting down Tern server" )
     self._StopServer()
 
 
