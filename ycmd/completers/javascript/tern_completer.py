@@ -310,20 +310,36 @@ class TernCompleter( Completer ):
                 '--persistent',
                 '--no-port-file' ] + extra_args
 
-    self._server_stdout = TernCompleter.logfile_format.format(
-        port = self._server_port,
-        std = 'stdout' )
-
-    self._server_stderr = TernCompleter.logfile_format.format(
-        port = self._server_port,
-        std = 'stderr' )
-
     try:
-      with open( self._server_stdout, 'w' ) as stdout:
-        with open( self._server_stderr, 'w' ) as stderr:
-          self._server_handle = utils.SafePopen( command,
-                                                 stdout = stdout,
-                                                 stderr = stderr )
+      if utils.OnWindows():
+        # For unknown reasons, redirecting stdout and stderr on windows for this
+        # particular Completer does not work. It causes tern to crash with an
+        # access error on startup. Rather than spending too much time trying to
+        # understand this (it's either a bug in Python, node or our code, and it
+        # isn't obvious which), we just suppress the log files on this platform.
+        # ATOW the only output from the server is the line saying it is
+        # listening anyway. Verbose logging includes requests and responses, but
+        # they can be tested on other platforms.
+        self._server_stdout = "<Not supported on this platform>"
+        self._server_stderr = "<Not supported on this platform>"
+        self._server_handle = utils.SafePopen( command )
+      else:
+        logfile_format = os.path.join( utils.PathToTempDir(),
+                                       u'tern_{port}_{std}.log' )
+
+        self._server_stdout = logfile_format.format(
+            port = self._server_port,
+            std = 'stdout' )
+
+        self._server_stderr = logfile_format.format(
+            port = self._server_port,
+            std = 'stderr' )
+
+        with open( self._server_stdout, 'w' ) as stdout:
+          with open( self._server_stderr, 'w' ) as stderr:
+            self._server_handle = utils.SafePopen( command,
+                                                   stdout = stdout,
+                                                   stderr = stderr )
     except Exception:
       _logger.warning( 'Unable to start Tern.js server: '
                        + traceback.format_exc() )
