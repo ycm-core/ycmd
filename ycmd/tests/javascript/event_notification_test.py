@@ -36,10 +36,49 @@ from .test_utils import ( with_cwd,
 bottle.debug( True )
 
 @with_setup( Setup )
+@with_cwd( TEST_DATA_DIR )
+def OnFileReadyToParse_TernCompleter_TernProjectFile_cwd_test():
+  app = TestApp( handlers.app )
+  WaitForTernServerReady( app )
+
+  contents = open( PathToTestFile( 'simple_test.js' ) ).read()
+
+  response = app.post_json( '/event_notification',
+                            BuildRequest(
+                              event_name = 'FileReadyToParse',
+                              contents = contents,
+                              filetype = 'javascript' ),
+                            expect_errors = True)
+
+  eq_( response.status_code, httplib.OK )
+  assert_that( response.json, empty() )
+
+
+@with_setup( Setup )
+@with_cwd( os.path.join( TEST_DATA_DIR, 'lamelib' ) )
+def OnFileReadyToParse_TernCompleter_TernProjectFile_parentdir_test():
+  app = TestApp( handlers.app )
+  WaitForTernServerReady( app )
+
+  contents = open( PathToTestFile( 'simple_test.js' ) ).read()
+
+  response = app.post_json( '/event_notification',
+                            BuildRequest(
+                              event_name = 'FileReadyToParse',
+                              contents = contents,
+                              filetype = 'javascript' ),
+                            expect_errors = True)
+
+  eq_( response.status_code, httplib.OK )
+  assert_that( response.json, empty() )
+
+
+@with_setup( Setup )
 @with_cwd( os.path.join( TEST_DATA_DIR, '..' ) )
 def OnFileReadyToParse_TernCompleter_No_TernProjectFile_test():
-  """We raise an error if we can't detect a .tern-project file. We only do this
-  on the first OnFileReadyToParse event after a server startup."""
+  # We raise an error if we can't detect a .tern-project file.
+  # We only do this on the first OnFileReadyToParse event after a
+  # server startup.
 
   app = TestApp( handlers.app )
   WaitForTernServerReady( app )
