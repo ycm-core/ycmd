@@ -158,6 +158,8 @@ def ParseArguments():
                        help = 'Build C# semantic completion engine.' )
   parser.add_argument( '--gocode-completer', action = 'store_true',
                        help = 'Build Go semantic completion engine.' )
+  parser.add_argument( '--codeintel-completer', action = 'store_true',
+                       help = 'Build CodeIntel semantic completion engine.' )
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
@@ -253,6 +255,27 @@ def BuildGoCode():
   subprocess.check_call( [ 'go', 'build' ] )
 
 
+def BuildCodeIntel():
+  pip_command = find_executable( 'pip' )
+  if not pip_command:
+    sys.exit( 'pip is required to install CodeIntel.' )
+
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party' ) )
+
+  # Make sure directory "codeintel" exists
+  if not p.exists( 'codeintel' ):
+    os.mkdir( 'codeintel' )
+
+  subprocess.check_call( [ pip_command, 'install', 'codeintel', '-U', '-t', 
+                           'codeintel' ] )
+
+  # Add __init__.py to install if missing to avoid import warnings and errors
+  zope_init = p.join( DIR_OF_THIS_SCRIPT, 'third_party/codeintel/zope/__init__.py' )
+  if not p.exists( zope_init ):
+    with open( zope_init, 'w' ) as init_file:
+	  init_file.write('')
+
+
 def Main():
   CheckDeps()
   args = ParseArguments()
@@ -261,6 +284,8 @@ def Main():
     BuildOmniSharp()
   if args.gocode_completer:
     BuildGoCode()
+  if args.codeintel_completer:
+	BuildCodeIntel()
 
 if __name__ == '__main__':
   Main()

@@ -1223,3 +1223,18 @@ def GetCompletions_TypeScriptCompleter_test():
                           CompletionEntryMatcher( 'methodB' ),
                           CompletionEntryMatcher( 'methodC' ) ) )
 
+
+@with_setup( Setup )
+def GetCompletions_CodeIntelCompleter_Basic_test():
+  app = TestApp( handlers.app )
+  filepath = PathToTestFile( 'basic.php' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'php',
+                                  contents = open( filepath ).read(),
+                                  line_num = 15,
+                                  column_num = 16)
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'x' ),
+                                   CompletionEntryMatcher( 'y' ) ) )

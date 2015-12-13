@@ -72,7 +72,8 @@ def BuildYcmdLibs( args ):
       sys.executable,
       p.join( DIR_OF_THIS_SCRIPT, 'build.py' ),
       '--omnisharp-completer',
-      '--gocode-completer'
+      '--gocode-completer',
+      '--codeintel-completer'
     ]
 
     if args.msvc:
