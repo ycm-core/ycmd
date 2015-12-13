@@ -48,45 +48,58 @@ def ShouldEnableTernCompleter():
                     'node_modules' ) )
 
 
+def FindTernProjectFile( starting_directory ):
+  starting_file = os.path.join( starting_directory, '.' )
+  for folder in utils.AncestorFolders( starting_file ):
+    tern_project = os.path.join( folder, '.tern-project' )
+    if os.path.exists( tern_project ):
+      return tern_project
+
+  return None
+
+
 class TernCompleter( Completer ):
   """Completer for JavaScript using tern.js: http://ternjs.net.
 
   The protocol is defined here: http://ternjs.net/doc/manual.html#protocol"""
 
-  subcommands = {
-    'StartServer':     ( lambda self, request_data, args:
-                                        self._StartServer() ),
-    'StopServer':      ( lambda self, request_data, args:
-                                        self._StopServer() ),
-    'GoToDefinition':  ( lambda self, request_data, args:
-                                        self._GoToDefinition( request_data ) ),
-    'GoTo':            ( lambda self, request_data, args:
-                                        self._GoToDefinition( request_data ) ),
-    'GoToReferences':  ( lambda self, request_data, args:
-                                        self._GoToReferences( request_data ) ),
-    'GetType':         ( lambda self, request_data, args:
-                                        self._GetType( request_data) ),
-    'GetDoc':          ( lambda self, request_data, args:
-                                        self._GetDoc( request_data) ),
-  }
-
-  logfile_format = os.path.join( utils.PathToTempDir(),
-                                 u'tern_{port}_{std}.log' )
-
   def __init__( self, user_options ):
     super( TernCompleter, self ).__init__( user_options )
 
-    self._user_options = user_options
+    self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
 
-    # Used to ensure that access to the members _server_port, _server_handle,
-    # _server_stdout, _server_stderr are synchronised.
+    # Used to ensure that starting/stopping of the server is synchronised
     self._server_state_mutex = threading.Lock()
+
+    self._do_tern_project_check = False
 
     with self._server_state_mutex:
       self._server_stdout = None
       self._server_stderr = None
       self._Reset()
       self._StartServerNoLock()
+
+
+  def _WarnIfMissingTernProject( self ):
+    # We do this check after the server has started because the server does
+    # have nonzero use without a project file, however limited. We only do this
+    # check once, though because the server can only handle one project at a
+    # time. This doesn't catch opening a file which is not part of the project
+    # or any of those things, but we can only do so much. We'd like to enhance
+    # ycmd to handle this better, but that is a FIXME for now.
+    if self._ServerIsRunning() and self._do_tern_project_check:
+      self._do_tern_project_check = False
+
+      tern_project = FindTernProjectFile( os.getcwd() )
+      if not tern_project:
+        _logger.warning( 'No .tern-project file detected: ' + os.getcwd() )
+        raise RuntimeError( 'Warning: Unable to detect a .tern-project file '
+                            'in the hierarchy before ' + os.getcwd() + '. '
+                            'This is required for accurate JavaScript '
+                            'completion. Please see the User Guide for '
+                            'details.' )
+      else:
+        _logger.info( 'Detected .tern-project file at: ' + tern_project )
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -119,8 +132,26 @@ class TernCompleter( Completer ):
              for completion in completions ]
 
 
+  def OnFileReadyToParse( self, request_data ):
+    self._WarnIfMissingTernProject()
+
   def GetSubcommandsMap( self ):
-    return TernCompleter.subcommands
+    return {
+      'StartServer':    ( lambda self, request_data, args:
+                                         self._StartServer() ),
+      'StopServer':     ( lambda self, request_data, args:
+                                         self._StopServer() ),
+      'GoToDefinition': ( lambda self, request_data, args:
+                                         self._GoToDefinition( request_data ) ),
+      'GoTo':           ( lambda self, request_data, args:
+                                         self._GoToDefinition( request_data ) ),
+      'GoToReferences': ( lambda self, request_data, args:
+                                         self._GoToReferences( request_data ) ),
+      'GetType':        ( lambda self, request_data, args:
+                                         self._GetType( request_data) ),
+      'GetDoc':         ( lambda self, request_data, args:
+                                         self._GetDoc( request_data) ),
+    }
 
 
   def SupportedFiletypes( self ):
@@ -171,10 +202,10 @@ class TernCompleter( Completer ):
   def _Reset( self ):
     """Callers must hold self._server_state_mutex"""
 
-    if not self.user_options[ 'server_keep_logfiles' ]:
-      if self._server_stdout:
+    if not self._server_keep_logfiles:
+      if self._server_stdout and os.path.exists( self._server_stdout ):
         os.unlink( self._server_stdout )
-      if self._server_stderr:
+      if self._server_stderr and os.path.exists( self._server_stderr ):
         os.unlink( self._server_stderr )
 
     self._server_handle = None
@@ -307,6 +338,8 @@ class TernCompleter( Completer ):
                     self._server_stdout +
                     ' and ' +
                     self._server_stderr )
+
+      self._do_tern_project_check = True
     else:
       _logger.warning( 'Tern.js server did not start successfully' )
 
