@@ -161,6 +161,7 @@ class TernCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     self._WarnIfMissingTernProject()
 
+
   def GetSubcommandsMap( self ):
     return {
       'StartServer':    ( lambda self, request_data, args:
