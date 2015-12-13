@@ -22,15 +22,24 @@ from ycmd.completers.completer import Completer
 
 _logger = logging.getLogger( __name__ )
 
-PATH_TO_TERNJS_BINARY = os.path.join(
-    os.path.abspath( os.path.dirname( __file__ ) ),
-    '..',
-    '..',
-    '..',
-    'third_party',
-    'tern',
-    'bin',
-    'tern' )
+PATH_TO_TERNJS_BINARY = os.path.abspath(
+    os.path.join(
+      os.path.dirname( __file__ ),
+      '..',
+      '..',
+      '..',
+      'third_party',
+      'tern',
+      'bin',
+      'tern' ) )
+
+PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
+
+# host name/address on which the tern server should listen
+# note: we use 127.0.0.1 rather than localhost because on some platforms
+# localhost might not be correctly configured as an alias for the loopback
+# address. (ahem: Windows)
+SERVER_HOST = '127.0.0.1'
 
 
 def ShouldEnableTernCompleter():
@@ -38,7 +47,14 @@ def ShouldEnableTernCompleter():
   or not the tern submodule has a 'node_modules' directory. This is pretty much
   the only way we can know if the user added '--tern-completer' on
   install or manually ran 'npm install' in the tern submodule directory."""
-  return os.path.exists(
+
+  if not PATH_TO_NODE:
+    _logger.warning( 'Not using Tern completer: unable to find node' )
+    return False
+
+  _logger.info( 'Using node binary from: ' + PATH_TO_NODE )
+
+  installed = os.path.exists(
       os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
                     '..',
                     '..',
@@ -46,6 +62,12 @@ def ShouldEnableTernCompleter():
                     'third_party',
                     'tern',
                     'node_modules' ) )
+
+  if not installed:
+    _logger.info( 'Not using Tern completer: not installed' )
+    return False
+
+  return True
 
 
 def FindTernProjectFile( starting_directory ):
@@ -100,6 +122,10 @@ class TernCompleter( Completer ):
                             'details.' )
       else:
         _logger.info( 'Detected .tern-project file at: ' + tern_project )
+
+
+  def _GetServerAddress( self ):
+    return 'http://' + SERVER_HOST + ':' + str( self._server_port )
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -192,7 +218,7 @@ class TernCompleter( Completer ):
       return False
 
     try:
-      target = 'http://localhost:' + str( self._server_port ) + '/ping'
+      target = self._GetServerAddress() + '/ping'
       response = requests.get( target )
       return response.status_code == httplib.OK
     except requests.ConnectionError:
@@ -227,8 +253,6 @@ class TernCompleter( Completer ):
     if not self._ServerIsRunning():
       raise ValueError( 'Not connected to server' )
 
-    target = 'http://localhost:' + str( self._server_port )
-
     def MakeIncompleteFile( name, file_data ):
       return {
         'type': 'full',
@@ -245,7 +269,8 @@ class TernCompleter( Completer ):
     }
     full_request.update( request )
 
-    response = requests.post( target, data = utils.ToUtf8Json( full_request ) )
+    response = requests.post( self._GetServerAddress(),
+                              data = utils.ToUtf8Json( full_request ) )
 
     if response.status_code != httplib.OK:
       raise RuntimeError( response.text )
@@ -302,13 +327,17 @@ class TernCompleter( Completer ):
     else:
       extra_args = []
 
-    command = [ PATH_TO_TERNJS_BINARY,
+    command = [ PATH_TO_NODE,
+                PATH_TO_TERNJS_BINARY,
                 '--port',
                 str( self._server_port ),
                 '--host',
-                'localhost',
+                SERVER_HOST,
                 '--persistent',
                 '--no-port-file' ] + extra_args
+
+    _logger.debug( 'Starting tern with the following command: '
+                   + ' '.join( command ) )
 
     try:
       if utils.OnWindows():

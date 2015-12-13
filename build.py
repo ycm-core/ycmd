@@ -258,13 +258,17 @@ def BuildGoCode():
 
 
 def SetUpTern():
+  paths = {}
   for exe in [ 'node', 'npm' ]:
-    if not FindExecutable( exe ):
+    path = FindExecutable( exe )
+    if not path:
       sys.exit( '"' + exe + '" is required to set up ternjs' )
+    else:
+      paths[ exe ] = path
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern' ) )
 
-  subprocess.check_call( [ 'npm', 'install', '--production' ] )
+  subprocess.check_call( [ paths[ 'npm' ], 'install', '--production' ] )
 
 
 def Main():
