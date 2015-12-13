@@ -342,6 +342,7 @@ class TernCompleter( Completer ):
 
     try:
       if utils.OnWindows():
+        # FIXME:
         # For unknown reasons, redirecting stdout and stderr on windows for this
         # particular Completer does not work. It causes tern to crash with an
         # access error on startup. Rather than spending too much time trying to
