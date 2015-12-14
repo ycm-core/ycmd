@@ -49,6 +49,7 @@ class Javascript_Handlers_test( Handlers_test ):
     except:
       pass
 
+
   def _WaitUntilTernServerReady( self ):
     self._app.post_json( '/run_completer_command', self._BuildRequest(
       command_arguments = [ 'StartServer' ],
