@@ -108,31 +108,31 @@ class ClangCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'GoToDefinition'           : ( lambda self, request_data:
+      'GoToDefinition'           : ( lambda self, request_data, args:
          self._GoToDefinition( request_data ) ),
-      'GoToDeclaration'          : ( lambda self, request_data:
+      'GoToDeclaration'          : ( lambda self, request_data, args:
          self._GoToDeclaration( request_data ) ),
-      'GoTo'                     : ( lambda self, request_data:
+      'GoTo'                     : ( lambda self, request_data, args:
          self._GoTo( request_data ) ),
-      'GoToImprecise'            : ( lambda self, request_data:
+      'GoToImprecise'            : ( lambda self, request_data, args:
          self._GoToImprecise( request_data ) ),
-      'GoToInclude'              : ( lambda self, request_data:
+      'GoToInclude'              : ( lambda self, request_data, args:
          self._GoToInclude( request_data ) ),
-      'ClearCompilationFlagCache': ( lambda self, request_data:
+      'ClearCompilationFlagCache': ( lambda self, request_data, args:
          self._ClearCompilationFlagCache() ),
-      'GetType'                  : ( lambda self, request_data:
+      'GetType'                  : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data, func = 'GetTypeAtLocation' ) ),
-      'GetParent'                : ( lambda self, request_data:
+      'GetParent'                : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data,
                                 func = 'GetEnclosingFunctionAtLocation' ) ),
-      'FixIt'                    : ( lambda self, request_data:
+      'FixIt'                    : ( lambda self, request_data, args:
          self._FixIt( request_data ) ),
-      'GetDoc'                   : ( lambda self, request_data:
+      'GetDoc'                   : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data,
                                 reparse = True,
                                 func = 'GetDocsForLocationInFile',
                                 response_builder = _BuildGetDocResponse ) ),
-      'GetDocQuick'              : ( lambda self, request_data:
+      'GetDocQuick'              : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data,
                                 reparse = False,
                                 func = 'GetDocsForLocationInFile',

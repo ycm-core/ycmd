@@ -38,10 +38,16 @@ import pprint
 
 bottle.debug( True )
 
-def CompletionEntryMatcher( insertion_text, extra_menu_info = None ):
+def CompletionEntryMatcher( insertion_text,
+                            extra_menu_info = None,
+                            extra_params = None ):
   match = { 'insertion_text': insertion_text }
   if extra_menu_info:
     match.update( { 'extra_menu_info': extra_menu_info } )
+
+  if extra_params:
+    match.update( extra_params )
+
   return has_entries( match )
 
 
@@ -53,8 +59,7 @@ def CompletionLocationMatcher( location_type, value ):
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
 
 
-@with_setup( Setup )
-def GetCompletions_RunTest( test ):
+def GetCompletions_RunTest( test, setup=None, Teardown=None ):
   """
   Method to run a simple completion test and verify the result
 
@@ -72,41 +77,49 @@ def GetCompletions_RunTest( test ):
     }
   """
   app = TestApp( handlers.app )
-  app.post_json( '/load_extra_conf_file',
-                 { 'filepath': PathToTestFile( 'general_fallback',
-                                               '.ycm_extra_conf.py' ) } )
 
-  contents = open( test[ 'request' ][ 'filepath' ] ).read()
+  try:
+    if setup:
+      setup( app )
+    else:
+      app.post_json( '/load_extra_conf_file',
+                     { 'filepath': PathToTestFile( 'general_fallback',
+                                                   '.ycm_extra_conf.py' ) } )
 
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
+    contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
-  # Because we aren't testing this command, we *always* ignore errors. This is
-  # mainly because we (may) want to test scenarios where the completer throws
-  # an exception and the easiest way to do that is to throw from within the
-  # FlagsForFile function.
-  app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
-                                   'event_name': 'FileReadyToParse',
-                                   'contents': contents,
-                                 } ),
-                 expect_errors = True )
+    def CombineRequest( request, data ):
+      kw = request
+      request.update( data )
+      return BuildRequest( **kw )
 
-  # We also ignore errors here, but then we check the response code ourself.
-  # This is to allow testing of requests returning errors.
-  response = app.post_json( '/completions',
-                            CombineRequest( test[ 'request' ], {
-                              'contents': contents
-                            } ),
-                            expect_errors = True )
+    # Because we aren't testing this command, we *always* ignore errors. This is
+    # mainly because we (may) want to test scenarios where the completer throws
+    # an exception and the easiest way to do that is to throw from within the
+    # FlagsForFile function.
+    app.post_json( '/event_notification',
+                   CombineRequest( test[ 'request' ], {
+                                     'event_name': 'FileReadyToParse',
+                                     'contents': contents,
+                                   } ),
+                   expect_errors = True )
 
-  print 'completer response: ' + pprint.pformat( response.json )
+    # We also ignore errors here, but then we check the response code ourself.
+    # This is to allow testing of requests returning errors.
+    response = app.post_json( '/completions',
+                              CombineRequest( test[ 'request' ], {
+                                'contents': contents
+                              } ),
+                              expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+    print 'completer response: ' + pprint.pformat( response.json )
 
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  finally:
+    if Teardown:
+      Teardown( app )
 
 @with_setup( Setup )
 def GetCompletions_RequestValidation_NoLineNumException_test():
@@ -199,7 +212,7 @@ def GetCompletions_ClangCompleter_Forced_With_No_Trigger_test():
         'errors': empty(),
       } )
     },
-  } )  
+  } )
 
 @with_setup( Setup )
 def GetCompletions_ClangCompleter_Fallback_NoSuggestions_test():
@@ -374,7 +387,7 @@ def GetCompletions_ClangCompleter_Filtered_No_Results_Fallback_test():
       } )
     },
   } )
-  
+
 
 @with_setup( Setup )
 def GetCompletions_CsCompleter_Works_test():

@@ -93,8 +93,8 @@ class GoCodeCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'StartServer': ( lambda self, request_data: self._StartServer() ),
-      'StopServer': ( lambda self, request_data: self._StopServer() )
+      'StartServer': ( lambda self, request_data, args: self._StartServer() ),
+      'StopServer': ( lambda self, request_data, args: self._StopServer() )
     }
 
 

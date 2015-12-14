@@ -210,11 +210,11 @@ class TypeScriptCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'GoToDefinition': ( lambda self, request_data:
+      'GoToDefinition': ( lambda self, request_data, args:
                           self._GoToDefinition( request_data ) ),
-      'GetType'       : ( lambda self, request_data:
+      'GetType'       : ( lambda self, request_data, args:
                           self._GetType( request_data ) ),
-      'GetDoc'        : ( lambda self, request_data:
+      'GetDoc'        : ( lambda self, request_data, args:
                           self._GetDoc( request_data ) )
     }
 

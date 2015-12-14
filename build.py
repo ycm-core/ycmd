@@ -27,7 +27,6 @@ from shutil import rmtree
 import platform
 import argparse
 import multiprocessing
-from distutils.spawn import find_executable
 
 
 def OnMac():
@@ -38,9 +37,36 @@ def OnWindows():
   return platform.system() == 'Windows'
 
 
+# On Windows, distutils.spawn.find_executable only works for .exe files
+# but .bat and .cmd files are also executables, so we use our own
+# implementation.
+def FindExecutable( executable ):
+  # Executable extensions used on Windows
+  WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
+
+  paths = os.environ[ 'PATH' ].split( os.pathsep )
+  base, extension = os.path.splitext( executable )
+
+  if OnWindows() and extension.lower() not in WIN_EXECUTABLE_EXTS:
+    extensions = WIN_EXECUTABLE_EXTS
+  else:
+    extensions = ['']
+
+  for extension in extensions:
+    executable_name = executable + extension
+    if not os.path.isfile( executable_name ):
+      for path in paths:
+        executable_path = os.path.join(path, executable_name )
+        if os.path.isfile( executable_path ):
+          return executable_path
+    else:
+      return executable_name
+  return None
+
+
 def PathToFirstExistingExecutable( executable_name_list ):
   for executable_name in executable_name_list:
-    path = find_executable( executable_name )
+    path = FindExecutable( executable_name )
     if path:
       return path
   return None
@@ -166,7 +192,11 @@ def ParseArguments():
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
                        help = 'Force architecture to 32 or 64 bits on '
-                       'Windows (default: python interpreter architecture).' )
+                       'Windows (default: python interpreter architecture).' ),
+  parser.add_argument( '--tern-completer',
+                       action = 'store_true',
+                       help   = 'Enable tern javascript completer' ),
+
   args = parser.parse_args()
 
   if args.system_libclang and not args.clang_completer:
@@ -246,11 +276,25 @@ def BuildOmniSharp():
 
 
 def BuildGoCode():
-  if not find_executable( 'go' ):
+  if not FindExecutable( 'go' ):
     sys.exit( 'go is required to build gocode' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
   subprocess.check_call( [ 'go', 'build' ] )
+
+
+def SetUpTern():
+  paths = {}
+  for exe in [ 'node', 'npm' ]:
+    path = FindExecutable( exe )
+    if not path:
+      sys.exit( '"' + exe + '" is required to set up ternjs' )
+    else:
+      paths[ exe ] = path
+
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern' ) )
+
+  subprocess.check_call( [ paths[ 'npm' ], 'install', '--production' ] )
 
 
 def Main():
@@ -261,6 +305,8 @@ def Main():
     BuildOmniSharp()
   if args.gocode_completer:
     BuildGoCode()
+  if args.tern_completer:
+    SetUpTern()
 
 if __name__ == '__main__':
   Main()

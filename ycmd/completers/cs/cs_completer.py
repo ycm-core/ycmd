@@ -151,65 +151,65 @@ class CsharpCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'StartServer'                      : ( lambda self, request_data:
+      'StartServer'                      : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_StartServer',
                                    no_request_data = True ) ),
-      'StopServer'                       : ( lambda self, request_data:
+      'StopServer'                       : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_StopServer',
                                    no_request_data = True ) ),
-      'RestartServer'                    : ( lambda self, request_data:
+      'RestartServer'                    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_RestartServer',
                                    no_request_data = True ) ),
-      'ReloadSolution'                   : ( lambda self, request_data:
+      'ReloadSolution'                   : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_ReloadSolution',
                                    no_request_data = True ) ),
-      'SolutionFile'                     : ( lambda self, request_data:
+      'SolutionFile'                     : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_SolutionFile',
                                    no_request_data = True ) ),
-      'GoToDefinition'                   : ( lambda self, request_data:
+      'GoToDefinition'                   : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToDefinition' ) ),
-      'GoToDeclaration'                  : ( lambda self, request_data:
+      'GoToDeclaration'                  : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToDefinition' ) ),
-      'GoTo'                             : ( lambda self, request_data:
+      'GoTo'                             : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToImplementation',
                                    fallback_to_declaration = True ) ),
-      'GoToDefinitionElseDeclaration'    : ( lambda self, request_data:
+      'GoToDefinitionElseDeclaration'    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToDefinition' ) ),
-      'GoToImplementation'               : ( lambda self, request_data:
+      'GoToImplementation'               : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToImplementation',
                                    fallback_to_declaration = False ) ),
-      'GoToImplementationElseDeclaration': ( lambda self, request_data:
+      'GoToImplementationElseDeclaration': ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToImplementation',
                                    fallback_to_declaration = True ) ),
-      'GetType'                          : ( lambda self, request_data:
+      'GetType'                          : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetType' ) ),
-      'FixIt'                            : ( lambda self, request_data:
+      'FixIt'                            : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_FixIt' ) ),
-      'GetDoc'                           : ( lambda self, request_data:
+      'GetDoc'                           : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetDoc' ) ),
-      'ServerRunning'                    : ( lambda self, request_data:
+      'ServerRunning'                    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsRunning',
                                    no_request_data = True ) ),
-      'ServerReady'                      : ( lambda self, request_data:
+      'ServerReady'                      : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsReady',
                                    no_request_data = True ) ),
-      'ServerTerminated'                 : ( lambda self, request_data:
+      'ServerTerminated'                 : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerTerminated',
                                    no_request_data = True ) )
