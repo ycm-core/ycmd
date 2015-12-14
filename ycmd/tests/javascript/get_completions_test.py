@@ -51,7 +51,6 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
     try:
       self._WaitUntilTernServerReady()
       contents = open( test[ 'request' ][ 'filepath' ] ).read()
-      print( pformat( test ) )
 
       def CombineRequest( request, data ):
         kw = request
