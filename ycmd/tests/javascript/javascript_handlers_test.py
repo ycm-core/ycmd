@@ -30,11 +30,16 @@ class Javascript_Handlers_test( Handlers_test ):
 
   def setUp( self ):
     super( Javascript_Handlers_test, self ).setUp()
+
     self._prev_current_dir = os.getcwd()
     os.chdir( self._PathToTestFile() )
 
+    self._WaitUntilTernServerReady()
+
 
   def tearDown( self ):
+    self._StopTernServer()
+
     os.chdir( self._prev_current_dir )
 
 

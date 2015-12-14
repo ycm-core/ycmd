@@ -31,44 +31,33 @@ import os
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
   def OnFileReadyToParse_ProjectFile_cwd_test( self ):
-    try:
-      self._WaitUntilTernServerReady()
+    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
 
-      contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True)
 
-      response = self._app.post_json( '/event_notification',
-                                      self._BuildRequest(
-                                        event_name = 'FileReadyToParse',
-                                        contents = contents,
-                                        filetype = 'javascript' ),
-                                      expect_errors = True)
-
-      eq_( response.status_code, httplib.OK )
-      assert_that( response.json, empty() )
-    finally:
-      self._StopTernServer()
-
+    eq_( response.status_code, httplib.OK )
+    assert_that( response.json, empty() )
 
 
   def OnFileReadyToParse_ProjectFile_parentdir_test( self ):
     os.chdir( self._PathToTestFile( 'lamelib' ) )
 
-    try:
-      self._WaitUntilTernServerReady()
+    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
 
-      contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True)
 
-      response = self._app.post_json( '/event_notification',
-                                      self._BuildRequest(
-                                        event_name = 'FileReadyToParse',
-                                        contents = contents,
-                                        filetype = 'javascript' ),
-                                      expect_errors = True)
-
-      eq_( response.status_code, httplib.OK )
-      assert_that( response.json, empty() )
-    finally:
-      self._StopTernServer()
+    eq_( response.status_code, httplib.OK )
+    assert_that( response.json, empty() )
 
 
   def OnFileReadyToParse_NoProjectFile_test( self ):
@@ -77,83 +66,78 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     # server startup.
     os.chdir( self._PathToTestFile( '..' ) )
 
-    try:
-      self._WaitUntilTernServerReady()
+    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
 
-      contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True )
 
-      response = self._app.post_json( '/event_notification',
-                                      self._BuildRequest(
-                                        event_name = 'FileReadyToParse',
-                                        contents = contents,
-                                        filetype = 'javascript' ),
-                                      expect_errors = True )
+    print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-      print( 'event response: {0}'.format( pformat( response.json ) ) )
+    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
 
-      eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    assert_that(
+      response.json,
+      self._ErrorMatcher( RuntimeError,
+                          'Warning: Unable to detect a .tern-project file '
+                          'in the hierarchy before ' + os.getcwd() + '. '
+                          'This is required for accurate JavaScript '
+                          'completion. Please see the User Guide for '
+                          'details.' )
+    )
 
-      assert_that(
-        response.json,
-        self._ErrorMatcher( RuntimeError,
-                            'Warning: Unable to detect a .tern-project file '
-                            'in the hierarchy before ' + os.getcwd() + '. '
-                            'This is required for accurate JavaScript '
-                            'completion. Please see the User Guide for '
-                            'details.' )
-      )
+    # Check that a subsequent call does *not* raise the error
 
-      # Check that a subsequent call does *not* raise the error
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True )
 
-      response = self._app.post_json( '/event_notification',
-                                      self._BuildRequest(
-                                        event_name = 'FileReadyToParse',
-                                        contents = contents,
-                                        filetype = 'javascript' ),
-                                      expect_errors = True )
+    print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-      print( 'event response: {0}'.format( pformat( response.json ) ) )
+    eq_( response.status_code, httplib.OK )
+    assert_that( response.json, empty() )
 
-      eq_( response.status_code, httplib.OK )
-      assert_that( response.json, empty() )
+    # Restart the server and check that it raises it again
 
-      # Restart the server and check that it raises it again
+    self._app.post_json(
+      '/run_completer_command',
+      self._BuildRequest( command_arguments = [ 'StopServer' ],
+                          filetype = 'javascript',
+                          contents = contents,
+                          completer_target = 'filetype_default' )
+    )
+    self._app.post_json(
+      '/run_completer_command',
+      self._BuildRequest( command_arguments = [ 'StartServer' ],
+                          filetype = 'javascript',
+                          contents = contents,
+                          completer_target = 'filetype_default' ) )
 
-      self._app.post_json(
-        '/run_completer_command',
-        self._BuildRequest( command_arguments = [ 'StopServer' ],
-                            filetype = 'javascript',
-                            contents = contents,
-                            completer_target = 'filetype_default' )
-      )
-      self._app.post_json(
-        '/run_completer_command',
-        self._BuildRequest( command_arguments = [ 'StartServer' ],
-                            filetype = 'javascript',
-                            contents = contents,
-                            completer_target = 'filetype_default' ) )
+    self._WaitUntilTernServerReady()
 
-      self._WaitUntilTernServerReady()
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True)
 
-      response = self._app.post_json( '/event_notification',
-                                      self._BuildRequest(
-                                        event_name = 'FileReadyToParse',
-                                        contents = contents,
-                                        filetype = 'javascript' ),
-                                      expect_errors = True)
+    print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-      print( 'event response: {0}'.format( pformat( response.json ) ) )
+    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
 
-      eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
-
-      assert_that(
-        response.json,
-        self._ErrorMatcher( RuntimeError,
-                            'Warning: Unable to detect a .tern-project file '
-                            'in the hierarchy before ' + os.getcwd() + '. '
-                            'This is required for accurate JavaScript '
-                            'completion. Please see the User Guide for '
-                            'details.' )
-      )
-    finally:
-      self._StopTernServer()
+    assert_that(
+      response.json,
+      self._ErrorMatcher( RuntimeError,
+                          'Warning: Unable to detect a .tern-project file '
+                          'in the hierarchy before ' + os.getcwd() + '. '
+                          'This is required for accurate JavaScript '
+                          'completion. Please see the User Guide for '
+                          'details.' )
+    )

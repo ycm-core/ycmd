@@ -48,37 +48,33 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
       }
     """
 
-    try:
-      self._WaitUntilTernServerReady()
-      contents = open( test[ 'request' ][ 'filepath' ] ).read()
+    contents = open( test[ 'request' ][ 'filepath' ] ).read()
 
-      def CombineRequest( request, data ):
-        kw = request
-        request.update( data )
-        return self._BuildRequest( **kw )
+    def CombineRequest( request, data ):
+      kw = request
+      request.update( data )
+      return self._BuildRequest( **kw )
 
-      self._app.post_json( '/event_notification',
-                           CombineRequest( test[ 'request' ], {
-                                           'event_name': 'FileReadyToParse',
-                                           'contents': contents,
-                                           } ),
-                           expect_errors = True )
+    self._app.post_json( '/event_notification',
+                         CombineRequest( test[ 'request' ], {
+                                         'event_name': 'FileReadyToParse',
+                                         'contents': contents,
+                                         } ),
+                         expect_errors = True )
 
-      # We ignore errors here and we check the response code ourself.
-      # This is to allow testing of requests returning errors.
-      response = self._app.post_json( '/completions',
-                                      CombineRequest( test[ 'request' ], {
-                                        'contents': contents
-                                      } ),
-                                      expect_errors = True )
+    # We ignore errors here and we check the response code ourself.
+    # This is to allow testing of requests returning errors.
+    response = self._app.post_json( '/completions',
+                                    CombineRequest( test[ 'request' ], {
+                                      'contents': contents
+                                    } ),
+                                    expect_errors = True )
 
-      print( 'completer response: {0}'.format( pformat( response.json ) ) )
+    print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
-      assert_that( response.json, test[ 'expect' ][ 'data' ] )
-    finally:
-      self._StopTernServer()
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
   def NoQuery_test( self ):
