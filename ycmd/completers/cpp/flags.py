@@ -300,6 +300,6 @@ def _ExtraClangFlags():
 def _SpecialClangIncludes():
   libclang_dir = os.path.dirname( ycm_core.__file__ )
   path_to_includes = os.path.join( libclang_dir, 'clang_includes' )
-  return [ '-isystem', path_to_includes ]
+  return [ '-resource-dir=' + path_to_includes ]
 
 
