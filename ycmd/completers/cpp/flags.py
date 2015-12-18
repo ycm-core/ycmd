@@ -229,7 +229,7 @@ def _CompilerToLanguageFlag( flags ):
   language = ( 'c++' if CPP_COMPILER_REGEX.search( flags[ 0 ] ) else
                'c' )
 
-  return [ '-x', language ] + flags[ 1: ]
+  return flags[ :1 ] + [ '-x', language ] + flags[ 1: ]
 
 
 def _RemoveUnusedFlags( flags, filename ):
@@ -241,6 +241,13 @@ def _RemoveUnusedFlags( flags, filename ):
   dirs."""
 
   new_flags = []
+
+  # When flags come from the compile_commands.json file, the first flag is
+  # usually the path to the compiler that should be invoked. Directly move it to
+  # the new_flags list so it doesn't get stripped of in the loop below.
+  if not flags[ 0 ].startswith( '-' ):
+    new_flags = flags[ :1 ]
+    flags = flags[ 1: ]
 
   skip_next = False
   previous_flag_is_include = False
