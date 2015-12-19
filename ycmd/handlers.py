@@ -29,6 +29,7 @@ import json
 import logging
 import traceback
 from bottle import request
+from threading import Thread
 
 import ycm_core
 from ycmd import extra_conf_store, hmac_plugin, server_state, user_options_store
@@ -46,6 +47,7 @@ _server_state = None
 _hmac_secret = bytes()
 _logger = logging.getLogger( __name__ )
 app = bottle.Bottle()
+wsgi_server = None
 
 
 @app.post( '/event_notification' )
@@ -223,6 +225,14 @@ def DebugInfo():
   return _JsonResponse( '\n'.join( output ) )
 
 
+@app.post( '/shutdown' )
+def Shutdown():
+  _logger.info( 'Received shutdown request' )
+  ServerShutdown()
+
+  return _JsonResponse( True )
+
+
 # The type of the param is Bottle.HTTPError
 def ErrorHandler( httperror ):
   body = _JsonResponse( BuildExceptionResponse( httperror.exception,
@@ -259,9 +269,20 @@ def _GetCompleterForRequestData( request_data ):
     return _server_state.GetFiletypeCompleter( [ completer_target ] )
 
 
-@atexit.register
 def ServerShutdown():
-  _logger.info( 'Server shutting down' )
+  def Terminator():
+    if wsgi_server:
+      wsgi_server.Shutdown()
+
+  # Use a separate thread to let the server send the response before shutting
+  # down.
+  terminator = Thread( target = Terminator )
+  terminator.daemon = True
+  terminator.start()
+
+
+@atexit.register
+def ServerCleanup():
   if _server_state:
     _server_state.Shutdown()
     extra_conf_store.Shutdown()

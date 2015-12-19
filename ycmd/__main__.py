@@ -36,16 +36,14 @@ import sys
 import logging
 import json
 import argparse
-import waitress
 import signal
 import os
 import base64
-from ycmd import user_options_store
-from ycmd import extra_conf_store
-from ycmd import utils
-from ycmd.watchdog_plugin import WatchdogPlugin
+
+from ycmd import extra_conf_store, user_options_store, utils
 from ycmd.hmac_plugin import HmacPlugin
 from ycmd.utils import ToBytes, ReadFile, OpenForStdHandle
+from ycmd.wsgi_server import StoppableWSGIServer
 
 
 def YcmCoreSanityCheck():
@@ -166,10 +164,11 @@ def Main():
 
   PossiblyDetachFromTerminal()
 
-  # This can't be a top-level import because it transitively imports
+  # These can't be top-level imports because they transitively import
   # ycm_core which we want to be imported ONLY after extra conf
   # preload has executed.
   from ycmd import handlers
+  from ycmd.watchdog_plugin import WatchdogPlugin
   handlers.UpdateUserOptions( options )
   handlers.SetHmacSecret( hmac_secret )
   SetUpSignalHandler( args.stdout, args.stderr, args.keep_logfiles )
@@ -177,10 +176,11 @@ def Main():
                                         args.check_interval_seconds ) )
   handlers.app.install( HmacPlugin( hmac_secret ) )
   CloseStdin()
-  waitress.serve( handlers.app,
-                  host = args.host,
-                  port = args.port,
-                  threads = 30 )
+  handlers.wsgi_server = StoppableWSGIServer( handlers.app,
+                                              host = args.host,
+                                              port = args.port,
+                                              threads = 30 )
+  handlers.wsgi_server.Run()
 
 
 if __name__ == "__main__":
