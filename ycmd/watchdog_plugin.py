@@ -47,7 +47,7 @@ class WatchdogPlugin( object ):
 
   def __init__( self,
                 idle_suicide_seconds,
-                check_interval_seconds = 60 * 10 ):
+                check_interval_seconds ):
     self._check_interval_seconds = check_interval_seconds
     self._idle_suicide_seconds = idle_suicide_seconds
 

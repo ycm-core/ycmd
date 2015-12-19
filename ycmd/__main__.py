@@ -104,6 +104,9 @@ def ParseArguments():
                               '[debug|info|warning|error|critical]' )
   parser.add_argument( '--idle_suicide_seconds', type = int, default = 0,
                        help = 'num idle seconds before server shuts down')
+  parser.add_argument( '--check_interval_seconds', type = int, default = 600,
+                       help = 'interval in seconds to check server '
+                              'inactivity' )
   parser.add_argument( '--options_file', type = str, required = True,
                        help = 'file with user options, in JSON format' )
   parser.add_argument( '--stdout', type = str, default = None,
@@ -170,7 +173,8 @@ def Main():
   handlers.UpdateUserOptions( options )
   handlers.SetHmacSecret( hmac_secret )
   SetUpSignalHandler( args.stdout, args.stderr, args.keep_logfiles )
-  handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds ) )
+  handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
+                                        args.check_interval_seconds ) )
   handlers.app.install( HmacPlugin( hmac_secret ) )
   CloseStdin()
   waitress.serve( handlers.app,
