@@ -254,7 +254,7 @@ class TernCompleter( Completer ):
     the files are being updated.
 
     The request block should contain the optional query block only. The file
-    data and timeout are are added automatically."""
+    data are added automatically."""
 
     if not self._ServerIsRunning():
       raise ValueError( 'Not connected to server' )
@@ -271,7 +271,6 @@ class TernCompleter( Completer ):
     full_request = {
       'files': [ MakeIncompleteFile( x, file_data[ x ] )
                  for x in file_data.keys() ],
-      'timeout': 500,
     }
     full_request.update( request )
 
@@ -292,7 +291,7 @@ class TernCompleter( Completer ):
     just updating file data in which case _PostRequest should be used directly.
 
     The query block should contain the type and any parameters. The files,
-    position, timeout etc. are added automatically."""
+    position, etc. are added automatically."""
 
     def MakeTernLocation( request_data ):
       return {
