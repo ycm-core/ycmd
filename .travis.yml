@@ -12,7 +12,7 @@ install:
   - source travis/travis_install.sh
 compiler:
   - gcc
-script: ./run_tests.py --with-coverage --cover-package=ycmd
+script: ./run_tests.py
 after_success:
   - if [ x"${COVERAGE}" = x"true" ]; then coveralls; fi
 env:
