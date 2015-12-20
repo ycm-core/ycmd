@@ -26,6 +26,23 @@ from javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
 import httplib
 import os
+import contextlib
+
+
+@contextlib.contextmanager
+def TemporaryGlobalTernConf( contents ):
+  """Create a user .tern-config file with the supplied contents, and ensure that
+  it is removed. Does not yield any object."""
+
+  filename = os.path.expanduser( '~/.tern-config'  )
+
+  with open( filename, 'w' ) as tern_config:
+    tern_config.write( contents )
+
+  try:
+    yield
+  finally:
+    os.unlink( filename )
 
 
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
@@ -147,3 +164,26 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
                           'completion. Please see the User Guide for '
                           'details.' )
     )
+
+
+  def OnFileReadyToParse_UseGlobalConfig_test( self ):
+    os.chdir( self._PathToTestFile( '..' ) )
+
+    if os.path.exists( os.path.expanduser( '~/.tern-config' ) ):
+      raise ValueError( 'You must remove/rename your ~/.tern-config for this '
+                        'test to pass' )
+
+
+    with TemporaryGlobalTernConf( """{}""" ):
+      contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+
+      response = self._app.post_json( '/event_notification',
+                                      self._BuildRequest(
+                                        event_name = 'FileReadyToParse',
+                                        contents = contents,
+                                        filetype = 'javascript' ),
+                                      expect_errors = True )
+
+      print( 'event response: {0}'.format( pformat( response.json ) ) )
+
+      eq_( response.status_code, httplib.OK )
