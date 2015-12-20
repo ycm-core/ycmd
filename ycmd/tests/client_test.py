@@ -43,7 +43,7 @@ from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
 from ycmd.utils import ( GetUnusedLocalhostPort, OpenForStdHandle,
                          PathToCreatedTempDir, ReadFile, RemoveIfExists,
-                         SafePopen, ToBytes, ToUnicode )
+                         SafePopen, SetEnviron, ToBytes, ToUnicode )
 
 HEADERS = { 'content-type': 'application/json' }
 HMAC_HEADER = 'x-ycm-hmac'
@@ -90,6 +90,11 @@ class Client_test( object ):
       self._port = GetUnusedLocalhostPort()
       self._location = 'http://127.0.0.1:' + str( self._port )
 
+      # Define environment variable to enable subprocesses coverage. See:
+      # http://coverage.readthedocs.org/en/coverage-4.0.3/subprocess.html
+      env = os.environ.copy()
+      SetEnviron( env, 'COVERAGE_PROCESS_START', '.coveragerc' )
+
       ycmd_args = [
         sys.executable,
         PATH_TO_YCMD,
@@ -105,7 +110,8 @@ class Client_test( object ):
         _popen_handle = SafePopen( ycmd_args,
                                    stdin_windows = subprocess.PIPE,
                                    stdout = stdout,
-                                   stderr = subprocess.STDOUT )
+                                   stderr = subprocess.STDOUT,
+                                   env = env )
         self.server = psutil.Process( _popen_handle.pid )
 
 
