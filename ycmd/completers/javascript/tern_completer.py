@@ -81,6 +81,16 @@ def FindTernProjectFile( starting_directory ):
     if os.path.exists( tern_project ):
       return tern_project
 
+  # As described here: http://ternjs.net/doc/manual.html#server a global
+  # .tern-config file is also supported for the Tern server. This can provide
+  # meaningful defaults (for libs, and possibly also for require paths), so
+  # don't warn if we find one. The point is that if the user has a .tern-config
+  # set up, then she has deliberately done so and a ycmd warning is unlikely
+  # to be anything other than annoying.
+  tern_config = os.path.expanduser( '~/.tern-config' )
+  if os.path.exists( tern_config ):
+    return tern_config
+
   return None
 
 
@@ -107,6 +117,11 @@ class TernCompleter( Completer ):
 
 
   def _WarnIfMissingTernProject( self ):
+    # The Tern server will operate without a .tern-project file. However, it
+    # does not operate optimally, and will likely lead to issues reported that
+    # JavaScript completion is not working properly. So we raise a warning if we
+    # aren't able to detect some semblance of manual Tern configuration.
+
     # We do this check after the server has started because the server does
     # have nonzero use without a project file, however limited. We only do this
     # check once, though because the server can only handle one project at a
@@ -120,7 +135,8 @@ class TernCompleter( Completer ):
       if not tern_project:
         _logger.warning( 'No .tern-project file detected: ' + os.getcwd() )
         raise RuntimeError( 'Warning: Unable to detect a .tern-project file '
-                            'in the hierarchy before ' + os.getcwd() + '. '
+                            'in the hierarchy before ' + os.getcwd() +
+                            ' and no global .tern-config file was found. '
                             'This is required for accurate JavaScript '
                             'completion. Please see the User Guide for '
                             'details.' )

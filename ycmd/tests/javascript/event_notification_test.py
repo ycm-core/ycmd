@@ -66,6 +66,10 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     # server startup.
     os.chdir( self._PathToTestFile( '..' ) )
 
+    if os.path.exists( os.path.expanduser( '~/.tern-config' ) ):
+      raise ValueError( 'You must remove/rename your ~/.tern-config for this '
+                        'test to pass' )
+
     contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
 
     response = self._app.post_json( '/event_notification',
@@ -83,7 +87,8 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
       response.json,
       self._ErrorMatcher( RuntimeError,
                           'Warning: Unable to detect a .tern-project file '
-                          'in the hierarchy before ' + os.getcwd() + '. '
+                          'in the hierarchy before ' + os.getcwd() +
+                          ' and no global .tern-config file was found. '
                           'This is required for accurate JavaScript '
                           'completion. Please see the User Guide for '
                           'details.' )
@@ -136,7 +141,8 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
       response.json,
       self._ErrorMatcher( RuntimeError,
                           'Warning: Unable to detect a .tern-project file '
-                          'in the hierarchy before ' + os.getcwd() + '. '
+                          'in the hierarchy before ' + os.getcwd() +
+                          ' and no global .tern-config file was found. '
                           'This is required for accurate JavaScript '
                           'completion. Please see the User Guide for '
                           'details.' )
