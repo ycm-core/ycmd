@@ -26,24 +26,7 @@ from javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
 import httplib
 import os
-import contextlib
-
-
-@contextlib.contextmanager
-def TemporaryGlobalTernConf( contents ):
-  """Create a user .tern-config file with the supplied contents, and ensure that
-  it is removed. Does not yield any object."""
-
-  filename = os.path.expanduser( '~/.tern-config'  )
-
-  with open( filename, 'w' ) as tern_config:
-    tern_config.write( contents )
-
-  try:
-    yield
-  finally:
-    os.unlink( filename )
-
+from mock import patch
 
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
@@ -77,15 +60,13 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     assert_that( response.json, empty() )
 
 
-  def OnFileReadyToParse_NoProjectFile_test( self ):
+  @patch( 'ycmd.completers.javascript.tern_completer.PathToGlobalTernConfig',
+          return_value = None )
+  def OnFileReadyToParse_NoProjectFile_test( self, *args ):
     # We raise an error if we can't detect a .tern-project file.
     # We only do this on the first OnFileReadyToParse event after a
     # server startup.
     os.chdir( self._PathToTestFile( '..' ) )
-
-    if os.path.exists( os.path.expanduser( '~/.tern-config' ) ):
-      raise ValueError( 'You must remove/rename your ~/.tern-config for this '
-                        'test to pass' )
 
     contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
 
@@ -166,24 +147,20 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     )
 
 
-  def OnFileReadyToParse_UseGlobalConfig_test( self ):
+  @patch( 'ycmd.completers.javascript.tern_completer.PathToGlobalTernConfig',
+          return_value = '/dummy/path/.tern-config' )
+  def OnFileReadyToParse_UseGlobalConfig_test( self, *args ):
     os.chdir( self._PathToTestFile( '..' ) )
 
-    if os.path.exists( os.path.expanduser( '~/.tern-config' ) ):
-      raise ValueError( 'You must remove/rename your ~/.tern-config for this '
-                        'test to pass' )
+    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
 
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True )
 
-    with TemporaryGlobalTernConf( """{}""" ):
-      contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-      response = self._app.post_json( '/event_notification',
-                                      self._BuildRequest(
-                                        event_name = 'FileReadyToParse',
-                                        contents = contents,
-                                        filetype = 'javascript' ),
-                                      expect_errors = True )
-
-      print( 'event response: {0}'.format( pformat( response.json ) ) )
-
-      eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, httplib.OK )

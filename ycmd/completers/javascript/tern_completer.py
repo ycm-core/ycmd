@@ -70,17 +70,7 @@ def ShouldEnableTernCompleter():
   return True
 
 
-def FindTernProjectFile( starting_directory ):
-  # We use a dummy_file here because AncestorFolders requires a file name and we
-  # don't have one. Something like '.' doesn't work because, while
-  # os.path.dirname( /a/b/c/. ) returns /a/b/c, AncestorFolders calls
-  # os.path.abspath on it, so the /. is removed.
-  starting_file = os.path.join( starting_directory, 'dummy_file' )
-  for folder in utils.AncestorFolders( starting_file ):
-    tern_project = os.path.join( folder, '.tern-project' )
-    if os.path.exists( tern_project ):
-      return tern_project
-
+def PathToGlobalTernConfig():
   # As described here: http://ternjs.net/doc/manual.html#server a global
   # .tern-config file is also supported for the Tern server. This can provide
   # meaningful defaults (for libs, and possibly also for require paths), so
@@ -92,6 +82,20 @@ def FindTernProjectFile( starting_directory ):
     return tern_config
 
   return None
+
+
+def FindTernProjectFile( starting_directory ):
+  # We use a dummy_file here because AncestorFolders requires a file name and we
+  # don't have one. Something like '.' doesn't work because, while
+  # os.path.dirname( /a/b/c/. ) returns /a/b/c, AncestorFolders calls
+  # os.path.abspath on it, so the /. is removed.
+  starting_file = os.path.join( starting_directory, 'dummy_file' )
+  for folder in utils.AncestorFolders( starting_file ):
+    tern_project = os.path.join( folder, '.tern-project' )
+    if os.path.exists( tern_project ):
+      return tern_project
+
+  return PathToGlobalTernConfig()
 
 
 class TernCompleter( Completer ):
