@@ -60,8 +60,8 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     assert_that( response.json, empty() )
 
 
-  @patch( 'ycmd.completers.javascript.tern_completer.PathToGlobalTernConfig',
-          return_value = None )
+  @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
+          return_value = False )
   def OnFileReadyToParse_NoProjectFile_test( self, *args ):
     # We raise an error if we can't detect a .tern-project file.
     # We only do this on the first OnFileReadyToParse event after a
@@ -147,8 +147,8 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     )
 
 
-  @patch( 'ycmd.completers.javascript.tern_completer.PathToGlobalTernConfig',
-          return_value = '/dummy/path/.tern-config' )
+  @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
+          return_value = True )
   def OnFileReadyToParse_UseGlobalConfig_test( self, *args ):
     os.chdir( self._PathToTestFile( '..' ) )
 

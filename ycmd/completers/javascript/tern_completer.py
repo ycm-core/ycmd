@@ -70,18 +70,11 @@ def ShouldEnableTernCompleter():
   return True
 
 
-def PathToGlobalTernConfig():
-  # As described here: http://ternjs.net/doc/manual.html#server a global
-  # .tern-config file is also supported for the Tern server. This can provide
-  # meaningful defaults (for libs, and possibly also for require paths), so
-  # don't warn if we find one. The point is that if the user has a .tern-config
-  # set up, then she has deliberately done so and a ycmd warning is unlikely
-  # to be anything other than annoying.
-  tern_config = os.path.expanduser( '~/.tern-config' )
-  if os.path.exists( tern_config ):
-    return tern_config
-
-  return None
+def GlobalConfigExists( tern_config ):
+  """Returns whether or not the global config file with the supplied path
+  exists. This method primarily exists to allow testability and simply returns
+  whether the supplied file exists."""
+  return os.path.exists( tern_config )
 
 
 def FindTernProjectFile( starting_directory ):
@@ -95,7 +88,17 @@ def FindTernProjectFile( starting_directory ):
     if os.path.exists( tern_project ):
       return tern_project
 
-  return PathToGlobalTernConfig()
+  # As described here: http://ternjs.net/doc/manual.html#server a global
+  # .tern-config file is also supported for the Tern server. This can provide
+  # meaningful defaults (for libs, and possibly also for require paths), so
+  # don't warn if we find one. The point is that if the user has a .tern-config
+  # set up, then she has deliberately done so and a ycmd warning is unlikely
+  # to be anything other than annoying.
+  tern_config = os.path.expanduser( '~/.tern-config' )
+  if GlobalConfigExists( tern_config ):
+    return tern_config
+
+  return None
 
 
 class TernCompleter( Completer ):
