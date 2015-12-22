@@ -26,7 +26,7 @@ from javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
 import httplib
 import os
-
+from mock import patch
 
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
@@ -60,7 +60,9 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     assert_that( response.json, empty() )
 
 
-  def OnFileReadyToParse_NoProjectFile_test( self ):
+  @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
+          return_value = False )
+  def OnFileReadyToParse_NoProjectFile_test( self, *args ):
     # We raise an error if we can't detect a .tern-project file.
     # We only do this on the first OnFileReadyToParse event after a
     # server startup.
@@ -83,7 +85,8 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
       response.json,
       self._ErrorMatcher( RuntimeError,
                           'Warning: Unable to detect a .tern-project file '
-                          'in the hierarchy before ' + os.getcwd() + '. '
+                          'in the hierarchy before ' + os.getcwd() +
+                          ' and no global .tern-config file was found. '
                           'This is required for accurate JavaScript '
                           'completion. Please see the User Guide for '
                           'details.' )
@@ -136,8 +139,28 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
       response.json,
       self._ErrorMatcher( RuntimeError,
                           'Warning: Unable to detect a .tern-project file '
-                          'in the hierarchy before ' + os.getcwd() + '. '
+                          'in the hierarchy before ' + os.getcwd() +
+                          ' and no global .tern-config file was found. '
                           'This is required for accurate JavaScript '
                           'completion. Please see the User Guide for '
                           'details.' )
     )
+
+
+  @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
+          return_value = True )
+  def OnFileReadyToParse_UseGlobalConfig_test( self, *args ):
+    os.chdir( self._PathToTestFile( '..' ) )
+
+    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+
+    response = self._app.post_json( '/event_notification',
+                                    self._BuildRequest(
+                                      event_name = 'FileReadyToParse',
+                                      contents = contents,
+                                      filetype = 'javascript' ),
+                                    expect_errors = True )
+
+    print( 'event response: {0}'.format( pformat( response.json ) ) )
+
+    eq_( response.status_code, httplib.OK )
