@@ -51,7 +51,6 @@ class Python_GetCompletions_test( Python_Handlers_test ):
                                          'contents': contents,
                                          } ) )
 
-
     # We ignore errors here and we check the response code ourself.
     # This is to allow testing of requests returning errors.
     response = self._app.post_json( '/completions',

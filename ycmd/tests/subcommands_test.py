@@ -20,25 +20,26 @@
 
 from nose.tools import eq_
 from .handlers_test import Handlers_test
-
+from ycmd.tests.test_utils import DummyCompleter
+from mock import patch
 
 class Subcommands_test( Handlers_test ):
 
-  def Basic_test( self ):
-    subcommands_data = self._BuildRequest( completer_target = 'python' )
+  @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+          return_value = { 'A': lambda x: x, 'B': lambda x: x, 'C': lambda x: x } )
+  def Basic_test( self, *args ):
+    with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+      subcommands_data = self._BuildRequest( completer_target = 'dummy_filetype' )
 
-    eq_( [ 'GetDoc',
-           'GoTo',
-           'GoToDeclaration',
-           'GoToDefinition' ],
-         self._app.post_json( '/defined_subcommands', subcommands_data ).json )
+      eq_( [ 'A', 'B', 'C' ],
+           self._app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
-  def NoExplicitCompleterTargetSpecified_test( self ):
-    subcommands_data = self._BuildRequest( filetype = 'python' )
+  @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+          return_value = { 'A': lambda x: x, 'B': lambda x: x, 'C': lambda x: x } )
+  def NoExplicitCompleterTargetSpecified_test( self, *args ):
+    with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+      subcommands_data = self._BuildRequest( filetype = 'dummy_filetype' )
 
-    eq_( [ 'GetDoc',
-           'GoTo',
-           'GoToDeclaration',
-           'GoToDefinition' ],
-         self._app.post_json( '/defined_subcommands', subcommands_data ).json )
+      eq_( [ 'A', 'B', 'C' ],
+           self._app.post_json( '/defined_subcommands', subcommands_data ).json )
