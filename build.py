@@ -158,11 +158,11 @@ def CustomPythonCmakeArgs():
 def GetGenerator( args ):
   if OnWindows():
     if args.msvc == 14:
-      generator = 'Visual Studio 14 2015'
+      generator = 'Visual Studio 14'
     elif args.msvc == 12:
-      generator = 'Visual Studio 12 2013'
+      generator = 'Visual Studio 12'
     else:
-      generator = 'Visual Studio 11 2012'
+      generator = 'Visual Studio 11'
 
     if ( not args.arch and platform.architecture()[ 0 ] == '64bit'
          or args.arch == 64 ):
