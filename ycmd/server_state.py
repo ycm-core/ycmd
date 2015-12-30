@@ -94,10 +94,6 @@ class ServerState( object ):
              self.FiletypeCompletionAvailable( filetypes ) )
 
 
-  def ShouldUseGeneralCompleter( self, request_data ):
-    return self._gencomp.ShouldUseNow( request_data )
-
-
   def ShouldUseFiletypeCompleter( self, request_data ):
     """
     Determines whether or not the semantic completer should be called, and
