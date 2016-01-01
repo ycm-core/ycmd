@@ -428,9 +428,9 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
 
     # It seems that Omnisharp server eats newlines
     eq_( {
-      'detailed_info': 'int GetDocTestCase.DoATest();\n'
-                       ' Very important method. With multiple lines of '
-                       'commentary And Format- -ting',
+      'detailed_info': 'int GetDocTestCase.DoATest()\n'
+                       'Very important method.\n\nWith multiple lines of '
+                       'commentary\nAnd Format-\n-ting',
     }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
 
     self._StopOmniSharpServer( filepath )
