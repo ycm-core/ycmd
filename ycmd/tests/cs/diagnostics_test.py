@@ -138,6 +138,6 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
                  has_entry(
                     'message',
                     contains_string(
-                       "Unexpected symbol `}'', expecting identifier" ) ) )
+                       "'Console' does not contain a definition for ''" ) ) )
 
     self._StopOmniSharpServer( filepath )
