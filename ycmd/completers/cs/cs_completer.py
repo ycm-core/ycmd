@@ -584,7 +584,7 @@ class CsharpSolutionCompleter:
 
 
   def _ServerLocation( self ):
-    return 'http://localhost:' + str( self._omnisharp_port )
+    return 'http://127.0.0.1:' + str( self._omnisharp_port )
 
 
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
