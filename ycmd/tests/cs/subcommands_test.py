@@ -400,7 +400,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
                                       filepath = filepath )
 
     eq_( {
-      'detailed_info': 'int GetDocTestCase.an_int;\n'
+      'detailed_info': 'int GetDocTestCase.an_int\n'
                        'an integer, or something',
     }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
 
