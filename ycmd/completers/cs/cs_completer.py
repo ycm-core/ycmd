@@ -37,8 +37,8 @@ INVALID_FILE_MESSAGE = 'File is invalid.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PATH_TO_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
-  '..', '..', '..', 'third_party', 'OmniSharpServer',
-  'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
+  '..', '..', '..', 'third_party', 'omnisharp-roslyn',
+  'artifacts', 'build', 'omnisharp', 'omnisharp' )
 
 
 # TODO: Handle this better than dummy classes
@@ -370,8 +370,9 @@ class CsharpSolutionCompleter:
                 '-s',
                 u'{0}'.format( path_to_solutionfile ) ]
 
-    if not utils.OnWindows() and not utils.OnCygwin():
-      command.insert( 0, 'mono' )
+    if utils.OnWindows():
+      command[0] = command[0] + '.bat'
+      command.insert(0, 'cmd')
 
     if utils.OnCygwin():
       command.extend( [ '--client-path-mode', 'Cygwin' ] )
@@ -443,7 +444,7 @@ class CsharpSolutionCompleter:
   def _ReloadSolution( self ):
     """ Reloads the solutions in the OmniSharp server """
     self._logger.info( 'Reloading Solution in OmniSharp server' )
-    return self._GetResponse( '/reloadsolution' )
+    return self._Post( '/reloadsolution' )
 
 
   def CompletionType( self, request_data ):
@@ -592,8 +593,16 @@ class CsharpSolutionCompleter:
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
-    response = requests.post( target, data = parameters, timeout = timeout )
+    self._logger.debug( 'Omnisharp Request: Post to %s with body %s' % ( handler, parameters ))
+    response = requests.post( target, json = parameters, timeout = timeout )
+    self._logger.debug( 'Response for %s is %s with body %s' % ( handler, response.status_code, response.text ))
     return response.json()
+
+  def _Post( self, handler, parameters = {}, timeout = None ):
+    """ Handle communication with server without wanting response """
+    target = urlparse.urljoin( self._ServerLocation(), handler )
+    response = requests.post( target, json = parameters, timeout = timeout )
+    return response.status_code == requests.codes.ok
 
 
   def _ChooseOmnisharpPort( self ):
