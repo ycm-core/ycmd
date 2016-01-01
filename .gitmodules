@@ -27,4 +27,4 @@
 	url = https://github.com/ternjs/tern.git
 [submodule "third_party/omnisharp-roslyn"]
 	path = third_party/omnisharp-roslyn
-	url = git@github.com:OmniSharp/omnisharp-roslyn.git
+	url = https://github.com/OmniSharp/omnisharp-roslyn.git
