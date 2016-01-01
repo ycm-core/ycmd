@@ -444,7 +444,7 @@ class CsharpSolutionCompleter:
   def _ReloadSolution( self ):
     """ Reloads the solutions in the OmniSharp server """
     self._logger.info( 'Reloading Solution in OmniSharp server' )
-    return self._GetResponse( '/reloadsolution' )
+    return self._Post( '/reloadsolution' )
 
 
   def CompletionType( self, request_data ):
@@ -591,8 +591,16 @@ class CsharpSolutionCompleter:
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
     target = urlparse.urljoin( self._ServerLocation(), handler )
+    self._logger.debug( 'Omnisharp Request: Post to %s with body %s' % ( handler, parameters ))
     response = requests.post( target, json = parameters, timeout = timeout )
+    self._logger.debug( 'Response for %s is %s with body %s' % ( handler, response.status_code, response.text ))
     return response.json()
+
+  def _Post( self, handler, parameters = {}, timeout = None ):
+    """ Handle communication with server without wanting response """
+    target = urlparse.urljoin( self._ServerLocation(), handler )
+    response = requests.post( target, json = parameters, timeout = timeout )
+    return response.status_code == requests.codes.ok
 
 
   def _ChooseOmnisharpPort( self ):
