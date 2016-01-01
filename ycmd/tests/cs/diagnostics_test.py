@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains, contains_string, equal_to,
+from hamcrest import ( assert_that, contains_string, equal_to,
                        has_entries, has_entry, has_item )
 from .cs_handlers_test import Cs_Handlers_test
 
@@ -91,23 +91,22 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
       results = self._app.post_json( '/event_notification', event_data ).json
 
       assert_that( results,
-                   contains(
+                   has_item(
                        has_entries( {
                            'kind': equal_to( 'ERROR' ),
-                           'text': contains_string( "Unexpected symbol `}'', "
-                                                    "expecting identifier" ),
+                           'text': contains_string( "'Console'" ),
                            'location': has_entries( {
                              'line_num': line,
-                             'column_num': 2
+                             'column_num': 1
                            } ),
                            'location_extent': has_entries( {
                              'start': has_entries( {
                                'line_num': line,
-                               'column_num': 2,
+                               'column_num': 1,
                              } ),
                              'end': has_entries( {
                                'line_num': line,
-                               'column_num': 2,
+                               'column_num': 1,
                              } ),
                            } )
                        } ) ) )
