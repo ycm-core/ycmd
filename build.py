@@ -268,7 +268,7 @@ def BuildYcmdLibs( args ):
 def BuildOmniSharp():
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'omnisharp-roslyn' ) )
   if OnWindows():
-    subprocess.check_call( [ 'build.bat' ] )
+    subprocess.check_call( [ 'cmd', 'build.bat' ] )
   else:
     subprocess.check_call( [ './build.sh' ] )
 
