@@ -295,7 +295,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
                                        filepath = filepath )
 
     eq_( {
-      u'message': u"string"
+      u'message': u"System.string"
     }, self._app.post_json( '/run_completer_command', gettype_data ).json )
 
     self._StopOmniSharpServer( filepath )
