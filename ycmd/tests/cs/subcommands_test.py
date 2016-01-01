@@ -81,7 +81,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
     eq_( {
       'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
       'line_num': 30,
-      'column_num': 3
+      'column_num': 15
     }, self._app.post_json( '/run_completer_command', goto_data ).json )
 
     self._StopOmniSharpServer( filepath )
