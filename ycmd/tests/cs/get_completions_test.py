@@ -227,8 +227,8 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     # completer in this case.
     assert_that( results, has_entries( {
       'completions': has_item( has_entries( {
-        'insertion_text' : 'String',
-        'extra_menu_info': '[ID]',
+        'insertion_text' : 'string',
+        'extra_menu_info': 'string',
       } ) ),
       'errors': empty(),
     } ) )
