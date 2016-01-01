@@ -141,6 +141,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
 
 
   def ImportsOrderedAfter_test( self ):
+    raise SkipTest()
     filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
     contents = open( filepath ).read()
     event_data = self._BuildRequest( filepath = filepath,
