@@ -584,6 +584,8 @@ class CsharpSolutionCompleter:
 
 
   def _ServerLocation( self ):
+    # We cannot use 127.0.0.1 like we do in other places because OmniSharp
+    # server only listens on localhost.
     return 'http://localhost:' + str( self._omnisharp_port )
 
 
