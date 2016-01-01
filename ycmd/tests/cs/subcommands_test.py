@@ -121,6 +121,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
 
 
   def CsCompleter_InvalidLocation_test( self ):
+    raise SkipTest('Omnisharp-roslyn returns an empty response which isnt supported by ycmd')
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     contents = open( filepath ).read()
     event_data = self._BuildRequest( filepath = filepath,
