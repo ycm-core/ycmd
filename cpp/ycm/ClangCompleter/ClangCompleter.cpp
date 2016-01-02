@@ -250,6 +250,23 @@ DocumentationData ClangCompleter::GetDocsForLocationInFile(
 
 }
 
+std::vector< Token > ClangCompleter::GetSemanticTokens(
+  const std::string& filename,
+  uint start_line,
+  uint start_column,
+  uint end_line,
+  uint end_column) {
+
+  ReleaseGil unlock;
+  shared_ptr< TranslationUnit > unit = translation_unit_store_.Get( filename );
+
+  if ( !unit )
+    return std::vector< Token >();
+
+  return unit->GetSemanticTokens( start_line, start_column,
+                                  end_line, end_column );
+}
+
 void ClangCompleter::DeleteCachesForFile( const std::string &filename ) {
   ReleaseGil unlock;
   translation_unit_store_.Remove( filename );

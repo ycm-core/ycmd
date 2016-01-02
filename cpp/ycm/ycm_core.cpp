@@ -24,6 +24,7 @@
 #  include "ClangUtils.h"
 #  include "CompletionData.h"
 #  include "Diagnostic.h"
+#  include "Token.h"
 #  include "Location.h"
 #  include "Range.h"
 #  include "UnsavedFile.h"
@@ -108,7 +109,8 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "GetFixItsForLocationInFile",
           &ClangCompleter::GetFixItsForLocationInFile )
     .def( "GetDocsForLocationInFile",
-          &ClangCompleter::GetDocsForLocationInFile );
+          &ClangCompleter::GetDocsForLocationInFile )
+    .def( "GetSemanticTokens", &ClangCompleter::GetSemanticTokens );
 
   enum_< CompletionKind >( "CompletionKind" )
     .value( "STRUCT", STRUCT )
@@ -182,6 +184,31 @@ BOOST_PYTHON_MODULE(ycm_core)
 
   class_< std::vector< Diagnostic > >( "DiagnosticVector" )
     .def( vector_indexing_suite< std::vector< Diagnostic > >() );
+
+  enum_< Token::Kind >( "TokenKind" )
+    .value( "Namespace", Token::NAMESPACE )
+    .value( "Class", Token::CLASS )
+    .value( "Struct", Token::STRUCT )
+    .value( "Union", Token::UNION )
+    .value( "MemberVariable", Token::MEMBER_VARIABLE )
+    .value( "Typedef", Token::TYPEDEF )
+    .value( "TemplateType", Token::TEMPLATE_TYPE )
+    .value( "Enum", Token::ENUM )
+    .value( "EnumConstant", Token::ENUM_CONSTANT )
+    .value( "Macro", Token::MACRO )
+    .value( "Function", Token::FUNCTION )
+    .value( "FunctionParam", Token::FUNCTION_PARAM )
+    .value( "Unsupported", Token::UNSUPPORTED )
+    .export_values();
+
+  class_< Token >( "Token" )
+    .def_readonly( "kind_", &Token::kind_ )
+    .def_readonly( "line_number_", &Token::line_number_ )
+    .def_readonly( "column_number_", &Token::column_number_ )
+    .def_readonly( "offset_", &Token::offset_ );
+
+  class_< std::vector< Token > >( "TokenVector" )
+    .def( vector_indexing_suite< std::vector< Token > >() );
 
   class_< DocumentationData >( "DocumentationData" )
     .def_readonly( "comment_xml", &DocumentationData::comment_xml )

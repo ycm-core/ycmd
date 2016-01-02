@@ -369,6 +369,19 @@ class ClangCompleter( Completer ):
       closest_diagnostic.long_formatted_text_ )
 
 
+  def GetSemanticTokens( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    start_line = request_data[ 'start_line' ]
+    start_column = request_data[ 'start_column' ]
+    end_line = request_data[ 'end_line' ]
+    end_column = request_data[ 'end_column' ]
+    semantic_tokens = self._completer.GetSemanticTokens(
+                                                   ToUtf8IfNeeded( filename ),
+                                                   start_line, start_column,
+                                                   end_line, end_column )
+    return [ responses.BuildTokenData( token ) for token in semantic_tokens ]
+
+
   def DebugInfo( self, request_data ):
     filename = request_data[ 'filepath' ]
     try:

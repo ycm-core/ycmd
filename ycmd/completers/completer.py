@@ -348,6 +348,10 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     raise NoDiagnosticSupport
 
 
+  def GetSemanticTokens( self, request_data ):
+    return []
+
+
   def _CurrentFiletype( self, filetypes ):
     supported = self.SupportedFiletypes()
 
