@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 from collections import defaultdict
 from nose.tools import eq_, ok_
 from ycmd.completers import completer_utils as cu
@@ -122,21 +123,40 @@ def MatchesSemanticTrigger_RegexTrigger_test():
                                        [ cu._PrepareTrigger( r're!\w+\.' ) ] ) )
 
 
+def MatchingSemanticTrigger_Basic_test():
+  triggers = [ cu._PrepareTrigger( '.' ), cu._PrepareTrigger( ';' ),
+               cu._PrepareTrigger( '::' ) ]
+  eq_( cu._MatchingSemanticTrigger( 'foo->bar', 5,  triggers ),
+       None )
+  eq_( cu._MatchingSemanticTrigger( 'foo::bar', 5,  triggers ).pattern,
+       re.escape( '::' ) )
+
+
 def PreparedTriggers_Basic_test():
   triggers = cu.PreparedTriggers()
   ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'c' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo.bar', 4, 'c' ).pattern,
+       re.escape( '.' ) )
   ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'cpp' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 'cpp' ).pattern,
+       re.escape( '->' ) )
 
 
 def PreparedTriggers_OnlySomeFiletypesSelected_test():
   triggers = cu.PreparedTriggers( filetype_set = set( 'c' ) )
   ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'c' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo.bar', 4, 'c' ).pattern,
+       re.escape( '.' ) )
   ok_( not triggers.MatchesForFiletype( 'foo->bar', 5, 'cpp' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 'cpp' ),
+       None )
 
 
 def PreparedTriggers_UserTriggers_test():
   triggers = cu.PreparedTriggers( user_trigger_map = { 'c': ['->'] } )
   ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'c' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 'c' ).pattern,
+       re.escape( '->' ) )
 
 
 def PreparedTriggers_ObjectiveC_test():
