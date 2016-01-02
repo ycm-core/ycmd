@@ -70,20 +70,6 @@ def _FiletypeDictUnion( dict_one, dict_two ):
   return final_dict
 
 
-def _StringTriggerMatches( trigger, line_value, start_column ):
-  index = -1
-  trigger_length = len( trigger )
-  while True:
-    line_index = start_column + index
-    if line_index < 0 or line_value[ line_index ] != trigger[ index ]:
-      break
-
-    if abs( index ) == trigger_length:
-      return True
-    index -= 1
-  return False
-
-
 def _RegexTriggerMatches( trigger, line_value, start_column ):
   for match in trigger.finditer( line_value ):
     if match.end() == start_column:
@@ -100,12 +86,8 @@ def _MatchesSemanticTrigger( line_value, start_column, trigger_list ):
   # ignore characters after user's caret column
   line_value = line_value[ :start_column ]
 
-  match = False
   for trigger in trigger_list:
-    match = ( _StringTriggerMatches( trigger, line_value, start_column )
-        if isinstance( trigger, basestring ) else
-        _RegexTriggerMatches( trigger, line_value, start_column ) )
-    if match:
+    if _RegexTriggerMatches( trigger, line_value, start_column ):
       return True
   return False
 
