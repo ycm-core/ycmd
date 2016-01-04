@@ -119,6 +119,7 @@ def BuildCompletionResponse( completion_datas,
     'errors': errors if errors else [],
   }
 
+
 def BuildLocationData( location ):
   return {
     'line_num': location.line_number_,
@@ -126,11 +127,61 @@ def BuildLocationData( location ):
     'filepath': location.filename_,
   }
 
+
 def BuildRangeData( source_range ):
   return {
     'start': BuildLocationData( source_range.start_ ),
     'end': BuildLocationData( source_range.end_ ),
   }
+
+
+class Diagnostic:
+  def __init__ ( self, ranges, location, location_extent, text, kind ):
+    self.ranges_ = ranges
+    self.location_ = location
+    self.location_extent_ = location_extent
+    self.text_ = text
+    self.kind_ = kind
+
+
+class FixIt:
+  """A set of replacements (of type FixItChunk) to be applied to fix a single
+  diagnostic"""
+
+  def __init__ ( self, location, chunks ):
+    """location of type Location, chunks of type list<FixItChunk>"""
+    self.location = location
+    self.chunks = chunks
+
+
+class FixItChunk:
+  """An individual replacement within a FixIt"""
+
+  def __init__ ( self, replacement_text, range ):
+    """replacement_text of type string, range of type Range"""
+    self.replacement_text = replacement_text
+    self.range = range
+
+
+class Range:
+  """Source code range relating to a diagnostic or FixIt."""
+
+  def __init__ ( self, start, end ):
+    "start of type Location, end of type Location"""
+    self.start_ = start
+    self.end_ = end
+
+
+class Location:
+  """Source code location for a diagnostic or FixIt."""
+
+  def __init__ ( self, line, column, filename ):
+    """Line is 1-based line, column is 1-based column, filename is absolute
+    path of the file"""
+    self.line_number_ = line
+    self.column_number_ = column
+    self.filename_ = filename
+
 
 def BuildDiagnosticData( diagnostic ):
 
@@ -147,6 +198,7 @@ def BuildDiagnosticData( diagnostic ):
     'kind': kind,
     'fixit_available': len( fixits ) > 0,
   }
+
 
 def BuildFixItResponse( fixits ):
   def BuildFixitChunkData( chunk ):
