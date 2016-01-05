@@ -19,6 +19,10 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from ycmd.completers.completer import Completer
+from ycmd.responses import BuildCompletionData
+
+
 def BuildRequest( **kwargs ):
   filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
   contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''
@@ -47,3 +51,22 @@ def BuildRequest( **kwargs ):
       request[ key ] = value
 
   return request
+
+
+class DummyCompleter( Completer ):
+  def __init__( self, user_options ):
+    super( DummyCompleter, self ).__init__( user_options )
+
+
+  def SupportedFiletypes( self ):
+    return []
+
+
+  def ComputeCandidatesInner( self, request_data ):
+    return [ BuildCompletionData( candidate )
+             for candidate in self.CandidatesList() ]
+
+
+  # This method is here for testing purpose, so it can be mocked during tests
+  def CandidatesList( self ):
+    return []

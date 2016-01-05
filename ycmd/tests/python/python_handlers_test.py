@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from ..handlers_test import Handlers_test
 
 
@@ -24,3 +25,33 @@ class Python_Handlers_test( Handlers_test ):
 
   def __init__( self ):
     self._file = __file__
+
+
+  def setUp( self ):
+    super( Python_Handlers_test, self ).setUp()
+    self.WaitUntilJediHTTPServerReady()
+
+
+  def tearDown( self ):
+    self.StopJediHTTPServer()
+
+
+  def WaitUntilJediHTTPServerReady( self ):
+    retries = 10
+
+    while retries > 0:
+      result = self._app.get( '/ready', { 'subserver': 'python' } ).json
+      if result:
+        return
+
+      time.sleep( 0.2 )
+      retries = retries - 1
+
+    raise RuntimeError( "Timeout waiting for JediHTTP" )
+
+
+  def StopJediHTTPServer( self ):
+    request = self._BuildRequest( completer_target = 'filetype_default',
+                                  command_arguments = [ 'StopServer' ],
+                                  filetype = 'python' )
+    self._app.post_json( '/run_completer_command', request )

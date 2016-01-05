@@ -23,6 +23,8 @@ from nose.tools import eq_
 from hamcrest import assert_that, has_items
 from .. import handlers
 from .handlers_test import Handlers_test
+from ycmd.tests.test_utils import DummyCompleter
+from mock import patch
 
 
 class GetCompletions_test( Handlers_test ):
@@ -93,15 +95,18 @@ class GetCompletions_test( Handlers_test ):
     )
 
 
-  def ForceSemantic_Works_test( self ):
-    completion_data = self._BuildRequest( filetype = 'python',
-                                          force_semantic = True )
+  @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+          return_value = [ 'foo', 'bar', 'qux' ] )
+  def ForceSemantic_Works_test( self, *args ):
+    with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+      completion_data = self._BuildRequest( filetype = 'dummy_filetype',
+                                            force_semantic = True )
 
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-    assert_that( results, has_items( self._CompletionEntryMatcher( 'abs' ),
-                                     self._CompletionEntryMatcher( 'open' ),
-                                     self._CompletionEntryMatcher( 'bool' ) ) )
+      results = self._app.post_json( '/completions',
+                                     completion_data ).json[ 'completions' ]
+      assert_that( results, has_items( self._CompletionEntryMatcher( 'foo' ),
+                                       self._CompletionEntryMatcher( 'bar' ),
+                                       self._CompletionEntryMatcher( 'qux' ) ) )
 
 
   def IdentifierCompleter_SyntaxKeywordsAdded_test( self ):

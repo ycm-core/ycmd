@@ -20,14 +20,16 @@
 
 from nose.tools import ok_
 from .handlers_test import Handlers_test
+from ycmd.tests.test_utils import DummyCompleter
 
 
 class MiscHandlers_test( Handlers_test ):
 
   def SemanticCompletionAvailable_test( self ):
-    request_data = self._BuildRequest( filetype = 'python' )
-    ok_( self._app.post_json( '/semantic_completion_available',
-                              request_data ).json )
+    with self.PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+      request_data = self._BuildRequest( filetype = 'dummy_filetype' )
+      ok_( self._app.post_json( '/semantic_completion_available',
+                                request_data ).json )
 
 
   def EventNotification_AlwaysJsonResponse_test( self ):
