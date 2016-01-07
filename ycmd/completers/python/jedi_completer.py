@@ -34,7 +34,8 @@ import base64
 
 
 HMAC_SECRET_LENGTH = 16
-PYTHON_EXECUTABLE_PATH = sys.executable
+BINARY_NOT_FOUND_MESSAGE = ( 'The python interpreted specified was not found. ' +
+                             'Did you specified it correctly?' )
 LOG_FILENAME_FORMAT = os.path.join( utils.PathToTempDir(),
                                     u'jedihttp_{port}_{std}.log' )
 PATH_TO_JEDIHTTP = os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
@@ -71,7 +72,25 @@ class JediCompleter( Completer ):
     self._logfile_stderr = None
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._hmac_secret = ''
+    self._binary_path = sys.executable
+
+    user_binary = user_options.get( 'python_binary_path' )
+    self._UpdatePythonBinary( user_binary )
+
     self._StartServer()
+
+
+  def _UpdatePythonBinary( self, binary ):
+    if binary:
+      if not self._CheckBinaryExists( binary ):
+        self._logger.error( BINARY_NOT_FOUND_MESSAGE )
+        raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
+      self._binary_path = binary
+
+
+  def _CheckBinaryExists( self, binary ):
+    """This method is here to help tesing"""
+    return os.path.isfile( binary )
 
 
   def SupportedFiletypes( self ):
@@ -104,9 +123,11 @@ class JediCompleter( Completer ):
         return False
 
 
-  def RestartServer( self ):
+  def RestartServer( self, binary = None ):
     """ Restart the JediHTTP Server. """
     with self._server_lock:
+      if binary:
+        self._UpdatePythonBinary( binary )
       self._StopServer()
       self._StartServer()
 
@@ -131,7 +152,7 @@ class JediCompleter( Completer ):
       self._GenerateHmacSecret()
 
       with hmaclib.TemporaryHmacSecretFile( self._hmac_secret ) as hmac_file:
-        command = [ PYTHON_EXECUTABLE_PATH,
+        command = [ self._binary_path,
                     PATH_TO_JEDIHTTP,
                     '--port', str( self._jedihttp_port ),
                     '--hmac-file-secret', hmac_file.name ]
@@ -244,7 +265,7 @@ class JediCompleter( Completer ):
       'StopServer'     : ( lambda self, request_data, args:
                            self.Shutdown() ),
       'RestartServer'  : ( lambda self, request_data, args:
-                           self.RestartServer() )
+                           self.RestartServer( *args ) )
     }
 
 
@@ -334,8 +355,10 @@ class JediCompleter( Completer ):
      with self._server_lock:
        if self.ServerIsRunning():
          return ( 'JediHTTP running at 127.0.0.1:{0}\n'
-                  '  stdout log: {1}\n'
-                  '  stderr log: {2}' ).format( self._jedihttp_port,
+                  '  python binary: {1}\n'
+                  '  stdout log: {2}\n'
+                  '  stderr log: {3}' ).format( self._jedihttp_port,
+                                                self._binary_path,
                                                 self._logfile_stdout,
                                                 self._logfile_stderr )
 
