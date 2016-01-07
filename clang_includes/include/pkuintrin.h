@@ -1,4 +1,5 @@
-/*===---- __wmmintrin_aes.h - AES intrinsics -------------------------------===
+/*===------------- pkuintrin.h - PKU intrinsics ------------------===
+ *
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,47 +21,28 @@
  *
  *===-----------------------------------------------------------------------===
  */
-#ifndef _WMMINTRIN_AES_H
-#define _WMMINTRIN_AES_H
+#ifndef __IMMINTRIN_H
+#error "Never use <pkuintrin.h> directly; include <immintrin.h> instead."
+#endif
 
-#include <emmintrin.h>
+#ifndef __PKUINTRIN_H
+#define __PKUINTRIN_H
 
 /* Define the default attributes for the functions in this file. */
-#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("aes")))
+#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("pku")))
 
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesenc_si128(__m128i __V, __m128i __R)
+static __inline__ unsigned int __DEFAULT_FN_ATTRS
+_rdpkru_u32(void)
 {
-  return (__m128i)__builtin_ia32_aesenc128(__V, __R);
+  return __builtin_ia32_rdpkru();
 }
 
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesenclast_si128(__m128i __V, __m128i __R)
+static __inline__ void __DEFAULT_FN_ATTRS
+_wrpkru(unsigned int val)
 {
-  return (__m128i)__builtin_ia32_aesenclast128(__V, __R);
+  return __builtin_ia32_wrpkru(val);
 }
-
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesdec_si128(__m128i __V, __m128i __R)
-{
-  return (__m128i)__builtin_ia32_aesdec128(__V, __R);
-}
-
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesdeclast_si128(__m128i __V, __m128i __R)
-{
-  return (__m128i)__builtin_ia32_aesdeclast128(__V, __R);
-}
-
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesimc_si128(__m128i __V)
-{
-  return (__m128i)__builtin_ia32_aesimc128(__V);
-}
-
-#define _mm_aeskeygenassist_si128(C, R) \
-  (__m128i)__builtin_ia32_aeskeygenassist128((__v2di)(__m128i)(C), (int)(R))
 
 #undef __DEFAULT_FN_ATTRS
 
-#endif  /* _WMMINTRIN_AES_H */
+#endif
