@@ -9,7 +9,7 @@ YCMD_VENV_DIR=${HOME}/venvs/ycmd_test
 #  - create (but don't activate) a virtualenv for the python version
 #    ${YCMD_PYTHON_VERSION} in the directory ${YCMD_VENV_DIR}, e.g.
 #    virtualenv -p python${YCMD_PYTHON_VERSION} ${YCMD_VENV_DIR}
-source travis/travis_install.${TRAVIS_OS_NAME}.sh
+source ci/travis/travis_install.${TRAVIS_OS_NAME}.sh
 
 # virtualenv doesn't copy python-config https://github.com/pypa/virtualenv/issues/169
 # but our build system uses it
