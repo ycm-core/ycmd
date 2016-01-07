@@ -38,5 +38,7 @@
   "csharp_server_port": 0,
   "hmac_secret": "",
   "server_keep_logfiles": 0,
-  "gocode_binary_path": ""
+  "gocode_binary_path": "",
+  "rust_src_path": "",
+  "racerd_binary_path": ""
 }

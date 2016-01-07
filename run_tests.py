@@ -74,6 +74,7 @@ def BuildYcmdLibs( args ):
       '--omnisharp-completer',
       '--gocode-completer',
       '--tern-completer',
+      '--racer-completer',
     ]
 
     if args.msvc:

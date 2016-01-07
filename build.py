@@ -184,6 +184,8 @@ def ParseArguments():
                        help = 'Build C# semantic completion engine.' )
   parser.add_argument( '--gocode-completer', action = 'store_true',
                        help = 'Build Go semantic completion engine.' )
+  parser.add_argument( '--racer-completer', action = 'store_true',
+                       help = 'Build rust semantic completion engine.' )
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
@@ -283,6 +285,17 @@ def BuildGoCode():
   subprocess.check_call( [ 'go', 'build' ] )
 
 
+def BuildRacerd():
+  """
+  Build racerd. This requires a reasonably new version of rustc/cargo.
+  """
+  if not FindExecutable( 'cargo' ):
+    sys.exit( 'cargo is required for the rust completer' )
+
+  os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
+  subprocess.check_call( [ 'cargo', 'build', '--release' ] )
+
+
 def SetUpTern():
   paths = {}
   for exe in [ 'node', 'npm' ]:
@@ -307,6 +320,8 @@ def Main():
     BuildGoCode()
   if args.tern_completer:
     SetUpTern()
+  if args.racer_completer:
+    BuildRacerd()
 
 if __name__ == '__main__':
   Main()
