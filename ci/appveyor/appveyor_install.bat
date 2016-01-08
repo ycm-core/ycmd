@@ -6,6 +6,9 @@ if exist third_party\racerd\target (
 )
 
 git submodule update --init --recursive
+:: Batch script will not exit if a command returns an error, so we manually do
+:: it for commands that may fail.
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 if exist racerd_target (
   move racerd_target third_party\racerd\target
@@ -31,6 +34,7 @@ set PYTHONHOME=%python%
 appveyor DownloadFile https://raw.github.com/pypa/pip/master/contrib/get-pip.py
 python get-pip.py
 pip install -r test_requirements.txt
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 ::
 :: Typescript configuration
@@ -39,6 +43,7 @@ pip install -r test_requirements.txt
 :: Since npm executable is a batch file, we need to prefix it with a call
 :: statement. See https://github.com/npm/npm/issues/2938
 call npm install -g typescript
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 ::
 :: Rust configuration
