@@ -104,7 +104,7 @@ class JediCompleter( Completer ):
         return False
 
 
-  def RestartServer( self, request_data ):
+  def RestartServer( self ):
     """ Restart the JediHTTP Server. """
     with self._server_lock:
       self._StopServer()
