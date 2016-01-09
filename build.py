@@ -1,7 +1,7 @@
 #!/bin/sh
 ''''which python2 >/dev/null 2>&1 && exec python2 "$0" "$@" # '''
 ''''which python  >/dev/null 2>&1 && exec python  "$0" "$@" # '''
-''''echo "Error: I can't find python anywhere" # '''
+''''echo "Error: Couldn't find python anywhere" # '''
 ''''exec exit 1 # '''
 
 # To understand how the above magic lines work, read the following two SO posts:
