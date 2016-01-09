@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+#!/bin/sh
+''''which python2 >/dev/null 2>&1 && exec python2 "$0" "$@" # '''
+''''which python  >/dev/null 2>&1 && exec python  "$0" "$@" # '''
+''''exec echo "Error: I can't find python anywhere"         # '''
 
 import os
 import subprocess
@@ -122,7 +125,7 @@ def CustomPythonCmakeArgs():
     print( 'Using OSX-style libs from {0}'.format( python_prefix ) )
   else:
     which_python = _CheckOutput( [
-      'python',
+      sys.executable,
       '-c',
       'import sys;i=sys.version_info;print( "python%d.%d" % (i[0], i[1]) )'
     ] ).strip()
