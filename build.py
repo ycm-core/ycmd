@@ -1,4 +1,12 @@
-#!/usr/bin/env python
+#!/bin/sh
+''''which python2 >/dev/null 2>&1 && exec python2 "$0" "$@" # '''
+''''which python  >/dev/null 2>&1 && exec python  "$0" "$@" # '''
+''''echo "Error: Couldn't find python anywhere" # '''
+''''exec exit 1 # '''
+
+# To understand how the above magic lines work, read the following two SO posts:
+#   http://stackoverflow.com/a/26056481/2606953
+#   http://stackoverflow.com/a/17458578/1672783
 
 import os
 import subprocess
@@ -122,7 +130,7 @@ def CustomPythonCmakeArgs():
     print( 'Using OSX-style libs from {0}'.format( python_prefix ) )
   else:
     which_python = _CheckOutput( [
-      'python',
+      sys.executable,
       '-c',
       'import sys;i=sys.version_info;print( "python%d.%d" % (i[0], i[1]) )'
     ] ).strip()
