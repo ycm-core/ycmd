@@ -1,27 +1,8 @@
 #!/bin/bash
-astyle \
---style=attach \
---indent=spaces=2 \
---indent-switches \
---indent-col1-comments \
---indent-preprocessor \
---max-instatement-indent=80 \
---break-blocks \
---pad-oper \
---pad-paren-in \
---pad-header \
---keep-one-line-blocks \
---convert-tabs \
---align-pointer=name \
---align-reference=name \
---suffix=none \
---lineend=linux \
---recursive \
---exclude=gmock \
---exclude=testdata \
---exclude=ycm_client_support.cpp \
---exclude=ycm_core.cpp \
---exclude=CustomAssert.h \
---exclude=CustomAssert.cpp \
-"cpp/ycm/*.cpp" \
-"cpp/ycm/*.h"
+
+files=$(find cpp/ycm -type f \
+        \( -name "*.cpp" -o -name "*.h" \) -and \
+        -not \( -path "**/gmock/**" -o -path "**/testdata/**" -o \
+        -path "**/CustomAssert.*" -o -path "**/ycm_*" \) )
+
+clang-format -i -style=file $files
