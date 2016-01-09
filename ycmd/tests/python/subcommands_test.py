@@ -167,3 +167,43 @@ inception()
     eq_( response, {
       'detailed_info': 'Class Documentation',
     } )
+
+
+  def GoToReferences_test( self ):
+    filepath = self._PathToTestFile( 'goto_references.py' )
+    contents = open( filepath ).read()
+
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'python',
+                                     line_num = 4,
+                                     column_num = 5,
+                                     contents = contents,
+                                     command_arguments = [ 'GoToReferences' ],
+                                     completer_target = 'filetype_default' )
+
+    response = self._app.post_json( '/run_completer_command', event_data ).json
+
+    eq_( response, [ {
+      'filepath': self._PathToTestFile( 'goto_references.py' ),
+      'column_num': 5,
+      'description': 'def f',
+      'line_num': 1
+    },
+    {
+      'filepath': self._PathToTestFile( 'goto_references.py' ),
+      'column_num': 5,
+      'description': 'a = f()',
+      'line_num': 4
+    },
+    {
+      'filepath': self._PathToTestFile( 'goto_references.py' ),
+      'column_num': 5,
+      'description': 'b = f()',
+      'line_num': 5
+    },
+    {
+      'filepath': self._PathToTestFile( 'goto_references.py' ),
+      'column_num': 5,
+      'description': 'c = f()',
+      'line_num': 6
+    } ] )
