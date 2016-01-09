@@ -49,6 +49,11 @@ HMAC_SECRET_LENGTH = 16
 BINARY_NOT_FOUND_MESSAGE = ( 'racerd binary not found. Did you build it? ' +
                              'You can do so by running ' +
                              '"./build.py --racer-completer".' )
+ERROR_FROM_RACERD_MESSAGE = (
+  'Received error from racerd while retrieving completions. You did not '
+  'set the rust_src_path option, which is probably causing this issue. '
+  'See YCM docs for details.'
+)
 
 
 def FindRacerdBinary( user_options ):
@@ -86,6 +91,11 @@ class RustCompleter( Completer ):
     self._server_state_lock = threading.RLock()
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._hmac_secret = ''
+    self._rust_source_path = self._GetRustSrcPath()
+
+    if not self._rust_source_path:
+      _logger.warn( 'No path provided for the rustc source. Please set the '
+                    'rust_src_path option' )
 
     if not self._racerd:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
@@ -110,8 +120,6 @@ class RustCompleter( Completer ):
     if env_key in os.environ:
       return os.environ[ env_key ]
 
-    _logger.warn( 'No path provided for the rustc source. Please set the '
-                  'ycm_rust_src_path option' )
     return None
 
 
@@ -199,7 +207,13 @@ class RustCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    completions = self._FetchCompletions( request_data )
+    try:
+      completions = self._FetchCompletions( request_data )
+    except requests.HTTPError:
+      if not self._rust_source_path:
+        raise RuntimeError( ERROR_FROM_RACERD_MESSAGE )
+      raise
+
     if not completions:
       return []
 
@@ -254,9 +268,8 @@ class RustCompleter( Completer ):
       env = os.environ.copy()
       env[ 'RUST_BACKTRACE' ] = '1'
 
-      rust_src_path = self._GetRustSrcPath()
-      if rust_src_path:
-        args.extend( [ '--rust-src-path', rust_src_path ] )
+      if self._rust_source_path:
+        args.extend( [ '--rust-src-path', self._rust_source_path ] )
 
       filename_format = p.join( utils.PathToTempDir(),
                                 'racerd_{port}_{std}.log' )
