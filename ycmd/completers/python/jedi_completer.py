@@ -74,8 +74,7 @@ class JediCompleter( Completer ):
     self._hmac_secret = ''
     self._python_binary_path = sys.executable
 
-    user_binary = user_options.get( 'python_binary_path' )
-    self._UpdatePythonBinary( user_binary )
+    self._UpdatePythonBinary( user_options.get( 'python_binary_path' ) )
 
     self._StartServer()
 
