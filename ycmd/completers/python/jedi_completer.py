@@ -72,7 +72,7 @@ class JediCompleter( Completer ):
     self._logfile_stderr = None
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._hmac_secret = ''
-    self._binary_path = sys.executable
+    self._python_binary_path = sys.executable
 
     user_binary = user_options.get( 'python_binary_path' )
     self._UpdatePythonBinary( user_binary )
@@ -85,7 +85,7 @@ class JediCompleter( Completer ):
       if not self._CheckBinaryExists( binary ):
         self._logger.error( BINARY_NOT_FOUND_MESSAGE )
         raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
-      self._binary_path = binary
+      self._python_binary_path = binary
 
 
   def _CheckBinaryExists( self, binary ):
@@ -152,7 +152,7 @@ class JediCompleter( Completer ):
       self._GenerateHmacSecret()
 
       with hmaclib.TemporaryHmacSecretFile( self._hmac_secret ) as hmac_file:
-        command = [ self._binary_path,
+        command = [ self._python_binary_path,
                     PATH_TO_JEDIHTTP,
                     '--port', str( self._jedihttp_port ),
                     '--hmac-file-secret', hmac_file.name ]
@@ -358,7 +358,7 @@ class JediCompleter( Completer ):
                   '  python binary: {1}\n'
                   '  stdout log: {2}\n'
                   '  stderr log: {3}' ).format( self._jedihttp_port,
-                                                self._binary_path,
+                                                self._python_binary_path,
                                                 self._logfile_stdout,
                                                 self._logfile_stderr )
 
