@@ -49,6 +49,11 @@ HMAC_SECRET_LENGTH = 16
 BINARY_NOT_FOUND_MESSAGE = ( 'racerd binary not found. Did you build it? ' +
                              'You can do so by running ' +
                              '"./build.py --racer-completer".' )
+ERROR_FROM_RACERD_MESSAGE = (
+  'Received error from racerd while retrieving completions. You did not '
+  'set the rust_src_path option, which is probably causing this issue. '
+  'See YCM docs for details.'
+)
 
 
 def FindRacerdBinary( user_options ):
@@ -110,8 +115,6 @@ class RustCompleter( Completer ):
     if env_key in os.environ:
       return os.environ[ env_key ]
 
-    _logger.warn( 'No path provided for the rustc source. Please set the '
-                  'ycm_rust_src_path option' )
     return None
 
 
@@ -199,7 +202,13 @@ class RustCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    completions = self._FetchCompletions( request_data )
+    try:
+      completions = self._FetchCompletions( request_data )
+    except requests.HTTPError:
+      if not self._GetRustSrcPath():
+        raise RuntimeError( ERROR_FROM_RACERD_MESSAGE )
+      raise
+
     if not completions:
       return []
 
@@ -257,6 +266,9 @@ class RustCompleter( Completer ):
       rust_src_path = self._GetRustSrcPath()
       if rust_src_path:
         args.extend( [ '--rust-src-path', rust_src_path ] )
+      else:
+        _logger.warn( 'No path provided for the rustc source. Please set the '
+                      'ycm_rust_src_path option' )
 
       filename_format = p.join( utils.PathToTempDir(),
                                 'racerd_{port}_{std}.log' )
