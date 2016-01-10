@@ -90,13 +90,6 @@ class Handlers_test( object ):
 
 
   @staticmethod
-  def _ChangeSpecificOptions( options ):
-    current_options = dict( user_options_store.GetAll() )
-    current_options.update( options )
-    handlers.UpdateUserOptions( current_options )
-
-
-  @staticmethod
   def _ErrorMatcher( cls, msg = None ):
     """ Returns a hamcrest matcher for a server exception response """
     entry = { 'exception': has_entry( 'TYPE', cls.__name__ ) }

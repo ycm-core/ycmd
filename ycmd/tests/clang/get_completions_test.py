@@ -294,12 +294,12 @@ int main()
 
 
   def NoCompletionsWhenAutoTriggerOff_test( self ):
-    self._ChangeSpecificOptions( { 'auto_trigger': False } )
-    self._app = TestApp( handlers.app )
-    self._app.post_json(
-      '/ignore_extra_conf_file',
-      { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
-    contents = """
+    with self.UserOption( 'auto_trigger', False ):
+      self._app = TestApp( handlers.app )
+      self._app.post_json(
+        '/ignore_extra_conf_file',
+        { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
+      contents = """
 struct Foo {
   int x;
   int y;
@@ -313,16 +313,16 @@ int main()
 }
 """
 
-    completion_data = self._BuildRequest( filepath = '/foo.cpp',
-                                          filetype = 'cpp',
-                                          contents = contents,
-                                          line_num = 11,
-                                          column_num = 7,
-                                          compilation_flags = ['-x', 'c++'] )
+      completion_data = self._BuildRequest( filepath = '/foo.cpp',
+                                            filetype = 'cpp',
+                                            contents = contents,
+                                            line_num = 11,
+                                            column_num = 7,
+                                            compilation_flags = ['-x', 'c++'] )
 
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-    assert_that( results, empty() )
+      results = self._app.post_json( '/completions',
+                                    completion_data ).json[ 'completions' ]
+      assert_that( results, empty() )
 
 
   def UnknownExtraConfException_test( self ):

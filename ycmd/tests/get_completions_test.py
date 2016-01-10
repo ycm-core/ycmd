@@ -150,21 +150,21 @@ class GetCompletions_test( Handlers_test ):
 
 
   def UltiSnipsCompleter_UnusedWhenOffWithOption_test( self ):
-    self._ChangeSpecificOptions( { 'use_ultisnips_completer': False } )
-    self._app = TestApp( handlers.app )
+    with self.UserOption( 'use_ultisnips_completer', False ):
+      self._app = TestApp( handlers.app )
 
-    event_data = self._BuildRequest(
-      event_name = 'BufferVisit',
-      ultisnips_snippets = [
-          {'trigger': 'foo', 'description': 'bar'},
-          {'trigger': 'zoo', 'description': 'goo'},
-      ] )
+      event_data = self._BuildRequest(
+        event_name = 'BufferVisit',
+        ultisnips_snippets = [
+            {'trigger': 'foo', 'description': 'bar'},
+            {'trigger': 'zoo', 'description': 'goo'},
+        ] )
 
-    self._app.post_json( '/event_notification', event_data )
+      self._app.post_json( '/event_notification', event_data )
 
-    completion_data = self._BuildRequest( contents = 'oo ',
-                                          column_num = 3 )
+      completion_data = self._BuildRequest( contents = 'oo ',
+                                            column_num = 3 )
 
-    eq_( [],
-         self._app.post_json( '/completions',
-                              completion_data ).json[ 'completions' ] )
+      eq_( [],
+          self._app.post_json( '/completions',
+                                completion_data ).json[ 'completions' ] )
