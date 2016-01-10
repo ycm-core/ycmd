@@ -27,11 +27,6 @@ class Python_Handlers_test( Handlers_test ):
     self._file = __file__
 
 
-  def setUp( self ):
-    super( Python_Handlers_test, self ).setUp()
-    self.WaitUntilJediHTTPServerReady()
-
-
   def tearDown( self ):
     self.StopJediHTTPServer()
 
@@ -54,4 +49,4 @@ class Python_Handlers_test( Handlers_test ):
     request = self._BuildRequest( completer_target = 'filetype_default',
                                   command_arguments = [ 'StopServer' ],
                                   filetype = 'python' )
-    self._app.post_json( '/run_completer_command', request )
+    self._app.post_json( '/run_completer_command', request, expect_errors = True )
