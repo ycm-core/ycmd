@@ -34,8 +34,8 @@ import base64
 
 
 HMAC_SECRET_LENGTH = 16
-BINARY_NOT_FOUND_MESSAGE = ( 'The specified python interpreter was not found. ' +
-                             'Did you specify it correctly?' )
+BINARY_NOT_FOUND_MESSAGE = ( 'The specified python interpreter {0} ' +
+                             'was not found. Did you specify it correctly?' )
 LOG_FILENAME_FORMAT = os.path.join( utils.PathToTempDir(),
                                     u'jedihttp_{port}_{std}.log' )
 PATH_TO_JEDIHTTP = os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
@@ -82,8 +82,9 @@ class JediCompleter( Completer ):
   def _UpdatePythonBinary( self, binary ):
     if binary:
       if not self._CheckBinaryExists( binary ):
-        self._logger.error( BINARY_NOT_FOUND_MESSAGE )
-        raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
+        msg = BINARY_NOT_FOUND_MESSAGE.format( binary )
+        self._logger.error( msg )
+        raise RuntimeError( msg )
       self._python_binary_path = binary
 
 

@@ -83,8 +83,9 @@ class UserDefinedPython_test( Python_Handlers_test ):
       response = self._app.get( '/ready',
                                 { 'subserver': 'python' },
                                 expect_errors = True ).json
-      assert_that( response, self._ErrorMatcher( RuntimeError,
-                                                 BINARY_NOT_FOUND_MESSAGE ) )
+
+      msg = BINARY_NOT_FOUND_MESSAGE.format( '/non/existing/path/python' )
+      assert_that( response, self._ErrorMatcher( RuntimeError, msg ) )
       utils.SafePopen.assert_not_called()
 
 
