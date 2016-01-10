@@ -49,4 +49,8 @@ class Python_Handlers_test( Handlers_test ):
     request = self._BuildRequest( completer_target = 'filetype_default',
                                   command_arguments = [ 'StopServer' ],
                                   filetype = 'python' )
-    self._app.post_json( '/run_completer_command', request, expect_errors = True )
+    # We don't actually start a JediHTTP server on every test, so we just
+    # ignore errors when stopping the server
+    self._app.post_json( '/run_completer_command',
+                         request,
+                         expect_errors = True )
