@@ -67,47 +67,49 @@ def FiletypeDictUnion_Works_test():
 
 
 def MatchesSemanticTrigger_Basic_test():
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 7, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 6, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 5, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 7, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 6, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 5, [cu._PrepareTrigger( '.' )] ) )
 
-  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 4, ['.'] ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 4, [cu._PrepareTrigger( '.' )] ) )
 
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 3, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 2, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 1, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 0, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 3, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 2, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 1, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 0, [cu._PrepareTrigger( '.' )] ) )
 
 
 def MatchesSemanticTrigger_JustTrigger_test():
-  ok_( cu._MatchesSemanticTrigger( '.', 1, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( '.', 0, ['.'] ) )
+  ok_( cu._MatchesSemanticTrigger( '.', 1, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( '.', 0, [cu._PrepareTrigger( '.' )] ) )
 
 
 def MatchesSemanticTrigger_TriggerBetweenWords_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo . bar', 5, ['.'] ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo . bar', 5, [cu._PrepareTrigger( '.' )] ) )
 
 
 def MatchesSemanticTrigger_BadInput_test():
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 10, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', -1, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( '', -1, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( '', 0, ['.'] ) )
-  ok_( not cu._MatchesSemanticTrigger( '', 1, ['.'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 10, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', -1, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( '', -1, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( '', 0, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( '', 1, [cu._PrepareTrigger( '.' )] ) )
   ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [] ) )
 
 
 def MatchesSemanticTrigger_TriggerIsWrong_test():
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [':'] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [cu._PrepareTrigger( ':' )] ) )
 
 
 def MatchesSemanticTrigger_LongerTrigger_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, ['::'] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 4, ['::'] ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, [cu._PrepareTrigger( '::' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 4, [cu._PrepareTrigger( '::' )] ) )
 
 
 def MatchesSemanticTrigger_OneTriggerMatches_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, ['.', ';', '::'] ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, [cu._PrepareTrigger( '.' ),
+                                                   cu._PrepareTrigger( ';' ),
+                                                   cu._PrepareTrigger( '::' )] ) )
 
 
 def MatchesSemanticTrigger_RegexTrigger_test():
