@@ -186,6 +186,20 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( vector_indexing_suite< std::vector< Diagnostic > >() );
 
   enum_< Token::Kind >( "TokenKind" )
+    .value( "Punctuation", Token::PUNCTUATION )
+    .value( "Keyword", Token::KEYWORD )
+    .value( "Identifier", Token::IDENTIFIER )
+    .value( "Literal", Token::LITERAL )
+    .value( "Comment", Token::COMMENT )
+    .export_values();
+
+  enum_< Token::Type >( "TokenType" )
+    .value( "None", Token::NONE )
+    .value( "Integer", Token::INTEGER )
+    .value( "Floating", Token::FLOATING )
+    .value( "Imaginary", Token::IMAGINARY )
+    .value( "String", Token::STRING )
+    .value( "Character", Token::CHARACTER )
     .value( "Namespace", Token::NAMESPACE )
     .value( "Class", Token::CLASS )
     .value( "Struct", Token::STRUCT )
@@ -202,10 +216,12 @@ BOOST_PYTHON_MODULE(ycm_core)
     .export_values();
 
   class_< Token >( "Token" )
-    .def_readonly( "kind_", &Token::kind_ )
-    .def_readonly( "line_number_", &Token::line_number_ )
-    .def_readonly( "column_number_", &Token::column_number_ )
-    .def_readonly( "offset_", &Token::offset_ );
+    .def_readonly( "kind", &Token::kind_ )
+    .def_readonly( "type", &Token::type_ )
+    .def_readonly( "start_line", &Token::start_line_ )
+    .def_readonly( "start_column", &Token::start_column_ )
+    .def_readonly( "end_line", &Token::end_line_ )
+    .def_readonly( "end_column", &Token::end_column_ );
 
   class_< std::vector< Token > >( "TokenVector" )
     .def( vector_indexing_suite< std::vector< Token > >() );

@@ -371,14 +371,21 @@ class ClangCompleter( Completer ):
 
   def GetSemanticTokens( self, request_data ):
     filename = request_data[ 'filepath' ]
+    if not filename:
+      raise ValueError( INVALID_FILE_MESSAGE )
+
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( "Still parsing file, no tokens yet." )
+
     start_line = request_data[ 'start_line' ]
     start_column = request_data[ 'start_column' ]
     end_line = request_data[ 'end_line' ]
     end_column = request_data[ 'end_column' ]
     semantic_tokens = self._completer.GetSemanticTokens(
-                                                   ToUtf8IfNeeded( filename ),
-                                                   start_line, start_column,
-                                                   end_line, end_column )
+        ToCppStringCompatible( filename ),
+        start_line, start_column,
+        end_line, end_column )
     return [ responses.BuildTokenData( token ) for token in semantic_tokens ]
 
 

@@ -102,10 +102,10 @@ public:
     bool reparse = true );
 
   std::vector< Token > GetSemanticTokens(
-    uint start_line,
-    uint start_column,
-    uint end_line,
-    uint end_column );
+    int start_line,
+    int start_column,
+    int end_line,
+    int end_column );
 
 private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
@@ -115,13 +115,10 @@ private:
 
   void UpdateLatestDiagnostics();
 
-  CXFile GetFile();
-
-  CXSourceLocation GetLocation( CXFile file, int line, int column );
-
-  CXSourceLocation GetLocation( int line, int column );
-
   CXCursor GetCursor( int line, int column );
+
+  CXSourceRange GetSourceRange( int start_line, int start_column,
+                                int end_line, int end_column );
 
   /////////////////////////////
   // PRIVATE MEMBER VARIABLES

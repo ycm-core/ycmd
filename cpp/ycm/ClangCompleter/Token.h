@@ -1,6 +1,6 @@
-// Copyright (C) 2011, 2012  Google Inc.
+// Copyright (C) 2016 Davit Samvelyan
 //
-// This file is part of YouCompleteMe.
+// This file is part of ycmd.
 //
 // YouCompleteMe is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,18 +18,37 @@
 #ifndef SYNTAX_H_IC9ZDM5T
 #define SYNTAX_H_IC9ZDM5T
 
-#include "standard.h"
-
 #include <string>
 
 #include <clang-c/Index.h>
 
 namespace YouCompleteMe {
 
+/// Represents single semantic token.
 struct Token {
 
   enum Kind {
-    NAMESPACE = 0,
+    PUNCTUATION = 0,
+    KEYWORD,
+    IDENTIFIER,
+    LITERAL,
+    COMMENT
+  };
+
+  enum Type {
+    // Punctutation and Comment
+    NONE = 0,
+
+    // Literal types
+    // true/false are keywords
+    INTEGER,
+    FLOATING,
+    IMAGINARY,
+    STRING,
+    CHARACTER,
+
+    // Identifier types
+    NAMESPACE,
     CLASS,
     STRUCT,
     UNION,
@@ -46,17 +65,26 @@ struct Token {
 
   Token();
 
-  Token( const CXSourceRange& tokenRange, const CXCursor& cursor );
+  Token( const CXTokenKind kind, const CXSourceRange& tokenRange,
+         const CXCursor& cursor );
 
   bool operator== ( const Token& other ) const;
 
   Kind kind_;
 
-  uint line_number_;
+  Type type_;
 
-  uint column_number_;
+  int start_line_;
 
-  uint offset_;
+  int start_column_;
+
+  int end_line_;
+
+  int end_column_;
+
+private:
+
+  void MapKindAndType( const CXTokenKind kind, const CXCursor& cursor );
 
 };
 

@@ -1,6 +1,6 @@
-// Copyright (C) 2011, 2012  Google Inc.
+// Copyright (C) 2016 Davit Samvelyan
 //
-// This file is part of YouCompleteMe.
+// This file is part of ycmd.
 //
 // YouCompleteMe is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,15 +17,34 @@
 
 #include "Token.h"
 
+#include "standard.h"
 #include "Range.h"
 
 namespace YouCompleteMe {
 
 namespace {
 
-Token::Kind CXCursorToTokenKind( const CXCursor& cursor ) {
+// This is a recursive function.
+// Recursive call is made for a reference cursors, to find out what kind of
+// cursors they are referencing, therefore recursion level should not exceed 2.
+Token::Type CXCursorToTokenType( const CXCursor& cursor ) {
   CXCursorKind kind = clang_getCursorKind( cursor );
   switch (kind) {
+    case CXCursor_IntegerLiteral:
+      return Token::INTEGER;
+
+    case CXCursor_FloatingLiteral:
+      return Token::FLOATING;
+
+    case CXCursor_ImaginaryLiteral:
+      return Token::IMAGINARY;
+
+    case CXCursor_StringLiteral:
+      return Token::STRING;
+
+    case CXCursor_CharacterLiteral:
+      return Token::CHARACTER;
+
     case CXCursor_Namespace:
     case CXCursor_NamespaceAlias:
     case CXCursor_NamespaceRef:
@@ -82,7 +101,7 @@ Token::Kind CXCursorToTokenKind( const CXCursor& cursor ) {
       if ( clang_Cursor_isNull( ref ) ) {
         return Token::UNSUPPORTED;
       } else {
-        return CXCursorToTokenKind( ref );
+        return CXCursorToTokenType( ref );
       }
     }
 
@@ -94,46 +113,71 @@ Token::Kind CXCursorToTokenKind( const CXCursor& cursor ) {
 } // unnamed namespace
 
 Token::Token()
-  : kind_( UNSUPPORTED ) {
+  : kind_( Token::IDENTIFIER )
+  , type_( Token::UNSUPPORTED )
+  , start_line_( 0 )
+  , start_column_( 0 )
+  , end_line_( 0 )
+  , end_column_( 0 )
+{
 }
 
-Token::Token( const CXSourceRange& tokenRange, const CXCursor& cursor ) {
+Token::Token( const CXTokenKind kind, const CXSourceRange& tokenRange,
+              const CXCursor& cursor ) {
 
-  kind_ = CXCursorToTokenKind( cursor );
-  if ( kind_ == UNSUPPORTED ) {
-    return;
-  }
+  MapKindAndType( kind, cursor );
 
-  CXFile unused_file;
-  uint unused_offset;
+  uint line, column;
   clang_getExpansionLocation( clang_getRangeStart( tokenRange ),
-                              &unused_file,
-                              &line_number_,
-                              &column_number_,
-                              &unused_offset );
+                              NULL,
+                              &line,
+                              &column,
+                              NULL );
 
-  uint end_line;
-  uint end_column;
+  start_line_ = static_cast< int >( line );
+  start_column_ = static_cast< int >( column );
+
   clang_getExpansionLocation( clang_getRangeEnd( tokenRange ),
-                              &unused_file,
-                              &end_line,
-                              &end_column,
-                              &unused_offset );
+                              NULL,
+                              &line,
+                              &column,
+                              NULL );
 
-  // There shouldn't exist any multiline Token, except for multiline strings,
-  // which is a job for syntax highlighter, but better be safe then sorry.
-  if ( line_number_ != end_line ) {
-    kind_ = UNSUPPORTED;
-    return;
-  }
-  offset_ = end_column - column_number_;
+  end_line_ = static_cast< int >( line );
+  end_column_ = static_cast< int >( column );
 }
 
 bool Token::operator== ( const Token& other ) const {
   return kind_ == other.kind_ &&
-         line_number_ == other.line_number_ &&
-         column_number_ == other.column_number_ &&
-         offset_ == other.offset_;
+         start_line_ == other.start_line_ &&
+         start_column_ == other.start_column_ &&
+         end_line_ == other.end_line_ &&
+         end_column_ == other.end_column_;
+}
+
+void Token::MapKindAndType( const CXTokenKind kind, const CXCursor& cursor ) {
+  switch ( kind ) {
+    case CXToken_Punctuation:
+      kind_ = Token::PUNCTUATION;
+      type_ = Token::NONE;
+      break;
+    case CXToken_Keyword:
+      kind_ = Token::KEYWORD;
+      type_ = Token::NONE;
+      break;
+    case CXToken_Identifier:
+      kind_ = Token::IDENTIFIER;
+      type_ = CXCursorToTokenType( cursor );
+      break;
+    case CXToken_Literal:
+      kind_ = Token::LITERAL;
+      type_ = CXCursorToTokenType( cursor );
+      break;
+    case CXToken_Comment:
+      kind_ = Token::COMMENT;
+      type_ = Token::NONE;
+      break;
+  }
 }
 
 } // YouCompleteMe
