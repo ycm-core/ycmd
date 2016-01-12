@@ -36,12 +36,18 @@ class PreparedTriggers( object ):
     self._filetype_to_prepared_triggers = final_triggers
 
 
-  def MatchesForFiletype( self, current_line, start_column, filetype ):
+  def MatchingTriggerForFiletype( self, current_line, start_column, filetype ):
     try:
       triggers = self._filetype_to_prepared_triggers[ filetype ]
     except KeyError:
-      return False
-    return _MatchesSemanticTrigger( current_line, start_column, triggers )
+      return None
+    return _MatchingSemanticTrigger( current_line, start_column, triggers )
+
+
+  def MatchesForFiletype( self, current_line, start_column, filetype ):
+    return self.MatchingTriggerForFiletype( current_line,
+                                            start_column,
+                                            filetype ) is not None
 
 
 def _FiletypeTriggerDictFromSpec( trigger_dict_spec ):
@@ -78,18 +84,24 @@ def _RegexTriggerMatches( trigger, line_value, start_column ):
 
 
 # start_column is 0-based
-def _MatchesSemanticTrigger( line_value, start_column, trigger_list ):
+def _MatchingSemanticTrigger( line_value, start_column, trigger_list ):
   line_length = len( line_value )
   if not line_length or start_column > line_length:
-    return False
+    return None
 
   # ignore characters after user's caret column
   line_value = line_value[ :start_column ]
 
   for trigger in trigger_list:
     if _RegexTriggerMatches( trigger, line_value, start_column ):
-      return True
-  return False
+      return trigger
+  return None
+
+
+def _MatchesSemanticTrigger( line_value, start_column, trigger_list ):
+  return _MatchingSemanticTrigger( line_value,
+                                   start_column,
+                                   trigger_list ) is not None
 
 
 def _PrepareTrigger( trigger ):
