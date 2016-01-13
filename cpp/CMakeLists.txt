@@ -29,13 +29,6 @@ else()
   endif()
 endif()
 
-
-# Disable CMake legacy mode for Cygwin, since the build doesn't depend on
-# WIN32 being set for Cygwin, and this property being unset causes a
-# warning in Cygwin.
-# Remove when CMake >= 2.8.4 is required, since that implicitly sets this
-set( CMAKE_LEGACY_CYGWIN_WIN32 0 )
-
 project( YouCompleteMe )
 
 # Get the core version
