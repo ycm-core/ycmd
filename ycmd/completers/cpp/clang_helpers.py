@@ -18,10 +18,6 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Provided for backwards compatibility with old ycm_extra_conf files.
 def PrepareClangFlags( flags, filename ):
-  # When flags come from the compile_commands.json file, the first flag is
-  # usually the path to the compiler that should be invoked. We want to strip
-  # that.
-  if flags and not flags[ 0 ].startswith( '-' ):
-    return flags[ 1: ]
   return flags
