@@ -227,9 +227,12 @@ class CsharpCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
 
-    if ( not solutioncompleter.ServerIsRunning() and
+    if ( not solutioncompleter.ServerIsActive() and
          self.user_options[ 'auto_start_csharp_server' ] ):
       solutioncompleter._StartServer()
+      return
+
+    if not solutioncompleter.ServerIsRunning():
       return
 
     errors = solutioncompleter.CodeCheck( request_data )
@@ -548,27 +551,29 @@ class CsharpSolutionCompleter:
 
   def ServerIsActive( self ):
     """ Check if our OmniSharp server is active (started, not yet stopped)."""
-    try:
-      return bool( self._omnisharp_port )
-    except:
-      return False
+    return ( self._omnisharp_phandle is not None and
+             self._omnisharp_phandle.poll() is None )
 
 
   def ServerIsRunning( self ):
     """ Check if our OmniSharp server is running (up and serving)."""
+    if not self.ServerIsActive():
+      return False
+
     try:
-      return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkalivestatus', timeout = .2 ) )
-    except:
+      return self._GetResponse( '/checkalivestatus', timeout = .2 )
+    except requests.exceptions.RequestException:
       return False
 
 
   def ServerIsReady( self ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
+    if not self.ServerIsActive():
+      return False
+
     try:
-      return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkreadystatus', timeout = .2 ) )
-    except:
+      return self._GetResponse( '/checkreadystatus', timeout = .2 )
+    except requests.exceptions.RequestException:
       return False
 
 
