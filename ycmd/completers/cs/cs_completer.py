@@ -227,8 +227,8 @@ class CsharpCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
 
-    if ( not solutioncompleter.ServerIsActive() and
-         self.user_options[ 'auto_start_csharp_server' ] ):
+    if ( self.user_options[ 'auto_start_csharp_server' ]
+         and not solutioncompleter.ServerIsActive() ):
       solutioncompleter._StartServer()
       return
 
