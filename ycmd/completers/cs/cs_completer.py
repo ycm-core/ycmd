@@ -555,8 +555,7 @@ class CsharpSolutionCompleter:
 
   def ServerIsActive( self ):
     """ Check if our OmniSharp server is active (started, not yet stopped)."""
-    return ( self._omnisharp_phandle is not None and
-             self._omnisharp_phandle.poll() is None )
+    return utils.ProcessIsRunning( self._omnisharp_phandle )
 
 
   def ServerIsRunning( self ):
@@ -583,8 +582,7 @@ class CsharpSolutionCompleter:
 
   def ServerTerminated( self ):
     """ Check if the server process has already terminated. """
-    return ( self._omnisharp_phandle is not None and
-             self._omnisharp_phandle.poll() is not None )
+    return not utils.ProcessIsRunning( self._omnisharp_phandle )
 
 
   def _SolutionFile( self ):
