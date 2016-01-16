@@ -3,6 +3,11 @@
     "browser",
     "jquery"
   ],
+  "loadEagerly": [
+      "file1.js",
+      "file2.js",
+      "file3.js"
+  ],
   "plugins": {
     "requirejs": {
       "baseURL": "./",

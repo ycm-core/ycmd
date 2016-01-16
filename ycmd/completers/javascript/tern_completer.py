@@ -188,6 +188,16 @@ class TernCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     self._WarnIfMissingTernProject()
 
+    # Keep tern server up to date with the file data. We do this by sending an
+    # empty request just containing the file data
+    try:
+      self._PostRequest( {}, request_data )
+    except:
+      # The server might not be ready yet or the server might not be running.
+      # in any case, just ignore this we'll hopefully get another parse request
+      # soon.
+      pass
+
 
   def GetSubcommandsMap( self ):
     return {
@@ -568,7 +578,6 @@ class TernCompleter( Completer ):
                             filename ) )
 
 
-
     def BuildFixItChunk( change ):
       return responses.FixItChunk(
         change[ 'text' ],
@@ -577,6 +586,9 @@ class TernCompleter( Completer ):
                     change[ 'end' ] ) )
 
 
+    # From an API perspective, Refactor and FixIt are the same thing - it just
+    # applies a set of changes to a set of files. So we re-use all of the
+    # existing FixIt infrastructure.
     return responses.BuildFixItResponse( [
       responses.FixIt(
         responses.Location( request_data[ 'line_num' ],
