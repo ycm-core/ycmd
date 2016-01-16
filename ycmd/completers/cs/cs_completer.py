@@ -227,11 +227,15 @@ class CsharpCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
 
+    # Only start the server associated to this solution if the option to
+    # automatically start one is set and no server process is already running.
     if ( self.user_options[ 'auto_start_csharp_server' ]
          and not solutioncompleter.ServerIsActive() ):
       solutioncompleter._StartServer()
       return
 
+    # Bail out if the server is unresponsive. We don't start or restart the
+    # server in this case because current one may still be warming up.
     if not solutioncompleter.ServerIsRunning():
       return
 
