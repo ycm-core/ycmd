@@ -57,7 +57,7 @@ class Cs_Handlers_test( Handlers_test ):
         success = True
         break
       request = self._BuildRequest( completer_target = 'filetype_default',
-                                    command_arguments = [ 'ServerIsActive' ],
+                                    command_arguments = [ 'ServerIsRunning' ],
                                     filepath = filename,
                                     filetype = 'cs' )
       result = self._app.post_json( '/run_completer_command', request ).json

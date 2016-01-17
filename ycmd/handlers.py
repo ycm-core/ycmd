@@ -131,7 +131,7 @@ def GetHealthy():
   _logger.info( 'Received health request' )
   if request.query.include_subservers:
     cs_completer = _server_state.GetFiletypeCompleter( ['cs'] )
-    return _JsonResponse( cs_completer.ServerIsRunning() )
+    return _JsonResponse( cs_completer.ServerIsHealthy() )
   return _JsonResponse( True )
 
 
