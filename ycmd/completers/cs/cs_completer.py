@@ -201,6 +201,10 @@ class CsharpCompleter( Completer ):
       'GetDoc'                           : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetDoc' ) ),
+      'ServerIsActive'                   : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = 'ServerIsActive',
+                                   no_request_data = True ) ),
       'ServerRunning'                    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsRunning',
@@ -208,10 +212,6 @@ class CsharpCompleter( Completer ):
       'ServerReady'                      : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsReady',
-                                   no_request_data = True ) ),
-      'ServerTerminated'                 : ( lambda self, request_data, args:
-         self._SolutionSubcommand( request_data,
-                                   method = 'ServerTerminated',
                                    no_request_data = True ) )
     }
 
@@ -300,6 +300,12 @@ class CsharpCompleter( Completer ):
       return 'OmniSharp Server is not running'
 
 
+  def ServerIsActive( self, request_data = None ):
+    """ Check if the server process is active. """
+    return self._CheckSingleOrAllActive( request_data,
+                                         lambda i: i.ServerIsActive() )
+
+
   def ServerIsRunning( self, request_data = None ):
     """ Check if our OmniSharp server is running. """
     return self._CheckSingleOrAllActive( request_data,
@@ -310,12 +316,6 @@ class CsharpCompleter( Completer ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
     return self._CheckSingleOrAllActive( request_data,
                                          lambda i: i.ServerIsReady() )
-
-
-  def ServerTerminated( self, request_data = None ):
-    """ Check if the server process has already terminated. """
-    return self._CheckSingleOrAllActive( request_data,
-                                         lambda i: i.ServerTerminated() )
 
 
   def _CheckSingleOrAllActive( self, request_data, action ):
@@ -409,7 +409,7 @@ class CsharpSolutionCompleter:
     self._TryToStopServer()
 
     # Kill it if it's still up
-    if not self.ServerTerminated() and self._omnisharp_phandle is not None:
+    if self.ServerIsActive():
       self._logger.info( 'Killing OmniSharp server' )
       self._omnisharp_phandle.kill()
 
@@ -425,7 +425,7 @@ class CsharpSolutionCompleter:
       except:
         pass
       for _ in range( 10 ):
-        if self.ServerTerminated():
+        if not self.ServerIsActive():
           return
         time.sleep( .1 )
 
@@ -578,11 +578,6 @@ class CsharpSolutionCompleter:
       return self._GetResponse( '/checkreadystatus', timeout = .2 )
     except requests.exceptions.RequestException:
       return False
-
-
-  def ServerTerminated( self ):
-    """ Check if the server process has already terminated. """
-    return not utils.ProcessIsRunning( self._omnisharp_phandle )
 
 
   def _SolutionFile( self ):
