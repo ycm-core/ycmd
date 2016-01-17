@@ -25,9 +25,8 @@ from ycmd import extra_conf_store
 from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
 
-INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
-                  '--sysroot', '-gcc-toolchain', '-include', '-iframework',
-                  '-F', '-imacros' ]
+INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
+                  '-gcc-toolchain', '-include', '-iframework', '-F', '-imacros' ]
 
 # We need to remove --fcolor-diagnostics because it will cause shell escape
 # sequences to show up in editors, which is bad. See Valloric/YouCompleteMe#1421
