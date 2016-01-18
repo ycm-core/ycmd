@@ -156,8 +156,8 @@ def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
           flags._RemoveUnusedFlags( expected + to_remove + expected[ 1: ],
                                    filename ) )
 
-  include_flags = [ '-isystem', '-I', '-iquote', '--sysroot=', '-isysroot',
-                    '-include', '-iframework', '-F', '-imacros' ]
+  include_flags = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
+                    '-gcc-toolchain', '-include', '-iframework', '-F', '-imacros' ]
   to_remove = [ '/moo/boo' ]
   filename = 'file'
 
