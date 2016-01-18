@@ -101,6 +101,9 @@ class GetCompletions_test( Handlers_test ):
     with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
       completion_data = self._BuildRequest( filetype = 'dummy_filetype',
                                             force_semantic = True )
+# support python3
+      for key in completion_data.keys():
+        completion_data[key] = str(completion_data[key])
 
       results = self._app.post_json( '/completions',
                                      completion_data ).json[ 'completions' ]

@@ -6,9 +6,15 @@ import os.path as p
 import sys
 
 major, minor = sys.version_info[ 0 : 2 ]
-if major != 2 or minor < 6:
-  sys.exit( 'The build script requires Python version >= 2.6 and < 3.0; '
-            'your version of Python is ' + sys.version )
+# support python3
+if major >2:
+    PY3 = True
+else:
+    PY3 = False
+
+if major == 2 and minor < 6:
+     sys.exit( 'The build script requires Python version >= 2.6 and < 3.0; '
+              'your version of Python is ' + sys.version )
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
@@ -111,10 +117,22 @@ def CustomPythonCmakeArgs():
 
   print( 'Searching for python libraries...' )
 
+# support python3
+  if PY3:
+      pyconfig_cmd = 'python3-config'
+      py_cmd = 'python3'
+  else:
+      pyconfig_cmd = 'python-config'
+      py_cmd = 'python'
+
   python_prefix = _CheckOutput( [
-      'python-config',
+      pyconfig_cmd,
       '--prefix'
   ] ).strip()
+
+# support python3
+  if PY3:
+      python_prefix = python_prefix.decode()
 
   if p.isfile( p.join( python_prefix, '/Python' ) ):
     python_library = p.join( python_prefix, '/Python' )
@@ -122,10 +140,13 @@ def CustomPythonCmakeArgs():
     print( 'Using OSX-style libs from {0}'.format( python_prefix ) )
   else:
     which_python = _CheckOutput( [
-      'python',
+      py_cmd,
       '-c',
       'import sys;i=sys.version_info;print( "python%d.%d" % (i[0], i[1]) )'
     ] ).strip()
+    if PY3:
+        which_python = which_python.decode()
+
     lib_python = '{0}/lib/lib{1}'.format( python_prefix, which_python ).strip()
 
     print( 'Searching for python with prefix: {0} and lib {1}:'.format(

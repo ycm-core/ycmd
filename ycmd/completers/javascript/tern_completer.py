@@ -15,8 +15,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
+# support python3
+import logging, os, requests, traceback, threading
+try:
+    import httplib
+except AttributeError:
+    import http.clinet as httplib
 
-import httplib, logging, os, requests, traceback, threading
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
 
