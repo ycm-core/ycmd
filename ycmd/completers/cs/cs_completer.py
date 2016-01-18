@@ -201,17 +201,17 @@ class CsharpCompleter( Completer ):
       'GetDoc'                           : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetDoc' ) ),
-      'ServerRunning'                    : ( lambda self, request_data, args:
+      'ServerIsRunning'                  : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsRunning',
                                    no_request_data = True ) ),
-      'ServerReady'                      : ( lambda self, request_data, args:
+      'ServerIsHealthy'                  : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = 'ServerIsHealthy',
+                                   no_request_data = True ) ),
+      'ServerIsReady'                    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsReady',
-                                   no_request_data = True ) ),
-      'ServerTerminated'                 : ( lambda self, request_data, args:
-         self._SolutionSubcommand( request_data,
-                                   method = 'ServerTerminated',
                                    no_request_data = True ) )
     }
 
@@ -227,9 +227,16 @@ class CsharpCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
 
-    if ( not solutioncompleter.ServerIsRunning() and
-         self.user_options[ 'auto_start_csharp_server' ] ):
+    # Only start the server associated to this solution if the option to
+    # automatically start one is set and no server process is already running.
+    if ( self.user_options[ 'auto_start_csharp_server' ]
+         and not solutioncompleter.ServerIsRunning() ):
       solutioncompleter._StartServer()
+      return
+
+    # Bail out if the server is unresponsive. We don't start or restart the
+    # server in this case because current one may still be warming up.
+    if not solutioncompleter.ServerIsHealthy():
       return
 
     errors = solutioncompleter.CodeCheck( request_data )
@@ -293,32 +300,20 @@ class CsharpCompleter( Completer ):
       return 'OmniSharp Server is not running'
 
 
-  def ServerIsRunning( self, request_data = None ):
-    """ Check if our OmniSharp server is running. """
-    return self._CheckSingleOrAllActive( request_data,
-                                         lambda i: i.ServerIsRunning() )
+  def ServerIsHealthy( self ):
+    """ Check if our OmniSharp server is healthy (up and serving). """
+    return self._CheckAllRunning( lambda i: i.ServerIsHealthy() )
 
 
-  def ServerIsReady( self, request_data = None ):
+  def ServerIsReady( self ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
-    return self._CheckSingleOrAllActive( request_data,
-                                         lambda i: i.ServerIsReady() )
+    return self._CheckAllRunning( lambda i: i.ServerIsReady() )
 
 
-  def ServerTerminated( self, request_data = None ):
-    """ Check if the server process has already terminated. """
-    return self._CheckSingleOrAllActive( request_data,
-                                         lambda i: i.ServerTerminated() )
-
-
-  def _CheckSingleOrAllActive( self, request_data, action ):
-    if request_data is not None:
-      solutioncompleter = self._GetSolutionCompleter( request_data )
-      return action( solutioncompleter )
-    else:
-      solutioncompleters = self._completer_per_solution.values()
-      return all( action( completer )
-        for completer in solutioncompleters if completer.ServerIsActive() )
+  def _CheckAllRunning( self, action ):
+    solutioncompleters = self._completer_per_solution.values()
+    return all( action( completer ) for completer in solutioncompleters
+                if completer.ServerIsRunning() )
 
 
   def _GetSolutionFile( self, filepath ):
@@ -402,7 +397,7 @@ class CsharpSolutionCompleter:
     self._TryToStopServer()
 
     # Kill it if it's still up
-    if not self.ServerTerminated() and self._omnisharp_phandle is not None:
+    if self.ServerIsRunning():
       self._logger.info( 'Killing OmniSharp server' )
       self._omnisharp_phandle.kill()
 
@@ -418,7 +413,7 @@ class CsharpSolutionCompleter:
       except:
         pass
       for _ in range( 10 ):
-        if self.ServerTerminated():
+        if not self.ServerIsRunning():
           return
         time.sleep( .1 )
 
@@ -546,36 +541,31 @@ class CsharpSolutionCompleter:
     return parameters
 
 
-  def ServerIsActive( self ):
-    """ Check if our OmniSharp server is active (started, not yet stopped)."""
-    try:
-      return bool( self._omnisharp_port )
-    except:
+  def ServerIsRunning( self ):
+    """ Check if our OmniSharp server is running (process is up)."""
+    return utils.ProcessIsRunning( self._omnisharp_phandle )
+
+
+  def ServerIsHealthy( self ):
+    """ Check if our OmniSharp server is healthy (up and serving)."""
+    if not self.ServerIsRunning():
       return False
 
-
-  def ServerIsRunning( self ):
-    """ Check if our OmniSharp server is running (up and serving)."""
     try:
-      return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkalivestatus', timeout = .2 ) )
-    except:
+      return self._GetResponse( '/checkalivestatus', timeout = .2 )
+    except requests.exceptions.RequestException:
       return False
 
 
   def ServerIsReady( self ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
-    try:
-      return bool( self._omnisharp_port and
-                   self._GetResponse( '/checkreadystatus', timeout = .2 ) )
-    except:
+    if not self.ServerIsRunning():
       return False
 
-
-  def ServerTerminated( self ):
-    """ Check if the server process has already terminated. """
-    return ( self._omnisharp_phandle is not None and
-             self._omnisharp_phandle.poll() is not None )
+    try:
+      return self._GetResponse( '/checkreadystatus', timeout = .2 )
+    except requests.exceptions.RequestException:
+      return False
 
 
   def _SolutionFile( self ):

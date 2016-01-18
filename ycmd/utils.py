@@ -171,6 +171,10 @@ def OnTravis():
   return 'TRAVIS' in os.environ
 
 
+def ProcessIsRunning( handle ):
+  return handle is not None and handle.poll() is None
+
+
 # From here: http://stackoverflow.com/a/8536476/1672783
 def TerminateProcess( pid ):
   if OnWindows():
