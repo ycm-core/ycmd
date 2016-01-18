@@ -21,17 +21,26 @@ project( ycm_support_libs )
 set( CLIENT_LIB "ycm_client_support" )
 set( SERVER_LIB "ycm_core" )
 
-set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
-find_package( PythonLibs 2.6 REQUIRED )
-# The version of PythonInterp controls the version of boost.python which
-# is pulled in later, otherwise the highest python version is used
-find_package( PythonInterp 2.6 REQUIRED )
-
-if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
-  message( FATAL_ERROR
-    "CMake found python3 libs instead of python2 libs. YCM works only with "
-    "python2.\n" )
+#support python3
+set( Python_ADDITIONAL_VERSIONS 2.7 2.6 3.0 3.1 3.2 3.3 3.4 3.5 )
+find_package( PythonLibs )
+message("include dirs py: ${PYTHON_INCLUDE_DIRS}")
+if(PYTHON_INCLUDE_DIRS MATCHES "\\python3")
+        find_package( PythonInterp 3.0 REQUIRED )
+        if(NOT PYTHON_INCLUDE_DIRS MATCHES "\\python3.5m")
+                set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS}m)
+                set(CPLUS_INCLUDE_PATH ${PYTHON_INCLUDE_DIRS}m)
+        message(WARNING "python include folder fixed (m) missing!")
+        endif()
+else()
+        find_package( PythonInterp 2.6 REQUIRED )
 endif()
+
+#if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
+  #message( FATAL_ERROR
+    #"CMake found python3 libs instead of python2 libs. YCM works only with "
+    #"python2.\n" )
+#endif()
 
 option( USE_DEV_FLAGS "Use compilation flags meant for YCM developers" OFF )
 option( USE_CLANG_COMPLETER "Use Clang semantic completer for C/C++/ObjC" OFF )

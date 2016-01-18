@@ -33,6 +33,20 @@ CREATE_NO_WINDOW = 0x08000000
 # Executable extensions used on Windows
 WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
 
+# support python3
+try:
+    unicode = unicode
+except NameError:
+    str = str
+    bytes = bytes
+    unicode = str
+    basestring = (str,bytes)
+else:
+    str = str
+    bytes = str
+    unicode = unicode
+    basestring = basestring
+
 
 def SanitizeQuery( query ):
   return query.strip()
@@ -40,6 +54,13 @@ def SanitizeQuery( query ):
 
 # Given an object, returns a str object that's utf-8 encoded.
 def ToUtf8IfNeeded( value ):
+# support python3
+  if unicode == str and value is not None:
+      return value
+  elif unicode == str and value is None:
+      return 'None'
+
+
   if isinstance( value, unicode ):
     return value.encode( 'utf8' )
   if isinstance( value, str ):
@@ -48,6 +69,10 @@ def ToUtf8IfNeeded( value ):
 
 
 def ToUnicodeIfNeeded( value ):
+# support python3
+  if unicode ==str:
+      return value
+
   if isinstance( value, unicode ):
     return value
   if isinstance( value, str ):
@@ -59,6 +84,8 @@ def ToUnicodeIfNeeded( value ):
 # Recurses through the object if it's a dict/iterable and converts all the
 # unicode objects to utf-8 strings.
 def RecursiveEncodeUnicodeToUtf8( value ):
+  if unicode == str:
+      return value
   if isinstance( value, unicode ):
     return value.encode( 'utf8' )
   if isinstance( value, str ):

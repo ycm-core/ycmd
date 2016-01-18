@@ -37,6 +37,12 @@ _module_for_module_file_lock = Lock()
 _module_file_for_source_file = {}
 _module_file_for_source_file_lock = Lock()
 
+# support python3
+try:
+    xrange = xrange
+except NameError:
+    xrange = range
+
 
 def Reset():
   global _module_for_module_file, _module_file_for_source_file

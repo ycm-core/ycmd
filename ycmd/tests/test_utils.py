@@ -36,7 +36,13 @@ def BuildRequest( **kwargs ):
     }
   }
 
-  for key, value in kwargs.iteritems():
+  # support python3
+  try:
+      kwargs.iteritems()
+  except AttributeError:
+      kwargs_iter = kwargs.items()
+
+  for key, value in kwargs_iter:
     if key in [ 'contents', 'filetype', 'filepath' ]:
       continue
 

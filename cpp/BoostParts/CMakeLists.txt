@@ -26,14 +26,31 @@ cmake_minimum_required( VERSION 2.8 )
 
 project( BoostParts )
 
-set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
-find_package( PythonLibs 2.6 REQUIRED )
-
-if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
-  message( FATAL_ERROR
-    "CMake found python3 libs instead of python2 libs. YCM works only with "
-    "python2.\n" )
+#support python3
+set( Python_ADDITIONAL_VERSIONS 2.7 2.6 3.0 3.1 3.2 3.3 3.4 3.5 )
+find_package( PythonLibs )
+message("include dirs py: ${PYTHON_INCLUDE_DIRS}")
+if(PYTHON_INCLUDE_DIRS MATCHES "\\python3")
+        find_package( PythonInterp 3.0 REQUIRED )
+        if(NOT PYTHON_INCLUDE_DIRS MATCHES "\\python3.5m")
+                set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS}m)
+                set(CPLUS_INCLUDE_PATH ${PYTHON_INCLUDE_DIRS}m)
+        message(WARNING "python include folder fixed (m) missing!")
+        endif()
+else()
+        find_package( PythonInterp 2.6 REQUIRED )
 endif()
+
+
+#set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
+#find_package( PythonLibs 2.6 REQUIRED )
+
+
+#if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
+  #message( FATAL_ERROR
+    #"CMake found python3 libs instead of python2 libs. YCM works only with "
+    #"python2.\n" )
+#endif()
 
 file( GLOB_RECURSE SOURCES *.cpp )
 
