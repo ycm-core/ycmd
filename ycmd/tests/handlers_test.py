@@ -20,10 +20,15 @@
 from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from webtest import TestApp
-from .. import handlers
+
+# support python3
+try:
+    from .. import handlers
+except ImportError:
+    from ycmd import handlers
 from ycmd import user_options_store
 from hamcrest import has_entries, has_entry, contains_string
-from test_utils import BuildRequest
+from .test_utils import BuildRequest
 from mock import patch
 import contextlib
 import bottle

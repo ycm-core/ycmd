@@ -40,6 +40,25 @@ PATH_TO_OMNISHARP_BINARY = os.path.join(
   '..', '..', '..', 'third_party', 'OmniSharpServer',
   'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
 
+# support python3
+import sys
+PY3 = sys.version_info > (3,)
+if PY3
+    from functools import cmp_to_key
+try:
+    unicode = unicode
+except NameError:
+    str = str
+    bytes = bytes
+    unicode = str
+    basestring = (str,bytes)
+else:
+    str = str
+    bytes = str
+    unicode = unicode
+    basestring = basestring
+
+
 
 # TODO: Handle this better than dummy classes
 class CsharpDiagnostic:
@@ -607,8 +626,11 @@ class CsharpSolutionCompleter:
 
 
 def _CompleteSorterByImport( a, b ):
-  return cmp( _CompleteIsFromImport( a ), _CompleteIsFromImport( b ) )
-
+# dont need to use cmp here since is only comparing booleans
+  if _CompleteIsFromImport(a) == _CompleteIsFromImport(b):
+      return 0
+  else:
+      return 1
 
 def _CompleteIsFromImport( candidate ):
   try:

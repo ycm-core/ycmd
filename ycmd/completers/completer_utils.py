@@ -21,6 +21,21 @@ from collections import defaultdict
 import os
 import re
 
+# support python3
+try:
+    unicode = unicode
+except NameError:
+    str = str
+    bytes = bytes
+    unicode = str
+    basestring = (str,bytes)
+else:
+    str = str
+    bytes = str
+    unicode = unicode
+    basestring = basestring
+
+
 
 class PreparedTriggers( object ):
   def __init__( self,  user_trigger_map = None, filetype_set = None ):
@@ -30,8 +45,13 @@ class PreparedTriggers( object ):
     final_triggers = _FiletypeDictUnion( PREPARED_DEFAULT_FILETYPE_TRIGGERS,
                                          user_prepared_triggers )
     if filetype_set:
-      final_triggers = dict( ( k, v ) for k, v in final_triggers.iteritems()
-                             if k in filetype_set )
+        # support python3
+        try:
+            final_triggers = dict( ( k, v ) for k, v in final_triggers.iteritems()
+                                  if k in filetype_set )
+        except AttributeError:
+            final_triggers = dict( ( k, v ) for k, v in final_triggers.items()
+                                  if k in filetype_set )
 
     self._filetype_to_prepared_triggers = final_triggers
 
@@ -52,8 +72,13 @@ class PreparedTriggers( object ):
 
 def _FiletypeTriggerDictFromSpec( trigger_dict_spec ):
   triggers_for_filetype = defaultdict( set )
+  # support python3
+  try:
+      trigger_dict_spec.iteritems()
+  except AttributeError:
+      trigger_iter = trigger_dict_spec.items()
 
-  for key, triggers in trigger_dict_spec.iteritems():
+  for key, triggers in trigger_iter:
     filetypes = key.split( ',' )
     for filetype in filetypes:
       regexes = [ _PrepareTrigger( x ) for x in triggers ]
@@ -67,7 +92,12 @@ def _FiletypeDictUnion( dict_one, dict_two ):
   """Returns a new filetype dict that's a union of the provided two dicts.
   Dict params are supposed to be type defaultdict(set)."""
   def UpdateDict( first, second ):
-    for key, value in second.iteritems():
+    try:
+        second.iteritems()
+    except AttributeError:
+        second_iter = second.items()
+
+    for key, value in second_iter:
       first[ key ].update( value )
 
   final_dict = defaultdict( set )

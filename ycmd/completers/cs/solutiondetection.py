@@ -8,6 +8,22 @@ from ycmd import extra_conf_store
 
 __logger = logging.getLogger( __name__ )
 
+# support python3
+try:
+    unicode = unicode
+except NameError:
+    str = str
+    bytes = bytes
+    unicode = str
+    basestring = (str,bytes)
+else:
+    str = str
+    bytes = str
+    unicode = unicode
+    basestring = basestring
+
+
+
 def FindSolutionPath( filepath ):
     """ Try to find suitable solution file given a source file path using all available information sources """
     # try to load ycm_extra_conf

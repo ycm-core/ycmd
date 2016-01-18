@@ -18,8 +18,15 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import httplib
-from urlparse import urlparse
+# support python3
+try:
+    import httplib
+    from urlparse import urlparse
+
+except ImportError:
+    import http.client as httplib
+    from urllib.parse import urlparse
+
 from base64 import b64decode, b64encode
 from bottle import request, response, abort
 from ycmd import hmac_utils

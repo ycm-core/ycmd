@@ -33,10 +33,20 @@ import atexit
 import logging
 import json
 import bottle
-import httplib
+# support python3
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib
+
 import traceback
 from bottle import request, response
-import server_state
+# support python3
+try:
+    import server_state
+except ImportError:
+    from ycmd import server_state
+
 from ycmd import user_options_store
 from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
 from ycmd import hmac_plugin

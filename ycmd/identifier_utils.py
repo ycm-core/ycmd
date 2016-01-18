@@ -19,6 +19,12 @@
 
 import re
 
+# support python3
+try:
+    xrange = xrange
+except NameError:
+    xrange = range
+
 COMMENT_AND_STRING_REGEX = re.compile(
   "//.*?$" # Anything following '//'
   "|"
