@@ -25,6 +25,11 @@ import os.path
 
 class Python_Subcommands_test( Python_Handlers_test ):
 
+  def setUp( self ):
+    super( Python_Subcommands_test, self ).setUp()
+    self.WaitUntilJediHTTPServerReady()
+
+
   def GoTo_Variation_ZeroBasedLineAndColumn_test( self ):
     tests = [
           {

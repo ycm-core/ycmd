@@ -628,51 +628,50 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
 
 
   def _StopServer_KeepLogFiles( self, keeping_log_files ):
-    self._ChangeSpecificOptions(
-      { 'server_keep_logfiles': keeping_log_files } )
-    self._app = TestApp( handlers.app )
-    self._app.post_json(
-      '/ignore_extra_conf_file',
-      { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self.UserOption( 'server_keep_logfiles', keeping_log_files ):
+      self._app = TestApp( handlers.app )
+      self._app.post_json(
+        '/ignore_extra_conf_file',
+        { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
+      filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
+      contents = open( filepath ).read()
+      event_data = self._BuildRequest( filepath = filepath,
+                                      filetype = 'cs',
+                                      contents = contents,
+                                      event_name = 'FileReadyToParse' )
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      self._app.post_json( '/event_notification', event_data )
+      self._WaitUntilOmniSharpServerReady( filepath )
 
-    event_data = self._BuildRequest( filetype = 'cs', filepath = filepath )
+      event_data = self._BuildRequest( filetype = 'cs', filepath = filepath )
 
-    debuginfo = self._app.post_json( '/debug_info', event_data ).json
+      debuginfo = self._app.post_json( '/debug_info', event_data ).json
 
-    log_files_match = re.search( "^OmniSharp logfiles:\n(.*)\n(.*)",
-                                 debuginfo,
-                                 re.MULTILINE )
-    stdout_logfiles_location = log_files_match.group( 1 )
-    stderr_logfiles_location = log_files_match.group( 2 )
+      log_files_match = re.search( "^OmniSharp logfiles:\n(.*)\n(.*)",
+                                  debuginfo,
+                                  re.MULTILINE )
+      stdout_logfiles_location = log_files_match.group( 1 )
+      stderr_logfiles_location = log_files_match.group( 2 )
 
-    try:
-      ok_( os.path.exists(stdout_logfiles_location ),
-           "Logfile should exist at {0}".format( stdout_logfiles_location ) )
-      ok_( os.path.exists( stderr_logfiles_location ),
-           "Logfile should exist at {0}".format( stderr_logfiles_location ) )
-    finally:
-      self._StopOmniSharpServer( filepath )
+      try:
+        ok_( os.path.exists(stdout_logfiles_location ),
+            "Logfile should exist at {0}".format( stdout_logfiles_location ) )
+        ok_( os.path.exists( stderr_logfiles_location ),
+            "Logfile should exist at {0}".format( stderr_logfiles_location ) )
+      finally:
+        self._StopOmniSharpServer( filepath )
 
-    if keeping_log_files:
-      ok_( os.path.exists( stdout_logfiles_location ),
-           "Logfile should still exist at "
-           "{0}".format( stdout_logfiles_location ) )
-      ok_( os.path.exists( stderr_logfiles_location ),
-           "Logfile should still exist at "
-           "{0}".format( stderr_logfiles_location ) )
-    else:
-      ok_( not os.path.exists( stdout_logfiles_location ),
-           "Logfile should no longer exist at "
-           "{0}".format( stdout_logfiles_location ) )
-      ok_( not os.path.exists( stderr_logfiles_location ),
-           "Logfile should no longer exist at "
-           "{0}".format( stderr_logfiles_location ) )
+      if keeping_log_files:
+        ok_( os.path.exists( stdout_logfiles_location ),
+            "Logfile should still exist at "
+            "{0}".format( stdout_logfiles_location ) )
+        ok_( os.path.exists( stderr_logfiles_location ),
+            "Logfile should still exist at "
+            "{0}".format( stderr_logfiles_location ) )
+      else:
+        ok_( not os.path.exists( stdout_logfiles_location ),
+            "Logfile should no longer exist at "
+            "{0}".format( stdout_logfiles_location ) )
+        ok_( not os.path.exists( stderr_logfiles_location ),
+            "Logfile should no longer exist at "
+            "{0}".format( stderr_logfiles_location ) )

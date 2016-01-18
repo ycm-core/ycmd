@@ -50,6 +50,18 @@ class Handlers_test( object ):
       yield
 
 
+  @contextlib.contextmanager
+  def UserOption( self, key, value ):
+    try:
+      current_options = dict( user_options_store.GetAll() )
+      user_options = current_options.copy()
+      user_options.update( { key: value } )
+      handlers.UpdateUserOptions( user_options )
+      yield
+    finally:
+      handlers.UpdateUserOptions( current_options )
+
+
   @staticmethod
   def _BuildRequest( **kwargs ):
     return BuildRequest( **kwargs )
@@ -75,13 +87,6 @@ class Handlers_test( object ):
     return has_entry( 'extra_data',
                       has_entry( 'location',
                                  has_entry( location_type, value ) ) )
-
-
-  @staticmethod
-  def _ChangeSpecificOptions( options ):
-    current_options = dict( user_options_store.GetAll() )
-    current_options.update( options )
-    handlers.UpdateUserOptions( current_options )
 
 
   @staticmethod
