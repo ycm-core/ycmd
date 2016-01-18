@@ -146,7 +146,8 @@ class Diagnostic:
 
 class FixIt:
   """A set of replacements (of type FixItChunk) to be applied to fix a single
-  diagnostic"""
+  diagnostic. This can be used for any type of refactoring command, not just
+  quick fixes. The individual chunks may span multiple files."""
 
   def __init__ ( self, location, chunks ):
     """location of type Location, chunks of type list<FixItChunk>"""
@@ -155,7 +156,7 @@ class FixIt:
 
 
 class FixItChunk:
-  """An individual replacement within a FixIt"""
+  """An individual replacement within a FixIt (aka Refactor)"""
 
   def __init__ ( self, replacement_text, range ):
     """replacement_text of type string, range of type Range"""
@@ -164,7 +165,7 @@ class FixItChunk:
 
 
 class Range:
-  """Source code range relating to a diagnostic or FixIt."""
+  """Source code range relating to a diagnostic or FixIt (aka Refactor)."""
 
   def __init__ ( self, start, end ):
     "start of type Location, end of type Location"""
@@ -173,7 +174,7 @@ class Range:
 
 
 class Location:
-  """Source code location for a diagnostic or FixIt."""
+  """Source code location for a diagnostic or FixIt (aka Refactor)."""
 
   def __init__ ( self, line, column, filename ):
     """Line is 1-based line, column is 1-based column, filename is absolute
@@ -201,6 +202,10 @@ def BuildDiagnosticData( diagnostic ):
 
 
 def BuildFixItResponse( fixits ):
+  """Build a response from a list of FixIt (aka Refactor) objects. This response
+  can be used to apply arbitrary changes to arbitrary files and is suitable for
+  both quick fix and refactor operations"""
+
   def BuildFixitChunkData( chunk ):
     return {
       'replacement_text': chunk.replacement_text,

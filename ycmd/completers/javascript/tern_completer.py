@@ -515,6 +515,10 @@ class TernCompleter( Completer ):
 
 
   def _Rename( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( 'Please specify a new name to rename it to.\n'
+                        'Usage: RefactorRename <new name>' )
+
     query = {
       'type': 'rename',
       'newName': args[ 0 ],

@@ -17,10 +17,10 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
-from hamcrest import (assert_that,
-                      contains,
-                      contains_inanyorder,
-                      has_entries)
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_inanyorder,
+                       has_entries )
 from javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
 import httplib
@@ -373,5 +373,26 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
             'location': LocationMatcher( file1, 3, 14 )
           } ) )
         }
+      }
+    } )
+
+
+  def RefactorRename_Missing_New_Name_test( self ):
+    self._RunTest( {
+      'description': 'FixItRename raises an error without new name',
+      'request': {
+        'command': 'FixItRename',
+        'line_num': 17,
+        'column_num': 29,
+        'filepath': self._PathToTestFile( 'coollib', 'cool_object.js' ),
+      },
+      'expect': {
+        'response': httplib.INTERNAL_SERVER_ERROR,
+        'data': {
+          'exception': self._ErrorMatcher(
+                                  ValueError,
+                                  'Please specify a new name to rename it to.\n'
+                                  'Usage: RefactorRename <new name>' ),
+        },
       }
     } )
