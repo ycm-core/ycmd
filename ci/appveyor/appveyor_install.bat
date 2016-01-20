@@ -31,7 +31,7 @@ python --version
 :: TODO: check if this is still needed when python 2.7.12 is released.
 set PYTHONHOME=%python%
 
-appveyor DownloadFile https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+appveyor DownloadFile https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
 pip install -r test_requirements.txt
 if %errorlevel% neq 0 exit /b %errorlevel%
