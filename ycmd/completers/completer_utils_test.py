@@ -68,120 +68,148 @@ def FiletypeDictUnion_Works_test():
 
 
 def MatchesSemanticTrigger_Basic_test():
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 7, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 6, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 5, [cu._PrepareTrigger( '.' )] ) )
+  triggers = [ cu._PrepareTrigger( '.' ) ]
 
-  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 4, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 7, 7, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 6, 7, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 5, 7, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 4, 7, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 3, 7, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 2, 7, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 1, 7, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 0, 7, triggers ) )
 
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 3, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 2, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 1, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 0, [cu._PrepareTrigger( '.' )] ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 3, 3, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 2, 3, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 1, 3, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 0, 3, triggers ) )
 
 
 def MatchesSemanticTrigger_JustTrigger_test():
-  ok_( cu._MatchesSemanticTrigger( '.', 1, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( '.', 0, [cu._PrepareTrigger( '.' )] ) )
+  triggers = [ cu._PrepareTrigger( '.' ) ]
+
+  ok_( not cu._MatchesSemanticTrigger( '.', 2, 2, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( '.', 1, 1, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( '.', 0, 0, triggers ) )
 
 
 def MatchesSemanticTrigger_TriggerBetweenWords_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo . bar', 5, [cu._PrepareTrigger( '.' )] ) )
+  triggers = [ cu._PrepareTrigger( '.' ) ]
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo . bar', 6, 9, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo . bar', 5, 9, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo . bar', 4, 9, triggers ) )
 
 
 def MatchesSemanticTrigger_BadInput_test():
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 10, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', -1, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( '', -1, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( '', 0, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( '', 1, [cu._PrepareTrigger( '.' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [] ) )
+  triggers = [ cu._PrepareTrigger( '.' ) ]
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 10, 7, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', -1, 7, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, -1, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( '', -1, 0, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( '', 0, 0, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( '', 1, 0, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, 7, [] ) )
 
 
 def MatchesSemanticTrigger_TriggerIsWrong_test():
-  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, [cu._PrepareTrigger( ':' )] ) )
+  triggers = [ cu._PrepareTrigger( ':' ) ]
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo.bar', 4, 7, triggers ) )
 
 
 def MatchesSemanticTrigger_LongerTrigger_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, [cu._PrepareTrigger( '::' )] ) )
-  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 4, [cu._PrepareTrigger( '::' )] ) )
+  triggers = [ cu._PrepareTrigger( '::' ) ]
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 6, 8, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, 8, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 4, 8, triggers ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 3, 8, triggers ) )
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 4, 4, triggers ) )
+  ok_( not cu._MatchesSemanticTrigger( 'foo::bar', 3, 4, triggers ) )
 
 
 def MatchesSemanticTrigger_OneTriggerMatches_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, [cu._PrepareTrigger( '.' ),
-                                                   cu._PrepareTrigger( ';' ),
-                                                   cu._PrepareTrigger( '::' )] ) )
+  triggers = [ cu._PrepareTrigger( '.' ),
+               cu._PrepareTrigger( ';' ),
+               cu._PrepareTrigger( '::' ) ]
+
+  ok_( cu._MatchesSemanticTrigger( 'foo::bar', 5, 8, triggers ) )
 
 
 def MatchesSemanticTrigger_RegexTrigger_test():
-  ok_( cu._MatchesSemanticTrigger( 'foo.bar',
-                                   4,
-                                   [ cu._PrepareTrigger( r're!\w+\.' ) ] ) )
+  triggers = [ cu._PrepareTrigger( r're!\w+\.' ) ]
 
-  ok_( not cu._MatchesSemanticTrigger( 'foo . bar',
-                                       5,
-                                       [ cu._PrepareTrigger( r're!\w+\.' ) ] ) )
+  ok_( cu._MatchesSemanticTrigger( 'foo.bar', 4, 8, triggers ) )
+
+  ok_( not cu._MatchesSemanticTrigger( 'foo . bar', 5, 8, triggers ) )
 
 
 def MatchingSemanticTrigger_Basic_test():
   triggers = [ cu._PrepareTrigger( '.' ), cu._PrepareTrigger( ';' ),
                cu._PrepareTrigger( '::' ) ]
-  eq_( cu._MatchingSemanticTrigger( 'foo->bar', 5,  triggers ),
-       None )
-  eq_( cu._MatchingSemanticTrigger( 'foo::bar', 5,  triggers ).pattern,
+
+  eq_( cu._MatchingSemanticTrigger( 'foo->bar', 5, 9, triggers ), None )
+  eq_( cu._MatchingSemanticTrigger( 'foo::bar', 5, 9, triggers ).pattern,
        re.escape( '::' ) )
 
 
 def PreparedTriggers_Basic_test():
   triggers = cu.PreparedTriggers()
-  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'c' ) )
-  eq_( triggers.MatchingTriggerForFiletype( 'foo.bar', 4, 'c' ).pattern,
+
+  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 8, 'c' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo.bar', 4, 8, 'c' ).pattern,
        re.escape( '.' ) )
-  ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'cpp' ) )
-  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 'cpp' ).pattern,
+  ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 9, 'cpp' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 9, 'cpp' ).pattern,
        re.escape( '->' ) )
 
 
 def PreparedTriggers_OnlySomeFiletypesSelected_test():
   triggers = cu.PreparedTriggers( filetype_set = set( 'c' ) )
-  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 'c' ) )
-  eq_( triggers.MatchingTriggerForFiletype( 'foo.bar', 4, 'c' ).pattern,
+
+  ok_( triggers.MatchesForFiletype( 'foo.bar', 4, 7, 'c' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo.bar', 4, 7, 'c' ).pattern,
        re.escape( '.' ) )
-  ok_( not triggers.MatchesForFiletype( 'foo->bar', 5, 'cpp' ) )
-  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 'cpp' ),
+  ok_( not triggers.MatchesForFiletype( 'foo->bar', 5, 8, 'cpp' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 8, 'cpp' ),
        None )
 
 
 def PreparedTriggers_UserTriggers_test():
   triggers = cu.PreparedTriggers( user_trigger_map = { 'c': ['->'] } )
-  ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 'c' ) )
-  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 'c' ).pattern,
+
+  ok_( triggers.MatchesForFiletype( 'foo->bar', 5, 8, 'c' ) )
+  eq_( triggers.MatchingTriggerForFiletype( 'foo->bar', 5, 8, 'c' ).pattern,
        re.escape( '->' ) )
 
 
 def PreparedTriggers_ObjectiveC_test():
   triggers = cu.PreparedTriggers()
-  # bracketed calls
-  ok_( triggers.MatchesForFiletype( '[foo ', 5, 'objc' ) )
-  ok_( not triggers.MatchesForFiletype( '[foo', 4, 'objc' ) )
-  ok_( not triggers.MatchesForFiletype( '[3foo ', 6, 'objc' ) )
-  ok_( triggers.MatchesForFiletype( '[f3oo ', 6, 'objc' ) )
-  ok_( triggers.MatchesForFiletype( '[[foo ', 6, 'objc' ) )
 
-  # bracketless calls
-  ok_( not triggers.MatchesForFiletype( '3foo ', 5, 'objc' ) )
-  ok_( triggers.MatchesForFiletype( 'foo3 ', 5, 'objc' ) )
-  ok_( triggers.MatchesForFiletype( 'foo ', 4, 'objc' ) )
+  # Bracketed calls
+  ok_( triggers.MatchesForFiletype( '[foo ', 5, 6, 'objc' ) )
+  ok_( not triggers.MatchesForFiletype( '[foo', 4, 5, 'objc' ) )
+  ok_( not triggers.MatchesForFiletype( '[3foo ', 6, 6, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '[f3oo ', 6, 6, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( '[[foo ', 6, 6, 'objc' ) )
 
-  # method composition
+  # Bracketless calls
+  ok_( not triggers.MatchesForFiletype( '3foo ', 5, 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'foo3 ', 5, 5, 'objc' ) )
+  ok_( triggers.MatchesForFiletype( 'foo ', 4, 4, 'objc' ) )
+
+  # Method composition
   ok_( triggers.MatchesForFiletype(
-      '[NSString stringWithFormat:@"Test %@", stuff] ', 46, 'objc' ) )
+      '[NSString stringWithFormat:@"Test %@", stuff] ', 46, 46, 'objc' ) )
   ok_( triggers.MatchesForFiletype(
-      '   [NSString stringWithFormat:@"Test"] ', 39, 'objc' ) )
+      '   [NSString stringWithFormat:@"Test"] ', 39, 39, 'objc' ) )
   ok_( triggers.MatchesForFiletype(
       '   [[NSString stringWithFormat:@"Test"] stringByAppendingString:%@] ',
       68,
+      68,
       'objc' ) )
 
-  ok_( not triggers.MatchesForFiletype( '// foo ', 8, 'objc' ) )
-
+  ok_( not triggers.MatchesForFiletype( '// foo ', 8, 8, 'objc' ) )

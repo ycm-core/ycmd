@@ -147,10 +147,11 @@ class Completer( object ):
       return False
     current_line = request_data[ 'line_value' ]
     start_column = request_data[ 'start_column' ] - 1
+    column_num = request_data[ 'column_num' ] - 1
     filetype = self._CurrentFiletype( request_data[ 'filetypes' ] )
 
     return self.prepared_triggers.MatchesForFiletype(
-        current_line, start_column, filetype )
+        current_line, start_column, column_num, filetype )
 
 
   def QueryLengthAboveMinThreshold( self, request_data ):
