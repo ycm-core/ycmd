@@ -29,8 +29,9 @@ PATH_TO_TERNJS_BINARY = os.path.abspath(
       '..',
       '..',
       'third_party',
-      'tern',
-      'bin',
+      'tern_runtime',
+      'node_modules',
+      '.bin',
       'tern' ) )
 
 PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
@@ -54,17 +55,11 @@ def ShouldEnableTernCompleter():
 
   _logger.info( 'Using node binary from: ' + PATH_TO_NODE )
 
-  installed = os.path.exists(
-      os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
-                    '..',
-                    '..',
-                    '..',
-                    'third_party',
-                    'tern',
-                    'node_modules' ) )
+  installed = os.path.exists( PATH_TO_TERNJS_BINARY )
 
   if not installed:
-    _logger.info( 'Not using Tern completer: not installed' )
+    _logger.info( 'Not using Tern completer: not installed at '
+                  + PATH_TO_TERNJS_BINARY )
     return False
 
   return True

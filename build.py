@@ -305,8 +305,37 @@ def SetUpTern():
     else:
       paths[ exe ] = path
 
-  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern' ) )
+  # We install Tern into a runtime directory. This allows us to control
+  # precisely the version (and/or git commit) that is used by ycmd.  We use a
+  # separate runtime directory rather than a submodule checkout directory
+  # because we want to allow users to install third party plugins to
+  # node_modules of the Tern runtime.  We also want to be able to install our
+  # own plugins to improve the user experience for all users.
+  #
+  # This is not possible if we use a git submodle for Tern and simply run 'npm
+  # install' within the submodule source directory, as subsequent 'npm install
+  # tern-my-plugin' will (heinously) install another (arbitrary) version of Tern
+  # within the Tern source tree (e.g. third_party/tern/node_modules/tern. The
+  # reason for this is that the plugin that gets installed has "tern" as a
+  # dependency, and npm isn't smart enough to know that you're installing
+  # *within* the Tern distribution. Or it isn't intended to work that way.
+  #
+  # So instead, we have a package.json within our "Tern runtime" directory
+  # (third_party/tern_runtime) that defines the packages that we require,
+  # including Tern and any plugins which we require as standard.
+  TERN_RUNTIME_DIR = os.path.join( DIR_OF_THIS_SCRIPT,
+                                   'third_party',
+                                   'tern_runtime' )
+  try:
+    os.makedirs( TERN_RUNTIME_DIR )
+  except Exception:
+    # os.makedirs throws if the dir already exists, it also throws if the
+    # permissions prevent creating the directory. There's no way to know the
+    # difference, so we just let the call to os.chdir below throw if this fails
+    # to create the target directory.
+    pass
 
+  os.chdir( TERN_RUNTIME_DIR )
   subprocess.check_call( [ paths[ 'npm' ], 'install', '--production' ] )
 
 
