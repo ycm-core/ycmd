@@ -4,6 +4,7 @@ import os
 import subprocess
 import os.path as p
 import sys
+import shlex
 
 major, minor = sys.version_info[ 0 : 2 ]
 if major != 2 or minor < 6:
@@ -219,7 +220,8 @@ def GetCmakeArgs( parsed_args ):
     cmake_args.append( '-DUSE_SYSTEM_BOOST=ON' )
 
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
-  cmake_args.extend( extra_cmake_args.split() )
+  # We use shlex split to properly parse quoted CMake arguments.
+  cmake_args.extend( shlex.split( extra_cmake_args ) )
   return cmake_args
 
 
