@@ -84,6 +84,13 @@ def _FiletypeDictUnion( dict_one, dict_two ):
 
 def _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
   for match in trigger.finditer( line_value ):
+    # By definition of 'start_column', we know that the character just before
+    # 'start_column' is not an identifier character but all characters
+    # between 'start_column' and 'column_num' are. This means that if our
+    # trigger ends with an identifier character, its tail must match between
+    # 'start_column' and 'column_num', 'start_column' excluded. But if it
+    # doesn't, its tail must match exactly at 'start_column'. Both cases are
+    # mutually exclusive hence the following condition.
     if start_column <= match.end() and match.end() <= column_num:
       return True
   return False
