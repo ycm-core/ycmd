@@ -166,5 +166,23 @@ class GetCompletions_test( Handlers_test ):
                                             column_num = 3 )
 
       eq_( [],
-          self._app.post_json( '/completions',
+           self._app.post_json( '/completions',
                                 completion_data ).json[ 'completions' ] )
+
+
+  @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+          return_value = [ 'some_candidate' ] )
+  def SemanticCompleter_WorksWhenTriggerIsIdentifier_test( self, *args ):
+    with self.UserOption( 'semantic_triggers',
+                          { 'dummy_filetype': [ '_' ] } ):
+      with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+        completion_data = self._BuildRequest( filetype = 'dummy_filetype',
+                                              contents = 'some_can',
+                                              column_num = 9 )
+
+        results = self._app.post_json( '/completions',
+                                       completion_data ).json[ 'completions' ]
+        assert_that(
+          results,
+          has_items( self._CompletionEntryMatcher( 'some_candidate' ) )
+        )
