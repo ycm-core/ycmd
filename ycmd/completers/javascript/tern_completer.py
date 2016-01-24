@@ -188,6 +188,16 @@ class TernCompleter( Completer ):
   def OnFileReadyToParse( self, request_data ):
     self._WarnIfMissingTernProject()
 
+    # Keep tern server up to date with the file data. We do this by sending an
+    # empty request just containing the file data
+    try:
+      self._PostRequest( {}, request_data )
+    except:
+      # The server might not be ready yet or the server might not be running.
+      # in any case, just ignore this we'll hopefully get another parse request
+      # soon.
+      pass
+
 
   def GetSubcommandsMap( self ):
     return {
@@ -205,6 +215,8 @@ class TernCompleter( Completer ):
                                          self._GetType( request_data) ),
       'GetDoc':         ( lambda self, request_data, args:
                                          self._GetDoc( request_data) ),
+      'RefactorRename': ( lambda self, request_data, args:
+                                         self._Rename( request_data, args ) ),
     }
 
 
@@ -499,3 +511,90 @@ class TernCompleter( Completer ):
                                           ref[ 'start' ][ 'line' ] + 1,
                                           ref[ 'start' ][ 'ch' ] + 1 )
              for ref in response[ 'refs' ] ]
+
+
+  def _Rename( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( 'Please specify a new name to rename it to.\n'
+                        'Usage: RefactorRename <new name>' )
+
+    query = {
+      'type': 'rename',
+      'newName': args[ 0 ],
+    }
+
+    response = self._GetResponse( query, request_data )
+
+    # Tern response format:
+    # 'changes': [
+    #     {
+    #         'file'
+    #         'start' {
+    #             'line'
+    #             'ch'
+    #         }
+    #         'end' {
+    #             'line'
+    #             'ch'
+    #         }
+    #         'text'
+    #     }
+    # ]
+
+    # ycmd response format:
+    #
+    # {
+    #     'fixits': [
+    #         'chunks': (list<Chunk>) [
+    #             {
+    #                  'replacement_text',
+    #                  'range' (Range) {
+    #                      'start_' (Location): {
+    #                          'line_number_',
+    #                          'column_number_',
+    #                          'filename_'
+    #                      },
+    #                      'end_' (Location): {
+    #                          'line_number_',
+    #                          'column_number_',
+    #                          'filename_'
+    #                      }
+    #                  }
+    #              }
+    #         ],
+    #         'location' (Location) {
+    #              'line_number_',
+    #              'column_number_',
+    #              'filename_'
+    #         }
+    #
+    #     ]
+    # }
+
+    def BuildRange( filename, start, end ):
+      return responses.Range(
+        responses.Location( start[ 'line' ] + 1,
+                            start[ 'ch' ] + 1,
+                            filename ),
+        responses.Location( end[ 'line' ] + 1,
+                            end[ 'ch' ] + 1,
+                            filename ) )
+
+
+    def BuildFixItChunk( change ):
+      return responses.FixItChunk(
+        change[ 'text' ],
+        BuildRange( os.path.abspath( change[ 'file'] ),
+                    change[ 'start' ],
+                    change[ 'end' ] ) )
+
+
+    # From an API perspective, Refactor and FixIt are the same thing - it just
+    # applies a set of changes to a set of files. So we re-use all of the
+    # existing FixIt infrastructure.
+    return responses.BuildFixItResponse( [
+      responses.FixIt(
+        responses.Location( request_data[ 'line_num' ],
+                            request_data[ 'column_num' ],
+                            request_data[ 'filepath' ] ),
+        [ BuildFixItChunk( x ) for x in response[ 'changes' ] ] ) ] )

@@ -42,41 +42,6 @@ PATH_TO_OMNISHARP_BINARY = os.path.join(
   'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
 
 
-# TODO: Handle this better than dummy classes
-class CsharpDiagnostic:
-  def __init__ ( self, ranges, location, location_extent, text, kind ):
-    self.ranges_ = ranges
-    self.location_ = location
-    self.location_extent_ = location_extent
-    self.text_ = text
-    self.kind_ = kind
-
-
-class CsharpFixIt:
-  def __init__ ( self, location, chunks ):
-    self.location = location
-    self.chunks = chunks
-
-
-class CsharpFixItChunk:
-  def __init__ ( self, replacement_text, range ):
-    self.replacement_text = replacement_text
-    self.range = range
-
-
-class CsharpDiagnosticRange:
-  def __init__ ( self, start, end ):
-    self.start_ = start
-    self.end_ = end
-
-
-class CsharpDiagnosticLocation:
-  def __init__ ( self, line, column, filename ):
-    self.line_number_ = line
-    self.column_number_ = column
-    self.filename_ = filename
-
-
 class CsharpCompleter( Completer ):
   """
   A Completer that uses the Omnisharp server as completion engine.
@@ -262,14 +227,15 @@ class CsharpCompleter( Completer ):
   def _QuickFixToDiagnostic( self, quick_fix ):
     filename = quick_fix[ "FileName" ]
 
-    location = CsharpDiagnosticLocation( quick_fix[ "Line" ],
-                                         quick_fix[ "Column" ], filename )
-    location_range = CsharpDiagnosticRange( location, location )
-    return CsharpDiagnostic( list(),
-                             location,
-                             location_range,
-                             quick_fix[ "Text" ],
-                             quick_fix[ "LogLevel" ].upper() )
+    location = responses.Location( quick_fix[ "Line" ],
+                                   quick_fix[ "Column" ],
+                                   filename )
+    location_range = responses.Range( location, location )
+    return responses.Diagnostic( list(),
+                                 location,
+                                 location_range,
+                                 quick_fix[ "Text" ],
+                                 quick_fix[ "LogLevel" ].upper() )
 
 
   def GetDetailedDiagnostic( self, request_data ):
@@ -525,11 +491,12 @@ class CsharpSolutionCompleter:
 
     result = self._GetResponse( '/fixcodeissue', request )
     replacement_text = result[ "Text" ]
-    location = CsharpDiagnosticLocation( request_data['line_num'],
-                                         request_data['column_num'],
-                                         request_data['filepath'] )
-    fixits = [ CsharpFixIt( location,
-                            _BuildChunks( request_data, replacement_text ) ) ]
+    location = responses.Location( request_data['line_num'],
+                                   request_data['column_num'],
+                                   request_data['filepath'] )
+    fixits = [ responses.FixIt( location,
+                                _BuildChunks( request_data,
+                                              replacement_text ) ) ]
 
     return responses.BuildFixItResponse( fixits )
 
@@ -661,10 +628,10 @@ def _BuildChunks( request_data, new_buffer ):
   ( start_line, start_column ) = _IndexToLineColumn( old_buffer, start_index )
   ( end_line, end_column ) = _IndexToLineColumn( old_buffer,
                                                  old_length - end_index )
-  start = CsharpDiagnosticLocation( start_line, start_column, filepath )
-  end = CsharpDiagnosticLocation( end_line, end_column, filepath )
-  return [ CsharpFixItChunk( replacement_text,
-                             CsharpDiagnosticRange( start, end ) ) ]
+  start = responses.Location( start_line, start_column, filepath )
+  end = responses.Location( end_line, end_column, filepath )
+  return [ responses.FixItChunk( replacement_text,
+                                 responses.Range( start, end ) ) ]
 
 
 def _FixLineEndings( old_buffer, new_buffer ):
