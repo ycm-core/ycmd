@@ -23,7 +23,7 @@ import re
 
 
 class PreparedTriggers( object ):
-  def __init__( self,  user_trigger_map = None, filetype_set = None ):
+  def __init__( self, user_trigger_map = None, filetype_set = None ):
     user_prepared_triggers = ( _FiletypeTriggerDictFromSpec(
         dict( user_trigger_map ) ) if user_trigger_map else
         defaultdict( set ) )
@@ -36,17 +36,23 @@ class PreparedTriggers( object ):
     self._filetype_to_prepared_triggers = final_triggers
 
 
-  def MatchingTriggerForFiletype( self, current_line, start_column, filetype ):
+  def MatchingTriggerForFiletype( self, current_line, start_column, column_num,
+                                  filetype ):
     try:
       triggers = self._filetype_to_prepared_triggers[ filetype ]
     except KeyError:
       return None
-    return _MatchingSemanticTrigger( current_line, start_column, triggers )
+    return _MatchingSemanticTrigger( current_line,
+                                     start_column,
+                                     column_num,
+                                     triggers )
 
 
-  def MatchesForFiletype( self, current_line, start_column, filetype ):
+  def MatchesForFiletype( self, current_line, start_column, column_num,
+                          filetype ):
     return self.MatchingTriggerForFiletype( current_line,
                                             start_column,
+                                            column_num,
                                             filetype ) is not None
 
 
@@ -76,31 +82,44 @@ def _FiletypeDictUnion( dict_one, dict_two ):
   return final_dict
 
 
-def _RegexTriggerMatches( trigger, line_value, start_column ):
+def _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
   for match in trigger.finditer( line_value ):
-    if match.end() == start_column:
+    # By definition of 'start_column', we know that the character just before
+    # 'start_column' is not an identifier character but all characters
+    # between 'start_column' and 'column_num' are. This means that if our
+    # trigger ends with an identifier character, its tail must match between
+    # 'start_column' and 'column_num', 'start_column' excluded. But if it
+    # doesn't, its tail must match exactly at 'start_column'. Both cases are
+    # mutually exclusive hence the following condition.
+    if start_column <= match.end() and match.end() <= column_num:
       return True
   return False
 
 
-# start_column is 0-based
-def _MatchingSemanticTrigger( line_value, start_column, trigger_list ):
+# start_column and column_num are 0-based
+def _MatchingSemanticTrigger( line_value, start_column, column_num,
+                              trigger_list ):
+  if start_column < 0 or column_num < 0:
+    return None
+
   line_length = len( line_value )
   if not line_length or start_column > line_length:
     return None
 
-  # ignore characters after user's caret column
-  line_value = line_value[ :start_column ]
+  # Ignore characters after user's caret column
+  line_value = line_value[ :column_num ]
 
   for trigger in trigger_list:
-    if _RegexTriggerMatches( trigger, line_value, start_column ):
+    if _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
       return trigger
   return None
 
 
-def _MatchesSemanticTrigger( line_value, start_column, trigger_list ):
+def _MatchesSemanticTrigger( line_value, start_column, column_num,
+                             trigger_list ):
   return _MatchingSemanticTrigger( line_value,
                                    start_column,
+                                   column_num,
                                    trigger_list ) is not None
 
 
