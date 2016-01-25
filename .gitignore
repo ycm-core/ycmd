@@ -45,3 +45,6 @@ cpp/BoostParts/libs/*/test
 
 # Exclude auto generated vim doc tags.
 doc/tags
+
+# Exclude tern installation area
+third_party/tern_runtime/node_modules
