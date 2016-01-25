@@ -31,7 +31,8 @@ PATH_TO_TERNJS_BINARY = os.path.abspath(
       'third_party',
       'tern_runtime',
       'node_modules',
-      '.bin',
+      'tern',
+      'bin',
       'tern' ) )
 
 PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
