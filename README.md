@@ -200,6 +200,14 @@ localhost if the user visits evil.com in a browser.
 code execution exploit [was created][exploit] for ycmd running on localhost. The
 HMAC auth was added to block this attack vector.
 
+
+Contributor Code of Conduct
+---------------------------
+
+Please note that this project is released with a [Contributor Code of
+Conduct][ccoc]. By participating in this project you agree to abide by its
+terms.
+
 Contact
 -------
 
@@ -234,3 +242,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gocode]: https://github.com/nsf/gocode
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
+[ccoc]: https://github.com/Valloric/ycmd/blob/master/CODE_OF_CONDUCT.md
