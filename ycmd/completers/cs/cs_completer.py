@@ -537,7 +537,7 @@ class CsharpSolutionCompleter:
 
     try:
       return self._GetResponse( '/checkalivestatus', timeout = .2 )
-    except requests.exceptions.RequestException:
+    except Exception:
       return False
 
 
@@ -548,7 +548,7 @@ class CsharpSolutionCompleter:
 
     try:
       return self._GetResponse( '/checkreadystatus', timeout = .2 )
-    except requests.exceptions.RequestException:
+    except Exception:
       return False
 
 
