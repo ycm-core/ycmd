@@ -19,7 +19,7 @@
 
 from nose.tools import eq_
 from nose.tools import ok_
-from .. import flags
+from ycmd.completers.cpp import flags
 
 
 def SanitizeFlags_Passthrough_test():

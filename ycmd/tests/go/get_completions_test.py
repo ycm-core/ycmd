@@ -21,7 +21,7 @@ from hamcrest import assert_that, has_item
 from go_handlers_test import Go_Handlers_test
 
 
-class Go_GetCompletions_test( Go_Handlers_test ):
+class GoCode_GetCompletions_test( Go_Handlers_test ):
 
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'test.go' )
