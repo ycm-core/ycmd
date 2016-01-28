@@ -36,6 +36,24 @@ def ParseArguments():
   parser.add_argument( '--no-clang-completer', action = 'store_true',
                        help = 'Do not test C-family '
                        'semantic completion engine.' )
+  parser.add_argument( '--no-omnisharp-completer', action = 'store_true',
+                       help = 'Do not test C# '
+                       'semantic completion engine.' )
+  parser.add_argument( '--no-tern-completer', action = 'store_true',
+                       help = 'Do not test Javascript '
+                       'semantic completion engine.' )
+  parser.add_argument( '--no-gocode-completer', action = 'store_true',
+                       help = 'Do not test GoCode '
+                       'semantic completion engine.' )
+  parser.add_argument( '--no-racer-completer', action = 'store_true',
+                       help = 'Do not test Racer '
+                       'semantic completion engine.' )
+  parser.add_argument( '--no-typescript-completer', action = 'store_true',
+                       help = 'Do not test TypeScript '
+                       'semantic completion engine.' )
+  parser.add_argument( '--no-python-completer', action = 'store_true',
+                       help = 'Do not test Jedi'
+                       'semantic completion engine.' )
   parser.add_argument( '--skip-build', action = 'store_true',
                        help = 'Do not build ycmd before testing.' )
   parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
@@ -71,11 +89,16 @@ def BuildYcmdLibs( args ):
     build_cmd = [
       sys.executable,
       p.join( DIR_OF_THIS_SCRIPT, 'build.py' ),
-      '--omnisharp-completer',
-      '--gocode-completer',
-      '--tern-completer',
-      '--racer-completer',
     ]
+
+    if not args.no_omnisharp_completer:
+      build_cmd.extend( [ '--omnisharp-completer' ] )
+    if not args.no_tern_completer:
+      build_cmd.extend( [ '--tern-completer' ] )
+    if not args.no_gocode_completer:
+      build_cmd.extend( [ '--gocode-completer' ] )
+    if not args.no_racer_completer:
+      build_cmd.extend( [ '--racer-completer' ] )
 
     if args.msvc:
       build_cmd.extend( [ '--msvc', str( args.msvc ) ] )
@@ -90,6 +113,18 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   nosetests_args = [ '-v' ]
   if parsed_args.no_clang_completer:
     nosetests_args.append( '--exclude=.*Clang.*' )
+  if parsed_args.no_tern_completer:
+    nosetests_args.append( '--exclude=.*Javascript.*' )
+  if parsed_args.no_gocode_completer:
+    nosetests_args.append( '--exclude=.*GoCode.*' )
+  if parsed_args.no_racer_completer:
+    nosetests_args.append( '--exclude=.*Rust.*' )
+  if parsed_args.no_typescript_completer:
+    nosetests_args.append( '--exclude=.*TypeScript.*' )
+  if parsed_args.no_omnisharp_completer:
+    nosetests_args.append( '--exclude=.*Cs.*' )
+  if parsed_args.no_python_completer:
+    nosetests_args.append( '--exclude=.*Python.*' )
 
   if parsed_args.coverage:
     nosetests_args += [ '--with-coverage', '--cover-package=ycmd' ]
