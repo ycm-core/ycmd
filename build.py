@@ -38,6 +38,10 @@ def OnWindows():
   return platform.system() == 'Windows'
 
 
+def OnTravisOrAppVeyor():
+  return 'CI' in os.environ
+
+
 # On Windows, distutils.spawn.find_executable only works for .exe files
 # but .bat and .cmd files are also executables, so we use our own
 # implementation.
@@ -266,7 +270,7 @@ def BuildYcmdLibs( args ):
       RunYcmdTests( build_dir )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
-    rmtree( build_dir )
+    rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
 
 
 def BuildOmniSharp():
