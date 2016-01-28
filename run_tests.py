@@ -112,19 +112,19 @@ def BuildYcmdLibs( args ):
 def NoseTests( parsed_args, extra_nosetests_args ):
   nosetests_args = [ '-v' ]
   if parsed_args.no_clang_completer:
-    nosetests_args.append( '--exclude=.*Clang.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/clang' )
   if parsed_args.no_tern_completer:
-    nosetests_args.append( '--exclude=.*Javascript.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/javascript' )
   if parsed_args.no_gocode_completer:
-    nosetests_args.append( '--exclude=.*GoCode.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/go' )
   if parsed_args.no_racer_completer:
-    nosetests_args.append( '--exclude=.*Rust.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/rust' )
   if parsed_args.no_typescript_completer:
-    nosetests_args.append( '--exclude=.*TypeScript.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/typescript' )
   if parsed_args.no_omnisharp_completer:
-    nosetests_args.append( '--exclude=.*Cs.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/cs' )
   if parsed_args.no_python_completer:
-    nosetests_args.append( '--exclude=.*Python.*' )
+    nosetests_args.append( '--exclude-dir=ycmd/tests/python' )
 
   if parsed_args.coverage:
     nosetests_args += [ '--with-coverage', '--cover-package=ycmd' ]
