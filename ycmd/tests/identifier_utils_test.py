@@ -213,19 +213,29 @@ def IsIdentifier_Haskell_test():
 
 
 def IsIdentifier_Perl6_test():
-  ok_( iu.IsIdentifier( 'foo' , 'perl6' ) )
-  ok_( iu.IsIdentifier( "f-o" , 'perl6' ) )
-  ok_( iu.IsIdentifier( "x'y" , 'perl6' ) )
-  ok_( iu.IsIdentifier( "_x-y", 'perl6' ) )
-  ok_( iu.IsIdentifier( "_x"  , 'perl6' ) )
-  ok_( iu.IsIdentifier( "x9"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( 'foo'  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "f-o"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x'y"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "_x-y" , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x-y'a", 'perl6' ) )
+  ok_( iu.IsIdentifier( "x-_"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x-_7" , 'perl6' ) )
+  ok_( iu.IsIdentifier( "_x"   , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x9"   , 'perl6' ) )
 
-  ok_( not iu.IsIdentifier( "'x", 'perl6' ) )
-  ok_( not iu.IsIdentifier( "x'", 'perl6' ) )
-  ok_( not iu.IsIdentifier( "-x", 'perl6' ) )
-  ok_( not iu.IsIdentifier( "x-", 'perl6' ) )
-  ok_( not iu.IsIdentifier( "9x", 'perl6' ) )
-  ok_( not iu.IsIdentifier( "9" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "'x"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x'"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "-x"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-1" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x--" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x--a", 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-'" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-'a", 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-a-", 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x+"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "9x"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "9"   , 'perl6' ) )
 
 
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
