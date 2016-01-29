@@ -59,8 +59,12 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
   EXPECT_TRUE( !completions.empty() );
   EXPECT_THAT( completions,
                Contains(
-                   Property( &CompletionData::TextToInsertInBuffer,
-                             StrEq( "foobar" ) ) ) );
+                   AllOf(
+                       Property( &CompletionData::TypedString,
+                                 StrEq( "foobar" ) ),
+                       Property( &CompletionData::TextToInsertInBuffer,
+                                 StrEq( "foobar" ) )
+               ) ) );
 }
 
 
@@ -78,7 +82,14 @@ TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
           flags );
 
   EXPECT_TRUE( !completions.empty() );
-  EXPECT_THAT( completions[0].TextToInsertInBuffer(), StrEq( "withArg2:" ) );
+  EXPECT_THAT( completions,
+               Contains(
+                   AllOf(
+                       Property( &CompletionData::TypedString,
+                                 StrEq( "withArg2:withArg3:" ) ),
+                       Property( &CompletionData::TextToInsertInBuffer,
+                                 StrEq( "withArg2:" ) )
+               ) ) );
 }
 
 

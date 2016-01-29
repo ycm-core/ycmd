@@ -48,7 +48,6 @@ class UltiSnipsCompleter( GeneralCompleter ):
     raw_candidates = request_data.get( 'ultisnips_snippets', [] )
     self._candidates = [
         responses.BuildCompletionData(
-            str( snip[ 'trigger' ] ),
-            str( '<snip> ' + snip[ 'description' ].encode( 'utf-8' ) ) )
+            insertion_text = str( snip[ 'trigger' ] ),
+            result_type = str( '<snip> ' + snip[ 'description' ].encode( 'utf-8' ) ) )
         for snip in raw_candidates ]
-

@@ -231,9 +231,9 @@ class JediCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     return [ responses.BuildCompletionData(
-                ToUtf8IfNeeded( completion[ 'name' ] ),
-                ToUtf8IfNeeded( completion[ 'description' ] ),
-                ToUtf8IfNeeded( completion[ 'docstring' ] ),
+                insertion_text = ToUtf8IfNeeded( completion[ 'name' ] ),
+                result_type = ToUtf8IfNeeded( completion[ 'description' ] ),
+                doc_string = ToUtf8IfNeeded( completion[ 'docstring' ] ),
                 extra_data = self._GetExtraData( completion ) )
              for completion in self._JediCompletions( request_data ) ]
 
@@ -369,4 +369,3 @@ class JediCompleter( Completer ):
                                                 self._logfile_stderr )
 
        return 'JediHTTP is not running'
-

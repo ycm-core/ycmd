@@ -122,11 +122,10 @@ BOOST_PYTHON_MODULE(ycm_core)
     .export_values();
 
   class_< CompletionData >( "CompletionData" )
+    .def( "TypedString", &CompletionData::TypedString )
     .def( "TextToInsertInBuffer", &CompletionData::TextToInsertInBuffer )
-    .def( "MainCompletionText", &CompletionData::MainCompletionText )
-    .def( "ExtraMenuInfo", &CompletionData::ExtraMenuInfo )
-    .def( "DetailedInfoForPreviewWindow",
-          &CompletionData::DetailedInfoForPreviewWindow )
+    .def( "DisplayString", &CompletionData::DisplayString )
+    .def( "ResultType", &CompletionData::ResultType )
     .def( "DocString", &CompletionData::DocString )
     .def_readonly( "kind_", &CompletionData::kind_ );
 

@@ -225,7 +225,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     assert_that( results, has_entries( {
       'completions': has_item( has_entries( {
         'insertion_text' : 'String',
-        'extra_menu_info': '[ID]',
+        'kind': '[ID]',
       } ) ),
       'errors': empty(),
     } ) )
@@ -269,7 +269,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     assert_that( results, has_entries( {
       'completions': has_item( has_entries( {
         'insertion_text' : 'String',
-        'extra_menu_info': '[ID]',
+        'kind': '[ID]',
       } ) ),
       'errors': empty(),
     } ) )

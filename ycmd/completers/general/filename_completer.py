@@ -210,7 +210,7 @@ def _GenerateCandidatesForPaths( absolute_paths ):
   # Keep original ordering
   for basename in basenames:
     completion_dicts.append(
-      responses.BuildCompletionData( basename,
-                                     EXTRA_INFO_MAP[ extra_info[ basename ] ] ) )
+      responses.BuildCompletionData( insertion_text = basename,
+                                     kind = EXTRA_INFO_MAP[ extra_info[ basename ] ] ) )
 
   return completion_dicts

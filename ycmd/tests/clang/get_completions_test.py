@@ -175,7 +175,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': has_item( self._CompletionEntryMatcher( 'a_parameter',
-                                                                 '[ID]' ) ),
+                                                                 kind = '[ID]' ) ),
           'errors': has_item( self._no_completions_error ),
         } )
       },
@@ -199,8 +199,8 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': contains(
-            self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-            self._CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+            self._CompletionEntryMatcher( 'a_parameter', kind = '[ID]' ),
+            self._CompletionEntryMatcher( 'another_parameter', kind = '[ID]' ),
           ),
           'errors': has_item( self._ErrorMatcher( ValueError, 'testy' ) )
         } )
@@ -250,9 +250,9 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
           'completions': contains_inanyorder(
             # do_ is an identifier because it is already in the file when we
             # load it
-            self._CompletionEntryMatcher( 'do_', '[ID]' ),
-            self._CompletionEntryMatcher( 'do_something', '[ID]' ),
-            self._CompletionEntryMatcher( 'do_another_thing', '[ID]' ),
+            self._CompletionEntryMatcher( 'do_', kind = '[ID]' ),
+            self._CompletionEntryMatcher( 'do_something', kind = '[ID]' ),
+            self._CompletionEntryMatcher( 'do_another_thing', kind = '[ID]' ),
           ),
           'errors': empty()
         } )
@@ -474,5 +474,5 @@ int main()
     assert_that(
       results,
       has_item( self._CompletionEntryMatcher( 'include.hpp',
-                extra_menu_info = '[File]' ) )
+                kind = '[File]' ) )
     )

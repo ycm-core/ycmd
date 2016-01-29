@@ -57,8 +57,8 @@ class GetCompletions_test( Handlers_test ):
     eq_( 1, response_data[ 'completion_start_column' ] )
     assert_that(
       response_data[ 'completions' ],
-      has_items( self._CompletionEntryMatcher( 'foo', '[ID]' ),
-                 self._CompletionEntryMatcher( 'foogoo', '[ID]' ) )
+      has_items( self._CompletionEntryMatcher( 'foo', kind = '[ID]' ),
+                 self._CompletionEntryMatcher( 'foogoo', kind = '[ID]' ) )
     )
 
 
@@ -90,8 +90,8 @@ class GetCompletions_test( Handlers_test ):
 
     assert_that(
       results,
-      has_items( self._CompletionEntryMatcher( 'font-size', '[ID]' ),
-                 self._CompletionEntryMatcher( 'font-family', '[ID]' ) )
+      has_items( self._CompletionEntryMatcher( 'font-size', kind = '[ID]' ),
+                 self._CompletionEntryMatcher( 'font-family', kind = '[ID]' ) )
     )
 
 
@@ -143,8 +143,8 @@ class GetCompletions_test( Handlers_test ):
     assert_that(
       results,
       has_items(
-        self._CompletionEntryMatcher( 'foo', extra_menu_info='<snip> bar' ),
-        self._CompletionEntryMatcher( 'zoo', extra_menu_info='<snip> goo' )
+        self._CompletionEntryMatcher( 'foo', '<snip> bar' ),
+        self._CompletionEntryMatcher( 'zoo', '<snip> goo' )
       )
     )
 

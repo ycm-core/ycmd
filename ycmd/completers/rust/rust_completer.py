@@ -220,7 +220,7 @@ class RustCompleter( Completer ):
     return [ responses.BuildCompletionData(
                 insertion_text = ToUtf8IfNeeded( completion[ 'text' ] ),
                 kind = ToUtf8IfNeeded( completion[ 'kind' ] ),
-                extra_menu_info = ToUtf8IfNeeded( completion[ 'context' ] ),
+                result_type = ToUtf8IfNeeded( completion[ 'context' ] ),
                 extra_data = self._GetExtraData( completion ) )
              for completion in completions ]
 

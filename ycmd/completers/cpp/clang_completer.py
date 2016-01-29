@@ -375,11 +375,12 @@ class ClangCompleter( Completer ):
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data.TextToInsertInBuffer(),
-    menu_text = completion_data.MainCompletionText(),
-    extra_menu_info = completion_data.ExtraMenuInfo(),
+    typed_string = completion_data.TypedString(),
+    result_type = completion_data.ResultType(),
+    display_string = completion_data.DisplayString(),
     kind = completion_data.kind_.name,
-    detailed_info = completion_data.DetailedInfoForPreviewWindow(),
-    extra_data = { 'doc_string': completion_data.DocString() } if completion_data.DocString() else None )
+    doc_string = completion_data.DocString(),
+    extra_data = None )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):

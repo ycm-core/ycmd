@@ -102,7 +102,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
     results = self._app.post_json( '/completions',
                                    completion_data ).json[ 'completions' ]
     assert_that( results, has_item(
-      has_entry( 'detailed_info', contains_string( u'aafäö' ) ) ) )
+      has_entry( 'doc_string', contains_string( u'aafäö' ) ) ) )
 
 
   def NoSuggestions_Fallback_test( self ):
@@ -124,8 +124,8 @@ class Python_GetCompletions_test( Python_Handlers_test ):
         'response': httplib.OK,
         'data': has_entries( {
           'completions': contains(
-            self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-            self._CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+            self._CompletionEntryMatcher( 'a_parameter', kind = '[ID]' ),
+            self._CompletionEntryMatcher( 'another_parameter', kind = '[ID]' ),
           ),
           'errors': empty(),
         } )

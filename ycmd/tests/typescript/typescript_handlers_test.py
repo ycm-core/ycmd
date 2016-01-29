@@ -26,10 +26,10 @@ class Typescript_Handlers_test( Handlers_test ):
     self._file = __file__
 
 
-  def CompletionEntryMatcher( self, insertion_text, menu_text = None ):
-    if not menu_text:
-      menu_text = insertion_text
+  def CompletionEntryMatcher( self, insertion_text, display_string = None ):
+    if not display_string:
+      display_string = insertion_text
 
-    extra_params = { 'menu_text': menu_text }
+    extra_params = { 'display_string': display_string }
     return self._CompletionEntryMatcher( insertion_text,
                                          extra_params = extra_params )

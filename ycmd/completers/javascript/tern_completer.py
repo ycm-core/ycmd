@@ -175,9 +175,9 @@ class TernCompleter( Completer ):
 
       return doc
 
-    return [ responses.BuildCompletionData( completion[ 'name' ],
-                                            completion.get( 'type', '?' ),
-                                            BuildDoc( completion ) )
+    return [ responses.BuildCompletionData( insertion_text = completion[ 'name' ],
+                                            result_type = completion.get( 'type', '?' ),
+                                            doc_string = completion.get( 'doc', None ) )
              for completion in completions ]
 
 

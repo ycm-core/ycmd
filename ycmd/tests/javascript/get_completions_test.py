@@ -271,9 +271,8 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
           'completions': contains_inanyorder(
             self._CompletionEntryMatcher(
               'a_function',
-              'fn(bar: ?) -> {a_value: string}', {
-                'detailed_info': ( 'fn(bar: ?) -> {a_value: string}\n'
-                                   'This is a short documentation string'),
+              'fn(bar: ?) -> {a_value: string}', extra_params = {
+                'doc_string': 'This is a short documentation string',
               } ),
             self._CompletionEntryMatcher( 'options', 'options' ),
             self._CompletionEntryMatcher( 'toString', 'fn() -> string' ),
