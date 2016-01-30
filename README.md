@@ -20,7 +20,7 @@ Known ycmd clients:
 ------------------
 
 - [YouCompleteMe][ycm]: Vim client, stable and exposes all ycmd features.
-- [emacs-ycmd][]: Emacs client, still a bit experimental.
+- [emacs-ycmd][]: Emacs client.
 - [you-complete-me][atom-you-complete-me]: Atom client.
 - [kak-ycmd][]: Kakoune client.
 
