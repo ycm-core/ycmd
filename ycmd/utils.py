@@ -211,7 +211,11 @@ def AddNearestThirdPartyFoldersToSysPath( filepath ):
     raise RuntimeError(
         'No third_party folder found for: {0}'.format( filepath ) )
 
+  # NOTE: Any hacks for loading modules that can't be imported without custom
+  # logic need to be reproduced in run_tests.py as well.
   for folder in os.listdir( path_to_third_party ):
+    if folder == 'python-future':
+      folder = os.path.join( folder, 'src' )
     sys.path.insert( 0, os.path.realpath( os.path.join( path_to_third_party,
                                                         folder ) ) )
 

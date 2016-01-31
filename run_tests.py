@@ -10,6 +10,8 @@ DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
 python_path = []
 for folder in os.listdir( DIR_OF_THIRD_PARTY ):
+  if folder == 'python-future':
+    folder = os.path.join( folder, 'src' )
   python_path.append( p.abspath( p.join( DIR_OF_THIRD_PARTY, folder ) ) )
 if os.environ.get( 'PYTHONPATH' ) is not None:
   python_path.append( os.environ['PYTHONPATH'] )
