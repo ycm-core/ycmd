@@ -45,7 +45,7 @@ COMPLETERS = {
   'javascript': {
     'build': [ '--tern-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/javascript' ],
-    'aliases': [ 'js', 'term' ]
+    'aliases': [ 'js', 'tern' ]
   },
   'go': {
     'build': [ '--gocode-completer' ],
@@ -94,7 +94,7 @@ def ParseArguments():
                        help = 'Do not build or test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
                         COMPLETERS.keys()) )
-  group.add_argument( '--with-completers', nargs ='*', type = CompleterType,
+  group.add_argument( '--completers', nargs ='*', type = CompleterType,
                        help = 'Only build and test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
                         COMPLETERS.keys()) )
@@ -111,22 +111,22 @@ def ParseArguments():
 
   parsed_args, nosetests_args = parser.parse_known_args()
 
-  with_completers = set( COMPLETERS.keys() )
-  if parsed_args.with_completers is not None:
-    with_completers = set( parsed_args.with_completers )
+  completers = set( COMPLETERS.keys() )
+  if parsed_args.completers is not None:
+    completers = set( parsed_args.completers )
   elif parsed_args.no_completers is not None:
-    with_completers = with_completers.difference( parsed_args.no_completers )
+    completers = completers.difference( parsed_args.no_completers )
   elif parsed_args.no_clang_completer:
     print( 'WARNING: The "--no-clang-completer" flag is deprecated. Please use "--no-completer cfamily" instead.' )
-    with_completers.remove( 'cfamily' )
+    completers.remove( 'cfamily' )
 
   if 'USE_CLANG_COMPLETER' in os.environ:
     if os.environ[ 'USE_CLANG_COMPLETER' ] == 'false':
-      with_completers.remove( 'cfamily' )
+      completers.remove( 'cfamily' )
     else:
-      with_completers.add( 'cfamily' )
+      completers.add( 'cfamily' )
 
-  parsed_args.with_completers = list( with_completers )
+  parsed_args.completers = list( completers )
 
   if 'COVERAGE' in os.environ:
     parsed_args.coverage = ( os.environ[ 'COVERAGE' ] == 'true' )
@@ -147,7 +147,7 @@ def BuildYcmdLibs( args ):
     ]
 
     for key in COMPLETERS:
-      if key in args.with_completers:
+      if key in args.completers:
         build_cmd.extend( COMPLETERS[ key ][ 'build' ] )
 
     if args.msvc:
@@ -163,7 +163,7 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   nosetests_args = [ '-v' ]
 
   for key in COMPLETERS:
-    if key not in parsed_args.with_completers:
+    if key not in parsed_args.completers:
       nosetests_args.extend( COMPLETERS[ key ][ 'test' ] )
 
   if parsed_args.coverage:

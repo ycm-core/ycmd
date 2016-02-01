@@ -52,8 +52,8 @@ To run the full suite, just run `run_tests.py`. Options are:
 * `--skip-build`: don't attempt to run the build `build.py`, e.g. if you use
 a non-standard build environment (e.g. `cmake28`, self-build of clang, etc.)
 * `--no-completers`: Do not build or test with listed semantic completion engine(s).
-* `--with-completers`: Only build and test with listed semantic completion engine(s).
-* `--msvc`: The the Microsoft Visual Studio version to build with.
+* `--completers`: Only build and test with listed semantic completion engine(s).
+* `--msvc`: The Microsoft Visual Studio version to build with.
  (default: 14). Windows only.
 * `--arch`: Force architecture to 32 or 64 bits on Windows (default: python
 interpreter architecture). Windows Only.
