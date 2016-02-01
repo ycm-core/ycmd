@@ -35,8 +35,9 @@ installation guide for details, but typically this involves manually installing:
 * node
 * npm
 
-If you are unwilling or unable to install all completers' requirement, you can
-able exclude certain completers with the `--no-completer` option.
+If you are unwilling or unable to install the requirements for all of the
+completers, you can exclude certain completers with the `--no-completer`
+option.
 
 ### mono non-standard path
 
@@ -50,8 +51,8 @@ To run the full suite, just run `run_tests.py`. Options are:
 
 * `--skip-build`: don't attempt to run the build `build.py`, e.g. if you use
 a non-standard build environment (e.g. `cmake28`, self-build of clang, etc.)
-* `--no-completers`: Do not build or test semantic completion engine(s).
-* `--with-completers`: Only build or test listed semantic completion engine(s).
+* `--no-completers`: Do not build or test with listed semantic completion engine(s).
+* `--with-completers`: Only build and test with listed semantic completion engine(s).
 * `--msvc`: The the Microsoft Visual Studio version to build with.
  (default: 14). Windows only.
 * `--arch`: Force architecture to 32 or 64 bits on Windows (default: python

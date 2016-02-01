@@ -91,11 +91,11 @@ def ParseArguments():
   group.add_argument( '--no-clang-completer', action = 'store_true',
                        help = argparse.SUPPRESS ) # deprecated 
   group.add_argument( '--no-completers', nargs ='*', type = CompleterType,
-                       help = 'Do not build or test semantic completion '
-                       'engine(s). Valid values: {0}'.format(
+                       help = 'Do not build or test with listed semantic '
+                       'completion engine(s). Valid values: {0}'.format(
                         COMPLETERS.keys()) )
   group.add_argument( '--with-completers', nargs ='*', type = CompleterType,
-                       help = 'Only build or test listed semantic '
+                       help = 'Only build and test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
                         COMPLETERS.keys()) )
   parser.add_argument( '--skip-build', action = 'store_true',
