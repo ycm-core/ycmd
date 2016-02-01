@@ -31,7 +31,7 @@ def RunFlake8():
   ] )
 
 
-completers = {
+COMPLETERS = {
   'cfamily': {
     'build': [ '--clang-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/clang' ],
@@ -72,17 +72,17 @@ completers = {
 
 def CompleterType( value ):
   value = value.lower()
-  if value in completers:
+  if value in COMPLETERS:
     return value
   else:
-    aliases_to_completer = dict( (i,k) for k,v in completers.iteritems()
+    aliases_to_completer = dict( (i,k) for k,v in COMPLETERS.iteritems()
                                           for i in v[ 'aliases' ] )
     if value in aliases_to_completer:
       return aliases_to_completer[ value ];
     else:
       raise argparse.ArgumentTypeError(
         '{0} is not a valid completer - should be one of {1}'.format(
-          value, completers.keys() ) )
+          value, COMPLETERS.keys() ) )
 
 
 def ParseArguments():
@@ -93,11 +93,11 @@ def ParseArguments():
   group.add_argument( '--no-completers', nargs ='*', type = CompleterType,
                        help = 'Do not build or test semantic completion '
                        'engine(s). Valid values: {0}'.format(
-                        completers.keys()) )
+                        COMPLETERS.keys()) )
   group.add_argument( '--with-completers', nargs ='*', type = CompleterType,
                        help = 'Only build or test listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
-                        completers.keys()) )
+                        COMPLETERS.keys()) )
   parser.add_argument( '--skip-build', action = 'store_true',
                        help = 'Do not build ycmd before testing.' )
   parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
@@ -111,7 +111,7 @@ def ParseArguments():
 
   parsed_args, nosetests_args = parser.parse_known_args()
 
-  with_completers = set( completers.keys() )
+  with_completers = set( COMPLETERS.keys() )
   if parsed_args.with_completers is not None:
     with_completers = set( parsed_args.with_completers )
   elif parsed_args.no_completers is not None:
@@ -146,9 +146,9 @@ def BuildYcmdLibs( args ):
       p.join( DIR_OF_THIS_SCRIPT, 'build.py' ),
     ]
 
-    for key in completers:
+    for key in COMPLETERS:
       if key in args.with_completers:
-        build_cmd.extend( completers[ key ][ 'build' ] )
+        build_cmd.extend( COMPLETERS[ key ][ 'build' ] )
 
     if args.msvc:
       build_cmd.extend( [ '--msvc', str( args.msvc ) ] )
@@ -162,9 +162,9 @@ def BuildYcmdLibs( args ):
 def NoseTests( parsed_args, extra_nosetests_args ):
   nosetests_args = [ '-v' ]
 
-  for key in completers:
+  for key in COMPLETERS:
     if key not in parsed_args.with_completers:
-      nosetests_args.extend( completers[ key ][ 'test' ] )
+      nosetests_args.extend( COMPLETERS[ key ][ 'test' ] )
 
   if parsed_args.coverage:
     nosetests_args += [ '--with-coverage', '--cover-package=ycmd' ]
