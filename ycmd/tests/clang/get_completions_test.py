@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from webtest import TestApp
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
@@ -22,7 +23,7 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
 from ...responses import UnknownExtraConf, NoExtraConfDetected
 from ... import handlers
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
-from clang_handlers_test import Clang_Handlers_test
+from .clang_handlers_test import Clang_Handlers_test
 import httplib
 
 

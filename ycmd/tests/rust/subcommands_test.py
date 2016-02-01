@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from rust_handlers_test import Rust_Handlers_test
+from __future__ import absolute_import
+from .rust_handlers_test import Rust_Handlers_test
 from nose.tools import eq_
 
 

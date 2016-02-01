@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from collections import defaultdict
 import os
 import time
@@ -26,7 +27,7 @@ from ycmd import utils
 import requests
 import urlparse
 import logging
-import solutiondetection
+from . import solutiondetection
 import threading
 
 SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +

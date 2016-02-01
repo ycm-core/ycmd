@@ -17,10 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
-from python_handlers_test import Python_Handlers_test
+from .python_handlers_test import Python_Handlers_test
 import httplib
 
 

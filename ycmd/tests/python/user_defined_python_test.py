@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from python_handlers_test import Python_Handlers_test
+from __future__ import absolute_import
+from .python_handlers_test import Python_Handlers_test
 from mock import patch
 from ycmd import utils
 from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE

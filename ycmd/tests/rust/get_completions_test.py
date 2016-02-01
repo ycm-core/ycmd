@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from hamcrest import assert_that, has_entry, has_items, contains_string
-from rust_handlers_test import Rust_Handlers_test
+from .rust_handlers_test import Rust_Handlers_test
 
 
 class Rust_GetCompletions_test( Rust_Handlers_test ):

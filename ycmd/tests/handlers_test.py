@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from ..server_utils import SetUpPythonPath
 SetUpPythonPath()
 from webtest import TestApp
 from .. import handlers
 from ycmd import user_options_store
 from hamcrest import has_entries, has_entry, contains_string
-from test_utils import BuildRequest
+from .test_utils import BuildRequest
 from mock import patch
 import contextlib
 import bottle

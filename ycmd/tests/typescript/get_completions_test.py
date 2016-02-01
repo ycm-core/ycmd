@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from hamcrest import assert_that, contains_inanyorder, has_entries
-from typescript_handlers_test import Typescript_Handlers_test
+from .typescript_handlers_test import Typescript_Handlers_test
 from mock import patch
 
 

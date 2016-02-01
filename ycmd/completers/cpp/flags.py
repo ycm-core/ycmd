@@ -112,21 +112,23 @@ class Flags( object ):
       path_flags = [ '-isystem', '-I' ]
 
       try:
-        it = iter(flags)
+        it = iter( flags )
         for flag in it:
           flag_len = len( flag )
           if flag.startswith( quote_flag ):
             quote_flag_len = len( quote_flag )
             # Add next flag to the include paths if current flag equals to
             # '-iquote', or add remaining string otherwise.
-            quoted_include_paths.append( it.next() if flag_len == quote_flag_len
-                                                 else flag[ quote_flag_len: ] )
+            quoted_include_paths.append( next( it )
+                                         if flag_len == quote_flag_len
+                                         else flag[ quote_flag_len: ] )
           else:
             for path_flag in path_flags:
               if flag.startswith( path_flag ):
                 path_flag_len = len( path_flag )
-                include_paths.append( it.next() if flag_len == path_flag_len
-                                              else flag[ path_flag_len: ] )
+                include_paths.append( next( it )
+                                      if flag_len == path_flag_len
+                                      else flag[ path_flag_len: ] )
                 break
       except StopIteration:
         pass

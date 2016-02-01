@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from hamcrest import assert_that, has_item
-from go_handlers_test import Go_Handlers_test
+from .go_handlers_test import Go_Handlers_test
 
 
 class Go_GetCompletions_test( Go_Handlers_test ):

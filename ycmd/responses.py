@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import ( absolute_import, division,
-                         print_function, unicode_literals )
-from builtins import *  # flake8: noqa
 
 import os
 

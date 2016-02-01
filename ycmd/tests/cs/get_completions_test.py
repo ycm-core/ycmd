@@ -17,11 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, empty, greater_than, has_item, has_items,
                        has_entries )
-from cs_handlers_test import Cs_Handlers_test
+from .cs_handlers_test import Cs_Handlers_test
 
 
 class Cs_GetCompletions_test( Cs_Handlers_test ):

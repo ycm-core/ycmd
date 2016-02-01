@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
+from __future__ import absolute_import
+from .server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
 SetUpPythonPath()
 
 import sys

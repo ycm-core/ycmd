@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 from hamcrest import assert_that
 from nose.tools import eq_
-from python_handlers_test import Python_Handlers_test
+from .python_handlers_test import Python_Handlers_test
 import os.path
 
 
