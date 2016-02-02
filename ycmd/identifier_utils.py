@@ -73,6 +73,9 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec: http://www.haskell.org/onlinereport/lexemes.html
     # Section 2.4
     'haskell': re.compile( r"[_a-zA-Z][\w']*", re.UNICODE ),
+
+    # Spec: http://doc.perl6.org/language/syntax
+    'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
 }
 
 FILETYPE_TO_IDENTIFIER_REGEX[ 'scss' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]
