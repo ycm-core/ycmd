@@ -39,6 +39,10 @@ PATH_TO_GOCODE_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
   '..', '..', '..', 'third_party', 'gocode',
   'gocode' + ( '.exe' if utils.OnWindows() else '' ) )
+PATH_TO_GODEF_BINARY = os.path.join(
+  os.path.abspath( os.path.dirname( __file__ ) ),
+  '..', '..', '..', 'third_party', 'godef',
+  'godef' + ( '.exe' if utils.OnWindows() else '' ) )
 
 _logger = logging.getLogger( __name__ )
 
@@ -49,6 +53,7 @@ class GoCodeCompleter( Completer ):
     super( GoCodeCompleter, self ).__init__( user_options )
     self._popener = utils.SafePopen # Overridden in test.
     self._binary = self.FindGoCodeBinary( user_options )
+    self._binary_def = self.FindGoDefBinary( user_options )
 
     if not self._binary:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
@@ -94,7 +99,13 @@ class GoCodeCompleter( Completer ):
   def GetSubcommandsMap( self ):
     return {
       'StartServer': ( lambda self, request_data, args: self._StartServer() ),
-      'StopServer': ( lambda self, request_data, args: self._StopServer() )
+      'StopServer': ( lambda self, request_data, args: self._StopServer() ),
+      'GoTo' : ( lambda self, request_data, args:
+                 self._GoToDefinition( request_data ) ),
+      'GoToDefinition' : ( lambda self, request_data, args:
+                           self._GoToDefinition( request_data ) ),
+      'GoToDeclaration' : ( lambda self, request_data, args:
+                           self._GoToDefinition( request_data ) ),
     }
 
 
@@ -121,6 +132,28 @@ class GoCodeCompleter( Completer ):
       return PATH_TO_GOCODE_BINARY
     return utils.PathToFirstExistingExecutable( [ 'gocode' ] )
 
+  def FindGoDefBinary( self, user_options ):
+    """ Find the path to the godef binary.
+
+    If 'godef_binary_path' in the options is blank,
+    use the version installed with YCM, if it exists,
+    then the one on the path, if not.
+
+    If the 'godef_binary_path' is specified, use it
+    as an absolute path.
+
+    If the resolved binary exists, return the path,
+    otherwise return None. """
+    if user_options.get( 'godef_binary_path' ):
+      # The user has explicitly specified a path.
+      if os.path.isfile( user_options[ 'godef_binary_path' ] ):
+        return user_options[ 'godef_binary_path' ]
+      else:
+        return None
+    # Try to use the bundled binary or one on the path.
+    if os.path.isfile( PATH_TO_GODEF_BINARY ):
+      return PATH_TO_GODEF_BINARY
+    return utils.PathToFirstExistingExecutable( [ 'godef' ] )
 
   def OnFileReadyToParse( self, request_data ):
     self._StartServer()
@@ -155,6 +188,47 @@ class GoCodeCompleter( Completer ):
       raise RuntimeError( COMPLETION_ERROR_MESSAGE )
 
     return stdoutdata
+
+  def _ExecuteGoDefBinary(self, *args):
+    """ Execute the GoDef binary with given arguments. Use the contents
+    argument to send data to GoDef. Return the standard output. """
+    _logger.info( "godef GoTo request %s" % self._binary_def )
+    proc = self._popener(
+      [ self._binary_def ] + list(args), stdin = subprocess.PIPE,
+      stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+    stdoutdata, stderrdata = proc.communicate()
+    if proc.returncode:
+      _logger.error( COMPLETION_ERROR_MESSAGE + " code %i stderr: %s",
+                     proc.returncode, stderrdata)
+      raise RuntimeError( COMPLETION_ERROR_MESSAGE )
+
+    return stdoutdata
+
+  def _GoToDefinition( self, request_data ):
+    try:
+      filename = request_data[ 'filepath' ]
+      _logger.info( "godef GoTo request %s" % filename )
+      if not filename:
+        return
+      contents = utils.ToUtf8IfNeeded(
+          request_data[ 'file_data' ][ filename ][ 'contents' ] )
+      offset = _ComputeOffset( contents, request_data[ 'line_num' ],
+                               request_data[ 'column_num' ] )
+      stdout = self._ExecuteGoDefBinary( "-f=%s" % filename, '-json',
+                                         "-o=%s" % offset )
+      parsed = json.loads(stdout)
+      if 'filename' in parsed:
+        if 'column' in parsed:
+          return responses.BuildGoToResponse( parsed[ 'filename' ],
+                                              parsed[ 'line' ],
+                                              parsed[ 'column' ] )
+        else:
+          return responses.BuildGoToResponse( parsed[ 'filename' ],
+                                    0, 0 )
+      else:
+        raise RuntimeError( 'Can\'t jump to definition.' )
+    except Exception:
+      raise RuntimeError( 'Can\'t jump to definition.' )
 
 
 
