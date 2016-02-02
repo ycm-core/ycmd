@@ -286,6 +286,7 @@ def BuildGoCode():
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
   subprocess.check_call( [ 'go', 'build' ] )
 
+
 def BuildRacerd():
   """
   Build racerd. This requires a reasonably new version of rustc/cargo.

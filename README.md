@@ -234,5 +234,5 @@ This software is licensed under the [GPL v3 license][gpl].
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gocode]: https://github.com/nsf/gocode
-[godef]: https://github.com/rogpeppe/godef
+[godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd

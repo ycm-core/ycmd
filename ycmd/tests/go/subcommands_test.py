@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2015 ycmd contributors.
+# Copyright (C) 2016 ycmd contributors.
 #
 # This file is part of ycmd.
 #
@@ -41,7 +41,26 @@ class Go_Subcommands_test( Go_Handlers_test ):
                                    goto_data )
 
     eq_( {
-      'line_num': '3', 'column_num': '6', 'filepath': filepath
+      'line_num': 3, 'column_num': 6, 'filepath': filepath
+    }, results.json )
+
+    filepath = self._PathToTestFile( 'win.go' )
+    contents = open( filepath ).read()
+
+    command = params[ 'command' ]
+    goto_data = self._BuildRequest( completer_target = 'filetype_default',
+                                    command_arguments = [ command ],
+                                    line_num = 4,
+                                    column_num = 7,
+                                    contents = contents,
+                                    filetype = 'go',
+                                    filepath = filepath )
+
+    results = self._app.post_json( '/run_completer_command',
+                                   goto_data )
+
+    eq_( {
+      'line_num': 2, 'column_num': 6, 'filepath': filepath
     }, results.json )
 
 
