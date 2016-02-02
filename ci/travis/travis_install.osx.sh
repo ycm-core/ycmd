@@ -5,6 +5,7 @@
 brew update || brew update
 brew install node.js || brew outdated node.js || brew upgrade node.js
 brew install go || brew outdated go || brew upgrade go
+brew install ninja
 
 # OS X comes with 2 versions of python by default, and a neat system
 # (versioner) to switch between them:

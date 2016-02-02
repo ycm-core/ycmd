@@ -172,9 +172,10 @@ def GetGenerator( args ):
     if ( not args.arch and platform.architecture()[ 0 ] == '64bit'
          or args.arch == 64 ):
       generator = generator + ' Win64'
-
     return generator
 
+  if PathToFirstExistingExecutable( ['ninja'] ):
+    return 'Ninja'
   return 'Unix Makefiles'
 
 

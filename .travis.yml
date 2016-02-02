@@ -19,8 +19,8 @@ env:
   global:
     - MONO_THREADS_PER_CPU=2000
     - MONO_MANAGED_WATCHER=disabled
-    # Travis can run out of RAM when compiling if we don't prevent parallelization.
-    - YCM_CORES=1
+    # Travis can run out of RAM, so we need to be careful here.
+    - YCM_CORES=3
   matrix:
     # Don't forget to take the below matrix exclusions into account.
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
@@ -36,12 +36,20 @@ matrix:
     - os: linux
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
 addons:
+  # If this doesn't make much sense to you, see the travis docs:
+  #    https://docs.travis-ci.com/user/migrating-from-legacy/
   apt:
     sources:
-     - ubuntu-toolchain-r-test
-     - deadsnakes
+     # The Travis apt source whitelist can be found here:
+     #   https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
+     - ubuntu-toolchain-r-test  # for new libstdc++
+     - llvm-toolchain-precise-3.7  # for clang
+     - deadsnakes  # for various versions of python
+     - kalakris-cmake # for a more recent version of cmake (needed for ninja-build)
     packages:
-     - g++-4.8
+     - cmake
+     - clang-3.7
+     - ninja-build
      - python2.6
      - python2.6-dev
      - python2.7
@@ -49,5 +57,11 @@ addons:
      - python-virtualenv
 cache:
   directories:
-    - $HOME/.cache/pip
-    - $HOME/.dnx/packages
+    - $HOME/.cache/pip  # Python packages from pip
+    - $HOME/.dnx/packages  # .Net packages?
+    - $HOME/.multirust  # what multirust downloads
+    - $HOME/.cargo  # cargo package deps
+    - $TRAVIS_BUILD_DIR/clang_archives  # clang downloads
+    # dependency compilation output
+    - $TRAVIS_BUILD_DIR/third_party/racerd/target
+    - $TRAVIS_BUILD_DIR/third_party/OmniSharpServer/OmniSharp/bin/Release
