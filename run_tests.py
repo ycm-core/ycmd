@@ -117,7 +117,8 @@ def ParseArguments():
   elif parsed_args.no_completers is not None:
     completers = completers.difference( parsed_args.no_completers )
   elif parsed_args.no_clang_completer:
-    print( 'WARNING: The "--no-clang-completer" flag is deprecated. Please use "--no-completer cfamily" instead.' )
+    print( 'WARNING: The "--no-clang-completer" flag is deprecated. '
+           'Please use "--no-completer cfamily" instead.' )
     completers.remove( 'cfamily' )
 
   if 'USE_CLANG_COMPLETER' in os.environ:
