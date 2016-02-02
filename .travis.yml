@@ -22,16 +22,17 @@ env:
     # Travis can run out of RAM when compiling if we don't prevent parallelization.
     - YCM_CORES=1
   matrix:
+    # Don't forget to take the below matrix exclusions into account.
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
     - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
 matrix:
   exclude:
-    # We don't run coverage on mac and we don't run the non-coverage version of
-    # the same run on linux.
     - os: osx
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
+    - os: osx
+      env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - os: linux
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
 addons:
