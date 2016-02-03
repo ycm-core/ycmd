@@ -87,7 +87,9 @@ def BuildYcmdLibs( args ):
 
 
 def NoseTests( parsed_args, extra_nosetests_args ):
-  nosetests_args = [ '-v' ]
+  # Always passing --with-id to nosetests enables non-surprising usage of
+  # its --failed flag.
+  nosetests_args = [ '-v', '--with-id' ]
   if parsed_args.no_clang_completer:
     nosetests_args.append( '--exclude=.*Clang.*' )
 
