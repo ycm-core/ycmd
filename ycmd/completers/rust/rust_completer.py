@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+
 from ycmd.utils import ToUtf8IfNeeded, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
@@ -39,8 +40,8 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = utils.PathToNearestThirdPartyFolder( DIR_OF_THIS_SCRIPT )
 
 RACERD_BINARY_NAME = 'racerd' + ( '.exe' if utils.OnWindows() else '' )
-RACERD_BINARY = p.join( DIR_OF_THIRD_PARTY,
-                         'racerd', 'target', 'release', RACERD_BINARY_NAME )
+RACERD_BINARY = ToUtf8IfNeeded( p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
+                                        'release', RACERD_BINARY_NAME ) )
 
 RACERD_HMAC_HEADER = 'x-racerd-hmac'
 HMAC_SECRET_LENGTH = 16
@@ -67,7 +68,7 @@ def FindRacerdBinary( user_options ):
   if racerd_user_binary:
     # The user has explicitly specified a path.
     if os.path.isfile( racerd_user_binary ):
-      return racerd_user_binary
+      return ToUtf8IfNeeded( racerd_user_binary )
     else:
       _logger.warn( 'user provided racerd_binary_path is not file' )
 
@@ -112,12 +113,12 @@ class RustCompleter( Completer ):
 
     # Early return if user provided config
     if rust_src_path:
-      return rust_src_path
+      return ToUtf8IfNeeded( rust_src_path )
 
     # Fall back to environment variable
     env_key = 'RUST_SRC_PATH'
     if env_key in os.environ:
-      return os.environ[ env_key ]
+      return ToUtf8IfNeeded( os.environ[ env_key ] )
 
     return None
 
