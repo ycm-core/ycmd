@@ -18,6 +18,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, empty, greater_than, has_item, has_items,

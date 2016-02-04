@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from ycmd.utils import ToUtf8IfNeeded, RunningInsideVim
+
+if RunningInsideVim():
+  from ycm_client_support import FilterAndSortCandidates
+else:
+  from ycm_core import FilterAndSortCandidates
+
 from collections import defaultdict
 import os
 import re
@@ -139,6 +147,11 @@ def PathToFiletypeCompleterPluginLoader( filetype ):
 def FiletypeCompleterExistsForFiletype( filetype ):
   return os.path.exists( PathToFiletypeCompleterPluginLoader( filetype ) )
 
+
+def FilterAndSortCandidatesShim( candidates, sort_property, query ):
+  return FilterAndSortCandidates( candidates,
+                                  ToUtf8IfNeeded( sort_property ),
+                                  ToUtf8IfNeeded( query ) )
 
 TRIGGER_REGEX_PREFIX = 're!'
 

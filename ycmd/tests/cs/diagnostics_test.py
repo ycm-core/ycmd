@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 from hamcrest import ( assert_that, contains, contains_string, equal_to,
                        has_entries, has_entry )
 from .cs_handlers_test import Cs_Handlers_test

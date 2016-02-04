@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+
 import httplib, logging, os, requests, traceback, threading
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer

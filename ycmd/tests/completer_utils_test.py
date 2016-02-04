@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 import re
 from collections import defaultdict
 from nose.tools import eq_, ok_
@@ -22,7 +23,7 @@ from ycmd.completers import completer_utils as cu
 
 
 def _ExtractPatternsFromFiletypeTriggerDict( triggerDict ):
-  """Returns a copy of the dictionary with the _sre.SRE_Pattern instances in 
+  """Returns a copy of the dictionary with the _sre.SRE_Pattern instances in
   each set value replaced with the pattern strings. Needed for equality test of
   two filetype trigger dictionaries."""
   copy = triggerDict.copy()

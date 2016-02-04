@@ -20,6 +20,7 @@ method/variable,etc. headers in order to remove non-data-ink from the raw
 comment"""
 
 from __future__ import print_function
+from __future__ import unicode_literals
 from nose.tools import eq_
 from ycmd.completers.cpp import clang_completer
 

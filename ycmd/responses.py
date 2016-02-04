@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import unicode_literals
 import os
 
 YCM_EXTRA_CONF_FILENAME = '.ycm_extra_conf.py'

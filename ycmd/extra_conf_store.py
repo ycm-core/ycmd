@@ -17,6 +17,7 @@
 
 # NOTE: This module is used as a Singleton
 
+from __future__ import unicode_literals
 import os
 import imp
 import random

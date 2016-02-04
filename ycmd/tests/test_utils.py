@@ -17,6 +17,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import unicode_literals
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 

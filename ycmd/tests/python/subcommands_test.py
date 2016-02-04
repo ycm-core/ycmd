@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from hamcrest import assert_that
 from nose.tools import eq_
 from .python_handlers_test import Python_Handlers_test

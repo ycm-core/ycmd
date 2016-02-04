@@ -17,5 +17,6 @@
 
 
 # Provided for backwards compatibility with old ycm_extra_conf files.
+from __future__ import unicode_literals
 def PrepareClangFlags( flags, filename ):
   return flags

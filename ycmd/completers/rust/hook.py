@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.

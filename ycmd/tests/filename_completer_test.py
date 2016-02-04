@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 import os
 from nose.tools import eq_
 from ycmd.completers.general.filename_completer import FilenameCompleter

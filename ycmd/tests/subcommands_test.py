@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 from nose.tools import eq_
 from .handlers_test import Handlers_test
 from ycmd.tests.test_utils import DummyCompleter

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+
 import tempfile
 import os
 import sys
@@ -38,8 +40,13 @@ def SanitizeQuery( query ):
 
 # Given an object, returns a str object that's utf-8 encoded.
 def ToUtf8IfNeeded( value ):
+  # TODO: This method is likely to need special knowledge of are we running on
+  # py2 or py3; the C++ interop layer specifically wants py2 'str' objects and
+  # probably 'bytes' on py3.
+
   if isinstance( value, unicode ):
     return value.encode( 'utf8' )
+  # TODO: in py3, this should be treated as unicode
   if isinstance( value, str ):
     return value
   return str( value )

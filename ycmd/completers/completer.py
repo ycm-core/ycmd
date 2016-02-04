@@ -15,15 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 import abc
 import threading
-from ycmd.utils import ToUtf8IfNeeded, ForceSemanticCompletion, RunningInsideVim
-
-if RunningInsideVim():
-  from ycm_client_support import FilterAndSortCandidates
-else:
-  from ycm_core import FilterAndSortCandidates
-
+from ycmd.utils import ForceSemanticCompletion
 from ycmd.completers import completer_utils
 from ycmd.responses import NoDiagnosticSupport
 
@@ -240,9 +235,8 @@ class Completer( object ):
       elif 'insertion_text' in candidates[ 0 ]:
         sort_property = 'insertion_text'
 
-    matches = FilterAndSortCandidates( candidates,
-                                       sort_property,
-                                       ToUtf8IfNeeded( query ) )
+    matches = completer_utils.FilterAndSortCandidatesShim(
+      candidates, sort_property, query )
 
     return matches
 

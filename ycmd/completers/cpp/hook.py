@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 import ycm_core
 from ycmd.completers.cpp.clang_completer import ClangCompleter
 

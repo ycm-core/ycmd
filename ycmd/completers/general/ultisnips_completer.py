@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import responses
 

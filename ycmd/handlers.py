@@ -16,6 +16,9 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import bytes
+
 from os import path
 
 try:
@@ -48,7 +51,7 @@ from ycmd.request_wrap import RequestWrap
 bottle.Request.MEMFILE_MAX = 1000 * 1024
 
 _server_state = None
-_hmac_secret = None
+_hmac_secret = bytes()
 _logger = logging.getLogger( __name__ )
 app = bottle.Bottle()
 

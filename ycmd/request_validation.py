@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 from ycmd.responses import ServerError
 
 # Throws an exception if request doesn't have all the required fields.

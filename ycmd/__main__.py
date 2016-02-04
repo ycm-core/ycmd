@@ -16,9 +16,12 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from .server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
 SetUpPythonPath()
 
+from builtins import bytes
 import sys
 import logging
 import json
@@ -115,7 +118,7 @@ def SetupOptions( options_file ):
     user_options = json.load( open( options_file, 'r' ) )
     options.update( user_options )
   utils.RemoveIfExists( options_file )
-  hmac_secret = base64.b64decode( options[ 'hmac_secret' ] )
+  hmac_secret = bytes( base64.b64decode( options[ 'hmac_secret' ] ) )
   del options[ 'hmac_secret' ]
   user_options_store.SetAll( options )
   return options, hmac_secret

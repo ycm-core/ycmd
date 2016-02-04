@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from builtins import bytes
+
 import logging
 import httplib
 from urlparse import urlparse
@@ -51,7 +54,7 @@ class HmacPlugin( object ):
         abort( httplib.UNAUTHORIZED, 'Unauthorized, received bad Host header.' )
         return
 
-      body = request.body.read()
+      body = bytes( request.body.read() )
       if not RequestAuthenticated( request.method, request.path, body,
                                    self._hmac_secret ):
         self._logger.info( 'Dropping request with bad HMAC.' )
@@ -72,9 +75,9 @@ def RequestAuthenticated( method, path, body, hmac_secret ):
   if _HMAC_HEADER not in request.headers:
     return False
 
-  return hmac_utils.SecureStringsEqual(
+  return hmac_utils.SecureBytesEqual(
       hmac_utils.CreateRequestHmac( method, path, body, hmac_secret ),
-      b64decode( request.headers[ _HMAC_HEADER ] ) )
+      bytes( b64decode( request.headers[ _HMAC_HEADER ] ) ) )
 
 
 def SetHmacHeader( body, hmac_secret ):
