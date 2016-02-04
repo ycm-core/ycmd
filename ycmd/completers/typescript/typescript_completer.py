@@ -21,7 +21,10 @@ import json
 import logging
 import os
 import subprocess
+import itertools
 
+from threading import Thread
+from threading import Event
 from threading import Lock
 from tempfile import NamedTemporaryFile
 
@@ -33,8 +36,35 @@ BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
                              'TypeScript 1.5 or higher is required' )
 
 MAX_DETAILED_COMPLETIONS = 100
+RESPONSE_TIMEOUT_SECONDS = 10
 
 _logger = logging.getLogger( __name__ )
+
+class DeferredResponse( object ):
+  """
+  A deferred that resolves to a response from TSServer.
+  """
+
+  def __init__( self, timeout ):
+    self._event = Event()
+    self._message = None
+    self._timeout = timeout
+
+
+  def resolve( self, message ):
+    self._message = message
+    self._event.set()
+
+
+  def result( self ):
+    self._event.wait( timeout = self._timeout )
+    if not self._event.isSet():
+      raise RuntimeError( 'Response Timeout' )
+    message = self._message
+    if not message[ 'success' ]:
+      raise RuntimeError( message[ 'message' ] )
+    if 'body' in message:
+      return self._message[ 'body' ]
 
 
 class TypeScriptCompleter( Completer ):
@@ -51,9 +81,9 @@ class TypeScriptCompleter( Completer ):
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
 
-    # Used to prevent threads from concurrently reading and writing to
-    # the tsserver process' stdout and stdin
-    self._lock = Lock()
+    # Used to prevent threads from concurrently writing to
+    # the tsserver process' stdin
+    self._writelock = Lock()
 
     binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
     if not binarypath:
@@ -63,7 +93,6 @@ class TypeScriptCompleter( Completer ):
     self._logfile = _LogFileName()
     tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
                                                          level = _LogLevel() )
-
     # TSServer get the configuration for the log file through the environment
     # variable 'TSS_LOG'. This seems to be undocumented but looking at the
     # source code it seems like this is the way:
@@ -73,7 +102,7 @@ class TypeScriptCompleter( Completer ):
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
-    self._sequenceid = 0
+    self._sequenceid = itertools.count()
 
     # TSServer ignores the fact that newlines are two characters on Windows
     # (\r\n) instead of one on other platforms (\n), so we use the
@@ -88,27 +117,51 @@ class TypeScriptCompleter( Completer ):
                                              env = self._environ,
                                              universal_newlines = True )
 
+    # Deferred requests pending a response
+    self._pending = {}
+
+    # Used to prevent threads from concurrently reading and writing to
+    # the pending response dictionary
+    self._pendinglock = Lock()
+
+    # Start a thread to read response from TSServer.
+    self._thread = Thread( target = self._ReaderLoop, args = () )
+    self._thread.daemon = True
+    self._thread.start()
+
     _logger.info( 'Enabling typescript completion' )
 
 
-  def _SendRequest( self, command, arguments = None ):
-    """Send a request message to TSServer."""
+  def _ReaderLoop( self ):
+    """
+    Read responses from TSServer and use them to resolve
+    the DeferredResponse instances.
+    """
 
-    seq = self._sequenceid
-    self._sequenceid += 1
-    request = {
-      'seq':     seq,
-      'type':    'request',
-      'command': command
-    }
-    if arguments:
-      request[ 'arguments' ] = arguments
-    self._tsserver_handle.stdin.write( json.dumps( request ) )
-    self._tsserver_handle.stdin.write( "\n" )
-    return seq
+    while True:
+      try:
+        message = self._ReadMessage()
+
+        # We ignore events for now since we don't have a use for them.
+        msgtype = message[ 'type' ]
+        if msgtype == 'event':
+          eventname = message[ 'event' ]
+          _logger.info( 'Recieved {0} event from tsserver'.format( eventname ) )
+          continue
+        if msgtype != 'response':
+          _logger.error( 'Unsuported message type {0}'.format( msgtype ) )
+          continue
+
+        seq = message[ 'request_seq' ]
+        with self._pendinglock:
+          if seq in self._pending:
+            self._pending[seq].resolve(message)
+            del self._pending[seq]
+      except Exception as e:
+        _logger.error( 'ReaderLoop error: {0}'.format( str( e ) ) )
 
 
-  def _ReadResponse( self, expected_seq ):
+  def _ReadMessage( self ):
     """Read a response message from TSServer."""
 
     # The headers are pretty similar to HTTP.
@@ -127,29 +180,47 @@ class TypeScriptCompleter( Completer ):
     if 'Content-Length' not in headers:
       raise RuntimeError( "Missing 'Content-Length' header" )
     contentlength = int( headers[ 'Content-Length' ] )
-    message = json.loads( self._tsserver_handle.stdout.read( contentlength ) )
-
-    msgtype = message[ 'type' ]
-    if msgtype == 'event':
-      self._HandleEvent( message )
-      return self._ReadResponse( expected_seq )
-
-    if msgtype != 'response':
-      raise RuntimeError( 'Unsuported message type {0}'.format( msgtype ) )
-    if int( message[ 'request_seq' ] ) != expected_seq:
-      raise RuntimeError( 'Request sequence mismatch' )
-    if not message[ 'success' ]:
-      raise RuntimeError( message[ 'message' ] )
-
-    return message
+    return json.loads( self._tsserver_handle.stdout.read( contentlength ) )
 
 
-  def _HandleEvent( self, event ):
-    """Handle event message from TSServer."""
+  def _BuildRequest( self, command, arguments = None ):
+    """Build TSServer request object."""
 
-    # We ignore events for now since we don't have a use for them.
-    eventname = event[ 'event' ]
-    _logger.info( 'Recieved {0} event from tsserver'.format( eventname ) )
+    seq = self._sequenceid.next()
+    request = {
+      'seq':     seq,
+      'type':    'request',
+      'command': command
+    }
+    if arguments:
+      request[ 'arguments' ] = arguments
+    return request
+
+
+  def _SendCommand( self, command, arguments = None ):
+    """Send a request message to TSServer."""
+
+    request = self._BuildRequest( command, arguments )
+    with self._writelock:
+      self._tsserver_handle.stdin.write( json.dumps( request ) )
+      self._tsserver_handle.stdin.write( "\n" )
+
+
+  def _SendRequest( self, command, arguments = None, timeout = RESPONSE_TIMEOUT_SECONDS ):
+    """
+    Send a request message to TSServer and
+    wait for the response.
+    """
+
+    request = self._BuildRequest( command, arguments )
+    deferred = DeferredResponse( timeout )
+    with self._pendinglock:
+      seq = request[ 'seq' ]
+      self._pending[ seq ] = deferred
+    with self._writelock:
+      self._tsserver_handle.stdin.write( json.dumps( request ) )
+      self._tsserver_handle.stdin.write( "\n" )
+    return deferred.result()
 
 
   def _Reload( self, request_data ):
@@ -163,11 +234,10 @@ class TypeScriptCompleter( Completer ):
     tmpfile = NamedTemporaryFile( delete=False )
     tmpfile.write( utils.ToUtf8IfNeeded( contents ) )
     tmpfile.close()
-    seq = self._SendRequest( 'reload', {
+    self._SendRequest( 'reload', {
       'file':    filename,
       'tmpfile': tmpfile.name
     } )
-    self._ReadResponse( seq )
     os.unlink( tmpfile.name )
 
 
@@ -176,36 +246,33 @@ class TypeScriptCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    with self._lock:
-      self._Reload( request_data )
-      seq = self._SendRequest( 'completions', {
-        'file':   request_data[ 'filepath' ],
-        'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_num' ]
-      } )
-      entries = self._ReadResponse( seq )[ 'body' ]
+    self._Reload( request_data )
+    entries = self._SendRequest( 'completions', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ]
+    } )
 
-      # A less detailed version of the completion data is returned
-      # if there are too many entries. This improves responsiveness.
-      if len( entries ) > MAX_DETAILED_COMPLETIONS:
-        return [ _ConvertCompletionData(e) for e in entries ]
+    # A less detailed version of the completion data is returned
+    # if there are too many entries. This improves responsiveness.
+    if len( entries ) > MAX_DETAILED_COMPLETIONS:
+      return [ _ConvertCompletionData(e) for e in entries ]
 
-      names = []
-      namelength = 0
-      for e in entries:
-        name = e[ 'name' ]
-        namelength = max( namelength, len( name ) )
-        names.append( name )
+    names = []
+    namelength = 0
+    for e in entries:
+      name = e[ 'name' ]
+      namelength = max( namelength, len( name ) )
+      names.append( name )
 
-      seq = self._SendRequest( 'completionEntryDetails', {
-        'file':       request_data[ 'filepath' ],
-        'line':       request_data[ 'line_num' ],
-        'offset':     request_data[ 'column_num' ],
-        'entryNames': names
-      } )
-      detailed_entries = self._ReadResponse( seq )[ 'body' ]
-      return [ _ConvertDetailedCompletionData( e, namelength )
-               for e in detailed_entries ]
+    detailed_entries = self._SendRequest( 'completionEntryDetails', {
+      'file':       request_data[ 'filepath' ],
+      'line':       request_data[ 'line_num' ],
+      'offset':     request_data[ 'column_num' ],
+      'entryNames': names
+    } )
+    return [ _ConvertDetailedCompletionData( e, namelength )
+             for e in detailed_entries ]
 
 
   def GetSubcommandsMap( self ):
@@ -221,73 +288,61 @@ class TypeScriptCompleter( Completer ):
 
   def OnBufferVisit( self, request_data ):
     filename = request_data[ 'filepath' ]
-    with self._lock:
-      self._SendRequest( 'open', { 'file': filename } )
+    self._SendCommand( 'open', { 'file': filename } )
 
 
   def OnBufferUnload( self, request_data ):
     filename = request_data[ 'filepath' ]
-    with self._lock:
-      self._SendRequest( 'close', { 'file': filename } )
+    self._SendCommand( 'close', { 'file': filename } )
 
 
   def OnFileReadyToParse( self, request_data ):
-    with self._lock:
-      self._Reload( request_data )
+    self._Reload( request_data )
 
 
   def _GoToDefinition( self, request_data ):
-    with self._lock:
-      self._Reload( request_data )
-      seq = self._SendRequest( 'definition', {
-        'file':   request_data[ 'filepath' ],
-        'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_num' ]
-      } )
+    self._Reload( request_data )
+    filespans = self._SendRequest( 'definition', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ]
+    } )
+    if not filespans:
+      raise RuntimeError( 'Could not find definition' )
 
-      filespans = self._ReadResponse( seq )[ 'body' ]
-      if not filespans:
-        raise RuntimeError( 'Could not find definition' )
-
-      span = filespans[ 0 ]
-      return responses.BuildGoToResponse(
-        filepath   = span[ 'file' ],
-        line_num   = span[ 'start' ][ 'line' ],
-        column_num = span[ 'start' ][ 'offset' ]
-      )
+    span = filespans[ 0 ]
+    return responses.BuildGoToResponse(
+      filepath   = span[ 'file' ],
+      line_num   = span[ 'start' ][ 'line' ],
+      column_num = span[ 'start' ][ 'offset' ]
+    )
 
 
   def _GetType( self, request_data ):
-    with self._lock:
-      self._Reload( request_data )
-      seq = self._SendRequest( 'quickinfo', {
-        'file':   request_data[ 'filepath' ],
-        'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_num' ]
-      } )
-
-      info = self._ReadResponse( seq )[ 'body' ]
-      return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
+    self._Reload( request_data )
+    info = self._SendRequest( 'quickinfo', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ]
+    } )
+    return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
 
 
   def _GetDoc( self, request_data ):
-    with self._lock:
-      self._Reload( request_data )
-      seq = self._SendRequest( 'quickinfo', {
-        'file':   request_data[ 'filepath' ],
-        'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_num' ]
-      } )
+    self._Reload( request_data )
+    info = self._SendRequest( 'quickinfo', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ]
+    } )
 
-      info = self._ReadResponse( seq )[ 'body' ]
-      message = '{0}\n\n{1}'.format( info[ 'displayString' ],
-                                     info[ 'documentation' ] )
-      return responses.BuildDetailedInfoResponse( message )
+    message = '{0}\n\n{1}'.format( info[ 'displayString' ],
+                                   info[ 'documentation' ] )
+    return responses.BuildDetailedInfoResponse( message )
 
 
   def Shutdown( self ):
-    with self._lock:
-      self._SendRequest( 'exit' )
+    self._SendCommand( 'exit' )
     if not self.user_options[ 'server_keep_logfiles' ]:
       os.unlink( self._logfile )
       self._logfile = None
