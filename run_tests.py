@@ -46,6 +46,8 @@ def ParseArguments():
                        'Windows (default: python interpreter architecture).' )
   parser.add_argument( '--coverage', action = 'store_true',
                        help = 'Enable coverage report (requires coverage pkg)' )
+  parser.add_argument( '--no-flake8', action = 'store_true',
+                       help = 'Disable flake8 run.' )
 
   parsed_args, nosetests_args = parser.parse_known_args()
 
@@ -106,7 +108,8 @@ def NoseTests( parsed_args, extra_nosetests_args ):
 
 def Main():
   parsed_args, nosetests_args = ParseArguments()
-  RunFlake8()
+  if not parsed_args.no_flake8:
+    RunFlake8()
   BuildYcmdLibs( parsed_args )
   NoseTests( parsed_args, nosetests_args )
 
