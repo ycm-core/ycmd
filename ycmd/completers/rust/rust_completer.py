@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from ycmd.utils import ToUtf8IfNeeded
+from ycmd.utils import ToUtf8IfNeeded, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
@@ -144,7 +144,7 @@ class RustCompleter( Completer ):
     """
     _logger.info( 'RustCompleter._GetResponse' )
     url = urlparse.urljoin( self._racerd_host, handler )
-    parameters = self._TranslateRequest( request_data )
+    parameters = self._ConvertToRacerdRequest( request_data )
     body = json.dumps( parameters ) if parameters else None
     request_hmac = self._ComputeRequestHmac( method, handler, body )
 
@@ -164,7 +164,7 @@ class RustCompleter( Completer ):
     return response.json()
 
 
-  def _TranslateRequest( self, request_data ):
+  def _ConvertToRacerdRequest( self, request_data ):
     """
     Transform ycm request into racerd request
     """
@@ -248,11 +248,7 @@ class RustCompleter( Completer ):
 
 
   def _StartServer( self ):
-    """
-    Start racerd.
-    """
     with self._server_state_lock:
-
       self._hmac_secret = self._CreateHmacSecret()
       secret_file_path = self._WriteSecretFile( self._hmac_secret )
 
@@ -284,28 +280,28 @@ class RustCompleter( Completer ):
                                                   stdout = fstdout,
                                                   stderr = fstderr,
                                                   env = env )
-
       self._racerd_host = 'http://127.0.0.1:{0}'.format( port )
-      _logger.info( 'RustCompleter using host = ' + self._racerd_host )
+
+      if not self.ServerIsRunning():
+        raise RuntimeError( 'Failed to start racerd!' )
+      _logger.info( 'Racerd started on: ' + self._racerd_host )
 
 
   def ServerIsRunning( self ):
     """
-    Check racerd status.
+    Check is racerd alive. That doesn't necessarily mean it's ready to serve
+    requests; that's checked by ServerIsReady.
     """
     with self._server_state_lock:
-      if not self._racerd_host or not self._racerd_phandle:
-        return False
-
-      try:
-        self._GetResponse( '/ping', method = 'GET' )
-        return True
-      except requests.HTTPError:
-        self._StopServer()
-        return False
-
+      return ( bool( self._racerd_host ) and
+              ProcessIsRunning( self._racerd_phandle ) )
 
   def ServerIsReady( self ):
+    """
+    Check is racerd alive AND ready to serve requests.
+    """
+    if not self.ServerIsRunning():
+      return False
     try:
       self._GetResponse( '/ping', method = 'GET' )
       return True
@@ -314,9 +310,6 @@ class RustCompleter( Completer ):
 
 
   def _StopServer( self ):
-    """
-    Stop racerd.
-    """
     with self._server_state_lock:
       if self._racerd_phandle:
         self._racerd_phandle.terminate()
@@ -337,9 +330,6 @@ class RustCompleter( Completer ):
 
 
   def _RestartServer( self ):
-    """
-    Restart racerd
-    """
     _logger.debug( 'RustCompleter restarting racerd' )
 
     with self._server_state_lock:
