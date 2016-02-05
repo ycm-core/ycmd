@@ -16,13 +16,20 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from nose.tools import eq_
 from hamcrest import assert_that
 from ..responses import NoDiagnosticSupport, BuildDisplayMessageResponse
 from .handlers_test import Handlers_test
 from .test_utils import DummyCompleter
 from mock import patch
-import httplib
+import http.client
 
 
 class Diagnostics_test( Handlers_test ):
@@ -37,7 +44,7 @@ class Diagnostics_test( Handlers_test ):
                                       diag_data,
                                       expect_errors = True )
 
-      eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+      eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
       assert_that( response.json, self._ErrorMatcher( NoDiagnosticSupport ) )
 
 

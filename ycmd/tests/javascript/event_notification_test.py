@@ -18,6 +18,11 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from ycmd.server_utils import SetUpPythonPath
 SetUpPythonPath()
 from nose.tools import eq_
@@ -25,7 +30,7 @@ from hamcrest import assert_that, empty
 
 from .javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
-import httplib
+import http.client
 import os
 from mock import patch
 
@@ -41,7 +46,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
                                       filetype = 'javascript' ),
                                     expect_errors = True)
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )
     assert_that( response.json, empty() )
 
 
@@ -57,7 +62,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
                                       filetype = 'javascript' ),
                                     expect_errors = True)
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )
     assert_that( response.json, empty() )
 
 
@@ -80,7 +85,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that(
       response.json,
@@ -104,7 +109,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )
     assert_that( response.json, empty() )
 
     # Restart the server and check that it raises it again
@@ -134,7 +139,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that(
       response.json,
@@ -164,4 +169,4 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+import platform
 import os
 import subprocess
 import os.path as p
@@ -92,7 +93,7 @@ def ParseArguments():
   parser = argparse.ArgumentParser()
   group = parser.add_mutually_exclusive_group()
   group.add_argument( '--no-clang-completer', action = 'store_true',
-                       help = argparse.SUPPRESS ) # deprecated 
+                       help = argparse.SUPPRESS ) # deprecated
   group.add_argument( '--no-completers', nargs ='*', type = CompleterType,
                        help = 'Do not build or test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
@@ -191,6 +192,7 @@ def NoseTests( parsed_args, extra_nosetests_args ):
 
 def Main():
   parsed_args, nosetests_args = ParseArguments()
+  print( 'Running tests on Python', platform.python_version() )
   if not parsed_args.no_flake8:
     RunFlake8()
   BuildYcmdLibs( parsed_args )

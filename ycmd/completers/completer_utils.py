@@ -16,6 +16,14 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+from future.utils import iteritems
+
 from ycmd.utils import ToUtf8IfNeeded, RunningInsideVim
 
 if RunningInsideVim():
@@ -36,7 +44,7 @@ class PreparedTriggers( object ):
     final_triggers = _FiletypeDictUnion( PREPARED_DEFAULT_FILETYPE_TRIGGERS,
                                          user_prepared_triggers )
     if filetype_set:
-      final_triggers = dict( ( k, v ) for k, v in final_triggers.iteritems()
+      final_triggers = dict( ( k, v ) for k, v in iteritems( final_triggers )
                              if k in filetype_set )
 
     self._filetype_to_prepared_triggers = final_triggers
@@ -65,7 +73,7 @@ class PreparedTriggers( object ):
 def _FiletypeTriggerDictFromSpec( trigger_dict_spec ):
   triggers_for_filetype = defaultdict( set )
 
-  for key, triggers in trigger_dict_spec.iteritems():
+  for key, triggers in iteritems( trigger_dict_spec ):
     filetypes = key.split( ',' )
     for filetype in filetypes:
       regexes = [ _PrepareTrigger( x ) for x in triggers ]
@@ -79,7 +87,7 @@ def _FiletypeDictUnion( dict_one, dict_two ):
   """Returns a new filetype dict that's a union of the provided two dicts.
   Dict params are supposed to be type defaultdict(set)."""
   def UpdateDict( first, second ):
-    for key, value in second.iteritems():
+    for key, value in iteritems( second ):
       first[ key ].update( value )
 
   final_dict = defaultdict( set )

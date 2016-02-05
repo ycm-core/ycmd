@@ -16,15 +16,23 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import abc
 import threading
 from ycmd.utils import ForceSemanticCompletion
 from ycmd.completers import completer_utils
 from ycmd.responses import NoDiagnosticSupport
+from future.utils import with_metaclass
 
 NO_USER_COMMANDS = 'This completer does not define any commands.'
 
-class Completer( object ):
+class Completer( with_metaclass( abc.ABCMeta, object ) ):
   """A base class for all Completers in YCM.
 
   Here's several important things you need to know if you're writing a custom
@@ -94,8 +102,6 @@ class Completer( object ):
   If your completer uses an external server process, then it can be useful to
   implement the ServerIsReady member function to handle the /ready request. This
   is very useful for the test suite."""
-
-  __metaclass__ = abc.ABCMeta
 
   def __init__( self, user_options ):
     self.user_options = user_options
@@ -339,9 +345,11 @@ class CompletionsCache( object ):
       return self._completions
 
 
-  def GetCompletionsIfCacheValid( self, current_line, start_column, completion_type ):
+  def GetCompletionsIfCacheValid( self, current_line, start_column,
+                                  completion_type ):
     with self._access_lock:
-      if not self._CacheValidNoLock( current_line, start_column, completion_type ):
+      if not self._CacheValidNoLock( current_line, start_column,
+                                     completion_type ):
         return None
       return self._completions
 
@@ -352,5 +360,6 @@ class CompletionsCache( object ):
 
 
   def _CacheValidNoLock( self, current_line, start_column, completion_type ):
-    return current_line == self._line and start_column == self._column and completion_type == self._completion_type
+    return ( current_line == self._line and start_column == self._column and
+             completion_type == self._completion_type )
 

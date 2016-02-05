@@ -17,6 +17,12 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from webtest import TestApp
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
@@ -25,7 +31,7 @@ from ...responses import UnknownExtraConf, NoExtraConfDetected
 from ... import handlers
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from .clang_handlers_test import Clang_Handlers_test
-import httplib
+import http.client
 
 
 class Clang_GetCompletions_test( Clang_Handlers_test ):
@@ -101,7 +107,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': True,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
@@ -126,7 +132,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': empty(),
           'errors': has_item( self._ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE ) ),
@@ -150,7 +156,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': empty(),
           'errors': has_item( self._no_completions_error ),
@@ -172,7 +178,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': has_item( self._CompletionEntryMatcher( 'a_parameter',
                                                                  '[ID]' ) ),
@@ -196,7 +202,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
@@ -221,7 +227,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': True,
       },
       'expect': {
-        'response': httplib.INTERNAL_SERVER_ERROR,
+        'response': http.client.INTERNAL_SERVER_ERROR,
         'data': self._no_completions_error,
       },
     } )
@@ -245,7 +251,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains_inanyorder(
             # do_ is an identifier because it is already in the file when we
@@ -338,7 +344,7 @@ int main()
                                     completion_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
     assert_that( response.json,
                  has_entry( 'exception',
                             has_entry( 'TYPE', UnknownExtraConf.__name__ ) ) )
@@ -351,7 +357,7 @@ int main()
                                     completion_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
     assert_that( response.json,
                  has_entry( 'exception',
                             has_entry( 'TYPE',
@@ -395,7 +401,7 @@ int main()
     response = self._app.post_json( '/completions',
                                     completion_data,
                                     expect_errors = True )
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  has_entry( 'exception',

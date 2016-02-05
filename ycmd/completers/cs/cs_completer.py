@@ -18,15 +18,23 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from builtins import *  # noqa
+from future import standard_library
+standard_library.install_aliases()
+from future.utils import itervalues
+
 from collections import defaultdict
 import os
 import time
+import re
 from ycmd.completers.completer import Completer
 from ycmd.utils import ForceSemanticCompletion
 from ycmd import responses
 from ycmd import utils
 import requests
-import urlparse
+import urllib.parse
 import logging
 from . import solutiondetection
 import threading
@@ -64,7 +72,7 @@ class CsharpCompleter( Completer ):
 
   def Shutdown( self ):
     if ( self.user_options[ 'auto_stop_csharp_server' ] ):
-      for solutioncompleter in self._completer_per_solution.values():
+      for solutioncompleter in itervalues( self._completer_per_solution ):
         if solutioncompleter.ServerIsRunning():
           solutioncompleter._StopServer()
 
@@ -117,9 +125,9 @@ class CsharpCompleter( Completer ):
 
 
   def FilterAndSortCandidates( self, candidates, query ):
-    result = super(CsharpCompleter, self).FilterAndSortCandidates( candidates,
-                                                                   query )
-    result.sort( _CompleteSorterByImport );
+    result = super( CsharpCompleter, self ).FilterAndSortCandidates( candidates,
+                                                                     query )
+    result.sort( key = _CompleteIsFromImport );
     return result
 
 
@@ -295,7 +303,7 @@ class CsharpCompleter( Completer ):
 
 
   def _CheckAllRunning( self, action ):
-    solutioncompleters = self._completer_per_solution.values()
+    solutioncompleters = itervalues( self._completer_per_solution )
     return all( action( completer ) for completer in solutioncompleters
                 if completer.ServerIsRunning() )
 
@@ -312,7 +320,7 @@ class CsharpCompleter( Completer ):
     return self._solution_for_file[ filepath ]
 
 
-class CsharpSolutionCompleter:
+class CsharpSolutionCompleter(object):
   def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
     self._logger = logging.getLogger( __name__ )
     self._solution_path = solution_path
@@ -602,7 +610,7 @@ class CsharpSolutionCompleter:
 
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
-    target = urlparse.urljoin( self._ServerLocation(), handler )
+    target = urllib.parse.urljoin( self._ServerLocation(), handler )
     response = requests.post( target, data = parameters, timeout = timeout )
     return response.json()
 
@@ -614,11 +622,6 @@ class CsharpSolutionCompleter:
         else:
             self._omnisharp_port = utils.GetUnusedLocalhostPort()
     self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
-
-
-
-def _CompleteSorterByImport( a, b ):
-  return cmp( _CompleteIsFromImport( a ), _CompleteIsFromImport( b ) )
 
 
 def _CompleteIsFromImport( candidate ):
@@ -679,7 +682,6 @@ def _FixLineEndings( old_buffer, new_buffer ):
       new_buffer = new_buffer.replace( "\r\n", "\n" )
       new_buffer = new_buffer.replace( "\r", "\n" )
     else:
-      import re
       new_buffer = re.sub( "\r(?!\n)|(?<!\r)\n", "\r\n", new_buffer )
   return new_buffer
 

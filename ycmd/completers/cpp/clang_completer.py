@@ -16,6 +16,14 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+from future.utils import iteritems
+
 from collections import defaultdict
 import ycm_core
 import re
@@ -59,7 +67,7 @@ class ClangCompleter( Completer ):
 
   def GetUnsavedFilesVector( self, request_data ):
     files = ycm_core.UnsavedFileVector()
-    for filename, file_data in request_data[ 'file_data' ].iteritems():
+    for filename, file_data in iteritems( request_data[ 'file_data' ] ):
       if not ClangAvailableForFiletypes( file_data[ 'filetypes' ] ):
         continue
       contents = file_data[ 'contents' ]

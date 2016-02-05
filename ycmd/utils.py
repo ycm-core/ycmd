@@ -16,7 +16,12 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from builtins import bytes
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
 
 import tempfile
 import os
@@ -24,9 +29,7 @@ import sys
 import signal
 import socket
 import stat
-import json
 import subprocess
-import collections
 
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
@@ -41,25 +44,24 @@ def SanitizeQuery( query ):
 
 # Given an object, returns a str object that's utf-8 encoded.
 def ToUtf8IfNeeded( value ):
-  # TODO: This method is likely to need special knowledge of are we running on
-  # py2 or py3; the C++ interop layer specifically wants py2 'str' objects and
-  # probably 'bytes' on py3.
+  # NOTE: the C++ interop layer specifically wants py2 'str' objects and
+  # probably 'bytes' on py3. You likely want to wrap what this returns with
+  # future.utils's native() if talking to C++.
 
-  if isinstance( value, unicode ):
-    return value.encode( 'utf8' )
-  # TODO: in py3, this should be treated as unicode
   if isinstance( value, str ):
+    return value.encode( 'utf8' )
+  if isinstance( value, bytes ):
     return value
-  return str( value )
+  return bytes( str( value ) )
 
 
 def ToUnicodeIfNeeded( value ):
-  if isinstance( value, unicode ):
-    return value
   if isinstance( value, str ):
+    return value
+  if isinstance( value, bytes ):
     # All incoming text should be utf8
-    return unicode( value, 'utf8' )
-  return unicode( value )
+    return str( value, encoding = 'utf8' )
+  return str( value )
 
 
 def ToBytes( value ):
@@ -75,28 +77,6 @@ def ToBytes( value ):
   if isinstance( value, int ):
     value = str( value )
   return bytes( value, encoding = 'utf-8' )
-
-
-# Recurses through the object if it's a dict/iterable and converts all the
-# unicode objects to utf-8 strings.
-def RecursiveEncodeUnicodeToUtf8( value ):
-  if isinstance( value, unicode ):
-    return value.encode( 'utf8' )
-  if isinstance( value, str ):
-    return value
-  elif isinstance( value, collections.Mapping ):
-    return dict( map( RecursiveEncodeUnicodeToUtf8, value.iteritems() ) )
-  elif isinstance( value, collections.Iterable ):
-    return type( value )( map( RecursiveEncodeUnicodeToUtf8, value ) )
-  else:
-    return value
-
-
-def ToUtf8Json( data ):
-  return json.dumps( RecursiveEncodeUnicodeToUtf8( data ),
-                     ensure_ascii = False,
-                     # This is the encoding of INPUT str data
-                     encoding = 'utf-8' )
 
 
 def PathToTempDir():
@@ -275,7 +255,7 @@ def ConvertArgsToShortPath( args ):
       return GetShortPathName( arg )
     return arg
 
-  if isinstance( args, basestring ):
+  if isinstance( args, str ) or isinstance( args, bytes ):
     return ConvertIfPath( args )
   return [ ConvertIfPath( arg ) for arg in args ]
 

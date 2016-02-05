@@ -289,6 +289,8 @@ def SecureCompareStrings( a, b ):
     result |= ord( x ) ^ ord( y )
   return result == 0
 
+# TODO: The below two functions are likely not needed anymore; we can just
+# call requests.post('url', json = dict_obj)
 
 # Recurses through the object if it's a dict/iterable and converts all the
 # unicode objects to utf-8 strings.

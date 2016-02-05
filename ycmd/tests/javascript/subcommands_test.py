@@ -18,6 +18,11 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from nose.tools import eq_
 from hamcrest import ( assert_that,
                        contains,
@@ -25,7 +30,7 @@ from hamcrest import ( assert_that,
                        has_entries )
 from .javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
-import httplib
+import http.client
 
 
 def LocationMatcher( filepath, column_num, line_num ):
@@ -115,7 +120,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'filepath': self._PathToTestFile( 'simple_test.js' ),
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'filepath': self._PathToTestFile( 'simple_test.js' ),
           'line_num': 1,
@@ -135,7 +140,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'filepath': self._PathToTestFile( 'simple_test.js' ),
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'filepath': self._PathToTestFile( 'simple_test.js' ),
           'line_num': 1,
@@ -155,7 +160,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'filepath': self._PathToTestFile( 'coollib', 'cool_object.js' ),
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'detailed_info': (
             'Name: mine_bitcoin\n'
@@ -178,7 +183,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'filepath': self._PathToTestFile( 'coollib', 'cool_object.js' ),
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'message': 'number'
         } )
@@ -196,7 +201,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'filepath': self._PathToTestFile( 'coollib', 'cool_object.js' ),
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': contains_inanyorder(
           has_entries( {
             'filepath': self._PathToTestFile( 'coollib', 'cool_object.js' ),
@@ -223,7 +228,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'column_num': 1,
       },
       'expect': {
-        'response': httplib.INTERNAL_SERVER_ERROR,
+        'response': http.client.INTERNAL_SERVER_ERROR,
         'data': self._ErrorMatcher( RuntimeError, 'TernError: No type found '
                                                   'at the given position.' ),
       }
@@ -242,7 +247,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'column_num': 32,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': {
           'fixits': contains( has_entries( {
             'chunks': contains(
@@ -289,7 +294,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'column_num': 14,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': {
           'fixits': contains( has_entries( {
             'chunks': contains(
@@ -347,7 +352,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'column_num': 14,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': {
           'fixits': contains( has_entries( {
             'chunks': contains(
@@ -389,7 +394,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
         'filepath': self._PathToTestFile( 'coollib', 'cool_object.js' ),
       },
       'expect': {
-        'response': httplib.INTERNAL_SERVER_ERROR,
+        'response': http.client.INTERNAL_SERVER_ERROR,
         'data': {
           'exception': self._ErrorMatcher(
                                   ValueError,

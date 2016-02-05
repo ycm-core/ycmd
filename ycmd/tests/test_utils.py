@@ -18,6 +18,14 @@
 
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+from future.utils import iteritems
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 
@@ -39,7 +47,7 @@ def BuildRequest( **kwargs ):
     }
   }
 
-  for key, value in kwargs.iteritems():
+  for key, value in iteritems( kwargs ):
     if key in [ 'contents', 'filetype', 'filepath' ]:
       continue
 

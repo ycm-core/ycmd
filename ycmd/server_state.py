@@ -16,6 +16,13 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import imp
 import os
 import threading
@@ -28,7 +35,7 @@ from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
 class ServerState( object ):
   def __init__( self, user_options ):
     self._user_options = user_options
-    self._filetype_completers = {}
+    self._filetype_completers = dict()
     self._filetype_completers_lock = threading.Lock()
     self._gencomp = GeneralCompleterStore( self._user_options )
 
@@ -40,7 +47,7 @@ class ServerState( object ):
 
   def Shutdown( self ):
     with self._filetype_completers_lock:
-      for completer in self._filetype_completers.itervalues():
+      for completer in self._filetype_completers.values():
         if completer:
           completer.Shutdown()
 

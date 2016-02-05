@@ -16,17 +16,22 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from builtins import bytes
-from future.utils import native
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import *  # noqa
+from future.utils import native, iteritems
+from future import standard_library
+standard_library.install_aliases()
 
 from ycmd.utils import ToBytes, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
 import logging
-import urlparse
+import urllib.parse
 import requests
-import httplib
+import http.client
 import json
 import tempfile
 import base64
@@ -147,7 +152,7 @@ class RustCompleter( Completer ):
     were found.
     """
     _logger.info( 'RustCompleter._GetResponse' )
-    url = urlparse.urljoin( self._racerd_host, handler )
+    url = urllib.parse.urljoin( self._racerd_host, handler )
     parameters = self._ConvertToRacerdRequest( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
     request_hmac = native( self._ComputeRequestHmac( method,
@@ -170,7 +175,7 @@ class RustCompleter( Completer ):
 
     response.raise_for_status()
 
-    if response.status_code is httplib.NO_CONTENT:
+    if response.status_code is http.client.NO_CONTENT:
       return None
 
     return response.json()
@@ -185,7 +190,7 @@ class RustCompleter( Completer ):
 
     file_path = request_data[ 'filepath' ]
     buffers = []
-    for path, obj in request_data[ 'file_data' ].items():
+    for path, obj in iteritems( request_data[ 'file_data' ] ):
       buffers.append( {
         'contents': obj[ 'contents' ],
         'file_path': path

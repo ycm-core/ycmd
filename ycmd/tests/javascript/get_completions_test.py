@@ -18,12 +18,17 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_entries )
 from .javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
-import httplib
+import http.client
 
 # The following properties/methods are in Object.prototype, so are present
 # on all objects:
@@ -89,7 +94,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         'column_num': 43,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains_inanyorder(
             self._CompletionEntryMatcher( 'a_simple_function',
@@ -122,7 +127,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         'column_num': 45,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'basic_type', 'number' ),
@@ -145,7 +150,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         'column_num': 15,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains_inanyorder(
             self._CompletionEntryMatcher( 'mine_bitcoin',
@@ -180,7 +185,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         'column_num': 17,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'mine_bitcoin',
@@ -203,7 +208,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         'column_num': 17,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'get_number', 'number' ),
@@ -237,7 +242,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         },
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains_inanyorder(
             self._CompletionEntryMatcher( 'big_endian_node', 'number' ),
@@ -268,7 +273,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
         'column_num': 15,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains_inanyorder(
             self._CompletionEntryMatcher(

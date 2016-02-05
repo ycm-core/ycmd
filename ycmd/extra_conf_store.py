@@ -18,6 +18,13 @@
 # NOTE: This module is used as a Singleton
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import os
 import imp
 import random
@@ -191,8 +198,8 @@ def _PathsToAllParentFolders( filename ):
     return list( reversed( folders ) )
 
   parent_folders = PathFolderComponents( filename )
-  parent_folders = [ os.path.join( *parent_folders[:i + 1] )
-                     for i in xrange( len( parent_folders ) ) ]
+  parent_folders = [ os.path.join( *parent_folders[ :i + 1 ] )
+                     for i in range( len( parent_folders ) ) ]
   return reversed( parent_folders )
 
 

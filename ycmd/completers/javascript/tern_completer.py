@@ -16,8 +16,15 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import *  # noqa
+from future.utils import iterkeys
+from future import standard_library
+standard_library.install_aliases()
 
-import httplib, logging, os, requests, traceback, threading
+import http.client, logging, os, requests, traceback, threading
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
 
@@ -258,7 +265,7 @@ class TernCompleter( Completer ):
     try:
       target = self._GetServerAddress() + '/ping'
       response = requests.get( target )
-      return response.status_code == httplib.OK
+      return response.status_code == http.client.OK
     except requests.ConnectionError:
       return False
 
@@ -302,14 +309,14 @@ class TernCompleter( Completer ):
 
     full_request = {
       'files': [ MakeIncompleteFile( x, file_data[ x ] )
-                 for x in file_data.keys() ],
+                 for x in iterkeys( file_data ) ],
     }
     full_request.update( request )
 
     response = requests.post( self._GetServerAddress(),
-                              data = utils.ToUtf8Json( full_request ) )
+                              json = full_request )
 
-    if response.status_code != httplib.OK:
+    if response.status_code != http.client.OK:
       raise RuntimeError( response.text )
 
     return response.json()

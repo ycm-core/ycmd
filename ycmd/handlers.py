@@ -17,6 +17,12 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from builtins import bytes
 
 from os import path
@@ -35,7 +41,7 @@ import atexit
 import logging
 import json
 import bottle
-import httplib
+import http.client
 import traceback
 from bottle import request, response
 from . import server_state
@@ -216,7 +222,7 @@ def DebugInfo():
 
 
 # The type of the param is Bottle.HTTPError
-@app.error( httplib.INTERNAL_SERVER_ERROR )
+@app.error( http.client.INTERNAL_SERVER_ERROR )
 def ErrorHandler( httperror ):
   body = _JsonResponse( BuildExceptionResponse( httperror.exception,
                                                 httperror.traceback ) )

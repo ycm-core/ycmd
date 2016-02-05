@@ -19,11 +19,17 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
 from .python_handlers_test import Python_Handlers_test
-import httplib
+import http.client
 
 
 class Python_GetCompletions_test( Python_Handlers_test ):
@@ -122,7 +128,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),

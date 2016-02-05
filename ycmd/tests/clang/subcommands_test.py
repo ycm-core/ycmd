@@ -17,6 +17,12 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, calling, contains, equal_to,
@@ -25,7 +31,7 @@ from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
 from .clang_handlers_test import Clang_Handlers_test
 from pprint import pprint
 import os.path
-import httplib
+import http.client
 
 
 class Clang_Subcommands_test( Clang_Handlers_test ):
@@ -789,7 +795,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -812,7 +818,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -959,7 +965,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -991,7 +997,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
