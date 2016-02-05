@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2013 Google Inc.
 #               2015 ycmd contributors
 #

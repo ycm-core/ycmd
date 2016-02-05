@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2014 Google Inc.
 #
 # YouCompleteMe is free software: you can redistribute it and/or modify
