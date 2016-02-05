@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2011, 2012  Chiel ten Brinke <ctenbrinke@gmail.com>
 #                           Google Inc.
 #

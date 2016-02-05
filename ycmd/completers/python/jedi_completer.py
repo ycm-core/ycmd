@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2011, 2012  Stephen Sugden <me@stephensugden.com>
 #                           Google Inc.
 #                           Stanislav Golovanov <stgolovanov@gmail.com>
