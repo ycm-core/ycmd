@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015  YCMD contributors.
 #
 # This file is part of ycmd.

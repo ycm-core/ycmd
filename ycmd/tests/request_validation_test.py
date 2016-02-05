@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2014  Google Inc.
 #
 # This file is part of YouCompleteMe.
