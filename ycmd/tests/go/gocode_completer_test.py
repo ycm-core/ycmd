@@ -65,15 +65,15 @@ class GoCodeCompleter_test( object ):
     user_options = user_options_store.DefaultOptions()
 
     eq_( PATH_TO_GOCODE_BINARY,
-         self._completer.FindGoCodeBinary( user_options ) )
+         self._completer.FindBinary( "gocode", user_options ) )
 
     user_options[ 'gocode_binary_path' ] = DUMMY_BINARY
     eq_( DUMMY_BINARY,
-         self._completer.FindGoCodeBinary( user_options ) )
+         self._completer.FindBinary( "gocode", user_options ) )
 
     user_options[ 'gocode_binary_path' ] = DATA_DIR
     eq_( None,
-         self._completer.FindGoCodeBinary( user_options ) )
+         self._completer.FindBinary( "gocode", user_options ) )
 
 
   # Test line-col to offset in the file before any unicode occurrences.

@@ -25,3 +25,6 @@
 [submodule "third_party/racerd"]
 	path = third_party/racerd
 	url = https://github.com/jwilm/racerd
+[submodule "third_party/godef"]
+	path = third_party/godef
+	url = https://github.com/Manishearth/godef.git

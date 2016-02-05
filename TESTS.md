@@ -2,6 +2,11 @@
 
 This readme documents instructions on running the test suite.
 
+The easiest way to run the ycmd test suite locally is to [set up your ycmd dev
+environment using Vagrant][dev-setup] which will have everything installed and
+ready to go. Reading this file is still useful because you'll learn how to skip
+the build or parts of the test suite.
+
 An alternative (canonical) reference is the scripts used for running the tests
 on Travis CI. These can be found in `.travis.yml` and `./travis` directory.
 
@@ -115,3 +120,5 @@ Likely to be a problem with the OmniSharpServer.
     FAIL: ycmd.completers.general.tests.filename_completer_test.FilenameCompleter_test.SystemPathCompletion_test
 
 Ensure that you have UTF-8 support in your environment (see above)
+
+[dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md
