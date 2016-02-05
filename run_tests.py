@@ -113,6 +113,15 @@ def ParseArguments():
 
   parsed_args, nosetests_args = parser.parse_known_args()
 
+  parsed_args.completers = FixupCompleters( parsed_args )
+
+  if 'COVERAGE' in os.environ:
+    parsed_args.coverage = ( os.environ[ 'COVERAGE' ] == 'true' )
+
+  return parsed_args, nosetests_args
+
+
+def FixupCompleters( parsed_args ):
   completers = set( COMPLETERS.keys() )
   if parsed_args.completers is not None:
     completers = set( parsed_args.completers )
@@ -129,12 +138,7 @@ def ParseArguments():
     else:
       completers.add( 'cfamily' )
 
-  parsed_args.completers = list( completers )
-
-  if 'COVERAGE' in os.environ:
-    parsed_args.coverage = ( os.environ[ 'COVERAGE' ] == 'true' )
-
-  return parsed_args, nosetests_args
+  return list( completers )
 
 
 def BuildYcmdLibs( args ):
