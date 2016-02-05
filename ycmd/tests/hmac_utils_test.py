@@ -30,7 +30,6 @@ from ycmd import hmac_utils as hu
 def CreateHmac_WithBytes_test():
   # Test vectors from Wikipedia (HMAC_SHA256): https://goo.gl/cvX0Tn
   eq_( hexlify( hu.CreateHmac(
-    # bytes( b'The quick brown fox jumps over the lazy dog' ),
     'The quick brown fox jumps over the lazy dog',
     bytes( b'key' ) ) ),
     bytes( b'f7bc83f430538424b13298e6aa6fb143'

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
 from builtins import bytes
 from future.utils import native
 
@@ -136,7 +137,8 @@ class RustCompleter( Completer ):
     return ToBytes( binascii.hexlify( hmac ) )
 
 
-  def _GetResponse( self, handler, request_data = None, method = 'POST' ):
+  def _GetResponse( self, handler, request_data = None,
+                    method = ToBytes( b'POST' ) ):
     """
     Query racerd via HTTP
 
@@ -148,15 +150,21 @@ class RustCompleter( Completer ):
     url = urlparse.urljoin( self._racerd_host, handler )
     parameters = self._ConvertToRacerdRequest( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
-    request_hmac = native( self._ComputeRequestHmac( method, handler, body ) )
+    request_hmac = native( self._ComputeRequestHmac( method,
+                                                     handler,
+                                                     body ) )
 
     extra_headers = { 'content-type': 'application/json' }
     extra_headers[ RACERD_HMAC_HEADER ] = request_hmac
 
     _logger.debug( 'Making racerd request: %s %s %s %s', method, url,
                    extra_headers, body )
-    response = requests.request( native( ToBytes( method ) ),
-                                 native( ToBytes( url ) ),
+
+    # Failing to wrap the method & url bytes objects in `native()` causes HMAC
+    # failures (403 Forbidden from racerd) for unknown reasons. Similar for
+    # request_hmac above.
+    response = requests.request( native( method ),
+                                 native( url ),
                                  data = body,
                                  headers = extra_headers )
 
@@ -179,8 +187,8 @@ class RustCompleter( Completer ):
     buffers = []
     for path, obj in request_data[ 'file_data' ].items():
       buffers.append( {
-          'contents': obj[ 'contents' ],
-          'file_path': path
+        'contents': obj[ 'contents' ],
+        'file_path': path
       } )
 
     line = request_data[ 'line_num' ]
@@ -229,7 +237,7 @@ class RustCompleter( Completer ):
 
 
   def _FetchCompletions( self, request_data ):
-    return self._GetResponse( '/list_completions', request_data )
+    return self._GetResponse( ToBytes( b'/list_completions' ), request_data )
 
 
   def _WriteSecretFile( self, secret ):
@@ -284,11 +292,11 @@ class RustCompleter( Completer ):
                                                   stdout = fstdout,
                                                   stderr = fstderr,
                                                   env = env )
-      self._racerd_host = 'http://127.0.0.1:{0}'.format( port )
+      self._racerd_host = ToBytes( 'http://127.0.0.1:{0}'.format( port ) )
 
       if not self.ServerIsRunning():
         raise RuntimeError( 'Failed to start racerd!' )
-      _logger.info( 'Racerd started on: ' + self._racerd_host )
+      _logger.info( ToBytes( b'Racerd started on: ' ) + self._racerd_host )
 
 
   def ServerIsRunning( self ):
@@ -300,6 +308,7 @@ class RustCompleter( Completer ):
       return ( bool( self._racerd_host ) and
                ProcessIsRunning( self._racerd_phandle ) )
 
+
   def ServerIsReady( self ):
     """
     Check is racerd alive AND ready to serve requests.
@@ -307,9 +316,12 @@ class RustCompleter( Completer ):
     if not self.ServerIsRunning():
       return False
     try:
-      self._GetResponse( '/ping', method = 'GET' )
+      self._GetResponse( ToBytes( b'/ping' ), method = ToBytes( b'GET' ) )
       return True
-    except Exception:
+    # Do NOT make this except clause more generic! If you need to catch more
+    # exception types, list them all out. Having `Exception` here caused FORTY
+    # HOURS OF DEBUGGING.
+    except requests.exceptions.ConnectionError:
       return False
 
 
@@ -361,7 +373,8 @@ class RustCompleter( Completer ):
 
   def _GoToDefinition( self, request_data ):
     try:
-      definition = self._GetResponse( '/find_definition', request_data )
+      definition = self._GetResponse( ToBytes( b'/find_definition' ),
+                                      request_data )
       return responses.BuildGoToResponse( definition[ 'file_path' ],
                                           definition[ 'line' ],
                                           definition[ 'column' ] + 1 )
