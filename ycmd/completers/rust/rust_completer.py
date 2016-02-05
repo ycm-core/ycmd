@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+from builtins import bytes
+from future.utils import native
 
-from ycmd.utils import ToUtf8IfNeeded, ProcessIsRunning
+from ycmd.utils import ToBytes, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
@@ -40,8 +41,8 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = utils.PathToNearestThirdPartyFolder( DIR_OF_THIS_SCRIPT )
 
 RACERD_BINARY_NAME = 'racerd' + ( '.exe' if utils.OnWindows() else '' )
-RACERD_BINARY = ToUtf8IfNeeded( p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
-                                        'release', RACERD_BINARY_NAME ) )
+RACERD_BINARY = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
+                        'release', RACERD_BINARY_NAME )
 
 RACERD_HMAC_HEADER = 'x-racerd-hmac'
 HMAC_SECRET_LENGTH = 16
@@ -68,7 +69,7 @@ def FindRacerdBinary( user_options ):
   if racerd_user_binary:
     # The user has explicitly specified a path.
     if os.path.isfile( racerd_user_binary ):
-      return ToUtf8IfNeeded( racerd_user_binary )
+      return ToBytes( racerd_user_binary )
     else:
       _logger.warn( 'user provided racerd_binary_path is not file' )
 
@@ -113,12 +114,12 @@ class RustCompleter( Completer ):
 
     # Early return if user provided config
     if rust_src_path:
-      return ToUtf8IfNeeded( rust_src_path )
+      return ToBytes( rust_src_path )
 
     # Fall back to environment variable
     env_key = 'RUST_SRC_PATH'
     if env_key in os.environ:
-      return ToUtf8IfNeeded( os.environ[ env_key ] )
+      return ToBytes( os.environ[ env_key ] )
 
     return None
 
@@ -129,10 +130,10 @@ class RustCompleter( Completer ):
 
   def _ComputeRequestHmac( self, method, path, body ):
     if not body:
-      body = ''
+      body = bytes()
 
     hmac = hmac_utils.CreateRequestHmac( method, path, body, self._hmac_secret )
-    return binascii.hexlify( hmac )
+    return ToBytes( binascii.hexlify( hmac ) )
 
 
   def _GetResponse( self, handler, request_data = None, method = 'POST' ):
@@ -146,14 +147,16 @@ class RustCompleter( Completer ):
     _logger.info( 'RustCompleter._GetResponse' )
     url = urlparse.urljoin( self._racerd_host, handler )
     parameters = self._ConvertToRacerdRequest( request_data )
-    body = json.dumps( parameters ) if parameters else None
-    request_hmac = self._ComputeRequestHmac( method, handler, body )
+    body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
+    request_hmac = native( self._ComputeRequestHmac( method, handler, body ) )
 
     extra_headers = { 'content-type': 'application/json' }
     extra_headers[ RACERD_HMAC_HEADER ] = request_hmac
 
-    response = requests.request( method,
-                                 url,
+    _logger.debug( 'Making racerd request: %s %s %s %s', method, url,
+                   extra_headers, body )
+    response = requests.request( native( ToBytes( method ) ),
+                                 native( ToBytes( url ) ),
                                  data = body,
                                  headers = extra_headers )
 
@@ -194,7 +197,7 @@ class RustCompleter( Completer ):
   def _GetExtraData( self, completion ):
     location = {}
     if completion[ 'file_path' ]:
-      location[ 'filepath' ] = ToUtf8IfNeeded( completion[ 'file_path' ] )
+      location[ 'filepath' ] = ToBytes( completion[ 'file_path' ] )
     if completion[ 'line' ]:
       location[ 'line_num' ] = completion[ 'line' ]
     if completion[ 'column' ]:
@@ -218,9 +221,9 @@ class RustCompleter( Completer ):
       return []
 
     return [ responses.BuildCompletionData(
-                insertion_text = ToUtf8IfNeeded( completion[ 'text' ] ),
-                kind = ToUtf8IfNeeded( completion[ 'kind' ] ),
-                extra_menu_info = ToUtf8IfNeeded( completion[ 'context' ] ),
+                insertion_text = ToBytes( completion[ 'text' ] ),
+                kind = ToBytes( completion[ 'kind' ] ),
+                extra_menu_info = ToBytes( completion[ 'context' ] ),
                 extra_data = self._GetExtraData( completion ) )
              for completion in completions ]
 
@@ -245,7 +248,7 @@ class RustCompleter( Completer ):
     with os.fdopen( secret_fd, 'w' ) as secret_file:
       secret_file.write( secret )
 
-    return secret_path
+    return ToBytes( secret_path )
 
 
   def _StartServer( self ):
@@ -295,7 +298,7 @@ class RustCompleter( Completer ):
     """
     with self._server_state_lock:
       return ( bool( self._racerd_host ) and
-              ProcessIsRunning( self._racerd_phandle ) )
+               ProcessIsRunning( self._racerd_phandle ) )
 
   def ServerIsReady( self ):
     """

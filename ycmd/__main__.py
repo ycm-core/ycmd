@@ -21,7 +21,6 @@ from __future__ import unicode_literals
 from .server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
 SetUpPythonPath()
 
-from builtins import bytes
 import sys
 import logging
 import json
@@ -35,6 +34,7 @@ from ycmd import extra_conf_store
 from ycmd import utils
 from ycmd.watchdog_plugin import WatchdogPlugin
 from ycmd.hmac_plugin import HmacPlugin
+from ycmd.utils import ToBytes
 
 def YcmCoreSanityCheck():
   if 'ycm_core' in sys.modules:
@@ -118,7 +118,7 @@ def SetupOptions( options_file ):
     user_options = json.load( open( options_file, 'r' ) )
     options.update( user_options )
   utils.RemoveIfExists( options_file )
-  hmac_secret = bytes( base64.b64decode( options[ 'hmac_secret' ] ) )
+  hmac_secret = ToBytes( base64.b64decode( options[ 'hmac_secret' ] ) )
   del options[ 'hmac_secret' ]
   user_options_store.SetAll( options )
   return options, hmac_secret
@@ -126,7 +126,7 @@ def SetupOptions( options_file ):
 
 def CloseStdin():
   sys.stdin.close()
-  os.close(0)
+  os.close( 0 )
 
 
 def Main():

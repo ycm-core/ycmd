@@ -44,6 +44,7 @@ from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
 from ycmd import hmac_plugin
 from ycmd import extra_conf_store
 from ycmd.request_wrap import RequestWrap
+from ycmd.utils import ToBytes
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -219,7 +220,7 @@ def DebugInfo():
 def ErrorHandler( httperror ):
   body = _JsonResponse( BuildExceptionResponse( httperror.exception,
                                                 httperror.traceback ) )
-  hmac_plugin.SetHmacHeader( body, _hmac_secret )
+  hmac_plugin.SetHmacHeader( ToBytes( body ), _hmac_secret )
   return body
 
 
