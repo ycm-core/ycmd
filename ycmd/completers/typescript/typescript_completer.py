@@ -156,8 +156,8 @@ class TypeScriptCompleter( Completer ):
         seq = message[ 'request_seq' ]
         with self._pendinglock:
           if seq in self._pending:
-            self._pending[seq].resolve( message )
-            del self._pending[seq]
+            self._pending[ seq ].resolve( message )
+            del self._pending[ seq ]
       except Exception as e:
         _logger.error( 'ReaderLoop error: {0}'.format( str( e ) ) )
 
@@ -200,8 +200,9 @@ class TypeScriptCompleter( Completer ):
 
   def _SendCommand( self, command, arguments = None ):
     """
-    Send a request message to TSServer but don't
-    wait for the response.
+    Send a request message to TSServer but don't wait for the response.
+    This function is to be used when we don't care about the response
+    to the message that is sent.
     """
 
     request = self._BuildRequest( command, arguments )
