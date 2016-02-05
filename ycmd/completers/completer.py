@@ -230,14 +230,15 @@ class Completer( object ):
 
     # We need to handle both an omni_completer style completer and a server
     # style completer
-    if 'words' in candidates:
+    if isinstance( candidates, dict ) and 'words' in candidates:
       candidates = candidates[ 'words' ]
 
     sort_property = ''
-    if 'word' in candidates[ 0 ]:
-      sort_property = 'word'
-    elif 'insertion_text' in candidates[ 0 ]:
-      sort_property = 'insertion_text'
+    if isinstance( candidates[ 0 ], dict ):
+      if 'word' in candidates[ 0 ]:
+        sort_property = 'word'
+      elif 'insertion_text' in candidates[ 0 ]:
+        sort_property = 'insertion_text'
 
     matches = FilterAndSortCandidates( candidates,
                                        sort_property,
