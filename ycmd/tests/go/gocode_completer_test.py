@@ -26,7 +26,7 @@ from ycmd import user_options_store
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR, 'testdata' )
-PATH_TO_TEST_FILE = os.path.join( DATA_DIR, 'test.go' )
+PATH_TO_TEST_FILE = os.path.join( DATA_DIR, 'test2.go' )
 # Use test file as dummy binary
 DUMMY_BINARY = PATH_TO_TEST_FILE
 PATH_TO_POS121_RES = os.path.join( DATA_DIR, 'gocode_output_offset_121.json' )
