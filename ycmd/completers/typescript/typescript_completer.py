@@ -105,7 +105,7 @@ class TypeScriptCompleter( Completer ):
     self._sequenceid = itertools.count()
 
     # Used to prevent threads from concurrently accessing the sequence counter
-    self._sequenceidlock = Lock()
+    self._sequenceid_lock = Lock()
 
     # TSServer ignores the fact that newlines are two characters on Windows
     # (\r\n) instead of one on other platforms (\n), so we use the
@@ -190,7 +190,7 @@ class TypeScriptCompleter( Completer ):
   def _BuildRequest( self, command, arguments = None ):
     """Build TSServer request object."""
 
-    with self._sequenceidlock:
+    with self._sequenceid_lock:
       seq = self._sequenceid.next()
     request = {
       'seq':     seq,
