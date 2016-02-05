@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
+from builtins import bytes
 
 import tempfile
 import os
@@ -59,6 +60,21 @@ def ToUnicodeIfNeeded( value ):
     # All incoming text should be utf8
     return unicode( value, 'utf8' )
   return unicode( value )
+
+
+def ToBytes( value ):
+  # This is tricky. On py2, the bytes type from builtins (from python-future) is
+  # a subclass of str. So all of the following are true:
+  #   isinstance(str(), bytes)
+  #   isinstance(bytes(), str)
+  # But they don't behave the same in one important aspect: iterating over a
+  # bytes instance yields ints, while iterating over a (raw, py2) str yields
+  # chars.
+  if type( value ) == bytes:
+    return value
+  if isinstance( value, int ):
+    value = str( value )
+  return bytes( value, encoding = 'utf-8' )
 
 
 # Recurses through the object if it's a dict/iterable and converts all the
