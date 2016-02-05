@@ -45,7 +45,7 @@ class DeferredResponse( object ):
   A deferred that resolves to a response from TSServer.
   """
 
-  def __init__( self, timeout ):
+  def __init__( self, timeout = MAX_DETAILED_COMPLETIONS ):
     self._event = Event()
     self._message = None
     self._timeout = timeout
@@ -117,7 +117,8 @@ class TypeScriptCompleter( Completer ):
                                              env = self._environ,
                                              universal_newlines = True )
 
-    # Deferred requests pending a response
+    # Used to map sequence id's to their corresponding DeferredResponse
+    # objects. The reader loop uses this to hand out responses.
     self._pending = {}
 
     # Used to prevent threads from concurrently reading and writing to
@@ -155,7 +156,7 @@ class TypeScriptCompleter( Completer ):
         seq = message[ 'request_seq' ]
         with self._pendinglock:
           if seq in self._pending:
-            self._pending[seq].resolve(message)
+            self._pending[seq].resolve( message )
             del self._pending[seq]
       except Exception as e:
         _logger.error( 'ReaderLoop error: {0}'.format( str( e ) ) )
@@ -198,7 +199,10 @@ class TypeScriptCompleter( Completer ):
 
 
   def _SendCommand( self, command, arguments = None ):
-    """Send a request message to TSServer."""
+    """
+    Send a request message to TSServer but don't
+    wait for the response.
+    """
 
     request = self._BuildRequest( command, arguments )
     with self._writelock:
@@ -206,14 +210,14 @@ class TypeScriptCompleter( Completer ):
       self._tsserver_handle.stdin.write( "\n" )
 
 
-  def _SendRequest( self, command, arguments = None, timeout = RESPONSE_TIMEOUT_SECONDS ):
+  def _SendRequest( self, command, arguments = None ):
     """
-    Send a request message to TSServer and
-    wait for the response.
+    Send a request message to TSServer and wait
+    for the response.
     """
 
     request = self._BuildRequest( command, arguments )
-    deferred = DeferredResponse( timeout )
+    deferred = DeferredResponse()
     with self._pendinglock:
       seq = request[ 'seq' ]
       self._pending[ seq ] = deferred
@@ -231,7 +235,7 @@ class TypeScriptCompleter( Completer ):
 
     filename = request_data[ 'filepath' ]
     contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-    tmpfile = NamedTemporaryFile( delete=False )
+    tmpfile = NamedTemporaryFile( delete = False )
     tmpfile.write( utils.ToUtf8IfNeeded( contents ) )
     tmpfile.close()
     self._SendRequest( 'reload', {
