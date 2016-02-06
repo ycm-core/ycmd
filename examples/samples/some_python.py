@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright (C) 2014  Google Inc.
+# Copyright (C) 2014 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,5 +21,5 @@ class Example( object ):
 
 if __name__ == "__main__":
   ex = Example()
-  # location after the dot is line 29, column 6
+  # location after the dot is line 25, column 6
   ex.

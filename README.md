@@ -20,8 +20,9 @@ Known ycmd clients:
 ------------------
 
 - [YouCompleteMe][ycm]: Vim client, stable and exposes all ycmd features.
-- [emacs-ycmd][]: Emacs client, still a bit experimental.
+- [emacs-ycmd][]: Emacs client.
 - [you-complete-me][atom-you-complete-me]: Atom client.
+- [YcmdCompletion][sublime-ycmd]: Sublime client
 - [kak-ycmd][]: Kakoune client.
 
 Feel free to send a pull request adding a link to your client here if you've
@@ -77,7 +78,8 @@ non-semantic.
 There are also several semantic engines in YCM. There's a libclang-based
 completer that provides semantic completion for C-family languages.  There's also a
 Jedi-based completer for semantic completion for Python, an OmniSharp-based
-completer for C#, a [Gocode][gocode]-based completer for Go, and a TSServer-based
+completer for C#, a [Gocode][gocode]-based completer for Go (using [Godef][godef]
+for jumping to definitions), and a TSServer-based
 completer for TypeScript. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
@@ -225,6 +227,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycm]: http://valloric.github.io/YouCompleteMe/
 [atom-you-complete-me]: https://atom.io/packages/you-complete-me
+[sublime-ycmd]: https://packagecontrol.io/packages/YcmdCompletion
 [semver]: http://semver.org/
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
@@ -241,5 +244,6 @@ This software is licensed under the [GPL v3 license][gpl].
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gocode]: https://github.com/nsf/gocode
+[godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
 [ccoc]: https://github.com/Valloric/ycmd/blob/master/CODE_OF_CONDUCT.md

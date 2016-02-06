@@ -38,6 +38,10 @@ def OnWindows():
   return platform.system() == 'Windows'
 
 
+def OnTravisOrAppVeyor():
+  return 'CI' in os.environ
+
+
 # On Windows, distutils.spawn.find_executable only works for .exe files
 # but .bat and .cmd files are also executables, so we use our own
 # implementation.
@@ -168,9 +172,10 @@ def GetGenerator( args ):
     if ( not args.arch and platform.architecture()[ 0 ] == '64bit'
          or args.arch == 64 ):
       generator = generator + ' Win64'
-
     return generator
 
+  if PathToFirstExistingExecutable( ['ninja'] ):
+    return 'Ninja'
   return 'Unix Makefiles'
 
 
@@ -266,7 +271,7 @@ def BuildYcmdLibs( args ):
       RunYcmdTests( build_dir )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
-    rmtree( build_dir )
+    rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
 
 
 def BuildOmniSharp():
@@ -284,6 +289,8 @@ def BuildGoCode():
     sys.exit( 'go is required to build gocode' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
+  subprocess.check_call( [ 'go', 'build' ] )
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
   subprocess.check_call( [ 'go', 'build' ] )
 
 

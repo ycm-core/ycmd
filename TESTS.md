@@ -2,6 +2,11 @@
 
 This readme documents instructions on running the test suite.
 
+The easiest way to run the ycmd test suite locally is to [set up your ycmd dev
+environment using Vagrant][dev-setup] which will have everything installed and
+ready to go. Reading this file is still useful because you'll learn how to skip
+the build or parts of the test suite.
+
 An alternative (canonical) reference is the scripts used for running the tests
 on Travis CI. These can be found in `.travis.yml` and `./travis` directory.
 
@@ -10,6 +15,7 @@ on Travis CI. These can be found in `.travis.yml` and `./travis` directory.
 You need to have installed:
 
 * nose (pip install nose)
+* nose-exclude (pip install nose-exclude)
 * mock (pip install mock)
 * flake8 (pip install flake8)
 * webtest (pip install webtest)
@@ -34,6 +40,10 @@ installation guide for details, but typically this involves manually installing:
 * node
 * npm
 
+If you are unwilling or unable to install the requirements for all of the
+completers, you can exclude certain completers with the `--no-completer`
+option.
+
 ### mono non-standard path
 
 Note: if your installation of mono is in a non-standard location,
@@ -46,8 +56,13 @@ To run the full suite, just run `run_tests.py`. Options are:
 
 * `--skip-build`: don't attempt to run the build `build.py`, e.g. if you use
 a non-standard build environment (e.g. `cmake28`, self-build of clang, etc.)
-* `--no-clang-completer`: don't attempt to test the clang completer. Can also
-be set via environment variable `USE_CLANG_COMPLETER`.
+* `--no-completers`: Do not build or test with listed semantic completion engine(s).
+* `--completers`: Only build and test with listed semantic completion engine(s).
+* `--msvc`: The Microsoft Visual Studio version to build with.
+ (default: 14). Windows only.
+* `--arch`: Force architecture to 32 or 64 bits on Windows (default: python
+interpreter architecture). Windows Only.
+* `--coverage`: Output test coverage report
 
 Remaining arguments are passed to "nosetests" directly. This means that you
 can run a specific script or a specific test as follows:
@@ -105,3 +120,5 @@ Likely to be a problem with the OmniSharpServer.
     FAIL: ycmd.completers.general.tests.filename_completer_test.FilenameCompleter_test.SystemPathCompletion_test
 
 Ensure that you have UTF-8 support in your environment (see above)
+
+[dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md

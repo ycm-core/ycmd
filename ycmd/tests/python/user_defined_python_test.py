@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors.
+# Copyright (C) 2016 ycmd contributors
 #
 # This file is part of ycmd.
 #

@@ -1,22 +1,21 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf-8
 #
 # Copyright (C) 2015 Google Inc.
 #
-# This file is part of YouCompleteMe.
+# This file is part of ycmd.
 #
-# YouCompleteMe is free software: you can redistribute it and/or modify
+# ycmd is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# YouCompleteMe is distributed in the hope that it will be useful,
+# ycmd is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
+# along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 from nose.tools import eq_, raises
@@ -27,7 +26,7 @@ from ycmd import user_options_store
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR, 'testdata' )
-PATH_TO_TEST_FILE = os.path.join( DATA_DIR, 'test.go' )
+PATH_TO_TEST_FILE = os.path.join( DATA_DIR, 'test2.go' )
 # Use test file as dummy binary
 DUMMY_BINARY = PATH_TO_TEST_FILE
 PATH_TO_POS121_RES = os.path.join( DATA_DIR, 'gocode_output_offset_121.json' )
@@ -65,15 +64,15 @@ class GoCodeCompleter_test( object ):
     user_options = user_options_store.DefaultOptions()
 
     eq_( PATH_TO_GOCODE_BINARY,
-         self._completer.FindGoCodeBinary( user_options ) )
+         self._completer.FindBinary( "gocode", user_options ) )
 
     user_options[ 'gocode_binary_path' ] = DUMMY_BINARY
     eq_( DUMMY_BINARY,
-         self._completer.FindGoCodeBinary( user_options ) )
+         self._completer.FindBinary( "gocode", user_options ) )
 
     user_options[ 'gocode_binary_path' ] = DATA_DIR
     eq_( None,
-         self._completer.FindGoCodeBinary( user_options ) )
+         self._completer.FindBinary( "gocode", user_options ) )
 
 
   # Test line-col to offset in the file before any unicode occurrences.

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright (C) 2015  Google Inc.
+# Copyright (C) 2015 Google Inc.
 #
 # This file is part of ycmd.
 #

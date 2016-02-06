@@ -1,22 +1,21 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf-8
 #
-# Copyright (C) 2013  Google Inc.
+# Copyright (C) 2013 Google Inc.
 #
-# This file is part of YouCompleteMe.
+# This file is part of ycmd.
 #
-# YouCompleteMe is free software: you can redistribute it and/or modify
+# ycmd is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# YouCompleteMe is distributed in the hope that it will be useful,
+# ycmd is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
+# along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_, ok_
 from ycmd import identifier_utils as iu
@@ -210,6 +209,32 @@ def IsIdentifier_Haskell_test():
   ok_( not iu.IsIdentifier( "'x", 'haskell' ) )
   ok_( not iu.IsIdentifier( "9x", 'haskell' ) )
   ok_( not iu.IsIdentifier( "9" , 'haskell' ) )
+
+
+def IsIdentifier_Perl6_test():
+  ok_( iu.IsIdentifier( 'foo'  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "f-o"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x'y"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "_x-y" , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x-y'a", 'perl6' ) )
+  ok_( iu.IsIdentifier( "x-_"  , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x-_7" , 'perl6' ) )
+  ok_( iu.IsIdentifier( "_x"   , 'perl6' ) )
+  ok_( iu.IsIdentifier( "x9"   , 'perl6' ) )
+
+  ok_( not iu.IsIdentifier( "'x"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x'"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "-x"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-1" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x--" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x--a", 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-'" , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-'a", 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x-a-", 'perl6' ) )
+  ok_( not iu.IsIdentifier( "x+"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "9x"  , 'perl6' ) )
+  ok_( not iu.IsIdentifier( "9"   , 'perl6' ) )
 
 
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
