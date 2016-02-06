@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 import os
 import subprocess
 import os.path as p
 import sys
 import shlex
 
-major, minor = sys.version_info[ 0 : 2 ]
-if major != 2 or minor < 6:
-  sys.exit( 'The build script requires Python version >= 2.6 and < 3.0; '
+PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
+if not ( ( PY_MAJOR == 2 and PY_MINOR in [ 6, 7 ] ) or
+         ( PY_MAJOR == 3 and PY_MINOR >= 3 ) or
+         PY_MAJOR > 3 ):
+  sys.exit( 'ycmd requires Python 2.6, 2.7 or >= 3.3; '
             'your version of Python is ' + sys.version )
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
@@ -94,7 +99,7 @@ def CheckDeps():
 
 
 # Shamelessly stolen from https://gist.github.com/edufelipe/1027906
-def _CheckOutput( *popen_args, **kwargs ):
+def CheckOutput( *popen_args, **kwargs ):
   """Run command with arguments and return its output as a byte string.
   Backported from Python 2.7."""
 
@@ -117,21 +122,27 @@ def CustomPythonCmakeArgs():
 
   print( 'Searching for python libraries...' )
 
-  python_prefix = _CheckOutput( [
-      'python-config',
-      '--prefix'
-  ] ).strip()
+  python_prefix = CheckOutput( [
+    'python-config',
+    '--prefix'
+  ] ).strip().decode( 'utf8' )
 
   if p.isfile( p.join( python_prefix, '/Python' ) ):
     python_library = p.join( python_prefix, '/Python' )
     python_include = p.join( python_prefix, '/Headers' )
     print( 'Using OSX-style libs from {0}'.format( python_prefix ) )
   else:
-    which_python = _CheckOutput( [
+    major_minor = CheckOutput( [
       'python',
       '-c',
-      'import sys;i=sys.version_info;print( "python%d.%d" % (i[0], i[1]) )'
-    ] ).strip()
+      'import sys;i=sys.version_info;print( "%d.%d" % (i[0], i[1]) )'
+    ] ).strip().decode( 'utf8' )
+    which_python = 'python' + major_minor
+
+    # Python 3 has an 'm' suffix, for instance libpython3.3m.a
+    if major_minor.startswith( '3' ):
+      which_python += 'm'
+
     lib_python = '{0}/lib/lib{1}'.format( python_prefix, which_python ).strip()
 
     print( 'Searching for python with prefix: {0} and lib {1}:'.format(
@@ -228,6 +239,9 @@ def GetCmakeArgs( parsed_args ):
 
   if parsed_args.system_boost:
     cmake_args.append( '-DUSE_SYSTEM_BOOST=ON' )
+
+  use_python2 = 'ON' if PY_MAJOR == 2 else 'OFF'
+  cmake_args.append( '-DUSE_PYTHON2=' + use_python2 )
 
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
   # We use shlex split to properly parse quoted CMake arguments.

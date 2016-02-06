@@ -140,7 +140,6 @@ pip install -r /vagrant/examples/requirements.txt
 pip install requests
 pip install argparse
 pip install bottle
-pip install future
 pip install waitress
 pip install ipdb
 pip install ipdbplugin
@@ -153,7 +152,6 @@ pip install -r /vagrant/examples/requirements.txt
 pip install requests
 pip install argparse
 pip install bottle
-pip install future
 pip install waitress
 pip install ipdb
 pip install ipdbplugin

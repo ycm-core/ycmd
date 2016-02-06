@@ -32,6 +32,7 @@ from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest import assert_that, has_item, contains, equal_to, is_not # noqa
 import sys
 
+
 class CalledWith( BaseMatcher ):
 
   def __init__( self, python ):

@@ -23,8 +23,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import sys
+import os
 
-from .server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
+sys.path.insert( 0, os.path.dirname( os.path.abspath( __file__ ) ) )
+from server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
 SetUpPythonPath()
 
 import sys
@@ -98,7 +101,7 @@ def ParseArguments():
                               '[debug|info|warning|error|critical]' )
   parser.add_argument( '--idle_suicide_seconds', type = int, default = 0,
                        help = 'num idle seconds before server shuts down')
-  parser.add_argument( '--options_file', type = str, default = '',
+  parser.add_argument( '--options_file', type = str, required = True,
                        help = 'file with user options, in JSON format' )
   parser.add_argument( '--stdout', type = str, default = None,
                        help = 'optional file to use for stdout' )
@@ -120,9 +123,8 @@ def SetupLogging( log_level ):
 
 def SetupOptions( options_file ):
   options = user_options_store.DefaultOptions()
-  if options_file:
-    user_options = json.load( open( options_file, 'r' ) )
-    options.update( user_options )
+  user_options = json.load( open( options_file, 'r' ) )
+  options.update( user_options )
   utils.RemoveIfExists( options_file )
   hmac_secret = ToBytes( base64.b64decode( options[ 'hmac_secret' ] ) )
   del options[ 'hmac_secret' ]

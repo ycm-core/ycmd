@@ -5,3 +5,5 @@ PyHamcrest>=1.8.0
 WebTest>=2.0.9
 ordereddict>=1.1
 nose-exclude>=0.4.1
+# This needs to be kept in sync with submodule checkout in third_party
+future==0.15.2
