@@ -62,11 +62,13 @@ python get-pip.py
 # PYTHON LIBS
 #######################
 
+# We intentionally do NOT install the deps from test_requirements.txt into the
+# system Python because that should help prevent accidental use of system Python
+# during development. All dev work should happen with pyenv.
+
 # This is needed to prevent InsecurePlatformWarning from showing up AFTER this
 # stuff is installed.
 pip install --upgrade pyopenssl ndg-httpsclient pyasn1
-pip install -r /vagrant/test_requirements.txt
-pip install coveralls
 
 
 #######################
@@ -102,7 +104,6 @@ su - vagrant -c "multirust default stable 2>/dev/null"
 #######################
 
 git clone https://github.com/yyuu/pyenv.git /home/vagrant/.pyenv
-chown -R vagrant:vagrant /home/vagrant/.pyenv
 
 # Sourcing .profile to determine has provisioning already been done. If it has,
 # then we don't re-add setup code.
@@ -123,9 +124,42 @@ if [ -z "$PROVISIONING_DONE" ]; then
 
   pyenv install 2.6.6
   pyenv install 3.3.0
+  pyenv rehash
 
   # Avoid relying on the system python at all. Devs using some other
   # python is perfectly fine, but let's use a supported version by default.
   echo 'pyenv global 2.6.6' >> /home/vagrant/.profile
 fi
 
+# This installs libs in the pyenv Pythons in case the developer wants to run
+# ycmd manually. NOTE: We use the latest lib versions here, not the versions
+# that are used as submodules!
+pyenv global 2.6.6
+pip install -r /vagrant/test_requirements.txt
+pip install -r /vagrant/examples/requirements.txt
+pip install requests
+pip install argparse
+pip install bottle
+pip install future
+pip install waitress
+pip install ipdb
+pip install ipdbplugin
+pip install httpie
+pip install coveralls
+
+pyenv global 3.3.0
+pip install -r /vagrant/test_requirements.txt
+pip install -r /vagrant/examples/requirements.txt
+pip install requests
+pip install argparse
+pip install bottle
+pip install future
+pip install waitress
+pip install ipdb
+pip install ipdbplugin
+pip install httpie
+pip install coveralls
+
+pyenv global system
+
+chown -R vagrant:vagrant /home/vagrant/.pyenv

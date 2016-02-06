@@ -16,7 +16,7 @@ Vagrant.configure(2) do |config|
 
     # We need quite a bit of memory to compile more than one ycmd C++ file at a
     # time.
-    v.memory = 2048
+    v.memory = 3072
     v.cpus = 2
   end
 end
