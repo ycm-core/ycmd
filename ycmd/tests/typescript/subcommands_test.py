@@ -17,7 +17,7 @@
 
 from webtest import AppError
 from nose.tools import eq_
-from hamcrest import assert_that, raises, calling
+from hamcrest import assert_that, raises, calling, contains_inanyorder, has_entries
 from typescript_handlers_test import Typescript_Handlers_test
 
 
@@ -120,3 +120,29 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                        'Class documentation\n\n'
                        'Multi-line',
     }, self._app.post_json( '/run_completer_command', gettype_data ).json )
+
+
+  def GoToReferences_test( self ):
+    filepath = self._PathToTestFile( 'test.ts' )
+    contents = open( filepath ).read()
+
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
+
+    self._app.post_json( '/event_notification', event_data )
+
+    references_data = self._BuildRequest( completer_target = 'filetype_default',
+                                          command_arguments = [ 'GoToReferences' ],
+                                          line_num = 28,
+                                          column_num = 6,
+                                          contents = contents,
+                                          filetype = 'typescript',
+                                          filepath = filepath )
+
+    expected = contains_inanyorder(
+      has_entries( { 'description': 'var bar = new Bar();', 'line_num': 28, 'column_num': 5 } ),
+      has_entries( { 'description': 'bar.testMethod();',    'line_num': 29, 'column_num': 1 } ) )
+    actual = self._app.post_json( '/run_completer_command', references_data ).json
+    assert_that( actual, expected )
