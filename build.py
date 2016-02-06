@@ -204,6 +204,10 @@ def ParseArguments():
   parser.add_argument( '--tern-completer',
                        action = 'store_true',
                        help   = 'Enable tern javascript completer' ),
+  parser.add_argument( '--all',
+                       action = 'store_true',
+                       help   = 'Enable all supported completers',
+                       dest   = 'all_completers' )
 
   args = parser.parse_args()
 
@@ -215,7 +219,7 @@ def ParseArguments():
 
 def GetCmakeArgs( parsed_args ):
   cmake_args = []
-  if parsed_args.clang_completer:
+  if parsed_args.clang_completer or parsed_args.all_completers:
     cmake_args.append( '-DUSE_CLANG_COMPLETER=ON' )
 
   if parsed_args.system_libclang:
@@ -352,13 +356,13 @@ def Main():
   CheckDeps()
   args = ParseArguments()
   BuildYcmdLibs( args )
-  if args.omnisharp_completer:
+  if args.omnisharp_completer or args.all_completers:
     BuildOmniSharp()
-  if args.gocode_completer:
+  if args.gocode_completer or args.all_completers:
     BuildGoCode()
-  if args.tern_completer:
+  if args.tern_completer or args.all_completers:
     SetUpTern()
-  if args.racer_completer:
+  if args.racer_completer or args.all_completers:
     BuildRacerd()
 
 if __name__ == '__main__':
