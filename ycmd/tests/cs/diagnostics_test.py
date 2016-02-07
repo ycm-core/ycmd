@@ -24,45 +24,39 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
 
   def ZeroBasedLineAndColumn_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    results = self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      results = {}
+      for _ in ( 0, 1 ): # First call always returns blank for some reason
+        event_data = self._BuildRequest( filepath = filepath,
+                                         event_name = 'FileReadyToParse',
+                                         filetype = 'cs',
+                                         contents = contents )
 
-    event_data = self._BuildRequest( filepath = filepath,
-                                     event_name = 'FileReadyToParse',
-                                     filetype = 'cs',
-                                     contents = contents )
+        results = self._app.post_json( '/event_notification', event_data ).json
 
-    results = self._app.post_json( '/event_notification', event_data ).json
-
-    assert_that( results,
-                 contains(
-                    has_entries( {
-                      'kind': equal_to( 'ERROR' ),
-                      'text': contains_string(
-                          "Unexpected symbol `}'', expecting identifier" ),
-                      'location': has_entries( {
-                        'line_num': 11,
-                        'column_num': 2
-                      } ),
-                      'location_extent': has_entries( {
-                        'start': has_entries( {
+      assert_that( results,
+                  contains(
+                      has_entries( {
+                        'kind': equal_to( 'ERROR' ),
+                        'text': contains_string(
+                            "Unexpected symbol `}'', expecting identifier" ),
+                        'location': has_entries( {
                           'line_num': 11,
-                          'column_num': 2,
+                          'column_num': 2
                         } ),
-                        'end': has_entries( {
-                          'line_num': 11,
-                          'column_num': 2,
-                        } ),
-                      } )
-                    } ) ) )
-
-    self._StopOmniSharpServer( filepath )
+                        'location_extent': has_entries( {
+                          'start': has_entries( {
+                            'line_num': 11,
+                            'column_num': 2,
+                          } ),
+                          'end': has_entries( {
+                            'line_num': 11,
+                            'column_num': 2,
+                          } ),
+                        } )
+                      } ) ) )
 
 
   def MultipleSolution_test( self ):
@@ -73,71 +67,62 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
                                         'Program.cs' ) ]
     lines = [ 11, 10 ]
     for filepath, line in zip( filepaths, lines ):
-      contents = open( filepath ).read()
-      event_data = self._BuildRequest( filepath = filepath,
-                                       filetype = 'cs',
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' )
+      with self._WrapOmniSharpServer( filepath ):
+        contents = open( filepath ).read()
 
-      results = self._app.post_json( '/event_notification', event_data )
-      self._WaitUntilOmniSharpServerReady( filepath )
+        results = {}
+        for _ in ( 0, 1 ): # First call always returns blank for some reason
+          event_data = self._BuildRequest( filepath = filepath,
+                                           event_name = 'FileReadyToParse',
+                                           filetype = 'cs',
+                                           contents = contents )
 
-      event_data = self._BuildRequest( filepath = filepath,
-                                       event_name = 'FileReadyToParse',
-                                       filetype = 'cs',
-                                       contents = contents )
+          results = self._app.post_json( '/event_notification', event_data ).json
 
-      results = self._app.post_json( '/event_notification', event_data ).json
-
-      assert_that( results,
-                   contains(
-                       has_entries( {
-                           'kind': equal_to( 'ERROR' ),
-                           'text': contains_string( "Unexpected symbol `}'', "
-                                                    "expecting identifier" ),
-                           'location': has_entries( {
-                             'line_num': line,
-                             'column_num': 2
-                           } ),
-                           'location_extent': has_entries( {
-                             'start': has_entries( {
-                               'line_num': line,
-                               'column_num': 2,
-                             } ),
-                             'end': has_entries( {
-                               'line_num': line,
-                               'column_num': 2,
-                             } ),
-                           } )
-                       } ) ) )
-
-      self._StopOmniSharpServer( filepath )
+        assert_that( results,
+                    contains(
+                        has_entries( {
+                            'kind': equal_to( 'ERROR' ),
+                            'text': contains_string( "Unexpected symbol `}'', "
+                                                      "expecting identifier" ),
+                            'location': has_entries( {
+                              'line_num': line,
+                              'column_num': 2
+                            } ),
+                            'location_extent': has_entries( {
+                              'start': has_entries( {
+                                'line_num': line,
+                                'column_num': 2,
+                              } ),
+                              'end': has_entries( {
+                                'line_num': line,
+                                'column_num': 2,
+                              } ),
+                            } )
+                        } ) ) )
 
 
   # This test seems identical to ZeroBasedLineAndColumn one
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-    self._app.post_json( '/event_notification', event_data )
+      event_data = self._BuildRequest( filepath = filepath,
+                                       event_name = 'FileReadyToParse',
+                                       filetype = 'cs',
+                                       contents = contents )
+      self._app.post_json( '/event_notification', event_data )
 
-    diag_data = self._BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 11,
-                                    column_num = 2 )
+      diag_data = self._BuildRequest( filepath = filepath,
+                                      filetype = 'cs',
+                                      contents = contents,
+                                      line_num = 11,
+                                      column_num = 2 )
 
-    results = self._app.post_json( '/detailed_diagnostic', diag_data ).json
-    assert_that( results,
-                 has_entry(
-                    'message',
-                    contains_string(
-                       "Unexpected symbol `}'', expecting identifier" ) ) )
-
-    self._StopOmniSharpServer( filepath )
+      results = self._app.post_json( '/detailed_diagnostic', diag_data ).json
+      assert_that( results,
+                  has_entry(
+                      'message',
+                      contains_string(
+                        "Unexpected symbol `}'', expecting identifier" ) ) )
