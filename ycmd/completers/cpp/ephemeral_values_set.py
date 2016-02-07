@@ -22,7 +22,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
-from builtins import object
+
 import threading
 
 ALREADY_PARSING_MESSAGE = 'File already being parsed.'
