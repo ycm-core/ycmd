@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import platform
 import os
 import subprocess
@@ -88,8 +95,8 @@ def CompleterType( value ):
   if value in COMPLETERS:
     return value
   else:
-    aliases_to_completer = dict( (i,k) for k,v in COMPLETERS.iteritems()
-                                          for i in v[ 'aliases' ] )
+    aliases_to_completer = dict( ( i, k ) for k, v in COMPLETERS.items()
+                                 for i in v[ 'aliases' ] )
     if value in aliases_to_completer:
       return aliases_to_completer[ value ];
     else:

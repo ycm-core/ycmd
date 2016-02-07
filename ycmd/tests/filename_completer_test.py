@@ -262,7 +262,6 @@ class FilenameCompleter_test( object ):
 
 
 def WorkingDir_Use_File_Path_test():
-
   assert os.getcwd() != DATA_DIR, ( "Please run this test from a different "
                                     "directory" )
 

@@ -33,7 +33,7 @@ from ycmd.completers.completer_utils import ( AtIncludeStatementStart,
                                               GetIncludeStatementValue )
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
-from ycmd.utils import ToUtf8IfNeeded, ToUnicodeIfNeeded, OnWindows
+from ycmd.utils import ToUnicodeIfNeeded, OnWindows
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
@@ -102,10 +102,9 @@ class FilenameCompleter( Completer ):
   def ComputeCandidatesInner( self, request_data ):
     current_line = request_data[ 'line_value' ]
     start_column = request_data[ 'start_column' ] - 1
-    orig_filepath = request_data[ 'filepath' ]
-    filetypes = request_data[ 'file_data' ][ orig_filepath ][ 'filetypes' ]
+    filepath = request_data[ 'filepath' ]
+    filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
     line = current_line[ :start_column ]
-    utf8_filepath = ToUtf8IfNeeded( orig_filepath )
 
     if InCFamilyFile( filetypes ):
       path_dir, quoted_include = (
@@ -117,7 +116,7 @@ class FilenameCompleter( Completer ):
         return _GenerateCandidatesForPaths(
           self.GetPathsIncludeCase( path_dir,
                                     quoted_include,
-                                    utf8_filepath,
+                                    filepath,
                                     client_data ) )
 
     path_match = self._path_regex.search( line )
@@ -132,7 +131,7 @@ class FilenameCompleter( Completer ):
       _GetPathsStandardCase(
         path_dir,
         self.user_options[ 'filepath_completion_use_working_dir' ],
-        utf8_filepath,
+        filepath,
         working_dir) )
 
 
@@ -187,7 +186,6 @@ def _GetAbsolutePathForCompletions( path_dir,
 
 
 def _GetPathsStandardCase( path_dir, use_working_dir, filepath, working_dir ):
-
   absolute_path_dir = _GetAbsolutePathForCompletions( path_dir,
                                                       use_working_dir,
                                                       filepath,

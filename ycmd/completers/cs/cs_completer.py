@@ -320,7 +320,7 @@ class CsharpCompleter( Completer ):
     return self._solution_for_file[ filepath ]
 
 
-class CsharpSolutionCompleter(object):
+class CsharpSolutionCompleter( object ):
   def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
     self._logger = logging.getLogger( __name__ )
     self._solution_path = solution_path

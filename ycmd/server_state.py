@@ -23,13 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-import imp
 import os
 import threading
-from ycmd.utils import ForceSemanticCompletion
+import logging
+from ycmd.utils import ForceSemanticCompletion, LoadPythonSource
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
 from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
+
+_logger = logging.getLogger( __name__ )
 
 
 class ServerState( object ):
@@ -63,12 +65,12 @@ class ServerState( object ):
 
       module_path = PathToFiletypeCompleterPluginLoader( filetype )
       completer = None
-      supported_filetypes = [ filetype ]
+      supported_filetypes = set( [ filetype ] )
       if os.path.exists( module_path ):
-        module = imp.load_source( filetype, module_path )
+        module = LoadPythonSource( filetype, module_path )
         completer = module.GetCompleter( self._user_options )
         if completer:
-          supported_filetypes.extend( completer.SupportedFiletypes() )
+          supported_filetypes.update( completer.SupportedFiletypes() )
 
       for supported_filetype in supported_filetypes:
         self._filetype_completers[ supported_filetype ] = completer
@@ -91,7 +93,8 @@ class ServerState( object ):
     try:
       self.GetFiletypeCompleter( filetypes )
       return True
-    except:
+    except Exception as e:
+      _logger.exception( e )
       return False
 
 
@@ -138,4 +141,3 @@ class ServerState( object ):
       return False
     else:
       return not all([ x in filetype_to_disable for x in current_filetypes ])
-

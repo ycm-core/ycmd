@@ -31,6 +31,8 @@ import socket
 import stat
 import subprocess
 
+from future.utils import PY2
+
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
 CREATE_NO_WINDOW = 0x08000000
@@ -68,7 +70,7 @@ def ToUnicodeIfNeeded( value ):
     return value
   if isinstance( value, bytes ):
     # All incoming text should be utf8
-    return str( value, encoding = 'utf8' )
+    return str( value, 'utf8' )
   return str( value )
 
 
@@ -82,9 +84,14 @@ def ToBytes( value ):
   # chars.
   if type( value ) == bytes:
     return value
-  if isinstance( value, int ):
-    value = str( value )
-  return bytes( value, encoding = 'utf-8' )
+
+  # This is meant to catch Python 2's str type and the str on Python 3, which is
+  # unicode.
+  if isinstance( value, bytes ) or isinstance( value, str ):
+    return bytes( value, encoding = 'utf-8' )
+
+  # This is meant to catch `int` and similar non-string/bytes types.
+  return bytes( str( value ), encoding = 'utf-8' )
 
 
 def PathToTempDir():
@@ -298,3 +305,14 @@ def GetShortPathName( path ):
       return output_buf.value
     else:
       output_buf_size = needed
+
+
+# Shim for imp.load_source so that it works on both Py2 & Py3. See upstream
+# Python docs for info on what this does.
+def LoadPythonSource( name, pathname ):
+  if PY2:
+    import imp
+    return imp.load_source( name, pathname )
+  else:
+    import importlib
+    return importlib.machinery.SourceFileLoader( name, pathname ).load_module()

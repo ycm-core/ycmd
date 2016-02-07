@@ -222,7 +222,7 @@ class ClangCompleter( Completer ):
     if not include_file_name:
       return None
 
-    current_file_path = ToUtf8IfNeeded( request_data[ 'filepath' ] )
+    current_file_path = request_data[ 'filepath' ]
     client_data = request_data.get( 'extra_conf_data', None )
     quoted_include_paths, include_paths = (
             self._flags.UserIncludePaths( current_file_path, client_data ) )
@@ -371,7 +371,7 @@ class ClangCompleter( Completer ):
 
 
   def _FlagsForRequest( self, request_data ):
-    filename = ToUtf8IfNeeded( request_data[ 'filepath' ] )
+    filename = request_data[ 'filepath' ]
     if 'compilation_flags' in request_data:
       return PrepareFlagsForClang( request_data[ 'compilation_flags' ],
                                    filename )

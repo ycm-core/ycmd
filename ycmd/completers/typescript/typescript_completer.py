@@ -22,6 +22,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
+
 import json
 import logging
 import os
@@ -196,7 +197,7 @@ class TypeScriptCompleter( Completer ):
     """Build TSServer request object."""
 
     with self._sequenceid_lock:
-      seq = self._sequenceid.next()
+      seq = next( self._sequenceid )
     request = {
       'seq':     seq,
       'type':    'request',
@@ -246,7 +247,7 @@ class TypeScriptCompleter( Completer ):
     filename = request_data[ 'filepath' ]
     contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
     tmpfile = NamedTemporaryFile( delete = False )
-    tmpfile.write( utils.ToUtf8IfNeeded( contents ) )
+    tmpfile.write( utils.ToBytes( contents ) )
     tmpfile.close()
     self._SendRequest( 'reload', {
       'file':    filename,
@@ -397,10 +398,10 @@ def _LogLevel():
 
 def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
-    insertion_text = utils.ToUtf8IfNeeded( completion_data[ 'name' ] ),
-    menu_text      = utils.ToUtf8IfNeeded( completion_data[ 'name' ] ),
-    kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] ),
-    extra_data     = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
+    insertion_text = completion_data[ 'name' ],
+    menu_text      = completion_data[ 'name' ],
+    kind           = completion_data[ 'kind' ],
+    extra_data     = completion_data[ 'kind' ]
   )
 
 
@@ -410,7 +411,7 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
   menu_text = '{0} {1}'.format( name.ljust( padding ), signature )
   return responses.BuildCompletionData(
-    insertion_text = utils.ToUtf8IfNeeded( name ),
-    menu_text      = utils.ToUtf8IfNeeded( menu_text ),
-    kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
+    insertion_text = name,
+    menu_text      = menu_text,
+    kind           = completion_data[ 'kind' ]
   )

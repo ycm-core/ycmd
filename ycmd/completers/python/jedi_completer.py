@@ -26,13 +26,13 @@ from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
 
-from ycmd.utils import ToBytes, ProcessIsRunning, ToUtf8IfNeeded
+from ycmd.utils import ToBytes, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
+from tempfile import NamedTemporaryFile
 
 from base64 import b64encode
 import json
-import tempfile
 import logging
 import urllib.parse
 import requests
@@ -108,7 +108,7 @@ class JediCompleter( Completer ):
       self._logger.debug( 'JediHTTP not running.' )
       return False
     try:
-      return bool( self._GetResponse( ToBytes( '/ready' ) ) )
+      return bool( self._GetResponse( '/ready' ) )
     except requests.exceptions.ConnectionError as e:
       self._logger.exception( e )
       return False
@@ -156,8 +156,9 @@ class JediCompleter( Completer ):
       self._hmac_secret = self._GenerateHmacSecret()
 
       # JediHTTP will delete the secret_file after it's done reading it
-      with tempfile.NamedTemporaryFile( delete = False ) as hmac_file:
-        json.dump( { 'hmac_secret': self._hmac_secret }, hmac_file )
+      with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
+        json.dump( { 'hmac_secret': str( self._hmac_secret, 'utf8' ) },
+                   hmac_file )
         command = [ self._python_binary_path,
                     PATH_TO_JEDIHTTP,
                     '--port', str( self._jedihttp_port ),
@@ -185,7 +186,7 @@ class JediCompleter( Completer ):
 
   def _GetResponse( self, handler, request_data = {} ):
     """POST JSON data to JediHTTP server and return JSON response."""
-
+    handler = ToBytes( handler )
     url = urllib.parse.urljoin( self._jedihttp_host, handler )
     parameters = self._TranslateRequestForJediHTTP( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
@@ -235,7 +236,7 @@ class JediCompleter( Completer ):
   def _GetExtraData( self, completion ):
       location = {}
       if completion[ 'module_path' ]:
-        location[ 'filepath' ] = ToUtf8IfNeeded( completion[ 'module_path' ] )
+        location[ 'filepath' ] = completion[ 'module_path' ]
       if completion[ 'line' ]:
         location[ 'line_num' ] = completion[ 'line' ]
       if completion[ 'column' ]:
@@ -251,15 +252,15 @@ class JediCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     return [ responses.BuildCompletionData(
-                ToUtf8IfNeeded( completion[ 'name' ] ),
-                ToUtf8IfNeeded( completion[ 'description' ] ),
-                ToUtf8IfNeeded( completion[ 'docstring' ] ),
+                completion[ 'name' ],
+                completion[ 'description' ],
+                completion[ 'docstring' ],
                 extra_data = self._GetExtraData( completion ) )
              for completion in self._JediCompletions( request_data ) ]
 
 
   def _JediCompletions( self, request_data ):
-    return self._GetResponse( ToBytes( b'/completions' ),
+    return self._GetResponse( '/completions',
                               request_data )[ 'completions' ]
 
 

@@ -77,7 +77,7 @@ def FindRacerdBinary( user_options ):
     if os.path.isfile( racerd_user_binary ):
       return racerd_user_binary
     else:
-      _logger.warn( 'user provided racerd_binary_path is not file' )
+      _logger.warning( 'user provided racerd_binary_path is not file' )
 
   if os.path.isfile( RACERD_BINARY ):
     return RACERD_BINARY
@@ -101,8 +101,8 @@ class RustCompleter( Completer ):
     self._rust_source_path = self._GetRustSrcPath()
 
     if not self._rust_source_path:
-      _logger.warn( 'No path provided for the rustc source. Please set the '
-                    'rust_src_path option' )
+      _logger.warning( 'No path provided for the rustc source. Please set the '
+                       'rust_src_path option' )
 
     if not self._racerd:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
@@ -135,7 +135,7 @@ class RustCompleter( Completer ):
 
 
   def _GetResponse( self, handler, request_data = None,
-                    method = ToBytes( b'POST' ) ):
+                    method = 'POST'):
     """
     Query racerd via HTTP
 
@@ -144,6 +144,8 @@ class RustCompleter( Completer ):
     were found.
     """
     _logger.info( 'RustCompleter._GetResponse' )
+    handler = ToBytes( handler )
+    method = ToBytes( method )
     url = urllib.parse.urljoin( self._racerd_host, handler )
     parameters = self._ConvertToRacerdRequest( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
@@ -165,7 +167,7 @@ class RustCompleter( Completer ):
     if response.status_code is http.client.NO_CONTENT:
       return None
 
-    return response.json( encoding = 'utf8' )
+    return response.json()
 
 
   def _ExtraHeaders( self, method, handler, body ):
@@ -209,7 +211,7 @@ class RustCompleter( Completer ):
   def _GetExtraData( self, completion ):
     location = {}
     if completion[ 'file_path' ]:
-      location[ 'filepath' ] = ToBytes( completion[ 'file_path' ] )
+      location[ 'filepath' ] = completion[ 'file_path' ]
     if completion[ 'line' ]:
       location[ 'line_num' ] = completion[ 'line' ]
     if completion[ 'column' ]:
@@ -233,15 +235,15 @@ class RustCompleter( Completer ):
       return []
 
     return [ responses.BuildCompletionData(
-                insertion_text = ToBytes( completion[ 'text' ] ),
-                kind = ToBytes( completion[ 'kind' ] ),
-                extra_menu_info = ToBytes( completion[ 'context' ] ),
+                insertion_text = completion[ 'text' ],
+                kind = completion[ 'kind' ],
+                extra_menu_info = completion[ 'context' ],
                 extra_data = self._GetExtraData( completion ) )
              for completion in completions ]
 
 
   def _FetchCompletions( self, request_data ):
-    return self._GetResponse( ToBytes( b'/list_completions' ), request_data )
+    return self._GetResponse( '/list_completions', request_data )
 
 
   def _StartServer( self ):
@@ -303,7 +305,7 @@ class RustCompleter( Completer ):
       _logger.debug( 'Racerd not running.' )
       return False
     try:
-      self._GetResponse( ToBytes( b'/ping' ), method = ToBytes( b'GET' ) )
+      self._GetResponse( '/ping', method = 'GET' )
       return True
     # Do NOT make this except clause more generic! If you need to catch more
     # exception types, list them all out. Having `Exception` here caused FORTY
@@ -361,7 +363,7 @@ class RustCompleter( Completer ):
 
   def _GoToDefinition( self, request_data ):
     try:
-      definition = self._GetResponse( ToBytes( b'/find_definition' ),
+      definition = self._GetResponse( '/find_definition',
                                       request_data )
       return responses.BuildGoToResponse( definition[ 'file_path' ],
                                           definition[ 'line' ],
