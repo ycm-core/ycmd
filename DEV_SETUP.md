@@ -11,7 +11,7 @@ need at least 8GB of RAM to use this environment.
 2. `cd` into the folder where you checked out ycmd.
 3. `$ vagrant up && vagrant ssh`. This will take a while because the VM is being
 	 built and set up. Only needs to happen once though.
-4. You are now in the VM. Run the tests with `$ ./run_tests.sh`.
+4. You are now in the VM. Run the tests with `$ ./run_tests.py`.
 5. Hack away. When done, exit the ssh connection with `exit`.
 6. `$ vagrant suspend` so that you can quickly get back to hacking later.
 7. Later on: `$ vagrant resume && vagrant ssh`. This will be _much_ faster.

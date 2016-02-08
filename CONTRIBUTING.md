@@ -79,11 +79,11 @@ Creating good pull requests
 
 5.  **Explain in detail why your pull request makes sense.** Ask yourself, would
     this feature be helpful to others? Not just a few people, but a lot of
-    ycmd’s users? See, good features are useful to many. If your feature is only
-    useful to you and _maybe_ a couple of others, then that’s not a good
+    ycmd's users? See, good features are useful to many. If your feature is only
+    useful to you and _maybe_ a couple of others, then that's not a good
     feature.  There is such a thing as “feature overload”. When software
     accumulates so many features of which most are only useful to a handful,
-    then that software has become “bloated”. We don’t want that.
+    then that software has become “bloated”. We don't want that.
 
     Requests for features that are obscure or are helpful to but a few, or are
     not part of ycmd's "vision" will be rejected. Yes, even if you provide a
@@ -94,10 +94,59 @@ Creating good pull requests
     sometimes what you want can be done in a different way if the reason for the
     change is known. _What goal is your change trying to accomplish?_
 
-You might also want to easily set up [an environment for ycmd
-development][dev-setup].
+You should also use our [Vagrant config when working on ycmd][dev-setup].
+There's _tons_ of gotchas when setting up the correct environment and they've
+all been worked out for you with Vagrant. Save yourself the trouble and use it.
+
+
+Writing code that runs on Python 2 & 3
+======================================
+
+We support Python 2.6, 2.7 and 3.3+. Since we use
+[`python-future`][python-future], you should mostly write Python 3 as normal.
+Here's what you should watch out for:
+
+- New files should start with the following prologue after the copyright header:
+
+    ```python
+    from __future__ import absolute_import
+    from __future__ import unicode_literals
+    from __future__ import print_function
+    from __future__ import division
+    from future import standard_library
+    standard_library.install_aliases()
+    from builtins import *  # noqa
+    ```
+
+- Write `dict(a=1, b=2)` instead of `{'a':1, 'b':2}`. `python-future` patches
+  `dict()` to return a dictionary like the one from Python 3, but it can't patch
+  dictionary literals. You could also create a dict with `d = dict()` and then
+  use `d.update()` on it with a dict literal.
+- Read the [_What Else You Need to Know_][what-else] doc from `python-future`.
+- Create `bytes` objects from literals like so: `bytes( b'foo' )`. Note that
+  `bytes` is patched by `python-future` on py2.
+- Be careful when passing the `bytes` type from `python-future` to python
+  libraries (includes the standard library) on py2; while that type should in
+  theory behave just like `str` on py2, some libraries might have issues. If you
+  encounter any, pass the value through `future.utils`'s `native()` function
+  which will convert `bytes` to a real `str` (again, only on py2). Heed this
+  advice for your own sanity; behind it are 40 hours of debugging and an
+  instance of tears-down-the-cheek crying at 2 am.
+- Use `from future.utils import iteritems`
+  then `for key, value in iteritems( dict_obj )` to efficiently iterate dicts on
+  py2 & py3
+- Use `from future.utils import itervalues` then `for value in itervalues(
+  dict_obj )` to efficiently iterate over values in dicts on py2 & py3
+- `future.utils` has `PY2` and `PY3` constants that are `True` in the respective
+  interpreter; be careful about checking for py3 (better to check for py2);
+  don't write code that will break on py4!
+- If you run tests and get failures on importing ycm_core that mention
+  `initycm_core` or `PyInit_ycm_core`, you've built the C++ parts of ycmd for
+  py2 and are trying to run tests in py3 (or vice-versa). Rebuild!
 
 [build-bots]: https://travis-ci.org/Valloric/ycmd
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycmd-tests]: https://github.com/Valloric/ycmd/blob/master/TESTS.md
 [dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md
+[python-future]: http://python-future.org/index.html
+[what-else]: http://python-future.org/what_else.html
