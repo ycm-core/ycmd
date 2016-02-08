@@ -1,5 +1,12 @@
 # Setting up for ycmd development
 
+We use Vagrant for development. The VM will have **all** dependencies already
+set up correctly so you won't have to do anything. (If you find something
+missing, please file a bug.)
+
+NOTE: The virtual machine that is created requires 3GB of RAM, so you likely
+need at least 8GB of RAM to use this environment.
+
 1. Install [Vagrant][].
 2. `cd` into the folder where you checked out ycmd.
 3. `$ vagrant up && vagrant ssh`. This will take a while because the VM is being
