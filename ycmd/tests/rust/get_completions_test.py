@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+from ycmd.utils import ReadFile
 from hamcrest import assert_that, has_entry, has_items, contains_string
 from .rust_handlers_test import Rust_Handlers_test
 
@@ -32,7 +33,7 @@ class Rust_GetCompletions_test( Rust_Handlers_test ):
 
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'test.rs' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._WaitUntilServerReady()
 
@@ -53,7 +54,7 @@ class Rust_GetCompletions_test( Rust_Handlers_test ):
 
   def WhenStandardLibraryCompletionFails_MentionRustSrcPath_test( self ):
     filepath = self._PathToTestFile( 'std_completions.rs' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._WaitUntilServerReady()
 

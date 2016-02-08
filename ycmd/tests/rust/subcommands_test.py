@@ -25,6 +25,7 @@ from builtins import *  # noqa
 
 from .rust_handlers_test import Rust_Handlers_test
 from nose.tools import eq_
+from ycmd.utils import ReadFile
 
 
 class Rust_Subcommands_test( Rust_Handlers_test ):
@@ -32,7 +33,7 @@ class Rust_Subcommands_test( Rust_Handlers_test ):
 
   def _GoTo( self, params ):
     filepath = self._PathToTestFile( 'test.rs' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._WaitUntilServerReady()
 

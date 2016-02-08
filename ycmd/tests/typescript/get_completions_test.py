@@ -25,6 +25,7 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that, contains_inanyorder, has_entries
 from .typescript_handlers_test import Typescript_Handlers_test
+from ycmd.utils import ReadFile
 from mock import patch
 
 
@@ -32,7 +33,7 @@ class TypeScript_GetCompletions_test( Typescript_Handlers_test ):
 
   def _RunTest( self, test ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',

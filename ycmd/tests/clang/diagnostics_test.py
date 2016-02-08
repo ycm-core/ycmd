@@ -28,6 +28,7 @@ SetUpPythonPath()
 from hamcrest import ( assert_that, contains, contains_string, has_entries,
                        has_entry, has_items, empty, equal_to )
 from .clang_handlers_test import Clang_Handlers_test
+from ycmd.utils import ReadFile
 from pprint import pprint
 
 
@@ -187,7 +188,7 @@ int main() {
 
 
   def FixIt_Available_test( self ):
-    contents = open( self._PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
 
     event_data = self._BuildRequest( contents = contents,
                                      event_name = 'FileReadyToParse',

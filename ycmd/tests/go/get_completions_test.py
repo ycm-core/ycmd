@@ -25,6 +25,7 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that, has_item
 from .go_handlers_test import Go_Handlers_test
+from ycmd.utils import ReadFile
 
 
 class Go_GetCompletions_test( Go_Handlers_test ):
@@ -33,7 +34,7 @@ class Go_GetCompletions_test( Go_Handlers_test ):
     filepath = self._PathToTestFile( 'test.go' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'go',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           force_semantic = True,
                                           line_num = 9,
                                           column_num = 11 )

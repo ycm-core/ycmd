@@ -42,6 +42,14 @@ def SanitizeQuery( query ):
   return query.strip()
 
 
+# Python 3 complains on the common open(path).read() idiom because the file
+# doesn't get closed. So, a helper func.
+# Also, all files we read are UTF-8.
+def ReadFile( filepath ):
+  with open( filepath, encoding = 'utf8' ) as f:
+    return f.read()
+
+
 # Given an object, returns a str object that's utf-8 encoded.
 def ToUtf8IfNeeded( value ):
   # NOTE: the C++ interop layer specifically wants py2 'str' objects and

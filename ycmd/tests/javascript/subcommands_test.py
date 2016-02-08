@@ -29,6 +29,7 @@ from hamcrest import ( assert_that,
                        contains_inanyorder,
                        has_entries )
 from .javascript_handlers_test import Javascript_Handlers_test
+from ycmd.utils import ReadFile
 from pprint import pformat
 import http.client
 
@@ -54,7 +55,7 @@ def ChunkMatcher( replacement_text, start, end ):
 class Javascript_Subcommands_test( Javascript_Handlers_test ):
 
   def _RunTest( self, test ):
-    contents = open( test[ 'request' ][ 'filepath' ] ).read()
+    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
     def CombineRequest( request, data ):
       kw = request
@@ -337,7 +338,7 @@ class Javascript_Subcommands_test( Javascript_Handlers_test ):
                          self._BuildRequest( **{
                            'filetype': 'javascript',
                            'event_name': 'FileReadyToParse',
-                           'contents': open( file4 ).read(),
+                           'contents': ReadFile( file4 ),
                            'filepath': file4,
                          } ),
                          expect_errors = False )

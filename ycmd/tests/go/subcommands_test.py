@@ -25,13 +25,14 @@ from builtins import *  # noqa
 
 from .go_handlers_test import Go_Handlers_test
 from nose.tools import eq_
+from ycmd.utils import ReadFile
 
 
 class Go_Subcommands_test( Go_Handlers_test ):
 
   def _GoTo( self, params ):
     filepath = self._PathToTestFile( 'goto.go' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     command = params[ 'command' ]
     goto_data = self._BuildRequest( completer_target = 'filetype_default',
@@ -50,7 +51,7 @@ class Go_Subcommands_test( Go_Handlers_test ):
     }, results.json )
 
     filepath = self._PathToTestFile( 'win.go' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     command = params[ 'command' ]
     goto_data = self._BuildRequest( completer_target = 'filetype_default',

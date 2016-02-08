@@ -28,6 +28,7 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_entries )
 from .javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
+from ycmd.utils import ReadFile
 import http.client
 
 # The following properties/methods are in Object.prototype, so are present
@@ -55,7 +56,7 @@ class Javascript_GetCompletions_test( Javascript_Handlers_test ):
       }
     """
 
-    contents = open( test[ 'request' ][ 'filepath' ] ).read()
+    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
     def CombineRequest( request, data ):
       kw = request

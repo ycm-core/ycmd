@@ -24,6 +24,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+import io
 
 VERSION_FILENAME = 'CORE_VERSION'
 CORE_NOT_COMPATIBLE_MESSAGE = (
@@ -43,8 +44,9 @@ def SetUpPythonPath():
 
 
 def ExpectedCoreVersion():
-  return int( open( os.path.join( DirectoryOfThisScript(), '..',
-                                  VERSION_FILENAME ) ).read() )
+  filepath = os.path.join( DirectoryOfThisScript(), '..', VERSION_FILENAME )
+  with io.open( filepath, encoding = 'utf8' ) as f:
+    return int( f.read() )
 
 
 def CompatibleWithCurrentCoreVersion():

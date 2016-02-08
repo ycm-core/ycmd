@@ -31,6 +31,7 @@ from ...responses import UnknownExtraConf, NoExtraConfDetected
 from ... import handlers
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from .clang_handlers_test import Clang_Handlers_test
+from ycmd.utils import ReadFile
 import http.client
 
 
@@ -63,7 +64,8 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
       'filepath': self._PathToTestFile( 'general_fallback',
                                         '.ycm_extra_conf.py' ) } )
 
-    contents = open( test[ 'request' ][ 'filepath' ] ).read()
+
+    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
     def CombineRequest( request, data ):
       kw = request
@@ -335,7 +337,7 @@ int main()
     filepath = self._PathToTestFile( 'basic.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 11,
                                           column_num = 7,
                                           force_semantic = True )
@@ -372,7 +374,7 @@ int main()
     filepath = self._PathToTestFile( 'basic.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 11,
                                           column_num = 7 )
 
@@ -393,7 +395,7 @@ int main()
 
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 11,
                                           column_num = 7,
                                           force_semantic = True )
@@ -447,7 +449,7 @@ int main()
     filepath = self._PathToTestFile( 'client_data', 'main.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 9,
                                           column_num = 7,
                                           extra_conf_data = {
@@ -468,7 +470,7 @@ int main()
     filepath = self._PathToTestFile( 'client_data', 'include.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 1,
                                           column_num = 11,
                                           extra_conf_data = {

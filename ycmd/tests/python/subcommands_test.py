@@ -26,6 +26,7 @@ from builtins import *  # noqa
 from hamcrest import assert_that
 from nose.tools import eq_
 from .python_handlers_test import Python_Handlers_test
+from ycmd.utils import ReadFile
 import os.path
 
 
@@ -90,7 +91,7 @@ inception()
     filepath = self._PathToTestFile( 'goto_file5.py' )
     goto_data = self._BuildRequest( command_arguments = [ 'GoToDefinition' ],
                                     line_num = 4,
-                                    contents = open( filepath ).read(),
+                                    contents = ReadFile( filepath ),
                                     filetype = 'python',
                                     filepath = filepath )
 
@@ -130,7 +131,7 @@ inception()
     goto_data = self._BuildRequest( completer_target = 'filetype_default',
                                     command_arguments = [ 'GoTo' ],
                                     line_num = test[ 'request' ][ 'line_num' ],
-                                    contents = open( filepath ).read(),
+                                    contents = ReadFile( filepath ),
                                     filetype = 'python',
                                     filepath = filepath )
 
@@ -141,7 +142,7 @@ inception()
   def GetDoc_Method_test( self ):
     # Testcase1
     filepath = self._PathToTestFile( 'GetDoc.py' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'python',
@@ -163,7 +164,7 @@ inception()
   def GetDoc_Class_test( self ):
     # Testcase1
     filepath = self._PathToTestFile( 'GetDoc.py' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'python',
@@ -182,7 +183,7 @@ inception()
 
   def GoToReferences_test( self ):
     filepath = self._PathToTestFile( 'goto_references.py' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'python',

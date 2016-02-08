@@ -26,6 +26,7 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that, contains, contains_string, equal_to,
                        has_entries, has_entry )
 from .cs_handlers_test import Cs_Handlers_test
+from ycmd.utils import ReadFile
 
 
 class Cs_Diagnostics_test( Cs_Handlers_test ):
@@ -33,7 +34,7 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
   def ZeroBasedLineAndColumn_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       results = {}
       for _ in ( 0, 1 ): # First call always returns blank for some reason
@@ -76,7 +77,7 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
     lines = [ 11, 10 ]
     for filepath, line in zip( filepaths, lines ):
       with self._WrapOmniSharpServer( filepath ):
-        contents = open( filepath ).read()
+        contents = ReadFile( filepath )
 
         results = {}
         for _ in ( 0, 1 ): # First call always returns blank for some reason
@@ -114,7 +115,7 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       event_data = self._BuildRequest( filepath = filepath,
                                        event_name = 'FileReadyToParse',

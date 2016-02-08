@@ -30,6 +30,7 @@ from nose.tools import eq_
 from hamcrest import ( assert_that, empty, greater_than, has_item, has_items,
                        has_entries )
 from .cs_handlers_test import Cs_Handlers_test
+from ycmd.utils import ReadFile
 
 
 class Cs_GetCompletions_test( Cs_Handlers_test ):
@@ -37,7 +38,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       completion_data = self._BuildRequest( filepath = filepath,
                                             filetype = 'cs',
@@ -60,7 +61,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     lines = [ 10, 9 ]
     for filepath, line in zip( filepaths, lines ):
       with self._WrapOmniSharpServer( filepath ):
-        contents = open( filepath ).read()
+        contents = ReadFile( filepath )
 
         completion_data = self._BuildRequest( filepath = filepath,
                                               filetype = 'cs',
@@ -78,7 +79,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def PathWithSpace_test( self ):
     filepath = self._PathToTestFile( u'неприличное слово', 'Program.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       completion_data = self._BuildRequest( filepath = filepath,
                                             filetype = 'cs',
@@ -95,7 +96,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def HasBothImportsAndNonImport_test( self ):
     filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       completion_data = self._BuildRequest( filepath = filepath,
                                             filetype = 'cs',
@@ -116,7 +117,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def ImportsOrderedAfter_test( self ):
     filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       completion_data = self._BuildRequest( filepath = filepath,
                                             filetype = 'cs',
@@ -145,7 +146,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def ForcedReturnsResults_test( self ):
     filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       completion_data = self._BuildRequest( filepath = filepath,
                                             filetype = 'cs',
@@ -164,12 +165,12 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def NonForcedReturnsNoResults_test( self ):
     filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
       event_data = self._BuildRequest( filepath = filepath,
                                        filetype = 'cs',
                                        contents = contents,
                                        event_name = 'FileReadyToParse' )
-  
+
       self._app.post_json( '/event_notification', event_data )
 
       completion_data = self._BuildRequest( filepath = filepath,
@@ -195,12 +196,12 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
   def ForcedDividesCache_test( self ):
     filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
       event_data = self._BuildRequest( filepath = filepath,
                                        filetype = 'cs',
                                        contents = contents,
                                        event_name = 'FileReadyToParse' )
-  
+
       self._app.post_json( '/event_notification', event_data )
 
       completion_data = self._BuildRequest( filepath = filepath,
@@ -347,7 +348,7 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
     filepath = self._PathToTestFile( 'testy-multiple-solutions',
                                      'solution-not-named-like-folder',
                                      'testy', 'Program.cs' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cs',
                                      contents = contents,

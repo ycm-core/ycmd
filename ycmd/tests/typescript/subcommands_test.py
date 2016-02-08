@@ -27,13 +27,14 @@ from webtest import AppError
 from nose.tools import eq_
 from hamcrest import assert_that, raises, calling, contains_inanyorder, has_entries
 from .typescript_handlers_test import Typescript_Handlers_test
+from ycmd.utils import ReadFile
 
 
 class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetType_Basic_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -57,7 +58,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetType_HasNoType_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -81,7 +82,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetDoc_Method_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -106,7 +107,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetDoc_Class_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -132,7 +133,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GoToReferences_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',

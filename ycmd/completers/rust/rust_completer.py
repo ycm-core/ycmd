@@ -165,7 +165,7 @@ class RustCompleter( Completer ):
     if response.status_code is http.client.NO_CONTENT:
       return None
 
-    return response.json()
+    return response.json( encoding = 'utf8' )
 
 
   def _ExtraHeaders( self, method, handler, body ):

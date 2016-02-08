@@ -24,6 +24,7 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from ycmd.server_utils import SetUpPythonPath
+from ycmd.utils import ReadFile
 SetUpPythonPath()
 from nose.tools import eq_
 from hamcrest import assert_that, empty
@@ -37,7 +38,7 @@ from mock import patch
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
   def OnFileReadyToParse_ProjectFile_cwd_test( self ):
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -52,8 +53,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
   def OnFileReadyToParse_ProjectFile_parentdir_test( self ):
     os.chdir( self._PathToTestFile( 'lamelib' ) )
-
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -73,8 +73,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     # We only do this on the first OnFileReadyToParse event after a
     # server startup.
     os.chdir( self._PathToTestFile( '..' ) )
-
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -157,8 +156,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
           return_value = True )
   def OnFileReadyToParse_UseGlobalConfig_test( self, *args ):
     os.chdir( self._PathToTestFile( '..' ) )
-
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
