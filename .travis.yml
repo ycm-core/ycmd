@@ -27,12 +27,15 @@ env:
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
     - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
 matrix:
   exclude:
     - os: osx
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
     - os: osx
       env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
+    - os: osx
+      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
     - os: linux
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
 addons:
@@ -54,7 +57,10 @@ addons:
      - python2.6-dev
      - python2.7
      - python2.7-dev
+     - python3.3
+     - python3.3-dev
      - python-virtualenv
+     - python-setuptools
 cache:
   directories:
     - $HOME/.cache/pip  # Python packages from pip
