@@ -30,7 +30,7 @@ class Python_Handlers_test( Handlers_test ):
 
 
   def WaitUntilJediHTTPServerReady( self ):
-    retries = 10
+    retries = 100
 
     while retries > 0:
       result = self._app.get( '/ready', { 'subserver': 'python' } ).json
