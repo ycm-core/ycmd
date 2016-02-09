@@ -49,3 +49,6 @@ doc/tags
 
 # Exclude tern installation area
 third_party/tern_runtime/node_modules
+
+# Exclude vagrant directory
+.vagrant/
