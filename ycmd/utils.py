@@ -194,6 +194,10 @@ def FindExecutable( executable ):
   return None
 
 
+def ExecutableName( executable ):
+  return executable + ( '.exe' if OnWindows() else '' )
+
+
 def OnWindows():
   return sys.platform == 'win32'
 
