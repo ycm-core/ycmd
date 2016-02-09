@@ -43,7 +43,7 @@ class DeferredResponse( object ):
   A deferred that resolves to a response from TSServer.
   """
 
-  def __init__( self, timeout = MAX_DETAILED_COMPLETIONS ):
+  def __init__( self, timeout = RESPONSE_TIMEOUT_SECONDS ):
     self._event = Event()
     self._message = None
     self._timeout = timeout
