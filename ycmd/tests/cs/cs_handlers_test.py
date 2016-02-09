@@ -18,9 +18,21 @@
 from ..handlers_test import Handlers_test
 from ycmd.utils import OnTravis
 import time
+from contextlib import contextmanager
+
+# If INSTANCE_PER_TEST is set, each test case will start up and shutdown an
+# instance of Omnisharp server.  Otherwise - the default - it will reuse the
+# Omnisharp instances between individual test cases. Non caching (false) is
+# much faster, but test cases are not totally isolated from each other.
+# For test case isolation, set to true.
+INSTANCE_PER_TEST = False
 
 
 class Cs_Handlers_test( Handlers_test ):
+
+  omnisharp_file_solution = {}
+  omnisharp_solution_port = {}
+  omnisharp_solution_file = {}
 
   def __init__( self ):
     self._file = __file__
@@ -33,17 +45,92 @@ class Cs_Handlers_test( Handlers_test ):
       { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
 
 
-  def _StopOmniSharpServer( self, filename ):
-    self._app.post_json(
-      '/run_completer_command',
-      self._BuildRequest( completer_target = 'filetype_default',
-                          command_arguments = [ 'StopServer' ],
-                          filepath = filename,
-                          filetype = 'cs' )
-    )
+  # See __init__.py for teardownPackage
 
 
-  def _WaitUntilOmniSharpServerReady( self, filename ):
+  @contextmanager
+  def _WrapOmniSharpServer( self, filepath ):
+    self._SetupOmniSharpServer( filepath )
+    yield
+    self._TeardownOmniSharpServer( filepath )
+
+
+  def _SetupOmniSharpServer( self, filepath ):
+    solution_path = self._FindOmniSharpSolutionPath( filepath )
+    if solution_path in Cs_Handlers_test.omnisharp_solution_port:
+      port = Cs_Handlers_test.omnisharp_solution_port[ solution_path ]
+      self._SetOmnisharpPort( filepath, port  )
+      self._WaitUntilOmniSharpServerReady( filepath )
+    else:
+      self._StartOmniSharpServer( filepath )
+      self._WaitUntilOmniSharpServerReady( filepath )
+      port = self._GetOmnisharpPort( filepath )
+      Cs_Handlers_test.omnisharp_solution_port[ solution_path ] = port
+
+
+  def _TeardownOmniSharpServer( self, filepath ):
+    if INSTANCE_PER_TEST:
+      self._StopOmniSharpServer( filepath )
+      try:
+        solution = self._FindOmniSharpSolutionPath( filepath )
+        del Cs_Handlers_test.omnisharp_solution_port[ solution ]
+        del Cs_Handlers_test.omnisharp_solution_file[ solution ]
+      except KeyError:
+        pass
+
+
+  def _StartOmniSharpServer( self, filepath ):
+    self._app.post_json( '/run_completer_command',
+                    self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ "StartServer" ],
+                                        filepath = filepath,
+                                        filetype = 'cs' ) )
+
+
+  def _FindOmniSharpSolutionPath( self, filepath ):
+    if filepath in Cs_Handlers_test.omnisharp_file_solution:
+      return Cs_Handlers_test.omnisharp_file_solution[ filepath ]
+
+    solution_request = self._BuildRequest( completer_target = 'filetype_default',
+                                           filepath = filepath,
+                                           command_arguments = [ "SolutionFile" ],
+                                           filetype = 'cs' )
+    solution_path = self._app.post_json( '/run_completer_command',
+                                         solution_request ).json
+    Cs_Handlers_test.omnisharp_file_solution[ filepath ] = solution_path
+    Cs_Handlers_test.omnisharp_solution_file[ solution_path ] = filepath
+
+    return solution_path
+
+
+  def _SetOmnisharpPort( self, filepath, port ):
+    command_arguments = [ 'SetOmnisharpPort', port ]
+    self._app.post_json( '/run_completer_command',
+                    self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = command_arguments,
+                                        filepath = filepath,
+                                        filetype = 'cs' ) )
+
+
+  def _GetOmnisharpPort( self, filepath ):
+    request = self._BuildRequest( completer_target = 'filetype_default',
+                                  command_arguments = [ "GetOmnisharpPort" ],
+                                  filepath = filepath,
+                                  filetype = 'cs' )
+    result = self._app.post_json( '/run_completer_command', request ).json
+
+    return int( result[ "message" ] )
+
+
+  def _StopOmniSharpServer( self, filepath ):
+    self._app.post_json( '/run_completer_command',
+                  self._BuildRequest( completer_target = 'filetype_default',
+                                      command_arguments = [ 'StopServer' ],
+                                      filepath = filepath,
+                                      filetype = 'cs' ) )
+
+
+  def _WaitUntilOmniSharpServerReady( self, filepath ):
     retries = 100
     success = False
 
@@ -56,7 +143,7 @@ class Cs_Handlers_test( Handlers_test ):
         break
       request = self._BuildRequest( completer_target = 'filetype_default',
                                     command_arguments = [ 'ServerIsRunning' ],
-                                    filepath = filename,
+                                    filepath = filepath,
                                     filetype = 'cs' )
       result = self._app.post_json( '/run_completer_command', request ).json
       if not result:
@@ -66,3 +153,15 @@ class Cs_Handlers_test( Handlers_test ):
 
     if not success:
       raise RuntimeError( "Timeout waiting for OmniSharpServer" )
+
+
+def StopAllOmniSharpServers():
+  self = Cs_Handlers_test()
+  with self.UserOption( 'auto_start_csharp_server', False ):
+    with self.UserOption( 'confirm_extra_conf', False ):
+      self.setUp()
+      while Cs_Handlers_test.omnisharp_solution_port:
+        ( solution, port ) = Cs_Handlers_test.omnisharp_solution_port.popitem()
+        filepath = Cs_Handlers_test.omnisharp_solution_file[ solution ]
+        self._SetOmnisharpPort( filepath, port )
+        self._StopOmniSharpServer( filepath )

@@ -27,431 +27,311 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
 
   def GoTo_Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest( completer_target = 'filetype_default',
+                                      command_arguments = [ 'GoTo' ],
+                                      line_num = 9,
+                                      column_num = 15,
+                                      contents = contents,
+                                      filetype = 'cs',
+                                      filepath = filepath )
 
-    goto_data = self._BuildRequest( completer_target = 'filetype_default',
-                                    command_arguments = [ 'GoTo' ],
-                                    line_num = 9,
-                                    column_num = 15,
-                                    contents = contents,
-                                    filetype = 'cs',
-                                    filepath = filepath )
-
-    eq_( {
-      'filepath': self._PathToTestFile( 'testy', 'Program.cs' ),
-      'line_num': 7,
-      'column_num': 3
-    }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        'filepath': self._PathToTestFile( 'testy', 'Program.cs' ),
+        'line_num': 7,
+        'column_num': 3
+      }, self._app.post_json( '/run_completer_command', goto_data ).json )
 
 
   def GoToImplementation_Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest(
+        completer_target = 'filetype_default',
+        command_arguments = [ 'GoToImplementation' ],
+        line_num = 13,
+        column_num = 13,
+        contents = contents,
+        filetype = 'cs',
+        filepath = filepath
+      )
 
-    goto_data = self._BuildRequest(
-      completer_target = 'filetype_default',
-      command_arguments = [ 'GoToImplementation' ],
-      line_num = 13,
-      column_num = 13,
-      contents = contents,
-      filetype = 'cs',
-      filepath = filepath
-    )
-
-    eq_( {
-      'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 30,
-      'column_num': 3
-    }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+        'line_num': 30,
+        'column_num': 3
+      }, self._app.post_json( '/run_completer_command', goto_data ).json )
 
 
   def GoToImplementation_NoImplementation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest(
+        completer_target = 'filetype_default',
+        command_arguments = [ 'GoToImplementation' ],
+        line_num = 17,
+        column_num = 13,
+        contents = contents,
+        filetype = 'cs',
+        filepath = filepath
+      )
 
-    goto_data = self._BuildRequest(
-      completer_target = 'filetype_default',
-      command_arguments = [ 'GoToImplementation' ],
-      line_num = 17,
-      column_num = 13,
-      contents = contents,
-      filetype = 'cs',
-      filepath = filepath
-    )
-
-    try:
-      self._app.post_json( '/run_completer_command', goto_data ).json
-      raise Exception("Expected a 'No implementations found' error")
-    except AppError as e:
-      if 'No implementations found' in str(e):
-        pass
-      else:
-        raise
-    finally:
-      self._StopOmniSharpServer( filepath )
+      try:
+        self._app.post_json( '/run_completer_command', goto_data ).json
+        raise Exception("Expected a 'No implementations found' error")
+      except AppError as e:
+        if 'No implementations found' in str(e):
+          pass
+        else:
+          raise
 
 
   def CsCompleter_InvalidLocation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest(
+        completer_target = 'filetype_default',
+        command_arguments = [ 'GoToImplementation' ],
+        line_num = 2,
+        column_num = 1,
+        contents = contents,
+        filetype = 'cs',
+        filepath = filepath
+      )
 
-    goto_data = self._BuildRequest(
-      completer_target = 'filetype_default',
-      command_arguments = [ 'GoToImplementation' ],
-      line_num = 2,
-      column_num = 1,
-      contents = contents,
-      filetype = 'cs',
-      filepath = filepath
-    )
-
-    try:
-      self._app.post_json( '/run_completer_command', goto_data ).json
-      raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
-    except AppError as e:
-      if 'Can\\\'t jump to implementation' in str(e):
-        pass
-      else:
-        raise
-    finally:
-      self._StopOmniSharpServer( filepath )
+      try:
+        self._app.post_json( '/run_completer_command', goto_data ).json
+        raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
+      except AppError as e:
+        if 'Can\\\'t jump to implementation' in str(e):
+          pass
+        else:
+          raise
 
 
   def GoToImplementationElseDeclaration_NoImplementation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest(
+        completer_target = 'filetype_default',
+        command_arguments = [ 'GoToImplementationElseDeclaration' ],
+        line_num = 17,
+        column_num = 13,
+        contents = contents,
+        filetype = 'cs',
+        filepath = filepath
+      )
 
-    goto_data = self._BuildRequest(
-      completer_target = 'filetype_default',
-      command_arguments = [ 'GoToImplementationElseDeclaration' ],
-      line_num = 17,
-      column_num = 13,
-      contents = contents,
-      filetype = 'cs',
-      filepath = filepath
-    )
-
-    eq_( {
-      'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 35,
-      'column_num': 3
-    }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+        'line_num': 35,
+        'column_num': 3
+      }, self._app.post_json( '/run_completer_command', goto_data ).json )
 
 
   def GoToImplementationElseDeclaration_SingleImplementation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest(
+        completer_target = 'filetype_default',
+        command_arguments = [ 'GoToImplementationElseDeclaration' ],
+        line_num = 13,
+        column_num = 13,
+        contents = contents,
+        filetype = 'cs',
+        filepath = filepath
+      )
 
-    goto_data = self._BuildRequest(
-      completer_target = 'filetype_default',
-      command_arguments = [ 'GoToImplementationElseDeclaration' ],
-      line_num = 13,
-      column_num = 13,
-      contents = contents,
-      filetype = 'cs',
-      filepath = filepath
-    )
-
-    eq_( {
-      'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 30,
-      'column_num': 3
-    }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+        'line_num': 30,
+        'column_num': 3
+      }, self._app.post_json( '/run_completer_command', goto_data ).json )
 
 
   def GoToImplementationElseDeclaration_MultipleImplementations_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      goto_data = self._BuildRequest(
+        completer_target = 'filetype_default',
+        command_arguments = [ 'GoToImplementationElseDeclaration' ],
+        line_num = 21,
+        column_num = 13,
+        contents = contents,
+        filetype = 'cs',
+        filepath = filepath
+      )
 
-    goto_data = self._BuildRequest(
-      completer_target = 'filetype_default',
-      command_arguments = [ 'GoToImplementationElseDeclaration' ],
-      line_num = 21,
-      column_num = 13,
-      contents = contents,
-      filetype = 'cs',
-      filepath = filepath
-    )
-
-    eq_( [ {
-      'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 43,
-      'column_num': 3
-    }, {
-      'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 48,
-      'column_num': 3
-    } ], self._app.post_json( '/run_completer_command', goto_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( [ {
+        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+        'line_num': 43,
+        'column_num': 3
+      }, {
+        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+        'line_num': 48,
+        'column_num': 3
+      } ], self._app.post_json( '/run_completer_command', goto_data ).json )
 
 
   def GetType_EmptyMessage_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetType' ],
+                                        line_num = 1,
+                                        column_num = 1,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                       command_arguments = [ 'GetType' ],
-                                       line_num = 1,
-                                       column_num = 1,
-                                       contents = contents,
-                                       filetype = 'cs',
-                                       filepath = filepath )
-
-    eq_( {
-      u'message': u""
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        u'message': u""
+      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
 
 
   def GetType_VariableDeclaration_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetType' ],
+                                        line_num = 4,
+                                        column_num = 5,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                       command_arguments = [ 'GetType' ],
-                                       line_num = 4,
-                                       column_num = 5,
-                                       contents = contents,
-                                       filetype = 'cs',
-                                       filepath = filepath )
-
-    eq_( {
-      u'message': u"string"
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        u'message': u"string"
+      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
 
 
   def GetType_VariableUsage_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetType' ],
+                                        line_num = 5,
+                                        column_num = 5,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                       command_arguments = [ 'GetType' ],
-                                       line_num = 5,
-                                       column_num = 5,
-                                       contents = contents,
-                                       filetype = 'cs',
-                                       filepath = filepath )
-
-    eq_( {
-      u'message': u"string str"
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        u'message': u"string str"
+      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
 
 
   def GetType_Constant_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetType' ],
+                                        line_num = 4,
+                                        column_num = 14,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                       command_arguments = [ 'GetType' ],
-                                       line_num = 4,
-                                       column_num = 14,
-                                       contents = contents,
-                                       filetype = 'cs',
-                                       filepath = filepath )
-
-    eq_( {
-      u'message': u"System.String"
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        u'message': u"System.String"
+      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
 
 
   def GetType_DocsIgnored_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetType' ],
+                                        line_num = 9,
+                                        column_num = 34,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                       command_arguments = [ 'GetType' ],
-                                       line_num = 9,
-                                       column_num = 34,
-                                       contents = contents,
-                                       filetype = 'cs',
-                                       filepath = filepath )
-
-    eq_( {
-      u'message': u"int GetTypeTestCase.an_int_with_docs;",
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        u'message': u"int GetTypeTestCase.an_int_with_docs;",
+      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
 
 
   def GetDoc_Variable_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetDoc' ],
+                                        line_num = 13,
+                                        column_num = 28,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
-                                      command_arguments = [ 'GetDoc' ],
-                                      line_num = 13,
-                                      column_num = 28,
-                                      contents = contents,
-                                      filetype = 'cs',
-                                      filepath = filepath )
-
-    eq_( {
-      'detailed_info': 'int GetDocTestCase.an_int;\n'
-                       'an integer, or something',
-    }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( {
+        'detailed_info': 'int GetDocTestCase.an_int;\n'
+                        'an integer, or something',
+      }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
 
 
   def GetDoc_Function_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
+                                        command_arguments = [ 'GetDoc' ],
+                                        line_num = 33,
+                                        column_num = 27,
+                                        contents = contents,
+                                        filetype = 'cs',
+                                        filepath = filepath )
 
-    getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
-                                      command_arguments = [ 'GetDoc' ],
-                                      line_num = 33,
-                                      column_num = 27,
-                                      contents = contents,
-                                      filetype = 'cs',
-                                      filepath = filepath )
-
-    # It seems that Omnisharp server eats newlines
-    eq_( {
-      'detailed_info': 'int GetDocTestCase.DoATest();\n'
-                       ' Very important method. With multiple lines of '
-                       'commentary And Format- -ting',
-    }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      # It seems that Omnisharp server eats newlines
+      eq_( {
+        'detailed_info': 'int GetDocTestCase.DoATest();\n'
+                        ' Very important method. With multiple lines of '
+                        'commentary And Format- -ting',
+      }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
 
 
   def _RunFixIt( self, line, column, expected_result ):
     filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      fixit_data = self._BuildRequest( completer_target = 'filetype_default',
+                                      command_arguments = [ 'FixIt' ],
+                                      line_num = line,
+                                      column_num = column,
+                                      contents = contents,
+                                      filetype = 'cs',
+                                      filepath = filepath )
 
-    fixit_data = self._BuildRequest( completer_target = 'filetype_default',
-                                     command_arguments = [ 'FixIt' ],
-                                     line_num = line,
-                                     column_num = column,
-                                     contents = contents,
-                                     filetype = 'cs',
-                                     filepath = filepath )
-
-    eq_( expected_result,
-         self._app.post_json( '/run_completer_command', fixit_data ).json )
-
-    self._StopOmniSharpServer( filepath )
+      eq_( expected_result,
+          self._app.post_json( '/run_completer_command', fixit_data ).json )
 
 
   def FixIt_RemoveSingleLine_test( self ):

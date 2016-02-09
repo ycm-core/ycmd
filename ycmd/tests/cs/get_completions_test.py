@@ -28,27 +28,19 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
 
   def Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 10,
-                                          column_num = 12 )
-    response_data = self._app.post_json( '/completions', completion_data ).json
-    assert_that( response_data[ 'completions' ],
-                 has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
-                            self._CompletionEntryMatcher( 'CursorSize' ) ) )
-    eq_( 12, response_data[ 'completion_start_column' ] )
-
-    self._StopOmniSharpServer( filepath )
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 10,
+                                            column_num = 12 )
+      response_data = self._app.post_json( '/completions', completion_data ).json
+      assert_that( response_data[ 'completions' ],
+                  has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
+                              self._CompletionEntryMatcher( 'CursorSize' ) ) )
+      eq_( 12, response_data[ 'completion_start_column' ] )
 
 
   def MultipleSolution_test( self ):
@@ -59,241 +51,193 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                         'Program.cs' ) ]
     lines = [ 10, 9 ]
     for filepath, line in zip( filepaths, lines ):
+      with self._WrapOmniSharpServer( filepath ):
+        contents = open( filepath ).read()
+
+        completion_data = self._BuildRequest( filepath = filepath,
+                                              filetype = 'cs',
+                                              contents = contents,
+                                              line_num = line,
+                                              column_num = 12 )
+        response_data = self._app.post_json( '/completions',
+                                            completion_data ).json
+        assert_that( response_data[ 'completions' ],
+                    has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
+                                self._CompletionEntryMatcher( 'CursorSize' ) ) )
+        eq_( 12, response_data[ 'completion_start_column' ] )
+
+
+  def PathWithSpace_test( self ):
+    filepath = self._PathToTestFile( u'неприличное слово', 'Program.cs' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
+
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 9,
+                                            column_num = 12 )
+      response_data = self._app.post_json( '/completions', completion_data ).json
+      assert_that( response_data[ 'completions' ],
+                  has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
+                              self._CompletionEntryMatcher( 'CursorSize' ) ) )
+      eq_( 12, response_data[ 'completion_start_column' ] )
+
+
+  def HasBothImportsAndNonImport_test( self ):
+    filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
+
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 9,
+                                            column_num = 12,
+                                            force_semantic = True,
+                                            query = 'Date' )
+      response_data = self._app.post_json( '/completions', completion_data ).json
+
+      assert_that(
+        response_data[ 'completions' ],
+        has_items( self._CompletionEntryMatcher( 'DateTime' ),
+                  self._CompletionEntryMatcher( 'DateTimeStyles' ) )
+      )
+
+
+  def ImportsOrderedAfter_test( self ):
+    filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
+
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 9,
+                                            column_num = 12,
+                                            force_semantic = True,
+                                            query = 'Date' )
+      response_data = self._app.post_json( '/completions', completion_data ).json
+
+      min_import_index = min(
+        loc for loc, val
+        in enumerate( response_data[ 'completions' ] )
+        if val[ 'extra_data' ][ 'required_namespace_import' ]
+      )
+
+      max_nonimport_index = max(
+        loc for loc, val
+        in enumerate( response_data[ 'completions' ] )
+        if not val[ 'extra_data' ][ 'required_namespace_import' ]
+      )
+
+      assert_that( min_import_index, greater_than( max_nonimport_index ) ),
+
+
+  def ForcedReturnsResults_test( self ):
+    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
+
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 9,
+                                            column_num = 21,
+                                            force_semantic = True,
+                                            query = 'Date' )
+      response_data = self._app.post_json( '/completions', completion_data ).json
+
+      assert_that( response_data[ 'completions' ],
+                  has_items( self._CompletionEntryMatcher( 'String' ),
+                              self._CompletionEntryMatcher( 'StringBuilder' ) ) )
+
+
+  def NonForcedReturnsNoResults_test( self ):
+    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
+    with self._WrapOmniSharpServer( filepath ):
       contents = open( filepath ).read()
       event_data = self._BuildRequest( filepath = filepath,
                                        filetype = 'cs',
                                        contents = contents,
                                        event_name = 'FileReadyToParse' )
-
+  
       self._app.post_json( '/event_notification', event_data )
-      self._WaitUntilOmniSharpServerReady( filepath )
 
       completion_data = self._BuildRequest( filepath = filepath,
                                             filetype = 'cs',
                                             contents = contents,
-                                            line_num = line,
-                                            column_num = 12 )
-      response_data = self._app.post_json( '/completions',
-                                           completion_data ).json
-      assert_that( response_data[ 'completions' ],
-                   has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
-                              self._CompletionEntryMatcher( 'CursorSize' ) ) )
-      eq_( 12, response_data[ 'completion_start_column' ] )
+                                            line_num = 9,
+                                            column_num = 21,
+                                            force_semantic = False,
+                                            query = 'Date' )
+      results = self._app.post_json( '/completions', completion_data ).json
 
-      self._StopOmniSharpServer( filepath )
-
-
-  def PathWithSpace_test( self ):
-    filepath = self._PathToTestFile( u'неприличное слово', 'Program.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
-
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 12 )
-    response_data = self._app.post_json( '/completions', completion_data ).json
-    assert_that( response_data[ 'completions' ],
-                 has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
-                            self._CompletionEntryMatcher( 'CursorSize' ) ) )
-    eq_( 12, response_data[ 'completion_start_column' ] )
-
-    self._StopOmniSharpServer( filepath )
-
-
-  def HasBothImportsAndNonImport_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
-
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 12,
-                                          force_semantic = True,
-                                          query = 'Date' )
-    response_data = self._app.post_json( '/completions', completion_data ).json
-
-    assert_that(
-      response_data[ 'completions' ],
-      has_items( self._CompletionEntryMatcher( 'DateTime' ),
-                 self._CompletionEntryMatcher( 'DateTimeStyles' ) )
-    )
-
-    self._StopOmniSharpServer( filepath )
-
-
-  def ImportsOrderedAfter_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'ImportTest.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
-
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 12,
-                                          force_semantic = True,
-                                          query = 'Date' )
-    response_data = self._app.post_json( '/completions', completion_data ).json
-
-    min_import_index = min(
-      loc for loc, val
-      in enumerate( response_data[ 'completions' ] )
-      if val[ 'extra_data' ][ 'required_namespace_import' ]
-    )
-
-    max_nonimport_index = max(
-      loc for loc, val
-      in enumerate( response_data[ 'completions' ] )
-      if not val[ 'extra_data' ][ 'required_namespace_import' ]
-    )
-
-    assert_that( min_import_index, greater_than( max_nonimport_index ) ),
-    self._StopOmniSharpServer( filepath )
-
-
-  def ForcedReturnsResults_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
-
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 21,
-                                          force_semantic = True,
-                                          query = 'Date' )
-    response_data = self._app.post_json( '/completions', completion_data ).json
-
-    assert_that( response_data[ 'completions' ],
-                 has_items( self._CompletionEntryMatcher( 'String' ),
-                            self._CompletionEntryMatcher( 'StringBuilder' ) ) )
-    self._StopOmniSharpServer( filepath )
-
-
-  def NonForcedReturnsNoResults_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
-
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 21,
-                                          force_semantic = False,
-                                          query = 'Date' )
-    results = self._app.post_json( '/completions', completion_data ).json
-
-    # There are no semantic completions. However, we fall back to identifier
-    # completer in this case.
-    assert_that( results, has_entries( {
-      'completions': has_item( has_entries( {
-        'insertion_text' : 'String',
-        'kind': '[ID]',
-      } ) ),
-      'errors': empty(),
-    } ) )
-    self._StopOmniSharpServer( filepath )
+      # There are no semantic completions. However, we fall back to identifier
+      # completer in this case.
+      assert_that( results, has_entries( {
+        'completions': has_item( has_entries( {
+          'insertion_text' : 'String',
+          'kind': '[ID]',
+        } ) ),
+        'errors': empty(),
+      } ) )
 
 
   def ForcedDividesCache_test( self ):
     filepath = self._PathToTestFile( 'testy', 'ContinuousTest.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      contents = open( filepath ).read()
+      event_data = self._BuildRequest( filepath = filepath,
+                                       filetype = 'cs',
+                                       contents = contents,
+                                       event_name = 'FileReadyToParse' )
+  
+      self._app.post_json( '/event_notification', event_data )
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 9,
+                                            column_num = 21,
+                                            force_semantic = True,
+                                            query = 'Date' )
+      results = self._app.post_json( '/completions', completion_data ).json
 
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 21,
-                                          force_semantic = True,
-                                          query = 'Date' )
-    results = self._app.post_json( '/completions', completion_data ).json
+      assert_that( results[ 'completions' ], not( empty() ) )
+      assert_that( results[ 'errors' ], empty() )
 
-    assert_that( results[ 'completions' ], not( empty() ) )
-    assert_that( results[ 'errors' ], empty() )
+      completion_data = self._BuildRequest( filepath = filepath,
+                                            filetype = 'cs',
+                                            contents = contents,
+                                            line_num = 9,
+                                            column_num = 21,
+                                            force_semantic = False,
+                                            query = 'Date' )
+      results = self._app.post_json( '/completions', completion_data ).json
 
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'cs',
-                                          contents = contents,
-                                          line_num = 9,
-                                          column_num = 21,
-                                          force_semantic = False,
-                                          query = 'Date' )
-    results = self._app.post_json( '/completions', completion_data ).json
-
-    # There are no semantic completions. However, we fall back to identifier
-    # completer in this case.
-    assert_that( results, has_entries( {
-      'completions': has_item( has_entries( {
-        'insertion_text' : 'String',
-        'kind': '[ID]',
-      } ) ),
-      'errors': empty(),
-    } ) )
-    self._StopOmniSharpServer( filepath )
+      # There are no semantic completions. However, we fall back to identifier
+      # completer in this case.
+      assert_that( results, has_entries( {
+        'completions': has_item( has_entries( {
+          'insertion_text' : 'String',
+          'kind': '[ID]',
+        } ) ),
+        'errors': empty(),
+      } ) )
 
 
   def ReloadSolution_Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'Program.cs' )
-    contents = open( filepath ).read()
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'cs',
-                                     contents = contents,
-                                     event_name = 'FileReadyToParse' )
+    with self._WrapOmniSharpServer( filepath ):
+      result = self._app.post_json(
+        '/run_completer_command',
+        self._BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'ReloadSolution' ],
+                            filepath = filepath,
+                            filetype = 'cs' ) ).json
 
-    self._app.post_json( '/event_notification', event_data )
-    self._WaitUntilOmniSharpServerReady( filepath )
-    result = self._app.post_json(
-      '/run_completer_command',
-      self._BuildRequest( completer_target = 'filetype_default',
-                          command_arguments = [ 'ReloadSolution' ],
-                          filepath = filepath,
-                          filetype = 'cs' ) ).json
-
-    self._StopOmniSharpServer( filepath )
-    eq_( result, True )
+      eq_( result, True )
 
 
   def ReloadSolution_MultipleSolution_test( self ):
@@ -303,23 +247,15 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                         'testy',
                                         'Program.cs' ) ]
     for filepath in filepaths:
-      contents = open( filepath ).read()
-      event_data = self._BuildRequest( filepath = filepath,
-                                       filetype = 'cs',
-                                       contents = contents,
-                                       event_name = 'FileReadyToParse' )
+      with self._WrapOmniSharpServer( filepath ):
+        result = self._app.post_json(
+          '/run_completer_command',
+          self._BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ 'ReloadSolution' ],
+                              filepath = filepath,
+                              filetype = 'cs' ) ).json
 
-      self._app.post_json( '/event_notification', event_data )
-      self._WaitUntilOmniSharpServerReady( filepath )
-      result = self._app.post_json(
-        '/run_completer_command',
-        self._BuildRequest( completer_target = 'filetype_default',
-                            command_arguments = [ 'ReloadSolution' ],
-                            filepath = filepath,
-                            filetype = 'cs' ) ).json
-
-      self._StopOmniSharpServer( filepath )
-      eq_( result, True )
+        eq_( result, True )
 
 
   def _SolutionSelectCheck( self, sourcefile, reference_solution,

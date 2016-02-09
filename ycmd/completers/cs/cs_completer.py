@@ -182,7 +182,16 @@ class CsharpCompleter( Completer ):
       'ServerIsReady'                    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsReady',
-                                   no_request_data = True ) )
+                                   no_request_data = True ) ),
+      'SetOmnisharpPort'                 : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_SetOmnisharpPort',
+                                   port = args[ 0 ],
+                                   no_request_data = True ) ),
+      'GetOmnisharpPort'                 : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_GetOmnisharpPort',
+                                   no_request_data = True ) ),
     }
 
 
@@ -310,6 +319,7 @@ class CsharpSolutionCompleter:
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
     self._server_state_lock = threading.RLock()
+    self._external_omnisharp = False
 
 
   def CodeCheck( self, request_data ):
@@ -361,6 +371,7 @@ class CsharpSolutionCompleter:
         with open( self._filename_stdout, 'w' ) as fstdout:
           self._omnisharp_phandle = utils.SafePopen(
               command, stdout = fstdout, stderr = fstderr )
+          self._external_omnisharp = False
 
       self._solution_path = path_to_solutionfile
 
@@ -376,7 +387,7 @@ class CsharpSolutionCompleter:
       self._TryToStopServer()
 
       # Kill it if it's still up
-      if self.ServerIsRunning():
+      if self.ServerIsRunning() and not self.ServerIsExternal():
         self._logger.info( 'Killing OmniSharp server' )
         self._omnisharp_phandle.kill()
 
@@ -521,14 +532,27 @@ class CsharpSolutionCompleter:
     return parameters
 
 
-  def ServerIsRunning( self ):
+  def ServerIsExternal( self ):
+    return self._external_omnisharp
+
+
+  def ServerIsRunning( self, external_check = True ):
     """ Check if our OmniSharp server is running (process is up)."""
-    return utils.ProcessIsRunning( self._omnisharp_phandle )
+    if not self.ServerIsExternal():
+      return utils.ProcessIsRunning( self._omnisharp_phandle )
+
+    if self._omnisharp_port is None:
+      return False
+
+    if external_check:
+      return self.ServerIsHealthy()
+
+    return True
 
 
   def ServerIsHealthy( self ):
     """ Check if our OmniSharp server is healthy (up and serving)."""
-    if not self.ServerIsRunning():
+    if not self.ServerIsRunning( external_check = False ):
       return False
 
     try:
@@ -539,7 +563,7 @@ class CsharpSolutionCompleter:
 
   def ServerIsReady( self ):
     """ Check if our OmniSharp server is ready (loaded solution file)."""
-    if not self.ServerIsRunning():
+    if not self.ServerIsRunning( external_check = False ):
       return False
 
     try:
@@ -557,6 +581,19 @@ class CsharpSolutionCompleter:
     # We cannot use 127.0.0.1 like we do in other places because OmniSharp
     # server only listens on localhost.
     return 'http://localhost:' + str( self._omnisharp_port )
+
+
+  def _GetOmnisharpPort( self ):
+    return responses.BuildDisplayMessageResponse( self._omnisharp_port )
+
+
+  def _SetOmnisharpPort( self, port ):
+    with self._server_state_lock:
+      if self.ServerIsRunning():
+        self.StopServer()
+
+      self._omnisharp_port = port
+      self._external_omnisharp = True
 
 
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
