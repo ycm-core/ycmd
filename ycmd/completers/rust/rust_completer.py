@@ -24,7 +24,7 @@ from future.utils import native, iteritems
 from future import standard_library
 standard_library.install_aliases()
 
-from ycmd.utils import ToBytes, ProcessIsRunning
+from ycmd.utils import ToBytes, SetEnviron, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
@@ -261,7 +261,7 @@ class RustCompleter( Completer ):
 
       # Enable logging of crashes
       env = os.environ.copy()
-      env[ 'RUST_BACKTRACE' ] = '1'
+      SetEnviron( env, 'RUST_BACKTRACE', '1' )
 
       if self._rust_source_path:
         args.extend( [ '--rust-src-path', self._rust_source_path ] )

@@ -31,7 +31,7 @@ import socket
 import stat
 import subprocess
 
-from future.utils import PY2, iteritems, native
+from future.utils import PY2, native
 
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
@@ -270,14 +270,6 @@ def ForceSemanticCompletion( request_data ):
 
 # A wrapper for subprocess.Popen that fixes quirks on Windows.
 def SafePopen( args, **kwargs ):
-  def ToNativeStringDict( dict_obj ):
-    new_dict = dict()
-    for k, v in iteritems( dict_obj ):
-      if PY2:
-        new_dict[ native( ToBytes( k ) ) ] = native( ToBytes( v ) )
-      else:
-        new_dict[ ToUnicode( k ) ] = ToUnicode( v )
-    return new_dict
 
   if OnWindows():
     # We need this to start the server otherwise bad things happen.
@@ -293,13 +285,17 @@ def SafePopen( args, **kwargs ):
     # short ones to obtain paths with only ascii characters.
     args = ConvertArgsToShortPath( args )
 
-    if 'env' in kwargs:
-      # Popen requires that on Windows, the environment has only native strings
-      # on py2 and py3.
-      kwargs[ 'env' ] = ToNativeStringDict( kwargs[ 'env' ] )
-
   kwargs.pop( 'stdin_windows', None )
   return subprocess.Popen( args, **kwargs )
+
+
+# We need to convert environment variables to native strings on Windows and
+# Python 2 to prevent a TypeError when passing them to a subprocess.
+def SetEnviron( environ, variable, value ):
+  if OnWindows() and PY2:
+    environ[ native( ToBytes( variable ) ) ] = native( ToBytes( value ) )
+  else:
+    environ[ variable ] = value
 
 
 # Convert paths in arguments command to short path ones

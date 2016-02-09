@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-from __future__ import unicode_literals
+# Passing an environment variable containing unicode literals to a subprocess
+# on Windows and Python2 raises a TypeError. Since there is no unicode
+# string in this script, we don't import unicode_literals to avoid the issue.
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+
 import os
 import subprocess
 import os.path as p

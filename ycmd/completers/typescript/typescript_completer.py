@@ -104,7 +104,7 @@ class TypeScriptCompleter( Completer ):
     # source code it seems like this is the way:
     # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
     self._environ = os.environ.copy()
-    self._environ[ 'TSS_LOG' ] = tsserver_log
+    utils.SetEnviron( self._environ, 'TSS_LOG', tsserver_log )
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
