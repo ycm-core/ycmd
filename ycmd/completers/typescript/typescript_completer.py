@@ -219,6 +219,7 @@ class TypeScriptCompleter( Completer ):
     with self._writelock:
       self._tsserver_handle.stdin.write( json.dumps( request ) )
       self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.flush()
 
 
   def _SendRequest( self, command, arguments = None ):
@@ -235,6 +236,7 @@ class TypeScriptCompleter( Completer ):
     with self._writelock:
       self._tsserver_handle.stdin.write( json.dumps( request ) )
       self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.flush()
     return deferred.result()
 
 
