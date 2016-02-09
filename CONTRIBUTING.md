@@ -132,6 +132,10 @@ Here's what you should watch out for:
   which will convert `bytes` to a real `str` (again, only on py2). Heed this
   advice for your own sanity; behind it are 40 hours of debugging and an
   instance of tears-down-the-cheek crying at 2 am.
+- **Use the `ToBytes()` and `ToUnicode()` helper functions from
+  `ycmd/utils.py`.** They work around weirdness, complexity and bugs in
+  `python-future` and behave as you would expect. They're also extensively
+  covered with tests.
 - Use `from future.utils import iteritems`
   then `for key, value in iteritems( dict_obj )` to efficiently iterate dicts on
   py2 & py3

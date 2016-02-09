@@ -29,7 +29,7 @@ from urllib.parse import urlparse
 from base64 import b64decode, b64encode
 from bottle import request, response, abort
 from ycmd import hmac_utils
-from ycmd.utils import ToBytes, ToUnicodeIfNeeded
+from ycmd.utils import ToBytes, ToUnicode
 
 _HMAC_HEADER = 'x-ycm-hmac'
 _HOST_HEADER = 'host'
@@ -91,5 +91,5 @@ def RequestAuthenticated( method, path, body, hmac_secret ):
 
 
 def SetHmacHeader( body, hmac_secret ):
-  response.headers[ _HMAC_HEADER ] = ToUnicodeIfNeeded( b64encode(
+  response.headers[ _HMAC_HEADER ] = ToUnicode( b64encode(
       hmac_utils.CreateHmac( ToBytes( body ), ToBytes( hmac_secret ) ) ) )

@@ -29,7 +29,7 @@ import glob
 import logging
 from inspect import getfile
 from ycmd import extra_conf_store
-from ycmd.utils import ToUnicodeIfNeeded
+from ycmd.utils import ToUnicode
 
 
 __logger = logging.getLogger( __name__ )
@@ -58,7 +58,7 @@ def PollModule( module, filepath ):
     try:
       module_hint = module.CSharpSolutionFile( filepath )
       __logger.info( u'extra_conf_store suggests {0} as solution file'.format(
-        ToUnicodeIfNeeded( module_hint ) ) )
+        ToUnicode( module_hint ) ) )
       if module_hint:
         # received a full path or one relative to the config's location?
         candidates = [ module_hint,

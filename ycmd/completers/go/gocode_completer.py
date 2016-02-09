@@ -30,7 +30,7 @@ import subprocess
 
 from ycmd import responses
 from ycmd import utils
-from ycmd.utils import ToBytes, ToUnicodeIfNeeded
+from ycmd.utils import ToBytes, ToUnicode
 from ycmd.completers.completer import Completer
 
 GO_FILETYPES = set( [ 'go' ] )
@@ -99,7 +99,7 @@ class GoCodeCompleter( Completer ):
                                       contents = contents )
 
     try:
-      resultdata = json.loads( ToUnicodeIfNeeded( stdoutdata ) )
+      resultdata = json.loads( ToUnicode( stdoutdata ) )
     except ValueError:
       _logger.error( PARSE_ERROR_MESSAGE )
       raise RuntimeError( PARSE_ERROR_MESSAGE )
@@ -217,7 +217,7 @@ class GoCodeCompleter( Completer ):
 
 
   def _ConstructGoToFromResponse( self, response_str ):
-    parsed = json.loads( ToUnicodeIfNeeded( response_str ) )
+    parsed = json.loads( ToUnicode( response_str ) )
     if 'filename' in parsed and 'column' in parsed:
       return responses.BuildGoToResponse( parsed[ 'filename' ],
                                           int( parsed[ 'line' ] ),

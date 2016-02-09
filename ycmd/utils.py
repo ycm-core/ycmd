@@ -65,7 +65,9 @@ def ToUtf8IfNeeded( value ):
   return bytes( str( value ) )
 
 
-def ToUnicodeIfNeeded( value ):
+# Returns a unicode type; either the new python-future str type or the real
+# unicode type. The difference shouldn't matter.
+def ToUnicode( value ):
   if isinstance( value, str ):
     return value
   if isinstance( value, bytes ):
@@ -74,6 +76,8 @@ def ToUnicodeIfNeeded( value ):
   return str( value )
 
 
+# Consistently returns the new bytes() type from python-future. Assumes incoming
+# strings are either UTF-8 or unicode (which is converted to UTF-8).
 def ToBytes( value ):
   # This is tricky. On py2, the bytes type from builtins (from python-future) is
   # a subclass of str. So all of the following are true:
@@ -81,17 +85,32 @@ def ToBytes( value ):
   #   isinstance(bytes(), str)
   # But they don't behave the same in one important aspect: iterating over a
   # bytes instance yields ints, while iterating over a (raw, py2) str yields
-  # chars.
+  # chars. We want consistent behavior so we force the use of bytes().
   if type( value ) == bytes:
     return value
 
   # This is meant to catch Python 2's str type and the str on Python 3, which is
   # unicode.
-  if isinstance( value, bytes ) or isinstance( value, str ):
-    return bytes( value, encoding = 'utf-8' )
+  if isinstance( value, bytes ):
+    return bytes( value, encoding = 'utf8' )
+
+  if isinstance( value, str ):
+    # On py2, with `from builtins import *` imported, the following is true:
+    #
+    #   bytes(str(u'abc'), 'utf8') == b"b'abc'"
+    #
+    # Obviously this is a bug in python-future. So we work around it. Also filed
+    # upstream at: https://github.com/PythonCharmers/python-future/issues/193
+    # We can't just return value.encode( 'utf8' ) on both py2 & py3 because on
+    # py2 that returns the built-in str type instead of the newbytes type from
+    # python-future.
+    if PY2:
+      return bytes( value.encode( 'utf8' ), encoding = 'utf8' )
+    else:
+      return bytes( value, encoding = 'utf8' )
 
   # This is meant to catch `int` and similar non-string/bytes types.
-  return bytes( str( value ), encoding = 'utf-8' )
+  return ToBytes( str( value ) )
 
 
 def PathToTempDir():
