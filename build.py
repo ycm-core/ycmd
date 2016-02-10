@@ -283,7 +283,10 @@ def RunYcmdTests( build_dir ):
   new_env = os.environ.copy()
 
   if OnWindows():
-    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT
+    # We prepend the folder of the ycm_core_tests executable to the PATH
+    # instead of overwriting it so that the executable is able to find the
+    # python35.dll library.
+    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT + ';' + new_env[ 'PATH' ]
   else:
     new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
 
