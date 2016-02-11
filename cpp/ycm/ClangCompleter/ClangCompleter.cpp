@@ -128,6 +128,25 @@ ClangCompleter::CandidatesForLocationInFile(
 }
 
 
+bool ClangCompleter::IsLocationOnDefinition(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse ) {
+  ReleaseGil unlock;
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
+
+  if ( !unit ) {
+    return false;
+  }
+
+  return unit->IsLocationOnDefinition( line, column, unsaved_files, reparse );
+}
+
+
 Location ClangCompleter::GetDeclarationLocation(
   const std::string &filename,
   int line,
@@ -162,7 +181,12 @@ Location ClangCompleter::GetDefinitionLocation(
     return Location();
   }
 
-  return unit->GetDefinitionLocation( line, column, unsaved_files, reparse );
+  Location loc = unit->GetDefinitionLocation( line, column, unsaved_files, reparse );
+  if ( loc.IsValid() )
+      return loc;
+
+  std::string usr = unit->GetDefinitionUSR( line, column );
+  return translation_unit_store_.LocationForUsr(usr);
 }
 
 std::string ClangCompleter::GetTypeAtLocation(

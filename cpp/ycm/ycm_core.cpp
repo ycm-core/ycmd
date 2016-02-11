@@ -92,6 +92,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( vector_indexing_suite< std::vector< UnsavedFile > >() );
 
   class_< ClangCompleter, boost::noncopyable >( "ClangCompleter" )
+    .def( "IsLocationOnDefinition", &ClangCompleter::IsLocationOnDefinition )
     .def( "GetDeclarationLocation", &ClangCompleter::GetDeclarationLocation )
     .def( "GetDefinitionLocation", &ClangCompleter::GetDefinitionLocation )
     .def( "DeleteCachesForFile", &ClangCompleter::DeleteCachesForFile )
