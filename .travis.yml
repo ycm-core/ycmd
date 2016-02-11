@@ -36,8 +36,6 @@ matrix:
       env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - os: osx
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
-    - os: osx
-      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
     - os: linux
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
 addons:
