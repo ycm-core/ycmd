@@ -200,6 +200,27 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
   return candidates;
 }
 
+bool TranslationUnit::IsLocationOnDefinition(
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  bool reparse ) {
+  if ( reparse )
+    Reparse( unsaved_files );
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+
+  if ( !clang_translation_unit_ )
+    return false;
+
+  CXCursor cursor = GetCursor( line, column );
+
+  if ( !CursorIsValid( cursor ) )
+    return false;
+
+  return clang_isCursorDefinition( cursor );
+}
+
 Location TranslationUnit::GetDeclarationLocation(
   int line,
   int column,
