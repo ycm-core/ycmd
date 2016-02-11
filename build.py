@@ -156,9 +156,9 @@ def CustomPythonCmakeArgs():
     #
     # The most likely explanation for this is that both the ycm_core.so and the
     # python binary include copies of libpython.a (or whatever included
-    # objects). When python executable starts it initiliases only the globals
+    # objects). When python executable starts it initializes only the globals
     # within its copy, so when ycm_core.so's copy starts executing, it points at
-    # its own copy which is uninitialised.
+    # its own copy which is uninitialized.
     #
     # Some platforms' dynamic linkers (ld.so) are able to resolve this when
     # loading shared libraries at runtime[citation needed], but OSX seemingly
