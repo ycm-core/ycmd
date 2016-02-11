@@ -4,9 +4,20 @@
 # it twice to workaround. https://github.com/Homebrew/homebrew/issues/42553
 brew update || brew update
 
-# install node, go, ninja, pyenv and dependencies
-for pkg in node.js go ninja readline autoconf pkg-config openssl pyenv; do
-  # install package, or upgrade it if it is already installed
+# List of homebrew formulae to install in the order they appear"
+REQUIREMENTS="node.js
+              go
+              ninja
+              readline
+              autoconf
+              pkg-config
+              openssl
+              pyenv"
+
+
+# Install node, go, ninja, pyenv and dependencies
+for pkg in $REQUIREMENTS; do
+  # Install package, or upgrade it if it is already installed
   brew install $pkg || brew outdated $pkg || brew upgrade $pkg
 done
 
