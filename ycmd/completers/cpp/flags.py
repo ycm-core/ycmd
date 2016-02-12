@@ -32,7 +32,8 @@ from ycmd.utils import ToCppStringCompatible, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
-                  '-gcc-toolchain', '-include', '-iframework', '-F', '-imacros' ]
+                  '-gcc-toolchain', '-include', '-include-pch', '-iframework',
+                  '-F', '-imacros' ]
 
 # We need to remove --fcolor-diagnostics because it will cause shell escape
 # sequences to show up in editors, which is bad. See Valloric/YouCompleteMe#1421
