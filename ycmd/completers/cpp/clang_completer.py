@@ -31,7 +31,7 @@ import os.path
 import textwrap
 from ycmd import responses
 from ycmd import extra_conf_store
-from ycmd.utils import ToUtf8IfNeeded
+from ycmd.utils import ToCppStringCompatible
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetIncludeStatementValue
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
@@ -75,10 +75,10 @@ class ClangCompleter( Completer ):
         continue
 
       unsaved_file = ycm_core.UnsavedFile()
-      utf8_contents = ToUtf8IfNeeded( contents )
+      utf8_contents = ToCppStringCompatible( contents )
       unsaved_file.contents_ = utf8_contents
       unsaved_file.length_ = len( utf8_contents )
-      unsaved_file.filename_ = ToUtf8IfNeeded( filename )
+      unsaved_file.filename_ = ToCppStringCompatible( filename )
 
       files.append( unsaved_file )
     return files
@@ -89,7 +89,8 @@ class ClangCompleter( Completer ):
     if not filename:
       return
 
-    if self._completer.UpdatingTranslationUnit( ToUtf8IfNeeded( filename ) ):
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
       raise RuntimeError( PARSING_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
@@ -101,7 +102,7 @@ class ClangCompleter( Completer ):
     column = request_data[ 'start_column' ]
     with self._files_being_compiled.GetExclusive( filename ):
       results = self._completer.CandidatesForLocationInFile(
-          ToUtf8IfNeeded( filename ),
+          ToCppStringCompatible( filename ),
           line,
           column,
           files,
@@ -160,7 +161,7 @@ class ClangCompleter( Completer ):
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
     return getattr( self._completer, goto_function )(
-        ToUtf8IfNeeded( filename ),
+        ToCppStringCompatible( filename ),
         line,
         column,
         files,
@@ -249,11 +250,12 @@ class ClangCompleter( Completer ):
     return include_response
 
 
-  def _GetSemanticInfo( self,
-                        request_data,
-                        func,
-                        response_builder = responses.BuildDisplayMessageResponse,
-                        reparse = True ):
+  def _GetSemanticInfo(
+      self,
+      request_data,
+      func,
+      response_builder = responses.BuildDisplayMessageResponse,
+      reparse = True ):
     filename = request_data[ 'filepath' ]
     if not filename:
       raise ValueError( INVALID_FILE_MESSAGE )
@@ -267,7 +269,7 @@ class ClangCompleter( Completer ):
     column = request_data[ 'column_num' ]
 
     message = getattr( self._completer, func )(
-        ToUtf8IfNeeded( filename ),
+        ToCppStringCompatible( filename ),
         line,
         column,
         files,
@@ -296,7 +298,7 @@ class ClangCompleter( Completer ):
     column = request_data[ 'column_num' ]
 
     fixits = getattr( self._completer, "GetFixItsForLocationInFile" )(
-        ToUtf8IfNeeded( filename ),
+        ToCppStringCompatible( filename ),
         line,
         column,
         files,
@@ -319,7 +321,7 @@ class ClangCompleter( Completer ):
 
     with self._files_being_compiled.GetExclusive( filename ):
       diagnostics = self._completer.UpdateTranslationUnit(
-        ToUtf8IfNeeded( filename ),
+        ToCppStringCompatible( filename ),
         self.GetUnsavedFilesVector( request_data ),
         flags )
 
@@ -331,7 +333,7 @@ class ClangCompleter( Completer ):
 
   def OnBufferUnload( self, request_data ):
     self._completer.DeleteCachesForFile(
-        ToUtf8IfNeeded( request_data[ 'unloaded_buffer' ] ) )
+        ToCppStringCompatible( request_data[ 'unloaded_buffer' ] ) )
 
 
   def GetDetailedDiagnostic( self, request_data ):
@@ -386,7 +388,8 @@ def ConvertCompletionData( completion_data ):
     extra_menu_info = completion_data.ExtraMenuInfo(),
     kind = completion_data.kind_.name,
     detailed_info = completion_data.DetailedInfoForPreviewWindow(),
-    extra_data = { 'doc_string': completion_data.DocString() } if completion_data.DocString() else None )
+    extra_data = ( { 'doc_string': completion_data.DocString() }
+                   if completion_data.DocString() else None ) )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):

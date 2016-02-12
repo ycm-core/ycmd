@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.utils import ToUnicode, ToUtf8IfNeeded
+from ycmd.utils import ToUnicode, ToBytes
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
 
@@ -103,7 +103,7 @@ def CompletionStartColumn( line_value, column_num, filetype ):
   # NOTE: column_num and other numbers on the wire are byte indices, but we need
   # to walk codepoints for identifier checks.
 
-  utf8_line_value = ToUtf8IfNeeded( line_value )
+  utf8_line_value = ToBytes( line_value )
   unicode_line_value = ToUnicode( line_value )
   codepoint_column_num = len(
       str( utf8_line_value[ : column_num -1 ], 'utf8' ) ) + 1

@@ -24,7 +24,7 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 from future.utils import iteritems
 
-from ycmd.utils import ToUtf8IfNeeded, RunningInsideVim
+from ycmd.utils import ToCppStringCompatible, RunningInsideVim
 
 if RunningInsideVim():
   from ycm_client_support import FilterAndSortCandidates
@@ -158,8 +158,8 @@ def FiletypeCompleterExistsForFiletype( filetype ):
 
 def FilterAndSortCandidatesShim( candidates, sort_property, query ):
   return FilterAndSortCandidates( candidates,
-                                  ToUtf8IfNeeded( sort_property ),
-                                  ToUtf8IfNeeded( query ) )
+                                  ToCppStringCompatible( sort_property ),
+                                  ToCppStringCompatible( query ) )
 
 TRIGGER_REGEX_PREFIX = 're!'
 

@@ -52,12 +52,10 @@ def ReadFile( filepath ):
     return f.read()
 
 
-# Given an object, returns a str object that's utf-8 encoded.
-def ToUtf8IfNeeded( value ):
-  # NOTE: the C++ interop layer specifically wants py2 'str' objects and
-  # probably 'bytes' on py3. You likely want to wrap what this returns with
-  # future.utils's native() if talking to C++.
-
+# Given an object, returns a str object that's utf-8 encoded. This is meant to
+# be used exclusively when producing strings to be passed to the C++ Python
+# plugins. For other code, you likely want to use ToBytes below.
+def ToCppStringCompatible( value ):
   if isinstance( value, str ):
     return value.encode( 'utf8' )
   if isinstance( value, bytes ):
@@ -89,8 +87,7 @@ def ToBytes( value ):
   if type( value ) == bytes:
     return value
 
-  # This is meant to catch Python 2's str type and the str on Python 3, which is
-  # unicode.
+  # This is meant to catch Python 2's native str type.
   if isinstance( value, bytes ):
     return bytes( value, encoding = 'utf8' )
 

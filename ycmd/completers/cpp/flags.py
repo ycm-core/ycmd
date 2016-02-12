@@ -28,7 +28,7 @@ import os
 import inspect
 import re
 from ycmd import extra_conf_store
-from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
+from ycmd.utils import ToCppStringCompatible, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
@@ -206,7 +206,7 @@ def _SanitizeFlags( flags ):
 
   vector = ycm_core.StringVector()
   for flag in sanitized_flags:
-    vector.append( ToUtf8IfNeeded( flag ) )
+    vector.append( ToCppStringCompatible( flag ) )
   return vector
 
 

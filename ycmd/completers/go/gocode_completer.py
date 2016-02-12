@@ -87,7 +87,7 @@ class GoCodeCompleter( Completer ):
     if not filename:
       return
 
-    contents = utils.ToUtf8IfNeeded(
+    contents = utils.ToBytes(
         request_data[ 'file_data' ][ filename ][ 'contents' ] )
     offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                              request_data[ 'column_num' ] )
@@ -200,7 +200,7 @@ class GoCodeCompleter( Completer ):
       _logger.info( "godef GoTo request %s" % filename )
       if not filename:
         return
-      contents = utils.ToUtf8IfNeeded(
+      contents = utils.ToBytes(
           request_data[ 'file_data' ][ filename ][ 'contents' ] )
       offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                                request_data[ 'column_num' ] )
