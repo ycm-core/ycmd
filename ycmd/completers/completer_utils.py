@@ -143,7 +143,7 @@ def FiletypeCompleterExistsForFiletype( filetype ):
 TRIGGER_REGEX_PREFIX = 're!'
 
 DEFAULT_FILETYPE_TRIGGERS = {
-  'c' : ['->', '.'],
+  'c' : ['->', '.', r're![_a-zA-Z][_a-zA-Z0-9]*'],
   'objc' : ['->',
             '.',
             r're!\[[_a-zA-Z]+\w*\s',    # bracketed calls
