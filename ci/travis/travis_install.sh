@@ -11,6 +11,34 @@ set -ev
 #  - setup the correct python for $YCMD_PYTHON_VERSION
 source ci/travis/travis_install.${TRAVIS_OS_NAME}.sh
 
+#############
+# pyenv setup
+#############
+
+# DON'T exit if error
+set +e
+git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+git fetch --tags
+git checkout v20160202
+# Exit if error
+set -e
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
+eval "$(pyenv init -)"
+
+if [ "${YCMD_PYTHON_VERSION}" == "2.6" ]; then
+  PYENV_VERSION="2.6.6"
+elif [ "${YCMD_PYTHON_VERSION}" == "2.7" ]; then
+  PYENV_VERSION="2.7.6"
+else
+  PYENV_VERSION="3.3.0"
+fi
+
+pyenv install --skip-existing ${PYENV_VERSION}
+pyenv rehash
+pyenv global ${PYENV_VERSION}
 
 # It is quite easy to get the above series of steps wrong. Verify that the
 # version of python actually in the path and used is the version that was
