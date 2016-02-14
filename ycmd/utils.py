@@ -22,6 +22,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
+from future.utils import PY2, native
 
 import tempfile
 import os
@@ -30,8 +31,6 @@ import signal
 import socket
 import stat
 import subprocess
-
-from future.utils import PY2, native
 
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
@@ -283,7 +282,8 @@ def SafePopen( args, **kwargs ):
     # http://bugs.python.org/issue1759845.
     # Since paths are likely to contains such characters, we convert them to
     # short ones to obtain paths with only ascii characters.
-    args = ConvertArgsToShortPath( args )
+    if PY2:
+      args = ConvertArgsToShortPath( args )
 
   kwargs.pop( 'stdin_windows', None )
   return subprocess.Popen( args, **kwargs )
@@ -313,7 +313,6 @@ def ConvertArgsToShortPath( args ):
 # Get the Windows short path name.
 # Based on http://stackoverflow.com/a/23598461/200291
 def GetShortPathName( path ):
-  path = native( ToBytes( path ) )
   from ctypes import windll, wintypes, create_unicode_buffer
 
   # Set the GetShortPathNameW prototype
