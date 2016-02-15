@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-from __future__ import unicode_literals
+# Passing an environment variable containing unicode literals to a subprocess
+# on Windows and Python2 raises a TypeError. Since there is no unicode
+# string in this script, we don't import unicode_literals to avoid the issue.
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+
 import os
 import subprocess
 import os.path as p
@@ -281,7 +284,10 @@ def RunYcmdTests( build_dir ):
   new_env = os.environ.copy()
 
   if OnWindows():
-    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT
+    # We prepend the folder of the ycm_core_tests executable to the PATH
+    # instead of overwriting it so that the executable is able to find the
+    # python35.dll library.
+    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT + ';' + new_env[ 'PATH' ]
   else:
     new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
 

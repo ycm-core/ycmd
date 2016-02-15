@@ -163,9 +163,11 @@ def FixupCompleters( parsed_args ):
 
 def BuildYcmdLibs( args ):
   if not args.skip_build:
-    extra_cmake_args = [ '-DUSE_DEV_FLAGS=ON' ]
+    if 'EXTRA_CMAKE_ARGS' in os.environ:
+      os.environ[ 'EXTRA_CMAKE_ARGS' ] += ' -DUSE_DEV_FLAGS=ON'
+    else:
+      os.environ[ 'EXTRA_CMAKE_ARGS' ] = '-DUSE_DEV_FLAGS=ON'
 
-    os.environ[ 'EXTRA_CMAKE_ARGS' ] = ' '.join(extra_cmake_args)
     os.environ[ 'YCM_TESTRUN' ] = '1'
 
     build_cmd = [

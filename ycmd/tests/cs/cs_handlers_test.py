@@ -22,9 +22,10 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
+from future.utils import PY2
 
 from ..handlers_test import Handlers_test
-from ycmd.utils import OnTravis
+from ycmd.utils import OnTravis, OnWindows
 import time
 from contextlib import contextmanager
 
@@ -33,7 +34,10 @@ from contextlib import contextmanager
 # Omnisharp instances between individual test cases. Non caching (false) is
 # much faster, but test cases are not totally isolated from each other.
 # For test case isolation, set to true.
-INSTANCE_PER_TEST = False
+# Reusing Omnisharp instances this way on Windows and Python 3 will randomly
+# raise the error "OSError: [WinError 6] The handle is invalid" in tests so
+# we set it to true in this case.
+INSTANCE_PER_TEST = True if OnWindows() and not PY2 else False
 
 
 class Cs_Handlers_test( Handlers_test ):
