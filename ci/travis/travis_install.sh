@@ -8,7 +8,7 @@ set -ev
 
 # Requirements of OS-specific install:
 #  - install any software which is not installed by Travis configuration
-#  - setup the correct python for $YCMD_PYTHON_VERSION
+#  - set up everything necessary so that pyenv can build python
 source ci/travis/travis_install.${TRAVIS_OS_NAME}.sh
 
 #############

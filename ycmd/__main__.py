@@ -43,7 +43,7 @@ from ycmd import extra_conf_store
 from ycmd import utils
 from ycmd.watchdog_plugin import WatchdogPlugin
 from ycmd.hmac_plugin import HmacPlugin
-from ycmd.utils import ToBytes
+from ycmd.utils import ToBytes, ReadFile
 
 def YcmCoreSanityCheck():
   if 'ycm_core' in sys.modules:
@@ -123,7 +123,7 @@ def SetupLogging( log_level ):
 
 def SetupOptions( options_file ):
   options = user_options_store.DefaultOptions()
-  user_options = json.load( open( options_file, 'r' ) )
+  user_options = json.loads( ReadFile( options_file ) )
   options.update( user_options )
   utils.RemoveIfExists( options_file )
   hmac_secret = ToBytes( base64.b64decode( options[ 'hmac_secret' ] ) )

@@ -149,16 +149,17 @@ def CustomPythonCmakeArgs():
       python_prefix, which_python ) )
 
     # On MacOS, ycmd does not work with statically linked python library.
-    # It typically manifests with the following error
-    # when there is a self-compiled python without --enable-framework (or,
-    # technically --enable-shared):
+    # It typically manifests with the following error when there is a
+    # self-compiled python without --enable-framework (or, technically
+    # --enable-shared):
+    #
     #   Fatal Python error: PyThreadState_Get: no current thread
     #
     # The most likely explanation for this is that both the ycm_core.so and the
     # python binary include copies of libpython.a (or whatever included
-    # objects). When python executable starts it initializes only the globals
-    # within its copy, so when ycm_core.so's copy starts executing, it points at
-    # its own copy which is uninitialized.
+    # objects). When the python interpreter starts it initializes only the
+    # globals within its copy, so when ycm_core.so's copy starts executing, it
+    # points at its own copy which is uninitialized.
     #
     # Some platforms' dynamic linkers (ld.so) are able to resolve this when
     # loading shared libraries at runtime[citation needed], but OSX seemingly
@@ -167,7 +168,7 @@ def CustomPythonCmakeArgs():
     # So we do 2 things special on OS X:
     #  - look for a .dylib first
     #  - if we find a .a, raise an error.
-    #
+
     if p.isfile( '{0}.dylib'.format( lib_python ) ):
       python_library = '{0}.dylib'.format( lib_python )
     elif p.isfile( '/usr/lib/lib{0}.dylib'.format( which_python ) ):
