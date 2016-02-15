@@ -21,7 +21,6 @@ from __future__ import print_function
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import next
 from builtins import *  # noqa
 
 from .python_handlers_test import Python_Handlers_test
