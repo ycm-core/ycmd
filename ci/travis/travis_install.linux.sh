@@ -17,4 +17,3 @@ ln -s /usr/bin/clang-3.7 ${HOME}/bin/gcc
 
 export PATH=${HOME}/bin:${PATH}
 
-virtualenv -p python${YCMD_PYTHON_VERSION} ${YCMD_VENV_DIR}

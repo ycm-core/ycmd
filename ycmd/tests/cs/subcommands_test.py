@@ -15,10 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from webtest import TestApp, AppError
 from nose.tools import eq_, ok_
 from ... import handlers
 from .cs_handlers_test import Cs_Handlers_test
+from ycmd.utils import ReadFile
 import re
 import os.path
 
@@ -28,7 +37,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GoTo_Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest( completer_target = 'filetype_default',
                                       command_arguments = [ 'GoTo' ],
@@ -48,7 +57,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GoToImplementation_Basic_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest(
         completer_target = 'filetype_default',
@@ -70,7 +79,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GoToImplementation_NoImplementation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest(
         completer_target = 'filetype_default',
@@ -95,7 +104,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def CsCompleter_InvalidLocation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest(
         completer_target = 'filetype_default',
@@ -120,7 +129,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GoToImplementationElseDeclaration_NoImplementation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest(
         completer_target = 'filetype_default',
@@ -142,7 +151,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GoToImplementationElseDeclaration_SingleImplementation_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest(
         completer_target = 'filetype_default',
@@ -164,7 +173,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GoToImplementationElseDeclaration_MultipleImplementations_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       goto_data = self._BuildRequest(
         completer_target = 'filetype_default',
@@ -190,7 +199,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetType_EmptyMessage_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       gettype_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetType' ],
@@ -208,7 +217,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetType_VariableDeclaration_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       gettype_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetType' ],
@@ -226,7 +235,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetType_VariableUsage_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       gettype_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetType' ],
@@ -244,7 +253,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetType_Constant_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       gettype_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetType' ],
@@ -262,7 +271,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetType_DocsIgnored_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       gettype_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetType' ],
@@ -280,7 +289,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetDoc_Variable_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetDocTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetDoc' ],
@@ -299,7 +308,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def GetDoc_Function_test( self ):
     filepath = self._PathToTestFile( 'testy', 'GetDocTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
                                         command_arguments = [ 'GetDoc' ],
@@ -320,7 +329,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
   def _RunFixIt( self, line, column, expected_result ):
     filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
     with self._WrapOmniSharpServer( filepath ):
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
 
       fixit_data = self._BuildRequest( completer_target = 'filetype_default',
                                       command_arguments = [ 'FixIt' ],
@@ -512,7 +521,7 @@ class Cs_Subcommands_test( Cs_Handlers_test ):
         '/ignore_extra_conf_file',
         { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
       filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-      contents = open( filepath ).read()
+      contents = ReadFile( filepath )
       event_data = self._BuildRequest( filepath = filepath,
                                       filetype = 'cs',
                                       contents = contents,

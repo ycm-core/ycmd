@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import os
 import logging
 import ycm_core
@@ -22,7 +30,7 @@ from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import identifier_utils
 from ycmd import utils
-from ycmd.utils import ToUtf8IfNeeded
+from ycmd.utils import ToCppStringCompatible
 from ycmd import responses
 
 SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
@@ -46,8 +54,8 @@ class IdentifierCompleter( GeneralCompleter ):
       return []
 
     completions = self._completer.CandidatesForQueryAndType(
-      ToUtf8IfNeeded( utils.SanitizeQuery( request_data[ 'query' ] ) ),
-      ToUtf8IfNeeded( request_data[ 'filetypes' ][ 0 ] ) )
+      ToCppStringCompatible( utils.SanitizeQuery( request_data[ 'query' ] ) ),
+      ToCppStringCompatible( request_data[ 'filetypes' ][ 0 ] ) )
 
     completions = completions[ : self._max_candidates ]
     completions = _RemoveSmallCandidates(
@@ -72,11 +80,12 @@ class IdentifierCompleter( GeneralCompleter ):
       return
 
     vector = ycm_core.StringVector()
-    vector.append( ToUtf8IfNeeded( identifier ) )
+    vector.append( ToCppStringCompatible( identifier ) )
     self._logger.info( 'Adding ONE buffer identifier for file: %s', filepath )
-    self._completer.AddIdentifiersToDatabase( vector,
-                                              ToUtf8IfNeeded( filetype ),
-                                              ToUtf8IfNeeded( filepath ) )
+    self._completer.AddIdentifiersToDatabase(
+      vector,
+      ToCppStringCompatible( filetype ),
+      ToCppStringCompatible( filepath ) )
 
 
   def AddPreviousIdentifier( self, request_data ):
@@ -113,8 +122,8 @@ class IdentifierCompleter( GeneralCompleter ):
         _IdentifiersFromBuffer( text,
                                 filetype,
                                 collect_from_comments_and_strings ),
-        ToUtf8IfNeeded( filetype ),
-        ToUtf8IfNeeded( filepath ) )
+        ToCppStringCompatible( filetype ),
+        ToCppStringCompatible( filepath ) )
 
 
   def AddIdentifiersFromTagFiles( self, tag_files ):
@@ -132,7 +141,7 @@ class IdentifierCompleter( GeneralCompleter ):
         continue
 
       self._tags_file_last_mtime[ tag_file ] = current_mtime
-      absolute_paths_to_tag_files.append( ToUtf8IfNeeded( tag_file ) )
+      absolute_paths_to_tag_files.append( ToCppStringCompatible( tag_file ) )
 
     if not absolute_paths_to_tag_files:
       return
@@ -144,12 +153,13 @@ class IdentifierCompleter( GeneralCompleter ):
   def AddIdentifiersFromSyntax( self, keyword_list, filetypes ):
     keyword_vector = ycm_core.StringVector()
     for keyword in keyword_list:
-      keyword_vector.append( ToUtf8IfNeeded( keyword ) )
+      keyword_vector.append( ToCppStringCompatible( keyword ) )
 
     filepath = SYNTAX_FILENAME + filetypes[ 0 ]
-    self._completer.AddIdentifiersToDatabase( keyword_vector,
-                                              ToUtf8IfNeeded( filetypes[ 0 ] ),
-                                              ToUtf8IfNeeded( filepath ) )
+    self._completer.AddIdentifiersToDatabase(
+      keyword_vector,
+      ToCppStringCompatible( filetypes[ 0 ] ),
+      ToCppStringCompatible( filepath ) )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -229,5 +239,5 @@ def _IdentifiersFromBuffer( text,
   idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
   vector = ycm_core.StringVector()
   for ident in idents:
-    vector.append( ToUtf8IfNeeded( ident ) )
+    vector.append( ToCppStringCompatible( ident ) )
   return vector

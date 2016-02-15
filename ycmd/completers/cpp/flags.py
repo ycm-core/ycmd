@@ -15,12 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import ycm_core
 import os
 import inspect
 import re
 from ycmd import extra_conf_store
-from ycmd.utils import ToUtf8IfNeeded, OnMac, OnWindows
+from ycmd.utils import ToCppStringCompatible, OnMac, OnWindows
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
@@ -112,21 +120,23 @@ class Flags( object ):
       path_flags = [ '-isystem', '-I' ]
 
       try:
-        it = iter(flags)
+        it = iter( flags )
         for flag in it:
           flag_len = len( flag )
           if flag.startswith( quote_flag ):
             quote_flag_len = len( quote_flag )
             # Add next flag to the include paths if current flag equals to
             # '-iquote', or add remaining string otherwise.
-            quoted_include_paths.append( it.next() if flag_len == quote_flag_len
-                                                 else flag[ quote_flag_len: ] )
+            quoted_include_paths.append( next( it )
+                                         if flag_len == quote_flag_len
+                                         else flag[ quote_flag_len: ] )
           else:
             for path_flag in path_flags:
               if flag.startswith( path_flag ):
                 path_flag_len = len( path_flag )
-                include_paths.append( it.next() if flag_len == path_flag_len
-                                              else flag[ path_flag_len: ] )
+                include_paths.append( next( it )
+                                      if flag_len == path_flag_len
+                                      else flag[ path_flag_len: ] )
                 break
       except StopIteration:
         pass
@@ -140,7 +150,6 @@ class Flags( object ):
 
 
 def _CallExtraConfFlagsForFile( module, filename, client_data ):
-  filename = ToUtf8IfNeeded( filename )
   # For the sake of backwards compatibility, we need to first check whether the
   # FlagsForFile function in the extra conf module even allows keyword args.
   if inspect.getargspec( module.FlagsForFile ).keywords:
@@ -197,7 +206,7 @@ def _SanitizeFlags( flags ):
 
   vector = ycm_core.StringVector()
   for flag in sanitized_flags:
-    vector.append( ToUtf8IfNeeded( flag ) )
+    vector.append( ToCppStringCompatible( flag ) )
   return vector
 
 

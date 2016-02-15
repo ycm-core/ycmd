@@ -6,18 +6,23 @@ branches:
 environment:
   USE_CLANG_COMPLETER: true
   matrix:
-  - msvc: 11
-    arch: 32
+  # We only test MSVC 11 and 12 with Python 3.5 on 64 bits.
   - msvc: 11
     arch: 64
-  - msvc: 12
-    arch: 32
+    python: 35
   - msvc: 12
     arch: 64
+    python: 35
   - msvc: 14
     arch: 32
+    python: 35
+  # We only test Python 2.7 with MSVC 14 on 64 bits.
   - msvc: 14
     arch: 64
+    python: 27
+  - msvc: 14
+    arch: 64
+    python: 35
 install:
   - ci\appveyor\appveyor_install.bat
 build_script:

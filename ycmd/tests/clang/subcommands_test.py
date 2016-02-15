@@ -15,22 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import ( assert_that, calling, contains, equal_to,
                        has_entries, raises )
 from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
-from clang_handlers_test import Clang_Handlers_test
+from .clang_handlers_test import Clang_Handlers_test
+from ycmd.utils import ReadFile
 from pprint import pprint
 import os.path
-import httplib
+import http.client
 
 
 class Clang_Subcommands_test( Clang_Handlers_test ):
 
   def GoTo_ZeroBasedLineAndColumn_test( self ):
-    contents = open( self._PathToTestFile(
-      'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) ).read()
+    contents = ReadFile( self._PathToTestFile(
+      'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) )
 
     goto_data = self._BuildRequest( completer_target = 'filetype_default',
                                     command_arguments = ['GoToDefinition'],
@@ -48,7 +57,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
 
   def _GoTo_all( self, filename, command, test ):
-    contents = open( self._PathToTestFile( filename ) ).read()
+    contents = ReadFile( self._PathToTestFile( filename ) )
     common_request = {
       'completer_target' : 'filetype_default',
       'command_arguments': command,
@@ -191,7 +200,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
     filepath = self._PathToTestFile( 'test-include', 'main.cpp' )
     goto_data = self._BuildRequest( filepath = filepath,
                                     filetype = 'cpp',
-                                    contents = open( filepath ).read(),
+                                    contents = ReadFile( filepath ),
                                     command_arguments = [ command ],
                                     line_num = test[ 'request' ][ 0 ],
                                     column_num = test[ 'request' ][ 1 ] )
@@ -245,7 +254,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
 
   def _Message( self, filename, test, command):
-    contents = open( self._PathToTestFile( filename ) ).read()
+    contents = ReadFile( self._PathToTestFile( filename ) )
 
     # We use the -fno-delayed-template-parsing flag to not delay
     # parsing of templates on Windows.  This is the default on
@@ -393,7 +402,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
 
   def _RunFixIt( self, line, column, lang, file_name, check ):
-    contents = open( self._PathToTestFile( file_name ) ).read()
+    contents = ReadFile( self._PathToTestFile( file_name ) )
 
     language_options = {
       'cpp11': {
@@ -683,7 +692,7 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
   def GetDoc_Variable_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cpp',
@@ -712,7 +721,7 @@ The first line of comment is the brief.""" } )
 
   def GetDoc_Method_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cpp',
@@ -745,7 +754,7 @@ This is more information
 
   def GetDoc_Namespace_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cpp',
@@ -772,7 +781,7 @@ This is a test namespace""" } )
 
   def GetDoc_Undocumented_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cpp',
@@ -787,7 +796,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -795,7 +804,7 @@ This is a test namespace""" } )
 
   def GetDoc_NoCursor_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cpp',
@@ -810,7 +819,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -819,7 +828,7 @@ This is a test namespace""" } )
   # Following tests repeat the tests above, but without re-parsing the file
   def GetDocQuick_Variable_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._app.post_json( '/event_notification',
                          self._BuildRequest( filepath = filepath,
@@ -855,7 +864,7 @@ The first line of comment is the brief.""" } )
 
   def GetDocQuick_Method_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._app.post_json(
       '/event_notification',
@@ -897,7 +906,7 @@ This is more information
 
   def GetDocQuick_Namespace_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._app.post_json(
       '/event_notification',
@@ -933,7 +942,7 @@ This is a test namespace""" } )
 
   def GetDocQuick_Undocumented_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._app.post_json(
       '/event_notification',
@@ -957,7 +966,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -965,7 +974,7 @@ This is a test namespace""" } )
 
   def GetDocQuick_NoCursor_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     self._app.post_json(
       '/event_notification',
@@ -989,7 +998,7 @@ This is a test namespace""" } )
                                     event_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  self._ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -997,7 +1006,7 @@ This is a test namespace""" } )
 
   def GetDocQuick_NoReadyToParse_test( self ):
     filepath = self._PathToTestFile( 'GetDoc_Clang.cc' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'cpp',

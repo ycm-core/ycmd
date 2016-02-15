@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from webtest import TestApp
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
@@ -22,8 +30,9 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
 from ...responses import UnknownExtraConf, NoExtraConfDetected
 from ... import handlers
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
-from clang_handlers_test import Clang_Handlers_test
-import httplib
+from .clang_handlers_test import Clang_Handlers_test
+from ycmd.utils import ReadFile
+import http.client
 
 
 class Clang_GetCompletions_test( Clang_Handlers_test ):
@@ -55,7 +64,8 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
       'filepath': self._PathToTestFile( 'general_fallback',
                                         '.ycm_extra_conf.py' ) } )
 
-    contents = open( test[ 'request' ][ 'filepath' ] ).read()
+
+    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
     def CombineRequest( request, data ):
       kw = request
@@ -99,7 +109,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': True,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
@@ -124,7 +134,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': empty(),
           'errors': has_item( self._ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE ) ),
@@ -148,7 +158,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': empty(),
           'errors': has_item( self._no_completions_error ),
@@ -170,7 +180,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': has_item( self._CompletionEntryMatcher( 'a_parameter',
                                                                  '[ID]' ) ),
@@ -194,7 +204,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
@@ -219,7 +229,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': True,
       },
       'expect': {
-        'response': httplib.INTERNAL_SERVER_ERROR,
+        'response': http.client.INTERNAL_SERVER_ERROR,
         'data': self._no_completions_error,
       },
     } )
@@ -243,7 +253,7 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains_inanyorder(
             # do_ is an identifier because it is already in the file when we
@@ -327,7 +337,7 @@ int main()
     filepath = self._PathToTestFile( 'basic.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 11,
                                           column_num = 7,
                                           force_semantic = True )
@@ -336,7 +346,7 @@ int main()
                                     completion_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
     assert_that( response.json,
                  has_entry( 'exception',
                             has_entry( 'TYPE', UnknownExtraConf.__name__ ) ) )
@@ -349,7 +359,7 @@ int main()
                                     completion_data,
                                     expect_errors = True )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
     assert_that( response.json,
                  has_entry( 'exception',
                             has_entry( 'TYPE',
@@ -364,7 +374,7 @@ int main()
     filepath = self._PathToTestFile( 'basic.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 11,
                                           column_num = 7 )
 
@@ -385,7 +395,7 @@ int main()
 
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 11,
                                           column_num = 7,
                                           force_semantic = True )
@@ -393,7 +403,7 @@ int main()
     response = self._app.post_json( '/completions',
                                     completion_data,
                                     expect_errors = True )
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that( response.json,
                  has_entry( 'exception',
@@ -439,7 +449,7 @@ int main()
     filepath = self._PathToTestFile( 'client_data', 'main.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 9,
                                           column_num = 7,
                                           extra_conf_data = {
@@ -460,7 +470,7 @@ int main()
     filepath = self._PathToTestFile( 'client_data', 'include.cpp' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'cpp',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 1,
                                           column_num = 11,
                                           extra_conf_data = {

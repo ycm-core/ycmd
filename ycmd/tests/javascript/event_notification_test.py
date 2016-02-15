@@ -15,22 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.server_utils import SetUpPythonPath
-SetUpPythonPath()
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
 
+from ycmd.server_utils import SetUpPythonPath
+from ycmd.utils import ReadFile
+SetUpPythonPath()
 from nose.tools import eq_
 from hamcrest import assert_that, empty
 
-from javascript_handlers_test import Javascript_Handlers_test
+from .javascript_handlers_test import Javascript_Handlers_test
 from pprint import pformat
-import httplib
+import http.client
 import os
 from mock import patch
 
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
   def OnFileReadyToParse_ProjectFile_cwd_test( self ):
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -39,14 +47,13 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
                                       filetype = 'javascript' ),
                                     expect_errors = True)
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )
     assert_that( response.json, empty() )
 
 
   def OnFileReadyToParse_ProjectFile_parentdir_test( self ):
     os.chdir( self._PathToTestFile( 'lamelib' ) )
-
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -55,7 +62,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
                                       filetype = 'javascript' ),
                                     expect_errors = True)
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )
     assert_that( response.json, empty() )
 
 
@@ -66,8 +73,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
     # We only do this on the first OnFileReadyToParse event after a
     # server startup.
     os.chdir( self._PathToTestFile( '..' ) )
-
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -78,7 +84,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that(
       response.json,
@@ -102,7 +108,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )
     assert_that( response.json, empty() )
 
     # Restart the server and check that it raises it again
@@ -132,7 +138,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.INTERNAL_SERVER_ERROR )
+    eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
 
     assert_that(
       response.json,
@@ -150,8 +156,7 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
           return_value = True )
   def OnFileReadyToParse_UseGlobalConfig_test( self, *args ):
     os.chdir( self._PathToTestFile( '..' ) )
-
-    contents = open( self._PathToTestFile( 'simple_test.js' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'simple_test.js' ) )
 
     response = self._app.post_json( '/event_notification',
                                     self._BuildRequest(
@@ -162,4 +167,4 @@ class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
     print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-    eq_( response.status_code, httplib.OK )
+    eq_( response.status_code, http.client.OK )

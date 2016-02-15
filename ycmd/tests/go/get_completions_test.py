@@ -15,8 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from hamcrest import assert_that, has_item
-from go_handlers_test import Go_Handlers_test
+from .go_handlers_test import Go_Handlers_test
+from ycmd.utils import ReadFile
 
 
 class Go_GetCompletions_test( Go_Handlers_test ):
@@ -25,7 +34,7 @@ class Go_GetCompletions_test( Go_Handlers_test ):
     filepath = self._PathToTestFile( 'test.go' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'go',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           force_semantic = True,
                                           line_num = 9,
                                           column_num = 11 )

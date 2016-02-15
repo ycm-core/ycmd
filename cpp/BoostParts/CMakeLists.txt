@@ -26,15 +26,6 @@ cmake_minimum_required( VERSION 2.8 )
 
 project( BoostParts )
 
-set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
-find_package( PythonLibs 2.6 REQUIRED )
-
-if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
-  message( FATAL_ERROR
-    "CMake found python3 libs instead of python2 libs. YCM works only with "
-    "python2.\n" )
-endif()
-
 file( GLOB_RECURSE SOURCES *.cpp )
 
 # We need to remove all the thread cpp files and then add them on a per-platform

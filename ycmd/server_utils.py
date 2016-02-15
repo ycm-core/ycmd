@@ -15,8 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+# No other imports from `future` because this module is loaded before we have
+# put our submodules in sys.path
+
 import sys
 import os
+import io
 
 VERSION_FILENAME = 'CORE_VERSION'
 CORE_NOT_COMPATIBLE_MESSAGE = (
@@ -36,8 +44,9 @@ def SetUpPythonPath():
 
 
 def ExpectedCoreVersion():
-  return int( open( os.path.join( DirectoryOfThisScript(), '..',
-                                  VERSION_FILENAME ) ).read() )
+  filepath = os.path.join( DirectoryOfThisScript(), '..', VERSION_FILENAME )
+  with io.open( filepath, encoding = 'utf8' ) as f:
+    return int( f.read() )
 
 
 def CompatibleWithCurrentCoreVersion():

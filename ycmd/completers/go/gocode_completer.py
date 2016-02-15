@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import json
 import logging
 import os
@@ -22,6 +30,7 @@ import subprocess
 
 from ycmd import responses
 from ycmd import utils
+from ycmd.utils import ToBytes, ToUnicode
 from ycmd.completers.completer import Completer
 
 GO_FILETYPES = set( [ 'go' ] )
@@ -78,25 +87,27 @@ class GoCodeCompleter( Completer ):
     if not filename:
       return
 
-    contents = utils.ToUtf8IfNeeded(
+    contents = utils.ToBytes(
         request_data[ 'file_data' ][ filename ][ 'contents' ] )
     offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                              request_data[ 'column_num' ] )
 
     stdoutdata = self._ExecuteBinary( self._binary_gocode,
                                       '-f=json', 'autocomplete',
-                                       filename, str(offset),
-                                       contents = contents )
+                                      filename,
+                                      str( offset ),
+                                      contents = contents )
 
     try:
-      resultdata = json.loads( stdoutdata )
+      resultdata = json.loads( ToUnicode( stdoutdata ) )
     except ValueError:
       _logger.error( PARSE_ERROR_MESSAGE )
       raise RuntimeError( PARSE_ERROR_MESSAGE )
-    if len(resultdata) != 2:
+
+    if len( resultdata ) != 2:
       _logger.error( NO_COMPLETIONS_MESSAGE )
       raise RuntimeError( NO_COMPLETIONS_MESSAGE )
-    for result in resultdata[1]:
+    for result in resultdata[ 1 ]:
       if result.get( 'class' ) == "PANIC":
         raise RuntimeError( GOCODE_PANIC_MESSAGE )
 
@@ -167,14 +178,13 @@ class GoCodeCompleter( Completer ):
     """ Execute the GoCode/GoDef binary with given arguments. Use the contents
     argument to send data to GoCode. Return the standard output. """
     popen_handle = self._popener(
-      [ binary ] + list(args), stdin = subprocess.PIPE,
+      [ binary ] + list( args ), stdin = subprocess.PIPE,
       stdout = subprocess.PIPE, stderr = subprocess.PIPE )
     contents = kwargs[ 'contents' ] if 'contents' in kwargs else None
     stdoutdata, stderrdata = popen_handle.communicate( contents )
+
     if popen_handle.returncode:
-      binary_str = "Gocode"
-      if binary == self._binary_godef:
-        binary_str = "Godef"
+      binary_str = 'Godef' if binary == self._binary_godef else 'Gocode'
 
       _logger.error( SHELL_ERROR_MESSAGE.format( binary_str ) +
                      " code %i stderr: %s",
@@ -190,7 +200,7 @@ class GoCodeCompleter( Completer ):
       _logger.info( "godef GoTo request %s" % filename )
       if not filename:
         return
-      contents = utils.ToUtf8IfNeeded(
+      contents = utils.ToBytes(
           request_data[ 'file_data' ][ filename ][ 'contents' ] )
       offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                                request_data[ 'column_num' ] )
@@ -201,12 +211,13 @@ class GoCodeCompleter( Completer ):
                                     "-o=%s" % offset,
                                     contents = contents )
       return self._ConstructGoToFromResponse( stdout )
-    except Exception:
+    except Exception as e:
+      _logger.exception( e )
       raise RuntimeError( 'Can\'t jump to definition.' )
 
 
   def _ConstructGoToFromResponse( self, response_str ):
-    parsed = json.loads( response_str )
+    parsed = json.loads( ToUnicode( response_str ) )
     if 'filename' in parsed and 'column' in parsed:
       return responses.BuildGoToResponse( parsed[ 'filename' ],
                                           int( parsed[ 'line' ] ),
@@ -219,13 +230,15 @@ class GoCodeCompleter( Completer ):
 # TODO(ekfriis): If this is slow, consider moving this to C++ ycm_core,
 # perhaps in RequestWrap.
 def _ComputeOffset( contents, line, col ):
+  contents = ToBytes( contents )
   curline = 1
   curcol = 1
+  newline = bytes( b'\n' )[ 0 ]
   for i, byte in enumerate( contents ):
     if curline == line and curcol == col:
       return i
     curcol += 1
-    if byte == '\n':
+    if byte == newline:
       curline += 1
       curcol = 1
   _logger.error( 'GoCode completer - could not compute byte offset ' +

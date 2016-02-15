@@ -34,8 +34,12 @@ Building
 [Clients commonly build and set up ycmd for you; you are unlikely to need to
 build ycmd yourself unless you want to build a new client.]
 
+**If you're looking to develop ycmd, see the [instructions for setting up a dev
+environment][dev-setup] and for [running the tests][test-setup].**
+
 This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can be
-found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
+found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts). Note
+that **ycmd runs on Python 2.6, 2.7 and 3.3+.**
 
 First, install the dependencies:
 ```
@@ -47,7 +51,7 @@ When you first clone the repository you'll need to update the submodules:
 git submodule update --init --recursive
 ```
 
-Then run `./build.py --clang-completer --omnisharp-completer --gocode-completer`.
+Then run `./build.py --all`.
 This should get you going.
 
 For more detailed instructions on building ycmd, see [YCM's
@@ -180,7 +184,7 @@ Backwards compatibility
 -----------------------
 
 ycmd's HTTP+JSON interface follows [SemVer][]. While ycmd has seen extensive use
-over the last several months as part of YCM, the version number is below 1.0
+over the last several years as part of YCM, the version number is below 1.0
 because some parts of the API _might_ change slightly as people discover
 possible problems integrating ycmd with other editors. In other words, the
 current API might unintentionally be Vim-specific. We don't want that.
@@ -247,3 +251,6 @@ This software is licensed under the [GPL v3 license][gpl].
 [godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
 [ccoc]: https://github.com/Valloric/ycmd/blob/master/CODE_OF_CONDUCT.md
+[dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md
+[test-setup]: https://github.com/Valloric/ycmd/blob/master/TESTS.md
+

@@ -19,17 +19,26 @@ if exist racerd_target (
 ::
 
 if %arch% == 32 (
-  set python=C:\Python27
+  set python_path=C:\Python%python%
 ) else (
-  set python=C:\Python27-x64
+  set python_path=C:\Python%python%-x64
 )
 
-set PATH=%python%;%python%\Scripts;%PATH%
+set PATH=%python_path%;%python_path%\Scripts;%PATH%
 python --version
 :: Manually setting PYTHONHOME for python 2.7.11 fix the following error when
 :: running core tests: "ImportError: No module named site"
 :: TODO: check if this is still needed when python 2.7.12 is released.
-set PYTHONHOME=%python%
+if %python% == 27 (
+  set PYTHONHOME=%python_path%
+)
+
+:: When using Python 3 on AppVeyor, CMake will always pick the 64 bits
+:: libraries. We specifically tell CMake the right path to the libraries
+:: according to the architecture.
+if %python% == 35 (
+  set EXTRA_CMAKE_ARGS="-DPYTHON_LIBRARY=%python_path%\libs\python%python%.lib"
+)
 
 appveyor DownloadFile https://bootstrap.pypa.io/get-pip.py
 python get-pip.py

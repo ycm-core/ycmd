@@ -15,19 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import imp
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import os
 import threading
-from ycmd.utils import ForceSemanticCompletion
+import logging
+from ycmd.utils import ForceSemanticCompletion, LoadPythonSource
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
 from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
+
+_logger = logging.getLogger( __name__ )
 
 
 class ServerState( object ):
   def __init__( self, user_options ):
     self._user_options = user_options
-    self._filetype_completers = {}
+    self._filetype_completers = dict()
     self._filetype_completers_lock = threading.Lock()
     self._gencomp = GeneralCompleterStore( self._user_options )
 
@@ -39,7 +49,7 @@ class ServerState( object ):
 
   def Shutdown( self ):
     with self._filetype_completers_lock:
-      for completer in self._filetype_completers.itervalues():
+      for completer in self._filetype_completers.values():
         if completer:
           completer.Shutdown()
 
@@ -55,12 +65,12 @@ class ServerState( object ):
 
       module_path = PathToFiletypeCompleterPluginLoader( filetype )
       completer = None
-      supported_filetypes = [ filetype ]
+      supported_filetypes = set( [ filetype ] )
       if os.path.exists( module_path ):
-        module = imp.load_source( filetype, module_path )
+        module = LoadPythonSource( filetype, module_path )
         completer = module.GetCompleter( self._user_options )
         if completer:
-          supported_filetypes.extend( completer.SupportedFiletypes() )
+          supported_filetypes.update( completer.SupportedFiletypes() )
 
       for supported_filetype in supported_filetypes:
         self._filetype_completers[ supported_filetype ] = completer
@@ -83,7 +93,8 @@ class ServerState( object ):
     try:
       self.GetFiletypeCompleter( filetypes )
       return True
-    except:
+    except Exception as e:
+      _logger.exception( e )
       return False
 
 
@@ -130,4 +141,3 @@ class ServerState( object ):
       return False
     else:
       return not all([ x in filetype_to_disable for x in current_filetypes ])
-
