@@ -47,8 +47,10 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = utils.PathToNearestThirdPartyFolder( DIR_OF_THIS_SCRIPT )
 
 RACERD_BINARY_NAME = 'racerd' + ( '.exe' if utils.OnWindows() else '' )
-RACERD_BINARY = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
+RACERD_BINARY_RELEASE = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
                         'release', RACERD_BINARY_NAME )
+RACERD_BINARY_DEBUG = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
+                        'debug', RACERD_BINARY_NAME )
 
 RACERD_HMAC_HEADER = 'x-racerd-hmac'
 HMAC_SECRET_LENGTH = 16
@@ -76,11 +78,16 @@ def FindRacerdBinary( user_options ):
     # The user has explicitly specified a path.
     if os.path.isfile( racerd_user_binary ):
       return racerd_user_binary
-    else:
-      _logger.warning( 'user provided racerd_binary_path is not file' )
+    _logger.warning( 'User-provided racerd_binary_path does not exist.' )
 
-  if os.path.isfile( RACERD_BINARY ):
-    return RACERD_BINARY
+  if os.path.isfile( RACERD_BINARY_RELEASE ):
+    return RACERD_BINARY_RELEASE
+
+  # We want to support using the debug binary for the sake of debugging; also,
+  # building the release version on Travis takes too long.
+  if os.path.isfile( RACERD_BINARY_DEBUG ):
+    _logger.warning( 'Using racerd DEBUG binary; performance will suffer!' )
+    return RACERD_BINARY_DEBUG
 
   return utils.PathToFirstExistingExecutable( [ 'racerd' ] )
 
