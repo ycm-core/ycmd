@@ -281,10 +281,10 @@ class TernCompleter( Completer ):
     """Callers must hold self._server_state_mutex"""
 
     if not self._server_keep_logfiles:
-      if self._server_stdout and os.path.exists( self._server_stdout ):
-        os.unlink( self._server_stdout )
-      if self._server_stderr and os.path.exists( self._server_stderr ):
-        os.unlink( self._server_stderr )
+      if self._server_stdout:
+        utils.RemoveIfExists( self._server_stdout )
+      if self._server_stderr:
+        utils.RemoveIfExists( self._server_stderr )
 
     self._server_handle = None
     self._server_port   = 0
@@ -444,9 +444,10 @@ class TernCompleter( Completer ):
                     + str( self._server_handle.pid )
                     + '...' )
 
-      self._server_handle.kill()
+      self._server_handle.terminate()
+      self._server_handle.wait()
 
-      _logger.info( 'Tern.js server killed.' )
+      _logger.info( 'Tern.js server terminated.' )
 
       self._Reset()
 
