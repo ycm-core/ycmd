@@ -22,6 +22,32 @@
 
 namespace YouCompleteMe {
 
+TEST( CandidateRepositoryTest, Basic ) {
+  std::vector< std::string > inputs;
+  inputs.push_back( "foobar" );
+
+  CandidateRepository &repo = CandidateRepository::Instance();
+  std::vector< const Candidate * > candidates =
+    repo.GetCandidatesForStrings( inputs );
+
+  EXPECT_EQ( "foobar", candidates[ 0 ]->Text() );
+}
+
+
+TEST( CandidateRepositoryTest, TooLongCandidateSkipped ) {
+  std::vector< std::string > inputs;
+  inputs.push_back( std::string( 81, 'a' ) );  // this one is too long
+  inputs.push_back( std::string( 80, 'b' ) );  // this one is *just* right
+
+  CandidateRepository &repo = CandidateRepository::Instance();
+  std::vector< const Candidate * > candidates =
+    repo.GetCandidatesForStrings( inputs );
+
+  EXPECT_EQ( "", candidates[ 0 ]->Text() );
+  EXPECT_EQ( 'b', candidates[ 1 ]->Text()[ 0 ] );
+}
+
+
 TEST( CandidateRepositoryTest, EmptyCandidatesForUnicode ) {
   std::vector< std::string > inputs;
   inputs.push_back( "fooδιακριτικός" );

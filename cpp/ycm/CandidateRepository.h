@@ -62,6 +62,8 @@ private:
   CandidateRepository() {};
   ~CandidateRepository();
 
+  const std::string &ValidatedCandidateText( const std::string &text );
+
   boost::mutex holder_mutex_;
 
   static boost::mutex singleton_mutex_;
