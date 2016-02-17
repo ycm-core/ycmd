@@ -137,6 +137,7 @@ std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
   return *candidates;
 }
 
+
 // WARNING: You need to hold the filetype_candidate_map_mutex_ before calling
 // this function and while using the returned set.
 void IdentifierDatabase::AddIdentifiersNoLock(
@@ -152,7 +153,6 @@ void IdentifierDatabase::AddIdentifiersNoLock(
   candidates.insert( repository_candidates.begin(),
                      repository_candidates.end() );
 }
-
 
 
 } // namespace YouCompleteMe
