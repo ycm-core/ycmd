@@ -31,6 +31,7 @@ apt-get install -yqq cmake
 apt-get install -yqq git
 apt-get install -yqq golang
 apt-get install -yqq mono-complete
+apt-get install -yqq astyle
 
 # These two are for pyopenssl
 apt-get install -yqq libffi-dev

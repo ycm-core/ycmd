@@ -256,11 +256,14 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
     case CXCompletionChunk_ResultType:
       return_type_ = ChunkToString( completion_string, chunk_num );
       break;
+
     case CXCompletionChunk_Placeholder:
       saw_placeholder = true;
       break;
+
     case CXCompletionChunk_TypedText:
     case CXCompletionChunk_Text:
+
       // need to add paren to insert string
       // when implementing inherited methods or declared methods in objc.
     case CXCompletionChunk_LeftParen:
@@ -269,7 +272,9 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
       if ( !saw_placeholder ) {
         original_string_ += ChunkToString( completion_string, chunk_num );
       }
+
       break;
+
     default:
       break;
   }
