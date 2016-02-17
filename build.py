@@ -353,7 +353,12 @@ def BuildRacerd():
     sys.exit( 'cargo is required for the rust completer' )
 
   os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
-  subprocess.check_call( [ 'cargo', 'build', '--release' ] )
+  args = [ 'cargo', 'build' ]
+  # We don't use the --release flag on Travis/AppVeyor because it makes building
+  # racerd 2.5x slower and we don't care about the speed of the produced racerd.
+  if not OnTravisOrAppVeyor():
+    args.append( '--release' )
+  subprocess.check_call( args )
 
 
 def SetUpTern():
