@@ -213,7 +213,7 @@ ClangCompleter::GetFixItsForLocationInFile(
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
   const std::vector< std::string > &flags,
-  bool reparse) {
+  bool reparse ) {
 
   ReleaseGil unlock;
 
@@ -237,7 +237,7 @@ DocumentationData ClangCompleter::GetDocsForLocationInFile(
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
   const std::vector< std::string > &flags,
-  bool reparse) {
+  bool reparse ) {
 
   ReleaseGil unlock;
 

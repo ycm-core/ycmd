@@ -21,7 +21,7 @@
 // The true value of this preprocessor definition is set in a compiler
 // command-line flag. This is done in the main CMakeLists.txt file.
 #if !defined( YCMD_CORE_VERSION )
-  #define YCMD_CORE_VERSION 0
+#define YCMD_CORE_VERSION 0
 #endif
 
 namespace YouCompleteMe {

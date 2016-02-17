@@ -24,25 +24,26 @@ namespace YouCompleteMe {
 
 namespace {
 
-bool CXCommentValid( const CXComment & comment ) {
+bool CXCommentValid( const CXComment &comment ) {
   return clang_Comment_getKind( comment ) != CXComment_Null;
 }
 
 }
 
-DocumentationData::DocumentationData( const CXCursor& cursor )
+DocumentationData::DocumentationData( const CXCursor &cursor )
   : raw_comment( CXStringToString( clang_Cursor_getRawCommentText( cursor ) ) )
   , brief_comment( CXStringToString(
-                                 clang_Cursor_getBriefCommentText( cursor ) ) )
+                     clang_Cursor_getBriefCommentText( cursor ) ) )
   , canonical_type( CXStringToString(
-                    clang_getTypeSpelling( clang_getCursorType( cursor ) ) ) )
+                      clang_getTypeSpelling( clang_getCursorType( cursor ) ) ) )
   , display_name( CXStringToString( clang_getCursorSpelling( cursor ) ) ) {
 
 
   CXComment parsed_comment = clang_Cursor_getParsedComment( cursor );
+
   if ( CXCommentValid( parsed_comment ) ) {
     comment_xml = CXStringToString(
-                                clang_FullComment_getAsXML( parsed_comment ) );
+                    clang_FullComment_getAsXML( parsed_comment ) );
   }
 }
 
