@@ -33,7 +33,7 @@ if [ "${YCMD_PYTHON_VERSION}" == "2.6" ]; then
 elif [ "${YCMD_PYTHON_VERSION}" == "2.7" ]; then
   PYENV_VERSION="2.7.6"
 else
-  PYENV_VERSION="3.3.0"
+  PYENV_VERSION="3.3.6"
 fi
 
 pyenv install --skip-existing ${PYENV_VERSION}
