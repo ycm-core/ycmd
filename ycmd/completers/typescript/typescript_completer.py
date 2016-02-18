@@ -387,7 +387,7 @@ class TypeScriptCompleter( Completer ):
 
 
 def _LogFileName():
-  with NamedTemporaryFile( dir = utils.PathToTempDir(),
+  with NamedTemporaryFile( dir = utils.PathToCreatedTempDir(),
                            prefix = 'tsserver_',
                            suffix = '.log',
                            delete = False ) as logfile:

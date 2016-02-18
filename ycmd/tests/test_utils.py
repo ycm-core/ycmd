@@ -28,6 +28,7 @@ from builtins import *  # noqa
 
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
+import os.path
 
 
 def BuildRequest( **kwargs ):
@@ -60,6 +61,11 @@ def BuildRequest( **kwargs ):
   return request
 
 
+def PathToTestFile( *args ):
+  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
+  return os.path.join( dir_of_current_script, 'testdata', *args )
+
+
 class DummyCompleter( Completer ):
   def __init__( self, user_options ):
     super( DummyCompleter, self ).__init__( user_options )
@@ -77,3 +83,4 @@ class DummyCompleter( Completer ):
   # This method is here for testing purpose, so it can be mocked during tests
   def CandidatesList( self ):
     return []
+

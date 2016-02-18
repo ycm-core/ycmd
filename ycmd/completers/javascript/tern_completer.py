@@ -391,7 +391,7 @@ class TernCompleter( Completer ):
                    + ' '.join( command ) )
 
     try:
-      logfile_format = os.path.join( utils.PathToTempDir(),
+      logfile_format = os.path.join( utils.PathToCreatedTempDir(),
                                      u'tern_{port}_{std}.log' )
 
       self._server_stdout = logfile_format.format(

@@ -273,7 +273,7 @@ class RustCompleter( Completer ):
       if self._rust_source_path:
         args.extend( [ '--rust-src-path', self._rust_source_path ] )
 
-      filename_format = p.join( utils.PathToTempDir(),
+      filename_format = p.join( utils.PathToCreatedTempDir(),
                                 'racerd_{port}_{std}.log' )
 
       self._server_stdout = filename_format.format( port = port,

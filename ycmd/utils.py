@@ -38,9 +38,13 @@ CREATE_NO_WINDOW = 0x08000000
 # Executable extensions used on Windows
 WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
 
+# Don't use this! Call PathToCreatedTempDir() instead. This exists for the sake of
+# tests.
+RAW_PATH_TO_TEMP_DIR = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
 
-def SanitizeQuery( query ):
-  return query.strip()
+# Readable, writable and executable by everyone.
+ACCESSIBLE_TO_ALL_MASK = ( stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH |
+                           stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP )
 
 
 # Python 3 complains on the common open(path).read() idiom because the file
@@ -59,7 +63,7 @@ def ToCppStringCompatible( value ):
     return value.encode( 'utf8' )
   if isinstance( value, bytes ):
     return value
-  return bytes( str( value ) )
+  return native( str( value ).encode( 'utf8' ) )
 
 
 # Returns a unicode type; either the new python-future str type or the real
@@ -98,8 +102,8 @@ def ToBytes( value ):
     # Obviously this is a bug in python-future. So we work around it. Also filed
     # upstream at: https://github.com/PythonCharmers/python-future/issues/193
     # We can't just return value.encode( 'utf8' ) on both py2 & py3 because on
-    # py2 that returns the built-in str type instead of the newbytes type from
-    # python-future.
+    # py2 that *sometimes* returns the built-in str type instead of the newbytes
+    # type from python-future.
     if PY2:
       return bytes( value.encode( 'utf8' ), encoding = 'utf8' )
     else:
@@ -109,8 +113,7 @@ def ToBytes( value ):
   return ToBytes( str( value ) )
 
 
-def PathToTempDir():
-  tempdir = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
+def PathToCreatedTempDir( tempdir = RAW_PATH_TO_TEMP_DIR ):
   try:
     os.makedirs( tempdir )
     # Needed to support multiple users working on the same machine;
@@ -124,9 +127,7 @@ def PathToTempDir():
 
 def MakeFolderAccessibleToAll( path_to_folder ):
   current_stat = os.stat( path_to_folder )
-  # readable, writable and executable by everyone
-  flags = ( current_stat.st_mode | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
-            | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP )
+  flags = current_stat.st_mode | ACCESSIBLE_TO_ALL_MASK
   os.chmod( path_to_folder, flags )
 
 
@@ -269,7 +270,6 @@ def ForceSemanticCompletion( request_data ):
 
 # A wrapper for subprocess.Popen that fixes quirks on Windows.
 def SafePopen( args, **kwargs ):
-
   if OnWindows():
     # We need this to start the server otherwise bad things happen.
     # See issue #637.
@@ -313,6 +313,9 @@ def ConvertArgsToShortPath( args ):
 # Get the Windows short path name.
 # Based on http://stackoverflow.com/a/23598461/200291
 def GetShortPathName( path ):
+  if not OnWindows():
+    return path
+
   from ctypes import windll, wintypes, create_unicode_buffer
 
   # Set the GetShortPathNameW prototype

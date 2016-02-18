@@ -29,7 +29,6 @@ import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import identifier_utils
-from ycmd import utils
 from ycmd.utils import ToCppStringCompatible
 from ycmd import responses
 
@@ -54,7 +53,7 @@ class IdentifierCompleter( GeneralCompleter ):
       return []
 
     completions = self._completer.CandidatesForQueryAndType(
-      ToCppStringCompatible( utils.SanitizeQuery( request_data[ 'query' ] ) ),
+      ToCppStringCompatible( _SanitizeQuery( request_data[ 'query' ] ) ),
       ToCppStringCompatible( request_data[ 'filetypes' ][ 0 ] ) )
 
     completions = completions[ : self._max_candidates ]
@@ -241,3 +240,7 @@ def _IdentifiersFromBuffer( text,
   for ident in idents:
     vector.append( ToCppStringCompatible( ident ) )
   return vector
+
+
+def _SanitizeQuery( query ):
+  return query.strip()
