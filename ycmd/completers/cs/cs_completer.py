@@ -370,7 +370,7 @@ class CsharpSolutionCompleter( object ):
       if utils.OnCygwin():
         command.extend( [ '--client-path-mode', 'Cygwin' ] )
 
-      filename_format = os.path.join( utils.PathToTempDir(),
+      filename_format = os.path.join( utils.PathToCreatedTempDir(),
                                       u'omnisharp_{port}_{sln}_{std}.log' )
 
       solutionfile = os.path.basename( path_to_solutionfile )

@@ -198,7 +198,8 @@ def NoseTests( parsed_args, extra_nosetests_args ):
       nosetests_args.extend( COMPLETERS[ key ][ 'test' ] )
 
   if parsed_args.coverage:
-    nosetests_args += [ '--with-coverage', '--cover-package=ycmd' ]
+    nosetests_args += [ '--with-coverage', '--cover-package=ycmd',
+                        '--cover-html' ]
 
   if extra_nosetests_args:
     nosetests_args.extend( extra_nosetests_args )

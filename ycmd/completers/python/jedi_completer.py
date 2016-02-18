@@ -46,7 +46,7 @@ HMAC_SECRET_LENGTH = 16
 JEDIHTTP_HMAC_HEADER = 'x-jedihttp-hmac'
 BINARY_NOT_FOUND_MESSAGE = ( 'The specified python interpreter {0} ' +
                              'was not found. Did you specify it correctly?' )
-LOG_FILENAME_FORMAT = os.path.join( utils.PathToTempDir(),
+LOG_FILENAME_FORMAT = os.path.join( utils.PathToCreatedTempDir(),
                                     u'jedihttp_{port}_{std}.log' )
 PATH_TO_JEDIHTTP = os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
                                  '..', '..', '..',
