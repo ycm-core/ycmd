@@ -22,8 +22,8 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
-from future.utils import PY2, native
 
+from future.utils import PY2, native
 from hamcrest import raises, assert_that, calling
 from mock import patch, call
 from nose.tools import eq_, ok_
