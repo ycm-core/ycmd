@@ -17,11 +17,20 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
-from python_handlers_test import Python_Handlers_test
-import httplib
+from .python_handlers_test import Python_Handlers_test
+from ycmd.utils import ReadFile
+import http.client
 
 
 class Python_GetCompletions_test( Python_Handlers_test ):
@@ -42,7 +51,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
          'data': matcher for the server response json
       }
     """
-    contents = open( test[ 'request' ][ 'filepath' ] ).read()
+    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
     def CombineRequest( request, data ):
       kw = request
@@ -72,7 +81,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
     filepath = self._PathToTestFile( 'basic.py' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'python',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           line_num = 7,
                                           column_num = 3)
 
@@ -93,7 +102,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
     filepath = self._PathToTestFile( 'unicode.py' )
     completion_data = self._BuildRequest( filepath = filepath,
                                           filetype = 'python',
-                                          contents = open( filepath ).read(),
+                                          contents = ReadFile( filepath ),
                                           force_semantic = True,
                                           line_num = 5,
                                           column_num = 3)
@@ -120,7 +129,7 @@ class Python_GetCompletions_test( Python_Handlers_test ):
         'force_semantic': False,
       },
       'expect': {
-        'response': httplib.OK,
+        'response': http.client.OK,
         'data': has_entries( {
           'completions': contains(
             self._CompletionEntryMatcher( 'a_parameter', kind = '[ID]' ),

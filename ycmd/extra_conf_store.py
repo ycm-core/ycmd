@@ -17,8 +17,15 @@
 
 # NOTE: This module is used as a Singleton
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import os
-import imp
 import random
 import string
 import sys
@@ -26,6 +33,7 @@ import logging
 from threading import Lock
 from ycmd import user_options_store
 from ycmd.responses import UnknownExtraConf, YCM_EXTRA_CONF_FILENAME
+from ycmd.utils import LoadPythonSource
 from fnmatch import fnmatch
 
 
@@ -138,7 +146,7 @@ def Load( module_file, force = False ):
   # anymore, but there are a lot of old ycm_extra_conf.py files that we don't
   # want to break.
   sys.path.insert( 0, _PathToCppCompleterFolder() )
-  module = imp.load_source( _RandomName(), module_file )
+  module = LoadPythonSource( _RandomName(), module_file )
   del sys.path[ 0 ]
 
   with _module_for_module_file_lock:
@@ -190,8 +198,8 @@ def _PathsToAllParentFolders( filename ):
     return list( reversed( folders ) )
 
   parent_folders = PathFolderComponents( filename )
-  parent_folders = [ os.path.join( *parent_folders[:i + 1] )
-                     for i in xrange( len( parent_folders ) ) ]
+  parent_folders = [ os.path.join( *parent_folders[ :i + 1 ] )
+                     for i in range( len( parent_folders ) ) ]
   return reversed( parent_folders )
 
 

@@ -17,8 +17,18 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+from future.utils import iteritems
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
+import os.path
 
 
 def BuildRequest( **kwargs ):
@@ -38,7 +48,7 @@ def BuildRequest( **kwargs ):
     }
   }
 
-  for key, value in kwargs.iteritems():
+  for key, value in iteritems( kwargs ):
     if key in [ 'contents', 'filetype', 'filepath' ]:
       continue
 
@@ -49,6 +59,11 @@ def BuildRequest( **kwargs ):
       request[ key ] = value
 
   return request
+
+
+def PathToTestFile( *args ):
+  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
+  return os.path.join( dir_of_current_script, 'testdata', *args )
 
 
 class DummyCompleter( Completer ):
@@ -68,3 +83,4 @@ class DummyCompleter( Completer ):
   # This method is here for testing purpose, so it can be mocked during tests
   def CandidatesList( self ):
     return []
+

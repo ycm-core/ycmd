@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
+import platform
 import os
 import subprocess
 import os.path as p
@@ -10,6 +19,17 @@ DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
 python_path = []
 for folder in os.listdir( DIR_OF_THIRD_PARTY ):
+  # We skip python-future because it needs to be inserted in sys.path AFTER
+  # the standard library imports but we can't do that with PYTHONPATH because
+  # the std lib paths are always appended to PYTHONPATH. We do it correctly in
+  # prod in ycmd/utils.py because we have access to the right sys.path.
+  # So for dev, we rely on python-future being installed correctly with
+  #   pip install -r test_requirements.txt
+  #
+  # Pip knows how to install this correctly so that it doesn't matter where in
+  # sys.path the path is.
+  if folder == 'python-future':
+    continue
   python_path.append( p.abspath( p.join( DIR_OF_THIRD_PARTY, folder ) ) )
 if os.environ.get( 'PYTHONPATH' ) is not None:
   python_path.append( os.environ['PYTHONPATH'] )
@@ -75,8 +95,8 @@ def CompleterType( value ):
   if value in COMPLETERS:
     return value
   else:
-    aliases_to_completer = dict( (i,k) for k,v in COMPLETERS.iteritems()
-                                          for i in v[ 'aliases' ] )
+    aliases_to_completer = dict( ( i, k ) for k, v in COMPLETERS.items()
+                                 for i in v[ 'aliases' ] )
     if value in aliases_to_completer:
       return aliases_to_completer[ value ];
     else:
@@ -89,7 +109,7 @@ def ParseArguments():
   parser = argparse.ArgumentParser()
   group = parser.add_mutually_exclusive_group()
   group.add_argument( '--no-clang-completer', action = 'store_true',
-                       help = argparse.SUPPRESS ) # deprecated 
+                       help = argparse.SUPPRESS ) # deprecated
   group.add_argument( '--no-completers', nargs ='*', type = CompleterType,
                        help = 'Do not build or test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
@@ -143,9 +163,11 @@ def FixupCompleters( parsed_args ):
 
 def BuildYcmdLibs( args ):
   if not args.skip_build:
-    extra_cmake_args = [ '-DUSE_DEV_FLAGS=ON' ]
+    if 'EXTRA_CMAKE_ARGS' in os.environ:
+      os.environ[ 'EXTRA_CMAKE_ARGS' ] += ' -DUSE_DEV_FLAGS=ON'
+    else:
+      os.environ[ 'EXTRA_CMAKE_ARGS' ] = '-DUSE_DEV_FLAGS=ON'
 
-    os.environ[ 'EXTRA_CMAKE_ARGS' ] = ' '.join(extra_cmake_args)
     os.environ[ 'YCM_TESTRUN' ] = '1'
 
     build_cmd = [
@@ -176,7 +198,8 @@ def NoseTests( parsed_args, extra_nosetests_args ):
       nosetests_args.extend( COMPLETERS[ key ][ 'test' ] )
 
   if parsed_args.coverage:
-    nosetests_args += [ '--with-coverage', '--cover-package=ycmd' ]
+    nosetests_args += [ '--with-coverage', '--cover-package=ycmd',
+                        '--cover-html' ]
 
   if extra_nosetests_args:
     nosetests_args.extend( extra_nosetests_args )
@@ -188,6 +211,7 @@ def NoseTests( parsed_args, extra_nosetests_args ):
 
 def Main():
   parsed_args, nosetests_args = ParseArguments()
+  print( 'Running tests on Python', platform.python_version() )
   if not parsed_args.no_flake8:
     RunFlake8()
   BuildYcmdLibs( parsed_args )

@@ -15,7 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import httplib, logging, os, requests, traceback, threading
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import *  # noqa
+from future.utils import iterkeys
+from future import standard_library
+standard_library.install_aliases()
+
+import http.client
+import logging
+import os
+import requests
+import threading
+import traceback
+
+from subprocess import PIPE
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
 
@@ -256,7 +272,7 @@ class TernCompleter( Completer ):
     try:
       target = self._GetServerAddress() + '/ping'
       response = requests.get( target )
-      return response.status_code == httplib.OK
+      return response.status_code == http.client.OK
     except requests.ConnectionError:
       return False
 
@@ -265,10 +281,10 @@ class TernCompleter( Completer ):
     """Callers must hold self._server_state_mutex"""
 
     if not self._server_keep_logfiles:
-      if self._server_stdout and os.path.exists( self._server_stdout ):
-        os.unlink( self._server_stdout )
-      if self._server_stderr and os.path.exists( self._server_stderr ):
-        os.unlink( self._server_stderr )
+      if self._server_stdout:
+        utils.RemoveIfExists( self._server_stdout )
+      if self._server_stderr:
+        utils.RemoveIfExists( self._server_stderr )
 
     self._server_handle = None
     self._server_port   = 0
@@ -300,14 +316,14 @@ class TernCompleter( Completer ):
 
     full_request = {
       'files': [ MakeIncompleteFile( x, file_data[ x ] )
-                 for x in file_data.keys() ],
+                 for x in iterkeys( file_data ) ],
     }
     full_request.update( request )
 
     response = requests.post( self._GetServerAddress(),
-                              data = utils.ToUtf8Json( full_request ) )
+                              json = full_request )
 
-    if response.status_code != httplib.OK:
+    if response.status_code != http.client.OK:
       raise RuntimeError( response.text )
 
     return response.json()
@@ -375,36 +391,25 @@ class TernCompleter( Completer ):
                    + ' '.join( command ) )
 
     try:
-      if utils.OnWindows():
-        # FIXME:
-        # For unknown reasons, redirecting stdout and stderr on windows for this
-        # particular Completer does not work. It causes tern to crash with an
-        # access error on startup. Rather than spending too much time trying to
-        # understand this (it's either a bug in Python, node or our code, and it
-        # isn't obvious which), we just suppress the log files on this platform.
-        # ATOW the only output from the server is the line saying it is
-        # listening anyway. Verbose logging includes requests and responses, but
-        # they can be tested on other platforms.
-        self._server_stdout = "<Not supported on this platform>"
-        self._server_stderr = "<Not supported on this platform>"
-        self._server_handle = utils.SafePopen( command )
-      else:
-        logfile_format = os.path.join( utils.PathToTempDir(),
-                                       u'tern_{port}_{std}.log' )
+      logfile_format = os.path.join( utils.PathToCreatedTempDir(),
+                                     u'tern_{port}_{std}.log' )
 
-        self._server_stdout = logfile_format.format(
-            port = self._server_port,
-            std = 'stdout' )
+      self._server_stdout = logfile_format.format(
+          port = self._server_port,
+          std = 'stdout' )
 
-        self._server_stderr = logfile_format.format(
-            port = self._server_port,
-            std = 'stderr' )
+      self._server_stderr = logfile_format.format(
+          port = self._server_port,
+          std = 'stderr' )
 
-        with open( self._server_stdout, 'w' ) as stdout:
-          with open( self._server_stderr, 'w' ) as stderr:
-            self._server_handle = utils.SafePopen( command,
-                                                   stdout = stdout,
-                                                   stderr = stderr )
+      # On Windows, we need to open a pipe to stdin to prevent Tern crashing
+      # with following error: "Implement me. Unknown stdin file type!"
+      with open( self._server_stdout, 'w' ) as stdout:
+        with open( self._server_stderr, 'w' ) as stderr:
+          self._server_handle = utils.SafePopen( command,
+                                                 stdin_windows = PIPE,
+                                                 stdout = stdout,
+                                                 stderr = stderr )
     except Exception:
       _logger.warning( 'Unable to start Tern.js server: '
                        + traceback.format_exc() )
@@ -439,9 +444,10 @@ class TernCompleter( Completer ):
                     + str( self._server_handle.pid )
                     + '...' )
 
-      self._server_handle.kill()
+      self._server_handle.terminate()
+      self._server_handle.wait()
 
-      _logger.info( 'Tern.js server killed.' )
+      _logger.info( 'Tern.js server terminated.' )
 
       self._Reset()
 

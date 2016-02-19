@@ -33,6 +33,15 @@ namespace YouCompleteMe {
 using boost::all;
 using boost::is_print;
 
+namespace {
+
+// We set a reasonable max limit to prevent issues with huge candidate strings
+// entering the database. Such large candidates are almost never desirable.
+const int MAX_CANDIDATE_SIZE = 80;
+
+}  // unnamed namespace
+
+
 boost::mutex CandidateRepository::singleton_mutex_;
 CandidateRepository *CandidateRepository::instance_ = NULL;
 
@@ -64,9 +73,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
 
     foreach ( const std::string & candidate_text, strings ) {
       const std::string &validated_candidate_text =
-        all( candidate_text, is_print( std::locale::classic() ) ) ?
-        candidate_text :
-        empty_;
+        ValidatedCandidateText( candidate_text );
 
       const Candidate *&candidate = GetValueElseInsert(
                                       candidate_holder_,
@@ -94,12 +101,16 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
     boost::lock_guard< boost::mutex > locker( holder_mutex_ );
 
     foreach ( const CompletionData & data, datas ) {
-      const Candidate *&candidate = GetValueElseInsert( candidate_holder_,
-                                                        data.original_string_,
-                                                        NULL );
+      const std::string &validated_candidate_text =
+        ValidatedCandidateText( data.original_string_ );
+
+      const Candidate *&candidate = GetValueElseInsert(
+                                      candidate_holder_,
+                                      validated_candidate_text,
+                                      NULL );
 
       if ( !candidate )
-        candidate = new Candidate( data.original_string_ );
+        candidate = new Candidate( validated_candidate_text );
 
       candidates.push_back( candidate );
     }
@@ -115,6 +126,17 @@ CandidateRepository::~CandidateRepository() {
             candidate_holder_ ) {
     delete pair.second;
   }
+}
+
+
+// Returns a ref to empty_ if candidate not valid.
+const std::string &CandidateRepository::ValidatedCandidateText(
+  const std::string &candidate_text ) {
+  if ( candidate_text.size() <= MAX_CANDIDATE_SIZE &&
+       all( candidate_text, is_print( std::locale::classic() ) ) )
+    return candidate_text;
+
+  return empty_;
 }
 
 } // namespace YouCompleteMe

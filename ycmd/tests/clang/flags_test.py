@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from nose.tools import eq_
 from nose.tools import ok_
 from ycmd.completers.cpp import flags
@@ -147,21 +155,21 @@ def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
          flags._RemoveUnusedFlags( expected + to_remove, filename ) )
 
     eq_( expected,
-          flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
-                                    filename ) )
+         flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                   filename ) )
 
     eq_( expected + expected[ 1: ],
-          flags._RemoveUnusedFlags( expected + to_remove + expected[ 1: ],
+         flags._RemoveUnusedFlags( expected + to_remove + expected[ 1: ],
                                    filename ) )
 
   include_flags = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
-                    '-gcc-toolchain', '-include', '-iframework', '-F', '-imacros' ]
+                    '-gcc-toolchain', '-include', '-include-pch',
+                    '-iframework', '-F', '-imacros' ]
   to_remove = [ '/moo/boo' ]
   filename = 'file'
 
   for flag in include_flags:
     yield tester, flag
-
 
 
 def RemoveXclangFlags_test():
@@ -215,6 +223,7 @@ def CompilerToLanguageFlag_ReplaceCppCompiler_test():
 
   for compiler in compilers:
     yield _ReplaceCompilerTester, compiler, 'c++'
+
 
 def ExtraClangFlags_test():
   flags_object = flags.Flags()

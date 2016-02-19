@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from os import path
 
 try:
@@ -31,10 +39,10 @@ import atexit
 import logging
 import json
 import bottle
-import httplib
+import http.client
 import traceback
 from bottle import request, response
-import server_state
+from . import server_state
 from ycmd import user_options_store
 from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
 from ycmd import hmac_plugin
@@ -47,7 +55,7 @@ from ycmd.request_wrap import RequestWrap
 bottle.Request.MEMFILE_MAX = 1000 * 1024
 
 _server_state = None
-_hmac_secret = None
+_hmac_secret = bytes()
 _logger = logging.getLogger( __name__ )
 app = bottle.Bottle()
 
@@ -211,7 +219,7 @@ def DebugInfo():
 
 
 # The type of the param is Bottle.HTTPError
-@app.error( httplib.INTERNAL_SERVER_ERROR )
+@app.error( http.client.INTERNAL_SERVER_ERROR )
 def ErrorHandler( httperror ):
   body = _JsonResponse( BuildExceptionResponse( httperror.exception,
                                                 httperror.traceback ) )

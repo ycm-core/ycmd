@@ -15,11 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from ...server_utils import SetUpPythonPath
 SetUpPythonPath()
 from hamcrest import ( assert_that, contains, contains_string, has_entries,
                        has_entry, has_items, empty, equal_to )
-from clang_handlers_test import Clang_Handlers_test
+from .clang_handlers_test import Clang_Handlers_test
+from ycmd.utils import ReadFile
 from pprint import pprint
 
 
@@ -179,7 +188,7 @@ int main() {
 
 
   def FixIt_Available_test( self ):
-    contents = open( self._PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) ).read()
+    contents = ReadFile( self._PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
 
     event_data = self._BuildRequest( contents = contents,
                                      event_name = 'FileReadyToParse',

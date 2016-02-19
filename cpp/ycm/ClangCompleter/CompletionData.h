@@ -118,7 +118,7 @@ private:
                              uint chunk_num,
                              bool &saw_left_paren,
                              bool &saw_function_params,
-                             bool &saw_placeholder);
+                             bool &saw_placeholder );
 };
 
 } // namespace YouCompleteMe

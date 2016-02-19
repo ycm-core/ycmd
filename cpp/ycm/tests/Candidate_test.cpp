@@ -85,8 +85,7 @@ TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddlePunctuation ) {
   EXPECT_EQ( "ssf", GetWordBoundaryChars( "simpleSTUFF_Foo" ) );
 }
 
-TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddlePunctuationLowercase )
-{
+TEST( GetWordBoundaryCharsTest, UppercaseSequenceInMiddlePunctuationLowercase ) {
   EXPECT_EQ( "ssf", GetWordBoundaryChars( "simpleSTUFF_foo" ) );
   EXPECT_EQ( "ssf", GetWordBoundaryChars( "simpleSTUFF.foo" ) );
 }

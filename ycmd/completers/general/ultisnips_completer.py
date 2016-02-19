@@ -16,6 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import responses
 
@@ -46,6 +54,6 @@ class UltiSnipsCompleter( GeneralCompleter ):
     raw_candidates = request_data.get( 'ultisnips_snippets', [] )
     self._candidates = [
         responses.BuildCompletionData(
-            insertion_text = str( snip[ 'trigger' ] ),
-            result_type = str( '<snip> ' + snip[ 'description' ].encode( 'utf-8' ) ) )
+            insertion_text = snip[ 'trigger' ],
+            result_type = '<snip> ' + snip[ 'description' ] )
         for snip in raw_candidates ]

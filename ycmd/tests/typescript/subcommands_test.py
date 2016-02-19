@@ -15,17 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 from webtest import AppError
 from nose.tools import eq_
 from hamcrest import assert_that, raises, calling, contains_inanyorder, has_entries
-from typescript_handlers_test import Typescript_Handlers_test
+from .typescript_handlers_test import Typescript_Handlers_test
+from ycmd.utils import ReadFile
 
 
 class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetType_Basic_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -49,7 +58,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetType_HasNoType_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -73,7 +82,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetDoc_Method_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -98,7 +107,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GetDoc_Class_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',
@@ -124,7 +133,7 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
   def GoToReferences_test( self ):
     filepath = self._PathToTestFile( 'test.ts' )
-    contents = open( filepath ).read()
+    contents = ReadFile( filepath )
 
     event_data = self._BuildRequest( filepath = filepath,
                                      filetype = 'typescript',

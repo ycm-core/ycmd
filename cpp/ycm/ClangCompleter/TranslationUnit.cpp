@@ -45,7 +45,7 @@ unsigned EditingOptions() {
 }
 
 unsigned ReparseOptions( CXTranslationUnit translationUnit ) {
-    return clang_defaultReparseOptions( translationUnit );
+  return clang_defaultReparseOptions( translationUnit );
 }
 
 
@@ -81,7 +81,7 @@ TranslationUnit::TranslationUnit(
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
-  foreach ( const std::string &flag, flags ) {
+  foreach ( const std::string & flag, flags ) {
     pointer_flags.push_back( flag.c_str() );
   }
 
@@ -263,7 +263,7 @@ std::string TranslationUnit::GetTypeAtLocation(
   const std::vector< UnsavedFile > &unsaved_files,
   bool reparse ) {
 
-  if (reparse)
+  if ( reparse )
     Reparse( unsaved_files );
 
   unique_lock< mutex > lock( clang_access_mutex_ );
@@ -279,7 +279,7 @@ std::string TranslationUnit::GetTypeAtLocation(
   CXType type = clang_getCursorType( cursor );
 
   std::string type_description =
-                        CXStringToString( clang_getTypeSpelling( type ) );
+    CXStringToString( clang_getTypeSpelling( type ) );
 
   if ( type_description.empty() )
     return "Unknown type";
@@ -308,7 +308,7 @@ std::string TranslationUnit::GetTypeAtLocation(
   if ( !clang_equalTypes( type, canonical_type ) ) {
     type_description += " => ";
     type_description += CXStringToString(
-                                  clang_getTypeSpelling( canonical_type ) );
+                          clang_getTypeSpelling( canonical_type ) );
   }
 
   return type_description;
@@ -320,7 +320,7 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
   const std::vector< UnsavedFile > &unsaved_files,
   bool reparse ) {
 
-  if (reparse)
+  if ( reparse )
     Reparse( unsaved_files );
 
   unique_lock< mutex > lock( clang_access_mutex_ );
@@ -336,9 +336,9 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
   CXCursor parent = clang_getCursorSemanticParent( cursor );
 
   std::string parent_str =
-                  CXStringToString( clang_getCursorDisplayName( parent ) );
+    CXStringToString( clang_getCursorDisplayName( parent ) );
 
-  if (parent_str.empty())
+  if ( parent_str.empty() )
     return "Unknown semantic parent";
 
   return parent_str;
@@ -407,23 +407,23 @@ void TranslationUnit::UpdateLatestDiagnostics() {
 }
 
 namespace {
-  /// Sort a FixIt container by its location's distance from a given column
-  /// (such as the cursor location).
-  ///
-  /// PreCondition: All FixIts in the container are on the same line.
-  struct sort_by_location {
-    sort_by_location( int column ) : column_( column ) { }
+/// Sort a FixIt container by its location's distance from a given column
+/// (such as the cursor location).
+///
+/// PreCondition: All FixIts in the container are on the same line.
+struct sort_by_location {
+  sort_by_location( int column ) : column_( column ) { }
 
-    bool operator()( const FixIt& a, const FixIt& b ) {
-      int a_distance = a.location.column_number_ - column_;
-      int b_distance = b.location.column_number_ - column_;
+  bool operator()( const FixIt &a, const FixIt &b ) {
+    int a_distance = a.location.column_number_ - column_;
+    int b_distance = b.location.column_number_ - column_;
 
-      return std::abs( a_distance ) < std::abs( b_distance );
-    }
+    return std::abs( a_distance ) < std::abs( b_distance );
+  }
 
-  private:
-    int column_;
-  };
+private:
+  int column_;
+};
 }
 
 std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
@@ -441,9 +441,9 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
     for ( std::vector< Diagnostic >::const_iterator it
-                                        = latest_diagnostics_.begin();
+          = latest_diagnostics_.begin();
           it != latest_diagnostics_.end();
-          ++it) {
+          ++it ) {
 
       // Find all fixits for the supplied line
       if ( it->fixits_.size() > 0 &&
@@ -487,6 +487,7 @@ DocumentationData TranslationUnit::GetDocsForLocationInFile(
   // If the original cursor is a reference, then we return the documentation
   // for the type/method/etc. that is referenced
   CXCursor referenced_cursor = clang_getCursorReferenced( cursor );
+
   if ( CursorIsValid( referenced_cursor ) )
     cursor = referenced_cursor;
 

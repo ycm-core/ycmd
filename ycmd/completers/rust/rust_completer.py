@@ -15,14 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.utils import ToUtf8IfNeeded
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import *  # noqa
+from future.utils import native, iteritems
+from future import standard_library
+standard_library.install_aliases()
+
+from ycmd.utils import ToBytes, SetEnviron, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
 import logging
-import urlparse
+import urllib.parse
 import requests
-import httplib
+import http.client
 import json
 import tempfile
 import base64
@@ -38,8 +47,10 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = utils.PathToNearestThirdPartyFolder( DIR_OF_THIS_SCRIPT )
 
 RACERD_BINARY_NAME = 'racerd' + ( '.exe' if utils.OnWindows() else '' )
-RACERD_BINARY = p.join( DIR_OF_THIRD_PARTY,
-                         'racerd', 'target', 'release', RACERD_BINARY_NAME )
+RACERD_BINARY_RELEASE = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
+                        'release', RACERD_BINARY_NAME )
+RACERD_BINARY_DEBUG = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
+                        'debug', RACERD_BINARY_NAME )
 
 RACERD_HMAC_HEADER = 'x-racerd-hmac'
 HMAC_SECRET_LENGTH = 16
@@ -67,11 +78,16 @@ def FindRacerdBinary( user_options ):
     # The user has explicitly specified a path.
     if os.path.isfile( racerd_user_binary ):
       return racerd_user_binary
-    else:
-      _logger.warn( 'user provided racerd_binary_path is not file' )
+    _logger.warning( 'User-provided racerd_binary_path does not exist.' )
 
-  if os.path.isfile( RACERD_BINARY ):
-    return RACERD_BINARY
+  if os.path.isfile( RACERD_BINARY_RELEASE ):
+    return RACERD_BINARY_RELEASE
+
+  # We want to support using the debug binary for the sake of debugging; also,
+  # building the release version on Travis takes too long.
+  if os.path.isfile( RACERD_BINARY_DEBUG ):
+    _logger.warning( 'Using racerd DEBUG binary; performance will suffer!' )
+    return RACERD_BINARY_DEBUG
 
   return utils.PathToFirstExistingExecutable( [ 'racerd' ] )
 
@@ -92,8 +108,8 @@ class RustCompleter( Completer ):
     self._rust_source_path = self._GetRustSrcPath()
 
     if not self._rust_source_path:
-      _logger.warn( 'No path provided for the rustc source. Please set the '
-                    'rust_src_path option' )
+      _logger.warning( 'No path provided for the rustc source. Please set the '
+                       'rust_src_path option' )
 
     if not self._racerd:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
@@ -125,15 +141,8 @@ class RustCompleter( Completer ):
     return [ 'rust' ]
 
 
-  def _ComputeRequestHmac( self, method, path, body ):
-    if not body:
-      body = ''
-
-    hmac = hmac_utils.CreateRequestHmac( method, path, body, self._hmac_secret )
-    return binascii.hexlify( hmac )
-
-
-  def _GetResponse( self, handler, request_data = None, method = 'POST' ):
+  def _GetResponse( self, handler, request_data = None,
+                    method = 'POST'):
     """
     Query racerd via HTTP
 
@@ -142,28 +151,45 @@ class RustCompleter( Completer ):
     were found.
     """
     _logger.info( 'RustCompleter._GetResponse' )
-    url = urlparse.urljoin( self._racerd_host, handler )
-    parameters = self._TranslateRequest( request_data )
-    body = json.dumps( parameters ) if parameters else None
-    request_hmac = self._ComputeRequestHmac( method, handler, body )
+    handler = ToBytes( handler )
+    method = ToBytes( method )
+    url = urllib.parse.urljoin( self._racerd_host, handler )
+    parameters = self._ConvertToRacerdRequest( request_data )
+    body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
+    extra_headers = self._ExtraHeaders( method, handler, body )
 
-    extra_headers = { 'content-type': 'application/json' }
-    extra_headers[ RACERD_HMAC_HEADER ] = request_hmac
+    _logger.debug( 'Making racerd request: %s %s %s %s', method, url,
+                   extra_headers, body )
 
-    response = requests.request( method,
-                                 url,
+    # Failing to wrap the method & url bytes objects in `native()` causes HMAC
+    # failures (403 Forbidden from racerd) for unknown reasons. Similar for
+    # request_hmac above.
+    response = requests.request( native( method ),
+                                 native( url ),
                                  data = body,
                                  headers = extra_headers )
 
     response.raise_for_status()
 
-    if response.status_code is httplib.NO_CONTENT:
+    if response.status_code is http.client.NO_CONTENT:
       return None
 
     return response.json()
 
 
-  def _TranslateRequest( self, request_data ):
+  def _ExtraHeaders( self, method, handler, body ):
+    if not body:
+      body = bytes()
+
+    hmac = hmac_utils.CreateRequestHmac( method, handler, body, self._hmac_secret )
+    final_hmac_value = native( ToBytes( binascii.hexlify( hmac ) ) )
+
+    extra_headers = { 'content-type': 'application/json' }
+    extra_headers[ RACERD_HMAC_HEADER ] = final_hmac_value
+    return extra_headers
+
+
+  def _ConvertToRacerdRequest( self, request_data ):
     """
     Transform ycm request into racerd request
     """
@@ -172,10 +198,10 @@ class RustCompleter( Completer ):
 
     file_path = request_data[ 'filepath' ]
     buffers = []
-    for path, obj in request_data[ 'file_data' ].items():
+    for path, obj in iteritems( request_data[ 'file_data' ] ):
       buffers.append( {
-          'contents': obj[ 'contents' ],
-          'file_path': path
+        'contents': obj[ 'contents' ],
+        'file_path': path
       } )
 
     line = request_data[ 'line_num' ]
@@ -192,7 +218,7 @@ class RustCompleter( Completer ):
   def _GetExtraData( self, completion ):
     location = {}
     if completion[ 'file_path' ]:
-      location[ 'filepath' ] = ToUtf8IfNeeded( completion[ 'file_path' ] )
+      location[ 'filepath' ] = completion[ 'file_path' ]
     if completion[ 'line' ]:
       location[ 'line_num' ] = completion[ 'line' ]
     if completion[ 'column' ]:
@@ -216,9 +242,9 @@ class RustCompleter( Completer ):
       return []
 
     return [ responses.BuildCompletionData(
-                insertion_text = ToUtf8IfNeeded( completion[ 'text' ] ),
-                kind = ToUtf8IfNeeded( completion[ 'kind' ] ),
-                result_type = ToUtf8IfNeeded( completion[ 'context' ] ),
+                insertion_text = completion[ 'text' ],
+                kind = completion[ 'kind' ],
+                result_type = completion[ 'context' ],
                 extra_data = self._GetExtraData( completion ) )
              for completion in completions ]
 
@@ -227,49 +253,27 @@ class RustCompleter( Completer ):
     return self._GetResponse( '/list_completions', request_data )
 
 
-  def _WriteSecretFile( self, secret ):
-    """
-    Write a file containing the `secret` argument. The path to this file is
-    returned.
-
-    Note that racerd consumes the file upon reading; removal of the temp file is
-    intentionally not handled here.
-    """
-
-    # Make temp file
-    secret_fd, secret_path = tempfile.mkstemp( text=True )
-
-    # Write secret
-    with os.fdopen( secret_fd, 'w' ) as secret_file:
-      secret_file.write( secret )
-
-    return secret_path
-
-
   def _StartServer( self ):
-    """
-    Start racerd.
-    """
     with self._server_state_lock:
-
-      self._hmac_secret = self._CreateHmacSecret()
-      secret_file_path = self._WriteSecretFile( self._hmac_secret )
-
       port = utils.GetUnusedLocalhostPort()
+      self._hmac_secret = self._CreateHmacSecret()
 
-      args = [ self._racerd, 'serve',
-               '--port', str(port),
-               '-l',
-               '--secret-file', secret_file_path ]
+      # racerd will delete the secret_file after it's done reading it
+      with tempfile.NamedTemporaryFile( delete = False ) as secret_file:
+        secret_file.write( self._hmac_secret )
+        args = [ self._racerd, 'serve',
+                '--port', str( port ),
+                '-l',
+                '--secret-file', secret_file.name ]
 
       # Enable logging of crashes
       env = os.environ.copy()
-      env[ 'RUST_BACKTRACE' ] = '1'
+      SetEnviron( env, 'RUST_BACKTRACE', '1' )
 
       if self._rust_source_path:
         args.extend( [ '--rust-src-path', self._rust_source_path ] )
 
-      filename_format = p.join( utils.PathToTempDir(),
+      filename_format = p.join( utils.PathToCreatedTempDir(),
                                 'racerd_{port}_{std}.log' )
 
       self._server_stdout = filename_format.format( port = port,
@@ -284,38 +288,41 @@ class RustCompleter( Completer ):
                                                   stderr = fstderr,
                                                   env = env )
 
-      self._racerd_host = 'http://127.0.0.1:{0}'.format( port )
-      _logger.info( 'RustCompleter using host = ' + self._racerd_host )
+      self._racerd_host = ToBytes( 'http://127.0.0.1:{0}'.format( port ) )
+      if not self.ServerIsRunning():
+        raise RuntimeError( 'Failed to start racerd!' )
+      _logger.info( ToBytes( b'Racerd started on: ' ) + self._racerd_host )
 
 
   def ServerIsRunning( self ):
     """
-    Check racerd status.
+    Check if racerd is alive. That doesn't necessarily mean it's ready to serve
+    requests; that's checked by ServerIsReady.
     """
     with self._server_state_lock:
-      if not self._racerd_host or not self._racerd_phandle:
-        return False
-
-      try:
-        self._GetResponse( '/ping', method = 'GET' )
-        return True
-      except requests.HTTPError:
-        self._StopServer()
-        return False
+      return ( bool( self._racerd_host ) and
+               ProcessIsRunning( self._racerd_phandle ) )
 
 
   def ServerIsReady( self ):
+    """
+    Check if racerd is alive AND ready to serve requests.
+    """
+    if not self.ServerIsRunning():
+      _logger.debug( 'Racerd not running.' )
+      return False
     try:
       self._GetResponse( '/ping', method = 'GET' )
       return True
-    except Exception:
+    # Do NOT make this except clause more generic! If you need to catch more
+    # exception types, list them all out. Having `Exception` here caused FORTY
+    # HOURS OF DEBUGGING.
+    except requests.exceptions.ConnectionError as e:
+      _logger.exception( e )
       return False
 
 
   def _StopServer( self ):
-    """
-    Stop racerd.
-    """
     with self._server_state_lock:
       if self._racerd_phandle:
         self._racerd_phandle.terminate()
@@ -336,9 +343,6 @@ class RustCompleter( Completer ):
 
 
   def _RestartServer( self ):
-    """
-    Restart racerd
-    """
     _logger.debug( 'RustCompleter restarting racerd' )
 
     with self._server_state_lock:
@@ -366,11 +370,13 @@ class RustCompleter( Completer ):
 
   def _GoToDefinition( self, request_data ):
     try:
-      definition = self._GetResponse( '/find_definition', request_data )
+      definition = self._GetResponse( '/find_definition',
+                                      request_data )
       return responses.BuildGoToResponse( definition[ 'file_path' ],
                                           definition[ 'line' ],
                                           definition[ 'column' ] + 1 )
-    except Exception:
+    except Exception as e:
+      _logger.exception( e )
       raise RuntimeError( 'Can\'t jump to definition.' )
 
 

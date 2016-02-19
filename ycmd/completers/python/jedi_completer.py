@@ -17,13 +17,24 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.utils import ToUtf8IfNeeded
-from ycmd.completers.completer import Completer
-from ycmd import responses, utils
-from jedihttp import hmaclib
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import *  # noqa
+from future import standard_library
+from future.utils import native
+standard_library.install_aliases()
 
+from ycmd.utils import ToBytes, ProcessIsRunning
+from ycmd.completers.completer import Completer
+from ycmd import responses, utils, hmac_utils
+from tempfile import NamedTemporaryFile
+
+from base64 import b64encode
+import json
 import logging
-import urlparse
+import urllib.parse
 import requests
 import threading
 import sys
@@ -32,25 +43,14 @@ import base64
 
 
 HMAC_SECRET_LENGTH = 16
+JEDIHTTP_HMAC_HEADER = 'x-jedihttp-hmac'
 BINARY_NOT_FOUND_MESSAGE = ( 'The specified python interpreter {0} ' +
                              'was not found. Did you specify it correctly?' )
-LOG_FILENAME_FORMAT = os.path.join( utils.PathToTempDir(),
+LOG_FILENAME_FORMAT = os.path.join( utils.PathToCreatedTempDir(),
                                     u'jedihttp_{port}_{std}.log' )
 PATH_TO_JEDIHTTP = os.path.join( os.path.abspath( os.path.dirname( __file__ ) ),
                                  '..', '..', '..',
                                  'third_party', 'JediHTTP', 'jedihttp.py' )
-
-
-class HmacAuth( requests.auth.AuthBase ):
-  def __init__( self, secret ):
-    self._hmac_helper = hmaclib.JediHTTPHmacHelper( secret )
-
-  def __call__( self, req ):
-    self._hmac_helper.SignRequestHeaders( req.headers,
-                                          req.method,
-                                          req.path_url,
-                                          req.body )
-    return req
 
 
 class JediCompleter( Completer ):
@@ -73,7 +73,6 @@ class JediCompleter( Completer ):
     self._python_binary_path = sys.executable
 
     self._UpdatePythonBinary( user_options.get( 'python_binary_path' ) )
-
     self._StartServer()
 
 
@@ -102,23 +101,27 @@ class JediCompleter( Completer ):
 
 
   def ServerIsReady( self ):
-    """ Check if JediHTTP server is ready. """
+    """
+    Check if JediHTTP is alive AND ready to serve requests.
+    """
+    if not self.ServerIsRunning():
+      self._logger.debug( 'JediHTTP not running.' )
+      return False
     try:
       return bool( self._GetResponse( '/ready' ) )
-    except Exception:
+    except requests.exceptions.ConnectionError as e:
+      self._logger.exception( e )
       return False
 
 
   def ServerIsRunning( self ):
-    """ Check if JediHTTP server is running (up and serving). """
+    """
+    Check if JediHTTP is alive. That doesn't necessarily mean it's ready to
+    serve requests; that's checked by ServerIsReady.
+    """
     with self._server_lock:
-      if not self._jedihttp_phandle or not self._jedihttp_port:
-        return False
-
-      try:
-        return bool( self._GetResponse( '/healthy' ) )
-      except Exception:
-        return False
+      return ( bool( self._jedihttp_port ) and
+               ProcessIsRunning( self._jedihttp_phandle ) )
 
 
   def RestartServer( self, binary = None ):
@@ -146,10 +149,16 @@ class JediCompleter( Completer ):
   def _StartServer( self ):
     with self._server_lock:
       self._logger.info( 'Starting JediHTTP server' )
-      self._ChoosePort()
-      self._GenerateHmacSecret()
+      self._jedihttp_port = utils.GetUnusedLocalhostPort()
+      self._jedihttp_host = ToBytes( 'http://127.0.0.1:{0}'.format(
+        self._jedihttp_port ) )
+      self._logger.info( 'using port {0}'.format( self._jedihttp_port ) )
+      self._hmac_secret = self._GenerateHmacSecret()
 
-      with hmaclib.TemporaryHmacSecretFile( self._hmac_secret ) as hmac_file:
+      # JediHTTP will delete the secret_file after it's done reading it
+      with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
+        json.dump( { 'hmac_secret': str( self._hmac_secret, 'utf8' ) },
+                   hmac_file )
         command = [ self._python_binary_path,
                     PATH_TO_JEDIHTTP,
                     '--port', str( self._jedihttp_port ),
@@ -167,25 +176,43 @@ class JediCompleter( Completer ):
                                                     stderr = logerr )
 
 
-  def _ChoosePort( self ):
-    if not self._jedihttp_port:
-      self._jedihttp_port = utils.GetUnusedLocalhostPort()
-    self._logger.info( u'using port {0}'.format( self._jedihttp_port ) )
-
-
   def _GenerateHmacSecret( self ):
-    self._hmac_secret = base64.b64encode( os.urandom( HMAC_SECRET_LENGTH ) )
+    # TODO: We shouldn't have to base64 encode the secret here, only before we
+    # pass it to JediHTTP. We should be able to use the raw bytes as the HMAC
+    # key, but can't until the following issue is resolved:
+    #   https://github.com/vheon/JediHTTP/issues/11
+    return base64.b64encode( os.urandom( HMAC_SECRET_LENGTH ) )
 
 
   def _GetResponse( self, handler, request_data = {} ):
-    """ Handle communication with server """
-    target = urlparse.urljoin( self._ServerLocation(), handler )
+    """POST JSON data to JediHTTP server and return JSON response."""
+    handler = ToBytes( handler )
+    url = urllib.parse.urljoin( self._jedihttp_host, handler )
     parameters = self._TranslateRequestForJediHTTP( request_data )
-    response = requests.post( target,
-                              json = parameters,
-                              auth = HmacAuth( self._hmac_secret ) )
+    body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
+    extra_headers = self._ExtraHeaders( handler, body )
+
+    self._logger.debug( 'Making JediHTTP request: %s %s %s %s', 'POST', url,
+                        extra_headers, body )
+
+    response = requests.request( native( bytes( b'POST' ) ),
+                                 native( url ),
+                                 data = body,
+                                 headers = extra_headers )
+
     response.raise_for_status()
     return response.json()
+
+
+  def _ExtraHeaders( self, handler, body ):
+    hmac = hmac_utils.CreateRequestHmac( bytes( b'POST' ),
+                                         handler,
+                                         body,
+                                         self._hmac_secret )
+
+    extra_headers = { 'content-type': 'application/json' }
+    extra_headers[ JEDIHTTP_HMAC_HEADER ] = b64encode( hmac )
+    return extra_headers
 
 
   def _TranslateRequestForJediHTTP( self, request_data ):
@@ -199,21 +226,17 @@ class JediCompleter( Completer ):
     col = request_data[ 'column_num' ] - 1
 
     return {
-        'source': source,
-        'line': line,
-        'col': col,
-        'source_path': path
+      'source': source,
+      'line': line,
+      'col': col,
+      'source_path': path
     }
-
-
-  def _ServerLocation( self ):
-    return 'http://127.0.0.1:' + str( self._jedihttp_port )
 
 
   def _GetExtraData( self, completion ):
       location = {}
       if completion[ 'module_path' ]:
-        location[ 'filepath' ] = ToUtf8IfNeeded( completion[ 'module_path' ] )
+        location[ 'filepath' ] = completion[ 'module_path' ]
       if completion[ 'line' ]:
         location[ 'line_num' ] = completion[ 'line' ]
       if completion[ 'column' ]:
@@ -229,15 +252,16 @@ class JediCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     return [ responses.BuildCompletionData(
-                insertion_text = ToUtf8IfNeeded( completion[ 'name' ] ),
-                result_type = ToUtf8IfNeeded( completion[ 'description' ] ),
-                doc_string = ToUtf8IfNeeded( completion[ 'docstring' ] ),
+                insertion_text = completion[ 'name' ],
+                result_type = completion[ 'description' ],
+                doc_string = completion[ 'docstring' ],
                 extra_data = self._GetExtraData( completion ) )
              for completion in self._JediCompletions( request_data ) ]
 
 
   def _JediCompletions( self, request_data ):
-    return self._GetResponse( '/completions', request_data )[ 'completions' ]
+    return self._GetResponse( '/completions',
+                              request_data )[ 'completions' ]
 
 
   def DefinedSubcommands( self ):
@@ -268,14 +292,16 @@ class JediCompleter( Completer ):
 
 
   def _GoToDefinition( self, request_data ):
-    definitions = self._GetDefinitionsList( '/gotodefinition', request_data )
+    definitions = self._GetDefinitionsList( '/gotodefinition',
+                                            request_data )
     if not definitions:
       raise RuntimeError( 'Can\'t jump to definition.' )
     return self._BuildGoToResponse( definitions )
 
 
   def _GoToDeclaration( self, request_data ):
-    definitions = self._GetDefinitionsList( '/gotoassignment', request_data )
+    definitions = self._GetDefinitionsList( '/gotoassignment',
+                                            request_data )
     if not definitions:
       raise RuntimeError( 'Can\'t jump to declaration.' )
     return self._BuildGoToResponse( definitions )
@@ -284,20 +310,24 @@ class JediCompleter( Completer ):
   def _GoTo( self, request_data ):
     try:
       return self._GoToDefinition( request_data )
-    except Exception:
+    except Exception as e:
+      self._logger.exception( e )
       pass
 
     try:
       return self._GoToDeclaration( request_data )
-    except Exception:
+    except Exception as e:
+      self._logger.exception( e )
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
 
 
   def _GetDoc( self, request_data ):
     try:
-      definitions = self._GetDefinitionsList( '/gotodefinition', request_data )
+      definitions = self._GetDefinitionsList( '/gotodefinition',
+                                              request_data )
       return self._BuildDetailedInfoResponse( definitions )
-    except Exception:
+    except Exception as e:
+      self._logger.exception( e )
       raise RuntimeError( 'Can\'t find a definition.' )
 
 
@@ -312,8 +342,10 @@ class JediCompleter( Completer ):
     try:
       response = self._GetResponse( handler, request_data )
       return response[ 'definitions' ]
-    except Exception:
-      raise RuntimeError( 'Cannot follow nothing. Put your cursor on a valid name.' )
+    except Exception as e:
+      self._logger.exception( e )
+      raise RuntimeError( 'Cannot follow nothing. '
+                          'Put your cursor on a valid name.' )
 
 
   def _BuildGoToResponse( self, definition_list ):

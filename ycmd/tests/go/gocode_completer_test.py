@@ -17,12 +17,21 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import os
 from nose.tools import eq_, raises
 from ycmd.completers.go.gocode_completer import ( GoCodeCompleter,
                                                   PATH_TO_GOCODE_BINARY )
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
+from ycmd.utils import ReadFile
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR, 'testdata' )
@@ -54,9 +63,8 @@ class GoCodeCompleter_test( object ):
     request = REQUEST_DATA.copy()
     request[ 'column_num' ] = column_num
     request[ 'line_num' ] = line_num
-    with open( PATH_TO_TEST_FILE, 'r') as testfile:
-      request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = (
-        testfile.read() )
+    request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = ReadFile(
+      PATH_TO_TEST_FILE )
     return RequestWrap( request )
 
 
@@ -77,8 +85,9 @@ class GoCodeCompleter_test( object ):
 
   # Test line-col to offset in the file before any unicode occurrences.
   def ComputeCandidatesInnerOffsetBeforeUnicode_test( self ):
-    with open( PATH_TO_POS121_RES, 'r' ) as gocodeoutput:
-      mock = MockPopen( returncode=0, stdout=gocodeoutput.read(), stderr='' )
+    mock = MockPopen( returncode = 0,
+                      stdout = ReadFile( PATH_TO_POS121_RES ),
+                      stderr = '' )
     self._completer._popener = mock
     # Col 8 corresponds to cursor at log.Pr^int("Line 7 ...
     self._completer.ComputeCandidatesInner( self._BuildRequest( 7, 8 ) )
@@ -88,8 +97,9 @@ class GoCodeCompleter_test( object ):
 
   # Test line-col to offset in the file after a unicode occurrences.
   def ComputeCandidatesInnerAfterUnicode_test( self ):
-    with open( PATH_TO_POS215_RES, 'r' ) as gocodeoutput:
-      mock = MockPopen( returncode=0, stdout=gocodeoutput.read(), stderr='' )
+    mock = MockPopen( returncode = 0,
+                      stdout = ReadFile( PATH_TO_POS215_RES ),
+                      stderr = '' )
     self._completer._popener = mock
     # Col 9 corresponds to cursor at log.Pri^nt("Line 7 ...
     self._completer.ComputeCandidatesInner(self._BuildRequest(9, 9))
@@ -99,8 +109,9 @@ class GoCodeCompleter_test( object ):
 
   # Test end to end parsing of completed results.
   def ComputeCandidatesInner_test( self ):
-    with open( PATH_TO_POS292_RES, 'r' ) as gocodeoutput:
-      mock = MockPopen( returncode=0, stdout=gocodeoutput.read(), stderr='' )
+    mock = MockPopen( returncode = 0,
+                      stdout = ReadFile( PATH_TO_POS292_RES ),
+                      stderr = '' )
     self._completer._popener = mock
     # Col 40 corresponds to cursor at ..., log.Prefi^x ...
     result = self._completer.ComputeCandidatesInner(
@@ -119,29 +130,32 @@ class GoCodeCompleter_test( object ):
   # Test gocode failure.
   @raises( RuntimeError )
   def ComputeCandidatesInnerGoCodeFailure_test( self ):
-    mock = MockPopen( returncode=1, stdout='', stderr='' )
+    mock = MockPopen( returncode = 1, stdout = '', stderr = '' )
     self._completer._popener = mock
     self._completer.ComputeCandidatesInner( self._BuildRequest( 1, 1 ) )
 
   # Test JSON parsing failure.
   @raises( RuntimeError )
   def ComputeCandidatesInnerParseFailure_test( self ):
-    mock = MockPopen( returncode=0, stdout="{this isn't parseable", stderr='' )
+    mock = MockPopen( returncode = 0,
+                      stdout = "{this isn't parseable",
+                      stderr = '' )
     self._completer._popener = mock
     self._completer.ComputeCandidatesInner( self._BuildRequest( 1, 1 ) )
 
   # Test empty results error (different than no results).
   @raises( RuntimeError )
   def ComputeCandidatesInnerNoResultsFailure_test( self ):
-    mock = MockPopen( returncode=0, stdout='[]', stderr='' )
+    mock = MockPopen( returncode = 0, stdout = '[]', stderr = '' )
     self._completer._popener = mock
     self._completer.ComputeCandidatesInner( self._BuildRequest( 1, 1 ) )
 
   # Test empty results error (different than no results).
   @raises( RuntimeError )
   def ComputeCandidatesGoCodePanic_test( self ):
-    with open( PATH_TO_PANIC_OUTPUT_RES, 'r') as gocodeoutput:
-      mock = MockPopen( returncode=0, stdout=gocodeoutput.read(), stderr='' )
+    mock = MockPopen( returncode = 0,
+                      stdout = ReadFile( PATH_TO_PANIC_OUTPUT_RES ),
+                      stderr = '' )
     self._completer._popener = mock
     self._completer.ComputeCandidatesInner( self._BuildRequest( 1, 1 ) )
 
@@ -160,7 +174,7 @@ class MockSubprocess( object ):
 
 
 class MockPopen( object ):
-  def __init__( self, returncode=None, stdout=None, stderr=None ):
+  def __init__( self, returncode = None, stdout = None, stderr = None ):
     self._returncode = returncode
     self._stdout = stdout
     self._stderr = stderr
@@ -168,6 +182,6 @@ class MockPopen( object ):
     self.cmd = None
 
 
-  def __call__( self, cmd, stdout=None, stderr=None, stdin=None ):
+  def __call__( self, cmd, stdout = None, stderr = None, stdin = None ):
     self.cmd = cmd
     return MockSubprocess( self._returncode, self._stdout, self._stderr )

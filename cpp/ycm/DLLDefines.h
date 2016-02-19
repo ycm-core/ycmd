@@ -21,9 +21,9 @@
 // We need to export symbols for gmock tests on Windows.  The preprocessor
 // symbol ycm_core_EXPORTS is defined by CMake when building a shared library.
 #if defined( _WIN32 ) && defined( ycm_core_EXPORTS )
-  #define YCM_DLL_EXPORT __declspec( dllexport )
+#define YCM_DLL_EXPORT __declspec( dllexport )
 #else
-  #define YCM_DLL_EXPORT
+#define YCM_DLL_EXPORT
 #endif
 
 #endif /* end of include guard: DLLDEFINES_H_0IYA3AQ3 */

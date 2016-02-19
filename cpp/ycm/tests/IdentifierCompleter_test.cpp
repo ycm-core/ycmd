@@ -228,7 +228,7 @@ TEST( IdentifierCompleterTest, PreferLowercaseCandidate ) {
                  StringVector(
                    "chatContentExtension",
                    "ChatContentExtension" ) ).CandidatesForQuery(
-                       "chatContent" ),
+                 "chatContent" ),
                ElementsAre( "chatContentExtension",
                             "ChatContentExtension" ) );
 

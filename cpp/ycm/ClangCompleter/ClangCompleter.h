@@ -97,7 +97,7 @@ public:
     int column,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags,
-    bool reparse = true);
+    bool reparse = true );
 
   DocumentationData GetDocsForLocationInFile(
     const std::string &filename,
@@ -105,7 +105,7 @@ public:
     int column,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags,
-    bool reparse = true);
+    bool reparse = true );
 
   void DeleteCachesForFile( const std::string &filename );
 

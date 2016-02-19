@@ -143,7 +143,7 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     std::string identifier( matches[ 1 ] );
     fs::path path( matches[ 2 ].str() );
     path = fs::absolute( path, path_to_tag_file.parent_path() )
-      .make_preferred();
+           .make_preferred();
 
     filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
   }

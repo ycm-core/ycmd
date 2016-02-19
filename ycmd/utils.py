@@ -15,15 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+from future.utils import PY2, native
+
 import tempfile
 import os
 import sys
 import signal
 import socket
 import stat
-import json
 import subprocess
-import collections
 
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
@@ -31,53 +38,82 @@ CREATE_NO_WINDOW = 0x08000000
 # Executable extensions used on Windows
 WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
 
+# Don't use this! Call PathToCreatedTempDir() instead. This exists for the sake of
+# tests.
+RAW_PATH_TO_TEMP_DIR = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
 
-def SanitizeQuery( query ):
-  return query.strip()
+# Readable, writable and executable by everyone.
+ACCESSIBLE_TO_ALL_MASK = ( stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH |
+                           stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP )
 
 
-# Given an object, returns a str object that's utf-8 encoded.
-def ToUtf8IfNeeded( value ):
-  if isinstance( value, unicode ):
+# Python 3 complains on the common open(path).read() idiom because the file
+# doesn't get closed. So, a helper func.
+# Also, all files we read are UTF-8.
+def ReadFile( filepath ):
+  with open( filepath, encoding = 'utf8' ) as f:
+    return f.read()
+
+
+# Given an object, returns a str object that's utf-8 encoded. This is meant to
+# be used exclusively when producing strings to be passed to the C++ Python
+# plugins. For other code, you likely want to use ToBytes below.
+def ToCppStringCompatible( value ):
+  if isinstance( value, str ):
     return value.encode( 'utf8' )
+  if isinstance( value, bytes ):
+    return value
+  return native( str( value ).encode( 'utf8' ) )
+
+
+# Returns a unicode type; either the new python-future str type or the real
+# unicode type. The difference shouldn't matter.
+def ToUnicode( value ):
   if isinstance( value, str ):
     return value
+  if isinstance( value, bytes ):
+    # All incoming text should be utf8
+    return str( value, 'utf8' )
   return str( value )
 
 
-def ToUnicodeIfNeeded( value ):
-  if isinstance( value, unicode ):
+# Consistently returns the new bytes() type from python-future. Assumes incoming
+# strings are either UTF-8 or unicode (which is converted to UTF-8).
+def ToBytes( value ):
+  # This is tricky. On py2, the bytes type from builtins (from python-future) is
+  # a subclass of str. So all of the following are true:
+  #   isinstance(str(), bytes)
+  #   isinstance(bytes(), str)
+  # But they don't behave the same in one important aspect: iterating over a
+  # bytes instance yields ints, while iterating over a (raw, py2) str yields
+  # chars. We want consistent behavior so we force the use of bytes().
+  if type( value ) == bytes:
     return value
+
+  # This is meant to catch Python 2's native str type.
+  if isinstance( value, bytes ):
+    return bytes( value, encoding = 'utf8' )
+
   if isinstance( value, str ):
-    # All incoming text should be utf8
-    return unicode( value, 'utf8' )
-  return unicode( value )
+    # On py2, with `from builtins import *` imported, the following is true:
+    #
+    #   bytes(str(u'abc'), 'utf8') == b"b'abc'"
+    #
+    # Obviously this is a bug in python-future. So we work around it. Also filed
+    # upstream at: https://github.com/PythonCharmers/python-future/issues/193
+    # We can't just return value.encode( 'utf8' ) on both py2 & py3 because on
+    # py2 that *sometimes* returns the built-in str type instead of the newbytes
+    # type from python-future.
+    if PY2:
+      return bytes( value.encode( 'utf8' ), encoding = 'utf8' )
+    else:
+      return bytes( value, encoding = 'utf8' )
+
+  # This is meant to catch `int` and similar non-string/bytes types.
+  return ToBytes( str( value ) )
 
 
-# Recurses through the object if it's a dict/iterable and converts all the
-# unicode objects to utf-8 strings.
-def RecursiveEncodeUnicodeToUtf8( value ):
-  if isinstance( value, unicode ):
-    return value.encode( 'utf8' )
-  if isinstance( value, str ):
-    return value
-  elif isinstance( value, collections.Mapping ):
-    return dict( map( RecursiveEncodeUnicodeToUtf8, value.iteritems() ) )
-  elif isinstance( value, collections.Iterable ):
-    return type( value )( map( RecursiveEncodeUnicodeToUtf8, value ) )
-  else:
-    return value
-
-
-def ToUtf8Json( data ):
-  return json.dumps( RecursiveEncodeUnicodeToUtf8( data ),
-                     ensure_ascii = False,
-                     # This is the encoding of INPUT str data
-                     encoding = 'utf-8' )
-
-
-def PathToTempDir():
-  tempdir = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
+def PathToCreatedTempDir( tempdir = RAW_PATH_TO_TEMP_DIR ):
   try:
     os.makedirs( tempdir )
     # Needed to support multiple users working on the same machine;
@@ -91,9 +127,7 @@ def PathToTempDir():
 
 def MakeFolderAccessibleToAll( path_to_folder ):
   current_stat = os.stat( path_to_folder )
-  # readable, writable and executable by everyone
-  flags = ( current_stat.st_mode | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
-            | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP )
+  flags = current_stat.st_mode | ACCESSIBLE_TO_ALL_MASK
   os.chmod( path_to_folder, flags )
 
 
@@ -211,7 +245,20 @@ def AddNearestThirdPartyFoldersToSysPath( filepath ):
     raise RuntimeError(
         'No third_party folder found for: {0}'.format( filepath ) )
 
+  # NOTE: Any hacks for loading modules that can't be imported without custom
+  # logic need to be reproduced in run_tests.py as well.
   for folder in os.listdir( path_to_third_party ):
+    # python-future needs special handling. Not only does it store the modules
+    # under its 'src' folder, but SOME of its modules are only meant to be
+    # accessible under py2, not py3. This is because these modules (like
+    # `queue`) are implementations of modules present in the py3 standard
+    # library. So to work around issues, we place the python-future last on
+    # sys.path so that they can be overriden by the standard library.
+    if folder == 'python-future':
+      folder = os.path.join( folder, 'src' )
+      sys.path.append( os.path.realpath( os.path.join( path_to_third_party,
+                                                       folder ) ) )
+      continue
     sys.path.insert( 0, os.path.realpath( os.path.join( path_to_third_party,
                                                         folder ) ) )
 
@@ -235,10 +282,20 @@ def SafePopen( args, **kwargs ):
     # http://bugs.python.org/issue1759845.
     # Since paths are likely to contains such characters, we convert them to
     # short ones to obtain paths with only ascii characters.
-    args = ConvertArgsToShortPath( args )
+    if PY2:
+      args = ConvertArgsToShortPath( args )
 
   kwargs.pop( 'stdin_windows', None )
   return subprocess.Popen( args, **kwargs )
+
+
+# We need to convert environment variables to native strings on Windows and
+# Python 2 to prevent a TypeError when passing them to a subprocess.
+def SetEnviron( environ, variable, value ):
+  if OnWindows() and PY2:
+    environ[ native( ToBytes( variable ) ) ] = native( ToBytes( value ) )
+  else:
+    environ[ variable ] = value
 
 
 # Convert paths in arguments command to short path ones
@@ -248,7 +305,7 @@ def ConvertArgsToShortPath( args ):
       return GetShortPathName( arg )
     return arg
 
-  if isinstance( args, basestring ):
+  if isinstance( args, str ) or isinstance( args, bytes ):
     return ConvertIfPath( args )
   return [ ConvertIfPath( arg ) for arg in args ]
 
@@ -256,6 +313,9 @@ def ConvertArgsToShortPath( args ):
 # Get the Windows short path name.
 # Based on http://stackoverflow.com/a/23598461/200291
 def GetShortPathName( path ):
+  if not OnWindows():
+    return path
+
   from ctypes import windll, wintypes, create_unicode_buffer
 
   # Set the GetShortPathNameW prototype
@@ -274,3 +334,14 @@ def GetShortPathName( path ):
       return output_buf.value
     else:
       output_buf_size = needed
+
+
+# Shim for imp.load_source so that it works on both Py2 & Py3. See upstream
+# Python docs for info on what this does.
+def LoadPythonSource( name, pathname ):
+  if PY2:
+    import imp
+    return imp.load_source( name, pathname )
+  else:
+    import importlib
+    return importlib.machinery.SourceFileLoader( name, pathname ).load_module()

@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
 import json
 import logging
 import os
@@ -43,7 +51,7 @@ class DeferredResponse( object ):
   A deferred that resolves to a response from TSServer.
   """
 
-  def __init__( self, timeout = MAX_DETAILED_COMPLETIONS ):
+  def __init__( self, timeout = RESPONSE_TIMEOUT_SECONDS ):
     self._event = Event()
     self._message = None
     self._timeout = timeout
@@ -96,7 +104,7 @@ class TypeScriptCompleter( Completer ):
     # source code it seems like this is the way:
     # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
     self._environ = os.environ.copy()
-    self._environ[ 'TSS_LOG' ] = tsserver_log
+    utils.SetEnviron( self._environ, 'TSS_LOG', tsserver_log )
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
@@ -189,7 +197,7 @@ class TypeScriptCompleter( Completer ):
     """Build TSServer request object."""
 
     with self._sequenceid_lock:
-      seq = self._sequenceid.next()
+      seq = next( self._sequenceid )
     request = {
       'seq':     seq,
       'type':    'request',
@@ -211,6 +219,7 @@ class TypeScriptCompleter( Completer ):
     with self._writelock:
       self._tsserver_handle.stdin.write( json.dumps( request ) )
       self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.flush()
 
 
   def _SendRequest( self, command, arguments = None ):
@@ -227,6 +236,7 @@ class TypeScriptCompleter( Completer ):
     with self._writelock:
       self._tsserver_handle.stdin.write( json.dumps( request ) )
       self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.flush()
     return deferred.result()
 
 
@@ -239,7 +249,7 @@ class TypeScriptCompleter( Completer ):
     filename = request_data[ 'filepath' ]
     contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
     tmpfile = NamedTemporaryFile( delete = False )
-    tmpfile.write( utils.ToUtf8IfNeeded( contents ) )
+    tmpfile.write( utils.ToBytes( contents ) )
     tmpfile.close()
     self._SendRequest( 'reload', {
       'file':    filename,
@@ -377,7 +387,7 @@ class TypeScriptCompleter( Completer ):
 
 
 def _LogFileName():
-  with NamedTemporaryFile( dir = utils.PathToTempDir(),
+  with NamedTemporaryFile( dir = utils.PathToCreatedTempDir(),
                            prefix = 'tsserver_',
                            suffix = '.log',
                            delete = False ) as logfile:
@@ -390,8 +400,8 @@ def _LogLevel():
 
 def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
-    insertion_text = utils.ToUtf8IfNeeded( completion_data[ 'name' ] ),
-    kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
+    insertion_text = completion_data[ 'name' ],
+    kind           = completion_data[ 'kind' ]
   )
 
 
@@ -401,7 +411,13 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
   display_string = '{0} {1}'.format( name.ljust( padding ), signature )
   return responses.BuildCompletionData(
+<<<<<<< HEAD
     insertion_text = utils.ToUtf8IfNeeded( name ),
     display_string = utils.ToUtf8IfNeeded( display_string ),
     kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
+=======
+    insertion_text = name,
+    menu_text      = menu_text,
+    kind           = completion_data[ 'kind' ]
+>>>>>>> upstream/master
   )
