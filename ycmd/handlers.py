@@ -41,13 +41,14 @@ import json
 import bottle
 import http.client
 import traceback
-from bottle import request, response
+from bottle import request
 from . import server_state
 from ycmd import user_options_store
 from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
 from ycmd import hmac_plugin
 from ycmd import extra_conf_store
 from ycmd.request_wrap import RequestWrap
+from ycmd.bottle_utils import SetResponseHeader
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -228,7 +229,7 @@ def ErrorHandler( httperror ):
 
 
 def _JsonResponse( data ):
-  response.set_header( 'Content-Type', 'application/json' )
+  SetResponseHeader( 'Content-Type', 'application/json' )
   return json.dumps( data, default = _UniversalSerialize )
 
 
