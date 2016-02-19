@@ -402,7 +402,7 @@ def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data[ 'name' ],
     kind           = completion_data[ 'kind' ]
-  )
+)
 
 
 def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
@@ -411,13 +411,7 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
   display_string = '{0} {1}'.format( name.ljust( padding ), signature )
   return responses.BuildCompletionData(
-<<<<<<< HEAD
-    insertion_text = utils.ToUtf8IfNeeded( name ),
-    display_string = utils.ToUtf8IfNeeded( display_string ),
-    kind           = utils.ToUtf8IfNeeded( completion_data[ 'kind' ] )
-=======
     insertion_text = name,
-    menu_text      = menu_text,
+    display_string = display_string,
     kind           = completion_data[ 'kind' ]
->>>>>>> upstream/master
   )
