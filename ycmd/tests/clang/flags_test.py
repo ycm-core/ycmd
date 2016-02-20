@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+# Intentionally not importing unicode_literals!
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
@@ -23,9 +23,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+from future.utils import PY2
 from nose.tools import eq_
 from nose.tools import ok_
 from ycmd.completers.cpp import flags
+import imp
 
 
 def SanitizeFlags_Passthrough_test():
@@ -234,3 +236,43 @@ def ExtraClangFlags_test():
       num_found += 1
 
   eq_( 1, num_found )
+
+
+def CreateModule( name, code ):
+  module = imp.new_module( name )
+  exec( code, module.__dict__ )
+  return module
+
+
+def FlagsForFile_OldSignature_PassCppCompatibleString_test():
+  code = """
+def FlagsForFile( filename ):
+  return filename
+"""
+  module = CreateModule( 'extra_conf', code )
+
+  filename = flags._CallExtraConfFlagsForFile( module, 'some_filename', None )
+
+  if PY2:
+    eq_( filename, 'some_filename' )
+    eq_( type( filename ), type( '' ) )
+  else:
+    eq_( filename, bytes( b'some_filename' ) )
+    ok_( isinstance( filename, bytes ) )
+
+
+def FlagsForFile_NewSignature_PassCppCompatibleString_test():
+  code = """
+def FlagsForFile( filename, **kwargs ):
+  return filename
+"""
+  module = CreateModule( 'extra_conf', code )
+
+  filename = flags._CallExtraConfFlagsForFile( module, 'some_filename', None )
+
+  if PY2:
+    eq_( filename, 'some_filename' )
+    eq_( type( filename ), type( '' ) )
+  else:
+    eq_( filename, bytes( b'some_filename' ) )
+    ok_( isinstance( filename, bytes ) )
