@@ -55,6 +55,16 @@ def ReadFile( filepath ):
     return f.read()
 
 
+# Returns a file object that can be used to replace sys.stdout or sys.stderr
+def OpenForStdHandle( filepath ):
+  # Need to open the file in binary mode on py2 because of bytes vs unicode.
+  # If we open in text mode (default), then third-party code that uses `print`
+  # (we're replacing sys.stdout!) with an `str` object on py2 will cause
+  # tracebacks because text mode insists on unicode objects. (Don't forget,
+  # `open` is actually `io.open` because of future builtins.)
+  return open( filepath, 'wb' if PY2 else 'w' )
+
+
 # Given an object, returns a str object that's utf-8 encoded. This is meant to
 # be used exclusively when producing strings to be passed to the C++ Python
 # plugins. For other code, you likely want to use ToBytes below.
