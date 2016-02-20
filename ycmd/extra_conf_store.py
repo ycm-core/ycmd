@@ -33,7 +33,7 @@ import logging
 from threading import Lock
 from ycmd import user_options_store
 from ycmd.responses import UnknownExtraConf, YCM_EXTRA_CONF_FILENAME
-from ycmd.utils import LoadPythonSource
+from ycmd.utils import LoadPythonSource, PathsToAllParentFolders
 from fnmatch import fnmatch
 
 
@@ -168,7 +168,7 @@ def _ExtraConfModuleSourceFilesForFile( filename ):
   files that will compute the flags necessary to compile the file.
   If _GlobalYcmExtraConfFileLocation() exists it is returned as a fallback."""
 
-  for folder in _PathsToAllParentFolders( filename ):
+  for folder in PathsToAllParentFolders( filename ):
     candidate = os.path.join( folder, YCM_EXTRA_CONF_FILENAME )
     if os.path.exists( candidate ):
       yield candidate
@@ -176,31 +176,6 @@ def _ExtraConfModuleSourceFilesForFile( filename ):
   if ( global_ycm_extra_conf
        and os.path.exists( global_ycm_extra_conf ) ):
     yield global_ycm_extra_conf
-
-
-def _PathsToAllParentFolders( filename ):
-  """Build a list of all parent folders of a file.
-  The nearest folders will be returned first.
-  Example: _PathsToAllParentFolders( '/home/user/projects/test.c' )
-    [ '/home/user/projects', '/home/user', '/home', '/' ]"""
-
-  def PathFolderComponents( filename ):
-    folders = []
-    path = os.path.normpath( os.path.dirname( filename ) )
-    while True:
-      path, folder = os.path.split( path )
-      if folder:
-        folders.append( folder )
-      else:
-        if path:
-          folders.append( path )
-        break
-    return list( reversed( folders ) )
-
-  parent_folders = PathFolderComponents( filename )
-  parent_folders = [ os.path.join( *parent_folders[ :i + 1 ] )
-                     for i in range( len( parent_folders ) ) ]
-  return reversed( parent_folders )
 
 
 def _PathToCppCompleterFolder():

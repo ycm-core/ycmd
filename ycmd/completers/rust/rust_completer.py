@@ -44,7 +44,8 @@ from os import path as p
 _logger = logging.getLogger( __name__ )
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
-DIR_OF_THIRD_PARTY = utils.PathToNearestThirdPartyFolder( DIR_OF_THIS_SCRIPT )
+DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, '..', '..', '..',
+                             'third_party' )
 
 RACERD_BINARY_NAME = 'racerd' + ( '.exe' if utils.OnWindows() else '' )
 RACERD_BINARY_RELEASE = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',

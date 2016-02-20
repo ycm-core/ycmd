@@ -89,12 +89,7 @@ def GlobalConfigExists( tern_config ):
 
 
 def FindTernProjectFile( starting_directory ):
-  # We use a dummy_file here because AncestorFolders requires a file name and we
-  # don't have one. Something like '.' doesn't work because, while
-  # os.path.dirname( /a/b/c/. ) returns /a/b/c, AncestorFolders calls
-  # os.path.abspath on it, so the /. is removed.
-  starting_file = os.path.join( starting_directory, 'dummy_file' )
-  for folder in utils.AncestorFolders( starting_file ):
+  for folder in utils.PathsToAllParentFolders( starting_directory ):
     tern_project = os.path.join( folder, '.tern-project' )
     if os.path.exists( tern_project ):
       return tern_project

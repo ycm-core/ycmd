@@ -24,14 +24,12 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from future.utils import PY2, native
-from hamcrest import raises, assert_that, calling
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
 from ycmd.tests.test_utils import PathToTestFile
 from shutil import rmtree
 import os
-import os.path
 import subprocess
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
@@ -280,16 +278,35 @@ if PY2:
     eq_( env, { native( bytes( b'key' ) ): native( bytes( b'value' ) ) } )
 
 
-def PathToNearestThirdPartyFolder_Success_test():
-  ok_( utils.PathToNearestThirdPartyFolder( os.path.abspath( __file__ ) ) )
+def PathsToAllParentFolders_Basic_test():
+  eq_( [
+    os.path.normpath( '/home/user/projects' ),
+    os.path.normpath( '/home/user' ),
+    os.path.normpath( '/home' ),
+    os.path.normpath( '/' )
+  ], list( utils.PathsToAllParentFolders( '/home/user/projects/test.c' ) ) )
 
 
-def PathToNearestThirdPartyFolder_Failure_test():
-  ok_( not utils.PathToNearestThirdPartyFolder( os.path.expanduser( '~' ) ) )
+@patch( 'os.path.isdir', return_value = True )
+def PathsToAllParentFolders_IsDirectory_test( *args ):
+  eq_( [
+    os.path.normpath( '/home/user/projects' ),
+    os.path.normpath( '/home/user' ),
+    os.path.normpath( '/home' ),
+    os.path.normpath( '/' )
+  ], list( utils.PathsToAllParentFolders( '/home/user/projects' ) ) )
 
 
-def AddNearestThirdPartyFoldersToSysPath_Failure_test():
-  assert_that(
-    calling( utils.AddNearestThirdPartyFoldersToSysPath ).with_args(
-      os.path.expanduser( '~' ) ),
-    raises( RuntimeError, '.*third_party folder.*' ) )
+def PathsToAllParentFolders_FileAtRoot_test():
+  eq_( [ os.path.normpath( '/' ) ],
+       list( utils.PathsToAllParentFolders( '/test.c' ) ) )
+
+
+if utils.OnWindows():
+  def PathsToAllParentFolders_WindowsPath_test():
+    eq_( [
+      os.path.normpath( r'C:\\foo\\goo\\zoo' ),
+      os.path.normpath( r'C:\\foo\\goo' ),
+      os.path.normpath( r'C:\\foo' ),
+      os.path.normpath( r'C:\\' )
+    ], list( utils.PathsToAllParentFolders( r'C:\\foo\\goo\\zoo\\test.c' ) ) )
