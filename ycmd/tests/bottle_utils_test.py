@@ -23,33 +23,36 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from future.utils import PY2
 from nose.tools import eq_
 from mock import patch, call
 from ycmd import bottle_utils
+from ycmd.tests.test_utils import Py2Only, Py3Only
 import bottle
 
 
-if PY2:
-  @patch( 'bottle.response' )
-  def SetResponseHeader_Py2CorrectTypesWithStr_test( *args ):
-    bottle_utils.SetResponseHeader( 'foo', 'bar' )
-    eq_( bottle.response.set_header.call_args, call( 'foo', u'bar' ) )
+@Py2Only
+@patch( 'bottle.response' )
+def SetResponseHeader_Py2CorrectTypesWithStr_test( *args ):
+  bottle_utils.SetResponseHeader( 'foo', 'bar' )
+  eq_( bottle.response.set_header.call_args, call( 'foo', u'bar' ) )
 
 
-  @patch( 'bottle.response' )
-  def SetResponseHeader_Py2CorrectTypesWithUnicode_test( *args ):
-    bottle_utils.SetResponseHeader( u'foo', u'bar' )
-    eq_( bottle.response.set_header.call_args, call( 'foo', u'bar' ) )
-
-else:
-  @patch( 'bottle.response' )
-  def SetResponseHeader_Py3CorrectTypesWithBytes_test( *args ):
-    bottle_utils.SetResponseHeader( b'foo', b'bar' )
-    eq_( bottle.response.set_header.call_args, call( u'foo', u'bar' ) )
+@Py2Only
+@patch( 'bottle.response' )
+def SetResponseHeader_Py2CorrectTypesWithUnicode_test( *args ):
+  bottle_utils.SetResponseHeader( u'foo', u'bar' )
+  eq_( bottle.response.set_header.call_args, call( 'foo', u'bar' ) )
 
 
-  @patch( 'bottle.response' )
-  def SetResponseHeader_Py3CorrectTypesWithUnicode_test( *args ):
-    bottle_utils.SetResponseHeader( u'foo', u'bar' )
-    eq_( bottle.response.set_header.call_args, call( u'foo', u'bar' ) )
+@Py3Only
+@patch( 'bottle.response' )
+def SetResponseHeader_Py3CorrectTypesWithBytes_test( *args ):
+  bottle_utils.SetResponseHeader( b'foo', b'bar' )
+  eq_( bottle.response.set_header.call_args, call( u'foo', u'bar' ) )
+
+
+@Py3Only
+@patch( 'bottle.response' )
+def SetResponseHeader_Py3CorrectTypesWithUnicode_test( *args ):
+  bottle_utils.SetResponseHeader( u'foo', u'bar' )
+  eq_( bottle.response.set_header.call_args, call( u'foo', u'bar' ) )
