@@ -140,10 +140,15 @@ def CloseStdin():
 def Main():
   args = ParseArguments()
 
+  # Need to open these files in binary mode because of bytes vs unicode. If we
+  # open in text mode (default), then third-party code that uses `print` (we're
+  # replacing sys.stdout!) with an `str` object on py2 will cause tracebacks
+  # because text mode insists on unicode objects. (Don't forget, `open` is
+  # actually `io.open` because of future builtins.)
   if args.stdout is not None:
-    sys.stdout = open( args.stdout, 'w' )
+    sys.stdout = open( args.stdout, 'wb' )
   if args.stderr is not None:
-    sys.stderr = open( args.stderr, 'w' )
+    sys.stderr = open( args.stderr, 'wb' )
 
   SetupLogging( args.log )
   options, hmac_secret = SetupOptions( args.options_file )
