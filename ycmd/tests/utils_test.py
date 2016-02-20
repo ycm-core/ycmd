@@ -310,3 +310,12 @@ if utils.OnWindows():
       os.path.normpath( r'C:\\foo' ),
       os.path.normpath( r'C:\\' )
     ], list( utils.PathsToAllParentFolders( r'C:\\foo\\goo\\zoo\\test.c' ) ) )
+
+
+def OpenForStdHandle_PrintDoesntThrowException_test():
+  try:
+    temp = PathToTestFile( 'open-for-std-handle' )
+    with utils.OpenForStdHandle( temp ) as f:
+      print( 'foo', file = f )
+  finally:
+    os.remove( temp )
