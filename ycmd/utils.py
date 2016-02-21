@@ -79,6 +79,8 @@ def ToCppStringCompatible( value ):
 # Returns a unicode type; either the new python-future str type or the real
 # unicode type. The difference shouldn't matter.
 def ToUnicode( value ):
+  if not value:
+    return str()
   if isinstance( value, str ):
     return value
   if isinstance( value, bytes ):
@@ -90,6 +92,9 @@ def ToUnicode( value ):
 # Consistently returns the new bytes() type from python-future. Assumes incoming
 # strings are either UTF-8 or unicode (which is converted to UTF-8).
 def ToBytes( value ):
+  if not value:
+    return bytes()
+
   # This is tricky. On py2, the bytes type from builtins (from python-future) is
   # a subclass of str. So all of the following are true:
   #   isinstance(str(), bytes)
