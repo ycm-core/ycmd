@@ -85,6 +85,12 @@ def ToBytes_Int_test():
   eq_( type( value ), bytes )
 
 
+def ToBytes_None_test():
+  value = utils.ToBytes( None )
+  eq_( value, bytes( b'' ) )
+  eq_( type( value ), bytes )
+
+
 if PY2:
   def ToUnicode_Py2Bytes_test():
     value = utils.ToUnicode( bytes( 'abc' ) )
@@ -131,6 +137,12 @@ def ToUnicode_Str_test():
 def ToUnicode_Int_test():
   value = utils.ToUnicode( 123 )
   eq_( value, u'123' )
+  ok_( isinstance( value, str ) )
+
+
+def ToUnicode_None_test():
+  value = utils.ToUnicode( None )
+  eq_( value, u'' )
   ok_( isinstance( value, str ) )
 
 
