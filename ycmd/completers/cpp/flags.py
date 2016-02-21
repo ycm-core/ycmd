@@ -43,21 +43,6 @@ STATE_FLAGS_TO_SKIP = set(['-c', '-MP', '--fcolor-diagnostics'])
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
 FILE_FLAGS_TO_SKIP = set(['-MD', '-MMD', '-MF', '-MT', '-MQ', '-o'])
 
-# These are the standard header search paths that clang will use on Mac BUT
-# libclang won't, for unknown reasons. We add these paths when the user is on a
-# Mac because if we don't, libclang would fail to find <vector> etc.
-# This should be fixed upstream in libclang, but until it does, we need to help
-# users out.
-# See Valloric/YouCompleteMe#303 for details.
-MAC_INCLUDE_PATHS = [
- '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1',
- '/usr/local/include',
- '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include',
- '/usr/include',
- '/System/Library/Frameworks',
- '/Library/Frameworks',
-]
-
 # Use a regex to correctly detect c++/c language for both versioned and
 # non-versioned compiler executable names suffixes
 # (e.g., c++, g++, clang++, g++-4.9, clang++-3.7, c++-10.2 etc).
@@ -294,10 +279,47 @@ def _RemoveUnusedFlags( flags, filename ):
   return new_flags
 
 
+# These are the standard header search paths that clang will use on Mac BUT
+# libclang won't, for unknown reasons. We add these paths when the user is on a
+# Mac because if we don't, libclang would fail to find <vector> etc.
+# This should be fixed upstream in libclang, but until it does, we need to help
+# users out.
+# See Valloric/YouCompleteMe#303 for details.
+# It is possible that, later on, further such exceptions will need to be
+# added. The complete list of paths that need to be added can be retrieved
+# on a machine running MacOSX with the command:
+#
+# echo | clang -stdlib=libc++ -v -E -x c++ -
+#
+# The list appears under the line:
+# #include <...> search starts here:
+def _MacIncludePaths():
+    mac_include_flags = [
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1',
+    '/usr/local/include',
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include',
+    '/usr/include',
+    '/System/Library/Frameworks',
+    '/Library/Frameworks',
+    ]
+    # The following path contains a version number, so simply including it is a
+    # brittle solution and likely to need to be changed very shortly. Instead,
+    # we search the parent path for a dirctory similar to "7.0.2", check inside
+    # of it for an "include" directory, and add that directory if it exists.
+    parent_path = '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/'
+    leaves = os.listdir( parent_path )
+    for leaf in leaves:
+        if (os.path.isdir( parent_path + '/' + leaf ) and
+                len( leaf.split( '.' ) ) == 3 ):
+            include_directory = parent_path + '/' + leaf + '/include'
+            if os.path.exists( include_directory ):
+                mac_include_flags.append( include_directory )
+    return mac_include_flags
+
 def _ExtraClangFlags():
   flags = _SpecialClangIncludes()
   if OnMac():
-    for path in MAC_INCLUDE_PATHS:
+    for path in _MacIncludePaths():
       flags.extend( [ '-isystem', path ] )
   # On Windows, parsing of templates is delayed until instantation time.
   # This makes GetType and GetParent commands not returning the expected
