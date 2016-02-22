@@ -25,6 +25,9 @@ from builtins import *  # noqa
 
 from nose.tools import eq_
 from nose.tools import ok_
+from mock import patch
+from hamcrest import ( assert_that, has_item )
+from ycmd.tests.test_utils import PathToTestFile
 from ycmd.completers.cpp import flags
 
 
@@ -223,6 +226,14 @@ def CompilerToLanguageFlag_ReplaceCppCompiler_test():
 
   for compiler in compilers:
     yield _ReplaceCompilerTester, compiler, 'c++'
+
+
+@patch( 'ycmd.completers.cpp.flags.CLANG_TOOLCHAIN_PARENT_PATH', PathToTestFile( ) )
+def MacIncludePaths_test( *args ):
+  results = flags._MacIncludePaths()
+  assert_that(results,
+                has_item(
+                  PathToTestFile( ) + '/7.0.3/include' ) )
 
 
 def ExtraClangFlags_test():
