@@ -32,6 +32,13 @@ import socket
 import stat
 import subprocess
 
+try:
+  import vim  # NOQA
+  IN_VIM = True
+except ImportError:
+  IN_VIM = False
+
+
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
 CREATE_NO_WINDOW = 0x08000000
@@ -45,7 +52,6 @@ RAW_PATH_TO_TEMP_DIR = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
 # Readable, writable and executable by everyone.
 ACCESSIBLE_TO_ALL_MASK = ( stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH |
                            stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP )
-
 
 # Python 3 complains on the common open(path).read() idiom because the file
 # doesn't get closed. So, a helper func.
@@ -144,14 +150,6 @@ def MakeFolderAccessibleToAll( path_to_folder ):
   current_stat = os.stat( path_to_folder )
   flags = current_stat.st_mode | ACCESSIBLE_TO_ALL_MASK
   os.chmod( path_to_folder, flags )
-
-
-def RunningInsideVim():
-  try:
-    import vim  # NOQA
-    return True
-  except ImportError:
-    return False
 
 
 def GetUnusedLocalhostPort():

@@ -195,6 +195,8 @@ endif()
 
 #############################################################################
 
+# Note: build.py always explicitly sets this option, so the default used here
+# rarely matters.
 option( USE_PYTHON2 "If on, link to Python 2 instead of 3" ON )
 
 if ( USE_PYTHON2 )

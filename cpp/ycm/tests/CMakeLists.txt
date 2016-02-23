@@ -46,7 +46,7 @@ else()
 endif()
 
 include_directories(
-  ${ycm_support_libs_SOURCE_DIR}
+  ${ycm_core_SOURCE_DIR}
   )
 
 include_directories(
@@ -105,9 +105,8 @@ if ( MSVC )
 endif()
 
 target_link_libraries( ${PROJECT_NAME}
+                       ycm_core
                        ${Boost_LIBRARIES}
-                       ${SERVER_LIB}
-                       ${CLIENT_LIB}
                        ${GTEST_LIBRARIES}
                        ${GMOCK_LIBRARIES} )
 
