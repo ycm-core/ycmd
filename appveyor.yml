@@ -30,7 +30,8 @@ build_script:
 # Disable automatic tests
 test: off
 cache:
-  - '%USERPROFILE%\.cargo -> third_party\racerd'
-  - 'third_party\racerd\target -> third_party\racerd'
-  - '%LOCALAPPDATA%\pip\cache'
-  - '%APPDATA%\npm-cache'
+  - '%LOCALAPPDATA%\pip\cache'  # Python packages from pip
+  - '%APPDATA%\npm-cache'  # Node packages from npm
+  - '%USERPROFILE%\.cargo'  # Cargo package deps
+  - '%APPVEYOR_BUILD_FOLDER%\clang_archives'  # Clang downloads
+  - '%APPVEYOR_BUILD_FOLDER%\third_party\racerd\target'  # Racerd compilation
