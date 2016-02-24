@@ -24,10 +24,11 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 from future.utils import iteritems
 
+# Must not import ycm_core here! Vim imports completer, which imports this file.
+# We don't want ycm_core inside Vim.
 import os
 import re
 from collections import defaultdict
-from ycm_core import FilterAndSortCandidates
 from ycmd.utils import ToCppStringCompatible
 
 
@@ -152,6 +153,7 @@ def FiletypeCompleterExistsForFiletype( filetype ):
 
 
 def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
+  from ycm_core import FilterAndSortCandidates
   return FilterAndSortCandidates( candidates,
                                   ToCppStringCompatible( sort_property ),
                                   ToCppStringCompatible( query ) )
