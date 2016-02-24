@@ -163,4 +163,3 @@ def Query_InWhiteSpace_test():
   eq_( '',
        RequestWrap( PrepareJson( column_num = 8,
                                  contents = 'foo       ') )[ 'query' ] )
-

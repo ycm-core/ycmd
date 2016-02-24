@@ -32,12 +32,6 @@ import socket
 import stat
 import subprocess
 
-try:
-  import vim  # NOQA
-  IN_VIM = True
-except ImportError:
-  IN_VIM = False
-
 
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx

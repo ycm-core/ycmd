@@ -26,9 +26,9 @@ from future.utils import iteritems
 
 import os
 import re
+from collections import defaultdict
 from ycm_core import FilterAndSortCandidates
 from ycmd.utils import ToCppStringCompatible
-from collections import defaultdict
 
 
 class PreparedTriggers( object ):
