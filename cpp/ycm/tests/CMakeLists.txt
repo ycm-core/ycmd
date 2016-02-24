@@ -46,7 +46,7 @@ else()
 endif()
 
 include_directories(
-  ${ycm_support_libs_SOURCE_DIR}
+  ${ycm_core_SOURCE_DIR}
   )
 
 include_directories(
@@ -104,10 +104,10 @@ if ( MSVC )
   endforeach()
 endif()
 
+# ycm_core must be linked after Boost libraries on Windows.
 target_link_libraries( ${PROJECT_NAME}
                        ${Boost_LIBRARIES}
-                       ${SERVER_LIB}
-                       ${CLIENT_LIB}
+                       ycm_core
                        ${GTEST_LIBRARIES}
                        ${GMOCK_LIBRARIES} )
 
@@ -116,17 +116,17 @@ if ( NOT CMAKE_GENERATOR_IS_XCODE )
   # Because there's NO reliable, cross-platform way of getting the directory in
   # which the executable is located.
   add_custom_target( copy_testdata
-                    COMMAND cmake -E copy_directory
-                    ${CMAKE_CURRENT_SOURCE_DIR}/testdata
-                    ${CMAKE_CURRENT_BINARY_DIR}/testdata )
+                     COMMAND cmake -E copy_directory
+                     ${CMAKE_CURRENT_SOURCE_DIR}/testdata
+                     ${CMAKE_CURRENT_BINARY_DIR}/testdata )
 else()
   add_custom_target( copy_testdata
-                    COMMAND cmake -E copy_directory
-                    ${CMAKE_CURRENT_SOURCE_DIR}/testdata
-                    ${CMAKE_CURRENT_BINARY_DIR}/Debug/testdata
-                    COMMAND cmake -E copy_directory
-                    ${CMAKE_CURRENT_SOURCE_DIR}/testdata
-                    ${CMAKE_CURRENT_BINARY_DIR}/Release/testdata )
+                     COMMAND cmake -E copy_directory
+                     ${CMAKE_CURRENT_SOURCE_DIR}/testdata
+                     ${CMAKE_CURRENT_BINARY_DIR}/Debug/testdata
+                     COMMAND cmake -E copy_directory
+                     ${CMAKE_CURRENT_SOURCE_DIR}/testdata
+                     ${CMAKE_CURRENT_BINARY_DIR}/Release/testdata )
 
 endif()
 

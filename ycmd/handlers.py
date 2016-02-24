@@ -49,6 +49,7 @@ from ycmd import hmac_plugin
 from ycmd import extra_conf_store
 from ycmd.request_wrap import RequestWrap
 from ycmd.bottle_utils import SetResponseHeader
+from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -131,6 +132,19 @@ def GetCompletions():
       BuildCompletionResponse( completions if completions else [],
                                request_data.CompletionStartColumn(),
                                errors = errors ) )
+
+
+@app.post( '/filter_and_sort_candidates' )
+def FilterAndSortCandidates():
+  _logger.info( 'Received filter & sort request' )
+  # Not using RequestWrap because no need and the requests coming in aren't like
+  # the usual requests we handle.
+  request_data = request.json
+
+  return _JsonResponse( FilterAndSortCandidatesWrap(
+    request_data[ 'candidates'],
+    request_data[ 'sort_property' ],
+    request_data[ 'query' ] ) )
 
 
 @app.get( '/healthy' )

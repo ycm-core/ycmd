@@ -24,16 +24,11 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 from future.utils import iteritems
 
-from ycmd.utils import ToCppStringCompatible, RunningInsideVim
-
-if RunningInsideVim():
-  from ycm_client_support import FilterAndSortCandidates
-else:
-  from ycm_core import FilterAndSortCandidates
-
-from collections import defaultdict
 import os
 import re
+from collections import defaultdict
+from ycm_core import FilterAndSortCandidates
+from ycmd.utils import ToCppStringCompatible
 
 
 class PreparedTriggers( object ):
@@ -156,7 +151,7 @@ def FiletypeCompleterExistsForFiletype( filetype ):
   return os.path.exists( PathToFiletypeCompleterPluginLoader( filetype ) )
 
 
-def FilterAndSortCandidatesShim( candidates, sort_property, query ):
+def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
   return FilterAndSortCandidates( candidates,
                                   ToCppStringCompatible( sort_property ),
                                   ToCppStringCompatible( query ) )

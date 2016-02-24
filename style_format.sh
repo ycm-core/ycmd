@@ -19,7 +19,6 @@ astyle \
 --recursive \
 --exclude=gmock \
 --exclude=testdata \
---exclude=ycm_client_support.cpp \
 --exclude=ycm_core.cpp \
 --exclude=CustomAssert.h \
 --exclude=CustomAssert.cpp \

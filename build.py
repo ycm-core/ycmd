@@ -307,7 +307,7 @@ def BuildYcmdLibs( args ):
     os.chdir( build_dir )
     subprocess.check_call( [ 'cmake' ] + full_cmake_args )
 
-    build_target = ( 'ycm_support_libs' if 'YCM_TESTRUN' not in os.environ else
+    build_target = ( 'ycm_core' if 'YCM_TESTRUN' not in os.environ else
                      'ycm_core_tests' )
 
     build_command = [ 'cmake', '--build', '.', '--target', build_target ]
