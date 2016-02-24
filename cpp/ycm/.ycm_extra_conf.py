@@ -152,11 +152,11 @@ def GetCompilationInfoForFile( filename ):
       replacement_file = basename + extension
       if os.path.exists( replacement_file ):
         compilation_info = database.GetCompilationInfoForFile(
-          replacement_file )
+          str(replacement_file.encode("utf-8")) )
         if compilation_info.compiler_flags_:
           return compilation_info
     return None
-  return database.GetCompilationInfoForFile( filename )
+  return database.GetCompilationInfoForFile( str(filename.encode("utf-8")) )
 
 
 def FlagsForFile( filename, **kwargs ):
