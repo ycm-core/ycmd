@@ -30,6 +30,7 @@ from future.utils import PY2
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 from ycmd.utils import OnWindows
+import ycm_core
 import os.path
 
 try:
@@ -40,6 +41,8 @@ except ImportError:
 Py2Only = skipIf( not PY2, 'Python 2 only' )
 Py3Only = skipIf( PY2, 'Python 3 only' )
 WindowsOnly = skipIf( not OnWindows(), 'Windows only' )
+ClangOnly = skipIf( not ycm_core.HasClangSupport(),
+                    'Only when Clang support available' )
 
 
 def BuildRequest( **kwargs ):

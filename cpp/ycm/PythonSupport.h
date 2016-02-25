@@ -31,6 +31,11 @@ boost::python::list FilterAndSortCandidates(
   const std::string &candidate_property,
   const std::string &query );
 
+// Given a Python object that's supposed to be "string-like", returns a UTF-8
+// encoded std::string. If the object can't be converted to a string, returns an
+// empty one.
+std::string GetUtf8String( const boost::python::object &string_or_unicode );
+
 } // namespace YouCompleteMe
 
 #endif /* end of include guard: PYTHONSUPPORT_H_KWGFEX0V */
