@@ -330,4 +330,3 @@ def LoadPythonSource( name, pathname ):
   else:
     import importlib
     return importlib.machinery.SourceFileLoader( name, pathname ).load_module()
-
