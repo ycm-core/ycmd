@@ -22,18 +22,18 @@
 
 namespace YouCompleteMe {
 
-// Given a list of python objects (that represent completion candidates) in a
-// python list |candidates|, a |candidate_property| on which to filter and sort
-// the candidates and a user query, returns a new sorted python list with the
-// original objects that survived the filtering.
+/// Given a list of python objects (that represent completion candidates) in a
+/// python list |candidates|, a |candidate_property| on which to filter and sort
+/// the candidates and a user query, returns a new sorted python list with the
+/// original objects that survived the filtering.
 boost::python::list FilterAndSortCandidates(
   const boost::python::list &candidates,
   const std::string &candidate_property,
   const std::string &query );
 
-// Given a Python object that's supposed to be "string-like", returns a UTF-8
-// encoded std::string. If the object can't be converted to a string, returns an
-// empty one.
+/// Given a Python object that's supposed to be "string-like", returns a UTF-8
+/// encoded std::string. If the object can't be converted to a string, returns an
+/// empty one.
 std::string GetUtf8String( const boost::python::object &string_or_unicode );
 
 } // namespace YouCompleteMe
