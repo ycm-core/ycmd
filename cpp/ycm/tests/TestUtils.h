@@ -35,8 +35,6 @@ std::vector< std::string > StringVector( const std::string &a,
                                          const std::string &h = std::string(),
                                          const std::string &i = std::string() );
 
-boost::filesystem::path PathToTestdataDir();
-
 boost::filesystem::path PathToTestFile( const std::string &filepath );
 
 } // namespace YouCompleteMe
