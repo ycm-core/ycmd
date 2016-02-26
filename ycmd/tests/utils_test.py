@@ -23,14 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import os
+import subprocess
+from shutil import rmtree
+import ycm_core
 from future.utils import native
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
-from ycmd.tests.test_utils import PathToTestFile, Py2Only, WindowsOnly
-from shutil import rmtree
-import os
-import subprocess
+from ycmd.tests.test_utils import PathToTestFile, Py2Only, Py3Only, WindowsOnly
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
 # changing things here, read the comments in utils.ToBytes.
@@ -160,12 +161,31 @@ def ToCppStringCompatible_Py2Str_test():
   eq_( value, 'abc' )
   eq_( type( value ), type( '' ) )
 
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
+
+
+@Py2Only
+def ToCppStringCompatible_Py2Bytes_test():
+  value = utils.ToCppStringCompatible( bytes( b'abc' ) )
+  eq_( value, 'abc' )
+  eq_( type( value ), type( '' ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
+
 
 @Py2Only
 def ToCppStringCompatible_Py2Unicode_test():
   value = utils.ToCppStringCompatible( u'abc' )
   eq_( value, 'abc' )
   eq_( type( value ), type( '' ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
 
 @Py2Only
@@ -174,29 +194,42 @@ def ToCppStringCompatible_Py2Int_test():
   eq_( value, '123' )
   eq_( type( value ), type( '' ) )
 
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], '123' )
 
-def ToCppStringCompatible_Bytes_test():
+
+@Py3Only
+def ToCppStringCompatible_Py3Bytes_test():
   value = utils.ToCppStringCompatible( bytes( b'abc' ) )
   eq_( value, bytes( b'abc' ) )
   ok_( isinstance( value, bytes ) )
 
-
-def ToCppStringCompatible_Unicode_test():
-  value = utils.ToCppStringCompatible( u'abc' )
-  eq_( value, bytes( b'abc' ) )
-  ok_( isinstance( value, bytes ) )
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
 
-def ToCppStringCompatible_Str_test():
+@Py3Only
+def ToCppStringCompatible_Py3Str_test():
   value = utils.ToCppStringCompatible( 'abc' )
   eq_( value, bytes( b'abc' ) )
   ok_( isinstance( value, bytes ) )
 
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
-def ToCppStringCompatible_Int_test():
+
+@Py3Only
+def ToCppStringCompatible_Py3Int_test():
   value = utils.ToCppStringCompatible( 123 )
   eq_( value, bytes( b'123' ) )
   ok_( isinstance( value, bytes ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], '123' )
 
 
 def PathToCreatedTempDir_DirDoesntExist_test():

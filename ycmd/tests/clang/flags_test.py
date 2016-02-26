@@ -23,9 +23,23 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from nose.tools import eq_
-from nose.tools import ok_
+from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
+from mock import patch, Mock
+
+
+@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
+def FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved_test( *args ):
+  fake_flags = {
+    'flags': [ bytes( b'-c' ), '-c', bytes( b'-foo' ), '-bar' ],
+    'do_cache': True
+  }
+
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = fake_flags ):
+    flags_object = flags.Flags()
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    eq_( list( flags_list ), [ '-foo', '-bar' ] )
 
 
 def SanitizeFlags_Passthrough_test():

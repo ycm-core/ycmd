@@ -27,8 +27,10 @@ import ycm_core
 import os
 import inspect
 import re
+from future.utils import PY2, native
 from ycmd import extra_conf_store
-from ycmd.utils import ToCppStringCompatible, OnMac, OnWindows
+from ycmd.utils import ( ToCppStringCompatible, OnMac, OnWindows, ToUnicode,
+                         ToBytes )
 from ycmd.responses import NoExtraConfDetected
 
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
@@ -97,7 +99,7 @@ class Flags( object ):
       if not results or not results.get( 'flags_ready', True ):
         return None
 
-      flags = list( results[ 'flags' ] )
+      flags = _ExtractFlagsList( results )
       if not flags:
         return None
 
@@ -111,7 +113,8 @@ class Flags( object ):
 
 
   def UserIncludePaths( self, filename, client_data ):
-    flags = self.FlagsForFile( filename, client_data = client_data )
+    flags = [ ToUnicode( x ) for x in
+              self.FlagsForFile( filename, client_data = client_data ) ]
 
     quoted_include_paths = [ os.path.dirname( filename ) ]
     include_paths = []
@@ -150,7 +153,23 @@ class Flags( object ):
     self.flags_for_file.clear()
 
 
+def _ExtractFlagsList( flags_for_file_output ):
+  return [ ToUnicode( x ) for x in flags_for_file_output[ 'flags' ] ]
+
+
 def _CallExtraConfFlagsForFile( module, filename, client_data ):
+  # We want to ensure we pass a native py2 `str` on py2 and a native py3 `str`
+  # (unicode) object on py3. That's the API we provide.
+  # In a vacuum, always passing a unicode object (`unicode` on py2 and `str` on
+  # py3) would be better, but we can't do that because that would break all the
+  # ycm_extra_conf files already out there that expect a py2 `str` object on
+  # py2, and WE DO NOT BREAK BACKWARDS COMPATIBILITY.
+  # Hindsight is 20/20.
+  if PY2:
+    filename = native( ToBytes( filename ) )
+  else:
+    filename = native( ToUnicode( filename ) )
+
   # For the sake of backwards compatibility, we need to first check whether the
   # FlagsForFile function in the extra conf module even allows keyword args.
   if inspect.getargspec( module.FlagsForFile ).keywords:
@@ -212,8 +231,8 @@ def _SanitizeFlags( flags ):
 
 
 def _RemoveFlagsPrecedingCompiler( flags ):
-  """Assuming that the flag just before the first flag starting with a dash is
-  the compiler path, removes all flags preceding it."""
+  """Assuming that the flag just before the first flag (which starts with a
+  dash) is the compiler path, removes all flags preceding it."""
 
   for index, flag in enumerate( flags ):
     if flag.startswith( '-' ):
