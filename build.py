@@ -12,6 +12,7 @@ import subprocess
 import os.path as p
 import sys
 import shlex
+import errno
 
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 if not ( ( PY_MAJOR == 2 and PY_MINOR in [ 6, 7 ] ) or
@@ -294,7 +295,27 @@ def RunYcmdTests( build_dir ):
   subprocess.check_call( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
 
 
-def BuildYcmdLibs( args ):
+# On Windows, if the ycmd library is in use while building it, a LNK1104
+# fatal error will occur during linking. Exit the script early with an
+# error message if this is the case.
+def ExitIfYcmdLibInUseOnWindows():
+  if not OnWindows():
+    return
+
+  ycmd_library = p.join( DIR_OF_THIS_SCRIPT, 'ycm_core.pyd' )
+
+  if not p.exists( ycmd_library ):
+    return
+
+  try:
+    open( p.join( ycmd_library ), 'a' ).close()
+  except IOError as error:
+    if error.errno == errno.EACCES:
+      sys.exit( 'ERROR: ycmd library is currently in use. '
+                'Stop all ycmd instances before compilation.' )
+
+
+def BuildYcmdLib( args ):
   build_dir = mkdtemp( prefix = 'ycm_build.' )
 
   try:
@@ -407,7 +428,8 @@ def SetUpTern():
 def Main():
   CheckDeps()
   args = ParseArguments()
-  BuildYcmdLibs( args )
+  ExitIfYcmdLibInUseOnWindows()
+  BuildYcmdLib( args )
   if args.omnisharp_completer or args.all_completers:
     BuildOmniSharp()
   if args.gocode_completer or args.all_completers:
