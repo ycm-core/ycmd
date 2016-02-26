@@ -70,9 +70,9 @@ def OpenForStdHandle( filepath ):
 # plugins. For other code, you likely want to use ToBytes below.
 def ToCppStringCompatible( value ):
   if isinstance( value, str ):
-    return value.encode( 'utf8' )
+    return native( value.encode( 'utf8' ) )
   if isinstance( value, bytes ):
-    return value
+    return native( value )
   return native( str( value ).encode( 'utf8' ) )
 
 
