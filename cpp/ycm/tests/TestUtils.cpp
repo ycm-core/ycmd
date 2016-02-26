@@ -60,6 +60,7 @@ std::vector< std::string > StringVector( const std::string &a,
   return string_vector;
 }
 
+
 boost::filesystem::path PathToTestFile( const std::string &filepath ) {
   fs::path path_to_testdata = fs::current_path() / fs::path( "testdata" );
   return path_to_testdata / fs::path( filepath );

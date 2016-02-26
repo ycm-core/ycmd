@@ -23,6 +23,7 @@
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/python.hpp>
 #include <clang-c/CXCompilationDatabase.h>
 
 
@@ -37,7 +38,8 @@ struct CompilationInfoForFile {
 // Access to Clang's internal CompilationDatabase. This class is thread-safe.
 class CompilationDatabase : boost::noncopyable {
 public:
-  CompilationDatabase( const std::string &path_to_directory );
+  // |path_to_directory| should be a string-like object.
+  CompilationDatabase( const boost::python::object &path_to_directory );
   ~CompilationDatabase();
 
   bool DatabaseSuccessfullyLoaded();
@@ -48,8 +50,9 @@ public:
 
   // NOTE: Multiple calls to this function from separate threads will be
   // serialized since Clang internals are not thread-safe.
+  // |path_to_file| should be a string-like object.
   CompilationInfoForFile GetCompilationInfoForFile(
-    const std::string &path_to_file );
+    const boost::python::object &path_to_file );
 
 private:
 
