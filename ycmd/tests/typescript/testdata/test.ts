@@ -27,5 +27,6 @@ class Bar {
 
 var bar = new Bar();
 bar.testMethod();
+bar.nonExistingMethod();
 
 Bar.apply()
