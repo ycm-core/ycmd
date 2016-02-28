@@ -164,3 +164,31 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                      'column_num' : 1 } ) )
     actual = self._app.post_json( '/run_completer_command', references_data ).json
     assert_that( actual, expected )
+
+
+  def GoTo_test( self ):
+    filepath = self._PathToTestFile( 'test.ts' )
+    contents = ReadFile( filepath )
+
+    event_data = self._BuildRequest( filepath = filepath,
+                                     filetype = 'typescript',
+                                     contents = contents,
+                                     event_name = 'BufferVisit' )
+
+    self._app.post_json( '/event_notification', event_data )
+
+    goto_data = self._BuildRequest( completer_target = 'filetype_default',
+                                    command_arguments = [ 'GoToDefinition' ],
+                                    line_num = 29,
+                                    column_num = 9,
+                                    contents = contents,
+                                    filetype = 'typescript',
+                                    filepath = filepath )
+
+    response = self._app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response,
+                 has_entries( {
+                   'filepath': filepath,
+                   'line_num': 25,
+                   'column_num': 3,
+                 } ) )
