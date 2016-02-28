@@ -23,9 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from webtest import AppError
-from nose.tools import eq_
-from hamcrest import assert_that, raises, calling, contains_inanyorder, has_entries
+from hamcrest import assert_that, contains_inanyorder, has_entries
 from .typescript_handlers_test import Typescript_Handlers_test
 from ycmd.utils import ReadFile
 
@@ -51,9 +49,8 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                                        filetype = 'typescript',
                                        filepath = filepath )
 
-    eq_( {
-      'message': 'var foo: Foo'
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
+    response = self._app.post_json( '/run_completer_command', gettype_data ).json
+    assert_that( response, self._MessageMatcher( 'var foo: Foo' ) )
 
 
   def GetType_HasNoType_test( self ):
@@ -75,9 +72,11 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                                        filetype = 'typescript',
                                        filepath = filepath )
 
-    assert_that( calling( self._app.post_json ).with_args(
-                 '/run_completer_command', gettype_data ),
-                 raises( AppError, 'RuntimeError.*No content available' ) )
+    response = self._app.post_json( '/run_completer_command',
+                                    gettype_data,
+                                    expect_errors = True ).json
+    assert_that( response,
+                 self._ErrorMatcher( RuntimeError, 'No content available.' ) )
 
 
   def GetDoc_Method_test( self ):
@@ -99,10 +98,13 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                                        filetype = 'typescript',
                                        filepath = filepath )
 
-    eq_( {
-      'detailed_info': '(method) Bar.testMethod(): void\n\n'
-                       'Method documentation',
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
+    response = self._app.post_json( '/run_completer_command',
+                                    gettype_data ).json
+    assert_that( response,
+                 has_entries( {
+                   'detailed_info': '(method) Bar.testMethod(): void\n\n'
+                                    'Method documentation'
+                 } ) )
 
 
   def GetDoc_Class_test( self ):
@@ -124,11 +126,14 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                                        filetype = 'typescript',
                                        filepath = filepath )
 
-    eq_( {
-      'detailed_info': 'class Bar\n\n'
-                       'Class documentation\n\n'
-                       'Multi-line',
-    }, self._app.post_json( '/run_completer_command', gettype_data ).json )
+    response = self._app.post_json( '/run_completer_command',
+                                    gettype_data ).json
+    assert_that( response,
+                 has_entries( {
+                   'detailed_info': 'class Bar\n\n'
+                                    'Class documentation\n\n'
+                                    'Multi-line'
+                 } ) )
 
 
   def GoToReferences_test( self ):
