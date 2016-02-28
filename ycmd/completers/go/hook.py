@@ -23,12 +23,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.completers.go.gocode_completer import (
-    GoCodeCompleter, ShouldEnableGoCompleter )
+from ycmd.completers.go.go_completer import GoCompleter, ShouldEnableGoCompleter
 
 
 def GetCompleter( user_options ):
   if not ShouldEnableGoCompleter( user_options ):
     return None
 
-  return GoCodeCompleter( user_options )
+  return GoCompleter( user_options )

@@ -27,8 +27,7 @@ from builtins import *  # noqa
 
 import os
 from nose.tools import eq_, raises
-from ycmd.completers.go.gocode_completer import ( GoCodeCompleter, GO_BINARIES,
-                                                  FindBinary )
+from ycmd.completers.go.go_completer import GoCompleter, GO_BINARIES, FindBinary
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
 from ycmd.utils import ReadFile
@@ -52,11 +51,11 @@ REQUEST_DATA = {
 }
 
 
-class GoCodeCompleter_test( object ):
+class GoCompleter_test( object ):
   def setUp( self ):
     user_options = user_options_store.DefaultOptions()
     user_options[ 'gocode_binary_path' ] = DUMMY_BINARY
-    self._completer = GoCodeCompleter( user_options )
+    self._completer = GoCompleter( user_options )
 
 
   def _BuildRequest( self, line_num, column_num ):

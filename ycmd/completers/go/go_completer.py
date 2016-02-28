@@ -91,10 +91,10 @@ def ShouldEnableGoCompleter( user_options ):
   return all( _HasBinary( binary ) for binary in [ 'gocode', 'godef' ] )
 
 
-class GoCodeCompleter( Completer ):
+class GoCompleter( Completer ):
 
   def __init__( self, user_options ):
-    super( GoCodeCompleter, self ).__init__( user_options )
+    super( GoCompleter, self ).__init__( user_options )
     self._popener = utils.SafePopen # Overridden in test.
     self._binary_gocode = FindBinary( 'gocode', user_options )
     self._binary_godef = FindBinary( 'godef', user_options )
