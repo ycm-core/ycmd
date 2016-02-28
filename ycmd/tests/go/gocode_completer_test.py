@@ -27,8 +27,8 @@ from builtins import *  # noqa
 
 import os
 from nose.tools import eq_, raises
-from ycmd.completers.go.gocode_completer import ( GoCodeCompleter,
-                                                  PATH_TO_GOCODE_BINARY )
+from ycmd.completers.go.gocode_completer import ( GoCodeCompleter, GO_BINARIES,
+                                                  FindBinary )
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
 from ycmd.utils import ReadFile
@@ -71,16 +71,13 @@ class GoCodeCompleter_test( object ):
   def FindGoCodeBinary_test( self ):
     user_options = user_options_store.DefaultOptions()
 
-    eq_( PATH_TO_GOCODE_BINARY,
-         self._completer.FindBinary( "gocode", user_options ) )
+    eq_( GO_BINARIES.get( "gocode" ), FindBinary( "gocode", user_options ) )
 
     user_options[ 'gocode_binary_path' ] = DUMMY_BINARY
-    eq_( DUMMY_BINARY,
-         self._completer.FindBinary( "gocode", user_options ) )
+    eq_( DUMMY_BINARY, FindBinary( "gocode", user_options ) )
 
     user_options[ 'gocode_binary_path' ] = DATA_DIR
-    eq_( None,
-         self._completer.FindBinary( "gocode", user_options ) )
+    eq_( None, FindBinary( "gocode", user_options ) )
 
 
   # Test line-col to offset in the file before any unicode occurrences.

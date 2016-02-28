@@ -30,10 +30,9 @@ import subprocess
 
 from ycmd import responses
 from ycmd import utils
-from ycmd.utils import ToBytes, ToUnicode
+from ycmd.utils import ToBytes, ToUnicode, ExecutableName
 from ycmd.completers.completer import Completer
 
-GO_FILETYPES = set( [ 'go' ] )
 BINARY_NOT_FOUND_MESSAGE = ( '{0} binary not found. Did you build it? ' +
                              'You can do so by running ' +
                              '"./install.py --gocode-completer".' )
@@ -42,16 +41,54 @@ PARSE_ERROR_MESSAGE = 'Gocode returned invalid JSON response.'
 NO_COMPLETIONS_MESSAGE = 'Gocode returned empty JSON response.'
 GOCODE_PANIC_MESSAGE = ( 'Gocode panicked trying to find completions, ' +
                          'you likely have a syntax error.' )
-PATH_TO_GOCODE_BINARY = os.path.join(
+DIR_OF_THIRD_PARTY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
-  '..', '..', '..', 'third_party', 'gocode',
-  'gocode' + ( '.exe' if utils.OnWindows() else '' ) )
-PATH_TO_GODEF_BINARY = os.path.join(
-  os.path.abspath( os.path.dirname( __file__ ) ),
-  '..', '..', '..', 'third_party', 'godef',
-  'godef' + ( '.exe' if utils.OnWindows() else '' ) )
+  '..', '..', '..', 'third_party' )
+GO_BINARIES = dict( {
+  'gocode': os.path.join( DIR_OF_THIRD_PARTY,
+                          'gocode',
+                          ExecutableName( 'gocode' ) ),
+  'godef': os.path.join( DIR_OF_THIRD_PARTY,
+                         'godef',
+                         ExecutableName( 'godef' ) )
+} )
 
 _logger = logging.getLogger( __name__ )
+
+
+def FindBinary( binary, user_options ):
+  """ Find the path to the gocode/godef binary.
+
+  If 'gocode_binary_path' or 'godef_binary_path'
+  in the options is blank, use the version installed
+  with YCM, if it exists.
+
+  If the 'gocode_binary_path' or 'godef_binary_path' is
+  specified, use it as an absolute path.
+
+  If the resolved binary exists, return the path,
+  otherwise return None. """
+
+  def _FindPath():
+    key = '{0}_binary_path'.format( binary )
+    if user_options.get( key ):
+      return user_options[ key ]
+    return GO_BINARIES.get( binary )
+
+  binary_path = _FindPath()
+  if os.path.isfile( binary_path ):
+    return binary_path
+  return None
+
+
+def ShouldEnableGoCompleter( user_options ):
+  def _HasBinary( binary ):
+    binary_path = FindBinary( binary, user_options )
+    if not binary_path:
+      _logger.error( BINARY_NOT_FOUND_MESSAGE.format( binary ) )
+    return binary_path
+
+  return all( _HasBinary( binary ) for binary in [ 'gocode', 'godef' ] )
 
 
 class GoCodeCompleter( Completer ):
@@ -59,26 +96,12 @@ class GoCodeCompleter( Completer ):
   def __init__( self, user_options ):
     super( GoCodeCompleter, self ).__init__( user_options )
     self._popener = utils.SafePopen # Overridden in test.
-    self._binary_gocode = self.FindBinary( 'gocode', user_options )
-    self._binary_godef = self.FindBinary( 'godef', user_options )
-
-    if not self._binary_gocode:
-      _logger.error( BINARY_NOT_FOUND_MESSAGE.format( 'Gocode' ) )
-      raise RuntimeError( BINARY_NOT_FOUND_MESSAGE.format( 'Gocode' ) )
-
-    _logger.info( 'Enabling go completion using %s binary',
-                  self._binary_gocode )
-
-    if not self._binary_godef:
-      _logger.error( BINARY_NOT_FOUND_MESSAGE.format( 'Godef' ) )
-      raise RuntimeError( BINARY_NOT_FOUND_MESSAGE.format( 'Godef' ) )
-
-    _logger.info( 'Enabling go definitions using %s binary',
-                   self._binary_godef )
+    self._binary_gocode = FindBinary( 'gocode', user_options )
+    self._binary_godef = FindBinary( 'godef', user_options )
 
 
   def SupportedFiletypes( self ):
-    return GO_FILETYPES
+    return [ 'go' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -125,34 +148,6 @@ class GoCodeCompleter( Completer ):
       'GoToDeclaration' : ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
     }
-
-
-  def FindBinary( self, binary, user_options ):
-    """ Find the path to the gocode/godef binary.
-
-    If 'gocode_binary_path' or 'godef_binary_path'
-    in the options is blank, use the version installed
-    with YCM, if it exists, then the one on the path, if not.
-
-    If the 'gocode_binary_path' or 'godef_binary_path' is
-    specified, use it as an absolute path.
-
-    If the resolved binary exists, return the path,
-    otherwise return None. """
-    if user_options.get( '%s_binary_path' % binary ):
-      # The user has explicitly specified a path.
-      if os.path.isfile( user_options[ '%s_binary_path' % binary] ):
-        return user_options[ '%s_binary_path' % binary]
-      else:
-        return None
-    # Try to use the bundled binary or one on the path.
-    if binary == 'gocode':
-      if os.path.isfile( PATH_TO_GOCODE_BINARY ):
-        return PATH_TO_GOCODE_BINARY
-    elif binary == 'godef':
-      if os.path.isfile( PATH_TO_GODEF_BINARY ):
-        return PATH_TO_GODEF_BINARY
-    return utils.PathToFirstExistingExecutable( [ binary ] )
 
 
   def OnFileReadyToParse( self, request_data ):
