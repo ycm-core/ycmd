@@ -154,7 +154,7 @@ class RustCompleter( Completer ):
     _logger.info( 'RustCompleter._GetResponse' )
     handler = ToBytes( handler )
     method = ToBytes( method )
-    url = urllib.parse.urljoin( self._racerd_host, handler )
+    url = urllib.parse.urljoin( ToBytes( self._racerd_host ), handler )
     parameters = self._ConvertToRacerdRequest( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
     extra_headers = self._ExtraHeaders( method, handler, body )
@@ -289,10 +289,10 @@ class RustCompleter( Completer ):
                                                   stderr = fstderr,
                                                   env = env )
 
-      self._racerd_host = ToBytes( 'http://127.0.0.1:{0}'.format( port ) )
+      self._racerd_host = 'http://127.0.0.1:{0}'.format( port )
       if not self.ServerIsRunning():
         raise RuntimeError( 'Failed to start racerd!' )
-      _logger.info( ToBytes( b'Racerd started on: ' ) + self._racerd_host )
+      _logger.info( 'Racerd started on: ' + self._racerd_host )
 
 
   def ServerIsRunning( self ):
