@@ -253,9 +253,11 @@ def ParseArguments():
 
   args = parser.parse_args()
 
-  if args.system_libclang and not args.clang_completer:
+  if ( args.system_libclang and
+       not args.clang_completer and
+       not args.all_completers ):
     sys.exit( "You can't pass --system-libclang without also passing "
-              "--clang-completer as well." )
+              "--clang-completer or --all as well." )
   return args
 
 
