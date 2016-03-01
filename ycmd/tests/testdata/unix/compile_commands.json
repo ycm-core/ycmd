@@ -1,0 +1,5 @@
+[ {
+  "directory": "/dir",
+  "command": "/usr/bin/clang++ example.cc",
+  "file": "example.cc"
+} ]

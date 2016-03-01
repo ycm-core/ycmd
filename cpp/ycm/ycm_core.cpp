@@ -56,6 +56,9 @@ BOOST_PYTHON_MODULE(ycm_core)
   def( "FilterAndSortCandidates", FilterAndSortCandidates );
   def( "YcmCoreVersion", YcmCoreVersion );
 
+  // This is exposed so that we can test it.
+  def( "GetUtf8String", GetUtf8String );
+
   class_< IdentifierCompleter, boost::noncopyable >( "IdentifierCompleter" )
     .def( "AddIdentifiersToDatabase",
           &IdentifierCompleter::AddIdentifiersToDatabase )
@@ -186,7 +189,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "display_name", &DocumentationData::display_name );
 
   class_< CompilationDatabase, boost::noncopyable >(
-      "CompilationDatabase", init< std::string >() )
+      "CompilationDatabase", init< boost::python::object >() )
     .def( "DatabaseSuccessfullyLoaded",
           &CompilationDatabase::DatabaseSuccessfullyLoaded )
     .def( "AlreadyGettingFlags",

@@ -38,15 +38,6 @@ namespace YouCompleteMe {
 
 namespace {
 
-std::string GetUtf8String( const boost::python::object &string_or_unicode ) {
-  extract< std::string > to_string( string_or_unicode );
-
-  if ( to_string.check() )
-    return to_string();
-
-  return extract< std::string >( str( string_or_unicode ).encode( "utf8" ) );
-}
-
 std::vector< const Candidate * > CandidatesFromObjectList(
   const pylist &candidates,
   const std::string &candidate_property ) {
@@ -69,6 +60,7 @@ std::vector< const Candidate * > CandidatesFromObjectList(
 }
 
 } // unnamed namespace
+
 
 boost::python::list FilterAndSortCandidates(
   const boost::python::list &candidates,
@@ -114,6 +106,16 @@ boost::python::list FilterAndSortCandidates(
   }
 
   return filtered_candidates;
+}
+
+
+std::string GetUtf8String( const boost::python::object &string_or_unicode ) {
+  extract< std::string > to_string( string_or_unicode );
+
+  if ( to_string.check() )
+    return to_string();
+
+  return extract< std::string >( str( string_or_unicode ).encode( "utf8" ) );
 }
 
 } // namespace YouCompleteMe

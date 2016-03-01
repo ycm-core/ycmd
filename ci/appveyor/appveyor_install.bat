@@ -58,13 +58,9 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 :: Rust configuration
 ::
 
-:: The gnu rust compiler is used since, on windows 10, there is a workaround
-:: needed for the msvc versions. However, the workaround sets Omnisharp build
-:: config to 64-bit release mode which results in a failed build.
-appveyor DownloadFile https://static.rust-lang.org/dist/rust-1.5.0-i686-pc-windows-gnu.exe
-rust-1.5.0-i686-pc-windows-gnu.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
-:: TODO: MinGW can be removed once the msvc rust compiler is used.
-set PATH=C:\Program Files (x86)\Rust\bin;C:\MinGW\bin;%PATH%
+appveyor DownloadFile https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.exe
+rust-1.6.0-x86_64-pc-windows-msvc.exe /VERYSILENT /NORESTART /DIR="C:\Program Files\Rust"
+set PATH=C:\Program Files\Rust\bin;%PATH%
 
 rustc -Vv
 cargo -V

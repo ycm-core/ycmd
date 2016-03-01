@@ -321,20 +321,21 @@ class TypeScriptCompleter( Completer ):
 
   def _GoToDefinition( self, request_data ):
     self._Reload( request_data )
-    filespans = self._SendRequest( 'definition', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
-    } )
-    if not filespans:
-      raise RuntimeError( 'Could not find definition' )
+    try:
+      filespans = self._SendRequest( 'definition', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      } )
 
-    span = filespans[ 0 ]
-    return responses.BuildGoToResponse(
-      filepath   = span[ 'file' ],
-      line_num   = span[ 'start' ][ 'line' ],
-      column_num = span[ 'start' ][ 'offset' ]
-    )
+      span = filespans[ 0 ]
+      return responses.BuildGoToResponse(
+        filepath   = span[ 'file' ],
+        line_num   = span[ 'start' ][ 'line' ],
+        column_num = span[ 'start' ][ 'offset' ]
+      )
+    except RuntimeError:
+      raise RuntimeError( 'Could not find definition' )
 
 
   def _GoToReferences( self, request_data ):

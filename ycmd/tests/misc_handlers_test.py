@@ -27,6 +27,7 @@ from builtins import *  # noqa
 from nose.tools import ok_
 from .handlers_test import Handlers_test
 from ycmd.tests.test_utils import DummyCompleter
+from hamcrest import assert_that, contains
 
 
 class MiscHandlers_test( Handlers_test ):
@@ -43,3 +44,20 @@ class MiscHandlers_test( Handlers_test ):
                                      event_name = 'FileReadyToParse' )
 
     self._app.post_json( '/event_notification', event_data ).json
+
+
+  def FilterAndSortCandidates_Basic_test( self ):
+    candidate1 = { 'prop1': 'aoo', 'prop2': 'bar' }
+    candidate2 = { 'prop1': 'bfo', 'prop2': 'zoo' }
+    candidate3 = { 'prop1': 'cfo', 'prop2': 'moo' }
+
+    data = {
+      'candidates': [ candidate3, candidate1, candidate2 ],
+      'sort_property': 'prop1',
+      'query': 'fo'
+    }
+
+    response_data = self._app.post_json(
+      '/filter_and_sort_candidates', data ).json
+
+    assert_that( response_data, contains( candidate2, candidate3 ) )

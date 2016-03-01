@@ -17,9 +17,7 @@
 
 cmake_minimum_required( VERSION 2.8.7 )
 
-project( ycm_support_libs )
-set( CLIENT_LIB "ycm_client_support" )
-set( SERVER_LIB "ycm_core" )
+project( ycm_core )
 
 option( USE_DEV_FLAGS "Use compilation flags meant for YCM developers" OFF )
 option( USE_CLANG_COMPLETER "Use Clang semantic completer for C/C++/ObjC" OFF )
@@ -88,28 +86,10 @@ if ( USE_CLANG_COMPLETER AND
     message( "Downloading Clang ${CLANG_VERSION}" )
 
     set( CLANG_URL "http://llvm.org/releases/${CLANG_VERSION}" )
-
-    # Try to download Clang several times until successful to prevent failure
-    # from network issues on CI services.
-    set( DOWNLOAD_TRIES 3 )
-    set( DOWNLOAD_TRY 0 )
-    set( DOWNLOAD_ERROR 1 )
-
-    while( DOWNLOAD_ERROR AND DOWNLOAD_TRY LESS DOWNLOAD_TRIES )
-      file(
-        DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
-        STATUS DOWNLOAD_STATUS
-        SHOW_PROGRESS
-        EXPECTED_HASH SHA256=${CLANG_SHA256}
-      )
-      math( EXPR DOWNLOAD_TRY "${DOWNLOAD_TRY} + 1" )
-      list( GET DOWNLOAD_STATUS 0 DOWNLOAD_ERROR )
-    endwhile()
-
-    if( DOWNLOAD_ERROR )
-      message( FATAL_ERROR
-        "Could not download ${CLANG_URL}/${CLANG_FILENAME}" )
-    endif()
+    file(
+      DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
+      SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
+    )
   else()
     message( "Using Clang archive: ${CLANG_LOCAL_FILE}" )
   endif()
@@ -321,33 +301,11 @@ endif()
 
 #############################################################################
 
-# We don't actually need all of the files this picks up, just the ones needed by
-# PythonSupport.cpp. But this is easier to maintain and dead code elemination
-# will remove unused code.
-file( GLOB CLIENT_SOURCES *.h *.cpp )
-file( GLOB SERVER_SPECIFIC *ycm_core* )
-
-if( SERVER_SPECIFIC )
-  list( REMOVE_ITEM CLIENT_SOURCES ${SERVER_SPECIFIC} )
-endif()
-
-add_library( ${CLIENT_LIB} SHARED
-             ${CLIENT_SOURCES}
-           )
-
-target_link_libraries( ${CLIENT_LIB}
-                       ${Boost_LIBRARIES}
-                       ${PYTHON_LIBRARIES}
-                       ${EXTRA_LIBS}
-                     )
-
-#############################################################################
-
-add_library( ${SERVER_LIB} SHARED
+add_library( ${PROJECT_NAME} SHARED
              ${SERVER_SOURCES}
            )
 
-target_link_libraries( ${SERVER_LIB}
+target_link_libraries( ${PROJECT_NAME}
                        ${Boost_LIBRARIES}
                        ${PYTHON_LIBRARIES}
                        ${LIBCLANG_TARGET}
@@ -358,24 +316,18 @@ if( LIBCLANG_TARGET )
   # When building with MSVC, we need to copy libclang.dll instead of libclang.lib
   if( MSVC )
     add_custom_command(
-      TARGET ${SERVER_LIB}
+      TARGET ${PROJECT_NAME}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
+      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
   else()
     add_custom_command(
-      TARGET ${SERVER_LIB}
+      TARGET ${PROJECT_NAME}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${SERVER_LIB}>"
+      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
   endif()
 endif()
-
-#############################################################################
-
-# Convenience target that builds both support libs.
-add_custom_target( ${PROJECT_NAME}
-                   DEPENDS ${CLIENT_LIB} ${SERVER_LIB} )
 
 
 #############################################################################
@@ -394,16 +346,16 @@ add_custom_target( ${PROJECT_NAME}
 if ( EXTERNAL_LIBCLANG_PATH AND APPLE )
   get_filename_component(EXTRA_LIB_PATH ${EXTERNAL_LIBCLANG_PATH} DIRECTORY)
 
-  set_target_properties(${SERVER_LIB}
+  set_target_properties(${PROJECT_NAME}
     PROPERTIES LINK_FLAGS "-Wl,-rpath,${EXTRA_LIB_PATH}")
 
-  add_custom_command( TARGET ${SERVER_LIB}
+  add_custom_command( TARGET ${PROJECT_NAME}
                       POST_BUILD
                       COMMAND install_name_tool
                       "-change"
                       "@rpath/libclang.dylib"
                       "@loader_path/libclang.dylib"
-                      "$<TARGET_FILE:${SERVER_LIB}>"
+                      "$<TARGET_FILE:${PROJECT_NAME}>"
                     )
 endif()
 
@@ -412,45 +364,35 @@ endif()
 
 # We don't want the "lib" prefix, it can screw up python when it tries to search
 # for our module
-set_target_properties( ${CLIENT_LIB} PROPERTIES PREFIX "")
-set_target_properties( ${SERVER_LIB} PROPERTIES PREFIX "")
+set_target_properties( ${PROJECT_NAME} PROPERTIES PREFIX "")
 
 if ( WIN32 OR CYGWIN )
   # DLL platforms put dlls in the RUNTIME_OUTPUT_DIRECTORY
   # First for the generic no-config case (e.g. with mingw)
-  set_target_properties( ${CLIENT_LIB} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../.. )
-  set_target_properties( ${SERVER_LIB} PROPERTIES
+  set_target_properties( ${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../.. )
   # Second, for multi-config builds (e.g. msvc)
   foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    set_target_properties( ${CLIENT_LIB} PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/../.. )
-    set_target_properties( ${SERVER_LIB} PROPERTIES
+    set_target_properties( ${PROJECT_NAME} PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/../.. )
   endforeach()
 
   if ( WIN32 )
     # This is the extension for compiled Python modules on Windows
-    set_target_properties( ${CLIENT_LIB} PROPERTIES SUFFIX ".pyd")
-    set_target_properties( ${SERVER_LIB} PROPERTIES SUFFIX ".pyd")
+    set_target_properties( ${PROJECT_NAME} PROPERTIES SUFFIX ".pyd")
   elseif ( CYGWIN )
     # This is the extension for compiled Python modules in Cygwin
-    set_target_properties( ${CLIENT_LIB} PROPERTIES SUFFIX ".dll")
-    set_target_properties( ${SERVER_LIB} PROPERTIES SUFFIX ".dll")
+    set_target_properties( ${PROJECT_NAME} PROPERTIES SUFFIX ".dll")
   endif()
 else()
   # Even on macs, we want a .so extension instead of a .dylib which is what
   # cmake would give us by default. Python won't recognize a .dylib as a module,
   # but it will recognize a .so
-  set_target_properties( ${CLIENT_LIB} PROPERTIES SUFFIX ".so")
-  set_target_properties( ${SERVER_LIB} PROPERTIES SUFFIX ".so")
+  set_target_properties( ${PROJECT_NAME} PROPERTIES SUFFIX ".so")
 endif()
 
-set_target_properties( ${CLIENT_LIB} PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../.. )
-set_target_properties( ${SERVER_LIB} PROPERTIES
+set_target_properties( ${PROJECT_NAME} PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../.. )
 
 #############################################################################

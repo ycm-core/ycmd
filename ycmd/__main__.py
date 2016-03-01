@@ -19,9 +19,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *  # noqa
+# Other imports from `future` must be placed after SetUpPythonPath.
 
 import sys
 import os
@@ -29,6 +27,10 @@ import os
 sys.path.insert( 0, os.path.dirname( os.path.abspath( __file__ ) ) )
 from server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
 SetUpPythonPath()
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
 
 import sys
 import logging
@@ -43,7 +45,7 @@ from ycmd import extra_conf_store
 from ycmd import utils
 from ycmd.watchdog_plugin import WatchdogPlugin
 from ycmd.hmac_plugin import HmacPlugin
-from ycmd.utils import ToBytes, ReadFile
+from ycmd.utils import ToBytes, ReadFile, OpenForStdHandle
 
 def YcmCoreSanityCheck():
   if 'ycm_core' in sys.modules:
@@ -141,9 +143,9 @@ def Main():
   args = ParseArguments()
 
   if args.stdout is not None:
-    sys.stdout = open( args.stdout, 'w' )
+    sys.stdout = OpenForStdHandle( args.stdout )
   if args.stderr is not None:
-    sys.stderr = open( args.stderr, 'w' )
+    sys.stderr = OpenForStdHandle( args.stderr )
 
   SetupLogging( args.log )
   options, hmac_secret = SetupOptions( args.options_file )

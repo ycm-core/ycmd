@@ -39,7 +39,6 @@ import requests
 import threading
 import sys
 import os
-import base64
 
 
 HMAC_SECRET_LENGTH = 16
@@ -157,7 +156,7 @@ class JediCompleter( Completer ):
 
       # JediHTTP will delete the secret_file after it's done reading it
       with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
-        json.dump( { 'hmac_secret': str( self._hmac_secret, 'utf8' ) },
+        json.dump( { 'hmac_secret': str( b64encode( self._hmac_secret ), 'utf8' ) },
                    hmac_file )
         command = [ self._python_binary_path,
                     PATH_TO_JEDIHTTP,
@@ -177,11 +176,7 @@ class JediCompleter( Completer ):
 
 
   def _GenerateHmacSecret( self ):
-    # TODO: We shouldn't have to base64 encode the secret here, only before we
-    # pass it to JediHTTP. We should be able to use the raw bytes as the HMAC
-    # key, but can't until the following issue is resolved:
-    #   https://github.com/vheon/JediHTTP/issues/11
-    return base64.b64encode( os.urandom( HMAC_SECRET_LENGTH ) )
+    return os.urandom( HMAC_SECRET_LENGTH )
 
 
   def _GetResponse( self, handler, request_data = {} ):

@@ -26,9 +26,23 @@ from future.utils import iteritems
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+from future.utils import PY2
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
+from ycmd.utils import OnWindows
+import ycm_core
 import os.path
+
+try:
+  from unittest import skipIf
+except ImportError:
+  from unittest2 import skipIf
+
+Py2Only = skipIf( not PY2, 'Python 2 only' )
+Py3Only = skipIf( PY2, 'Python 3 only' )
+WindowsOnly = skipIf( not OnWindows(), 'Windows only' )
+ClangOnly = skipIf( not ycm_core.HasClangSupport(),
+                    'Only when Clang support available' )
 
 
 def BuildRequest( **kwargs ):
@@ -83,4 +97,3 @@ class DummyCompleter( Completer ):
   # This method is here for testing purpose, so it can be mocked during tests
   def CandidatesList( self ):
     return []
-

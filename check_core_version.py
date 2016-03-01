@@ -17,7 +17,7 @@
 
 import sys
 import os
-import ycm_client_support
+import ycm_core
 
 VERSION_FILENAME = 'CORE_VERSION'
 
@@ -33,7 +33,7 @@ def ExpectedCoreVersion():
 
 def CompatibleWithCurrentCoreVersion():
   try:
-    current_core_version = ycm_client_support.YcmCoreVersion()
+    current_core_version = ycm_core.YcmCoreVersion()
   except AttributeError:
     return False
   return ExpectedCoreVersion() == current_core_version

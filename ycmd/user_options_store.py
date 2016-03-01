@@ -27,7 +27,10 @@ import json
 import os
 from frozendict import frozendict
 
+from ycmd.utils import ReadFile
+
 _USER_OPTIONS = {}
+
 
 def SetAll( new_options ):
   global _USER_OPTIONS
@@ -49,8 +52,6 @@ def LoadDefaults():
 def DefaultOptions():
   settings_path = os.path.join(
       os.path.dirname( os.path.abspath( __file__ ) ), 'default_settings.json' )
-  with open( settings_path ) as f:
-    options = json.loads( f.read() )
-    options.pop( 'hmac_secret', None )
-    return options
-
+  options = json.loads( ReadFile( settings_path ) )
+  options.pop( 'hmac_secret', None )
+  return options

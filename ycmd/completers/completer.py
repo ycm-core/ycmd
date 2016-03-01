@@ -241,10 +241,12 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       elif 'insertion_text' in candidates[ 0 ]:
         sort_property = 'insertion_text'
 
-    matches = completer_utils.FilterAndSortCandidatesShim(
-      candidates, sort_property, query )
+    return self.FilterAndSortCandidatesInner( candidates, sort_property, query )
 
-    return matches
+
+  def FilterAndSortCandidatesInner( self, candidates, sort_property, query ):
+    return completer_utils.FilterAndSortCandidatesWrap(
+      candidates, sort_property, query )
 
 
   def OnFileReadyToParse( self, request_data ):

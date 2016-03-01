@@ -19,6 +19,7 @@
 #include "ClangUtils.h"
 #include "standard.h"
 #include "ReleaseGil.h"
+#include "PythonSupport.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -39,11 +40,12 @@ remove_pointer< CXCompileCommands >::type > CompileCommandsWrap;
 
 
 CompilationDatabase::CompilationDatabase(
-  const std::string &path_to_directory )
+  const boost::python::object &path_to_directory )
   : is_loaded_( false ) {
   CXCompilationDatabase_Error status;
+  std::string path_to_directory_string = GetUtf8String( path_to_directory );
   compilation_database_ = clang_CompilationDatabase_fromDirectory(
-                            path_to_directory.c_str(),
+                            path_to_directory_string.c_str(),
                             &status );
   is_loaded_ = status == CXCompilationDatabase_NoError;
 }
@@ -66,19 +68,21 @@ bool CompilationDatabase::AlreadyGettingFlags() {
 
 
 CompilationInfoForFile CompilationDatabase::GetCompilationInfoForFile(
-  const std::string &path_to_file ) {
-  ReleaseGil unlock;
+  const boost::python::object &path_to_file ) {
   CompilationInfoForFile info;
 
   if ( !is_loaded_ )
     return info;
+
+  std::string path_to_file_string = GetUtf8String( path_to_file );
+  ReleaseGil unlock;
 
   lock_guard< mutex > lock( compilation_database_mutex_ );
 
   CompileCommandsWrap commands(
     clang_CompilationDatabase_getCompileCommands(
       compilation_database_,
-      path_to_file.c_str() ), clang_CompileCommands_dispose );
+      path_to_file_string.c_str() ), clang_CompileCommands_dispose );
 
   uint num_commands = clang_CompileCommands_getSize( commands.get() );
 

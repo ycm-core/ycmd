@@ -22,51 +22,54 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
-from future.utils import PY2, native
 
-from hamcrest import raises, assert_that, calling
+import os
+import subprocess
+from shutil import rmtree
+import ycm_core
+from future.utils import native
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
-from ycmd.tests.test_utils import PathToTestFile
-from shutil import rmtree
-import os
-import os.path
-import subprocess
+from ycmd.tests.test_utils import PathToTestFile, Py2Only, Py3Only, WindowsOnly
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
 # changing things here, read the comments in utils.ToBytes.
 
 
-if PY2:
-  def ToBytes_Py2Bytes_test():
-    value = utils.ToBytes( bytes( 'abc' ) )
-    eq_( value, bytes( 'abc' ) )
-    eq_( type( value ), bytes )
+@Py2Only
+def ToBytes_Py2Bytes_test():
+  value = utils.ToBytes( bytes( 'abc' ) )
+  eq_( value, bytes( 'abc' ) )
+  eq_( type( value ), bytes )
 
 
-  def ToBytes_Py2Str_test():
-    value = utils.ToBytes( 'abc' )
-    eq_( value, bytes( 'abc' ) )
-    eq_( type( value ), bytes )
+@Py2Only
+def ToBytes_Py2Str_test():
+  value = utils.ToBytes( 'abc' )
+  eq_( value, bytes( 'abc' ) )
+  eq_( type( value ), bytes )
 
 
-  def ToBytes_Py2FutureStr_test():
-    value = utils.ToBytes( str( 'abc' ) )
-    eq_( value, bytes( 'abc' ) )
-    eq_( type( value ), bytes )
+@Py2Only
+def ToBytes_Py2FutureStr_test():
+  value = utils.ToBytes( str( 'abc' ) )
+  eq_( value, bytes( 'abc' ) )
+  eq_( type( value ), bytes )
 
 
-  def ToBytes_Py2Unicode_test():
-    value = utils.ToBytes( u'abc' )
-    eq_( value, bytes( 'abc' ) )
-    eq_( type( value ), bytes )
+@Py2Only
+def ToBytes_Py2Unicode_test():
+  value = utils.ToBytes( u'abc' )
+  eq_( value, bytes( 'abc' ) )
+  eq_( type( value ), bytes )
 
 
-  def ToBytes_Py2Int_test():
-    value = utils.ToBytes( 123 )
-    eq_( value, bytes( '123' ) )
-    eq_( type( value ), bytes )
+@Py2Only
+def ToBytes_Py2Int_test():
+  value = utils.ToBytes( 123 )
+  eq_( value, bytes( '123' ) )
+  eq_( type( value ), bytes )
 
 
 def ToBytes_Bytes_test():
@@ -87,35 +90,45 @@ def ToBytes_Int_test():
   eq_( type( value ), bytes )
 
 
-if PY2:
-  def ToUnicode_Py2Bytes_test():
-    value = utils.ToUnicode( bytes( 'abc' ) )
-    eq_( value, u'abc' )
-    ok_( isinstance( value, str ) )
+def ToBytes_None_test():
+  value = utils.ToBytes( None )
+  eq_( value, bytes( b'' ) )
+  eq_( type( value ), bytes )
 
 
-  def ToUnicode_Py2Str_test():
-    value = utils.ToUnicode( 'abc' )
-    eq_( value, u'abc' )
-    ok_( isinstance( value, str ) )
+@Py2Only
+def ToUnicode_Py2Bytes_test():
+  value = utils.ToUnicode( bytes( 'abc' ) )
+  eq_( value, u'abc' )
+  ok_( isinstance( value, str ) )
 
 
-  def ToUnicode_Py2FutureStr_test():
-    value = utils.ToUnicode( str( 'abc' ) )
-    eq_( value, u'abc' )
-    ok_( isinstance( value, str ) )
+@Py2Only
+def ToUnicode_Py2Str_test():
+  value = utils.ToUnicode( 'abc' )
+  eq_( value, u'abc' )
+  ok_( isinstance( value, str ) )
 
 
-  def ToUnicode_Py2Unicode_test():
-    value = utils.ToUnicode( u'abc' )
-    eq_( value, u'abc' )
-    ok_( isinstance( value, str ) )
+@Py2Only
+def ToUnicode_Py2FutureStr_test():
+  value = utils.ToUnicode( str( 'abc' ) )
+  eq_( value, u'abc' )
+  ok_( isinstance( value, str ) )
 
 
-  def ToUnicode_Py2Int_test():
-    value = utils.ToUnicode( 123 )
-    eq_( value, u'123' )
-    ok_( isinstance( value, str ) )
+@Py2Only
+def ToUnicode_Py2Unicode_test():
+  value = utils.ToUnicode( u'abc' )
+  eq_( value, u'abc' )
+  ok_( isinstance( value, str ) )
+
+
+@Py2Only
+def ToUnicode_Py2Int_test():
+  value = utils.ToUnicode( 123 )
+  eq_( value, u'123' )
+  ok_( isinstance( value, str ) )
 
 
 def ToUnicode_Bytes_test():
@@ -136,47 +149,87 @@ def ToUnicode_Int_test():
   ok_( isinstance( value, str ) )
 
 
-if PY2:
-  def ToCppStringCompatible_Py2Str_test():
-    value = utils.ToCppStringCompatible( 'abc' )
-    eq_( value, 'abc' )
-    eq_( type( value ), type( '' ) )
+def ToUnicode_None_test():
+  value = utils.ToUnicode( None )
+  eq_( value, u'' )
+  ok_( isinstance( value, str ) )
 
 
-  def ToCppStringCompatible_Py2Unicode_test():
-    value = utils.ToCppStringCompatible( u'abc' )
-    eq_( value, 'abc' )
-    eq_( type( value ), type( '' ) )
+@Py2Only
+def ToCppStringCompatible_Py2Str_test():
+  value = utils.ToCppStringCompatible( 'abc' )
+  eq_( value, 'abc' )
+  eq_( type( value ), type( '' ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
 
-  def ToCppStringCompatible_Py2Int_test():
-    value = utils.ToCppStringCompatible( 123 )
-    eq_( value, '123' )
-    eq_( type( value ), type( '' ) )
+@Py2Only
+def ToCppStringCompatible_Py2Bytes_test():
+  value = utils.ToCppStringCompatible( bytes( b'abc' ) )
+  eq_( value, 'abc' )
+  eq_( type( value ), type( '' ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
 
-def ToCppStringCompatible_Bytes_test():
+@Py2Only
+def ToCppStringCompatible_Py2Unicode_test():
+  value = utils.ToCppStringCompatible( u'abc' )
+  eq_( value, 'abc' )
+  eq_( type( value ), type( '' ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
+
+
+@Py2Only
+def ToCppStringCompatible_Py2Int_test():
+  value = utils.ToCppStringCompatible( 123 )
+  eq_( value, '123' )
+  eq_( type( value ), type( '' ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], '123' )
+
+
+@Py3Only
+def ToCppStringCompatible_Py3Bytes_test():
   value = utils.ToCppStringCompatible( bytes( b'abc' ) )
   eq_( value, bytes( b'abc' ) )
   ok_( isinstance( value, bytes ) )
 
-
-def ToCppStringCompatible_Unicode_test():
-  value = utils.ToCppStringCompatible( u'abc' )
-  eq_( value, bytes( b'abc' ) )
-  ok_( isinstance( value, bytes ) )
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
 
-def ToCppStringCompatible_Str_test():
+@Py3Only
+def ToCppStringCompatible_Py3Str_test():
   value = utils.ToCppStringCompatible( 'abc' )
   eq_( value, bytes( b'abc' ) )
   ok_( isinstance( value, bytes ) )
 
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], 'abc' )
 
-def ToCppStringCompatible_Int_test():
+
+@Py3Only
+def ToCppStringCompatible_Py3Int_test():
   value = utils.ToCppStringCompatible( 123 )
   eq_( value, bytes( b'123' ) )
   ok_( isinstance( value, bytes ) )
+
+  vector = ycm_core.StringVector()
+  vector.append( value )
+  eq_( vector[ 0 ], '123' )
 
 
 def PathToCreatedTempDir_DirDoesntExist_test():
@@ -252,9 +305,9 @@ def SafePopen_WindowsPath_test( *args ):
   try:
     utils.SafePopen( [ 'foo', tempfile ], stdin_windows = subprocess.PIPE )
     eq_( subprocess.Popen.call_args,
-        call( [ 'foo', tempfile ],
-              stdin = subprocess.PIPE,
-              creationflags = utils.CREATE_NO_WINDOW ) )
+         call( [ 'foo', tempfile ],
+               stdin = subprocess.PIPE,
+               creationflags = utils.CREATE_NO_WINDOW ) )
   finally:
     os.remove( tempfile )
 
@@ -272,24 +325,52 @@ def SetEnviron_UnicodeNotOnWindows_test( *args ):
   eq_( env, { u'key': u'value' } )
 
 
-if PY2:
-  @patch( 'ycmd.utils.OnWindows', return_value = True )
-  def SetEnviron_UnicodeOnWindows_test( *args ):
-    env = {}
-    utils.SetEnviron( env, u'key', u'value' )
-    eq_( env, { native( bytes( b'key' ) ): native( bytes( b'value' ) ) } )
+@Py2Only
+@patch( 'ycmd.utils.OnWindows', return_value = True )
+def SetEnviron_UnicodeOnWindows_test( *args ):
+  env = {}
+  utils.SetEnviron( env, u'key', u'value' )
+  eq_( env, { native( bytes( b'key' ) ): native( bytes( b'value' ) ) } )
 
 
-def PathToNearestThirdPartyFolder_Success_test():
-  ok_( utils.PathToNearestThirdPartyFolder( os.path.abspath( __file__ ) ) )
+def PathsToAllParentFolders_Basic_test():
+  eq_( [
+    os.path.normpath( '/home/user/projects' ),
+    os.path.normpath( '/home/user' ),
+    os.path.normpath( '/home' ),
+    os.path.normpath( '/' )
+  ], list( utils.PathsToAllParentFolders( '/home/user/projects/test.c' ) ) )
 
 
-def PathToNearestThirdPartyFolder_Failure_test():
-  ok_( not utils.PathToNearestThirdPartyFolder( os.path.expanduser( '~' ) ) )
+@patch( 'os.path.isdir', return_value = True )
+def PathsToAllParentFolders_IsDirectory_test( *args ):
+  eq_( [
+    os.path.normpath( '/home/user/projects' ),
+    os.path.normpath( '/home/user' ),
+    os.path.normpath( '/home' ),
+    os.path.normpath( '/' )
+  ], list( utils.PathsToAllParentFolders( '/home/user/projects' ) ) )
 
 
-def AddNearestThirdPartyFoldersToSysPath_Failure_test():
-  assert_that(
-    calling( utils.AddNearestThirdPartyFoldersToSysPath ).with_args(
-      os.path.expanduser( '~' ) ),
-    raises( RuntimeError, '.*third_party folder.*' ) )
+def PathsToAllParentFolders_FileAtRoot_test():
+  eq_( [ os.path.normpath( '/' ) ],
+       list( utils.PathsToAllParentFolders( '/test.c' ) ) )
+
+
+@WindowsOnly
+def PathsToAllParentFolders_WindowsPath_test():
+  eq_( [
+    os.path.normpath( r'C:\\foo\\goo\\zoo' ),
+    os.path.normpath( r'C:\\foo\\goo' ),
+    os.path.normpath( r'C:\\foo' ),
+    os.path.normpath( r'C:\\' )
+  ], list( utils.PathsToAllParentFolders( r'C:\\foo\\goo\\zoo\\test.c' ) ) )
+
+
+def OpenForStdHandle_PrintDoesntThrowException_test():
+  try:
+    temp = PathToTestFile( 'open-for-std-handle' )
+    with utils.OpenForStdHandle( temp ) as f:
+      print( 'foo', file = f )
+  finally:
+    os.remove( temp )
