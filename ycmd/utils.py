@@ -24,6 +24,7 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 from future.utils import PY2, native
 
+import io
 import tempfile
 import os
 import sys
@@ -51,7 +52,7 @@ ACCESSIBLE_TO_ALL_MASK = ( stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH |
 # doesn't get closed. So, a helper func.
 # Also, all files we read are UTF-8.
 def ReadFile( filepath ):
-  with open( filepath, encoding = 'utf8' ) as f:
+  with io.open( filepath, encoding = 'utf8' ) as f:
     return f.read()
 
 
