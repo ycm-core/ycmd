@@ -1,3 +1,5 @@
+# coding: utf-8
+#
 # Copyright (C) 2013 Google Inc.
 #
 # This file is part of ycmd.
@@ -15,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+# Intentionally not importing unicode_literals!
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
@@ -72,6 +74,11 @@ def FiletypeDictUnion_Works_test():
          'bla': set(['boo']),
          'qux': set(['q'])
        } ) ) )
+
+
+def PrepareTrigger_UnicodeTrigger_Test():
+  regex = cu._PrepareTrigger( 'æ' )
+  eq_( regex.pattern, u'\\æ' )
 
 
 def MatchesSemanticTrigger_Basic_test():
