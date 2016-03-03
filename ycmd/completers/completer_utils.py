@@ -29,7 +29,7 @@ from future.utils import iteritems
 import os
 import re
 from collections import defaultdict
-from ycmd.utils import ToCppStringCompatible
+from ycmd.utils import ToCppStringCompatible, ToUnicode
 
 
 class PreparedTriggers( object ):
@@ -134,6 +134,7 @@ def _MatchesSemanticTrigger( line_value, start_column, column_num,
 
 
 def _PrepareTrigger( trigger ):
+  trigger = ToUnicode( trigger )
   if trigger.startswith( TRIGGER_REGEX_PREFIX ):
     return re.compile( trigger[ len( TRIGGER_REGEX_PREFIX ) : ], re.UNICODE )
   return re.compile( re.escape( trigger ), re.UNICODE )
