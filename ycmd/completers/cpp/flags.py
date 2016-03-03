@@ -55,7 +55,6 @@ MAC_INCLUDE_PATHS = [
  '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1',
  '/usr/local/include',
  '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include',
- '/usr/include',
  '/System/Library/Frameworks',
  '/Library/Frameworks',
 ]
