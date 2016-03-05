@@ -27,11 +27,17 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from future.utils import PY2
+from hamcrest import contains_string, has_entry, has_entries
+from mock import patch
+from webtest import TestApp
+import bottle
+import contextlib
+
+from ycmd import handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 from ycmd.utils import OnMac, OnWindows
 import ycm_core
-import os.path
 
 try:
   from unittest import skipIf
@@ -76,9 +82,64 @@ def BuildRequest( **kwargs ):
   return request
 
 
-def PathToTestFile( *args ):
-  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
-  return os.path.join( dir_of_current_script, 'testdata', *args )
+def ErrorMatcher( cls, msg = None ):
+  """ Returns a hamcrest matcher for a server exception response """
+  entry = { 'exception': has_entry( 'TYPE', cls.__name__ ) }
+
+  if msg:
+    entry.update( { 'message': msg } )
+
+  return has_entries( entry )
+
+
+def CompletionEntryMatcher( insertion_text,
+                            extra_menu_info = None,
+                            extra_params = None ):
+  match = { 'insertion_text': insertion_text }
+
+  if extra_menu_info:
+    match.update( { 'extra_menu_info': extra_menu_info } )
+
+  if extra_params:
+    match.update( extra_params )
+
+  return has_entries( match )
+
+
+def CompletionLocationMatcher( location_type, value ):
+  return has_entry( 'extra_data',
+                    has_entry( 'location',
+                               has_entry( location_type, value ) ) )
+
+
+def MessageMatcher( msg ):
+  return has_entry( 'message', contains_string( msg ) )
+
+
+@contextlib.contextmanager
+def PatchCompleter( completer, filetype ):
+  user_options = handlers._server_state._user_options
+  with patch.dict( 'ycmd.handlers._server_state._filetype_completers',
+                   { filetype: completer( user_options ) } ):
+    yield
+
+
+@contextlib.contextmanager
+def UserOption( key, value ):
+  try:
+    current_options = dict( user_options_store.GetAll() )
+    user_options = current_options.copy()
+    user_options.update( { key: value } )
+    handlers.UpdateUserOptions( user_options )
+    yield
+  finally:
+    handlers.UpdateUserOptions( current_options )
+
+
+def SetUpApp():
+  bottle.debug( True )
+  handlers.SetServerStateToDefaults()
+  return TestApp( handlers.app )
 
 
 class DummyCompleter( Completer ):

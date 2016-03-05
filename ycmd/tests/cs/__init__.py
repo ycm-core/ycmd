@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors.
+# Copyright (C) 2016 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,8 +15,121 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from .cs_handlers_test import StopAllOmniSharpServers
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
+from contextlib import contextmanager
+import functools
+import os
+import time
+
+from ycmd import handlers
+from ycmd.tests.test_utils import BuildRequest, SetUpApp
+
+shared_app = None
+shared_filepaths = []
 
 
-def teardownPackage():
-  StopAllOmniSharpServers()
+def PathToTestFile( *args ):
+  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
+  return os.path.join( dir_of_current_script, 'testdata', *args )
+
+
+def StartOmniSharpServer( app, filepath ):
+  app.post_json( '/run_completer_command',
+                 BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = [ "StartServer" ],
+                               filepath = filepath,
+                               filetype = 'cs' ) )
+
+
+def StopOmniSharpServer( app, filepath ):
+  app.post_json( '/run_completer_command',
+                 BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = [ 'StopServer' ],
+                               filepath = filepath,
+                               filetype = 'cs' ) )
+
+
+def WaitUntilOmniSharpServerReady( app, filepath ):
+  retries = 100
+  success = False
+
+  # If running on Travis CI, keep trying forever. Travis will kill the worker
+  # after 10 mins if nothing happens.
+  while retries > 0 or OnTravis():
+    result = app.get( '/ready', { 'subserver': 'cs' } ).json
+    if result:
+      success = True
+      break
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'ServerIsRunning' ],
+                            filepath = filepath,
+                            filetype = 'cs' )
+    result = app.post_json( '/run_completer_command', request ).json
+    if not result:
+      raise RuntimeError( "OmniSharp failed during startup." )
+    time.sleep( 0.2 )
+    retries = retries - 1
+
+  if not success:
+    raise RuntimeError( "Timeout waiting for OmniSharpServer" )
+
+
+def setUpPackage():
+  global shared_app
+
+  shared_app = SetUpApp()
+
+  shared_app.post_json(
+    '/ignore_extra_conf_file',
+    { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+
+
+def tearDownPackage():
+  global shared_app, shared_filepaths
+
+  for filepath in shared_filepaths:
+    StopOmniSharpServer( shared_app, filepath )
+
+
+@contextmanager
+def WrapOmniSharpServer( app, filepath ):
+  global shared_filepaths
+
+  if filepath not in shared_filepaths:
+    StartOmniSharpServer( app, filepath )
+    shared_filepaths.append( filepath )
+  WaitUntilOmniSharpServerReady( app, filepath )
+  yield
+
+
+def Shared( function ):
+  global shared_app
+
+  @functools.wraps( function )
+  def Wrapper( *args, **kwargs ):
+    return function( shared_app, *args, **kwargs )
+  return Wrapper
+
+
+def Isolated( function ):
+  @functools.wraps( function )
+  def Wrapper( *args, **kwargs ):
+    old_server_state = handlers._server_state
+
+    app = SetUpApp()
+
+    app.post_json(
+      '/ignore_extra_conf_file',
+      { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+
+    function( app, *args, **kwargs )
+
+    handlers._server_state = old_server_state
+  return Wrapper
