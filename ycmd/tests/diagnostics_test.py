@@ -29,12 +29,12 @@ from nose.tools import eq_
 import http.client
 
 from ycmd.responses import NoDiagnosticSupport, BuildDisplayMessageResponse
-from ycmd.tests import Shared
+from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, DummyCompleter, ErrorMatcher,
                                     MessageMatcher, PatchCompleter )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_DoesntWork_test( app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     diag_data = BuildRequest( contents = "foo = 5",
@@ -49,7 +49,7 @@ def Diagnostics_DoesntWork_test( app ):
     assert_that( response.json, ErrorMatcher( NoDiagnosticSupport ) )
 
 
-@Shared
+@SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.GetDetailedDiagnostic',
         return_value = BuildDisplayMessageResponse( 'detailed diagnostic' ) )
 def Diagnostics_DoesWork_test( app, *args ):

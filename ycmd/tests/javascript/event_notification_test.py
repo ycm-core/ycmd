@@ -23,22 +23,20 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.server_utils import SetUpPythonPath
-from ycmd.utils import ReadFile
-SetUpPythonPath()
-from nose.tools import eq_
 from hamcrest import assert_that, empty
-
+from mock import patch
+from nose.tools import eq_
 from pprint import pformat
 import http.client
 import os
-from mock import patch
+
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
-from ycmd.tests.javascript import ( Isolated, PathToTestFile,
+from ycmd.tests.javascript import ( IsolatedYcmd, PathToTestFile,
                                     WaitUntilTernServerReady )
+from ycmd.utils import ReadFile
 
 
-@Isolated
+@IsolatedYcmd
 def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
   contents = ReadFile( PathToTestFile( 'simple_test.js' ) )
 
@@ -53,7 +51,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
   assert_that( response.json, empty() )
 
 
-@Isolated
+@IsolatedYcmd
 def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
   os.chdir( PathToTestFile( 'lamelib' ) )
   contents = ReadFile( PathToTestFile( 'simple_test.js' ) )
@@ -69,7 +67,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
   assert_that( response.json, empty() )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = False )
 def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
@@ -152,7 +150,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
   )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = True )
 def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):

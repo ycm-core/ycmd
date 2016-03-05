@@ -27,12 +27,12 @@ from hamcrest import ( assert_that, contains, contains_string, has_entries,
                        has_entry, has_items, empty, equal_to )
 from pprint import pprint
 
-from ycmd.tests.clang import PathToTestFile, Shared
+from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_ZeroBasedLineAndColumn_test( app ):
   contents = """
 void foo() {
@@ -80,7 +80,7 @@ void foo() {
                   } ) ) )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_SimpleLocationExtent_test( app ):
   contents = """
 void foo() {
@@ -112,7 +112,7 @@ void foo() {
                   } ) ) )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_PragmaOnceWarningIgnored_test( app ):
   contents = """
 #pragma once
@@ -135,7 +135,7 @@ struct Foo {
   assert_that( response, empty() )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_Works_test( app ):
   contents = """
 struct Foo {
@@ -162,7 +162,7 @@ struct Foo {
                has_entry( 'message', contains_string( "expected ';'" ) ) )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_Multiline_test( app ):
   contents = """
 struct Foo {
@@ -190,7 +190,7 @@ int main() {
                has_entry( 'message', contains_string( "\n" ) ) )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_FixIt_Available_test( app ):
   contents = ReadFile( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
 

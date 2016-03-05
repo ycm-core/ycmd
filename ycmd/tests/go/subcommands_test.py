@@ -25,12 +25,12 @@ from builtins import *  # noqa
 
 from nose.tools import eq_
 
-from ycmd.tests.go import PathToTestFile, Shared
+from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def RunGoToTest( app, params ):
   filepath = PathToTestFile( 'goto.go' )
   contents = ReadFile( filepath )

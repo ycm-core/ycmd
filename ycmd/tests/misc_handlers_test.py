@@ -27,18 +27,18 @@ from builtins import *  # noqa
 from nose.tools import ok_
 from hamcrest import assert_that, contains
 
-from ycmd.tests import Shared
+from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
-@Shared
+@SharedYcmd
 def MiscHandlers_SemanticCompletionAvailable_test( app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
     ok_( app.post_json( '/semantic_completion_available', request_data ).json )
 
 
-@Shared
+@SharedYcmd
 def MiscHandlers_EventNotification_AlwaysJsonResponse_test( app ):
   event_data = BuildRequest( contents = 'foo foogoo ba',
                              event_name = 'FileReadyToParse' )
@@ -46,7 +46,7 @@ def MiscHandlers_EventNotification_AlwaysJsonResponse_test( app ):
   app.post_json( '/event_notification', event_data ).json
 
 
-@Shared
+@SharedYcmd
 def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
   candidate1 = { 'prop1': 'aoo', 'prop2': 'bar' }
   candidate2 = { 'prop1': 'bfo', 'prop2': 'zoo' }

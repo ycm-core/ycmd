@@ -28,13 +28,13 @@ from hamcrest import assert_that, has_items
 from mock import patch
 from nose.tools import eq_
 
-from ycmd.tests import Shared
+from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     DummyCompleter, PatchCompleter,
                                     UserOption )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_RequestValidation_NoLineNumException_test( app ):
   response = app.post_json( '/semantic_completion_available', {
     'column_num': 0,
@@ -49,7 +49,7 @@ def GetCompletions_RequestValidation_NoLineNumException_test( app ):
   response.mustcontain( 'missing', 'line_num' )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_IdentifierCompleter_Works_test( app ):
   event_data = BuildRequest( contents = 'foo foogoo ba',
                              event_name = 'FileReadyToParse' )
@@ -69,7 +69,7 @@ def GetCompletions_IdentifierCompleter_Works_test( app ):
   )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test( app ):
   completion_data = BuildRequest( contents = 'oo foo foogoo ba',
                                   column_num = 11 )
@@ -77,7 +77,7 @@ def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test( app ):
   eq_( 8, response_data[ 'completion_start_column' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test(
   app ):
   contents = """
@@ -105,7 +105,7 @@ def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test(
   )
 
 
-@Shared
+@SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
         return_value = [ 'foo', 'bar', 'qux' ] )
 def GetCompletions_ForceSemantic_Works_test( app, *args ):
@@ -120,7 +120,7 @@ def GetCompletions_ForceSemantic_Works_test( app, *args ):
                                      CompletionEntryMatcher( 'qux' ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test( app ):
   event_data = BuildRequest( event_name = 'FileReadyToParse',
                              syntax_keywords = ['foo', 'bar', 'zoo'] )
@@ -137,7 +137,7 @@ def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test( app ):
                           CompletionEntryMatcher( 'zoo' ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   event_data = BuildRequest(
     event_name = 'BufferVisit',
@@ -162,7 +162,7 @@ def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test( app ):
   with UserOption( 'use_ultisnips_completer', False ):
     event_data = BuildRequest(
@@ -181,7 +181,7 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test( app ):
                         completion_data ).json[ 'completions' ] )
 
 
-@Shared
+@SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
         return_value = [ 'some_candidate' ] )
 def GetCompletions_SemanticCompleter_WorksWhenTriggerIsIdentifier_test(

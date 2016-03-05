@@ -30,12 +30,12 @@ from hamcrest import ( assert_that, empty, greater_than, has_item, has_items,
 from nose.tools import eq_
 from webtest import AppError
 
-from ycmd.tests.cs import PathToTestFile, Shared, WrapOmniSharpServer
+from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -53,7 +53,7 @@ def GetCompletions_Basic_test( app ):
     eq_( 12, response_data[ 'completion_start_column' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_MultipleSolution_test( app ):
   filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
                 PathToTestFile( 'testy-multiple-solutions',
@@ -78,7 +78,7 @@ def GetCompletions_MultipleSolution_test( app ):
       eq_( 12, response_data[ 'completion_start_column' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_PathWithSpace_test( app ):
   filepath = PathToTestFile( u'неприличное слово', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -96,7 +96,7 @@ def GetCompletions_PathWithSpace_test( app ):
     eq_( 12, response_data[ 'completion_start_column' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_HasBothImportsAndNonImport_test( app ):
   filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -118,7 +118,7 @@ def GetCompletions_HasBothImportsAndNonImport_test( app ):
     )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ImportsOrderedAfter_test( app ):
   filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -148,7 +148,7 @@ def GetCompletions_ImportsOrderedAfter_test( app ):
     assert_that( min_import_index, greater_than( max_nonimport_index ) ),
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ForcedReturnsResults_test( app ):
   filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -168,7 +168,7 @@ def GetCompletions_ForcedReturnsResults_test( app ):
                             CompletionEntryMatcher( 'StringBuilder' ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_NonForcedReturnsNoResults_test( app ):
   filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -200,7 +200,7 @@ def GetCompletions_NonForcedReturnsNoResults_test( app ):
     } ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ForcedDividesCache_test( app ):
   filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -244,7 +244,7 @@ def GetCompletions_ForcedDividesCache_test( app ):
     } ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ReloadSolution_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -258,7 +258,7 @@ def GetCompletions_ReloadSolution_Basic_test( app ):
     eq_( result, True )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ReloadSolution_MultipleSolution_test( app ):
   filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
                 PathToTestFile( 'testy-multiple-solutions',
@@ -295,7 +295,7 @@ def SolutionSelectCheck( app, sourcefile, reference_solution,
   eq_( reference_solution, result)
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_UsesSubfolderHint_test( app ):
   SolutionSelectCheck( app,
                        PathToTestFile( 'testy-multiple-solutions',
@@ -306,7 +306,7 @@ def GetCompletions_UsesSubfolderHint_test( app ):
                                        'testy.sln' ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_UsesSuperfolderHint_test( app ):
   SolutionSelectCheck( app,
                        PathToTestFile( 'testy-multiple-solutions',
@@ -317,7 +317,7 @@ def GetCompletions_UsesSuperfolderHint_test( app ):
                                        'solution-named-like-folder.sln' ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ExtraConfStoreAbsolute_test( app ):
   SolutionSelectCheck( app,
                        PathToTestFile( 'testy-multiple-solutions',
@@ -333,7 +333,7 @@ def GetCompletions_ExtraConfStoreAbsolute_test( app ):
                                        '.ycm_extra_conf.py' ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ExtraConfStoreRelative_test( app ):
   SolutionSelectCheck( app,
                        PathToTestFile( 'testy-multiple-solutions',
@@ -350,7 +350,7 @@ def GetCompletions_ExtraConfStoreRelative_test( app ):
                                        '.ycm_extra_conf.py' ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ExtraConfStoreNonexisting_test( app ):
   SolutionSelectCheck( app,
                        PathToTestFile( 'testy-multiple-solutions',
@@ -367,7 +367,7 @@ def GetCompletions_ExtraConfStoreNonexisting_test( app ):
                                        'testy', '.ycm_extra_conf.py' ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_DoesntStartWithAmbiguousMultipleSolutions_test( app ):
   filepath = PathToTestFile( 'testy-multiple-solutions',
                              'solution-not-named-like-folder',

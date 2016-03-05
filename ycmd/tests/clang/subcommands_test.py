@@ -32,12 +32,12 @@ import http.client
 import os.path
 
 from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
-from ycmd.tests.clang import PathToTestFile, Shared
+from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
   contents = ReadFile( PathToTestFile(
     'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) )
@@ -57,7 +57,7 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
   }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
-@Shared
+@SharedYcmd
 def RunGoToTest_all( app, filename, command, test ):
   contents = ReadFile( PathToTestFile( filename ) )
   common_request = {
@@ -193,7 +193,7 @@ def Subcommands_GoTo_all_test():
             test )
 
 
-@Shared
+@SharedYcmd
 def RunGoToIncludeTest( app, command, test ):
   app.post_json(
     '/load_extra_conf_file',
@@ -256,7 +256,7 @@ def Subcommands_GoToInclude_Fail_test():
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
 
-@Shared
+@SharedYcmd
 def RunGetSemanticTest( app, filename, test, command):
   contents = ReadFile( PathToTestFile( filename ) )
 
@@ -405,7 +405,7 @@ def Subcommands_GetParent_test():
             [ 'GetParent' ] )
 
 
-@Shared
+@SharedYcmd
 def RunFixItTest( app, line, column, lang, file_name, check ):
   contents = ReadFile( PathToTestFile( file_name ) )
 
@@ -695,7 +695,7 @@ def Subcommands_FixIt_all_test():
     yield RunFixItTest, test[0], test[1], test[2], test[3], test[4]
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Variable_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -725,7 +725,7 @@ This really is a global variable.
 The first line of comment is the brief.""" } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Method_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -759,7 +759,7 @@ This is more information
 """ } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Namespace_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -787,7 +787,7 @@ Name: Test
 This is a test namespace""" } ) # noqa
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Undocumented_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -811,7 +811,7 @@ def Subcommands_GetDoc_Undocumented_test( app ):
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_NoCursor_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -836,7 +836,7 @@ def Subcommands_GetDoc_NoCursor_test( app ):
 
 
 # Following tests repeat the tests above, but without re-parsing the file
-@Shared
+@SharedYcmd
 def Subcommands_GetDocQuick_Variable_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -873,7 +873,7 @@ This really is a global variable.
 The first line of comment is the brief.""" } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDocQuick_Method_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -916,7 +916,7 @@ This is more information
 """ } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDocQuick_Namespace_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -953,7 +953,7 @@ Name: Test
 This is a test namespace""" } ) # noqa
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDocQuick_Undocumented_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -986,7 +986,7 @@ def Subcommands_GetDocQuick_Undocumented_test( app ):
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDocQuick_NoCursor_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )
@@ -1019,7 +1019,7 @@ def Subcommands_GetDocQuick_NoCursor_test( app ):
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDocQuick_NoReadyToParse_test( app ):
   filepath = PathToTestFile( 'GetDoc_Clang.cc' )
   contents = ReadFile( filepath )

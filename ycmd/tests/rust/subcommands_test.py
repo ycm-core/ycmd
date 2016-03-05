@@ -25,12 +25,12 @@ from builtins import *  # noqa
 
 from nose.tools import eq_
 
-from ycmd.tests.rust import PathToTestFile, Shared
+from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def RunGoToTest( app, params ):
   filepath = PathToTestFile( 'test.rs' )
   contents = ReadFile( filepath )

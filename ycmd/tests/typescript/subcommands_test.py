@@ -25,12 +25,12 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that, has_items, has_entries
 
-from ycmd.tests.typescript import PathToTestFile, Shared
+from ycmd.tests.typescript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, MessageMatcher
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_Basic_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )
@@ -54,7 +54,7 @@ def Subcommands_GetType_Basic_test( app ):
   assert_that( response, MessageMatcher( 'var foo: Foo' ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_HasNoType_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )
@@ -81,7 +81,7 @@ def Subcommands_GetType_HasNoType_test( app ):
                ErrorMatcher( RuntimeError, 'No content available.' ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Method_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )
@@ -109,7 +109,7 @@ def Subcommands_GetDoc_Method_test( app ):
                } ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Class_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )
@@ -138,7 +138,7 @@ def Subcommands_GetDoc_Class_test( app ):
                } ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToReferences_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )
@@ -169,7 +169,7 @@ def Subcommands_GoToReferences_test( app ):
   assert_that( actual, expected )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoTo_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )
@@ -198,7 +198,7 @@ def Subcommands_GoTo_test( app ):
                } ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoTo_Fail_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )

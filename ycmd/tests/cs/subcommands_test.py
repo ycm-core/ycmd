@@ -23,19 +23,19 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from webtest import AppError
 from nose.tools import eq_, ok_
+from webtest import AppError
 import re
 import os.path
 
-from ycmd.tests.cs import ( Isolated, PathToTestFile, Shared,
+from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
                             StopOmniSharpServer, WaitUntilOmniSharpServerReady,
                             WrapOmniSharpServer )
 from ycmd.tests.test_utils import BuildRequest, UserOption
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoTo_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -56,7 +56,7 @@ def Subcommands_GoTo_Basic_test( app ):
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToImplementation_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -79,7 +79,7 @@ def Subcommands_GoToImplementation_Basic_test( app ):
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToImplementation_NoImplementation_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -105,7 +105,7 @@ def Subcommands_GoToImplementation_NoImplementation_test( app ):
         raise
 
 
-@Shared
+@SharedYcmd
 def Subcommands_CsCompleter_InvalidLocation_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -131,7 +131,7 @@ def Subcommands_CsCompleter_InvalidLocation_test( app ):
         raise
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToImplementationElseDeclaration_NoImplementation_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -154,7 +154,7 @@ def Subcommands_GoToImplementationElseDeclaration_NoImplementation_test( app ):
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToImplementationElseDeclaration_SingleImplementation_test(
   app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
@@ -178,7 +178,7 @@ def Subcommands_GoToImplementationElseDeclaration_SingleImplementation_test(
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
   app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
@@ -206,7 +206,7 @@ def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
     } ], app.post_json( '/run_completer_command', goto_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_EmptyMessage_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -225,7 +225,7 @@ def Subcommands_GetType_EmptyMessage_test( app ):
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_VariableDeclaration_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -244,7 +244,7 @@ def Subcommands_GetType_VariableDeclaration_test( app ):
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_VariableUsage_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -263,7 +263,7 @@ def Subcommands_GetType_VariableUsage_test( app ):
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_Constant_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -282,7 +282,7 @@ def Subcommands_GetType_Constant_test( app ):
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_DocsIgnored_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -301,7 +301,7 @@ def Subcommands_GetType_DocsIgnored_test( app ):
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Variable_test( app ):
   filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -321,7 +321,7 @@ def Subcommands_GetDoc_Variable_test( app ):
     }, app.post_json( '/run_completer_command', getdoc_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Function_test( app ):
   filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -360,7 +360,7 @@ def RunFixItTest( app, line, column, expected_result ):
          app.post_json( '/run_completer_command', fixit_data ).json )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_FixIt_RemoveSingleLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 11, 1, {
@@ -393,7 +393,7 @@ def Subcommands_FixIt_RemoveSingleLine_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_FixIt_MultipleLines_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 19, 1, {
@@ -426,7 +426,7 @@ def Subcommands_FixIt_MultipleLines_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_FixIt_SpanFileEdge_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 1, 1, {
@@ -459,7 +459,7 @@ def Subcommands_FixIt_SpanFileEdge_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_FixIt_AddTextInLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 9, 1, {
@@ -492,7 +492,7 @@ def Subcommands_FixIt_AddTextInLine_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_FixIt_ReplaceTextInLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 10, 1, {
@@ -525,14 +525,14 @@ def Subcommands_FixIt_ReplaceTextInLine_test( app ):
   } )
 
 
-@Isolated
+@IsolatedYcmd
 def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   StopOmniSharpServer( app, filepath )
   # Success = no raise
 
 
-@Isolated
+@IsolatedYcmd
 def StopServer_KeepLogFiles( app, keeping_log_files ):
   with UserOption( 'server_keep_logfiles', keeping_log_files ):
     filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )

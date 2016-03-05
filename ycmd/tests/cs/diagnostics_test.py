@@ -26,12 +26,12 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that, contains, contains_string, equal_to,
                        has_entries, has_entry )
 
-from ycmd.tests.cs import PathToTestFile, Shared, WrapOmniSharpServer
+from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -57,7 +57,7 @@ def Diagnostics_Basic_test( app ):
                        "Unexpected symbol `}'', expecting identifier" ) ) )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_ZeroBasedLineAndColumn_test( app ):
   filepath = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -95,7 +95,7 @@ def Diagnostics_ZeroBasedLineAndColumn_test( app ):
                      } ) ) )
 
 
-@Shared
+@SharedYcmd
 def Diagnostics_MultipleSolution_test( app ):
   filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
                 PathToTestFile( 'testy-multiple-solutions',

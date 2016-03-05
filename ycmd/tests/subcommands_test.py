@@ -27,11 +27,11 @@ from builtins import *  # noqa
 from mock import patch
 from nose.tools import eq_
 
-from ycmd.tests import Shared
+from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
-@Shared
+@SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
         return_value = { 'A': lambda x: x,
                          'B': lambda x: x,
@@ -44,7 +44,7 @@ def Subcommands_Basic_test( app, *args ):
          app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
-@Shared
+@SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
         return_value = { 'A': lambda x: x,
                          'B': lambda x: x,

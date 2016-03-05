@@ -29,7 +29,7 @@ from nose.tools import eq_
 from pprint import pformat
 import http.client
 
-from ycmd.tests.javascript import PathToTestFile, Shared
+from ycmd.tests.javascript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
@@ -85,7 +85,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_NoQuery_test( app ):
   RunTest( app, {
     'description': 'semantic completion works for simple object no query',
@@ -119,7 +119,7 @@ def GetCompletions_NoQuery_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Query_test( app ):
   RunTest( app, {
     'description': 'semantic completion works for simple object with query',
@@ -143,7 +143,7 @@ def GetCompletions_Query_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Require_NoQuery_test( app ):
   RunTest( app, {
     'description': 'semantic completion works for simple object no query',
@@ -179,7 +179,7 @@ def GetCompletions_Require_NoQuery_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Require_Query_test( app ):
   RunTest( app, {
     'description': 'semantic completion works for require object with query',
@@ -202,7 +202,7 @@ def GetCompletions_Require_Query_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Require_Query_LCS_test( app ):
   RunTest( app, {
     'description': ( 'completion works for require object '
@@ -228,7 +228,7 @@ def GetCompletions_Require_Query_LCS_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_DirtyNamedBuffers_test( app ):
   # This tests that when we have dirty buffers in our editor, tern actually
   # uses them correctly
@@ -269,7 +269,7 @@ def GetCompletions_DirtyNamedBuffers_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ReturnsDocsInCompletions_test( app ):
   # This tests that we supply docs for completions
   RunTest( app, {

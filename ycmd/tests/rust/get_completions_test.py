@@ -25,12 +25,12 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that, has_entry, has_items, contains_string
 
-from ycmd.tests.rust import Isolated, PathToTestFile, Shared
+from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'test.rs' )
   contents = ReadFile( filepath )
@@ -52,7 +52,7 @@ def GetCompletions_Basic_test( app ):
 
 # This test is isolated because it affects the GoTo tests, although it
 # shouldn't.
-@Isolated
+@IsolatedYcmd
 def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   app ):
   filepath = PathToTestFile( 'std_completions.rs' )

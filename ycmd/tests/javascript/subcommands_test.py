@@ -28,7 +28,7 @@ from nose.tools import eq_
 from pprint import pformat
 import http.client
 
-from ycmd.tests.javascript import PathToTestFile, Shared
+from ycmd.tests.javascript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 from ycmd.utils import ReadFile
 
@@ -51,7 +51,7 @@ def ChunkMatcher( replacement_text, start, end ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'javascript' )
 
@@ -107,7 +107,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToDefinition_test( app ):
   RunTest( app, {
     'description': 'GoToDefinition works within file',
@@ -128,7 +128,7 @@ def Subcommands_GoToDefinition_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoTo_test( app ):
   RunTest( app, {
     'description': 'GoTo works the same as GoToDefinition within file',
@@ -149,7 +149,7 @@ def Subcommands_GoTo_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_test( app ):
   RunTest( app, {
     'description': 'GetDoc works within file',
@@ -173,7 +173,7 @@ def Subcommands_GetDoc_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetType_test( app ):
   RunTest( app, {
     'description': 'GetType works within file',
@@ -192,7 +192,7 @@ def Subcommands_GetType_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToReferences_test( app ):
   RunTest( app, {
     'description': 'GoToReferences works within file',
@@ -220,7 +220,7 @@ def Subcommands_GoToReferences_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDocWithNoItendifier_test( app ):
   RunTest( app, {
     'description': 'GetDoc works when no identifier',
@@ -238,7 +238,7 @@ def Subcommands_GetDocWithNoItendifier_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_RefactorRename_Simple_test( app ):
   filepath = PathToTestFile( 'simple_test.js' )
   RunTest( app, {
@@ -283,7 +283,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_RefactorRename_MultipleFiles_test( app ):
   file1 = PathToTestFile( 'file1.js' )
   file2 = PathToTestFile( 'file2.js' )
@@ -327,7 +327,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
   file1 = PathToTestFile( 'file1.js' )
   file2 = PathToTestFile( 'file2.js' )
@@ -390,7 +390,7 @@ def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_RefactorRename_Missing_New_Name_test( app ):
   RunTest( app, {
     'description': 'FixItRename raises an error without new name',

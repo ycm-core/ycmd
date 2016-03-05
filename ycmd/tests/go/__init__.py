@@ -55,7 +55,7 @@ def tearDownPackage():
   StopGoCodeServer( shared_app )
 
 
-def Shared( test ):
+def SharedYcmd( test ):
   global shared_app
 
   @functools.wraps( test )

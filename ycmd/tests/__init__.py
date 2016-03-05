@@ -42,7 +42,7 @@ def setUpPackage():
   shared_app = SetUpApp()
 
 
-def Shared( test ):
+def SharedYcmd( test ):
   global shared_app
 
   @functools.wraps( test )

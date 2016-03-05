@@ -28,9 +28,9 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entry, has_entries )
 import http.client
 
-from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
-from ycmd.tests.clang import Isolated, PathToTestFile, Shared
+from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
+from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     ErrorMatcher, UserOption )
 from ycmd.utils import ReadFile
@@ -91,7 +91,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ForcedWithNoTrigger_test( app ):
   RunTest( app, {
     'description': 'semantic completion with force query=DO_SO',
@@ -117,7 +117,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Fallback_NoSuggestions_test( app ):
   # TESTCASE1 (general_fallback/lang_c.c)
   RunTest( app, {
@@ -140,7 +140,7 @@ def GetCompletions_Fallback_NoSuggestions_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
   # TESTCASE1 (general_fallback/lang_cpp.cc)
   RunTest( app, {
@@ -165,7 +165,7 @@ def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Fallback_Suggestions_test( app ):
   # TESTCASE1 (general_fallback/lang_c.c)
   RunTest( app, {
@@ -189,7 +189,7 @@ def GetCompletions_Fallback_Suggestions_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Fallback_Exception_test( app ):
   # TESTCASE4 (general_fallback/lang_c.c)
   # extra conf throws exception
@@ -216,7 +216,7 @@ def GetCompletions_Fallback_Exception_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Forced_NoFallback_test( app ):
   # TESTCASE2 (general_fallback/lang_c.c)
   RunTest( app, {
@@ -236,7 +236,7 @@ def GetCompletions_Forced_NoFallback_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_FilteredNoResults_Fallback_test( app ):
   # no errors because the semantic completer returned results, but they
   # were filtered out by the query, so this is considered working OK
@@ -270,7 +270,7 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_WorksWithExplicitFlags_test( app ):
   app.post_json(
     '/ignore_extra_conf_file',
@@ -304,7 +304,7 @@ int main()
   eq_( 7, response_data[ 'completion_start_column' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_NoCompletionsWhenAutoTriggerOff_test( app ):
   with UserOption( 'auto_trigger', False ):
     app.post_json(
@@ -336,7 +336,7 @@ int main()
     assert_that( results, empty() )
 
 
-@Isolated
+@IsolatedYcmd
 def GetCompletions_UnknownExtraConfException_test( app ):
   filepath = PathToTestFile( 'basic.cpp' )
   completion_data = BuildRequest( filepath = filepath,
@@ -370,7 +370,7 @@ def GetCompletions_UnknownExtraConfException_test( app ):
                                      NoExtraConfDetected.__name__ ) ) )
 
 
-@Isolated
+@IsolatedYcmd
 def GetCompletions_WorksWhenExtraConfExplicitlyAllowed_test( app ):
   app.post_json(
     '/load_extra_conf_file',
@@ -390,7 +390,7 @@ def GetCompletions_WorksWhenExtraConfExplicitlyAllowed_test( app ):
                                    CompletionEntryMatcher( 'y' ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ExceptionWhenNoFlagsFromExtraConf_test( app ):
   app.post_json(
     '/load_extra_conf_file',
@@ -416,7 +416,7 @@ def GetCompletions_ExceptionWhenNoFlagsFromExtraConf_test( app ):
                           has_entry( 'TYPE', RuntimeError.__name__ ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ForceSemantic_OnlyFilteredCompletions_test( app ):
   contents = """
 int main()
@@ -447,7 +447,7 @@ int main()
   )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_ClientDataGivenToExtraConf_test( app ):
   app.post_json(
     '/load_extra_conf_file',
@@ -469,7 +469,7 @@ def GetCompletions_ClientDataGivenToExtraConf_test( app ):
   assert_that( results, has_item( CompletionEntryMatcher( 'x' ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
   app.post_json(
     '/load_extra_conf_file',

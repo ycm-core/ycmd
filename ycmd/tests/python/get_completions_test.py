@@ -29,13 +29,13 @@ from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
 from ycmd.utils import ReadFile
-from ycmd.tests.python import PathToTestFile, Shared
+from ycmd.tests.python import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     CompletionLocationMatcher )
 import http.client
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'basic.py' )
   completion_data = BuildRequest( filepath = filepath,
@@ -57,7 +57,7 @@ def GetCompletions_Basic_test( app ):
                  CompletionLocationMatcher( 'filepath', filepath ) ) )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_UnicodeDescription_test( app ):
   filepath = PathToTestFile( 'unicode.py' )
   completion_data = BuildRequest( filepath = filepath,
@@ -110,7 +110,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_NoSuggestions_Fallback_test( app ):
   # Python completer doesn't raise NO_COMPLETIONS_MESSAGE, so this is a
   # different code path to the Clang completer cases

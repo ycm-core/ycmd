@@ -23,14 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from mock import patch
-from ycmd import utils
-from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest import assert_that, has_item, contains, equal_to, is_not  # noqa
-from ycmd.tests.python import Isolated
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, UserOption
+from mock import patch
 import sys
+
+from ycmd import utils
+from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE
+from ycmd.tests.python import IsolatedYcmd
+from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, UserOption
 
 
 class CalledWith( BaseMatcher ):
@@ -76,14 +77,14 @@ def was_called_with_python( python ):
   return CalledWith( python )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.utils.SafePopen' )
 def UserDefinedPython_WithoutAnyOption_DefaultToYcmdPython_test( app, *args ):
   app.get( '/ready', { 'subserver': 'python' } )
   assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
           '_CheckBinaryExists', return_value = False )
@@ -100,7 +101,7 @@ def UserDefinedPython_WhenNonExistentPythonIsGiven_ReturnAnError_test( app,
     utils.SafePopen.assert_not_called()
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
           '_CheckBinaryExists', return_value = True )
@@ -111,7 +112,7 @@ def UserDefinedPython_WhenExistingPythonIsGiven_ThatIsUsed_test( app, *args ):
     assert_that( utils.SafePopen, was_called_with_python( python ) )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
           '_CheckBinaryExists', return_value = True )
@@ -123,7 +124,7 @@ def UserDefinedPython_RestartServerWithoutArguments_WillReuseTheLastPython_test(
   assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
           '_CheckBinaryExists', return_value = True )
@@ -136,7 +137,7 @@ def UserDefinedPython_RestartServerWithArgument_WillUseTheSpecifiedPython_test(
   assert_that( utils.SafePopen, was_called_with_python( python ) )
 
 
-@Isolated
+@IsolatedYcmd
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
           '_CheckBinaryExists', return_value = False )

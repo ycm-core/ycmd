@@ -28,11 +28,11 @@ from nose.tools import eq_
 import os.path
 
 from ycmd.utils import ReadFile
-from ycmd.tests.python import PathToTestFile, Shared
+from ycmd.tests.python import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 
 
-@Shared
+@SharedYcmd
 def RunGoToTest( app, test ):
   filepath = PathToTestFile( test[ 'request' ][ 'filename' ] )
   goto_data = BuildRequest( completer_target = 'filetype_default',
@@ -71,7 +71,7 @@ def Subcommands_GoTo_test():
     yield RunGoToTest, test
 
 
-@Shared
+@SharedYcmd
 def RunGoToTest_Variation_ZeroBasedLineAndColumn( app, test ):
   # Example taken directly from jedi docs
   # http://jedi.jedidjah.ch/en/latest/docs/plugin-api.html#examples
@@ -123,7 +123,7 @@ def Subcommands_GoTo_Variation_ZeroBasedLineAndColumn_test():
     yield RunGoToTest_Variation_ZeroBasedLineAndColumn, test
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToDefinition_NotFound_test( app ):
   filepath = PathToTestFile( 'goto_file5.py' )
   goto_data = BuildRequest( command_arguments = [ 'GoToDefinition' ],
@@ -140,7 +140,7 @@ def Subcommands_GoToDefinition_NotFound_test( app ):
                              "Can\'t jump to definition." ) )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Method_test( app ):
   # Testcase1
   filepath = PathToTestFile( 'GetDoc.py' )
@@ -163,7 +163,7 @@ def Subcommands_GetDoc_Method_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GetDoc_Class_test( app ):
   # Testcase1
   filepath = PathToTestFile( 'GetDoc.py' )
@@ -184,7 +184,7 @@ def Subcommands_GetDoc_Class_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 def Subcommands_GoToReferences_test( app ):
   filepath = PathToTestFile( 'goto_references.py' )
   contents = ReadFile( filepath )

@@ -25,12 +25,12 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that, has_item
 
-from ycmd.tests.go import PathToTestFile, Shared
+from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'test.go' )
   completion_data = BuildRequest( filepath = filepath,

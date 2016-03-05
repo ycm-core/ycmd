@@ -26,7 +26,7 @@ from builtins import *  # noqa
 from hamcrest import assert_that, contains_inanyorder, has_entries
 from mock import patch
 
-from ycmd.tests.typescript import PathToTestFile, Shared
+from ycmd.tests.typescript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
@@ -54,7 +54,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@Shared
+@SharedYcmd
 def GetCompletions_Basic_test( app ):
   RunTest( app, {
     'expect': {
@@ -72,7 +72,7 @@ def GetCompletions_Basic_test( app ):
   } )
 
 
-@Shared
+@SharedYcmd
 @patch( 'ycmd.completers.typescript.'
           'typescript_completer.MAX_DETAILED_COMPLETIONS',
         2 )

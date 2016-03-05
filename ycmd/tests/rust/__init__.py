@@ -74,7 +74,7 @@ def tearDownPackage():
   StopRacerdServer( shared_app )
 
 
-def Shared( test ):
+def SharedYcmd( test ):
   global shared_app
 
   @functools.wraps( test )
@@ -83,7 +83,7 @@ def Shared( test ):
   return Wrapper
 
 
-def Isolated( test ):
+def IsolatedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
