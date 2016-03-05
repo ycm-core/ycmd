@@ -123,13 +123,12 @@ def Isolated( function ):
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
 
-    app = SetUpApp()
-
-    app.post_json(
-      '/ignore_extra_conf_file',
-      { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-
-    function( app, *args, **kwargs )
-
-    handlers._server_state = old_server_state
+    try:
+      app = SetUpApp()
+      app.post_json(
+        '/ignore_extra_conf_file',
+        { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+      function( app, *args, **kwargs )
+    finally:
+      handlers._server_state = old_server_state
   return Wrapper

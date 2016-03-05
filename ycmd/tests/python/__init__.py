@@ -90,9 +90,8 @@ def Isolated( function ):
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
 
-    app = SetUpApp()
-
-    function( app, *args, **kwargs )
-
-    handlers._server_state = old_server_state
+    try:
+      function( SetUpApp(), *args, **kwargs )
+    finally:
+      handlers._server_state = old_server_state
   return Wrapper

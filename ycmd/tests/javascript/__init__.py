@@ -101,19 +101,15 @@ def Isolated( function ):
   @functools.wraps( function )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
+    old_current_dir = os.getcwd()
 
-    app = SetUpApp()
-
-    current_dir = os.getcwd()
-    os.chdir( PathToTestFile() )
-
-    WaitUntilTernServerReady( shared_app )
-
-    function( app, *args, **kwargs )
-
-    StopTernServer( shared_app )
-
-    os.chdir( current_dir )
-
-    handlers._server_state = old_server_state
+    try:
+      os.chdir( PathToTestFile() )
+      app = SetUpApp()
+      WaitUntilTernServerReady( app )
+      function( app, *args, **kwargs )
+      StopTernServer( app )
+    finally:
+      os.chdir( old_current_dir )
+      handlers._server_state = old_server_state
   return Wrapper

@@ -88,13 +88,11 @@ def Isolated( function ):
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
 
-    app = SetUpApp()
-
-    WaitUntilRacerdServerReady( app )
-
-    function( app, *args, **kwargs )
-
-    StopRacerdServer( app )
-
-    handlers._server_state = old_server_state
+    try:
+      app = SetUpApp()
+      WaitUntilRacerdServerReady( app )
+      function( app, *args, **kwargs )
+      StopRacerdServer( app )
+    finally:
+      handlers._server_state = old_server_state
   return Wrapper
