@@ -74,24 +74,24 @@ def tearDownPackage():
   StopRacerdServer( shared_app )
 
 
-def Shared( function ):
+def Shared( test ):
   global shared_app
 
-  @functools.wraps( function )
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
-    return function( shared_app, *args, **kwargs )
+    return test( shared_app, *args, **kwargs )
   return Wrapper
 
 
-def Isolated( function ):
-  @functools.wraps( function )
+def Isolated( test ):
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
 
     try:
       app = SetUpApp()
       WaitUntilRacerdServerReady( app )
-      function( app, *args, **kwargs )
+      test( app, *args, **kwargs )
       StopRacerdServer( app )
     finally:
       handlers._server_state = old_server_state

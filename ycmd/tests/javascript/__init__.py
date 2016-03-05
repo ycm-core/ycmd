@@ -88,17 +88,17 @@ def tearDownPackage():
   os.chdir( shared_current_dir )
 
 
-def Shared( function ):
+def Shared( test ):
   global shared_app
 
-  @functools.wraps( function )
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
-    return function( shared_app, *args, **kwargs )
+    return test( shared_app, *args, **kwargs )
   return Wrapper
 
 
-def Isolated( function ):
-  @functools.wraps( function )
+def Isolated( test ):
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
     old_current_dir = os.getcwd()
@@ -107,7 +107,7 @@ def Isolated( function ):
       os.chdir( PathToTestFile() )
       app = SetUpApp()
       WaitUntilTernServerReady( app )
-      function( app, *args, **kwargs )
+      test( app, *args, **kwargs )
       StopTernServer( app )
     finally:
       os.chdir( old_current_dir )

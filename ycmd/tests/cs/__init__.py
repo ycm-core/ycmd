@@ -109,17 +109,17 @@ def WrapOmniSharpServer( app, filepath ):
   yield
 
 
-def Shared( function ):
+def Shared( test ):
   global shared_app
 
-  @functools.wraps( function )
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
-    return function( shared_app, *args, **kwargs )
+    return test( shared_app, *args, **kwargs )
   return Wrapper
 
 
-def Isolated( function ):
-  @functools.wraps( function )
+def Isolated( test ):
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
 
@@ -128,7 +128,7 @@ def Isolated( function ):
       app.post_json(
         '/ignore_extra_conf_file',
         { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-      function( app, *args, **kwargs )
+      test( app, *args, **kwargs )
     finally:
       handlers._server_state = old_server_state
   return Wrapper

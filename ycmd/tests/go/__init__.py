@@ -55,10 +55,10 @@ def tearDownPackage():
   StopGoCodeServer( shared_app )
 
 
-def Shared( function ):
+def Shared( test ):
   global shared_app
 
-  @functools.wraps( function )
+  @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
-    return function( shared_app, *args, **kwargs )
+    return test( shared_app, *args, **kwargs )
   return Wrapper
