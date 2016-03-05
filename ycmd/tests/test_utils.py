@@ -29,7 +29,7 @@ from builtins import *  # noqa
 from future.utils import PY2
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
-from ycmd.utils import OnWindows
+from ycmd.utils import OnMac, OnWindows
 import ycm_core
 import os.path
 
@@ -43,6 +43,7 @@ Py3Only = skipIf( PY2, 'Python 3 only' )
 WindowsOnly = skipIf( not OnWindows(), 'Windows only' )
 ClangOnly = skipIf( not ycm_core.HasClangSupport(),
                     'Only when Clang support available' )
+MacOnly = skipIf( not OnMac(), 'Mac only' )
 
 
 def BuildRequest( **kwargs ):

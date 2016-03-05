@@ -45,21 +45,6 @@ STATE_FLAGS_TO_SKIP = set(['-c', '-MP', '--fcolor-diagnostics'])
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
 FILE_FLAGS_TO_SKIP = set(['-MD', '-MMD', '-MF', '-MT', '-MQ', '-o'])
 
-# These are the standard header search paths that clang will use on Mac BUT
-# libclang won't, for unknown reasons. We add these paths when the user is on a
-# Mac because if we don't, libclang would fail to find <vector> etc.
-# This should be fixed upstream in libclang, but until it does, we need to help
-# users out.
-# See Valloric/YouCompleteMe#303 for details.
-MAC_INCLUDE_PATHS = [
- '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1',
- '/usr/local/include',
- '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include',
- '/usr/include',
- '/System/Library/Frameworks',
- '/Library/Frameworks',
-]
-
 # Use a regex to correctly detect c++/c language for both versioned and
 # non-versioned compiler executable names suffixes
 # (e.g., c++, g++, clang++, g++-4.9, clang++-3.7, c++-10.2 etc).
@@ -311,6 +296,77 @@ def _RemoveUnusedFlags( flags, filename ):
     new_flags.append( flag )
     previous_flag_is_include = flag in INCLUDE_FLAGS
   return new_flags
+
+
+# There are 2 ways to get a development enviornment (as standard) on OS X:
+#  - install XCode.app, or
+#  - install the command-line tools (xcode-select --install)
+#
+# Most users have xcode installed, but in order to be as compatible as
+# possible we consider both possible installation locations
+MAC_CLANG_TOOLCHAIN_DIRS = [
+  '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain',
+  '/Library/Developer/CommandLineTools'
+]
+
+# Returns a list containing the supplied path as a suffix of each of the known
+# Mac toolchains
+def _PathsForAllMacToolchains( path ):
+  return [ os.path.join( x, path ) for x in MAC_CLANG_TOOLCHAIN_DIRS ]
+
+
+# Ultimately, this method exists only for testability
+def _GetMacClangVersionList( candidates_dir ):
+  try:
+    return os.listdir( candidates_dir )
+  except OSError:
+    # Path might not exist, so just ignore
+    return []
+
+
+# Ultimately, this method exists only for testability
+def _MacClangIncludeDirExists( candidate_include ):
+  return os.path.exists( candidate_include )
+
+
+# Add in any clang headers found in the installed toolchains. These are
+# required for the same reasons as described below, but unfortuantely, these
+# are in versioned directories and there is no easy way to find the "correct"
+# version. We simply pick the highest version in the first toolchain that we
+# find, as this is the most likely to be correct.
+def _LatestMacClangIncludes():
+  for path in MAC_CLANG_TOOLCHAIN_DIRS:
+    # we use the first toolchain which actually contains any versions, rather
+    # than trying all of the toolchains and picking the highest. We
+    # favour Xcode over CommandLineTools as using Xcode is more common.
+    # It might be possible to extrace this information from xcode-select, though
+    # xcode-select -p does not point at the toolchain directly
+    candidates_dir = os.path.join( path, 'usr', 'lib', 'clang' )
+    versions = _GetMacClangVersionList( candidates_dir )
+
+    for version in reversed( sorted( versions ) ):
+      candidate_include = os.path.join( candidates_dir, version, 'include' )
+      if _MacClangIncludeDirExists( candidate_include ):
+        return [ candidate_include ]
+
+  return []
+
+MAC_INCLUDE_PATHS = []
+
+if OnMac():
+  # These are the standard header search paths that clang will use on Mac BUT
+  # libclang won't, for unknown reasons. We add these paths when the user is on
+  # a Mac because if we don't, libclang would fail to find <vector> etc.  This
+  # should be fixed upstream in libclang, but until it does, we need to help
+  # users out.
+  # See Valloric/YouCompleteMe#303 for details.
+  MAC_INCLUDE_PATHS = (
+    _PathsForAllMacToolchains( 'usr/include/c++/v1' ) +
+    [ '/usr/local/include' ] +
+    _PathsForAllMacToolchains( 'usr/include' ) +
+    [ '/usr/include', '/System/Library/Frameworks', '/Library/Frameworks' ] +
+    _LatestMacClangIncludes()
+  )
 
 
 def _ExtraClangFlags():
