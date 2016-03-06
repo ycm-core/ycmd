@@ -56,4 +56,5 @@ class Diagnostics_test( Handlers_test ):
                                       filetype = 'dummy_filetype' )
 
       response = self._app.post_json( '/detailed_diagnostic', diag_data )
-      assert_that( response.json, self._MessageMatcher( "detailed diagnostic" ) )
+      assert_that( response.json,
+                   self._MessageMatcher( "detailed diagnostic" ) )

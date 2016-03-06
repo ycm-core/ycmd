@@ -58,19 +58,24 @@ class TypeScript_GetCompletions_test( Typescript_Handlers_test ):
       'expect': {
         'data': has_entries( {
           'completions': contains_inanyorder(
-            self.CompletionEntryMatcher( 'methodA',
-                                         'methodA (method) Foo.methodA(): void' ),
-            self.CompletionEntryMatcher( 'methodB',
-                                         'methodB (method) Foo.methodB(): void' ),
-            self.CompletionEntryMatcher( 'methodC',
-                                         'methodC (method) Foo.methodC(): void' ),
+            self.CompletionEntryMatcher(
+              'methodA',
+              'methodA (method) Foo.methodA(): void' ),
+            self.CompletionEntryMatcher(
+              'methodB',
+              'methodB (method) Foo.methodB(): void' ),
+            self.CompletionEntryMatcher(
+              'methodC',
+              'methodC (method) Foo.methodC(): void' ),
           )
         } )
       }
     } )
 
 
-  @patch( 'ycmd.completers.typescript.typescript_completer.MAX_DETAILED_COMPLETIONS', 2 )
+  @patch( 'ycmd.completers.typescript.'
+            'typescript_completer.MAX_DETAILED_COMPLETIONS',
+          2 )
   def MaxDetailedCompletion_test( self ):
     self._RunTest( {
       'expect': {

@@ -86,7 +86,8 @@ class Cs_Diagnostics_test( Cs_Handlers_test ):
                                            filetype = 'cs',
                                            contents = contents )
 
-          results = self._app.post_json( '/event_notification', event_data ).json
+          results = self._app.post_json( '/event_notification',
+                                         event_data ).json
 
         assert_that( results,
                     contains(

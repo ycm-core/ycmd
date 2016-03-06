@@ -47,6 +47,7 @@ from ycmd.watchdog_plugin import WatchdogPlugin
 from ycmd.hmac_plugin import HmacPlugin
 from ycmd.utils import ToBytes, ReadFile, OpenForStdHandle
 
+
 def YcmCoreSanityCheck():
   if 'ycm_core' in sys.modules:
     raise RuntimeError( 'ycm_core already imported, ycmd has a bug!' )
@@ -123,6 +124,7 @@ def SetupLogging( log_level ):
   logging.basicConfig( format = '%(asctime)s - %(levelname)s - %(message)s',
                        level = numeric_level )
 
+
 def SetupOptions( options_file ):
   options = user_options_store.DefaultOptions()
   user_options = json.loads( ReadFile( options_file ) )
@@ -179,4 +181,3 @@ def Main():
 
 if __name__ == "__main__":
   Main()
-

@@ -19,6 +19,8 @@
 method/variable,etc. headers in order to remove non-data-ink from the raw
 comment"""
 
+# flake8: noqa
+
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
@@ -129,7 +131,7 @@ Multi-line
  Doxygen-like
    comment   ****/ Entries
 
-""" )
+""" ) # noqa
 
 def ClangCompleter_FormatRawComment_MultiLine_JavaDoc_Inconsistent_test():
   # The dedenting only applies to consistent indent, and leaves any subsequent
@@ -147,7 +149,7 @@ All of the
 Lines in this
 	Comment consistently
 * Have a 2-space indent
-""" )
+""" ) # noqa
 
 
 def ClangCompleter_FormatRawComment_ZeroLine_test():
@@ -170,4 +172,4 @@ def ClangCompleter_FormatRawComment_MultiLine_empty_test():
 
 
 
-""" )
+""" ) # noqa

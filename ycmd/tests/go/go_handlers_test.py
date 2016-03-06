@@ -37,7 +37,8 @@ class Go_Handlers_test( Handlers_test ):
 
 
   def _StopGoCodeServer( self ):
-    self._app.post_json( '/run_completer_command',
-                         self._BuildRequest( completer_target = 'filetype_default',
-                                             command_arguments = [ 'StopServer' ],
-                                             filetype = 'go' ) )
+    self._app.post_json(
+        '/run_completer_command',
+        self._BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'StopServer' ],
+                            filetype = 'go' ) )

@@ -85,7 +85,8 @@ class UserDefinedPython_test( Python_Handlers_test ):
 
 
   @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.JediCompleter._CheckBinaryExists',
+  @patch( 'ycmd.completers.python.jedi_completer.'
+            'JediCompleter._CheckBinaryExists',
           return_value = False )
   def WhenNonExistentPythonIsGiven_ReturnAnError_test( self, *args ):
     python = '/non/existing/path/python'
@@ -100,7 +101,8 @@ class UserDefinedPython_test( Python_Handlers_test ):
 
 
   @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.JediCompleter._CheckBinaryExists',
+  @patch( 'ycmd.completers.python.jedi_completer.'
+            'JediCompleter._CheckBinaryExists',
           return_value = True )
   def WhenExistingPythonIsGiven_ThatIsUsed_test( self, *args ):
     python = '/existing/python'
@@ -110,7 +112,8 @@ class UserDefinedPython_test( Python_Handlers_test ):
 
 
   @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.JediCompleter._CheckBinaryExists',
+  @patch( 'ycmd.completers.python.jedi_completer.'
+            'JediCompleter._CheckBinaryExists',
           return_value = True )
   def RestartServerWithoutArguments_WillReuseTheLastPython_test( self, *args ):
     request = self._BuildRequest( filetype = 'python',
@@ -120,7 +123,8 @@ class UserDefinedPython_test( Python_Handlers_test ):
 
 
   @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.JediCompleter._CheckBinaryExists',
+  @patch( 'ycmd.completers.python.jedi_completer.'
+            'JediCompleter._CheckBinaryExists',
           return_value = True )
   def RestartServerWithArgument_WillUseTheSpecifiedPython_test( self, *args ):
     python = '/existing/python'
@@ -132,7 +136,8 @@ class UserDefinedPython_test( Python_Handlers_test ):
 
 
   @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.JediCompleter._CheckBinaryExists',
+  @patch( 'ycmd.completers.python.jedi_completer.'
+            'JediCompleter._CheckBinaryExists',
           return_value = False )
   def RestartServerWithNonExistingPythonArgument_test( self, *args ):
     python = '/non/existing/python'

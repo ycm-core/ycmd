@@ -44,9 +44,6 @@ def RunFlake8():
   print( 'Running flake8' )
   subprocess.check_call( [
     'flake8',
-    '--select=F,C9',
-    '--max-complexity=10',
-    '--exclude=testdata',
     p.join( DIR_OF_THIS_SCRIPT, 'ycmd' )
   ] )
 
@@ -98,7 +95,7 @@ def CompleterType( value ):
     aliases_to_completer = dict( ( i, k ) for k, v in COMPLETERS.items()
                                  for i in v[ 'aliases' ] )
     if value in aliases_to_completer:
-      return aliases_to_completer[ value ];
+      return aliases_to_completer[ value ]
     else:
       raise argparse.ArgumentTypeError(
         '{0} is not a valid completer - should be one of {1}'.format(

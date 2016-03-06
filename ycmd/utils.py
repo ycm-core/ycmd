@@ -39,13 +39,14 @@ CREATE_NO_WINDOW = 0x08000000
 # Executable extensions used on Windows
 WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
 
-# Don't use this! Call PathToCreatedTempDir() instead. This exists for the sake of
-# tests.
+# Don't use this! Call PathToCreatedTempDir() instead. This exists for the sake
+# of tests.
 RAW_PATH_TO_TEMP_DIR = os.path.join( tempfile.gettempdir(), 'ycm_temp' )
 
 # Readable, writable and executable by everyone.
 ACCESSIBLE_TO_ALL_MASK = ( stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH |
                            stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP )
+
 
 # Python 3 complains on the common open(path).read() idiom because the file
 # doesn't get closed. So, a helper func.

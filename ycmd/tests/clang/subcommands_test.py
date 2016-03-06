@@ -114,8 +114,8 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
     # GoToDefinition - identical to GoToDeclaration
     #
-    # The semantics of this seem the wrong way round to me. GoToDefinition should
-    # go to where a method is implemented, not where it is declared.
+    # The semantics of this seem the wrong way round to me. GoToDefinition
+    # should go to where a method is implemented, not where it is declared.
     #
     tests = [
       # Local::x -> declaration of x
@@ -140,8 +140,8 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
     # GoTo - identical to GoToDeclaration
     #
-    # The semantics of this seem the wrong way round to me. GoToDefinition should
-    # go to where a method is implemented, not where it is declared.
+    # The semantics of this seem the wrong way round to me. GoToDefinition
+    # should go to where a method is implemented, not where it is declared.
     #
     tests = [
       # Local::x -> declaration of x
@@ -166,8 +166,8 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
 
     # GoToImprecise - identical to GoToDeclaration
     #
-    # The semantics of this seem the wrong way round to me. GoToDefinition should
-    # go to where a method is implemented, not where it is declared.
+    # The semantics of this seem the wrong way round to me. GoToDefinition
+    # should go to where a method is implemented, not where it is declared.
     #
     tests = [
       # Local::x -> declaration of x
@@ -347,13 +347,13 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
       [{'line_num': 28, 'column_num': 16}, 'const auto *'], # sic
 
       # Auto sort of works in usage (but canonical types apparently differ)
-      [{'line_num': 30, 'column_num': 14}, 'const Foo => const Foo'], #sic
+      [{'line_num': 30, 'column_num': 14}, 'const Foo => const Foo'], # sic
       [{'line_num': 30, 'column_num': 21}, 'const int'],
-      [{'line_num': 31, 'column_num': 14}, 'const Foo * => const Foo *'], #sic
+      [{'line_num': 31, 'column_num': 14}, 'const Foo * => const Foo *'], # sic
       [{'line_num': 31, 'column_num': 22}, 'const int'],
-      [{'line_num': 32, 'column_num': 13}, 'Foo => Foo'], #sic
+      [{'line_num': 32, 'column_num': 13}, 'Foo => Foo'], # sic
       [{'line_num': 32, 'column_num': 19}, 'int'],
-      [{'line_num': 33, 'column_num': 13}, 'Foo * => Foo *'], #sic
+      [{'line_num': 33, 'column_num': 13}, 'Foo * => Foo *'], # sic
       [{'line_num': 33, 'column_num': 20}, 'int'],
     ]
 
@@ -423,8 +423,8 @@ class Clang_Subcommands_test( Clang_Handlers_test ):
       },
     }
 
-    # Build the command arguments from the standard ones and the language-specific
-    # arguments.
+    # Build the command arguments from the standard ones and the
+    # language-specific arguments.
     args = {
       'completer_target' : 'filetype_default',
       'contents'         : contents,
@@ -776,7 +776,7 @@ This is a test namespace
 Type: 
 Name: Test
 ---
-This is a test namespace""" } )
+This is a test namespace""" } ) # noqa
 
 
   def GetDoc_Undocumented_test( self ):
@@ -833,7 +833,8 @@ This is a test namespace""" } )
     self._app.post_json( '/event_notification',
                          self._BuildRequest( filepath = filepath,
                                              filetype = 'cpp',
-                                             compilation_flags = [ '-x', 'c++' ],
+                                             compilation_flags = [ '-x',
+                                                                   'c++' ],
                                              contents = contents,
                                              event_name = 'FileReadyToParse' ) )
 
@@ -937,7 +938,7 @@ This is a test namespace
 Type: 
 Name: Test
 ---
-This is a test namespace""" } )
+This is a test namespace""" } ) # noqa
 
 
   def GetDocQuick_Undocumented_test( self ):

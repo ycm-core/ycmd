@@ -62,4 +62,3 @@ class Rust_Handlers_test( Handlers_test ):
       retries = retries - 1
 
     raise RuntimeError( "Timeout waiting for racerd" )
-

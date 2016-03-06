@@ -51,6 +51,7 @@ FILE_FLAGS_TO_SKIP = set(['-MD', '-MMD', '-MF', '-MT', '-MQ', '-o'])
 # See Valloric/ycmd#266
 CPP_COMPILER_REGEX = re.compile( r'\+\+(-\d+(\.\d+){0,2})?$' )
 
+
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
   The flags are loaded from user-created python files (hereafter referred to as
@@ -276,7 +277,7 @@ def _RemoveUnusedFlags( flags, filename ):
       continue
 
     if flag in FILE_FLAGS_TO_SKIP:
-      skip_next = True;
+      skip_next = True
       continue
 
     if flag == filename or os.path.realpath( flag ) == filename:
@@ -305,9 +306,11 @@ def _RemoveUnusedFlags( flags, filename ):
 # Most users have xcode installed, but in order to be as compatible as
 # possible we consider both possible installation locations
 MAC_CLANG_TOOLCHAIN_DIRS = [
-  '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain',
+  '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+    'XcodeDefault.xctoolchain',
   '/Library/Developer/CommandLineTools'
 ]
+
 
 # Returns a list containing the supplied path as a suffix of each of the known
 # Mac toolchains
@@ -378,7 +381,8 @@ def _ExtraClangFlags():
   # This makes GetType and GetParent commands not returning the expected
   # result when the cursor is in templates.
   # Using the -fno-delayed-template-parsing flag disables this behavior.
-  # See http://clang.llvm.org/extra/PassByValueTransform.html#note-about-delayed-template-parsing
+  # See
+  # http://clang.llvm.org/extra/PassByValueTransform.html#note-about-delayed-template-parsing # noqa
   # for an explanation of the flag and
   # https://code.google.com/p/include-what-you-use/source/detail?r=566
   # for a similar issue.
@@ -391,5 +395,3 @@ def _SpecialClangIncludes():
   libclang_dir = os.path.dirname( ycm_core.__file__ )
   path_to_includes = os.path.join( libclang_dir, 'clang_includes' )
   return [ '-resource-dir=' + path_to_includes ]
-
-

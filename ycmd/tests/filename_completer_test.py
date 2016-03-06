@@ -32,7 +32,10 @@ from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
-DATA_DIR = os.path.join( TEST_DIR, "testdata", "filename_completer", "inner_dir" )
+DATA_DIR = os.path.join( TEST_DIR,
+                         "testdata",
+                         "filename_completer",
+                         "inner_dir" )
 PATH_TO_TEST_FILE = os.path.join( DATA_DIR, "test.cpp" )
 
 REQUEST_DATA = {
@@ -139,11 +142,12 @@ class FilenameCompleter_test( object ):
   def EnvVar_AtStart_File_Partial_test( self ):
     # The reason all entries in the directory are returned is that the
     # RequestWrapper tells the completer to effectively return results for
-    # $YCM_TEST_DIR/testdata/filename_completer/inner_dir/ and the client filters based
-    # on the additional characters.
+    # $YCM_TEST_DIR/testdata/filename_completer/inner_dir/ and the client
+    # filters based on the additional characters.
     os.environ[ 'YCM_TEST_DIR' ] = TEST_DIR
     data = sorted( self._CompletionResultsForLine(
-                    'set x = $YCM_TEST_DIR/testdata/filename_completer/inner_dir/te' ) )
+                    'set x = $YCM_TEST_DIR/testdata/filename_completer/'
+                      'inner_dir/te' ) )
     os.environ.pop( 'YCM_TEST_DIR' )
 
     eq_( [
@@ -158,7 +162,7 @@ class FilenameCompleter_test( object ):
     os.environ[ 'YCMTESTDIR' ] = TEST_DIR
 
     data = sorted( self._CompletionResultsForLine(
-                            'set x = $YCMTESTDIR/testdata/filename_completer/' ) )
+                      'set x = $YCMTESTDIR/testdata/filename_completer/' ) )
 
     os.environ.pop( 'YCMTESTDIR' )
 
@@ -168,7 +172,7 @@ class FilenameCompleter_test( object ):
   def EnvVar_AtStart_Dir_Partial_test( self ):
     os.environ[ 'ycm_test_dir' ] = TEST_DIR
     data = sorted( self._CompletionResultsForLine(
-                            'set x = $ycm_test_dir/testdata/filename_completer/inn' ) )
+                    'set x = $ycm_test_dir/testdata/filename_completer/inn' ) )
 
     os.environ.pop( 'ycm_test_dir' )
     eq_( [ ('inner_dir', '[Dir]') ], data )
@@ -177,7 +181,9 @@ class FilenameCompleter_test( object ):
   def EnvVar_InMiddle_File_test( self ):
     os.environ[ 'YCM_TEST_filename_completer' ] = 'inner_dir'
     data = sorted( self._CompletionResultsForLine(
-      'set x = ' + TEST_DIR + '/testdata/filename_completer/$YCM_TEST_filename_completer/' ) )
+      'set x = '
+      + TEST_DIR
+      + '/testdata/filename_completer/$YCM_TEST_filename_completer/' ) )
     os.environ.pop( 'YCM_TEST_filename_completer' )
     eq_( [
           ( u'foo漢字.txt', '[File]' ),
@@ -190,7 +196,9 @@ class FilenameCompleter_test( object ):
   def EnvVar_InMiddle_File_Partial_test( self ):
     os.environ[ 'YCM_TEST_filename_c0mpleter' ] = 'inner_dir'
     data = sorted( self._CompletionResultsForLine(
-      'set x = ' + TEST_DIR + '/testdata/filename_completer/$YCM_TEST_filename_c0mpleter/te' ) )
+      'set x = '
+      + TEST_DIR
+      + '/testdata/filename_completer/$YCM_TEST_filename_c0mpleter/te' ) )
     os.environ.pop( 'YCM_TEST_filename_c0mpleter' )
     eq_( [
           ( u'foo漢字.txt', '[File]' ),
@@ -203,7 +211,7 @@ class FilenameCompleter_test( object ):
   def EnvVar_InMiddle_Dir_test( self ):
     os.environ[ 'YCM_TEST_td' ] = 'testd'
     data = sorted( self._CompletionResultsForLine(
-                    'set x = ' + TEST_DIR + '/${YCM_TEST_td}ata/filename_completer/' ) )
+          'set x = ' + TEST_DIR + '/${YCM_TEST_td}ata/filename_completer/' ) )
 
     os.environ.pop( 'YCM_TEST_td' )
     eq_( [ ('inner_dir', '[Dir]') ], data )
@@ -212,7 +220,7 @@ class FilenameCompleter_test( object ):
   def EnvVar_InMiddle_Dir_Partial_test( self ):
     os.environ[ 'YCM_TEST_td' ] = 'tdata'
     data = sorted( self._CompletionResultsForLine(
-                    'set x = ' + TEST_DIR + '/tes${YCM_TEST_td}/filename_completer/' ) )
+          'set x = ' + TEST_DIR + '/tes${YCM_TEST_td}/filename_completer/' ) )
     os.environ.pop( 'YCM_TEST_td' )
 
     eq_( [ ('inner_dir', '[Dir]') ], data )
@@ -220,7 +228,7 @@ class FilenameCompleter_test( object ):
 
   def EnvVar_Undefined_test( self ):
     data = sorted( self._CompletionResultsForLine(
-                    'set x = ' + TEST_DIR + '/testdata/filename_completer${YCM_TEST_td}/' ) )
+      'set x = ' + TEST_DIR + '/testdata/filename_completer${YCM_TEST_td}/' ) )
 
     eq_( [ ], data )
 
@@ -228,7 +236,9 @@ class FilenameCompleter_test( object ):
   def EnvVar_Empty_Matches_test( self ):
     os.environ[ 'YCM_empty_var' ] = ''
     data = sorted( self._CompletionResultsForLine(
-                    'set x = ' + TEST_DIR + '/testdata/filename_completer${YCM_empty_var}/' ) )
+      'set x = '
+      + TEST_DIR
+      + '/testdata/filename_completer${YCM_empty_var}/' ) )
     os.environ.pop( 'YCM_empty_var' )
 
     eq_( [ ('inner_dir', '[Dir]') ], data )

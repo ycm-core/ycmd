@@ -99,7 +99,8 @@ inception()
                                     goto_data,
                                     expect_errors = True  ).json
     assert_that( response,
-                 self._ErrorMatcher( RuntimeError, "Can\'t jump to definition." ) )
+                 self._ErrorMatcher( RuntimeError,
+                                     "Can\'t jump to definition." ) )
 
 
   def GoTo_test( self ):
@@ -200,20 +201,17 @@ inception()
       'column_num': 5,
       'description': 'def f',
       'line_num': 1
-    },
-    {
+    }, {
       'filepath': self._PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'a = f()',
       'line_num': 4
-    },
-    {
+    }, {
       'filepath': self._PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'b = f()',
       'line_num': 5
-    },
-    {
+    }, {
       'filepath': self._PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'c = f()',

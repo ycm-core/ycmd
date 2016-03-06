@@ -27,6 +27,7 @@ from ycmd.utils import ToUnicode, ToBytes
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
 
+
 # TODO: Change the custom computed (and other) keys to be actual properties on
 # the object.
 class RequestWrap( object ):
@@ -106,7 +107,7 @@ def CompletionStartColumn( line_value, column_num, filetype ):
   utf8_line_value = ToBytes( line_value )
   unicode_line_value = ToUnicode( line_value )
   codepoint_column_num = len(
-      str( utf8_line_value[ : column_num -1 ], 'utf8' ) ) + 1
+      str( utf8_line_value[ : column_num - 1 ], 'utf8' ) ) + 1
 
   # -1 and then +1 to account for difference betwen 0-based and 1-based
   # indices/columns
@@ -115,5 +116,3 @@ def CompletionStartColumn( line_value, column_num, filetype ):
 
   return len(
       unicode_line_value[ : codepoint_start_column - 1 ].encode( 'utf8' ) ) + 1
-
-

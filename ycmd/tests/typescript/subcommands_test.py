@@ -49,7 +49,8 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
                                        filetype = 'typescript',
                                        filepath = filepath )
 
-    response = self._app.post_json( '/run_completer_command', gettype_data ).json
+    response = self._app.post_json( '/run_completer_command',
+                                    gettype_data ).json
     assert_that( response, self._MessageMatcher( 'var foo: Foo' ) )
 
 
@@ -147,13 +148,14 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
 
     self._app.post_json( '/event_notification', event_data )
 
-    references_data = self._BuildRequest( completer_target = 'filetype_default',
-                                          command_arguments = [ 'GoToReferences' ],
-                                          line_num = 28,
-                                          column_num = 6,
-                                          contents = contents,
-                                          filetype = 'typescript',
-                                          filepath = filepath )
+    references_data = self._BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToReferences' ],
+      line_num = 28,
+      column_num = 6,
+      contents = contents,
+      filetype = 'typescript',
+      filepath = filepath )
 
     expected = has_items(
       has_entries( { 'description': 'var bar = new Bar();',
@@ -162,7 +164,8 @@ class TypeScript_Subcommands_test( Typescript_Handlers_test ):
       has_entries( { 'description': 'bar.testMethod();',
                      'line_num'   : 29,
                      'column_num' : 1 } ) )
-    actual = self._app.post_json( '/run_completer_command', references_data ).json
+    actual = self._app.post_json( '/run_completer_command',
+                                  references_data ).json
     assert_that( actual, expected )
 
 

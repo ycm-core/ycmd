@@ -27,6 +27,7 @@ import threading
 
 ALREADY_PARSING_MESSAGE = 'File already being parsed.'
 
+
 # Holds a set of values in a python set. Trying to get an exclusive hold on a
 # provided value results in a context manager that manages the lifetime of the
 # value.

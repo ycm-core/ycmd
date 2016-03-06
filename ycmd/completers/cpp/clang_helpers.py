@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+
 # Provided for backwards compatibility with old ycm_extra_conf files.
 def PrepareClangFlags( flags, filename ):
   return flags

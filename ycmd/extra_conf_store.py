@@ -60,7 +60,7 @@ def ModuleFileForSourceFile( filename ):
   If no module was found or allowed to load, None is returned."""
 
   with _module_file_for_source_file_lock:
-    if not filename in _module_file_for_source_file:
+    if filename not in _module_file_for_source_file:
       for module_file in _ExtraConfModuleSourceFilesForFile( filename ):
         if Load( module_file ):
           _module_file_for_source_file[ filename ] = module_file

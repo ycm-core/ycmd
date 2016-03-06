@@ -25,5 +25,6 @@ from builtins import *  # noqa
 
 from ycmd.completers.typescript.typescript_completer import TypeScriptCompleter
 
+
 def GetCompleter( user_options ):
   return TypeScriptCompleter( user_options )

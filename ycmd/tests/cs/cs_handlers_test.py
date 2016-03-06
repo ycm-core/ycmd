@@ -103,10 +103,11 @@ class Cs_Handlers_test( Handlers_test ):
     if filepath in Cs_Handlers_test.omnisharp_file_solution:
       return Cs_Handlers_test.omnisharp_file_solution[ filepath ]
 
-    solution_request = self._BuildRequest( completer_target = 'filetype_default',
-                                           filepath = filepath,
-                                           command_arguments = [ "SolutionFile" ],
-                                           filetype = 'cs' )
+    solution_request = self._BuildRequest(
+        completer_target = 'filetype_default',
+        filepath = filepath,
+        command_arguments = [ "SolutionFile" ],
+        filetype = 'cs' )
     solution_path = self._app.post_json( '/run_completer_command',
                                          solution_request ).json
     Cs_Handlers_test.omnisharp_file_solution[ filepath ] = solution_path

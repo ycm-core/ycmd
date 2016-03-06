@@ -35,6 +35,7 @@ from ycmd.bottle_utils import SetResponseHeader
 _HMAC_HEADER = 'x-ycm-hmac'
 _HOST_HEADER = 'host'
 
+
 # This class implements the Bottle plugin API:
 # http://bottlepy.org/docs/dev/plugindev.html
 #
@@ -58,7 +59,8 @@ class HmacPlugin( object ):
     def wrapper( *args, **kwargs ):
       if not HostHeaderCorrect( request ):
         self._logger.info( 'Dropping request with bad Host header.' )
-        abort( http.client.UNAUTHORIZED, 'Unauthorized, received bad Host header.' )
+        abort( http.client.UNAUTHORIZED,
+               'Unauthorized, received bad Host header.' )
         return
 
       body = ToBytes( request.body.read() )
