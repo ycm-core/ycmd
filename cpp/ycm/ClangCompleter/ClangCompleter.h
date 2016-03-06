@@ -113,7 +113,7 @@ public:
     int start_line,
     int start_column,
     int end_line,
-    int end_column);
+    int end_column );
 
   void DeleteCachesForFile( const std::string &filename );
 

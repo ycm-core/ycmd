@@ -209,6 +209,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .value( "TemplateType", Token::TEMPLATE_TYPE )
     .value( "Enum", Token::ENUM )
     .value( "EnumConstant", Token::ENUM_CONSTANT )
+    .value( "PreprocessingDirective", Token::PREPROCESSING_DIRECTIVE )
     .value( "Macro", Token::MACRO )
     .value( "Function", Token::FUNCTION )
     .value( "FunctionParam", Token::FUNCTION_PARAM )
@@ -218,10 +219,7 @@ BOOST_PYTHON_MODULE(ycm_core)
   class_< Token >( "Token" )
     .def_readonly( "kind", &Token::kind_ )
     .def_readonly( "type", &Token::type_ )
-    .def_readonly( "start_line", &Token::start_line_ )
-    .def_readonly( "start_column", &Token::start_column_ )
-    .def_readonly( "end_line", &Token::end_line_ )
-    .def_readonly( "end_column", &Token::end_column_ );
+    .def_readonly( "range", &Token::range_ );
 
   class_< std::vector< Token > >( "TokenVector" )
     .def( vector_indexing_suite< std::vector< Token > >() );
