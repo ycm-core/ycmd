@@ -23,59 +23,60 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from .go_handlers_test import Go_Handlers_test
 from nose.tools import eq_
+
+from ycmd.tests.go import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-class Go_Subcommands_test( Go_Handlers_test ):
+@SharedYcmd
+def RunGoToTest( app, params ):
+  filepath = PathToTestFile( 'goto.go' )
+  contents = ReadFile( filepath )
 
-  def _GoTo( self, params ):
-    filepath = self._PathToTestFile( 'goto.go' )
-    contents = ReadFile( filepath )
+  command = params[ 'command' ]
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ command ],
+                            line_num = 8,
+                            column_num = 8,
+                            contents = contents,
+                            filetype = 'go',
+                            filepath = filepath )
 
-    command = params[ 'command' ]
-    goto_data = self._BuildRequest( completer_target = 'filetype_default',
-                                    command_arguments = [ command ],
-                                    line_num = 8,
-                                    column_num = 8,
-                                    contents = contents,
-                                    filetype = 'go',
-                                    filepath = filepath )
+  results = app.post_json( '/run_completer_command',
+                           goto_data )
 
-    results = self._app.post_json( '/run_completer_command',
-                                   goto_data )
+  eq_( {
+    'line_num': 3, 'column_num': 6, 'filepath': filepath
+  }, results.json )
 
-    eq_( {
-      'line_num': 3, 'column_num': 6, 'filepath': filepath
-    }, results.json )
+  filepath = PathToTestFile( 'win.go' )
+  contents = ReadFile( filepath )
 
-    filepath = self._PathToTestFile( 'win.go' )
-    contents = ReadFile( filepath )
+  command = params[ 'command' ]
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ command ],
+                            line_num = 4,
+                            column_num = 7,
+                            contents = contents,
+                            filetype = 'go',
+                            filepath = filepath )
 
-    command = params[ 'command' ]
-    goto_data = self._BuildRequest( completer_target = 'filetype_default',
-                                    command_arguments = [ command ],
-                                    line_num = 4,
-                                    column_num = 7,
-                                    contents = contents,
-                                    filetype = 'go',
-                                    filepath = filepath )
+  results = app.post_json( '/run_completer_command',
+                           goto_data )
 
-    results = self._app.post_json( '/run_completer_command',
-                                   goto_data )
-
-    eq_( {
-      'line_num': 2, 'column_num': 6, 'filepath': filepath
-    }, results.json )
+  eq_( {
+    'line_num': 2, 'column_num': 6, 'filepath': filepath
+  }, results.json )
 
 
-  def GoTo_all_test( self ):
-    tests = [
-      { 'command': 'GoTo' },
-      { 'command': 'GoToDefinition' },
-      { 'command': 'GoToDeclaration' }
-    ]
+def Subcommands_GoTo_all_test():
+  tests = [
+    { 'command': 'GoTo' },
+    { 'command': 'GoToDefinition' },
+    { 'command': 'GoToDeclaration' }
+  ]
 
-    for test in tests:
-      yield ( self._GoTo, test )
+  for test in tests:
+    yield RunGoToTest, test

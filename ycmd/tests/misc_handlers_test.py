@@ -25,39 +25,39 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from nose.tools import ok_
-from .handlers_test import Handlers_test
-from ycmd.tests.test_utils import DummyCompleter
 from hamcrest import assert_that, contains
 
-
-class MiscHandlers_test( Handlers_test ):
-
-  def SemanticCompletionAvailable_test( self ):
-    with self.PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
-      request_data = self._BuildRequest( filetype = 'dummy_filetype' )
-      ok_( self._app.post_json( '/semantic_completion_available',
-                                request_data ).json )
+from ycmd.tests import SharedYcmd
+from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
-  def EventNotification_AlwaysJsonResponse_test( self ):
-    event_data = self._BuildRequest( contents = 'foo foogoo ba',
-                                     event_name = 'FileReadyToParse' )
+@SharedYcmd
+def MiscHandlers_SemanticCompletionAvailable_test( app ):
+  with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+    request_data = BuildRequest( filetype = 'dummy_filetype' )
+    ok_( app.post_json( '/semantic_completion_available', request_data ).json )
 
-    self._app.post_json( '/event_notification', event_data ).json
+
+@SharedYcmd
+def MiscHandlers_EventNotification_AlwaysJsonResponse_test( app ):
+  event_data = BuildRequest( contents = 'foo foogoo ba',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data ).json
 
 
-  def FilterAndSortCandidates_Basic_test( self ):
-    candidate1 = { 'prop1': 'aoo', 'prop2': 'bar' }
-    candidate2 = { 'prop1': 'bfo', 'prop2': 'zoo' }
-    candidate3 = { 'prop1': 'cfo', 'prop2': 'moo' }
+@SharedYcmd
+def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
+  candidate1 = { 'prop1': 'aoo', 'prop2': 'bar' }
+  candidate2 = { 'prop1': 'bfo', 'prop2': 'zoo' }
+  candidate3 = { 'prop1': 'cfo', 'prop2': 'moo' }
 
-    data = {
-      'candidates': [ candidate3, candidate1, candidate2 ],
-      'sort_property': 'prop1',
-      'query': 'fo'
-    }
+  data = {
+    'candidates': [ candidate3, candidate1, candidate2 ],
+    'sort_property': 'prop1',
+    'query': 'fo'
+  }
 
-    response_data = self._app.post_json(
-      '/filter_and_sort_candidates', data ).json
+  response_data = app.post_json( '/filter_and_sort_candidates', data ).json
 
-    assert_that( response_data, contains( candidate2, candidate3 ) )
+  assert_that( response_data, contains( candidate2, candidate3 ) )

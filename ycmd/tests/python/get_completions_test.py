@@ -28,114 +28,112 @@ from builtins import *  # noqa
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
-from .python_handlers_test import Python_Handlers_test
 from ycmd.utils import ReadFile
+from ycmd.tests.python import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
+                                    CompletionLocationMatcher )
 import http.client
 
 
-class Python_GetCompletions_test( Python_Handlers_test ):
+@SharedYcmd
+def GetCompletions_Basic_test( app ):
+  filepath = PathToTestFile( 'basic.py' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'python',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 7,
+                                  column_num = 3)
 
-  def setUp( self ):
-    super( Python_GetCompletions_test, self ).setUp()
-    self.WaitUntilJediHTTPServerReady()
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
 
-
-  def _RunTest( self, test ):
-    """
-    Method to run a simple completion test and verify the result
-
-    test is a dictionary containing:
-      'request': kwargs for BuildRequest
-      'expect': {
-         'response': server response code (e.g. httplib.OK)
-         'data': matcher for the server response json
-      }
-    """
-    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
-
-    def CombineRequest( request, data ):
-      kw = request
-      request.update( data )
-      return self._BuildRequest( **kw )
-
-    self._app.post_json( '/event_notification',
-                         CombineRequest( test[ 'request' ], {
-                                         'event_name': 'FileReadyToParse',
-                                         'contents': contents,
-                                         } ) )
-
-    # We ignore errors here and we check the response code ourself.
-    # This is to allow testing of requests returning errors.
-    response = self._app.post_json( '/completions',
-                                    CombineRequest( test[ 'request' ], {
-                                      'contents': contents
-                                    } ),
-                                    expect_errors = True )
-
-    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
-
-    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  assert_that( results,
+               has_items(
+                 CompletionEntryMatcher( 'a' ),
+                 CompletionEntryMatcher( 'b' ),
+                 CompletionLocationMatcher( 'line_num', 3 ),
+                 CompletionLocationMatcher( 'line_num', 4 ),
+                 CompletionLocationMatcher( 'column_num', 10 ),
+                 CompletionLocationMatcher( 'filepath', filepath ) ) )
 
 
-  def Basic_test( self ):
-    filepath = self._PathToTestFile( 'basic.py' )
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'python',
-                                          contents = ReadFile( filepath ),
-                                          line_num = 7,
-                                          column_num = 3)
+@SharedYcmd
+def GetCompletions_UnicodeDescription_test( app ):
+  filepath = PathToTestFile( 'unicode.py' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'python',
+                                  contents = ReadFile( filepath ),
+                                  force_semantic = True,
+                                  line_num = 5,
+                                  column_num = 3)
 
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-
-    assert_that( results,
-                 has_items(
-                   self._CompletionEntryMatcher( 'a' ),
-                   self._CompletionEntryMatcher( 'b' ),
-                   self._CompletionLocationMatcher( 'line_num', 3 ),
-                   self._CompletionLocationMatcher( 'line_num', 4 ),
-                   self._CompletionLocationMatcher( 'column_num', 10 ),
-                   self._CompletionLocationMatcher( 'filepath', filepath ) ) )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_item(
+    has_entry( 'detailed_info', contains_string( u'aafäö' ) ) ) )
 
 
-  def UnicodeDescription_test( self ):
-    filepath = self._PathToTestFile( 'unicode.py' )
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'python',
-                                          contents = ReadFile( filepath ),
-                                          force_semantic = True,
-                                          line_num = 5,
-                                          column_num = 3)
+def RunTest( app, test ):
+  """
+  Method to run a simple completion test and verify the result
 
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-    assert_that( results, has_item(
-      has_entry( 'detailed_info', contains_string( u'aafäö' ) ) ) )
+  test is a dictionary containing:
+    'request': kwargs for BuildRequest
+    'expect': {
+       'response': server response code (e.g. httplib.OK)
+       'data': matcher for the server response json
+    }
+  """
+  contents = ReadFile( test[ 'request' ][ 'filepath' ] )
+
+  def CombineRequest( request, data ):
+    kw = request
+    request.update( data )
+    return BuildRequest( **kw )
+
+  app.post_json( '/event_notification',
+                 CombineRequest( test[ 'request' ], {
+                                 'event_name': 'FileReadyToParse',
+                                 'contents': contents,
+                                 } ) )
+
+  # We ignore errors here and we check the response code ourself.
+  # This is to allow testing of requests returning errors.
+  response = app.post_json( '/completions',
+                            CombineRequest( test[ 'request' ], {
+                              'contents': contents
+                            } ),
+                            expect_errors = True )
+
+  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+
+  assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-  def NoSuggestions_Fallback_test( self ):
-    # Python completer doesn't raise NO_COMPLETIONS_MESSAGE, so this is a
-    # different code path to the Clang completer cases
+@SharedYcmd
+def GetCompletions_NoSuggestions_Fallback_test( app ):
+  # Python completer doesn't raise NO_COMPLETIONS_MESSAGE, so this is a
+  # different code path to the Clang completer cases
 
-    # TESTCASE2 (general_fallback/lang_python.py)
-    self._RunTest( {
-      'description': 'param jedi does not know about (id). query="a_p"',
-      'request': {
-        'filetype'  : 'python',
-        'filepath'  : self._PathToTestFile( 'general_fallback',
-                                            'lang_python.py' ),
-        'line_num'  : 28,
-        'column_num': 20,
-        'force_semantic': False,
-      },
-      'expect': {
-        'response': http.client.OK,
-        'data': has_entries( {
-          'completions': contains(
-            self._CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-            self._CompletionEntryMatcher( 'another_parameter', '[ID]' ),
-          ),
-          'errors': empty(),
-        } )
-      },
-    } )
+  # TESTCASE2 (general_fallback/lang_python.py)
+  RunTest( app, {
+    'description': 'param jedi does not know about (id). query="a_p"',
+    'request': {
+      'filetype'  : 'python',
+      'filepath'  : PathToTestFile( 'general_fallback',
+                                    'lang_python.py' ),
+      'line_num'  : 28,
+      'column_num': 20,
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'a_parameter', '[ID]' ),
+          CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )

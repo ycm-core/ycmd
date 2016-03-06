@@ -25,114 +25,114 @@ from builtins import *  # noqa
 
 from hamcrest import ( assert_that, contains, contains_string, equal_to,
                        has_entries, has_entry )
-from .cs_handlers_test import Cs_Handlers_test
+
+from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
+from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-class Cs_Diagnostics_test( Cs_Handlers_test ):
+@SharedYcmd
+def Diagnostics_Basic_test( app ):
+  filepath = PathToTestFile( 'testy', 'Program.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
 
-  def ZeroBasedLineAndColumn_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'Program.cs' )
-    with self._WrapOmniSharpServer( filepath ):
+    event_data = BuildRequest( filepath = filepath,
+                               event_name = 'FileReadyToParse',
+                               filetype = 'cs',
+                               contents = contents )
+    app.post_json( '/event_notification', event_data )
+
+    diag_data = BuildRequest( filepath = filepath,
+                              filetype = 'cs',
+                              contents = contents,
+                              line_num = 11,
+                              column_num = 2 )
+
+    results = app.post_json( '/detailed_diagnostic', diag_data ).json
+    assert_that( results,
+                 has_entry(
+                     'message',
+                     contains_string(
+                       "Unexpected symbol `}'', expecting identifier" ) ) )
+
+
+@SharedYcmd
+def Diagnostics_ZeroBasedLineAndColumn_test( app ):
+  filepath = PathToTestFile( 'testy', 'Program.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    results = {}
+    for _ in ( 0, 1 ):  # First call always returns blank for some reason
+      event_data = BuildRequest( filepath = filepath,
+                                 event_name = 'FileReadyToParse',
+                                 filetype = 'cs',
+                                 contents = contents )
+
+      results = app.post_json( '/event_notification', event_data ).json
+
+    assert_that( results,
+                 contains(
+                     has_entries( {
+                       'kind': equal_to( 'ERROR' ),
+                       'text': contains_string(
+                           "Unexpected symbol `}'', expecting identifier" ),
+                       'location': has_entries( {
+                         'line_num': 11,
+                         'column_num': 2
+                       } ),
+                       'location_extent': has_entries( {
+                         'start': has_entries( {
+                           'line_num': 11,
+                           'column_num': 2,
+                         } ),
+                         'end': has_entries( {
+                           'line_num': 11,
+                           'column_num': 2,
+                         } ),
+                       } )
+                     } ) ) )
+
+
+@SharedYcmd
+def Diagnostics_MultipleSolution_test( app ):
+  filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
+                PathToTestFile( 'testy-multiple-solutions',
+                                'solution-named-like-folder',
+                                'testy', 'Program.cs' ) ]
+  lines = [ 11, 10 ]
+  for filepath, line in zip( filepaths, lines ):
+    with WrapOmniSharpServer( app, filepath ):
       contents = ReadFile( filepath )
 
       results = {}
-      for _ in ( 0, 1 ): # First call always returns blank for some reason
-        event_data = self._BuildRequest( filepath = filepath,
-                                         event_name = 'FileReadyToParse',
-                                         filetype = 'cs',
-                                         contents = contents )
+      for _ in ( 0, 1 ):  # First call always returns blank for some reason
+        event_data = BuildRequest( filepath = filepath,
+                                   event_name = 'FileReadyToParse',
+                                   filetype = 'cs',
+                                   contents = contents )
 
-        results = self._app.post_json( '/event_notification', event_data ).json
+        results = app.post_json( '/event_notification', event_data ).json
 
       assert_that( results,
-                  contains(
-                      has_entries( {
-                        'kind': equal_to( 'ERROR' ),
-                        'text': contains_string(
-                            "Unexpected symbol `}'', expecting identifier" ),
-                        'location': has_entries( {
-                          'line_num': 11,
-                          'column_num': 2
-                        } ),
-                        'location_extent': has_entries( {
-                          'start': has_entries( {
-                            'line_num': 11,
-                            'column_num': 2,
-                          } ),
-                          'end': has_entries( {
-                            'line_num': 11,
-                            'column_num': 2,
-                          } ),
-                        } )
-                      } ) ) )
-
-
-  def MultipleSolution_test( self ):
-    filepaths = [ self._PathToTestFile( 'testy', 'Program.cs' ),
-                  self._PathToTestFile( 'testy-multiple-solutions',
-                                        'solution-named-like-folder',
-                                        'testy',
-                                        'Program.cs' ) ]
-    lines = [ 11, 10 ]
-    for filepath, line in zip( filepaths, lines ):
-      with self._WrapOmniSharpServer( filepath ):
-        contents = ReadFile( filepath )
-
-        results = {}
-        for _ in ( 0, 1 ): # First call always returns blank for some reason
-          event_data = self._BuildRequest( filepath = filepath,
-                                           event_name = 'FileReadyToParse',
-                                           filetype = 'cs',
-                                           contents = contents )
-
-          results = self._app.post_json( '/event_notification',
-                                         event_data ).json
-
-        assert_that( results,
-                    contains(
-                        has_entries( {
-                            'kind': equal_to( 'ERROR' ),
-                            'text': contains_string( "Unexpected symbol `}'', "
-                                                      "expecting identifier" ),
-                            'location': has_entries( {
-                              'line_num': line,
-                              'column_num': 2
-                            } ),
-                            'location_extent': has_entries( {
-                              'start': has_entries( {
-                                'line_num': line,
-                                'column_num': 2,
-                              } ),
-                              'end': has_entries( {
-                                'line_num': line,
-                                'column_num': 2,
-                              } ),
-                            } )
-                        } ) ) )
-
-
-  # This test seems identical to ZeroBasedLineAndColumn one
-  def Basic_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'Program.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      event_data = self._BuildRequest( filepath = filepath,
-                                       event_name = 'FileReadyToParse',
-                                       filetype = 'cs',
-                                       contents = contents )
-      self._app.post_json( '/event_notification', event_data )
-
-      diag_data = self._BuildRequest( filepath = filepath,
-                                      filetype = 'cs',
-                                      contents = contents,
-                                      line_num = 11,
-                                      column_num = 2 )
-
-      results = self._app.post_json( '/detailed_diagnostic', diag_data ).json
-      assert_that( results,
-                  has_entry(
-                      'message',
-                      contains_string(
-                        "Unexpected symbol `}'', expecting identifier" ) ) )
+                   contains(
+                       has_entries( {
+                           'kind': equal_to( 'ERROR' ),
+                           'text': contains_string( "Unexpected symbol `}'', "
+                                                    "expecting identifier" ),
+                           'location': has_entries( {
+                             'line_num': line,
+                             'column_num': 2
+                           } ),
+                           'location_extent': has_entries( {
+                             'start': has_entries( {
+                               'line_num': line,
+                               'column_num': 2,
+                             } ),
+                             'end': has_entries( {
+                               'line_num': line,
+                               'column_num': 2,
+                             } ),
+                           } )
+                       } ) ) )

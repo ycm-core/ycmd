@@ -24,36 +24,34 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from nose.tools import eq_
-from .handlers_test import Handlers_test
-from ycmd.tests.test_utils import DummyCompleter
 from mock import patch
+from nose.tools import eq_
+
+from ycmd.tests import SharedYcmd
+from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
-class Subcommands_test( Handlers_test ):
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+        return_value = { 'A': lambda x: x,
+                         'B': lambda x: x,
+                         'C': lambda x: x } )
+def Subcommands_Basic_test( app, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
 
-  @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
-          return_value = { 'A': lambda x: x,
-                           'B': lambda x: x,
-                           'C': lambda x: x } )
-  def Basic_test( self, *args ):
-    with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-      subcommands_data = self._BuildRequest(
-          completer_target = 'dummy_filetype' )
-
-      eq_( [ 'A', 'B', 'C' ],
-           self._app.post_json( '/defined_subcommands',
-                                subcommands_data ).json )
+    eq_( [ 'A', 'B', 'C' ],
+         app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
-  @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
-          return_value = { 'A': lambda x: x,
-                           'B': lambda x: x,
-                           'C': lambda x: x } )
-  def NoExplicitCompleterTargetSpecified_test( self, *args ):
-    with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-      subcommands_data = self._BuildRequest( filetype = 'dummy_filetype' )
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+        return_value = { 'A': lambda x: x,
+                         'B': lambda x: x,
+                         'C': lambda x: x } )
+def Subcommands_NoExplicitCompleterTargetSpecified_test( app, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
 
-      eq_( [ 'A', 'B', 'C' ],
-           self._app.post_json( '/defined_subcommands',
-                                subcommands_data ).json )
+    eq_( [ 'A', 'B', 'C' ],
+         app.post_json( '/defined_subcommands', subcommands_data ).json )

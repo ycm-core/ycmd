@@ -23,542 +23,562 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from webtest import TestApp, AppError
 from nose.tools import eq_, ok_
-from ... import handlers
-from .cs_handlers_test import Cs_Handlers_test
-from ycmd.utils import ReadFile
+from webtest import AppError
 import re
 import os.path
 
-
-class Cs_Subcommands_test( Cs_Handlers_test ):
-
-  def GoTo_Basic_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest( completer_target = 'filetype_default',
-                                      command_arguments = [ 'GoTo' ],
-                                      line_num = 9,
-                                      column_num = 15,
-                                      contents = contents,
-                                      filetype = 'cs',
-                                      filepath = filepath )
-
-      eq_( {
-        'filepath': self._PathToTestFile( 'testy', 'Program.cs' ),
-        'line_num': 7,
-        'column_num': 3
-      }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GoToImplementation_Basic_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = [ 'GoToImplementation' ],
-        line_num = 13,
-        column_num = 13,
-        contents = contents,
-        filetype = 'cs',
-        filepath = filepath
-      )
-
-      eq_( {
-        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-        'line_num': 30,
-        'column_num': 3
-      }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GoToImplementation_NoImplementation_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = [ 'GoToImplementation' ],
-        line_num = 17,
-        column_num = 13,
-        contents = contents,
-        filetype = 'cs',
-        filepath = filepath
-      )
-
-      try:
-        self._app.post_json( '/run_completer_command', goto_data ).json
-        raise Exception("Expected a 'No implementations found' error")
-      except AppError as e:
-        if 'No implementations found' in str(e):
-          pass
-        else:
-          raise
-
-
-  def CsCompleter_InvalidLocation_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = [ 'GoToImplementation' ],
-        line_num = 2,
-        column_num = 1,
-        contents = contents,
-        filetype = 'cs',
-        filepath = filepath
-      )
-
-      try:
-        self._app.post_json( '/run_completer_command', goto_data ).json
-        raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
-      except AppError as e:
-        if 'Can\\\'t jump to implementation' in str(e):
-          pass
-        else:
-          raise
-
-
-  def GoToImplementationElseDeclaration_NoImplementation_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = [ 'GoToImplementationElseDeclaration' ],
-        line_num = 17,
-        column_num = 13,
-        contents = contents,
-        filetype = 'cs',
-        filepath = filepath
-      )
-
-      eq_( {
-        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-        'line_num': 35,
-        'column_num': 3
-      }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GoToImplementationElseDeclaration_SingleImplementation_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = [ 'GoToImplementationElseDeclaration' ],
-        line_num = 13,
-        column_num = 13,
-        contents = contents,
-        filetype = 'cs',
-        filepath = filepath
-      )
-
-      eq_( {
-        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-        'line_num': 30,
-        'column_num': 3
-      }, self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GoToImplementationElseDeclaration_MultipleImplementations_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = [ 'GoToImplementationElseDeclaration' ],
-        line_num = 21,
-        column_num = 13,
-        contents = contents,
-        filetype = 'cs',
-        filepath = filepath
-      )
-
-      eq_( [ {
-        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-        'line_num': 43,
-        'column_num': 3
-      }, {
-        'filepath': self._PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-        'line_num': 48,
-        'column_num': 3
-      } ], self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GetType_EmptyMessage_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetType' ],
-                                        line_num = 1,
-                                        column_num = 1,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      eq_( {
-        u'message': u""
-      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-
-  def GetType_VariableDeclaration_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetType' ],
-                                        line_num = 4,
-                                        column_num = 5,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      eq_( {
-        u'message': u"string"
-      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-
-  def GetType_VariableUsage_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetType' ],
-                                        line_num = 5,
-                                        column_num = 5,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      eq_( {
-        u'message': u"string str"
-      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-
-  def GetType_Constant_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetType' ],
-                                        line_num = 4,
-                                        column_num = 14,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      eq_( {
-        u'message': u"System.String"
-      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-
-  def GetType_DocsIgnored_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      gettype_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetType' ],
-                                        line_num = 9,
-                                        column_num = 34,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      eq_( {
-        u'message': u"int GetTypeTestCase.an_int_with_docs;",
-      }, self._app.post_json( '/run_completer_command', gettype_data ).json )
-
-
-  def GetDoc_Variable_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetDoc' ],
-                                        line_num = 13,
-                                        column_num = 28,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      eq_( {
-        'detailed_info': 'int GetDocTestCase.an_int;\n'
-                        'an integer, or something',
-      }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
-
-
-  def GetDoc_Function_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      getdoc_data = self._BuildRequest( completer_target = 'filetype_default',
-                                        command_arguments = [ 'GetDoc' ],
-                                        line_num = 33,
-                                        column_num = 27,
-                                        contents = contents,
-                                        filetype = 'cs',
-                                        filepath = filepath )
-
-      # It seems that Omnisharp server eats newlines
-      eq_( {
-        'detailed_info': 'int GetDocTestCase.DoATest();\n'
-                        ' Very important method. With multiple lines of '
-                        'commentary And Format- -ting',
-      }, self._app.post_json( '/run_completer_command', getdoc_data ).json )
-
-
-  def _RunFixIt( self, line, column, expected_result ):
-    filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    with self._WrapOmniSharpServer( filepath ):
-      contents = ReadFile( filepath )
-
-      fixit_data = self._BuildRequest( completer_target = 'filetype_default',
-                                      command_arguments = [ 'FixIt' ],
-                                      line_num = line,
-                                      column_num = column,
-                                      contents = contents,
-                                      filetype = 'cs',
-                                      filepath = filepath )
-
-      eq_( expected_result,
-          self._app.post_json( '/run_completer_command', fixit_data ).json )
-
-
-  def FixIt_RemoveSingleLine_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    self._RunFixIt( 11, 1, {
-      u'fixits': [
-        {
-          u'location': {
-            u'line_num': 11,
-            u'column_num': 1,
-            u'filepath': filepath
-          },
-          u'chunks': [
-            {
-              u'replacement_text': '',
-              u'range': {
-                u'start': {
-                  u'line_num': 10,
-                  u'column_num': 20,
-                  u'filepath': filepath
-                },
-                u'end': {
-                  u'line_num': 11,
-                  u'column_num': 30,
-                  u'filepath': filepath
-                },
-              }
-            }
-          ]
-        }
-      ]
-    } )
-
-
-  def FixIt_MultipleLines_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    self._RunFixIt( 19, 1, {
-      u'fixits': [
-        {
-          u'location': {
-            u'line_num': 19,
-            u'column_num': 1,
-            u'filepath': filepath
-          },
-          u'chunks': [
-            {
-              u'replacement_text': "return On",
-              u'range': {
-                u'start': {
-                  u'line_num': 20,
-                  u'column_num': 13,
-                  u'filepath': filepath
-                },
-                u'end': {
-                  u'line_num': 21,
-                  u'column_num': 35,
-                  u'filepath': filepath
-                },
-              }
-            }
-          ]
-        }
-      ]
-    } )
-
-
-  def FixIt_SpanFileEdge_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    self._RunFixIt( 1, 1, {
-      u'fixits': [
-        {
-          u'location': {
-            u'line_num': 1,
-            u'column_num': 1,
-            u'filepath': filepath
-          },
-          u'chunks': [
-            {
-              u'replacement_text': 'System',
-              u'range': {
-                u'start': {
-                  u'line_num': 1,
-                  u'column_num': 7,
-                  u'filepath': filepath
-                },
-                u'end': {
-                  u'line_num': 3,
-                  u'column_num': 18,
-                  u'filepath': filepath
-                },
-              }
-            }
-          ]
-        }
-      ]
-    } )
-
-
-  def FixIt_AddTextInLine_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    self._RunFixIt( 9, 1, {
-      u'fixits': [
-        {
-          u'location': {
-            u'line_num': 9,
-            u'column_num': 1,
-            u'filepath': filepath
-          },
-          u'chunks': [
-            {
-              u'replacement_text': ', StringComparison.Ordinal',
-              u'range': {
-                u'start': {
-                  u'line_num': 9,
-                  u'column_num': 29,
-                  u'filepath': filepath
-                },
-                u'end': {
-                  u'line_num': 9,
-                  u'column_num': 29,
-                  u'filepath': filepath
-                },
-              }
-            }
-          ]
-        }
-      ]
-    } )
-
-
-  def FixIt_ReplaceTextInLine_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'FixItTestCase.cs' )
-    self._RunFixIt( 10, 1, {
-      u'fixits': [
-        {
-          u'location': {
-            u'line_num': 10,
-            u'column_num': 1,
-            u'filepath': filepath
-          },
-          u'chunks': [
-            {
-              u'replacement_text': 'const int',
-              u'range': {
-                u'start': {
-                  u'line_num': 10,
-                  u'column_num': 13,
-                  u'filepath': filepath
-                },
-                u'end': {
-                  u'line_num': 10,
-                  u'column_num': 16,
-                  u'filepath': filepath
-                },
-              }
-            }
-          ]
-        }
-      ]
-    } )
-
-
-  def StopServer_NoErrorIfNotStarted_test( self ):
-    filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    self._StopOmniSharpServer( filepath )
-    # Success = no raise
-
-
-  def StopServer_KeepLogFiles_test( self ):
-    yield self._StopServer_KeepLogFiles, True
-    yield self._StopServer_KeepLogFiles, False
-
-
-  def _StopServer_KeepLogFiles( self, keeping_log_files ):
-    with self.UserOption( 'server_keep_logfiles', keeping_log_files ):
-      self._app = TestApp( handlers.app )
-      self._app.post_json(
-        '/ignore_extra_conf_file',
-        { 'filepath': self._PathToTestFile( '.ycm_extra_conf.py' ) } )
-      filepath = self._PathToTestFile( 'testy', 'GotoTestCase.cs' )
-      contents = ReadFile( filepath )
-      event_data = self._BuildRequest( filepath = filepath,
-                                      filetype = 'cs',
-                                      contents = contents,
-                                      event_name = 'FileReadyToParse' )
-
-      self._app.post_json( '/event_notification', event_data )
-      self._WaitUntilOmniSharpServerReady( filepath )
-
-      event_data = self._BuildRequest( filetype = 'cs', filepath = filepath )
-
-      debuginfo = self._app.post_json( '/debug_info', event_data ).json
-
-      log_files_match = re.search( "^OmniSharp logfiles:\n(.*)\n(.*)",
-                                  debuginfo,
-                                  re.MULTILINE )
-      stdout_logfiles_location = log_files_match.group( 1 )
-      stderr_logfiles_location = log_files_match.group( 2 )
-
-      try:
-        ok_( os.path.exists(stdout_logfiles_location ),
-            "Logfile should exist at {0}".format( stdout_logfiles_location ) )
-        ok_( os.path.exists( stderr_logfiles_location ),
-            "Logfile should exist at {0}".format( stderr_logfiles_location ) )
-      finally:
-        self._StopOmniSharpServer( filepath )
-
-      if keeping_log_files:
-        ok_( os.path.exists( stdout_logfiles_location ),
-            "Logfile should still exist at "
-            "{0}".format( stdout_logfiles_location ) )
-        ok_( os.path.exists( stderr_logfiles_location ),
-            "Logfile should still exist at "
-            "{0}".format( stderr_logfiles_location ) )
+from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
+                            StopOmniSharpServer, WaitUntilOmniSharpServerReady,
+                            WrapOmniSharpServer )
+from ycmd.tests.test_utils import BuildRequest, UserOption
+from ycmd.utils import ReadFile
+
+
+@SharedYcmd
+def Subcommands_GoTo_Basic_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ 'GoTo' ],
+                              line_num = 9,
+                              column_num = 15,
+                              contents = contents,
+                              filetype = 'cs',
+                              filepath = filepath )
+
+    eq_( {
+      'filepath': PathToTestFile( 'testy', 'Program.cs' ),
+      'line_num': 7,
+      'column_num': 3
+    }, app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GoToImplementation_Basic_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementation' ],
+      line_num = 13,
+      column_num = 13,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    eq_( {
+      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+      'line_num': 30,
+      'column_num': 3
+    }, app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GoToImplementation_NoImplementation_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementation' ],
+      line_num = 17,
+      column_num = 13,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    try:
+      app.post_json( '/run_completer_command', goto_data ).json
+      raise Exception("Expected a 'No implementations found' error")
+    except AppError as e:
+      if 'No implementations found' in str(e):
+        pass
       else:
-        ok_( not os.path.exists( stdout_logfiles_location ),
-            "Logfile should no longer exist at "
-            "{0}".format( stdout_logfiles_location ) )
-        ok_( not os.path.exists( stderr_logfiles_location ),
-            "Logfile should no longer exist at "
-            "{0}".format( stderr_logfiles_location ) )
+        raise
+
+
+@SharedYcmd
+def Subcommands_CsCompleter_InvalidLocation_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementation' ],
+      line_num = 2,
+      column_num = 1,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    try:
+      app.post_json( '/run_completer_command', goto_data ).json
+      raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
+    except AppError as e:
+      if 'Can\\\'t jump to implementation' in str(e):
+        pass
+      else:
+        raise
+
+
+@SharedYcmd
+def Subcommands_GoToImplementationElseDeclaration_NoImplementation_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementationElseDeclaration' ],
+      line_num = 17,
+      column_num = 13,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    eq_( {
+      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+      'line_num': 35,
+      'column_num': 3
+    }, app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GoToImplementationElseDeclaration_SingleImplementation_test(
+  app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementationElseDeclaration' ],
+      line_num = 13,
+      column_num = 13,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    eq_( {
+      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+      'line_num': 30,
+      'column_num': 3
+    }, app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
+  app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementationElseDeclaration' ],
+      line_num = 21,
+      column_num = 13,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    eq_( [ {
+      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+      'line_num': 43,
+      'column_num': 3
+    }, {
+      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+      'line_num': 48,
+      'column_num': 3
+    } ], app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetType_EmptyMessage_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    gettype_data = BuildRequest( completer_target = 'filetype_default',
+                                 command_arguments = [ 'GetType' ],
+                                 line_num = 1,
+                                 column_num = 1,
+                                 contents = contents,
+                                 filetype = 'cs',
+                                 filepath = filepath )
+
+    eq_( {
+      u'message': u""
+    }, app.post_json( '/run_completer_command', gettype_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetType_VariableDeclaration_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    gettype_data = BuildRequest( completer_target = 'filetype_default',
+                                 command_arguments = [ 'GetType' ],
+                                 line_num = 4,
+                                 column_num = 5,
+                                 contents = contents,
+                                 filetype = 'cs',
+                                 filepath = filepath )
+
+    eq_( {
+      u'message': u"string"
+    }, app.post_json( '/run_completer_command', gettype_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetType_VariableUsage_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    gettype_data = BuildRequest( completer_target = 'filetype_default',
+                                 command_arguments = [ 'GetType' ],
+                                 line_num = 5,
+                                 column_num = 5,
+                                 contents = contents,
+                                 filetype = 'cs',
+                                 filepath = filepath )
+
+    eq_( {
+      u'message': u"string str"
+    }, app.post_json( '/run_completer_command', gettype_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetType_Constant_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    gettype_data = BuildRequest( completer_target = 'filetype_default',
+                                 command_arguments = [ 'GetType' ],
+                                 line_num = 4,
+                                 column_num = 14,
+                                 contents = contents,
+                                 filetype = 'cs',
+                                 filepath = filepath )
+
+    eq_( {
+      u'message': u"System.String"
+    }, app.post_json( '/run_completer_command', gettype_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetType_DocsIgnored_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    gettype_data = BuildRequest( completer_target = 'filetype_default',
+                                 command_arguments = [ 'GetType' ],
+                                 line_num = 9,
+                                 column_num = 34,
+                                 contents = contents,
+                                 filetype = 'cs',
+                                 filepath = filepath )
+
+    eq_( {
+      u'message': u"int GetTypeTestCase.an_int_with_docs;",
+    }, app.post_json( '/run_completer_command', gettype_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Variable_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    getdoc_data = BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'GetDoc' ],
+                                line_num = 13,
+                                column_num = 28,
+                                contents = contents,
+                                filetype = 'cs',
+                                filepath = filepath )
+
+    eq_( {
+      'detailed_info': 'int GetDocTestCase.an_int;\n'
+                       'an integer, or something',
+    }, app.post_json( '/run_completer_command', getdoc_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Function_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    getdoc_data = BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'GetDoc' ],
+                                line_num = 33,
+                                column_num = 27,
+                                contents = contents,
+                                filetype = 'cs',
+                                filepath = filepath )
+
+    # It seems that Omnisharp server eats newlines
+    eq_( {
+      'detailed_info': 'int GetDocTestCase.DoATest();\n'
+                       ' Very important method. With multiple lines of '
+                       'commentary And Format- -ting',
+    }, app.post_json( '/run_completer_command', getdoc_data ).json )
+
+
+def RunFixItTest( app, line, column, expected_result ):
+  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    fixit_data = BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = [ 'FixIt' ],
+                               line_num = line,
+                               column_num = column,
+                               contents = contents,
+                               filetype = 'cs',
+                               filepath = filepath )
+
+    eq_( expected_result,
+         app.post_json( '/run_completer_command', fixit_data ).json )
+
+
+@SharedYcmd
+def Subcommands_FixIt_RemoveSingleLine_test( app ):
+  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  RunFixItTest( app, 11, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 11,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks': [
+          {
+            u'replacement_text': '',
+            u'range': {
+              u'start': {
+                u'line_num': 10,
+                u'column_num': 20,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 11,
+                u'column_num': 30,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
+@SharedYcmd
+def Subcommands_FixIt_MultipleLines_test( app ):
+  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  RunFixItTest( app, 19, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 19,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks': [
+          {
+            u'replacement_text': "return On",
+            u'range': {
+              u'start': {
+                u'line_num': 20,
+                u'column_num': 13,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 21,
+                u'column_num': 35,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
+@SharedYcmd
+def Subcommands_FixIt_SpanFileEdge_test( app ):
+  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  RunFixItTest( app, 1, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 1,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks': [
+          {
+            u'replacement_text': 'System',
+            u'range': {
+              u'start': {
+                u'line_num': 1,
+                u'column_num': 7,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 3,
+                u'column_num': 18,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
+@SharedYcmd
+def Subcommands_FixIt_AddTextInLine_test( app ):
+  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  RunFixItTest( app, 9, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 9,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks': [
+          {
+            u'replacement_text': ', StringComparison.Ordinal',
+            u'range': {
+              u'start': {
+                u'line_num': 9,
+                u'column_num': 29,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 9,
+                u'column_num': 29,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
+@SharedYcmd
+def Subcommands_FixIt_ReplaceTextInLine_test( app ):
+  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  RunFixItTest( app, 10, 1, {
+    u'fixits': [
+      {
+        u'location': {
+          u'line_num': 10,
+          u'column_num': 1,
+          u'filepath': filepath
+        },
+        u'chunks': [
+          {
+            u'replacement_text': 'const int',
+            u'range': {
+              u'start': {
+                u'line_num': 10,
+                u'column_num': 13,
+                u'filepath': filepath
+              },
+              u'end': {
+                u'line_num': 10,
+                u'column_num': 16,
+                u'filepath': filepath
+              },
+            }
+          }
+        ]
+      }
+    ]
+  } )
+
+
+@IsolatedYcmd
+def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  StopOmniSharpServer( app, filepath )
+  # Success = no raise
+
+
+@IsolatedYcmd
+def StopServer_KeepLogFiles( app, keeping_log_files ):
+  with UserOption( 'server_keep_logfiles', keeping_log_files ):
+    filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+    contents = ReadFile( filepath )
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'cs',
+                               contents = contents,
+                               event_name = 'FileReadyToParse' )
+
+    app.post_json( '/event_notification', event_data )
+    WaitUntilOmniSharpServerReady( app, filepath )
+
+    event_data = BuildRequest( filetype = 'cs', filepath = filepath )
+
+    debuginfo = app.post_json( '/debug_info', event_data ).json
+
+    log_files_match = re.search( "^OmniSharp logfiles:\n(.*)\n(.*)",
+                                 debuginfo,
+                                 re.MULTILINE )
+    stdout_logfiles_location = log_files_match.group( 1 )
+    stderr_logfiles_location = log_files_match.group( 2 )
+
+    try:
+      ok_( os.path.exists(stdout_logfiles_location ),
+           "Logfile should exist at {0}".format( stdout_logfiles_location ) )
+      ok_( os.path.exists( stderr_logfiles_location ),
+           "Logfile should exist at {0}".format( stderr_logfiles_location ) )
+    finally:
+      StopOmniSharpServer( app, filepath )
+
+    if keeping_log_files:
+      ok_( os.path.exists( stdout_logfiles_location ),
+           "Logfile should still exist at "
+           "{0}".format( stdout_logfiles_location ) )
+      ok_( os.path.exists( stderr_logfiles_location ),
+           "Logfile should still exist at "
+           "{0}".format( stderr_logfiles_location ) )
+    else:
+      ok_( not os.path.exists( stdout_logfiles_location ),
+           "Logfile should no longer exist at "
+           "{0}".format( stdout_logfiles_location ) )
+      ok_( not os.path.exists( stderr_logfiles_location ),
+           "Logfile should no longer exist at "
+           "{0}".format( stderr_logfiles_location ) )
+
+
+def Subcommands_StopServer_KeepLogFiles_test():
+  yield StopServer_KeepLogFiles, True
+  yield StopServer_KeepLogFiles, False

@@ -23,13 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from .python_handlers_test import Python_Handlers_test
+from hamcrest.core.base_matcher import BaseMatcher
+from hamcrest import assert_that, has_item, contains, equal_to, is_not  # noqa
 from mock import patch
+import sys
+
 from ycmd import utils
 from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE
-from hamcrest.core.base_matcher import BaseMatcher
-from hamcrest import assert_that, has_item, contains, equal_to, is_not # noqa
-import sys
+from ycmd.tests.python import IsolatedYcmd
+from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, UserOption
 
 
 class CalledWith( BaseMatcher ):
@@ -75,79 +77,79 @@ def was_called_with_python( python ):
   return CalledWith( python )
 
 
-
-class UserDefinedPython_test( Python_Handlers_test ):
-
-  @patch( 'ycmd.utils.SafePopen' )
-  def WithoutAnyOption_DefaultToYcmdPython_test( self, *args ):
-    self._app.get( '/ready', { 'subserver': 'python' } )
-    assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
+@IsolatedYcmd
+@patch( 'ycmd.utils.SafePopen' )
+def UserDefinedPython_WithoutAnyOption_DefaultToYcmdPython_test( app, *args ):
+  app.get( '/ready', { 'subserver': 'python' } )
+  assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
 
 
-  @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.'
-            'JediCompleter._CheckBinaryExists',
-          return_value = False )
-  def WhenNonExistentPythonIsGiven_ReturnAnError_test( self, *args ):
-    python = '/non/existing/path/python'
-    with self.UserOption( 'python_binary_path', python ):
-      response = self._app.get( '/ready',
-                                { 'subserver': 'python' },
-                                expect_errors = True ).json
+@IsolatedYcmd
+@patch( 'ycmd.utils.SafePopen' )
+@patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
+          '_CheckBinaryExists', return_value = False )
+def UserDefinedPython_WhenNonExistentPythonIsGiven_ReturnAnError_test( app,
+                                                                       *args ):
+  python = '/non/existing/path/python'
+  with UserOption( 'python_binary_path', python ):
+    response = app.get( '/ready',
+                        { 'subserver': 'python' },
+                        expect_errors = True ).json
 
-      msg = BINARY_NOT_FOUND_MESSAGE.format( python )
-      assert_that( response, self._ErrorMatcher( RuntimeError, msg ) )
-      utils.SafePopen.assert_not_called()
-
-
-  @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.'
-            'JediCompleter._CheckBinaryExists',
-          return_value = True )
-  def WhenExistingPythonIsGiven_ThatIsUsed_test( self, *args ):
-    python = '/existing/python'
-    with self.UserOption( 'python_binary_path', python ):
-      self._app.get( '/ready', { 'subserver': 'python' } ).json
-      assert_that( utils.SafePopen, was_called_with_python( python ) )
+    msg = BINARY_NOT_FOUND_MESSAGE.format( python )
+    assert_that( response, ErrorMatcher( RuntimeError, msg ) )
+    utils.SafePopen.assert_not_called()
 
 
-  @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.'
-            'JediCompleter._CheckBinaryExists',
-          return_value = True )
-  def RestartServerWithoutArguments_WillReuseTheLastPython_test( self, *args ):
-    request = self._BuildRequest( filetype = 'python',
-                                  command_arguments = [ 'RestartServer' ] )
-    self._app.post_json( '/run_completer_command', request )
-    assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
-
-
-  @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.'
-            'JediCompleter._CheckBinaryExists',
-          return_value = True )
-  def RestartServerWithArgument_WillUseTheSpecifiedPython_test( self, *args ):
-    python = '/existing/python'
-    request = self._BuildRequest( filetype = 'python',
-                                  command_arguments = [ 'RestartServer',
-                                                        python ] )
-    self._app.post_json( '/run_completer_command', request )
+@IsolatedYcmd
+@patch( 'ycmd.utils.SafePopen' )
+@patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
+          '_CheckBinaryExists', return_value = True )
+def UserDefinedPython_WhenExistingPythonIsGiven_ThatIsUsed_test( app, *args ):
+  python = '/existing/python'
+  with UserOption( 'python_binary_path', python ):
+    app.get( '/ready', { 'subserver': 'python' } ).json
     assert_that( utils.SafePopen, was_called_with_python( python ) )
 
 
-  @patch( 'ycmd.utils.SafePopen' )
-  @patch( 'ycmd.completers.python.jedi_completer.'
-            'JediCompleter._CheckBinaryExists',
-          return_value = False )
-  def RestartServerWithNonExistingPythonArgument_test( self, *args ):
-    python = '/non/existing/python'
-    request = self._BuildRequest( filetype = 'python',
-                                  command_arguments = [ 'RestartServer',
-                                                        python ] )
-    response = self._app.post_json( '/run_completer_command',
-                                    request,
-                                    expect_errors = True ).json
+@IsolatedYcmd
+@patch( 'ycmd.utils.SafePopen' )
+@patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
+          '_CheckBinaryExists', return_value = True )
+def UserDefinedPython_RestartServerWithoutArguments_WillReuseTheLastPython_test(
+  app, *args ):
+  request = BuildRequest( filetype = 'python',
+                          command_arguments = [ 'RestartServer' ] )
+  app.post_json( '/run_completer_command', request )
+  assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
 
-    msg = BINARY_NOT_FOUND_MESSAGE.format( python )
-    assert_that( response, self._ErrorMatcher( RuntimeError, msg ) )
-    assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
+
+@IsolatedYcmd
+@patch( 'ycmd.utils.SafePopen' )
+@patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
+          '_CheckBinaryExists', return_value = True )
+def UserDefinedPython_RestartServerWithArgument_WillUseTheSpecifiedPython_test(
+  app, *args ):
+  python = '/existing/python'
+  request = BuildRequest( filetype = 'python',
+                          command_arguments = [ 'RestartServer', python ] )
+  app.post_json( '/run_completer_command', request )
+  assert_that( utils.SafePopen, was_called_with_python( python ) )
+
+
+@IsolatedYcmd
+@patch( 'ycmd.utils.SafePopen' )
+@patch( 'ycmd.completers.python.jedi_completer.JediCompleter.'
+          '_CheckBinaryExists', return_value = False )
+def UserDefinedPython_RestartServerWithNonExistingPythonArgument_test( app,
+                                                                       *args ):
+  python = '/non/existing/python'
+  request = BuildRequest( filetype = 'python',
+                          command_arguments = [ 'RestartServer', python ] )
+  response = app.post_json( '/run_completer_command',
+                            request,
+                            expect_errors = True ).json
+
+  msg = BINARY_NOT_FOUND_MESSAGE.format( python )
+  assert_that( response, ErrorMatcher( RuntimeError, msg ) )
+  assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )

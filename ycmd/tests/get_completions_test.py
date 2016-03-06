@@ -24,171 +24,178 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from webtest import TestApp
-from nose.tools import eq_
 from hamcrest import assert_that, has_items
-from .. import handlers
-from .handlers_test import Handlers_test
-from ycmd.tests.test_utils import DummyCompleter
 from mock import patch
+from nose.tools import eq_
+
+from ycmd.tests import SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
+                                    DummyCompleter, PatchCompleter,
+                                    UserOption )
 
 
-class GetCompletions_test( Handlers_test ):
-
-  def RequestValidation_NoLineNumException_test( self ):
-    response = self._app.post_json( '/semantic_completion_available', {
-      'column_num': 0,
-      'filepath': '/foo',
-      'file_data': {
-        '/foo': {
-          'filetypes': [ 'text' ],
-          'contents': 'zoo'
-        }
+@SharedYcmd
+def GetCompletions_RequestValidation_NoLineNumException_test( app ):
+  response = app.post_json( '/semantic_completion_available', {
+    'column_num': 0,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'filetypes': [ 'text' ],
+        'contents': 'zoo'
       }
-    }, status = '5*', expect_errors = True )
-    response.mustcontain( 'missing', 'line_num' )
+    }
+  }, status = '5*', expect_errors = True )
+  response.mustcontain( 'missing', 'line_num' )
 
 
-  def IdentifierCompleter_Works_test( self ):
-    event_data = self._BuildRequest( contents = 'foo foogoo ba',
-                                     event_name = 'FileReadyToParse' )
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_Works_test( app ):
+  event_data = BuildRequest( contents = 'foo foogoo ba',
+                             event_name = 'FileReadyToParse' )
 
-    self._app.post_json( '/event_notification', event_data )
+  app.post_json( '/event_notification', event_data )
 
-    # query is 'oo'
-    completion_data = self._BuildRequest( contents = 'oo foo foogoo ba',
-                                          column_num = 3 )
-    response_data = self._app.post_json( '/completions', completion_data ).json
+  # query is 'oo'
+  completion_data = BuildRequest( contents = 'oo foo foogoo ba',
+                                  column_num = 3 )
+  response_data = app.post_json( '/completions', completion_data ).json
 
-    eq_( 1, response_data[ 'completion_start_column' ] )
-    assert_that(
-      response_data[ 'completions' ],
-      has_items( self._CompletionEntryMatcher( 'foo', '[ID]' ),
-                 self._CompletionEntryMatcher( 'foogoo', '[ID]' ) )
+  eq_( 1, response_data[ 'completion_start_column' ] )
+  assert_that(
+    response_data[ 'completions' ],
+    has_items( CompletionEntryMatcher( 'foo', '[ID]' ),
+               CompletionEntryMatcher( 'foogoo', '[ID]' ) )
+  )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test( app ):
+  completion_data = BuildRequest( contents = 'oo foo foogoo ba',
+                                  column_num = 11 )
+  response_data = app.post_json( '/completions', completion_data ).json
+  eq_( 8, response_data[ 'completion_start_column' ] )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test(
+  app ):
+  contents = """
+    textarea {
+      font-family: sans-serif;
+      font-size: 12px;
+    }"""
+  event_data = BuildRequest( contents = contents,
+                             filetype = 'css',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+
+  # query is 'fo'
+  completion_data = BuildRequest( contents = 'fo ' + contents,
+                                  filetype = 'css',
+                                  column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+
+  assert_that(
+    results,
+    has_items( CompletionEntryMatcher( 'font-size', '[ID]' ),
+               CompletionEntryMatcher( 'font-family', '[ID]' ) )
+  )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        return_value = [ 'foo', 'bar', 'qux' ] )
+def GetCompletions_ForceSemantic_Works_test( app, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    force_semantic = True )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that( results, has_items( CompletionEntryMatcher( 'foo' ),
+                                     CompletionEntryMatcher( 'bar' ),
+                                     CompletionEntryMatcher( 'qux' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test( app ):
+  event_data = BuildRequest( event_name = 'FileReadyToParse',
+                             syntax_keywords = ['foo', 'bar', 'zoo'] )
+
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo ',
+                                  column_num = 3 )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'foo' ),
+                          CompletionEntryMatcher( 'zoo' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_UltiSnipsCompleter_Works_test( app ):
+  event_data = BuildRequest(
+    event_name = 'BufferVisit',
+    ultisnips_snippets = [
+        {'trigger': 'foo', 'description': 'bar'},
+        {'trigger': 'zoo', 'description': 'goo'},
+    ] )
+
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo ',
+                                  column_num = 3 )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that(
+    results,
+    has_items(
+      CompletionEntryMatcher( 'foo', extra_menu_info='<snip> bar' ),
+      CompletionEntryMatcher( 'zoo', extra_menu_info='<snip> goo' )
     )
+  )
 
 
-  def IdentifierCompleter_StartColumn_AfterWord_test( self ):
-    completion_data = self._BuildRequest( contents = 'oo foo foogoo ba',
-                                          column_num = 11 )
-    response_data = self._app.post_json( '/completions', completion_data ).json
-    eq_( 8, response_data[ 'completion_start_column' ] )
-
-
-  def IdentifierCompleter_WorksForSpecialIdentifierChars_test( self ):
-    contents = """
-      textarea {
-        font-family: sans-serif;
-        font-size: 12px;
-      }"""
-    event_data = self._BuildRequest( contents = contents,
-                                     filetype = 'css',
-                                     event_name = 'FileReadyToParse' )
-
-    self._app.post_json( '/event_notification', event_data )
-
-    # query is 'fo'
-    completion_data = self._BuildRequest( contents = 'fo ' + contents,
-                                          filetype = 'css',
-                                          column_num = 3 )
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-
-    assert_that(
-      results,
-      has_items( self._CompletionEntryMatcher( 'font-size', '[ID]' ),
-                 self._CompletionEntryMatcher( 'font-family', '[ID]' ) )
-    )
-
-
-  @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
-          return_value = [ 'foo', 'bar', 'qux' ] )
-  def ForceSemantic_Works_test( self, *args ):
-    with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-      completion_data = self._BuildRequest( filetype = 'dummy_filetype',
-                                            force_semantic = True )
-
-      results = self._app.post_json( '/completions',
-                                     completion_data ).json[ 'completions' ]
-      assert_that( results, has_items( self._CompletionEntryMatcher( 'foo' ),
-                                       self._CompletionEntryMatcher( 'bar' ),
-                                       self._CompletionEntryMatcher( 'qux' ) ) )
-
-
-  def IdentifierCompleter_SyntaxKeywordsAdded_test( self ):
-    event_data = self._BuildRequest( event_name = 'FileReadyToParse',
-                                     syntax_keywords = ['foo', 'bar', 'zoo'] )
-
-    self._app.post_json( '/event_notification', event_data )
-
-    completion_data = self._BuildRequest( contents = 'oo ',
-                                          column_num = 3 )
-
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-    assert_that( results,
-                 has_items( self._CompletionEntryMatcher( 'foo' ),
-                            self._CompletionEntryMatcher( 'zoo' ) ) )
-
-
-  def UltiSnipsCompleter_Works_test( self ):
-    event_data = self._BuildRequest(
+@SharedYcmd
+def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test( app ):
+  with UserOption( 'use_ultisnips_completer', False ):
+    event_data = BuildRequest(
       event_name = 'BufferVisit',
       ultisnips_snippets = [
           {'trigger': 'foo', 'description': 'bar'},
           {'trigger': 'zoo', 'description': 'goo'},
       ] )
 
-    self._app.post_json( '/event_notification', event_data )
+    app.post_json( '/event_notification', event_data )
 
-    completion_data = self._BuildRequest( contents = 'oo ',
-                                          column_num = 3 )
+    completion_data = BuildRequest( contents = 'oo ', column_num = 3 )
 
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-    assert_that(
-      results,
-      has_items(
-        self._CompletionEntryMatcher( 'foo', extra_menu_info='<snip> bar' ),
-        self._CompletionEntryMatcher( 'zoo', extra_menu_info='<snip> goo' )
+    eq_( [],
+         app.post_json( '/completions',
+                        completion_data ).json[ 'completions' ] )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        return_value = [ 'some_candidate' ] )
+def GetCompletions_SemanticCompleter_WorksWhenTriggerIsIdentifier_test(
+  app, *args ):
+  with UserOption( 'semantic_triggers',
+                   { 'dummy_filetype': [ '_' ] } ):
+    with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+      completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                      contents = 'some_can',
+                                      column_num = 9 )
+
+      results = app.post_json( '/completions',
+                               completion_data ).json[ 'completions' ]
+      assert_that(
+        results,
+        has_items( CompletionEntryMatcher( 'some_candidate' ) )
       )
-    )
-
-
-  def UltiSnipsCompleter_UnusedWhenOffWithOption_test( self ):
-    with self.UserOption( 'use_ultisnips_completer', False ):
-      self._app = TestApp( handlers.app )
-
-      event_data = self._BuildRequest(
-        event_name = 'BufferVisit',
-        ultisnips_snippets = [
-            {'trigger': 'foo', 'description': 'bar'},
-            {'trigger': 'zoo', 'description': 'goo'},
-        ] )
-
-      self._app.post_json( '/event_notification', event_data )
-
-      completion_data = self._BuildRequest( contents = 'oo ',
-                                            column_num = 3 )
-
-      eq_( [],
-           self._app.post_json( '/completions',
-                                completion_data ).json[ 'completions' ] )
-
-
-  @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
-          return_value = [ 'some_candidate' ] )
-  def SemanticCompleter_WorksWhenTriggerIsIdentifier_test( self, *args ):
-    with self.UserOption( 'semantic_triggers',
-                          { 'dummy_filetype': [ '_' ] } ):
-      with self.PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-        completion_data = self._BuildRequest( filetype = 'dummy_filetype',
-                                              contents = 'some_can',
-                                              column_num = 9 )
-
-        results = self._app.post_json( '/completions',
-                                       completion_data ).json[ 'completions' ]
-        assert_that(
-          results,
-          has_items( self._CompletionEntryMatcher( 'some_candidate' ) )
-        )

@@ -25,45 +25,57 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that
 from nose.tools import eq_
-from .python_handlers_test import Python_Handlers_test
-from ycmd.utils import ReadFile
 import os.path
 
-
-class Python_Subcommands_test( Python_Handlers_test ):
-
-  def setUp( self ):
-    super( Python_Subcommands_test, self ).setUp()
-    self.WaitUntilJediHTTPServerReady()
+from ycmd.utils import ReadFile
+from ycmd.tests.python import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 
 
-  def GoTo_Variation_ZeroBasedLineAndColumn_test( self ):
-    tests = [
-          {
-            'command_arguments': [ 'GoToDefinition' ],
-            'response': {
-              'filepath': os.path.abspath( '/foo.py' ),
-              'line_num': 2,
-              'column_num': 5
-            }
-          },
-          {
-            'command_arguments': [ 'GoToDeclaration' ],
-            'response': {
-              'filepath': os.path.abspath( '/foo.py' ),
-              'line_num': 7,
-              'column_num': 1
-            }
-          }
-      ]
-    for test in tests:
-      yield self._Run_GoTo_Variation_ZeroBasedLineAndColumn, test
+@SharedYcmd
+def RunGoToTest( app, test ):
+  filepath = PathToTestFile( test[ 'request' ][ 'filename' ] )
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'GoTo' ],
+                            line_num = test[ 'request' ][ 'line_num' ],
+                            contents = ReadFile( filepath ),
+                            filetype = 'python',
+                            filepath = filepath )
+
+  eq_( test[ 'response' ],
+       app.post_json( '/run_completer_command', goto_data ).json )
 
 
-  def _Run_GoTo_Variation_ZeroBasedLineAndColumn( self, test ):
-    # Example taken directly from jedi docs
-    # http://jedi.jedidjah.ch/en/latest/docs/plugin-api.html#examples
-    contents = """
+def Subcommands_GoTo_test():
+  # Tests taken from https://github.com/Valloric/YouCompleteMe/issues/1236
+  tests = [
+    {
+      'request': { 'filename': 'goto_file1.py', 'line_num': 2 },
+      'response': {
+          'filepath': PathToTestFile( 'goto_file3.py' ),
+          'line_num': 1,
+          'column_num': 5
+      }
+    },
+    {
+      'request': { 'filename': 'goto_file4.py', 'line_num': 2 },
+      'response': {
+          'filepath': PathToTestFile( 'goto_file4.py' ),
+          'line_num': 1,
+          'column_num': 18
+      }
+    }
+  ]
+
+  for test in tests:
+    yield RunGoToTest, test
+
+
+@SharedYcmd
+def RunGoToTest_Variation_ZeroBasedLineAndColumn( app, test ):
+  # Example taken directly from jedi docs
+  # http://jedi.jedidjah.ch/en/latest/docs/plugin-api.html#examples
+  contents = """
 def my_func():
   print 'called'
 
@@ -74,145 +86,140 @@ inception = my_list[2]
 inception()
 """
 
-    goto_data = self._BuildRequest(
-        completer_target = 'filetype_default',
-        command_arguments = test[ 'command_arguments' ],
-        line_num = 9,
-        contents = contents,
-        filetype = 'python',
-        filepath = '/foo.py'
-    )
+  goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = test[ 'command_arguments' ],
+      line_num = 9,
+      contents = contents,
+      filetype = 'python',
+      filepath = '/foo.py'
+  )
 
-    eq_( test[ 'response' ],
-         self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GoToDefinition_NotFound_test( self ):
-    filepath = self._PathToTestFile( 'goto_file5.py' )
-    goto_data = self._BuildRequest( command_arguments = [ 'GoToDefinition' ],
-                                    line_num = 4,
-                                    contents = ReadFile( filepath ),
-                                    filetype = 'python',
-                                    filepath = filepath )
-
-    response = self._app.post_json( '/run_completer_command',
-                                    goto_data,
-                                    expect_errors = True  ).json
-    assert_that( response,
-                 self._ErrorMatcher( RuntimeError,
-                                     "Can\'t jump to definition." ) )
+  eq_( test[ 'response' ],
+       app.post_json( '/run_completer_command', goto_data ).json )
 
 
-  def GoTo_test( self ):
-    # Tests taken from https://github.com/Valloric/YouCompleteMe/issues/1236
-    tests = [
-        {
-          'request': { 'filename': 'goto_file1.py', 'line_num': 2 },
-          'response': {
-              'filepath': self._PathToTestFile( 'goto_file3.py' ),
-              'line_num': 1,
-              'column_num': 5
-          }
-        },
-        {
-          'request': { 'filename': 'goto_file4.py', 'line_num': 2 },
-          'response': {
-              'filepath': self._PathToTestFile( 'goto_file4.py' ),
-              'line_num': 1,
-              'column_num': 18
-          }
-        }
-    ]
-    for test in tests:
-      yield self._Run_GoTo, test
+def Subcommands_GoTo_Variation_ZeroBasedLineAndColumn_test():
+  tests = [
+    {
+      'command_arguments': [ 'GoToDefinition' ],
+      'response': {
+        'filepath': os.path.abspath( '/foo.py' ),
+        'line_num': 2,
+        'column_num': 5
+      }
+    },
+    {
+      'command_arguments': [ 'GoToDeclaration' ],
+      'response': {
+        'filepath': os.path.abspath( '/foo.py' ),
+        'line_num': 7,
+        'column_num': 1
+      }
+    }
+  ]
+
+  for test in tests:
+    yield RunGoToTest_Variation_ZeroBasedLineAndColumn, test
 
 
-  def _Run_GoTo( self, test ):
-    filepath = self._PathToTestFile( test[ 'request' ][ 'filename' ] )
-    goto_data = self._BuildRequest( completer_target = 'filetype_default',
-                                    command_arguments = [ 'GoTo' ],
-                                    line_num = test[ 'request' ][ 'line_num' ],
-                                    contents = ReadFile( filepath ),
-                                    filetype = 'python',
-                                    filepath = filepath )
+@SharedYcmd
+def Subcommands_GoToDefinition_NotFound_test( app ):
+  filepath = PathToTestFile( 'goto_file5.py' )
+  goto_data = BuildRequest( command_arguments = [ 'GoToDefinition' ],
+                            line_num = 4,
+                            contents = ReadFile( filepath ),
+                            filetype = 'python',
+                            filepath = filepath )
 
-    eq_( test[ 'response' ],
-         self._app.post_json( '/run_completer_command', goto_data ).json )
-
-
-  def GetDoc_Method_test( self ):
-    # Testcase1
-    filepath = self._PathToTestFile( 'GetDoc.py' )
-    contents = ReadFile( filepath )
-
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'python',
-                                     line_num = 17,
-                                     column_num = 9,
-                                     contents = contents,
-                                     command_arguments = [ 'GetDoc' ],
-                                     completer_target = 'filetype_default' )
-
-    response = self._app.post_json( '/run_completer_command', event_data ).json
-
-    eq_( response, {
-      'detailed_info': '_ModuleMethod()\n\n'
-                       'Module method docs\n'
-                       'Are dedented, like you might expect',
-    } )
+  response = app.post_json( '/run_completer_command',
+                            goto_data,
+                            expect_errors = True  ).json
+  assert_that( response,
+               ErrorMatcher( RuntimeError,
+                             "Can\'t jump to definition." ) )
 
 
-  def GetDoc_Class_test( self ):
-    # Testcase1
-    filepath = self._PathToTestFile( 'GetDoc.py' )
-    contents = ReadFile( filepath )
+@SharedYcmd
+def Subcommands_GetDoc_Method_test( app ):
+  # Testcase1
+  filepath = PathToTestFile( 'GetDoc.py' )
+  contents = ReadFile( filepath )
 
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'python',
-                                     line_num = 19,
-                                     column_num = 2,
-                                     contents = contents,
-                                     command_arguments = [ 'GetDoc' ],
-                                     completer_target = 'filetype_default' )
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'python',
+                             line_num = 17,
+                             column_num = 9,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
 
-    response = self._app.post_json( '/run_completer_command', event_data ).json
+  response = app.post_json( '/run_completer_command', event_data ).json
 
-    eq_( response, {
-      'detailed_info': 'Class Documentation',
-    } )
+  eq_( response, {
+    'detailed_info': '_ModuleMethod()\n\n'
+                     'Module method docs\n'
+                     'Are dedented, like you might expect',
+  } )
 
 
-  def GoToReferences_test( self ):
-    filepath = self._PathToTestFile( 'goto_references.py' )
-    contents = ReadFile( filepath )
+@SharedYcmd
+def Subcommands_GetDoc_Class_test( app ):
+  # Testcase1
+  filepath = PathToTestFile( 'GetDoc.py' )
+  contents = ReadFile( filepath )
 
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'python',
-                                     line_num = 4,
-                                     column_num = 5,
-                                     contents = contents,
-                                     command_arguments = [ 'GoToReferences' ],
-                                     completer_target = 'filetype_default' )
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'python',
+                             line_num = 19,
+                             column_num = 2,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
 
-    response = self._app.post_json( '/run_completer_command', event_data ).json
+  response = app.post_json( '/run_completer_command', event_data ).json
 
-    eq_( response, [ {
-      'filepath': self._PathToTestFile( 'goto_references.py' ),
+  eq_( response, {
+    'detailed_info': 'Class Documentation',
+  } )
+
+
+@SharedYcmd
+def Subcommands_GoToReferences_test( app ):
+  filepath = PathToTestFile( 'goto_references.py' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'python',
+                             line_num = 4,
+                             column_num = 5,
+                             contents = contents,
+                             command_arguments = [ 'GoToReferences' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  eq_( response, [
+    {
+      'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'def f',
       'line_num': 1
-    }, {
-      'filepath': self._PathToTestFile( 'goto_references.py' ),
+    },
+    {
+      'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'a = f()',
       'line_num': 4
-    }, {
-      'filepath': self._PathToTestFile( 'goto_references.py' ),
+    },
+    {
+      'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'b = f()',
       'line_num': 5
-    }, {
-      'filepath': self._PathToTestFile( 'goto_references.py' ),
+    },
+    {
+      'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
       'description': 'c = f()',
       'line_num': 6
