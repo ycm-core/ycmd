@@ -38,12 +38,20 @@ def PathToTestFile( *args ):
 
 
 def setUpPackage():
+  """Initializes the ycmd server as a WebTest application that will be shared
+  by all tests using the SharedYcmd decorator in this package. Additional
+  configuration that is common to these tests, like starting a semantic
+  subserver, should be done here."""
   global shared_app
 
   shared_app = SetUpApp()
 
 
 def SharedYcmd( test ):
+  """Defines a decorator to be attached to tests of this package. This decorator
+  passes the shared ycmd application as a parameter.
+
+  Do NOT attach it to test generators but directly to the yielded tests."""
   global shared_app
 
   @functools.wraps( test )
@@ -53,6 +61,13 @@ def SharedYcmd( test ):
 
 
 def IsolatedYcmd( test ):
+  """Defines a decorator to be attached to tests of this package. This decorator
+  passes a unique ycmd application as a parameter. It should be used on tests
+  that change the server state in a irreversible way (ex: a semantic subserver
+  is stopped or restarted) or expect a clean state (ex: no semantic subserver
+  started, no .ycm_extra_conf.py loaded, etc).
+
+  Do NOT attach it to test generators but directly to the yielded tests."""
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
