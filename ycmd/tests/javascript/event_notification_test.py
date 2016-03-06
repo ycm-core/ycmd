@@ -35,6 +35,7 @@ import http.client
 import os
 from mock import patch
 
+
 class Javascript_EventNotification_test( Javascript_Handlers_test ):
 
   def OnFileReadyToParse_ProjectFile_cwd_test( self ):

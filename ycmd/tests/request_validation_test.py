@@ -28,6 +28,7 @@ from nose.tools import ok_
 from ycmd.request_validation import EnsureRequestValid
 from ycmd.responses import ServerError
 
+
 def BasicData():
   return {
     'line_num': 1,
@@ -100,4 +101,3 @@ def EnsureRequestValid_MissingEntryForFileInFileData_test():
   data[ 'filepath' ] = '/bar'
   assert_that( calling( EnsureRequestValid ).with_args( data ),
                raises( ServerError, ".*/bar.*" ) )
-

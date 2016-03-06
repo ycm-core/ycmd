@@ -55,7 +55,7 @@ def FiletypeTriggerDictFromSpec_Works_test():
            'foo': ['zoo', 'bar'],
            'goo,moo': ['moo'],
            'qux': ['q']
-       } ) ) )
+         } ) ) )
 
 
 def FiletypeDictUnion_Works_test():

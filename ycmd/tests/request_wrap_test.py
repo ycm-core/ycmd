@@ -28,6 +28,7 @@ from builtins import *  # noqa
 from nose.tools import eq_
 from ..request_wrap import RequestWrap
 
+
 def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
   return {
     'line_num': line_num,
@@ -40,6 +41,7 @@ def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
       }
     }
   }
+
 
 def LineValue_OneLine_test():
   eq_( 'zoo',
@@ -91,6 +93,7 @@ def StartColumn_Dot_test():
   eq_( 5,
        RequestWrap( PrepareJson( column_num = 8,
                                  contents = 'foo.bar') )[ 'start_column' ] )
+
 
 def StartColumn_DotWithUnicode_test():
   eq_( 7,

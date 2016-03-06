@@ -28,6 +28,7 @@ from ycmd.completers.all import identifier_completer as ic
 from ycmd.request_wrap import RequestWrap
 from ycmd.tests.test_utils import BuildRequest
 
+
 def BuildRequestWrap( contents, column_num, line_num = 1 ):
   return RequestWrap( BuildRequest( column_num = column_num,
                                     line_num = line_num,

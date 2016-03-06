@@ -46,6 +46,7 @@ RESPONSE_TIMEOUT_SECONDS = 10
 
 _logger = logging.getLogger( __name__ )
 
+
 class DeferredResponse( object ):
   """
   A deferred that resolves to a response from TSServer.

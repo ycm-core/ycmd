@@ -56,4 +56,3 @@ class UltiSnipsCompleter( GeneralCompleter ):
       responses.BuildCompletionData( snip[ 'trigger' ],
                                      '<snip> ' + snip[ 'description' ] )
       for snip in raw_candidates ]
-

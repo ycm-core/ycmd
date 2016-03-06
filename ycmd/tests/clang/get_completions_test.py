@@ -137,7 +137,8 @@ class Clang_GetCompletions_test( Clang_Handlers_test ):
         'response': http.client.OK,
         'data': has_entries( {
           'completions': empty(),
-          'errors': has_item( self._ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE ) ),
+          'errors': has_item( self._ErrorMatcher( RuntimeError,
+                                                  NO_COMPLETIONS_MESSAGE ) ),
         } )
       },
     } )

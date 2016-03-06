@@ -127,7 +127,7 @@ class CsharpCompleter( Completer ):
   def FilterAndSortCandidates( self, candidates, query ):
     result = super( CsharpCompleter, self ).FilterAndSortCandidates( candidates,
                                                                      query )
-    result.sort( key = _CompleteIsFromImport );
+    result.sort( key = _CompleteIsFromImport )
     return result
 
 
@@ -309,7 +309,7 @@ class CsharpCompleter( Completer ):
 
 
   def _GetSolutionFile( self, filepath ):
-    if not filepath in self._solution_for_file:
+    if filepath not in self._solution_for_file:
       # NOTE: detection could throw an exception if an extra_conf_store needs
       # to be confirmed
       path_to_solutionfile = solutiondetection.FindSolutionPath( filepath )
@@ -454,14 +454,14 @@ class CsharpSolutionCompleter( object ):
     parameters[ 'ForceSemanticCompletion' ] = completion_type
     parameters[ 'WantDocumentationForEveryCompletionResult' ] = True
     completions = self._GetResponse( '/autocomplete', parameters )
-    return completions if completions != None else []
+    return completions if completions is not None else []
 
 
   def _GoToDefinition( self, request_data ):
     """ Jump to definition of identifier under cursor """
     definition = self._GetResponse( '/gotodefinition',
                                     self._DefaultParameters( request_data ) )
-    if definition[ 'FileName' ] != None:
+    if definition[ 'FileName' ] is not None:
       return responses.BuildGoToResponse( definition[ 'FileName' ],
                                           definition[ 'Line' ],
                                           definition[ 'Column' ] )
@@ -489,7 +489,7 @@ class CsharpSolutionCompleter( object ):
     else:
       if ( fallback_to_declaration ):
         return self._GoToDefinition( request_data )
-      elif implementation[ 'QuickFixes' ] == None:
+      elif implementation[ 'QuickFixes' ] is None:
         raise RuntimeError( 'Can\'t jump to implementation' )
       else:
         raise RuntimeError( 'No implementations found' )
@@ -626,7 +626,7 @@ class CsharpSolutionCompleter( object ):
 
 def _CompleteIsFromImport( candidate ):
   try:
-    return candidate[ "extra_data" ][ "required_namespace_import" ] != None
+    return candidate[ "extra_data" ][ "required_namespace_import" ] is not None
   except ( KeyError, TypeError ):
     return False
 

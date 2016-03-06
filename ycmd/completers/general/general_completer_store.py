@@ -124,5 +124,3 @@ class GeneralCompleterStore( Completer ):
   def Shutdown( self ):
     for completer in self._all_completers:
       completer.Shutdown()
-
-

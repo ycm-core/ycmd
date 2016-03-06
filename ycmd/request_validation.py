@@ -25,6 +25,7 @@ from builtins import *  # noqa
 
 from ycmd.responses import ServerError
 
+
 # Throws an exception if request doesn't have all the required fields.
 # TODO: Accept a request_type param so that we can also verify missing
 # command_arguments and completer_target fields if necessary.

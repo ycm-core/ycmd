@@ -31,8 +31,8 @@ from inspect import getfile
 from ycmd import extra_conf_store
 from ycmd.utils import ToUnicode
 
-
 __logger = logging.getLogger( __name__ )
+
 
 def FindSolutionPath( filepath ):
     """Try to find suitable solution file given a source file path using all
@@ -71,13 +71,13 @@ def PollModule( module, filepath ):
             path_to_solutionfile = path
             __logger.info(
                 u'Using solution file {0} selected by extra_conf_store'.format(
-                path_to_solutionfile ) )
+                  path_to_solutionfile ) )
             break
     except AttributeError as e:
       # the config script might not provide solution file locations
       __logger.error(
-          u'Could not retrieve solution for {0} from extra_conf_store: {1}'.format(
-          filepath, str( e ) ) )
+          u'Could not retrieve solution for {0}'
+           'from extra_conf_store: {1}'.format( filepath, str( e ) ) )
   return path_to_solutionfile
 
 
@@ -102,25 +102,30 @@ def _SolutionTestCheckHeuristics( candidates, tokens, i ):
     selection = os.path.join( path, candidates[ 0 ] )
     __logger.info(
         u'Selected solution file {0} as it is the first one found'.format(
-        selection ) )
+          selection ) )
+
   # there is more than one file, try some hints to decide
   # 1. is there a solution named just like the subdirectory with the source?
   if ( not selection and i < len( tokens ) - 1 and
-      u'{0}.sln'.format( tokens[ i + 1 ] ) in candidates ) :
+       u'{0}.sln'.format( tokens[ i + 1 ] ) in candidates ):
     selection = os.path.join( path, u'{0}.sln'.format( tokens[ i + 1 ] ) )
     __logger.info(
         u'Selected solution file {0} as it matches source subfolder'.format(
-        selection ) )
-  # 2. is there a solution named just like the directory containing the solution?
+          selection ) )
+
+  # 2. is there a solution named just like the directory containing the
+  # solution?
   if not selection and u'{0}.sln'.format( tokens[ i ] ) in candidates :
     selection = os.path.join( path, u'{0}.sln'.format( tokens[ i ] ) )
     __logger.info(
         u'Selected solution file {0} as it matches containing folder'.format(
-        selection ) )
+          selection ) )
+
   if not selection:
     __logger.error(
         u'Could not decide between multiple solution files:\n{0}'.format(
-        candidates ) )
+          candidates ) )
+
   return selection
 
 
@@ -136,5 +141,3 @@ def _PathComponents( path ):
       break
   path_components.reverse()
   return path_components
-
-

@@ -45,7 +45,8 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                             contents = contents,
                                             line_num = 10,
                                             column_num = 12 )
-      response_data = self._app.post_json( '/completions', completion_data ).json
+      response_data = self._app.post_json( '/completions',
+                                           completion_data ).json
       assert_that( response_data[ 'completions' ],
                   has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
                               self._CompletionEntryMatcher( 'CursorSize' ) ) )
@@ -86,7 +87,8 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                             contents = contents,
                                             line_num = 9,
                                             column_num = 12 )
-      response_data = self._app.post_json( '/completions', completion_data ).json
+      response_data = self._app.post_json( '/completions',
+                                           completion_data ).json
       assert_that( response_data[ 'completions' ],
                   has_items( self._CompletionEntryMatcher( 'CursorLeft' ),
                               self._CompletionEntryMatcher( 'CursorSize' ) ) )
@@ -105,7 +107,8 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                             column_num = 12,
                                             force_semantic = True,
                                             query = 'Date' )
-      response_data = self._app.post_json( '/completions', completion_data ).json
+      response_data = self._app.post_json( '/completions',
+                                           completion_data ).json
 
       assert_that(
         response_data[ 'completions' ],
@@ -126,7 +129,8 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                             column_num = 12,
                                             force_semantic = True,
                                             query = 'Date' )
-      response_data = self._app.post_json( '/completions', completion_data ).json
+      response_data = self._app.post_json( '/completions',
+                                           completion_data ).json
 
       min_import_index = min(
         loc for loc, val
@@ -155,11 +159,13 @@ class Cs_GetCompletions_test( Cs_Handlers_test ):
                                             column_num = 21,
                                             force_semantic = True,
                                             query = 'Date' )
-      response_data = self._app.post_json( '/completions', completion_data ).json
+      response_data = self._app.post_json( '/completions',
+                                           completion_data ).json
 
-      assert_that( response_data[ 'completions' ],
-                  has_items( self._CompletionEntryMatcher( 'String' ),
-                              self._CompletionEntryMatcher( 'StringBuilder' ) ) )
+      assert_that(
+          response_data[ 'completions' ],
+          has_items( self._CompletionEntryMatcher( 'String' ),
+                     self._CompletionEntryMatcher( 'StringBuilder' ) ) )
 
 
   def NonForcedReturnsNoResults_test( self ):

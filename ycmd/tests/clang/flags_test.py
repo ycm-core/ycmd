@@ -141,8 +141,8 @@ def RemoveUnusedFlags_RemoveFilename_test():
        flags._RemoveUnusedFlags( expected + to_remove, filename ) )
 
   eq_( expected,
-        flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
-                                  filename ) )
+       flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                 filename ) )
 
   eq_( expected,
        flags._RemoveUnusedFlags(
@@ -158,8 +158,8 @@ def RemoveUnusedFlags_RemoveFlagWithoutPrecedingDashFlag_test():
        flags._RemoveUnusedFlags( expected + to_remove, filename ) )
 
   eq_( expected,
-        flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
-                                  filename ) )
+       flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                 filename ) )
 
 
 def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():

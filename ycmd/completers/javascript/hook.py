@@ -24,7 +24,7 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from ycmd.completers.javascript.tern_completer import (
-        ShouldEnableTernCompleter, TernCompleter )
+  ShouldEnableTernCompleter, TernCompleter )
 
 
 def GetCompleter( user_options ):
