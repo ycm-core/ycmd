@@ -100,9 +100,9 @@ def BuildCompletionData( insertion_text,
                          kind = None,
                          doc_string = None,
                          extra_data = None ):
-  if typed_string == None:
+  if typed_string is None:
     typed_string = insertion_text
-  if display_string == None:
+  if display_string is None:
     display_string = insertion_text
 
   completion_data = {

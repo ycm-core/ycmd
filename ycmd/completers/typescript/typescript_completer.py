@@ -404,7 +404,7 @@ def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data[ 'name' ],
     kind           = completion_data[ 'kind' ]
-)
+  )
 
 
 def _ConvertDetailedCompletionData( completion_data, padding = 0 ):

@@ -491,5 +491,5 @@ def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
   assert_that(
     results,
     has_item( CompletionEntryMatcher( 'include.hpp',
-              extra_menu_info = '[File]' ) )
+              kind = '[File]' ) )
   )
