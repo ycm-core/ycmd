@@ -26,6 +26,7 @@ from builtins import *  # noqa
 import json
 import logging
 import os
+import re
 import subprocess
 import itertools
 
@@ -413,6 +414,9 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   name = completion_data[ 'name' ]
   display_parts = completion_data[ 'displayParts' ]
   signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
+
+  # needed to strip new lines and indentation from the signature
+  signature = re.sub( '\s+', ' ', signature )
   menu_text = '{0} {1}'.format( name.ljust( padding ), signature )
   return responses.BuildCompletionData(
     insertion_text = name,
