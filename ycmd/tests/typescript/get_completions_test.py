@@ -65,7 +65,8 @@ def GetCompletions_Basic_test( app ):
           CompletionEntryMatcher( 'methodB', extra_params = {
             'menu_text': 'methodB (method) Foo.methodB(): void' } ),
           CompletionEntryMatcher( 'methodC', extra_params = {
-            'menu_text': 'methodC (method) Foo.methodC(a: { foo: string; bar: number; }): void' } ),
+            'menu_text': ( 'methodC (method) Foo.methodC(a: '
+                           '{ foo: string; bar: number; }): void' ) } ),
         )
       } )
     }
