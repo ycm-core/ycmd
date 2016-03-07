@@ -280,6 +280,8 @@ class JediCompleter( Completer ):
                            self._GetDoc( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
+      'RefactorRename' : ( lambda self, request_data, args:
+                           self._RefactorRename( request_data, args ) ),
       'StopServer'     : ( lambda self, request_data, args:
                            self.Shutdown() ),
       'RestartServer'  : ( lambda self, request_data, args:
@@ -332,6 +334,81 @@ class JediCompleter( Completer ):
     if not definitions:
       raise RuntimeError( 'Can\'t find references.' )
     return self._BuildGoToResponse( definitions )
+
+
+  def _BuildRange( self, definition ):
+    # Assume the whole definition is on the same line. Compute its length to
+    # find the column end.
+    line = definition[ 'line' ]
+    column = definition[ 'column' ] + 1
+    filepath = definition[ 'module_path' ]
+    offset = len( definition[ 'name' ] )
+
+    return responses.Range(
+      responses.Location( line, column, filepath ),
+      responses.Location( line, column + offset, filepath )
+    )
+
+
+  def _RefactorRename( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( 'Please specify a new name to rename it to.\n'
+                        'Usage: RefactorRename <new name>' )
+
+    definitions = self._GetDefinitionsList( '/usages', request_data )
+    if not definitions:
+      raise RuntimeError( 'Can\'t find references.' )
+
+    # JediHTTP response format:
+    # [
+    #     {
+    #         'name',
+    #         'line',
+    #         'column',
+    #         'module_path'
+    #     }
+    # ]
+
+    # ycmd response format:
+    #
+    # {
+    #     'fixits': [
+    #         'chunks': (list<Chunk>) [
+    #             {
+    #                  'replacement_text',
+    #                  'range' (Range) {
+    #                      'start_' (Location): {
+    #                          'line_number_',
+    #                          'column_number_',
+    #                          'filename_'
+    #                      },
+    #                      'end_' (Location): {
+    #                          'line_number_',
+    #                          'column_number_',
+    #                          'filename_'
+    #                      }
+    #                  }
+    #              }
+    #         ],
+    #         'location' (Location) {
+    #              'line_number_',
+    #              'column_number_',
+    #              'filename_'
+    #         }
+    #
+    #     ]
+    # }
+
+    new_name = args[ 0 ]
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   request_data[ 'filepath' ] )
+    chunks = [ responses.FixItChunk( new_name, self._BuildRange( definition ) )
+               for definition in definitions ]
+
+    return responses.BuildFixItResponse( [
+      responses.FixIt( location, chunks )
+    ] )
 
 
   def _GetDefinitionsList( self, handler, request_data ):
