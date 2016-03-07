@@ -1,4 +1,5 @@
-# Copyright (C) 2015 Google Inc.
+# Copyright (C) 2015 - 2016 Google Inc.
+#               2016 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -303,7 +304,9 @@ class TypeScriptCompleter( Completer ):
       'GetType'        : ( lambda self, request_data, args:
                            self._GetType( request_data ) ),
       'GetDoc'         : ( lambda self, request_data, args:
-                           self._GetDoc( request_data ) )
+                           self._GetDoc( request_data ) ),
+      'RefactorRename' : ( lambda self, request_data, args:
+                           self._RefactorRename( request_data, args ) ),
     }
 
 
@@ -376,6 +379,87 @@ class TypeScriptCompleter( Completer ):
     message = '{0}\n\n{1}'.format( info[ 'displayString' ],
                                    info[ 'documentation' ] )
     return responses.BuildDetailedInfoResponse( message )
+
+
+  def _RefactorRename( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( 'Please specify a new name to rename it to.\n'
+                        'Usage: RefactorRename <new name>' )
+
+    self._Reload( request_data )
+
+    response = self._SendRequest( 'rename', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ],
+      'findInComments': False,
+      'findInStrings': False,
+    } )
+
+    if not response[ 'info' ][ 'canRename' ]:
+      raise RuntimeError( 'Value cannot be renamed: {0}'.format(
+        response[ 'info' ][ 'localizedErrorMessage' ] ) )
+
+    # The format of the response is:
+    #
+    # body {
+    #   info {
+    #     ...
+    #     triggerSpan: {
+    #       length: original_length
+    #     }
+    #   }
+    #
+    #   locs [ {
+    #     file: file_path
+    #     locs: [
+    #       start: {
+    #         line: line_num
+    #         offset: offset
+    #       }
+    #       end {
+    #         line: line_num
+    #         offset: offset
+    #       }
+    #     ] }
+    #   ]
+    # }
+    #
+    new_name = args[ 0 ]
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   request_data[ 'filepath' ] )
+
+
+    def BuildFixItChunkForRange( file_name, source_range ):
+      """ returns list FixItChunk for a tsserver source range """
+      return responses.FixItChunk(
+          new_name, # from enclosing scope
+          responses.Range(
+            start = responses.Location(
+                                source_range[ 'start' ][ 'line' ],
+                                source_range[ 'start' ][ 'offset' ],
+                                file_replacement[ 'file' ] ),
+            end = responses.Location(
+                                source_range[ 'end' ][ 'line' ],
+                                source_range[ 'end' ][ 'offset' ],
+                                file_replacement[ 'file' ] ) ) )
+
+
+    def BuildFixItChunksForFile( file_replacement ):
+      """ returns a list of FixItChunk for each replacement range for the
+      supplied file"""
+      return [ BuildFixItChunkForRange( file_replacement[ 'file' ], r )
+               for r in file_replacement[ 'locs' ] ]
+
+
+    chunks = []
+    for file_replacement in response[ 'locs' ]:
+      chunks.extend( BuildFixItChunksForFile( file_replacement ) )
+
+    return responses.BuildFixItResponse( [
+      responses.FixIt( location, chunks )
+    ] )
 
 
   def Shutdown( self ):

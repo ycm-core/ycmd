@@ -23,10 +23,18 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_items, has_entries
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_inanyorder,
+                       has_items,
+                       has_entries )
 
 from ycmd.tests.typescript import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, MessageMatcher
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    ChunkMatcher,
+                                    ErrorMatcher,
+                                    LocationMatcher,
+                                    MessageMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -223,3 +231,165 @@ def Subcommands_GoTo_Fail_test( app ):
                             expect_errors = True ).json
   assert_that( response,
                ErrorMatcher( RuntimeError, 'Could not find definition' ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Missing_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  request = BuildRequest( completer_target = 'filetype_default',
+                          command_arguments = [ 'RefactorRename' ],
+                          line_num = 30,
+                          column_num = 6,
+                          contents = contents,
+                          filetype = 'typescript',
+                          filepath = filepath )
+
+  response = app.post_json( '/run_completer_command',
+                            request,
+                            expect_errors = True ).json
+  assert_that( response,
+               ErrorMatcher( ValueError,
+                             'Please specify a new name to rename it to.\n'
+                             'Usage: RefactorRename <new name>' ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_NotPossible_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  request = BuildRequest( completer_target = 'filetype_default',
+                          command_arguments = [
+                            'RefactorRename',
+                            'whatever'
+                          ],
+                          line_num = 35,
+                          column_num = 5,
+                          contents = contents,
+                          filetype = 'typescript',
+                          filepath = filepath )
+
+  response = app.post_json( '/run_completer_command',
+                            request,
+                            expect_errors = True ).json
+  assert_that( response,
+               ErrorMatcher( RuntimeError,
+                             'Value cannot be renamed: '
+                             'You cannot rename this element.' ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Simple_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  request = BuildRequest( completer_target = 'filetype_default',
+                          command_arguments = [ 'RefactorRename', 'test' ],
+                          line_num = 2,
+                          column_num = 8,
+                          contents = contents,
+                          filetype = 'typescript',
+                          filepath = filepath )
+
+  response = app.post_json( '/run_completer_command',
+                            request ).json
+
+  print( str( response ) )
+
+  assert_that( response, has_entries ( {
+    'fixits': contains( has_entries( {
+      'chunks': contains_inanyorder(
+        ChunkMatcher(
+          'test',
+          LocationMatcher( filepath, 14, 15 ),
+          LocationMatcher( filepath, 14, 18 ) ),
+        ChunkMatcher(
+          'test',
+          LocationMatcher( filepath, 2, 7 ),
+          LocationMatcher( filepath, 2, 10 ) ),
+      ),
+      'location': LocationMatcher( filepath, 2, 8 )
+    } ) )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_MultipleFiles_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  file2 = PathToTestFile( 'file2.ts' )
+  file3 = PathToTestFile( 'file3.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  request = BuildRequest( completer_target = 'filetype_default',
+                          command_arguments = [
+                            'RefactorRename',
+                            'this-is-a-longer-string'
+                          ],
+                          line_num = 25,
+                          column_num = 9,
+                          contents = contents,
+                          filetype = 'typescript',
+                          filepath = filepath )
+
+  response = app.post_json( '/run_completer_command',
+                            request ).json
+
+  print( str( response ) )
+
+  assert_that( response, has_entries ( {
+    'fixits': contains( has_entries( {
+      'chunks': contains_inanyorder(
+        ChunkMatcher(
+          'this-is-a-longer-string',
+          LocationMatcher( filepath, 25, 7 ),
+          LocationMatcher( filepath, 25, 10 ) ),
+        ChunkMatcher(
+          'this-is-a-longer-string',
+          LocationMatcher( filepath, 33, 15 ),
+          LocationMatcher( filepath, 33, 18 ) ),
+        ChunkMatcher(
+          'this-is-a-longer-string',
+          LocationMatcher( filepath, 37, 1 ),
+          LocationMatcher( filepath, 37, 4 ) ),
+        ChunkMatcher(
+          'this-is-a-longer-string',
+          LocationMatcher( file2, 1, 5 ),
+          LocationMatcher( file2, 1, 8 ) ),
+        ChunkMatcher(
+          'this-is-a-longer-string',
+          LocationMatcher( file3, 1, 15 ),
+          LocationMatcher( file3, 1, 18 ) ),
+      ),
+      'location': LocationMatcher( filepath, 25, 9 )
+    } ) )
+  } ) )
