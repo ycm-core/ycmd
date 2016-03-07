@@ -46,7 +46,7 @@ def RunTest( app, test ):
                                   filetype = 'typescript',
                                   contents = contents,
                                   force_semantic = True,
-                                  line_num = 12,
+                                  line_num = 17,
                                   column_num = 6 )
 
   response = app.post_json( '/completions', completion_data )
@@ -65,7 +65,7 @@ def GetCompletions_Basic_test( app ):
           CompletionEntryMatcher( 'methodB', extra_params = {
             'menu_text': 'methodB (method) Foo.methodB(): void' } ),
           CompletionEntryMatcher( 'methodC', extra_params = {
-            'menu_text': 'methodC (method) Foo.methodC(): void' } ),
+            'menu_text': 'methodC (method) Foo.methodC(a: { foo: string; bar: number; }): void' } ),
         )
       } )
     }
