@@ -399,8 +399,8 @@ class TernCompleter( Completer ):
 
       # On Windows, we need to open a pipe to stdin to prevent Tern crashing
       # with following error: "Implement me. Unknown stdin file type!"
-      with open( self._server_stdout, 'w' ) as stdout:
-        with open( self._server_stderr, 'w' ) as stderr:
+      with utils.OpenForStdHandle( self._server_stdout ) as stdout:
+        with utils.OpenForStdHandle( self._server_stderr ) as stderr:
           self._server_handle = utils.SafePopen( command,
                                                  stdin_windows = PIPE,
                                                  stdout = stdout,
