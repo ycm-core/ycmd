@@ -439,17 +439,24 @@ class TypeScriptCompleter( Completer ):
             start = responses.Location(
                                 source_range[ 'start' ][ 'line' ],
                                 source_range[ 'start' ][ 'offset' ],
-                                file_replacement[ 'file' ] ),
+                                file_name ),
             end = responses.Location(
                                 source_range[ 'end' ][ 'line' ],
                                 source_range[ 'end' ][ 'offset' ],
-                                file_replacement[ 'file' ] ) ) )
+                                file_name ) ) )
 
 
     def BuildFixItChunksForFile( file_replacement ):
       """ returns a list of FixItChunk for each replacement range for the
       supplied file"""
-      return [ BuildFixItChunkForRange( file_replacement[ 'file' ], r )
+
+      # On windows, tsserver annoyingly returns file path as C:/blah/blah,
+      # whereas all other paths in Python are of the C:\\blah\\blah form. We use
+      # normpath to have python do the conversion for us.
+      file_path = os.path.normpath( file_replacement[ 'file' ] )
+      _logger.debug( 'Converted {0} to {1}'.format( file_replacement[ 'file' ],
+                                                    file_path ) )
+      return [ BuildFixItChunkForRange( file_path, r )
                for r in file_replacement[ 'locs' ] ]
 
 
