@@ -25,6 +25,7 @@ from builtins import *  # noqa
 
 from ycmd.completers.completer import Completer
 
+
 class GeneralCompleter( Completer ):
   """
   A base class for General completers in YCM. A general completer is used in all

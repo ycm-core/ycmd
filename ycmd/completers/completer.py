@@ -32,6 +32,7 @@ from future.utils import with_metaclass
 
 NO_USER_COMMANDS = 'This completer does not define any commands.'
 
+
 class Completer( with_metaclass( abc.ABCMeta, object ) ):
   """A base class for all Completers in YCM.
 
@@ -364,4 +365,3 @@ class CompletionsCache( object ):
   def _CacheValidNoLock( self, current_line, start_column, completion_type ):
     return ( current_line == self._line and start_column == self._column and
              completion_type == self._completion_type )
-

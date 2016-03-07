@@ -132,4 +132,3 @@ def IdentifierAtIndex( text, index, filetype = None ):
     if match.end() > index:
       return match.group()
   return ''
-

@@ -25,5 +25,6 @@ from builtins import *  # noqa
 
 from ycmd.completers.cs.cs_completer import CsharpCompleter
 
+
 def GetCompleter( user_options ):
   return CsharpCompleter( user_options )

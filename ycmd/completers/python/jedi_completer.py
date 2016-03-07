@@ -156,7 +156,8 @@ class JediCompleter( Completer ):
 
       # JediHTTP will delete the secret_file after it's done reading it
       with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
-        json.dump( { 'hmac_secret': str( b64encode( self._hmac_secret ), 'utf8' ) },
+        json.dump( { 'hmac_secret': str( b64encode( self._hmac_secret ),
+                                         'utf8' ) },
                    hmac_file )
         command = [ self._python_binary_path,
                     PATH_TO_JEDIHTTP,

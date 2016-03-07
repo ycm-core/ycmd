@@ -38,17 +38,17 @@ from ycmd.completers.completer import Completer
 _logger = logging.getLogger( __name__ )
 
 PATH_TO_TERNJS_BINARY = os.path.abspath(
-    os.path.join(
-      os.path.dirname( __file__ ),
-      '..',
-      '..',
-      '..',
-      'third_party',
-      'tern_runtime',
-      'node_modules',
-      'tern',
-      'bin',
-      'tern' ) )
+  os.path.join(
+    os.path.dirname( __file__ ),
+    '..',
+    '..',
+    '..',
+    'third_party',
+    'tern_runtime',
+    'node_modules',
+    'tern',
+    'bin',
+    'tern' ) )
 
 PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
 
@@ -74,8 +74,8 @@ def ShouldEnableTernCompleter():
   installed = os.path.exists( PATH_TO_TERNJS_BINARY )
 
   if not installed:
-    _logger.info( 'Not using Tern completer: not installed at '
-                  + PATH_TO_TERNJS_BINARY )
+    _logger.info( 'Not using Tern completer: not installed at ' +
+                  PATH_TO_TERNJS_BINARY )
     return False
 
   return True

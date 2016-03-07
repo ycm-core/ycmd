@@ -28,6 +28,7 @@ from builtins import bytes
 import hmac
 import hashlib
 
+
 def CreateHmac( content, hmac_secret ):
   # Note that py2's str type passes this check (and that's ok)
   if not isinstance( content, bytes ):

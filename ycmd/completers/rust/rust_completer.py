@@ -182,7 +182,10 @@ class RustCompleter( Completer ):
     if not body:
       body = bytes()
 
-    hmac = hmac_utils.CreateRequestHmac( method, handler, body, self._hmac_secret )
+    hmac = hmac_utils.CreateRequestHmac( method,
+                                         handler,
+                                         body,
+                                         self._hmac_secret )
     final_hmac_value = native( ToBytes( binascii.hexlify( hmac ) ) )
 
     extra_headers = { 'content-type': 'application/json' }

@@ -25,5 +25,6 @@ from builtins import *  # noqa
 
 from ycmd.completers.python.jedi_completer import JediCompleter
 
+
 def GetCompleter( user_options ):
   return JediCompleter( user_options )

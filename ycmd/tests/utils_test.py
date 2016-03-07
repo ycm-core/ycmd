@@ -31,7 +31,8 @@ from future.utils import native
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
-from ycmd.tests.test_utils import PathToTestFile, Py2Only, Py3Only, WindowsOnly
+from ycmd.tests.test_utils import Py2Only, Py3Only, WindowsOnly
+from ycmd.tests import PathToTestFile
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
 # changing things here, read the comments in utils.ToBytes.

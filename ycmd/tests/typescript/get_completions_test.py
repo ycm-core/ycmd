@@ -24,62 +24,67 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from hamcrest import assert_that, contains_inanyorder, has_entries
-from .typescript_handlers_test import Typescript_Handlers_test
-from ycmd.utils import ReadFile
 from mock import patch
 
-
-class TypeScript_GetCompletions_test( Typescript_Handlers_test ):
-
-  def _RunTest( self, test ):
-    filepath = self._PathToTestFile( 'test.ts' )
-    contents = ReadFile( filepath )
-
-    event_data = self._BuildRequest( filepath = filepath,
-                                     filetype = 'typescript',
-                                     contents = contents,
-                                     event_name = 'BufferVisit' )
-
-    self._app.post_json( '/event_notification', event_data )
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'typescript',
-                                          contents = contents,
-                                          force_semantic = True,
-                                          line_num = 12,
-                                          column_num = 6 )
-
-    response = self._app.post_json( '/completions', completion_data )
-    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+from ycmd.tests.typescript import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
+from ycmd.utils import ReadFile
 
 
-  def Basic_test( self ):
-    self._RunTest( {
-      'expect': {
-        'data': has_entries( {
-          'completions': contains_inanyorder(
-            self.CompletionEntryMatcher( 'methodA',
-                                         'methodA (method) Foo.methodA(): void' ),
-            self.CompletionEntryMatcher( 'methodB',
-                                         'methodB (method) Foo.methodB(): void' ),
-            self.CompletionEntryMatcher( 'methodC',
-                                         'methodC (method) Foo.methodC(): void' ),
-          )
-        } )
-      }
-    } )
+def RunTest( app, test ):
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'typescript',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 12,
+                                  column_num = 6 )
+
+  response = app.post_json( '/completions', completion_data )
+
+  assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-  @patch( 'ycmd.completers.typescript.typescript_completer.MAX_DETAILED_COMPLETIONS', 2 )
-  def MaxDetailedCompletion_test( self ):
-    self._RunTest( {
-      'expect': {
-        'data': has_entries( {
-          'completions': contains_inanyorder(
-            self.CompletionEntryMatcher( 'methodA' ),
-            self.CompletionEntryMatcher( 'methodB' ),
-            self.CompletionEntryMatcher( 'methodC' )
-          )
-        } )
-      }
-    } )
+@SharedYcmd
+def GetCompletions_Basic_test( app ):
+  RunTest( app, {
+    'expect': {
+      'data': has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'methodA', extra_params = {
+            'menu_text': 'methodA (method) Foo.methodA(): void' } ),
+          CompletionEntryMatcher( 'methodB', extra_params = {
+            'menu_text': 'methodB (method) Foo.methodB(): void' } ),
+          CompletionEntryMatcher( 'methodC', extra_params = {
+            'menu_text': 'methodC (method) Foo.methodC(): void' } ),
+        )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+@patch( 'ycmd.completers.typescript.'
+          'typescript_completer.MAX_DETAILED_COMPLETIONS',
+        2 )
+def GetCompletions_MaxDetailedCompletion_test( app ):
+  RunTest( app, {
+    'expect': {
+      'data': has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'methodA' ),
+          CompletionEntryMatcher( 'methodB' ),
+          CompletionEntryMatcher( 'methodC' )
+        )
+      } )
+    }
+  } )

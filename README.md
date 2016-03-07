@@ -239,7 +239,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [example-readme]: https://github.com/Valloric/ycmd/blob/master/examples/README.md
 [trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L143
 [subsequence]: http://en.wikipedia.org/wiki/Subsequence
-[ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x-super-quick-installation
+[ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x
 [def-settings]: https://github.com/Valloric/ycmd/blob/master/ycmd/default_settings.json
 [base64]: http://en.wikipedia.org/wiki/Base64
 [mkstemp]: http://man7.org/linux/man-pages/man3/mkstemp.3.html

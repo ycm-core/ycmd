@@ -23,51 +23,51 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.utils import ReadFile
 from hamcrest import assert_that, has_entry, has_items, contains_string
-from .rust_handlers_test import Rust_Handlers_test
+
+from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
+from ycmd.utils import ReadFile
 
 
-class Rust_GetCompletions_test( Rust_Handlers_test ):
+@SharedYcmd
+def GetCompletions_Basic_test( app ):
+  filepath = PathToTestFile( 'test.rs' )
+  contents = ReadFile( filepath )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'rust',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 9,
+                                  column_num = 11 )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'build_rocket' ),
+                          CompletionEntryMatcher( 'build_shuttle' ) ) )
 
 
-  def Basic_test( self ):
-    filepath = self._PathToTestFile( 'test.rs' )
-    contents = ReadFile( filepath )
+# This test is isolated because it affects the GoTo tests, although it
+# shouldn't.
+@IsolatedYcmd
+def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
+  app ):
+  filepath = PathToTestFile( 'std_completions.rs' )
+  contents = ReadFile( filepath )
 
-    self._WaitUntilServerReady()
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'rust',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 5,
+                                  column_num = 11 )
 
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'rust',
-                                          contents = contents,
-                                          force_semantic = True,
-                                          line_num = 9,
-                                          column_num = 11 )
-
-    results = self._app.post_json( '/completions',
-                                   completion_data ).json[ 'completions' ]
-
-    assert_that( results,
-                 has_items( self._CompletionEntryMatcher( 'build_rocket' ),
-                            self._CompletionEntryMatcher( 'build_shuttle' ) ) )
-
-
-  def WhenStandardLibraryCompletionFails_MentionRustSrcPath_test( self ):
-    filepath = self._PathToTestFile( 'std_completions.rs' )
-    contents = ReadFile( filepath )
-
-    self._WaitUntilServerReady()
-
-    completion_data = self._BuildRequest( filepath = filepath,
-                                          filetype = 'rust',
-                                          contents = contents,
-                                          force_semantic = True,
-                                          line_num = 5,
-                                          column_num = 11 )
-
-    response = self._app.post_json( '/completions',
-                                    completion_data,
-                                    expect_errors = True ).json
-    assert_that( response,
-                 has_entry( 'message',
-                            contains_string( 'rust_src_path' ) ) )
+  response = app.post_json( '/completions',
+                            completion_data,
+                            expect_errors = True ).json
+  assert_that( response,
+               has_entry( 'message',
+                          contains_string( 'rust_src_path' ) ) )

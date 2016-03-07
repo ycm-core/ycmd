@@ -29,6 +29,7 @@ import copy
 from ycmd import utils
 from threading import Thread, Lock
 
+
 # This class implements the Bottle plugin API:
 # http://bottlepy.org/docs/dev/plugindev.html
 #
@@ -104,4 +105,3 @@ class WatchdogPlugin( object ):
       self._SetLastRequestTime( time.time() )
       return callback( *args, **kwargs )
     return wrapper
-

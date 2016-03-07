@@ -26,6 +26,7 @@ from builtins import *  # noqa
 from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
 from mock import patch, Mock
+from ycmd.tests.test_utils import MacOnly
 
 
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
@@ -140,8 +141,8 @@ def RemoveUnusedFlags_RemoveFilename_test():
        flags._RemoveUnusedFlags( expected + to_remove, filename ) )
 
   eq_( expected,
-        flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
-                                  filename ) )
+       flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                 filename ) )
 
   eq_( expected,
        flags._RemoveUnusedFlags(
@@ -157,8 +158,8 @@ def RemoveUnusedFlags_RemoveFlagWithoutPrecedingDashFlag_test():
        flags._RemoveUnusedFlags( expected + to_remove, filename ) )
 
   eq_( expected,
-        flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
-                                  filename ) )
+       flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                 filename ) )
 
 
 def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
@@ -248,3 +249,31 @@ def ExtraClangFlags_test():
       num_found += 1
 
   eq_( 1, num_found )
+
+
+@MacOnly
+@patch( 'ycmd.completers.cpp.flags._GetMacClangVersionList',
+        return_value = [ '1.0.0', '7.0.1', '7.0.2', '___garbage__' ] )
+@patch( 'ycmd.completers.cpp.flags._MacClangIncludeDirExists',
+        side_effect = [ False, True, True, True ] )
+def Mac_LatestMacClangIncludes_test( *args ):
+  eq_( flags._LatestMacClangIncludes(),
+       [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+         'XcodeDefault.xctoolchain/usr/lib/clang/7.0.2/include' ] )
+
+
+@MacOnly
+def Mac_LatestMacClangIncludes_NoSuchDirectory_test():
+  def RaiseOSError( x ):
+    raise OSError( x )
+
+  with patch( 'os.listdir', side_effect = RaiseOSError ):
+    eq_( flags._LatestMacClangIncludes(), [] )
+
+
+@MacOnly
+def Mac_PathsForAllMacToolchains_test():
+  eq_( flags._PathsForAllMacToolchains( 'test' ),
+       [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+         'XcodeDefault.xctoolchain/test',
+         '/Library/Developer/CommandLineTools/test' ] )

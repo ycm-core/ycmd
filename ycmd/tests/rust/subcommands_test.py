@@ -23,43 +23,41 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from .rust_handlers_test import Rust_Handlers_test
 from nose.tools import eq_
+
+from ycmd.tests.rust import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
-class Rust_Subcommands_test( Rust_Handlers_test ):
+@SharedYcmd
+def RunGoToTest( app, params ):
+  filepath = PathToTestFile( 'test.rs' )
+  contents = ReadFile( filepath )
+
+  command = params[ 'command' ]
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ command ],
+                            line_num = 7,
+                            column_num = 12,
+                            contents = contents,
+                            filetype = 'rust',
+                            filepath = filepath )
+
+  results = app.post_json( '/run_completer_command',
+                           goto_data )
+
+  eq_( {
+    'line_num': 1, 'column_num': 8, 'filepath': filepath
+  }, results.json )
 
 
-  def _GoTo( self, params ):
-    filepath = self._PathToTestFile( 'test.rs' )
-    contents = ReadFile( filepath )
+def Subcommands_GoTo_all_test():
+  tests = [
+    { 'command': 'GoTo' },
+    { 'command': 'GoToDefinition' },
+    { 'command': 'GoToDeclaration' }
+  ]
 
-    self._WaitUntilServerReady()
-
-    command = params[ 'command' ]
-    goto_data = self._BuildRequest( completer_target = 'filetype_default',
-                                    command_arguments = [ command ],
-                                    line_num = 7,
-                                    column_num = 12,
-                                    contents = contents,
-                                    filetype = 'rust',
-                                    filepath = filepath )
-
-    results = self._app.post_json( '/run_completer_command',
-                                   goto_data )
-
-    eq_( {
-      'line_num': 1, 'column_num': 8, 'filepath': filepath
-    }, results.json )
-
-
-  def GoTo_all_test( self ):
-    tests = [
-      { 'command': 'GoTo' },
-      { 'command': 'GoToDefinition' },
-      { 'command': 'GoToDeclaration' }
-    ]
-
-    for test in tests:
-      yield ( self._GoTo, test )
+  for test in tests:
+    yield RunGoToTest, test

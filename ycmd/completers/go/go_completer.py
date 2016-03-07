@@ -220,7 +220,6 @@ class GoCompleter( Completer ):
     raise RuntimeError( 'Can\'t jump to definition.' )
 
 
-
 # Compute the byte offset in the file given the line and column.
 # TODO(ekfriis): If this is slow, consider moving this to C++ ycm_core,
 # perhaps in RequestWrap.
