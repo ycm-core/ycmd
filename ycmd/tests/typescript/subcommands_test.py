@@ -44,7 +44,7 @@ def Subcommands_GetType_Basic_test( app ):
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                                command_arguments = [ 'GetType' ],
-                               line_num = 12,
+                               line_num = 17,
                                column_num = 1,
                                contents = contents,
                                filetype = 'typescript',
@@ -95,7 +95,7 @@ def Subcommands_GetDoc_Method_test( app ):
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                                command_arguments = [ 'GetDoc' ],
-                               line_num = 29,
+                               line_num = 34,
                                column_num = 9,
                                contents = contents,
                                filetype = 'typescript',
@@ -123,7 +123,7 @@ def Subcommands_GetDoc_Class_test( app ):
 
   gettype_data = BuildRequest( completer_target = 'filetype_default',
                                command_arguments = [ 'GetDoc' ],
-                               line_num = 32,
+                               line_num = 37,
                                column_num = 2,
                                contents = contents,
                                filetype = 'typescript',
@@ -152,7 +152,7 @@ def Subcommands_GoToReferences_test( app ):
 
   references_data = BuildRequest( completer_target = 'filetype_default',
                                   command_arguments = [ 'GoToReferences' ],
-                                  line_num = 28,
+                                  line_num = 33,
                                   column_num = 6,
                                   contents = contents,
                                   filetype = 'typescript',
@@ -160,10 +160,10 @@ def Subcommands_GoToReferences_test( app ):
 
   expected = has_items(
     has_entries( { 'description': 'var bar = new Bar();',
-                   'line_num'   : 28,
+                   'line_num'   : 33,
                    'column_num' : 5 } ),
     has_entries( { 'description': 'bar.testMethod();',
-                   'line_num'   : 29,
+                   'line_num'   : 34,
                    'column_num' : 1 } ) )
   actual = app.post_json( '/run_completer_command', references_data ).json
   assert_that( actual, expected )
@@ -183,7 +183,7 @@ def Subcommands_GoTo_test( app ):
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = [ 'GoToDefinition' ],
-                            line_num = 29,
+                            line_num = 34,
                             column_num = 9,
                             contents = contents,
                             filetype = 'typescript',
@@ -193,7 +193,7 @@ def Subcommands_GoTo_test( app ):
   assert_that( response,
                has_entries( {
                  'filepath': filepath,
-                 'line_num': 25,
+                 'line_num': 30,
                  'column_num': 3,
                } ) )
 
@@ -212,7 +212,7 @@ def Subcommands_GoTo_Fail_test( app ):
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = [ 'GoToDefinition' ],
-                            line_num = 30,
+                            line_num = 35,
                             column_num = 6,
                             contents = contents,
                             filetype = 'typescript',
