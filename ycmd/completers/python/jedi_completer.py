@@ -169,8 +169,8 @@ class JediCompleter( Completer ):
       self._logfile_stderr = LOG_FILENAME_FORMAT.format(
           port = self._jedihttp_port, std = 'stderr' )
 
-      with open( self._logfile_stderr, 'w' ) as logerr:
-        with open( self._logfile_stdout, 'w' ) as logout:
+      with utils.OpenForStdHandle( self._logfile_stderr ) as logerr:
+        with utils.OpenForStdHandle( self._logfile_stdout ) as logout:
           self._jedihttp_phandle = utils.SafePopen( command,
                                                     stdout = logout,
                                                     stderr = logerr )

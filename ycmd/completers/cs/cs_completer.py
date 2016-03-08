@@ -369,8 +369,8 @@ class CsharpSolutionCompleter( object ):
       self._filename_stderr = filename_format.format(
           port = self._omnisharp_port, sln = solutionfile, std = 'stderr' )
 
-      with open( self._filename_stderr, 'w' ) as fstderr:
-        with open( self._filename_stdout, 'w' ) as fstdout:
+      with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
+        with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
           self._omnisharp_phandle = utils.SafePopen(
               command, stdout = fstdout, stderr = fstderr )
 
