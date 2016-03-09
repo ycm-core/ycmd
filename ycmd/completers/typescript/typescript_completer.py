@@ -291,10 +291,30 @@ class TypeScriptCompleter( Completer ):
     if self._detailed_completions_cache.IsValid( query ):
       candidates = self._detailed_completions_cache.GetCompletions()
       return completer_utils.FilterAndSortCandidatesWrap(
-        candidates, sort_property, request_data[ 'query' ] )
+        candidates, sort_property, query )
 
-    return completer_utils.FilterAndSortCandidatesWrap(
-      candidates, sort_property, request_data[ 'query' ] )
+    candidates = completer_utils.FilterAndSortCandidatesWrap(
+      candidates, sort_property, query )
+
+    if len( candidates ) < MAX_DETAILED_COMPLETIONS:
+      names = []
+      namelength = 0
+      for c in candidates:
+        name = c[ 'insertion_text' ]
+        namelength = max( namelength, len( name ) )
+        names.append( name )
+
+      detailed_entries = self._SendRequest( 'completionEntryDetails', {
+        'file':       request_data[ 'filepath' ],
+        'line':       request_data[ 'line_num' ],
+        'offset':     request_data[ 'column_num' ],
+        'entryNames': names
+      } )
+      candidates = [ _ConvertDetailedCompletionData( e, namelength )
+               for e in detailed_entries ]
+      self._detailed_completions_cache.Update( query, candidates )
+
+    return candidates
 
 
   def OnCacheInvalidated( self ):
@@ -311,24 +331,7 @@ class TypeScriptCompleter( Completer ):
 
     # A less detailed version of the completion data is returned
     # if there are too many entries. This improves responsiveness.
-    if len( entries ) > MAX_DETAILED_COMPLETIONS:
-      return [ _ConvertCompletionData(e) for e in entries ]
-
-    names = []
-    namelength = 0
-    for e in entries:
-      name = e[ 'name' ]
-      namelength = max( namelength, len( name ) )
-      names.append( name )
-
-    detailed_entries = self._SendRequest( 'completionEntryDetails', {
-      'file':       request_data[ 'filepath' ],
-      'line':       request_data[ 'line_num' ],
-      'offset':     request_data[ 'column_num' ],
-      'entryNames': names
-    } )
-    return [ _ConvertDetailedCompletionData( e, namelength )
-             for e in detailed_entries ]
+    return [ _ConvertCompletionData(e) for e in entries ]
 
 
   def GetSubcommandsMap( self ):
