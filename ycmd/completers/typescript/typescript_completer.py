@@ -297,6 +297,10 @@ class TypeScriptCompleter( Completer ):
       candidates, sort_property, request_data[ 'query' ] )
 
 
+  def OnCacheInvalidated( self ):
+    self._detailed_completions_cache.Invalidate()
+
+
   def ComputeCandidatesInner( self, request_data ):
     self._Reload( request_data )
     entries = self._SendRequest( 'completions', {
