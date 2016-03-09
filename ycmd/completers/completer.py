@@ -168,8 +168,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
     candidates = self._GetCandidatesFromSubclass( request_data )
     if request_data[ 'query' ]:
-      candidates = self.FilterAndSortCandidates( candidates,
-                                                 request_data[ 'query' ] )
+      candidates = self.FilterAndSortCandidates( candidates, request_data )
     return candidates
 
 
@@ -226,7 +225,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       return 'This Completer has no supported subcommands.'
 
 
-  def FilterAndSortCandidates( self, candidates, query ):
+  def FilterAndSortCandidates( self, candidates, request_data ):
     if not candidates:
       return []
 
@@ -242,12 +241,12 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       elif 'insertion_text' in candidates[ 0 ]:
         sort_property = 'insertion_text'
 
-    return self.FilterAndSortCandidatesInner( candidates, sort_property, query )
+    return self.FilterAndSortCandidatesInner( candidates, sort_property, request_data )
 
 
-  def FilterAndSortCandidatesInner( self, candidates, sort_property, query ):
+  def FilterAndSortCandidatesInner( self, candidates, sort_property, request_data ):
     return completer_utils.FilterAndSortCandidatesWrap(
-      candidates, sort_property, query )
+      candidates, sort_property, request_data[ 'query' ] )
 
 
   def OnFileReadyToParse( self, request_data ):
