@@ -37,7 +37,6 @@ import logging
 import urllib.parse
 import requests
 import threading
-import sys
 import os
 from distutils.spawn import find_executable
 
