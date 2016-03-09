@@ -54,15 +54,17 @@ class DetailedCompletionCache( object ):
     self.Invalidate()
 
   def Invalidate( self ):
+    self._valid = False
     self._query = ""
     self._completions = []
 
   def Update( self, query, completions ):
+    self._valid = True
     self._query = query
     self._completions = completions
 
   def IsValid( self, query ):
-    return len( self._query ) and self._query.startswith( query )
+    return self._valid and query.startswith( self._query )
 
   def GetCompletions( self ):
     return self._completions
@@ -331,7 +333,28 @@ class TypeScriptCompleter( Completer ):
 
     # A less detailed version of the completion data is returned
     # if there are too many entries. This improves responsiveness.
-    return [ _ConvertCompletionData(e) for e in entries ]
+    if len( entries ) > MAX_DETAILED_COMPLETIONS:
+      return [ _ConvertCompletionData(e) for e in entries ]
+
+    names = []
+    namelength = 0
+    for e in entries:
+      name = e[ 'name' ]
+      namelength = max( namelength, len( name ) )
+      names.append( name )
+
+    detailed_entries = self._SendRequest( 'completionEntryDetails', {
+      'file':       request_data[ 'filepath' ],
+      'line':       request_data[ 'line_num' ],
+      'offset':     request_data[ 'column_num' ],
+      'entryNames': names
+    } )
+    candidates = [ _ConvertDetailedCompletionData( e, namelength )
+                   for e in detailed_entries ]
+
+    self._detailed_completions_cache.Update( '', candidates )
+
+    return candidates
 
 
   def GetSubcommandsMap( self ):
