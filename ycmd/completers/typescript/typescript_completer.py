@@ -37,6 +37,7 @@ from tempfile import NamedTemporaryFile
 
 from ycmd import responses
 from ycmd import utils
+from ycmd.completers import completer_utils
 from ycmd.completers.completer import Completer
 
 BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
@@ -282,6 +283,11 @@ class TypeScriptCompleter( Completer ):
 
   def SupportedFiletypes( self ):
     return [ 'typescript' ]
+
+
+  def FilterAndSortCandidatesInner( self, candidates, sort_property, request_data ):
+    return completer_utils.FilterAndSortCandidatesWrap(
+      candidates, sort_property, request_data[ 'query' ] )
 
 
   def ComputeCandidatesInner( self, request_data ):
