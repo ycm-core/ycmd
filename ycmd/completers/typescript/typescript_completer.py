@@ -283,6 +283,24 @@ class TypeScriptCompleter( Completer ):
     os.unlink( tmpfile.name )
 
 
+  def _GetDetailedCompletions( self, request_data, candidates ):
+    names = []
+    namelength = 0
+    for c in candidates:
+      name = c[ 'insertion_text' ]
+      namelength = max( namelength, len( name ) )
+      names.append( name )
+
+    detailed_entries = self._SendRequest( 'completionEntryDetails', {
+      'file':       request_data[ 'filepath' ],
+      'line':       request_data[ 'line_num' ],
+      'offset':     request_data[ 'column_num' ],
+      'entryNames': names
+    } )
+    return [ _ConvertDetailedCompletionData( e, namelength )
+            for e in detailed_entries ]
+
+
   def SupportedFiletypes( self ):
     return [ 'typescript' ]
 
@@ -299,21 +317,7 @@ class TypeScriptCompleter( Completer ):
       candidates, sort_property, query )
 
     if len( candidates ) < MAX_DETAILED_COMPLETIONS:
-      names = []
-      namelength = 0
-      for c in candidates:
-        name = c[ 'insertion_text' ]
-        namelength = max( namelength, len( name ) )
-        names.append( name )
-
-      detailed_entries = self._SendRequest( 'completionEntryDetails', {
-        'file':       request_data[ 'filepath' ],
-        'line':       request_data[ 'line_num' ],
-        'offset':     request_data[ 'column_num' ],
-        'entryNames': names
-      } )
-      candidates = [ _ConvertDetailedCompletionData( e, namelength )
-               for e in detailed_entries ]
+      candidates = self._GetDetailedCompletions( request_data, candidates )
       self._detailed_completions_cache.Update( query, candidates )
 
     return candidates
@@ -331,27 +335,15 @@ class TypeScriptCompleter( Completer ):
       'offset': request_data[ 'column_num' ]
     } )
 
+
+    candidates = [ _ConvertCompletionData(e) for e in entries ]
+
     # A less detailed version of the completion data is returned
     # if there are too many entries. This improves responsiveness.
-    if len( entries ) > MAX_DETAILED_COMPLETIONS:
-      return [ _ConvertCompletionData(e) for e in entries ]
+    if len( candidates ) > MAX_DETAILED_COMPLETIONS:
+      return candidates
 
-    names = []
-    namelength = 0
-    for e in entries:
-      name = e[ 'name' ]
-      namelength = max( namelength, len( name ) )
-      names.append( name )
-
-    detailed_entries = self._SendRequest( 'completionEntryDetails', {
-      'file':       request_data[ 'filepath' ],
-      'line':       request_data[ 'line_num' ],
-      'offset':     request_data[ 'column_num' ],
-      'entryNames': names
-    } )
-    candidates = [ _ConvertDetailedCompletionData( e, namelength )
-                   for e in detailed_entries ]
-
+    candidates = self._GetDetailedCompletions( request_data, candidates )
     self._detailed_completions_cache.Update( '', candidates )
 
     return candidates
