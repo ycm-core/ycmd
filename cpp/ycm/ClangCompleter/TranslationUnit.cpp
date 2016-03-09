@@ -93,13 +93,11 @@ TranslationUnit::TranslationUnit(
                                  ? &cxunsaved_files[ 0 ] : NULL;
 
   // Actually parse the translation unit.
-  // TODO: Stop stripping argv[0] here and use
-  // clang_parseTranslationUnit2FullArgv, which is available in libclang 3.8.
-  CXErrorCode result = clang_parseTranslationUnit2(
+  CXErrorCode result = clang_parseTranslationUnit2FullArgv(
                          clang_index,
                          filename.c_str(),
-                         &pointer_flags[ 1 ],
-                         pointer_flags.size() - 1,
+                         &pointer_flags[ 0 ],
+                         pointer_flags.size(),
                          const_cast<CXUnsavedFile *>( unsaved ),
                          cxunsaved_files.size(),
                          EditingOptions(),
