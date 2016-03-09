@@ -47,6 +47,24 @@ RESPONSE_TIMEOUT_SECONDS = 10
 
 _logger = logging.getLogger( __name__ )
 
+class DetailedCompletionCache( object ):
+
+  def __init__( self ):
+    self.Invalidate()
+
+  def Invalidate( self ):
+    self._query = ""
+    self._completions = []
+
+  def Update( self, query, completions ):
+    self._query = query
+    self._completions = completions
+
+  def IsValid( self, query ):
+    return len( self._query ) and self._query.startswith( query )
+
+  def GetCompletions( self ):
+    return self._completions
 
 class DeferredResponse( object ):
   """
@@ -88,6 +106,8 @@ class TypeScriptCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
+
+    self._detailed_completions_cache = DetailedCompletionCache()
 
     # Used to prevent threads from concurrently writing to
     # the tsserver process' stdin
