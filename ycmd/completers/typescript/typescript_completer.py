@@ -286,6 +286,13 @@ class TypeScriptCompleter( Completer ):
 
 
   def FilterAndSortCandidatesInner( self, candidates, sort_property, request_data ):
+
+    query = request_data[ 'query' ]
+    if self._detailed_completions_cache.IsValid( query ):
+      candidates = self._detailed_completions_cache.GetCompletions()
+      return completer_utils.FilterAndSortCandidatesWrap(
+        candidates, sort_property, request_data[ 'query' ] )
+
     return completer_utils.FilterAndSortCandidatesWrap(
       candidates, sort_property, request_data[ 'query' ] )
 
