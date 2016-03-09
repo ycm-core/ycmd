@@ -39,8 +39,7 @@ unsigned EditingOptions() {
   return CXTranslationUnit_DetailedPreprocessingRecord |
          CXTranslationUnit_Incomplete |
          CXTranslationUnit_IncludeBriefCommentsInCodeCompletion |
-         // TODO: Use the actual enum value when removing Clang 3.7 support.
-         0x100 /*CXTranslationUnit_CreatePreambleOnFirstParse*/ |
+         CXTranslationUnit_CreatePreambleOnFirstParse |
          clang_defaultEditingTranslationUnitOptions();
 }
 
@@ -105,11 +104,6 @@ TranslationUnit::TranslationUnit(
 
   if ( result != CXError_Success )
     boost_throw( ClangParseError() );
-
-  // Only with a reparse is the preamble precompiled. This issue was fixed
-  // upstream in r255635.
-  // TODO: Remove this after dropping support for Clang 3.7.
-  Reparse( cxunsaved_files );
 }
 
 
