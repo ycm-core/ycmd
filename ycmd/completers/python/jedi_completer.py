@@ -39,6 +39,7 @@ import requests
 import threading
 import sys
 import os
+from distutils.spawn import find_executable
 
 
 HMAC_SECRET_LENGTH = 16
@@ -69,7 +70,7 @@ class JediCompleter( Completer ):
     self._logfile_stderr = None
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._hmac_secret = ''
-    self._python_binary_path = sys.executable
+    self._python_binary_path = find_executable('python')
 
     self._UpdatePythonBinary( user_options.get( 'python_binary_path' ) )
     self._StartServer()
