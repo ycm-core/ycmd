@@ -124,6 +124,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   def ShouldUseNow( self, request_data ):
     if not self.ShouldUseNowInner( request_data ):
       self._completions_cache.Invalidate()
+      self.OnCacheInvalidated()
       return False
 
     # We have to do the cache valid check and get the completions as part of one
@@ -247,6 +248,10 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   def FilterAndSortCandidatesInner( self, candidates, sort_property, request_data ):
     return completer_utils.FilterAndSortCandidatesWrap(
       candidates, sort_property, request_data[ 'query' ] )
+
+
+  def OnCacheInvalidated( self ):
+    pass
 
 
   def OnFileReadyToParse( self, request_data ):
