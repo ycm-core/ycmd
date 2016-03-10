@@ -121,15 +121,6 @@ void TranslationUnit::Destroy() {
 }
 
 
-std::vector< Diagnostic > TranslationUnit::LatestDiagnostics() {
-  if ( !clang_translation_unit_ )
-    return std::vector< Diagnostic >();
-
-  unique_lock< mutex > lock( diagnostics_mutex_ );
-  return latest_diagnostics_;
-}
-
-
 bool TranslationUnit::IsCurrentlyUpdating() const {
   // We return true when the TU is invalid; an invalid TU also acts a sentinel,
   // preventing other threads from trying to use it.

@@ -89,12 +89,7 @@ std::vector< Diagnostic > ClangCompleter::UpdateTranslationUnit(
     return std::vector< Diagnostic >();
 
   try {
-    // There's no point in reparsing a TU that was just created, it was just
-    // parsed in the TU constructor
-    if ( !translation_unit_created )
-      return unit->Reparse( unsaved_files );
-
-    return unit->LatestDiagnostics();
+    return unit->Reparse( unsaved_files );
   }
 
   catch ( ClangParseError & ) {
