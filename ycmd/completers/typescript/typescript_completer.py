@@ -38,6 +38,7 @@ from tempfile import NamedTemporaryFile
 
 from ycmd import responses
 from ycmd import utils
+from ycmd.completers import completer_utils
 from ycmd.completers.completer import Completer
 
 BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
@@ -48,6 +49,26 @@ RESPONSE_TIMEOUT_SECONDS = 10
 
 _logger = logging.getLogger( __name__ )
 
+class DetailedCompletionCache( object ):
+
+  def __init__( self ):
+    self.Invalidate()
+
+  def Invalidate( self ):
+    self._valid = False
+    self._query = ""
+    self._completions = []
+
+  def Update( self, query, completions ):
+    self._valid = True
+    self._query = query
+    self._completions = completions
+
+  def IsValid( self, query ):
+    return self._valid and query.startswith( self._query )
+
+  def GetCompletions( self ):
+    return self._completions
 
 class DeferredResponse( object ):
   """
@@ -89,6 +110,8 @@ class TypeScriptCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
+
+    self._detailed_completions_cache = DetailedCompletionCache()
 
     # Used to prevent threads from concurrently writing to
     # the tsserver process' stdin
@@ -261,27 +284,11 @@ class TypeScriptCompleter( Completer ):
     os.unlink( tmpfile.name )
 
 
-  def SupportedFiletypes( self ):
-    return [ 'typescript' ]
-
-
-  def ComputeCandidatesInner( self, request_data ):
-    self._Reload( request_data )
-    entries = self._SendRequest( 'completions', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
-    } )
-
-    # A less detailed version of the completion data is returned
-    # if there are too many entries. This improves responsiveness.
-    if len( entries ) > MAX_DETAILED_COMPLETIONS:
-      return [ _ConvertCompletionData(e) for e in entries ]
-
+  def _GetDetailedCompletions( self, request_data, candidates ):
     names = []
     namelength = 0
-    for e in entries:
-      name = e[ 'name' ]
+    for c in candidates:
+      name = c[ 'insertion_text' ]
       namelength = max( namelength, len( name ) )
       names.append( name )
 
@@ -292,7 +299,55 @@ class TypeScriptCompleter( Completer ):
       'entryNames': names
     } )
     return [ _ConvertDetailedCompletionData( e, namelength )
-             for e in detailed_entries ]
+            for e in detailed_entries ]
+
+
+  def SupportedFiletypes( self ):
+    return [ 'typescript' ]
+
+
+  def FilterAndSortCandidatesInner( self, candidates, sort_property, request_data ):
+
+    query = request_data[ 'query' ]
+    if self._detailed_completions_cache.IsValid( query ):
+      candidates = self._detailed_completions_cache.GetCompletions()
+      return completer_utils.FilterAndSortCandidatesWrap(
+        candidates, sort_property, query )
+
+    candidates = completer_utils.FilterAndSortCandidatesWrap(
+      candidates, sort_property, query )
+
+    if len( candidates ) < MAX_DETAILED_COMPLETIONS:
+      candidates = self._GetDetailedCompletions( request_data, candidates )
+      self._detailed_completions_cache.Update( query, candidates )
+
+    return candidates
+
+
+  def OnCacheInvalidated( self ):
+    self._detailed_completions_cache.Invalidate()
+
+
+  def ComputeCandidatesInner( self, request_data ):
+    self._Reload( request_data )
+    entries = self._SendRequest( 'completions', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ]
+    } )
+
+
+    candidates = [ _ConvertCompletionData(e) for e in entries ]
+
+    # A less detailed version of the completion data is returned
+    # if there are too many entries. This improves responsiveness.
+    if len( candidates ) > MAX_DETAILED_COMPLETIONS:
+      return candidates
+
+    candidates = self._GetDetailedCompletions( request_data, candidates )
+    self._detailed_completions_cache.Update( '', candidates )
+
+    return candidates
 
 
   def GetSubcommandsMap( self ):
