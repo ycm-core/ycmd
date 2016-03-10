@@ -28,27 +28,12 @@ from nose.tools import eq_
 from pprint import pformat
 import http.client
 
-from ycmd.tests.javascript import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
+from ycmd.tests.javascript import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    ChunkMatcher,
+                                    ErrorMatcher,
+                                    LocationMatcher )
 from ycmd.utils import ReadFile
-
-
-def LocationMatcher( filepath, column_num, line_num ):
-  return has_entries( {
-    'line_num': line_num,
-    'column_num': column_num,
-    'filepath': filepath
-  } )
-
-
-def ChunkMatcher( replacement_text, start, end ):
-  return has_entries( {
-    'replacement_text': replacement_text,
-    'range': has_entries( {
-      'start': start,
-      'end': end
-    } )
-  } )
 
 
 @SharedYcmd
@@ -83,6 +68,7 @@ def RunTest( app, test ):
                  CombineRequest( test[ 'request' ], {
                                  'event_name': 'FileReadyToParse',
                                  'contents': contents,
+                                 'filetype': 'javascript',
                                  } ),
                  expect_errors = True )
 
@@ -252,7 +238,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
     },
     'expect': {
       'response': http.client.OK,
-      'data': {
+      'data': has_entries ( {
         'fixits': contains( has_entries( {
           'chunks': contains(
               ChunkMatcher( 'test',
@@ -278,7 +264,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
           ),
           'location': LocationMatcher( filepath, 15, 32 )
         } ) )
-      }
+      } )
     }
   } )
 
@@ -300,7 +286,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     },
     'expect': {
       'response': http.client.OK,
-      'data': {
+      'data': has_entries ( {
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
@@ -310,24 +296,26 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file1, 3, 14 ),
-              LocationMatcher( file1, 3, 19 ) ),
+              LocationMatcher( file1, 3, 20 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file2, 2, 14 ),
-              LocationMatcher( file2, 2, 19 ) ),
+              LocationMatcher( file2, 2, 20 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file3, 3, 12 ),
-              LocationMatcher( file3, 3, 17 ) )
+              LocationMatcher( file3, 3, 18 ) )
           ),
           'location': LocationMatcher( file1, 3, 14 )
         } ) )
-      }
+      } )
     }
   } )
 
 
-@SharedYcmd
+# Needs to be isolated to prevent interfering with other tests (this test loads
+# an extra file into tern's project memory)
+@IsolatedYcmd
 def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
   file1 = PathToTestFile( 'file1.js' )
   file2 = PathToTestFile( 'file2.js' )
@@ -359,7 +347,7 @@ def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
     },
     'expect': {
       'response': http.client.OK,
-      'data': {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
@@ -369,15 +357,15 @@ def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file1, 3, 14 ),
-              LocationMatcher( file1, 3, 19 ) ),
+              LocationMatcher( file1, 3, 20 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file2, 2, 14 ),
-              LocationMatcher( file2, 2, 19 ) ),
+              LocationMatcher( file2, 2, 20 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file3, 3, 12 ),
-              LocationMatcher( file3, 3, 17 ) ),
+              LocationMatcher( file3, 3, 18 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file4, 4, 22 ),
@@ -385,7 +373,7 @@ def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
           ),
           'location': LocationMatcher( file1, 3, 14 )
         } ) )
-      }
+      } )
     }
   } )
 
@@ -393,20 +381,17 @@ def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
 @SharedYcmd
 def Subcommands_RefactorRename_Missing_New_Name_test( app ):
   RunTest( app, {
-    'description': 'FixItRename raises an error without new name',
+    'description': 'RefactorRename raises an error without new name',
     'request': {
-      'command': 'FixItRename',
+      'command': 'RefactorRename',
       'line_num': 17,
       'column_num': 29,
       'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
     },
     'expect': {
       'response': http.client.INTERNAL_SERVER_ERROR,
-      'data': {
-        'exception': ErrorMatcher(
-           ValueError,
-           'Please specify a new name to rename it to.\n'
-           'Usage: RefactorRename <new name>' ),
-      },
+      'data': ErrorMatcher( ValueError,
+                            'Please specify a new name to rename it to.\n'
+                            'Usage: RefactorRename <new name>' ),
     }
   } )

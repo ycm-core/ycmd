@@ -615,13 +615,13 @@ def _BuildChunks( request_data, new_buffer ):
   start_index = 0
   end_index = min_length
   for i in range( 0, min_length - 1 ):
-      if new_buffer[ i ] != old_buffer[ i ]:
-          start_index = i
-          break
+    if new_buffer[ i ] != old_buffer[ i ]:
+      start_index = i
+      break
   for i in range( 1, min_length ):
-      if new_buffer[ new_length - i ] != old_buffer[ old_length - i ]:
-          end_index = i - 1
-          break
+    if new_buffer[ new_length - i ] != old_buffer[ old_length - i ]:
+      end_index = i - 1
+      break
   # To handle duplicates, i.e aba => a
   if ( start_index + end_index > min_length ):
     start_index -= start_index + end_index - min_length

@@ -116,6 +116,24 @@ def MessageMatcher( msg ):
   return has_entry( 'message', contains_string( msg ) )
 
 
+def LocationMatcher( filepath, line_num, column_num ):
+  return has_entries( {
+    'line_num': line_num,
+    'column_num': column_num,
+    'filepath': filepath
+  } )
+
+
+def ChunkMatcher( replacement_text, start, end ):
+  return has_entries( {
+    'replacement_text': replacement_text,
+    'range': has_entries( {
+      'start': start,
+      'end': end
+    } )
+  } )
+
+
 @contextlib.contextmanager
 def PatchCompleter( completer, filetype ):
   user_options = handlers._server_state._user_options

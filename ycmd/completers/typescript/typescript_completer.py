@@ -1,4 +1,5 @@
-# Copyright (C) 2015 Google Inc.
+# Copyright (C) 2015 - 2016 Google Inc.
+#               2016 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -303,7 +304,9 @@ class TypeScriptCompleter( Completer ):
       'GetType'        : ( lambda self, request_data, args:
                            self._GetType( request_data ) ),
       'GetDoc'         : ( lambda self, request_data, args:
-                           self._GetDoc( request_data ) )
+                           self._GetDoc( request_data ) ),
+      'RefactorRename' : ( lambda self, request_data, args:
+                           self._RefactorRename( request_data, args ) ),
     }
 
 
@@ -378,6 +381,64 @@ class TypeScriptCompleter( Completer ):
     return responses.BuildDetailedInfoResponse( message )
 
 
+  def _RefactorRename( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( 'Please specify a new name to rename it to.\n'
+                        'Usage: RefactorRename <new name>' )
+
+    self._Reload( request_data )
+
+    response = self._SendRequest( 'rename', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_num' ],
+      'findInComments': False,
+      'findInStrings': False,
+    } )
+
+    if not response[ 'info' ][ 'canRename' ]:
+      raise RuntimeError( 'Value cannot be renamed: {0}'.format(
+        response[ 'info' ][ 'localizedErrorMessage' ] ) )
+
+    # The format of the response is:
+    #
+    # body {
+    #   info {
+    #     ...
+    #     triggerSpan: {
+    #       length: original_length
+    #     }
+    #   }
+    #
+    #   locs [ {
+    #     file: file_path
+    #     locs: [
+    #       start: {
+    #         line: line_num
+    #         offset: offset
+    #       }
+    #       end {
+    #         line: line_num
+    #         offset: offset
+    #       }
+    #     ] }
+    #   ]
+    # }
+    #
+    new_name = args[ 0 ]
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   request_data[ 'filepath' ] )
+
+    chunks = []
+    for file_replacement in response[ 'locs' ]:
+      chunks.extend( _BuildFixItChunksForFile( new_name, file_replacement ) )
+
+    return responses.BuildFixItResponse( [
+      responses.FixIt( location, chunks )
+    ] )
+
+
   def Shutdown( self ):
     self._SendCommand( 'exit' )
     if not self.user_options[ 'server_keep_logfiles' ]:
@@ -423,3 +484,32 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
     menu_text      = menu_text,
     kind           = completion_data[ 'kind' ]
   )
+
+
+def _BuildFixItChunkForRange( new_name, file_name, source_range ):
+  """ returns list FixItChunk for a tsserver source range """
+  return responses.FixItChunk(
+      new_name,
+      responses.Range(
+        start = responses.Location(
+                            source_range[ 'start' ][ 'line' ],
+                            source_range[ 'start' ][ 'offset' ],
+                            file_name ),
+        end = responses.Location(
+                            source_range[ 'end' ][ 'line' ],
+                            source_range[ 'end' ][ 'offset' ],
+                            file_name ) ) )
+
+
+def _BuildFixItChunksForFile( new_name, file_replacement ):
+  """ returns a list of FixItChunk for each replacement range for the
+  supplied file"""
+
+  # On windows, tsserver annoyingly returns file path as C:/blah/blah,
+  # whereas all other paths in Python are of the C:\\blah\\blah form. We use
+  # normpath to have python do the conversion for us.
+  file_path = os.path.normpath( file_replacement[ 'file' ] )
+  _logger.debug( 'Converted {0} to {1}'.format( file_replacement[ 'file' ],
+                                                file_path ) )
+  return [ _BuildFixItChunkForRange( new_name, file_path, r )
+           for r in file_replacement[ 'locs' ] ]
