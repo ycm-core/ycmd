@@ -430,39 +430,9 @@ class TypeScriptCompleter( Completer ):
                                    request_data[ 'column_num' ],
                                    request_data[ 'filepath' ] )
 
-
-    def BuildFixItChunkForRange( file_name, source_range ):
-      """ returns list FixItChunk for a tsserver source range """
-      return responses.FixItChunk(
-          new_name, # from enclosing scope
-          responses.Range(
-            start = responses.Location(
-                                source_range[ 'start' ][ 'line' ],
-                                source_range[ 'start' ][ 'offset' ],
-                                file_name ),
-            end = responses.Location(
-                                source_range[ 'end' ][ 'line' ],
-                                source_range[ 'end' ][ 'offset' ],
-                                file_name ) ) )
-
-
-    def BuildFixItChunksForFile( file_replacement ):
-      """ returns a list of FixItChunk for each replacement range for the
-      supplied file"""
-
-      # On windows, tsserver annoyingly returns file path as C:/blah/blah,
-      # whereas all other paths in Python are of the C:\\blah\\blah form. We use
-      # normpath to have python do the conversion for us.
-      file_path = os.path.normpath( file_replacement[ 'file' ] )
-      _logger.debug( 'Converted {0} to {1}'.format( file_replacement[ 'file' ],
-                                                    file_path ) )
-      return [ BuildFixItChunkForRange( file_path, r )
-               for r in file_replacement[ 'locs' ] ]
-
-
     chunks = []
     for file_replacement in response[ 'locs' ]:
-      chunks.extend( BuildFixItChunksForFile( file_replacement ) )
+      chunks.extend( _BuildFixItChunksForFile( new_name, file_replacement ) )
 
     return responses.BuildFixItResponse( [
       responses.FixIt( location, chunks )
@@ -514,3 +484,32 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
     menu_text      = menu_text,
     kind           = completion_data[ 'kind' ]
   )
+
+
+def _BuildFixItChunkForRange( new_name, file_name, source_range ):
+  """ returns list FixItChunk for a tsserver source range """
+  return responses.FixItChunk(
+      new_name,
+      responses.Range(
+        start = responses.Location(
+                            source_range[ 'start' ][ 'line' ],
+                            source_range[ 'start' ][ 'offset' ],
+                            file_name ),
+        end = responses.Location(
+                            source_range[ 'end' ][ 'line' ],
+                            source_range[ 'end' ][ 'offset' ],
+                            file_name ) ) )
+
+
+def _BuildFixItChunksForFile( new_name, file_replacement ):
+  """ returns a list of FixItChunk for each replacement range for the
+  supplied file"""
+
+  # On windows, tsserver annoyingly returns file path as C:/blah/blah,
+  # whereas all other paths in Python are of the C:\\blah\\blah form. We use
+  # normpath to have python do the conversion for us.
+  file_path = os.path.normpath( file_replacement[ 'file' ] )
+  _logger.debug( 'Converted {0} to {1}'.format( file_replacement[ 'file' ],
+                                                file_path ) )
+  return [ _BuildFixItChunkForRange( new_name, file_path, r )
+           for r in file_replacement[ 'locs' ] ]
