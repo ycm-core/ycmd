@@ -33,11 +33,16 @@ from future.utils import native
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
-from ycmd.tests.test_utils import Py2Only, Py3Only, WindowsOnly
+from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly,
+                                    CurrentWorkingDirectory )
 from ycmd.tests import PathToTestFile
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
 # changing things here, read the comments in utils.ToBytes.
+
+
+ROOT_PATH = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ),
+                          '..', '..' )
 
 
 @Py2Only
@@ -463,3 +468,15 @@ def SplitLines_test():
 
   for test in tests:
     yield lambda: eq_( utils.SplitLines( test[ 0 ] ), test[ 1 ] )
+
+
+def FindExecutable_ReturnSameRelativePath_IfFileIsExecutable_test():
+  with CurrentWorkingDirectory( ROOT_PATH ):
+    executable = os.path.join( '.', 'build.py' )
+    eq_( executable, utils.FindExecutable( executable ) )
+
+
+def FindExecutable_ReturnNone_IfFileIsNotExecutable_test():
+  with CurrentWorkingDirectory( ROOT_PATH ):
+    executable = os.path.join( '.', 'README.md' )
+    eq_( None, utils.FindExecutable( executable ) )

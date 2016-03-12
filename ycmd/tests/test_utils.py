@@ -34,6 +34,7 @@ import bottle
 import contextlib
 import nose
 import functools
+import os
 
 from ycmd import handlers, user_options_store
 from ycmd.completers.completer import Completer
@@ -154,6 +155,16 @@ def UserOption( key, value ):
     yield
   finally:
     handlers.UpdateUserOptions( current_options )
+
+
+@contextlib.contextmanager
+def CurrentWorkingDirectory( path ):
+  old_cwd = os.getcwd()
+  try:
+    os.chdir( path )
+    yield
+  finally:
+    os.chdir( old_cwd )
 
 
 def SetUpApp():
