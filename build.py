@@ -203,7 +203,9 @@ def CustomPythonCmakeArgs():
 
 
 def GetGenerator( args ):
-  if OnWindows():
+  if PathToFirstExistingExecutable( ['ninja'] ):
+    return 'Ninja'
+  elif OnWindows():
     if args.msvc == 14:
       generator = 'Visual Studio 14'
     elif args.msvc == 12:
@@ -216,8 +218,6 @@ def GetGenerator( args ):
       generator = generator + ' Win64'
     return generator
 
-  if PathToFirstExistingExecutable( ['ninja'] ):
-    return 'Ninja'
   return 'Unix Makefiles'
 
 
