@@ -199,17 +199,6 @@ else()
   set( Boost_LIBRARIES BoostParts )
 endif()
 
-# The SYSTEM flag makes sure that -isystem[header path] is passed to the
-# compiler instead of the standard -I[header path]. Headers included with
-# -isystem do not generate warnings (and they shouldn't; e.g. boost warnings are
-# just noise for us since we won't be changing them).
-include_directories(
-  SYSTEM
-  ${Boost_INCLUDE_DIR}
-  ${PYTHON_INCLUDE_DIRS}
-  ${CLANG_INCLUDES_DIR}
-  )
-
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
 # The test sources are a part of a different target, so we remove them
@@ -233,6 +222,20 @@ else()
     list( REMOVE_ITEM SERVER_SOURCES ${to_remove_clang} )
   endif()
 endif()
+
+# The SYSTEM flag makes sure that -isystem[header path] is passed to the
+# compiler instead of the standard -I[header path]. Headers included with
+# -isystem do not generate warnings (and they shouldn't; e.g. boost warnings are
+# just noise for us since we won't be changing them).
+# Since there is no -isystem flag equivalent on Windows, headers from external
+# projects may conflict with our headers and override them. We prevent that by
+# including these directories after ours.
+include_directories(
+  SYSTEM
+  ${Boost_INCLUDE_DIR}
+  ${PYTHON_INCLUDE_DIRS}
+  ${CLANG_INCLUDES_DIR}
+  )
 
 #############################################################################
 
