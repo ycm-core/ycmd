@@ -30,10 +30,6 @@ built one.
 
 Building
 --------
-
-[Clients commonly build and set up ycmd for you; you are unlikely to need to
-build ycmd yourself unless you want to build a new client.]
-
 **If you're looking to develop ycmd, see the [instructions for setting up a dev
 environment][dev-setup] and for [running the tests][test-setup].**
 
