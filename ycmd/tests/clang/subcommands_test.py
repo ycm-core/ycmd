@@ -338,19 +338,19 @@ def Subcommands_GetType_test():
     [{'line_num': 44, 'column_num': 12}, 'Foo *'],
     [{'line_num': 44, 'column_num': 18}, 'int'],
 
-    # Auto behaves strangely (bug in libclang)
-    [{'line_num': 24, 'column_num':  3}, 'auto &'], # sic
-    [{'line_num': 24, 'column_num': 11}, 'auto &'], # sic
+    # Auto in declaration (canonical types apparently differ)
+    [{'line_num': 24, 'column_num':  3}, 'Foo & => Foo &'], # sic
+    [{'line_num': 24, 'column_num': 11}, 'Foo & => Foo &'], # sic
     [{'line_num': 24, 'column_num': 18}, 'Foo'],
-    [{'line_num': 25, 'column_num':  3}, 'auto *'], # sic
-    [{'line_num': 25, 'column_num': 11}, 'auto *'], # sic
+    [{'line_num': 25, 'column_num':  3}, 'Foo * => Foo *'], # sic
+    [{'line_num': 25, 'column_num': 11}, 'Foo * => Foo *'], # sic
     [{'line_num': 25, 'column_num': 18}, 'Foo'],
-    [{'line_num': 27, 'column_num':  3}, 'const auto &'], # sic
-    [{'line_num': 27, 'column_num': 16}, 'const auto &'], # sic
-    [{'line_num': 28, 'column_num':  3}, 'const auto *'], # sic
-    [{'line_num': 28, 'column_num': 16}, 'const auto *'], # sic
+    [{'line_num': 27, 'column_num':  3}, 'const Foo & => const Foo &'], # sic
+    [{'line_num': 27, 'column_num': 16}, 'const Foo & => const Foo &'], # sic
+    [{'line_num': 28, 'column_num':  3}, 'const Foo * => const Foo *'], # sic
+    [{'line_num': 28, 'column_num': 16}, 'const Foo * => const Foo *'], # sic
 
-    # Auto sort of works in usage (but canonical types apparently differ)
+    # Auto in usage (canonical types apparently differ)
     [{'line_num': 30, 'column_num': 14}, 'const Foo => const Foo'], # sic
     [{'line_num': 30, 'column_num': 21}, 'const int'],
     [{'line_num': 31, 'column_num': 14}, 'const Foo * => const Foo *'], # sic

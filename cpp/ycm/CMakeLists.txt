@@ -30,22 +30,22 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION "3.7.0" )
+  set( CLANG_VERSION "3.8.0" )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "057e56b445ac5dfbf0d5475badab374edebe8db5428001c8829340e40724b50d" )
+         "e5a961e04b0e1738bbb5b824886a34932dc13b0af699d1fe16519d814d7b776f" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win64" )
       set( CLANG_SHA256
-           "04a393cf73bc7416c9903aa08f47f15c77cf475b22a607ac4b7493a658a11a3f" )
+           "f9c3147157db32beab025314db9b82c600e182d82994880c1d844c70e29d76ef" )
     else()
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win32" )
       set( CLANG_SHA256
-           "75933480c8f8e3ae3cf9281494bf0057e9e4cfae4315f59c468a4e850a86f544" )
+           "ebdb056ebc6efd57c0643733a099920d1d5760a4d570580243e6c63f4b52920f" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
   else()
@@ -55,7 +55,7 @@ if ( USE_CLANG_COMPLETER AND
       # it comes out.
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-14.04" )
       set( CLANG_SHA256
-           "093a94ff8982ae78461f0d2604c98f6b454c15e2ef768d34c235c6676c336460" )
+           "3120c3055ea78bbbb6848510a2af70c68538b990cb0545bac8dad01df8ff69d7" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Clang 3.3 is the last version with pre-built x86 binaries upstream.

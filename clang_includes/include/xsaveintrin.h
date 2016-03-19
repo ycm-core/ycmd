@@ -1,4 +1,4 @@
-/*===---- __wmmintrin_aes.h - AES intrinsics -------------------------------===
+/*===---- xsaveintrin.h - XSAVE intrinsic ------------------------------------===
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,47 +20,39 @@
  *
  *===-----------------------------------------------------------------------===
  */
-#ifndef _WMMINTRIN_AES_H
-#define _WMMINTRIN_AES_H
 
-#include <emmintrin.h>
+#ifndef __IMMINTRIN_H
+#error "Never use <xsaveintrin.h> directly; include <immintrin.h> instead."
+#endif
+
+#ifndef __XSAVEINTRIN_H
+#define __XSAVEINTRIN_H
 
 /* Define the default attributes for the functions in this file. */
-#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("aes")))
+#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__,  __target__("xsave")))
 
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesenc_si128(__m128i __V, __m128i __R)
-{
-  return (__m128i)__builtin_ia32_aesenc128(__V, __R);
+static __inline__ void __DEFAULT_FN_ATTRS
+_xsave(void *__p, unsigned long long __m) {
+  return __builtin_ia32_xsave(__p, __m);
 }
 
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesenclast_si128(__m128i __V, __m128i __R)
-{
-  return (__m128i)__builtin_ia32_aesenclast128(__V, __R);
+static __inline__ void __DEFAULT_FN_ATTRS
+_xrstor(void *__p, unsigned long long __m) {
+  return __builtin_ia32_xrstor(__p, __m);
 }
 
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesdec_si128(__m128i __V, __m128i __R)
-{
-  return (__m128i)__builtin_ia32_aesdec128(__V, __R);
+#ifdef __x86_64__
+static __inline__ void __DEFAULT_FN_ATTRS
+_xsave64(void *__p, unsigned long long __m) {
+  return __builtin_ia32_xsave64(__p, __m);
 }
 
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesdeclast_si128(__m128i __V, __m128i __R)
-{
-  return (__m128i)__builtin_ia32_aesdeclast128(__V, __R);
+static __inline__ void __DEFAULT_FN_ATTRS
+_xrstor64(void *__p, unsigned long long __m) {
+  return __builtin_ia32_xrstor64(__p, __m);
 }
-
-static __inline__ __m128i __DEFAULT_FN_ATTRS
-_mm_aesimc_si128(__m128i __V)
-{
-  return (__m128i)__builtin_ia32_aesimc128(__V);
-}
-
-#define _mm_aeskeygenassist_si128(C, R) \
-  (__m128i)__builtin_ia32_aeskeygenassist128((__v2di)(__m128i)(C), (int)(R))
+#endif
 
 #undef __DEFAULT_FN_ATTRS
 
-#endif  /* _WMMINTRIN_AES_H */
+#endif

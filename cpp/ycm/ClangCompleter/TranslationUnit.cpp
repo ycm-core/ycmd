@@ -39,8 +39,7 @@ unsigned EditingOptions() {
   return CXTranslationUnit_DetailedPreprocessingRecord |
          CXTranslationUnit_Incomplete |
          CXTranslationUnit_IncludeBriefCommentsInCodeCompletion |
-         // TODO: Use the actual enum value when removing Clang 3.7 support.
-         0x100 /*CXTranslationUnit_CreatePreambleOnFirstParse*/ |
+         CXTranslationUnit_CreatePreambleOnFirstParse |
          clang_defaultEditingTranslationUnitOptions();
 }
 
@@ -93,13 +92,11 @@ TranslationUnit::TranslationUnit(
                                  ? &cxunsaved_files[ 0 ] : NULL;
 
   // Actually parse the translation unit.
-  // TODO: Stop stripping argv[0] here and use
-  // clang_parseTranslationUnit2FullArgv, which is available in libclang 3.8.
-  CXErrorCode result = clang_parseTranslationUnit2(
+  CXErrorCode result = clang_parseTranslationUnit2FullArgv(
                          clang_index,
                          filename.c_str(),
-                         &pointer_flags[ 1 ],
-                         pointer_flags.size() - 1,
+                         &pointer_flags[ 0 ],
+                         pointer_flags.size(),
                          const_cast<CXUnsavedFile *>( unsaved ),
                          cxunsaved_files.size(),
                          EditingOptions(),
@@ -107,11 +104,6 @@ TranslationUnit::TranslationUnit(
 
   if ( result != CXError_Success )
     boost_throw( ClangParseError() );
-
-  // Only with a reparse is the preamble precompiled. This issue was fixed
-  // upstream in r255635.
-  // TODO: Remove this after dropping support for Clang 3.7.
-  Reparse( cxunsaved_files );
 }
 
 
@@ -126,15 +118,6 @@ void TranslationUnit::Destroy() {
     clang_disposeTranslationUnit( clang_translation_unit_ );
     clang_translation_unit_ = NULL;
   }
-}
-
-
-std::vector< Diagnostic > TranslationUnit::LatestDiagnostics() {
-  if ( !clang_translation_unit_ )
-    return std::vector< Diagnostic >();
-
-  unique_lock< mutex > lock( diagnostics_mutex_ );
-  return latest_diagnostics_;
 }
 
 
