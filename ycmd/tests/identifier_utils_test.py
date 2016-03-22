@@ -27,6 +27,7 @@ from builtins import *  # noqa
 
 from nose.tools import eq_, ok_
 from ycmd import identifier_utils as iu
+from hamcrest import assert_that, has_item
 
 
 def RemoveIdentifierFreeText_CppComments_test():
@@ -126,9 +127,14 @@ def ExtractIdentifiersFromText_Css_test():
 
 
 def ExtractIdentifiersFromText_Html_test():
-  eq_( [ "foo", "goo-foo", "zoo", "bar", "aa", "z", "b@g" ],
+  eq_( [ "foo", "goo-foo", "zoo", "bar", "aa", "z", "b@g", "fo", "ba" ],
        iu.ExtractIdentifiersFromText(
-           '<foo> <goo-foo zoo=bar aa="" z=\'\'/> b@g', "html" ) )
+           '<foo> <goo-foo zoo=bar aa="" z=\'\'/> b@g fo.ba', "html" ) )
+
+
+def ExtractIdentifiersFromText_Html_TemplateChars_test():
+  assert_that( iu.ExtractIdentifiersFromText( '<foo>{{goo}}</foo>', 'html' ),
+               has_item( 'goo' ) )
 
 
 def IsIdentifier_generic_test():

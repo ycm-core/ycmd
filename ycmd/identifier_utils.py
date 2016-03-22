@@ -60,7 +60,8 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
     # But not quite since not everything we want to pull out is a tag name. We
     # also want attribute names (and probably unquoted attribute values).
-    'html': re.compile( r"[a-zA-Z][^\s/>='\"]*", re.UNICODE ),
+    # And we also want to ignore common template chars like `}` and `{`.
+    'html': re.compile( r"[a-zA-Z][^\s/>='\"}{\.]*", re.UNICODE ),
 
     # Spec: http://cran.r-project.org/doc/manuals/r-release/R-lang.pdf
     # Section 10.3.2.
