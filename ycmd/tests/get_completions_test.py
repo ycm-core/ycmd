@@ -64,8 +64,8 @@ def GetCompletions_IdentifierCompleter_Works_test( app ):
   eq_( 1, response_data[ 'completion_start_column' ] )
   assert_that(
     response_data[ 'completions' ],
-    has_items( CompletionEntryMatcher( 'foo', '[ID]' ),
-               CompletionEntryMatcher( 'foogoo', '[ID]' ) )
+    has_items( CompletionEntryMatcher( 'foo', kind = '[ID]' ),
+               CompletionEntryMatcher( 'foogoo', kind = '[ID]' ) )
   )
 
 
@@ -100,8 +100,8 @@ def GetCompletions_IdentifierCompleter_WorksForSpecialIdentifierChars_test(
 
   assert_that(
     results,
-    has_items( CompletionEntryMatcher( 'font-size', '[ID]' ),
-               CompletionEntryMatcher( 'font-family', '[ID]' ) )
+    has_items( CompletionEntryMatcher( 'font-size', kind = '[ID]' ),
+               CompletionEntryMatcher( 'font-family', kind = '[ID]' ) )
   )
 
 
@@ -156,8 +156,8 @@ def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   assert_that(
     results,
     has_items(
-      CompletionEntryMatcher( 'foo', extra_menu_info='<snip> bar' ),
-      CompletionEntryMatcher( 'zoo', extra_menu_info='<snip> goo' )
+      CompletionEntryMatcher( 'foo', '<snip> bar' ),
+      CompletionEntryMatcher( 'zoo', '<snip> goo' )
     )
   )
 

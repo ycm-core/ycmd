@@ -54,6 +54,12 @@ struct CompletionData {
   CompletionData() {}
   CompletionData( const CXCompletionResult &completion_result );
 
+  // Text that users would be expected to type to get this completion result.
+  // It is used for filtering, sorting and grouping.
+  std::string TypedString() const {
+    return typed_string_;
+  }
+
   // What should actually be inserted into the buffer. For a function like
   // "int foo(int x)", this is just "foo". Same for a data member like "foo_":
   // we insert just "foo_".
@@ -61,27 +67,19 @@ struct CompletionData {
     return original_string_;
   }
 
+  // Text that is displayed for users.
   // Currently, here we show the full function signature (without the return
   // type) if the current completion is a function or just the raw TypedText if
   // the completion is, say, a data member. So for a function like "int foo(int
   // x)", this would be "foo(int x)". For a data member like "count_", it would
   // be just "count_".
-  std::string MainCompletionText() const {
-    return everything_except_return_type_;
+  std::string DisplayString() const {
+    return display_string_;
   }
 
-  // This is extra info shown in the pop-up completion menu, after the
-  // completion text and the kind. Currently we put the return type of the
-  // function here, if any.
-  std::string ExtraMenuInfo() const {
-    return return_type_;
-  }
-
-  // This is used to show extra information in vim's preview window. This is the
-  // window that vim usually shows at the top of the buffer. This should be used
-  // for extra information about the completion.
-  std::string DetailedInfoForPreviewWindow() const {
-    return detailed_info_;
+  // This is the type the completion expression would have.
+  std::string ResultType() const {
+    return result_type_;
   }
 
   std::string DocString() const {
@@ -90,16 +88,17 @@ struct CompletionData {
 
   bool operator== ( const CompletionData &other ) const {
     return
+      typed_string_ == other.typed_string_ &&
       kind_ == other.kind_ &&
-      everything_except_return_type_ == other.everything_except_return_type_ &&
-      return_type_ == other.return_type_ &&
+      display_string_ == other.display_string_ &&
+      result_type_ == other.result_type_ &&
       original_string_ == other.original_string_;
-    // detailed_info_ doesn't matter
+      // doc_string_ doesn't matter
   }
 
-  std::string detailed_info_;
+  std::string typed_string_;
 
-  std::string return_type_;
+  std::string result_type_;
 
   CompletionKind kind_;
 
@@ -109,7 +108,7 @@ struct CompletionData {
   // completion string.
   std::string original_string_;
 
-  std::string everything_except_return_type_;
+  std::string display_string_;
 
   std::string doc_string_;
 

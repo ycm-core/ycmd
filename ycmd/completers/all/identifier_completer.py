@@ -63,7 +63,7 @@ class IdentifierCompleter( GeneralCompleter ):
     def ConvertCompletionData( x ):
         return responses.BuildCompletionData(
                 insertion_text = x,
-                extra_menu_info='[ID]' )
+                kind = '[ID]' )
 
     return [ ConvertCompletionData( x ) for x in completions ]
 

@@ -115,10 +115,10 @@ class GoCompleter_test( object ):
     eq_( mock.cmd, [
       DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '292' ] )
     eq_( result, [ {
-        'menu_text': u'Prefix',
+        'typed_string': u'Prefix',
         'insertion_text': u'Prefix',
-        'extra_menu_info': u'func() string',
-        'detailed_info': u'Prefix func() string func',
+        'display_string': u'Prefix',
+        'result_type': u'func() string',
         'kind': u'func'
     } ] )
 

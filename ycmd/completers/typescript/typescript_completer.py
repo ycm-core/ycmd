@@ -465,9 +465,7 @@ def _LogLevel():
 def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data[ 'name' ],
-    menu_text      = completion_data[ 'name' ],
-    kind           = completion_data[ 'kind' ],
-    extra_data     = completion_data[ 'kind' ]
+    kind           = completion_data[ 'kind' ]
   )
 
 
@@ -478,10 +476,10 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
 
   # needed to strip new lines and indentation from the signature
   signature = re.sub( '\s+', ' ', signature )
-  menu_text = '{0} {1}'.format( name.ljust( padding ), signature )
+  display_string = '{0} {1}'.format( name.ljust( padding ), signature )
   return responses.BuildCompletionData(
     insertion_text = name,
-    menu_text      = menu_text,
+    display_string = display_string,
     kind           = completion_data[ 'kind' ]
   )
 

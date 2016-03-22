@@ -202,14 +202,9 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   // show them as just "pos". This will never interfere with client code since
   // ANY C++ identifier with two consecutive underscores in it is
   // compiler-reserved.
-  everything_except_return_type_ =
+  display_string_ =
     RemoveTwoConsecutiveUnderscores(
-      boost::move( everything_except_return_type_ ) );
-
-  detailed_info_.append( return_type_ )
-  .append( " " )
-  .append( everything_except_return_type_ )
-  .append( "\n" );
+      boost::move( display_string_ ) );
 
   doc_string_ = YouCompleteMe::CXStringToString(
                   clang_getCompletionBriefComment( completion_string ) );
@@ -234,27 +229,27 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
               kind != CXCompletionChunk_RightParen &&
               kind != CXCompletionChunk_Informative ) {
       saw_function_params = true;
-      everything_except_return_type_.append( " " );
+      display_string_.append( " " );
     }
 
     else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
-      everything_except_return_type_.append( " " );
+      display_string_.append( " " );
     }
 
     if ( kind == CXCompletionChunk_Optional ) {
-      everything_except_return_type_.append(
+      display_string_.append(
         OptionalChunkToString( completion_string, chunk_num ) );
     }
 
     else {
-      everything_except_return_type_.append(
+      display_string_.append(
         ChunkToString( completion_string, chunk_num ) );
     }
   }
 
   switch ( kind ) {
     case CXCompletionChunk_ResultType:
-      return_type_ = ChunkToString( completion_string, chunk_num );
+      result_type_ = ChunkToString( completion_string, chunk_num );
       break;
 
     case CXCompletionChunk_Placeholder:
@@ -262,6 +257,7 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
       break;
 
     case CXCompletionChunk_TypedText:
+      typed_string_ += ChunkToString( completion_string, chunk_num );
     case CXCompletionChunk_Text:
 
       // need to add paren to insert string

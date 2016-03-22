@@ -286,9 +286,8 @@ def GetCompletions_ReturnsDocsInCompletions_test( app ):
         'completions': contains_inanyorder(
           CompletionEntryMatcher(
             'a_function',
-            'fn(bar: ?) -> {a_value: string}', {
-              'detailed_info': ( 'fn(bar: ?) -> {a_value: string}\n'
-                                 'This is a short documentation string'),
+            'fn(bar: ?) -> {a_value: string}', extra_params = {
+              'doc_string': 'This is a short documentation string',
             } ),
           CompletionEntryMatcher( 'options', 'options' ),
           CompletionEntryMatcher( 'toString', 'fn() -> string' ),

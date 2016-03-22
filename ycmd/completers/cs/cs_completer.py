@@ -112,12 +112,10 @@ class CsharpCompleter( Completer ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
     completion_type = self.CompletionType( request_data )
     return [ responses.BuildCompletionData(
-                completion[ 'CompletionText' ],
-                completion[ 'DisplayText' ],
-                completion[ 'Description' ],
-                None,
-                None,
-                { "required_namespace_import" :
+                insertion_text = completion[ 'CompletionText' ],
+                display_string = completion[ 'DisplayText' ],
+                doc_string = completion[ 'Description' ],
+                extra_data = { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
              for completion
              in solutioncompleter._GetCompletions( request_data,

@@ -182,7 +182,7 @@ def GetCompletions_Fallback_Suggestions_test( app ):
       'response': http.client.OK,
       'data': has_entries( {
         'completions': has_item( CompletionEntryMatcher( 'a_parameter',
-                                                         '[ID]' ) ),
+                                                         kind = '[ID]' ) ),
         'errors': has_item( NO_COMPLETIONS_ERROR ),
       } )
     },
@@ -207,8 +207,8 @@ def GetCompletions_Fallback_Exception_test( app ):
       'response': http.client.OK,
       'data': has_entries( {
         'completions': contains(
-          CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-          CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+          CompletionEntryMatcher( 'a_parameter', kind = '[ID]' ),
+          CompletionEntryMatcher( 'another_parameter', kind = '[ID]' ),
         ),
         'errors': has_item( ErrorMatcher( ValueError, 'testy' ) )
       } )
@@ -260,9 +260,9 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
         'completions': contains_inanyorder(
           # do_ is an identifier because it is already in the file when we
           # load it
-          CompletionEntryMatcher( 'do_', '[ID]' ),
-          CompletionEntryMatcher( 'do_something', '[ID]' ),
-          CompletionEntryMatcher( 'do_another_thing', '[ID]' ),
+          CompletionEntryMatcher( 'do_', kind = '[ID]' ),
+          CompletionEntryMatcher( 'do_something', kind = '[ID]' ),
+          CompletionEntryMatcher( 'do_another_thing', kind = '[ID]' ),
         ),
         'errors': empty()
       } )
@@ -491,5 +491,5 @@ def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
   assert_that(
     results,
     has_item( CompletionEntryMatcher( 'include.hpp',
-              extra_menu_info = '[File]' ) )
+              kind = '[File]' ) )
   )

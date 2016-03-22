@@ -94,23 +94,29 @@ def BuildDetailedInfoResponse( text ):
 
 
 def BuildCompletionData( insertion_text,
-                         extra_menu_info = None,
-                         detailed_info = None,
-                         menu_text = None,
+                         typed_string = None,
+                         display_string = None,
+                         result_type = None,
                          kind = None,
+                         doc_string = None,
                          extra_data = None ):
+  if typed_string is None:
+    typed_string = insertion_text
+  if display_string is None:
+    display_string = insertion_text
+
   completion_data = {
-    'insertion_text': insertion_text
+    'typed_string': typed_string,
+    'insertion_text': insertion_text,
+    'display_string': display_string
   }
 
-  if extra_menu_info:
-    completion_data[ 'extra_menu_info' ] = extra_menu_info
-  if menu_text:
-    completion_data[ 'menu_text' ] = menu_text
-  if detailed_info:
-    completion_data[ 'detailed_info' ] = detailed_info
+  if result_type:
+    completion_data[ 'result_type' ] = result_type
   if kind:
     completion_data[ 'kind' ] = kind
+  if doc_string:
+    completion_data[ 'doc_string' ] = doc_string
   if extra_data:
     completion_data[ 'extra_data' ] = extra_data
   return completion_data

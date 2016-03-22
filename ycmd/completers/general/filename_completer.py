@@ -217,7 +217,7 @@ def _GenerateCandidatesForPaths( absolute_paths ):
   for basename in basenames:
     completion_dicts.append(
       responses.BuildCompletionData(
-        basename,
-        EXTRA_INFO_MAP[ extra_info[ basename ] ] ) )
+        insertion_text = basename,
+        kind = EXTRA_INFO_MAP[ extra_info[ basename ] ] ) )
 
   return completion_dicts

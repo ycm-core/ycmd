@@ -54,7 +54,7 @@ def _CompletionResultsForLine( filename_completer, contents, extra_data=None ):
 
   request = RequestWrap( request )
   candidates = filename_completer.ComputeCandidatesInner( request )
-  return [ ( c[ 'insertion_text' ], c[ 'extra_menu_info' ] )
+  return [ ( c[ 'insertion_text' ], c[ 'kind' ] )
           for c in candidates ]
 
 

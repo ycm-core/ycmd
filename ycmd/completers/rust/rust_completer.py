@@ -248,7 +248,7 @@ class RustCompleter( Completer ):
     return [ responses.BuildCompletionData(
                 insertion_text = completion[ 'text' ],
                 kind = completion[ 'kind' ],
-                extra_menu_info = completion[ 'context' ],
+                result_type = completion[ 'context' ],
                 extra_data = self._GetExtraData( completion ) )
              for completion in completions ]
 

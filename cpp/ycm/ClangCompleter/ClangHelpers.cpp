@@ -168,7 +168,6 @@ std::vector< CompletionData > ToCompletionDataVector(
     return completions;
 
   completions.reserve( results->NumResults );
-  unordered_map< std::string, uint > seen_data;
 
   for ( uint i = 0; i < results->NumResults; ++i ) {
     CXCompletionResult completion_result = results->Results[ i ];
@@ -177,24 +176,10 @@ std::vector< CompletionData > ToCompletionDataVector(
       continue;
 
     CompletionData data( completion_result );
-    uint index = GetValueElseInsert( seen_data,
-                                     data.original_string_,
-                                     completions.size() );
 
-    if ( index == completions.size() ) {
-      completions.push_back( boost::move( data ) );
-    }
-
-    else {
-      // If we have already seen this completion, then this is an overload of a
-      // function we have seen. We add the signature of the overload to the
-      // detailed information.
-      completions[ index ].detailed_info_
-      .append( data.return_type_ )
-      .append( " " )
-      .append( data.everything_except_return_type_ )
-      .append( "\n" );
-    }
+    // A function and its overloads would have the same value for typed string,
+    // by which clients can group completions.
+    completions.push_back( boost::move( data ) );
   }
 
   return completions;

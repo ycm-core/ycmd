@@ -93,12 +93,16 @@ def ErrorMatcher( cls, msg = None ):
 
 
 def CompletionEntryMatcher( insertion_text,
-                            extra_menu_info = None,
+                            result_type = None,
+                            kind = None,
                             extra_params = None ):
   match = { 'insertion_text': insertion_text }
 
-  if extra_menu_info:
-    match.update( { 'extra_menu_info': extra_menu_info } )
+  if result_type:
+    match.update( { 'result_type': result_type } )
+
+  if kind:
+    match.update( { 'kind': kind } )
 
   if extra_params:
     match.update( extra_params )

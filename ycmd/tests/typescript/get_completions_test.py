@@ -60,13 +60,13 @@ def GetCompletions_Basic_test( app ):
     'expect': {
       'data': has_entries( {
         'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'methodA', extra_params = {
-            'menu_text': 'methodA (method) Foo.methodA(): void' } ),
-          CompletionEntryMatcher( 'methodB', extra_params = {
-            'menu_text': 'methodB (method) Foo.methodB(): void' } ),
-          CompletionEntryMatcher( 'methodC', extra_params = {
-            'menu_text': ( 'methodC (method) Foo.methodC(a: '
-                           '{ foo: string; bar: number; }): void' ) } ),
+          CompletionEntryMatcher( 'methodA', kind = 'method', extra_params = {
+            'display_string': 'methodA (method) Foo.methodA(): void' } ),
+          CompletionEntryMatcher( 'methodB', kind = 'method', extra_params = {
+            'display_string': 'methodB (method) Foo.methodB(): void' } ),
+          CompletionEntryMatcher( 'methodC', kind = 'method', extra_params = {
+            'display_string': ( 'methodC (method) Foo.methodC(a: '
+                                '{ foo: string; bar: number; }): void' ) } ),
         )
       } )
     }

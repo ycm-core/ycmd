@@ -70,7 +70,7 @@ def GetCompletions_UnicodeDescription_test( app ):
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
   assert_that( results, has_item(
-    has_entry( 'detailed_info', contains_string( u'aafäö' ) ) ) )
+    has_entry( 'doc_string', contains_string( u'aafäö' ) ) ) )
 
 
 def RunTest( app, test ):
@@ -130,8 +130,8 @@ def GetCompletions_NoSuggestions_Fallback_test( app ):
       'response': http.client.OK,
       'data': has_entries( {
         'completions': contains(
-          CompletionEntryMatcher( 'a_parameter', '[ID]' ),
-          CompletionEntryMatcher( 'another_parameter', '[ID]' ),
+          CompletionEntryMatcher( 'a_parameter', kind = '[ID]' ),
+          CompletionEntryMatcher( 'another_parameter', kind = '[ID]' ),
         ),
         'errors': empty(),
       } )
