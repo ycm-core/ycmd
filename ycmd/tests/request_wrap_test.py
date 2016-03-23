@@ -96,8 +96,8 @@ def StartColumn_Dot_test():
 
 
 def StartColumn_DotWithUnicode_test():
-  eq_( 7,
-       RequestWrap( PrepareJson( column_num = 11,
+  eq_( 5,
+       RequestWrap( PrepareJson( column_num = 8,
                                  contents = 'fäö.bär') )[ 'start_column' ] )
 
 
@@ -122,7 +122,7 @@ def StartColumn_AfterWholeWord_Html_test():
 
 def StartColumn_AfterWholeUnicodeWord_test():
   eq_( 1,
-       RequestWrap( PrepareJson( column_num = 6,
+       RequestWrap( PrepareJson( column_num = 4,
                                  contents = u'fäö') )[ 'start_column' ] )
 
 
