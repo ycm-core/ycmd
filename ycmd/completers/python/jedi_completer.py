@@ -26,7 +26,7 @@ from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
 
-from ycmd.utils import ToBytes, ProcessIsRunning
+from ycmd.utils import ToBytes, ToUnicode, ProcessIsRunning
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 from tempfile import NamedTemporaryFile
@@ -156,8 +156,8 @@ class JediCompleter( Completer ):
 
       # JediHTTP will delete the secret_file after it's done reading it
       with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
-        json.dump( { 'hmac_secret': str( b64encode( self._hmac_secret ),
-                                         'utf8' ) },
+        json.dump( { 'hmac_secret': ToUnicode(
+                        b64encode( self._hmac_secret ) ) },
                    hmac_file )
         command = [ self._python_binary_path,
                     PATH_TO_JEDIHTTP,
