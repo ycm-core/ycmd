@@ -31,6 +31,7 @@ import signal
 import socket
 import stat
 import subprocess
+import codecs
 
 
 # Creation flag to disable creating a console window on Windows. See
@@ -90,6 +91,12 @@ def ToUnicode( value ):
   return str( value )
 
 
+# Returns a unicode type containing the hexadecimal representation of the
+# value which must be of type bytes
+def ToHex( value ):
+  return codecs.getencoder( 'hex_codec' )( ToBytes( value ) )[ 0 ]
+
+
 # Consistently returns the new bytes() type from python-future. Assumes incoming
 # strings are either UTF-8 or unicode (which is converted to UTF-8).
 def ToBytes( value ):
@@ -127,6 +134,41 @@ def ToBytes( value ):
 
   # This is meant to catch `int` and similar non-string/bytes types.
   return ToBytes( str( value ) )
+
+
+def ByteOffsetToCodepointOffset( line_value, column_num ):
+  """The API calls for byte offsets, into the UTF-8 encoded version of the
+  buffer. However, internally, ycmd uses unicode strings. This means that
+  when we need to walk 'characters' within the buffer, such as when checking
+  for semantic triggers, etc., we must use codepoint offets, rather than
+  byte offsets.
+
+  This method converts the |column_num| which is a utf-8 byte offset into
+  a codepoint offset in the unicode string |line_value|"""
+
+  utf8_line_value = ToBytes( line_value )
+  codepoint_column_num = len(
+      str( utf8_line_value[ : column_num - 1 ], 'utf8' ) ) + 1
+
+  return codepoint_column_num
+
+
+def CodepointOffsetToByteOffset( unicode_line_value, codepoint_offset ):
+  """The API calls for byte offsets, into the UTF-8 encoded version of the
+  buffer. However, internally, ycmd uses unicode strings. This means that
+  when we need to walk 'characters' within the buffer, such as when checking
+  for semantic triggers, etc., we must use codepoint offets, rather than
+  byte offsets.
+
+  This method converts the |codepoint_offset| which is a unicode codepoint
+  offset into an byte offset into the utf-8 encoded bytes version of
+  |unicode_line_value|"""
+
+  # Should be a no-op, but in case someone passes a bytes instance
+  unicode_line_value = ToUnicode( unicode_line_value )
+
+  return len(
+      unicode_line_value[ : codepoint_offset - 1 ].encode( 'utf8' ) ) + 1
 
 
 def PathToCreatedTempDir( tempdir = RAW_PATH_TO_TEMP_DIR ):

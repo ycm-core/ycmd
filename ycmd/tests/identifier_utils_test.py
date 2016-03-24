@@ -29,6 +29,8 @@ from nose.tools import eq_, ok_
 from ycmd import identifier_utils as iu
 from hamcrest import assert_that, has_item
 
+from ycmd.tests.test_utils import ExpectedFailure
+
 
 def RemoveIdentifierFreeText_CppComments_test():
   eq_( "foo \nbar \nqux",
@@ -148,6 +150,23 @@ def IsIdentifier_generic_test():
   ok_( not iu.IsIdentifier( 'font-face' ) )
   ok_( not iu.IsIdentifier( None ) )
   ok_( not iu.IsIdentifier( '' ) )
+
+
+def IsIdentifier_generic_unicode_test():
+  ok_( iu.IsIdentifier( 'uniçode' ) )
+  ok_( iu.IsIdentifier( 'uç' ) )
+
+
+@ExpectedFailure( 'A single unicode character is spuriously not recognised as '
+                  'an identifier' )
+def IsIdentifier_generic_unicode_single_char_test():
+  ok_( iu.IsIdentifier( 'ç' ) )
+
+
+@ExpectedFailure( 'Any word starting with a unicode character is spuriously '
+                  'not recognised as an identifier' )
+def IsIdentifier_generic_unicode_char_first_test():
+  ok_( iu.IsIdentifier( 'çode' ) )
 
 
 def IsIdentifier_Css_test():

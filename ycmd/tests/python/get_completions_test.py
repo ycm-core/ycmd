@@ -137,3 +137,25 @@ def GetCompletions_NoSuggestions_Fallback_test( app ):
       } )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_Unicode_InLine_test( app ):
+  RunTest( app, {
+    'description': 'return completions for strings with multi-byte chars',
+    'request': {
+      'filetype'  : 'python',
+      'filepath'  : PathToTestFile( 'unicode.py' ),
+      'line_num'  : 7,
+      'column_num': 14
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'center', 'function: builtins.str.center' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )

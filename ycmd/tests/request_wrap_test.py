@@ -25,12 +25,16 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import json
+from ycmd.utils import ToBytes, ToHex
+from ycmd.tests.test_utils import ExpectedFailure
+
 from nose.tools import eq_
 from ..request_wrap import RequestWrap
 
 
 def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
-  return {
+  return json.loads( ToBytes( json.dumps( {
     'line_num': line_num,
     'column_num': column_num,
     'filepath': '/foo',
@@ -40,7 +44,7 @@ def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
         'contents': contents
       }
     }
-  }
+  } ) ) )
 
 
 def LineValue_OneLine_test():
@@ -99,6 +103,60 @@ def StartColumn_DotWithUnicode_test():
   eq_( 7,
        RequestWrap( PrepareJson( column_num = 11,
                                  contents = 'fäö.bär') )[ 'start_column' ] )
+
+
+def StartColumn_Unicode_Not_Identifier_test():
+  contents = "var x = '†es†ing'."
+
+  print( ToHex( ToBytes( contents ) ) )
+
+  # † not considered an identifier character
+
+  for i in range( 13, 15 ):
+    print( ToBytes( contents )[ i - 1 : i ] )
+    eq_( 13,
+         RequestWrap( PrepareJson( column_num = i,
+                                   contents = contents ) )[ 'start_column' ] )
+
+  eq_( 13,
+       RequestWrap( PrepareJson( column_num = 15,
+                                 contents = contents ) )[ 'start_column' ] )
+
+  for i in range( 18, 20 ):
+    print( ToBytes( contents )[ i - 1 : i ] )
+    eq_( 18,
+         RequestWrap( PrepareJson( column_num = i,
+                                   contents = contents ) )[ 'start_column' ] )
+
+
+def StartColumn_QueryIsUnicode_test():
+  contents = "var x = ålpha.alphå"
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 16,
+                                 contents = contents ) )[ 'start_column' ] )
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 19,
+                                 contents = contents ) )[ 'start_column' ] )
+
+
+@ExpectedFailure( 'Start column incorrecty calculated when first character is '
+                  'non-ASCII, as words beginning with non-ASCII are not '
+                  'recognised as identifiers' )
+def StartColumn_QueryStartsWithUnicode_test():
+  contents = "var x = ålpha.ålpha"
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 16,
+                                 contents = contents ) )[ 'start_column' ] )
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 19,
+                                 contents = contents ) )[ 'start_column' ] )
+
+
+def StartColumn_ThreeByteUnicode_test():
+  contents = "var x = '†'."
+  eq_( 15,
+       RequestWrap( PrepareJson( column_num = 15,
+                                 contents = contents ) )[ 'start_column' ] )
 
 
 def StartColumn_Paren_test():

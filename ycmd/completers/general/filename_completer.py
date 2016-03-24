@@ -26,6 +26,7 @@ from builtins import *  # noqa
 
 import os
 import re
+import logging
 from collections import defaultdict
 
 from ycmd.completers.completer import Completer
@@ -33,10 +34,12 @@ from ycmd.completers.completer_utils import ( AtIncludeStatementStart,
                                               GetIncludeStatementValue )
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
-from ycmd.utils import ToUnicode, OnWindows
+from ycmd.utils import ToUnicode, OnWindows, ToHex
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
+
+_logger = logging.getLogger( __name__ )
 
 
 class FilenameCompleter( Completer ):
@@ -88,6 +91,11 @@ class FilenameCompleter( Completer ):
 
 
   def ShouldUseNowInner( self, request_data ):
+    _logger.debug( 'ComputeCandidatesInner: line_value is {0}'.format(
+      ToHex( request_data[ 'line_value' ] ) ) )
+    _logger.debug( 'ComputeCandidatesInner: start_column is {0}'.format(
+      request_data[ 'start_column' ] ) )
+
     start_column = request_data[ 'start_column' ] - 1
     current_line = request_data[ 'line_value' ]
     return ( start_column and

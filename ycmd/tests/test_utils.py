@@ -32,6 +32,8 @@ from mock import patch
 from webtest import TestApp
 import bottle
 import contextlib
+import nose
+import functools
 
 from ycmd import handlers, user_options_store
 from ycmd.completers.completer import Completer
@@ -176,3 +178,25 @@ class DummyCompleter( Completer ):
   # This method is here for testing purpose, so it can be mocked during tests
   def CandidatesList( self ):
     return []
+
+
+def ExpectedFailure( reason ):
+  """Defines a decorator to be attached to tests. This decorator
+  marks the test as being known to fail, e.g. where documenting or exercising
+  known incorrect behaviour.
+
+  If the test fails, then it is marked as skipped. If the test passes, then it
+  is marked as failed."""
+  def decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( *args, **kwargs ):
+      try:
+        test( *args, **kwargs )
+      except Exception:
+        raise nose.SkipTest( reason )
+      else:
+        raise AssertionError( 'Test was expected to fail: {0}'.format(
+          reason ) )
+    return Wrapper
+
+  return decorator
