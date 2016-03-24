@@ -240,7 +240,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [base64]: http://en.wikipedia.org/wiki/Base64
 [mkstemp]: http://man7.org/linux/man-pages/man3/mkstemp.3.html
 [options]: https://github.com/Valloric/YouCompleteMe#options
-[extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion-engine-usage
+[extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gocode]: https://github.com/nsf/gocode
