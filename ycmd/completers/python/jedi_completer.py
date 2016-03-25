@@ -26,7 +26,10 @@ from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
 
-from ycmd.utils import ToBytes, ToUnicode, ProcessIsRunning
+from ycmd.utils import ( ToBytes,
+                         ToUnicode,
+                         ProcessIsRunning,
+                         ByteOffsetToCodepointOffset )
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 from tempfile import NamedTemporaryFile
@@ -218,8 +221,17 @@ class JediCompleter( Completer ):
     path = request_data[ 'filepath' ]
     source = request_data[ 'file_data' ][ path ][ 'contents' ]
     line = request_data[ 'line_num' ]
-    # JediHTTP as Jedi itself expects columns to start at 0, not 1
-    col = request_data[ 'column_num' ] - 1
+    # JediHTTP (as Jedi itself) expects columns to start at 0, not 1, and for
+    # them to be unicode codepoint offsets, but in what encoding?!
+    #
+    # NOTE: We are be sending the data as UTF-8 json to JediHTTP, then it is
+    # converting to python unicode string object. We're really talking about
+    # 'character' offsets, not codepoint offsets here.
+    col = ByteOffsetToCodepointOffset( request_data[ 'line_value' ],
+                                       request_data[ 'column_num' ] ) - 1
+
+    # TODO: should this use the start column?
+    # col = request_data[ 'start_codepoint' ] - 1
 
     return {
       'source': source,

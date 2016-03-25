@@ -46,23 +46,29 @@ class PreparedTriggers( object ):
     self._filetype_to_prepared_triggers = final_triggers
 
 
-  def MatchingTriggerForFiletype( self, current_line, start_column, column_num,
+  def MatchingTriggerForFiletype( self,
+                                  current_line,
+                                  start_codepoint,
+                                  column_codepoint,
                                   filetype ):
     try:
       triggers = self._filetype_to_prepared_triggers[ filetype ]
     except KeyError:
       return None
     return _MatchingSemanticTrigger( current_line,
-                                     start_column,
-                                     column_num,
+                                     start_codepoint,
+                                     column_codepoint,
                                      triggers )
 
 
-  def MatchesForFiletype( self, current_line, start_column, column_num,
+  def MatchesForFiletype( self,
+                          current_line,
+                          start_codepoint,
+                          column_codepoint,
                           filetype ):
     return self.MatchingTriggerForFiletype( current_line,
-                                            start_column,
-                                            column_num,
+                                            start_codepoint,
+                                            column_codepoint,
                                             filetype ) is not None
 
 
@@ -92,44 +98,53 @@ def _FiletypeDictUnion( dict_one, dict_two ):
   return final_dict
 
 
-def _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
+# start_codepoint and column_codepoint are codepoint offsets in the unicode
+# string line_value
+def _RegexTriggerMatches( trigger,
+                          line_value,
+                          start_codepoint,
+                          column_codepoint ):
   for match in trigger.finditer( line_value ):
-    # By definition of 'start_column', we know that the character just before
-    # 'start_column' is not an identifier character but all characters
-    # between 'start_column' and 'column_num' are. This means that if our
-    # trigger ends with an identifier character, its tail must match between
-    # 'start_column' and 'column_num', 'start_column' excluded. But if it
-    # doesn't, its tail must match exactly at 'start_column'. Both cases are
-    # mutually exclusive hence the following condition.
-    if start_column <= match.end() and match.end() <= column_num:
+    # By definition of 'start_codepoint', we know that the character just before
+    # 'start_codepoint' is not an identifier character but all characters
+    # between 'start_codepoint' and 'column_codepoint' are. This means that if
+    # our trigger ends with an identifier character, its tail must match between
+    # 'start_codepoint' and 'column_codepoint', 'start_codepoint' excluded. But
+    # if it doesn't, its tail must match exactly at 'start_codepoint'. Both
+    # cases are mutually exclusive hence the following condition.
+    if start_codepoint <= match.end() and match.end() <= column_codepoint:
       return True
   return False
 
 
-# start_column and column_num are 0-based
-def _MatchingSemanticTrigger( line_value, start_column, column_num,
+# start_codepoint and column_codepoint are 0-based and are codepiont offsets
+# into # the unicode string line_value
+def _MatchingSemanticTrigger( line_value, start_codepoint, column_codepoint,
                               trigger_list ):
-  if start_column < 0 or column_num < 0:
+  if start_codepoint < 0 or column_codepoint < 0:
     return None
 
   line_length = len( line_value )
-  if not line_length or start_column > line_length:
+  if not line_length or start_codepoint > line_length:
     return None
 
   # Ignore characters after user's caret column
-  line_value = line_value[ :column_num ]
+  line_value = line_value[ : column_codepoint ]
 
   for trigger in trigger_list:
-    if _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
+    if _RegexTriggerMatches( trigger,
+                             line_value,
+                             start_codepoint,
+                             column_codepoint ):
       return trigger
   return None
 
 
-def _MatchesSemanticTrigger( line_value, start_column, column_num,
+def _MatchesSemanticTrigger( line_value, start_codepoint, column_codepoint,
                              trigger_list ):
   return _MatchingSemanticTrigger( line_value,
-                                   start_column,
-                                   column_num,
+                                   start_codepoint,
+                                   column_codepoint,
                                    trigger_list ) is not None
 
 

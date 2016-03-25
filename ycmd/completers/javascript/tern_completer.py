@@ -338,7 +338,11 @@ class TernCompleter( Completer ):
     def MakeTernLocation( request_data ):
       return {
         'line': request_data[ 'line_num' ] - 1,
-        'ch':   request_data[ 'start_column' ] - 1
+        # We send the data to tern as utf-8 encoded json. It then converts it
+        # to javascript strings which are utf-16 encoded. The best we can do is
+        # return the codepoint (which we're really treating as the 'character'
+        # offset)
+        'ch':   request_data[ 'start_codepoint' ] - 1
       }
 
     full_query = {
@@ -528,11 +532,11 @@ class TernCompleter( Completer ):
     #         'file'
     #         'start' {
     #             'line'
-    #             'ch'
+    #             'ch' (codepoint offset)
     #         }
     #         'end' {
     #             'line'
-    #             'ch'
+    #             'ch' (codepoint offset)
     #         }
     #         'text'
     #     }
@@ -548,12 +552,12 @@ class TernCompleter( Completer ):
     #                  'range' (Range) {
     #                      'start_' (Location): {
     #                          'line_number_',
-    #                          'column_number_',
+    #                          'column_number_', (byte offset)
     #                          'filename_'
     #                      },
     #                      'end_' (Location): {
     #                          'line_number_',
-    #                          'column_number_',
+    #                          'column_number_', (byte offset)
     #                          'filename_'
     #                      }
     #                  }
@@ -568,20 +572,36 @@ class TernCompleter( Completer ):
     #     ]
     # }
 
-    def BuildRange( filename, start, end ):
+    def BuildLocation(  file_contents, filename, line, ch ):
+      # tern returns codepoint offsets, but we need byte offsets, so we must
+      # convert
+      return responses.Location(
+        line + 1,
+        utils.CodepointOffsetToByteOffset(
+          file_contents[ line ],
+          ch + 1 ),
+        filename )
+
+
+    def BuildRange( file_contents, filename, start, end ):
       return responses.Range(
-        responses.Location( start[ 'line' ] + 1,
-                            start[ 'ch' ] + 1,
-                            filename ),
-        responses.Location( end[ 'line' ] + 1,
-                            end[ 'ch' ] + 1,
-                            filename ) )
+        BuildLocation( file_contents,
+                       filename,
+                       start[ 'line' ],
+                       start[ 'ch' ] ),
+        BuildLocation( file_contents,
+                       filename,
+                       end[ 'line' ],
+                       end[ 'ch' ] ) )
 
 
     def BuildFixItChunk( change ):
+      filename = os.path.abspath( change[ 'file' ] )
+      file_contents = _GetFileContents( request_data, filename )
       return responses.FixItChunk(
         change[ 'text' ],
-        BuildRange( os.path.abspath( change[ 'file'] ),
+        BuildRange( file_contents,
+                    filename,
                     change[ 'start' ],
                     change[ 'end' ] ) )
 
@@ -595,3 +615,10 @@ class TernCompleter( Completer ):
                             request_data[ 'column_num' ],
                             request_data[ 'filepath' ] ),
         [ BuildFixItChunk( x ) for x in response[ 'changes' ] ] ) ] )
+
+
+def _GetFileContents( request_data, filename ):
+  file_data = request_data[ 'file_data' ]
+  return utils.ToUnicode(
+    utils.ReadFile( filename ) if filename not in file_data
+                               else file_data[ filename ] ).splitlines()

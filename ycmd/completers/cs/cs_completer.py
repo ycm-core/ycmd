@@ -235,6 +235,7 @@ class CsharpCompleter( Completer ):
   def _QuickFixToDiagnostic( self, quick_fix ):
     filename = quick_fix[ "FileName" ]
 
+    # TODO(Ben): is 'Column' a codepoint offset or a byte offset?
     location = responses.Location( quick_fix[ "Line" ],
                                    quick_fix[ "Column" ],
                                    filename )
@@ -261,6 +262,9 @@ class CsharpCompleter( Completer ):
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
+    # TODO(Ben): all of these calculations are currently working with byte
+    # offsets, which are technically incorrect. We should be working with
+    # codepoint offsets, as we want the nearest character-wise diagnostic
     for diagnostic in diagnostics:
       distance = abs( current_column - diagnostic.location_.column_number_ )
       if distance < distance_to_closest_diagnostic:
@@ -451,6 +455,7 @@ class CsharpSolutionCompleter( object ):
     definition = self._GetResponse( '/gotodefinition',
                                     self._DefaultParameters( request_data ) )
     if definition[ 'FileName' ] is not None:
+      # TODO(Ben): check if Column is a byte offset or codepoint offset
       return responses.BuildGoToResponse( definition[ 'FileName' ],
                                           definition[ 'Line' ],
                                           definition[ 'Column' ] )
@@ -466,11 +471,13 @@ class CsharpSolutionCompleter( object ):
 
     if implementation[ 'QuickFixes' ]:
       if len( implementation[ 'QuickFixes' ] ) == 1:
+        # TODO(Ben): check if Column is a byte offset or codepoint offset
         return responses.BuildGoToResponse(
             implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
             implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
             implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] )
       else:
+        # TODO(Ben): check if Column is a byte offset or codepoint offset
         return [ responses.BuildGoToResponse( x[ 'FileName' ],
                                               x[ 'Line' ],
                                               x[ 'Column' ] )
@@ -525,7 +532,11 @@ class CsharpSolutionCompleter( object ):
     """ Some very common request parameters """
     parameters = {}
     parameters[ 'line' ] = request_data[ 'line_num' ]
+
+    # TODO(Ben): Does OmniSharp require codepoints or byte offsets? We are
+    # currently sending it byte offsets
     parameters[ 'column' ] = request_data[ 'column_num' ]
+
     filepath = request_data[ 'filepath' ]
     parameters[ 'buffer' ] = (
       request_data[ 'file_data' ][ filepath ][ 'contents' ] )
@@ -631,6 +642,9 @@ def _BuildChunks( request_data, new_buffer ):
   ( start_line, start_column ) = _IndexToLineColumn( old_buffer, start_index )
   ( end_line, end_column ) = _IndexToLineColumn( old_buffer,
                                                  old_length - end_index )
+
+  # TODO(Ben): check if start_column is a byte offset or a codepoint offset by
+  #            presumably looking at the source code
   start = responses.Location( start_line, start_column, filepath )
   end = responses.Location( end_line, end_column, filepath )
   return [ responses.FixItChunk( replacement_text,
@@ -651,7 +665,8 @@ def _FixLineEndings( old_buffer, new_buffer ):
 
 # Adapted from http://stackoverflow.com/a/24495900
 def _IndexToLineColumn( text, index ):
-  """Get (line_number, col) of `index` in `string`."""
+  """Get 0-based (line_number, col) of `index` in `string`, where string is a
+  unicode string and col is a codepoint offset."""
   lines = text.splitlines( True )
   curr_pos = 0
   for linenum, line in enumerate( lines ):

@@ -61,6 +61,7 @@ class NoDiagnosticSupport( ServerError ):
     super( NoDiagnosticSupport, self ).__init__( NO_DIAGNOSTIC_SUPPORT_MESSAGE )
 
 
+# column_num is a byte offset
 def BuildGoToResponse( filepath, line_num, column_num, description = None ):
   response = {
     'filepath': os.path.realpath( filepath ),
@@ -116,6 +117,7 @@ def BuildCompletionData( insertion_text,
   return completion_data
 
 
+# start_column is a byte offset
 def BuildCompletionResponse( completion_datas,
                              start_column,
                              errors=None ):
@@ -126,7 +128,9 @@ def BuildCompletionResponse( completion_datas,
   }
 
 
+# location.column_number_ is a byte offset
 def BuildLocationData( location ):
+  # TODO(Ben): Check all cases that location is a byte offset
   return {
     'line_num': location.line_number_,
     'column_num': location.column_number_,
@@ -153,7 +157,20 @@ class Diagnostic( object ):
 class FixIt( object ):
   """A set of replacements (of type FixItChunk) to be applied to fix a single
   diagnostic. This can be used for any type of refactoring command, not just
-  quick fixes. The individual chunks may span multiple files."""
+  quick fixes. The individual chunks may span multiple files.
+
+  NOTE: All offsets supplied in both |location| and (the members of) |chunks|
+  must be byte offsets into the UTF-8 encoded version of the appropriate
+  buffer.
+  """
+
+  # TODO(Ben): Check RefactorRename and FixIt apply correctly when the buffer
+  # contains unicode on lines with changes. I expect that this will work
+  # mostly for c++, but will not work for javascript or c-sharp.
+  #
+  # It may be simpler to require that BuildLocationData takes a codepoint, and
+  # it does the conversion. However, this requires passing the source buffer
+  # line to it, which will also require many changes.
 
   def __init__ ( self, location, chunks ):
     """location of type Location, chunks of type list<FixItChunk>"""
@@ -183,8 +200,8 @@ class Location( object ):
   """Source code location for a diagnostic or FixIt (aka Refactor)."""
 
   def __init__ ( self, line, column, filename ):
-    """Line is 1-based line, column is 1-based column, filename is absolute
-    path of the file"""
+    """Line is 1-based line, column is 1-based column byte offset, filename is
+    absolute path of the file"""
     self.line_number_ = line
     self.column_number_ = column
     self.filename_ = filename

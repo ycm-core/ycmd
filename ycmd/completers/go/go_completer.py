@@ -112,6 +112,9 @@ class GoCompleter( Completer ):
 
     contents = utils.ToBytes(
         request_data[ 'file_data' ][ filename ][ 'contents' ] )
+
+    # NOTE(Ben): Offsets sent to gocode are byte offsets, so using column_num
+    # with contents (a bytes instance) above is correct.
     offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                              request_data[ 'column_num' ] )
 
@@ -197,6 +200,9 @@ class GoCompleter( Completer ):
         return
       contents = utils.ToBytes(
           request_data[ 'file_data' ][ filename ][ 'contents' ] )
+
+      # NOTE(Ben): Offsets sent to gocode are byte offsets, so using column_num
+      # with contents (a bytes instance) above is correct.
       offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                                request_data[ 'column_num' ] )
       stdout = self._ExecuteBinary( self._binary_godef,
@@ -221,8 +227,6 @@ class GoCompleter( Completer ):
 
 
 # Compute the byte offset in the file given the line and column.
-# TODO(ekfriis): If this is slow, consider moving this to C++ ycm_core,
-# perhaps in RequestWrap.
 def _ComputeOffset( contents, line, col ):
   contents = ToBytes( contents )
   curline = 1

@@ -1,4 +1,5 @@
 # Copyright (C) 2014 Google Inc.
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -50,6 +51,10 @@ COMMENT_AND_STRING_REGEX = re.compile(
   #  3. the escaped double quote inside the string
   r'(?<!\\)"(?:\\\\|\\"|.)*?"', re.MULTILINE )
 
+# FIXME: At the least c++ and javascript support unicode identifiers, and
+#        identifiers may start with unicode character, e.g. ålpha. The following
+#        regex will match any unicode 'alphanumeric' in anything other than the
+#        first position. Thus it does not match the valid identifier 'å'.
 DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*", re.UNICODE )
 
 FILETYPE_TO_IDENTIFIER_REGEX = {
@@ -83,6 +88,10 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
 
     # Spec: http://doc.perl6.org/language/syntax
     'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
+
+    # Spec: http://www.ecma-international.org/ecma-262/5.1/#sec-7.6
+    #  And referenced chapter 5 of unicode standard v3.0 (Section 5.16):
+    #    - http://www.unicode.org/versions/Unicode3.0.0/ch05.pdf
 }
 
 FILETYPE_TO_IDENTIFIER_REGEX[ 'scss' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]
