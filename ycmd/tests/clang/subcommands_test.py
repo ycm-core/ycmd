@@ -1,4 +1,5 @@
 # Copyright (C) 2015 ycmd contributors
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -661,9 +662,27 @@ def FixIt_Check_cpp11_MultiSecond( results ):
   } ) )
 
 
+def FixIt_Check_unicode_Ins( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+      'chunks': contains(
+        has_entries( {
+          'replacement_text': equal_to(';'),
+          'range': has_entries( {
+            'start': has_entries( { 'line_num': 21, 'column_num': 39 } ),
+            'end'  : has_entries( { 'line_num': 21, 'column_num': 39 } ),
+          } ),
+        } )
+      ),
+      'location': has_entries( { 'line_num': 21, 'column_num': 39 } )
+    } ) )
+  } ) )
+
+
 def Subcommands_FixIt_all_test():
   cfile = 'FixIt_Clang_cpp11.cpp'
   mfile = 'FixIt_Clang_objc.m'
+  ufile = 'unicode.cc'
 
   tests = [
     [ 16, 0,  'cpp11', cfile, FixIt_Check_cpp11_Ins ],
@@ -689,6 +708,9 @@ def Subcommands_FixIt_all_test():
     [ 54, 51, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
     [ 54, 52, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
     [ 54, 53, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
+
+    # unicode in line for fixit
+    [ 21, 16, 'cpp11', ufile, FixIt_Check_unicode_Ins ],
   ]
 
   for test in tests:
@@ -1044,3 +1066,33 @@ Name: get_a_global_variable
 ---
 This is a method which is only pretend global
 @param test Set this to true. Do it.""" } )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_unicode_test( app ):
+  filepath = PathToTestFile( 'unicode.cc' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ],
+                             line_num = 21,
+                             column_num = 16,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( response )
+
+  eq_( response, {
+    'detailed_info': """\
+int member_with_å_unicøde
+This method has unicøde in it
+Type: int
+Name: member_with_å_unicøde
+---
+
+This method has unicøde in it
+""" } )
