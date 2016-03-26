@@ -329,39 +329,30 @@ class CompletionsCache( object ):
 
   def Invalidate( self ):
     with self._access_lock:
-      self._line = -1
-      self._column = -1
-      self._completion_type = -1
-      self._completions = []
+      self._line_num = None
+      self._start_column = None
+      self._completion_type = None
+      self._completions = None
 
 
-  def Update( self, line, column, completion_type, completions ):
+  def Update( self, line_num, start_column, completion_type, completions ):
     with self._access_lock:
-      self._line = line
-      self._column = column
+      self._line_num = line_num
+      self._start_column = start_column
       self._completion_type = completion_type
       self._completions = completions
 
 
-  def GetCompletions( self ):
-    with self._access_lock:
-      return self._completions
-
-
-  def GetCompletionsIfCacheValid( self, current_line, start_column,
+  def GetCompletionsIfCacheValid( self, line_num, start_column,
                                   completion_type ):
     with self._access_lock:
-      if not self._CacheValidNoLock( current_line, start_column,
+      if not self._CacheValidNoLock( line_num, start_column,
                                      completion_type ):
         return None
       return self._completions
 
 
-  def CacheValid( self, current_line, start_column ):
-    with self._access_lock:
-      return self._CacheValidNoLock( current_line, start_column )
-
-
-  def _CacheValidNoLock( self, current_line, start_column, completion_type ):
-    return ( current_line == self._line and start_column == self._column and
+  def _CacheValidNoLock( self, line_num, start_column, completion_type ):
+    return ( line_num == self._line_num and
+             start_column == self._start_column and
              completion_type == self._completion_type )
