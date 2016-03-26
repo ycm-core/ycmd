@@ -34,6 +34,7 @@ import traceback
 from subprocess import PIPE
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetFileContents
 
 _logger = logging.getLogger( __name__ )
 
@@ -597,7 +598,7 @@ class TernCompleter( Completer ):
 
     def BuildFixItChunk( change ):
       filename = os.path.abspath( change[ 'file' ] )
-      file_contents = _GetFileContents( request_data, filename )
+      file_contents = GetFileContents( request_data, filename ).splitlines()
       return responses.FixItChunk(
         change[ 'text' ],
         BuildRange( file_contents,
@@ -615,10 +616,3 @@ class TernCompleter( Completer ):
                             request_data[ 'column_num' ],
                             request_data[ 'filepath' ] ),
         [ BuildFixItChunk( x ) for x in response[ 'changes' ] ] ) ] )
-
-
-def _GetFileContents( request_data, filename ):
-  file_data = request_data[ 'file_data' ]
-  return utils.ToUnicode(
-    utils.ReadFile( filename ) if filename not in file_data
-                               else file_data[ filename ] ).splitlines()

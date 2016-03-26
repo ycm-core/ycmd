@@ -29,7 +29,7 @@ from future.utils import iteritems
 import os
 import re
 from collections import defaultdict
-from ycmd.utils import ToCppStringCompatible, ToUnicode
+from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile
 
 
 class PreparedTriggers( object ):
@@ -231,3 +231,13 @@ def GetIncludeStatementValue( line, check_closing = True ):
       if close_char_pos != -1:
         include_value = line[ match.end() : close_char_pos ]
   return include_value, quoted_include
+
+
+def GetFileContents( request_data, filename ):
+  """Returns the contents of the absolute path |filename| as a unicode
+  string"""
+  file_data = request_data[ 'file_data' ]
+  if filename in file_data:
+    return ToUnicode( file_data[ filename ][ 'contents' ] )
+
+  return ToUnicode( ReadFile( filename ) )
