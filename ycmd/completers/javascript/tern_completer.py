@@ -177,6 +177,7 @@ class TernCompleter( Completer ):
     }
 
     completions = self._GetResponse( query,
+                                     request_data[ 'start_codepoint' ],
                                      request_data ).get( 'completions', [] )
 
     def BuildDoc( completion ):
@@ -326,7 +327,7 @@ class TernCompleter( Completer ):
     return response.json()
 
 
-  def _GetResponse( self, query, request_data ):
+  def _GetResponse( self, query, codepoint, request_data ):
     """Send a standard file/line request with the supplied query block, and
     return the server's response. If the server is not running, it is started.
 
@@ -334,16 +335,16 @@ class TernCompleter( Completer ):
     just updating file data in which case _PostRequest should be used directly.
 
     The query block should contain the type and any parameters. The files,
-    position, etc. are added automatically."""
+    position, etc. are added automatically.
+
+    NOTE: the |codepoint| parameter is usually the current cursor position,
+    though it should be the "completion start column" codepoint for completion
+    requests"""
 
     def MakeTernLocation( request_data ):
       return {
         'line': request_data[ 'line_num' ] - 1,
-        # We send the data to tern as utf-8 encoded json. It then converts it
-        # to javascript strings which are utf-16 encoded. The best we can do is
-        # return the codepoint (which we're really treating as the 'character'
-        # offset)
-        'ch':   request_data[ 'start_codepoint' ] - 1
+        'ch':   codepoint - 1
       }
 
     full_query = {
@@ -462,7 +463,9 @@ class TernCompleter( Completer ):
       'type': 'type',
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     return responses.BuildDisplayMessageResponse( response[ 'type' ] )
 
@@ -478,7 +481,9 @@ class TernCompleter( Completer ):
       'types':      True
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     doc_string = 'Name: {name}\nType: {type}\n\n{doc}'.format(
         name = response.get( 'name', 'Unknown' ),
@@ -493,7 +498,9 @@ class TernCompleter( Completer ):
       'type': 'definition',
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     return responses.BuildGoToResponse(
       response[ 'file' ],
@@ -507,7 +514,9 @@ class TernCompleter( Completer ):
       'type': 'refs',
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     return [ responses.BuildGoToResponse( ref[ 'file' ],
                                           ref[ 'start' ][ 'line' ] + 1,
@@ -525,7 +534,9 @@ class TernCompleter( Completer ):
       'newName': args[ 0 ],
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     # Tern response format:
     # 'changes': [
