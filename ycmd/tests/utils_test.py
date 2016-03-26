@@ -1,4 +1,5 @@
 # Copyright (C) 2016  ycmd contributors.
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -375,3 +376,74 @@ def OpenForStdHandle_PrintDoesntThrowException_test():
       print( 'foo', file = f )
   finally:
     os.remove( temp )
+
+
+def CodepointOffsetToByteOffset_test():
+  # tuples of ( ( unicode_line_value, codepoint_offset ), expected_result )
+  tests = [
+    # Simple ascii strings
+    ( ( 'test', 1 ), 1 ),
+    ( ( 'test', 4 ), 4 ),
+    ( ( 'test', 5 ), 5 ),
+
+    # unicode char at beginning
+    ( ( '†est', 1 ), 1 ),
+    ( ( '†est', 2 ), 4 ),
+    ( ( '†est', 4 ), 6 ),
+    ( ( '†est', 5 ), 7 ),
+
+    # unicode char at end
+    ( ( 'tes†', 1 ), 1 ),
+    ( ( 'tes†', 2 ), 2 ),
+    ( ( 'tes†', 4 ), 4 ),
+    ( ( 'tes†', 5 ), 7 ),
+
+    # unicode char in middle
+    ( ( 'tes†ing', 1 ), 1 ),
+    ( ( 'tes†ing', 2 ), 2 ),
+    ( ( 'tes†ing', 4 ), 4 ),
+    ( ( 'tes†ing', 5 ), 7 ),
+    ( ( 'tes†ing', 7 ), 9 ),
+    ( ( 'tes†ing', 8 ), 10 ),
+
+    # Converts bytes to unicode
+    ( ( utils.ToBytes( '†est' ), 2 ), 4 )
+  ]
+
+  for test in tests:
+    yield lambda: eq_( utils.CodepointOffsetToByteOffset( *test[ 0 ] ),
+                       test[ 1 ] )
+
+
+def ByteOffsetToCodepointOffset_test():
+  # tuples of ( ( unicode_line_value, byte_offset ), expected_result )
+  tests = [
+    # Simple ascii strings
+    ( ( 'test', 1 ), 1 ),
+    ( ( 'test', 4 ), 4 ),
+    ( ( 'test', 5 ), 5 ),
+
+    # unicode char at beginning
+    ( ( '†est', 1 ), 1 ),
+    ( ( '†est', 4 ), 2 ),
+    ( ( '†est', 6 ), 4 ),
+    ( ( '†est', 7 ), 5 ),
+
+    # unicode char at end
+    ( ( 'tes†', 1 ), 1 ),
+    ( ( 'tes†', 2 ), 2 ),
+    ( ( 'tes†', 4 ), 4 ),
+    ( ( 'tes†', 7 ), 5 ),
+
+    # unicode char in middle
+    ( ( 'tes†ing', 1 ), 1 ),
+    ( ( 'tes†ing', 2 ), 2 ),
+    ( ( 'tes†ing', 4 ), 4 ),
+    ( ( 'tes†ing', 7 ), 5 ),
+    ( ( 'tes†ing', 9 ), 7 ),
+    ( ( 'tes†ing', 10 ), 8 ),
+  ]
+
+  for test in tests:
+    yield lambda: eq_( utils.ByteOffsetToCodepointOffset( *test[ 0 ] ),
+                       test[ 1 ] )

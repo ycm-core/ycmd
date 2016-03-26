@@ -88,7 +88,7 @@ class GoCompleter_test( object ):
     # Col 8 corresponds to cursor at log.Pr^int("Line 7 ...
     self._completer.ComputeCandidatesInner( self._BuildRequest( 7, 8 ) )
     eq_( mock.cmd, [
-      DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '121' ] )
+      DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '119' ] )
 
 
   # Test line-col to offset in the file after a unicode occurrences.
@@ -100,7 +100,7 @@ class GoCompleter_test( object ):
     # Col 9 corresponds to cursor at log.Pri^nt("Line 7 ...
     self._completer.ComputeCandidatesInner(self._BuildRequest(9, 9))
     eq_( mock.cmd, [
-      DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '215' ] )
+      DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '212' ] )
 
 
   # Test end to end parsing of completed results.
@@ -113,7 +113,7 @@ class GoCompleter_test( object ):
     result = self._completer.ComputeCandidatesInner(
       self._BuildRequest( 10, 40 ) )
     eq_( mock.cmd, [
-      DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '292' ] )
+      DUMMY_BINARY, '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '287' ] )
     eq_( result, [ {
         'menu_text': u'Prefix',
         'insertion_text': u'Prefix',

@@ -25,7 +25,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-import json
 from ycmd.utils import ToBytes, ToHex
 
 from nose.tools import eq_
@@ -33,7 +32,7 @@ from ..request_wrap import RequestWrap
 
 
 def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
-  return json.loads( ToBytes( json.dumps( {
+  return {
     'line_num': line_num,
     'column_num': column_num,
     'filepath': '/foo',
@@ -43,7 +42,7 @@ def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
         'contents': contents
       }
     }
-  } ) ) )
+  }
 
 
 def LineValue_OneLine_test():

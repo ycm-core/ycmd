@@ -1,4 +1,5 @@
 # Copyright (C) 2011, 2012 Google Inc.
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #

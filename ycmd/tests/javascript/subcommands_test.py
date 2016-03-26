@@ -1,4 +1,5 @@
 # Copyright (C) 2015 ycmd contributors
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -393,5 +394,39 @@ def Subcommands_RefactorRename_Missing_New_Name_test( app ):
       'data': ErrorMatcher( ValueError,
                             'Please specify a new name to rename it to.\n'
                             'Usage: RefactorRename <new name>' ),
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_unicode_test( app ):
+  filepath = PathToTestFile( 'unicode.js' )
+  RunTest( app, {
+    'description': 'RefactorRename works with unicode identifiers',
+    'request': {
+      'command': 'RefactorRename',
+      'arguments': [ '†es†' ],
+      'filepath': filepath,
+      'line_num': 11,
+      'column_num': 3,
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries ( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+              ChunkMatcher( '†es†',
+                            LocationMatcher( filepath, 5, 5 ),
+                            LocationMatcher( filepath, 5, 13 ) ),
+              ChunkMatcher( '†es†',
+                            LocationMatcher( filepath, 9, 1 ),
+                            LocationMatcher( filepath, 9, 9 ) ),
+              ChunkMatcher( '†es†',
+                            LocationMatcher( filepath, 11, 1 ),
+                            LocationMatcher( filepath, 11, 9 ) )
+          ),
+          'location': LocationMatcher( filepath, 11, 3 )
+        } ) )
+      } )
     }
   } )
