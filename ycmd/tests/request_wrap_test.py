@@ -27,7 +27,6 @@ from builtins import *  # noqa
 
 import json
 from ycmd.utils import ToBytes, ToHex
-from ycmd.tests.test_utils import ExpectedFailure
 
 from nose.tools import eq_
 from ..request_wrap import RequestWrap
@@ -139,9 +138,6 @@ def StartColumn_QueryIsUnicode_test():
                                  contents = contents ) )[ 'start_column' ] )
 
 
-@ExpectedFailure( 'Start column incorrecty calculated when first character is '
-                  'non-ASCII, as words beginning with non-ASCII are not '
-                  'recognised as identifiers' )
 def StartColumn_QueryStartsWithUnicode_test():
   contents = "var x = ålpha.ålpha"
   eq_( 16,
