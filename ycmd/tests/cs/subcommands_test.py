@@ -23,15 +23,21 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+
 from nose.tools import eq_, ok_
 from webtest import AppError
+from hamcrest import assert_that, has_entries, contains
+import pprint
 import re
 import os.path
 
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
                             StopOmniSharpServer, WaitUntilOmniSharpServerReady,
                             WrapOmniSharpServer )
-from ycmd.tests.test_utils import BuildRequest, UserOption
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    UserOption,
+                                    LocationMatcher,
+                                    ChunkMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -53,6 +59,27 @@ def Subcommands_GoTo_Basic_test( app ):
       'filepath': PathToTestFile( 'testy', 'Program.cs' ),
       'line_num': 7,
       'column_num': 3
+    }, app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
+def Subcommands_GoTo_Unicode_test( app ):
+  filepath = PathToTestFile( 'testy', 'Unicode.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ 'GoTo' ],
+                              line_num = 45,
+                              column_num = 43,
+                              contents = contents,
+                              filetype = 'cs',
+                              filepath = filepath )
+
+    eq_( {
+      'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
+      'line_num': 30,
+      'column_num': 37
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
@@ -207,6 +234,33 @@ def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
 
 
 @SharedYcmd
+def Subcommands_GetToImplementation_Unicode_test( app ):
+  filepath = PathToTestFile( 'testy', 'Unicode.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToImplementation' ],
+      line_num = 48,
+      column_num = 44,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    eq_( [ {
+      'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
+      'line_num': 49,
+      'column_num': 54
+    }, {
+      'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
+      'line_num': 50,
+      'column_num': 50
+    } ], app.post_json( '/run_completer_command', goto_data ).json )
+
+
+@SharedYcmd
 def Subcommands_GetType_EmptyMessage_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
   with WrapOmniSharpServer( app, filepath ):
@@ -343,8 +397,12 @@ def Subcommands_GetDoc_Function_test( app ):
     }, app.post_json( '/run_completer_command', getdoc_data ).json )
 
 
-def RunFixItTest( app, line, column, expected_result ):
-  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+def RunFixItTest( app,
+                  line,
+                  column,
+                  result_matcher,
+                  filepath = [ 'testy', 'FixItTestCase.cs' ] ):
+  filepath = PathToTestFile( *filepath )
   with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
@@ -356,173 +414,89 @@ def RunFixItTest( app, line, column, expected_result ):
                                filetype = 'cs',
                                filepath = filepath )
 
-    eq_( expected_result,
-         app.post_json( '/run_completer_command', fixit_data ).json )
+    response = app.post_json( '/run_completer_command', fixit_data ).json
+
+    pprint.pprint( response )
+
+    assert_that( response, result_matcher )
 
 
 @SharedYcmd
 def Subcommands_FixIt_RemoveSingleLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 11, 1, {
-    u'fixits': [
-      {
-        u'location': {
-          u'line_num': 11,
-          u'column_num': 1,
-          u'filepath': filepath
-        },
-        u'chunks': [
-          {
-            u'replacement_text': '',
-            u'range': {
-              u'start': {
-                u'line_num': 10,
-                u'column_num': 20,
-                u'filepath': filepath
-              },
-              u'end': {
-                u'line_num': 11,
-                u'column_num': 30,
-                u'filepath': filepath
-              },
-            }
-          }
-        ]
-      }
-    ]
-  } )
+  RunFixItTest( app, 11, 1, has_entries( {
+    'fixits': contains( has_entries( {
+      'location': LocationMatcher( filepath, 11, 1 ),
+      'chunks': contains( ChunkMatcher( '',
+                                        LocationMatcher( filepath, 10, 20 ),
+                                        LocationMatcher( filepath, 11, 30 ) ) )
+    } ) )
+  } ) )
 
 
 @SharedYcmd
 def Subcommands_FixIt_MultipleLines_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 19, 1, {
-    u'fixits': [
-      {
-        u'location': {
-          u'line_num': 19,
-          u'column_num': 1,
-          u'filepath': filepath
-        },
-        u'chunks': [
-          {
-            u'replacement_text': "return On",
-            u'range': {
-              u'start': {
-                u'line_num': 20,
-                u'column_num': 13,
-                u'filepath': filepath
-              },
-              u'end': {
-                u'line_num': 21,
-                u'column_num': 35,
-                u'filepath': filepath
-              },
-            }
-          }
-        ]
-      }
-    ]
-  } )
+  RunFixItTest( app, 19, 1, has_entries( {
+    'fixits': contains( has_entries ( {
+      'location': LocationMatcher( filepath, 19, 1 ),
+      'chunks': contains( ChunkMatcher( 'return On',
+                                        LocationMatcher( filepath, 20, 13 ),
+                                        LocationMatcher( filepath, 21, 35 ) ) )
+    } ) )
+  } ) )
 
 
 @SharedYcmd
 def Subcommands_FixIt_SpanFileEdge_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 1, 1, {
-    u'fixits': [
-      {
-        u'location': {
-          u'line_num': 1,
-          u'column_num': 1,
-          u'filepath': filepath
-        },
-        u'chunks': [
-          {
-            u'replacement_text': 'System',
-            u'range': {
-              u'start': {
-                u'line_num': 1,
-                u'column_num': 7,
-                u'filepath': filepath
-              },
-              u'end': {
-                u'line_num': 3,
-                u'column_num': 18,
-                u'filepath': filepath
-              },
-            }
-          }
-        ]
-      }
-    ]
-  } )
+  RunFixItTest( app, 1, 1, has_entries( {
+    'fixits': contains( has_entries ( {
+      'location': LocationMatcher( filepath, 1, 1 ),
+      'chunks': contains( ChunkMatcher( 'System',
+                                        LocationMatcher( filepath, 1, 7 ),
+                                        LocationMatcher( filepath, 3, 18 ) ) )
+    } ) )
+  } ) )
 
 
 @SharedYcmd
 def Subcommands_FixIt_AddTextInLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 9, 1, {
-    u'fixits': [
-      {
-        u'location': {
-          u'line_num': 9,
-          u'column_num': 1,
-          u'filepath': filepath
-        },
-        u'chunks': [
-          {
-            u'replacement_text': ', StringComparison.Ordinal',
-            u'range': {
-              u'start': {
-                u'line_num': 9,
-                u'column_num': 29,
-                u'filepath': filepath
-              },
-              u'end': {
-                u'line_num': 9,
-                u'column_num': 29,
-                u'filepath': filepath
-              },
-            }
-          }
-        ]
-      }
-    ]
-  } )
+  RunFixItTest( app, 9, 1, has_entries( {
+    'fixits': contains( has_entries ( {
+      'location': LocationMatcher( filepath, 9, 1 ),
+      'chunks': contains( ChunkMatcher( ', StringComparison.Ordinal',
+                                        LocationMatcher( filepath, 9, 29 ),
+                                        LocationMatcher( filepath, 9, 29 ) ) )
+    } ) )
+  } ) )
 
 
 @SharedYcmd
 def Subcommands_FixIt_ReplaceTextInLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 10, 1, {
-    u'fixits': [
-      {
-        u'location': {
-          u'line_num': 10,
-          u'column_num': 1,
-          u'filepath': filepath
-        },
-        u'chunks': [
-          {
-            u'replacement_text': 'const int',
-            u'range': {
-              u'start': {
-                u'line_num': 10,
-                u'column_num': 13,
-                u'filepath': filepath
-              },
-              u'end': {
-                u'line_num': 10,
-                u'column_num': 16,
-                u'filepath': filepath
-              },
-            }
-          }
-        ]
-      }
-    ]
-  } )
+  RunFixItTest( app, 10, 1, has_entries( {
+    'fixits': contains( has_entries ( {
+      'location': LocationMatcher( filepath, 10, 1 ),
+      'chunks': contains( ChunkMatcher( 'const int',
+                                        LocationMatcher( filepath, 10, 13 ),
+                                        LocationMatcher( filepath, 10, 16 ) ) )
+    } ) )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_FixIt_Unicode_test( app ):
+  filepath = PathToTestFile( 'testy', 'Unicode.cs' )
+  RunFixItTest( app, 30, 54, has_entries( {
+    'fixits': contains( has_entries ( {
+      'location': LocationMatcher( filepath, 30, 54 ),
+      'chunks': contains( ChunkMatcher( ' readonly',
+                                        LocationMatcher( filepath, 30, 44 ),
+                                        LocationMatcher( filepath, 30, 44 ) ) )
+    } ) )
+  } ), filepath = [ 'testy', 'Unicode.cs' ] )
 
 
 @IsolatedYcmd
