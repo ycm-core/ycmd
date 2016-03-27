@@ -25,11 +25,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that,
-                       equal_to,
-                       has_items,
-                       has_property,
-                       contains_string )
+from hamcrest import assert_that, equal_to, has_items, contains_string
 from mock import patch
 from nose.tools import eq_
 
@@ -138,9 +134,7 @@ def GetCompletions_IdentifierCompleter_Unicode_InLine_test( app ):
 @ExpectedFailure( "The identifier completer - like FilterAndSortCandidates "
                   "can't handle unicode: "
                   "https://github.com/Valloric/YouCompleteMe/issues/278",
-                  has_property( 'message',
-                                contains_string( 'IndexError: bitset set '
-                                                 'argument out of range' ) ) )
+                  contains_string( 'bitset' ) )
 @SharedYcmd
 def GetCompletions_IdentifierCompleter_UnicodeQuery_InLine_test( app ):
   contents = """

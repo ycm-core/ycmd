@@ -38,7 +38,7 @@ import functools
 from ycmd import handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
-from ycmd.utils import OnMac, OnWindows
+from ycmd.utils import OnMac, OnWindows, ToUnicode
 import ycm_core
 
 try:
@@ -202,9 +202,10 @@ def ExpectedFailure( reason, *exception_matchers ):
         test( *args, **kwargs )
       except Exception as test_exception:
         # Ensure that we failed for the right reason
+        test_exception_message = ToUnicode( test_exception )
         try:
           for matcher in exception_matchers:
-            assert_that( test_exception, matcher )
+            assert_that( test_exception_message, matcher )
         except AssertionError:
           # Failed for the wrong reason!
           import traceback

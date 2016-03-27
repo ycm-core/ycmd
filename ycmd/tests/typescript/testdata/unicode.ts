@@ -17,10 +17,10 @@ class Bår {
   a: number;
 }
 
-var bar = new Bår(); bar.å;
-bar.abc;
-bar.a;
-bar.å;
+var baz = new Bår(); baz.å;
+baz.abc;
+baz.a;
+baz.å;
 
 var føø_long_long = new Bår();
 føø_long_long.methød();

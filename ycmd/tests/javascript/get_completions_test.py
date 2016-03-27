@@ -428,7 +428,7 @@ def GetCompletions_Unicode_AfterLine_test( app ):
           CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
           CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
         ),
-        'completion_start_column': 15,
+        'completion_start_column': 13,
         'errors': empty(),
       } )
     },
@@ -452,7 +452,7 @@ def GetCompletions_Unicode_InLine_test( app ):
           CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
           CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
         ),
-        'completion_start_column': 13,
+        'completion_start_column': 15,
         'errors': empty(),
       } )
     },

@@ -110,6 +110,8 @@ class TypeScriptCompleter( Completer ):
     self._environ = os.environ.copy()
     utils.SetEnviron( self._environ, 'TSS_LOG', tsserver_log )
 
+    _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
+
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
     self._sequenceid = itertools.count()
@@ -194,7 +196,8 @@ class TypeScriptCompleter( Completer ):
     if 'Content-Length' not in headers:
       raise RuntimeError( "Missing 'Content-Length' header" )
     contentlength = int( headers[ 'Content-Length' ] )
-    return json.loads( self._tsserver_handle.stdout.read( contentlength ) )
+    content = self._tsserver_handle.stdout.readline( contentlength )
+    return json.loads( utils.ToUnicode( content ) )
 
 
   def _BuildRequest( self, command, arguments = None ):
@@ -219,10 +222,9 @@ class TypeScriptCompleter( Completer ):
     to the message that is sent.
     """
 
-    request = self._BuildRequest( command, arguments )
+    request = json.dumps( self._BuildRequest( command, arguments ) ) + '\n'
     with self._writelock:
-      self._tsserver_handle.stdin.write( json.dumps( request ) )
-      self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.write( request )
       self._tsserver_handle.stdin.flush()
 
 
@@ -233,13 +235,13 @@ class TypeScriptCompleter( Completer ):
     """
 
     request = self._BuildRequest( command, arguments )
+    json_request = json.dumps( request ) + '\n'
     deferred = DeferredResponse()
     with self._pendinglock:
       seq = request[ 'seq' ]
       self._pending[ seq ] = deferred
     with self._writelock:
-      self._tsserver_handle.stdin.write( json.dumps( request ) )
-      self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.write( json_request )
       self._tsserver_handle.stdin.flush()
     return deferred.result()
 
@@ -352,7 +354,7 @@ class TypeScriptCompleter( Completer ):
     response = self._SendRequest( 'references', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'column_codepoint' ]
     } )
     return [
       responses.BuildGoToResponseFromLocation(
@@ -547,10 +549,10 @@ def _BuildFixItChunksForFile( request_data, new_name, file_replacement ):
 
 
 def _BuildLocation( file_contents, filename, line, offset ):
-  # tsserver returns codepoint offsets, but we need byte offsets, so we must
-  # convert
   return responses.Location(
     line = line,
+    # tsserver returns codepoint offsets, but we need byte offsets, so we must
+    # convert
     column = utils.CodepointOffsetToByteOffset( file_contents[ line - 1 ],
                                                 offset ),
     filename = filename )
