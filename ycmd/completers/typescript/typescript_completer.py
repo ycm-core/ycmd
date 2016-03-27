@@ -39,6 +39,7 @@ from tempfile import NamedTemporaryFile
 from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetFileContents
 
 BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
                              'TypeScript 1.5 or higher is required' )
@@ -270,7 +271,7 @@ class TypeScriptCompleter( Completer ):
     entries = self._SendRequest( 'completions', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'start_codepoint' ]
     } )
 
     # A less detailed version of the completion data is returned
@@ -288,7 +289,7 @@ class TypeScriptCompleter( Completer ):
     detailed_entries = self._SendRequest( 'completionEntryDetails', {
       'file':       request_data[ 'filepath' ],
       'line':       request_data[ 'line_num' ],
-      'offset':     request_data[ 'column_num' ],
+      'offset':     request_data[ 'start_codepoint' ],
       'entryNames': names
     } )
     return [ _ConvertDetailedCompletionData( e, namelength )
@@ -332,15 +333,16 @@ class TypeScriptCompleter( Completer ):
       filespans = self._SendRequest( 'definition', {
         'file':   request_data[ 'filepath' ],
         'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_num' ]
+        'offset': request_data[ 'column_codepoint' ]
       } )
 
       span = filespans[ 0 ]
-      return responses.BuildGoToResponse(
-        filepath   = span[ 'file' ],
-        line_num   = span[ 'start' ][ 'line' ],
-        column_num = span[ 'start' ][ 'offset' ]
-      )
+      return responses.BuildGoToResponseFromLocation(
+        _BuildLocation( GetFileContents( request_data,
+                                         span[ 'file' ] ).splitlines(),
+                        span[ 'file' ],
+                        span[ 'start' ][ 'line' ],
+                        span[ 'start' ][ 'offset' ] ) )
     except RuntimeError:
       raise RuntimeError( 'Could not find definition' )
 
@@ -352,12 +354,16 @@ class TypeScriptCompleter( Completer ):
       'line':   request_data[ 'line_num' ],
       'offset': request_data[ 'column_num' ]
     } )
-    return [ responses.BuildGoToResponse(
-               filepath    = ref[ 'file' ],
-               line_num    = ref[ 'start' ][ 'line' ],
-               column_num  = ref[ 'start' ][ 'offset' ],
-               description = ref[ 'lineText' ]
-             ) for ref in response[ 'refs' ] ]
+    return [
+      responses.BuildGoToResponseFromLocation(
+        _BuildLocation( GetFileContents( request_data,
+                                         ref[ 'file' ] ).splitlines(),
+                        ref[ 'file' ],
+                        ref[ 'start' ][ 'line' ],
+                        ref[ 'start' ][ 'offset' ] ),
+        ref[ 'lineText' ] )
+      for ref in response[ 'refs' ]
+    ]
 
 
   def _GoToType( self, request_data ):
@@ -384,7 +390,7 @@ class TypeScriptCompleter( Completer ):
     info = self._SendRequest( 'quickinfo', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'column_codepoint' ]
     } )
     return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
 
@@ -394,7 +400,7 @@ class TypeScriptCompleter( Completer ):
     info = self._SendRequest( 'quickinfo', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'column_codepoint' ]
     } )
 
     message = '{0}\n\n{1}'.format( info[ 'displayString' ],
@@ -412,7 +418,7 @@ class TypeScriptCompleter( Completer ):
     response = self._SendRequest( 'rename', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ],
+      'offset': request_data[ 'column_codepoint' ],
       'findInComments': False,
       'findInStrings': False,
     } )
@@ -453,7 +459,9 @@ class TypeScriptCompleter( Completer ):
 
     chunks = []
     for file_replacement in response[ 'locs' ]:
-      chunks.extend( _BuildFixItChunksForFile( new_name, file_replacement ) )
+      chunks.extend( _BuildFixItChunksForFile( request_data,
+                                               new_name,
+                                               file_replacement ) )
 
     return responses.BuildFixItResponse( [
       responses.FixIt( location, chunks )
@@ -507,22 +515,25 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   )
 
 
-def _BuildFixItChunkForRange( new_name, file_name, source_range ):
+def _BuildFixItChunkForRange( new_name,
+                              file_contents,
+                              file_name,
+                              source_range ):
   """ returns list FixItChunk for a tsserver source range """
   return responses.FixItChunk(
       new_name,
       responses.Range(
-        start = responses.Location(
-                            source_range[ 'start' ][ 'line' ],
-                            source_range[ 'start' ][ 'offset' ],
-                            file_name ),
-        end = responses.Location(
-                            source_range[ 'end' ][ 'line' ],
-                            source_range[ 'end' ][ 'offset' ],
-                            file_name ) ) )
+        start = _BuildLocation( file_contents,
+                                file_name,
+                                source_range[ 'start' ][ 'line' ],
+                                source_range[ 'start' ][ 'offset' ] ),
+        end   = _BuildLocation( file_contents,
+                                file_name,
+                                source_range[ 'end' ][ 'line' ],
+                                source_range[ 'end' ][ 'offset' ] ) ) )
 
 
-def _BuildFixItChunksForFile( new_name, file_replacement ):
+def _BuildFixItChunksForFile( request_data, new_name, file_replacement ):
   """ returns a list of FixItChunk for each replacement range for the
   supplied file"""
 
@@ -530,7 +541,16 @@ def _BuildFixItChunksForFile( new_name, file_replacement ):
   # whereas all other paths in Python are of the C:\\blah\\blah form. We use
   # normpath to have python do the conversion for us.
   file_path = os.path.normpath( file_replacement[ 'file' ] )
-  _logger.debug( 'Converted {0} to {1}'.format( file_replacement[ 'file' ],
-                                                file_path ) )
-  return [ _BuildFixItChunkForRange( new_name, file_path, r )
+  file_contents = GetFileContents( request_data, file_path ).splitlines()
+  return [ _BuildFixItChunkForRange( new_name, file_contents, file_path, r )
            for r in file_replacement[ 'locs' ] ]
+
+
+def _BuildLocation( file_contents, filename, line, offset ):
+  # tsserver returns codepoint offsets, but we need byte offsets, so we must
+  # convert
+  return responses.Location(
+    line = line,
+    column = utils.CodepointOffsetToByteOffset( file_contents[ line - 1 ],
+                                                offset ),
+    filename = filename )
