@@ -502,11 +502,12 @@ class TernCompleter( Completer ):
                                   request_data[ 'column_codepoint' ],
                                   request_data )
 
-    return responses.BuildGoToResponse(
-      response[ 'file' ],
-      response[ 'start' ][ 'line' ] + 1,
-      response[ 'start' ][ 'ch' ] + 1
-    )
+    return responses.BuildGoToResponseFromLocation(
+      _BuildLocation( GetFileContents( request_data,
+                                       response[ 'file' ] ).splitlines(),
+                      response[ 'file' ],
+                      response[ 'start' ][ 'line' ],
+                      response[ 'start' ][ 'ch' ] ) )
 
 
   def _GoToReferences( self, request_data ):
@@ -518,10 +519,15 @@ class TernCompleter( Completer ):
                                   request_data[ 'column_codepoint' ],
                                   request_data )
 
-    return [ responses.BuildGoToResponse( ref[ 'file' ],
-                                          ref[ 'start' ][ 'line' ] + 1,
-                                          ref[ 'start' ][ 'ch' ] + 1 )
-             for ref in response[ 'refs' ] ]
+    return [
+      responses.BuildGoToResponseFromLocation(
+        _BuildLocation( GetFileContents( request_data,
+                                         ref[ 'file' ] ).splitlines(),
+                        ref[ 'file' ],
+                        ref[ 'start' ][ 'line' ],
+                        ref[ 'start' ][ 'ch' ] ) )
+      for ref in response[ 'refs' ]
+    ]
 
 
   def _Rename( self, request_data, args ):
@@ -584,27 +590,17 @@ class TernCompleter( Completer ):
     #     ]
     # }
 
-    def BuildLocation(  file_contents, filename, line, ch ):
-      # tern returns codepoint offsets, but we need byte offsets, so we must
-      # convert
-      return responses.Location(
-        line + 1,
-        utils.CodepointOffsetToByteOffset(
-          file_contents[ line ],
-          ch + 1 ),
-        filename )
-
 
     def BuildRange( file_contents, filename, start, end ):
       return responses.Range(
-        BuildLocation( file_contents,
-                       filename,
-                       start[ 'line' ],
-                       start[ 'ch' ] ),
-        BuildLocation( file_contents,
-                       filename,
-                       end[ 'line' ],
-                       end[ 'ch' ] ) )
+        _BuildLocation( file_contents,
+                        filename,
+                        start[ 'line' ],
+                        start[ 'ch' ] ),
+        _BuildLocation( file_contents,
+                        filename,
+                        end[ 'line' ],
+                        end[ 'ch' ] ) )
 
 
     def BuildFixItChunk( change ):
@@ -627,3 +623,13 @@ class TernCompleter( Completer ):
                             request_data[ 'column_num' ],
                             request_data[ 'filepath' ] ),
         [ BuildFixItChunk( x ) for x in response[ 'changes' ] ] ) ] )
+
+
+def _BuildLocation( file_contents, filename, line, ch ):
+  # tern returns codepoint offsets, but we need byte offsets, so we must
+  # convert
+  return responses.Location(
+    line = line + 1,
+    column = utils.CodepointOffsetToByteOffset( file_contents[ line ],
+                                                ch + 1 ),
+    filename = os.path.realpath( filename ) )

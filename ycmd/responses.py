@@ -63,12 +63,16 @@ class NoDiagnosticSupport( ServerError ):
 
 # column_num is a byte offset
 def BuildGoToResponse( filepath, line_num, column_num, description = None ):
-  response = {
-    'filepath': os.path.realpath( filepath ),
-    'line_num': line_num,
-    'column_num': column_num
-  }
+  return BuildGoToResponseFromLocation(
+    Location( line = line_num,
+              column = column_num,
+              filename = os.path.realpath( filepath ) ),
+    description )
 
+
+def BuildGoToResponseFromLocation( location, description = None ):
+  """Build a GoTo response from a responses.Location object"""
+  response = BuildLocationData( location )
   if description:
     response[ 'description' ] = description
   return response
@@ -163,15 +167,6 @@ class FixIt( object ):
   must be byte offsets into the UTF-8 encoded version of the appropriate
   buffer.
   """
-
-  # TODO(Ben): Check RefactorRename and FixIt apply correctly when the buffer
-  # contains unicode on lines with changes. I expect that this will work
-  # mostly for c++, but will not work for javascript or c-sharp.
-  #
-  # It may be simpler to require that BuildLocationData takes a codepoint, and
-  # it does the conversion. However, this requires passing the source buffer
-  # line to it, which will also require many changes.
-
   def __init__ ( self, location, chunks ):
     """location of type Location, chunks of type list<FixItChunk>"""
     self.location = location

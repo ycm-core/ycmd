@@ -3,7 +3,7 @@ var y = '†'.cha
 var x = 't'.cha
 
 var øbjecø = {
-  'ålpha': '∫eta'
+  /* unicøde comment */ 'ålpha': '∫eta'
 };
 
 øbjecø.a
