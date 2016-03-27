@@ -44,6 +44,16 @@ from ycmd.utils import ReadFile
 # isPrototypeOf()
 
 
+def _CombineRequest( request, data ):
+  return BuildRequest( **_Merge( request, data ) )
+
+
+def _Merge( request, data ):
+  kw = dict( request )
+  kw.update( data )
+  return kw
+
+
 def RunTest( app, test ):
   """
   Method to run a simple completion test and verify the result
@@ -58,23 +68,18 @@ def RunTest( app, test ):
 
   contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
-
   app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
-                                 'event_name': 'FileReadyToParse',
-                                 'contents': contents,
-                                 } ),
+                 _CombineRequest( test[ 'request' ], {
+                                  'event_name': 'FileReadyToParse',
+                                  'contents': contents,
+                                  } ),
                  expect_errors = True )
 
   # We ignore errors here and we check the response code ourself.
   # This is to allow testing of requests returning errors.
   response = app.post_json( '/completions',
-                            CombineRequest( test[ 'request' ], {
-                              'contents': contents
+                            _CombineRequest( test[ 'request' ], {
+                               'contents': contents
                             } ),
                             expect_errors = True )
 
@@ -305,3 +310,102 @@ def GetCompletions_ReturnsDocsInCompletions_test( app ):
       } )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_IgoreNonJSFiles_test( app ):
+  trivial1 = {
+    'filetypes': [ 'python' ],
+    'contents':  ReadFile( PathToTestFile( 'trivial.js' ) ),
+  }
+  trivial2 = {
+    'filetypes': [ 'javascript' ],
+    'contents':  ReadFile( PathToTestFile( 'trivial2.js' ) ),
+  }
+
+  request = {
+    'line_num': 1,
+    'column_num': 3,
+    'file_data': {
+      PathToTestFile( 'trivial.js' ): trivial1,
+      PathToTestFile( 'trivial2.js' ): trivial2,
+    },
+  }
+
+  app.post_json( '/event_notification', _Merge( request, {
+    'filepath': PathToTestFile( 'trivial2.js' ),
+    'event_name': 'FileReadyToParse',
+  } ) )
+
+  response = app.post_json( '/completions', _Merge( request, {
+    'filepath': PathToTestFile( 'trivial2.js' ),
+  } ) ).json
+
+  print( 'completer response: {0}'.format( pformat( response, indent=2 ) ) )
+
+  assert_that( response,
+    has_entries( {
+      'completion_start_column': 3,
+      # Note: we do *not* see X.y and X.z because tern is not told about
+      # the trivial.js file because we pretended it was Python
+      'completions': empty(),
+      'errors': empty(),
+    } )
+  )
+
+
+@SharedYcmd
+def GetCompletions_IncludeMultiFileType_test( app ):
+  trivial1 = {
+    'filetypes': [ 'python', 'javascript' ],
+    'contents':  ReadFile( PathToTestFile( 'trivial.js' ) ),
+  }
+  trivial2 = {
+    'filetypes': [ 'javascript' ],
+    'contents':  ReadFile( PathToTestFile( 'trivial2.js' ) ),
+  }
+
+  request = {
+    'line_num': 1,
+    'column_num': 3,
+    'file_data': {
+      PathToTestFile( 'trivial.js' ): trivial1,
+      PathToTestFile( 'trivial2.js' ): trivial2,
+    },
+  }
+
+  app.post_json( '/event_notification', _Merge( request, {
+    'filepath': PathToTestFile( 'trivial2.js' ),
+    'event_name': 'FileReadyToParse',
+  } ) )
+
+  response = app.post_json( '/completions', _Merge( request, {
+    'filepath': PathToTestFile( 'trivial2.js' ),
+    # We must force the use of semantic engine because the previous test would
+    # have entered 'empty' results into the completion cache.
+    'force_semantic': True,
+  } ) ).json
+
+  print( 'completer response: {0}'.format( pformat( response, indent=2 ) ) )
+
+  assert_that( response,
+    has_entries( {
+      'completion_start_column': 3,
+      # Note: This time, we *do* see the completions, becuase one of the 2
+      # filetypes for trivial.js is javascript.
+      'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'y', 'string' ),
+          CompletionEntryMatcher( 'z', 'string' ),
+          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+          CompletionEntryMatcher( 'hasOwnProperty',
+                                  'fn(prop: string) -> bool' ),
+          CompletionEntryMatcher( 'isPrototypeOf',
+                                  'fn(obj: ?) -> bool' ),
+          CompletionEntryMatcher( 'propertyIsEnumerable',
+                                  'fn(prop: string) -> bool' ),
+      ),
+      'errors': empty(),
+    } )
+  )

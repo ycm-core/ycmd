@@ -311,7 +311,8 @@ class TernCompleter( Completer ):
 
     full_request = {
       'files': [ MakeIncompleteFile( x, file_data[ x ] )
-                 for x in iterkeys( file_data ) ],
+                 for x in iterkeys( file_data )
+                 if 'javascript' in file_data[ x ][ 'filetypes' ] ],
     }
     full_request.update( request )
 
