@@ -102,9 +102,9 @@ debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
 2. Build ycm_core.so with debugging information (and link against debug Python):
 
 ```
-    export EXTRA_CMAKE_ARGS=‘-DPYTHON_LIBRARY=$HOME/.pyenv/versions/2.7.11/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=$HOME/.pyenv/versions/2.7.11/include/python2.7’ -DCMAKE_BUILD_TYPE=Debug
+    export EXTRA_CMAKE_ARGS=‘-DPYTHON_LIBRARY=$HOME/.pyenv/versions/2.7.11/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=$HOME/.pyenv/versions/2.7.11/include/python2.7’
    pyenv shell 2.7.11
-   ./build.sh —all
+   ./build.sh —all --enable-debug
 ```
 
 3. Enable debugging in the OS. On Linux (Ubuntu at least, which is what all of
