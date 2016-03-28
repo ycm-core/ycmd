@@ -170,9 +170,59 @@ def FiletypeCompleterExistsForFiletype( filetype ):
 
 def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
   from ycm_core import FilterAndSortCandidates
-  return FilterAndSortCandidates( candidates,
-                                  ToCppStringCompatible( sort_property ),
-                                  ToCppStringCompatible( query ) )
+
+  # The c++ interface we use only understands the (*native*) 'str' type (i.e.
+  # not the 'str' type from future. So if we pass in a pass it a 'unicode' or
+  # 'bytes' instance then various things blow up, such as converting to
+  # std::string. Therefore all strings passed into the c++ API must pass through
+  # ToCppStringCompatible (or more strictly all strings which the C++ code
+  # needs to use and convert. In this case, just the insertion text property)
+  cpp_compatible_candidates = _ConvertCandidatesToCppCompatible(
+    candidates,
+    sort_property )
+
+  # However, the reset of the python layer expects all the candidates properties
+  # to be some form of unicode string - a future str instance.
+  # So we need to convert the insertion text property back to a unicode string
+  # before returning it.
+  filtered_candidates = FilterAndSortCandidates(
+    cpp_compatible_candidates,
+    ToCppStringCompatible( sort_property ),
+    ToCppStringCompatible( query ) )
+
+  return _ConvertCandidatesToPythonCompatible( filtered_candidates,
+                                               sort_property )
+
+
+def _ConvertCandidatesToCppCompatible( candidates, sort_property ):
+  """Convert the candidates to the format expected by the C++ layer"""
+  return _ConvertCandidates( candidates, sort_property, ToCppStringCompatible )
+
+
+def _ConvertCandidatesToPythonCompatible( candidates, sort_property ):
+  """Convert the candidates to the format expected by the python layer"""
+  return _ConvertCandidates( candidates, sort_property, ToUnicode )
+
+
+def _ConvertCandidates( candidates, sort_property, converter ):
+  """ Apply the conversion function |converter| to the logical insertion text
+  field within the candidates in the candidate list |candidates|. The
+  |sort_property| is required to determine the format of |candidates|.
+
+  The conversion function should take a single argument (the string) and return
+  the converted string. It should be one of ycmd.utils.ToUnicode or
+  ycmd.utils.ToCppStringCompatible.
+
+  Typically this method is not called directly, rather it is used via
+  _ConvertCandidatesToCppCompatible and _ConvertCandidatesToPythonCompatible"""
+
+  if sort_property:
+    for candidate in candidates:
+      candidate[ sort_property ] = converter( candidate[ sort_property ] )
+    return candidates
+
+  return [ converter( c ) for c in candidates ]
+
 
 TRIGGER_REGEX_PREFIX = 're!'
 
