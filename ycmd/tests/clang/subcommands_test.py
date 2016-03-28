@@ -88,25 +88,29 @@ def RunGoToTest_all( app, filename, command, test ):
 
   goto_data = BuildRequest( **request )
 
-  eq_( response,
-       app.post_json( '/run_completer_command', goto_data ).json )
+  actual_response = app.post_json( '/run_completer_command', goto_data ).json
+  pprint( actual_response )
+  eq_( response, actual_response )
 
 
 def Subcommands_GoTo_all_test():
   # GoToDeclaration
   tests = [
     # Local::x -> declaration of x
-    { 'request': [23, 21], 'response': [ 4,  9] },
+    { 'request': [ 23, 21 ],  'response': [ 4,  9 ] },
     # Local::in_line -> declaration of Local::in_line
-    { 'request': [24, 26], 'response': [ 6, 10] },
+    { 'request': [ 24, 26 ],  'response': [ 6, 10 ] },
     # Local -> declaration of Local
-    { 'request': [24, 16], 'response': [ 2, 11] },
+    { 'request': [ 24, 16 ],  'response': [ 2, 11 ] },
     # Local::out_of_line -> declaration of Local::out_of_line
-    { 'request': [25, 27], 'response': [11, 10] },
+    { 'request': [ 25, 27 ],  'response': [ 11, 10 ] },
     # GoToDeclaration on definition of out_of_line moves to declaration
-    { 'request': [14, 13], 'response': [11, 10] },
+    { 'request': [ 14, 13 ],  'response': [ 11, 10] },
     # main -> declaration of main
-    { 'request': [21,  7], 'response': [19, 5] },
+    { 'request': [ 21,  7 ],  'response': [ 19, 5] },
+    # Another_Unicøde
+    { 'request': [ 36,  25 ], 'response': [ 32, 54] },
+    { 'request': [ 38,  3 ],  'response': [ 36, 28] },
   ]
 
   for test in tests:
@@ -122,17 +126,19 @@ def Subcommands_GoTo_all_test():
   #
   tests = [
     # Local::x -> declaration of x
-    { 'request': [23, 21], 'response': [ 4,  9] },
+    { 'request': [ 23, 21 ], 'response': [ 4,  9] },
     # Local::in_line -> declaration of Local::in_line
-    { 'request': [24, 26], 'response': [ 6, 10] },
+    { 'request': [ 24, 26 ], 'response': [ 6, 10 ] },
     # Local -> declaration of Local
-    { 'request': [24, 16], 'response': [ 2, 11] },
+    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
     # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [25, 27], 'response': [14, 13] }, # sic
+    { 'request': [ 25, 27 ], 'response': [ 14, 13 ] }, # sic
     # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [14, 13], 'response': [14, 13] }, # sic
+    { 'request': [ 14, 13 ], 'response': [ 14, 13 ] }, # sic
     # main -> definition of main (not declaration)
-    { 'request': [21,  7], 'response': [21, 5] }, # sic
+    { 'request': [ 21,  7 ], 'response': [ 21, 5]  }, # sic
+    # Unicøde
+    { 'request': [ 34, 8  ], 'response': [ 32, 26 ] },
   ]
 
   for test in tests:
@@ -159,6 +165,8 @@ def Subcommands_GoTo_all_test():
     { 'request': [14, 13], 'response': [14, 13] }, # sic
     # main -> definition of main (not declaration)
     { 'request': [21,  7], 'response': [21, 5] }, # sic
+    # Another_Unicøde
+    { 'request': [ 36,  25 ], 'response': [ 32, 54] },
   ]
 
   for test in tests:
@@ -215,8 +223,9 @@ def RunGoToIncludeTest( app, command, test ):
     'column_num' : 1,
   }
 
-  eq_( response,
-       app.post_json( '/run_completer_command', goto_data ).json )
+  actual_response = app.post_json( '/run_completer_command', goto_data ).json
+  pprint( actual_response )
+  eq_( response, actual_response )
 
 
 def Subcommands_GoToInclude_test():
@@ -287,8 +296,9 @@ def RunGetSemanticTest( app, filename, test, command):
 
   request_data = BuildRequest( **request )
 
-  eq_( { 'message': expected },
-       app.post_json( '/run_completer_command', request_data ).json )
+  response = app.post_json( '/run_completer_command', request_data ).json
+  pprint( response )
+  eq_( { 'message': expected }, response )
 
 
 def Subcommands_GetType_test():
@@ -360,6 +370,9 @@ def Subcommands_GetType_test():
     [{'line_num': 32, 'column_num': 19}, 'int'],
     [{'line_num': 33, 'column_num': 13}, 'Foo * => Foo *'], # sic
     [{'line_num': 33, 'column_num': 20}, 'int'],
+
+    # Unicode
+    [{'line_num': 47, 'column_num': 13}, 'Unicøde *'],
   ]
 
   for test in tests:

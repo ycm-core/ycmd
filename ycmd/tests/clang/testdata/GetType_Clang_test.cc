@@ -43,5 +43,8 @@ int main()
   int ry = rFoo.y;
   int px = pFoo->x;
 
+  struct Unicøde;
+  Unicøde *ø;
+
   return 0;
 }

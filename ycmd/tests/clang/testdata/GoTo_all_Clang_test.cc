@@ -26,3 +26,14 @@ int main()
 
     return 0;
 }
+
+void unicode()
+{
+  /* †est ê */ struct Unicøde { int u; }; struct Another_Unicøde;
+
+  Unicøde *ç;
+
+  ç->u; Another_Unicøde *u;
+
+  u;
+}
