@@ -21,7 +21,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 from hamcrest import assert_that, contains, contains_inanyorder, has_entries
 from nose.tools import eq_

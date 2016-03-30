@@ -21,7 +21,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 from hamcrest import raises, assert_that, calling
 from nose.tools import ok_

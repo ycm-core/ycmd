@@ -21,7 +21,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
