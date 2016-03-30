@@ -21,7 +21,7 @@ from __future__ import print_function
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest import assert_that, has_item, contains, equal_to, is_not  # noqa

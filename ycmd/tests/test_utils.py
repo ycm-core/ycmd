@@ -24,7 +24,7 @@ from __future__ import absolute_import
 from future import standard_library
 from future.utils import iteritems
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 from future.utils import PY2
 from hamcrest import contains_string, has_entry, has_entries

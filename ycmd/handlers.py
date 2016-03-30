@@ -21,7 +21,7 @@ from __future__ import print_function
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 from os import path
 

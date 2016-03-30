@@ -53,7 +53,7 @@ def GetUtf8String_Py3Bytes_test():
   eq_( 'foo', str( ycm_core.GetUtf8String( b'foo' ) ) )
 
 
-# No test for `bytes` from builtins because it's very difficult to make
+# No test for `bytes` from future.builtins because it's very difficult to make
 # GetUtf8String work with that and also it should never receive that type in the
 # first place (only py2 str/unicode and py3 bytes/str).
 

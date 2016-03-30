@@ -30,7 +30,7 @@ SetUpPythonPath()
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 import sys
 import logging

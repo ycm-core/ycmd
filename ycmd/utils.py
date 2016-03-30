@@ -21,7 +21,7 @@ from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 from future.utils import PY2, native
 
 import tempfile
@@ -96,7 +96,7 @@ def ToBytes( value ):
   if not value:
     return bytes()
 
-  # This is tricky. On py2, the bytes type from builtins (from python-future) is
+  # This is tricky. On py2, the bytes type from future.builtins (from python-future) is
   # a subclass of str. So all of the following are true:
   #   isinstance(str(), bytes)
   #   isinstance(bytes(), str)
@@ -111,7 +111,7 @@ def ToBytes( value ):
     return bytes( value, encoding = 'utf8' )
 
   if isinstance( value, str ):
-    # On py2, with `from builtins import *` imported, the following is true:
+    # On py2, with `from future.builtins import *` imported, the following is true:
     #
     #   bytes(str(u'abc'), 'utf8') == b"b'abc'"
     #

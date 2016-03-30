@@ -23,7 +23,7 @@ from __future__ import print_function
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *  # noqa
+from future.builtins import *  # noqa
 
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
