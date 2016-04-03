@@ -25,6 +25,7 @@ from __future__ import absolute_import
 import sys
 import os
 import io
+import re
 
 VERSION_FILENAME = 'CORE_VERSION'
 CORE_NOT_COMPATIBLE_MESSAGE = (
@@ -32,6 +33,7 @@ CORE_NOT_COMPATIBLE_MESSAGE = (
 )
 
 DIR_OF_CURRENT_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
+DIR_PACKAGES_REGEX = re.compile( '(site|dist)-packages$' )
 
 
 def SetUpPythonPath():
@@ -86,11 +88,19 @@ def AddNearestThirdPartyFoldersToSysPath( filepath ):
     # under its 'src' folder, but SOME of its modules are only meant to be
     # accessible under py2, not py3. This is because these modules (like
     # `queue`) are implementations of modules present in the py3 standard
-    # library. So to work around issues, we place the python-future last on
-    # sys.path so that they can be overriden by the standard library.
+    # library. Furthermore, we need to be sure that they are not overriden by
+    # already installed packages (for example, the 'builtins' module from
+    # 'pies2overrides' or a different version of 'python-future'). To work
+    # around these issues, we place the python-future just before the first
+    # path ending with 'site-packages' (or 'dist-packages' for Debian-like
+    # distributions) so that its modules can be overridden by the standard
+    # library but not by installed packages.
     if folder == 'python-future':
       folder = os.path.join( folder, 'src' )
-      sys.path.append( os.path.realpath( os.path.join( path_to_third_party,
+      packages_indices = ( sys.path.index( path ) for path in sys.path
+                           if DIR_PACKAGES_REGEX.search( path ) )
+      sys.path.insert( next( packages_indices, len( sys.path ) ),
+                       os.path.realpath( os.path.join( path_to_third_party,
                                                        folder ) ) )
       continue
     sys.path.insert( 0, os.path.realpath( os.path.join( path_to_third_party,

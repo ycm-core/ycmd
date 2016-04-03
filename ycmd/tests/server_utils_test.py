@@ -23,11 +23,31 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import raises, assert_that, calling
+from hamcrest import ( assert_that, calling, contains, contains_inanyorder,
+                       raises )
+from mock import patch
 from nose.tools import ok_
-from ycmd.server_utils import ( PathToNearestThirdPartyFolder,
-                                AddNearestThirdPartyFoldersToSysPath )
 import os.path
+import sys
+
+from ycmd.server_utils import ( AddNearestThirdPartyFoldersToSysPath,
+                                PathToNearestThirdPartyFolder )
+
+DIR_OF_THIRD_PARTY = os.path.abspath(
+  os.path.join( os.path.dirname( __file__ ), '..', '..', 'third_party' ) )
+THIRD_PARTY_FOLDERS = (
+  os.path.join( DIR_OF_THIRD_PARTY, 'argparse' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'bottle' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'godef' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'gocode' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'JediHTTP' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'OmniSharpServer' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'racerd' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'requests' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'tern_runtime' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'waitress' )
+)
 
 
 def PathToNearestThirdPartyFolder_Success_test():
@@ -43,3 +63,53 @@ def AddNearestThirdPartyFoldersToSysPath_Failure_test():
     calling( AddNearestThirdPartyFoldersToSysPath ).with_args(
       os.path.expanduser( '~' ) ),
     raises( RuntimeError, '.*third_party folder.*' ) )
+
+
+@patch( 'sys.path', [ '/some/path',
+                      '/first/path/to/site-packages',
+                      '/another/path',
+                      '/second/path/to/site-packages' ] )
+def AddNearestThirdPartyFoldersToSysPath_FutureBeforeSitePackages_test():
+  AddNearestThirdPartyFoldersToSysPath( __file__ )
+  assert_that( sys.path[ : len( THIRD_PARTY_FOLDERS ) ], contains_inanyorder(
+    *THIRD_PARTY_FOLDERS
+  ) )
+  assert_that( sys.path[ len( THIRD_PARTY_FOLDERS ) : ], contains(
+    '/some/path',
+    os.path.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ),
+    '/first/path/to/site-packages',
+    '/another/path',
+    '/second/path/to/site-packages',
+  ) )
+
+
+@patch( 'sys.path', [ '/some/path',
+                      '/first/path/to/dist-packages',
+                      '/another/path',
+                      '/second/path/to/dist-packages' ] )
+def AddNearestThirdPartyFoldersToSysPath_FutureBeforeDistPackages_test():
+  AddNearestThirdPartyFoldersToSysPath( __file__ )
+  assert_that( sys.path[ : len( THIRD_PARTY_FOLDERS ) ], contains_inanyorder(
+    *THIRD_PARTY_FOLDERS
+  ) )
+  assert_that( sys.path[ len( THIRD_PARTY_FOLDERS ) : ], contains(
+    '/some/path',
+    os.path.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ),
+    '/first/path/to/dist-packages',
+    '/another/path',
+    '/second/path/to/dist-packages',
+  ) )
+
+
+@patch( 'sys.path', [ '/some/path',
+                      '/another/path' ] )
+def AddNearestThirdPartyFoldersToSysPath_FutureLastIfNoPackages_test():
+  AddNearestThirdPartyFoldersToSysPath( __file__ )
+  assert_that( sys.path[ : len( THIRD_PARTY_FOLDERS ) ], contains_inanyorder(
+    *THIRD_PARTY_FOLDERS
+  ) )
+  assert_that( sys.path[ len( THIRD_PARTY_FOLDERS ) : ], contains(
+    '/some/path',
+    '/another/path',
+    os.path.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ),
+  ) )
