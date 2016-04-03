@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.utils import ToUnicode, ToBytes
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
 
@@ -101,18 +100,8 @@ def CompletionStartColumn( line_value, column_num, filetype ):
     foo.bar^
   with the cursor being at the location of the caret (so the character *AFTER*
   'r'), then the starting column would be the index of the letter 'b'."""
-  # NOTE: column_num and other numbers on the wire are byte indices, but we need
-  # to walk codepoints for identifier checks.
-
-  utf8_line_value = ToBytes( line_value )
-  unicode_line_value = ToUnicode( line_value )
-  codepoint_column_num = len(
-      str( utf8_line_value[ : column_num - 1 ], 'utf8' ) ) + 1
 
   # -1 and then +1 to account for difference betwen 0-based and 1-based
   # indices/columns
-  codepoint_start_column = StartOfLongestIdentifierEndingAtIndex(
-      unicode_line_value, codepoint_column_num - 1, filetype ) + 1
-
-  return len(
-      unicode_line_value[ : codepoint_start_column - 1 ].encode( 'utf8' ) ) + 1
+  return StartOfLongestIdentifierEndingAtIndex(
+      line_value, column_num - 1, filetype ) + 1
