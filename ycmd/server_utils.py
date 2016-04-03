@@ -101,7 +101,7 @@ def AddNearestThirdPartyFoldersToSysPath( filepath ):
                            if DIR_PACKAGES_REGEX.search( path ) )
       sys.path.insert( next( packages_indices, len( sys.path ) ),
                        os.path.realpath( os.path.join( path_to_third_party,
-                                         folder ) ) )
+                                                       folder ) ) )
       continue
     sys.path.insert( 0, os.path.realpath( os.path.join( path_to_third_party,
                                                         folder ) ) )
