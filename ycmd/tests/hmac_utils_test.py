@@ -24,9 +24,17 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from binascii import hexlify
-from nose.tools import eq_, ok_, raises
+from nose.tools import eq_, ok_
+from hamcrest import raises, assert_that, calling
 from ycmd import hmac_utils as hu
 from ycmd.tests.test_utils import Py2Only
+
+
+def CreateHmac_ArgsNotBytes_test():
+  assert_that( calling( hu.CreateHmac ).with_args( u'foo', bytes( b'foo' ) ),
+               raises( TypeError, '.*content*' ) )
+  assert_that( calling( hu.CreateHmac ).with_args( bytes( b'foo' ), u'foo' ),
+               raises( TypeError, '.*hmac_secret*' ) )
 
 
 def CreateHmac_WithBytes_test():
@@ -46,6 +54,28 @@ def CreateHmac_WithPy2Str_test():
     'key' ) ),
     'f7bc83f430538424b13298e6aa6fb143'
     'ef4d59a14946175997479dbc2d1a3cd8' )
+
+
+def CreateRequestHmac_ArgsNotBytes_test():
+  assert_that(
+    calling( hu.CreateRequestHmac ).with_args(
+      u'foo', bytes( b'foo' ), bytes( b'foo' ), bytes( b'foo' ) ),
+    raises( TypeError, '.*method*' ) )
+
+  assert_that(
+    calling( hu.CreateRequestHmac ).with_args(
+      bytes( b'foo' ), u'foo', bytes( b'foo' ), bytes( b'foo' ) ),
+    raises( TypeError, '.*path*' ) )
+
+  assert_that(
+    calling( hu.CreateRequestHmac ).with_args(
+      bytes( b'foo' ), bytes( b'foo' ), u'foo', bytes( b'foo' ) ),
+    raises( TypeError, '.*body*' ) )
+
+  assert_that(
+    calling( hu.CreateRequestHmac ).with_args(
+      bytes( b'foo' ), bytes( b'foo' ), bytes( b'foo' ), u'foo' ),
+    raises( TypeError, '.*hmac_secret*' ) )
 
 
 def CreateRequestHmac_WithBytes_test():
@@ -71,6 +101,7 @@ def CreateRequestHmac_WithPy2Str_test():
 
 def SecureBytesEqual_Basic_test():
   ok_( hu.SecureBytesEqual( bytes( b'foo' ), bytes( b'foo' ) ) )
+  ok_( not hu.SecureBytesEqual( bytes( b'foo' ), bytes( b'fo' ) ) )
   ok_( not hu.SecureBytesEqual( bytes( b'foo' ), bytes( b'goo' ) ) )
 
 
@@ -78,12 +109,12 @@ def SecureBytesEqual_Empty_test():
   ok_( hu.SecureBytesEqual( bytes(), bytes() ) )
 
 
-@raises( TypeError )
 def SecureBytesEqual_ExceptionOnUnicode_test():
-  ok_( hu.SecureBytesEqual( u'foo', u'foo' ) )
+  assert_that( calling( hu.SecureBytesEqual ).with_args( u'foo', u'foo' ),
+               raises( TypeError, '.*inputs must be bytes.*' ) )
 
 
 @Py2Only
-@raises( TypeError )
 def SecureBytesEqual_ExceptionOnPy2Str_test():
-  ok_( hu.SecureBytesEqual( 'foo', 'foo' ) )
+  assert_that( calling( hu.SecureBytesEqual ).with_args( 'foo', 'foo' ),
+               raises( TypeError, '.*inputs must be bytes.*' ) )
