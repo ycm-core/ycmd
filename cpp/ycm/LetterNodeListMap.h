@@ -32,6 +32,7 @@ class LetterNode;
 
 YCM_DLL_EXPORT int IndexForChar( char letter );
 YCM_DLL_EXPORT bool IsUppercase( char letter );
+bool IsInAsciiRange( int index );
 
 class LetterNodeListMap : boost::noncopyable {
 public:
