@@ -32,5 +32,36 @@ TEST( LetterBitsetFromStringTest, Basic ) {
   EXPECT_EQ( expected, LetterBitsetFromString( text ) );
 }
 
-} // namespace YouCompleteMe
 
+TEST( LetterBitsetFromStringTest, Boundaries ) {
+  Bitset expected;
+  // While the null character (0) is the lower bound, we cannot check it
+  // because it is used to terminate a string.
+  expected.set( IndexForChar( 1 ) );
+  expected.set( IndexForChar( 127 ) );
+
+  // \x01 is the start of heading character.
+  // \x7f (127) is the delete character.
+  // \x80 (-128) and \xff (-1) are out of ASCII characters range and are
+  // ignored.
+  std::string text = "\x01\x7f\x80\xff";
+  EXPECT_EQ( expected, LetterBitsetFromString( text ) );
+}
+
+
+TEST( LetterBitsetFromStringTest, IgnoreNonAsciiCharacters ) {
+  Bitset expected;
+  expected.set( IndexForChar( 'u' ) );
+  expected.set( IndexForChar( 'n' ) );
+  expected.set( IndexForChar( 'i' ) );
+  expected.set( IndexForChar( 'd' ) );
+
+  // UTF-8 characters representation:
+  //   ¢: \xc2\xa2
+  //   €: \xe2\x82\xac
+  //   𐍈: \xf0\x90\x8d\x88
+  std::string text = "uni¢𐍈d€";
+  EXPECT_EQ( expected, LetterBitsetFromString( text ) );
+}
+
+} // namespace YouCompleteMe
