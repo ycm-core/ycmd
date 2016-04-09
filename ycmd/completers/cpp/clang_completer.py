@@ -351,7 +351,7 @@ class ClangCompleter( Completer ):
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
-    # TODO(Ben): all of these calculations are currently working with byte
+    # FIXME: all of these calculations are currently working with byte
     # offsets, which are technically incorrect. We should be working with
     # codepoint offsets, as we want the nearest character-wise diagnostic
     for diagnostic in diagnostics:

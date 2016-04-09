@@ -5,13 +5,13 @@ namespace testy {
         /**
          * Tests the GetDoc subcommands
          */
-	public class Unicøde {
+        public class Unicøde {
                 /**
                  * Constructor
                  */
-		public Unicøde () {
+        	public Unicøde () {
                     this.an_int = 1;
-		}
+        	}
 
                 /**
                  * Very important methød.
@@ -48,5 +48,5 @@ namespace testy {
                 interface Bøøm { void Båm(); }
                 public class BøømBøøm : Bøøm { public void Båm() { } }
                 public class BåmBåm : Bøøm { public void Båm() { } }
-	}
+        }
 }

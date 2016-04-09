@@ -1,5 +1,6 @@
-# Copyright (C) 2015 ycmd contributors
 # encoding: utf-8
+#
+# Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -496,7 +497,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
   response = app.post_json( '/run_completer_command',
                             request ).json
 
-  pprint.pprint( response, indent=2 )
+  pprint.pprint( response, indent = 2 )
 
   assert_that( response, has_entries ( {
     'fixits': contains( has_entries( {
@@ -543,7 +544,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
   response = app.post_json( '/run_completer_command',
                             request ).json
 
-  pprint.pprint( response, indent=2 )
+  pprint.pprint( response, indent = 2 )
 
   assert_that( response, has_entries ( {
     'fixits': contains( has_entries( {
@@ -597,7 +598,7 @@ def Subcommands_RefactorRename_SimpleUnicode_test( app ):
   response = app.post_json( '/run_completer_command',
                             request ).json
 
-  pprint.pprint( response, indent=2 )
+  pprint.pprint( response, indent = 2 )
 
   assert_that( response, has_entries ( {
     'fixits': contains( has_entries( {

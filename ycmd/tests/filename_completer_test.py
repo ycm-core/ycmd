@@ -48,13 +48,13 @@ REQUEST_DATA = {
 
 def _CompletionResultsForLine( filename_completer,
                                contents,
-                               extra_data=None,
-                               column_num=None ):
+                               extra_data = None,
+                               column_num = None ):
   request = REQUEST_DATA.copy()
 
   # Strictly, column numbers are *byte* offsets, not character offsets. If
   # the contents of the file contain unicode characters, then we should manually
-  # supply the correct byte offset
+  # supply the correct byte offset.
   column_num = len( contents ) + 1 if not column_num else column_num
 
   request[ 'column_num' ] = column_num
@@ -70,13 +70,13 @@ def _CompletionResultsForLine( filename_completer,
 
 def _ShouldUseNowForLine( filename_completer,
                           contents,
-                          extra_data=None,
-                          column_num=None ):
+                          extra_data = None,
+                          column_num = None ):
   request = REQUEST_DATA.copy()
 
   # Strictly, column numbers are *byte* offsets, not character offsets. If
   # the contents of the file contain unicode characters, then we should manually
-  # supply the correct byte offset
+  # supply the correct byte offset.
   column_num = len( contents ) + 1 if not column_num else column_num
 
   request[ 'column_num' ] = column_num

@@ -1,5 +1,6 @@
-# Copyright (C) 2014 Google Inc.
 # encoding: utf8
+#
+# Copyright (C) 2014 Google Inc.
 #
 # This file is part of ycmd.
 #
@@ -27,12 +28,10 @@ from builtins import *  # noqa
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          CodepointOffsetToByteOffset,
                          ToUnicode,
-                         ToBytes )
+                         ToBytes,
+                         SplitLines )
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
-
-import logging
-_logger = logging.getLogger( __name__ )
 
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
@@ -99,10 +98,7 @@ class RequestWrap( object ):
     current_file = self._request[ 'filepath' ]
     contents = self._request[ 'file_data' ][ current_file ][ 'contents' ]
 
-    # Handling ''.splitlines() returning [] instead of ['']
-    if contents is not None and len( contents ) == 0:
-      return ''
-    return contents.split( '\n' )[ self._request[ 'line_num' ] - 1 ]
+    return SplitLines( contents )[ self._request[ 'line_num' ] - 1 ]
 
 
   def CompletionStartColumn( self ):
@@ -126,13 +122,9 @@ class RequestWrap( object ):
 
 
   def _Query( self ):
-    query = ToUnicode( self[ 'line_bytes' ][
-             self[ 'start_column' ] - 1 : self[ 'column_num' ] - 1 ] )
-
-    _logger.debug( 'Query for line /{0}/ is /{1}/'.format( self[ 'line_value' ],
-                                                           query ) )
-
-    return query
+    return self[ 'line_value' ][
+        self[ 'start_codepoint' ] - 1 : self[ 'column_codepoint' ] - 1
+    ]
 
 
   def _Filetypes( self ):
@@ -148,9 +140,9 @@ def CompletionStartColumn( line_value, column_num, filetype ):
   'r'), then the starting column would be the index of the letter 'b'.
 
   NOTE: if the line contains multi-byte characters, then the result is not
-  the 'character' index (see CompletionStartCodepoint for that), and therfore
-  is is not safe to perform any character-relevant arithmetic on the result
-  of this method"""
+  the 'character' index (see CompletionStartCodepoint for that), and therefore
+  it is not safe to perform any character-relevant arithmetic on the result
+  of this method."""
   return CodepointOffsetToByteOffset(
       ToUnicode( line_value ),
       CompletionStartCodepoint( line_value, column_num, filetype ) )

@@ -26,7 +26,6 @@ from builtins import *  # noqa
 
 import os
 import re
-import logging
 from collections import defaultdict
 
 from ycmd.completers.completer import Completer
@@ -38,8 +37,6 @@ from ycmd.utils import ToUnicode, OnWindows
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
-
-_logger = logging.getLogger( __name__ )
 
 
 class FilenameCompleter( Completer ):
@@ -113,7 +110,7 @@ class FilenameCompleter( Completer ):
     start_codepoint = request_data[ 'start_codepoint' ] - 1
     filepath = request_data[ 'filepath' ]
     filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
-    line = current_line[ :start_codepoint ]
+    line = current_line[ : start_codepoint ]
 
     if InCFamilyFile( filetypes ):
       path_dir, quoted_include = (

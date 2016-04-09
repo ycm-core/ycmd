@@ -1,5 +1,6 @@
-# Copyright (C) 2015 ycmd contributors
 # encoding: utf-8
+#
+# Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -28,7 +29,8 @@ import json
 
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entry, has_entries )
+                       has_item, has_items, has_entry, has_entries,
+                       contains_string )
 import http.client
 
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
@@ -50,7 +52,7 @@ def RunTest( app, test ):
    - requires extra_conf_data containing 'filetype&' = the filetype
 
   This should be sufficient for many standard test cases. If not, specify
-  a path (as a list of path items) in 'extra_conf' member of |test|
+  a path (as a list of path items) in 'extra_conf' member of |test|.
 
   test is a dictionary containing:
     'request': kwargs for BuildRequest
@@ -508,7 +510,7 @@ def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
 
 
 @SharedYcmd
-def GetCompletions_Unicode_InLine_test( app ):
+def GetCompletions_UnicodeInLine_test( app ):
   RunTest( app, {
     'description': 'member completion with a unicode identifier',
     'extra_conf': [ '.ycm_extra_conf.py' ],
@@ -537,9 +539,10 @@ def GetCompletions_Unicode_InLine_test( app ):
 
 @ExpectedFailure( 'Filtering and sorting does not work when the candidate '
                   'contains non-ASCII characters. This is due to the way '
-                  'the filtering and sorting code works.' )
+                  'the filtering and sorting code works.',
+                  contains_string( "value for 'completions' no item matches" ) )
 @SharedYcmd
-def GetCompletions_Unicode_InLine_Filter_test( app ):
+def GetCompletions_UnicodeInLineFilter_test( app ):
   RunTest( app, {
     'description': 'member completion with a unicode identifier',
     'extra_conf': [ '.ycm_extra_conf.py' ],

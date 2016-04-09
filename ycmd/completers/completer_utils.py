@@ -28,6 +28,7 @@ from future.utils import iteritems
 # We don't want ycm_core inside Vim.
 import os
 import re
+import copy
 from collections import defaultdict
 from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile
 
@@ -99,7 +100,7 @@ def _FiletypeDictUnion( dict_one, dict_two ):
 
 
 # start_codepoint and column_codepoint are codepoint offsets in the unicode
-# string line_value
+# string line_value.
 def _RegexTriggerMatches( trigger,
                           line_value,
                           start_codepoint,
@@ -117,8 +118,8 @@ def _RegexTriggerMatches( trigger,
   return False
 
 
-# start_codepoint and column_codepoint are 0-based and are codepiont offsets
-# into # the unicode string line_value
+# start_codepoint and column_codepoint are 0-based and are codepoint offsets
+# into the unicode string line_value.
 def _MatchingSemanticTrigger( line_value, start_codepoint, column_codepoint,
                               trigger_list ):
   if start_codepoint < 0 or column_codepoint < 0:
@@ -172,17 +173,31 @@ def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
   from ycm_core import FilterAndSortCandidates
 
   # The c++ interface we use only understands the (*native*) 'str' type (i.e.
-  # not the 'str' type from future. So if we pass in a pass it a 'unicode' or
+  # not the 'str' type from python-future. If we pass it a 'unicode' or
   # 'bytes' instance then various things blow up, such as converting to
   # std::string. Therefore all strings passed into the c++ API must pass through
   # ToCppStringCompatible (or more strictly all strings which the C++ code
   # needs to use and convert. In this case, just the insertion text property)
+
+  # FIXME: This is actually quite inefficient in an area which is used
+  # constantly and the key performance critical part of the system. There is
+  # code in the C++ layer (see PythonSupport.cpp:GetUtf8String) which attempts
+  # to work around this limitation. Unfortunately it has issues which cause the
+  # above problems, and we work around it by converting here in the python
+  # layer until we can come up with a better solution in the C++ layer.
+
+  # Note: we must deep copy candidates because we do not want to clobber the
+  # data that is passed in. It is actually used directly by the cache, so if
+  # we change the data pointed to by the elements of candidates, then this will
+  # be reflected in a subsequent response from the cache. This is particularly
+  # important for those candidates which are *not* returned after the filter, as
+  # they are not converted back to unicode.
   cpp_compatible_candidates = _ConvertCandidatesToCppCompatible(
-    candidates,
+    copy.deepcopy( candidates ),
     sort_property )
 
   # However, the reset of the python layer expects all the candidates properties
-  # to be some form of unicode string - a future str instance.
+  # to be some form of unicode string - a python-future str() instance.
   # So we need to convert the insertion text property back to a unicode string
   # before returning it.
   filtered_candidates = FilterAndSortCandidates(
@@ -195,17 +210,17 @@ def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
 
 
 def _ConvertCandidatesToCppCompatible( candidates, sort_property ):
-  """Convert the candidates to the format expected by the C++ layer"""
+  """Convert the candidates to the format expected by the C++ layer."""
   return _ConvertCandidates( candidates, sort_property, ToCppStringCompatible )
 
 
 def _ConvertCandidatesToPythonCompatible( candidates, sort_property ):
-  """Convert the candidates to the format expected by the python layer"""
+  """Convert the candidates to the format expected by the python layer."""
   return _ConvertCandidates( candidates, sort_property, ToUnicode )
 
 
 def _ConvertCandidates( candidates, sort_property, converter ):
-  """ Apply the conversion function |converter| to the logical insertion text
+  """Apply the conversion function |converter| to the logical insertion text
   field within the candidates in the candidate list |candidates|. The
   |sort_property| is required to determine the format of |candidates|.
 
@@ -214,7 +229,7 @@ def _ConvertCandidates( candidates, sort_property, converter ):
   ycmd.utils.ToCppStringCompatible.
 
   Typically this method is not called directly, rather it is used via
-  _ConvertCandidatesToCppCompatible and _ConvertCandidatesToPythonCompatible"""
+  _ConvertCandidatesToCppCompatible and _ConvertCandidatesToPythonCompatible."""
 
   if sort_property:
     for candidate in candidates:
@@ -285,7 +300,10 @@ def GetIncludeStatementValue( line, check_closing = True ):
 
 def GetFileContents( request_data, filename ):
   """Returns the contents of the absolute path |filename| as a unicode
-  string"""
+  string. If the file contents exist in |request_data| (i.e. it is open and
+  potentially modified/dirty in the user's editor), then it is returned,
+  otherwise the file is read from disk (assuming a UTF-8 encoding) and its
+  contents returned."""
   file_data = request_data[ 'file_data' ]
   if filename in file_data:
     return ToUnicode( file_data[ filename ][ 'contents' ] )

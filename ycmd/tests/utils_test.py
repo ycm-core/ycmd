@@ -1,5 +1,6 @@
-# Copyright (C) 2016  ycmd contributors.
 # encoding: utf-8
+#
+# Copyright (C) 2016  ycmd contributors.
 #
 # This file is part of ycmd.
 #
@@ -379,26 +380,26 @@ def OpenForStdHandle_PrintDoesntThrowException_test():
 
 
 def CodepointOffsetToByteOffset_test():
-  # tuples of ( ( unicode_line_value, codepoint_offset ), expected_result )
+  # Tuples of ( ( unicode_line_value, codepoint_offset ), expected_result ).
   tests = [
-    # Simple ascii strings
+    # Simple ascii strings.
     ( ( 'test', 1 ), 1 ),
     ( ( 'test', 4 ), 4 ),
     ( ( 'test', 5 ), 5 ),
 
-    # unicode char at beginning
+    # Unicode char at beginning.
     ( ( '†est', 1 ), 1 ),
     ( ( '†est', 2 ), 4 ),
     ( ( '†est', 4 ), 6 ),
     ( ( '†est', 5 ), 7 ),
 
-    # unicode char at end
+    # Unicode char at end.
     ( ( 'tes†', 1 ), 1 ),
     ( ( 'tes†', 2 ), 2 ),
     ( ( 'tes†', 4 ), 4 ),
     ( ( 'tes†', 5 ), 7 ),
 
-    # unicode char in middle
+    # Unicode char in middle.
     ( ( 'tes†ing', 1 ), 1 ),
     ( ( 'tes†ing', 2 ), 2 ),
     ( ( 'tes†ing', 4 ), 4 ),
@@ -406,7 +407,7 @@ def CodepointOffsetToByteOffset_test():
     ( ( 'tes†ing', 7 ), 9 ),
     ( ( 'tes†ing', 8 ), 10 ),
 
-    # Converts bytes to unicode
+    # Converts bytes to Unicode.
     ( ( utils.ToBytes( '†est' ), 2 ), 4 )
   ]
 
@@ -416,26 +417,26 @@ def CodepointOffsetToByteOffset_test():
 
 
 def ByteOffsetToCodepointOffset_test():
-  # tuples of ( ( unicode_line_value, byte_offset ), expected_result )
+  # Tuples of ( ( unicode_line_value, byte_offset ), expected_result ).
   tests = [
-    # Simple ascii strings
+    # Simple ascii strings.
     ( ( 'test', 1 ), 1 ),
     ( ( 'test', 4 ), 4 ),
     ( ( 'test', 5 ), 5 ),
 
-    # unicode char at beginning
+    # Unicode char at beginning.
     ( ( '†est', 1 ), 1 ),
     ( ( '†est', 4 ), 2 ),
     ( ( '†est', 6 ), 4 ),
     ( ( '†est', 7 ), 5 ),
 
-    # unicode char at end
+    # Unicode char at end.
     ( ( 'tes†', 1 ), 1 ),
     ( ( 'tes†', 2 ), 2 ),
     ( ( 'tes†', 4 ), 4 ),
     ( ( 'tes†', 7 ), 5 ),
 
-    # unicode char in middle
+    # Unicode char in middle.
     ( ( 'tes†ing', 1 ), 1 ),
     ( ( 'tes†ing', 2 ), 2 ),
     ( ( 'tes†ing', 4 ), 4 ),
@@ -447,3 +448,28 @@ def ByteOffsetToCodepointOffset_test():
   for test in tests:
     yield lambda: eq_( utils.ByteOffsetToCodepointOffset( *test[ 0 ] ),
                        test[ 1 ] )
+
+
+def SplitLines_test():
+  # Tuples of ( input, expected_output ) for utils.SplitLines.
+  tests = [
+    ( '', [ '' ] ),
+    ( ' ', [ ' ' ] ),
+    ( '\n', [ '', '' ] ),
+    ( ' \n', [ ' ', '' ] ),
+    ( ' \n ', [ ' ', ' ' ] ),
+    ( 'test\n', [ 'test', '' ] ),
+    ( '\r', [ '', '' ] ),
+    ( '\r ', [ '', ' ' ] ),
+    ( 'test\r', [ 'test', '' ] ),
+    ( '\n\r', [ '', '', '' ] ),
+    ( '\r\n', [ '', '' ] ),
+    ( '\r\n\n', [ '', '', '' ] ),
+    # Other behaviors are just the behavior of splitlines, so just a couple of
+    # tests to prove that we don't mangle it.
+    ( 'test\ntesting', [ 'test', 'testing' ] ),
+    ( '\ntesting', [ '', 'testing' ] ),
+  ]
+
+  for test in tests:
+    yield lambda: eq_( utils.SplitLines( test[ 0 ] ), test[ 1 ] )

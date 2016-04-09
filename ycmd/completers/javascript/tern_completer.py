@@ -339,7 +339,7 @@ class TernCompleter( Completer ):
 
     NOTE: the |codepoint| parameter is usually the current cursor position,
     though it should be the "completion start column" codepoint for completion
-    requests"""
+    requests."""
 
     def MakeTernLocation( request_data ):
       return {
@@ -503,8 +503,8 @@ class TernCompleter( Completer ):
                                   request_data )
 
     return responses.BuildGoToResponseFromLocation(
-      _BuildLocation( GetFileContents( request_data,
-                                       response[ 'file' ] ).splitlines(),
+      _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                         response[ 'file' ] ) ),
                       response[ 'file' ],
                       response[ 'start' ][ 'line' ],
                       response[ 'start' ][ 'ch' ] ) )
@@ -521,8 +521,8 @@ class TernCompleter( Completer ):
 
     return [
       responses.BuildGoToResponseFromLocation(
-        _BuildLocation( GetFileContents( request_data,
-                                         ref[ 'file' ] ).splitlines(),
+        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                           ref[ 'file' ] ) ),
                         ref[ 'file' ],
                         ref[ 'start' ][ 'line' ],
                         ref[ 'start' ][ 'ch' ] ) )
@@ -605,7 +605,8 @@ class TernCompleter( Completer ):
 
     def BuildFixItChunk( change ):
       filename = os.path.abspath( change[ 'file' ] )
-      file_contents = GetFileContents( request_data, filename ).splitlines()
+      file_contents = utils.SplitLines( GetFileContents( request_data,
+                                                         filename ) )
       return responses.FixItChunk(
         change[ 'text' ],
         BuildRange( file_contents,

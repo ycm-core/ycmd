@@ -119,18 +119,12 @@ class TypeScriptCompleter( Completer ):
     # Used to prevent threads from concurrently accessing the sequence counter
     self._sequenceid_lock = Lock()
 
-    # TSServer ignores the fact that newlines are two characters on Windows
-    # (\r\n) instead of one on other platforms (\n), so we use the
-    # universal_newlines option to convert those newlines to \n. See the issue
-    # https://github.com/Microsoft/TypeScript/issues/3403
-    # TODO: remove this option when the issue is fixed.
-    # We also need to redirect the error stream to the output one on Windows.
+    # We need to redirect the error stream to the output one on Windows.
     self._tsserver_handle = utils.SafePopen( binarypath,
-                                             stdout = subprocess.PIPE,
                                              stdin = subprocess.PIPE,
+                                             stdout = subprocess.PIPE,
                                              stderr = subprocess.STDOUT,
-                                             env = self._environ,
-                                             universal_newlines = True )
+                                             env = self._environ )
 
     # Used to map sequence id's to their corresponding DeferredResponse
     # objects. The reader loop uses this to hand out responses.
@@ -174,7 +168,7 @@ class TypeScriptCompleter( Completer ):
             self._pending[ seq ].resolve( message )
             del self._pending[ seq ]
       except Exception as e:
-        _logger.error( 'ReaderLoop error: {0}'.format( str( e ) ) )
+        _logger.exception( e )
 
 
   def _ReadMessage( self ):
@@ -187,7 +181,7 @@ class TypeScriptCompleter( Completer ):
       headerline = self._tsserver_handle.stdout.readline().strip()
       if not headerline:
         break
-      key, value = headerline.split( ':', 1 )
+      key, value = utils.ToUnicode( headerline ).split( ':', 1 )
       headers[ key.strip() ] = value.strip()
 
     # The response message is a JSON object which comes back on one line.
@@ -196,6 +190,13 @@ class TypeScriptCompleter( Completer ):
     if 'Content-Length' not in headers:
       raise RuntimeError( "Missing 'Content-Length' header" )
     contentlength = int( headers[ 'Content-Length' ] )
+    # TSServer adds a newline at the end of the response message and counts it
+    # as one character (\n) towards the content length. However, newlines are
+    # two characters on Windows (\r\n), so we need to take care of that. See
+    # issue https://github.com/Microsoft/TypeScript/issues/3403
+    # TODO: remove this when the issue is fixed.
+    if utils.OnWindows():
+      contentlength += 1
     content = self._tsserver_handle.stdout.readline( contentlength )
     return json.loads( utils.ToUnicode( content ) )
 
@@ -224,7 +225,7 @@ class TypeScriptCompleter( Completer ):
 
     request = json.dumps( self._BuildRequest( command, arguments ) ) + '\n'
     with self._writelock:
-      self._tsserver_handle.stdin.write( request )
+      self._tsserver_handle.stdin.write( utils.ToBytes( request ) )
       self._tsserver_handle.stdin.flush()
 
 
@@ -241,7 +242,7 @@ class TypeScriptCompleter( Completer ):
       seq = request[ 'seq' ]
       self._pending[ seq ] = deferred
     with self._writelock:
-      self._tsserver_handle.stdin.write( json_request )
+      self._tsserver_handle.stdin.write( utils.ToBytes( json_request ) )
       self._tsserver_handle.stdin.flush()
     return deferred.result()
 
@@ -340,8 +341,8 @@ class TypeScriptCompleter( Completer ):
 
       span = filespans[ 0 ]
       return responses.BuildGoToResponseFromLocation(
-        _BuildLocation( GetFileContents( request_data,
-                                         span[ 'file' ] ).splitlines(),
+        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                           span[ 'file' ] ) ),
                         span[ 'file' ],
                         span[ 'start' ][ 'line' ],
                         span[ 'start' ][ 'offset' ] ) )
@@ -358,8 +359,8 @@ class TypeScriptCompleter( Completer ):
     } )
     return [
       responses.BuildGoToResponseFromLocation(
-        _BuildLocation( GetFileContents( request_data,
-                                         ref[ 'file' ] ).splitlines(),
+        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                           ref[ 'file' ] ) ),
                         ref[ 'file' ],
                         ref[ 'start' ][ 'line' ],
                         ref[ 'start' ][ 'offset' ] ),
@@ -543,7 +544,7 @@ def _BuildFixItChunksForFile( request_data, new_name, file_replacement ):
   # whereas all other paths in Python are of the C:\\blah\\blah form. We use
   # normpath to have python do the conversion for us.
   file_path = os.path.normpath( file_replacement[ 'file' ] )
-  file_contents = GetFileContents( request_data, file_path ).splitlines()
+  file_contents = utils.SplitLines( GetFileContents( request_data, file_path ) )
   return [ _BuildFixItChunkForRange( new_name, file_contents, file_path, r )
            for r in file_replacement[ 'locs' ] ]
 

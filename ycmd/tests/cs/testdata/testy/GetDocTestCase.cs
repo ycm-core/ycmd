@@ -32,5 +32,5 @@ namespace testy {
                     GetDocTestCase tc;
                     tc.DoATest();
                 }
-	}
+        }
 }

@@ -1,4 +1,5 @@
 # encoding: utf-8
+#
 # Copyright (C) 2013 Google Inc.
 #               2015 ycmd contributors
 #
@@ -131,10 +132,9 @@ def GetCompletions_IdentifierCompleter_Unicode_InLine_test( app ):
   )
 
 
-@ExpectedFailure( "The identifier completer - like FilterAndSortCandidates "
-                  "can't handle unicode: "
-                  "https://github.com/Valloric/YouCompleteMe/issues/278",
-                  contains_string( 'bitset' ) )
+@ExpectedFailure( 'The identifier completer does not support '
+                  'unicode characters',
+                  contains_string( '[]' ) )
 @SharedYcmd
 def GetCompletions_IdentifierCompleter_UnicodeQuery_InLine_test( app ):
   contents = """
@@ -408,3 +408,53 @@ def GetCompletions_CacheIsNotValid_DifferentCompletionType_test(
     # We ask for candidates twice because of cache invalidation:
     # completion types are different between requests.
     assert_that( candidates_list.call_count, equal_to( 2 ) )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
+        return_value = True )
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        return_value = [ 'aba', 'cbc' ] )
+def GetCompletions_FilterThenReturnFromCache_test( app,
+                                                   candidates_list,
+                                                   *args ):
+
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    # First, fill the cache with an empty query
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.',
+                                    line_num = 1,
+                                    column_num = 9 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that( results,
+                 has_items( CompletionEntryMatcher( 'aba' ),
+                            CompletionEntryMatcher( 'cbc' ) ) )
+
+    # Now, filter them. This causes them to be converted to bytes and back
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.c',
+                                    line_num = 1,
+                                    column_num = 10 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that( results,
+                 has_items( CompletionEntryMatcher( 'cbc' ) ) )
+
+    # Finally, request the original (unfiltered) set again. Ensure that we get
+    # proper results (not some bytes objects)
+    # First, fill the cache with an empty query
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.',
+                                    line_num = 1,
+                                    column_num = 9 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that( results,
+                 has_items( CompletionEntryMatcher( 'aba' ),
+                            CompletionEntryMatcher( 'cbc' ) ) )
+
+    assert_that( candidates_list.call_count, equal_to( 1 ) )

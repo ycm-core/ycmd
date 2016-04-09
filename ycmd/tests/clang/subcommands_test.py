@@ -1,5 +1,6 @@
-# Copyright (C) 2015 ycmd contributors
 # encoding: utf-8
+#
+# Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -1082,7 +1083,7 @@ This is a method which is only pretend global
 
 
 @SharedYcmd
-def Subcommands_GetDoc_unicode_test( app ):
+def Subcommands_GetDoc_Unicode_test( app ):
   filepath = PathToTestFile( 'unicode.cc' )
   contents = ReadFile( filepath )
 

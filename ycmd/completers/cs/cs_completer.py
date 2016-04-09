@@ -262,7 +262,7 @@ class CsharpCompleter( Completer ):
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
-    # TODO(Ben): all of these calculations are currently working with byte
+    # FIXME: all of these calculations are currently working with byte
     # offsets, which are technically incorrect. We should be working with
     # codepoint offsets, as we want the nearest character-wise diagnostic
     for diagnostic in diagnostics:
@@ -509,8 +509,8 @@ class CsharpSolutionCompleter( object ):
 
     result = self._GetResponse( '/fixcodeissue', request )
     replacement_text = result[ "Text" ]
-    # Note: column_num already a byte offset so we don't need to use
-    # _BuildLocation
+    # Note: column_num is already a byte offset so we don't need to use
+    # _BuildLocation.
     location = responses.Location( request_data[ 'line_num' ],
                                    request_data[ 'column_num' ],
                                    request_data[ 'filepath' ] )
@@ -680,7 +680,7 @@ def _IndexToLineColumn( text, index ):
 
 
 def _BuildLocation( request_data, filename, line_num, column_num ):
-  contents = GetFileContents( request_data, filename ).splitlines()
+  contents = utils.SplitLines( GetFileContents( request_data, filename ) )
   line_value = contents[ line_num - 1 ]
   return responses.Location(
       line_num,

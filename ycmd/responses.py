@@ -66,12 +66,12 @@ def BuildGoToResponse( filepath, line_num, column_num, description = None ):
   return BuildGoToResponseFromLocation(
     Location( line = line_num,
               column = column_num,
-              filename = os.path.realpath( filepath ) ),
+              filename = filepath ),
     description )
 
 
 def BuildGoToResponseFromLocation( location, description = None ):
-  """Build a GoTo response from a responses.Location object"""
+  """Build a GoTo response from a responses.Location object."""
   response = BuildLocationData( location )
   if description:
     response[ 'description' ] = description
@@ -134,7 +134,6 @@ def BuildCompletionResponse( completion_datas,
 
 # location.column_number_ is a byte offset
 def BuildLocationData( location ):
-  # TODO(Ben): Check all cases that location is a byte offset
   return {
     'line_num': location.line_number_,
     'column_num': location.column_number_,
@@ -199,7 +198,7 @@ class Location( object ):
     absolute path of the file"""
     self.line_number_ = line
     self.column_number_ = column
-    self.filename_ = filename
+    self.filename_ = os.path.realpath( filename )
 
 
 def BuildDiagnosticData( diagnostic ):

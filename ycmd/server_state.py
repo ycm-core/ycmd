@@ -107,13 +107,10 @@ class ServerState( object ):
     """
     Determines whether or not the semantic completer should be called, and
     returns an indication of the reason why. Specifically, returns a tuple:
-    ( should_use_completer_now, was_semantic_completion_forced, debug_reason ),
-    where:
+    ( should_use_completer_now, was_semantic_completion_forced ), where:
      - should_use_completer_now: if True, the semantic engine should be used
      - was_semantic_completion_forced: if True, the user requested "forced"
                                        semantic completion
-     - debug_reason: A string identifying why this is the result
-
     was_semantic_completion_forced is always False if should_use_completer_now
     is False
     """
@@ -121,18 +118,17 @@ class ServerState( object ):
     if self.FiletypeCompletionUsable( filetypes ):
       if ForceSemanticCompletion( request_data ):
         # use semantic, and it was forced
-        return ( True, True, "Forced" )
+        return ( True, True )
       else:
         # was not forced. check the conditions for triggering
-        return ( self.GetFiletypeCompleter( filetypes ).ShouldUseNow(
-                   request_data ), False, "Filetype completer trigger check" )
+        return (
+          self.GetFiletypeCompleter( filetypes ).ShouldUseNow( request_data ),
+          False
+        )
 
     # don't use semantic, ignore whether or not the user requested forced
     # completion
-    return ( False,
-             False,
-             "filetype completion not usable for filetypes {0}".format(
-                ','.join( filetypes ) ) )
+    return ( False, False )
 
 
   def GetGeneralCompleter( self ):

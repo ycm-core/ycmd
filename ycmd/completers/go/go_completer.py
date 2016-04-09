@@ -201,7 +201,7 @@ class GoCompleter( Completer ):
       contents = utils.ToBytes(
           request_data[ 'file_data' ][ filename ][ 'contents' ] )
 
-      # NOTE(Ben): Offsets sent to gocode are byte offsets, so using column_num
+      # Offsets sent to gocode are byte offsets, so using column_num
       # with contents (a bytes instance) above is correct.
       offset = _ComputeOffset( contents, request_data[ 'line_num' ],
                                request_data[ 'column_num' ] )

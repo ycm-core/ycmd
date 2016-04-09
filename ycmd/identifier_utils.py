@@ -1,5 +1,6 @@
-# Copyright (C) 2014 Google Inc.
 # encoding: utf-8
+#
+# Copyright (C) 2014 Google Inc.
 #
 # This file is part of ycmd.
 #
@@ -51,15 +52,15 @@ COMMENT_AND_STRING_REGEX = re.compile(
   #  3. the escaped double quote inside the string
   r'(?<!\\)"(?:\\\\|\\"|.)*?"', re.MULTILINE )
 
-# At the least c++ and javascript support unicode identifiers, and
-# identifiers may start with unicode character, e.g. ålpha. So we need to
-# accept any identifier starting with a 'alpha' character or underscore. i.e.
-# not starting with a 'digit'. The following regex will match:
+# At least c++ and javascript support unicode identifiers, and identifiers may
+# start with unicode character, e.g. ålpha. So we need to accept any identifier
+# starting with an 'alpha' character or underscore. i.e. not starting with a
+# 'digit'. The following regex will match:
 #   - A character which is alpha or _. That is a character which is NOT:
 #     - a digit (\d)
 #     - non-alphanumeric
 #     - not an underscore
-#       (The latter two come from \W is negation of \w)
+#       (The latter two come from \W which is the negation of \w)
 #   - Followed by any alphanumeric or _ characters
 DEFAULT_IDENTIFIER_REGEX = re.compile( r"[^\W\d]\w*", re.UNICODE )
 
@@ -94,10 +95,6 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
 
     # Spec: http://doc.perl6.org/language/syntax
     'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
-
-    # Spec: http://www.ecma-international.org/ecma-262/5.1/#sec-7.6
-    #  And referenced chapter 5 of unicode standard v3.0 (Section 5.16):
-    #    - http://www.unicode.org/versions/Unicode3.0.0/ch05.pdf
 }
 
 FILETYPE_TO_IDENTIFIER_REGEX[ 'scss' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]
