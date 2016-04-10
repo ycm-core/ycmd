@@ -39,13 +39,9 @@ public:
   LetterNodeListMap();
   YCM_DLL_EXPORT ~LetterNodeListMap();
 
-  bool HasLetter( char letter );
-
   std::list< LetterNode * > &operator[] ( char letter );
 
   YCM_DLL_EXPORT std::list< LetterNode * > *ListPointerAt( char letter );
-
-  bool HasLetter( char letter ) const;
 
 private:
   boost::array< std::list< LetterNode * >*, NUM_LETTERS > letters_;

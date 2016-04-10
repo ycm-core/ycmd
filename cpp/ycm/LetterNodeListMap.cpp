@@ -53,17 +53,6 @@ LetterNodeListMap::~LetterNodeListMap() {
 }
 
 
-bool LetterNodeListMap::HasLetter( char letter ) {
-  int letter_index = IndexForChar( letter );
-
-  if ( !IsInAsciiRange( letter_index ) )
-    return false;
-
-  std::list< LetterNode * > *list = letters_[ letter_index ];
-  return list;
-}
-
-
 std::list< LetterNode * > &LetterNodeListMap::operator[] ( char letter ) {
   int letter_index = IndexForChar( letter );
 
@@ -79,16 +68,6 @@ std::list< LetterNode * > &LetterNodeListMap::operator[] ( char letter ) {
 
 std::list< LetterNode * > *LetterNodeListMap::ListPointerAt( char letter ) {
   return letters_.at( IndexForChar( letter ) );
-}
-
-
-bool LetterNodeListMap::HasLetter( char letter ) const {
-  int letter_index = IndexForChar( letter );
-
-  if ( !IsInAsciiRange( letter_index ) )
-    return false;
-
-  return letters_[ letter_index ] != NULL;
 }
 
 } // namespace YouCompleteMe
