@@ -30,9 +30,9 @@ namespace YouCompleteMe {
 
 class LetterNode;
 
-YCM_DLL_EXPORT int IndexForChar( char letter );
 YCM_DLL_EXPORT bool IsUppercase( char letter );
 bool IsInAsciiRange( int index );
+YCM_DLL_EXPORT int IndexForLetter( char letter );
 
 class LetterNodeListMap : boost::noncopyable {
 public:

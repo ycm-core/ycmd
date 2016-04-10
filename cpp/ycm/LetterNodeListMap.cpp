@@ -31,7 +31,7 @@ bool IsInAsciiRange( int index ) {
 }
 
 
-int IndexForChar( char letter ) {
+int IndexForLetter( char letter ) {
   if ( IsUppercase( letter ) )
     return letter + ( 'a' - 'A' );
 
@@ -54,7 +54,7 @@ LetterNodeListMap::~LetterNodeListMap() {
 
 
 std::list< LetterNode * > &LetterNodeListMap::operator[] ( char letter ) {
-  int letter_index = IndexForChar( letter );
+  int letter_index = IndexForLetter( letter );
 
   std::list< LetterNode * > *list = letters_.at( letter_index );
 
@@ -67,7 +67,7 @@ std::list< LetterNode * > &LetterNodeListMap::operator[] ( char letter ) {
 
 
 std::list< LetterNode * > *LetterNodeListMap::ListPointerAt( char letter ) {
-  return letters_.at( IndexForChar( letter ) );
+  return letters_.at( IndexForLetter( letter ) );
 }
 
 } // namespace YouCompleteMe

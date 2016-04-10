@@ -20,15 +20,15 @@
 
 namespace YouCompleteMe {
 
-TEST( IndexForCharTest, Basic ) {
-  EXPECT_EQ( static_cast<int>( 'a' ), IndexForChar( 'a' ) );
-  EXPECT_EQ( static_cast<int>( 'a' ), IndexForChar( 'A' ) );
-  EXPECT_EQ( static_cast<int>( 'z' ), IndexForChar( 'z' ) );
-  EXPECT_EQ( static_cast<int>( 'z' ), IndexForChar( 'Z' ) );
+TEST( IndexForLetterTest, Basic ) {
+  EXPECT_EQ( static_cast<int>( 'a' ), IndexForLetter( 'a' ) );
+  EXPECT_EQ( static_cast<int>( 'a' ), IndexForLetter( 'A' ) );
+  EXPECT_EQ( static_cast<int>( 'z' ), IndexForLetter( 'z' ) );
+  EXPECT_EQ( static_cast<int>( 'z' ), IndexForLetter( 'Z' ) );
 
-  EXPECT_EQ( static_cast<int>( '[' ), IndexForChar( '[' ) );
-  EXPECT_EQ( static_cast<int>( ' ' ), IndexForChar( ' ' ) );
-  EXPECT_EQ( static_cast<int>( '~' ), IndexForChar( '~' ) );
+  EXPECT_EQ( static_cast<int>( '[' ), IndexForLetter( '[' ) );
+  EXPECT_EQ( static_cast<int>( ' ' ), IndexForLetter( ' ' ) );
+  EXPECT_EQ( static_cast<int>( '~' ), IndexForLetter( '~' ) );
 }
 
 } // namespace YouCompleteMe
