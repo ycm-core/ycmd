@@ -42,7 +42,7 @@ public:
 
   std::list< LetterNode * > &operator[] ( char letter );
 
-  std::list< LetterNode * > *ListPointerAt( char letter );
+  YCM_DLL_EXPORT std::list< LetterNode * > *ListPointerAt( char letter );
 
   bool HasLetter( char letter ) const;
 
