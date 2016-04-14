@@ -234,6 +234,62 @@ def Subcommands_GoTo_Fail_test( app ):
 
 
 @SharedYcmd
+def Subcommands_GoToType_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'GoToType' ],
+                            line_num = 14,
+                            column_num = 6,
+                            contents = contents,
+                            filetype = 'typescript',
+                            filepath = filepath )
+
+  response = app.post_json( '/run_completer_command', goto_data ).json
+  assert_that( response,
+               has_entries( {
+                 'filepath': filepath,
+                 'line_num': 2,
+                 'column_num': 1,
+               } ) )
+
+
+@SharedYcmd
+def Subcommands_GoToType_fail_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'GoToType' ],
+                            line_num = 39,
+                            column_num = 8,
+                            contents = contents,
+                            filetype = 'typescript',
+                            filepath = filepath )
+
+  response = app.post_json( '/run_completer_command',
+                            goto_data,
+                            expect_errors = True ).json
+  assert_that( response,
+               ErrorMatcher( RuntimeError, 'Could not find type definition' ) )
+
+
+@SharedYcmd
 def Subcommands_RefactorRename_Missing_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   contents = ReadFile( filepath )

@@ -301,6 +301,8 @@ class TypeScriptCompleter( Completer ):
                            self._GoToDefinition( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
+      'GoToType'       : ( lambda self, request_data, args:
+                           self._GoToType( request_data ) ),
       'GetType'        : ( lambda self, request_data, args:
                            self._GetType( request_data ) ),
       'GetDoc'         : ( lambda self, request_data, args:
@@ -356,6 +358,25 @@ class TypeScriptCompleter( Completer ):
                column_num  = ref[ 'start' ][ 'offset' ],
                description = ref[ 'lineText' ]
              ) for ref in response[ 'refs' ] ]
+
+
+  def _GoToType( self, request_data ):
+    self._Reload( request_data )
+    try:
+      filespans = self._SendRequest( 'typeDefinition', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_num' ]
+      } )
+
+      span = filespans[ 0 ]
+      return responses.BuildGoToResponse(
+        filepath   = span[ 'file' ],
+        line_num   = span[ 'start' ][ 'line' ],
+        column_num = span[ 'start' ][ 'offset' ]
+      )
+    except RuntimeError:
+      raise RuntimeError( 'Could not find type definition' )
 
 
   def _GetType( self, request_data ):
