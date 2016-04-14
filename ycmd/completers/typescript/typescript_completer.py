@@ -359,6 +359,7 @@ class TypeScriptCompleter( Completer ):
                description = ref[ 'lineText' ]
              ) for ref in response[ 'refs' ] ]
 
+
   def _GoToType( self, request_data ):
     self._Reload( request_data )
     try:
