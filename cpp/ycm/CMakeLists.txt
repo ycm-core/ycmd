@@ -276,10 +276,15 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
   else()
     # For Macs, we do things differently; look further in this file.
     if ( NOT APPLE )
-      # Setting this to true makes sure that libraries we build will have our rpath
-      # set even without having to do "make install"
+      # Setting this to true makes sure that libraries we build will have our
+      # rpath set even without having to do "make install"
       set( CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
       set( CMAKE_INSTALL_RPATH "\$ORIGIN" )
+      # Add directories from all libraries outside the build tree to the rpath.
+      # This makes the dynamic linker able to find non system libraries that
+      # our libraries require, in particular the Python one (from pyenv for
+      # instance).
+      set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
     endif()
   endif()
 

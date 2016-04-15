@@ -15,18 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-if ( DEFINED ENV{TRAVIS} )
-  # We lie to Travis CI about the min CMake version we need. For what we use
-  # Travis for, the old version of CMake that it has is good enough.
-  cmake_minimum_required( VERSION 2.8 )
+if ( APPLE )
+  # OSX requires CMake >= 2.8.12, see YCM issue #1439
+  cmake_minimum_required( VERSION 2.8.12 )
 else()
-  if ( APPLE )
-    # OSX requires CMake >= 2.8.12, see YCM issue #1439
-    cmake_minimum_required( VERSION 2.8.12 )
-  else()
-    # CMake 2.8.11 is the latest available version on RHEL/CentOS 7
-    cmake_minimum_required( VERSION 2.8.11 )
-  endif()
+  # CMake 2.8.11 is the latest available version on RHEL/CentOS 7
+  cmake_minimum_required( VERSION 2.8.11 )
 endif()
 
 project( YouCompleteMe )
