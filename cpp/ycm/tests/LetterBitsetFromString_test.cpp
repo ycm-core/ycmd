@@ -22,15 +22,46 @@ namespace YouCompleteMe {
 
 TEST( LetterBitsetFromStringTest, Basic ) {
   Bitset expected;
-  expected.set( IndexForChar( 'a' ) );
-  expected.set( IndexForChar( 'o' ) );
-  expected.set( IndexForChar( 'c' ) );
-  expected.set( IndexForChar( 'f' ) );
-  expected.set( IndexForChar( 'b' ) );
+  expected.set( IndexForLetter( 'a' ) );
+  expected.set( IndexForLetter( 'o' ) );
+  expected.set( IndexForLetter( 'c' ) );
+  expected.set( IndexForLetter( 'f' ) );
+  expected.set( IndexForLetter( 'b' ) );
 
   std::string text = "abcfoof";
   EXPECT_EQ( expected, LetterBitsetFromString( text ) );
 }
 
-} // namespace YouCompleteMe
 
+TEST( LetterBitsetFromStringTest, Boundaries ) {
+  Bitset expected;
+  // While the null character (0) is the lower bound, we cannot check it
+  // because it is used to terminate a string.
+  expected.set( IndexForLetter( 1 ) );
+  expected.set( IndexForLetter( 127 ) );
+
+  // \x01 is the start of heading character.
+  // \x7f (127) is the delete character.
+  // \x80 (-128) and \xff (-1) are out of ASCII characters range and are
+  // ignored.
+  std::string text = "\x01\x7f\x80\xff";
+  EXPECT_EQ( expected, LetterBitsetFromString( text ) );
+}
+
+
+TEST( LetterBitsetFromStringTest, IgnoreNonAsciiCharacters ) {
+  Bitset expected;
+  expected.set( IndexForLetter( 'u' ) );
+  expected.set( IndexForLetter( 'n' ) );
+  expected.set( IndexForLetter( 'i' ) );
+  expected.set( IndexForLetter( 'd' ) );
+
+  // UTF-8 characters representation:
+  //   ¢: \xc2\xa2
+  //   €: \xe2\x82\xac
+  //   𐍈: \xf0\x90\x8d\x88
+  std::string text = "uni¢𐍈d€";
+  EXPECT_EQ( expected, LetterBitsetFromString( text ) );
+}
+
+} // namespace YouCompleteMe

@@ -30,21 +30,18 @@ namespace YouCompleteMe {
 
 class LetterNode;
 
-YCM_DLL_EXPORT int IndexForChar( char letter );
 YCM_DLL_EXPORT bool IsUppercase( char letter );
+bool IsInAsciiRange( int index );
+YCM_DLL_EXPORT int IndexForLetter( char letter );
 
 class LetterNodeListMap : boost::noncopyable {
 public:
   LetterNodeListMap();
   YCM_DLL_EXPORT ~LetterNodeListMap();
 
-  bool HasLetter( char letter );
-
   std::list< LetterNode * > &operator[] ( char letter );
 
-  std::list< LetterNode * > *ListPointerAt( char letter );
-
-  bool HasLetter( char letter ) const;
+  YCM_DLL_EXPORT std::list< LetterNode * > *ListPointerAt( char letter );
 
 private:
   boost::array< std::list< LetterNode * >*, NUM_LETTERS > letters_;

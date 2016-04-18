@@ -27,7 +27,6 @@ LetterNode::LetterNode( char letter, int index )
 }
 
 
-// TODO: this class needs tests
 LetterNode::LetterNode( const std::string &text )
   : is_uppercase_( false ),
     index_( -1 ) {
