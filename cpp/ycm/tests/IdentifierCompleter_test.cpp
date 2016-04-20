@@ -22,6 +22,7 @@
 #include "TestUtils.h"
 
 using ::testing::ElementsAre;
+using ::testing::IsEmpty;
 using ::testing::WhenSorted;
 
 namespace YouCompleteMe {
@@ -33,7 +34,7 @@ TEST( IdentifierCompleterTest, EmptyQueryNoResults ) {
   EXPECT_THAT( IdentifierCompleter(
                  StringVector(
                    "foobar" ) ).CandidatesForQuery( "" ),
-               ElementsAre() );
+               IsEmpty() );
 }
 
 TEST( IdentifierCompleterTest, NoDuplicatesReturned ) {
@@ -265,6 +266,22 @@ TEST( IdentifierCompleterTest, NonAlnumStartChar ) {
                  StringVector(
                    "-zoo-foo" ) ).CandidatesForQuery( "-z" ),
                ElementsAre( "-zoo-foo" ) );
+}
+
+
+TEST( IdentifierCompleterTest, EmptyCandidatesForUnicode ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "uni¢𐍈d€" ) ).CandidatesForQuery( "¢" ),
+               IsEmpty() );
+}
+
+
+TEST( IdentifierCompleterTest, EmptyCandidatesForNonPrintable ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "\x01\x1f\x7f" ) ).CandidatesForQuery( "\x1f" ),
+               IsEmpty() );
 }
 
 

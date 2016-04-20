@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
+
 namespace fs = boost::filesystem;
 
 namespace YouCompleteMe {

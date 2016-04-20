@@ -68,9 +68,11 @@ boost::python::list FilterAndSortCandidates(
   const std::string &query ) {
   pylist filtered_candidates;
 
-  if ( query.empty() ) {
+  if ( query.empty() )
     return candidates;
-  }
+
+  if ( !IsPrintable( query ) )
+    return boost::python::list();
 
   int num_candidates = len( candidates );
   std::vector< const Candidate * > repository_candidates =

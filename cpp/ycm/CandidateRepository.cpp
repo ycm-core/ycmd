@@ -22,16 +22,12 @@
 
 #include <boost/thread/locks.hpp>
 #include <boost/algorithm/string.hpp>
-#include <locale>
 
 #ifdef USE_CLANG_COMPLETER
 #  include "ClangCompleter/CompletionData.h"
 #endif // USE_CLANG_COMPLETER
 
 namespace YouCompleteMe {
-
-using boost::all;
-using boost::is_print;
 
 namespace {
 
@@ -133,7 +129,7 @@ CandidateRepository::~CandidateRepository() {
 const std::string &CandidateRepository::ValidatedCandidateText(
   const std::string &candidate_text ) {
   if ( candidate_text.size() <= MAX_CANDIDATE_SIZE &&
-       all( candidate_text, is_print( std::locale::classic() ) ) )
+       IsPrintable( candidate_text ) )
     return candidate_text;
 
   return empty_;
