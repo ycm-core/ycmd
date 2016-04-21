@@ -86,6 +86,10 @@ std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
   const std::string &query,
   const std::string &filetype ) const {
   ReleaseGil unlock;
+
+  if ( !IsPrintable( query ) )
+    return std::vector< std::string >();
+
   std::vector< Result > results;
   identifier_database_.ResultsForQueryAndType( query, filetype, results );
 
