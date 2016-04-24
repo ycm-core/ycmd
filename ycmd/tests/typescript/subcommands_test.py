@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
@@ -23,10 +25,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import pprint
+
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
-                       has_items,
                        has_entries )
 
 from ycmd.tests.typescript import PathToTestFile, SharedYcmd
@@ -147,8 +150,37 @@ def Subcommands_GetDoc_Class_test( app ):
 
 
 @SharedYcmd
+def Subcommands_GetDoc_Class_Unicode_test( app ):
+  filepath = PathToTestFile( 'unicode.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  gettype_data = BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = [ 'GetDoc' ],
+                               line_num = 35,
+                               column_num = 12,
+                               contents = contents,
+                               filetype = 'typescript',
+                               filepath = filepath )
+
+  response = app.post_json( '/run_completer_command', gettype_data ).json
+  assert_that( response,
+               has_entries( {
+                 'detailed_info': 'class Båøz\n\n'
+                                  'Test unicøde st††††',
+               } ) )
+
+
+@SharedYcmd
 def Subcommands_GoToReferences_test( app ):
   filepath = PathToTestFile( 'test.ts' )
+  file3 = PathToTestFile( 'file3.ts' )
   contents = ReadFile( filepath )
 
   event_data = BuildRequest( filepath = filepath,
@@ -166,14 +198,77 @@ def Subcommands_GoToReferences_test( app ):
                                   filetype = 'typescript',
                                   filepath = filepath )
 
-  expected = has_items(
+  expected = contains_inanyorder(
     has_entries( { 'description': 'var bar = new Bar();',
                    'line_num'   : 33,
-                   'column_num' : 5 } ),
+                   'column_num' : 5,
+                   'filepath'   : filepath } ),
     has_entries( { 'description': 'bar.testMethod();',
                    'line_num'   : 34,
-                   'column_num' : 1 } ) )
+                   'column_num' : 1,
+                   'filepath'   : filepath } ),
+    has_entries( { 'description': 'bar.nonExistingMethod();',
+                   'line_num'   : 35,
+                   'column_num' : 1,
+                   'filepath'   : filepath } ),
+    has_entries( { 'description': 'var bar = new Bar();',
+                   'line_num'   : 1,
+                   'column_num' : 5,
+                   'filepath'   : file3 } ),
+    has_entries( { 'description': 'bar.testMethod();',
+                   'line_num'   : 2,
+                   'column_num' : 1,
+                   'filepath'   : file3 } )
+  )
   actual = app.post_json( '/run_completer_command', references_data ).json
+
+  pprint.pprint( actual )
+
+  assert_that( actual, expected )
+
+
+@SharedYcmd
+def Subcommands_GoToReferences_Unicode_test( app ):
+  filepath = PathToTestFile( 'unicode.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  references_data = BuildRequest( completer_target = 'filetype_default',
+                                  command_arguments = [ 'GoToReferences' ],
+                                  line_num = 14,
+                                  column_num = 3,
+                                  contents = contents,
+                                  filetype = 'typescript',
+                                  filepath = filepath )
+
+  expected = contains_inanyorder(
+    has_entries( { 'description': '  å: number;',
+                   'line_num'   : 14,
+                   'column_num' : 3,
+                   'filepath'   : filepath } ),
+    has_entries( { 'description': 'var baz = new Bår(); baz.å;',
+                   'line_num'   : 20,
+                   'column_num' : 27,
+                   'filepath'   : filepath } ),
+    has_entries( { 'description': 'baz.å;',
+                   'line_num'   : 23,
+                   'column_num' : 5,
+                   'filepath'   : filepath } ),
+    has_entries( { 'description': 'føø_long_long.å;',
+                   'line_num'   : 27,
+                   'column_num' : 17,
+                   'filepath'   : filepath } )
+  )
+  actual = app.post_json( '/run_completer_command', references_data ).json
+
+  pprint.pprint( actual )
+
   assert_that( actual, expected )
 
 
@@ -202,6 +297,35 @@ def Subcommands_GoTo_test( app ):
                has_entries( {
                  'filepath': filepath,
                  'line_num': 30,
+                 'column_num': 3,
+               } ) )
+
+
+@SharedYcmd
+def Subcommands_GoTo_Unicode_test( app ):
+  filepath = PathToTestFile( 'unicode.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'GoToDefinition' ],
+                            line_num = 28,
+                            column_num = 19,
+                            contents = contents,
+                            filetype = 'typescript',
+                            filepath = filepath )
+
+  response = app.post_json( '/run_completer_command', goto_data ).json
+  assert_that( response,
+               has_entries( {
+                 'filepath': filepath,
+                 'line_num': 15,
                  'column_num': 3,
                } ) )
 
@@ -373,7 +497,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
   response = app.post_json( '/run_completer_command',
                             request ).json
 
-  print( str( response ) )
+  pprint.pprint( response, indent = 2 )
 
   assert_that( response, has_entries ( {
     'fixits': contains( has_entries( {
@@ -420,7 +544,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
   response = app.post_json( '/run_completer_command',
                             request ).json
 
-  print( str( response ) )
+  pprint.pprint( response, indent = 2 )
 
   assert_that( response, has_entries ( {
     'fixits': contains( has_entries( {
@@ -447,5 +571,55 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
           LocationMatcher( file3, 1, 18 ) ),
       ),
       'location': LocationMatcher( filepath, 25, 9 )
+    } ) )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_SimpleUnicode_test( app ):
+  filepath = PathToTestFile( 'unicode.ts' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  app.post_json( '/event_notification', event_data )
+
+  request = BuildRequest( completer_target = 'filetype_default',
+                          command_arguments = [ 'RefactorRename', 'ø' ],
+                          line_num = 14,
+                          column_num = 3,
+                          contents = contents,
+                          filetype = 'typescript',
+                          filepath = filepath )
+
+  response = app.post_json( '/run_completer_command',
+                            request ).json
+
+  pprint.pprint( response, indent = 2 )
+
+  assert_that( response, has_entries ( {
+    'fixits': contains( has_entries( {
+      'chunks': contains_inanyorder(
+        ChunkMatcher(
+          'ø',
+          LocationMatcher( filepath, 14, 3 ),
+          LocationMatcher( filepath, 14, 5 ) ),
+        ChunkMatcher(
+          'ø',
+          LocationMatcher( filepath, 20, 27 ),
+          LocationMatcher( filepath, 20, 29 ) ),
+        ChunkMatcher(
+          'ø',
+          LocationMatcher( filepath, 23, 5 ),
+          LocationMatcher( filepath, 23, 7 ) ),
+        ChunkMatcher(
+          'ø',
+          LocationMatcher( filepath, 27, 17),
+          LocationMatcher( filepath, 27, 19 ) ),
+      ),
+      'location': LocationMatcher( filepath, 14, 3 )
     } ) )
   } ) )

@@ -27,16 +27,18 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from future.utils import PY2
-from hamcrest import contains_string, has_entry, has_entries
+from hamcrest import contains_string, has_entry, has_entries, assert_that
 from mock import patch
 from webtest import TestApp
 import bottle
 import contextlib
+import nose
+import functools
 
 from ycmd import handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
-from ycmd.utils import OnMac, OnWindows
+from ycmd.utils import OnMac, OnWindows, ToUnicode
 import ycm_core
 
 try:
@@ -176,3 +178,47 @@ class DummyCompleter( Completer ):
   # This method is here for testing purpose, so it can be mocked during tests
   def CandidatesList( self ):
     return []
+
+
+def ExpectedFailure( reason, *exception_matchers ):
+  """Defines a decorator to be attached to tests. This decorator
+  marks the test as being known to fail, e.g. where documenting or exercising
+  known incorrect behaviour.
+
+  The parameters are:
+    - |reason| a textual description of the reason for the known issue. This
+               is used for the skip reason
+    - |exception_matchers| additional arguments are hamcrest matchers to apply
+                 to the exception thrown. If the matchers don't match, then the
+                 test is marked as error, with the original exception.
+
+  If the test fails (for the correct reason), then it is marked as skipped.
+  If it fails for any other reason, it is marked as failed.
+  If the test passes, then it is also marked as failed."""
+  def decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( *args, **kwargs ):
+      try:
+        test( *args, **kwargs )
+      except Exception as test_exception:
+        # Ensure that we failed for the right reason
+        test_exception_message = ToUnicode( test_exception )
+        try:
+          for matcher in exception_matchers:
+            assert_that( test_exception_message, matcher )
+        except AssertionError:
+          # Failed for the wrong reason!
+          import traceback
+          print( 'Test failed for the wrong reason: ' + traceback.format_exc() )
+          # Real failure reason is the *original* exception, we're only trapping
+          # and ignoring the exception that is expected.
+          raise test_exception
+
+        # Failed for the right reason
+        raise nose.SkipTest( reason )
+      else:
+        raise AssertionError( 'Test was expected to fail: {0}'.format(
+          reason ) )
+    return Wrapper
+
+  return decorator

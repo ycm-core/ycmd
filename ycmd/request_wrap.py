@@ -1,3 +1,5 @@
+# encoding: utf8
+#
 # Copyright (C) 2014 Google Inc.
 #
 # This file is part of ycmd.
@@ -23,7 +25,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.utils import ToUnicode, ToBytes
+from ycmd.utils import ( ByteOffsetToCodepointOffset,
+                         CodepointOffsetToByteOffset,
+                         ToUnicode,
+                         ToBytes,
+                         SplitLines )
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
 
@@ -36,9 +42,32 @@ class RequestWrap( object ):
       EnsureRequestValid( request )
     self._request = request
     self._computed_key = {
+      # Unicode string representation of the current line
       'line_value': self._CurrentLine,
+
+      # The calculated start column, as a codepoint offset into the
+      # unicode string line_value
+      'start_codepoint': self.CompletionStartCodepoint,
+
+      # The 'column_num' as a unicode codepoint offset
+      'column_codepoint': (lambda:
+        ByteOffsetToCodepointOffset( self[ 'line_bytes' ],
+                                     self[ 'column_num' ] ) ),
+
+      # Bytes string representation of the current line
+      'line_bytes': lambda: ToBytes( self[ 'line_value' ] ),
+
+      # The calculated start column, as a byte offset into the UTF-8 encoded
+      # bytes returned by line_bytes
       'start_column': self.CompletionStartColumn,
+
+      # Note: column_num is the byte offset into the UTF-8 encoded bytes
+      # returned by line_bytes
+
+      # unicode string representation of the 'query' after the beginning
+      # of the identifier to be completed
       'query': self._Query,
+
       'filetypes': self._Filetypes,
     }
     self._cached_computed = {}
@@ -69,10 +98,7 @@ class RequestWrap( object ):
     current_file = self._request[ 'filepath' ]
     contents = self._request[ 'file_data' ][ current_file ][ 'contents' ]
 
-    # Handling ''.splitlines() returning [] instead of ['']
-    if contents is not None and len( contents ) == 0:
-      return ''
-    return contents.splitlines()[ self._request[ 'line_num' ] - 1 ]
+    return SplitLines( contents )[ self._request[ 'line_num' ] - 1 ]
 
 
   def CompletionStartColumn( self ):
@@ -85,9 +111,20 @@ class RequestWrap( object ):
                                   filetype )
 
 
+  def CompletionStartCodepoint( self ):
+    try:
+      filetype = self[ 'filetypes' ][ 0 ]
+    except (KeyError, IndexError):
+      filetype = None
+    return CompletionStartCodepoint( self[ 'line_value' ],
+                                     self[ 'column_num' ],
+                                     filetype )
+
+
   def _Query( self ):
     return self[ 'line_value' ][
-             self[ 'start_column' ] - 1 : self[ 'column_num' ] - 1 ]
+        self[ 'start_codepoint' ] - 1 : self[ 'column_codepoint' ] - 1
+    ]
 
 
   def _Filetypes( self ):
@@ -96,23 +133,37 @@ class RequestWrap( object ):
 
 
 def CompletionStartColumn( line_value, column_num, filetype ):
-  """Returns the 1-based index where the completion query should start. So if
-  the user enters:
+  """Returns the 1-based byte index where the completion query should start.
+  So if the user enters:
     foo.bar^
   with the cursor being at the location of the caret (so the character *AFTER*
-  'r'), then the starting column would be the index of the letter 'b'."""
+  'r'), then the starting column would be the index of the letter 'b'.
+
+  NOTE: if the line contains multi-byte characters, then the result is not
+  the 'character' index (see CompletionStartCodepoint for that), and therefore
+  it is not safe to perform any character-relevant arithmetic on the result
+  of this method."""
+  return CodepointOffsetToByteOffset(
+      ToUnicode( line_value ),
+      CompletionStartCodepoint( line_value, column_num, filetype ) )
+
+
+def CompletionStartCodepoint( line_value, column_num, filetype ):
+  """Returns the 1-based codepoint index where the completion query should
+  start.  So if the user enters:
+    ƒøø.∫å®^
+  with the cursor being at the location of the caret (so the character *AFTER*
+  '®'), then the starting column would be the index of the character '∫'
+  (i.e. 5, not its byte index)."""
+
   # NOTE: column_num and other numbers on the wire are byte indices, but we need
   # to walk codepoints for identifier checks.
+  codepoint_column_num = ByteOffsetToCodepointOffset( line_value, column_num )
 
-  utf8_line_value = ToBytes( line_value )
   unicode_line_value = ToUnicode( line_value )
-  codepoint_column_num = len(
-      str( utf8_line_value[ : column_num - 1 ], 'utf8' ) ) + 1
-
   # -1 and then +1 to account for difference betwen 0-based and 1-based
   # indices/columns
   codepoint_start_column = StartOfLongestIdentifierEndingAtIndex(
       unicode_line_value, codepoint_column_num - 1, filetype ) + 1
 
-  return len(
-      unicode_line_value[ : codepoint_start_column - 1 ].encode( 'utf8' ) ) + 1
+  return codepoint_start_column

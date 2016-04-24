@@ -25,6 +25,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+from ycmd.utils import ToBytes
+
 from nose.tools import eq_
 from ..request_wrap import RequestWrap
 
@@ -101,6 +103,55 @@ def StartColumn_DotWithUnicode_test():
                                  contents = 'fäö.bär') )[ 'start_column' ] )
 
 
+def StartColumn_UnicodeNotIdentifier_test():
+  contents = "var x = '†es†ing'."
+
+  # † not considered an identifier character
+
+  for i in range( 13, 15 ):
+    print( ToBytes( contents )[ i - 1 : i ] )
+    eq_( 13,
+         RequestWrap( PrepareJson( column_num = i,
+                                   contents = contents ) )[ 'start_column' ] )
+
+  eq_( 13,
+       RequestWrap( PrepareJson( column_num = 15,
+                                 contents = contents ) )[ 'start_column' ] )
+
+  for i in range( 18, 20 ):
+    print( ToBytes( contents )[ i - 1 : i ] )
+    eq_( 18,
+         RequestWrap( PrepareJson( column_num = i,
+                                   contents = contents ) )[ 'start_column' ] )
+
+
+def StartColumn_QueryIsUnicode_test():
+  contents = "var x = ålpha.alphå"
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 16,
+                                 contents = contents ) )[ 'start_column' ] )
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 19,
+                                 contents = contents ) )[ 'start_column' ] )
+
+
+def StartColumn_QueryStartsWithUnicode_test():
+  contents = "var x = ålpha.ålpha"
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 16,
+                                 contents = contents ) )[ 'start_column' ] )
+  eq_( 16,
+       RequestWrap( PrepareJson( column_num = 19,
+                                 contents = contents ) )[ 'start_column' ] )
+
+
+def StartColumn_ThreeByteUnicode_test():
+  contents = "var x = '†'."
+  eq_( 15,
+       RequestWrap( PrepareJson( column_num = 15,
+                                 contents = contents ) )[ 'start_column' ] )
+
+
 def StartColumn_Paren_test():
   eq_( 5,
        RequestWrap( PrepareJson( column_num = 8,
@@ -166,3 +217,15 @@ def Query_InWhiteSpace_test():
   eq_( '',
        RequestWrap( PrepareJson( column_num = 8,
                                  contents = 'foo       ') )[ 'query' ] )
+
+
+def Query_UnicodeSinglecharInclusive_test():
+  eq_( 'ø',
+       RequestWrap( PrepareJson( column_num = 7,
+                                 contents = 'abc.ø' ) )[ 'query' ] )
+
+
+def Query_UnicodeSinglecharExclusive_test():
+  eq_( '',
+       RequestWrap( PrepareJson( column_num = 5,
+                                 contents = 'abc.ø' ) )[ 'query' ] )

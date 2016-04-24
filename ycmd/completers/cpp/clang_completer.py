@@ -31,7 +31,7 @@ import os.path
 import textwrap
 from ycmd import responses
 from ycmd import extra_conf_store
-from ycmd.utils import ToCppStringCompatible
+from ycmd.utils import ToCppStringCompatible, ToUnicode
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetIncludeStatementValue
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
@@ -351,6 +351,9 @@ class ClangCompleter( Completer ):
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
+    # FIXME: all of these calculations are currently working with byte
+    # offsets, which are technically incorrect. We should be working with
+    # codepoint offsets, as we want the nearest character-wise diagnostic
     for diagnostic in diagnostics:
       distance = abs( current_column - diagnostic.location_.column_number_ )
       if distance < distance_to_closest_diagnostic:
@@ -459,7 +462,7 @@ def _FormatRawComment( comment ):
   return textwrap.dedent(
     '\n'.join( [ re.sub( STRIP_TRAILING_COMMENT, '',
                  re.sub( STRIP_LEADING_COMMENT, '', line ) )
-                 for line in comment.splitlines() ] ) )
+                 for line in ToUnicode( comment ).splitlines() ] ) )
 
 
 def _BuildGetDocResponse( doc_data ):
@@ -485,11 +488,11 @@ def _BuildGetDocResponse( doc_data ):
 
   return responses.BuildDetailedInfoResponse(
     '{0}\n{1}\nType: {2}\nName: {3}\n---\n{4}'.format(
-      declaration.text if declaration is not None else "",
-      doc_data.brief_comment,
-      doc_data.canonical_type,
-      doc_data.display_name,
-      _FormatRawComment( doc_data.raw_comment ) ) )
+      ToUnicode( declaration.text ) if declaration is not None else "",
+      ToUnicode( doc_data.brief_comment ),
+      ToUnicode( doc_data.canonical_type ),
+      ToUnicode( doc_data.display_name ),
+      ToUnicode( _FormatRawComment( doc_data.raw_comment ) ) ) )
 
 
 def _GetAbsolutePath( include_file_name, include_paths ):

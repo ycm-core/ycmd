@@ -5,16 +5,16 @@ namespace testy {
         /**
          * Tests the GetDoc subcommands
          */
-	public class GetDocTestCase {
+        public class Unicøde {
                 /**
                  * Constructor
                  */
-		public GetDocTestCase() {
+        	public Unicøde () {
                     this.an_int = 1;
-		}
+        	}
 
                 /**
-                 * Very important method.
+                 * Very important methød.
                  *
                  * With multiple lines of commentary
                  *     And Format-
@@ -27,10 +27,26 @@ namespace testy {
                 /// an integer, or something
                 private int an_int;
 
+                private int øøø; private Unicøde a_unicøde;
+
+                private static void DoSomething( Unicøde unicode )
+                {
+
+                }
+
                 /// Use this for testing
                 private static void DoTesting() {
-                    GetDocTestCase tc;
+                    Unicøde tc;
                     tc.DoATest();
+
+                    Unicøde øø;
+                    øø.
+
+                    DoSomething( a_unicøde );
                 }
+
+                interface Bøøm { void Båm(); }
+                public class BøømBøøm : Bøøm { public void Båm() { } }
+                public class BåmBåm : Bøøm { public void Båm() { } }
         }
 }

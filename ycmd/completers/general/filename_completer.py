@@ -79,20 +79,26 @@ class FilenameCompleter( Completer ):
 
 
   def ShouldCompleteIncludeStatement( self, request_data ):
-    start_column = request_data[ 'start_column' ] - 1
+    start_codepoint = request_data[ 'start_codepoint' ] - 1
     current_line = request_data[ 'line_value' ]
     filepath = request_data[ 'filepath' ]
     filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
     return ( InCFamilyFile( filetypes ) and
-             AtIncludeStatementStart( current_line[ :start_column ] ) )
+             AtIncludeStatementStart( current_line[ : start_codepoint ] ) )
 
 
   def ShouldUseNowInner( self, request_data ):
-    start_column = request_data[ 'start_column' ] - 1
     current_line = request_data[ 'line_value' ]
-    return ( start_column and
-             ( current_line[ start_column - 1 ] in self._triggers or
-               self.ShouldCompleteIncludeStatement( request_data ) ) )
+    start_codepoint = request_data[ 'start_codepoint' ]
+
+    # inspect the previous 'character' from the start column to find the trigger
+    # note: 1-based still. we subtract 1 when indexing into current_line
+    trigger_codepoint = start_codepoint - 1
+
+    return (
+        trigger_codepoint > 0 and
+         ( current_line[ trigger_codepoint - 1 ] in self._triggers or
+           self.ShouldCompleteIncludeStatement( request_data ) ) )
 
 
   def SupportedFiletypes( self ):
@@ -101,10 +107,10 @@ class FilenameCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     current_line = request_data[ 'line_value' ]
-    start_column = request_data[ 'start_column' ] - 1
+    start_codepoint = request_data[ 'start_codepoint' ] - 1
     filepath = request_data[ 'filepath' ]
     filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
-    line = current_line[ :start_column ]
+    line = current_line[ : start_codepoint ]
 
     if InCFamilyFile( filetypes ):
       path_dir, quoted_include = (

@@ -34,6 +34,7 @@ import traceback
 from subprocess import PIPE
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetFileContents
 
 _logger = logging.getLogger( __name__ )
 
@@ -176,6 +177,7 @@ class TernCompleter( Completer ):
     }
 
     completions = self._GetResponse( query,
+                                     request_data[ 'start_codepoint' ],
                                      request_data ).get( 'completions', [] )
 
     def BuildDoc( completion ):
@@ -325,7 +327,7 @@ class TernCompleter( Completer ):
     return response.json()
 
 
-  def _GetResponse( self, query, request_data ):
+  def _GetResponse( self, query, codepoint, request_data ):
     """Send a standard file/line request with the supplied query block, and
     return the server's response. If the server is not running, it is started.
 
@@ -333,12 +335,16 @@ class TernCompleter( Completer ):
     just updating file data in which case _PostRequest should be used directly.
 
     The query block should contain the type and any parameters. The files,
-    position, etc. are added automatically."""
+    position, etc. are added automatically.
+
+    NOTE: the |codepoint| parameter is usually the current cursor position,
+    though it should be the "completion start column" codepoint for completion
+    requests."""
 
     def MakeTernLocation( request_data ):
       return {
         'line': request_data[ 'line_num' ] - 1,
-        'ch':   request_data[ 'start_column' ] - 1
+        'ch':   codepoint - 1
       }
 
     full_query = {
@@ -457,7 +463,9 @@ class TernCompleter( Completer ):
       'type': 'type',
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     return responses.BuildDisplayMessageResponse( response[ 'type' ] )
 
@@ -473,7 +481,9 @@ class TernCompleter( Completer ):
       'types':      True
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     doc_string = 'Name: {name}\nType: {type}\n\n{doc}'.format(
         name = response.get( 'name', 'Unknown' ),
@@ -488,13 +498,16 @@ class TernCompleter( Completer ):
       'type': 'definition',
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
-    return responses.BuildGoToResponse(
-      response[ 'file' ],
-      response[ 'start' ][ 'line' ] + 1,
-      response[ 'start' ][ 'ch' ] + 1
-    )
+    return responses.BuildGoToResponseFromLocation(
+      _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                         response[ 'file' ] ) ),
+                      response[ 'file' ],
+                      response[ 'start' ][ 'line' ],
+                      response[ 'start' ][ 'ch' ] ) )
 
 
   def _GoToReferences( self, request_data ):
@@ -502,12 +515,19 @@ class TernCompleter( Completer ):
       'type': 'refs',
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
-    return [ responses.BuildGoToResponse( ref[ 'file' ],
-                                          ref[ 'start' ][ 'line' ] + 1,
-                                          ref[ 'start' ][ 'ch' ] + 1 )
-             for ref in response[ 'refs' ] ]
+    return [
+      responses.BuildGoToResponseFromLocation(
+        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                           ref[ 'file' ] ) ),
+                        ref[ 'file' ],
+                        ref[ 'start' ][ 'line' ],
+                        ref[ 'start' ][ 'ch' ] ) )
+      for ref in response[ 'refs' ]
+    ]
 
 
   def _Rename( self, request_data, args ):
@@ -520,7 +540,9 @@ class TernCompleter( Completer ):
       'newName': args[ 0 ],
     }
 
-    response = self._GetResponse( query, request_data )
+    response = self._GetResponse( query,
+                                  request_data[ 'column_codepoint' ],
+                                  request_data )
 
     # Tern response format:
     # 'changes': [
@@ -528,11 +550,11 @@ class TernCompleter( Completer ):
     #         'file'
     #         'start' {
     #             'line'
-    #             'ch'
+    #             'ch' (codepoint offset)
     #         }
     #         'end' {
     #             'line'
-    #             'ch'
+    #             'ch' (codepoint offset)
     #         }
     #         'text'
     #     }
@@ -548,12 +570,12 @@ class TernCompleter( Completer ):
     #                  'range' (Range) {
     #                      'start_' (Location): {
     #                          'line_number_',
-    #                          'column_number_',
+    #                          'column_number_', (byte offset)
     #                          'filename_'
     #                      },
     #                      'end_' (Location): {
     #                          'line_number_',
-    #                          'column_number_',
+    #                          'column_number_', (byte offset)
     #                          'filename_'
     #                      }
     #                  }
@@ -568,20 +590,27 @@ class TernCompleter( Completer ):
     #     ]
     # }
 
-    def BuildRange( filename, start, end ):
+
+    def BuildRange( file_contents, filename, start, end ):
       return responses.Range(
-        responses.Location( start[ 'line' ] + 1,
-                            start[ 'ch' ] + 1,
-                            filename ),
-        responses.Location( end[ 'line' ] + 1,
-                            end[ 'ch' ] + 1,
-                            filename ) )
+        _BuildLocation( file_contents,
+                        filename,
+                        start[ 'line' ],
+                        start[ 'ch' ] ),
+        _BuildLocation( file_contents,
+                        filename,
+                        end[ 'line' ],
+                        end[ 'ch' ] ) )
 
 
     def BuildFixItChunk( change ):
+      filename = os.path.abspath( change[ 'file' ] )
+      file_contents = utils.SplitLines( GetFileContents( request_data,
+                                                         filename ) )
       return responses.FixItChunk(
         change[ 'text' ],
-        BuildRange( os.path.abspath( change[ 'file'] ),
+        BuildRange( file_contents,
+                    filename,
                     change[ 'start' ],
                     change[ 'end' ] ) )
 
@@ -595,3 +624,13 @@ class TernCompleter( Completer ):
                             request_data[ 'column_num' ],
                             request_data[ 'filepath' ] ),
         [ BuildFixItChunk( x ) for x in response[ 'changes' ] ] ) ] )
+
+
+def _BuildLocation( file_contents, filename, line, ch ):
+  # tern returns codepoint offsets, but we need byte offsets, so we must
+  # convert
+  return responses.Location(
+    line = line + 1,
+    column = utils.CodepointOffsetToByteOffset( file_contents[ line ],
+                                                ch + 1 ),
+    filename = os.path.realpath( filename ) )

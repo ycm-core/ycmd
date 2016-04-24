@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Copyright (C) 2014 Google Inc.
 #
 # This file is part of ycmd.
@@ -50,7 +52,17 @@ COMMENT_AND_STRING_REGEX = re.compile(
   #  3. the escaped double quote inside the string
   r'(?<!\\)"(?:\\\\|\\"|.)*?"', re.MULTILINE )
 
-DEFAULT_IDENTIFIER_REGEX = re.compile( r"[_a-zA-Z]\w*", re.UNICODE )
+# At least c++ and javascript support unicode identifiers, and identifiers may
+# start with unicode character, e.g. ålpha. So we need to accept any identifier
+# starting with an 'alpha' character or underscore. i.e. not starting with a
+# 'digit'. The following regex will match:
+#   - A character which is alpha or _. That is a character which is NOT:
+#     - a digit (\d)
+#     - non-alphanumeric
+#     - not an underscore
+#       (The latter two come from \W which is the negation of \w)
+#   - Followed by any alphanumeric or _ characters
+DEFAULT_IDENTIFIER_REGEX = re.compile( r"[^\W\d]\w*", re.UNICODE )
 
 FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters

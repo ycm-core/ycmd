@@ -54,6 +54,28 @@ def GetCompletions_Basic_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_Unicode_test( app ):
+  filepath = PathToTestFile( 'testy', 'Unicode.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'cs',
+                                    contents = contents,
+                                    line_num = 43,
+                                    column_num = 26 )
+    response_data = app.post_json( '/completions', completion_data ).json
+    assert_that( response_data[ 'completions' ],
+                 has_items(
+                   CompletionEntryMatcher( 'DoATest()' ),
+                   CompletionEntryMatcher( 'an_int' ),
+                   CompletionEntryMatcher( 'a_unicøde' ),
+                   CompletionEntryMatcher( 'øøø' ) ) )
+
+    eq_( 26, response_data[ 'completion_start_column' ] )
+
+
+@SharedYcmd
 def GetCompletions_MultipleSolution_test( app ):
   filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
                 PathToTestFile( 'testy-multiple-solutions',

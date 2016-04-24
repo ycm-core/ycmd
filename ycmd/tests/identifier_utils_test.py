@@ -141,6 +141,12 @@ def IsIdentifier_generic_test():
   ok_( iu.IsIdentifier( 'foo' ) )
   ok_( iu.IsIdentifier( 'foo129' ) )
   ok_( iu.IsIdentifier( 'f12' ) )
+  ok_( iu.IsIdentifier( 'f12' ) )
+
+  ok_( iu.IsIdentifier( '_foo' ) )
+  ok_( iu.IsIdentifier( '_foo129' ) )
+  ok_( iu.IsIdentifier( '_f12' ) )
+  ok_( iu.IsIdentifier( '_f12' ) )
 
   ok_( not iu.IsIdentifier( '1foo129' ) )
   ok_( not iu.IsIdentifier( '-foo' ) )
@@ -148,6 +154,19 @@ def IsIdentifier_generic_test():
   ok_( not iu.IsIdentifier( 'font-face' ) )
   ok_( not iu.IsIdentifier( None ) )
   ok_( not iu.IsIdentifier( '' ) )
+
+
+def IsIdentifier_generic_unicode_test():
+  ok_( iu.IsIdentifier( 'uniçode' ) )
+  ok_( iu.IsIdentifier( 'uç' ) )
+
+
+def IsIdentifier_generic_unicode_single_char_test():
+  ok_( iu.IsIdentifier( 'ç' ) )
+
+
+def IsIdentifier_generic_unicode_char_first_test():
+  ok_( iu.IsIdentifier( 'çode' ) )
 
 
 def IsIdentifier_Css_test():

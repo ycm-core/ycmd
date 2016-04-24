@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Copyright (C) 2011, 2012 Google Inc.
 #
 # This file is part of ycmd.
@@ -127,6 +129,36 @@ def ToBytes( value ):
 
   # This is meant to catch `int` and similar non-string/bytes types.
   return ToBytes( str( value ) )
+
+
+def ByteOffsetToCodepointOffset( line_value, byte_offset ):
+  """The API calls for byte offsets into the UTF-8 encoded version of the
+  buffer. However, ycmd internally uses unicode strings. This means that
+  when we need to walk 'characters' within the buffer, such as when checking
+  for semantic triggers and similar, we must use codepoint offets, rather than
+  byte offsets.
+
+  This method converts the |byte_offset|, which is a utf-8 byte offset, into
+  a codepoint offset in the unicode string |line_value|."""
+
+  byte_line_value = ToBytes( line_value )
+  return len( ToUnicode( byte_line_value[ : byte_offset - 1 ] ) ) + 1
+
+
+def CodepointOffsetToByteOffset( unicode_line_value, codepoint_offset ):
+  """The API calls for byte offsets into the UTF-8 encoded version of the
+  buffer. However, ycmd internally uses unicode strings. This means that
+  when we need to walk 'characters' within the buffer, such as when checking
+  for semantic triggers and similar, we must use codepoint offets, rather than
+  byte offsets.
+
+  This method converts the |codepoint_offset| which is a unicode codepoint
+  offset into an byte offset into the utf-8 encoded bytes version of
+  |unicode_line_value|."""
+
+  # Should be a no-op, but in case someone passes a bytes instance.
+  unicode_line_value = ToUnicode( unicode_line_value )
+  return len( ToBytes( unicode_line_value[ : codepoint_offset - 1 ] ) ) + 1
 
 
 def PathToCreatedTempDir( tempdir = RAW_PATH_TO_TEMP_DIR ):
@@ -327,3 +359,46 @@ def LoadPythonSource( name, pathname ):
   else:
     import importlib
     return importlib.machinery.SourceFileLoader( name, pathname ).load_module()
+
+
+def SplitLines( contents ):
+  """Return a list of each of the lines in the unicode string |contents|.
+  Behaviour is equivalent to str.splitlines with the following exceptions:
+    - empty strings are returned as [ '' ]
+    - a trailing newline is not ignored (i.e. SplitLines( '\n' )
+      returns [ '', '' ], not [ '' ]"""
+
+  # We often want to get a list representation of a buffer such that we can
+  # index all of the 'lines' within it. Python provides str.splitlines for this
+  # purpose, but its documented behaviors for empty strings and strings ending
+  # with a newline character are not compatible with this. As a result, we write
+  # our own wrapper to provide a splitlines implementation which returns the
+  # actual list of indexable lines in a buffer, where a line may have 0
+  # characters.
+  #
+  # NOTE: str.split( '\n' ) actually gives this behaviour, except it does not
+  # work when running on a unix-like system and reading a file with Windows line
+  # endings.
+
+  # ''.splitlines() returns [], but we want [ '' ]
+  if contents == '':
+    return [ '' ]
+
+  lines = contents.splitlines()
+
+  # '\n'.splitlines() returns [ '' ]. We want [ '', '' ].
+  # '\n\n\n'.splitlines() returns [ '', '', '' ]. We want [ '', '', '', '' ].
+  #
+  # So we re-instate the empty entry at the end if the original string ends
+  # with a newline. Universal newlines recognise the following as
+  # line-terminators:
+  #   - '\n'
+  #   - '\r\n'
+  #   - '\r'
+  #
+  # Importantly, notice that \r\n also ends with \n
+  #
+  if contents.endswith( '\r' ) or contents.endswith( '\n' ):
+    lines.append( '' )
+
+  return lines

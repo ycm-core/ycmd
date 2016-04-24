@@ -40,10 +40,56 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   Completer. The following are functions that the Vim part of YCM will be
   calling on your Completer:
 
+  *Important note about unicode and byte offsets*
+
+    Useful background: http://utf8everywhere.org
+
+    Internally, all Python strings are unicode string objects, unless otherwise
+    converted to 'bytes' using ToBytes. In particular, the line_value and
+    file_data.contents entries in the request_data are unicode strings.
+
+    However, offsets in the API (such as column_num and start_column) are *byte*
+    offsets into a utf-8 encoded version of the contents of the line or buffer.
+    Therefore it is *never* safe to perform 'character' arithmetic
+    (such as '-1' to get the previous 'character') using these byte offsets, and
+    they cannot *ever* be used to index into line_value or buffer contents
+    unicode strings.
+
+    It is therefore important to ensure that you use the right type of offsets
+    for the right type of calculation:
+     - use codepoint offsets and a unicode string for 'character' calculations
+     - use byte offsets and utf-8 encoded bytes for all other manipulations
+
+    ycmd provides the following ways of accessing the source data and offsets:
+
+    For working with utf-8 encoded bytes:
+     - request_data[ 'line_bytes' ] - the line as utf-8 encoded bytes.
+     - request_data[ 'start_column' ] and request_data[ 'column_num' ].
+
+    For working with 'character' manipulations (unicode strings and codepoint
+    offsets):
+     - request_data[ 'line_value' ] - the line as a unicode string.
+     - request_data[ 'start_codepoint' ] and request_data[ 'column_codepoint' ].
+
+    For converting between the two:
+     - utils.ToBytes
+     - utils.ByteOffsetToCodepointOffset
+     - utils.ToUnicode
+     - utils.CodepointOffsetToByteOffset
+
+    Note: The above use of codepoints for 'character' manipulations is not
+    strictly correct. There are unicode 'characters' which consume multiple
+    codepoints. However, it is currently considered viable to use a single
+    codepoint = a single character until such a time as we improve support for
+    unicode identifiers. The purpose of the above rule is to prevent crashes and
+    random encoding exceptions, not to fully support unicode identifiers.
+
+  *END: Important note about unicode and byte offsets*
+
   ShouldUseNow() is called with the start column of where a potential completion
   string should start and the current line (string) the cursor is on. For
   instance, if the user's input is 'foo.bar' and the cursor is on the 'r' in
-  'bar', start_column will be the 1-based index of 'b' in the line. Your
+  'bar', start_column will be the 1-based byte index of 'b' in the line. Your
   implementation of ShouldUseNow() should return True if your semantic completer
   should be used and False otherwise.
 
@@ -146,16 +192,19 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     if not self.prepared_triggers:
       return False
     current_line = request_data[ 'line_value' ]
-    start_column = request_data[ 'start_column' ] - 1
-    column_num = request_data[ 'column_num' ] - 1
+    start_codepoint = request_data[ 'start_codepoint' ] - 1
+    column_codepoint = request_data[ 'column_codepoint' ] - 1
     filetype = self._CurrentFiletype( request_data[ 'filetypes' ] )
 
     return self.prepared_triggers.MatchesForFiletype(
-        current_line, start_column, column_num, filetype )
+        current_line, start_codepoint, column_codepoint, filetype )
 
 
   def QueryLengthAboveMinThreshold( self, request_data ):
-    query_length = request_data[ 'column_num' ] - request_data[ 'start_column' ]
+    # Note: calculation in 'characters' not bytes.
+    query_length = ( request_data[ 'column_codepoint' ] -
+                     request_data[ 'start_codepoint' ] )
+
     return query_length >= self.min_num_chars
 
 
@@ -322,6 +371,9 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
 class CompletionsCache( object ):
+  """Completions for a particular request. Importantly, columns are byte
+  offsets, not unicode codepoints."""
+
   def __init__( self ):
     self._access_lock = threading.Lock()
     self.Invalidate()
@@ -335,6 +387,7 @@ class CompletionsCache( object ):
       self._completions = None
 
 
+  # start_column is a byte offset.
   def Update( self, line_num, start_column, completion_type, completions ):
     with self._access_lock:
       self._line_num = line_num
@@ -343,6 +396,7 @@ class CompletionsCache( object ):
       self._completions = completions
 
 
+  # start_column is a byte offset.
   def GetCompletionsIfCacheValid( self, line_num, start_column,
                                   completion_type ):
     with self._access_lock:
@@ -352,6 +406,7 @@ class CompletionsCache( object ):
       return self._completions
 
 
+  # start_column is a byte offset.
   def _CacheValidNoLock( self, line_num, start_column, completion_type ):
     return ( line_num == self._line_num and
              start_column == self._start_column and

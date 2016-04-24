@@ -30,6 +30,7 @@ from nose.tools import eq_
 from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
+from ycmd.utils import ToBytes
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR,
@@ -45,9 +46,18 @@ REQUEST_DATA = {
 }
 
 
-def _CompletionResultsForLine( filename_completer, contents, extra_data=None ):
+def _CompletionResultsForLine( filename_completer,
+                               contents,
+                               extra_data = None,
+                               column_num = None ):
   request = REQUEST_DATA.copy()
-  request[ 'column_num' ] = len( contents ) + 1
+
+  # Strictly, column numbers are *byte* offsets, not character offsets. If
+  # the contents of the file contain unicode characters, then we should manually
+  # supply the correct byte offset.
+  column_num = len( contents ) + 1 if not column_num else column_num
+
+  request[ 'column_num' ] = column_num
   request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = contents
   if extra_data:
     request.update( extra_data )
@@ -56,6 +66,26 @@ def _CompletionResultsForLine( filename_completer, contents, extra_data=None ):
   candidates = filename_completer.ComputeCandidatesInner( request )
   return [ ( c[ 'insertion_text' ], c[ 'extra_menu_info' ] )
           for c in candidates ]
+
+
+def _ShouldUseNowForLine( filename_completer,
+                          contents,
+                          extra_data = None,
+                          column_num = None ):
+  request = REQUEST_DATA.copy()
+
+  # Strictly, column numbers are *byte* offsets, not character offsets. If
+  # the contents of the file contain unicode characters, then we should manually
+  # supply the correct byte offset.
+  column_num = len( contents ) + 1 if not column_num else column_num
+
+  request[ 'column_num' ] = column_num
+  request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = contents
+  if extra_data:
+    request.update( extra_data )
+
+  request = RequestWrap( request )
+  return filename_completer.ShouldUseNow( request )
 
 
 class FilenameCompleter_test( object ):
@@ -71,8 +101,16 @@ class FilenameCompleter_test( object ):
     ]
 
 
-  def _CompletionResultsForLine( self, contents ):
-    return _CompletionResultsForLine( self._filename_completer, contents )
+  def _CompletionResultsForLine( self, contents, column_num=None ):
+    return _CompletionResultsForLine( self._filename_completer,
+                                      contents,
+                                      column_num = column_num )
+
+
+  def _ShouldUseNowForLine( self, contents, column_num=None ):
+    return _ShouldUseNowForLine( self._filename_completer,
+                                 contents,
+                                 column_num = column_num )
 
 
   def QuotedIncludeCompletion_test( self ):
@@ -166,7 +204,7 @@ class FilenameCompleter_test( object ):
 
     os.environ.pop( 'YCMTESTDIR' )
 
-    eq_( [ ('inner_dir', '[Dir]') ], data )
+    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ], data )
 
 
   def EnvVar_AtStart_Dir_Partial_test( self ):
@@ -175,7 +213,7 @@ class FilenameCompleter_test( object ):
                     'set x = $ycm_test_dir/testdata/filename_completer/inn' ) )
 
     os.environ.pop( 'ycm_test_dir' )
-    eq_( [ ('inner_dir', '[Dir]') ], data )
+    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ], data )
 
 
   def EnvVar_InMiddle_File_test( self ):
@@ -214,7 +252,7 @@ class FilenameCompleter_test( object ):
           'set x = ' + TEST_DIR + '/${YCM_TEST_td}ata/filename_completer/' ) )
 
     os.environ.pop( 'YCM_TEST_td' )
-    eq_( [ ('inner_dir', '[Dir]') ], data )
+    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ], data )
 
 
   def EnvVar_InMiddle_Dir_Partial_test( self ):
@@ -223,7 +261,7 @@ class FilenameCompleter_test( object ):
           'set x = ' + TEST_DIR + '/tes${YCM_TEST_td}/filename_completer/' ) )
     os.environ.pop( 'YCM_TEST_td' )
 
-    eq_( [ ('inner_dir', '[Dir]') ], data )
+    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ], data )
 
 
   def EnvVar_Undefined_test( self ):
@@ -241,7 +279,7 @@ class FilenameCompleter_test( object ):
       + '/testdata/filename_completer${YCM_empty_var}/' ) )
     os.environ.pop( 'YCM_empty_var' )
 
-    eq_( [ ('inner_dir', '[Dir]') ], data )
+    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ], data )
 
 
   def EnvVar_Undefined_Garbage_test( self ):
@@ -269,6 +307,30 @@ class FilenameCompleter_test( object ):
 
     os.environ.pop( 'YCM_TEST_td' )
     eq_( [ ], data )
+
+
+  def Unicode_In_Line_Works_test( self ):
+    eq_( True, self._ShouldUseNowForLine(
+      contents = "var x = /†/testing",
+      # The † character is 3 bytes in UTF-8
+      column_num = 15 ) )
+    eq_( [ ], self._CompletionResultsForLine(
+      contents = "var x = /†/testing",
+      # The † character is 3 bytes in UTF-8
+      column_num = 15 ) )
+
+
+  def Unicode_Paths_test( self ):
+    contents = "test " + DATA_DIR + "/../∂"
+    # The column number is the first byte of the ∂ character (1-based )
+    column_num = ( len( ToBytes( "test" ) ) +
+                   len( ToBytes( DATA_DIR ) ) +
+                   len( ToBytes( '/../' ) ) +
+                   1 + # 0-based offset of ∂
+                   1 ) # Make it 1-based
+    eq_( True, self._ShouldUseNowForLine( contents, column_num = column_num ) )
+    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ],
+         self._CompletionResultsForLine( contents, column_num = column_num ) )
 
 
 def WorkingDir_Use_File_Path_test():

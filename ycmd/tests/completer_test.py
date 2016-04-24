@@ -1,4 +1,5 @@
 # Copyright (C) 2016 ycmd contributors.
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -15,9 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.tests.test_utils import DummyCompleter
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # noqa
+
+from ycmd.tests.test_utils import DummyCompleter, ExpectedFailure
 from ycmd.user_options_store import DefaultOptions
 from nose.tools import eq_
+from hamcrest import contains_string
 
 
 def _FilterAndSortCandidates_Match( candidates, query, expected_matches ):
@@ -48,3 +58,11 @@ def FilterAndSortCandidates_ServerCompleter_test():
   _FilterAndSortCandidates_Match( [ { 'insertion_text': 'password' } ],
                                   'p',
                                   [ { 'insertion_text': 'password' } ] )
+
+
+@ExpectedFailure( 'Filtering does not support unicode characters',
+                  contains_string( '[]' ) )
+def FilterAndSortCandidates_Unicode_test():
+  _FilterAndSortCandidates_Match( [ { 'insertion_text': 'ø' } ],
+                                  'ø',
+                                  [ { 'insertion_text': 'ø' } ] )

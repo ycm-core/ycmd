@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
@@ -23,16 +25,19 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import json
+
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entry, has_entries )
+                       has_item, has_items, has_entry, has_entries,
+                       contains_string )
 import http.client
 
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
 from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
-                                    ErrorMatcher, UserOption )
+                                    ErrorMatcher, UserOption, ExpectedFailure )
 from ycmd.utils import ReadFile
 
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
@@ -42,11 +47,12 @@ def RunTest( app, test ):
   """
   Method to run a simple completion test and verify the result
 
-  Note: uses the .ycm_extra_conf from general_fallback/ which:
+  Note: by default uses the .ycm_extra_conf from general_fallback/ which:
    - supports cpp, c and objc
    - requires extra_conf_data containing 'filetype&' = the filetype
 
-  this should be sufficient for many standard test cases
+  This should be sufficient for many standard test cases. If not, specify
+  a path (as a list of path items) in 'extra_conf' member of |test|.
 
   test is a dictionary containing:
     'request': kwargs for BuildRequest
@@ -54,10 +60,15 @@ def RunTest( app, test ):
        'response': server response code (e.g. httplib.OK)
        'data': matcher for the server response json
     }
+    'extra_conf': [ optional list of path items to extra conf file ]
   """
+
+  extra_conf = ( test[ 'extra_conf' ] if 'extra_conf' in test
+                                      else [ 'general_fallback',
+                                             '.ycm_extra_conf.py' ] )
+
   app.post_json( '/load_extra_conf_file', {
-    'filepath': PathToTestFile( 'general_fallback',
-                                '.ycm_extra_conf.py' ) } )
+    'filepath': PathToTestFile( *extra_conf ) } )
 
 
   contents = ReadFile( test[ 'request' ][ 'filepath' ] )
@@ -87,6 +98,9 @@ def RunTest( app, test ):
                             expect_errors = True )
 
   eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+
+  print( 'Completer response: {0}'.format( json.dumps(
+    response.json, indent = 2 ) ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
@@ -493,3 +507,60 @@ def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
     has_item( CompletionEntryMatcher( 'include.hpp',
               extra_menu_info = '[File]' ) )
   )
+
+
+@SharedYcmd
+def GetCompletions_UnicodeInLine_test( app ):
+  RunTest( app, {
+    'description': 'member completion with a unicode identifier',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'unicode.cc' ),
+      'line_num'  : 9,
+      'column_num': 8,
+      'extra_conf_data': { '&filetype': 'cpp' },
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries( {
+        'completion_start_column': 8,
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'member_with_å_unicøde', 'int' ),
+          CompletionEntryMatcher( '~MyStruct', 'void' ),
+          CompletionEntryMatcher( 'operator=', 'MyStruct &' ),
+          CompletionEntryMatcher( 'MyStruct::', '' ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@ExpectedFailure( 'Filtering and sorting does not work when the candidate '
+                  'contains non-ASCII characters. This is due to the way '
+                  'the filtering and sorting code works.',
+                  contains_string( "value for 'completions' no item matches" ) )
+@SharedYcmd
+def GetCompletions_UnicodeInLineFilter_test( app ):
+  RunTest( app, {
+    'description': 'member completion with a unicode identifier',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'unicode.cc' ),
+      'line_num'  : 9,
+      'column_num': 10,
+      'extra_conf_data': { '&filetype': 'cpp' },
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries( {
+        'completion_start_column': 8,
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'member_with_å_unicøde', 'int' ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )

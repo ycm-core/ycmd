@@ -29,7 +29,7 @@ import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import identifier_utils
-from ycmd.utils import ToCppStringCompatible
+from ycmd.utils import ToCppStringCompatible, SplitLines
 from ycmd import responses
 
 SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
@@ -190,7 +190,7 @@ def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
     return nearest_ident
 
   line_num = request_data[ 'line_num' ] - 1
-  column_num = request_data[ 'column_num' ] - 1
+  column_num = request_data[ 'column_codepoint' ] - 1
   filepath = request_data[ 'filepath' ]
   try:
     filetype = request_data[ 'filetypes' ][ 0 ]
@@ -198,7 +198,7 @@ def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
     filetype = None
 
   contents_per_line = (
-    request_data[ 'file_data' ][ filepath ][ 'contents' ].split( '\n' ) )
+    SplitLines( request_data[ 'file_data' ][ filepath ][ 'contents' ] ) )
 
   ident = PreviousIdentifierOnLine( contents_per_line[ line_num ], column_num )
   if ident:
@@ -225,9 +225,10 @@ def _GetCursorIdentifier( request_data ):
     filetype = request_data[ 'filetypes' ][ 0 ]
   except KeyError:
     filetype = None
-  return identifier_utils.IdentifierAtIndex( request_data[ 'line_value' ],
-                                             request_data[ 'column_num' ] - 1,
-                                             filetype )
+  return identifier_utils.IdentifierAtIndex(
+      request_data[ 'line_value' ],
+      request_data[ 'column_codepoint' ] - 1,
+      filetype )
 
 
 def _IdentifiersFromBuffer( text,

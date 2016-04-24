@@ -3,3 +3,5 @@ def Foo():
   pass
 
 Fo
+
+x = '†'.cen

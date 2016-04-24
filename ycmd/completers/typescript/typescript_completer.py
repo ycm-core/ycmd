@@ -39,6 +39,7 @@ from tempfile import NamedTemporaryFile
 from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetFileContents
 
 BINARY_NOT_FOUND_MESSAGE = ( 'tsserver not found. '
                              'TypeScript 1.5 or higher is required' )
@@ -109,6 +110,8 @@ class TypeScriptCompleter( Completer ):
     self._environ = os.environ.copy()
     utils.SetEnviron( self._environ, 'TSS_LOG', tsserver_log )
 
+    _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
+
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
     self._sequenceid = itertools.count()
@@ -116,18 +119,12 @@ class TypeScriptCompleter( Completer ):
     # Used to prevent threads from concurrently accessing the sequence counter
     self._sequenceid_lock = Lock()
 
-    # TSServer ignores the fact that newlines are two characters on Windows
-    # (\r\n) instead of one on other platforms (\n), so we use the
-    # universal_newlines option to convert those newlines to \n. See the issue
-    # https://github.com/Microsoft/TypeScript/issues/3403
-    # TODO: remove this option when the issue is fixed.
-    # We also need to redirect the error stream to the output one on Windows.
+    # We need to redirect the error stream to the output one on Windows.
     self._tsserver_handle = utils.SafePopen( binarypath,
-                                             stdout = subprocess.PIPE,
                                              stdin = subprocess.PIPE,
+                                             stdout = subprocess.PIPE,
                                              stderr = subprocess.STDOUT,
-                                             env = self._environ,
-                                             universal_newlines = True )
+                                             env = self._environ )
 
     # Used to map sequence id's to their corresponding DeferredResponse
     # objects. The reader loop uses this to hand out responses.
@@ -171,7 +168,7 @@ class TypeScriptCompleter( Completer ):
             self._pending[ seq ].resolve( message )
             del self._pending[ seq ]
       except Exception as e:
-        _logger.error( 'ReaderLoop error: {0}'.format( str( e ) ) )
+        _logger.exception( e )
 
 
   def _ReadMessage( self ):
@@ -184,7 +181,7 @@ class TypeScriptCompleter( Completer ):
       headerline = self._tsserver_handle.stdout.readline().strip()
       if not headerline:
         break
-      key, value = headerline.split( ':', 1 )
+      key, value = utils.ToUnicode( headerline ).split( ':', 1 )
       headers[ key.strip() ] = value.strip()
 
     # The response message is a JSON object which comes back on one line.
@@ -193,7 +190,15 @@ class TypeScriptCompleter( Completer ):
     if 'Content-Length' not in headers:
       raise RuntimeError( "Missing 'Content-Length' header" )
     contentlength = int( headers[ 'Content-Length' ] )
-    return json.loads( self._tsserver_handle.stdout.read( contentlength ) )
+    # TSServer adds a newline at the end of the response message and counts it
+    # as one character (\n) towards the content length. However, newlines are
+    # two characters on Windows (\r\n), so we need to take care of that. See
+    # issue https://github.com/Microsoft/TypeScript/issues/3403
+    # TODO: remove this when the issue is fixed.
+    if utils.OnWindows():
+      contentlength += 1
+    content = self._tsserver_handle.stdout.readline( contentlength )
+    return json.loads( utils.ToUnicode( content ) )
 
 
   def _BuildRequest( self, command, arguments = None ):
@@ -218,10 +223,9 @@ class TypeScriptCompleter( Completer ):
     to the message that is sent.
     """
 
-    request = self._BuildRequest( command, arguments )
+    request = json.dumps( self._BuildRequest( command, arguments ) ) + '\n'
     with self._writelock:
-      self._tsserver_handle.stdin.write( json.dumps( request ) )
-      self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.write( utils.ToBytes( request ) )
       self._tsserver_handle.stdin.flush()
 
 
@@ -232,13 +236,13 @@ class TypeScriptCompleter( Completer ):
     """
 
     request = self._BuildRequest( command, arguments )
+    json_request = json.dumps( request ) + '\n'
     deferred = DeferredResponse()
     with self._pendinglock:
       seq = request[ 'seq' ]
       self._pending[ seq ] = deferred
     with self._writelock:
-      self._tsserver_handle.stdin.write( json.dumps( request ) )
-      self._tsserver_handle.stdin.write( "\n" )
+      self._tsserver_handle.stdin.write( utils.ToBytes( json_request ) )
       self._tsserver_handle.stdin.flush()
     return deferred.result()
 
@@ -270,7 +274,7 @@ class TypeScriptCompleter( Completer ):
     entries = self._SendRequest( 'completions', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'start_codepoint' ]
     } )
 
     # A less detailed version of the completion data is returned
@@ -288,7 +292,7 @@ class TypeScriptCompleter( Completer ):
     detailed_entries = self._SendRequest( 'completionEntryDetails', {
       'file':       request_data[ 'filepath' ],
       'line':       request_data[ 'line_num' ],
-      'offset':     request_data[ 'column_num' ],
+      'offset':     request_data[ 'start_codepoint' ],
       'entryNames': names
     } )
     return [ _ConvertDetailedCompletionData( e, namelength )
@@ -332,15 +336,16 @@ class TypeScriptCompleter( Completer ):
       filespans = self._SendRequest( 'definition', {
         'file':   request_data[ 'filepath' ],
         'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_num' ]
+        'offset': request_data[ 'column_codepoint' ]
       } )
 
       span = filespans[ 0 ]
-      return responses.BuildGoToResponse(
-        filepath   = span[ 'file' ],
-        line_num   = span[ 'start' ][ 'line' ],
-        column_num = span[ 'start' ][ 'offset' ]
-      )
+      return responses.BuildGoToResponseFromLocation(
+        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                           span[ 'file' ] ) ),
+                        span[ 'file' ],
+                        span[ 'start' ][ 'line' ],
+                        span[ 'start' ][ 'offset' ] ) )
     except RuntimeError:
       raise RuntimeError( 'Could not find definition' )
 
@@ -350,14 +355,18 @@ class TypeScriptCompleter( Completer ):
     response = self._SendRequest( 'references', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'column_codepoint' ]
     } )
-    return [ responses.BuildGoToResponse(
-               filepath    = ref[ 'file' ],
-               line_num    = ref[ 'start' ][ 'line' ],
-               column_num  = ref[ 'start' ][ 'offset' ],
-               description = ref[ 'lineText' ]
-             ) for ref in response[ 'refs' ] ]
+    return [
+      responses.BuildGoToResponseFromLocation(
+        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
+                                                           ref[ 'file' ] ) ),
+                        ref[ 'file' ],
+                        ref[ 'start' ][ 'line' ],
+                        ref[ 'start' ][ 'offset' ] ),
+        ref[ 'lineText' ] )
+      for ref in response[ 'refs' ]
+    ]
 
 
   def _GoToType( self, request_data ):
@@ -384,7 +393,7 @@ class TypeScriptCompleter( Completer ):
     info = self._SendRequest( 'quickinfo', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'column_codepoint' ]
     } )
     return responses.BuildDisplayMessageResponse( info[ 'displayString' ] )
 
@@ -394,7 +403,7 @@ class TypeScriptCompleter( Completer ):
     info = self._SendRequest( 'quickinfo', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ]
+      'offset': request_data[ 'column_codepoint' ]
     } )
 
     message = '{0}\n\n{1}'.format( info[ 'displayString' ],
@@ -412,7 +421,7 @@ class TypeScriptCompleter( Completer ):
     response = self._SendRequest( 'rename', {
       'file':   request_data[ 'filepath' ],
       'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_num' ],
+      'offset': request_data[ 'column_codepoint' ],
       'findInComments': False,
       'findInStrings': False,
     } )
@@ -453,7 +462,9 @@ class TypeScriptCompleter( Completer ):
 
     chunks = []
     for file_replacement in response[ 'locs' ]:
-      chunks.extend( _BuildFixItChunksForFile( new_name, file_replacement ) )
+      chunks.extend( _BuildFixItChunksForFile( request_data,
+                                               new_name,
+                                               file_replacement ) )
 
     return responses.BuildFixItResponse( [
       responses.FixIt( location, chunks )
@@ -507,22 +518,25 @@ def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
   )
 
 
-def _BuildFixItChunkForRange( new_name, file_name, source_range ):
+def _BuildFixItChunkForRange( new_name,
+                              file_contents,
+                              file_name,
+                              source_range ):
   """ returns list FixItChunk for a tsserver source range """
   return responses.FixItChunk(
       new_name,
       responses.Range(
-        start = responses.Location(
-                            source_range[ 'start' ][ 'line' ],
-                            source_range[ 'start' ][ 'offset' ],
-                            file_name ),
-        end = responses.Location(
-                            source_range[ 'end' ][ 'line' ],
-                            source_range[ 'end' ][ 'offset' ],
-                            file_name ) ) )
+        start = _BuildLocation( file_contents,
+                                file_name,
+                                source_range[ 'start' ][ 'line' ],
+                                source_range[ 'start' ][ 'offset' ] ),
+        end   = _BuildLocation( file_contents,
+                                file_name,
+                                source_range[ 'end' ][ 'line' ],
+                                source_range[ 'end' ][ 'offset' ] ) ) )
 
 
-def _BuildFixItChunksForFile( new_name, file_replacement ):
+def _BuildFixItChunksForFile( request_data, new_name, file_replacement ):
   """ returns a list of FixItChunk for each replacement range for the
   supplied file"""
 
@@ -530,7 +544,16 @@ def _BuildFixItChunksForFile( new_name, file_replacement ):
   # whereas all other paths in Python are of the C:\\blah\\blah form. We use
   # normpath to have python do the conversion for us.
   file_path = os.path.normpath( file_replacement[ 'file' ] )
-  _logger.debug( 'Converted {0} to {1}'.format( file_replacement[ 'file' ],
-                                                file_path ) )
-  return [ _BuildFixItChunkForRange( new_name, file_path, r )
+  file_contents = utils.SplitLines( GetFileContents( request_data, file_path ) )
+  return [ _BuildFixItChunkForRange( new_name, file_contents, file_path, r )
            for r in file_replacement[ 'locs' ] ]
+
+
+def _BuildLocation( file_contents, filename, line, offset ):
+  return responses.Location(
+    line = line,
+    # tsserver returns codepoint offsets, but we need byte offsets, so we must
+    # convert
+    column = utils.CodepointOffsetToByteOffset( file_contents[ line - 1 ],
+                                                offset ),
+    filename = filename )

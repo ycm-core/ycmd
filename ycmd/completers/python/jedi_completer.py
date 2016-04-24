@@ -218,8 +218,9 @@ class JediCompleter( Completer ):
     path = request_data[ 'filepath' ]
     source = request_data[ 'file_data' ][ path ][ 'contents' ]
     line = request_data[ 'line_num' ]
-    # JediHTTP as Jedi itself expects columns to start at 0, not 1
-    col = request_data[ 'column_num' ] - 1
+    # JediHTTP (as Jedi itself) expects columns to start at 0, not 1, and for
+    # them to be unicode codepoint offsets.
+    col = request_data[ 'start_codepoint' ] - 1
 
     return {
       'source': source,

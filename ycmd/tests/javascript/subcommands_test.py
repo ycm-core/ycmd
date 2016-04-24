@@ -1,4 +1,5 @@
 # Copyright (C) 2015 ycmd contributors
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -115,6 +116,27 @@ def Subcommands_GoToDefinition_test( app ):
 
 
 @SharedYcmd
+def Subcommands_GoToDefinition_Unicode_test( app ):
+  RunTest( app, {
+    'description': 'GoToDefinition works within file with unicode',
+    'request': {
+      'command': 'GoToDefinition',
+      'line_num': 11,
+      'column_num': 12,
+      'filepath': PathToTestFile( 'unicode.js' ),
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries( {
+        'filepath': PathToTestFile( 'unicode.js' ),
+        'line_num': 6,
+        'column_num': 26,
+      } )
+    }
+  } )
+
+
+@SharedYcmd
 def Subcommands_GoTo_test( app ):
   RunTest( app, {
     'description': 'GoTo works the same as GoToDefinition within file',
@@ -200,6 +222,39 @@ def Subcommands_GoToReferences_test( app ):
           'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
           'line_num': 12,
           'column_num': 9,
+        } )
+      )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_GoToReferences_Unicode_test( app ):
+  RunTest( app, {
+    'description': 'GoToReferences works within file with unicode chars',
+    'request': {
+      'command': 'GoToReferences',
+      'line_num': 11,
+      'column_num': 5,
+      'filepath': PathToTestFile( 'unicode.js' ),
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': contains_inanyorder(
+        has_entries( {
+          'filepath': PathToTestFile( 'unicode.js' ),
+          'line_num': 5,
+          'column_num': 5,
+        } ),
+        has_entries( {
+          'filepath': PathToTestFile( 'unicode.js' ),
+          'line_num': 9,
+          'column_num': 1,
+        } ),
+        has_entries( {
+          'filepath': PathToTestFile( 'unicode.js' ),
+          'line_num': 11,
+          'column_num': 1,
         } )
       )
     }
@@ -393,5 +448,39 @@ def Subcommands_RefactorRename_Missing_New_Name_test( app ):
       'data': ErrorMatcher( ValueError,
                             'Please specify a new name to rename it to.\n'
                             'Usage: RefactorRename <new name>' ),
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Unicode_test( app ):
+  filepath = PathToTestFile( 'unicode.js' )
+  RunTest( app, {
+    'description': 'RefactorRename works with unicode identifiers',
+    'request': {
+      'command': 'RefactorRename',
+      'arguments': [ '†es†' ],
+      'filepath': filepath,
+      'line_num': 11,
+      'column_num': 3,
+    },
+    'expect': {
+      'response': http.client.OK,
+      'data': has_entries ( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+              ChunkMatcher( '†es†',
+                            LocationMatcher( filepath, 5, 5 ),
+                            LocationMatcher( filepath, 5, 13 ) ),
+              ChunkMatcher( '†es†',
+                            LocationMatcher( filepath, 9, 1 ),
+                            LocationMatcher( filepath, 9, 9 ) ),
+              ChunkMatcher( '†es†',
+                            LocationMatcher( filepath, 11, 1 ),
+                            LocationMatcher( filepath, 11, 9 ) )
+          ),
+          'location': LocationMatcher( filepath, 11, 3 )
+        } ) )
+      } )
     }
   } )

@@ -28,8 +28,9 @@ from future.utils import iteritems
 # We don't want ycm_core inside Vim.
 import os
 import re
+import copy
 from collections import defaultdict
-from ycmd.utils import ToCppStringCompatible, ToUnicode
+from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile
 
 
 class PreparedTriggers( object ):
@@ -46,23 +47,29 @@ class PreparedTriggers( object ):
     self._filetype_to_prepared_triggers = final_triggers
 
 
-  def MatchingTriggerForFiletype( self, current_line, start_column, column_num,
+  def MatchingTriggerForFiletype( self,
+                                  current_line,
+                                  start_codepoint,
+                                  column_codepoint,
                                   filetype ):
     try:
       triggers = self._filetype_to_prepared_triggers[ filetype ]
     except KeyError:
       return None
     return _MatchingSemanticTrigger( current_line,
-                                     start_column,
-                                     column_num,
+                                     start_codepoint,
+                                     column_codepoint,
                                      triggers )
 
 
-  def MatchesForFiletype( self, current_line, start_column, column_num,
+  def MatchesForFiletype( self,
+                          current_line,
+                          start_codepoint,
+                          column_codepoint,
                           filetype ):
     return self.MatchingTriggerForFiletype( current_line,
-                                            start_column,
-                                            column_num,
+                                            start_codepoint,
+                                            column_codepoint,
                                             filetype ) is not None
 
 
@@ -92,44 +99,53 @@ def _FiletypeDictUnion( dict_one, dict_two ):
   return final_dict
 
 
-def _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
+# start_codepoint and column_codepoint are codepoint offsets in the unicode
+# string line_value.
+def _RegexTriggerMatches( trigger,
+                          line_value,
+                          start_codepoint,
+                          column_codepoint ):
   for match in trigger.finditer( line_value ):
-    # By definition of 'start_column', we know that the character just before
-    # 'start_column' is not an identifier character but all characters
-    # between 'start_column' and 'column_num' are. This means that if our
-    # trigger ends with an identifier character, its tail must match between
-    # 'start_column' and 'column_num', 'start_column' excluded. But if it
-    # doesn't, its tail must match exactly at 'start_column'. Both cases are
-    # mutually exclusive hence the following condition.
-    if start_column <= match.end() and match.end() <= column_num:
+    # By definition of 'start_codepoint', we know that the character just before
+    # 'start_codepoint' is not an identifier character but all characters
+    # between 'start_codepoint' and 'column_codepoint' are. This means that if
+    # our trigger ends with an identifier character, its tail must match between
+    # 'start_codepoint' and 'column_codepoint', 'start_codepoint' excluded. But
+    # if it doesn't, its tail must match exactly at 'start_codepoint'. Both
+    # cases are mutually exclusive hence the following condition.
+    if start_codepoint <= match.end() and match.end() <= column_codepoint:
       return True
   return False
 
 
-# start_column and column_num are 0-based
-def _MatchingSemanticTrigger( line_value, start_column, column_num,
+# start_codepoint and column_codepoint are 0-based and are codepoint offsets
+# into the unicode string line_value.
+def _MatchingSemanticTrigger( line_value, start_codepoint, column_codepoint,
                               trigger_list ):
-  if start_column < 0 or column_num < 0:
+  if start_codepoint < 0 or column_codepoint < 0:
     return None
 
   line_length = len( line_value )
-  if not line_length or start_column > line_length:
+  if not line_length or start_codepoint > line_length:
     return None
 
   # Ignore characters after user's caret column
-  line_value = line_value[ :column_num ]
+  line_value = line_value[ : column_codepoint ]
 
   for trigger in trigger_list:
-    if _RegexTriggerMatches( trigger, line_value, start_column, column_num ):
+    if _RegexTriggerMatches( trigger,
+                             line_value,
+                             start_codepoint,
+                             column_codepoint ):
       return trigger
   return None
 
 
-def _MatchesSemanticTrigger( line_value, start_column, column_num,
+def _MatchesSemanticTrigger( line_value, start_codepoint, column_codepoint,
                              trigger_list ):
   return _MatchingSemanticTrigger( line_value,
-                                   start_column,
-                                   column_num,
+                                   start_codepoint,
+                                   column_codepoint,
                                    trigger_list ) is not None
 
 
@@ -155,9 +171,73 @@ def FiletypeCompleterExistsForFiletype( filetype ):
 
 def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
   from ycm_core import FilterAndSortCandidates
-  return FilterAndSortCandidates( candidates,
-                                  ToCppStringCompatible( sort_property ),
-                                  ToCppStringCompatible( query ) )
+
+  # The c++ interface we use only understands the (*native*) 'str' type (i.e.
+  # not the 'str' type from python-future. If we pass it a 'unicode' or
+  # 'bytes' instance then various things blow up, such as converting to
+  # std::string. Therefore all strings passed into the c++ API must pass through
+  # ToCppStringCompatible (or more strictly all strings which the C++ code
+  # needs to use and convert. In this case, just the insertion text property)
+
+  # FIXME: This is actually quite inefficient in an area which is used
+  # constantly and the key performance critical part of the system. There is
+  # code in the C++ layer (see PythonSupport.cpp:GetUtf8String) which attempts
+  # to work around this limitation. Unfortunately it has issues which cause the
+  # above problems, and we work around it by converting here in the python
+  # layer until we can come up with a better solution in the C++ layer.
+
+  # Note: we must deep copy candidates because we do not want to clobber the
+  # data that is passed in. It is actually used directly by the cache, so if
+  # we change the data pointed to by the elements of candidates, then this will
+  # be reflected in a subsequent response from the cache. This is particularly
+  # important for those candidates which are *not* returned after the filter, as
+  # they are not converted back to unicode.
+  cpp_compatible_candidates = _ConvertCandidatesToCppCompatible(
+    copy.deepcopy( candidates ),
+    sort_property )
+
+  # However, the reset of the python layer expects all the candidates properties
+  # to be some form of unicode string - a python-future str() instance.
+  # So we need to convert the insertion text property back to a unicode string
+  # before returning it.
+  filtered_candidates = FilterAndSortCandidates(
+    cpp_compatible_candidates,
+    ToCppStringCompatible( sort_property ),
+    ToCppStringCompatible( query ) )
+
+  return _ConvertCandidatesToPythonCompatible( filtered_candidates,
+                                               sort_property )
+
+
+def _ConvertCandidatesToCppCompatible( candidates, sort_property ):
+  """Convert the candidates to the format expected by the C++ layer."""
+  return _ConvertCandidates( candidates, sort_property, ToCppStringCompatible )
+
+
+def _ConvertCandidatesToPythonCompatible( candidates, sort_property ):
+  """Convert the candidates to the format expected by the python layer."""
+  return _ConvertCandidates( candidates, sort_property, ToUnicode )
+
+
+def _ConvertCandidates( candidates, sort_property, converter ):
+  """Apply the conversion function |converter| to the logical insertion text
+  field within the candidates in the candidate list |candidates|. The
+  |sort_property| is required to determine the format of |candidates|.
+
+  The conversion function should take a single argument (the string) and return
+  the converted string. It should be one of ycmd.utils.ToUnicode or
+  ycmd.utils.ToCppStringCompatible.
+
+  Typically this method is not called directly, rather it is used via
+  _ConvertCandidatesToCppCompatible and _ConvertCandidatesToPythonCompatible."""
+
+  if sort_property:
+    for candidate in candidates:
+      candidate[ sort_property ] = converter( candidate[ sort_property ] )
+    return candidates
+
+  return [ converter( c ) for c in candidates ]
+
 
 TRIGGER_REGEX_PREFIX = 're!'
 
@@ -216,3 +296,16 @@ def GetIncludeStatementValue( line, check_closing = True ):
       if close_char_pos != -1:
         include_value = line[ match.end() : close_char_pos ]
   return include_value, quoted_include
+
+
+def GetFileContents( request_data, filename ):
+  """Returns the contents of the absolute path |filename| as a unicode
+  string. If the file contents exist in |request_data| (i.e. it is open and
+  potentially modified/dirty in the user's editor), then it is returned,
+  otherwise the file is read from disk (assuming a UTF-8 encoding) and its
+  contents returned."""
+  file_data = request_data[ 'file_data' ]
+  if filename in file_data:
+    return ToUnicode( file_data[ filename ][ 'contents' ] )
+
+  return ToUnicode( ReadFile( filename ) )

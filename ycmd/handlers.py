@@ -99,7 +99,7 @@ def GetCompletions():
   _logger.info( 'Received completion request' )
   request_data = RequestWrap( request.json )
   ( do_filetype_completion, forced_filetype_completion ) = (
-                    _server_state.ShouldUseFiletypeCompleter(request_data ) )
+                    _server_state.ShouldUseFiletypeCompleter( request_data ) )
   _logger.debug( 'Using filetype completion: %s', do_filetype_completion )
 
   errors = None

@@ -30,9 +30,10 @@ import os
 import time
 import re
 from ycmd.completers.completer import Completer
-from ycmd.utils import ForceSemanticCompletion
+from ycmd.utils import ForceSemanticCompletion, CodepointOffsetToByteOffset
 from ycmd import responses
 from ycmd import utils
+from ycmd.completers.completer_utils import GetFileContents
 import requests
 import urllib.parse
 import logging
@@ -223,7 +224,7 @@ class CsharpCompleter( Completer ):
 
     errors = solutioncompleter.CodeCheck( request_data )
 
-    diagnostics = [ self._QuickFixToDiagnostic( x ) for x in
+    diagnostics = [ self._QuickFixToDiagnostic( request_data, x ) for x in
                     errors[ "QuickFixes" ] ]
 
     self._diagnostic_store = DiagnosticsToDiagStructure( diagnostics )
@@ -232,12 +233,12 @@ class CsharpCompleter( Completer ):
              diagnostics[ : self._max_diagnostics_to_display ] ]
 
 
-  def _QuickFixToDiagnostic( self, quick_fix ):
+  def _QuickFixToDiagnostic( self, request_data, quick_fix ):
     filename = quick_fix[ "FileName" ]
-
-    location = responses.Location( quick_fix[ "Line" ],
-                                   quick_fix[ "Column" ],
-                                   filename )
+    location = _BuildLocation( request_data,
+                               filename,
+                               quick_fix[ 'Line' ],
+                               quick_fix[ 'Column' ] )
     location_range = responses.Range( location, location )
     return responses.Diagnostic( list(),
                                  location,
@@ -261,6 +262,9 @@ class CsharpCompleter( Completer ):
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
+    # FIXME: all of these calculations are currently working with byte
+    # offsets, which are technically incorrect. We should be working with
+    # codepoint offsets, as we want the nearest character-wise diagnostic
     for diagnostic in diagnostics:
       distance = abs( current_column - diagnostic.location_.column_number_ )
       if distance < distance_to_closest_diagnostic:
@@ -451,9 +455,11 @@ class CsharpSolutionCompleter( object ):
     definition = self._GetResponse( '/gotodefinition',
                                     self._DefaultParameters( request_data ) )
     if definition[ 'FileName' ] is not None:
-      return responses.BuildGoToResponse( definition[ 'FileName' ],
-                                          definition[ 'Line' ],
-                                          definition[ 'Column' ] )
+      return responses.BuildGoToResponseFromLocation(
+        _BuildLocation( request_data,
+                        definition[ 'FileName' ],
+                        definition[ 'Line' ],
+                        definition[ 'Column' ] ) )
     else:
       raise RuntimeError( 'Can\'t jump to definition' )
 
@@ -466,14 +472,18 @@ class CsharpSolutionCompleter( object ):
 
     if implementation[ 'QuickFixes' ]:
       if len( implementation[ 'QuickFixes' ] ) == 1:
-        return responses.BuildGoToResponse(
+        return responses.BuildGoToResponseFromLocation(
+          _BuildLocation(
+            request_data,
             implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
             implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
-            implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] )
+            implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] ) )
       else:
-        return [ responses.BuildGoToResponse( x[ 'FileName' ],
-                                              x[ 'Line' ],
-                                              x[ 'Column' ] )
+        return [ responses.BuildGoToResponseFromLocation(
+                   _BuildLocation( request_data,
+                                   x[ 'FileName' ],
+                                   x[ 'Line' ],
+                                   x[ 'Column' ] ) )
                  for x in implementation[ 'QuickFixes' ] ]
     else:
       if ( fallback_to_declaration ):
@@ -499,9 +509,11 @@ class CsharpSolutionCompleter( object ):
 
     result = self._GetResponse( '/fixcodeissue', request )
     replacement_text = result[ "Text" ]
-    location = responses.Location( request_data['line_num'],
-                                   request_data['column_num'],
-                                   request_data['filepath'] )
+    # Note: column_num is already a byte offset so we don't need to use
+    # _BuildLocation.
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   request_data[ 'filepath' ] )
     fixits = [ responses.FixIt( location,
                                 _BuildChunks( request_data,
                                               replacement_text ) ) ]
@@ -525,7 +537,8 @@ class CsharpSolutionCompleter( object ):
     """ Some very common request parameters """
     parameters = {}
     parameters[ 'line' ] = request_data[ 'line_num' ]
-    parameters[ 'column' ] = request_data[ 'column_num' ]
+    parameters[ 'column' ] = request_data[ 'column_codepoint' ]
+
     filepath = request_data[ 'filepath' ]
     parameters[ 'buffer' ] = (
       request_data[ 'file_data' ][ filepath ][ 'contents' ] )
@@ -631,6 +644,9 @@ def _BuildChunks( request_data, new_buffer ):
   ( start_line, start_column ) = _IndexToLineColumn( old_buffer, start_index )
   ( end_line, end_column ) = _IndexToLineColumn( old_buffer,
                                                  old_length - end_index )
+
+  # No need for _BuildLocation, because _IndexToLineColumn already converted
+  # start_column and end_column to byte offsets for us.
   start = responses.Location( start_line, start_column, filepath )
   end = responses.Location( end_line, end_column, filepath )
   return [ responses.FixItChunk( replacement_text,
@@ -651,11 +667,22 @@ def _FixLineEndings( old_buffer, new_buffer ):
 
 # Adapted from http://stackoverflow.com/a/24495900
 def _IndexToLineColumn( text, index ):
-  """Get (line_number, col) of `index` in `string`."""
+  """Get 1-based (line_number, col) of `index` in `string`, where string is a
+  unicode string and col is a byte offset."""
   lines = text.splitlines( True )
   curr_pos = 0
   for linenum, line in enumerate( lines ):
     if curr_pos + len( line ) > index:
-      return linenum + 1, index - curr_pos + 1
+      return ( linenum + 1,
+               CodepointOffsetToByteOffset( line, index - curr_pos + 1 ) )
     curr_pos += len( line )
   assert False
+
+
+def _BuildLocation( request_data, filename, line_num, column_num ):
+  contents = utils.SplitLines( GetFileContents( request_data, filename ) )
+  line_value = contents[ line_num - 1 ]
+  return responses.Location(
+      line_num,
+      CodepointOffsetToByteOffset( line_value, column_num ),
+      filename )

@@ -5,6 +5,7 @@
   "files": [
     "test.ts",
     "file2.ts",
-    "file3.ts"
+    "file3.ts",
+    "unicode.ts"
   ]
 }
