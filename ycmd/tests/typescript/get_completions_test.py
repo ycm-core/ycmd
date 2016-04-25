@@ -23,7 +23,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains_inanyorder, has_entries
+from hamcrest import ( all_of, any_of, assert_that, contains_inanyorder,
+                       has_entries, has_item, is_not )
 from mock import patch
 
 from ycmd.tests.typescript import PathToTestFile, SharedYcmd
@@ -81,10 +82,24 @@ def GetCompletions_MaxDetailedCompletion_test( app ):
   RunTest( app, {
     'expect': {
       'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'methodA' ),
-          CompletionEntryMatcher( 'methodB' ),
-          CompletionEntryMatcher( 'methodC' )
+        'completions': all_of(
+          contains_inanyorder(
+            CompletionEntryMatcher( 'methodA' ),
+            CompletionEntryMatcher( 'methodB' ),
+            CompletionEntryMatcher( 'methodC' ),
+          ),
+          is_not( any_of(
+            has_item(
+              CompletionEntryMatcher( 'methodA', extra_params = {
+                'menu_text': 'methodA (method) Foo.methodA(): void' } ) ),
+            has_item(
+              CompletionEntryMatcher( 'methodB', extra_params = {
+                'menu_text': 'methodB (method) Foo.methodB(): void' } ) ),
+            has_item(
+              CompletionEntryMatcher( 'methodC', extra_params = {
+                'menu_text': ( 'methodC (method) Foo.methodC(a: '
+                               '{ foo: string; bar: number; }): void' ) } ) )
+          ) )
         )
       } )
     }
