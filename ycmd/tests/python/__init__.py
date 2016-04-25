@@ -28,7 +28,7 @@ import os
 import time
 
 from ycmd import handlers
-from ycmd.tests.test_utils import BuildRequest, SetUpApp
+from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
 
 shared_app = None
 
@@ -90,6 +90,7 @@ def SharedYcmd( test ):
 
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
+    ClearCompletionsCache()
     return test( shared_app, *args, **kwargs )
   return Wrapper
 

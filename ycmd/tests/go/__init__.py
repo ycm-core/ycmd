@@ -26,7 +26,7 @@ from builtins import *  # noqa
 import functools
 import os
 
-from ycmd.tests.test_utils import BuildRequest, SetUpApp
+from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
 
 shared_app = None
 
@@ -68,5 +68,6 @@ def SharedYcmd( test ):
 
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
+    ClearCompletionsCache()
     return test( shared_app, *args, **kwargs )
   return Wrapper
