@@ -23,30 +23,17 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from os import path
-
-try:
-  import ycm_core
-except ImportError as e:
-  raise RuntimeError(
-    'Error importing ycm_core. Are you sure you have placed a '
-    'version 3.2+ libclang.[so|dll|dylib] in folder "{0}"? '
-    'See the Installation Guide in the docs. Full error: {1}'.format(
-      path.realpath( path.join( path.abspath( __file__ ), '..', '..' ) ),
-      str( e ) ) )
-
 import atexit
-import logging
-import json
 import bottle
 import http.client
+import json
+import logging
 import traceback
 from bottle import request
-from . import server_state
-from ycmd import user_options_store
+
+import ycm_core
+from ycmd import extra_conf_store, hmac_plugin, server_state, user_options_store
 from ycmd.responses import BuildExceptionResponse, BuildCompletionResponse
-from ycmd import hmac_plugin
-from ycmd import extra_conf_store
 from ycmd.request_wrap import RequestWrap
 from ycmd.bottle_utils import SetResponseHeader
 from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap

@@ -22,24 +22,57 @@ from __future__ import absolute_import
 # No other imports from `future` because this module is loaded before we have
 # put our submodules in sys.path
 
-import sys
-import os
 import io
+import logging
+import os
 import re
+import sys
+
+CORE_MISSING_ERROR_REGEX = re.compile( "No module named '?ycm_core'?" )
+CORE_PYTHON2_ERROR_REGEX = re.compile(
+  'dynamic module does not define (?:init|module export) '
+  'function \(PyInit_ycm_core\)|'
+  'Module use of python2[0-9].dll conflicts with this version of Python\.$' )
+CORE_PYTHON3_ERROR_REGEX = re.compile(
+  'dynamic module does not define init function \(initycm_core\)|'
+  'Module use of python3[0-9].dll conflicts with this version of Python\.$' )
+
+CORE_MISSING_MESSAGE = (
+  'ycm_core library not detected; you need to compile it by running the '
+  'build.py script. See the documentation for more details.' )
+CORE_PYTHON2_MESSAGE = (
+  'ycm_core library compiled for Python 2 but loaded in Python 3.' )
+CORE_PYTHON3_MESSAGE = (
+  'ycm_core library compiled for Python 3 but loaded in Python 2.' )
+CORE_OUTDATED_MESSAGE = (
+  'ycm_core library too old; PLEASE RECOMPILE by running the build.py script. '
+  'See the documentation for more details.' )
+
+# Exit statuses returned by the CompatibleWithCurrentCore function:
+#  - CORE_COMPATIBLE_STATUS: ycm_core is compatible;
+#  - CORE_UNEXPECTED_STATUS: unexpected error while loading ycm_core;
+#  - CORE_MISSING_STATUS   : ycm_core is missing;
+#  - CORE_PYTHON2_STATUS   : ycm_core is compiled with Python 2 but loaded with
+#    Python 3;
+#  - CORE_PYTHON3_STATUS   : ycm_core is compiled with Python 3 but loaded with
+#    Python 2;
+#  - CORE_OUTDATED_STATUS  : ycm_core version is outdated.
+# Values 1 and 2 are not used because 1 is for general errors and 2 has often a
+# special meaning for Unix programs. See
+# https://docs.python.org/2/library/sys.html#sys.exit
+CORE_COMPATIBLE_STATUS  = 0
+CORE_UNEXPECTED_STATUS  = 3
+CORE_MISSING_STATUS     = 4
+CORE_PYTHON2_STATUS     = 5
+CORE_PYTHON3_STATUS     = 6
+CORE_OUTDATED_STATUS    = 7
 
 VERSION_FILENAME = 'CORE_VERSION'
-CORE_NOT_COMPATIBLE_MESSAGE = (
-  'ycmd can\'t run: ycm_core lib too old, PLEASE RECOMPILE'
-)
 
 DIR_OF_CURRENT_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
 DIR_PACKAGES_REGEX = re.compile( '(site|dist)-packages$' )
 
-
-def SetUpPythonPath():
-  sys.path.insert( 0, os.path.join( DIR_OF_CURRENT_SCRIPT, '..' ) )
-
-  AddNearestThirdPartyFoldersToSysPath( __file__ )
+_logger = logging.getLogger( __name__ )
 
 
 def ExpectedCoreVersion():
@@ -48,13 +81,49 @@ def ExpectedCoreVersion():
     return int( f.read() )
 
 
-def CompatibleWithCurrentCoreVersion():
-  import ycm_core
+def ImportCore():
+  """Imports and returns the ycm_core module. This function exists for easily
+  mocking this import in tests."""
+  import ycm_core as ycm_core
+  return ycm_core
+
+
+def CompatibleWithCurrentCore():
+  """Checks if ycm_core library is compatible and returns with an exit
+  status."""
+  try:
+    ycm_core = ImportCore()
+  except ImportError as error:
+    message = str( error )
+    if CORE_MISSING_ERROR_REGEX.match( message ):
+      _logger.exception( CORE_MISSING_MESSAGE )
+      return CORE_MISSING_STATUS
+    if CORE_PYTHON2_ERROR_REGEX.match( message ):
+      _logger.exception( CORE_PYTHON2_MESSAGE )
+      return CORE_PYTHON2_STATUS
+    if CORE_PYTHON3_ERROR_REGEX.match( message ):
+      _logger.exception( CORE_PYTHON3_MESSAGE )
+      return CORE_PYTHON3_STATUS
+    _logger.exception( message )
+    return CORE_UNEXPECTED_STATUS
+
   try:
     current_core_version = ycm_core.YcmCoreVersion()
   except AttributeError:
-    return False
-  return ExpectedCoreVersion() == current_core_version
+    _logger.exception( CORE_OUTDATED_MESSAGE )
+    return CORE_OUTDATED_STATUS
+
+  if ExpectedCoreVersion() != current_core_version:
+    _logger.error( CORE_OUTDATED_MESSAGE )
+    return CORE_OUTDATED_STATUS
+
+  return CORE_COMPATIBLE_STATUS
+
+
+def SetUpPythonPath():
+  sys.path.insert( 0, os.path.join( DIR_OF_CURRENT_SCRIPT, '..' ) )
+
+  AddNearestThirdPartyFoldersToSysPath( __file__ )
 
 
 def AncestorFolders( path ):
