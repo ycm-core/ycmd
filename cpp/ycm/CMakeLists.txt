@@ -58,11 +58,11 @@ if ( USE_CLANG_COMPLETER AND
            "3120c3055ea78bbbb6848510a2af70c68538b990cb0545bac8dad01df8ff69d7" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
-      # Clang 3.3 is the last version with pre-built x86 binaries upstream.
-      # That's too old now.
-      message( FATAL_ERROR "No pre-built Clang ${CLANG_VERSION} binaries for 32 bit linux. "
-        "You'll have to compile Clang ${CLANG_VERSION} from source. "
-        "See the YCM docs for details on how to use a user-compiled libclang." )
+      # Use the prebuilt x86 binaries for Fedora 23.
+      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i686-fedora23" )
+      set( CLANG_SHA256
+           "063a5430b1895a1565831ab0b840cdb14f22ee9fad38e82b9bb8be76e49f1a8b" )
+      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     endif()
   endif()
 
