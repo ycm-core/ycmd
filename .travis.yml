@@ -4,7 +4,7 @@ os:
   - osx
 sudo: false
 mono:
-  - beta
+  - 4.2.3
 before_install:
   - git submodule update --init --recursive
 install:
