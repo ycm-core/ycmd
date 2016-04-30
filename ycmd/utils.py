@@ -243,10 +243,6 @@ def OnMac():
   return sys.platform == 'darwin'
 
 
-def OnTravis():
-  return 'TRAVIS' in os.environ
-
-
 def ProcessIsRunning( handle ):
   return handle is not None and handle.poll() is None
 
