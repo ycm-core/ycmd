@@ -59,6 +59,8 @@ public:
 
   YCM_DLL_EXPORT Result QueryMatchResult( const std::string &query,
                                           bool case_sensitive ) const;
+  YCM_DLL_EXPORT Result QueryMatchResultNaive( const std::string &query,
+                                               bool case_sensitive ) const;
 
 private:
   std::string text_;

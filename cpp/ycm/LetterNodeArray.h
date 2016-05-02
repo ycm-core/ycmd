@@ -15,32 +15,29 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "LetterNode.h"
-#include "standard.h"
+#ifndef LETTERNODEARRAY_H_EIZ6JVWC
+#define LETTERNODEARRAY_H_EIZ6JVWC
 
+#include <string>
 
 namespace YouCompleteMe {
 
-LetterNode::LetterNode( char letter, int index )
-  : index_( index ) ,
-    is_uppercase_( IsUppercase( letter ) ) {
+class LetterNode;
+
+class LetterNodeArray {
+public:
+  LetterNodeArray() : elements_( NULL ), size_( 0 ) {}
+  LetterNodeArray( const std::string &text );
+  ~LetterNodeArray();
+
+  LetterNode &operator[]( size_t index );
+
+private:
+  LetterNode *elements_;
+  unsigned size_;
+};
+
 }
 
+#endif /* end of include guard: LETTERNODEARRAY_H_EIZ6JVWC */
 
-LetterNode::LetterNode( const std::string &text )
-  : letternode_per_text_index_( text ),
-    index_( -1 ) ,
-    is_uppercase_( false ) {
-
-  for ( uint i = 0; i < text.size(); ++i ) {
-    AddNodeForLetter( text[ i ], i );
-  }
-
-  for ( size_t i = 0; i < text.size(); ++i ) {
-    for ( size_t j = i + 1; j < text.size(); ++j ) {
-      letternode_per_text_index_[ i ].AddNodeForLetter( text[ j ], j );
-    }
-  }
-}
-
-} // namespace YouCompleteMe

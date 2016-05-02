@@ -20,7 +20,8 @@
 
 #include "DLLDefines.h"
 
-#include <list>
+#include <vector>
+#include <boost/move/unique_ptr.hpp>
 #include <boost/utility.hpp>
 #include <boost/array.hpp>
 
@@ -34,17 +35,28 @@ YCM_DLL_EXPORT bool IsUppercase( char letter );
 bool IsInAsciiRange( int index );
 YCM_DLL_EXPORT int IndexForLetter( char letter );
 
+struct NearestLetterNodeIndices {
+  NearestLetterNodeIndices()
+    : eitherIndex( -1 ), upperIndex( -1 )
+  {}
+
+  short eitherIndex;
+  short upperIndex;
+};
+
 class LetterNodeListMap : boost::noncopyable {
 public:
   LetterNodeListMap();
   YCM_DLL_EXPORT ~LetterNodeListMap();
 
-  std::list< LetterNode * > &operator[] ( char letter );
+  NearestLetterNodeIndices &operator[] ( char letter );
 
-  YCM_DLL_EXPORT std::list< LetterNode * > *ListPointerAt( char letter );
+  YCM_DLL_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
 
 private:
-  boost::array< std::list< LetterNode * >*, NUM_LETTERS > letters_;
+  typedef boost::array<NearestLetterNodeIndices , NUM_LETTERS> NearestLetterNodeArray;
+
+  boost::movelib::unique_ptr< NearestLetterNodeArray > letters_;
 };
 
 } // namespace YouCompleteMe
