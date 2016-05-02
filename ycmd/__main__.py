@@ -25,7 +25,7 @@ import sys
 import os
 
 sys.path.insert( 0, os.path.dirname( os.path.abspath( __file__ ) ) )
-from server_utils import SetUpPythonPath, CompatibleWithCurrentCoreVersion
+from server_utils import SetUpPythonPath, CompatibleWithCurrentCore
 SetUpPythonPath()
 
 from future import standard_library
@@ -157,9 +157,9 @@ def Main():
   YcmCoreSanityCheck()
   extra_conf_store.CallGlobalExtraConfYcmCorePreloadIfExists()
 
-  if not CompatibleWithCurrentCoreVersion():
-    # ycm_core.[so|dll|dylib] is too old and needs to be recompiled.
-    sys.exit( 2 )
+  code = CompatibleWithCurrentCore()
+  if code:
+    sys.exit( code )
 
   PossiblyDetachFromTerminal()
 

@@ -153,6 +153,17 @@ keep-alive background thread that periodically pings ycmd (just call the
 You can also turn this off by passing `--idle_suicide_seconds=0`, although that
 isn't recommended.
 
+### Exit codes
+
+During startup, ycmd attempts to load the `ycm_core` library and exits with one
+of the following return codes if unsuccessful:
+
+- 3: unexpected error while loading the library;
+- 4: the `ycm_core` library is missing;
+- 5: the `ycm_core` library is compiled for Python 3 but loaded in Python 2;
+- 6: the `ycm_core` library is compiled for Python 2 but loaded in Python 3;
+- 7: the version of the `ycm_core` library is outdated.
+
 User-level customization
 -----------------------
 
