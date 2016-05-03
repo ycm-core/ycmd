@@ -19,6 +19,7 @@
 #define LETTERNODEARRAY_H_EIZ6JVWC
 
 #include <string>
+#include "DLLDefines.h"
 
 namespace YouCompleteMe {
 
@@ -28,9 +29,9 @@ class LetterNodeArray {
 public:
   LetterNodeArray() : elements_( NULL ), size_( 0 ) {}
   LetterNodeArray( const std::string &text );
-  ~LetterNodeArray();
+  YCM_DLL_EXPORT ~LetterNodeArray();
 
-  LetterNode &operator[]( size_t index );
+  YCM_DLL_EXPORT LetterNode &operator[]( size_t index );
 
 private:
   LetterNode *elements_;
