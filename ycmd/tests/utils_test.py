@@ -281,16 +281,6 @@ def PathToFirstExistingExecutable_Failure_test():
   ok_( not utils.PathToFirstExistingExecutable( [ 'ycmd-foobar' ] ) )
 
 
-@patch( 'os.environ', { 'TRAVIS': 1 } )
-def OnTravis_IsOnTravis_test():
-  ok_( utils.OnTravis() )
-
-
-@patch( 'os.environ', {} )
-def OnTravis_IsNotOnTravis_test():
-  ok_( not utils.OnTravis() )
-
-
 @patch( 'ycmd.utils.OnWindows', return_value = False )
 @patch( 'subprocess.Popen' )
 def SafePopen_RemovesStdinWindows_test( *args ):

@@ -25,8 +25,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, empty, greater_than, has_item, has_items,
-                       has_entries )
+from hamcrest import ( assert_that, calling, empty, greater_than, has_item,
+                       has_items, has_entries, raises )
 from nose.tools import eq_
 from webtest import AppError
 
@@ -400,20 +400,10 @@ def GetCompletions_DoesntStartWithAmbiguousMultipleSolutions_test( app ):
                              contents = contents,
                              event_name = 'FileReadyToParse' )
 
-  exception_caught = False
-  try:
-    app.post_json( '/event_notification', event_data )
-  except AppError as e:
-    if 'Autodetection of solution file failed' in str( e ):
-      exception_caught = True
-
-  # The test passes if we caught an exception when trying to start it,
-  # so raise one if it managed to start
-  if not exception_caught:
-    WaitUntilOmniSharpServerReady( app, filepath )
-    StopOmniSharpServer( app, filepath )
-    raise Exception( 'The Omnisharp server started, despite us not being '
-                     'able to find a suitable solution file to feed it. Did '
-                     'you fiddle with the solution finding code in '
-                     'cs_completer.py? Hopefully you\'ve enhanced it: you '
-                     'need to update this test then :)' )
+  assert_that(
+    calling( app.post_json ).with_args( '/event_notification', event_data ),
+    raises( AppError, 'Autodetection of solution file failed' ),
+    "The Omnisharp server started, despite us not being able to find a "
+    "suitable solution file to feed it. Did you fiddle with the solution "
+    "finding code in cs_completer.py? Hopefully you've enhanced it: you need "
+    "to update this test then :)" )
