@@ -65,7 +65,12 @@ def OpenForStdHandle( filepath ):
   # (we're replacing sys.stdout!) with an `str` object on py2 will cause
   # tracebacks because text mode insists on unicode objects. (Don't forget,
   # `open` is actually `io.open` because of future builtins.)
-  return open( filepath, 'wb' if PY2 else 'w' )
+  # Since this function is used for logging purposes, we don't want the output
+  # to be delayed. This means no buffering for binary mode and line buffering
+  # for text mode. See https://docs.python.org/2/library/io.html#io.open
+  if PY2:
+    return open( filepath, mode = 'wb', buffering = 0 )
+  return open( filepath, mode = 'w', buffering = 1 )
 
 
 # Given an object, returns a str object that's utf-8 encoded. This is meant to
