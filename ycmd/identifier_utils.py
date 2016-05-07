@@ -93,6 +93,10 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     # Section 2.4
     'haskell': re.compile( r"[_a-zA-Z][\w']*", re.UNICODE ),
 
+    # Spec: ?
+    # Labels like \label{fig:foobar} are very common
+    'tex': re.compile( r"[_a-zA-Z:-]*", re.UNICODE ),
+
     # Spec: http://doc.perl6.org/language/syntax
     'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
 }
