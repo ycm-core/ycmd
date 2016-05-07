@@ -244,6 +244,17 @@ def IsIdentifier_Haskell_test():
   ok_( not iu.IsIdentifier( "9" , 'haskell' ) )
 
 
+def IsIdentifier_Tex_test():
+  ok_( iu.IsIdentifier( 'foo', 'tex' ) )
+  ok_( iu.IsIdentifier( 'fig:foo', 'tex' ) )
+  ok_( iu.IsIdentifier( 'fig:foo-bar', 'tex' ) )
+  ok_( iu.IsIdentifier( 'sec:summary', 'tex' ) )
+  ok_( iu.IsIdentifier( 'eq:bar_foo', 'tex' ) )
+
+  ok_( not iu.IsIdentifier( '\section', 'tex' ) )
+  ok_( not iu.IsIdentifier( 'some8', 'tex' ) )
+
+
 def IsIdentifier_Perl6_test():
   ok_( iu.IsIdentifier( 'foo'  , 'perl6' ) )
   ok_( iu.IsIdentifier( "f-o"  , 'perl6' ) )
