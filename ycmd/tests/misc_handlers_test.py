@@ -56,7 +56,6 @@ def MiscHandlers_EventNotification_ReturnJsonOnBigFileError_test( app ):
   app.post_json( '/event_notification', event_data, expect_errors = True ).json
 
 
-
 @SharedYcmd
 def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
   candidate1 = { 'prop1': 'aoo', 'prop2': 'bar' }
