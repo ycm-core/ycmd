@@ -404,12 +404,11 @@ class TernCompleter( Completer ):
           port = self._server_port,
           std = 'stderr' )
 
-      # On Windows, we need to open a pipe to stdin to prevent Tern crashing
-      # with following error: "Implement me. Unknown stdin file type!"
+      # Tern exits when stdin closes, so we need to open a pipe to it
       with utils.OpenForStdHandle( self._server_stdout ) as stdout:
         with utils.OpenForStdHandle( self._server_stderr ) as stderr:
           self._server_handle = utils.SafePopen( command,
-                                                 stdin_windows = PIPE,
+                                                 stdin = PIPE,
                                                  stdout = stdout,
                                                  stderr = stderr )
     except Exception:
