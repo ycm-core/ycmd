@@ -45,7 +45,7 @@ import ipdb; ipdb.set_trace()
 
 3. Run the tests without `flake8`, e.g.
 
-```
+```sh
 ./run_tests --skip-build --no-flake8 ycmd/tests/get_completions_test.py
 ```
 
@@ -69,7 +69,7 @@ import clewn.vim as clewn; clewn.pdb()
 
 3. Run the tests without `flake8`, e.g.
 
-```
+```sh
 ./run_tests --skip-build --no-flake8 ycmd/tests/get_completions_test.py
 ```
 
@@ -86,7 +86,7 @@ debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
 1. Ensure your Python is built with debug enabled. In the vagrant system that's
    as simple as:
 
-```
+```sh
     vagrant up
     vagrant ssh
     export OPT=“-g” # Ensure Python binary has debugging info
@@ -99,12 +99,13 @@ debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
    homebrew, the you need to sign the binary otherwise you can't debug anything.
    See later steps for a link.
 
-2. Build ycm_core.so with debugging information (and link against debug Python):
+2. Build ycm_core library with debugging information (and link against debug
+   Python):
 
-```
+```sh
     export EXTRA_CMAKE_ARGS=‘-DPYTHON_LIBRARY=$HOME/.pyenv/versions/2.7.11/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=$HOME/.pyenv/versions/2.7.11/include/python2.7’
-   pyenv shell 2.7.11
-   ./build.sh —all --enable-debug
+    pyenv shell 2.7.11
+    ./build.py —all --enable-debug
 ```
 
 3. Enable debugging in the OS. On Linux (Ubuntu at least, which is what all of
@@ -112,7 +113,7 @@ debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
    make it permanent if you like by adding it to `/etc/sysctl.conf` or via any
    other appropriate mechanism):
 
-```
+```sh
      sudo sysctl kernel.yama.ptrace_scope=0
 ```
 
