@@ -183,6 +183,7 @@ def IsIdentifier_Css_test():
   ok_( not iu.IsIdentifier( '-3' , 'css' ) )
   ok_( not iu.IsIdentifier( '3'  , 'css' ) )
   ok_( not iu.IsIdentifier( 'a'  , 'css' ) )
+  ok_( not iu.IsIdentifier( '' , 'css' ) )
 
 
 def IsIdentifier_R_test():
@@ -204,6 +205,7 @@ def IsIdentifier_R_test():
   ok_( not iu.IsIdentifier( '123', 'r' ) )
   ok_( not iu.IsIdentifier( '_1a', 'r' ) )
   ok_( not iu.IsIdentifier( '_a' , 'r' ) )
+  ok_( not iu.IsIdentifier( '' , 'r' ) )
 
 
 def IsIdentifier_Clojure_test():
@@ -229,6 +231,7 @@ def IsIdentifier_Clojure_test():
   ok_( not iu.IsIdentifier( '9'    , 'clojure' ) )
   ok_( not iu.IsIdentifier( 'a/b/c', 'clojure' ) )
   ok_( not iu.IsIdentifier( '(a)'  , 'clojure' ) )
+  ok_( not iu.IsIdentifier( '' , 'clojure' ) )
 
 
 def IsIdentifier_Haskell_test():
@@ -242,6 +245,19 @@ def IsIdentifier_Haskell_test():
   ok_( not iu.IsIdentifier( "'x", 'haskell' ) )
   ok_( not iu.IsIdentifier( "9x", 'haskell' ) )
   ok_( not iu.IsIdentifier( "9" , 'haskell' ) )
+  ok_( not iu.IsIdentifier( '' , 'haskell' ) )
+
+
+def IsIdentifier_Tex_test():
+  ok_( iu.IsIdentifier( 'foo', 'tex' ) )
+  ok_( iu.IsIdentifier( 'fig:foo', 'tex' ) )
+  ok_( iu.IsIdentifier( 'fig:foo-bar', 'tex' ) )
+  ok_( iu.IsIdentifier( 'sec:summary', 'tex' ) )
+  ok_( iu.IsIdentifier( 'eq:bar_foo', 'tex' ) )
+
+  ok_( not iu.IsIdentifier( '\section', 'tex' ) )
+  ok_( not iu.IsIdentifier( 'some8', 'tex' ) )
+  ok_( not iu.IsIdentifier( '' , 'tex' ) )
 
 
 def IsIdentifier_Perl6_test():
@@ -268,6 +284,7 @@ def IsIdentifier_Perl6_test():
   ok_( not iu.IsIdentifier( "x+"  , 'perl6' ) )
   ok_( not iu.IsIdentifier( "9x"  , 'perl6' ) )
   ok_( not iu.IsIdentifier( "9"   , 'perl6' ) )
+  ok_( not iu.IsIdentifier( '' , 'perl6' ) )
 
 
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
