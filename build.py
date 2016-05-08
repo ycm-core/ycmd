@@ -307,8 +307,8 @@ def ParseArguments():
                        dest   = 'all_completers' )
   parser.add_argument( '--enable-debug',
                        action = 'store_true',
-                       help   = 'For developers: build ycm_core.so with debug '
-                                'symbols' )
+                       help   = 'For developers: build ycm_core library with '
+                                'debug symbols' )
 
   args = parser.parse_args()
 
