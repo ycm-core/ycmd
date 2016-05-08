@@ -193,12 +193,14 @@ def CustomPythonCmakeArgs():
       sys.exit( 'ERROR: Unable to find an appropriate python library' )
 
     python_include = '{0}/include/{1}'.format( python_prefix, which_python )
+    python_executable = '{0}/bin/python'.format( python_prefix )
 
   print( 'Using PYTHON_LIBRARY={0} PYTHON_INCLUDE_DIR={1}'.format(
       python_library, python_include ) )
   return [
     '-DPYTHON_LIBRARY={0}'.format( python_library ),
-    '-DPYTHON_INCLUDE_DIR={0}'.format( python_include )
+    '-DPYTHON_INCLUDE_DIR={0}'.format( python_include ),
+    '-DPYTHON_EXECUTABLE={0}'.format( python_executable )
   ]
 
 
