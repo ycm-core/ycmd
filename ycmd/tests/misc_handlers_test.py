@@ -47,6 +47,16 @@ def MiscHandlers_EventNotification_AlwaysJsonResponse_test( app ):
 
 
 @SharedYcmd
+def MiscHandlers_EventNotification_ReturnJsonOnBigFileError_test( app ):
+  # We generate a content greater than Bottle.MEMFILE_MAX, which is set to 1Mb.
+  contents = "foo " * 500000
+  event_data = BuildRequest( contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data, expect_errors = True ).json
+
+
+@SharedYcmd
 def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
   candidate1 = { 'prop1': 'aoo', 'prop2': 'bar' }
   candidate2 = { 'prop1': 'bfo', 'prop2': 'zoo' }
