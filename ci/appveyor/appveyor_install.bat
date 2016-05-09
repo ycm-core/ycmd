@@ -33,13 +33,6 @@ if %python% == 27 (
   set PYTHONHOME=%python_path%
 )
 
-:: When using Python 3 on AppVeyor, CMake will always pick the 64 bits
-:: libraries. We specifically tell CMake the right path to the libraries
-:: according to the architecture.
-if %python% == 35 (
-  set EXTRA_CMAKE_ARGS="-DPYTHON_LIBRARY=%python_path%\libs\python%python%.lib"
-)
-
 appveyor DownloadFile https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
 pip install -r test_requirements.txt

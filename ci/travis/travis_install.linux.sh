@@ -17,3 +17,6 @@ ln -s /usr/bin/clang-3.7 ${HOME}/bin/gcc
 
 export PATH=${HOME}/bin:${PATH}
 
+# In order to work with ycmd, python *must* be built as a shared library. This
+# is set via the PYTHON_CONFIGURE_OPTS option.
+export PYTHON_CONFIGURE_OPTS="--enable-shared"
