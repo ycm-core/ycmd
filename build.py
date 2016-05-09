@@ -270,8 +270,7 @@ def GetGenerator( args ):
     else:
       generator = 'Visual Studio 11'
 
-    if ( not args.arch and platform.architecture()[ 0 ] == '64bit'
-         or args.arch == 64 ):
+    if platform.architecture()[ 0 ] == '64bit':
       generator = generator + ' Win64'
     return generator
 
@@ -299,9 +298,6 @@ def ParseArguments():
   parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
                        default = 14, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
-  parser.add_argument( '--arch', type = int, choices = [ 32, 64 ],
-                       help = 'Force architecture to 32 or 64 bits on '
-                       'Windows (default: python interpreter architecture).' ),
   parser.add_argument( '--tern-completer',
                        action = 'store_true',
                        help   = 'Enable tern javascript completer' ),
