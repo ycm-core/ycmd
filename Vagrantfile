@@ -19,4 +19,14 @@ Vagrant.configure(2) do |config|
     v.memory = 3072
     v.cpus = 2
   end
+
+  config.vm.provider "parallels" do |v|
+    config.vm.box = 'parallels/ubuntu-14.04'
+
+    v.memory = 3072
+    v.cpus = 4
+
+    v.linked_clone = true
+    v.update_guest_tools = true
+  end
 end

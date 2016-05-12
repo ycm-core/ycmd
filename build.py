@@ -305,6 +305,10 @@ def ParseArguments():
                        action = 'store_true',
                        help   = 'Enable all supported completers',
                        dest   = 'all_completers' )
+  parser.add_argument( '--enable-debug',
+                       action = 'store_true',
+                       help   = 'For developers: build ycm_core library with '
+                                'debug symbols' )
 
   args = parser.parse_args()
 
@@ -326,6 +330,9 @@ def GetCmakeArgs( parsed_args ):
 
   if parsed_args.system_boost:
     cmake_args.append( '-DUSE_SYSTEM_BOOST=ON' )
+
+  if parsed_args.enable_debug:
+    cmake_args.append( '-DCMAKE_BUILD_TYPE=Debug' )
 
   use_python2 = 'ON' if PY_MAJOR == 2 else 'OFF'
   cmake_args.append( '-DUSE_PYTHON2=' + use_python2 )
@@ -389,7 +396,8 @@ def BuildYcmdLib( args ):
 
     build_command = [ 'cmake', '--build', '.', '--target', build_target ]
     if OnWindows():
-      build_command.extend( [ '--config', 'Release' ] )
+      config = 'Debug' if args.enable_debug else 'Release'
+      build_command.extend( [ '--config', config ] )
     else:
       build_command.extend( [ '--', '-j', str( NumCores() ) ] )
 
