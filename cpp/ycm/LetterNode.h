@@ -22,9 +22,7 @@
 #include "LetterNodeListMap.h"
 
 #include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
 
-#include <vector>
 #include <list>
 #include <string>
 
@@ -59,7 +57,6 @@ public:
 private:
 
   LetterNodeListMap letters_;
-  std::vector< boost::shared_ptr< LetterNode > > letternode_per_text_index_;
   bool is_uppercase_;
   int index_;
 };
