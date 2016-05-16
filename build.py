@@ -11,11 +11,11 @@ from distutils import sysconfig
 from shutil import rmtree
 from tempfile import mkdtemp
 import errno
-import re
 import multiprocessing
 import os
 import os.path as p
 import platform
+import re
 import shlex
 import subprocess
 import sys
@@ -49,12 +49,25 @@ NO_DYNAMIC_PYTHON_ERROR = (
   'before installing a Python version.' )
 NO_PYTHON_LIBRARY_ERROR = 'ERROR: unable to find an appropriate Python library.'
 
-LIBRARY_LDCONFIG_REGEX = re.compile(
-  '(?P<library>\S+) \(.*\) => (?P<path>\S+)' )
-
-
-def OnLinux():
-  return platform.system() == 'Linux'
+# Regular expressions used to find static and dynamic Python libraries.
+# Notes:
+#  - Python 3 library name may have an 'm' suffix on Unix platforms, for
+#    instance libpython3.3m.so;
+#  - the linker name (the soname without the version) does not always
+#    exist so we look for the versioned names too;
+#  - on Windows, the .lib extension is used instead of the .dll one. See
+#    http://xenophilia.org/winvunix.html to understand why.
+STATIC_PYTHON_LIBRARY_REGEX = '^libpython{major}\.{minor}m?\.a$'
+DYNAMIC_PYTHON_LIBRARY_REGEX = """
+  ^(?:
+  # Linux, BSD
+  libpython{major}\.{minor}m?\.so(\.\d+)*|
+  # OS X
+  libpython{major}\.{minor}m?\.dylib|
+  # Windows
+  python{major}{minor}\.lib
+  )$
+"""
 
 
 def OnMac():
@@ -137,108 +150,58 @@ def CheckOutput( *popen_args, **kwargs ):
   return output
 
 
-def GetPythonNameOnUnix():
-  python_name = 'python' + str( PY_MAJOR ) + '.' + str( PY_MINOR )
-  # Python 3 has an 'm' suffix on Unix platforms, for instance libpython3.3m.so.
-  if PY_MAJOR == 3:
-    python_name += 'm'
-  return python_name
+def FindPythonLibraries():
+  include_dir = sysconfig.get_python_inc()
+  # get_python_lib with the standard_lib parameter set to True returns the
+  # standard Python modules directory. Python libraries should always be in
+  # the parent directory or one of its subdirectories.
+  library_dir = p.dirname( sysconfig.get_python_lib( standard_lib = True ) )
 
-
-def GetStandardPythonLocationsOnUnix( name ):
-  library_dir = sysconfig.get_config_var( 'LIBDIR' )
-  include_dir = sysconfig.get_config_var( 'INCLUDEDIR' )
-  return p.join( library_dir, 'lib' + name ), p.join( include_dir, name )
-
-
-def FindPythonLibrariesOnLinux():
-  python_name = GetPythonNameOnUnix()
-  python_library_root, python_include = GetStandardPythonLocationsOnUnix(
-    python_name )
-
-  python_library = python_library_root + '.so'
-  if p.isfile( python_library ):
-    return python_library, python_include
-
-  python_library = python_library_root + '.a'
-  if p.isfile( python_library ):
-    sys.exit( NO_DYNAMIC_PYTHON_ERROR.format( library = python_library,
-                                              flag = '--enable-shared' ) )
-
-  # On some distributions (Ubuntu for instance), the Python system library is
-  # not installed in its default path: /usr/lib. We use the ldconfig tool to
-  # find it.
-  python_library = 'lib' + python_name + '.so'
-  ldconfig_output = CheckOutput( [ 'ldconfig', '-p' ] ).strip().decode( 'utf8' )
-  for line in ldconfig_output.splitlines():
-    match = LIBRARY_LDCONFIG_REGEX.search( line )
-    if match and match.group( 'library' ) == python_library:
-      return match.group( 'path' ), python_include
-
-  sys.exit( NO_PYTHON_LIBRARY_ERROR )
-
-
-def FindPythonLibrariesOnMac():
-  python_name = GetPythonNameOnUnix()
-  python_library_root, python_include = GetStandardPythonLocationsOnUnix(
-    python_name )
-
-  # On MacOS, ycmd does not work with statically linked python library.
-  # It typically manifests with the following error when there is a
-  # self-compiled python without --enable-framework (or, technically
-  # --enable-shared):
+  # Since ycmd is compiled as a dynamic library, we can't link it to a Python
+  # static library. If we try, the following error will occur on Mac:
   #
   #   Fatal Python error: PyThreadState_Get: no current thread
   #
-  # The most likely explanation for this is that both the ycm_core.so and the
-  # python binary include copies of libpython.a (or whatever included
-  # objects). When the python interpreter starts it initializes only the
-  # globals within its copy, so when ycm_core.so's copy starts executing, it
-  # points at its own copy which is uninitialized.
+  # while the error happens during linking on Linux and looks something like:
   #
-  # Some platforms' dynamic linkers (ld.so) are able to resolve this when
-  # loading shared libraries at runtime[citation needed], but OSX seemingly
-  # cannot.
+  #   relocation R_X86_64_32 against `a local symbol' can not be used when
+  #   making a shared object; recompile with -fPIC
   #
-  # So we do 2 things special on OS X:
-  #  - look for a .dylib first
-  #  - if we find a .a, raise an error.
-  python_library = python_library_root + '.dylib'
-  if p.isfile( python_library ):
-    return python_library, python_include
+  # On Windows, the Python library is always a dynamic one (an import library to
+  # be exact). To obtain a dynamic library on other platforms, Python must be
+  # compiled with the --enable-shared flag on Linux or the --enable-framework
+  # flag on Mac.
+  #
+  # So we proceed like this:
+  #  - look for a dynamic library and return its path;
+  #  - if a static library is found instead, raise an error with instructions
+  #    on how to build Python as a dynamic library.
+  #  - if no libraries are found, raise a generic error.
+  dynamic_name = re.compile( DYNAMIC_PYTHON_LIBRARY_REGEX.format(
+    major = PY_MAJOR, minor = PY_MINOR ), re.X )
+  static_name = re.compile( STATIC_PYTHON_LIBRARY_REGEX.format(
+    major = PY_MAJOR, minor = PY_MINOR ), re.X )
+  static_libraries = []
 
-  python_library = python_library_root + '.a'
-  if p.isfile( python_library ):
-    sys.exit( NO_DYNAMIC_PYTHON_ERROR.format( library = python_library,
-                                              flag = '--enable-framework' ) )
+  # We search the Python libraries through the library directory and its
+  # subdirectories.
+  for root, dirs, files in os.walk( library_dir ):
+    # Files are sorted so that we found the non-versioned Python library before
+    # the versioned one.
+    for filename in sorted( files ):
+      if dynamic_name.match( filename ):
+        return p.join( root, filename ), include_dir
+
+      if static_name.match( filename ):
+        static_libraries.append( p.join( root, filename ) )
+
+  if static_libraries and not OnWindows():
+    dynamic_flag = ( '--enable-framework' if OnMac() else
+                     '--enable-shared' )
+    sys.exit( NO_DYNAMIC_PYTHON_ERROR.format( library = static_libraries[ 0 ],
+                                              flag = dynamic_flag ) )
 
   sys.exit( NO_PYTHON_LIBRARY_ERROR )
-
-
-def FindPythonLibrariesOnWindows():
-  python_name = 'python' + str( PY_MAJOR ) + str( PY_MINOR )
-
-  python_include = sysconfig.get_config_var( 'INCLUDEPY' )
-  python_library = p.join(
-    p.dirname( python_include ), 'libs', python_name + '.lib' )
-  if p.isfile( python_library ):
-    return python_library, python_include
-
-  sys.exit( NO_PYTHON_LIBRARY_ERROR )
-
-
-def FindPythonLibraries():
-  if OnLinux():
-    return FindPythonLibrariesOnLinux()
-
-  if OnMac():
-    return FindPythonLibrariesOnMac()
-
-  if OnWindows():
-    return FindPythonLibrariesOnWindows()
-
-  sys.exit( 'ERROR: your platform is not supported by this script. Follow the '
-            'Full Installation Guide instructions in the documentation.' )
 
 
 def CustomPythonCmakeArgs():
