@@ -51,8 +51,8 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 :: Rust configuration
 ::
 
-appveyor DownloadFile https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.exe
-rust-1.6.0-x86_64-pc-windows-msvc.exe /VERYSILENT /NORESTART /DIR="C:\Program Files\Rust"
+appveyor DownloadFile https://static.rust-lang.org/dist/rust-1.8.0-x86_64-pc-windows-msvc.exe
+rust-1.8.0-x86_64-pc-windows-msvc.exe /VERYSILENT /NORESTART /DIR="C:\Program Files\Rust"
 set PATH=C:\Program Files\Rust\bin;%PATH%
 
 rustc -Vv
