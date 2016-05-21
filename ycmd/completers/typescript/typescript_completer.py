@@ -194,7 +194,7 @@ class TypeScriptCompleter( Completer ):
     # as one character (\n) towards the content length. However, newlines are
     # two characters on Windows (\r\n), so we need to take care of that. See
     # issue https://github.com/Microsoft/TypeScript/issues/3403
-    content = self._tsserver_handle.stdout.readline( contentlength )
+    content = self._tsserver_handle.stdout.read( contentlength )
     if utils.OnWindows() and content.endswith( b'\r' ):
       content += self._tsserver_handle.stdout.read( 1 )
     return json.loads( utils.ToUnicode( content ) )
