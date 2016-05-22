@@ -43,7 +43,7 @@ def PathToTestFile( *args ):
 def StartOmniSharpServer( app, filepath ):
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ "StartServer" ],
+                               command_arguments = [ "RestartServer" ],
                                filepath = filepath,
                                filetype = 'cs' ) )
 

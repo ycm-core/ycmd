@@ -265,14 +265,6 @@ class JediCompleter( Completer ):
                               request_data )[ 'completions' ]
 
 
-  def DefinedSubcommands( self ):
-    # We don't want expose this sub-command because is not really needed for
-    # the user but is useful in tests for tearing down the server
-    subcommands = super( JediCompleter, self ).DefinedSubcommands()
-    subcommands.remove( 'StopServer' )
-    return subcommands
-
-
   def GetSubcommandsMap( self ):
     return {
       'GoToDefinition' : ( lambda self, request_data, args:

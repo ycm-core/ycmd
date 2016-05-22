@@ -245,7 +245,14 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def DefinedSubcommands( self ):
-    return sorted( self.GetSubcommandsMap().keys() )
+    subcommands = sorted( self.GetSubcommandsMap().keys() )
+    try:
+      # We don't want expose this sub-command because is not really needed for
+      # the user but is useful in tests for tearing down the server
+      subcommands.remove( 'StopServer' )
+    except ValueError:
+      pass
+    return subcommands
 
 
   def GetSubcommandsMap( self ):

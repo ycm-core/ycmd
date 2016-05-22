@@ -134,10 +134,6 @@ class CsharpCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'StartServer'                      : ( lambda self, request_data, args:
-         self._SolutionSubcommand( request_data,
-                                   method = '_StartServer',
-                                   no_request_data = True ) ),
       'StopServer'                       : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_StopServer',
@@ -418,9 +414,9 @@ class CsharpSolutionCompleter( object ):
     self._omnisharp_phandle = None
     if ( not self._keep_logfiles ):
       if self._filename_stdout:
-        os.unlink( self._filename_stdout )
+        utils.RemoveIfExists( self._filename_stdout )
       if self._filename_stderr:
-        os.unlink( self._filename_stderr )
+        utils.RemoveIfExists( self._filename_stderr )
 
 
   def _RestartServer( self ):

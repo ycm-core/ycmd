@@ -45,10 +45,9 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GoTo',
                  'GetDoc',
                  'GetType',
-                 'StartServer',
-                 'StopServer',
                  'GoToReferences',
-                 'RefactorRename' ] ),
+                 'RefactorRename',
+                 'RestartServer' ] ),
        app.post_json( '/defined_subcommands',
                       subcommands_data ).json )
 
