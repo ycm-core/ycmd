@@ -46,6 +46,8 @@ _module_for_module_file_lock = Lock()
 _module_file_for_source_file = {}
 _module_file_for_source_file_lock = Lock()
 
+YCMD_DEFAULT_EXTRA_CONF_PATH = os.path.join( os.path.dirname( __file__ ),
+                                             'default_ycm_extra_conf.py' )
 
 def Reset():
   global _module_for_module_file, _module_file_for_source_file
@@ -194,7 +196,10 @@ def _MatchesGlobPattern( filename, glob ):
 def _ExtraConfModuleSourceFilesForFile( filename ):
   """For a given filename, search all parent folders for YCM_EXTRA_CONF_FILENAME
   files that will compute the flags necessary to compile the file.
-  If _GlobalYcmExtraConfFileLocation() exists it is returned as a fallback."""
+  If _GlobalYcmExtraConfFileLocation() exists it is returned as a fallback.
+  Otherwise, we return the "default" extra_conf file. This file applies
+  best-efforts to generate flags according to a series of heuristics (such as
+  looking for a compilation database)"""
 
   for folder in PathsToAllParentFolders( filename ):
     candidate = os.path.join( folder, YCM_EXTRA_CONF_FILENAME )
@@ -204,6 +209,8 @@ def _ExtraConfModuleSourceFilesForFile( filename ):
   if ( global_ycm_extra_conf
        and os.path.exists( global_ycm_extra_conf ) ):
     yield global_ycm_extra_conf
+
+  yield YCMD_DEFAULT_EXTRA_CONF_PATH
 
 
 def _PathToCppCompleterFolder():
