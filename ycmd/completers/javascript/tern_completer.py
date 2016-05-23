@@ -396,8 +396,8 @@ class TernCompleter( Completer ):
 
         # We need to open a pipe to stdin or the Tern server is killed.
         # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
-        # For unknown reasons, this is only needed on Windows and for Python 3.4+
-        # on other platforms.
+        # For unknown reasons, this is only needed on Windows and for Python
+        # 3.4+ on other platforms.
         with utils.OpenForStdHandle( self._server_stdout ) as stdout:
           with utils.OpenForStdHandle( self._server_stderr ) as stderr:
             self._server_handle = utils.SafePopen( command,
