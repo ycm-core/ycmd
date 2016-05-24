@@ -46,6 +46,7 @@ MAX_SERVER_WAIT_TIME_SECONDS = 5
 INCLUDE_YCMD_OUTPUT = False
 DEFINED_SUBCOMMANDS_HANDLER = '/defined_subcommands'
 CODE_COMPLETIONS_HANDLER = '/completions'
+SEMANTIC_TOKENS_HANDLER = '/semantic_tokens'
 COMPLETER_COMMANDS_HANDLER = '/run_completer_command'
 EVENT_HANDLER = '/event_notification'
 EXTRA_CONF_HANDLER = '/load_extra_conf_file'
@@ -153,6 +154,25 @@ class YcmdHandle( object ):
     print( '==== Sending code-completion request ====' )
     self.PostToHandlerAndLog( CODE_COMPLETIONS_HANDLER, request_json )
 
+
+  def SendSemanticTokensRequest( self,
+                                 test_filename,
+                                 filetype,
+                                 start_line,
+                                 start_column,
+                                 end_line,
+                                 end_column ):
+    filepath = PathToTestFile( test_filename )
+    request_json = {
+      'filepath': filepath,
+      'filetypes': [ filetype ],
+      'start_line': start_line,
+      'start_column': start_column,
+      'end_line': end_line,
+      'end_column': end_column,
+    }
+    print( '==== Sending semantic-tokens request ====' )
+    self.PostToHandlerAndLog( SEMANTIC_TOKENS_HANDLER, request_json )
 
   def SendGoToRequest( self,
                        test_filename,
@@ -437,6 +457,12 @@ def CppSemanticCompletionResults( server ):
                                     line_num = 25,
                                     column_num = 7 )
 
+  server.SendSemanticTokensRequest( test_filename = 'some_cpp.cpp',
+                                    filetype = 'cpp',
+                                    start_line = 1,
+                                    start_column = 1,
+                                    end_line = 26,
+                                    end_column = 1 )
 
 def PythonGetSupportedCommands( server ):
   server.SendDefinedSubcommandsRequest( completer_target = 'python' )
