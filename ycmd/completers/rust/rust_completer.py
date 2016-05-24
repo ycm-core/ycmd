@@ -292,12 +292,12 @@ class RustCompleter( Completer ):
                                                   env = env )
 
       self._racerd_host = 'http://127.0.0.1:{0}'.format( port )
-      if not self.ServerIsRunning():
+      if not self._ServerIsRunning():
         raise RuntimeError( 'Failed to start racerd!' )
       _logger.info( 'Racerd started on: ' + self._racerd_host )
 
 
-  def ServerIsRunning( self ):
+  def _ServerIsRunning( self ):
     """
     Check if racerd is alive. That doesn't necessarily mean it's ready to serve
     requests; that's checked by ServerIsReady.
@@ -311,7 +311,7 @@ class RustCompleter( Completer ):
     """
     Check if racerd is alive AND ready to serve requests.
     """
-    if not self.ServerIsRunning():
+    if not self._ServerIsRunning():
       _logger.debug( 'Racerd not running.' )
       return False
     try:
@@ -349,7 +349,7 @@ class RustCompleter( Completer ):
     _logger.debug( 'RustCompleter restarting racerd' )
 
     with self._server_state_lock:
-      if self.ServerIsRunning():
+      if self._ServerIsRunning():
         self._StopServer()
       self._StartServer()
 
@@ -393,7 +393,7 @@ class RustCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     with self._server_state_lock:
-      if self.ServerIsRunning():
+      if self._ServerIsRunning():
         return ( 'racerd\n'
                  '  listening at: {0}\n'
                  '  racerd path: {1}\n'
