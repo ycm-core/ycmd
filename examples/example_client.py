@@ -47,6 +47,7 @@ INCLUDE_YCMD_OUTPUT = False
 DEFINED_SUBCOMMANDS_HANDLER = '/defined_subcommands'
 CODE_COMPLETIONS_HANDLER = '/completions'
 SEMANTIC_TOKENS_HANDLER = '/semantic_tokens'
+SKIPPED_RANGES_HANDLER = '/skipped_ranges'
 COMPLETER_COMMANDS_HANDLER = '/run_completer_command'
 EVENT_HANDLER = '/event_notification'
 EXTRA_CONF_HANDLER = '/load_extra_conf_file'
@@ -173,6 +174,19 @@ class YcmdHandle( object ):
     }
     print( '==== Sending semantic-tokens request ====' )
     self.PostToHandlerAndLog( SEMANTIC_TOKENS_HANDLER, request_json )
+
+
+  def SendSkippedRangesRequest( self,
+                                test_filename,
+                                filetype ):
+    filepath = PathToTestFile( test_filename )
+    request_json = {
+      'filepath': filepath,
+      'filetypes': [ filetype ],
+    }
+    print( '==== Sending skipped-ranges request ====' )
+    self.PostToHandlerAndLog( SKIPPED_RANGES_HANDLER, request_json )
+
 
   def SendGoToRequest( self,
                        test_filename,
@@ -459,10 +473,14 @@ def CppSemanticCompletionResults( server ):
 
   server.SendSemanticTokensRequest( test_filename = 'some_cpp.cpp',
                                     filetype = 'cpp',
-                                    start_line = 1,
+                                    start_line = 15,
                                     start_column = 1,
-                                    end_line = 26,
-                                    end_column = 1 )
+                                    end_line = 22,
+                                    end_column = 2 )
+
+  server.SendSkippedRangesRequest( test_filename = 'some_cpp.cpp',
+                                   filetype = 'cpp' )
+
 
 def PythonGetSupportedCommands( server ):
   server.SendDefinedSubcommandsRequest( completer_target = 'python' )

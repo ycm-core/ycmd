@@ -389,6 +389,20 @@ class ClangCompleter( Completer ):
     return [ responses.BuildTokenData( token ) for token in semantic_tokens ]
 
 
+  def GetSkippedRanges( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    if not filename:
+      raise ValueError( INVALID_FILE_MESSAGE )
+
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( "Still parsing file, no skipped ranges yet." )
+
+    skipped_ranges = self._completer.GetSkippedRanges(
+        ToCppStringCompatible( filename ) )
+    return [ responses.BuildRangeData( sr ) for sr in skipped_ranges ]
+
+
   def DebugInfo( self, request_data ):
     filename = request_data[ 'filepath' ]
     try:

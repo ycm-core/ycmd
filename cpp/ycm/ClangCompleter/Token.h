@@ -74,11 +74,11 @@ struct Token {
 
   bool operator==( const Token& other ) const;
 
-  Kind kind_;
+  Kind kind;
 
-  Type type_;
+  Type type;
 
-  Range range_;
+  Range range;
 
 private:
 

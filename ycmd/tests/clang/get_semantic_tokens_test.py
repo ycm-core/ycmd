@@ -33,13 +33,13 @@ from ycmd.utils import ReadFile
 import http.client
 
 
-_TEST_FILE = PathToTestFile( 'GetTokens_Clang_test.cc' )
+_TEST_FILE = PathToTestFile( 'token_test_data', 'GetTokens_Clang_test.cc' )
 
 
 @SharedYcmd
 def setUpModule( app ):
   app.post_json( '/load_extra_conf_file', {
-    'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+    'filepath': PathToTestFile( 'token_test_data', '.ycm_extra_conf.py' ) } )
   request = {
     'filetype': 'cpp',
     'filepath': _TEST_FILE,
@@ -59,7 +59,6 @@ def _BuildTokenData( kind, type, sl, sc, el, ec ):
   }
 
 
-@SharedYcmd
 def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
   request = {
     'filetypes': 'cpp',
@@ -78,7 +77,7 @@ def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
 
 @SharedYcmd
 def PreprocessingTokens_test( app ):
-  _RunTest( 1, 1, 4, 22,
+  _RunTest( app, 1, 1, 4, 22,
             has_items(
               _BuildTokenData( 'Punctuation', 'None', 1, 1, 1, 2 ),
               _BuildTokenData( 'Identifier', 'PreprocessingDirective',
@@ -97,7 +96,7 @@ def PreprocessingTokens_test( app ):
 
 @SharedYcmd
 def DeclarationTokens_test( app ):
-  _RunTest( 6, 1, 42, 17,
+  _RunTest( app, 6, 1, 42, 17,
             has_items(
               _BuildTokenData( 'Identifier', 'Namespace', 6, 11, 6, 13 ),
 
@@ -133,7 +132,7 @@ def DeclarationTokens_test( app ):
 
 @SharedYcmd
 def LiteralTokens_test( app ):
-  _RunTest( 48, 1, 51, 24,
+  _RunTest( app, 48, 1, 51, 24,
             has_items(
               _BuildTokenData( 'Literal', 'Integer', 48, 11, 48, 14 ),
               _BuildTokenData( 'Literal', 'Floating', 49, 13, 49, 18 ),
@@ -144,7 +143,7 @@ def LiteralTokens_test( app ):
 
 @SharedYcmd
 def DetailedUsageTokens_test( app ):
-  _RunTest( 53, 1, 54, 28,
+  _RunTest( app, 53, 1, 54, 28,
             contains(
               _BuildTokenData( 'Identifier', 'Namespace', 53, 3, 53, 5 ),
               _BuildTokenData( 'Punctuation', 'None', 53, 5, 53, 7 ),
@@ -173,7 +172,7 @@ def DetailedUsageTokens_test( app ):
 
 @SharedYcmd
 def UnicodeTokens_test( app ):
-  _RunTest( 56, 1, 59, 10,
+  _RunTest( app, 56, 1, 59, 10,
             has_items(
               _BuildTokenData( 'Comment', 'None', 56, 3, 56, 22 ),
               _BuildTokenData( 'Identifier', 'Typedef', 57, 18, 57, 24 ),

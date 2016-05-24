@@ -115,6 +115,8 @@ public:
     int end_line,
     int end_column );
 
+  std::vector< Range > GetSkippedRanges( const std::string& filename );
+
   void DeleteCachesForFile( const std::string &filename );
 
 private:

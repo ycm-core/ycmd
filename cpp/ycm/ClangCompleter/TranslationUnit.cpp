@@ -514,6 +514,28 @@ std::vector< Token > TranslationUnit::GetSemanticTokens(
   return semantic_tokens;
 }
 
+std::vector< Range > TranslationUnit::GetSkippedRanges() {
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  CXSourceRangeList* source_ranges =
+          clang_getSkippedRanges( clang_translation_unit_, file );
+
+  if ( source_ranges == NULL ) {
+    return std::vector< Range >();
+  }
+
+  std::vector< Range > skipped_ranges;
+  skipped_ranges.reserve( source_ranges->count );
+  for ( uint i = 0; i < source_ranges->count; ++i ) {
+    const CXSourceRange& range = source_ranges->ranges[ i ];
+    skipped_ranges.push_back( Range( range ) );
+  }
+
+  clang_disposeSourceRangeList( source_ranges );
+  return skipped_ranges;
+}
+
 CXCursor TranslationUnit::GetCursor( int line, int column ) {
   // ASSUMES A LOCK IS ALREADY HELD ON clang_access_mutex_!
   if ( !clang_translation_unit_ )

@@ -117,46 +117,46 @@ Token::Type CXCursorToTokenType( const CXCursor& cursor ) {
 } // unnamed namespace
 
 Token::Token()
-  : kind_( Token::IDENTIFIER )
-  , type_( Token::UNSUPPORTED )
-  , range_()
+  : kind( Token::IDENTIFIER )
+  , type( Token::UNSUPPORTED )
+  , range()
 {
 }
 
-Token::Token( const CXTokenKind kind, const CXSourceRange& tokenRange,
-              const CXCursor& cursor )
-  : range_( tokenRange )
+Token::Token( const CXTokenKind cx_kind, const CXSourceRange& cx_range,
+              const CXCursor& cx_cursor )
+  : range( cx_range )
 {
-  MapKindAndType( kind, cursor );
+  MapKindAndType( cx_kind, cx_cursor );
 }
 
 bool Token::operator==( const Token& other ) const {
-  return kind_ == other.kind_ &&
-         type_ == other.type_ &&
-         range_ == other.range_;
+  return kind == other.kind &&
+         type == other.type &&
+         range == other.range;
 }
 
-void Token::MapKindAndType( const CXTokenKind kind, const CXCursor& cursor ) {
-  switch ( kind ) {
+void Token::MapKindAndType( const CXTokenKind cx_kind, const CXCursor& cx_cursor ) {
+  switch ( cx_kind ) {
     case CXToken_Punctuation:
-      kind_ = Token::PUNCTUATION;
-      type_ = Token::NONE;
+      kind = Token::PUNCTUATION;
+      type = Token::NONE;
       break;
     case CXToken_Keyword:
-      kind_ = Token::KEYWORD;
-      type_ = Token::NONE;
+      kind = Token::KEYWORD;
+      type = Token::NONE;
       break;
     case CXToken_Identifier:
-      kind_ = Token::IDENTIFIER;
-      type_ = CXCursorToTokenType( cursor );
+      kind = Token::IDENTIFIER;
+      type = CXCursorToTokenType( cx_cursor );
       break;
     case CXToken_Literal:
-      kind_ = Token::LITERAL;
-      type_ = CXCursorToTokenType( cursor );
+      kind = Token::LITERAL;
+      type = CXCursorToTokenType( cx_cursor );
       break;
     case CXToken_Comment:
-      kind_ = Token::COMMENT;
-      type_ = Token::NONE;
+      kind = Token::COMMENT;
+      type = Token::NONE;
       break;
   }
 }

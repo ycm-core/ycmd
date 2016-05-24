@@ -107,6 +107,8 @@ public:
     int end_line,
     int end_column );
 
+  std::vector< Range > GetSkippedRanges();
+
 private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
 
