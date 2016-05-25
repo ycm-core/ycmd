@@ -232,28 +232,29 @@ class TernCompleter( Completer ):
 
 
   def DebugInfo( self, request_data ):
-    if self._server_handle is None:
-      # server is not running because we haven't tried to start it.
-      return ' * Tern server is not running'
+    with self._server_state_mutex:
+      if self._server_handle is None:
+        # server is not running because we haven't tried to start it.
+        return ' * Tern server is not running'
 
-    if not self._ServerIsRunning():
-      # The handle is set, but the process isn't running. This means either it
-      # crashed or we failed to start it.
-      return ( ' * Tern server is not running (crashed)'
-               + '\n * Server stdout: '
-               + self._server_stdout
-               + '\n * Server stderr: '
-               + self._server_stderr )
+      if not self._ServerIsRunning():
+        # The handle is set, but the process isn't running. This means either it
+        # crashed or we failed to start it.
+        return ( ' * Tern server is not running (crashed)'
+                + '\n * Server stdout: '
+                + self._server_stdout
+                + '\n * Server stderr: '
+                + self._server_stderr )
 
-    # Server is up and running.
-    return ( ' * Tern server is running on port: '
-             + str( self._server_port )
-             + ' with PID: '
-             + str( self._server_handle.pid )
-             + '\n * Server stdout: '
-             + self._server_stdout
-             + '\n * Server stderr: '
-             + self._server_stderr )
+      # Server is up and running.
+      return ( ' * Tern server is running on port: '
+              + str( self._server_port )
+              + ' with PID: '
+              + str( self._server_handle.pid )
+              + '\n * Server stdout: '
+              + self._server_stdout
+              + '\n * Server stderr: '
+              + self._server_stderr )
 
 
   def Shutdown( self ):
