@@ -22,6 +22,7 @@ from __future__ import absolute_import
 # No other imports from `future` because this module is loaded before we have
 # put our submodules in sys.path
 
+from distutils import sysconfig
 import io
 import logging
 import os
@@ -144,6 +145,15 @@ def PathToNearestThirdPartyFolder( path ):
   return None
 
 
+def GetStandardLibraryIndexInSysPath():
+  standard_library_path = os.path.normcase(
+    sysconfig.get_python_lib( standard_lib = True ) )
+  for path in sys.path:
+    if os.path.normcase( path ) == standard_library_path:
+      return sys.path.index( path )
+  raise RuntimeError( 'Could not find standard library path in Python path.' )
+
+
 def AddNearestThirdPartyFoldersToSysPath( filepath ):
   path_to_third_party = PathToNearestThirdPartyFolder( filepath )
   if not path_to_third_party:
@@ -157,18 +167,15 @@ def AddNearestThirdPartyFoldersToSysPath( filepath ):
     # under its 'src' folder, but SOME of its modules are only meant to be
     # accessible under py2, not py3. This is because these modules (like
     # `queue`) are implementations of modules present in the py3 standard
-    # library. Furthermore, we need to be sure that they are not overriden by
+    # library. Furthermore, we need to be sure that they are not overridden by
     # already installed packages (for example, the 'builtins' module from
     # 'pies2overrides' or a different version of 'python-future'). To work
-    # around these issues, we place the python-future just before the first
-    # path ending with 'site-packages' (or 'dist-packages' for Debian-like
-    # distributions) so that its modules can be overridden by the standard
-    # library but not by installed packages.
+    # around these issues, we place the python-future just after the Python
+    # standard library so that its modules can be overridden by standard
+    # modules but not by installed packages.
     if folder == 'python-future':
       folder = os.path.join( folder, 'src' )
-      packages_indices = ( sys.path.index( path ) for path in sys.path
-                           if DIR_PACKAGES_REGEX.search( path ) )
-      sys.path.insert( next( packages_indices, len( sys.path ) ),
+      sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
                        os.path.realpath( os.path.join( path_to_third_party,
                                                        folder ) ) )
       continue
