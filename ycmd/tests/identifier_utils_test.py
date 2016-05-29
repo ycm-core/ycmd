@@ -234,6 +234,20 @@ def IsIdentifier_Clojure_test():
   ok_( not iu.IsIdentifier( '' , 'clojure' ) )
 
 
+def IsIdentifier_Elisp_test():
+  # elisp is using the clojure regexes, so we're testing this more lightly
+  ok_( iu.IsIdentifier( 'foo'  , 'elisp' ) )
+  ok_( iu.IsIdentifier( 'f9'   , 'elisp' ) )
+  ok_( iu.IsIdentifier( 'a.b.c', 'elisp' ) )
+  ok_( iu.IsIdentifier( 'a/c'  , 'elisp' ) )
+
+  ok_( not iu.IsIdentifier( '9f'   , 'elisp' ) )
+  ok_( not iu.IsIdentifier( '9'    , 'elisp' ) )
+  ok_( not iu.IsIdentifier( 'a/b/c', 'elisp' ) )
+  ok_( not iu.IsIdentifier( '(a)'  , 'elisp' ) )
+  ok_( not iu.IsIdentifier( '' , 'elisp' ) )
+
+
 def IsIdentifier_Haskell_test():
   ok_( iu.IsIdentifier( 'foo' , 'haskell' ) )
   ok_( iu.IsIdentifier( "foo'", 'haskell' ) )
