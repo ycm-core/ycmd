@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2016 ycmd contributors
 //
 // This file is part of ycmd.
 //

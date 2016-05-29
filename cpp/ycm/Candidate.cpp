@@ -99,7 +99,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
         node =  ( *root_node_ )[ nearest->upperIndex ];
     } else {
       if ( nearest->eitherIndex >= 0 )
-        node = ( *root_node_ )[nearest->eitherIndex];
+        node = ( *root_node_ )[ nearest->eitherIndex ];
     }
 
     if ( !node )

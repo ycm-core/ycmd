@@ -47,7 +47,7 @@ public:
     return letters_.ListPointerAt( letter );
   }
 
-  inline void AddNodeForLetter( char letter, short index ) {
+  void AddNodeForLetter( char letter, short index ) {
     if ( IsUppercase( letter ) ) {
       if ( letters_[ letter ].upperIndex == -1 )
         letters_[ letter ].upperIndex = index;
@@ -61,7 +61,7 @@ public:
     return index_;
   }
 
-  inline LetterNode *operator[]( short index ) {
+  inline LetterNode *operator[]( int index ) {
     return &letternode_per_text_index_[index];
   }
 
