@@ -25,7 +25,7 @@ from builtins import *  # noqa
 
 from nose.tools import eq_
 from webtest import AppError
-from hamcrest import assert_that, has_entries, contains
+from hamcrest import assert_that, has_entries, contains, contains_string
 import pprint
 
 from ycmd.tests.cs import ( PathToTestFile, SharedYcmd, WrapOmniSharpServer )
@@ -491,3 +491,19 @@ def Subcommands_FixIt_Unicode_test( app ):
                                         LocationMatcher( filepath, 30, 44 ) ) )
     } ) )
   } ), filepath = [ 'testy', 'Unicode.cs' ] )
+
+
+@SharedYcmd
+def Subcommands_DebugInfo_HasOmnisharpLogText_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    debuginfo_data = BuildRequest( contents = contents,
+                                   filetype = 'cs',
+                                   filepath = filepath )
+
+    debuginfo = app.post_json( '/debug_info', debuginfo_data ).json
+
+    assert_that( debuginfo,
+                 contains_string( 'Omnisharp logs: included in ycmd logs' ) )
