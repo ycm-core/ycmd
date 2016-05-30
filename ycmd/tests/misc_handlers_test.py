@@ -71,3 +71,31 @@ def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
   response_data = app.post_json( '/filter_and_sort_candidates', data ).json
 
   assert_that( response_data, contains( candidate2, candidate3 ) )
+
+
+@SharedYcmd
+def MiscHandlers_IsReady_Basic_test( app ):
+  response_data = app.get( '/ready' ).json
+
+  ok_( response_data  )
+
+
+@SharedYcmd
+def MiscHandlers_IsReady_Subservers_test( app ):
+  response_data = app.get( '/ready', { 'include_subservers': True } ).json
+
+  ok_( response_data  )
+
+
+@SharedYcmd
+def MiscHandlers_IsHealthy_Basic_test( app ):
+  response_data = app.get( '/healthy' ).json
+
+  ok_( response_data  )
+
+
+@SharedYcmd
+def MiscHandlers_IsHealthy_Subservers_test( app ):
+  response_data = app.get( '/healthy', { 'include_subservers': True } ).json
+
+  ok_( response_data  )
