@@ -20,8 +20,8 @@ Vagrant.configure(2) do |config|
     v.cpus = 2
   end
 
-  config.vm.provider "parallels" do |v|
-    config.vm.box = 'parallels/ubuntu-14.04'
+  config.vm.provider "parallels" do |v, override|
+    override.vm.box = 'parallels/ubuntu-14.04'
 
     v.memory = 3072
     v.cpus = 4
