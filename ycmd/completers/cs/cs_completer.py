@@ -30,7 +30,8 @@ import os
 import time
 import re
 from ycmd.completers.completer import Completer
-from ycmd.utils import ForceSemanticCompletion, CodepointOffsetToByteOffset
+from ycmd.utils import ( ForceSemanticCompletion, CodepointOffsetToByteOffset,
+                         ToUnicode )
 from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer_utils import GetFileContents
@@ -39,6 +40,8 @@ import urllib.parse
 import logging
 from . import solutiondetection
 import threading
+import traceback
+from subprocess import ( PIPE )
 
 SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +
                          'Did you compile it? You can do so by running ' +
@@ -49,6 +52,7 @@ PATH_TO_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
   '..', '..', '..', 'third_party', 'OmniSharpServer',
   'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
+LOG_THREAD_NAME = 'Omnisharp_Log_'
 
 
 class CsharpCompleter( Completer ):
@@ -91,10 +95,8 @@ class CsharpCompleter( Completer ):
 
     with self._solution_state_lock:
       if solution not in self._completer_per_solution:
-        keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
         desired_omnisharp_port = self.user_options.get( 'csharp_server_port' )
         completer = CsharpSolutionCompleter( solution,
-                                             keep_logfiles,
                                              desired_omnisharp_port )
         self._completer_per_solution[ solution ] = completer
 
@@ -278,11 +280,9 @@ class CsharpCompleter( Completer ):
   def DebugInfo( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
     if solutioncompleter.ServerIsRunning():
-      return ( 'OmniSharp Server running at: {0}\n'
-               'OmniSharp logfiles:\n{1}\n{2}' ).format(
+      return 'OmniSharp Server running at: {0}\n{1}'.format(
                    solutioncompleter._ServerLocation(),
-                   solutioncompleter._filename_stdout,
-                   solutioncompleter._filename_stderr )
+                   solutioncompleter.DebugInfo( request_data ) )
     else:
       return 'OmniSharp Server is not running'
 
@@ -316,12 +316,9 @@ class CsharpCompleter( Completer ):
 
 
 class CsharpSolutionCompleter( object ):
-  def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
+  def __init__( self, solution_path, desired_omnisharp_port ):
     self._logger = logging.getLogger( __name__ )
     self._solution_path = solution_path
-    self._keep_logfiles = keep_logfiles
-    self._filename_stderr = None
-    self._filename_stdout = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
@@ -364,21 +361,35 @@ class CsharpSolutionCompleter( object ):
       if utils.OnCygwin():
         command.extend( [ '--client-path-mode', 'Cygwin' ] )
 
-      filename_format = os.path.join( utils.PathToCreatedTempDir(),
-                                      u'omnisharp_{port}_{sln}_{std}.log' )
+      self._omnisharp_phandle = utils.SafePopen(
+          command, stdout = PIPE, stderr = PIPE )
+      for target, name in [
+        self._GenerateOutLoop( self._omnisharp_phandle.stdout, "O" ),
+        self._GenerateOutLoop( self._omnisharp_phandle.stderr, "E" )
+      ]:
+        thread = threading.Thread( target = target, name = name )
+        thread.daemon = True
+        thread.start()
 
-      solutionfile = os.path.basename( path_to_solutionfile )
-      self._filename_stdout = filename_format.format(
-          port = self._omnisharp_port, sln = solutionfile, std = 'stdout' )
-      self._filename_stderr = filename_format.format(
-          port = self._omnisharp_port, sln = solutionfile, std = 'stderr' )
+      self._logger.info( 'Starting OmniSharp server' )
 
-      with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
-        with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
-          self._omnisharp_phandle = utils.SafePopen(
-              command, stdout = fstdout, stderr = fstderr )
 
-      self._solution_path = path_to_solutionfile
+  def _GenerateOutLoop( self, stream, type ):
+    def out_loop():
+      try:
+        data = ""
+        while not stream.closed and self._omnisharp_phandle is not None:
+          new_data = os.read( stream.fileno(), 1024 * 1024 * 10 )
+          if not new_data:
+            time.sleep( .1 )
+          data += ToUnicode( new_data )
+          while "\n" in data:
+            ( line, data ) = data.split( "\n", 1 )
+            self._logger.info( "Omnisharp " + type + ": " + line.rstrip() )
+      except Exception:
+        self._logger.error( "Read error: " + traceback.format_exc() )
+
+    return out_loop, LOG_THREAD_NAME + type
 
 
   def _StopServer( self ):
@@ -416,11 +427,6 @@ class CsharpSolutionCompleter( object ):
   def _CleanupAfterServerStop( self ):
     self._omnisharp_port = None
     self._omnisharp_phandle = None
-    if ( not self._keep_logfiles ):
-      if self._filename_stdout:
-        os.unlink( self._filename_stdout )
-      if self._filename_stderr:
-        os.unlink( self._filename_stderr )
 
 
   def _RestartServer( self ):
@@ -598,6 +604,11 @@ class CsharpSolutionCompleter( object ):
         else:
             self._omnisharp_port = utils.GetUnusedLocalhostPort()
     self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
+
+
+  def DebugInfo( self, request_data ):
+    """ Get debug info."""
+    return "Omnisharp logs: included in ycmd logs"
 
 
 def _CompleteIsFromImport( candidate ):
