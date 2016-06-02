@@ -147,8 +147,8 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   custom cleanup logic on server shutdown.
 
   If your completer uses an external server process, then it can be useful to
-  implement the ServerIsReady member function to handle the /ready request. This
-  is very useful for the test suite."""
+  implement the ServerIsHealthy member function to handle the /healthy request.
+  This is very useful for the test suite."""
 
   def __init__( self, user_options ):
     self.user_options = user_options
@@ -372,7 +372,11 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def ServerIsReady( self ):
-    """Called by the /ready handler to check if the underlying completion
+    return self.ServerIsHealthy()
+
+
+  def ServerIsHealthy( self ):
+    """Called by the /healthy handler to check if the underlying completion
     server is started and ready to receive requests. Returns bool."""
     return True
 

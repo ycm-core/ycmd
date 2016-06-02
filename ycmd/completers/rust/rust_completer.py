@@ -300,14 +300,14 @@ class RustCompleter( Completer ):
   def _ServerIsRunning( self ):
     """
     Check if racerd is alive. That doesn't necessarily mean it's ready to serve
-    requests; that's checked by ServerIsReady.
+    requests; that's checked by ServerIsHealthy.
     """
     with self._server_state_lock:
       return ( bool( self._racerd_host ) and
                ProcessIsRunning( self._racerd_phandle ) )
 
 
-  def ServerIsReady( self ):
+  def ServerIsHealthy( self ):
     """
     Check if racerd is alive AND ready to serve requests.
     """
