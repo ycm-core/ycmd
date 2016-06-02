@@ -20,7 +20,6 @@
 
 #include "DLLDefines.h"
 #include "LetterNodeListMap.h"
-#include "LetterNodeArray.h"
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
@@ -33,7 +32,7 @@
 
 namespace YouCompleteMe {
 
-class LetterNode : boost::noncopyable {
+class LetterNode {
 public:
   LetterNode( char letter, int index );
 
@@ -47,15 +46,7 @@ public:
     return letters_.ListPointerAt( letter );
   }
 
-  void AddNodeForLetter( char letter, short index ) {
-    if ( IsUppercase( letter ) ) {
-      if ( letters_[ letter ].upperIndex == -1 )
-        letters_[ letter ].upperIndex = index;
-    }
-
-    if ( letters_[ letter ].eitherIndex == -1 )
-      letters_[ letter ].eitherIndex = index;
-  }
+  void AddNodeForLetter( char letter, short index );
 
   inline int Index() const {
     return index_;
@@ -67,7 +58,7 @@ public:
 
 private:
   LetterNodeListMap letters_;
-  LetterNodeArray letternode_per_text_index_;
+  std::vector<LetterNode> letternode_per_text_index_;
   int index_;
   bool is_uppercase_;
 };

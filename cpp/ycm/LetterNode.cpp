@@ -28,11 +28,13 @@ LetterNode::LetterNode( char letter, int index )
 
 
 LetterNode::LetterNode( const std::string &text )
-  : letternode_per_text_index_( text ),
-    index_( -1 ) ,
+  : index_( -1 ),
     is_uppercase_( false ) {
 
+  letternode_per_text_index_.reserve(text.size());
+
   for ( uint i = 0; i < text.size(); ++i ) {
+    letternode_per_text_index_.push_back( LetterNode( text[ i ], i ) );
     AddNodeForLetter( text[ i ], i );
   }
 
@@ -41,6 +43,16 @@ LetterNode::LetterNode( const std::string &text )
       letternode_per_text_index_[ i ].AddNodeForLetter( text[ j ], j );
     }
   }
+}
+
+void LetterNode::AddNodeForLetter( char letter, short index ) {
+  if ( IsUppercase( letter ) ) {
+    if ( letters_[ letter ].upperIndex == -1 )
+      letters_[ letter ].upperIndex = index;
+  }
+
+  if ( letters_[ letter ].eitherIndex == -1 )
+    letters_[ letter ].eitherIndex = index;
 }
 
 } // namespace YouCompleteMe

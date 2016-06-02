@@ -44,9 +44,10 @@ struct NearestLetterNodeIndices {
   short upperIndex;
 };
 
-class LetterNodeListMap : boost::noncopyable {
+class LetterNodeListMap {
 public:
   LetterNodeListMap();
+  LetterNodeListMap( const LetterNodeListMap &other );
   YCM_DLL_EXPORT ~LetterNodeListMap();
 
   NearestLetterNodeIndices &operator[] ( char letter );
