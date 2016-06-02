@@ -301,6 +301,10 @@ class TypeScriptCompleter( Completer ):
       return utils.ProcessIsRunning( self._tsserver_handle )
 
 
+  def ServerIsHealthy( self ):
+    return self._ServerIsRunning()
+
+
   def SupportedFiletypes( self ):
     return [ 'typescript' ]
 
