@@ -208,13 +208,33 @@ def PathToFirstExistingExecutable( executable_name_list ):
   return None
 
 
-# Check that a given file can be accessed as an executable file.
-# Additionally check that `file` is not a directory, as on Windows
-# directories pass the os.access check.
-def IsExecutable( filename ):
-  return ( os.path.exists( filename )
-            and os.access( filename, EXECUTABLE_FILE_MASK )
-            and not os.path.isdir( filename ) )
+def _GetWindowsExecutable( filename ):
+  def _GetPossibleWindowsExecutable( filename ):
+    pathext = [ ext.lower() for ext in
+                os.environ.get( 'PATHEXT', '' ).split( os.pathsep ) ]
+    base, extension = os.path.splitext( filename )
+    if extension.lower() in pathext:
+      return [ filename ]
+    else:
+      return [ base + ext for ext in pathext ]
+
+  for exe in _GetPossibleWindowsExecutable( filename ):
+    if os.path.isfile( exe ):
+      return exe
+  return None
+
+
+# Check that a given file can be accessed as an executable file, so controlling
+# the access mask on Unix and if has a valid extension on Windows. It returns
+# the path to the executable or None if no executable was found.
+def GetExecutable( filename ):
+  if OnWindows():
+    return _GetWindowsExecutable( filename )
+
+  if ( os.path.isfile( filename )
+       and os.access( filename, EXECUTABLE_FILE_MASK ) ):
+    return filename
+  return None
 
 
 # Adapted from https://hg.python.org/cpython/file/3.5/Lib/shutil.py#l1081
@@ -224,34 +244,20 @@ def FindExecutable( executable ):
   # than referring to PATH directories. This includes checking relative to the
   # current directory, e.g. ./script
   if os.path.dirname( executable ):
-    if IsExecutable( executable ):
-      return executable
-    return None
+    return GetExecutable( executable )
 
   paths = os.environ[ 'PATH' ].split( os.pathsep )
-  base, extension = os.path.splitext( executable )
 
   if OnWindows():
     # The current directory takes precedence on Windows.
-    if os.curdir not in paths:
-      paths.insert( 0, os.curdir )
-
-    # See if the given file matches any of the expected path extensions.  This
-    # will allow us to short circuit when given "python.exe".  If it does
-    # match, only test that one, otherwise we have to try others.
-    pathext = os.environ.get( 'PATHEXT', '' ).split( os.pathsep )
-    if extension in pathext:
-      files = [ executable ]
-    else:
-      files = [ base + ext for ext in pathext ]
-  else:
-    files = [ executable ]
+    curdir = os.path.abspath( os.curdir )
+    if curdir not in paths:
+      paths.insert( 0, curdir )
 
   for path in paths:
-    for file in files:
-      name = os.path.join( path, file )
-      if IsExecutable( name ):
-        return name
+    exe = GetExecutable( os.path.join( path, executable ) )
+    if exe:
+      return exe
   return None
 
 
