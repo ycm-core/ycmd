@@ -38,6 +38,9 @@ python get-pip.py
 pip install -r test_requirements.txt
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+pip install codecov
+if %errorlevel% neq 0 exit /b %errorlevel%
+
 ::
 :: Typescript configuration
 ::
