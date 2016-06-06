@@ -27,23 +27,29 @@ import json
 import logging
 import os
 import subprocess
+import threading
 
 from ycmd import responses
 from ycmd import utils
 from ycmd.utils import ToBytes, ToUnicode, ExecutableName
 from ycmd.completers.completer import Completer
 
-BINARY_NOT_FOUND_MESSAGE = ( '{0} binary not found. Did you build it? ' +
-                             'You can do so by running ' +
+BINARY_NOT_FOUND_MESSAGE = ( '{0} binary not found. Did you build it? '
+                             'You can do so by running '
                              '"./install.py --gocode-completer".' )
-SHELL_ERROR_MESSAGE = '{0} shell call failed.'
-PARSE_ERROR_MESSAGE = 'Gocode returned invalid JSON response.'
-NO_COMPLETIONS_MESSAGE = 'Gocode returned empty JSON response.'
-GOCODE_PANIC_MESSAGE = ( 'Gocode panicked trying to find completions, ' +
+SHELL_ERROR_MESSAGE = ( 'Command {command} failed with code {code} and error '
+                        '"{error}".' )
+COMPUTE_OFFSET_ERROR_MESSAGE = ( 'Go completer could not compute byte offset '
+                                 'corresponding to line {line} and column '
+                                 '{column}.' )
+
+GOCODE_PARSE_ERROR_MESSAGE = 'Gocode returned invalid JSON response.'
+GOCODE_NO_COMPLETIONS_MESSAGE = 'No completions found.'
+GOCODE_PANIC_MESSAGE = ( 'Gocode panicked trying to find completions, '
                          'you likely have a syntax error.' )
-DIR_OF_THIRD_PARTY = os.path.join(
-  os.path.abspath( os.path.dirname( __file__ ) ),
-  '..', '..', '..', 'third_party' )
+
+DIR_OF_THIRD_PARTY = os.path.abspath(
+  os.path.join( os.path.dirname( __file__ ), '..', '..', '..', 'third_party' ) )
 GO_BINARIES = dict( {
   'gocode': os.path.join( DIR_OF_THIRD_PARTY,
                           'gocode',
@@ -53,11 +59,14 @@ GO_BINARIES = dict( {
                          ExecutableName( 'godef' ) )
 } )
 
+LOG_FILENAME_FORMAT = os.path.join( utils.PathToCreatedTempDir(),
+                                    'gocode_{port}_{std}.log' )
+
 _logger = logging.getLogger( __name__ )
 
 
 def FindBinary( binary, user_options ):
-  """ Find the path to the gocode/godef binary.
+  """Find the path to the Gocode/Godef binary.
 
   If 'gocode_binary_path' or 'godef_binary_path'
   in the options is blank, use the version installed
@@ -67,7 +76,7 @@ def FindBinary( binary, user_options ):
   specified, use it as an absolute path.
 
   If the resolved binary exists, return the path,
-  otherwise return None. """
+  otherwise return None."""
 
   def _FindPath():
     key = '{0}_binary_path'.format( binary )
@@ -92,12 +101,26 @@ def ShouldEnableGoCompleter( user_options ):
 
 
 class GoCompleter( Completer ):
+  """Completer for Go using the Gocode daemon for completions:
+  https://github.com/nsf/gocode
+  and the Godef binary for jumping to definitions:
+  https://github.com/Manishearth/godef"""
 
   def __init__( self, user_options ):
     super( GoCompleter, self ).__init__( user_options )
-    self._popener = utils.SafePopen # Overridden in test.
-    self._binary_gocode = FindBinary( 'gocode', user_options )
-    self._binary_godef = FindBinary( 'godef', user_options )
+    self._gocode_binary_path = FindBinary( 'gocode', user_options )
+    self._gocode_lock = threading.RLock()
+    self._gocode_handle = None
+    self._gocode_port = None
+    self._gocode_address = None
+    self._gocode_stderr = None
+    self._gocode_stdout = None
+
+    self._godef_binary_path = FindBinary( 'godef', user_options )
+
+    self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
+
+    self._StartServer()
 
 
   def SupportedFiletypes( self ):
@@ -106,115 +129,170 @@ class GoCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     filename = request_data[ 'filepath' ]
-    _logger.info( "gocode completion request %s" % filename )
-    if not filename:
-      return
+    _logger.info( 'Gocode completion request {0}'.format( filename ) )
 
     contents = utils.ToBytes(
         request_data[ 'file_data' ][ filename ][ 'contents' ] )
 
     # NOTE: Offsets sent to gocode are byte offsets, so using start_column
     # with contents (a bytes instance) above is correct.
-    offset = _ComputeOffset( contents, request_data[ 'line_num' ],
+    offset = _ComputeOffset( contents,
+                             request_data[ 'line_num' ],
                              request_data[ 'start_column' ] )
 
-    stdoutdata = self._ExecuteBinary( self._binary_gocode,
-                                      '-f=json', 'autocomplete',
-                                      filename,
-                                      str( offset ),
-                                      contents = contents )
+    stdoutdata = self._ExecuteCommand( [ self._gocode_binary_path,
+                                         '-addr', self._gocode_address,
+                                         '-f=json', 'autocomplete',
+                                         filename, str( offset ) ],
+                                       contents = contents )
 
     try:
       resultdata = json.loads( ToUnicode( stdoutdata ) )
     except ValueError:
-      _logger.error( PARSE_ERROR_MESSAGE )
-      raise RuntimeError( PARSE_ERROR_MESSAGE )
+      _logger.error( GOCODE_PARSE_ERROR_MESSAGE )
+      raise RuntimeError( GOCODE_PARSE_ERROR_MESSAGE )
 
     if len( resultdata ) != 2:
-      _logger.error( NO_COMPLETIONS_MESSAGE )
-      raise RuntimeError( NO_COMPLETIONS_MESSAGE )
+      _logger.error( GOCODE_NO_COMPLETIONS_MESSAGE )
+      raise RuntimeError( GOCODE_NO_COMPLETIONS_MESSAGE )
     for result in resultdata[ 1 ]:
-      if result.get( 'class' ) == "PANIC":
+      if result.get( 'class' ) == 'PANIC':
         raise RuntimeError( GOCODE_PANIC_MESSAGE )
 
-    return [ _ConvertCompletionData( x ) for x in resultdata[1] ]
+    return [ _ConvertCompletionData( x ) for x in resultdata[ 1 ] ]
+
+
+  def DefinedSubcommands( self ):
+    # We don't want to expose this sub-command because it is not really needed
+    # for the user but it is useful in tests for tearing down the server.
+    subcommands = super( GoCompleter, self ).DefinedSubcommands()
+    subcommands.remove( 'StopServer' )
+    return subcommands
 
 
   def GetSubcommandsMap( self ):
     return {
-      'StartServer': ( lambda self, request_data, args: self._StartServer() ),
-      'StopServer': ( lambda self, request_data, args: self._StopServer() ),
-      'GoTo' : ( lambda self, request_data, args:
-                 self._GoToDefinition( request_data ) ),
+      'StopServer'     : ( lambda self, request_data, args:
+                           self._StopServer() ),
+      'RestartServer'  : ( lambda self, request_data, args:
+                           self._RestartServer() ),
+      'GoTo'           : ( lambda self, request_data, args:
+                           self._GoToDefinition( request_data ) ),
       'GoToDefinition' : ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
-      'GoToDeclaration' : ( lambda self, request_data, args:
+      'GoToDeclaration': ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
     }
 
 
-  def OnFileReadyToParse( self, request_data ):
-    self._StartServer()
+  def _ExecuteCommand( self, command, contents = None ):
+    """Run a command in a subprocess and communicate with it using the contents
+    argument. Return the standard output.
 
+    It is used to send a command to the Gocode daemon or execute the Godef
+    binary."""
+    phandle = utils.SafePopen( command,
+                               stdin = subprocess.PIPE,
+                               stdout = subprocess.PIPE,
+                               stderr = subprocess.PIPE )
 
-  def Shutdown( self ):
-    self._StopServer()
+    stdoutdata, stderrdata = phandle.communicate( contents )
 
-
-  def _StartServer( self ):
-    """ Start the GoCode server """
-    self._ExecuteBinary( self._binary_gocode )
-
-
-  def _StopServer( self ):
-    """ Stop the GoCode server """
-    _logger.info( 'Stopping GoCode server' )
-    self._ExecuteBinary( self._binary_gocode, 'close' )
-
-
-  def _ExecuteBinary( self, binary, *args, **kwargs):
-    """ Execute the GoCode/GoDef binary with given arguments. Use the contents
-    argument to send data to GoCode. Return the standard output. """
-    popen_handle = self._popener(
-      [ binary ] + list( args ), stdin = subprocess.PIPE,
-      stdout = subprocess.PIPE, stderr = subprocess.PIPE )
-    contents = kwargs[ 'contents' ] if 'contents' in kwargs else None
-    stdoutdata, stderrdata = popen_handle.communicate( contents )
-
-    if popen_handle.returncode:
-      binary_str = 'Godef' if binary == self._binary_godef else 'Gocode'
-
-      _logger.error( SHELL_ERROR_MESSAGE.format( binary_str ) +
-                     " code %i stderr: %s",
-                     popen_handle.returncode, stderrdata)
-      raise RuntimeError( SHELL_ERROR_MESSAGE.format( binary_str )  )
+    if phandle.returncode:
+      message = SHELL_ERROR_MESSAGE.format(
+          command = ' '.join( command ),
+          code = phandle.returncode,
+          error = ToUnicode( stderrdata.strip() ) )
+      _logger.error( message )
+      raise RuntimeError( message )
 
     return stdoutdata
 
 
-  def _GoToDefinition( self, request_data ):
-    try:
-      filename = request_data[ 'filepath' ]
-      _logger.info( "godef GoTo request %s" % filename )
-      if not filename:
-        return
-      contents = utils.ToBytes(
-          request_data[ 'file_data' ][ filename ][ 'contents' ] )
+  def _StartServer( self ):
+    """Start the Gocode server."""
+    with self._gocode_lock:
+      _logger.info( 'Starting Gocode server' )
 
-      # Offsets sent to gocode are byte offsets, so using column_num
-      # with contents (a bytes instance) above is correct.
-      offset = _ComputeOffset( contents, request_data[ 'line_num' ],
-                               request_data[ 'column_num' ] )
-      stdout = self._ExecuteBinary( self._binary_godef,
-                                    "-i",
-                                    "-f=%s" % filename,
-                                    '-json',
-                                    "-o=%s" % offset,
-                                    contents = contents )
-      return self._ConstructGoToFromResponse( stdout )
-    except Exception as e:
-      _logger.exception( e )
-      raise RuntimeError( 'Can\'t jump to definition.' )
+      self._gocode_port = utils.GetUnusedLocalhostPort()
+      self._gocode_address = '127.0.0.1:{0}'.format( self._gocode_port )
+
+      command = [ self._gocode_binary_path,
+                  '-s',
+                  '-sock', 'tcp',
+                  '-addr', self._gocode_address ]
+
+      if _logger.isEnabledFor( logging.DEBUG ):
+        command.append( '-debug' )
+
+      self._gocode_stdout = LOG_FILENAME_FORMAT.format(
+          port = self._gocode_port, std = 'stdout' )
+      self._gocode_stderr = LOG_FILENAME_FORMAT.format(
+          port = self._gocode_port, std = 'stderr' )
+
+      with open( self._gocode_stdout, 'w' ) as stdout:
+        with open( self._gocode_stderr, 'w' ) as stderr:
+          self._gocode_handle = utils.SafePopen( command,
+                                                 stdout = stdout,
+                                                 stderr = stderr )
+
+
+  def _StopServer( self ):
+    """Stop the Gocode server."""
+    with self._gocode_lock:
+      _logger.info( 'Stopping Gocode server' )
+
+      if self._ServerIsRunning():
+        self._ExecuteCommand( [ self._gocode_binary_path,
+                                '-addr', self._gocode_address,
+                                'close' ] )
+        self._gocode_handle.terminate()
+        self._gocode_handle.wait()
+
+      self._gocode_handle = None
+      self._gocode_port = None
+      self._gocode_address = None
+
+      if not self._keep_logfiles:
+        if self._gocode_stdout:
+          utils.RemoveIfExists( self._gocode_stdout )
+          self._gocode_stdout = None
+
+        if self._gocode_stderr:
+          utils.RemoveIfExists( self._gocode_stderr )
+          self._gocode_stderr = None
+
+
+  def _RestartServer( self ):
+    """Restart the Gocode server."""
+    with self._gocode_lock:
+      self._StopServer()
+      self._StartServer()
+
+
+  def _GoToDefinition( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    _logger.info( 'Godef GoTo request {0}'.format( filename ) )
+
+    contents = utils.ToBytes(
+      request_data[ 'file_data' ][ filename ][ 'contents' ] )
+    offset = _ComputeOffset( contents,
+                             request_data[ 'line_num' ],
+                             request_data[ 'column_num' ] )
+    try:
+      stdout = self._ExecuteCommand( [ self._godef_binary_path,
+                                       '-i',
+                                       '-f={0}'.format( filename ),
+                                       '-json',
+                                       '-o={0}'.format( offset ) ],
+                                     contents = contents )
+    # We catch this exception type and not a more specific one because we
+    # raise it in _ExecuteCommand when the command fails.
+    except RuntimeError as error:
+      _logger.exception( error )
+      raise RuntimeError( 'Can\'t find a definition.' )
+
+    return self._ConstructGoToFromResponse( stdout )
 
 
   def _ConstructGoToFromResponse( self, response_str ):
@@ -226,22 +304,90 @@ class GoCompleter( Completer ):
     raise RuntimeError( 'Can\'t jump to definition.' )
 
 
-# Compute the byte offset in the file given the line and column.
-def _ComputeOffset( contents, line, col ):
+  def Shutdown( self ):
+    self._StopServer()
+
+
+  def _ServerIsRunning( self ):
+    """Check if the Gocode server is running (process is up)."""
+    return utils.ProcessIsRunning( self._gocode_handle )
+
+
+  def ServerIsHealthy( self ):
+    """Check if the Gocode server is healthy (up and serving)."""
+    if not self._ServerIsRunning():
+      return False
+
+    try:
+      self._ExecuteCommand( [ self._gocode_binary_path,
+                              '-addr', self._gocode_address,
+                              'status' ] )
+      return True
+    # We catch this exception type and not a more specific one because we
+    # raise it in _ExecuteCommand when the command fails.
+    except RuntimeError as error:
+      _logger.exception( error )
+      return False
+
+
+  def ServerIsReady( self ):
+    """Check if the Gocode server is ready. Same as the healthy status."""
+    return self.ServerIsHealthy()
+
+
+  def DebugInfo( self, request_data ):
+    with self._gocode_lock:
+      if self._ServerIsRunning():
+        return ( 'Go completer debug information:\n'
+                 '  Gocode running at: http://{0}\n'
+                 '  Gocode process ID: {1}\n'
+                 '  Gocode binary: {2}\n'
+                 '  Gocode logfiles:\n'
+                 '    {3}\n'
+                 '    {4}\n'
+                 '  Godef binary: {5}'.format( self._gocode_address,
+                                               self._gocode_handle.pid,
+                                               self._gocode_binary_path,
+                                               self._gocode_stdout,
+                                               self._gocode_stderr,
+                                               self._godef_binary_path ) )
+
+      if self._gocode_stdout and self._gocode_stderr:
+        return ( 'Go completer debug information:\n'
+                 '  Gocode no longer running\n'
+                 '  Gocode binary: {0}\n'
+                 '  Gocode logfiles:\n'
+                 '    {1}\n'
+                 '    {2}\n'
+                 '  Godef binary: {3}'.format( self._gocode_binary_path,
+                                               self._gocode_stdout,
+                                               self._gocode_stderr,
+                                               self._godef_binary_path ) )
+
+      return ( 'Go completer debug information:\n'
+               '  Gocode is not running\n'
+               '  Gocode binary: {0}\n'
+               '  Godef binary: {1}'.format( self._gocode_binary_path,
+                                             self._godef_binary_path ) )
+
+
+def _ComputeOffset( contents, line, column ):
+  """Compute the byte offset in the file given the line and column."""
   contents = ToBytes( contents )
-  curline = 1
-  curcol = 1
+  current_line = 1
+  current_column = 1
   newline = bytes( b'\n' )[ 0 ]
   for i, byte in enumerate( contents ):
-    if curline == line and curcol == col:
+    if current_line == line and current_column == column:
       return i
-    curcol += 1
+    current_column += 1
     if byte == newline:
-      curline += 1
-      curcol = 1
-  _logger.error( 'GoCode completer - could not compute byte offset ' +
-                 'corresponding to L%i C%i', line, col )
-  return -1
+      current_line += 1
+      current_column = 1
+  message = COMPUTE_OFFSET_ERROR_MESSAGE.format( line = line,
+                                                 column = column )
+  _logger.error( message )
+  raise RuntimeError( message )
 
 
 def _ConvertCompletionData( completion_data ):
