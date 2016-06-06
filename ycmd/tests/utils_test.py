@@ -27,13 +27,16 @@ from builtins import *  # noqa
 
 import os
 import subprocess
+import tempfile
 from shutil import rmtree
 import ycm_core
 from future.utils import native
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
-from ycmd.tests.test_utils import Py2Only, Py3Only, WindowsOnly
+from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly,
+                                    CurrentWorkingDirectory,
+                                    TemporaryExecutable )
 from ycmd.tests import PathToTestFile
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
@@ -463,3 +466,43 @@ def SplitLines_test():
 
   for test in tests:
     yield lambda: eq_( utils.SplitLines( test[ 0 ] ), test[ 1 ] )
+
+
+def FindExecutable_AbsolutePath_test():
+  with TemporaryExecutable() as executable:
+    eq_( executable, utils.FindExecutable( executable ) )
+
+
+def FindExecutable_RelativePath_test():
+  with TemporaryExecutable() as executable:
+    dirname, exename = os.path.split( executable )
+    relative_executable = os.path.join( '.', exename )
+    with CurrentWorkingDirectory( dirname ):
+      eq_( relative_executable, utils.FindExecutable( relative_executable ) )
+
+
+@patch.dict( 'os.environ', { 'PATH': tempfile.gettempdir() } )
+def FindExecutable_ExecutableNameInPath_test():
+  with TemporaryExecutable() as executable:
+    dirname, exename = os.path.split( executable )
+    eq_( executable, utils.FindExecutable( exename ) )
+
+
+def FindExecutable_ReturnNoneIfFileIsNotExecutable_test():
+  with tempfile.NamedTemporaryFile() as non_executable:
+    eq_( None, utils.FindExecutable( non_executable.name ) )
+
+
+@WindowsOnly
+def FindExecutable_CurrentDirectory_test():
+  with TemporaryExecutable() as executable:
+    dirname, exename = os.path.split( executable )
+    with CurrentWorkingDirectory( dirname ):
+      eq_( executable, utils.FindExecutable( exename ) )
+
+
+@WindowsOnly
+@patch.dict( 'os.environ', { 'PATHEXT': '.xyz' } )
+def FindExecutable_AdditionalPathExt_test():
+  with TemporaryExecutable( extension = '.xyz' ) as executable:
+    eq_( executable, utils.FindExecutable( executable ) )
