@@ -36,7 +36,6 @@ from ycmd.utils import ReadFile
 @SharedYcmd
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'go' )
-
   eq_( sorted( [ 'RestartServer',
                  'GoTo',
                  'GoToDefinition',
