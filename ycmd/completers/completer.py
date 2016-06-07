@@ -241,7 +241,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    pass
+    pass # pragma: no cover
 
 
   def DefinedSubcommands( self ):
@@ -300,19 +300,19 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def OnFileReadyToParse( self, request_data ):
-    pass
+    pass # pragma: no cover
 
 
   def OnBufferVisit( self, request_data ):
-    pass
+    pass # pragma: no cover
 
 
   def OnBufferUnload( self, request_data ):
-    pass
+    pass # pragma: no cover
 
 
   def OnInsertLeave( self, request_data ):
-    pass
+    pass # pragma: no cover
 
 
   def OnUserCommand( self, arguments, request_data ):
@@ -330,7 +330,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def OnCurrentIdentifierFinished( self, request_data ):
-    pass
+    pass # pragma: no cover
 
 
   def GetDiagnosticsForCurrentFile( self, request_data ):
@@ -361,7 +361,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def Shutdown( self ):
-    pass
+    pass # pragma: no cover
 
 
   def ServerIsReady( self ):
