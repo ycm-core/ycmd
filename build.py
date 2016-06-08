@@ -150,12 +150,19 @@ def CheckOutput( *popen_args, **kwargs ):
   return output
 
 
+def GetPossiblePythonLibraryDirectories():
+  library_dir = p.dirname( sysconfig.get_python_lib( standard_lib = True ) )
+  if OnWindows():
+    return [ p.join( library_dir, 'libs' ) ]
+  # On pyenv, there is no Python dynamic library in the directory returned by
+  # the LIBPL variable. Such library is located in the parent folder of the
+  # standard Python library modules.
+  return [ sysconfig.get_config_var( 'LIBPL' ), library_dir ]
+
+
 def FindPythonLibraries():
   include_dir = sysconfig.get_python_inc()
-  # get_python_lib with the standard_lib parameter set to True returns the
-  # standard Python modules directory. Python libraries should always be in
-  # the parent directory or one of its subdirectories.
-  library_dir = p.dirname( sysconfig.get_python_lib( standard_lib = True ) )
+  library_dirs = GetPossiblePythonLibraryDirectories()
 
   # Since ycmd is compiled as a dynamic library, we can't link it to a Python
   # static library. If we try, the following error will occur on Mac:
@@ -183,17 +190,15 @@ def FindPythonLibraries():
     major = PY_MAJOR, minor = PY_MINOR ), re.X )
   static_libraries = []
 
-  # We search the Python libraries through the library directory and its
-  # subdirectories.
-  for root, dirs, files in os.walk( library_dir ):
+  for library_dir in library_dirs:
     # Files are sorted so that we found the non-versioned Python library before
     # the versioned one.
-    for filename in sorted( files ):
+    for filename in sorted( os.listdir( library_dir ) ):
       if dynamic_name.match( filename ):
-        return p.join( root, filename ), include_dir
+        return p.join( library_dir, filename ), include_dir
 
       if static_name.match( filename ):
-        static_libraries.append( p.join( root, filename ) )
+        static_libraries.append( p.join( library_dir, filename ) )
 
   if static_libraries and not OnWindows():
     dynamic_flag = ( '--enable-framework' if OnMac() else
