@@ -22,18 +22,17 @@ env:
     # Travis can run out of RAM, so we need to be careful here.
     - YCM_CORES=3
     - COVERAGE=true
-    - USE_CLANG_COMPLETER=true
   matrix:
-    - YCMD_PYTHON_VERSION=2.6
-    - YCMD_PYTHON_VERSION=2.7
-    - YCMD_PYTHON_VERSION=3.3
+    - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
 matrix:
-  include:
-    - os: linux
-      env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
   exclude:
     - os: osx
-      env: YCMD_PYTHON_VERSION=2.6
+      env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
+    - os: osx
+      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/
