@@ -286,9 +286,12 @@ def PathToFirstExistingExecutable_Failure_test():
 
 @WindowsOnly
 @patch( 'subprocess.Popen' )
-def SafePopen_RemovesStdinWindows_test( *args ):
+def SafePopen_ReplaceStdinWindowsPIPEOnWindows_test( *args ):
   utils.SafePopen( [ 'foo' ], stdin_windows = subprocess.PIPE )
-  eq_( subprocess.Popen.call_args, call( [ 'foo' ] ) )
+  eq_( subprocess.Popen.call_args,
+       call( [ 'foo' ],
+             stdin = subprocess.PIPE,
+             creationflags = utils.CREATE_NO_WINDOW ) )
 
 
 @WindowsOnly
