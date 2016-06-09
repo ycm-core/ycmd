@@ -24,7 +24,6 @@ from future.utils import iterkeys
 from future import standard_library
 standard_library.install_aliases()
 
-import http.client
 import logging
 import os
 import requests
@@ -269,7 +268,7 @@ class TernCompleter( Completer ):
     try:
       target = self._GetServerAddress() + '/ping'
       response = requests.get( target )
-      return response.status_code == http.client.OK
+      return response.status_code == requests.codes.ok
     except requests.ConnectionError:
       return False
 
@@ -321,7 +320,7 @@ class TernCompleter( Completer ):
     response = requests.post( self._GetServerAddress(),
                               json = full_request )
 
-    if response.status_code != http.client.OK:
+    if response.status_code != requests.codes.ok:
       raise RuntimeError( response.text )
 
     return response.json()

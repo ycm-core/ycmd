@@ -26,7 +26,7 @@ from builtins import *  # noqa
 from hamcrest import assert_that, has_entries
 from nose.tools import eq_
 from pprint import pformat
-import http.client
+import requests
 
 from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
@@ -85,7 +85,7 @@ def Subcommands_GoTo_Basic( app, goto_command ):
       'filepath': PathToTestFile( 'goto.go' ),
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'filepath': PathToTestFile( 'goto.go' ),
         'line_num': 3,
@@ -111,7 +111,7 @@ def Subcommands_GoTo_Keyword( app, goto_command ):
       'filepath': PathToTestFile( 'goto.go' ),
     },
     'expect': {
-      'response': http.client.INTERNAL_SERVER_ERROR,
+      'response': requests.codes.internal_server_error,
       'data': ErrorMatcher( RuntimeError, 'Can\'t find a definition.' )
     }
   } )
@@ -133,7 +133,7 @@ def Subcommands_GoTo_WindowsNewlines( app, goto_command ):
       'filepath': PathToTestFile( 'win.go' ),
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'filepath': PathToTestFile( 'win.go' ),
         'line_num': 2,

@@ -27,7 +27,7 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_entries )
 from nose.tools import eq_
 from pprint import pformat
-import http.client
+import requests
 
 from ycmd.tests.javascript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
@@ -101,7 +101,7 @@ def GetCompletions_NoQuery_test( app ):
       'column_num': 43,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'a_simple_function',
@@ -135,7 +135,7 @@ def GetCompletions_Query_test( app ):
       'column_num': 45,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'basic_type', 'number' ),
@@ -159,7 +159,7 @@ def GetCompletions_Require_NoQuery_test( app ):
       'column_num': 15,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'mine_bitcoin',
@@ -195,7 +195,7 @@ def GetCompletions_Require_Query_test( app ):
       'column_num': 17,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'mine_bitcoin',
@@ -219,7 +219,7 @@ def GetCompletions_Require_Query_LCS_test( app ):
       'column_num': 17,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'get_number', 'number' ),
@@ -254,7 +254,7 @@ def GetCompletions_DirtyNamedBuffers_test( app ):
       },
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'big_endian_node', 'number' ),
@@ -286,7 +286,7 @@ def GetCompletions_ReturnsDocsInCompletions_test( app ):
       'column_num': 15,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher(
@@ -422,7 +422,7 @@ def GetCompletions_Unicode_AfterLine_test( app ):
       'column_num': 16,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
@@ -446,7 +446,7 @@ def GetCompletions_Unicode_InLine_test( app ):
       'column_num': 18,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
@@ -470,7 +470,7 @@ def GetCompletions_Unicode_InFile_test( app ):
       'column_num': 16,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
