@@ -23,11 +23,13 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_entry, has_items, contains_string
+from hamcrest import assert_that, empty, has_entry, has_items, contains_string
+from nose.tools import eq_
 
 from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
+import http.client
 
 
 @SharedYcmd
@@ -71,3 +73,21 @@ def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   assert_that( response,
                has_entry( 'message',
                           contains_string( 'rust_src_path' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_NoCompletionsFound_test( app ):
+  filepath = PathToTestFile( 'test.rs' )
+  contents = ReadFile( filepath )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'rust',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 4,
+                                  column_num = 1 )
+
+  response = app.post_json( '/completions', completion_data )
+
+  eq_( response.status_code, http.client.OK )
+  assert_that( response.json, has_entry( 'completions', empty() ) )
