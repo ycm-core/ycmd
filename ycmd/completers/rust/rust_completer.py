@@ -172,7 +172,7 @@ class RustCompleter( Completer ):
 
     response.raise_for_status()
 
-    if response.status_code is http.client.NO_CONTENT:
+    if response.status_code == http.client.NO_CONTENT:
       return None
 
     return response.json()
