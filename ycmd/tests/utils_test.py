@@ -284,6 +284,13 @@ def PathToFirstExistingExecutable_Failure_test():
   ok_( not utils.PathToFirstExistingExecutable( [ 'ycmd-foobar' ] ) )
 
 
+@UnixOnly
+@patch( 'subprocess.Popen' )
+def SafePopen_RemoveStdinWindows_test( *args ):
+  utils.SafePopen( [ 'foo' ], stdin_windows = 'bar' )
+  eq_( subprocess.Popen.call_args, call( [ 'foo' ] ) )
+
+
 @WindowsOnly
 @patch( 'subprocess.Popen' )
 def SafePopen_ReplaceStdinWindowsPIPEOnWindows_test( *args ):
