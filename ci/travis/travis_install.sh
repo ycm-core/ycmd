@@ -57,10 +57,6 @@ pip install -U pip wheel setuptools
 pip install -r test_requirements.txt
 npm install -g typescript
 
-pip install codecov
-pip install coverage
-
-
 ############
 # rust setup
 ############
