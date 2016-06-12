@@ -24,7 +24,7 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 import logging
-import http.client
+import requests
 from urllib.parse import urlparse
 from base64 import b64decode, b64encode
 from bottle import request, abort
@@ -59,7 +59,7 @@ class HmacPlugin( object ):
     def wrapper( *args, **kwargs ):
       if not HostHeaderCorrect( request ):
         self._logger.info( 'Dropping request with bad Host header.' )
-        abort( http.client.UNAUTHORIZED,
+        abort( requests.codes.unauthorized,
                'Unauthorized, received bad Host header.' )
         return
 
@@ -67,7 +67,7 @@ class HmacPlugin( object ):
       if not RequestAuthenticated( request.method, request.path, body,
                                    self._hmac_secret ):
         self._logger.info( 'Dropping request with bad HMAC.' )
-        abort( http.client.UNAUTHORIZED, 'Unauthorized, received bad HMAC.' )
+        abort( requests.codes.unauthorized, 'Unauthorized, received bad HMAC.' )
         return
       body = callback( *args, **kwargs )
       SetHmacHeader( body, self._hmac_secret )

@@ -26,12 +26,11 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 import json
-
+import requests
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entry, has_entries,
                        contains_string )
-import http.client
 
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
@@ -57,7 +56,7 @@ def RunTest( app, test ):
   test is a dictionary containing:
     'request': kwargs for BuildRequest
     'expect': {
-       'response': server response code (e.g. httplib.OK)
+       'response': server response code (e.g. requests.codes.ok)
        'data': matcher for the server response json
     }
     'extra_conf': [ optional list of path items to extra conf file ]
@@ -119,7 +118,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
       'force_semantic': True,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
@@ -145,7 +144,7 @@ def GetCompletions_Fallback_NoSuggestions_test( app ):
       'force_semantic': False,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': empty(),
         'errors': has_item( NO_COMPLETIONS_ERROR ),
@@ -170,7 +169,7 @@ def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
       'force_semantic': False,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': empty(),
         'errors': has_item( NO_COMPLETIONS_ERROR ),
@@ -193,7 +192,7 @@ def GetCompletions_Fallback_Suggestions_test( app ):
       'force_semantic': False,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': has_item( CompletionEntryMatcher( 'a_parameter',
                                                          '[ID]' ) ),
@@ -218,7 +217,7 @@ def GetCompletions_Fallback_Exception_test( app ):
       'force_semantic': False,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'a_parameter', '[ID]' ),
@@ -244,7 +243,7 @@ def GetCompletions_Forced_NoFallback_test( app ):
       'force_semantic': True,
     },
     'expect': {
-      'response': http.client.INTERNAL_SERVER_ERROR,
+      'response': requests.codes.internal_server_error,
       'data': NO_COMPLETIONS_ERROR,
     },
   } )
@@ -269,7 +268,7 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
       'force_semantic': False,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
           # do_ is an identifier because it is already in the file when we
@@ -364,7 +363,7 @@ def GetCompletions_UnknownExtraConfException_test( app ):
                             completion_data,
                             expect_errors = True )
 
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
   assert_that( response.json,
                has_entry( 'exception',
                           has_entry( 'TYPE', UnknownExtraConf.__name__ ) ) )
@@ -377,7 +376,7 @@ def GetCompletions_UnknownExtraConfException_test( app ):
                             completion_data,
                             expect_errors = True )
 
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
   assert_that( response.json,
                has_entry( 'exception',
                           has_entry( 'TYPE',
@@ -423,7 +422,7 @@ def GetCompletions_ExceptionWhenNoFlagsFromExtraConf_test( app ):
   response = app.post_json( '/completions',
                             completion_data,
                             expect_errors = True )
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
 
   assert_that( response.json,
                has_entry( 'exception',
@@ -522,7 +521,7 @@ def GetCompletions_UnicodeInLine_test( app ):
       'extra_conf_data': { '&filetype': 'cpp' },
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 8,
         'completions': contains_inanyorder(
@@ -554,7 +553,7 @@ def GetCompletions_UnicodeInLineFilter_test( app ):
       'extra_conf_data': { '&filetype': 'cpp' },
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 8,
         'completions': contains_inanyorder(

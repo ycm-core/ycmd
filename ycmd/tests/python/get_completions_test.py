@@ -28,11 +28,12 @@ from builtins import *  # noqa
 from nose.tools import eq_
 from hamcrest import ( assert_that, has_item, has_items, has_entry,
                        has_entries, contains, empty, contains_string )
+import requests
+
 from ycmd.utils import ReadFile
 from ycmd.tests.python import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     CompletionLocationMatcher )
-import http.client
 
 
 @SharedYcmd
@@ -127,7 +128,7 @@ def GetCompletions_NoSuggestions_Fallback_test( app ):
       'force_semantic': False,
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'a_parameter', '[ID]' ),
@@ -150,7 +151,7 @@ def GetCompletions_Unicode_InLine_test( app ):
       'column_num': 14
     },
     'expect': {
-      'response': http.client.OK,
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
           CompletionEntryMatcher( 'center', 'function: builtins.str.center' )

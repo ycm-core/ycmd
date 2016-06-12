@@ -30,7 +30,7 @@ from hamcrest import ( assert_that, calling, contains, equal_to,
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
-import http.client
+import requests
 import os.path
 
 from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
@@ -841,7 +841,7 @@ def Subcommands_GetDoc_Undocumented_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -865,7 +865,7 @@ def Subcommands_GetDoc_NoCursor_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1016,7 +1016,7 @@ def Subcommands_GetDocQuick_Undocumented_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1049,7 +1049,7 @@ def Subcommands_GetDocQuick_NoCursor_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, http.client.INTERNAL_SERVER_ERROR )
+  eq_( response.status_code, requests.codes.internal_server_error )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )

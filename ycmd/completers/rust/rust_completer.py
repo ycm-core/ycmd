@@ -31,7 +31,6 @@ from ycmd import responses, utils, hmac_utils
 import logging
 import urllib.parse
 import requests
-import http.client
 import json
 import tempfile
 import base64
@@ -172,7 +171,7 @@ class RustCompleter( Completer ):
 
     response.raise_for_status()
 
-    if response.status_code == http.client.NO_CONTENT:
+    if response.status_code == requests.codes.no_content:
       return None
 
     return response.json()
