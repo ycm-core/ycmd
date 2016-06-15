@@ -333,34 +333,34 @@ class GoCompleter( Completer ):
         return ( 'Go completer debug information:\n'
                  '  Gocode running at: http://{0}\n'
                  '  Gocode process ID: {1}\n'
-                 '  Gocode binary: {2}\n'
+                 '  Gocode executable: {2}\n'
                  '  Gocode logfiles:\n'
                  '    {3}\n'
                  '    {4}\n'
-                 '  Godef binary: {5}'.format( self._gocode_address,
-                                               self._gocode_handle.pid,
-                                               self._gocode_binary_path,
-                                               self._gocode_stdout,
-                                               self._gocode_stderr,
-                                               self._godef_binary_path ) )
+                 '  Godef executable: {5}'.format( self._gocode_address,
+                                                   self._gocode_handle.pid,
+                                                   self._gocode_binary_path,
+                                                   self._gocode_stdout,
+                                                   self._gocode_stderr,
+                                                   self._godef_binary_path ) )
 
       if self._gocode_stdout and self._gocode_stderr:
         return ( 'Go completer debug information:\n'
                  '  Gocode no longer running\n'
-                 '  Gocode binary: {0}\n'
+                 '  Gocode executable: {0}\n'
                  '  Gocode logfiles:\n'
                  '    {1}\n'
                  '    {2}\n'
-                 '  Godef binary: {3}'.format( self._gocode_binary_path,
-                                               self._gocode_stdout,
-                                               self._gocode_stderr,
-                                               self._godef_binary_path ) )
+                 '  Godef executable: {3}'.format( self._gocode_binary_path,
+                                                   self._gocode_stdout,
+                                                   self._gocode_stderr,
+                                                   self._godef_binary_path ) )
 
       return ( 'Go completer debug information:\n'
                '  Gocode is not running\n'
-               '  Gocode binary: {0}\n'
-               '  Godef binary: {1}'.format( self._gocode_binary_path,
-                                             self._godef_binary_path ) )
+               '  Gocode executable: {0}\n'
+               '  Godef executable: {1}'.format( self._gocode_binary_path,
+                                                 self._godef_binary_path ) )
 
 
 def _ComputeOffset( contents, line, column ):

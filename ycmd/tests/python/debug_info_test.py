@@ -25,49 +25,49 @@ from builtins import *  # noqa
 
 from hamcrest import assert_that, matches_regexp
 
-from ycmd.tests.go import IsolatedYcmd, SharedYcmd
+from ycmd.tests.python import IsolatedYcmd, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, StopCompleterServer, UserOption
 
 
 @SharedYcmd
 def DebugInfo_ServerIsRunning_test( app ):
-  request_data = BuildRequest( filetype = 'go' )
+  request_data = BuildRequest( filetype = 'python' )
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    matches_regexp( 'Go completer debug information:\n'
-                    '  Gocode running at: http://127.0.0.1:\d+\n'
-                    '  Gocode process ID: \d+\n'
-                    '  Gocode executable: .+\n'
-                    '  Gocode logfiles:\n'
+    matches_regexp( 'Python completer debug information:\n'
+                    '  JediHTTP running at: http://127.0.0.1:\d+\n'
+                    '  JediHTTP process ID: \d+\n'
+                    '  JediHTTP executable: .+\n'
+                    '  JediHTTP logfiles:\n'
                     '    .+\n'
                     '    .+\n'
-                    '  Godef executable: .+' ) )
+                    '  Python interpreter: .+' ) )
 
 
 @IsolatedYcmd
 def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
   with UserOption( 'server_keep_logfiles', True ):
-    StopCompleterServer( app, 'go' )
-    request_data = BuildRequest( filetype = 'go' )
+    StopCompleterServer( app, 'python' )
+    request_data = BuildRequest( filetype = 'python' )
     assert_that(
       app.post_json( '/debug_info', request_data ).json,
-      matches_regexp( 'Go completer debug information:\n'
-                      '  Gocode no longer running\n'
-                      '  Gocode executable: .+\n'
-                      '  Gocode logfiles:\n'
+      matches_regexp( 'Python completer debug information:\n'
+                      '  JediHTTP no longer running\n'
+                      '  JediHTTP executable: .+\n'
+                      '  JediHTTP logfiles:\n'
                       '    .+\n'
                       '    .+\n'
-                      '  Godef executable: .+' ) )
+                      '  Python interpreter: .+' ) )
 
 
 @IsolatedYcmd
 def DebugInfo_ServerIsNotRunning_LogfilesDoNotExist_test( app ):
   with UserOption( 'server_keep_logfiles', False ):
-    StopCompleterServer( app, 'go' )
-    request_data = BuildRequest( filetype = 'go' )
+    StopCompleterServer( app, 'python' )
+    request_data = BuildRequest( filetype = 'python' )
     assert_that(
       app.post_json( '/debug_info', request_data ).json,
-      matches_regexp( 'Go completer debug information:\n'
-                      '  Gocode is not running\n'
-                      '  Gocode executable: .+\n'
-                      '  Godef executable: .+' ) )
+      matches_regexp( 'Python completer debug information:\n'
+                      '  JediHTTP is not running\n'
+                      '  JediHTTP executable: .+\n'
+                      '  Python interpreter: .+' ) )

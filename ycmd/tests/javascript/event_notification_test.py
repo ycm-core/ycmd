@@ -30,14 +30,16 @@ from pprint import pformat
 import requests
 import os
 
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
-from ycmd.tests.javascript import ( IsolatedYcmd, PathToTestFile,
-                                    WaitUntilTernServerReady )
+from ycmd.tests.test_utils import ( BuildRequest, ErrorMatcher,
+                                    WaitUntilCompleterServerReady )
+from ycmd.tests.javascript import IsolatedYcmd, PathToTestFile
 from ycmd.utils import ReadFile
 
 
 @IsolatedYcmd
 def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+
   contents = ReadFile( PathToTestFile( 'simple_test.js' ) )
 
   response = app.post_json( '/event_notification',
@@ -53,6 +55,8 @@ def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
 
 @IsolatedYcmd
 def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+
   os.chdir( PathToTestFile( 'lamelib' ) )
   contents = ReadFile( PathToTestFile( 'simple_test.js' ) )
 
@@ -71,6 +75,8 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = False )
 def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+
   # We raise an error if we can't detect a .tern-project file.
   # We only do this on the first OnFileReadyToParse event after a
   # server startup.
@@ -121,7 +127,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
                                contents = contents,
                                completer_target = 'filetype_default' ) )
 
-  WaitUntilTernServerReady( app )
+  WaitUntilCompleterServerReady( app, 'javascript' )
 
   response = app.post_json( '/event_notification',
                             BuildRequest( event_name = 'FileReadyToParse',
@@ -149,6 +155,8 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = True )
 def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+
   os.chdir( PathToTestFile( '..' ) )
   contents = ReadFile( PathToTestFile( 'simple_test.js' ) )
 

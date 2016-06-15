@@ -211,7 +211,7 @@ def DebugInfo():
   request_data = RequestWrap( request.json )
   try:
     output.append(
-        _GetCompleterForRequestData( request_data ).DebugInfo( request_data) )
+        _GetCompleterForRequestData( request_data ).DebugInfo( request_data ) )
   except Exception:
     _logger.debug( 'Exception in debug info request: '
                    + traceback.format_exc() )

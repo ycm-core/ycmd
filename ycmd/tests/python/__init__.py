@@ -25,10 +25,11 @@ from builtins import *  # noqa
 
 import functools
 import os
-import time
 
 from ycmd import handlers
-from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
+from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
+                                    StopCompleterServer,
+                                    WaitUntilCompleterServerReady )
 
 shared_app = None
 
@@ -36,30 +37,6 @@ shared_app = None
 def PathToTestFile( *args ):
   dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
   return os.path.join( dir_of_current_script, 'testdata', *args )
-
-
-def WaitUntilJediHTTPServerReady( app ):
-  retries = 100
-
-  while retries > 0:
-    result = app.get( '/ready', { 'subserver': 'python' } ).json
-    if result:
-      return
-
-    time.sleep( 0.2 )
-    retries = retries - 1
-
-  raise RuntimeError( "Timeout waiting for JediHTTP" )
-
-
-def StopJediHTTPServer( app ):
-  # We don't actually start a JediHTTP server on every test, so we just
-  # ignore errors when stopping the server
-  app.post_json( '/run_completer_command',
-                 BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ 'StopServer' ],
-                               filetype = 'python' ),
-                 expect_errors = True )
 
 
 def setUpPackage():
@@ -70,7 +47,7 @@ def setUpPackage():
   global shared_app
 
   shared_app = SetUpApp()
-  WaitUntilJediHTTPServerReady( shared_app )
+  WaitUntilCompleterServerReady( shared_app, 'python' )
 
 
 def tearDownPackage():
@@ -78,7 +55,7 @@ def tearDownPackage():
   executed once after running all the tests in the package."""
   global shared_app
 
-  StopJediHTTPServer( shared_app )
+  StopCompleterServer( shared_app, 'python' )
 
 
 def SharedYcmd( test ):
@@ -106,9 +83,10 @@ def IsolatedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
-
+    app = SetUpApp()
     try:
-      test( SetUpApp(), *args, **kwargs )
+      test( app, *args, **kwargs )
     finally:
+      StopCompleterServer( app, 'python' )
       handlers._server_state = old_server_state
   return Wrapper
