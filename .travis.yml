@@ -14,30 +14,25 @@ compiler:
   - gcc
 script: ./run_tests.py
 after_success:
-  - if [ x"${COVERAGE}" = x"true" ]; then coveralls; fi
+  - codecov
 env:
   global:
     - MONO_THREADS_PER_CPU=2000
     - MONO_MANAGED_WATCHER=disabled
     # Travis can run out of RAM, so we need to be careful here.
     - YCM_CORES=3
+    - COVERAGE=true
   matrix:
-    # Don't forget to take the below matrix exclusions into account.
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
     - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
 matrix:
   exclude:
     - os: osx
-      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 COVERAGE=true
-    - os: osx
       env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - os: osx
       env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
-    - os: linux
-      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/

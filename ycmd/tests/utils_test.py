@@ -34,7 +34,7 @@ from future.utils import native
 from mock import patch, call
 from nose.tools import eq_, ok_
 from ycmd import utils
-from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly,
+from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly, UnixOnly,
                                     CurrentWorkingDirectory,
                                     TemporaryExecutable )
 from ycmd.tests import PathToTestFile
@@ -284,14 +284,24 @@ def PathToFirstExistingExecutable_Failure_test():
   ok_( not utils.PathToFirstExistingExecutable( [ 'ycmd-foobar' ] ) )
 
 
-@patch( 'ycmd.utils.OnWindows', return_value = False )
+@UnixOnly
 @patch( 'subprocess.Popen' )
-def SafePopen_RemovesStdinWindows_test( *args ):
-  utils.SafePopen( [ 'foo' ], stdin_windows = subprocess.PIPE )
+def SafePopen_RemoveStdinWindows_test( *args ):
+  utils.SafePopen( [ 'foo' ], stdin_windows = 'bar' )
   eq_( subprocess.Popen.call_args, call( [ 'foo' ] ) )
 
 
-@patch( 'ycmd.utils.OnWindows', return_value = True )
+@WindowsOnly
+@patch( 'subprocess.Popen' )
+def SafePopen_ReplaceStdinWindowsPIPEOnWindows_test( *args ):
+  utils.SafePopen( [ 'foo' ], stdin_windows = subprocess.PIPE )
+  eq_( subprocess.Popen.call_args,
+       call( [ 'foo' ],
+             stdin = subprocess.PIPE,
+             creationflags = utils.CREATE_NO_WINDOW ) )
+
+
+@WindowsOnly
 @patch( 'ycmd.utils.GetShortPathName', side_effect = lambda x: x )
 @patch( 'subprocess.Popen' )
 def SafePopen_WindowsPath_test( *args ):
@@ -308,21 +318,21 @@ def SafePopen_WindowsPath_test( *args ):
     os.remove( tempfile )
 
 
-@patch( 'ycmd.utils.OnWindows', return_value = False )
+@UnixOnly
 def ConvertArgsToShortPath_PassthroughOnUnix_test( *args ):
   eq_( 'foo', utils.ConvertArgsToShortPath( 'foo' ) )
   eq_( [ 'foo' ], utils.ConvertArgsToShortPath( [ 'foo' ] ) )
 
 
-@patch( 'ycmd.utils.OnWindows', return_value = False )
-def SetEnviron_UnicodeNotOnWindows_test( *args ):
+@UnixOnly
+def SetEnviron_UnicodeOnUnix_test( *args ):
   env = {}
   utils.SetEnviron( env, u'key', u'value' )
   eq_( env, { u'key': u'value' } )
 
 
 @Py2Only
-@patch( 'ycmd.utils.OnWindows', return_value = True )
+@WindowsOnly
 def SetEnviron_UnicodeOnWindows_test( *args ):
   env = {}
   utils.SetEnviron( env, u'key', u'value' )

@@ -5,6 +5,7 @@ branches:
     - auto
 environment:
   USE_CLANG_COMPLETER: true
+  COVERAGE: true
   matrix:
   # We only test MSVC 11 and 12 with Python 3.5 on 64 bits.
   - msvc: 11
@@ -27,6 +28,8 @@ install:
   - ci\appveyor\appveyor_install.bat
 build_script:
   - python run_tests.py --msvc %MSVC%
+after_build:
+  - codecov
 # Disable automatic tests
 test: off
 cache:
