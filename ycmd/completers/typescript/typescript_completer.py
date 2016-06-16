@@ -95,11 +95,13 @@ class TypeScriptCompleter( Completer ):
     # the tsserver process' stdin
     self._write_lock = threading.Lock()
 
-    binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
-    if not binarypath:
+    # TODO: if we follow the path of tern_completer we can extract a
+    # `ShouldEnableTypescriptCompleter` and use it in hook.py
+    self._binary_path = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
+    if not self._binary_path:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
-    _logger.info( 'Found TSServer at {0}'.format( binarypath ) )
+    _logger.info( 'Found TSServer at {0}'.format( self._binary_path ) )
 
     self._logfile = _LogFileName()
     tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
@@ -119,13 +121,6 @@ class TypeScriptCompleter( Completer ):
 
     # Used to prevent threads from concurrently accessing the sequence counter
     self._sequenceid_lock = threading.Lock()
-
-    # TODO: if we follow the path of tern_completer we can extract a
-    # `ShouldEnableTypescriptCompleter` and use it in hook.py
-    self._binary_path = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
-    if not self._binary_path:
-      _logger.error( BINARY_NOT_FOUND_MESSAGE )
-      raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
 
     self._server_lock = threading.RLock()
 
