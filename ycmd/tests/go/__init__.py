@@ -25,6 +25,7 @@ from builtins import *  # noqa
 
 import functools
 import os
+import time
 
 from ycmd import handlers
 from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
