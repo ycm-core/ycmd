@@ -96,7 +96,7 @@ import ycm_core
 # (../cpp/ycm/.ycm_extra_conf.py).
 #
 
-### Tweakables for heuristics {{{
+# Tweakables for heuristics {{{
 
 # List of file extensions to be considered "header" files and thus not present
 # in the compilation database. The logic will try and find an associated
@@ -107,9 +107,9 @@ HEADER_EXTENSIONS = [ '.h', '.hxx', '.hpp', '.hh' ]
 # of heuristically locating the flags for a header file.
 SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 
-### }}}
+# }}}
 
-### Caches for heuristically guessing flags {{{
+# Caches for heuristically guessing flags {{{
 
 # We cache the database for any given source directory
 compilation_database_dir_map = dict()
@@ -132,8 +132,8 @@ last_compilation_info_ext_map = dict()
 # any large or complex project, but it might work for trivial projects, demos,
 # school projects etc.
 
-
-# This map contains the flag lists to return for the supported file types.
+# This map contains the flag lists to return for the supported file types. The
+# flags are arbitrary, but should work for a large number of toy projects.
 fallback_flags_filetype_map = {
   'cpp':  [
     '-x',
@@ -144,8 +144,7 @@ fallback_flags_filetype_map = {
   'c': [
     '-x', 'c',
     '-std=c99',
-    '-I',
-    '.'
+    '-I', '.'
   ],
   'objc': [
     '-x', 'objective-c',
@@ -164,9 +163,10 @@ fallback_flags_ext_map = {
   '.m':   fallback_flags_filetype_map[ 'objc' ],
 }
 
-### }}}
+# }}}
 
-### Implementation {{{
+# Implementation {{{
+
 
 # Return a compilation database object for the supplied path or None if none
 # could be found.
@@ -299,5 +299,4 @@ def FlagsForFile( file_name, **kwargs ):
     'do_cache': True
   }
 
-### }}}
-
+# }}}

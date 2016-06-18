@@ -49,6 +49,7 @@ _module_file_for_source_file_lock = Lock()
 YCMD_DEFAULT_EXTRA_CONF_PATH = os.path.join( os.path.dirname( __file__ ),
                                              'default_ycm_extra_conf.py' )
 
+
 def Reset():
   global _module_for_module_file, _module_file_for_source_file
   _module_for_module_file = {}
