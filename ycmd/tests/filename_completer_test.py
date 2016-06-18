@@ -26,6 +26,7 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 import os
+from hamcrest import assert_that, contains_inanyorder
 from nose.tools import eq_
 from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.request_wrap import RequestWrap
@@ -329,8 +330,10 @@ class FilenameCompleter_test( object ):
                    1 + # 0-based offset of ∂
                    1 ) # Make it 1-based
     eq_( True, self._ShouldUseNowForLine( contents, column_num = column_num ) )
-    eq_( [ ( 'inner_dir', '[Dir]' ), ( '∂†∫', '[Dir]' ) ],
-         self._CompletionResultsForLine( contents, column_num = column_num ) )
+    assert_that( self._CompletionResultsForLine( contents,
+                                                 column_num = column_num ),
+                 contains_inanyorder( ( 'inner_dir', '[Dir]' ),
+                                      ( '∂†∫', '[Dir]' )  ) )
 
 
 def WorkingDir_Use_File_Path_test():
