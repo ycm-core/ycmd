@@ -129,7 +129,8 @@ def _ShouldLoad( module_file ):
   fallback."""
 
   if ( module_file == _GlobalYcmExtraConfFileLocation() or
-       not user_options_store.Value( 'confirm_extra_conf' ) ):
+       not user_options_store.Value( 'confirm_extra_conf' ) or
+       module_file == YCMD_DEFAULT_EXTRA_CONF_PATH ):
     return True
 
   globlist = user_options_store.Value( 'extra_conf_globlist' )
