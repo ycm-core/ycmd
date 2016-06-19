@@ -91,15 +91,15 @@ class JediCompleter( Completer ):
 
 
   def Shutdown( self ):
-    if self.ServerIsRunning():
+    if self._ServerIsRunning():
       self._StopServer()
 
 
-  def ServerIsReady( self ):
+  def ServerIsHealthy( self ):
     """
     Check if JediHTTP is alive AND ready to serve requests.
     """
-    if not self.ServerIsRunning():
+    if not self._ServerIsRunning():
       self._logger.debug( 'JediHTTP not running.' )
       return False
     try:
@@ -109,10 +109,10 @@ class JediCompleter( Completer ):
       return False
 
 
-  def ServerIsRunning( self ):
+  def _ServerIsRunning( self ):
     """
     Check if JediHTTP is alive. That doesn't necessarily mean it's ready to
-    serve requests; that's checked by ServerIsReady.
+    serve requests; that's checked by ServerIsHealthy.
     """
     with self._server_lock:
       return ( bool( self._jedihttp_port ) and
@@ -265,14 +265,6 @@ class JediCompleter( Completer ):
                               request_data )[ 'completions' ]
 
 
-  def DefinedSubcommands( self ):
-    # We don't want expose this sub-command because is not really needed for
-    # the user but is useful in tests for tearing down the server
-    subcommands = super( JediCompleter, self ).DefinedSubcommands()
-    subcommands.remove( 'StopServer' )
-    return subcommands
-
-
   def GetSubcommandsMap( self ):
     return {
       'GoToDefinition' : ( lambda self, request_data, args:
@@ -384,7 +376,7 @@ class JediCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
      with self._server_lock:
-       if self.ServerIsRunning():
+       if self._ServerIsRunning():
          return ( 'JediHTTP running at 127.0.0.1:{0}\n'
                   '  python binary: {1}\n'
                   '  stdout log: {2}\n'
@@ -395,8 +387,8 @@ class JediCompleter( Completer ):
 
        if self._logfile_stdout and self._logfile_stderr:
          return ( 'JediHTTP is no longer running\n'
-                  '  stdout log: {1}\n'
-                  '  stderr log: {2}' ).format( self._logfile_stdout,
+                  '  stdout log: {0}\n'
+                  '  stderr log: {1}' ).format( self._logfile_stdout,
                                                 self._logfile_stderr )
 
        return 'JediHTTP is not running'

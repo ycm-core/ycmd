@@ -162,14 +162,6 @@ class GoCompleter( Completer ):
     return [ _ConvertCompletionData( x ) for x in resultdata[ 1 ] ]
 
 
-  def DefinedSubcommands( self ):
-    # We don't want to expose this sub-command because it is not really needed
-    # for the user but it is useful in tests for tearing down the server.
-    subcommands = super( GoCompleter, self ).DefinedSubcommands()
-    subcommands.remove( 'StopServer' )
-    return subcommands
-
-
   def GetSubcommandsMap( self ):
     return {
       'StopServer'     : ( lambda self, request_data, args:

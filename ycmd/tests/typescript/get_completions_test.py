@@ -104,3 +104,34 @@ def GetCompletions_MaxDetailedCompletion_test( app ):
       } )
     }
   } )
+
+
+@SharedYcmd
+def GetCompletions_AfterRestart_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+
+  app.post_json( '/run_completer_command',
+                BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ 'RestartServer' ],
+                              filetype = 'typescript',
+                              filepath = filepath ) )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'typescript',
+                                  contents = ReadFile( filepath ),
+                                  force_semantic = True,
+                                  line_num = 17,
+                                  column_num = 6 )
+
+  response = app.post_json( '/completions', completion_data )
+  assert_that( response.json, has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'methodA', extra_params = {
+            'menu_text': 'methodA (method) Foo.methodA(): void' } ),
+          CompletionEntryMatcher( 'methodB', extra_params = {
+            'menu_text': 'methodB (method) Foo.methodB(): void' } ),
+          CompletionEntryMatcher( 'methodC', extra_params = {
+            'menu_text': ( 'methodC (method) Foo.methodC(a: '
+                           '{ foo: string; bar: number; }): void' ) } ),
+        )
+      } ) )

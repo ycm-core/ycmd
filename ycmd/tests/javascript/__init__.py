@@ -40,15 +40,6 @@ def PathToTestFile( *args ):
 
 
 def WaitUntilTernServerReady( app ):
-  app.post_json( '/run_completer_command', BuildRequest(
-    command_arguments = [ 'StartServer' ],
-    completer_target = 'filetype_default',
-    filetype = 'javascript',
-    filepath = '/foo.js',
-    contents = '',
-    line_num = '1'
-  ) )
-
   retries = 100
   while retries > 0:
     result = app.get( '/ready', { 'subserver': 'javascript' } ).json

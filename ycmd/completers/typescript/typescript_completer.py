@@ -30,10 +30,8 @@ import os
 import re
 import subprocess
 import itertools
+import threading
 
-from threading import Thread
-from threading import Event
-from threading import Lock
 from tempfile import NamedTemporaryFile
 
 from ycmd import responses
@@ -56,7 +54,7 @@ class DeferredResponse( object ):
   """
 
   def __init__( self, timeout = RESPONSE_TIMEOUT_SECONDS ):
-    self._event = Event()
+    self._event = threading.Event()
     self._message = None
     self._timeout = timeout
 
@@ -91,15 +89,19 @@ class TypeScriptCompleter( Completer ):
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
 
+    self._tsserver_handle = None
+
     # Used to prevent threads from concurrently writing to
     # the tsserver process' stdin
-    self._writelock = Lock()
+    self._write_lock = threading.Lock()
 
-    binarypath = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
-    if not binarypath:
+    # TODO: if we follow the path of tern_completer we can extract a
+    # `ShouldEnableTypescriptCompleter` and use it in hook.py
+    self._binary_path = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
+    if not self._binary_path:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
-    _logger.info( 'Found TSServer at {0}'.format( binarypath ) )
+    _logger.info( 'Found TSServer at {0}'.format( self._binary_path ) )
 
     self._logfile = _LogFileName()
     tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
@@ -118,14 +120,13 @@ class TypeScriptCompleter( Completer ):
     self._sequenceid = itertools.count()
 
     # Used to prevent threads from concurrently accessing the sequence counter
-    self._sequenceid_lock = Lock()
+    self._sequenceid_lock = threading.Lock()
 
-    # We need to redirect the error stream to the output one on Windows.
-    self._tsserver_handle = utils.SafePopen( binarypath,
-                                             stdin = subprocess.PIPE,
-                                             stdout = subprocess.PIPE,
-                                             stderr = subprocess.STDOUT,
-                                             env = self._environ )
+    self._server_lock = threading.RLock()
+
+    # We first start the server and then the response-reading queue, so it will
+    # certainly find a responding TSServer.
+    self._StartServer()
 
     # Used to map sequence id's to their corresponding DeferredResponse
     # objects. The reader loop uses this to hand out responses.
@@ -133,14 +134,39 @@ class TypeScriptCompleter( Completer ):
 
     # Used to prevent threads from concurrently reading and writing to
     # the pending response dictionary
-    self._pendinglock = Lock()
+    self._pending_lock = threading.Lock()
 
     # Start a thread to read response from TSServer.
-    self._thread = Thread( target = self._ReaderLoop, args = () )
+    self._thread = threading.Thread( target = self._ReaderLoop, args = () )
     self._thread.daemon = True
     self._thread.start()
 
     _logger.info( 'Enabling typescript completion' )
+
+
+  def _StartServer( self ):
+    with self._server_lock:
+      if self._ServerIsRunning():
+        return
+
+      self._logfile = _LogFileName()
+      tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
+                                                           level = _LogLevel() )
+      # TSServer gets the configuration for the log file through the
+      # environment variable 'TSS_LOG'. This seems to be undocumented but
+      # looking at the source code it seems like this is the way:
+      # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
+      environ = os.environ.copy()
+      utils.SetEnviron( environ, 'TSS_LOG', tsserver_log )
+
+      _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
+
+      # We need to redirect the error stream to the output one on Windows.
+      self._tsserver_handle = utils.SafePopen( self._binary_path,
+                                               stdin = subprocess.PIPE,
+                                               stdout = subprocess.PIPE,
+                                               stderr = subprocess.STDOUT,
+                                               env = environ )
 
 
   def _ReaderLoop( self ):
@@ -164,7 +190,7 @@ class TypeScriptCompleter( Completer ):
           continue
 
         seq = message[ 'request_seq' ]
-        with self._pendinglock:
+        with self._pending_lock:
           if seq in self._pending:
             self._pending[ seq ].resolve( message )
             del self._pending[ seq ]
@@ -224,7 +250,7 @@ class TypeScriptCompleter( Completer ):
     """
 
     request = json.dumps( self._BuildRequest( command, arguments ) ) + '\n'
-    with self._writelock:
+    with self._write_lock:
       self._tsserver_handle.stdin.write( utils.ToBytes( request ) )
       self._tsserver_handle.stdin.flush()
 
@@ -238,10 +264,10 @@ class TypeScriptCompleter( Completer ):
     request = self._BuildRequest( command, arguments )
     json_request = json.dumps( request ) + '\n'
     deferred = DeferredResponse()
-    with self._pendinglock:
+    with self._pending_lock:
       seq = request[ 'seq' ]
       self._pending[ seq ] = deferred
-    with self._writelock:
+    with self._write_lock:
       self._tsserver_handle.stdin.write( utils.ToBytes( json_request ) )
       self._tsserver_handle.stdin.flush()
     return deferred.result()
@@ -262,7 +288,16 @@ class TypeScriptCompleter( Completer ):
       'file':    filename,
       'tmpfile': tmpfile.name
     } )
-    os.unlink( tmpfile.name )
+    utils.RemoveIfExists( tmpfile.name )
+
+
+  def _ServerIsRunning( self ):
+    with self._server_lock:
+      return utils.ProcessIsRunning( self._tsserver_handle )
+
+
+  def ServerIsHealthy( self ):
+    return self._ServerIsRunning()
 
 
   def SupportedFiletypes( self ):
@@ -301,6 +336,10 @@ class TypeScriptCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
+      'RestartServer'  : ( lambda self, request_data, args:
+                           self._RestartServer( request_data ) ),
+      'StopServer'     : ( lambda self, request_data, args:
+                           self._StopServer() ),
       'GoToDefinition' : ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
@@ -471,15 +510,50 @@ class TypeScriptCompleter( Completer ):
     ] )
 
 
+  def _RestartServer( self, request_data ):
+    with self._server_lock:
+      self._StopServer()
+      self._StartServer()
+      # This is needed because after we restart the TSServer it would lose all
+      # the information about the files we were working on. This means that the
+      # newly started TSServer will know nothing about the buffer we're working
+      # on after restarting the server. So if we restart the server and right
+      # after that ask for completion in the buffer, the server will timeout.
+      # So we notify the server that we're working on the current buffer.
+      self.OnBufferVisit( request_data )
+
+
+  def _StopServer( self ):
+    with self._server_lock:
+      if not self._ServerIsRunning():
+        return
+
+      self._SendCommand( 'exit' )
+      self._tsserver_handle.wait()
+
+      if not self.user_options[ 'server_keep_logfiles' ]:
+        utils.RemoveIfExists( self._logfile )
+        self._logfile = None
+
+
   def Shutdown( self ):
-    self._SendCommand( 'exit' )
-    if not self.user_options[ 'server_keep_logfiles' ]:
-      os.unlink( self._logfile )
-      self._logfile = None
+    self._StopServer()
 
 
   def DebugInfo( self, request_data ):
-    return ( 'TSServer logfile:\n  {0}' ).format( self._logfile )
+    with self._server_lock:
+      if self._ServerIsRunning():
+        return ( 'Typescript completer debug informations:\n'
+                 '  TSServer process ID: {0}\n'
+                 '  TSServer logfile: {1}' ).format( self._tsserver_handle.pid,
+                                                     self._logfile )
+      if self._logfile:
+        return ( 'Typescript completer debug informations:\n'
+                 '  TSServer is not running\n'
+                 '  TSServer logfile: {0}' ).format( self._logfile )
+
+      return ( 'Typescript completer debug informations:\n'
+                '  TSServer is not running' )
 
 
 def _LogFileName():

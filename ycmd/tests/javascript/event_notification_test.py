@@ -116,12 +116,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
   # Restart the server and check that it raises it again
 
   app.post_json( '/run_completer_command',
-                 BuildRequest( command_arguments = [ 'StopServer' ],
-                               filetype = 'javascript',
-                               contents = contents,
-                               completer_target = 'filetype_default' ) )
-  app.post_json( '/run_completer_command',
-                 BuildRequest( command_arguments = [ 'StartServer' ],
+                 BuildRequest( command_arguments = [ 'RestartServer' ],
                                filetype = 'javascript',
                                contents = contents,
                                completer_target = 'filetype_default' ) )

@@ -26,6 +26,7 @@ from builtins import *  # noqa
 
 from ycmd.tests.test_utils import DummyCompleter, ExpectedFailure
 from ycmd.user_options_store import DefaultOptions
+from mock import patch
 from nose.tools import eq_
 from hamcrest import contains_string
 
@@ -66,3 +67,10 @@ def FilterAndSortCandidates_Unicode_test():
   _FilterAndSortCandidates_Match( [ { 'insertion_text': 'ø' } ],
                                   'ø',
                                   [ { 'insertion_text': 'ø' } ] )
+
+
+@patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+        return_value = { 'Foo': '', 'StopServer': '' } )
+def DefinedSubcommands_RemoveStopServerSubcommand_test( subcommands_map ):
+  completer = DummyCompleter( DefaultOptions() )
+  eq_( completer.DefinedSubcommands(), [ 'Foo' ] )

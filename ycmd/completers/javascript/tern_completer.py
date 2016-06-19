@@ -118,7 +118,7 @@ class TernCompleter( Completer ):
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
 
     # Used to ensure that starting/stopping of the server is synchronised
-    self._server_state_mutex = threading.Lock()
+    self._server_state_mutex = threading.RLock()
 
     self._do_tern_project_check = False
 
@@ -126,7 +126,7 @@ class TernCompleter( Completer ):
       self._server_stdout = None
       self._server_stderr = None
       self._Reset()
-      self._StartServerNoLock()
+      self._StartServer()
 
 
   def _WarnIfMissingTernProject( self ):
@@ -208,8 +208,8 @@ class TernCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'StartServer':    ( lambda self, request_data, args:
-                                         self._StartServer() ),
+      'RestartServer':  ( lambda self, request_data, args:
+                                         self._RestartServer() ),
       'StopServer':     ( lambda self, request_data, args:
                                          self._StopServer() ),
       'GoToDefinition': ( lambda self, request_data, args:
@@ -232,28 +232,29 @@ class TernCompleter( Completer ):
 
 
   def DebugInfo( self, request_data ):
-    if self._server_handle is None:
-      # server is not running because we haven't tried to start it.
-      return ' * Tern server is not running'
+    with self._server_state_mutex:
+      if self._server_handle is None:
+        # server is not running because we haven't tried to start it.
+        return ' * Tern server is not running'
 
-    if not self._ServerIsRunning():
-      # The handle is set, but the process isn't running. This means either it
-      # crashed or we failed to start it.
-      return ( ' * Tern server is not running (crashed)'
-               + '\n * Server stdout: '
-               + self._server_stdout
-               + '\n * Server stderr: '
-               + self._server_stderr )
+      if not self._ServerIsRunning():
+        # The handle is set, but the process isn't running. This means either it
+        # crashed or we failed to start it.
+        return ( ' * Tern server is not running (crashed)'
+                + '\n * Server stdout: '
+                + self._server_stdout
+                + '\n * Server stderr: '
+                + self._server_stderr )
 
-    # Server is up and running.
-    return ( ' * Tern server is running on port: '
-             + str( self._server_port )
-             + ' with PID: '
-             + str( self._server_handle.pid )
-             + '\n * Server stdout: '
-             + self._server_stdout
-             + '\n * Server stderr: '
-             + self._server_stderr )
+      # Server is up and running.
+      return ( ' * Tern server is running on port: '
+              + str( self._server_port )
+              + ' with PID: '
+              + str( self._server_handle.pid )
+              + '\n * Server stdout: '
+              + self._server_stdout
+              + '\n * Server stderr: '
+              + self._server_stderr )
 
 
   def Shutdown( self ):
@@ -261,7 +262,7 @@ class TernCompleter( Completer ):
     self._StopServer()
 
 
-  def ServerIsReady( self, request_data = {} ):
+  def ServerIsHealthy( self, request_data = {} ):
     if not self._ServerIsRunning():
       return False
 
@@ -274,18 +275,17 @@ class TernCompleter( Completer ):
 
 
   def _Reset( self ):
-    """Callers must hold self._server_state_mutex"""
+    with self._server_state_mutex:
+      if not self._server_keep_logfiles:
+        if self._server_stdout:
+          utils.RemoveIfExists( self._server_stdout )
+        if self._server_stderr:
+          utils.RemoveIfExists( self._server_stderr )
 
-    if not self._server_keep_logfiles:
-      if self._server_stdout:
-        utils.RemoveIfExists( self._server_stdout )
-      if self._server_stderr:
-        utils.RemoveIfExists( self._server_stderr )
-
-    self._server_handle = None
-    self._server_port   = 0
-    self._server_stdout = None
-    self._server_stderr = None
+      self._server_handle = None
+      self._server_port   = 0
+      self._server_stdout = None
+      self._server_stderr = None
 
 
   def _PostRequest( self, request, request_data ):
@@ -356,103 +356,94 @@ class TernCompleter( Completer ):
     return self._PostRequest( { 'query': full_query }, request_data )
 
 
+  # TODO: this function is way too long. Consider refactoring it.
   def _StartServer( self ):
-    if not self._ServerIsRunning():
-      with self._server_state_mutex:
-        self._StartServerNoLock()
+    with self._server_state_mutex:
+      if self._ServerIsRunning():
+        return
+
+      _logger.info( 'Starting Tern.js server...' )
+
+      self._server_port = utils.GetUnusedLocalhostPort()
+
+      if _logger.isEnabledFor( logging.DEBUG ):
+        extra_args = [ '--verbose' ]
+      else:
+        extra_args = []
+
+      command = [ PATH_TO_NODE,
+                  PATH_TO_TERNJS_BINARY,
+                  '--port',
+                  str( self._server_port ),
+                  '--host',
+                  SERVER_HOST,
+                  '--persistent',
+                  '--no-port-file' ] + extra_args
+
+      _logger.debug( 'Starting tern with the following command: '
+                    + ' '.join( command ) )
+
+      try:
+        logfile_format = os.path.join( utils.PathToCreatedTempDir(),
+                                      u'tern_{port}_{std}.log' )
+
+        self._server_stdout = logfile_format.format(
+            port = self._server_port,
+            std = 'stdout' )
+
+        self._server_stderr = logfile_format.format(
+            port = self._server_port,
+            std = 'stderr' )
+
+        # We need to open a pipe to stdin or the Tern server is killed.
+        # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
+        # For unknown reasons, this is only needed on Windows and for Python
+        # 3.4+ on other platforms.
+        with utils.OpenForStdHandle( self._server_stdout ) as stdout:
+          with utils.OpenForStdHandle( self._server_stderr ) as stderr:
+            self._server_handle = utils.SafePopen( command,
+                                                  stdin = PIPE,
+                                                  stdout = stdout,
+                                                  stderr = stderr )
+      except Exception:
+        _logger.warning( 'Unable to start Tern.js server: '
+                        + traceback.format_exc() )
+        self._Reset()
+
+      if self._server_port > 0 and self._ServerIsRunning():
+        _logger.info( 'Tern.js Server started with pid: ' +
+                      str( self._server_handle.pid ) +
+                      ' listening on port ' +
+                      str( self._server_port ) )
+        _logger.info( 'Tern.js Server log files are: ' +
+                      self._server_stdout +
+                      ' and ' +
+                      self._server_stderr )
+
+        self._do_tern_project_check = True
+      else:
+        _logger.warning( 'Tern.js server did not start successfully' )
 
 
-  def _StartServerNoLock( self ):
-    """Start the server, under the lock.
-
-    Callers must hold self._server_state_mutex"""
-
-    if self._ServerIsRunning():
-      return
-
-    _logger.info( 'Starting Tern.js server...' )
-
-    self._server_port = utils.GetUnusedLocalhostPort()
-
-    if _logger.isEnabledFor( logging.DEBUG ):
-      extra_args = [ '--verbose' ]
-    else:
-      extra_args = []
-
-    command = [ PATH_TO_NODE,
-                PATH_TO_TERNJS_BINARY,
-                '--port',
-                str( self._server_port ),
-                '--host',
-                SERVER_HOST,
-                '--persistent',
-                '--no-port-file' ] + extra_args
-
-    _logger.debug( 'Starting tern with the following command: '
-                   + ' '.join( command ) )
-
-    try:
-      logfile_format = os.path.join( utils.PathToCreatedTempDir(),
-                                     u'tern_{port}_{std}.log' )
-
-      self._server_stdout = logfile_format.format(
-          port = self._server_port,
-          std = 'stdout' )
-
-      self._server_stderr = logfile_format.format(
-          port = self._server_port,
-          std = 'stderr' )
-
-      # We need to open a pipe to stdin or the Tern server is killed.
-      # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
-      # For unknown reasons, this is only needed on Windows and for Python 3.4+
-      # on other platforms.
-      with utils.OpenForStdHandle( self._server_stdout ) as stdout:
-        with utils.OpenForStdHandle( self._server_stderr ) as stderr:
-          self._server_handle = utils.SafePopen( command,
-                                                 stdin = PIPE,
-                                                 stdout = stdout,
-                                                 stderr = stderr )
-    except Exception:
-      _logger.warning( 'Unable to start Tern.js server: '
-                       + traceback.format_exc() )
-      self._Reset()
-
-    if self._server_port > 0 and self._ServerIsRunning():
-      _logger.info( 'Tern.js Server started with pid: ' +
-                    str( self._server_handle.pid ) +
-                    ' listening on port ' +
-                    str( self._server_port ) )
-      _logger.info( 'Tern.js Server log files are: ' +
-                    self._server_stdout +
-                    ' and ' +
-                    self._server_stderr )
-
-      self._do_tern_project_check = True
-    else:
-      _logger.warning( 'Tern.js server did not start successfully' )
+  def _RestartServer( self ):
+    with self._server_state_mutex:
+      self._StopServer()
+      self._StartServer()
 
 
   def _StopServer( self ):
     with self._server_state_mutex:
-      self._StopServerNoLock()
+      if self._ServerIsRunning():
+        _logger.info( 'Stopping Tern.js server with PID '
+                      + str( self._server_handle.pid )
+                      + '...' )
 
+        self._server_handle.terminate()
+        self._server_handle.wait()
 
-  def _StopServerNoLock( self ):
-    """Stop the server, under the lock.
+        _logger.info( 'Tern.js server terminated.' )
 
-    Callers must hold self._server_state_mutex"""
-    if self._ServerIsRunning():
-      _logger.info( 'Stopping Tern.js server with PID '
-                    + str( self._server_handle.pid )
-                    + '...' )
-
-      self._server_handle.terminate()
-      self._server_handle.wait()
-
-      _logger.info( 'Tern.js server terminated.' )
-
-      self._Reset()
+        self._Reset()
 
 
   def _ServerIsRunning( self ):
