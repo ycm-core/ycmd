@@ -268,6 +268,11 @@ def ParseArguments():
                        action = 'store_true',
                        help   = 'For developers: build ycm_core library with '
                                 'debug symbols' )
+  parser.add_argument( '--build-dir',
+                       help   = 'For developers: perform the build in the '
+                                'specified directory, and do not delete the '
+                                'build output. This is useful for incremental '
+                                'builds' )
 
   args = parser.parse_args()
 
@@ -339,7 +344,17 @@ def ExitIfYcmdLibInUseOnWindows():
 
 
 def BuildYcmdLib( args ):
-  build_dir = mkdtemp( prefix = 'ycm_build_' )
+  if args.build_dir:
+    build_dir = args.build_dir
+
+    if os.path.exists( build_dir ):
+      print( 'The supplied build directory (' + build_dir + ' exists, '
+             'deleting it.' )
+      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+
+    os.makedirs( build_dir )
+  else:
+    build_dir = mkdtemp( prefix = 'ycm_build_' )
 
   try:
     full_cmake_args = [ '-G', GetGenerator( args ) ]
@@ -376,7 +391,11 @@ def BuildYcmdLib( args ):
       RunYcmdTests( build_dir )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
-    rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+
+    if args.build_dir:
+      print( 'The build files are in: ' + build_dir )
+    else:
+      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
 
 
 def BuildOmniSharp():
