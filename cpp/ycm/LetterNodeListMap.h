@@ -62,7 +62,6 @@ class LetterNodeListMap {
 public:
   LetterNodeListMap();
   LetterNodeListMap( const LetterNodeListMap &other );
-  YCM_DLL_EXPORT ~LetterNodeListMap();
 
   NearestLetterNodeIndices &operator[] ( char letter );
 

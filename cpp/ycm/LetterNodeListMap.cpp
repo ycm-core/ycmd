@@ -42,13 +42,12 @@ int IndexForLetter( char letter ) {
 LetterNodeListMap::LetterNodeListMap() {
 }
 
+
 LetterNodeListMap::LetterNodeListMap( const LetterNodeListMap &other ) {
   if ( other.letters_ )
     letters_.reset( new NearestLetterNodeArray( *other.letters_ ) );
 }
 
-LetterNodeListMap::~LetterNodeListMap() {
-}
 
 NearestLetterNodeIndices &LetterNodeListMap::operator[] ( char letter ) {
   if ( !letters_ ) {
