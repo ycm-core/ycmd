@@ -423,19 +423,12 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
-    for ( std::vector< Diagnostic >::const_iterator it
-          = latest_diagnostics_.begin();
-          it != latest_diagnostics_.end();
-          ++it ) {
-
-      // Find all fixits for the supplied line
-      if ( it->fixits_.size() > 0 &&
-           it->location_.line_number_ == static_cast<uint>( line ) ) {
-        FixIt fixit;
-        fixit.chunks = it->fixits_;
-        fixit.location = it->location_;
-
-        fixits.push_back( fixit );
+    foreach( const Diagnostic& diagnostic, latest_diagnostics_ ) {
+      // Find all diagnostics for the supplied line which have FixIts attached
+      if ( diagnostic.location_.line_number_ == static_cast< uint >( line ) ) {
+        fixits.insert( fixits.end(),
+                       diagnostic.fixits_.begin(),
+                       diagnostic.fixits_.end() );
       }
     }
   }

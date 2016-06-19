@@ -25,8 +25,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, calling, contains, equal_to,
-                       has_entries, raises )
+from hamcrest import ( assert_that, calling, contains, contains_string,
+                       equal_to, has_entries, raises )
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
@@ -35,7 +35,10 @@ import os.path
 
 from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
 from ycmd.tests.clang import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    ErrorMatcher,
+                                    ChunkMatcher,
+                                    LineColMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -693,6 +696,37 @@ def FixIt_Check_unicode_Ins( results ):
   } ) )
 
 
+def FixIt_Check_cpp11_Note( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains(
+      # First note: put parens around it
+      has_entries( {
+        'text': contains_string( 'parentheses around the assignment' ),
+        'chunks': contains(
+          ChunkMatcher( '(',
+                        LineColMatcher( 59, 8 ),
+                        LineColMatcher( 59, 8 ) ),
+          ChunkMatcher( ')',
+                        LineColMatcher( 61, 12 ),
+                        LineColMatcher( 61, 12 ) )
+        ),
+        'location': LineColMatcher( 60, 8 ),
+      } ),
+
+      # Second note: change to ==
+      has_entries( {
+        'text': contains_string( '==' ),
+        'chunks': contains(
+          ChunkMatcher( '==',
+                        LineColMatcher( 60, 8 ),
+                        LineColMatcher( 60, 9 ) )
+        ),
+        'location': LineColMatcher( 60, 8 ),
+      } )
+    )
+  } ) )
+
+
 def Subcommands_FixIt_all_test():
   cfile = 'FixIt_Clang_cpp11.cpp'
   mfile = 'FixIt_Clang_objc.m'
@@ -725,6 +759,9 @@ def Subcommands_FixIt_all_test():
 
     # unicode in line for fixit
     [ 21, 16, 'cpp11', ufile, FixIt_Check_unicode_Ins ],
+
+    # FixIt attached to a "child" diagnostic (i.e. a Note)
+    [ 60, 1,  'cpp11', cfile, FixIt_Check_cpp11_Note ],
   ]
 
   for test in tests:

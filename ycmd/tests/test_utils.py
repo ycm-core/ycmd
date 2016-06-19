@@ -141,6 +141,13 @@ def ChunkMatcher( replacement_text, start, end ):
   } )
 
 
+def LineColMatcher( line, col ):
+  return has_entries( {
+    'line_num': line,
+    'column_num': col
+  } )
+
+
 @contextlib.contextmanager
 def PatchCompleter( completer, filetype ):
   user_options = handlers._server_state._user_options
