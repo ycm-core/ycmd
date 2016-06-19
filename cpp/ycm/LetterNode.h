@@ -42,7 +42,9 @@ public:
     return is_uppercase_;
   }
 
-  inline const NearestLetterNodeIndices *NearestLetterNodesForLetter( char letter ) {
+  inline const NearestLetterNodeIndices *NearestLetterNodesForLetter(
+    char letter ) {
+
     return letters_.ListPointerAt( letter );
   }
 

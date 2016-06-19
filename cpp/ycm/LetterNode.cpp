@@ -40,7 +40,8 @@ LetterNode::LetterNode( const std::string &text )
 
   for ( size_t i = 0; i < text.size(); ++i ) {
     for ( size_t j = i + 1; j < text.size(); ++j ) {
-      letternode_per_text_index_[ i ].SetNodeIndexForLetterIfNearest( text[ j ], j );
+      letternode_per_text_index_[ i ].SetNodeIndexForLetterIfNearest( text[ j ],
+                                                                      j );
     }
   }
 }

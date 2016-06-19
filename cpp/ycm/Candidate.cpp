@@ -87,7 +87,8 @@ Result Candidate::QueryMatchResult( const std::string &query,
   int index_sum = 0;
 
   foreach ( char letter, query ) {
-    const NearestLetterNodeIndices *nearest = node->NearestLetterNodesForLetter( letter );
+    const NearestLetterNodeIndices *nearest =
+      node->NearestLetterNodesForLetter( letter );
 
     if ( !nearest )
       return Result( false );
