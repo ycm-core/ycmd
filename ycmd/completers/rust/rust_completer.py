@@ -335,12 +335,12 @@ class RustCompleter( Completer ):
 
       if not self._keep_logfiles:
         # Remove stdout log
-        if self._server_stdout and p.exists( self._server_stdout ):
+        if self._server_stdout:
           utils.RemoveIfExists( self._server_stdout )
           self._server_stdout = None
 
         # Remove stderr log
-        if self._server_stderr and p.exists( self._server_stderr ):
+        if self._server_stderr:
           utils.RemoveIfExists( self._server_stderr )
           self._server_stderr = None
 
