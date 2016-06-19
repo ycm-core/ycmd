@@ -36,17 +36,21 @@ bool IsInAsciiRange( int index );
 YCM_DLL_EXPORT int IndexForLetter( char letter );
 
 /*
- * This struct is used as part of the LetterNodeListMap structure. Every LetterNode represents 1 position
- * in a string, and contains one LetterNodeListMap. The LetterNodeListMap records the first occurrence of
- * all ascii characters after the current LetterNode in the original string. For each character, the
- * LetterNodeListMap contains one instance of NearestLetterNodeIndices.
+ * This struct is used as part of the LetterNodeListMap structure.
+ * Every LetterNode represents 1 position in a string, and contains
+ * one LetterNodeListMap. The LetterNodeListMap records the first
+ * occurrence of all ascii characters after the current LetterNode
+ * in the original string. For each character, the
+ * LetterNodeListMap contains one instance of NearestLetterNodeIndices
  *
- * The struct records the position in the original string of the character after the current LetterNode,
- * both the first occurrence overall and the first uppercase occurrence. If the letter (or uppercase version)
+ * The struct records the position in the original string of the character
+ * after the current LetterNode, both the first occurrence overall and the
+ * first uppercase occurrence. If the letter (or uppercase version)
  * doesn't occur, it records -1, indicating it isn't present.
  *
- * The indices can be used to retrieve the corresponding LetterNode from the root LetterNode, as it contains a
- * vector of LetterNodes, one per position in the original string.
+ * The indices can be used to retrieve the corresponding LetterNode from
+ * the root LetterNode, as it contains a vector of LetterNodes, one per 
+ * position in the original string.
  */
 struct NearestLetterNodeIndices {
   NearestLetterNodeIndices()
@@ -68,7 +72,8 @@ public:
   YCM_DLL_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
 
 private:
-  typedef boost::array<NearestLetterNodeIndices , NUM_LETTERS> NearestLetterNodeArray;
+  typedef boost::array<NearestLetterNodeIndices , NUM_LETTERS> 
+    NearestLetterNodeArray;
 
   boost::movelib::unique_ptr< NearestLetterNodeArray > letters_;
 };
