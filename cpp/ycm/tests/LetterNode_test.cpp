@@ -34,33 +34,33 @@ TEST( LetterNodeTest, AsciiText ) {
                       Property( &LetterNode::LetterIsUppercase, false ) ) );
 
   const NearestLetterNodeIndices *nearest_nodes = root_node.NearestLetterNodesForLetter( 'i' );
-  EXPECT_THAT( root_node[nearest_nodes->eitherIndex],
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
                AllOf( Property( &LetterNode::Index, 3 ),
                       Property( &LetterNode::LetterIsUppercase, true ) ) );
-  EXPECT_THAT(  root_node[nearest_nodes->upperIndex],
+  EXPECT_THAT(  root_node[ nearest_nodes->indexOfFirstUppercaseOccurrence ],
                 AllOf( Property( &LetterNode::Index, 3 ),
                        Property( &LetterNode::LetterIsUppercase, true ) ) );
 
-  LetterNode *node = root_node[nearest_nodes->eitherIndex];
+  LetterNode *node = root_node[ nearest_nodes->indexOfFirstOccurrence ];
 
   nearest_nodes = node->NearestLetterNodesForLetter( 'i' );
-  EXPECT_THAT( root_node[nearest_nodes->eitherIndex],
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
                AllOf( Property( &LetterNode::Index, 4 ),
                       Property( &LetterNode::LetterIsUppercase, false ) ) );
-  EXPECT_EQ( nearest_nodes->upperIndex, -1 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, -1 );
 
 
   nearest_nodes = node->NearestLetterNodesForLetter( 't' );
-  EXPECT_THAT( root_node[nearest_nodes->eitherIndex],
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
                AllOf( Property( &LetterNode::Index, 6 ),
                       Property( &LetterNode::LetterIsUppercase, false ) ) );
-  EXPECT_THAT( root_node[nearest_nodes->upperIndex],
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstUppercaseOccurrence ],
                AllOf( Property( &LetterNode::Index, 9 ),
                       Property( &LetterNode::LetterIsUppercase, true ) ) );
 
   nearest_nodes = node->NearestLetterNodesForLetter( 'c' );
-  EXPECT_EQ( nearest_nodes->eitherIndex, -1 );
-  EXPECT_EQ( nearest_nodes->upperIndex, -1 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, -1 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, -1 );
 }
 
 

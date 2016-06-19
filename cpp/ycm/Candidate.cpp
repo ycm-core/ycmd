@@ -100,7 +100,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
     node = NULL;
     if ( case_sensitive && IsUppercase( letter ) ) {
       if ( nearest->indexOfFirstUppercaseOccurrence >= 0 )
-        node =  ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
+        node = ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
     } else {
       if ( nearest->indexOfFirstOccurrence >= 0 )
         node = ( *root_node_ )[ nearest->indexOfFirstOccurrence ];
