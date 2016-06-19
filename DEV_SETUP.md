@@ -10,7 +10,7 @@ need at least 8GB of RAM to use this environment.
 1. Install [Vagrant][].
 2. `cd` into the folder where you checked out ycmd.
 3. `$ vagrant up && vagrant ssh`. This will take a while because the VM is being
-	 built and set up. Only needs to happen once though.
+   built and set up. Only needs to happen once though.
 4. You are now in the VM. Run the tests with `$ ./run_tests.py`.
 5. Hack away. When done, exit the ssh connection with `exit`.
 6. `$ vagrant suspend` so that you can quickly get back to hacking later.
@@ -46,7 +46,7 @@ import ipdb; ipdb.set_trace()
 3. Run the tests without `flake8`, e.g.
 
 ```sh
-./run_tests --skip-build --no-flake8 ycmd/tests/get_completions_test.py
+./run_tests.py --skip-build --no-flake8 ycmd/tests/get_completions_test.py
 ```
 
 4. The test breaks at your code breakpoint and offers a command interface to
@@ -70,7 +70,7 @@ import clewn.vim as clewn; clewn.pdb()
 3. Run the tests without `flake8`, e.g.
 
 ```sh
-./run_tests --skip-build --no-flake8 ycmd/tests/get_completions_test.py
+./run_tests.py --skip-build --no-flake8 ycmd/tests/get_completions_test.py
 ```
 
 4. The tests will pause at the breakpoint. Now within Vim attach the debugger
@@ -89,23 +89,22 @@ debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
 ```sh
     vagrant up
     vagrant ssh
-    export OPT=“-g” # Ensure Python binary has debugging info
-    export PYTHON_CONFIGURE_OPTS=‘—enable-shared —-with-pydebug’
+    export OPT='-g' # Ensure Python binary has debugging info
+    export PYTHON_CONFIGURE_OPTS='--enable-shared --with-pydebug'
     pyenv install 2.7.11 # or whatever version
 ```
 
    On OS X, you need a working debugger. You can either use `lldb`
    which comes with XCode or `brew install gdb`. Note: If you use `gdb` from
-   homebrew, the you need to sign the binary otherwise you can't debug anything.
-   See later steps for a link.
+   homebrew, then you need to sign the binary otherwise you can't debug
+   anything. See later steps for a link.
 
 2. Build ycm_core library with debugging information (and link against debug
    Python):
 
 ```sh
-    export EXTRA_CMAKE_ARGS=‘-DPYTHON_LIBRARY=$HOME/.pyenv/versions/2.7.11/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=$HOME/.pyenv/versions/2.7.11/include/python2.7’
     pyenv shell 2.7.11
-    ./build.py —all --enable-debug
+    ./build.py --all --enable-debug
 ```
 
 3. Enable debugging in the OS. On Linux (Ubuntu at least, which is what all of
