@@ -60,8 +60,8 @@ BINARY_NOT_FOUND_MESSAGE = ( 'racerd binary not found. Did you build it? ' +
                              '"./build.py --racer-completer".' )
 ERROR_FROM_RACERD_MESSAGE = (
   'Received error from racerd while retrieving completions. You did not '
-  'set the rust_src_path option, which is probably causing this issue. '
-  'See YCM docs for details.'
+  'set the rust_src_path option (or you did, but the path doesn\'t exist), '
+  'which is probably causing this issue. See YCM docs for details.'
 )
 
 
@@ -237,7 +237,8 @@ class RustCompleter( Completer ):
     try:
       completions = self._FetchCompletions( request_data )
     except requests.HTTPError:
-      if not self._rust_source_path:
+      if not self._rust_source_path or not os.path.exists(
+          self._rust_source_path ):
         raise RuntimeError( ERROR_FROM_RACERD_MESSAGE )
       raise
 
