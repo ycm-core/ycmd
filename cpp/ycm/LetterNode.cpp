@@ -31,28 +31,29 @@ LetterNode::LetterNode( const std::string &text )
   : index_( -1 ),
     is_uppercase_( false ) {
 
-  letternode_per_text_index_.reserve(text.size());
+  letternode_per_text_index_.reserve( text.size() );
 
   for ( uint i = 0; i < text.size(); ++i ) {
     letternode_per_text_index_.push_back( LetterNode( text[ i ], i ) );
-    AddNodeForLetter( text[ i ], i );
+    SetNodeIndexForLetterIfNearest( text[ i ], i );
   }
 
   for ( size_t i = 0; i < text.size(); ++i ) {
     for ( size_t j = i + 1; j < text.size(); ++j ) {
-      letternode_per_text_index_[ i ].AddNodeForLetter( text[ j ], j );
+      letternode_per_text_index_[ i ].SetNodeIndexForLetterIfNearest( text[ j ], j );
     }
   }
 }
 
-void LetterNode::AddNodeForLetter( char letter, short index ) {
+void LetterNode::SetNodeIndexForLetterIfNearest( char letter, short index ) {
+  NearestLetterNodeIndices& currentLetterNodeIndices = letters_[ letter ];
   if ( IsUppercase( letter ) ) {
-    if ( letters_[ letter ].upperIndex == -1 )
-      letters_[ letter ].upperIndex = index;
+    if ( currentLetterNodeIndices.upperIndex == -1 )
+      currentLetterNodeIndices.upperIndex = index;
   }
 
-  if ( letters_[ letter ].eitherIndex == -1 )
-    letters_[ letter ].eitherIndex = index;
+  if ( currentLetterNodeIndices.eitherIndex == -1 )
+    currentLetterNodeIndices.eitherIndex = index;
 }
 
 } // namespace YouCompleteMe

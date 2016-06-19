@@ -33,6 +33,7 @@ bool IsPrintable( const std::string &text ) {
   return all( text, is_print( std::locale::classic() ) );
 }
 
+
 std::string GetWordBoundaryChars( const std::string &text ) {
   std::string result;
 
@@ -54,6 +55,7 @@ std::string GetWordBoundaryChars( const std::string &text ) {
 
   return result;
 }
+
 
 Bitset LetterBitsetFromString( const std::string &text ) {
   Bitset letter_bitset;
@@ -77,6 +79,7 @@ Candidate::Candidate( const std::string &text )
   letters_present_( LetterBitsetFromString( text ) ),
   root_node_( new LetterNode( text ) ) {
 }
+
 
 Result Candidate::QueryMatchResult( const std::string &query,
                                     bool case_sensitive ) const {

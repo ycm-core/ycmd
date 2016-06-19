@@ -46,7 +46,7 @@ public:
     return letters_.ListPointerAt( letter );
   }
 
-  void AddNodeForLetter( char letter, short index );
+  void SetNodeIndexForLetterIfNearest( char letter, short index );
 
   inline int Index() const {
     return index_;
