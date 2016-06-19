@@ -35,13 +35,27 @@ YCM_DLL_EXPORT bool IsUppercase( char letter );
 bool IsInAsciiRange( int index );
 YCM_DLL_EXPORT int IndexForLetter( char letter );
 
+/*
+ * This struct is used as part of the LetterNodeListMap structure. Every LetterNode represents 1 position
+ * in a string, and contains one LetterNodeListMap. The LetterNodeListMap records the first occurrence of
+ * all ascii characters after the current LetterNode in the original string. For each character, the
+ * LetterNodeListMap contains one instance of NearestLetterNodeIndices.
+ *
+ * The struct records the position in the original string of the character after the current LetterNode,
+ * both the first occurrence overall and the first uppercase occurrence. If the letter (or uppercase version)
+ * doesn't occur, it records -1, indicating it isn't present.
+ *
+ * The indices can be used to retrieve the corresponding LetterNode from the root LetterNode, as it contains a
+ * vector of LetterNodes, one per position in the original string.
+ */
 struct NearestLetterNodeIndices {
   NearestLetterNodeIndices()
-    : eitherIndex( -1 ), upperIndex( -1 )
+    : indexOfFirstOccurrence( -1 ),
+      indexOfFirstUppercaseOccurrence( -1 )
   {}
 
-  short eitherIndex;
-  short upperIndex;
+  short indexOfFirstOccurrence;
+  short indexOfFirstUppercaseOccurrence;
 };
 
 class LetterNodeListMap {

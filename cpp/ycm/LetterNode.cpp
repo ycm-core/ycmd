@@ -48,12 +48,12 @@ LetterNode::LetterNode( const std::string &text )
 void LetterNode::SetNodeIndexForLetterIfNearest( char letter, short index ) {
   NearestLetterNodeIndices& currentLetterNodeIndices = letters_[ letter ];
   if ( IsUppercase( letter ) ) {
-    if ( currentLetterNodeIndices.upperIndex == -1 )
-      currentLetterNodeIndices.upperIndex = index;
+    if ( currentLetterNodeIndices.indexOfFirstUppercaseOccurrence == -1 )
+      currentLetterNodeIndices.indexOfFirstUppercaseOccurrence = index;
   }
 
-  if ( currentLetterNodeIndices.eitherIndex == -1 )
-    currentLetterNodeIndices.eitherIndex = index;
+  if ( currentLetterNodeIndices.indexOfFirstOccurrence == -1 )
+    currentLetterNodeIndices.indexOfFirstOccurrence = index;
 }
 
 } // namespace YouCompleteMe

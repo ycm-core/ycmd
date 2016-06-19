@@ -98,11 +98,11 @@ Result Candidate::QueryMatchResult( const std::string &query,
     // better than forcing lowercase letter matches.
     node = NULL;
     if ( case_sensitive && IsUppercase( letter ) ) {
-      if ( nearest->upperIndex >= 0 )
-        node =  ( *root_node_ )[ nearest->upperIndex ];
+      if ( nearest->indexOfFirstUppercaseOccurrence >= 0 )
+        node =  ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
     } else {
-      if ( nearest->eitherIndex >= 0 )
-        node = ( *root_node_ )[ nearest->eitherIndex ];
+      if ( nearest->indexOfFirstOccurrence >= 0 )
+        node = ( *root_node_ )[ nearest->indexOfFirstOccurrence ];
     }
 
     if ( !node )
