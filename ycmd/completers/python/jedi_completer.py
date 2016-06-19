@@ -387,8 +387,8 @@ class JediCompleter( Completer ):
 
        if self._logfile_stdout and self._logfile_stderr:
          return ( 'JediHTTP is no longer running\n'
-                  '  stdout log: {1}\n'
-                  '  stderr log: {2}' ).format( self._logfile_stdout,
+                  '  stdout log: {0}\n'
+                  '  stderr log: {1}' ).format( self._logfile_stdout,
                                                 self._logfile_stderr )
 
        return 'JediHTTP is not running'
