@@ -28,7 +28,8 @@ from nose.tools import eq_
 from mock import patch
 
 from ycmd.completers.rust.rust_completer import ERROR_FROM_RACERD_MESSAGE
-from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.rust import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
+                              WaitUntilRacerdServerReady )
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     ErrorMatcher )
 from ycmd.utils import ReadFile
@@ -60,6 +61,8 @@ def GetCompletions_Basic_test( app ):
 @IsolatedYcmd
 def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   app ):
+  WaitUntilRacerdServerReady( app )
+
   filepath = PathToTestFile( 'std_completions.rs' )
   contents = ReadFile( filepath )
 
@@ -82,6 +85,8 @@ def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
 @IsolatedYcmd
 @patch.dict( 'os.environ', { 'RUST_SRC_PATH': '/foobar' } )
 def GetCompletions_RustSrcPathSetButDoesntExist_test( app ):
+  WaitUntilRacerdServerReady( app )
+
   filepath = PathToTestFile( 'std_completions.rs' )
   contents = ReadFile( filepath )
 

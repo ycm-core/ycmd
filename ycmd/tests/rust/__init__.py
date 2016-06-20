@@ -105,12 +105,11 @@ def IsolatedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
+    app = SetUpApp()
 
     try:
-      app = SetUpApp()
-      WaitUntilRacerdServerReady( app )
       test( app, *args, **kwargs )
-      StopRacerdServer( app )
     finally:
+      StopRacerdServer( app )
       handlers._server_state = old_server_state
   return Wrapper
