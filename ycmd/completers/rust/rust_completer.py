@@ -55,14 +55,16 @@ RACERD_BINARY_DEBUG = p.join( DIR_OF_THIRD_PARTY, 'racerd', 'target',
 RACERD_HMAC_HEADER = 'x-racerd-hmac'
 HMAC_SECRET_LENGTH = 16
 
-BINARY_NOT_FOUND_MESSAGE = ( 'racerd binary not found. Did you build it? ' +
-                             'You can do so by running ' +
-                             '"./build.py --racer-completer".' )
+BINARY_NOT_FOUND_MESSAGE = (
+  'racerd binary not found. Did you build it? '
+  'You can do so by running "./build.py --racer-completer".' )
+NON_EXISTING_RUST_SOURCES_PATH_MESSAGE = (
+  'Rust sources path does not exist. Check the value of the rust_src_path '
+  'option or the RUST_SRC_PATH environment variable.' )
 ERROR_FROM_RACERD_MESSAGE = (
   'Received error from racerd while retrieving completions. You did not '
-  'set the rust_src_path option (or you did, but the path doesn\'t exist), '
-  'which is probably causing this issue. See YCM docs for details.'
-)
+  'set the rust_src_path option, which is probably causing this issue. '
+  'See YCM docs for details.' )
 
 
 def FindRacerdBinary( user_options ):
@@ -110,6 +112,9 @@ class RustCompleter( Completer ):
     if not self._rust_source_path:
       _logger.warning( 'No path provided for the rustc source. Please set the '
                        'rust_src_path option' )
+    elif not p.isdir( self._rust_source_path ):
+      _logger.error( NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
+      raise RuntimeError( NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
 
     if not self._racerd:
       _logger.error( BINARY_NOT_FOUND_MESSAGE )
@@ -237,8 +242,7 @@ class RustCompleter( Completer ):
     try:
       completions = self._FetchCompletions( request_data )
     except requests.HTTPError:
-      if not self._rust_source_path or not os.path.exists(
-          self._rust_source_path ):
+      if not self._rust_source_path:
         raise RuntimeError( ERROR_FROM_RACERD_MESSAGE )
       raise
 
