@@ -18,6 +18,7 @@
 #include "LetterNode.h"
 #include "standard.h"
 
+#include <vector>
 
 namespace YouCompleteMe {
 
@@ -30,22 +31,22 @@ LetterNode::LetterNode( char letter, int index )
 LetterNode::LetterNode( const std::string &text )
   : is_uppercase_( false ),
     index_( -1 ) {
-  letternode_per_text_index_.resize( text.size() );
+  std::vector< LetterNode * > letternode_per_text_index( text.size() );
 
   for ( uint i = 0; i < text.size(); ++i ) {
     char letter = text[ i ];
     LetterNode *node = new LetterNode( letter, i );
     letters_[ letter ].push_back( node );
-    letternode_per_text_index_[ i ] = boost::shared_ptr< LetterNode >( node );
+    letternode_per_text_index[ i ] = node;
   }
 
-  for ( int i = static_cast< int >( letternode_per_text_index_.size() ) - 1;
+  for ( int i = static_cast< int >( letternode_per_text_index.size() ) - 1;
         i >= 0; --i ) {
-    LetterNode *node_to_add = letternode_per_text_index_[ i ].get();
+    LetterNode *node_to_add = letternode_per_text_index[ i ];
 
     for ( int j = i - 1; j >= 0; --j ) {
-      letternode_per_text_index_[ j ]->PrependNodeForLetter( text[ i ],
-                                                             node_to_add );
+      letternode_per_text_index[ j ]->PrependNodeForLetter( text[ i ],
+                                                            node_to_add );
     }
   }
 }
