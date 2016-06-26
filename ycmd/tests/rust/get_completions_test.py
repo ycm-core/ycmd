@@ -32,7 +32,7 @@ from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     ErrorMatcher )
 from ycmd.utils import ReadFile
-import http.client
+import requests
 
 
 @SharedYcmd
@@ -113,5 +113,5 @@ def GetCompletions_NoCompletionsFound_test( app ):
 
   response = app.post_json( '/completions', completion_data )
 
-  eq_( response.status_code, http.client.OK )
+  eq_( response.status_code, requests.codes.ok )
   assert_that( response.json, has_entry( 'completions', empty() ) )
