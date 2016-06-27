@@ -179,6 +179,13 @@ def BuildYcmdLibs( args ):
     if args.msvc:
       build_cmd.extend( [ '--msvc', str( args.msvc ) ] )
 
+    if args.coverage:
+      # In order to generate coverage data for C++, we use gcov. This requires
+      # some files generated when building (*.gcno), so we store the build
+      # output in a known directory, which is then used by the CI infrastructure
+      # to generate the c++ coverage information.
+      build_cmd.extend( [ '--enable-coverage', '--build-dir', '.build' ] )
+
     subprocess.check_call( build_cmd )
 
 

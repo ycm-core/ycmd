@@ -264,6 +264,10 @@ def ParseArguments():
                        action = 'store_true',
                        help   = 'Enable all supported completers',
                        dest   = 'all_completers' )
+  parser.add_argument( '--enable-coverage',
+                       action = 'store_true',
+                       help   = 'For developers: Enable gcov coverage for the '
+                                'c++ module' )
   parser.add_argument( '--enable-debug',
                        action = 'store_true',
                        help   = 'For developers: build ycm_core library with '
@@ -272,9 +276,13 @@ def ParseArguments():
                        help   = 'For developers: perform the build in the '
                                 'specified directory, and do not delete the '
                                 'build output. This is useful for incremental '
-                                'builds' )
+                                'builds, and required for coverage data' )
 
   args = parser.parse_args()
+
+  if args.enable_coverage:
+    # We always want a debug build when running with coverage enabled
+    args.enable_debug = True
 
   if ( args.system_libclang and
        not args.clang_completer and
@@ -297,6 +305,10 @@ def GetCmakeArgs( parsed_args ):
 
   if parsed_args.enable_debug:
     cmake_args.append( '-DCMAKE_BUILD_TYPE=Debug' )
+
+  # coverage is not supported for c++ on MSVC
+  if not OnWindows() and parsed_args.enable_coverage:
+    cmake_args.append( '-DCMAKE_CXX_FLAGS=-coverage' )
 
   use_python2 = 'ON' if PY_MAJOR == 2 else 'OFF'
   cmake_args.append( '-DUSE_PYTHON2=' + use_python2 )
@@ -345,10 +357,10 @@ def ExitIfYcmdLibInUseOnWindows():
 
 def BuildYcmdLib( args ):
   if args.build_dir:
-    build_dir = args.build_dir
+    build_dir = os.path.abspath( args.build_dir )
 
     if os.path.exists( build_dir ):
-      print( 'The supplied build directory (' + build_dir + ' exists, '
+      print( 'The supplied build directory ' + build_dir + ' exists, '
              'deleting it.' )
       rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
 
