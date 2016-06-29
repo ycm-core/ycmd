@@ -59,6 +59,18 @@ PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
 SERVER_HOST = '127.0.0.1'
 
 
+def FindTernBinary():
+  """Find the path to the tern binary.
+
+  If a version is installed with YCM, use that.
+  Otherwise try to find one installed in the system.
+  If that fails, return None."""
+
+  if os.path.exists( PATH_TO_TERNJS_BINARY ):
+    return PATH_TO_TERNJS_BINARY
+
+  return utils.PathToFirstExistingExecutable( [ 'tern' ] )
+
 def ShouldEnableTernCompleter():
   """Returns whether or not the tern completer is 'installed'. That is whether
   or not the tern submodule has a 'node_modules' directory. This is pretty much
@@ -71,9 +83,7 @@ def ShouldEnableTernCompleter():
 
   _logger.info( 'Using node binary from: ' + PATH_TO_NODE )
 
-  installed = os.path.exists( PATH_TO_TERNJS_BINARY )
-
-  if not installed:
+  if not FindTernBinary():
     _logger.info( 'Not using Tern completer: not installed at ' +
                   PATH_TO_TERNJS_BINARY )
     return False
@@ -372,7 +382,7 @@ class TernCompleter( Completer ):
         extra_args = []
 
       command = [ PATH_TO_NODE,
-                  PATH_TO_TERNJS_BINARY,
+                  FindTernBinary(),
                   '--port',
                   str( self._server_port ),
                   '--host',
