@@ -70,7 +70,8 @@ def FindBinary( binary, user_options ):
 
   If 'gocode_binary_path' or 'godef_binary_path'
   in the options is blank, use the version installed
-  with YCM, if it exists.
+  with YCM, if it exists. Otherwise try to find one
+  installed on the system.
 
   If the 'gocode_binary_path' or 'godef_binary_path' is
   specified, use it as an absolute path.
@@ -87,7 +88,7 @@ def FindBinary( binary, user_options ):
   binary_path = _FindPath()
   if os.path.isfile( binary_path ):
     return binary_path
-  return None
+  return utils.PathToFirstExistingExecutable( [ binary ] )
 
 
 def ShouldEnableGoCompleter( user_options ):

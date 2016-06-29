@@ -51,6 +51,18 @@ PATH_TO_OMNISHARP_BINARY = os.path.join(
   'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
 
 
+def FindOmniSharpBinary():
+  """Find the path to the OmniSharp binary.
+
+  If a version is installed with YCM, use that.
+  Otherwise try to find one installed in the system.
+  If that fails, return None."""
+
+  if os.path.exists( PATH_TO_OMNISHARP_BINARY ):
+    return PATH_TO_OMNISHARP_BINARY
+
+  return utils.PathToFirstExistingExecutable( [ 'OmniSharp', 'OmniSharp.exe' ] )
+
 class CsharpCompleter( Completer ):
   """
   A Completer that uses the Omnisharp server as completion engine.
@@ -66,7 +78,7 @@ class CsharpCompleter( Completer ):
       'max_diagnostics_to_display' ]
     self._solution_state_lock = threading.Lock()
 
-    if not os.path.isfile( PATH_TO_OMNISHARP_BINARY ):
+    if not FindOmniSharpBinary():
       raise RuntimeError(
            SERVER_NOT_FOUND_MSG.format( PATH_TO_OMNISHARP_BINARY ) )
 
@@ -348,7 +360,7 @@ class CsharpSolutionCompleter( object ):
 
       self._ChooseOmnisharpPort()
 
-      command = [ PATH_TO_OMNISHARP_BINARY,
+      command = [ FindOmniSharpBinary(),
                   '-p',
                   str( self._omnisharp_port ),
                   '-s',
