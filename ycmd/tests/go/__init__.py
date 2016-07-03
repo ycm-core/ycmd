@@ -25,10 +25,11 @@ from builtins import *  # noqa
 
 import functools
 import os
-import time
 
 from ycmd import handlers
-from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
+from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
+                                    StopCompleterServer,
+                                    WaitUntilCompleterServerReady )
 
 shared_app = None
 
@@ -36,27 +37,6 @@ shared_app = None
 def PathToTestFile( *args ):
   dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
   return os.path.join( dir_of_current_script, 'testdata', *args )
-
-
-def StopGoCodeServer( app ):
-  app.post_json( '/run_completer_command',
-                 BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ 'StopServer' ],
-                               filetype = 'go' ) )
-
-
-def WaitUntilGoCodeServerReady( app ):
-  retries = 100
-
-  while retries > 0:
-    result = app.get( '/ready', { 'subserver': 'go' } ).json
-    if result:
-      return
-
-    time.sleep( 0.2 )
-    retries = retries - 1
-
-  raise RuntimeError( 'Timeout waiting for GoCode' )
 
 
 def setUpPackage():
@@ -67,13 +47,13 @@ def setUpPackage():
   global shared_app
 
   shared_app = SetUpApp()
-  WaitUntilGoCodeServerReady( shared_app )
+  WaitUntilCompleterServerReady( shared_app, 'go' )
 
 
 def tearDownPackage():
   global shared_app
 
-  StopGoCodeServer( shared_app )
+  StopCompleterServer( shared_app, 'go' )
 
 
 def SharedYcmd( test ):
@@ -101,9 +81,10 @@ def IsolatedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
-
+    app = SetUpApp()
     try:
-      test( SetUpApp(), *args, **kwargs )
+      test( app, *args, **kwargs )
     finally:
+      StopCompleterServer( app, 'go' )
       handlers._server_state = old_server_state
   return Wrapper

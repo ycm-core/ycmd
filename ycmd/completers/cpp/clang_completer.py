@@ -36,6 +36,7 @@ from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetIncludeStatementValue
 from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
+from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
 import xml.etree.ElementTree
 
@@ -366,13 +367,24 @@ class ClangCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     filename = request_data[ 'filepath' ]
-    if not filename:
-      return ''
-    flags = self._FlagsForRequest( request_data ) or []
-    source = extra_conf_store.ModuleFileForSourceFile( filename )
-    return 'Flags for {0} loaded from {1}:\n{2}'.format( filename,
-                                                         source,
-                                                         list( flags ) )
+    try:
+      extra_conf = extra_conf_store.ModuleFileForSourceFile( filename )
+      flags = self._FlagsForRequest( request_data ) or []
+    except NoExtraConfDetected:
+      return ( 'C-family completer debug information:\n'
+               '  No configuration file found' )
+    except UnknownExtraConf as error:
+      return ( 'C-family completer debug information:\n'
+               '  Configuration file found but not loaded\n'
+               '  Configuration path: {0}'.format(
+                 error.extra_conf_file ) )
+    if not extra_conf:
+      return ( 'C-family completer debug information:\n'
+               '  No configuration file found' )
+    return ( 'C-family completer debug information:\n'
+             '  Configuration file found and loaded\n'
+             '  Configuration path: {0}\n'
+             '  Flags: {1}'.format( extra_conf, list( flags ) ) )
 
 
   def _FlagsForRequest( self, request_data ):

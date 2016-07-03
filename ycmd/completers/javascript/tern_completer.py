@@ -37,7 +37,7 @@ from ycmd.completers.completer_utils import GetFileContents
 
 _logger = logging.getLogger( __name__ )
 
-PATH_TO_TERNJS_BINARY = os.path.abspath(
+PATH_TO_TERN_BINARY = os.path.abspath(
   os.path.join(
     os.path.dirname( __file__ ),
     '..',
@@ -71,11 +71,11 @@ def ShouldEnableTernCompleter():
 
   _logger.info( 'Using node binary from: ' + PATH_TO_NODE )
 
-  installed = os.path.exists( PATH_TO_TERNJS_BINARY )
+  installed = os.path.exists( PATH_TO_TERN_BINARY )
 
   if not installed:
     _logger.info( 'Not using Tern completer: not installed at ' +
-                  PATH_TO_TERNJS_BINARY )
+                  PATH_TO_TERN_BINARY )
     return False
 
   return True
@@ -233,28 +233,32 @@ class TernCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     with self._server_state_mutex:
-      if self._server_handle is None:
-        # server is not running because we haven't tried to start it.
-        return ' * Tern server is not running'
+      if self._ServerIsRunning():
+        return ( 'JavaScript completer debug information:\n'
+                 '  Tern running at: {0}\n'
+                 '  Tern process ID: {1}\n'
+                 '  Tern executable: {2}\n'
+                 '  Tern logfiles:\n'
+                 '    {3}\n'
+                 '    {4}'.format( self._GetServerAddress(),
+                                   self._server_handle.pid,
+                                   PATH_TO_TERN_BINARY,
+                                   self._server_stdout,
+                                   self._server_stderr ) )
 
-      if not self._ServerIsRunning():
-        # The handle is set, but the process isn't running. This means either it
-        # crashed or we failed to start it.
-        return ( ' * Tern server is not running (crashed)'
-                + '\n * Server stdout: '
-                + self._server_stdout
-                + '\n * Server stderr: '
-                + self._server_stderr )
+      if self._server_stdout and self._server_stderr:
+        return ( 'JavaScript completer debug information:\n'
+                 '  Tern no longer running\n'
+                 '  Tern executable: {0}\n'
+                 '  Tern logfiles:\n'
+                 '    {1}\n'
+                 '    {2}\n'.format( PATH_TO_TERN_BINARY,
+                                     self._server_stdout,
+                                     self._server_stderr ) )
 
-      # Server is up and running.
-      return ( ' * Tern server is running on port: '
-              + str( self._server_port )
-              + ' with PID: '
-              + str( self._server_handle.pid )
-              + '\n * Server stdout: '
-              + self._server_stdout
-              + '\n * Server stderr: '
-              + self._server_stderr )
+      return ( 'JavaScript completer debug information:\n'
+               '  Tern is not running\n'
+               '  Tern executable: {0}'.format( PATH_TO_TERN_BINARY ) )
 
 
   def Shutdown( self ):
@@ -279,13 +283,13 @@ class TernCompleter( Completer ):
       if not self._server_keep_logfiles:
         if self._server_stdout:
           utils.RemoveIfExists( self._server_stdout )
+          self._server_stdout = None
         if self._server_stderr:
           utils.RemoveIfExists( self._server_stderr )
+          self._server_stderr = None
 
       self._server_handle = None
       self._server_port   = 0
-      self._server_stdout = None
-      self._server_stderr = None
 
 
   def _PostRequest( self, request, request_data ):
@@ -362,7 +366,7 @@ class TernCompleter( Completer ):
       if self._ServerIsRunning():
         return
 
-      _logger.info( 'Starting Tern.js server...' )
+      _logger.info( 'Starting Tern server...' )
 
       self._server_port = utils.GetUnusedLocalhostPort()
 
@@ -372,7 +376,7 @@ class TernCompleter( Completer ):
         extra_args = []
 
       command = [ PATH_TO_NODE,
-                  PATH_TO_TERNJS_BINARY,
+                  PATH_TO_TERN_BINARY,
                   '--port',
                   str( self._server_port ),
                   '--host',
@@ -406,23 +410,23 @@ class TernCompleter( Completer ):
                                                   stdout = stdout,
                                                   stderr = stderr )
       except Exception:
-        _logger.warning( 'Unable to start Tern.js server: '
+        _logger.warning( 'Unable to start Tern server: '
                         + traceback.format_exc() )
         self._Reset()
 
       if self._server_port > 0 and self._ServerIsRunning():
-        _logger.info( 'Tern.js Server started with pid: ' +
+        _logger.info( 'Tern Server started with pid: ' +
                       str( self._server_handle.pid ) +
                       ' listening on port ' +
                       str( self._server_port ) )
-        _logger.info( 'Tern.js Server log files are: ' +
+        _logger.info( 'Tern Server log files are: ' +
                       self._server_stdout +
                       ' and ' +
                       self._server_stderr )
 
         self._do_tern_project_check = True
       else:
-        _logger.warning( 'Tern.js server did not start successfully' )
+        _logger.warning( 'Tern server did not start successfully' )
 
 
   def _RestartServer( self ):
@@ -434,14 +438,14 @@ class TernCompleter( Completer ):
   def _StopServer( self ):
     with self._server_state_mutex:
       if self._ServerIsRunning():
-        _logger.info( 'Stopping Tern.js server with PID '
+        _logger.info( 'Stopping Tern server with PID '
                       + str( self._server_handle.pid )
                       + '...' )
 
         self._server_handle.terminate()
         self._server_handle.wait()
 
-        _logger.info( 'Tern.js server terminated.' )
+        _logger.info( 'Tern server terminated.' )
 
         self._Reset()
 

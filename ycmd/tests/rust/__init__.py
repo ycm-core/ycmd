@@ -25,10 +25,11 @@ from builtins import *  # noqa
 
 import functools
 import os
-import time
 
-from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
 from ycmd import handlers
+from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
+                                    StopCompleterServer,
+                                    WaitUntilCompleterServerReady )
 
 shared_app = None
 
@@ -36,28 +37,6 @@ shared_app = None
 def PathToTestFile( *args ):
   dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
   return os.path.join( dir_of_current_script, 'testdata', *args )
-
-
-def WaitUntilRacerdServerReady( app ):
-  retries = 100
-
-  while retries > 0:
-    result = app.get( '/ready', { 'subserver': 'rust' } ).json
-    if result:
-      return
-
-    time.sleep( 0.2 )
-    retries = retries - 1
-
-  raise RuntimeError( "Timeout waiting for JediHTTP" )
-
-
-def StopRacerdServer( app ):
-  app.post_json( '/run_completer_command',
-                 BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ 'StopServer' ],
-                               filetype = 'rust' ),
-                 expect_errors = True )
 
 
 def setUpPackage():
@@ -68,8 +47,7 @@ def setUpPackage():
   global shared_app
 
   shared_app = SetUpApp()
-
-  WaitUntilRacerdServerReady( shared_app )
+  WaitUntilCompleterServerReady( shared_app, 'rust' )
 
 
 def tearDownPackage():
@@ -77,7 +55,7 @@ def tearDownPackage():
   executed once after running all the tests in the package."""
   global shared_app
 
-  StopRacerdServer( shared_app )
+  StopCompleterServer( shared_app, 'rust' )
 
 
 def SharedYcmd( test ):
@@ -106,10 +84,9 @@ def IsolatedYcmd( test ):
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
     app = SetUpApp()
-
     try:
       test( app, *args, **kwargs )
     finally:
-      StopRacerdServer( app )
+      StopCompleterServer( app, 'rust' )
       handlers._server_state = old_server_state
   return Wrapper

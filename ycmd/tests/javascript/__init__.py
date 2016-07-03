@@ -25,10 +25,11 @@ from builtins import *  # noqa
 
 import functools
 import os
-import time
 
 from ycmd import handlers
-from ycmd.tests.test_utils import BuildRequest, ClearCompletionsCache, SetUpApp
+from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
+                                    StopCompleterServer,
+                                    WaitUntilCompleterServerReady )
 
 shared_app = None
 shared_current_dir = None
@@ -37,27 +38,6 @@ shared_current_dir = None
 def PathToTestFile( *args ):
   dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
   return os.path.join( dir_of_current_script, 'testdata', *args )
-
-
-def WaitUntilTernServerReady( app ):
-  retries = 100
-  while retries > 0:
-    result = app.get( '/ready', { 'subserver': 'javascript' } ).json
-    if result:
-      return
-
-    time.sleep( 0.2 )
-    retries = retries - 1
-
-  raise RuntimeError( 'Timeout waiting for Tern.js server to be ready' )
-
-
-def StopTernServer( app ):
-  app.post_json( '/run_completer_command',
-                 BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ 'StopServer' ],
-                               filetype = 'javascript' ),
-                 expect_errors = True )
 
 
 def setUpPackage():
@@ -70,7 +50,7 @@ def setUpPackage():
   shared_app = SetUpApp()
   shared_current_dir = os.getcwd()
   os.chdir( PathToTestFile() )
-  WaitUntilTernServerReady( shared_app )
+  WaitUntilCompleterServerReady( shared_app, 'javascript' )
 
 
 def tearDownPackage():
@@ -78,7 +58,7 @@ def tearDownPackage():
   executed once after running all the tests in the package."""
   global shared_app, shared_current_dir
 
-  StopTernServer( shared_app )
+  StopCompleterServer( shared_app, 'javascript' )
   os.chdir( shared_current_dir )
 
 
@@ -108,14 +88,12 @@ def IsolatedYcmd( test ):
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
     old_current_dir = os.getcwd()
-
+    app = SetUpApp()
+    os.chdir( PathToTestFile() )
     try:
-      os.chdir( PathToTestFile() )
-      app = SetUpApp()
-      WaitUntilTernServerReady( app )
       test( app, *args, **kwargs )
-      StopTernServer( app )
     finally:
+      StopCompleterServer( app, 'javascript' )
       os.chdir( old_current_dir )
       handlers._server_state = old_server_state
   return Wrapper

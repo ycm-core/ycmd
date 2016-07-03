@@ -29,10 +29,10 @@ from mock import patch
 
 from ycmd.completers.rust.rust_completer import (
   ERROR_FROM_RACERD_MESSAGE, NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
-from ycmd.tests.rust import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
-                              WaitUntilRacerdServerReady )
+from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
-                                    ErrorMatcher, UserOption )
+                                    ErrorMatcher, UserOption,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 import requests
 
@@ -62,7 +62,7 @@ def GetCompletions_Basic_test( app ):
 @IsolatedYcmd
 def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   app ):
-  WaitUntilRacerdServerReady( app )
+  WaitUntilCompleterServerReady( app, 'rust' )
 
   filepath = PathToTestFile( 'std_completions.rs' )
   contents = ReadFile( filepath )
