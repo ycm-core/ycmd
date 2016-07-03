@@ -23,6 +23,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/type_traits.hpp>
 
 #include <vector>
 #include <list>
@@ -31,37 +32,37 @@
 
 namespace YouCompleteMe {
 
-class LetterNode : boost::noncopyable {
+class LetterNode {
 public:
   LetterNode( char letter, int index );
 
-  // this is for root nodes
   YCM_DLL_EXPORT explicit LetterNode( const std::string &text );
 
   inline bool LetterIsUppercase() const {
     return is_uppercase_;
   }
 
+  inline const NearestLetterNodeIndices *NearestLetterNodesForLetter(
+    char letter ) {
 
-  inline const std::list< LetterNode * > *NodeListForLetter( char letter ) {
     return letters_.ListPointerAt( letter );
   }
 
-
-  inline void PrependNodeForLetter( char letter, LetterNode *node ) {
-    letters_[ letter ].push_front( node );
-  }
+  void SetNodeIndexForLetterIfNearest( char letter, short index );
 
   inline int Index() const {
     return index_;
   }
 
-private:
+  inline LetterNode *operator[]( int index ) {
+    return &letternode_per_text_index_[ index ];
+  }
 
+private:
   LetterNodeListMap letters_;
-  std::vector< boost::shared_ptr< LetterNode > > letternode_per_text_index_;
-  bool is_uppercase_;
+  std::vector<LetterNode> letternode_per_text_index_;
   int index_;
+  bool is_uppercase_;
 };
 
 } // namespace YouCompleteMe

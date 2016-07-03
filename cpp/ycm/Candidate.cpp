@@ -33,20 +33,6 @@ bool IsPrintable( const std::string &text ) {
   return all( text, is_print( std::locale::classic() ) );
 }
 
-namespace {
-
-LetterNode *FirstUppercaseNode( const std::list< LetterNode *> &list ) {
-  LetterNode *node = NULL;
-  foreach( LetterNode * current_node, list ) {
-    if ( current_node->LetterIsUppercase() ) {
-      node = current_node;
-      break;
-    }
-  }
-  return node;
-}
-
-} // unnamed namespace
 
 std::string GetWordBoundaryChars( const std::string &text ) {
   std::string result;
@@ -73,6 +59,7 @@ std::string GetWordBoundaryChars( const std::string &text ) {
 
 Bitset LetterBitsetFromString( const std::string &text ) {
   Bitset letter_bitset;
+
   foreach ( char letter, text ) {
     int letter_index = IndexForLetter( letter );
 
@@ -100,25 +87,27 @@ Result Candidate::QueryMatchResult( const std::string &query,
   int index_sum = 0;
 
   foreach ( char letter, query ) {
-    const std::list< LetterNode *> *list = node->NodeListForLetter( letter );
+    const NearestLetterNodeIndices *nearest =
+      node->NearestLetterNodesForLetter( letter );
 
-    if ( !list )
+    if ( !nearest )
       return Result( false );
 
-    if ( case_sensitive ) {
-      // When the query letter is uppercase, then we force an uppercase match
-      // but when the query letter is lowercase, then it can match both an
-      // uppercase and a lowercase letter. This is by design and it's much
-      // better than forcing lowercase letter matches.
-      node = IsUppercase( letter ) ?
-             FirstUppercaseNode( *list ) :
-             list->front();
-
-      if ( !node )
-        return Result( false );
+    // When the query letter is uppercase, then we force an uppercase match
+    // but when the query letter is lowercase, then it can match both an
+    // uppercase and a lowercase letter. This is by design and it's much
+    // better than forcing lowercase letter matches.
+    node = NULL;
+    if ( case_sensitive && IsUppercase( letter ) ) {
+      if ( nearest->indexOfFirstUppercaseOccurrence >= 0 )
+        node = ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
     } else {
-      node = list->front();
+      if ( nearest->indexOfFirstOccurrence >= 0 )
+        node = ( *root_node_ )[ nearest->indexOfFirstOccurrence ];
     }
+
+    if ( !node )
+      return Result( false );
 
     index_sum += node->Index();
   }

@@ -30,32 +30,39 @@ using ::testing::StrEq;
 TEST( LetterNodeTest, AsciiText ) {
   LetterNode root_node( "ascIi_texT" );
   EXPECT_THAT( root_node,
-    AllOf( Property( &LetterNode::Index, -1 ),
-           Property( &LetterNode::LetterIsUppercase, false ) ) );
+               AllOf( Property( &LetterNode::Index, -1 ),
+                      Property( &LetterNode::LetterIsUppercase, false ) ) );
 
-  const std::list< LetterNode *> *list = root_node.NodeListForLetter( 'i' );
-  EXPECT_THAT( *list, ElementsAre(
-    AllOf( Property( &LetterNode::Index, 3 ),
-           Property( &LetterNode::LetterIsUppercase, true ) ),
-    AllOf( Property( &LetterNode::Index, 4 ),
-           Property( &LetterNode::LetterIsUppercase, false ) ) ) );
+  const NearestLetterNodeIndices *nearest_nodes =
+    root_node.NearestLetterNodesForLetter( 'i' );
 
-  LetterNode *node = list->front();
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
+               AllOf( Property( &LetterNode::Index, 3 ),
+                      Property( &LetterNode::LetterIsUppercase, true ) ) );
+  EXPECT_THAT(  root_node[ nearest_nodes->indexOfFirstUppercaseOccurrence ],
+                AllOf( Property( &LetterNode::Index, 3 ),
+                       Property( &LetterNode::LetterIsUppercase, true ) ) );
 
-  list = node->NodeListForLetter( 'i' );
-  EXPECT_THAT( *list, ElementsAre(
-    AllOf( Property( &LetterNode::Index, 4 ),
-           Property( &LetterNode::LetterIsUppercase, false ) ) ) );
+  LetterNode *node = root_node[ nearest_nodes->indexOfFirstOccurrence ];
 
-  list = node->NodeListForLetter( 't' );
-  EXPECT_THAT( *list, ElementsAre(
-    AllOf( Property( &LetterNode::Index, 6 ),
-           Property( &LetterNode::LetterIsUppercase, false ) ),
-    AllOf( Property( &LetterNode::Index, 9 ),
-           Property( &LetterNode::LetterIsUppercase, true ) ) ) );
+  nearest_nodes = node->NearestLetterNodesForLetter( 'i' );
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
+               AllOf( Property( &LetterNode::Index, 4 ),
+                      Property( &LetterNode::LetterIsUppercase, false ) ) );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, -1 );
 
-  list = node->NodeListForLetter( 'c' );
-  EXPECT_THAT( list, IsNull() );
+
+  nearest_nodes = node->NearestLetterNodesForLetter( 't' );
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
+               AllOf( Property( &LetterNode::Index, 6 ),
+                      Property( &LetterNode::LetterIsUppercase, false ) ) );
+  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstUppercaseOccurrence ],
+               AllOf( Property( &LetterNode::Index, 9 ),
+                      Property( &LetterNode::LetterIsUppercase, true ) ) );
+
+  nearest_nodes = node->NearestLetterNodesForLetter( 'c' );
+  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, -1 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, -1 );
 }
 
 
@@ -65,6 +72,7 @@ TEST( LetterNodeTest, ThrowOnNonAsciiCharacters ) {
   //   €: \xe2\x82\xac
   //   𐍈: \xf0\x90\x8d\x88
   ASSERT_THROW( LetterNode root_node( "uni¢𐍈d€" ), std::out_of_range );
+
   try {
     LetterNode root_node( "uni¢𐍈d€" );
   } catch ( std::out_of_range error ) {
