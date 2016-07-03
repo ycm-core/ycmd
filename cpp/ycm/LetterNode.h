@@ -55,7 +55,7 @@ public:
   }
 
   inline LetterNode *operator[]( int index ) {
-    return &letternode_per_text_index_[index];
+    return &letternode_per_text_index_[ index ];
   }
 
 private:

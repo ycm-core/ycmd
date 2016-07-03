@@ -33,7 +33,9 @@ TEST( LetterNodeTest, AsciiText ) {
                AllOf( Property( &LetterNode::Index, -1 ),
                       Property( &LetterNode::LetterIsUppercase, false ) ) );
 
-  const NearestLetterNodeIndices *nearest_nodes = root_node.NearestLetterNodesForLetter( 'i' );
+  const NearestLetterNodeIndices *nearest_nodes =
+    root_node.NearestLetterNodesForLetter( 'i' );
+
   EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
                AllOf( Property( &LetterNode::Index, 3 ),
                       Property( &LetterNode::LetterIsUppercase, true ) ) );

@@ -72,7 +72,7 @@ public:
   YCM_DLL_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
 
 private:
-  typedef boost::array<NearestLetterNodeIndices , NUM_LETTERS> 
+  typedef boost::array<NearestLetterNodeIndices , NUM_LETTERS>
     NearestLetterNodeArray;
 
   boost::movelib::unique_ptr< NearestLetterNodeArray > letters_;

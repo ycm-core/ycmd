@@ -50,9 +50,8 @@ LetterNodeListMap::LetterNodeListMap( const LetterNodeListMap &other ) {
 
 
 NearestLetterNodeIndices &LetterNodeListMap::operator[] ( char letter ) {
-  if ( !letters_ ) {
+  if ( !letters_ )
     letters_.reset( new NearestLetterNodeArray() );
-  }
 
   int letter_index = IndexForLetter( letter );
 

@@ -22,7 +22,7 @@
 namespace YouCompleteMe {
 
 LetterNode::LetterNode( char letter, int index )
-  : index_( index ) ,
+  : index_( index ),
     is_uppercase_( IsUppercase( letter ) ) {
 }
 
