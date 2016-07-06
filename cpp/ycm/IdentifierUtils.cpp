@@ -76,6 +76,7 @@ const boost::unordered_map < const char *,
         ( "COBOL"      , "cobol"      )
         ( "DosBatch"   , "dosbatch"   )
         ( "Eiffel"     , "eiffel"     )
+        ( "Elixir"     , "elixir"     )
         ( "Erlang"     , "erlang"     )
         ( "Fortran"    , "fortran"    )
         ( "Go"         , "go"         )
