@@ -58,6 +58,11 @@ struct FixIt {
 
   Location location;
 
+  /// This is the text of the diagnostic. This is useful when there are
+  /// multiple diagnostics offering different fixit options. The text is
+  /// displayed to the user, allowing them choose which diagnostic to apply.
+  std::string text;
+
   bool operator==( const FixIt &other ) const {
     return chunks == other.chunks &&
            location == other.location;
@@ -84,8 +89,11 @@ struct Diagnostic {
 
   std::string long_formatted_text_;
 
-  /// The (cached) changes required to fix this diagnostic
-  std::vector< FixItChunk > fixits_;
+  /// The (cached) changes required to fix this diagnostic.
+  /// Note: when there are child diagnostics, there may be multiple possible
+  /// FixIts for the main reported diagnostic. These are typically notes,
+  /// offering alternative ways to fix the error.
+  std::vector< FixIt > fixits_;
 };
 
 } // namespace YouCompleteMe

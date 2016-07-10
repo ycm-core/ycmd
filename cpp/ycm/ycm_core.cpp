@@ -159,7 +159,8 @@ BOOST_PYTHON_MODULE(ycm_core)
 
   class_< FixIt >( "FixIt" )
     .def_readonly( "chunks", &FixIt::chunks )
-    .def_readonly( "location", &FixIt::location );
+    .def_readonly( "location", &FixIt::location )
+    .def_readonly( "text", &FixIt::text );
 
   class_< std::vector< FixIt > >( "FixItVector" )
     .def( vector_indexing_suite< std::vector< FixIt > >() );
