@@ -39,11 +39,19 @@ INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
 
 # We need to remove --fcolor-diagnostics because it will cause shell escape
 # sequences to show up in editors, which is bad. See Valloric/YouCompleteMe#1421
-STATE_FLAGS_TO_SKIP = set(['-c', '-MP', '--fcolor-diagnostics'])
+STATE_FLAGS_TO_SKIP = set( [ '-c',
+                             '-MP',
+                             '-MD',
+                             '-MMD',
+                             '--fcolor-diagnostics' ] )
 
 # The -M* flags spec:
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
-FILE_FLAGS_TO_SKIP = set(['-MD', '-MMD', '-MF', '-MT', '-MQ', '-o'])
+FILE_FLAGS_TO_SKIP = set( [ '-MF',
+                            '-MT',
+                            '-MQ',
+                            '-o',
+                            '--serialize-diagnostics' ] )
 
 # Use a regex to correctly detect c++/c language for both versioned and
 # non-versioned compiler executable names suffixes
@@ -266,9 +274,11 @@ def _RemoveUnusedFlags( flags, filename ):
   previous_flag_is_include = False
   previous_flag_starts_with_dash = False
   current_flag_starts_with_dash = False
+
   for flag in flags:
     previous_flag_starts_with_dash = current_flag_starts_with_dash
     current_flag_starts_with_dash = flag.startswith( '-' )
+
     if skip_next:
       skip_next = False
       continue
@@ -377,9 +387,9 @@ def _ExtraClangFlags():
   if OnMac():
     for path in MAC_INCLUDE_PATHS:
       flags.extend( [ '-isystem', path ] )
-  # On Windows, parsing of templates is delayed until instantation time.
-  # This makes GetType and GetParent commands not returning the expected
-  # result when the cursor is in templates.
+  # On Windows, parsing of templates is delayed until instantiation time.
+  # This makes GetType and GetParent commands fail to return the expected
+  # result when the cursor is in a template.
   # Using the -fno-delayed-template-parsing flag disables this behavior.
   # See
   # http://clang.llvm.org/extra/PassByValueTransform.html#note-about-delayed-template-parsing # noqa
