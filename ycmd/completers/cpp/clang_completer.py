@@ -317,6 +317,9 @@ class ClangCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
+    # don't raise an error when flags are not ready yet
+    if flags == False:
+      return []
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
