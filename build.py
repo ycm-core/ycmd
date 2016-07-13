@@ -427,7 +427,7 @@ def SetUpTern():
   # node_modules of the Tern runtime.  We also want to be able to install our
   # own plugins to improve the user experience for all users.
   #
-  # This is not possible if we use a git submodle for Tern and simply run 'npm
+  # This is not possible if we use a git submodule for Tern and simply run 'npm
   # install' within the submodule source directory, as subsequent 'npm install
   # tern-my-plugin' will (heinously) install another (arbitrary) version of Tern
   # within the Tern source tree (e.g. third_party/tern/node_modules/tern. The
@@ -438,19 +438,7 @@ def SetUpTern():
   # So instead, we have a package.json within our "Tern runtime" directory
   # (third_party/tern_runtime) that defines the packages that we require,
   # including Tern and any plugins which we require as standard.
-  TERN_RUNTIME_DIR = os.path.join( DIR_OF_THIS_SCRIPT,
-                                   'third_party',
-                                   'tern_runtime' )
-  try:
-    os.makedirs( TERN_RUNTIME_DIR )
-  except Exception:
-    # os.makedirs throws if the dir already exists, it also throws if the
-    # permissions prevent creating the directory. There's no way to know the
-    # difference, so we just let the call to os.chdir below throw if this fails
-    # to create the target directory.
-    pass
-
-  os.chdir( TERN_RUNTIME_DIR )
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern_runtime' ) )
   subprocess.check_call( [ paths[ 'npm' ], 'install', '--production' ] )
 
 
