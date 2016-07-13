@@ -318,7 +318,7 @@ class ClangCompleter( Completer ):
 
     flags = self._FlagsForRequest( request_data )
     # don't raise an error when flags are not ready yet
-    if flags == False:
+    if flags is False:
       return []
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
