@@ -82,8 +82,10 @@ class Flags( object ):
                                             filename,
                                             client_data )
 
-      if not results or not results.get( 'flags_ready', True ):
+      if not results:
         return None
+      if not results.get( 'flags_ready', True ):
+        return False
 
       flags = _ExtractFlagsList( results )
       if not flags:
