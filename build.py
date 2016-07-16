@@ -19,6 +19,7 @@ import re
 import shlex
 import subprocess
 import sys
+import traceback
 
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 if not ( ( PY_MAJOR == 2 and PY_MINOR >= 6 ) or
@@ -354,19 +355,30 @@ def BuildYcmdLib( args ):
     full_cmake_args.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
 
     os.chdir( build_dir )
-    subprocess.check_call( [ 'cmake' ] + full_cmake_args )
+    try:
+      subprocess.check_call( [ 'cmake' ] + full_cmake_args )
 
-    build_target = ( 'ycm_core' if 'YCM_TESTRUN' not in os.environ else
-                     'ycm_core_tests' )
+      build_target = ( 'ycm_core' if 'YCM_TESTRUN' not in os.environ else
+                       'ycm_core_tests' )
 
-    build_command = [ 'cmake', '--build', '.', '--target', build_target ]
-    if OnWindows():
-      config = 'Debug' if args.enable_debug else 'Release'
-      build_command.extend( [ '--config', config ] )
-    else:
-      build_command.extend( [ '--', '-j', str( NumCores() ) ] )
+      build_command = [ 'cmake', '--build', '.', '--target', build_target ]
+      if OnWindows():
+        config = 'Debug' if args.enable_debug else 'Release'
+        build_command.extend( [ '--config', config ] )
+      else:
+        build_command.extend( [ '--', '-j', str( NumCores() ) ] )
 
-    subprocess.check_call( build_command )
+      subprocess.check_call( build_command )
+    except subprocess.CalledProcessError:
+      traceback.print_exc()
+      sys.exit(
+        '\n\nERROR: The build failed.\n\n'
+        'NOTE: It is *highly* unlikely that this is a bug but rather\n'
+        'that this is a problem with the configuration of your system\n'
+        'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
+        "and if you're sure that it is a bug, please raise an issue on the\n"
+        'issue tracker, including the entire output of this script\n'
+        'and the invocation line used to run it.\n' )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
