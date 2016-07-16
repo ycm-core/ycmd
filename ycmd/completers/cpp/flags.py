@@ -99,7 +99,10 @@ class Flags( object ):
 
       if add_extra_clang_flags:
         flags += self.extra_clang_flags
-      sanitized_flags = PrepareFlagsForClang( flags, filename )
+
+      sanitized_flags = PrepareFlagsForClang( flags,
+                                              filename,
+                                              add_extra_clang_flags )
 
       if results[ 'do_cache' ]:
         self.flags_for_file[ filename ] = sanitized_flags
@@ -172,10 +175,12 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
     return module.FlagsForFile( filename )
 
 
-def PrepareFlagsForClang( flags, filename ):
+def PrepareFlagsForClang( flags, filename, add_extra_clang_flags = True ):
   flags = _CompilerToLanguageFlag( flags )
   flags = _RemoveXclangFlags( flags )
   flags = _RemoveUnusedFlags( flags, filename )
+  if add_extra_clang_flags:
+    flags = _EnableTypoCorrection( flags )
   flags = _SanitizeFlags( flags )
   return flags
 
@@ -398,6 +403,24 @@ def _ExtraClangFlags():
   # for a similar issue.
   if OnWindows():
     flags.append( '-fno-delayed-template-parsing' )
+  return flags
+
+
+def _EnableTypoCorrection( flags ):
+  """Adds the -fspell-checking flag if the -fno-spell-checking flag is not
+  present"""
+
+  # "Typo correction" (aka spell checking) in clang allows it to produce
+  # hints (in the form of fix-its) in the case of certain diagnostics. A common
+  # example is "no type named 'strng' in namespace 'std'; Did you mean
+  # 'string'? (FixIt)". This is enabled by default in the clang driver (i.e. the
+  # 'clang' binary), but is not when using libclang (as we do). It's a useful
+  # enough feature that we just always turn it on unless the user explicitly
+  # turned it off in their flags (with -fno-spell-checking).
+  if '-fno-spell-checking' in flags:
+    return flags
+
+  flags.append( '-fspell-checking' )
   return flags
 
 

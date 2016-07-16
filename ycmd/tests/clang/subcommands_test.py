@@ -727,12 +727,32 @@ def FixIt_Check_cpp11_Note( results ):
   } ) )
 
 
+def FixIt_Check_cpp11_SpellCheck( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains(
+      # Change to SpellingIsNotMyStrongPoint
+      has_entries( {
+        'text': contains_string( "did you mean 'SpellingIsNotMyStrongPoint'" ),
+        'chunks': contains(
+          ChunkMatcher( 'SpellingIsNotMyStrongPoint',
+                        LineColMatcher( 72, 9 ),
+                        LineColMatcher( 72, 35 ) )
+        ),
+        'location': LineColMatcher( 72, 9 ),
+      } ) )
+  } ) )
+
+
 def Subcommands_FixIt_all_test():
   cfile = 'FixIt_Clang_cpp11.cpp'
   mfile = 'FixIt_Clang_objc.m'
   ufile = 'unicode.cc'
 
   tests = [
+    # L
+    # i   C
+    # n   o
+    # e   l   Lang     File,  Checker
     [ 16, 0,  'cpp11', cfile, FixIt_Check_cpp11_Ins ],
     [ 16, 1,  'cpp11', cfile, FixIt_Check_cpp11_Ins ],
     [ 16, 10, 'cpp11', cfile, FixIt_Check_cpp11_Ins ],
@@ -762,6 +782,9 @@ def Subcommands_FixIt_all_test():
 
     # FixIt attached to a "child" diagnostic (i.e. a Note)
     [ 60, 1,  'cpp11', cfile, FixIt_Check_cpp11_Note ],
+
+    # FixIt due to forced spell checking
+    [ 72, 9,  'cpp11', cfile, FixIt_Check_cpp11_SpellCheck ],
   ]
 
   for test in tests:
