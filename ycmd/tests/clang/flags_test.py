@@ -28,6 +28,8 @@ from ycmd.completers.cpp import flags
 from mock import patch, Mock
 from ycmd.tests.test_utils import MacOnly
 
+from hamcrest import assert_that, contains
+
 
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
 def FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved_test( *args ):
@@ -160,6 +162,27 @@ def RemoveUnusedFlags_RemoveFlagWithoutPrecedingDashFlag_test():
   eq_( expected,
        flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
                                  filename ) )
+
+
+def RemoveUnusedFlags_Depfiles_test():
+  full_flags = [
+    '/bin/clang',
+    '-x', 'objective-c',
+    '-arch', 'armv7',
+    '-MMD',
+    '-MT', 'dependencies',
+    '-MF', 'file',
+    '--serialize-diagnostics', 'diagnostics'
+  ]
+
+  expected = [
+    '/bin/clang',
+    '-x', 'objective-c',
+    '-arch', 'armv7',
+  ]
+
+  assert_that( flags._RemoveUnusedFlags( full_flags, 'test.m' ),
+               contains( *expected ) )
 
 
 def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
