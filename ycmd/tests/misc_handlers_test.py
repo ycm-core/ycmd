@@ -24,10 +24,10 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from nose.tools import ok_
-from hamcrest import assert_that, contains
+from hamcrest import assert_that, contains, empty, equal_to, has_entries
+import requests
 
-from ycmd.tests import SharedYcmd
+from ycmd.tests import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
@@ -35,7 +35,9 @@ from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 def MiscHandlers_SemanticCompletionAvailable_test( app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
-    ok_( app.post_json( '/semantic_completion_available', request_data ).json )
+    assert_that( app.post_json( '/semantic_completion_available',
+                                request_data ).json,
+                 equal_to( True ) )
 
 
 @SharedYcmd
@@ -43,17 +45,26 @@ def MiscHandlers_EventNotification_AlwaysJsonResponse_test( app ):
   event_data = BuildRequest( contents = 'foo foogoo ba',
                              event_name = 'FileReadyToParse' )
 
-  app.post_json( '/event_notification', event_data ).json
+  assert_that( app.post_json( '/event_notification', event_data ).json,
+               empty() )
 
 
 @SharedYcmd
 def MiscHandlers_EventNotification_ReturnJsonOnBigFileError_test( app ):
-  # We generate a content greater than Bottle.MEMFILE_MAX, which is set to 1Mb.
+  # We generate a content greater than Bottle.MEMFILE_MAX, which is set to 1MB.
   contents = "foo " * 500000
   event_data = BuildRequest( contents = contents,
                              event_name = 'FileReadyToParse' )
 
-  app.post_json( '/event_notification', event_data, expect_errors = True ).json
+  response = app.post_json( '/event_notification',
+                            event_data,
+                            expect_errors = True )
+  assert_that( response.status_code,
+               equal_to( requests.codes.request_entity_too_large ) )
+  assert_that( response.json,
+               has_entries( { 'traceback': None,
+                              'message': 'None',
+                              'exception': None } ) )
 
 
 @SharedYcmd
@@ -71,3 +82,21 @@ def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
   response_data = app.post_json( '/filter_and_sort_candidates', data ).json
 
   assert_that( response_data, contains( candidate2, candidate3 ) )
+
+
+@SharedYcmd
+def MiscHandlers_LoadExtraConfFile_AlwaysJsonResponse_test( app ):
+  filepath = PathToTestFile( '.ycm_extra_conf.py' )
+  extra_conf_data = BuildRequest( filepath = filepath )
+
+  assert_that( app.post_json( '/load_extra_conf_file', extra_conf_data ).json,
+               equal_to( True ) )
+
+
+@SharedYcmd
+def MiscHandlers_IgnoreExtraConfFile_AlwaysJsonResponse_test( app ):
+  filepath = PathToTestFile( '.ycm_extra_conf.py' )
+  extra_conf_data = BuildRequest( filepath = filepath )
+
+  assert_that( app.post_json( '/ignore_extra_conf_file', extra_conf_data ).json,
+               equal_to( True ) )
