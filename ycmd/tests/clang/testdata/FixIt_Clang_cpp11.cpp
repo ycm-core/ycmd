@@ -63,3 +63,11 @@ void z() {
 
   }
 }
+
+namespace Typo {
+    struct SpellingIsNotMyStrongPoint;
+}
+
+void typo() {
+  Typo::SpellingIsNotMyStringPiont *p;
+}
