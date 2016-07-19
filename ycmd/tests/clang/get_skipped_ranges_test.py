@@ -30,7 +30,7 @@ from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.responses import ( BuildRangeData, Range, Location )
 from ycmd.utils import ReadFile
-import http.client
+import requests
 
 
 _TEST_FILE = PathToTestFile( 'token_test_data',
@@ -68,7 +68,7 @@ def _RunTest( app, expect ):
   response = app.post_json( '/skipped_ranges', BuildRequest( **request ),
                             expect_errors = False )
 
-  eq_( response.status_code, http.client.OK )
+  eq_( response.status_code, requests.codes.ok )
   assert_that( response.json, expect )
 
 

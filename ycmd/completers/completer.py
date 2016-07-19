@@ -352,11 +352,11 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def GetSemanticTokens( self, request_data ):
-    return []
+    return [] # pragma: no cover
 
 
   def GetSkippedRanges( self, request_data ):
-    return []
+    return [] # pragma: no cover
 
 
   def _CurrentFiletype( self, filetypes ):
