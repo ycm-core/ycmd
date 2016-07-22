@@ -6,6 +6,7 @@ WebTest>=2.0.20
 ordereddict>=1.1
 nose-exclude>=0.4.1
 unittest2>=1.1.0
+psutil>=3.3.0
 # This needs to be kept in sync with submodule checkout in third_party
 future==0.15.2
 codecov>=2.0.5

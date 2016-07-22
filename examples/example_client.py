@@ -113,10 +113,10 @@ class YcmdHandle( object ):
 
   def Shutdown( self ):
     if self.IsAlive():
-      self._popen_handle.terminate()
+      self.PostToHandlerAndLog( 'shutdown' )
 
 
-  def PostToHandlerAndLog( self, handler, data ):
+  def PostToHandlerAndLog( self, handler, data = None ):
     self._CallHttpie( 'post', handler, data )
 
 

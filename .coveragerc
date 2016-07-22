@@ -1,4 +1,14 @@
 [report]
 omit =
+    */third_party/requests/*
     */tests/*
     */__init__.py
+
+[run]
+parallel = True
+source =
+    ycmd
+
+[paths]
+source =
+    ycmd/
