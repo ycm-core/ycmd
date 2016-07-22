@@ -23,12 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( all_of, any_of, assert_that, contains_inanyorder,
-                       has_entries, has_item, is_not )
+from hamcrest import ( all_of, any_of, assert_that, calling,
+                       contains_inanyorder, has_entries, has_item, is_not,
+                       raises )
 from mock import patch
+from webtest import AppError
 
-from ycmd.tests.typescript import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
+from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
+                                    StopCompleterServer )
 from ycmd.utils import ReadFile
 
 
@@ -135,3 +138,35 @@ def GetCompletions_AfterRestart_test( app ):
                            '{ foo: string; bar: number; }): void' ) } ),
         )
       } ) )
+
+
+@IsolatedYcmd
+def GetCompletions_ServerIsNotRunning_test( app ):
+  StopCompleterServer( app, filetype = 'typescript' )
+
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
+
+  # Check that sending a request to TSServer (the response is ignored) raises
+  # the proper exception.
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'typescript',
+                             contents = contents,
+                             event_name = 'BufferVisit' )
+
+  assert_that(
+    calling( app.post_json ).with_args( '/event_notification', event_data ),
+    raises( AppError, 'TSServer is not running.' ) )
+
+  # Check that sending a command to TSServer (the response is processed) raises
+  # the proper exception.
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'typescript',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 17,
+                                  column_num = 6 )
+
+  assert_that(
+    calling( app.post_json ).with_args( '/completions', completion_data ),
+    raises( AppError, 'TSServer is not running.' ) )
