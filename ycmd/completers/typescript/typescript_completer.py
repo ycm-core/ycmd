@@ -90,6 +90,8 @@ class TypeScriptCompleter( Completer ):
   def __init__( self, user_options ):
     super( TypeScriptCompleter, self ).__init__( user_options )
 
+    self._logfile = None
+
     self._tsserver_handle = None
 
     # Used to prevent threads from concurrently writing to
@@ -104,17 +106,6 @@ class TypeScriptCompleter( Completer ):
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
     _logger.info( 'Found TSServer at {0}'.format( self._binary_path ) )
 
-    self._logfile = _LogFileName()
-    tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
-                                                         level = _LogLevel() )
-    # TSServer get the configuration for the log file through the environment
-    # variable 'TSS_LOG'. This seems to be undocumented but looking at the
-    # source code it seems like this is the way:
-    # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
-    self._environ = os.environ.copy()
-    utils.SetEnviron( self._environ, 'TSS_LOG', tsserver_log )
-
-    _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
