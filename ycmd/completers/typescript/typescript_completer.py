@@ -46,6 +46,8 @@ SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 MAX_DETAILED_COMPLETIONS = 100
 RESPONSE_TIMEOUT_SECONDS = 10
 
+PATH_TO_TSSERVER = utils.FindExecutable( 'tsserver' )
+
 _logger = logging.getLogger( __name__ )
 
 
@@ -76,6 +78,16 @@ class DeferredResponse( object ):
       return self._message[ 'body' ]
 
 
+def ShouldEnableTypescriptCompleter():
+  if not PATH_TO_TSSERVER:
+    _logger.error( BINARY_NOT_FOUND_MESSAGE )
+    return False
+
+  _logger.info( 'Using TSServer located at {0}'.format( PATH_TO_TSSERVER ) )
+
+  return True
+
+
 class TypeScriptCompleter( Completer ):
   """
   Completer for TypeScript.
@@ -97,15 +109,6 @@ class TypeScriptCompleter( Completer ):
     # Used to prevent threads from concurrently writing to
     # the tsserver process' stdin
     self._write_lock = threading.Lock()
-
-    # TODO: if we follow the path of tern_completer we can extract a
-    # `ShouldEnableTypescriptCompleter` and use it in hook.py
-    self._binary_path = utils.PathToFirstExistingExecutable( [ 'tsserver' ] )
-    if not self._binary_path:
-      _logger.error( BINARY_NOT_FOUND_MESSAGE )
-      raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
-    _logger.info( 'Found TSServer at {0}'.format( self._binary_path ) )
-
 
     # Each request sent to tsserver must have a sequence id.
     # Responses contain the id sent in the corresponding request.
@@ -155,7 +158,7 @@ class TypeScriptCompleter( Completer ):
       _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
 
       # We need to redirect the error stream to the output one on Windows.
-      self._tsserver_handle = utils.SafePopen( self._binary_path,
+      self._tsserver_handle = utils.SafePopen( PATH_TO_TSSERVER,
                                                stdin = subprocess.PIPE,
                                                stdout = subprocess.PIPE,
                                                stderr = subprocess.STDOUT,
@@ -556,18 +559,18 @@ class TypeScriptCompleter( Completer ):
                  '  TSServer process ID: {0}\n'
                  '  TSServer executable: {1}\n'
                  '  TSServer logfile: {2}'.format( self._tsserver_handle.pid,
-                                                   self._binary_path,
+                                                   PATH_TO_TSSERVER,
                                                    self._logfile ) )
       if self._logfile:
         return ( 'TypeScript completer debug information:\n'
                  '  TSServer no longer running\n'
                  '  TSServer executable: {0}\n'
-                 '  TSServer logfile: {1}'.format( self._binary_path,
+                 '  TSServer logfile: {1}'.format( PATH_TO_TSSERVER,
                                                    self._logfile ) )
 
       return ( 'TypeScript completer debug information:\n'
                '  TSServer is not running\n'
-               '  TSServer executable: {0}'.format( self._binary_path ) )
+               '  TSServer executable: {0}'.format( PATH_TO_TSSERVER ) )
 
 
 def _LogFileName():
