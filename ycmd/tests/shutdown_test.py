@@ -30,18 +30,19 @@ from ycmd.tests.client_test import Client_test
 
 class Shutdown_test( Client_test ):
 
-  @Client_test.CaptureOutputFromServer
+  @Client_test.CaptureLogfiles
   def FromHandlerWithoutSubserver_test( self ):
     self.Start()
-    self.AssertServerAndSubserversAreRunning()
+    self.AssertServersAreRunning()
 
     response = self.PostRequest( 'shutdown' )
     self.AssertResponse( response )
     assert_that( response.json(), equal_to( True ) )
-    self.AssertServerAndSubserversShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = 5 )
+    self.AssertLogfilesAreRemoved()
 
 
-  @Client_test.CaptureOutputFromServer
+  @Client_test.CaptureLogfiles
   def FromHandlerWithSubservers_test( self ):
     self.Start()
 
@@ -53,23 +54,25 @@ class Shutdown_test( Client_test ):
                   'rust' ]
     for filetype in filetypes:
       self.StartSubserverForFiletype( filetype )
-    self.AssertServerAndSubserversAreRunning()
+    self.AssertServersAreRunning()
 
     response = self.PostRequest( 'shutdown' )
     self.AssertResponse( response )
     assert_that( response.json(), equal_to( True ) )
-    self.AssertServerAndSubserversShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = 5 )
+    self.AssertLogfilesAreRemoved()
 
 
-  @Client_test.CaptureOutputFromServer
+  @Client_test.CaptureLogfiles
   def FromWatchdogWithoutSubserver_test( self ):
     self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
-    self.AssertServerAndSubserversAreRunning()
+    self.AssertServersAreRunning()
 
-    self.AssertServerAndSubserversShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = 5 )
+    self.AssertLogfilesAreRemoved()
 
 
-  @Client_test.CaptureOutputFromServer
+  @Client_test.CaptureLogfiles
   def FromWatchdogWithSubservers_test( self ):
     self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
 
@@ -81,6 +84,7 @@ class Shutdown_test( Client_test ):
                   'rust' ]
     for filetype in filetypes:
       self.StartSubserverForFiletype( filetype )
-    self.AssertServerAndSubserversAreRunning()
+    self.AssertServersAreRunning()
 
-    self.AssertServerAndSubserversShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = 5 )
+    self.AssertLogfilesAreRemoved()

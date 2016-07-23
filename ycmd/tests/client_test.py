@@ -25,7 +25,7 @@ from builtins import *  # noqa
 from future.utils import native
 
 from base64 import b64decode, b64encode
-from hamcrest import assert_that, equal_to, has_length, is_in
+from hamcrest import assert_that, empty, equal_to, is_in
 from tempfile import NamedTemporaryFile
 import functools
 import json
@@ -42,9 +42,9 @@ from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
-from ycmd.utils import ( GetUnusedLocalhostPort, OpenForStdHandle,
-                         PathToCreatedTempDir, ReadFile, RemoveIfExists,
-                         SafePopen, SetEnviron, ToBytes, ToUnicode )
+from ycmd.utils import ( GetUnusedLocalhostPort, PathToCreatedTempDir, ReadFile,
+                         RemoveIfExists, SafePopen, SetEnviron, ToBytes,
+                         ToUnicode )
 
 HEADERS = { 'content-type': 'application/json' }
 HMAC_HEADER = 'x-ycm-hmac'
@@ -59,9 +59,8 @@ class Client_test( object ):
     self._location = None
     self._port = None
     self._hmac_secret = None
-    self._stdout = None
-    self.server = None
-    self.subservers = []
+    self._servers = []
+    self._logfiles = []
     self._options_dict = DefaultOptions()
 
 
@@ -72,14 +71,11 @@ class Client_test( object ):
 
 
   def tearDown( self ):
-    if self.server.is_running():
-      self.server.terminate()
-    if self._stdout:
-      RemoveIfExists( self._stdout )
-    if self.subservers:
-      for subserver in self.subservers:
-        if subserver.is_running():
-          subserver.terminate()
+    for server in self._servers:
+      if server.is_running():
+        server.terminate()
+    for logfile in self._logfiles:
+      RemoveIfExists( logfile )
 
 
   def Start( self, idle_suicide_seconds = 60,
@@ -106,14 +102,20 @@ class Client_test( object ):
         '--check_interval_seconds={0}'.format( check_interval_seconds ),
       ]
 
-      self._stdout = os.path.join( PathToCreatedTempDir(), 'test.log' )
-      with OpenForStdHandle( self._stdout ) as stdout:
-        _popen_handle = SafePopen( ycmd_args,
-                                   stdin_windows = subprocess.PIPE,
-                                   stdout = stdout,
-                                   stderr = subprocess.STDOUT,
-                                   env = env )
-        self.server = psutil.Process( _popen_handle.pid )
+      filename_format = os.path.join( PathToCreatedTempDir(),
+                                      'server_{port}_{std}.log' )
+      stdout = filename_format.format( port = self._port, std = 'stdout' )
+      stderr = filename_format.format( port = self._port, std = 'stderr' )
+      self._logfiles.extend( [ stdout, stderr ] )
+      ycmd_args.append( '--stdout={0}'.format( stdout ) )
+      ycmd_args.append( '--stderr={0}'.format( stderr ) )
+
+      _popen_handle = SafePopen( ycmd_args,
+                                 stdin_windows = subprocess.PIPE,
+                                 stdout = subprocess.PIPE,
+                                 stderr = subprocess.PIPE,
+                                 env = env )
+      self._servers.append( psutil.Process( _popen_handle.pid ) )
 
       self._WaitUntilReady()
       extra_conf = PathToTestFile( 'client', '.ycm_extra_conf.py' )
@@ -165,24 +167,38 @@ class Client_test( object ):
       'debug_info',
       BuildRequest( filepath = filepath,
                     filetype = filetype )
-    )
-    pid_match = re.search( 'process ID: (\d+)', response.json() )
+    ).json()
+
+    pid_match = re.search( 'process ID: (\d+)', response )
     if not pid_match:
       raise RuntimeError( 'Cannot find PID in debug informations for {0} '
                           'filetype.'.format( filetype ) )
     subserver_pid = int( pid_match.group( 1 ) )
-    self.subservers.append( psutil.Process( subserver_pid ) )
+    self._servers.append( psutil.Process( subserver_pid ) )
+
+    logfiles = re.findall( '(\S+\.log)', response )
+    if not logfiles:
+      raise RuntimeError( 'Cannot find logfiles in debug informations for {0} '
+                          'filetype.'.format( filetype ) )
+    self._logfiles.extend( logfiles )
 
 
-  def AssertServerAndSubserversAreRunning( self ):
-    for server in [ self.server ] + self.subservers:
+  def AssertServersAreRunning( self ):
+    for server in self._servers:
       assert_that( server.is_running(), equal_to( True ) )
 
 
-  def AssertServerAndSubserversShutDown( self, timeout = 5 ):
-    _, alive = psutil.wait_procs( [ self.server ] + self.subservers,
-                                  timeout = timeout )
-    assert_that( alive, has_length( equal_to( 0 ) ) )
+  def AssertServersShutDown( self, timeout = 5 ):
+    _, alive_procs = psutil.wait_procs( self._servers, timeout = timeout )
+    assert_that( alive_procs, empty() )
+
+
+  def AssertLogfilesAreRemoved( self ):
+    existing_logfiles = []
+    for logfile in self._logfiles:
+      if os.path.isfile( logfile ):
+        existing_logfiles.append( logfile )
+    assert_that( existing_logfiles, empty() )
 
 
   def GetRequest( self, handler, params = None ):
@@ -243,13 +259,16 @@ class Client_test( object ):
 
 
   @staticmethod
-  def CaptureOutputFromServer( test ):
+  def CaptureLogfiles( test ):
     @functools.wraps( test )
     def Wrapper( self, *args ):
       try:
         test( self, *args )
       finally:
-        if self._stdout:
-          sys.stdout.write( ReadFile( self._stdout ) )
+        for logfile in self._logfiles:
+          if os.path.isfile( logfile ):
+            sys.stdout.write( 'Logfile {0}:\n\n'.format( logfile ) )
+            sys.stdout.write( ReadFile( logfile ) )
+            sys.stdout.write( '\n' )
 
     return Wrapper
