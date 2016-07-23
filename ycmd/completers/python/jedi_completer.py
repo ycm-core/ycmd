@@ -133,6 +133,7 @@ class JediCompleter( Completer ):
       self._logger.info( 'Stopping JediHTTP' )
       if self._jedihttp_phandle:
         self._jedihttp_phandle.terminate()
+        self._jedihttp_phandle.wait()
         self._jedihttp_phandle = None
         self._jedihttp_port = None
 

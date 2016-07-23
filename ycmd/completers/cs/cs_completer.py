@@ -418,10 +418,11 @@ class CsharpSolutionCompleter( object ):
 
       self._TryToStopServer()
 
-      # Kill it if it's still up
+      # Terminate it if it's still up
       if self._ServerIsRunning():
-        self._logger.info( 'Killing OmniSharp server' )
-        self._omnisharp_phandle.kill()
+        self._logger.info( 'Terminating OmniSharp server' )
+        self._omnisharp_phandle.terminate()
+        self._omnisharp_phandle.wait()
 
       self._CleanupAfterServerStop()
 
