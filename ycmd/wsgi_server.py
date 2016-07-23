@@ -38,6 +38,13 @@ class StoppableWSGIServer( TcpWSGIServer ):
   def Run( self ):
     """Wrapper of TcpWSGIServer run method. It prevents a traceback from
     asyncore."""
+
+    # Message for compatibility with clients who expect the output from
+    # waitress.serve here
+    print( 'serving on http://{0}:{1}'.format(
+      self.effective_host,
+      self.effective_port ) )
+
     try:
       self.run()
     except select.error:
