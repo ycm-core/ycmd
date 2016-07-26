@@ -51,8 +51,8 @@ def MiscHandlers_EventNotification_AlwaysJsonResponse_test( app ):
 
 @SharedYcmd
 def MiscHandlers_EventNotification_ReturnJsonOnBigFileError_test( app ):
-  # We generate a content greater than Bottle.MEMFILE_MAX, which is set to 1MB.
-  contents = "foo " * 500000
+  # We generate a content greater than Bottle.MEMFILE_MAX, which is set to 10MB.
+  contents = "foo " * 5000000
   event_data = BuildRequest( contents = contents,
                              event_name = 'FileReadyToParse' )
 

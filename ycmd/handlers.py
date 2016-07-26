@@ -41,7 +41,7 @@ from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap
 
 # num bytes for the request body buffer; request.json only works if the request
 # size is less than this
-bottle.Request.MEMFILE_MAX = 1000 * 1024
+bottle.Request.MEMFILE_MAX = 10000 * 1024
 
 _server_state = None
 _hmac_secret = bytes()
