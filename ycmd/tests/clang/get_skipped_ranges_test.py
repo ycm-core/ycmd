@@ -73,6 +73,17 @@ def _RunTest( app, expect ):
 
 
 @SharedYcmd
+def InvalidFile_test( app ):
+  request = {
+    'filetypes': 'cpp',
+    'filepath': '',
+  }
+  response = app.post_json( '/skipped_ranges', BuildRequest( **request ),
+                            expect_errors = True )
+  eq_( response.status_code, requests.codes.server_error )
+
+
+@SharedYcmd
 def SkippedRanges_test( app ):
   _SendReadyToParse( app )
   _RunTest( app,

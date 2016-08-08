@@ -76,6 +76,21 @@ def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
 
 
 @SharedYcmd
+def InvalidFile_test( app ):
+  request = {
+    'filetypes': 'cpp',
+    'filepath': '',
+    'start_line': 1,
+    'start_column': 1,
+    'end_line': 1,
+    'end_column': 1,
+  }
+  response = app.post_json( '/semantic_tokens', BuildRequest( **request ),
+                            expect_errors = True )
+  eq_( response.status_code, requests.codes.server_error )
+
+
+@SharedYcmd
 def PreprocessingTokens_test( app ):
   _RunTest( app, 1, 1, 4, 22,
             has_items(
