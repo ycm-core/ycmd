@@ -319,6 +319,12 @@ add_library( ${PROJECT_NAME} SHARED
              ${SERVER_SOURCES}
            )
 
+if ( USE_CLANG_COMPLETER AND NOT LIBCLANG_TARGET )
+     message( FATAL_ERROR "Using Clang completer, but no libclang found. "
+                          "Try setting EXTERNAL_LIBCLANG_PATH or revise "
+                          "your configuration" )
+endif()
+
 target_link_libraries( ${PROJECT_NAME}
                        ${Boost_LIBRARIES}
                        ${PYTHON_LIBRARIES}
