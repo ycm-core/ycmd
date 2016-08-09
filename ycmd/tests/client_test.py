@@ -130,10 +130,10 @@ class Client_test( object ):
 
 
   def _WaitUntilReady( self, filetype = None, timeout = 5 ):
-    total_slept = 0
+    expiration = time.time() + timeout
     while True:
       try:
-        if total_slept > timeout:
+        if time.time() > expiration:
           server = ( 'the {0} subserver'.format( filetype ) if filetype else
                      'ycmd' )
           raise RuntimeError( 'Waited for {0} to be ready for {1} seconds, '
@@ -145,7 +145,6 @@ class Client_test( object ):
         pass
       finally:
         time.sleep( 0.1 )
-        total_slept += 0.1
 
 
   def StartSubserverForFiletype( self, filetype ):
