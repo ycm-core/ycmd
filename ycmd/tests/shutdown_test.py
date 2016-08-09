@@ -33,7 +33,6 @@ class Shutdown_test( Client_test ):
   @Client_test.CaptureOutputFromServer
   def FromHandlerWithoutSubserver_test( self ):
     self.Start()
-    self.WaitUntilReady()
     self.AssertServerAndSubserversAreRunning()
 
     response = self.PostRequest( 'shutdown' )
@@ -45,11 +44,9 @@ class Shutdown_test( Client_test ):
   @Client_test.CaptureOutputFromServer
   def FromHandlerWithSubservers_test( self ):
     self.Start()
-    self.WaitUntilReady()
 
-    # C# subserver cannot be started without a solution file so we don't test
-    # it.
-    filetypes = [ 'go',
+    filetypes = [ 'cs',
+                  'go',
                   'javascript',
                   'python',
                   'typescript',
@@ -67,7 +64,6 @@ class Shutdown_test( Client_test ):
   @Client_test.CaptureOutputFromServer
   def FromWatchdogWithoutSubserver_test( self ):
     self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
-    self.WaitUntilReady()
     self.AssertServerAndSubserversAreRunning()
 
     self.AssertServerAndSubserversShutDown( timeout = 5 )
@@ -76,11 +72,9 @@ class Shutdown_test( Client_test ):
   @Client_test.CaptureOutputFromServer
   def FromWatchdogWithSubservers_test( self ):
     self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
-    self.WaitUntilReady()
 
-    # C# subserver cannot be started without a solution file so we don't test
-    # it.
-    filetypes = [ 'go',
+    filetypes = [ 'cs',
+                  'go',
                   'javascript',
                   'python',
                   'typescript',

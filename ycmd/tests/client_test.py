@@ -39,6 +39,7 @@ import time
 import urllib.parse
 
 from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
+from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
 from ycmd.utils import ( GetUnusedLocalhostPort, OpenForStdHandle,
@@ -114,6 +115,10 @@ class Client_test( object ):
                                    env = env )
         self.server = psutil.Process( _popen_handle.pid )
 
+      self._WaitUntilReady()
+      extra_conf = PathToTestFile( 'client', '.ycm_extra_conf.py' )
+      self.PostRequest( 'load_extra_conf_file', { 'filepath': extra_conf } )
+
 
   def _IsReady( self, filetype = None ):
     params = { 'subserver': filetype } if filetype else None
@@ -122,14 +127,15 @@ class Client_test( object ):
     return response.json()
 
 
-  def WaitUntilReady( self, filetype = None, timeout = 5 ):
+  def _WaitUntilReady( self, filetype = None, timeout = 5 ):
     total_slept = 0
     while True:
       try:
         if total_slept > timeout:
-          raise RuntimeError( 'Waited for the server to be ready '
-                              'for {0} seconds, aborting.'.format(
-                                timeout ) )
+          server = ( 'the {0} subserver'.format( filetype ) if filetype else
+                     'ycmd' )
+          raise RuntimeError( 'Waited for {0} to be ready for {1} seconds, '
+                              'aborting.'.format( server, timeout ) )
 
         if self._IsReady( filetype ):
           return
@@ -141,12 +147,24 @@ class Client_test( object ):
 
 
   def StartSubserverForFiletype( self, filetype ):
-    # This automatically starts the subserver if not already started.
-    self.WaitUntilReady( filetype )
+    filepath = PathToTestFile( 'client', 'some_file' )
+    # Calling the BufferVisit event before the FileReadyToParse one is needed
+    # for the TypeScript completer.
+    self.PostRequest( 'event_notification',
+                      BuildRequest( filepath = filepath,
+                                    filetype = filetype,
+                                    event_name = 'BufferVisit' ) )
+    self.PostRequest( 'event_notification',
+                      BuildRequest( filepath = filepath,
+                                    filetype = filetype,
+                                    event_name = 'FileReadyToParse' ) )
+
+    self._WaitUntilReady( filetype )
 
     response = self.PostRequest(
       'debug_info',
-      BuildRequest( filetype = filetype )
+      BuildRequest( filepath = filepath,
+                    filetype = filetype )
     )
     pid_match = re.search( 'process ID: (\d+)', response.json() )
     if not pid_match:
