@@ -26,12 +26,6 @@ if %arch% == 32 (
 
 set PATH=%python_path%;%python_path%\Scripts;%PATH%
 python --version
-:: Manually setting PYTHONHOME for python 2.7.11 fix the following error when
-:: running core tests: "ImportError: No module named site"
-:: TODO: check if this is still needed when python 2.7.12 is released.
-if %python% == 27 (
-  set PYTHONHOME=%python_path%
-)
 
 appveyor DownloadFile https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
