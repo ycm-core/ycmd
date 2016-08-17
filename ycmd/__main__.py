@@ -104,7 +104,7 @@ def ParseArguments():
                        help = 'num idle seconds before server shuts down')
   parser.add_argument( '--check_interval_seconds', type = int, default = 600,
                        help = 'interval in seconds to check server '
-                              'inactivity' )
+                              'inactivity and keep subservers alive' )
   parser.add_argument( '--options_file', type = str, required = True,
                        help = 'file with user options, in JSON format' )
   parser.add_argument( '--stdout', type = str, default = None,
@@ -171,6 +171,7 @@ def Main():
   from ycmd.watchdog_plugin import WatchdogPlugin
   handlers.UpdateUserOptions( options )
   handlers.SetHmacSecret( hmac_secret )
+  handlers.KeepSubserversAlive( args.check_interval_seconds )
   SetUpSignalHandler( args.stdout, args.stderr, args.keep_logfiles )
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
                                         args.check_interval_seconds ) )
