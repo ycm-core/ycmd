@@ -27,6 +27,7 @@ import atexit
 import bottle
 import json
 import logging
+import time
 import traceback
 from bottle import request
 from threading import Thread
@@ -311,3 +312,19 @@ def SetServerStateToDefaults():
   user_options_store.LoadDefaults()
   _server_state = server_state.ServerState( user_options_store.GetAll() )
   extra_conf_store.Reset()
+
+
+def KeepSubserversAlive( check_interval_seconds ):
+  def Keepalive( check_interval_seconds ):
+    while True:
+      time.sleep( check_interval_seconds )
+
+      _logger.debug( 'Keeping subservers alive' )
+      loaded_completers = _server_state.GetLoadedFiletypeCompleters()
+      for completer in loaded_completers:
+        completer.ServerIsHealthy()
+
+  keepalive = Thread( target = Keepalive,
+                      args = ( check_interval_seconds, ) )
+  keepalive.daemon = True
+  keepalive.start()
