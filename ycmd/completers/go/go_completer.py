@@ -141,6 +141,7 @@ class GoCompleter( Completer ):
                              request_data[ 'start_column' ] )
 
     stdoutdata = self._ExecuteCommand( [ self._gocode_binary_path,
+                                         '-sock', 'tcp',
                                          '-addr', self._gocode_address,
                                          '-f=json', 'autocomplete',
                                          filename, str( offset ) ],
@@ -236,6 +237,7 @@ class GoCompleter( Completer ):
         _logger.info( 'Stopping Gocode server with PID {0}'.format(
                           self._gocode_handle.pid ) )
         self._ExecuteCommand( [ self._gocode_binary_path,
+                                '-sock', 'tcp',
                                 '-addr', self._gocode_address,
                                 'close' ] )
         self._gocode_handle.wait()
@@ -314,6 +316,7 @@ class GoCompleter( Completer ):
 
     try:
       self._ExecuteCommand( [ self._gocode_binary_path,
+                              '-sock', 'tcp',
                               '-addr', self._gocode_address,
                               'status' ] )
       return True
