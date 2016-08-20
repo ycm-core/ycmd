@@ -438,16 +438,13 @@ class TernCompleter( Completer ):
   def _StopServer( self ):
     with self._server_state_mutex:
       if self._ServerIsRunning():
-        _logger.info( 'Stopping Tern server with PID '
-                      + str( self._server_handle.pid )
-                      + '...' )
-
+        _logger.info( 'Stopping Tern server with PID {0}'.format(
+                          self._server_handle.pid ) )
         self._server_handle.terminate()
         self._server_handle.wait()
+        _logger.info( 'Tern server stopped.' )
 
-        _logger.info( 'Tern server terminated.' )
-
-        self._Reset()
+      self._Reset()
 
 
   def _ServerIsRunning( self ):

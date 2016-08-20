@@ -536,15 +536,20 @@ class TypeScriptCompleter( Completer ):
 
   def _StopServer( self ):
     with self._server_lock:
-      if not self._ServerIsRunning():
-        return
+      if self._ServerIsRunning():
+        _logger.info( 'Stopping TSServer with PID {0}'.format(
+                          self._tsserver_handle.pid ) )
+        self._SendCommand( 'exit' )
+        self._tsserver_handle.wait()
+        _logger.info( 'TSServer stopped' )
 
-      self._SendCommand( 'exit' )
-      self._tsserver_handle.wait()
+      self._CleanUp()
 
-      if not self.user_options[ 'server_keep_logfiles' ]:
-        utils.RemoveIfExists( self._logfile )
-        self._logfile = None
+
+  def _CleanUp( self ):
+    if not self.user_options[ 'server_keep_logfiles' ]:
+      utils.RemoveIfExists( self._logfile )
+      self._logfile = None
 
 
   def Shutdown( self ):

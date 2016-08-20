@@ -232,27 +232,29 @@ class GoCompleter( Completer ):
   def _StopServer( self ):
     """Stop the Gocode server."""
     with self._gocode_lock:
-      _logger.info( 'Stopping Gocode server' )
-
       if self._ServerIsRunning():
+        _logger.info( 'Stopping Gocode server with PID {0}'.format(
+                          self._gocode_handle.pid ) )
         self._ExecuteCommand( [ self._gocode_binary_path,
                                 '-addr', self._gocode_address,
                                 'close' ] )
-        self._gocode_handle.terminate()
         self._gocode_handle.wait()
+        _logger.info( 'Gocode server stopped' )
 
-      self._gocode_handle = None
-      self._gocode_port = None
-      self._gocode_address = None
+      self._CleanUp()
 
-      if not self._keep_logfiles:
-        if self._gocode_stdout:
-          utils.RemoveIfExists( self._gocode_stdout )
-          self._gocode_stdout = None
 
-        if self._gocode_stderr:
-          utils.RemoveIfExists( self._gocode_stderr )
-          self._gocode_stderr = None
+  def _CleanUp( self ):
+    self._gocode_handle = None
+    self._gocode_port = None
+    self._gocode_address = None
+    if not self._keep_logfiles:
+      if self._gocode_stdout:
+        utils.RemoveIfExists( self._gocode_stdout )
+        self._gocode_stdout = None
+      if self._gocode_stderr:
+        utils.RemoveIfExists( self._gocode_stderr )
+        self._gocode_stderr = None
 
 
   def _RestartServer( self ):

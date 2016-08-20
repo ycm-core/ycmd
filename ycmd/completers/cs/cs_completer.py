@@ -27,7 +27,6 @@ from future.utils import itervalues
 
 from collections import defaultdict
 import os
-import time
 import re
 from ycmd.completers.completer import Completer
 from ycmd.utils import ForceSemanticCompletion, CodepointOffsetToByteOffset
@@ -72,10 +71,9 @@ class CsharpCompleter( Completer ):
 
 
   def Shutdown( self ):
-    if ( self.user_options[ 'auto_stop_csharp_server' ] ):
+    if self.user_options[ 'auto_stop_csharp_server' ]:
       for solutioncompleter in itervalues( self._completer_per_solution ):
-        if solutioncompleter._ServerIsRunning():
-          solutioncompleter._StopServer()
+        solutioncompleter._StopServer()
 
 
   def SupportedFiletypes( self ):
@@ -411,40 +409,20 @@ class CsharpSolutionCompleter( object ):
   def _StopServer( self ):
     """ Stop the OmniSharp server using a lock. """
     with self._server_state_lock:
-      if not self._ServerIsRunning():
-        return
-
-      self._logger.info( 'Stopping OmniSharp server' )
-
-      self._TryToStopServer()
-
-      # Terminate it if it's still up
       if self._ServerIsRunning():
-        self._logger.info( 'Terminating OmniSharp server' )
-        self._omnisharp_phandle.terminate()
+        self._logger.info( 'Stopping OmniSharp server with PID {0}'.format(
+                               self._omnisharp_phandle.pid ) )
+        self._GetResponse( '/stopserver' )
         self._omnisharp_phandle.wait()
+        self._logger.info( 'Stopped OmniSharp server' )
 
-      self._CleanupAfterServerStop()
-
-      self._logger.info( 'Stopped OmniSharp server' )
-
-
-  def _TryToStopServer( self ):
-    for _ in range( 5 ):
-      try:
-        self._GetResponse( '/stopserver', timeout = .1 )
-      except:
-        pass
-      for _ in range( 10 ):
-        if not self._ServerIsRunning():
-          return
-        time.sleep( .1 )
+      self._CleanUp()
 
 
-  def _CleanupAfterServerStop( self ):
+  def _CleanUp( self ):
     self._omnisharp_port = None
     self._omnisharp_phandle = None
-    if ( not self._keep_logfiles ):
+    if not self._keep_logfiles:
       if self._filename_stdout:
         utils.RemoveIfExists( self._filename_stdout )
         self._filename_stdout = None

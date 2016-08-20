@@ -91,8 +91,7 @@ class JediCompleter( Completer ):
 
 
   def Shutdown( self ):
-    if self._ServerIsRunning():
-      self._StopServer()
+    self._StopServer()
 
 
   def ServerIsHealthy( self ):
@@ -130,18 +129,24 @@ class JediCompleter( Completer ):
 
   def _StopServer( self ):
     with self._server_lock:
-      self._logger.info( 'Stopping JediHTTP' )
-      if self._jedihttp_phandle:
+      if self._ServerIsRunning():
+        self._logger.info( 'Stopping JediHTTP server with PID {0}'.format(
+                               self._jedihttp_phandle.pid ) )
         self._jedihttp_phandle.terminate()
         self._jedihttp_phandle.wait()
-        self._jedihttp_phandle = None
-        self._jedihttp_port = None
+        self._logger.info( 'JediHTTP server stopped' )
 
-      if not self._keep_logfiles:
-        utils.RemoveIfExists( self._logfile_stdout )
-        self._logfile_stdout = None
-        utils.RemoveIfExists( self._logfile_stderr )
-        self._logfile_stderr = None
+      self._CleanUp()
+
+
+  def _CleanUp( self ):
+    self._jedihttp_phandle = None
+    self._jedihttp_port = None
+    if not self._keep_logfiles:
+      utils.RemoveIfExists( self._logfile_stdout )
+      self._logfile_stdout = None
+      utils.RemoveIfExists( self._logfile_stderr )
+      self._logfile_stderr = None
 
 
   def _StartServer( self ):
