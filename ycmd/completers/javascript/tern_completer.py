@@ -441,8 +441,12 @@ class TernCompleter( Completer ):
         _logger.info( 'Stopping Tern server with PID {0}'.format(
                           self._server_handle.pid ) )
         self._server_handle.terminate()
-        self._server_handle.wait()
-        _logger.info( 'Tern server stopped.' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                              timeout = 5 )
+          _logger.info( 'Tern server stopped' )
+        except RuntimeError:
+          _logger.exception( 'Error while stopping Tern server' )
 
       self._Reset()
 

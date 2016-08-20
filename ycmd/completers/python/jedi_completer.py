@@ -133,8 +133,12 @@ class JediCompleter( Completer ):
         self._logger.info( 'Stopping JediHTTP server with PID {0}'.format(
                                self._jedihttp_phandle.pid ) )
         self._jedihttp_phandle.terminate()
-        self._jedihttp_phandle.wait()
-        self._logger.info( 'JediHTTP server stopped' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._jedihttp_phandle,
+                                              timeout = 5 )
+          self._logger.info( 'JediHTTP server stopped' )
+        except RuntimeError:
+          self._logger.exception( 'Error while stopping JediHTTP server' )
 
       self._CleanUp()
 

@@ -26,13 +26,13 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 from future.utils import PY2, native
 
-import tempfile
 import os
-import sys
-import signal
 import socket
 import stat
 import subprocess
+import sys
+import tempfile
+import time
 
 
 # Creation flag to disable creating a console window on Windows. See
@@ -281,18 +281,15 @@ def ProcessIsRunning( handle ):
   return handle is not None and handle.poll() is None
 
 
-# From here: http://stackoverflow.com/a/8536476/1672783
-def TerminateProcess( pid ):
-  if OnWindows():
-    import ctypes
-    PROCESS_TERMINATE = 1
-    handle = ctypes.windll.kernel32.OpenProcess( PROCESS_TERMINATE,
-                                                 False,
-                                                 pid )
-    ctypes.windll.kernel32.TerminateProcess( handle, -1 )
-    ctypes.windll.kernel32.CloseHandle( handle )
-  else:
-    os.kill( pid, signal.SIGTERM )
+def WaitUntilProcessIsTerminated( handle, timeout = 5 ):
+  expiration = time.time() + timeout
+  while True:
+    if time.time() > expiration:
+      raise RuntimeError( 'Waited process to terminate for {0} seconds, '
+                          'aborting.'.format( timeout ) )
+    if not ProcessIsRunning( handle ):
+      return
+    time.sleep( 0.1 )
 
 
 def PathsToAllParentFolders( path ):

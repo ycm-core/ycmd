@@ -335,8 +335,12 @@ class RustCompleter( Completer ):
         _logger.info( 'Stopping Racerd with PID {0}'.format(
                           self._racerd_phandle.pid ) )
         self._racerd_phandle.terminate()
-        self._racerd_phandle.wait()
-        _logger.info( 'Racerd stopped' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._racerd_phandle,
+                                              timeout = 5 )
+          _logger.info( 'Racerd stopped' )
+        except RuntimeError:
+          _logger.exception( 'Error while stopping Racerd' )
 
       self._CleanUp()
 

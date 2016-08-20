@@ -540,8 +540,12 @@ class TypeScriptCompleter( Completer ):
         _logger.info( 'Stopping TSServer with PID {0}'.format(
                           self._tsserver_handle.pid ) )
         self._SendCommand( 'exit' )
-        self._tsserver_handle.wait()
-        _logger.info( 'TSServer stopped' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._tsserver_handle,
+                                              timeout = 5 )
+          _logger.info( 'TSServer stopped' )
+        except RuntimeError:
+          _logger.exception( 'Error while stopping TSServer' )
 
       self._CleanUp()
 

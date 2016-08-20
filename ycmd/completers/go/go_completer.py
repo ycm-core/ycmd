@@ -240,8 +240,11 @@ class GoCompleter( Completer ):
                                 '-sock', 'tcp',
                                 '-addr', self._gocode_address,
                                 'close' ] )
-        self._gocode_handle.wait()
-        _logger.info( 'Gocode server stopped' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._gocode_handle, timeout = 5 )
+          _logger.info( 'Gocode server stopped' )
+        except RuntimeError:
+          _logger.exception( 'Error while stopping Gocode server' )
 
       self._CleanUp()
 
