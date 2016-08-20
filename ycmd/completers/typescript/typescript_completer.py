@@ -253,7 +253,7 @@ class TypeScriptCompleter( Completer ):
         self._tsserver_handle.stdin.write( serialized_request )
         self._tsserver_handle.stdin.flush()
       # IOError is an alias of OSError in Python 3.
-      except IOError:
+      except ( AttributeError, IOError ):
         _logger.exception( SERVER_NOT_RUNNING_MESSAGE )
         raise RuntimeError( SERVER_NOT_RUNNING_MESSAGE )
 
@@ -551,6 +551,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def _CleanUp( self ):
+    self._tsserver_handle = None
     if not self.user_options[ 'server_keep_logfiles' ]:
       utils.RemoveIfExists( self._logfile )
       self._logfile = None
