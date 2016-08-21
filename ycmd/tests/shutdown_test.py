@@ -74,7 +74,7 @@ class Shutdown_test( Client_test ):
 
   @Client_test.CaptureLogfiles
   def FromWatchdogWithSubservers_test( self ):
-    self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
+    self.Start( idle_suicide_seconds = 5, check_interval_seconds = 1 )
 
     filetypes = [ 'cs',
                   'go',
@@ -86,5 +86,5 @@ class Shutdown_test( Client_test ):
       self.StartSubserverForFiletype( filetype )
     self.AssertServersAreRunning()
 
-    self.AssertServersShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = 15 )
     self.AssertLogfilesAreRemoved()
