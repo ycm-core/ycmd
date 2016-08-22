@@ -26,9 +26,10 @@ namespace {
 // Recursive call is made for the reference cursor kind,
 // with the referenced cursor as an argument,
 // therefore recursion level should not exceed 2.
-Token::Type CXCursorToTokenType( const CXCursor& cursor ) {
+Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
   CXCursorKind kind = clang_getCursorKind( cursor );
-  switch (kind) {
+
+  switch ( kind ) {
     case CXCursor_IntegerLiteral:
       return Token::INTEGER;
 
@@ -79,6 +80,7 @@ Token::Type CXCursorToTokenType( const CXCursor& cursor ) {
       return Token::PREPROCESSING_DIRECTIVE;
 
     case CXCursor_MacroDefinition:
+
     //case CXCursor_MacroExpansion: // Same as CXCursor_MacroInstantiation
     case CXCursor_MacroInstantiation:
       return Token::MACRO;
@@ -99,9 +101,9 @@ Token::Type CXCursorToTokenType( const CXCursor& cursor ) {
     case CXCursor_DeclRefExpr:
     case CXCursor_MemberRefExpr:
     case CXCursor_MemberRef:
-    case CXCursor_VariableRef:
-    {
+    case CXCursor_VariableRef: {
       CXCursor ref = clang_getCursorReferenced( cursor );
+
       if ( clang_Cursor_isNull( ref ) ) {
         return Token::UNSUPPORTED;
       } else {
@@ -119,41 +121,44 @@ Token::Type CXCursorToTokenType( const CXCursor& cursor ) {
 Token::Token()
   : kind( Token::IDENTIFIER )
   , type( Token::UNSUPPORTED )
-  , range()
-{
+  , range() {
 }
 
-Token::Token( const CXTokenKind cx_kind, const CXSourceRange& cx_range,
-              const CXCursor& cx_cursor )
-  : range( cx_range )
-{
+Token::Token( const CXTokenKind cx_kind, const CXSourceRange &cx_range,
+              const CXCursor &cx_cursor )
+  : range( cx_range ) {
   MapKindAndType( cx_kind, cx_cursor );
 }
 
-bool Token::operator==( const Token& other ) const {
+bool Token::operator==( const Token &other ) const {
   return kind == other.kind &&
          type == other.type &&
          range == other.range;
 }
 
-void Token::MapKindAndType( const CXTokenKind cx_kind, const CXCursor& cx_cursor ) {
+void Token::MapKindAndType( const CXTokenKind cx_kind,
+                            const CXCursor &cx_cursor ) {
   switch ( cx_kind ) {
     case CXToken_Punctuation:
       kind = Token::PUNCTUATION;
       type = Token::NONE;
       break;
+
     case CXToken_Keyword:
       kind = Token::KEYWORD;
       type = Token::NONE;
       break;
+
     case CXToken_Identifier:
       kind = Token::IDENTIFIER;
       type = CXCursorToTokenType( cx_cursor );
       break;
+
     case CXToken_Literal:
       kind = Token::LITERAL;
       type = CXCursorToTokenType( cx_cursor );
       break;
+
     case CXToken_Comment:
       kind = Token::COMMENT;
       type = Token::NONE;

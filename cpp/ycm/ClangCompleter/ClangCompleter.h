@@ -109,13 +109,13 @@ public:
     bool reparse = true );
 
   std::vector< Token > GetSemanticTokens(
-    const std::string& filename,
+    const std::string &filename,
     int start_line,
     int start_column,
     int end_line,
     int end_column );
 
-  std::vector< Range > GetSkippedRanges( const std::string& filename );
+  std::vector< Range > GetSkippedRanges( const std::string &filename );
 
   void DeleteCachesForFile( const std::string &filename );
 

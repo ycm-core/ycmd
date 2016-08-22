@@ -40,7 +40,7 @@ struct Token {
 
   // Divided into groups of possible values for each Kind enum value.
   enum Type {
-    // Punctutation and Comment
+    // Punctuation and Comment
     NONE = 0,
 
     // Literal types
@@ -72,10 +72,10 @@ struct Token {
 
   Token();
 
-  Token( const CXTokenKind kind, const CXSourceRange& tokenRange,
-         const CXCursor& cursor );
+  Token( const CXTokenKind kind, const CXSourceRange &tokenRange,
+         const CXCursor &cursor );
 
-  bool operator==( const Token& other ) const;
+  bool operator==( const Token &other ) const;
 
   Kind kind;
 
@@ -85,7 +85,7 @@ struct Token {
 
 private:
 
-  void MapKindAndType( const CXTokenKind kind, const CXCursor& cursor );
+  void MapKindAndType( const CXTokenKind kind, const CXCursor &cursor );
 
 };
 

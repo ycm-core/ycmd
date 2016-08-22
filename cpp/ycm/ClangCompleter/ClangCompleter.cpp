@@ -251,7 +251,7 @@ DocumentationData ClangCompleter::GetDocsForLocationInFile(
 }
 
 std::vector< Token > ClangCompleter::GetSemanticTokens(
-  const std::string& filename,
+  const std::string &filename,
   int start_line,
   int start_column,
   int end_line,
@@ -268,7 +268,7 @@ std::vector< Token > ClangCompleter::GetSemanticTokens(
 }
 
 std::vector< Range > ClangCompleter::GetSkippedRanges(
-  const std::string& filename ) {
+  const std::string &filename ) {
 
   ReleaseGil unlock;
   shared_ptr< TranslationUnit > unit = translation_unit_store_.Get( filename );

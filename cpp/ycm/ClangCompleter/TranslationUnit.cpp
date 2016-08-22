@@ -83,7 +83,7 @@ TranslationUnit::TranslationUnit(
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
-  foreach ( const std::string & flag, flags ) {
+  foreach ( const std::string &flag, flags ) {
     pointer_flags.push_back( flag.c_str() );
   }
 
@@ -426,7 +426,7 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
-    foreach( const Diagnostic& diagnostic, latest_diagnostics_ ) {
+    foreach ( const Diagnostic &diagnostic, latest_diagnostics_ ) {
       // Find all diagnostics for the supplied line which have FixIts attached
       if ( diagnostic.location_.line_number_ == static_cast< uint >( line ) ) {
         fixits.insert( fixits.end(),
@@ -489,11 +489,12 @@ std::vector< Token > TranslationUnit::GetSemanticTokens(
   unique_lock< mutex > lock( clang_access_mutex_ );
   CXSourceRange range = GetSourceRange( start_line, start_column,
                                         end_line, end_column );
+
   if ( clang_Range_isNull( range ) ) {
     return std::vector< Token >();
   }
 
-  CXToken* tokens = NULL;
+  CXToken *tokens = NULL;
   uint num_tokens = 0;
   clang_tokenize( clang_translation_unit_, range, &tokens, &num_tokens );
 
@@ -503,6 +504,7 @@ std::vector< Token > TranslationUnit::GetSemanticTokens(
 
   std::vector< Token > semantic_tokens;
   semantic_tokens.reserve( num_tokens );
+
   for ( uint i = 0; i < num_tokens; ++i ) {
     CXTokenKind tokenKind = clang_getTokenKind( tokens[i] );
     CXSourceRange tokenRange = clang_getTokenExtent( clang_translation_unit_,
@@ -518,16 +520,17 @@ std::vector< Range > TranslationUnit::GetSkippedRanges() {
 
   unique_lock< mutex > lock( clang_access_mutex_ );
   CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
-  CXSourceRangeList* source_ranges =
-          clang_getSkippedRanges( clang_translation_unit_, file );
+  CXSourceRangeList *source_ranges =
+    clang_getSkippedRanges( clang_translation_unit_, file );
 
   if ( source_ranges == NULL )
     return std::vector< Range >();
 
   std::vector< Range > skipped_ranges;
   skipped_ranges.reserve( source_ranges->count );
+
   for ( uint i = 0; i < source_ranges->count; ++i ) {
-    const CXSourceRange& range = source_ranges->ranges[ i ];
+    const CXSourceRange &range = source_ranges->ranges[ i ];
     skipped_ranges.push_back( Range( range ) );
   }
 
@@ -558,6 +561,7 @@ CXSourceRange TranslationUnit::GetSourceRange(
   if ( !clang_translation_unit_ ) {
     return clang_getNullRange();
   }
+
   CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
   CXSourceLocation start = clang_getLocation( clang_translation_unit_, file,
                                               start_line, start_column );
