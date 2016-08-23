@@ -22,7 +22,6 @@ from __future__ import absolute_import
 # No other imports from `future` because this module is loaded before we have
 # put our submodules in sys.path
 
-from distutils import sysconfig
 import io
 import logging
 import os
@@ -146,10 +145,8 @@ def PathToNearestThirdPartyFolder( path ):
 
 
 def GetStandardLibraryIndexInSysPath():
-  standard_library_path = os.path.normcase(
-    sysconfig.get_python_lib( standard_lib = True ) )
   for path in sys.path:
-    if os.path.normcase( path ) == standard_library_path:
+    if os.path.isfile( os.path.join( path, 'os.py' ) ):
       return sys.path.index( path )
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
