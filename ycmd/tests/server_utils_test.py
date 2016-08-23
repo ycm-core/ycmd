@@ -33,6 +33,7 @@ import sys
 from ycmd.server_utils import ( AddNearestThirdPartyFoldersToSysPath,
                                 CompatibleWithCurrentCore,
                                 PathToNearestThirdPartyFolder )
+from ycmd.tests import PathToTestFile
 
 DIR_OF_THIRD_PARTY = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', 'third_party' ) )
@@ -169,12 +170,11 @@ def AddNearestThirdPartyFoldersToSysPath_Failure_test():
     raises( RuntimeError, '.*third_party folder.*' ) )
 
 
-@patch( 'sys.path', [ '/some/path',
-                      '/path/to/standard/library',
-                      '/path/to/standard/library/site-packages',
-                      '/another/path' ] )
-@patch( 'distutils.sysconfig.get_python_lib',
-        return_value = '/path/to/standard/library' )
+@patch( 'sys.path', [
+  PathToTestFile( 'python-future', 'some', 'path' ),
+  PathToTestFile( 'python-future', 'standard_library' ),
+  PathToTestFile( 'python-future', 'standard_library', 'site-packages' ),
+  PathToTestFile( 'python-future', 'another', 'path' ) ] )
 def AddNearestThirdPartyFoldersToSysPath_FutureAfterStandardLibrary_test(
   *args ):
   AddNearestThirdPartyFoldersToSysPath( __file__ )
@@ -182,18 +182,17 @@ def AddNearestThirdPartyFoldersToSysPath_FutureAfterStandardLibrary_test(
     *THIRD_PARTY_FOLDERS
   ) )
   assert_that( sys.path[ len( THIRD_PARTY_FOLDERS ) : ], contains(
-    '/some/path',
-    '/path/to/standard/library',
+    PathToTestFile( 'python-future', 'some', 'path' ),
+    PathToTestFile( 'python-future', 'standard_library' ),
     os.path.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ),
-    '/path/to/standard/library/site-packages',
-    '/another/path'
+    PathToTestFile( 'python-future', 'standard_library', 'site-packages' ),
+    PathToTestFile( 'python-future', 'another', 'path' )
   ) )
 
 
-@patch( 'sys.path', [ '/some/path',
-                      '/another/path' ] )
-@patch( 'distutils.sysconfig.get_python_lib',
-        return_value = '/path/to/standard/library' )
+@patch( 'sys.path', [
+  PathToTestFile( 'python_future', 'some', 'path' ),
+  PathToTestFile( 'python_future', 'another', 'path' ) ] )
 def AddNearestThirdPartyFoldersToSysPath_ErrorIfNoStandardLibrary_test( *args ):
   assert_that(
     calling( AddNearestThirdPartyFoldersToSysPath ).with_args( __file__ ),
