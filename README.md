@@ -41,6 +41,10 @@ First, install the dependencies:
 ```
 sudo apt-get install build-essential cmake python-dev
 ```
+on Fedora 23+
+```
+sudo dnf install python git cmake tar xz clang make
+```
 
 When you first clone the repository you'll need to update the submodules:
 ```
