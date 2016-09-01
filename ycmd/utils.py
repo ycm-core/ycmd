@@ -273,6 +273,29 @@ def OnCygwin():
   return sys.platform == 'cygwin'
 
 
+def CygWinPath(path):
+    """If we're on cygwin, convert the path from cygwin's format to a
+    windows path.
+
+    This is only useful if we've configured JediHTTP to run using a
+    Windows python.
+    """
+    if not OnCygwin():
+        return path
+
+    cmd = ['cygpath', '-ma', path]
+    return subprocess.check_output(cmd).strip()
+
+
+def IsWindowsPython(executable):
+    """If we are on cygwin, we need to determine if its the win32 or
+    CYGWIN python executable.
+    """
+    cmd = [executable, '-c', '''import sys; print(sys.platform)''']
+    sys_descriptor = subprocess.check_output(cmd).strip()
+    return sys_descriptor == 'win32'
+
+
 def OnMac():
   return sys.platform == 'darwin'
 

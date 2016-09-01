@@ -72,8 +72,9 @@ class JediCompleter( Completer ):
     self._python_binary_path = sys.executable
 
     self._UpdatePythonBinary( user_options.get( 'python_binary_path' ) )
-    self._StartServer()
+    self._is_windows_python = utils.IsWindowsPython(self._python_binary_path)
 
+    self._StartServer()
 
   def _UpdatePythonBinary( self, binary ):
     if binary:
@@ -157,11 +158,27 @@ class JediCompleter( Completer ):
         json.dump( { 'hmac_secret': ToUnicode(
                         b64encode( self._hmac_secret ) ) },
                    hmac_file )
+
+        self._logger.info('This is a {} python: {}'.format(
+            'WIN32' if self._is_windows_python else
+            'UNIX', self._python_binary_path)
+        )
+        # We need to convert the windows paths to cygpath if we're on cygwin,
+        # but the python executable is a Windows python
+        jedi_http_path = (utils.CygWinPath(PATH_TO_JEDIHTTP)
+                          if utils.OnCygwin()
+                          and self._is_windows_python
+                          else PATH_TO_JEDIHTTP)
+        hmac_file_name = (utils.CygWinPath(hmac_file.name)
+                          if utils.OnCygwin()
+                          and self._is_windows_python
+                          else hmac_file.name)
+
         command = [ self._python_binary_path,
-                    PATH_TO_JEDIHTTP,
+                    jedi_http_path,
                     '--port', str( self._jedihttp_port ),
                     '--log', self._GetLoggingLevel(),
-                    '--hmac-file-secret', hmac_file.name ]
+                    '--hmac-file-secret', hmac_file_name ]
 
       self._logfile_stdout = LOG_FILENAME_FORMAT.format(
           port = self._jedihttp_port, std = 'stdout' )
@@ -344,6 +361,13 @@ class JediCompleter( Completer ):
 
 
   def _BuildGoToResponse( self, definition_list ):
+    # We need to convert the windows paths to cygpath if we're on cygwin,
+    # but the python binary is a Windows python
+    if utils.OnCygwin() and self._is_windows_python:
+        for d in definition_list:
+            d['module_path'] = utils.CygWinPath(d['module_path'])
+
+    # single definition
     if len( definition_list ) == 1:
       definition = definition_list[ 0 ]
       if definition[ 'in_builtin_module' ]:
