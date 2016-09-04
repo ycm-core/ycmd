@@ -30,7 +30,4 @@ def FlagsForFile(filename, **kwargs):
   if 'throw' in client_data:
     raise ValueError( client_data['throw'] )
 
-  return {
-    'flags': opts,
-    'do_cache': True
-  }
+  return { 'flags': opts }

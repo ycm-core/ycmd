@@ -104,7 +104,7 @@ class Flags( object ):
                                               filename,
                                               add_extra_clang_flags )
 
-      if results[ 'do_cache' ]:
+      if results.get( 'do_cache', True ):
         self.flags_for_file[ filename ] = sanitized_flags
       return sanitized_flags
 

@@ -34,8 +34,7 @@ from hamcrest import assert_that, contains
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
 def FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved_test( *args ):
   fake_flags = {
-    'flags': [ bytes( b'-c' ), '-c', bytes( b'-foo' ), '-bar' ],
-    'do_cache': True
+    'flags': [ bytes( b'-c' ), '-c', bytes( b'-foo' ), '-bar' ]
   }
 
   with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
@@ -43,6 +42,63 @@ def FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved_test( *args ):
     flags_object = flags.Flags()
     flags_list = flags_object.FlagsForFile( '/foo', False )
     eq_( list( flags_list ), [ '-foo', '-bar' ] )
+
+
+@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
+def FlagsForFile_FlagsCachedByDefault_test( *args ):
+  flags_object = flags.Flags()
+
+  results = { 'flags': [ '-x', 'c' ] }
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = results ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list, contains( '-x', 'c' ) )
+
+  results[ 'flags' ] = [ '-x', 'c++' ]
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = results ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list, contains( '-x', 'c' ) )
+
+
+@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
+def FlagsForFile_FlagsNotCachedWhenDoCacheIsFalse_test( *args ):
+  flags_object = flags.Flags()
+
+  results = {
+    'flags': [ '-x', 'c' ],
+    'do_cache': False
+  }
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = results ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list, contains( '-x', 'c' ) )
+
+  results[ 'flags' ] = [ '-x', 'c++' ]
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = results ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list, contains( '-x', 'c++' ) )
+
+
+@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
+def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test( *args ):
+  flags_object = flags.Flags()
+
+  results = {
+    'flags': [ '-x', 'c' ],
+    'do_cache': True
+  }
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = results ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list, contains( '-x', 'c' ) )
+
+  results[ 'flags' ] = [ '-x', 'c++' ]
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = results ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list, contains( '-x', 'c' ) )
 
 
 def SanitizeFlags_Passthrough_test():
