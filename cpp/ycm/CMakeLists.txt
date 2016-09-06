@@ -50,12 +50,19 @@ if ( USE_CLANG_COMPLETER AND
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
   else()
     if ( 64_BIT_PLATFORM )
+      # arch linux use ncurses version 6
+      if ( EXISTS "/etc/arch-release")
+        set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-opensuse13.2")
+        set( CLANG_SHA256
+             "b4b20a35232595b12f90788b9ca42c4bf559e81013bf26f043ee3b88ea02c9ac" )
+      else ()
       # We MUST support the latest Ubuntu LTS release!
       # At the time of writing, that's 14.04. Switch to next LTS ~6 months after
       # it comes out.
-      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-14.04" )
-      set( CLANG_SHA256
-           "3120c3055ea78bbbb6848510a2af70c68538b990cb0545bac8dad01df8ff69d7" )
+        set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-14.04" )
+        set( CLANG_SHA256
+             "3120c3055ea78bbbb6848510a2af70c68538b990cb0545bac8dad01df8ff69d7" )
+      endif()
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       # Use the prebuilt x86 binaries for Fedora 23.
