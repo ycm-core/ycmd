@@ -1,5 +1,6 @@
-# Copyright (C) 2011, 2012 Chiel ten Brinke <ctenbrinke@gmail.com>
-#                          Google Inc.
+# Copyright (C) 2011-2012 Chiel ten Brinke <ctenbrinke@gmail.com>
+#                         Google Inc.
+#               2017      ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -270,47 +271,30 @@ class CsharpCompleter( Completer ):
     try:
       completer = self._GetSolutionCompleter( request_data )
     except RuntimeError:
-      return (
-        'C# completer debug information:\n'
-        '  OmniSharp not running\n'
-        '  OmniSharp executable: {0}\n'
-        '  OmniSharp solution: not found'.format( PATH_TO_OMNISHARP_BINARY ) )
+      omnisharp_server = responses.DebugInfoServer(
+        name = 'OmniSharp',
+        handle = None,
+        executable = PATH_TO_OMNISHARP_BINARY )
+
+      return responses.BuildDebugInfoResponse( name = 'C#',
+                                               servers = [ omnisharp_server ] )
 
     with completer._server_state_lock:
-      if completer._ServerIsRunning():
-        return (
-          'C# completer debug information:\n'
-          '  OmniSharp running at: {0}\n'
-          '  OmniSharp process ID: {1}\n'
-          '  OmniSharp executable: {2}\n'
-          '  OmniSharp logfiles:\n'
-          '    {3}\n'
-          '    {4}\n'
-          '  OmniSharp solution: {5}'.format( completer._ServerLocation(),
-                                              completer._omnisharp_phandle.pid,
-                                              PATH_TO_OMNISHARP_BINARY,
-                                              completer._filename_stdout,
-                                              completer._filename_stderr,
-                                              completer._solution_path ) )
+      solution_item = responses.DebugInfoItem(
+        key = 'solution',
+        value = completer._solution_path )
 
-      if completer._filename_stdout and completer._filename_stderr:
-        return (
-          'C# completer debug information:\n'
-          '  OmniSharp no longer running\n'
-          '  OmniSharp executable: {0}\n'
-          '  OmniSharp logfiles:\n'
-          '    {1}\n'
-          '    {2}\n'
-          '  OmniSharp solution: {3}'.format( PATH_TO_OMNISHARP_BINARY,
-                                              completer._filename_stdout,
-                                              completer._filename_stderr,
-                                              completer._solution_path ) )
+      omnisharp_server = responses.DebugInfoServer(
+        name = 'OmniSharp',
+        handle = completer._omnisharp_phandle,
+        executable = PATH_TO_OMNISHARP_BINARY,
+        address = 'localhost',
+        port = completer._omnisharp_port,
+        logfiles = [ completer._filename_stdout, completer._filename_stderr ],
+        extras = [ solution_item ] )
 
-      return ( 'C# completer debug information:\n'
-               '  OmniSharp is not running\n'
-               '  OmniSharp executable: {0}\n'
-               '  OmniSharp solution: {1}'.format( PATH_TO_OMNISHARP_BINARY,
-                                                   completer._solution_path ) )
+      return responses.BuildDebugInfoResponse( name = 'C#',
+                                               servers = [ omnisharp_server ] )
 
 
   def ServerIsHealthy( self ):

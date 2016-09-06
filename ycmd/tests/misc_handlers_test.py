@@ -1,5 +1,5 @@
-# Copyright (C) 2013 Google Inc.
-#               2015 ycmd contributors
+# Copyright (C) 2013      Google Inc.
+#               2015-2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,10 +24,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains, empty, equal_to, has_entries
+from hamcrest import ( any_of, assert_that, contains, empty, equal_to,
+                       has_entries, instance_of )
 import requests
 
-from ycmd.tests import PathToTestFile, SharedYcmd
+from ycmd.tests import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
@@ -100,3 +101,76 @@ def MiscHandlers_IgnoreExtraConfFile_AlwaysJsonResponse_test( app ):
 
   assert_that( app.post_json( '/ignore_extra_conf_file', extra_conf_data ).json,
                equal_to( True ) )
+
+
+@SharedYcmd
+def MiscHandlers_DebugInfo_ExtraConfLoaded_test( app ):
+  filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
+  app.post_json( '/load_extra_conf_file', { 'filepath': filepath } )
+
+  request_data = BuildRequest( filepath = filepath )
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entries( {
+      'python': has_entries( {
+        'executable': instance_of( str ),
+        'version': instance_of( str ),
+      } ),
+      'clang': has_entries( {
+        'has_support': instance_of( bool ),
+        'version': any_of( None, instance_of( str ) )
+      } ),
+      'extra_conf': has_entries( {
+        'path': instance_of( str ),
+        'is_loaded': True
+      } ),
+      'completer': None
+    } )
+  )
+
+
+@SharedYcmd
+def MiscHandlers_DebugInfo_NoExtraConfFound_test( app ):
+  request_data = BuildRequest()
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entries( {
+      'python': has_entries( {
+        'executable': instance_of( str ),
+        'version': instance_of( str ),
+      } ),
+      'clang': has_entries( {
+        'has_support': instance_of( bool ),
+        'version': any_of( None, instance_of( str ) )
+      } ),
+      'extra_conf': has_entries( {
+        'path': None,
+        'is_loaded': False
+      } ),
+      'completer': None
+    } )
+  )
+
+
+@IsolatedYcmd
+def MiscHandlers_DebugInfo_ExtraConfFoundButNotLoaded_test( app ):
+  filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
+  request_data = BuildRequest( filepath = filepath )
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entries( {
+      'python': has_entries( {
+        'executable': instance_of( str ),
+        'version': instance_of( str ),
+      } ),
+      'clang': has_entries( {
+        'has_support': instance_of( bool ),
+        'version': any_of( None, instance_of( str ) )
+      } ),
+      'extra_conf': has_entries( {
+        'path': instance_of( str ),
+        'is_loaded': False
+      } ),
+      'completer': None
+    } )
+  )

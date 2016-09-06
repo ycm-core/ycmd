@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -23,11 +23,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, matches_regexp
+from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
+                       instance_of )
 
-from ycmd.tests.cs import IsolatedYcmd, PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( BuildRequest, StopCompleterServer,
-                                    UserOption, WaitUntilCompleterServerReady )
+from ycmd.tests.cs import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
 
@@ -47,14 +48,25 @@ def DebugInfo_ServerIsRunning_test( app ):
                                filetype = 'cs' )
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    matches_regexp( 'C# completer debug information:\n'
-                    '  OmniSharp running at: http://localhost:\d+\n'
-                    '  OmniSharp process ID: \d+\n'
-                    '  OmniSharp executable: .+\n'
-                    '  OmniSharp logfiles:\n'
-                    '    .+\n'
-                    '    .+\n'
-                    '  OmniSharp solution: .+' ) )
+    has_entry( 'completer', has_entries( {
+      'name': 'C#',
+      'servers': contains( has_entries( {
+        'name': 'OmniSharp',
+        'is_running': True,
+        'executable': instance_of( str ),
+        'pid': instance_of( int ),
+        'address': instance_of( str ),
+        'port': instance_of( int ),
+        'logfiles': contains( instance_of( str ),
+                              instance_of( str ) ),
+        'extras': contains( has_entries( {
+          'key': 'solution',
+          'value': instance_of( str )
+        } ) )
+      } ) ),
+      'items': empty()
+    } ) )
+  )
 
 
 @SharedYcmd
@@ -62,58 +74,17 @@ def DebugInfo_ServerIsNotRunning_NoSolution_test( app ):
   request_data = BuildRequest( filetype = 'cs' )
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    matches_regexp( 'C# completer debug information:\n'
-                    '  OmniSharp not running\n'
-                    '  OmniSharp executable: .+\n'
-                    '  OmniSharp solution: not found' ) )
-
-
-@IsolatedYcmd
-def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
-  with UserOption( 'server_keep_logfiles', True ):
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
-    contents = ReadFile( filepath )
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cs',
-                               contents = contents,
-                               event_name = 'FileReadyToParse' )
-
-    app.post_json( '/event_notification', event_data )
-    WaitUntilCompleterServerReady( app, 'cs' )
-
-    StopCompleterServer( app, 'cs', filepath )
-    request_data = BuildRequest( filepath = filepath,
-                                 filetype = 'cs' )
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      matches_regexp( 'C# completer debug information:\n'
-                      '  OmniSharp no longer running\n'
-                      '  OmniSharp executable: .+\n'
-                      '  OmniSharp logfiles:\n'
-                      '    .+\n'
-                      '    .+\n'
-                      '  OmniSharp solution: .+' ) )
-
-
-@IsolatedYcmd
-def DebugInfo_ServerIsNotRunning_LogfilesDoNotExist_test( app ):
-  with UserOption( 'server_keep_logfiles', False ):
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
-    contents = ReadFile( filepath )
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cs',
-                               contents = contents,
-                               event_name = 'FileReadyToParse' )
-
-    app.post_json( '/event_notification', event_data )
-    WaitUntilCompleterServerReady( app, 'cs' )
-
-    StopCompleterServer( app, 'cs', filepath )
-    request_data = BuildRequest( filepath = filepath,
-                                 filetype = 'cs' )
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      matches_regexp( 'C# completer debug information:\n'
-                      '  OmniSharp is not running\n'
-                      '  OmniSharp executable: .+\n'
-                      '  OmniSharp solution: .+' ) )
+    has_entry( 'completer', has_entries( {
+      'name': 'C#',
+      'servers': contains( has_entries( {
+        'name': 'OmniSharp',
+        'is_running': False,
+        'executable': instance_of( str ),
+        'pid': None,
+        'address': None,
+        'port': None,
+        'logfiles': empty()
+      } ) ),
+      'items': empty()
+    } ) )
+  )
