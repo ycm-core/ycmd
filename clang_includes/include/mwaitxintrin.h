@@ -1,5 +1,4 @@
-/*===------------- pkuintrin.h - PKU intrinsics ------------------===
- *
+/*===---- mwaitxintrin.h - MONITORX/MWAITX intrinsics ----------------------===
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,28 +20,28 @@
  *
  *===-----------------------------------------------------------------------===
  */
-#ifndef __IMMINTRIN_H
-#error "Never use <pkuintrin.h> directly; include <immintrin.h> instead."
+
+#ifndef __X86INTRIN_H
+#error "Never use <mwaitxintrin.h> directly; include <x86intrin.h> instead."
 #endif
 
-#ifndef __PKUINTRIN_H
-#define __PKUINTRIN_H
+#ifndef _MWAITXINTRIN_H
+#define _MWAITXINTRIN_H
 
 /* Define the default attributes for the functions in this file. */
-#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("pku")))
-
-static __inline__ unsigned int __DEFAULT_FN_ATTRS
-_rdpkru_u32(void)
+#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__,  __target__("mwaitx")))
+static __inline__ void __DEFAULT_FN_ATTRS
+_mm_monitorx(void const * __p, unsigned __extensions, unsigned __hints)
 {
-  return __builtin_ia32_rdpkru();
+  __builtin_ia32_monitorx((void *)__p, __extensions, __hints);
 }
 
 static __inline__ void __DEFAULT_FN_ATTRS
-_wrpkru(unsigned int __val)
+_mm_mwaitx(unsigned __extensions, unsigned __hints, unsigned __clock)
 {
-  return __builtin_ia32_wrpkru(__val);
+  __builtin_ia32_mwaitx(__extensions, __hints, __clock);
 }
 
 #undef __DEFAULT_FN_ATTRS
 
-#endif
+#endif /* _MWAITXINTRIN_H */

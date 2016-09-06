@@ -1,5 +1,4 @@
-/*===------------- pkuintrin.h - PKU intrinsics ------------------===
- *
+/*===---- clflushoptintrin.h - CLFLUSHOPT intrinsic ------------------------------------===
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +20,20 @@
  *
  *===-----------------------------------------------------------------------===
  */
+
 #ifndef __IMMINTRIN_H
-#error "Never use <pkuintrin.h> directly; include <immintrin.h> instead."
+#error "Never use <clflushoptintrin.h> directly; include <immintrin.h> instead."
 #endif
 
-#ifndef __PKUINTRIN_H
-#define __PKUINTRIN_H
+#ifndef __CLFLUSHOPTINTRIN_H
+#define __CLFLUSHOPTINTRIN_H
 
 /* Define the default attributes for the functions in this file. */
-#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("pku")))
-
-static __inline__ unsigned int __DEFAULT_FN_ATTRS
-_rdpkru_u32(void)
-{
-  return __builtin_ia32_rdpkru();
-}
+#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__,  __target__("clflushopt")))
 
 static __inline__ void __DEFAULT_FN_ATTRS
-_wrpkru(unsigned int __val)
-{
-  return __builtin_ia32_wrpkru(__val);
+_mm_clflushopt(char * __m) {
+  __builtin_ia32_clflushopt(__m);
 }
 
 #undef __DEFAULT_FN_ATTRS
