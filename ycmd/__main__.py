@@ -32,6 +32,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import atexit
 import sys
 import logging
 import json
@@ -53,29 +54,31 @@ def YcmCoreSanityCheck():
 
 # We manually call sys.exit() on SIGTERM and SIGINT so that atexit handlers are
 # properly executed.
-def SetUpSignalHandler( stdout, stderr, keep_logfiles ):
+def SetUpSignalHandler():
   def SignalHandler( signum, frame ):
-    # We reset stderr & stdout, just in case something tries to use them
-    if stderr:
-      tmp = sys.stderr
-      sys.stderr = sys.__stderr__
-      tmp.close()
-    if stdout:
-      tmp = sys.stdout
-      sys.stdout = sys.__stdout__
-      tmp.close()
-
-    if not keep_logfiles:
-      if stderr:
-        utils.RemoveIfExists( stderr )
-      if stdout:
-        utils.RemoveIfExists( stdout )
-
     sys.exit()
 
   for sig in [ signal.SIGTERM,
                signal.SIGINT ]:
     signal.signal( sig, SignalHandler )
+
+
+def CleanUpLogfiles( stdout, stderr, keep_logfiles ):
+  # We reset stderr & stdout, just in case something tries to use them
+  if stderr:
+    tmp = sys.stderr
+    sys.stderr = sys.__stderr__
+    tmp.close()
+  if stdout:
+    tmp = sys.stdout
+    sys.stdout = sys.__stdout__
+    tmp.close()
+
+  if not keep_logfiles:
+    if stderr:
+      utils.RemoveIfExists( stderr )
+    if stdout:
+      utils.RemoveIfExists( stdout )
 
 
 def PossiblyDetachFromTerminal():
@@ -172,7 +175,13 @@ def Main():
   handlers.UpdateUserOptions( options )
   handlers.SetHmacSecret( hmac_secret )
   handlers.KeepSubserversAlive( args.check_interval_seconds )
-  SetUpSignalHandler( args.stdout, args.stderr, args.keep_logfiles )
+  SetUpSignalHandler()
+  # Functions registered by the atexit module are called at program termination
+  # in last in, first out order.
+  atexit.register( CleanUpLogfiles, args.stdout,
+                                    args.stderr,
+                                    args.keep_logfiles )
+  atexit.register( handlers.ServerCleanup )
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
                                         args.check_interval_seconds ) )
   handlers.app.install( HmacPlugin( hmac_secret ) )

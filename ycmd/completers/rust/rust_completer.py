@@ -332,21 +332,29 @@ class RustCompleter( Completer ):
   def _StopServer( self ):
     with self._server_state_lock:
       if self._racerd_phandle:
+        _logger.info( 'Stopping Racerd with PID {0}'.format(
+                          self._racerd_phandle.pid ) )
         self._racerd_phandle.terminate()
-        self._racerd_phandle.wait()
-        self._racerd_phandle = None
-        self._racerd_host = None
+        try:
+          utils.WaitUntilProcessIsTerminated( self._racerd_phandle,
+                                              timeout = 5 )
+          _logger.info( 'Racerd stopped' )
+        except RuntimeError:
+          _logger.exception( 'Error while stopping Racerd' )
 
-      if not self._keep_logfiles:
-        # Remove stdout log
-        if self._server_stdout:
-          utils.RemoveIfExists( self._server_stdout )
-          self._server_stdout = None
+      self._CleanUp()
 
-        # Remove stderr log
-        if self._server_stderr:
-          utils.RemoveIfExists( self._server_stderr )
-          self._server_stderr = None
+
+  def _CleanUp( self ):
+    self._racerd_phandle = None
+    self._racerd_host = None
+    if not self._keep_logfiles:
+      if self._server_stdout:
+        utils.RemoveIfExists( self._server_stdout )
+        self._server_stdout = None
+      if self._server_stderr:
+        utils.RemoveIfExists( self._server_stderr )
+        self._server_stderr = None
 
 
   def _RestartServer( self ):

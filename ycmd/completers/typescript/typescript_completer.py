@@ -253,7 +253,7 @@ class TypeScriptCompleter( Completer ):
         self._tsserver_handle.stdin.write( serialized_request )
         self._tsserver_handle.stdin.flush()
       # IOError is an alias of OSError in Python 3.
-      except IOError:
+      except ( AttributeError, IOError ):
         _logger.exception( SERVER_NOT_RUNNING_MESSAGE )
         raise RuntimeError( SERVER_NOT_RUNNING_MESSAGE )
 
@@ -536,15 +536,25 @@ class TypeScriptCompleter( Completer ):
 
   def _StopServer( self ):
     with self._server_lock:
-      if not self._ServerIsRunning():
-        return
+      if self._ServerIsRunning():
+        _logger.info( 'Stopping TSServer with PID {0}'.format(
+                          self._tsserver_handle.pid ) )
+        self._SendCommand( 'exit' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._tsserver_handle,
+                                              timeout = 5 )
+          _logger.info( 'TSServer stopped' )
+        except RuntimeError:
+          _logger.exception( 'Error while stopping TSServer' )
 
-      self._SendCommand( 'exit' )
-      self._tsserver_handle.wait()
+      self._CleanUp()
 
-      if not self.user_options[ 'server_keep_logfiles' ]:
-        utils.RemoveIfExists( self._logfile )
-        self._logfile = None
+
+  def _CleanUp( self ):
+    self._tsserver_handle = None
+    if not self.user_options[ 'server_keep_logfiles' ]:
+      utils.RemoveIfExists( self._logfile )
+      self._logfile = None
 
 
   def Shutdown( self ):
