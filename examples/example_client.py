@@ -257,6 +257,8 @@ class YcmdHandle( object ):
 
 
 def ToBytes( value ):
+  if not value:
+    return bytes()
   if isinstance( value, bytes ):
     return value
   if isinstance( value, int ):
