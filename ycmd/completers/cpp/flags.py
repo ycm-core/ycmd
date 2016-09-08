@@ -377,13 +377,20 @@ if OnMac():
   # a Mac because if we don't, libclang would fail to find <vector> etc.  This
   # should be fixed upstream in libclang, but until it does, we need to help
   # users out.
-  # See Valloric/YouCompleteMe#303 for details.
+  # See the following for details:
+  #  - Valloric/YouCompleteMe#303
+  #  - Valloric/YouCompleteMe#2268
   MAC_INCLUDE_PATHS = (
     _PathsForAllMacToolchains( 'usr/include/c++/v1' ) +
     [ '/usr/local/include' ] +
     _PathsForAllMacToolchains( 'usr/include' ) +
     [ '/usr/include', '/System/Library/Frameworks', '/Library/Frameworks' ] +
-    _LatestMacClangIncludes()
+    _LatestMacClangIncludes() +
+    # We include the MacOS platform SDK because some meaningful parts of the
+    # standard library are located there. If users are compiling for (say)
+    # iPhone.platform, etc. they should appear earlier in the include path.
+    [ '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/'
+      'Developer/SDKs/MacOSX.sdk/usr/include' ]
   )
 
 
