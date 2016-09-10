@@ -36,10 +36,12 @@ namespace YouCompleteMe {
 namespace {
 
 unsigned EditingOptions() {
+  // See cpp/llvm/include/clang-c/Index.h file for detail on these options.
   return CXTranslationUnit_DetailedPreprocessingRecord |
          CXTranslationUnit_Incomplete |
          CXTranslationUnit_IncludeBriefCommentsInCodeCompletion |
          CXTranslationUnit_CreatePreambleOnFirstParse |
+         CXTranslationUnit_KeepGoing |
          clang_defaultEditingTranslationUnitOptions();
 }
 
