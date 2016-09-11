@@ -53,8 +53,9 @@ def Subcommands_DefinedSubcommands_test( app ):
                       subcommands_data ).json )
 
 
-def RunTest( app, test ):
-  contents = ReadFile( test[ 'request' ][ 'filepath' ] )
+def RunTest( app, test, contents = None ):
+  if not contents:
+    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
   def CombineRequest( request, data ):
     kw = request
@@ -155,6 +156,31 @@ def Subcommands_GoTo_test( app ):
       } )
     }
   } )
+
+
+@IsolatedYcmd
+def Subcommands_GoTo_RelativePath_test( app ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+  RunTest(
+    app,
+    {
+      'description': 'GoTo works when the buffer differs from the file on disk',
+      'request': {
+        'command': 'GoTo',
+        'line_num': 43,
+        'column_num': 25,
+        'filepath': PathToTestFile( 'simple_test.js' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'filepath': PathToTestFile( 'simple_test.js' ),
+          'line_num': 31,
+          'column_num': 5,
+        } )
+      }
+    },
+    contents = ReadFile( PathToTestFile( 'simple_test.modified.js' ) ) )
 
 
 @SharedYcmd
