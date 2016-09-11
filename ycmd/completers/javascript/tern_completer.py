@@ -89,10 +89,14 @@ def GlobalConfigExists( tern_config ):
 
 
 def FindTernProjectFile( starting_directory ):
+  """Finds the path to either a Tern project file or the user's global Tern
+  configuration file. If found, a tuple is returned containing the path and a
+  boolean indicating if the path is to a .tern-project file. If not found,
+  returns (None, False)."""
   for folder in utils.PathsToAllParentFolders( starting_directory ):
     tern_project = os.path.join( folder, '.tern-project' )
     if os.path.exists( tern_project ):
-      return tern_project
+      return ( tern_project, True )
 
   # As described here: http://ternjs.net/doc/manual.html#server a global
   # .tern-config file is also supported for the Tern server. This can provide
@@ -102,9 +106,9 @@ def FindTernProjectFile( starting_directory ):
   # to be anything other than annoying.
   tern_config = os.path.expanduser( '~/.tern-config' )
   if GlobalConfigExists( tern_config ):
-    return tern_config
+    return ( tern_config, False )
 
-  return None
+  return ( None, False )
 
 
 class TernCompleter( Completer ):
@@ -121,6 +125,12 @@ class TernCompleter( Completer ):
     self._server_state_mutex = threading.RLock()
 
     self._do_tern_project_check = False
+
+    # Used to determine the absolute path of files returned by the tern server.
+    # When a .tern_project file exists, paths are returned relative to it.
+    # Otherwise, they are returned relative to the working directory of the tern
+    # server.
+    self._server_paths_relative_to = None
 
     with self._server_state_mutex:
       self._server_stdout = None
@@ -144,7 +154,7 @@ class TernCompleter( Completer ):
     if self._ServerIsRunning() and self._do_tern_project_check:
       self._do_tern_project_check = False
 
-      tern_project = FindTernProjectFile( os.getcwd() )
+      ( tern_project, is_project ) = FindTernProjectFile( os.getcwd() )
       if not tern_project:
         _logger.warning( 'No .tern-project file detected: ' + os.getcwd() )
         raise RuntimeError( 'Warning: Unable to detect a .tern-project file '
@@ -154,7 +164,17 @@ class TernCompleter( Completer ):
                             'completion. Please see the User Guide for '
                             'details.' )
       else:
-        _logger.info( 'Detected .tern-project file at: ' + tern_project )
+        _logger.info( 'Detected Tern configuration file at: ' + tern_project )
+
+        # Paths are relative to the project file if it exists, otherwise they
+        # are relative to the working directory of Tern server (which is the
+        # same as the working directory of ycmd).
+        self._server_paths_relative_to = (
+          os.path.dirname( tern_project ) if is_project else os.getcwd() )
+
+        _logger.info( 'Tern paths are relative to: '
+                      + self._server_paths_relative_to )
+
 
 
   def _GetServerAddress( self ):
@@ -360,6 +380,18 @@ class TernCompleter( Completer ):
     return self._PostRequest( { 'query': full_query }, request_data )
 
 
+  def _ServerPathToAbsolute( self, path ):
+    """Given a path returned from the tern server, return it as an absolute
+    path.
+
+    In particular, if the path is a relative path, return an absolute path
+    assuming that it is relative to the location of the .tern-project file."""
+    if os.path.isabs( path ):
+      return path
+
+    return os.path.join( self._server_paths_relative_to, path )
+
+
   # TODO: this function is way too long. Consider refactoring it.
   def _StartServer( self ):
     with self._server_state_mutex:
@@ -499,12 +531,13 @@ class TernCompleter( Completer ):
                                   request_data[ 'column_codepoint' ],
                                   request_data )
 
+    filepath = self._ServerPathToAbsolute( response[ 'file' ] )
     return responses.BuildGoToResponseFromLocation(
-      _BuildLocation( utils.SplitLines( GetFileContents( request_data,
-                                                         response[ 'file' ] ) ),
-                      response[ 'file' ],
-                      response[ 'start' ][ 'line' ],
-                      response[ 'start' ][ 'ch' ] ) )
+      _BuildLocation(
+        utils.SplitLines( GetFileContents( request_data, filepath ) ),
+        filepath,
+        response[ 'start' ][ 'line' ],
+        response[ 'start' ][ 'ch' ] ) )
 
 
   def _GoToReferences( self, request_data ):
@@ -516,15 +549,16 @@ class TernCompleter( Completer ):
                                   request_data[ 'column_codepoint' ],
                                   request_data )
 
-    return [
-      responses.BuildGoToResponseFromLocation(
-        _BuildLocation( utils.SplitLines( GetFileContents( request_data,
-                                                           ref[ 'file' ] ) ),
-                        ref[ 'file' ],
-                        ref[ 'start' ][ 'line' ],
-                        ref[ 'start' ][ 'ch' ] ) )
-      for ref in response[ 'refs' ]
-    ]
+    def BuildRefResponse( ref ):
+      filepath = self._ServerPathToAbsolute( ref[ 'file' ] )
+      return responses.BuildGoToResponseFromLocation(
+        _BuildLocation(
+          utils.SplitLines( GetFileContents( request_data, filepath ) ),
+          filepath,
+          ref[ 'start' ][ 'line' ],
+          ref[ 'start' ][ 'ch' ] ) )
+
+    return [ BuildRefResponse( ref ) for ref in response[ 'refs' ] ]
 
 
   def _Rename( self, request_data, args ):
@@ -544,7 +578,7 @@ class TernCompleter( Completer ):
     # Tern response format:
     # 'changes': [
     #     {
-    #         'file'
+    #         'file' (potentially relative path)
     #         'start' {
     #             'line'
     #             'ch' (codepoint offset)
@@ -568,12 +602,12 @@ class TernCompleter( Completer ):
     #                      'start_' (Location): {
     #                          'line_number_',
     #                          'column_number_', (byte offset)
-    #                          'filename_'
+    #                          'filename_' (note: absolute path!)
     #                      },
     #                      'end_' (Location): {
     #                          'line_number_',
     #                          'column_number_', (byte offset)
-    #                          'filename_'
+    #                          'filename_' (note: absolute path!)
     #                      }
     #                  }
     #              }
@@ -581,7 +615,7 @@ class TernCompleter( Completer ):
     #         'location' (Location) {
     #              'line_number_',
     #              'column_number_',
-    #              'filename_'
+    #              'filename_' (note: absolute path!)
     #         }
     #
     #     ]
@@ -601,13 +635,13 @@ class TernCompleter( Completer ):
 
 
     def BuildFixItChunk( change ):
-      filename = os.path.abspath( change[ 'file' ] )
-      file_contents = utils.SplitLines( GetFileContents( request_data,
-                                                         filename ) )
+      filepath = self._ServerPathToAbsolute( change[ 'file' ] )
+      file_contents = utils.SplitLines(
+        GetFileContents( request_data, filepath ) )
       return responses.FixItChunk(
         change[ 'text' ],
         BuildRange( file_contents,
-                    filename,
+                    filepath,
                     change[ 'start' ],
                     change[ 'end' ] ) )
 
