@@ -223,8 +223,8 @@ class GoCompleter( Completer ):
       self._gocode_stderr = LOG_FILENAME_FORMAT.format(
           port = self._gocode_port, std = 'stderr' )
 
-      with open( self._gocode_stdout, 'w' ) as stdout:
-        with open( self._gocode_stderr, 'w' ) as stderr:
+      with utils.OpenForStdHandle( self._gocode_stdout ) as stdout:
+        with utils.OpenForStdHandle( self._gocode_stderr ) as stderr:
           self._gocode_handle = utils.SafePopen( command,
                                                  stdout = stdout,
                                                  stderr = stderr )
