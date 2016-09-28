@@ -174,7 +174,7 @@ namespace detail
       
       typedef typename detail::error::more_keywords_than_function_arguments<
           NumKeywords::value, arity
-          >::too_many_keywords assertion;
+          >::too_many_keywords assertion BOOST_ATTRIBUTE_UNUSED;
     
       typedef typename outer_constructor_signature<Sig>::type outer_signature;
 

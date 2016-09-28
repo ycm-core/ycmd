@@ -485,7 +485,7 @@ BOOST_FORCEINLINE void thread_fence(memory_order order) BOOST_NOEXCEPT
     {
         __asm__ __volatile__
         (
-#if defined(__x86_64__) || defined(__SSE2__)
+#if defined(BOOST_ATOMIC_DETAIL_X86_HAS_MFENCE)
             "mfence\n"
 #else
             "lock; addl $0, (%%esp)\n"

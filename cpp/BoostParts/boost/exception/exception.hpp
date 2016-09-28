@@ -182,6 +182,18 @@ boost
         template <>
         struct get_info<throw_line>;
 
+        template <class>
+        struct set_info_rv;
+
+        template <>
+        struct set_info_rv<throw_function>;
+
+        template <>
+        struct set_info_rv<throw_file>;
+
+        template <>
+        struct set_info_rv<throw_line>;
+
         char const * get_diagnostic_information( exception const &, char const * );
 
         void copy_boost_exception( exception *, exception const * );
@@ -264,6 +276,11 @@ boost
         friend struct exception_detail::get_info<throw_function>;
         friend struct exception_detail::get_info<throw_file>;
         friend struct exception_detail::get_info<throw_line>;
+        template <class>
+        friend struct exception_detail::set_info_rv;
+        friend struct exception_detail::set_info_rv<throw_function>;
+        friend struct exception_detail::set_info_rv<throw_file>;
+        friend struct exception_detail::set_info_rv<throw_line>;
         friend void exception_detail::copy_boost_exception( exception *, exception const * );
 #endif
         mutable exception_detail::refcount_ptr<exception_detail::error_info_container> data_;

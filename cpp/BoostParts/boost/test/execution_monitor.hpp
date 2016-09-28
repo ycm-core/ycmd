@@ -66,6 +66,18 @@
 
 #endif
 
+
+// Additional macro documentations not being generated without this hack
+#ifdef BOOST_TEST_DOXYGEN_DOC__
+
+//! Disables the support of the alternative stack
+//! during the compilation of the Boost.test framework. This is especially useful
+//! in case it is not possible to detect the lack of alternative stack support for
+//! your compiler (for instance, ESXi).
+#define BOOST_TEST_DISABLE_ALT_STACK
+
+#endif
+
 //____________________________________________________________________________//
 
 namespace boost {
@@ -276,7 +288,7 @@ private:
 }; // execution_exception
 
 // ************************************************************************** //
-/// Function execution monitor
+/// @brief Function execution monitor
 
 /// This class is used to uniformly detect and report an occurrence of several types of signals and exceptions, reducing various
 /// errors to a uniform execution_exception that is returned to a caller.
@@ -465,6 +477,7 @@ public:
     char const* const   p_failed_exp;
 };
 
+//!@internal
 #define BOOST_TEST_SYS_ASSERT( cond ) BOOST_TEST_I_ASSRT( cond, ::boost::system_error( BOOST_STRINGIZE( exp ) ) )
 
 // ************************************************************************** //

@@ -7,8 +7,8 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef BOOST_CONTAINER_DETAIL_UTILITIES_HPP
-#define BOOST_CONTAINER_DETAIL_UTILITIES_HPP
+#ifndef BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP
+#define BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP
 
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
@@ -25,6 +25,8 @@
 #include <boost/container/detail/iterator_to_raw_pointer.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/construct_in_place.hpp>
+
 // move
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/iterator.hpp>
@@ -515,7 +517,7 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
    F back = r;
    BOOST_TRY{
       while (n--) {
-         allocator_traits<Allocator>::construct(a, container_detail::iterator_to_raw_pointer(r), *f);
+         boost::container::construct_in_place(a, container_detail::iterator_to_raw_pointer(r), f);
          ++f; ++r;
       }
    }
@@ -757,7 +759,7 @@ inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, I
    copy_n_source(I f, typename boost::container::iterator_traits<I>::difference_type n, F r)
 {
    while (n--) {
-      *r = *f;
+      boost::container::assign_in_place(r, f);
       ++f; ++r;
    }
    return f;
@@ -1139,4 +1141,4 @@ void move_assign_range_alloc_n( Allocator &a, I inp_start, typename allocator_tr
 }  //namespace container {
 }  //namespace boost {
 
-#endif   //#ifndef BOOST_CONTAINER_DETAIL_UTILITIES_HPP
+#endif   //#ifndef BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP

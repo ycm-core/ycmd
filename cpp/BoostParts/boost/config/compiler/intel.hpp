@@ -90,7 +90,7 @@
 
 #else
 
-#include "boost/config/compiler/common_edg.hpp"
+#include <boost/config/compiler/common_edg.hpp>
 
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER == 9999

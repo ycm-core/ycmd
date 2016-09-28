@@ -12,7 +12,6 @@
 #pragma once
 #endif
 
-#include <boost/unordered/detail/table.hpp>
 #include <boost/unordered/detail/extract_key.hpp>
 
 namespace boost { namespace unordered { namespace detail {
@@ -130,55 +129,6 @@ namespace boost { namespace unordered { namespace detail {
         typedef typename pick::link_pointer link_pointer;
     };
 
-    template <typename A, typename T, typename H, typename P>
-    struct multiset
-    {
-        typedef boost::unordered::detail::multiset<A, T, H, P> types;
-
-        typedef A allocator;
-        typedef T value_type;
-        typedef H hasher;
-        typedef P key_equal;
-        typedef T key_type;
-
-        typedef boost::unordered::detail::allocator_traits<allocator> traits;
-        typedef boost::unordered::detail::pick_grouped_node<allocator,
-            value_type> pick;
-        typedef typename pick::node node;
-        typedef typename pick::bucket bucket;
-        typedef typename pick::link_pointer link_pointer;
-
-        typedef boost::unordered::detail::grouped_table_impl<types> table;
-        typedef boost::unordered::detail::set_extractor<value_type> extractor;
-
-        typedef typename boost::unordered::detail::pick_policy<T>::type policy;
-    };
-
-    template <typename A, typename K, typename M, typename H, typename P>
-    struct multimap
-    {
-        typedef boost::unordered::detail::multimap<A, K, M, H, P> types;
-
-        typedef A allocator;
-        typedef std::pair<K const, M> value_type;
-        typedef H hasher;
-        typedef P key_equal;
-        typedef K key_type;
-
-        typedef boost::unordered::detail::allocator_traits<allocator> traits;
-        typedef boost::unordered::detail::pick_grouped_node<allocator,
-                value_type> pick;
-        typedef typename pick::node node;
-        typedef typename pick::bucket bucket;
-        typedef typename pick::link_pointer link_pointer;
-
-        typedef boost::unordered::detail::grouped_table_impl<types> table;
-        typedef boost::unordered::detail::map_extractor<key_type, value_type>
-            extractor;
-
-        typedef typename boost::unordered::detail::pick_policy<K>::type policy;
-    };
-
     template <typename Types>
     struct grouped_table_impl : boost::unordered::detail::table<Types>
     {
@@ -195,6 +145,7 @@ namespace boost { namespace unordered { namespace detail {
         typedef typename table::key_equal key_equal;
         typedef typename table::key_type key_type;
         typedef typename table::node_constructor node_constructor;
+        typedef typename table::node_tmp node_tmp;
         typedef typename table::extractor extractor;
         typedef typename table::iterator iterator;
         typedef typename table::c_iterator c_iterator;
@@ -381,11 +332,10 @@ namespace boost { namespace unordered { namespace detail {
         }
 
         inline iterator add_node(
-                node_constructor& a,
+                node_pointer n,
                 std::size_t key_hash,
                 iterator pos)
         {
-            node_pointer n = a.release();
             n->hash_ = key_hash;
             if (pos.node_) {
                 this->add_after_node(n, pos.node_);
@@ -425,23 +375,23 @@ namespace boost { namespace unordered { namespace detail {
             return iterator(n);
         }
 
-        iterator emplace_impl(node_constructor& a)
+        iterator emplace_impl(node_pointer n)
         {
-            key_type const& k = this->get_key(a.value());
+            node_tmp a(n, this->node_alloc());
+            key_type const& k = this->get_key(a.node_->value());
             std::size_t key_hash = this->hash(k);
             iterator position = this->find_node(key_hash, k);
-
-            // reserve has basic exception safety if the hash function
-            // throws, strong otherwise.
             this->reserve_for_insert(this->size_ + 1);
-            return this->add_node(a, key_hash, position);
+            return this->add_node(a.release(), key_hash, position);
         }
 
-        void emplace_impl_no_rehash(node_constructor& a)
+        void emplace_impl_no_rehash(node_pointer n)
         {
-            key_type const& k = this->get_key(a.value());
+            node_tmp a(n, this->node_alloc());
+            key_type const& k = this->get_key(a.node_->value());
             std::size_t key_hash = this->hash(k);
-            this->add_node(a, key_hash, this->find_node(key_hash, k));
+            iterator position = this->find_node(key_hash, k);
+            this->add_node(a.release(), key_hash, position);
         }
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -465,10 +415,9 @@ namespace boost { namespace unordered { namespace detail {
         template <BOOST_UNORDERED_EMPLACE_TEMPLATE>
         iterator emplace(BOOST_UNORDERED_EMPLACE_ARGS)
         {
-            node_constructor a(this->node_alloc());
-            a.construct_with_value(BOOST_UNORDERED_EMPLACE_FORWARD);
-
-            return iterator(emplace_impl(a));
+            return iterator(emplace_impl(
+                boost::unordered::detail::func::construct_value_generic(
+                    this->node_alloc(), BOOST_UNORDERED_EMPLACE_FORWARD)));
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -477,37 +426,37 @@ namespace boost { namespace unordered { namespace detail {
         // if hash function throws, or inserting > 1 element, basic exception
         // safety. Strong otherwise
         template <class I>
-        typename boost::unordered::detail::enable_if_forward<I, void>::type
-            insert_range(I i, I j)
+        void insert_range(I i, I j, typename
+            boost::unordered::detail::enable_if_forward<I, void*>::type = 0)
         {
             if(i == j) return;
 
-            std::size_t distance = boost::unordered::detail::distance(i, j);
+            std::size_t distance = std::distance(i, j);
             if(distance == 1) {
-                node_constructor a(this->node_alloc());
-                a.construct_with_value2(*i);
-                emplace_impl(a);
+                emplace_impl(
+                    boost::unordered::detail::func::construct_value(
+                        this->node_alloc(), *i));
             }
             else {
                 // Only require basic exception safety here
                 this->reserve_for_insert(this->size_ + distance);
 
-                node_constructor a(this->node_alloc());
                 for (; i != j; ++i) {
-                    a.construct_with_value2(*i);
-                    emplace_impl_no_rehash(a);
+                    emplace_impl_no_rehash(
+                        boost::unordered::detail::func::construct_value(
+                            this->node_alloc(), *i));
                 }
             }
         }
 
         template <class I>
-        typename boost::unordered::detail::disable_if_forward<I, void>::type
-            insert_range(I i, I j)
+        void insert_range(I i, I j, typename
+            boost::unordered::detail::disable_if_forward<I, void*>::type = 0)
         {
-            node_constructor a(this->node_alloc());
             for (; i != j; ++i) {
-                a.construct_with_value2(*i);
-                emplace_impl(a);
+                emplace_impl(
+                    boost::unordered::detail::func::construct_value(
+                        this->node_alloc(), *i));
             }
         }
 
@@ -621,31 +570,65 @@ namespace boost { namespace unordered { namespace detail {
         ////////////////////////////////////////////////////////////////////////
         // fill_buckets
 
-        template <class NodeCreator>
-        static void fill_buckets(iterator n, table& dst,
-            NodeCreator& creator)
-        {
-            link_pointer prev = dst.get_previous_start();
+        void copy_buckets(table const& src) {
+            this->create_buckets(this->bucket_count_);
 
-            while (n.node_) {
+            for (iterator n = src.begin(); n.node_;) {
                 std::size_t key_hash = n.node_->hash_;
                 iterator group_end(n.node_->group_prev_->next_);
-
-                node_pointer first_node = creator.create(*n);
-                node_pointer end = first_node;
-                first_node->hash_ = key_hash;
-                prev->next_ = first_node;
-                ++dst.size_;
-
+                iterator pos = this->add_node(
+                    boost::unordered::detail::func::construct_value(
+                        this->node_alloc(), *n), key_hash, iterator());
                 for (++n; n != group_end; ++n)
                 {
-                    end = creator.create(*n);
-                    end->hash_ = key_hash;
-                    add_after_node(end, first_node);
-                    ++dst.size_;
+                    this->add_node(
+                        boost::unordered::detail::func::construct_value(
+                            this->node_alloc(), *n), key_hash, pos);
                 }
+            }
+        }
 
-                prev = place_in_bucket(dst, prev, end);
+        void move_buckets(table const& src) {
+            this->create_buckets(this->bucket_count_);
+
+            for (iterator n = src.begin(); n.node_;) {
+                std::size_t key_hash = n.node_->hash_;
+                iterator group_end(n.node_->group_prev_->next_);
+                iterator pos = this->add_node(
+                    boost::unordered::detail::func::construct_value(
+                        this->node_alloc(), boost::move(*n)), key_hash, iterator());
+                for (++n; n != group_end; ++n)
+                {
+                    this->add_node(
+                        boost::unordered::detail::func::construct_value(
+                            this->node_alloc(), boost::move(*n)), key_hash, pos);
+                }
+            }
+        }
+
+        void assign_buckets(table const& src) {
+            node_holder<node_allocator> holder(*this);
+            for (iterator n = src.begin(); n.node_;) {
+                std::size_t key_hash = n.node_->hash_;
+                iterator group_end(n.node_->group_prev_->next_);
+                iterator pos = this->add_node(holder.copy_of(*n), key_hash, iterator());
+                for (++n; n != group_end; ++n)
+                {
+                    this->add_node(holder.copy_of(*n), key_hash, pos);
+                }
+            }
+        }
+
+        void move_assign_buckets(table& src) {
+            node_holder<node_allocator> holder(*this);
+            for (iterator n = src.begin(); n.node_;) {
+                std::size_t key_hash = n.node_->hash_;
+                iterator group_end(n.node_->group_prev_->next_);
+                iterator pos = this->add_node(holder.move_copy_of(*n), key_hash, iterator());
+                for (++n; n != group_end; ++n)
+                {
+                    this->add_node(holder.move_copy_of(*n), key_hash, pos);
+                }
             }
         }
 
