@@ -135,4 +135,8 @@
 #define BOOST_PYTHON_SUPPORTS_PY_SIGNATURES // enables smooth transition
 #endif
 
+#if !defined(BOOST_ATTRIBUTE_UNUSED) && defined(__GNUC__) && (__GNUC__ >= 4)
+#  define BOOST_ATTRIBUTE_UNUSED __attribute__((unused))
+#endif
+
 #endif // CONFIG_DWA052200_H_

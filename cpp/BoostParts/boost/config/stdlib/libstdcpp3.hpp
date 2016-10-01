@@ -151,11 +151,27 @@
 // Oracle Solaris compiler uses it's own verison of libstdc++ but doesn't 
 // set __GNUC__
 //
+#if __SUNPRO_CC >= 0x5140
+#define BOOST_LIBSTDCXX_VERSION 50100
+#else
 #define BOOST_LIBSTDCXX_VERSION 40800
+#endif
 #endif
 
 #if !defined(BOOST_LIBSTDCXX_VERSION)
 #  define BOOST_LIBSTDCXX_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+// std::auto_ptr isn't provided with _GLIBCXX_DEPRECATED=0 (GCC 4.5 and earlier)
+// or _GLIBCXX_USE_DEPRECATED=0 (GCC 4.6 and later).
+#if defined(BOOST_LIBSTDCXX11)
+#  if BOOST_LIBSTDCXX_VERSION < 40600
+#     if !_GLIBCXX_DEPRECATED
+#        define BOOST_NO_AUTO_PTR
+#     endif
+#  elif !_GLIBCXX_USE_DEPRECATED
+#     define BOOST_NO_AUTO_PTR
+#  endif
 #endif
 
 //  C++0x headers in GCC 4.3.0 and later
@@ -247,7 +263,7 @@
 
 //
 // Headers not present on Solaris with the Oracle compiler:
-#if defined(__SUNPRO_CC)
+#if defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x5140)
 #define BOOST_NO_CXX11_HDR_FUTURE
 #define BOOST_NO_CXX11_HDR_FORWARD_LIST 
 #define BOOST_NO_CXX11_HDR_ATOMIC

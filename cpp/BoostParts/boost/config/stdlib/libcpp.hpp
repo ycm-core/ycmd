@@ -75,6 +75,14 @@
 #define BOOST_NO_STD_MESSAGES
 #endif
 
+#if (_LIBCPP_VERSION <= 1101) && !defined(BOOST_NO_CXX11_THREAD_LOCAL)
+// This is a bit of a sledgehammer, because really it's just libc++abi that has no
+// support for thread_local, leading to linker errors such as
+// "undefined reference to `__cxa_thread_atexit'".  It is fixed in the
+// most recent releases of libc++abi though...
+#  define BOOST_NO_CXX11_THREAD_LOCAL
+#endif
+
 #if defined(__has_include)
 #if !__has_include(<shared_mutex>)
 #  define BOOST_NO_CXX14_HDR_SHARED_MUTEX

@@ -212,7 +212,6 @@ namespace boost
             seed ^= value + 0x9e3779b9 + (seed<<6) + (seed>>2);
         }
 
-        template <typename SizeT>
         inline void hash_combine_impl(boost::uint32_t& h1,
                 boost::uint32_t k1)
         {
@@ -229,12 +228,11 @@ namespace boost
         }
 
 
-// Don't define 64-bit hash combine on platforms with 64 bit integers,
+// Don't define 64-bit hash combine on platforms without 64 bit integers,
 // and also not for 32-bit gcc as it warns about the 64-bit constant.
 #if !defined(BOOST_NO_INT64_T) && \
         !(defined(__GNUC__) && ULONG_MAX == 0xffffffff)
 
-        template <typename SizeT>
         inline void hash_combine_impl(boost::uint64_t& h,
                 boost::uint64_t k)
         {
@@ -247,6 +245,10 @@ namespace boost
 
             h ^= k;
             h *= m;
+
+            // Completely arbitrary number, to prevent 0's
+            // from hashing to 0.
+            h += 0xe6546b64;
         }
 
 #endif // BOOST_NO_INT64_T

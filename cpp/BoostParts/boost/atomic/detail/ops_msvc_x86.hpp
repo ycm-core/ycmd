@@ -42,7 +42,7 @@
 #pragma warning(disable: 4731)
 #endif
 
-#if defined(_MSC_VER) && (defined(_M_AMD64) || (defined(_M_IX86) && defined(_M_IX86_FP) && _M_IX86_FP >= 2))
+#if defined(BOOST_ATOMIC_DETAIL_X86_HAS_MFENCE)
 extern "C" void _mm_mfence(void);
 #if defined(BOOST_MSVC)
 #pragma intrinsic(_mm_mfence)
@@ -74,8 +74,7 @@ struct msvc_x86_operations_base
 {
     static BOOST_FORCEINLINE void hardware_full_fence() BOOST_NOEXCEPT
     {
-#if defined(_MSC_VER) && (defined(_M_AMD64) || (defined(_M_IX86) && defined(_M_IX86_FP) && _M_IX86_FP >= 2))
-        // Use mfence only if SSE2 is available
+#if defined(BOOST_ATOMIC_DETAIL_X86_HAS_MFENCE)
         _mm_mfence();
 #else
         long tmp;

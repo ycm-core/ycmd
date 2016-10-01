@@ -467,7 +467,7 @@ namespace boost {
 
             template <std::size_t N>
             bool operator<<(boost::array<const CharT, N> const& input) BOOST_NOEXCEPT { 
-                return shl_char_array_limited(input.begin(), N); 
+                return shl_char_array_limited(input.data(), N);
             }
 
             template <std::size_t N>
@@ -697,7 +697,7 @@ namespace boost {
             template <class C, std::size_t N>
             bool operator>>(std::array<C, N>& output) BOOST_NOEXCEPT { 
                 BOOST_STATIC_ASSERT_MSG(
-                    (sizeof(boost::array<C, N>) == sizeof(boost::array<C, N>)),
+                    (sizeof(std::array<C, N>) == sizeof(boost::array<C, N>)),
                     "std::array<C, N> and boost::array<C, N> must have exactly the same layout."
                 );
                 return ((*this) >> reinterpret_cast<boost::array<C, N>& >(output));

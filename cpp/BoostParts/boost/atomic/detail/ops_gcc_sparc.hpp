@@ -66,7 +66,7 @@ struct gcc_sparc_cas32 :
 
     static BOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) BOOST_NOEXCEPT
     {
-        fence_before_store(order);
+        fence_before(order);
         storage = v;
         fence_after_store(order);
     }
@@ -107,7 +107,7 @@ struct gcc_sparc_cas32 :
 
     static BOOST_FORCEINLINE storage_type exchange(storage_type volatile& storage, storage_type v, memory_order order) BOOST_NOEXCEPT
     {
-        base_type::fence_before(order);
+        fence_before(order);
         __asm__ __volatile__
         (
             "swap [%1], %0"
@@ -115,7 +115,7 @@ struct gcc_sparc_cas32 :
             : "r" (&storage)
             : "memory"
         );
-        base_type::fence_after(order);
+        fence_after(order);
         return v;
     }
 
@@ -152,7 +152,7 @@ struct gcc_sparc_cas64 :
 
     static BOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) BOOST_NOEXCEPT
     {
-        fence_before_store(order);
+        fence_before(order);
         storage = v;
         fence_after_store(order);
     }

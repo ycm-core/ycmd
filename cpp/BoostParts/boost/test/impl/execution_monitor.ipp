@@ -68,6 +68,7 @@ using std::va_list;
 // to use vsnprintf
 #if defined(__QNXNTO__)
 #  include <stdio.h>
+using std::va_list;
 #endif
 
 #ifdef BOOST_SEH_BASED_SIGNAL_HANDLING
@@ -155,8 +156,10 @@ namespace { void _set_se_translator( void* ) {} }
 #    include <android/api-level.h>
 #  endif
 
+// documentation of BOOST_TEST_DISABLE_ALT_STACK in execution_monitor.hpp
 #  if !defined(__CYGWIN__) && !defined(__QNXNTO__) && !defined(__bgq__) && \
-   (!defined(__ANDROID__) || __ANDROID_API__ >= 8)
+   (!defined(__ANDROID__) || __ANDROID_API__ >= 8) && \
+   !defined(BOOST_TEST_DISABLE_ALT_STACK)
 #    define BOOST_TEST_USE_ALT_STACK
 #  endif
 
@@ -182,8 +185,8 @@ namespace { void _set_se_translator( void* ) {} }
 #include <errno.h>
 #endif
 
-#if defined(__GNUC__) && !defined(BOOST_NO_TYPEID)
-#  include <cxxabi.h>
+#if !defined(BOOST_NO_TYPEID) && !defined(BOOST_NO_RTTI)
+#  include <boost/core/demangle.hpp>
 #endif
 
 #include <boost/test/detail/suppress_warnings.hpp>
@@ -304,23 +307,17 @@ struct fpe_except_guard {
     unsigned m_previosly_enabled;
 };
 
-#ifndef BOOST_NO_TYPEID
 
 // ************************************************************************** //
 // **************                  typeid_name                 ************** //
 // ************************************************************************** //
 
+#if !defined(BOOST_NO_TYPEID) && !defined(BOOST_NO_RTTI)
 template<typename T>
-char const*
+std::string
 typeid_name( T const& t )
 {
-#ifdef __GNUC__
-    int status;
-
-    return abi::__cxa_demangle( typeid(t).name(), 0, 0, &status );
-#else
-    return typeid(t).name();
-#endif
+    return boost::core::demangle(typeid(t).name());
 }
 #endif
 
@@ -605,7 +602,7 @@ system_signal_exception::report() const
         break;
 
     default:
-        report_error( execution_exception::system_error, 
+        report_error( execution_exception::system_error,
                       "unrecognized signal %d", m_sig_info->si_signo );
     }
 }
@@ -1224,7 +1221,7 @@ execution_monitor::execute( boost::function<int ()> const& F )
                               "std::string: %s", ex.c_str() ); }
 
     //  std:: exceptions
-#ifdef BOOST_NO_TYPEID
+#if defined(BOOST_NO_TYPEID) || defined(BOOST_NO_RTTI)
 #define CATCH_AND_REPORT_STD_EXCEPTION( ex_name )                           \
     catch( ex_name const& ex )                                              \
        { detail::report_error( execution_exception::cpp_exception_error,    \
@@ -1236,7 +1233,7 @@ execution_monitor::execute( boost::function<int ()> const& F )
     catch( ex_name const& ex )                                              \
         { detail::report_error( execution_exception::cpp_exception_error,   \
                           current_exception_cast<boost::exception const>(), \
-                          "%s: %s", detail::typeid_name(ex), ex.what() ); } \
+                          "%s: %s", detail::typeid_name(ex).c_str(), ex.what() ); } \
 /**/
 #endif
 
@@ -1266,7 +1263,7 @@ execution_monitor::execute( boost::function<int ()> const& F )
     catch( boost::exception const& ex )
       { detail::report_error( execution_exception::cpp_exception_error,
                               &ex,
-#ifdef BOOST_NO_TYPEID
+#if defined(BOOST_NO_TYPEID) || defined(BOOST_NO_RTTI)
                               "unknown boost::exception" ); }
 #else
                               typeid(ex).name()          ); }
@@ -1437,4 +1434,3 @@ disable( unsigned mask )
 #include <boost/test/detail/enable_warnings.hpp>
 
 #endif // BOOST_TEST_EXECUTION_MONITOR_IPP_012205GER
-
