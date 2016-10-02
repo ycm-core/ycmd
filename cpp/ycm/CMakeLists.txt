@@ -48,7 +48,7 @@ if ( USE_CLANG_COMPLETER AND
            "b4eaa1fa9872e2c76268f32fc597148cfa14c57b7d13e1edd9b9b6496cdf7de8" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
-  elseif ( ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+  elseif ( ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" )
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-amd64-unknown-freebsd10" )
       set( CLANG_SHA256
