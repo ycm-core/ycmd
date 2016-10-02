@@ -145,7 +145,7 @@ class ClangCompleter( Completer ):
                                 reparse = True,
                                 func = 'GetDocsForLocationInFile',
                                 response_builder = _BuildGetDocResponse ) ),
-      'GetDocQuick'              : ( lambda self, request_data, args:
+      'GetDocImprecise'          : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data,
                                 reparse = False,
                                 func = 'GetDocsForLocationInFile',
