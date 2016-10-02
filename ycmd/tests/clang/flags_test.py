@@ -300,12 +300,12 @@ def RemoveXclangFlags_test():
        flags._RemoveXclangFlags( expected + to_remove + expected ) )
 
 
-def CompilerToLanguageFlag_Passthrough_test():
+def AddLanguageFlagWhenAppropriate_Passthrough_test():
   eq_( [ '-foo', '-bar' ],
-       flags._CompilerToLanguageFlag( [ '-foo', '-bar' ] ) )
+       flags._AddLanguageFlagWhenAppropriate( [ '-foo', '-bar' ] ) )
 
 
-def _ReplaceCompilerTester( compiler, language ):
+def _AddLanguageFlagWhenAppropriateTester( compiler, language_flag = [] ):
   to_removes = [
     [],
     [ '/usr/bin/ccache' ],
@@ -314,19 +314,20 @@ def _ReplaceCompilerTester( compiler, language ):
   expected = [ '-foo', '-bar' ]
 
   for to_remove in to_removes:
-    eq_( [ compiler, '-x', language ] + expected,
-         flags._CompilerToLanguageFlag( to_remove + [ compiler ] + expected ) )
+    eq_( [ compiler ] + language_flag + expected,
+         flags._AddLanguageFlagWhenAppropriate( to_remove + [ compiler ] +
+                                                expected ) )
 
 
-def CompilerToLanguageFlag_ReplaceCCompiler_test():
+def AddLanguageFlagWhenAppropriate_CCompiler_test():
   compilers = [ 'cc', 'gcc', 'clang', '/usr/bin/cc',
                 '/some/other/path', 'some_command' ]
 
   for compiler in compilers:
-    yield _ReplaceCompilerTester, compiler, 'c'
+    yield _AddLanguageFlagWhenAppropriateTester, compiler
 
 
-def CompilerToLanguageFlag_ReplaceCppCompiler_test():
+def AddLanguageFlagWhenAppropriate_CppCompiler_test():
   compilers = [ 'c++', 'g++', 'clang++', '/usr/bin/c++',
                 '/some/other/path++', 'some_command++',
                 'c++-5', 'g++-5.1', 'clang++-3.7.3', '/usr/bin/c++-5',
@@ -335,7 +336,7 @@ def CompilerToLanguageFlag_ReplaceCppCompiler_test():
                 '/some/other/path++-4.9.31', 'some_command++-5.10' ]
 
   for compiler in compilers:
-    yield _ReplaceCompilerTester, compiler, 'c++'
+    yield _AddLanguageFlagWhenAppropriateTester, compiler, [ '-x', 'c++' ]
 
 
 def ExtraClangFlags_test():

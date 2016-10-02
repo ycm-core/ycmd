@@ -176,7 +176,7 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
 
 
 def PrepareFlagsForClang( flags, filename, add_extra_clang_flags = True ):
-  flags = _CompilerToLanguageFlag( flags )
+  flags = _AddLanguageFlagWhenAppropriate( flags )
   flags = _RemoveXclangFlags( flags )
   flags = _RemoveUnusedFlags( flags, filename )
   if add_extra_clang_flags:
@@ -240,22 +240,24 @@ def _RemoveFlagsPrecedingCompiler( flags ):
   return flags[ :-1 ]
 
 
-def _CompilerToLanguageFlag( flags ):
-  """When flags come from the compile_commands.json file, the flag preceding
-  the first flag starting with a dash is usually the path to the compiler that
-  should be invoked.  We want to replace it with a corresponding language flag.
-  E.g., -x c for gcc and -x c++ for g++."""
+def _AddLanguageFlagWhenAppropriate( flags ):
+  """When flags come from the compile_commands.json file, the flag preceding the
+  first flag starting with a dash is usually the path to the compiler that
+  should be invoked. Since LibClang does not deduce the language from the
+  compiler name, we explicitely set the language to C++ if the compiler is a C++
+  one (g++, clang++, etc.). Otherwise, we let LibClang guess the language from
+  the file extension. This handles the case where the .h extension is used for
+  C++ headers."""
 
   flags = _RemoveFlagsPrecedingCompiler( flags )
 
-  # First flag is now the compiler path or a flag starting with a dash
-  if flags[ 0 ].startswith( '-' ):
-    return flags
+  # First flag is now the compiler path or a flag starting with a dash.
+  first_flag = flags[ 0 ]
 
-  language = ( 'c++' if CPP_COMPILER_REGEX.search( flags[ 0 ] ) else
-               'c' )
-
-  return flags[ :1 ] + [ '-x', language ] + flags[ 1: ]
+  if ( not first_flag.startswith( '-' ) and
+       CPP_COMPILER_REGEX.search( first_flag ) ):
+    return [ first_flag, '-x', 'c++' ] + flags[ 1: ]
+  return flags
 
 
 def _RemoveUnusedFlags( flags, filename ):
