@@ -131,6 +131,10 @@ class ClangCompleter( Completer ):
          self._ClearCompilationFlagCache() ),
       'GetType'                  : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data, func = 'GetTypeAtLocation' ) ),
+      'GetTypeImprecise'         : ( lambda self, request_data, args:
+         self._GetSemanticInfo( request_data,
+                                func = 'GetTypeAtLocation',
+                                reparse = False ) ),
       'GetParent'                : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data,
                                 func = 'GetEnclosingFunctionAtLocation' ) ),
