@@ -59,7 +59,7 @@ if ( USE_CLANG_COMPLETER AND
       set( CLANG_SHA256
            "16c612019ece5ba1f846740e77c7c1a39b813acb5bcfbfe9f8af32d7c28caa60" )
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
-    endif()    
+    endif()
   else()
     # Among the prebuilt binaries available upstream, only the Ubuntu 14.04
     # and openSUSE 13.2 ones are working on Ubuntu 14.04 (and 12.04 which is
