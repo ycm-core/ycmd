@@ -94,7 +94,7 @@ def InvalidFile_test( app ):
 def PreprocessingTokens_test( app ):
   _RunTest( app, 1, 1, 4, 22,
             has_items(
-              _BuildTokenData( 'Punctuation', 'None', 1, 1, 1, 2 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 1, 1, 1, 2 ),
               _BuildTokenData( 'Identifier', 'PreprocessingDirective',
                                1, 2, 1, 8 ),
               _BuildTokenData( 'Identifier', 'Macro', 1, 9, 1, 11 ),
@@ -115,7 +115,7 @@ def DeclarationTokens_test( app ):
             has_items(
               _BuildTokenData( 'Identifier', 'Namespace', 6, 11, 6, 13 ),
 
-              _BuildTokenData( 'Comment', 'None', 8, 1, 11, 4 ),
+              _BuildTokenData( 'Comment', 'Comment', 8, 1, 11, 4 ),
 
               _BuildTokenData( 'Identifier', 'TemplateType', 12, 17, 12, 18 ),
               _BuildTokenData( 'Identifier', 'Class', 13, 7, 13, 10 ),
@@ -141,7 +141,7 @@ def DeclarationTokens_test( app ):
               _BuildTokenData( 'Identifier', 'EnumConstant', 33, 3, 33, 13 ),
 
               _BuildTokenData( 'Identifier', 'Union', 36, 7, 36, 9 ),
-              _BuildTokenData( 'Comment', 'None', 36, 10, 36, 25 ),
+              _BuildTokenData( 'Comment', 'Comment', 36, 10, 36, 25 ),
             ) )
 
 
@@ -161,27 +161,27 @@ def DetailedUsageTokens_test( app ):
   _RunTest( app, 53, 1, 54, 28,
             contains(
               _BuildTokenData( 'Identifier', 'Namespace', 53, 3, 53, 5 ),
-              _BuildTokenData( 'Punctuation', 'None', 53, 5, 53, 7 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 53, 5, 53, 7 ),
               _BuildTokenData( 'Identifier', 'Typedef', 53, 7, 53, 13 ),
               _BuildTokenData( 'Identifier', 'Unsupported', 53, 14, 53, 17 ),
-              _BuildTokenData( 'Punctuation', 'None', 53, 18, 53, 19 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 53, 18, 53, 19 ),
               _BuildTokenData( 'Identifier', 'Namespace', 53, 20, 53, 22 ),
-              _BuildTokenData( 'Punctuation', 'None', 53, 22, 53, 24 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 53, 22, 53, 24 ),
               _BuildTokenData( 'Identifier', 'Typedef', 53, 24, 53, 30 ),
-              _BuildTokenData( 'Punctuation', 'None', 53, 30, 53, 31 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 53, 30, 53, 31 ),
               _BuildTokenData( 'Identifier', 'FunctionParam', 53, 31, 53, 35 ),
-              _BuildTokenData( 'Punctuation', 'None', 53, 35, 53, 36 ),
-              _BuildTokenData( 'Punctuation', 'None', 53, 36, 53, 37 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 53, 35, 53, 36 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 53, 36, 53, 37 ),
 
               _BuildTokenData( 'Identifier', 'Namespace', 54, 3, 54, 5 ),
-              _BuildTokenData( 'Punctuation', 'None', 54, 5, 54, 7 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 54, 5, 54, 7 ),
               _BuildTokenData( 'Identifier', 'Enum', 54, 7, 54, 9 ),
               _BuildTokenData( 'Identifier', 'Unsupported', 54, 10, 54, 11 ),
-              _BuildTokenData( 'Punctuation', 'None', 54, 12, 54, 13 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 54, 12, 54, 13 ),
               _BuildTokenData( 'Identifier', 'Namespace', 54, 14, 54, 16 ),
-              _BuildTokenData( 'Punctuation', 'None', 54, 16, 54, 18 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 54, 16, 54, 18 ),
               _BuildTokenData( 'Identifier', 'EnumConstant', 54, 18, 54, 28 ),
-              _BuildTokenData( 'Punctuation', 'None', 54, 28, 54, 29 ),
+              _BuildTokenData( 'Punctuation', 'Punctuation', 54, 28, 54, 29 ),
             ) )
 
 
@@ -189,7 +189,7 @@ def DetailedUsageTokens_test( app ):
 def UnicodeTokens_test( app ):
   _RunTest( app, 56, 1, 59, 10,
             has_items(
-              _BuildTokenData( 'Comment', 'None', 56, 3, 56, 22 ),
+              _BuildTokenData( 'Comment', 'Comment', 56, 3, 56, 22 ),
               _BuildTokenData( 'Identifier', 'Typedef', 57, 18, 57, 24 ),
               _BuildTokenData( 'Identifier', 'Typedef', 58, 3, 58, 9 ),
               _BuildTokenData( 'Identifier', 'Unsupported', 58, 10, 58, 12 ),

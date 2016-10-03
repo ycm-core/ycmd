@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SYNTAX_H_IC9ZDM5T
-#define SYNTAX_H_IC9ZDM5T
+#ifndef TOKEN_H_IC9ZDM5T
+#define TOKEN_H_IC9ZDM5T
 
 #include "Range.h"
 
@@ -32,16 +32,23 @@ struct Token {
 
   enum Kind {
     PUNCTUATION = 0,
+    COMMENT,
     KEYWORD,
-    IDENTIFIER,
     LITERAL,
-    COMMENT
+    IDENTIFIER
   };
 
   // Divided into groups of possible values for each Kind enum value.
+  // TODO change to enum class and remove _TYPE suffixes after switch to C++11
   enum Type {
-    // Punctuation and Comment
-    NONE = 0,
+    // Punctuation types
+    PUNCTUATION_TYPE = 0,
+
+    // Comment types
+    COMMENT_TYPE,
+
+    // Keyword types
+    KEYWORD_TYPE,
 
     // Literal types
     // true/false are keywords
@@ -91,4 +98,4 @@ private:
 
 } // YouCompleteMe
 
-#endif /* end of include guard: SYNTAX_H_IC9ZDM5T */
+#endif /* end of include guard: TOKEN_H_IC9ZDM5T */

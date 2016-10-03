@@ -141,17 +141,17 @@ void Token::MapKindAndType( const CXTokenKind cx_kind,
   switch ( cx_kind ) {
     case CXToken_Punctuation:
       kind = Token::PUNCTUATION;
-      type = Token::NONE;
+      type = Token::PUNCTUATION_TYPE;
+      break;
+
+    case CXToken_Comment:
+      kind = Token::COMMENT;
+      type = Token::COMMENT_TYPE;
       break;
 
     case CXToken_Keyword:
       kind = Token::KEYWORD;
-      type = Token::NONE;
-      break;
-
-    case CXToken_Identifier:
-      kind = Token::IDENTIFIER;
-      type = CXCursorToTokenType( cx_cursor );
+      type = Token::KEYWORD_TYPE;
       break;
 
     case CXToken_Literal:
@@ -159,9 +159,9 @@ void Token::MapKindAndType( const CXTokenKind cx_kind,
       type = CXCursorToTokenType( cx_cursor );
       break;
 
-    case CXToken_Comment:
-      kind = Token::COMMENT;
-      type = Token::NONE;
+    case CXToken_Identifier:
+      kind = Token::IDENTIFIER;
+      type = CXCursorToTokenType( cx_cursor );
       break;
   }
 }
