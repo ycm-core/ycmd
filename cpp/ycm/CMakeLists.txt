@@ -48,6 +48,18 @@ if ( USE_CLANG_COMPLETER AND
            "b4eaa1fa9872e2c76268f32fc597148cfa14c57b7d13e1edd9b9b6496cdf7de8" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
+  elseif ( ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" )
+    if ( 64_BIT_PLATFORM )
+      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-amd64-unknown-freebsd10" )
+      set( CLANG_SHA256
+           "df35eaeabec7a474b3c3737c798a0c817795ebbd12952c665c52b2f98abcb6de" )
+      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+    else()
+      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i386-unknown-freebsd10" )
+      set( CLANG_SHA256
+           "16c612019ece5ba1f846740e77c7c1a39b813acb5bcfbfe9f8af32d7c28caa60" )
+      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+    endif()
   else()
     # Among the prebuilt binaries available upstream, only the Ubuntu 14.04
     # and openSUSE 13.2 ones are working on Ubuntu 14.04 (and 12.04 which is
