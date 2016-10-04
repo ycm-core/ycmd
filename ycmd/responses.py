@@ -218,15 +218,28 @@ def BuildDiagnosticData( diagnostic ):
   }
 
 
-def BuildTokenData( token ):
-  kind = ( token.kind.name if hasattr( token.kind, 'name' )
-           else token.kind )
-  token_type = ( token.type.name if hasattr( token.type, 'name' )
-                 else token.type )
+def BuildSemanticTokensResponse( tokens ):
+  """Build a response from list of SemanticToken objects."""
+  def BuildSemanticTokenData( token ):
+    kind = ( token.kind.name if hasattr( token.kind, 'name' )
+             else token.kind )
+    token_type = ( token.type.name if hasattr( token.type, 'name' )
+                   else token.type )
+    return {
+      'kind': kind,
+      'type': token_type,
+      'range': BuildRangeData( token.range )
+    }
+
   return {
-    'kind': kind,
-    'type': token_type,
-    'range': BuildRangeData( token.range )
+    'tokens': [ BuildSemanticTokenData( x ) for x in tokens ]
+  }
+
+
+def BuildSkippedRangesResponse( skipped_ranges ):
+  """Build a response from a list of Skipped Range (aka Range) objects."""
+  return {
+    'skipped_ranges': [ BuildRangeData( x ) for x in skipped_ranges ]
   }
 
 

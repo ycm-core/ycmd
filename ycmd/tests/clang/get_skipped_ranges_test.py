@@ -69,7 +69,7 @@ def _RunTest( app, expect ):
                             expect_errors = False )
 
   eq_( response.status_code, requests.codes.ok )
-  assert_that( response.json, expect )
+  assert_that( response.json[ 'skipped_ranges' ], expect )
 
 
 @SharedYcmd

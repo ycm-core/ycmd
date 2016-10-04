@@ -9,11 +9,11 @@ namespace Ns {
  * Multiline
  * comment
  */
-template <class T>
+template <class T, int tntp>
 class Foo
 {
 public:
-  Foo(T) {};
+  Foo(T) { i = tntp; };
   ~Foo() {};
 
   void setMember(T arg) {
@@ -21,10 +21,10 @@ public:
   }
 
 private:
-  T t;
+  T t; T i;
 };
 
-typedef Foo<int> FooInt;
+typedef Foo<int, 2> FooInt;
 
 struct St;
 

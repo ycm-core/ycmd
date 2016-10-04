@@ -72,7 +72,7 @@ def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
                             expect_errors = False )
 
   eq_( response.status_code, requests.codes.ok )
-  assert_that( response.json, expect )
+  assert_that( response.json[ 'tokens' ], expect )
 
 
 @SharedYcmd
@@ -117,28 +117,40 @@ def DeclarationTokens_test( app ):
 
               _BuildTokenData( 'Comment', 'Comment', 8, 1, 11, 4 ),
 
-              _BuildTokenData( 'Identifier', 'TemplateType', 12, 17, 12, 18 ),
+              _BuildTokenData( 'Identifier', 'TemplateParameter',
+                               12, 17, 12, 18 ),
+              _BuildTokenData( 'Identifier', 'TemplateNonTypeParameter',
+                               12, 24, 12, 28 ),
               _BuildTokenData( 'Identifier', 'Class', 13, 7, 13, 10 ),
               _BuildTokenData( 'Identifier', 'Function', 16, 3, 16, 6 ),
-              _BuildTokenData( 'Identifier', 'TemplateType', 16, 7, 16, 8 ),
+              _BuildTokenData( 'Identifier', 'TemplateParameter',
+                               16, 7, 16, 8 ),
+              _BuildTokenData( 'Identifier', 'MemberVariable',
+                               16, 12, 16, 13 ),
+              _BuildTokenData( 'Identifier', 'TemplateNonTypeParameter',
+                               16, 16, 16, 20 ),
               _BuildTokenData( 'Identifier', 'Function', 17, 4, 17, 7 ),
               _BuildTokenData( 'Identifier', 'Function', 19, 8, 19, 17 ),
-              _BuildTokenData( 'Identifier', 'TemplateType', 19, 18, 19, 19 ),
-              _BuildTokenData( 'Identifier', 'FunctionParam', 19, 20, 19, 23 ),
+              _BuildTokenData( 'Identifier', 'TemplateParameter',
+                               19, 18, 19, 19 ),
+              _BuildTokenData( 'Identifier', 'FunctionParameter',
+                               19, 20, 19, 23 ),
               _BuildTokenData( 'Identifier', 'MemberVariable', 20, 5, 20, 6 ),
-              _BuildTokenData( 'Identifier', 'FunctionParam', 20, 9, 20, 12 ),
-              _BuildTokenData( 'Identifier', 'TemplateType', 24, 3, 24, 4 ),
+              _BuildTokenData( 'Identifier', 'FunctionParameter',
+                               20, 9, 20, 12 ),
+              _BuildTokenData( 'Identifier', 'TemplateParameter',
+                               24, 3, 24, 4 ),
               _BuildTokenData( 'Identifier', 'MemberVariable', 24, 5, 24, 6 ),
 
               _BuildTokenData( 'Identifier', 'Class', 27, 9, 27, 12 ),
-              _BuildTokenData( 'Identifier', 'Typedef', 27, 18, 27, 24 ),
+              _BuildTokenData( 'Identifier', 'TypeAlias', 27, 21, 27, 27 ),
 
               _BuildTokenData( 'Identifier', 'Struct', 29, 8, 29, 10 ),
 
-              _BuildTokenData( 'Identifier', 'Enum', 31, 6, 31, 8 ),
+              _BuildTokenData( 'Identifier', 'Enumeration', 31, 6, 31, 8 ),
 
-              _BuildTokenData( 'Identifier', 'EnumConstant', 32, 3, 32, 13 ),
-              _BuildTokenData( 'Identifier', 'EnumConstant', 33, 3, 33, 13 ),
+              _BuildTokenData( 'Identifier', 'Enumerator', 32, 3, 32, 13 ),
+              _BuildTokenData( 'Identifier', 'Enumerator', 33, 3, 33, 13 ),
 
               _BuildTokenData( 'Identifier', 'Union', 36, 7, 36, 9 ),
               _BuildTokenData( 'Comment', 'Comment', 36, 10, 36, 25 ),
@@ -162,25 +174,26 @@ def DetailedUsageTokens_test( app ):
             contains(
               _BuildTokenData( 'Identifier', 'Namespace', 53, 3, 53, 5 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 53, 5, 53, 7 ),
-              _BuildTokenData( 'Identifier', 'Typedef', 53, 7, 53, 13 ),
-              _BuildTokenData( 'Identifier', 'Unsupported', 53, 14, 53, 17 ),
+              _BuildTokenData( 'Identifier', 'TypeAlias', 53, 7, 53, 13 ),
+              _BuildTokenData( 'Identifier', 'Variable', 53, 14, 53, 17 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 53, 18, 53, 19 ),
               _BuildTokenData( 'Identifier', 'Namespace', 53, 20, 53, 22 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 53, 22, 53, 24 ),
-              _BuildTokenData( 'Identifier', 'Typedef', 53, 24, 53, 30 ),
+              _BuildTokenData( 'Identifier', 'TypeAlias', 53, 24, 53, 30 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 53, 30, 53, 31 ),
-              _BuildTokenData( 'Identifier', 'FunctionParam', 53, 31, 53, 35 ),
+              _BuildTokenData( 'Identifier', 'FunctionParameter',
+                               53, 31, 53, 35 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 53, 35, 53, 36 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 53, 36, 53, 37 ),
 
               _BuildTokenData( 'Identifier', 'Namespace', 54, 3, 54, 5 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 54, 5, 54, 7 ),
-              _BuildTokenData( 'Identifier', 'Enum', 54, 7, 54, 9 ),
-              _BuildTokenData( 'Identifier', 'Unsupported', 54, 10, 54, 11 ),
+              _BuildTokenData( 'Identifier', 'Enumeration', 54, 7, 54, 9 ),
+              _BuildTokenData( 'Identifier', 'Variable', 54, 10, 54, 11 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 54, 12, 54, 13 ),
               _BuildTokenData( 'Identifier', 'Namespace', 54, 14, 54, 16 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 54, 16, 54, 18 ),
-              _BuildTokenData( 'Identifier', 'EnumConstant', 54, 18, 54, 28 ),
+              _BuildTokenData( 'Identifier', 'Enumerator', 54, 18, 54, 28 ),
               _BuildTokenData( 'Punctuation', 'Punctuation', 54, 28, 54, 29 ),
             ) )
 
@@ -190,8 +203,8 @@ def UnicodeTokens_test( app ):
   _RunTest( app, 56, 1, 59, 10,
             has_items(
               _BuildTokenData( 'Comment', 'Comment', 56, 3, 56, 22 ),
-              _BuildTokenData( 'Identifier', 'Typedef', 57, 18, 57, 24 ),
-              _BuildTokenData( 'Identifier', 'Typedef', 58, 3, 58, 9 ),
-              _BuildTokenData( 'Identifier', 'Unsupported', 58, 10, 58, 12 ),
+              _BuildTokenData( 'Identifier', 'TypeAlias', 57, 18, 57, 24 ),
+              _BuildTokenData( 'Identifier', 'TypeAlias', 58, 3, 58, 9 ),
+              _BuildTokenData( 'Identifier', 'Variable', 58, 10, 58, 12 ),
               _BuildTokenData( 'Identifier', 'MemberVariable', 59, 6, 59, 7 ),
             ) )

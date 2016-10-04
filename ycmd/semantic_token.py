@@ -26,10 +26,10 @@ from builtins import *  # noqa
 
 # Filename token.py conflicts with the python internals.
 
-class Token( object ):
+class SemanticToken( object ):
   """Represents single semantic token.
   kind attribute groups tokens of certain types into higher level abstractions.
-       Possible values are: (Punctuation, Comment, Keyword, Literal, Identifier).
+       Possible values are (Punctuation, Comment, Keyword, Literal, Identifier).
   type represents token type (Keyword, Class, Enumeration, ...),
   range is the token's source range.
 
@@ -68,4 +68,3 @@ class Token( object ):
     self.kind = kind
     self.type = token_type
     self.range = token_range
-
