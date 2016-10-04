@@ -60,30 +60,15 @@ Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
     case CXCursor_UnionDecl:
       return Token::UNION;
 
+    case CXCursor_TypedefDecl: // typedef
+    case CXCursor_TypeAliasDecl: // using
+      return Token::TYPE_ALIAS;
+
     case CXCursor_FieldDecl:
       return Token::MEMBER_VARIABLE;
 
-    case CXCursor_TypedefDecl: // typedef
-    case CXCursor_TypeAliasDecl: // using
-      return Token::TYPEDEF;
-
-    case CXCursor_TemplateTypeParameter:
-      return Token::TEMPLATE_TYPE;
-
-    case CXCursor_EnumDecl:
-      return Token::ENUM;
-
-    case CXCursor_EnumConstantDecl:
-      return Token::ENUM_CONSTANT;
-
-    case CXCursor_PreprocessingDirective:
-      return Token::PREPROCESSING_DIRECTIVE;
-
-    case CXCursor_MacroDefinition:
-
-    //case CXCursor_MacroExpansion: // Same as CXCursor_MacroInstantiation
-    case CXCursor_MacroInstantiation:
-      return Token::MACRO;
+    case CXCursor_VarDecl:
+      return Token::VARIABLE;
 
     case CXCursor_FunctionDecl:
     case CXCursor_CXXMethod:
@@ -92,7 +77,27 @@ Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
       return Token::FUNCTION;
 
     case CXCursor_ParmDecl:
-      return Token::FUNCTION_PARAM;
+      return Token::FUNCTION_PARAMETER;
+
+    case CXCursor_EnumDecl:
+      return Token::ENUMERATION;
+
+    case CXCursor_EnumConstantDecl:
+      return Token::ENUMERATOR;
+
+    case CXCursor_TemplateTypeParameter:
+      return Token::TEMPLATE_PARAMETER;
+
+    case CXCursor_NonTypeTemplateParameter:
+      return Token::TEMPLATE_NON_TYPE_PARAMETER;
+
+    case CXCursor_PreprocessingDirective:
+      return Token::PREPROCESSING_DIRECTIVE;
+
+    case CXCursor_MacroDefinition:
+    //case CXCursor_MacroExpansion: // Same as CXCursor_MacroInstantiation
+    case CXCursor_MacroInstantiation:
+      return Token::MACRO;
 
     // When we have a type reference we need to do one more step
     // to find out what it is referencing.

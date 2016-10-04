@@ -219,9 +219,13 @@ def BuildDiagnosticData( diagnostic ):
 
 
 def BuildTokenData( token ):
+  kind = ( token.kind.name if hasattr( token.kind, 'name' )
+           else token.kind )
+  token_type = ( token.type.name if hasattr( token.type, 'name' )
+                 else token.type )
   return {
-    'kind': token.kind.name,
-    'type': token.type.name,
+    'kind': kind,
+    'type': token_type,
     'range': BuildRangeData( token.range )
   }
 
