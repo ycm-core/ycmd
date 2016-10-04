@@ -55,7 +55,7 @@ Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
       return Token::CLASS;
 
     case CXCursor_StructDecl:
-      return Token::STRUCT;
+      return Token::STRUCTURE;
 
     case CXCursor_UnionDecl:
       return Token::UNION;

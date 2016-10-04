@@ -61,7 +61,7 @@ struct Token {
     // Identifier types
     NAMESPACE,
     CLASS,
-    STRUCT,
+    STRUCTURE,
     UNION,
     TYPE_ALIAS,
     MEMBER_VARIABLE,

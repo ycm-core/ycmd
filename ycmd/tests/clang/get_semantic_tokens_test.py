@@ -28,7 +28,9 @@ from hamcrest import ( assert_that, contains, has_items )
 
 from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
-from ycmd.responses import ( BuildRangeData, Range, Location )
+from ycmd.responses import ( BuildRangeData, BuildSemanticTokensResponse,
+                             Range, Location )
+from ycmd.semantic_token import SemanticToken
 from ycmd.utils import ReadFile
 import requests
 
@@ -73,6 +75,20 @@ def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
 
   eq_( response.status_code, requests.codes.ok )
   assert_that( response.json[ 'tokens' ], expect )
+
+
+def BuildSemanticTokenData_unit_test():
+  token_range = Range( Location( 1, 1, 'test.cpp' ),
+                       Location( 1, 2, 'test.cpp' ) )
+  token = SemanticToken( 'Keyword', 'Keyword', token_range )
+  response = BuildSemanticTokensResponse( [ token ] )
+  eq_( response, { 'tokens': [
+                               {
+                                 'kind': 'Keyword',
+                                 'type': 'Keyword',
+                                 'range': BuildRangeData( token_range )
+                               }
+                             ] } )
 
 
 @SharedYcmd
@@ -145,7 +161,7 @@ def DeclarationTokens_test( app ):
               _BuildTokenData( 'Identifier', 'Class', 27, 9, 27, 12 ),
               _BuildTokenData( 'Identifier', 'TypeAlias', 27, 21, 27, 27 ),
 
-              _BuildTokenData( 'Identifier', 'Struct', 29, 8, 29, 10 ),
+              _BuildTokenData( 'Identifier', 'Structure', 29, 8, 29, 10 ),
 
               _BuildTokenData( 'Identifier', 'Enumeration', 31, 6, 31, 8 ),
 
