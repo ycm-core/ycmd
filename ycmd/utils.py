@@ -97,6 +97,22 @@ def ToUnicode( value ):
   return str( value )
 
 
+# When lines is an iterable of all strings or all bytes, equivalent to
+#   '\n'.join( ToUnicode( lines ) )
+# but faster on large inputs.
+def JoinLinesAsUnicode( lines ):
+  try:
+    first = next( iter( lines ) )
+  except StopIteration:
+    return str()
+
+  if isinstance( first, str ):
+    return ToUnicode( '\n'.join( lines ) )
+  if isinstance( first, bytes ):
+    return ToUnicode( b'\n'.join( lines ) )
+  raise ValueError( 'lines must contain either strings or bytes.' )
+
+
 # Consistently returns the new bytes() type from python-future. Assumes incoming
 # strings are either UTF-8 or unicode (which is converted to UTF-8).
 def ToBytes( value ):

@@ -32,7 +32,7 @@ from shutil import rmtree
 import ycm_core
 from future.utils import native
 from mock import patch, call
-from nose.tools import eq_, ok_
+from nose.tools import eq_, ok_, raises
 from ycmd import utils
 from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly, UnixOnly,
                                     CurrentWorkingDirectory,
@@ -159,6 +159,57 @@ def ToUnicode_None_test():
   value = utils.ToUnicode( None )
   eq_( value, u'' )
   ok_( isinstance( value, str ) )
+
+
+@Py2Only
+def JoinLinesAsUnicode_Py2Bytes_test():
+  value = utils.JoinLinesAsUnicode( [ bytes( 'abc' ), bytes( 'xyz' ) ] )
+  eq_( value, u'abc\nxyz' )
+  ok_( isinstance( value, str ) )
+
+
+@Py2Only
+def JoinLinesAsUnicode_Py2Str_test():
+  value = utils.JoinLinesAsUnicode( [ 'abc', 'xyz' ] )
+  eq_( value, u'abc\nxyz' )
+  ok_( isinstance( value, str ) )
+
+
+@Py2Only
+def JoinLinesAsUnicode_Py2FutureStr_test():
+  value = utils.JoinLinesAsUnicode( [ str( 'abc' ), str( 'xyz' ) ] )
+  eq_( value, u'abc\nxyz' )
+  ok_( isinstance( value, str ) )
+
+
+@Py2Only
+def JoinLinesAsUnicode_Py2Unicode_test():
+  value = utils.JoinLinesAsUnicode( [ u'abc', u'xyz' ] )
+  eq_( value, u'abc\nxyz' )
+  ok_( isinstance( value, str ) )
+
+
+def JoinLinesAsUnicode_Bytes_test():
+  value = utils.JoinLinesAsUnicode( [ bytes( b'abc' ), bytes( b'xyz' ) ] )
+  eq_( value, u'abc\nxyz' )
+  ok_( isinstance( value, str ) )
+
+
+def JoinLinesAsUnicode_Str_test():
+  value = utils.JoinLinesAsUnicode( [ u'abc', u'xyz' ] )
+  eq_( value, u'abc\nxyz' )
+  ok_( isinstance( value, str ) )
+
+
+def JoinLinesAsUnicode_EmptyList_test():
+  value = utils.JoinLinesAsUnicode( [ ] )
+  eq_( value, u'' )
+  ok_( isinstance( value, str ) )
+
+
+@raises( ValueError )
+def JoinLinesAsUnicode_BadInput_test():
+  utils.JoinLinesAsUnicode( [ 42 ] )
 
 
 @Py2Only
