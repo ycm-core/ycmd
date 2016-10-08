@@ -338,7 +338,7 @@ class ClangCompleter( Completer ):
 
   def OnBufferUnload( self, request_data ):
     self._completer.DeleteCachesForFile(
-        ToCppStringCompatible( request_data[ 'unloaded_buffer' ] ) )
+        ToCppStringCompatible( request_data[ 'filepath' ] ) )
 
 
   def GetDetailedDiagnostic( self, request_data ):
