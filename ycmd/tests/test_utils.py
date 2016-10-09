@@ -26,7 +26,7 @@ from future.utils import iteritems
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from future.utils import itervalues, PY2
+from future.utils import PY2
 from hamcrest import contains_string, has_entry, has_entries, assert_that
 from mock import patch
 from webtest import TestApp
@@ -232,10 +232,8 @@ def ClearCompletionsCache():
   This function is used when sharing the application between tests so that
   no completions are cached by previous tests."""
   server_state = handlers._server_state
-  filetype_completers = server_state._filetype_completers
-  for completer in itervalues( filetype_completers ):
-    if completer:
-      completer._completions_cache.Invalidate()
+  for completer in server_state.GetLoadedFiletypeCompleters():
+    completer._completions_cache.Invalidate()
   general_completer = server_state.GetGeneralCompleter()
   for completer in general_completer._all_completers:
     completer._completions_cache.Invalidate()
