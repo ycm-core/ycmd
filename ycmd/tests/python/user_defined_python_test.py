@@ -29,7 +29,7 @@ from mock import patch
 import sys
 
 from ycmd import utils
-from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE
+from ycmd.completers.python.python_completer import BINARY_NOT_FOUND_MESSAGE
 from ycmd.tests.python import IsolatedYcmd
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, UserOption
 

@@ -23,8 +23,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from ycmd.completers.python.jedi_completer import JediCompleter
+from ycmd.completers.python.python_completer import PythonCompleter
 
 
 def GetCompleter( user_options ):
-  return JediCompleter( user_options )
+  return PythonCompleter( user_options )
