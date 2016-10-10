@@ -163,7 +163,7 @@ def UserOption( key, value ):
     user_options = current_options.copy()
     user_options.update( { key: value } )
     handlers.UpdateUserOptions( user_options )
-    yield
+    yield user_options
   finally:
     handlers.UpdateUserOptions( current_options )
 
@@ -173,7 +173,7 @@ def CurrentWorkingDirectory( path ):
   old_cwd = GetCurrentDirectory()
   os.chdir( path )
   try:
-    yield
+    yield old_cwd
   finally:
     os.chdir( old_cwd )
 

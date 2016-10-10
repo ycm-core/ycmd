@@ -27,7 +27,9 @@ import functools
 import os
 
 from ycmd import handlers
-from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
+from ycmd.tests.test_utils import ( ClearCompletionsCache,
+                                    CurrentWorkingDirectory,
+                                    SetUpApp,
                                     StopCompleterServer,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import GetCurrentDirectory
@@ -88,13 +90,11 @@ def IsolatedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
-    old_current_dir = GetCurrentDirectory()
     app = SetUpApp()
-    os.chdir( PathToTestFile() )
     try:
-      test( app, *args, **kwargs )
+      with CurrentWorkingDirectory( PathToTestFile() ):
+        test( app, *args, **kwargs )
     finally:
       StopCompleterServer( app, 'javascript' )
-      os.chdir( old_current_dir )
       handlers._server_state = old_server_state
   return Wrapper
