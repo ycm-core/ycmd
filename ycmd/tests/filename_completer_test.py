@@ -27,17 +27,18 @@ from builtins import *  # noqa
 
 import os
 from hamcrest import assert_that, contains_inanyorder
-from nose.tools import eq_
+from nose.tools import eq_, ok_
 from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
-from ycmd.utils import ToBytes
+from ycmd.tests.test_utils import CurrentWorkingDirectory, UserOption
+from ycmd.utils import GetCurrentDirectory, ToBytes
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR,
-                         "testdata",
-                         "filename_completer",
-                         "inner_dir" )
+                         'testdata',
+                         'filename_completer',
+                         'inner_dir' )
 PATH_TO_TEST_FILE = os.path.join( DATA_DIR, "test.cpp" )
 
 REQUEST_DATA = {
@@ -336,78 +337,69 @@ class FilenameCompleter_test( object ):
                                       ( '∂†∫', '[Dir]' )  ) )
 
 
-def WorkingDir_Use_File_Path_test():
-  assert os.getcwd() != DATA_DIR, ( "Please run this test from a different "
-                                    "directory" )
+def WorkingDir_UseFilePath_test():
+  ok_( GetCurrentDirectory() != DATA_DIR, ( 'Please run this test from a '
+                                            'different directory' ) )
 
-  options = user_options_store.DefaultOptions()
-  options.update( {
-    'filepath_completion_use_working_dir': 0
-  } )
-  completer = FilenameCompleter( options )
+  with UserOption( 'filepath_completion_use_working_dir', 0 ) as options:
+    completer = FilenameCompleter( options )
 
-  data = sorted( _CompletionResultsForLine( completer, 'ls ./include/' ) )
-  eq_( [
-        ( 'Qt',       '[Dir]' ),
-        ( 'QtGui',    '[Dir]' ),
+    data = sorted( _CompletionResultsForLine( completer, 'ls ./include/' ) )
+    eq_( [
+      ( 'Qt',    '[Dir]' ),
+      ( 'QtGui', '[Dir]' )
+    ], data )
+
+
+def WorkingDir_UseServerWorkingDirectory_test():
+  test_dir = os.path.join( DATA_DIR, 'include' )
+  with CurrentWorkingDirectory( test_dir ) as old_current_dir:
+    ok_( old_current_dir != test_dir, ( 'Please run this test from a different '
+                                        'directory' ) )
+
+    with UserOption( 'filepath_completion_use_working_dir', 1 ) as options:
+      completer = FilenameCompleter( options )
+
+      # We don't supply working_dir in the request, so the current working
+      # directory is used.
+      data = sorted( _CompletionResultsForLine( completer, 'ls ./' ) )
+      eq_( [
+        ( 'Qt',    '[Dir]' ),
+        ( 'QtGui', '[Dir]' )
       ], data )
 
 
-def WorkingDir_Use_ycmd_WD_test():
-  # Store the working directory so we can return to it
-  wd = os.getcwd()
+def WorkingDir_UseServerWorkingDirectory_Unicode_test():
+  test_dir = os.path.join( TEST_DIR, 'testdata', 'filename_completer', '∂†∫' )
+  with CurrentWorkingDirectory( test_dir ) as old_current_dir:
+    ok_( old_current_dir != test_dir, ( 'Please run this test from a different '
+                                        'directory' ) )
 
+    with UserOption( 'filepath_completion_use_working_dir', 1 ) as options:
+      completer = FilenameCompleter( options )
+
+      # We don't supply working_dir in the request, so the current working
+      # directory is used.
+      data = sorted( _CompletionResultsForLine( completer, 'ls ./' ) )
+      eq_( [
+        ( '†es†.txt', '[File]' )
+      ], data )
+
+
+def WorkingDir_UseClientWorkingDirectory_test():
   test_dir = os.path.join( DATA_DIR, 'include' )
-  assert wd != test_dir, "Please run this test from a different directory"
+  ok_( GetCurrentDirectory() != test_dir, ( 'Please run this test from a '
+                                            'different directory' ) )
 
-  try:
-    options = user_options_store.DefaultOptions()
-    options.update( {
-      'filepath_completion_use_working_dir': 1
-    } )
-
+  with UserOption( 'filepath_completion_use_working_dir', 1 ) as options:
     completer = FilenameCompleter( options )
 
-    # Change current directory to DATA_DIR/include (path to which we expect
-    # results to be relative)
-    os.chdir( test_dir )
-
-    # We don't supply working_dir in the request, so the current working
-    # directory is used.
-    data = sorted( _CompletionResultsForLine( completer, 'ls ./' ) )
-    eq_( [
-          ( 'Qt',       '[Dir]' ),
-          ( 'QtGui',    '[Dir]' ),
-        ], data )
-
-  finally:
-    os.chdir( wd )
-
-
-def WorkingDir_Use_Client_WD_test():
-  # Store the working directory so we can return to it
-  wd = os.getcwd()
-
-  test_dir = os.path.join( DATA_DIR, 'include' )
-  assert wd != test_dir, "Please run this test from a different directory"
-
-  try:
-    options = user_options_store.DefaultOptions()
-    options.update( {
-      'filepath_completion_use_working_dir': 1
-    } )
-
-    completer = FilenameCompleter( options )
-
-    # We supply working_dir in the request, so we expect results to be relative
-    # to the supplied path
+    # We supply working_dir in the request, so we expect results to be
+    # relative to the supplied path.
     data = sorted( _CompletionResultsForLine( completer, 'ls ./', {
-      'working_dir': os.path.join( DATA_DIR, 'include' )
+      'working_dir': test_dir
     } ) )
     eq_( [
-          ( 'Qt',       '[Dir]' ),
-          ( 'QtGui',    '[Dir]' ),
-        ], data )
-
-  finally:
-    os.chdir( wd )
+      ( 'Qt',    '[Dir]' ),
+      ( 'QtGui', '[Dir]' )
+    ], data )

@@ -33,7 +33,7 @@ from ycmd.completers.completer_utils import ( AtIncludeStatementStart,
                                               GetIncludeStatementValue )
 from ycmd.completers.cpp.clang_completer import InCFamilyFile
 from ycmd.completers.cpp.flags import Flags
-from ycmd.utils import ToUnicode, OnWindows
+from ycmd.utils import GetCurrentDirectory, OnWindows, ToUnicode
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
@@ -184,7 +184,7 @@ def _GetAbsolutePathForCompletions( path_dir,
     if working_dir:
       return os.path.join( working_dir, path_dir )
     else:
-      return os.path.join( os.getcwd(), path_dir )
+      return os.path.join( GetCurrentDirectory(), path_dir )
   else:
     # Return paths relative to the file
     return os.path.join( os.path.join( os.path.dirname( filepath ) ),

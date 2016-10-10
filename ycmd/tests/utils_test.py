@@ -567,3 +567,15 @@ def FindExecutable_CurrentDirectory_test():
 def FindExecutable_AdditionalPathExt_test():
   with TemporaryExecutable( extension = '.xyz' ) as executable:
     eq_( executable, utils.FindExecutable( executable ) )
+
+
+@Py2Only
+def GetCurrentDirectory_Py2NoCurrentDirectory_test():
+  with patch( 'os.getcwdu', side_effect = OSError ):
+    eq_( utils.GetCurrentDirectory(), tempfile.gettempdir() )
+
+
+@Py3Only
+def GetCurrentDirectory_Py3NoCurrentDirectory_test():
+  with patch( 'os.getcwd', side_effect = FileNotFoundError ): # noqa
+    eq_( utils.GetCurrentDirectory(), tempfile.gettempdir() )
