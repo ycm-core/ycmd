@@ -35,9 +35,9 @@ from ycmd.utils import ToBytes
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR,
-                         "testdata",
-                         "filename_completer",
-                         "inner_dir" )
+                         'testdata',
+                         'filename_completer',
+                         'inner_dir' )
 PATH_TO_TEST_FILE = os.path.join( DATA_DIR, "test.cpp" )
 
 REQUEST_DATA = {
@@ -336,9 +336,9 @@ class FilenameCompleter_test( object ):
                                       ( '∂†∫', '[Dir]' )  ) )
 
 
-def WorkingDir_Use_File_Path_test():
-  assert os.getcwd() != DATA_DIR, ( "Please run this test from a different "
-                                    "directory" )
+def WorkingDir_UseFilePath_test():
+  assert os.getcwd() != DATA_DIR, ( 'Please run this test from a different '
+                                    'directory' )
 
   options = user_options_store.DefaultOptions()
   options.update( {
@@ -353,12 +353,12 @@ def WorkingDir_Use_File_Path_test():
       ], data )
 
 
-def WorkingDir_Use_ycmd_WD_test():
-  # Store the working directory so we can return to it
+def WorkingDir_UseServerWorkingDirectory_test():
+  # Store the working directory so we can return to it.
   wd = os.getcwd()
 
   test_dir = os.path.join( DATA_DIR, 'include' )
-  assert wd != test_dir, "Please run this test from a different directory"
+  assert wd != test_dir, 'Please run this test from a different directory'
 
   try:
     options = user_options_store.DefaultOptions()
@@ -369,7 +369,7 @@ def WorkingDir_Use_ycmd_WD_test():
     completer = FilenameCompleter( options )
 
     # Change current directory to DATA_DIR/include (path to which we expect
-    # results to be relative)
+    # results to be relative).
     os.chdir( test_dir )
 
     # We don't supply working_dir in the request, so the current working
@@ -384,12 +384,41 @@ def WorkingDir_Use_ycmd_WD_test():
     os.chdir( wd )
 
 
-def WorkingDir_Use_Client_WD_test():
-  # Store the working directory so we can return to it
+def WorkingDir_UseServerWorkingDirectory_Unicode_test():
+  # Store the working directory so we can return to it.
+  wd = os.getcwd()
+
+  test_dir = os.path.join( TEST_DIR, 'testdata', 'filename_completer', '∂†∫' )
+  assert wd != test_dir, 'Please run this test from a different directory'
+
+  try:
+    options = user_options_store.DefaultOptions()
+    options.update( {
+      'filepath_completion_use_working_dir': 1
+    } )
+
+    completer = FilenameCompleter( options )
+
+    # Change current directory to path with unicode characters.
+    os.chdir( test_dir )
+
+    # We don't supply working_dir in the request, so the current working
+    # directory is used.
+    data = sorted( _CompletionResultsForLine( completer, 'ls ./' ) )
+    eq_( [
+          ( '†es†.txt', '[File]' )
+        ], data )
+
+  finally:
+    os.chdir( wd )
+
+
+def WorkingDir_UseClientWorkingDirectory_test():
+  # Store the working directory so we can return to it.
   wd = os.getcwd()
 
   test_dir = os.path.join( DATA_DIR, 'include' )
-  assert wd != test_dir, "Please run this test from a different directory"
+  assert wd != test_dir, 'Please run this test from a different directory'
 
   try:
     options = user_options_store.DefaultOptions()
@@ -400,7 +429,7 @@ def WorkingDir_Use_Client_WD_test():
     completer = FilenameCompleter( options )
 
     # We supply working_dir in the request, so we expect results to be relative
-    # to the supplied path
+    # to the supplied path.
     data = sorted( _CompletionResultsForLine( completer, 'ls ./', {
       'working_dir': os.path.join( DATA_DIR, 'include' )
     } ) )
