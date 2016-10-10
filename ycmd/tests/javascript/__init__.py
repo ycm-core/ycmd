@@ -30,6 +30,7 @@ from ycmd import handlers
 from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
                                     StopCompleterServer,
                                     WaitUntilCompleterServerReady )
+from ycmd.utils import GetCurrentDirectory
 
 shared_app = None
 shared_current_dir = None
@@ -48,7 +49,7 @@ def setUpPackage():
   global shared_app, shared_current_dir
 
   shared_app = SetUpApp()
-  shared_current_dir = os.getcwd()
+  shared_current_dir = GetCurrentDirectory()
   os.chdir( PathToTestFile() )
   WaitUntilCompleterServerReady( shared_app, 'javascript' )
 
@@ -87,7 +88,7 @@ def IsolatedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     old_server_state = handlers._server_state
-    old_current_dir = os.getcwd()
+    old_current_dir = GetCurrentDirectory()
     app = SetUpApp()
     os.chdir( PathToTestFile() )
     try:

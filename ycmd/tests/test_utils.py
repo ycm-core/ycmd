@@ -42,7 +42,7 @@ import stat
 from ycmd import handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
-from ycmd.utils import OnMac, OnWindows, ToUnicode
+from ycmd.utils import GetCurrentDirectory, OnMac, OnWindows, ToUnicode
 import ycm_core
 
 try:
@@ -170,7 +170,7 @@ def UserOption( key, value ):
 
 @contextlib.contextmanager
 def CurrentWorkingDirectory( path ):
-  old_cwd = os.getcwd()
+  old_cwd = GetCurrentDirectory()
   os.chdir( path )
   try:
     yield

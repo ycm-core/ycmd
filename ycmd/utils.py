@@ -445,3 +445,17 @@ def SplitLines( contents ):
     lines.append( '' )
 
   return lines
+
+
+def GetCurrentDirectory():
+  """Returns the current directory as an unicode object. If the current
+  directory does not exist anymore, returns the temporary folder instead."""
+  try:
+    if PY2:
+      return os.getcwdu()
+    return os.getcwd()
+  # os.getcwdu throws an OSError exception when the current directory has been
+  # deleted while os.getcwd throws a FileNotFoundError, which is a subclass of
+  # OSError.
+  except OSError:
+    return tempfile.gettempdir()

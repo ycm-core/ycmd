@@ -31,7 +31,7 @@ from nose.tools import eq_
 from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
-from ycmd.utils import ToBytes
+from ycmd.utils import GetCurrentDirectory, ToBytes
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 DATA_DIR = os.path.join( TEST_DIR,
@@ -337,8 +337,8 @@ class FilenameCompleter_test( object ):
 
 
 def WorkingDir_UseFilePath_test():
-  assert os.getcwd() != DATA_DIR, ( 'Please run this test from a different '
-                                    'directory' )
+  assert GetCurrentDirectory() != DATA_DIR, ( 'Please run this test from a '
+                                              'different directory' )
 
   options = user_options_store.DefaultOptions()
   options.update( {
@@ -355,7 +355,7 @@ def WorkingDir_UseFilePath_test():
 
 def WorkingDir_UseServerWorkingDirectory_test():
   # Store the working directory so we can return to it.
-  wd = os.getcwd()
+  wd = GetCurrentDirectory()
 
   test_dir = os.path.join( DATA_DIR, 'include' )
   assert wd != test_dir, 'Please run this test from a different directory'
@@ -386,7 +386,7 @@ def WorkingDir_UseServerWorkingDirectory_test():
 
 def WorkingDir_UseServerWorkingDirectory_Unicode_test():
   # Store the working directory so we can return to it.
-  wd = os.getcwd()
+  wd = GetCurrentDirectory()
 
   test_dir = os.path.join( TEST_DIR, 'testdata', 'filename_completer', '∂†∫' )
   assert wd != test_dir, 'Please run this test from a different directory'
@@ -415,7 +415,7 @@ def WorkingDir_UseServerWorkingDirectory_Unicode_test():
 
 def WorkingDir_UseClientWorkingDirectory_test():
   # Store the working directory so we can return to it.
-  wd = os.getcwd()
+  wd = GetCurrentDirectory()
 
   test_dir = os.path.join( DATA_DIR, 'include' )
   assert wd != test_dir, 'Please run this test from a different directory'
