@@ -146,7 +146,21 @@ def Load( module_file, force = False ):
   # anymore, but there are a lot of old ycm_extra_conf.py files that we don't
   # want to break.
   sys.path.insert( 0, _PathToCppCompleterFolder() )
-  module = LoadPythonSource( _RandomName(), module_file )
+
+  # By default, the Python interpreter compiles source files into bytecode to
+  # load them faster next time they are run. These *.pyc files are generated
+  # along the source files prior to Python 3.2 or in a __pycache__ folder for
+  # newer versions. We disable the generation of these files when loading
+  # ycm_extra_conf.py files as users do not want them inside their projects.
+  # The drawback is negligible since ycm_extra_conf.py files are generally small
+  # files thus really fast to compile and only loaded once by editing session.
+  old_dont_write_bytecode = sys.dont_write_bytecode
+  sys.dont_write_bytecode = True
+  try:
+    module = LoadPythonSource( _RandomName(), module_file )
+  finally:
+    sys.dont_write_bytecode = old_dont_write_bytecode
+
   del sys.path[ 0 ]
 
   with _module_for_module_file_lock:
