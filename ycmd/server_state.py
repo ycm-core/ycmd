@@ -26,7 +26,7 @@ from builtins import *  # noqa
 import os
 import threading
 import logging
-from future.utils import listvalues
+from future.utils import itervalues
 from ycmd.utils import ForceSemanticCompletion, LoadPythonSource
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
@@ -92,7 +92,8 @@ class ServerState( object ):
 
   def GetLoadedFiletypeCompleters( self ):
     with self._filetype_completers_lock:
-      return set( listvalues( self._filetype_completers ) )
+      return set( [ completer for completer in
+                    itervalues( self._filetype_completers ) if completer ] )
 
 
   def FiletypeCompletionAvailable( self, filetypes ):
