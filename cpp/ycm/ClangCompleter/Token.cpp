@@ -70,10 +70,12 @@ Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
     case CXCursor_VarDecl:
       return Token::VARIABLE;
 
-    case CXCursor_FunctionDecl:
     case CXCursor_CXXMethod:
     case CXCursor_Constructor:
     case CXCursor_Destructor:
+      return Token::MEMBER_FUNCTION;
+
+    case CXCursor_FunctionDecl:
       return Token::FUNCTION;
 
     case CXCursor_ParmDecl:

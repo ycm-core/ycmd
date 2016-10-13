@@ -129,7 +129,8 @@ def PreprocessingTokens_test( app ):
 def DeclarationTokens_test( app ):
   _RunTest( app, 6, 1, 42, 17,
             has_items(
-              _BuildTokenData( 'Identifier', 'Namespace', 6, 11, 6, 13 ),
+              _BuildTokenData( 'Identifier', 'Function', 6, 6, 6, 20 ),
+              _BuildTokenData( 'Identifier', 'Namespace', 7, 11, 7, 13 ),
 
               _BuildTokenData( 'Comment', 'Comment', 8, 1, 11, 4 ),
 
@@ -138,15 +139,15 @@ def DeclarationTokens_test( app ):
               _BuildTokenData( 'Identifier', 'TemplateNonTypeParameter',
                                12, 24, 12, 28 ),
               _BuildTokenData( 'Identifier', 'Class', 13, 7, 13, 10 ),
-              _BuildTokenData( 'Identifier', 'Function', 16, 3, 16, 6 ),
+              _BuildTokenData( 'Identifier', 'MemberFunction', 16, 3, 16, 6 ),
               _BuildTokenData( 'Identifier', 'TemplateParameter',
                                16, 7, 16, 8 ),
               _BuildTokenData( 'Identifier', 'MemberVariable',
                                16, 12, 16, 13 ),
               _BuildTokenData( 'Identifier', 'TemplateNonTypeParameter',
                                16, 16, 16, 20 ),
-              _BuildTokenData( 'Identifier', 'Function', 17, 4, 17, 7 ),
-              _BuildTokenData( 'Identifier', 'Function', 19, 8, 19, 17 ),
+              _BuildTokenData( 'Identifier', 'MemberFunction', 17, 4, 17, 7 ),
+              _BuildTokenData( 'Identifier', 'MemberFunction', 19, 8, 19, 17 ),
               _BuildTokenData( 'Identifier', 'TemplateParameter',
                                19, 18, 19, 19 ),
               _BuildTokenData( 'Identifier', 'FunctionParameter',

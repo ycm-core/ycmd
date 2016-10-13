@@ -54,6 +54,7 @@ class SemanticToken( object ):
     ( Identifier, TypeAlias ),
     ( Identifier, MemberVariable ),
     ( Identifier, Variable ),
+    ( Identifier, MemberFunction ),
     ( Identifier, Function ),
     ( Identifier, FunctionParameter ),
     ( Identifier, Enumeration ),

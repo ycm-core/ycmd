@@ -3,8 +3,8 @@
 #define AREA ( 2 * PI * RADIUS )
 const float area = AREA;
 
+void globalFunction();
 namespace Ns {
-
 /*
  * Multiline
  * comment
