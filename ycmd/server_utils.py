@@ -144,9 +144,18 @@ def PathToNearestThirdPartyFolder( path ):
   return None
 
 
+def IsStandardLibraryFolder( path ):
+  return os.path.isfile( os.path.join( path, 'os.py' ) )
+
+
+def IsVirtualEnvLibraryFolder( path ):
+  return os.path.isfile( os.path.join( path, 'orig-prefix.txt' ) )
+
+
 def GetStandardLibraryIndexInSysPath():
   for path in sys.path:
-    if os.path.isfile( os.path.join( path, 'os.py' ) ):
+    if ( IsStandardLibraryFolder( path ) and
+         not IsVirtualEnvLibraryFolder( path ) ):
       return sys.path.index( path )
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
