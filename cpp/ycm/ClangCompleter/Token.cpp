@@ -22,6 +22,22 @@ namespace YouCompleteMe {
 
 namespace {
 
+// Since cursor kind is a CXCursor_VarDecl we can't just check for the
+// storage class, because global static variables will be selected too.
+// Instead we just check if the semantic parent is a class or struct.
+// Luke, I am your father
+bool isStaticMemberVariable( const CXCursor &cursor ) {
+  CXCursor parent = clang_getCursorSemanticParent( cursor );
+  CXCursorKind kind = clang_getCursorKind( parent );
+  // Since cursor is a declaration, its parent should be a declaration too.
+  return kind == CXCursor_ClassDecl ||
+         kind == CXCursor_StructDecl;
+}
+
+bool hasStaticStorage( const CXCursor &cursor ) {
+  return clang_Cursor_getStorageClass( cursor ) == CX_SC_Static;
+}
+
 // This is a recursive function.
 // Recursive call is made for the reference cursor kind,
 // with the referenced cursor as an argument,
@@ -67,13 +83,19 @@ Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
     case CXCursor_FieldDecl:
       return Token::MEMBER_VARIABLE;
 
+    // Clang reports static member variables as plain variables
+    // not sure if it is a bug or feature
     case CXCursor_VarDecl:
-      return Token::VARIABLE;
+      return isStaticMemberVariable( cursor ) ? Token::STATIC_MEMBER_VARIABLE :
+                                                Token::VARIABLE;
 
-    case CXCursor_CXXMethod:
     case CXCursor_Constructor:
     case CXCursor_Destructor:
       return Token::MEMBER_FUNCTION;
+
+    case CXCursor_CXXMethod:
+      return hasStaticStorage( cursor ) ? Token::STATIC_MEMBER_FUNCTION :
+                                          Token::MEMBER_FUNCTION;
 
     case CXCursor_FunctionDecl:
       return Token::FUNCTION;

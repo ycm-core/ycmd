@@ -59,3 +59,17 @@ int main(int argc, char *argv[])
   մ.s = 0;
   return 0;
 }
+
+static int global_static_var;
+static int global_static_func();
+
+struct SSS
+{
+        int i;
+        static int s;
+
+        void foo(int);
+        static void foo();
+};
+
+int SSS::s = 0;

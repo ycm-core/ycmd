@@ -167,10 +167,16 @@ class YcmdHandle( object ):
     request_json = {
       'filepath': filepath,
       'filetypes': [ filetype ],
-      'start_line': start_line,
-      'start_column': start_column,
-      'end_line': end_line,
-      'end_column': end_column,
+      'range': {
+        'start': {
+          'line_num': start_line,
+          'column_num': start_column,
+        },
+        'end': {
+          'line_num': end_line,
+          'column_num': end_column,
+        },
+      }
     }
     print( '==== Sending semantic-tokens request ====' )
     self.PostToHandlerAndLog( SEMANTIC_TOKENS_HANDLER, request_json )

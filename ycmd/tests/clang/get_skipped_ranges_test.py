@@ -24,11 +24,11 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from nose.tools import eq_
-from hamcrest import ( assert_that, contains, empty )
+from hamcrest import assert_that, contains, empty
 
 from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
-from ycmd.responses import ( BuildRangeData, Range, Location )
+from ycmd.responses import BuildRangeData, Range, Location
 from ycmd.utils import ReadFile
 import requests
 

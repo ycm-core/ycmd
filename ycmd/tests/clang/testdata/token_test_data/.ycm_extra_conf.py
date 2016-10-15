@@ -1,6 +1,6 @@
 def FlagsForFile( filename, **kwargs ):
 
-  flags = [ '-x', 'c++', '-I', '.' ]
+  flags = [ '-x', 'c++' ]
 
   client_data = kwargs[ 'client_data' ]
   if client_data:

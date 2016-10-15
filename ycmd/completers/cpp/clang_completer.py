@@ -378,10 +378,13 @@ class ClangCompleter( Completer ):
         ToCppStringCompatible( filename ) ):
       raise RuntimeError( "Still parsing file, no tokens yet." )
 
-    start_line = request_data[ 'start_line' ]
-    start_column = request_data[ 'start_column' ]
-    end_line = request_data[ 'end_line' ]
-    end_column = request_data[ 'end_column' ]
+    source_range = request_data[ 'range' ]
+    start = source_range[ 'start' ]
+    end = source_range[ 'end' ]
+    start_line = start[ 'line_num' ]
+    start_column = start[ 'column_num' ]
+    end_line = end[ 'line_num' ]
+    end_column = end[ 'column_num' ]
     semantic_tokens = self._completer.GetSemanticTokens(
         ToCppStringCompatible( filename ),
         start_line, start_column,

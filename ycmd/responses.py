@@ -218,19 +218,20 @@ def BuildDiagnosticData( diagnostic ):
   }
 
 
+def BuildSemanticTokenData( token ):
+  kind = ( token.kind.name if hasattr( token.kind, 'name' )
+           else token.kind )
+  token_type = ( token.type.name if hasattr( token.type, 'name' )
+                 else token.type )
+  return {
+    'kind': kind,
+    'type': token_type,
+    'range': BuildRangeData( token.range )
+  }
+
+
 def BuildSemanticTokensResponse( tokens ):
   """Build a response from list of SemanticToken objects."""
-  def BuildSemanticTokenData( token ):
-    kind = ( token.kind.name if hasattr( token.kind, 'name' )
-             else token.kind )
-    token_type = ( token.type.name if hasattr( token.type, 'name' )
-                   else token.type )
-    return {
-      'kind': kind,
-      'type': token_type,
-      'range': BuildRangeData( token.range )
-    }
-
   return {
     'tokens': [ BuildSemanticTokenData( x ) for x in tokens ]
   }

@@ -24,12 +24,11 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 from nose.tools import eq_
-from hamcrest import ( assert_that, contains, has_items )
+from hamcrest import assert_that, contains, has_items
 
 from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
-from ycmd.responses import ( BuildRangeData, BuildSemanticTokensResponse,
-                             Range, Location )
+from ycmd.responses import BuildSemanticTokenData, Range, Location
 from ycmd.semantic_token import SemanticToken
 from ycmd.utils import ReadFile
 import requests
@@ -53,22 +52,26 @@ def setUpModule( app ):
 
 
 def _BuildTokenData( kind, type, sl, sc, el, ec ):
-  return {
-    'kind': kind,
-    'type': type,
-    'range': BuildRangeData( Range( Location( sl, sc, _TEST_FILE ),
-                                    Location( el, ec, _TEST_FILE ) ) )
-  }
+  token = SemanticToken( kind, type,
+                         Range( Location( sl, sc, _TEST_FILE ),
+                                Location( el, ec, _TEST_FILE ) )  )
+  return BuildSemanticTokenData( token )
 
 
 def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
   request = {
     'filetypes': 'cpp',
     'filepath': _TEST_FILE,
-    'start_line': start_line,
-    'start_column': start_column,
-    'end_line': end_line,
-    'end_column': end_column,
+    'range': {
+      'start': {
+        'line_num': start_line,
+        'column_num': start_column,
+      },
+      'end': {
+        'line_num': end_line,
+        'column_num': end_column,
+      },
+    }
   }
   response = app.post_json( '/semantic_tokens', BuildRequest( **request ),
                             expect_errors = False )
@@ -77,29 +80,21 @@ def _RunTest( app, start_line, start_column, end_line, end_column, expect ):
   assert_that( response.json[ 'tokens' ], expect )
 
 
-def BuildSemanticTokenData_unit_test():
-  token_range = Range( Location( 1, 1, 'test.cpp' ),
-                       Location( 1, 2, 'test.cpp' ) )
-  token = SemanticToken( 'Keyword', 'Keyword', token_range )
-  response = BuildSemanticTokensResponse( [ token ] )
-  eq_( response, { 'tokens': [
-                               {
-                                 'kind': 'Keyword',
-                                 'type': 'Keyword',
-                                 'range': BuildRangeData( token_range )
-                               }
-                             ] } )
-
-
 @SharedYcmd
 def InvalidFile_test( app ):
   request = {
     'filetypes': 'cpp',
     'filepath': '',
-    'start_line': 1,
-    'start_column': 1,
-    'end_line': 1,
-    'end_column': 1,
+    'range': {
+      'start': {
+        'line_num': 1,
+        'column_num': 1,
+      },
+      'end': {
+        'line_num': 1,
+        'column_num': 1,
+      },
+    }
   }
   response = app.post_json( '/semantic_tokens', BuildRequest( **request ),
                             expect_errors = True )
@@ -224,4 +219,24 @@ def UnicodeTokens_test( app ):
               _BuildTokenData( 'Identifier', 'TypeAlias', 58, 3, 58, 9 ),
               _BuildTokenData( 'Identifier', 'Variable', 58, 10, 58, 12 ),
               _BuildTokenData( 'Identifier', 'MemberVariable', 59, 6, 59, 7 ),
+            ) )
+
+
+@SharedYcmd
+def StaticMemberTokens_test( app ):
+  _RunTest( app, 63, 1, 75, 15,
+            has_items(
+              _BuildTokenData( 'Identifier', 'Variable', 63, 12, 63, 29 ),
+              _BuildTokenData( 'Identifier', 'Function', 64, 12, 64, 30 ),
+
+              _BuildTokenData( 'Identifier', 'MemberVariable', 68, 13, 68, 14 ),
+              _BuildTokenData( 'Identifier', 'StaticMemberVariable',
+                               69, 20, 69, 21 ),
+
+              _BuildTokenData( 'Identifier', 'MemberFunction', 71, 14, 71, 17 ),
+              _BuildTokenData( 'Identifier', 'StaticMemberFunction',
+                               72, 21, 72, 24 ),
+
+              _BuildTokenData( 'Identifier', 'StaticMemberVariable',
+                               75, 10, 75, 11 ),
             ) )
