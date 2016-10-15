@@ -26,9 +26,15 @@ from builtins import *  # noqa
 from ycmd.completers.javascript.tern_completer import (
   ShouldEnableTernCompleter, TernCompleter )
 
+from ycmd.completers.typescript.typescript_completer import (
+  ShouldEnableTypescriptCompleter, TypeScriptCompleter )
+
 
 def GetCompleter( user_options ):
-  if not ShouldEnableTernCompleter():
-    return None
+  if ShouldEnableTernCompleter():
+    return TernCompleter( user_options )
 
-  return TernCompleter( user_options )
+  if ShouldEnableTypescriptCompleter():
+    return TypeScriptCompleter( user_options )
+
+  return None
