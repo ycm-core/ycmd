@@ -115,6 +115,8 @@ def flags_for_closest_include(filename):
 
 def find_database(filename):
     compilation_db_path = find_closest_path(filename, 'compile_commands.json')
+    if not compilation_db_path:
+        return None
     compilation_db_dir = os.path.dirname(compilation_db_path)
     logging.info("Set compilation database directory to " + compilation_db_dir)
     compilation_db =  ycm_core.CompilationDatabase(compilation_db_dir)
