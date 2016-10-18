@@ -61,3 +61,25 @@ def Subcommands_GoTo_all_test():
 
   for test in tests:
     yield RunGoToTest, test
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Method_test( app ):
+  # Testcase1
+  filepath = PathToTestFile( 'docs.rs' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'rust',
+                             line_num = 7,
+                             column_num = 9,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  eq_( response, {
+    'detailed_info': 'pub fn fun()\n---\n'
+                     'some docs on a function'
+  } )
