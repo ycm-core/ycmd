@@ -381,7 +381,7 @@ class RustCompleter( Completer ):
       'RestartServer' : ( lambda self, request_data, args:
                            self._RestartServer() ),
       'GetDoc' : ( lambda self, request_data, args:
-                           self._GetDoc(request_data) ),
+                           self._GetDoc( request_data ) ),
     }
 
 
@@ -396,13 +396,14 @@ class RustCompleter( Completer ):
       _logger.exception( e )
       raise RuntimeError( 'Can\'t jump to definition.' )
 
+
   def _GetDoc( self, request_data ):
     try:
-      definitions = self._GetResponse( '/find_definition',
+      definition = self._GetResponse( '/find_definition',
                                       request_data )
 
-      docs = [definitions['context'], definitions['docs']]
-      return responses.BuildDetailedInfoResponse('\n---\n'.join(docs))
+      docs = [ definition[ 'context' ], definition[ 'docs' ] ]
+      return responses.BuildDetailedInfoResponse( '\n---\n'.join( docs ) )
     except Exception as e:
       _logger.exception( e )
       raise RuntimeError( 'Can\'t lookup docs.' )
