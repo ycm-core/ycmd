@@ -4,5 +4,6 @@ mod t {
 }
 
 pub fn main() {
-    t::fun()
+    t::fun();
+    t::dne();
 }
