@@ -61,3 +61,47 @@ def Subcommands_GoTo_all_test():
 
   for test in tests:
     yield RunGoToTest, test
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Method_test( app ):
+  filepath = PathToTestFile( 'docs.rs' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'rust',
+                             line_num = 7,
+                             column_num = 9,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  eq_( response, {
+    'detailed_info': 'pub fn fun()\n---\n'
+                     'some docs on a function'
+  } )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Fail_Method_test( app ):
+  filepath = PathToTestFile( 'docs.rs' )
+  contents = ReadFile( filepath )
+
+  # no docs exist for this function
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'rust',
+                             line_num = 8,
+                             column_num = 9,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json(
+          '/run_completer_command',
+          event_data,
+          expect_errors=True ).json
+
+  eq_( response[ 'exception' ][ 'TYPE' ], 'RuntimeError' )
+  eq_( response[ 'message' ], 'Can\'t lookup docs.' )
