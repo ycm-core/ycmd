@@ -45,8 +45,7 @@ HMAC_SECRET_LENGTH = 16
 JEDIHTTP_HMAC_HEADER = 'x-jedihttp-hmac'
 BINARY_NOT_FOUND_MESSAGE = ( 'The specified python interpreter {0} ' +
                              'was not found. Did you specify it correctly?' )
-LOG_FILENAME_FORMAT = os.path.join( utils.PathToCreatedTempDir(),
-                                    u'jedihttp_{port}_{std}.log' )
+LOGFILE_FORMAT = 'jedihttp_{port}_{std}_'
 PATH_TO_JEDIHTTP = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
                 'third_party', 'JediHTTP', 'jedihttp.py' ) )
@@ -173,13 +172,13 @@ class JediCompleter( Completer ):
                     '--log', self._GetLoggingLevel(),
                     '--hmac-file-secret', hmac_file.name ]
 
-      self._logfile_stdout = LOG_FILENAME_FORMAT.format(
-          port = self._jedihttp_port, std = 'stdout' )
-      self._logfile_stderr = LOG_FILENAME_FORMAT.format(
-          port = self._jedihttp_port, std = 'stderr' )
+      self._logfile_stdout = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._jedihttp_port, std = 'stdout' ) )
+      self._logfile_stderr = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._jedihttp_port, std = 'stderr' ) )
 
-      with utils.OpenForStdHandle( self._logfile_stderr ) as logerr:
-        with utils.OpenForStdHandle( self._logfile_stdout ) as logout:
+      with utils.OpenForStdHandle( self._logfile_stdout ) as logout:
+        with utils.OpenForStdHandle( self._logfile_stderr ) as logerr:
           self._jedihttp_phandle = utils.SafePopen( command,
                                                     stdout = logout,
                                                     stderr = logerr )

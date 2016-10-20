@@ -42,7 +42,7 @@ from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
-from ycmd.utils import ( GetUnusedLocalhostPort, PathToCreatedTempDir, ReadFile,
+from ycmd.utils import ( CreateLogfile, GetUnusedLocalhostPort, ReadFile,
                          RemoveIfExists, SafePopen, SetEnviron, ToBytes,
                          ToUnicode )
 
@@ -51,6 +51,7 @@ HMAC_HEADER = 'x-ycm-hmac'
 HMAC_SECRET_LENGTH = 16
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
 PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..' )
+LOGFILE_FORMAT = 'server_{port}_{std}_'
 
 
 class Client_test( object ):
@@ -102,10 +103,10 @@ class Client_test( object ):
         '--check_interval_seconds={0}'.format( check_interval_seconds ),
       ]
 
-      filename_format = os.path.join( PathToCreatedTempDir(),
-                                      'server_{port}_{std}.log' )
-      stdout = filename_format.format( port = self._port, std = 'stdout' )
-      stderr = filename_format.format( port = self._port, std = 'stderr' )
+      stdout = CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._port, std = 'stdout' ) )
+      stderr = CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._port, std = 'stderr' ) )
       self._logfiles.extend( [ stdout, stderr ] )
       ycmd_args.append( '--stdout={0}'.format( stdout ) )
       ycmd_args.append( '--stderr={0}'.format( stderr ) )
