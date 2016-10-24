@@ -69,6 +69,8 @@ class RequestWrap( object ):
       'query': self._Query,
 
       'filetypes': self._Filetypes,
+
+      'first_filetype': self._FirstFiletype,
     }
     self._cached_computed = {}
 
@@ -104,13 +106,13 @@ class RequestWrap( object ):
   def CompletionStartColumn( self ):
     return CompletionStartColumn( self[ 'line_value' ],
                                   self[ 'column_num' ],
-                                  self._FirstFiletype() )
+                                  self[ 'first_filetype' ] )
 
 
   def CompletionStartCodepoint( self ):
     return CompletionStartCodepoint( self[ 'line_value' ],
                                      self[ 'column_num' ],
-                                     self._FirstFiletype() )
+                                     self[ 'first_filetype' ] )
 
 
   def _Query( self ):

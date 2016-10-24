@@ -69,10 +69,7 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddIdentifier( self, identifier, request_data ):
-    try:
-      filetype = request_data[ 'filetypes' ][ 0 ]
-    except KeyError:
-      filetype = None
+    filetype = request_data[ 'first_filetype' ]
     filepath = request_data[ 'filepath' ]
 
     if not filetype or not filepath or not identifier:
@@ -104,17 +101,14 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def AddBufferIdentifiers( self, request_data ):
-    try:
-      filetype = request_data[ 'filetypes' ][ 0 ]
-    except KeyError:
-      filetype = None
+    filetype = request_data[ 'first_filetype' ]
     filepath = request_data[ 'filepath' ]
-    collect_from_comments_and_strings = bool( self.user_options[
-      'collect_identifiers_from_comments_and_strings' ] )
 
     if not filetype or not filepath:
       return
 
+    collect_from_comments_and_strings = bool( self.user_options[
+      'collect_identifiers_from_comments_and_strings' ] )
     text = request_data[ 'file_data' ][ filepath ][ 'contents' ]
     self._logger.info( 'Adding buffer identifiers for file: %s', filepath )
     self._completer.ClearForFileAndAddIdentifiersToDatabase(
@@ -217,14 +211,10 @@ def _RemoveSmallCandidates( candidates, min_num_candidate_size_chars ):
 
 
 def _GetCursorIdentifier( request_data ):
-  try:
-    filetype = request_data[ 'filetypes' ][ 0 ]
-  except KeyError:
-    filetype = None
   return identifier_utils.IdentifierAtIndex(
       request_data[ 'line_value' ],
       request_data[ 'column_codepoint' ] - 1,
-      filetype )
+      request_data[ 'first_filetype' ] )
 
 
 def _IdentifiersFromBuffer( text,
