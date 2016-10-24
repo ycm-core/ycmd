@@ -192,10 +192,6 @@ def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
   line_num = request_data[ 'line_num' ] - 1
   column_num = request_data[ 'column_codepoint' ] - 1
   filepath = request_data[ 'filepath' ]
-  try:
-    filetype = request_data[ 'filetypes' ][ 0 ]
-  except KeyError:
-    filetype = None
 
   contents_per_line = (
     SplitLines( request_data[ 'file_data' ][ filepath ][ 'contents' ] ) )
