@@ -346,7 +346,7 @@ def ExitIfYcmdLibInUseOnWindows():
 
 
 def BuildYcmdLib( args ):
-  build_dir = mkdtemp( prefix = 'ycm_build.' )
+  build_dir = mkdtemp( prefix = 'ycm_build_' )
 
   try:
     full_cmake_args = [ '-G', GetGenerator( args ) ]

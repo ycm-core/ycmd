@@ -48,6 +48,7 @@ PATH_TO_OMNISHARP_BINARY = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
                 'third_party', 'OmniSharpServer', 'OmniSharp',
                 'bin', 'Release', 'OmniSharp.exe' ) )
+LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
 class CsharpCompleter( Completer ):
@@ -389,14 +390,15 @@ class CsharpSolutionCompleter( object ):
       if utils.OnCygwin():
         command.extend( [ '--client-path-mode', 'Cygwin' ] )
 
-      filename_format = os.path.join( utils.PathToCreatedTempDir(),
-                                      u'omnisharp_{port}_{sln}_{std}.log' )
-
       solutionfile = os.path.basename( path_to_solutionfile )
-      self._filename_stdout = filename_format.format(
-          port = self._omnisharp_port, sln = solutionfile, std = 'stdout' )
-      self._filename_stderr = filename_format.format(
-          port = self._omnisharp_port, sln = solutionfile, std = 'stderr' )
+      self._filename_stdout = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._omnisharp_port,
+                                 sln = solutionfile,
+                                 std = 'stdout' ) )
+      self._filename_stderr = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._omnisharp_port,
+                                 sln = solutionfile,
+                                 std = 'stderr' ) )
 
       with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
         with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:

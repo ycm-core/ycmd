@@ -28,7 +28,6 @@ from builtins import *  # noqa
 import os
 import subprocess
 import tempfile
-from shutil import rmtree
 import ycm_core
 from future.utils import native
 from mock import patch, call
@@ -287,26 +286,6 @@ def ToCppStringCompatible_Py3Int_test():
   vector = ycm_core.StringVector()
   vector.append( value )
   eq_( vector[ 0 ], '123' )
-
-
-def PathToCreatedTempDir_DirDoesntExist_test():
-  tempdir = PathToTestFile( 'tempdir' )
-  rmtree( tempdir, ignore_errors = True )
-
-  try:
-    eq_( utils.PathToCreatedTempDir( tempdir ), tempdir )
-  finally:
-    rmtree( tempdir, ignore_errors = True )
-
-
-def PathToCreatedTempDir_DirDoesExist_test():
-  tempdir = PathToTestFile( 'tempdir' )
-  os.makedirs( tempdir )
-
-  try:
-    eq_( utils.PathToCreatedTempDir( tempdir ), tempdir )
-  finally:
-    rmtree( tempdir, ignore_errors = True )
 
 
 def RemoveIfExists_Exists_test():

@@ -58,6 +58,8 @@ PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
 # address. (ahem: Windows)
 SERVER_HOST = '127.0.0.1'
 
+LOGFILE_FORMAT = 'tern_{port}_{std}_'
+
 
 def ShouldEnableTernCompleter():
   """Returns whether or not the tern completer is 'installed'. That is whether
@@ -421,16 +423,11 @@ class TernCompleter( Completer ):
                     + ' '.join( command ) )
 
       try:
-        logfile_format = os.path.join( utils.PathToCreatedTempDir(),
-                                      u'tern_{port}_{std}.log' )
+        self._server_stdout = utils.CreateLogfile(
+            LOGFILE_FORMAT.format( port = self._server_port, std = 'stdout' ) )
 
-        self._server_stdout = logfile_format.format(
-            port = self._server_port,
-            std = 'stdout' )
-
-        self._server_stderr = logfile_format.format(
-            port = self._server_port,
-            std = 'stderr' )
+        self._server_stderr = utils.CreateLogfile(
+            LOGFILE_FORMAT.format( port = self._server_port, std = 'stderr' ) )
 
         # We need to open a pipe to stdin or the Tern server is killed.
         # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749

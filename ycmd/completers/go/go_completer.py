@@ -59,8 +59,7 @@ GO_BINARIES = dict( {
                          ExecutableName( 'godef' ) )
 } )
 
-LOG_FILENAME_FORMAT = os.path.join( utils.PathToCreatedTempDir(),
-                                    'gocode_{port}_{std}.log' )
+LOGFILE_FORMAT = 'gocode_{port}_{std}_'
 
 _logger = logging.getLogger( __name__ )
 
@@ -218,10 +217,10 @@ class GoCompleter( Completer ):
       if _logger.isEnabledFor( logging.DEBUG ):
         command.append( '-debug' )
 
-      self._gocode_stdout = LOG_FILENAME_FORMAT.format(
-          port = self._gocode_port, std = 'stdout' )
-      self._gocode_stderr = LOG_FILENAME_FORMAT.format(
-          port = self._gocode_port, std = 'stderr' )
+      self._gocode_stdout = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._gocode_port, std = 'stdout' ) )
+      self._gocode_stderr = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._gocode_port, std = 'stderr' ) )
 
       with utils.OpenForStdHandle( self._gocode_stdout ) as stdout:
         with utils.OpenForStdHandle( self._gocode_stderr ) as stderr:
