@@ -19,7 +19,6 @@ import re
 import shlex
 import subprocess
 import sys
-import traceback
 
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 if not ( ( PY_MAJOR == 2 and PY_MINOR >= 6 ) or
@@ -34,9 +33,10 @@ DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 for folder in os.listdir( DIR_OF_THIRD_PARTY ):
   abs_folder_path = p.join( DIR_OF_THIRD_PARTY, folder )
   if p.isdir( abs_folder_path ) and not os.listdir( abs_folder_path ):
-    sys.exit( 'Some folders in ' + DIR_OF_THIRD_PARTY + ' are empty; '
-              'you probably forgot to run:'
-              '\n\tgit submodule update --init --recursive\n\n' )
+    sys.exit(
+      'ERROR: some folders in {0} are empty; you probably forgot to run:\n'
+      '\tgit submodule update --init --recursive\n'.format( DIR_OF_THIRD_PARTY )
+    )
 
 sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
 
@@ -130,25 +130,18 @@ def NumCores():
 
 def CheckDeps():
   if not PathToFirstExistingExecutable( [ 'cmake' ] ):
-    sys.exit( 'Please install CMake and retry.')
+    sys.exit( 'ERROR: please install CMake and retry.')
 
 
-# Shamelessly stolen from https://gist.github.com/edufelipe/1027906
-def CheckOutput( *popen_args, **kwargs ):
-  """Run command with arguments and return its output as a byte string.
-  Backported from Python 2.7."""
-
-  process = subprocess.Popen( stdout=subprocess.PIPE, *popen_args, **kwargs )
-  output, unused_err = process.communicate()
-  retcode = process.poll()
-  if retcode:
-    command = kwargs.get( 'args' )
-    if command is None:
-      command = popen_args[ 0 ]
-    error = subprocess.CalledProcessError( retcode, command )
-    error.output = output
-    raise error
-  return output
+def CheckCall( args, **kwargs ):
+  exit_message = kwargs.get( 'exit_message', None )
+  kwargs.pop( 'exit_message', None )
+  try:
+    subprocess.check_call( args, **kwargs )
+  except subprocess.CalledProcessError as error:
+    if exit_message:
+      sys.exit( exit_message )
+    sys.exit( error.returncode )
 
 
 def GetPossiblePythonLibraryDirectories():
@@ -281,8 +274,8 @@ def ParseArguments():
   if ( args.system_libclang and
        not args.clang_completer and
        not args.all_completers ):
-    sys.exit( "You can't pass --system-libclang without also passing "
-              "--clang-completer or --all as well." )
+    sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
+              '--clang-completer or --all as well.' )
   return args
 
 
@@ -322,7 +315,7 @@ def RunYcmdTests( build_dir ):
   else:
     new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
 
-  subprocess.check_call( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
+  CheckCall( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
 
 
 # On Windows, if the ycmd library is in use while building it, a LNK1104
@@ -355,30 +348,29 @@ def BuildYcmdLib( args ):
     full_cmake_args.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
 
     os.chdir( build_dir )
-    try:
-      subprocess.check_call( [ 'cmake' ] + full_cmake_args )
 
-      build_target = ( 'ycm_core' if 'YCM_TESTRUN' not in os.environ else
-                       'ycm_core_tests' )
+    exit_message = (
+      'ERROR: the build failed.\n\n'
+      'NOTE: it is *highly* unlikely that this is a bug but rather\n'
+      'that this is a problem with the configuration of your system\n'
+      'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
+      'and if you\'re sure that it is a bug, please raise an issue on the\n'
+      'issue tracker, including the entire output of this script\n'
+      'and the invocation line used to run it.' )
 
-      build_command = [ 'cmake', '--build', '.', '--target', build_target ]
-      if OnWindows():
-        config = 'Debug' if args.enable_debug else 'Release'
-        build_command.extend( [ '--config', config ] )
-      else:
-        build_command.extend( [ '--', '-j', str( NumCores() ) ] )
+    CheckCall( [ 'cmake' ] + full_cmake_args, exit_message = exit_message )
 
-      subprocess.check_call( build_command )
-    except subprocess.CalledProcessError:
-      traceback.print_exc()
-      sys.exit(
-        '\n\nERROR: The build failed.\n\n'
-        'NOTE: It is *highly* unlikely that this is a bug but rather\n'
-        'that this is a problem with the configuration of your system\n'
-        'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
-        "and if you're sure that it is a bug, please raise an issue on the\n"
-        'issue tracker, including the entire output of this script\n'
-        'and the invocation line used to run it.\n' )
+    build_target = ( 'ycm_core' if 'YCM_TESTRUN' not in os.environ else
+                     'ycm_core_tests' )
+
+    build_command = [ 'cmake', '--build', '.', '--target', build_target ]
+    if OnWindows():
+      config = 'Debug' if args.enable_debug else 'Release'
+      build_command.extend( [ '--config', config ] )
+    else:
+      build_command.extend( [ '--', '-j', str( NumCores() ) ] )
+
+    CheckCall( build_command, exit_message = exit_message )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
@@ -391,20 +383,20 @@ def BuildOmniSharp():
   build_command = PathToFirstExistingExecutable(
     [ 'msbuild', 'msbuild.exe', 'xbuild' ] )
   if not build_command:
-    sys.exit( 'msbuild or xbuild is required to build Omnisharp' )
+    sys.exit( 'ERROR: msbuild or xbuild is required to build Omnisharp.' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'OmniSharpServer' ) )
-  subprocess.check_call( [ build_command, '/property:Configuration=Release' ] )
+  CheckCall( [ build_command, '/property:Configuration=Release' ] )
 
 
 def BuildGoCode():
   if not FindExecutable( 'go' ):
-    sys.exit( 'go is required to build gocode' )
+    sys.exit( 'ERROR: go is required to build gocode.' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
-  subprocess.check_call( [ 'go', 'build' ] )
+  CheckCall( [ 'go', 'build' ] )
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
-  subprocess.check_call( [ 'go', 'build' ] )
+  CheckCall( [ 'go', 'build' ] )
 
 
 def BuildRacerd():
@@ -412,7 +404,7 @@ def BuildRacerd():
   Build racerd. This requires a reasonably new version of rustc/cargo.
   """
   if not FindExecutable( 'cargo' ):
-    sys.exit( 'cargo is required for the rust completer' )
+    sys.exit( 'ERROR: cargo is required for the Rust completer.' )
 
   os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
   args = [ 'cargo', 'build' ]
@@ -420,7 +412,7 @@ def BuildRacerd():
   # racerd 2.5x slower and we don't care about the speed of the produced racerd.
   if not OnTravisOrAppVeyor():
     args.append( '--release' )
-  subprocess.check_call( args )
+  CheckCall( args )
 
 
 def SetUpTern():
@@ -428,7 +420,7 @@ def SetUpTern():
   for exe in [ 'node', 'npm' ]:
     path = FindExecutable( exe )
     if not path:
-      sys.exit( '"' + exe + '" is required to set up ternjs' )
+      sys.exit( 'ERROR: {0} is required to set up ternjs.'.format( exe ) )
     else:
       paths[ exe ] = path
 
@@ -451,7 +443,7 @@ def SetUpTern():
   # (third_party/tern_runtime) that defines the packages that we require,
   # including Tern and any plugins which we require as standard.
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern_runtime' ) )
-  subprocess.check_call( [ paths[ 'npm' ], 'install', '--production' ] )
+  CheckCall( [ paths[ 'npm' ], 'install', '--production' ] )
 
 
 def WritePythonUsedDuringBuild():
