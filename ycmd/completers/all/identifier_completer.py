@@ -54,7 +54,7 @@ class IdentifierCompleter( GeneralCompleter ):
 
     completions = self._completer.CandidatesForQueryAndType(
       ToCppStringCompatible( _SanitizeQuery( request_data[ 'query' ] ) ),
-      ToCppStringCompatible( request_data[ 'filetypes' ][ 0 ] ) )
+      ToCppStringCompatible( request_data[ 'first_filetype' ] ) )
 
     completions = completions[ : self._max_candidates ]
     completions = _RemoveSmallCandidates(
@@ -143,15 +143,15 @@ class IdentifierCompleter( GeneralCompleter ):
       absolute_paths_to_tag_files )
 
 
-  def AddIdentifiersFromSyntax( self, keyword_list, filetypes ):
+  def AddIdentifiersFromSyntax( self, keyword_list, filetype ):
     keyword_vector = ycm_core.StringVector()
     for keyword in keyword_list:
       keyword_vector.append( ToCppStringCompatible( keyword ) )
 
-    filepath = SYNTAX_FILENAME + filetypes[ 0 ]
+    filepath = SYNTAX_FILENAME + filetype
     self._completer.AddIdentifiersToDatabase(
       keyword_vector,
-      ToCppStringCompatible( filetypes[ 0 ] ),
+      ToCppStringCompatible( filetype ),
       ToCppStringCompatible( filepath ) )
 
 
@@ -161,7 +161,7 @@ class IdentifierCompleter( GeneralCompleter ):
       self.AddIdentifiersFromTagFiles( request_data[ 'tag_files' ] )
     if 'syntax_keywords' in request_data:
       self.AddIdentifiersFromSyntax( request_data[ 'syntax_keywords' ],
-                                     request_data[ 'filetypes' ] )
+                                     request_data[ 'first_filetype' ] )
 
 
   def OnInsertLeave( self, request_data ):
