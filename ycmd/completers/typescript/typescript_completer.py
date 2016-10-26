@@ -39,14 +39,13 @@ from ycmd import utils
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents
 
-BINARY_NOT_FOUND_MESSAGE = ( 'TSServer not found. '
-                             'TypeScript 1.5 or higher is required.' )
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 
 MAX_DETAILED_COMPLETIONS = 100
 RESPONSE_TIMEOUT_SECONDS = 10
 
-PATH_TO_TSSERVER = utils.FindExecutable( 'tsserver' )
+# On Debian-based distributions, node is by default installed as nodejs.
+PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node', 'nodejs' ] )
 
 LOGFILE_FORMAT = 'tsserver_'
 
@@ -80,12 +79,33 @@ class DeferredResponse( object ):
       return self._message[ 'body' ]
 
 
-def ShouldEnableTypescriptCompleter():
-  if not PATH_TO_TSSERVER:
-    _logger.error( BINARY_NOT_FOUND_MESSAGE )
-    return False
+def FindTsserverBinary():
+  tsserver = utils.FindExecutable( 'tsserver' )
+  if not tsserver:
+    return None
 
-  _logger.info( 'Using TSServer located at {0}'.format( PATH_TO_TSSERVER ) )
+  if not utils.OnWindows():
+    return tsserver
+
+  # On Windows, tsserver is a batch script that calls the tsserver binary with
+  # node.
+  return os.path.abspath( os.path.join(
+    os.path.dirname( tsserver ), 'node_modules', 'typescript', 'bin',
+    'tsserver' ) )
+
+
+def ShouldEnableTypescriptCompleter():
+  if not PATH_TO_NODE:
+    _logger.warning( 'Not using TypeScript completer: unable to find node' )
+    return False
+  _logger.info( 'Using node binary from {0}'.format( PATH_TO_NODE ) )
+
+  tsserver_binary_path = FindTsserverBinary()
+  if not tsserver_binary_path:
+    _logger.error( 'Not using TypeScript completer: unable to find TSServer.'
+                   'TypeScript 1.5 or higher is required.' )
+    return False
+  _logger.info( 'Using TSServer from {0}'.format( tsserver_binary_path ) )
 
   return True
 
@@ -105,6 +125,8 @@ class TypeScriptCompleter( Completer ):
     super( TypeScriptCompleter, self ).__init__( user_options )
 
     self._logfile = None
+
+    self._tsserver_binary_path = FindTsserverBinary()
 
     self._tsserver_handle = None
 
@@ -160,7 +182,8 @@ class TypeScriptCompleter( Completer ):
       _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
 
       # We need to redirect the error stream to the output one on Windows.
-      self._tsserver_handle = utils.SafePopen( PATH_TO_TSSERVER,
+      self._tsserver_handle = utils.SafePopen( [ PATH_TO_NODE,
+                                                 self._tsserver_binary_path ],
                                                stdin = subprocess.PIPE,
                                                stdout = subprocess.PIPE,
                                                stderr = subprocess.STDOUT,
@@ -566,10 +589,11 @@ class TypeScriptCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     with self._server_lock:
-      tsserver = responses.DebugInfoServer( name = 'TSServer',
-                                            handle = self._tsserver_handle,
-                                            executable = PATH_TO_TSSERVER,
-                                            logfiles = [ self._logfile ] )
+      tsserver = responses.DebugInfoServer(
+          name = 'TSServer',
+          handle = self._tsserver_handle,
+          executable = self._tsserver_binary_path,
+          logfiles = [ self._logfile ] )
 
       return responses.BuildDebugInfoResponse( name = 'TypeScript',
                                                servers = [ tsserver ] )
