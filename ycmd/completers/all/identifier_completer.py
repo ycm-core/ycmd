@@ -175,7 +175,7 @@ class IdentifierCompleter( GeneralCompleter ):
 # This looks for the previous identifier and returns it; this might mean looking
 # at last identifier on the previous line if a new line has just been created.
 def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
-  def PreviousIdentifierOnLine( line, column ):
+  def PreviousIdentifierOnLine( line, column, filetype ):
     nearest_ident = ''
     for match in identifier_utils.IdentifierRegexForFiletype(
         filetype ).finditer( line ):
@@ -190,14 +190,17 @@ def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
   contents_per_line = (
     SplitLines( request_data[ 'file_data' ][ filepath ][ 'contents' ] ) )
 
-  ident = PreviousIdentifierOnLine( contents_per_line[ line_num ], column_num )
+  filetype = request_data[ 'first_filetype' ]
+  ident = PreviousIdentifierOnLine( contents_per_line[ line_num ],
+                                    column_num,
+                                    filetype )
   if ident:
     if len( ident ) < min_num_candidate_size_chars:
       return ''
     return ident
 
   prev_line = contents_per_line[ line_num - 1 ]
-  ident = PreviousIdentifierOnLine( prev_line, len( prev_line ) )
+  ident = PreviousIdentifierOnLine( prev_line, len( prev_line ), filetype )
   if len( ident ) < min_num_candidate_size_chars:
     return ''
   return ident
