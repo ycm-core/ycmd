@@ -90,6 +90,12 @@ def PreviousIdentifier_WholeIdentShouldBeBeforeColumn_test():
                                                     column_num = 4 ) ) )
 
 
+def PreviousIdentifier_DoNotWrap_test():
+  eq_( '',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar\n bar',
+                                                    column_num = 4 ) ) )
+
+
 def PreviousIdentifier_IgnoreForwardIdents_test():
   eq_( 'foo',
        ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo bar zoo', 4 ) ) )
