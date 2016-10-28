@@ -199,7 +199,12 @@ def _PreviousIdentifier( min_num_candidate_size_chars, request_data ):
       return ''
     return ident
 
-  prev_line = contents_per_line[ line_num - 1 ]
+  line_num = line_num - 1
+
+  if line_num < 0:
+    return ''
+
+  prev_line = contents_per_line[ line_num ]
   ident = PreviousIdentifierOnLine( prev_line, len( prev_line ), filetype )
   if len( ident ) < min_num_candidate_size_chars:
     return ''

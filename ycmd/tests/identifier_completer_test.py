@@ -84,8 +84,16 @@ def PreviousIdentifier_Simple_test():
   eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo', 4 ) ) )
 
 
-def PreviousIdentifier_ColumnInMiddleStillWholeIdent_test():
-  eq_( 'foobar', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar', 4 ) ) )
+def PreviousIdentifier_WholeIdentShouldBeBeforeColumn_test():
+  eq_( '',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar',
+                                                    column_num = 4 ) ) )
+
+
+def PreviousIdentifier_DoNotWrap_test():
+  eq_( '',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar\n bar',
+                                                    column_num = 4 ) ) )
 
 
 def PreviousIdentifier_IgnoreForwardIdents_test():
