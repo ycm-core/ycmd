@@ -288,6 +288,14 @@ def WaitUntilProcessIsTerminated( handle, timeout = 5 ):
     time.sleep( 0.1 )
 
 
+def CloseStandardStreams( handle ):
+  if not handle:
+    return
+  for stream in [ handle.stdin, handle.stdout, handle.stderr ]:
+    if stream:
+      stream.close()
+
+
 def PathsToAllParentFolders( path ):
   folder = os.path.normpath( path )
   if os.path.isdir( folder ):
