@@ -28,7 +28,6 @@ import logging
 import os
 import requests
 import threading
-import traceback
 
 from subprocess import PIPE
 from ycmd import utils, responses
@@ -134,11 +133,12 @@ class TernCompleter( Completer ):
     # server.
     self._server_paths_relative_to = None
 
-    with self._server_state_mutex:
-      self._server_stdout = None
-      self._server_stderr = None
-      self._Reset()
-      self._StartServer()
+    self._server_handle = None
+    self._server_port = None
+    self._server_stdout = None
+    self._server_stderr = None
+
+    self._StartServer()
 
 
   def _WarnIfMissingTernProject( self ):
@@ -301,20 +301,6 @@ class TernCompleter( Completer ):
       return False
 
 
-  def _Reset( self ):
-    with self._server_state_mutex:
-      if not self._server_keep_logfiles:
-        if self._server_stdout:
-          utils.RemoveIfExists( self._server_stdout )
-          self._server_stdout = None
-        if self._server_stderr:
-          utils.RemoveIfExists( self._server_stderr )
-          self._server_stderr = None
-
-      self._server_handle = None
-      self._server_port   = 0
-
-
   def _PostRequest( self, request, request_data ):
     """Send a raw request with the supplied request block, and
     return the server's response. If the server is not running, it is started.
@@ -440,11 +426,10 @@ class TernCompleter( Completer ):
                                                   stdout = stdout,
                                                   stderr = stderr )
       except Exception:
-        _logger.warning( 'Unable to start Tern server: '
-                        + traceback.format_exc() )
-        self._Reset()
+        _logger.exception( 'Unable to start Tern server' )
+        self._CleanUp()
 
-      if self._server_port > 0 and self._ServerIsRunning():
+      if self._server_port and self._ServerIsRunning():
         _logger.info( 'Tern Server started with pid: ' +
                       str( self._server_handle.pid ) +
                       ' listening on port ' +
@@ -478,7 +463,18 @@ class TernCompleter( Completer ):
         except RuntimeError:
           _logger.exception( 'Error while stopping Tern server' )
 
-      self._Reset()
+      self._CleanUp()
+
+
+  def _CleanUp( self ):
+    utils.CloseStandardStreams( self._server_handle )
+    self._server_handle = None
+    self._server_port = None
+    if not self._server_keep_logfiles:
+      utils.RemoveIfExists( self._server_stdout )
+      self._server_stdout = None
+      utils.RemoveIfExists( self._server_stderr )
+      self._server_stderr = None
 
 
   def _ServerIsRunning( self ):
