@@ -119,8 +119,7 @@ class IdentifierCompleter( GeneralCompleter ):
         ToCppStringCompatible( filepath ) )
 
 
-  def AddIdentifiersFromTagFiles( self, tag_files ):
-    absolute_paths_to_tag_files = ycm_core.StringVector()
+  def _FilterUnchangedTagFiles( self, tag_files ):
     for tag_file in tag_files:
       try:
         current_mtime = os.path.getmtime( tag_file )
@@ -134,6 +133,12 @@ class IdentifierCompleter( GeneralCompleter ):
         continue
 
       self._tags_file_last_mtime[ tag_file ] = current_mtime
+      yield tag_file
+
+
+  def AddIdentifiersFromTagFiles( self, tag_files ):
+    absolute_paths_to_tag_files = ycm_core.StringVector()
+    for tag_file in self._FilterUnchangedTagFiles( tag_files ):
       absolute_paths_to_tag_files.append( ToCppStringCompatible( tag_file ) )
 
     if not absolute_paths_to_tag_files:
