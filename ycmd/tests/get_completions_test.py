@@ -210,6 +210,34 @@ def GetCompletions_IdentifierCompleter_TagsAdded_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_IdentifierCompleter_JustFinishedIdentifier_test( app ):
+  event_data = BuildRequest( event_name = 'CurrentIdentifierFinished',
+                             column_num = 4,
+                             contents = 'foo' )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'foo' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_IdentifierUnderCursor_test( app ):
+  event_data = BuildRequest( event_name = 'InsertLeave',
+                             column_num = 2,
+                             contents = 'foo' )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'foo' ) ) )
+
+
+@SharedYcmd
 def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   event_data = BuildRequest(
     event_name = 'BufferVisit',
