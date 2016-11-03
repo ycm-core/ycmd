@@ -29,15 +29,8 @@ from ycmd.user_options_store import DefaultOptions
 from ycmd.completers.all import identifier_completer as ic
 from ycmd.completers.all.identifier_completer import IdentifierCompleter
 from ycmd.request_wrap import RequestWrap
+from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
-
-
-TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
-DATA_DIR = os.path.join( TEST_DIR,
-                         '..', '..',
-                         'cpp', 'ycm',
-                         'tests',
-                         'testdata' )
 
 
 def BuildRequestWrap( contents, column_num, line_num = 1 ):
@@ -166,7 +159,7 @@ def FilterUnchangedTagFiles_SkipBadFiles_test():
 
 def FilterUnchangedTagFiles_KeepGoodFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
-  tag_file = os.path.join( DATA_DIR, 'basic.tags' )
+  tag_file = PathToTestFile( 'basic.tags' )
   eq_( [ tag_file ],
        list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ) )
 
@@ -175,7 +168,7 @@ def FilterUnchangedTagFiles_SkipUnchangesFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
 
   # simulate an already open tags file that didn't change in the meantime.
-  tag_file = os.path.join( DATA_DIR, 'basic.tags' )
+  tag_file = PathToTestFile( 'basic.tags' )
   ident_completer._tags_file_last_mtime[ tag_file ] = os.path.getmtime(
       tag_file )
 

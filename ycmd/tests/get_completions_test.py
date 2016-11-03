@@ -26,7 +26,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-import os
 from hamcrest import assert_that, equal_to, has_items, contains_string
 from mock import patch
 from nose.tools import eq_
