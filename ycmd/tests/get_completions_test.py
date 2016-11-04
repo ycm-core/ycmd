@@ -26,7 +26,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, equal_to, has_items, contains_string
+from hamcrest import ( assert_that, equal_to, has_items,
+                       contains_string, contains_inanyorder )
 from mock import patch
 from nose.tools import eq_
 
@@ -69,6 +70,22 @@ def GetCompletions_IdentifierCompleter_Works_test( app ):
     has_items( CompletionEntryMatcher( 'foo', '[ID]' ),
                CompletionEntryMatcher( 'foogoo', '[ID]' ) )
   )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_FilterShortCandidates_test( app ):
+  with UserOption( 'min_num_identifier_candidate_chars', 4 ):
+    event_data = BuildRequest( contents = 'foo foogoo gooo',
+                               event_name = 'FileReadyToParse' )
+    app.post_json( '/event_notification', event_data )
+
+    completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+    response = app.post_json( '/completions',
+                              completion_data ).json[ 'completions' ]
+
+    assert_that( response,
+                 contains_inanyorder( CompletionEntryMatcher( 'foogoo' ),
+                                      CompletionEntryMatcher( 'gooo' ) ) )
 
 
 @SharedYcmd
