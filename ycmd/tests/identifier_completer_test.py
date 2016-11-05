@@ -146,6 +146,13 @@ def PreviousIdentifier_IdentOnPreviousLine_JunkAfterIdent_test():
                                                     line_num = 2 ) ) )
 
 
+def PreviousIdentifier_NoGoodIdentFound_test():
+  eq_( '',
+       ic._PreviousIdentifier( 5, BuildRequestWrap( 'foo\n ',
+                                                    column_num = 2,
+                                                    line_num = 2 ) ) )
+
+
 def FilterUnchangedTagFiles_NoFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
   eq_( [], list( ident_completer._FilterUnchangedTagFiles( [] ) ) )
