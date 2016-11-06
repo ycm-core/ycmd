@@ -13,6 +13,15 @@ coverage:
     patch: true
     changes: true
 
+  # We don't want statistics for the tests themselves and certainly not for the
+  # boost libraries. Note that while we exclude the gcov data for these patterns
+  # in the codecov call (codecov --gcov-glob ...), the fact that our code
+  # references these areas also means we need to tell codecov itself to ignore
+  # them from the stats.
+  ignore:
+  - .*/tests/.*
+  - .*/BoostParts/.*
+
 comment:
   layout: "header, diff, changes, uncovered"
   behavior: default  # update if exists else create new

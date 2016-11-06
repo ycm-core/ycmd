@@ -62,7 +62,7 @@ a non-standard build environment (e.g. `cmake28`, self-build of clang, etc.)
  (default: 14). Windows only.
 * `--arch`: Force architecture to 32 or 64 bits on Windows (default: python
 interpreter architecture). Windows Only.
-* `--coverage`: Output test coverage report
+* `--coverage`: Generate code coverage data
 
 Remaining arguments are passed to "nosetests" directly. This means that you
 can run a specific script or a specific test as follows:
@@ -81,7 +81,15 @@ NOTE: you must have UTF8 support in your terminal when you do this, e.g.:
 
 ## Coverage testing
 
-There's a coverage module for Python which works nicely with `nosetests`. This
+We can generate coverage data for both the C++ layer and the Python layer. The
+CI system will pass this coverage data to codecov.io where you can view coverage
+after pushing a branch.
+
+C++ coverage testing is available only on Linux/Mac and uses gcov.
+Stricly speaking, we use the `-coverage` option to your compiler, which in the
+case of GNU and LLVM compilers, generate gcov-compatible data.
+
+For Python, there's a coverage module which works nicely with `nosetests`. This
 is very useful for highlighting areas of your code which are not covered by the
 automated integration tests.
 
@@ -89,7 +97,7 @@ Run it like this:
 
 ```
 $ pip install coverage
-$ ./run_tests.py --coverage --cover-html
+$ ./run_tests.py --coverage
 ```
 
 This will print a summary and generate HTML output in `./cover`
