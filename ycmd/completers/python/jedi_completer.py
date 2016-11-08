@@ -66,7 +66,7 @@ class JediCompleter( Completer ):
     self._logger = logging.getLogger( __name__ )
     self._logfile_stdout = None
     self._logfile_stderr = None
-    self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._keep_logfiles = user_options[ 'keep_logfiles' ]
     self._hmac_secret = ''
     self._python_binary_path = sys.executable
 

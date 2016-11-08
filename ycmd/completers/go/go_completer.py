@@ -117,7 +117,7 @@ class GoCompleter( Completer ):
 
     self._godef_binary_path = FindBinary( 'godef', user_options )
 
-    self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._keep_logfiles = user_options[ 'keep_logfiles' ]
 
     self._StartServer()
 

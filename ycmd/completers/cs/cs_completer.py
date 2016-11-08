@@ -90,7 +90,7 @@ class CsharpCompleter( Completer ):
 
     with self._solution_state_lock:
       if solution not in self._completer_per_solution:
-        keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
+        keep_logfiles = self.user_options[ 'keep_logfiles' ]
         desired_omnisharp_port = self.user_options.get( 'csharp_server_port' )
         completer = CsharpSolutionCompleter( solution,
                                              keep_logfiles,

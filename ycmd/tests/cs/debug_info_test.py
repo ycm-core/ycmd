@@ -70,7 +70,7 @@ def DebugInfo_ServerIsNotRunning_NoSolution_test( app ):
 
 @IsolatedYcmd
 def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
-  with UserOption( 'server_keep_logfiles', True ):
+  with UserOption( 'keep_logfiles', True ):
     filepath = PathToTestFile( 'testy', 'Program.cs' )
     contents = ReadFile( filepath )
     event_data = BuildRequest( filepath = filepath,
@@ -97,7 +97,7 @@ def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
 
 @IsolatedYcmd
 def DebugInfo_ServerIsNotRunning_LogfilesDoNotExist_test( app ):
-  with UserOption( 'server_keep_logfiles', False ):
+  with UserOption( 'keep_logfiles', False ):
     filepath = PathToTestFile( 'testy', 'Program.cs' )
     contents = ReadFile( filepath )
     event_data = BuildRequest( filepath = filepath,

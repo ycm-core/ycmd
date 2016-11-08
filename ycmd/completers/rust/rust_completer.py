@@ -106,7 +106,7 @@ class RustCompleter( Completer ):
     self._racerd_binary = FindRacerdBinary( user_options )
     self._racerd_host = None
     self._server_state_lock = threading.RLock()
-    self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._keep_logfiles = user_options[ 'keep_logfiles' ]
     self._hmac_secret = ''
     self._rust_source_path = self._GetRustSrcPath()
 
