@@ -26,12 +26,20 @@ namespace {
 // storage class, because global static variables will be selected too.
 // Instead we just check if the semantic parent is a class or struct.
 // Luke, I am your father
-bool isStaticMemberVariable( const CXCursor &cursor ) {
+Token::Type getVariableType( const CXCursor &cursor ) {
   CXCursor parent = clang_getCursorSemanticParent( cursor );
   CXCursorKind kind = clang_getCursorKind( parent );
   // Since cursor is a declaration, its parent should be a declaration too.
-  return kind == CXCursor_ClassDecl ||
-         kind == CXCursor_StructDecl;
+  switch ( kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_StructDecl:
+      return Token::STATIC_MEMBER_VARIABLE;
+    case CXCursor_Namespace:
+    case CXCursor_TranslationUnit:
+      return Token::GLOBAL_VARIABLE;
+    default:
+      return Token::VARIABLE;
+  }
 }
 
 bool hasStaticStorage( const CXCursor &cursor ) {
@@ -86,8 +94,7 @@ Token::Type CXCursorToTokenType( const CXCursor &cursor ) {
     // Clang reports static member variables as plain variables
     // not sure if it is a bug or feature
     case CXCursor_VarDecl:
-      return isStaticMemberVariable( cursor ) ? Token::STATIC_MEMBER_VARIABLE :
-                                                Token::VARIABLE;
+      return getVariableType( cursor );
 
     case CXCursor_Constructor:
     case CXCursor_Destructor:

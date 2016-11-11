@@ -226,7 +226,7 @@ def UnicodeTokens_test( app ):
 def StaticMemberTokens_test( app ):
   _RunTest( app, 63, 1, 75, 15,
             has_items(
-              _BuildTokenData( 'Identifier', 'Variable', 63, 12, 63, 29 ),
+              _BuildTokenData( 'Identifier', 'GlobalVariable', 63, 12, 63, 29 ),
               _BuildTokenData( 'Identifier', 'Function', 64, 12, 64, 30 ),
 
               _BuildTokenData( 'Identifier', 'MemberVariable', 68, 13, 68, 14 ),
