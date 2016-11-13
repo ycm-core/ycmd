@@ -65,6 +65,11 @@ COMMENT_AND_STRING_REGEX = re.compile(
 DEFAULT_IDENTIFIER_REGEX = re.compile( r"[^\W\d]\w*", re.UNICODE )
 
 FILETYPE_TO_IDENTIFIER_REGEX = {
+    # Spec:
+    # http://www.ecma-international.org/ecma-262/6.0/#sec-names-and-keywords
+    # Default identifier plus the dollar sign.
+    'javascript': re.compile( r"([^\W\d]|\$)[\w$]*", re.UNICODE ),
+
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
     # Good summary: http://stackoverflow.com/a/449000/1672783
     'css': re.compile( r"-?[_a-zA-Z]+[\w-]+", re.UNICODE ),
@@ -101,6 +106,8 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
 }
 
+FILETYPE_TO_IDENTIFIER_REGEX[ 'typescript' ] = (
+  FILETYPE_TO_IDENTIFIER_REGEX[ 'javascript' ] )
 FILETYPE_TO_IDENTIFIER_REGEX[ 'scss' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]
 FILETYPE_TO_IDENTIFIER_REGEX[ 'sass' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]
 FILETYPE_TO_IDENTIFIER_REGEX[ 'less' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'css' ]
