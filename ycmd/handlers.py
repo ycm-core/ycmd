@@ -240,6 +240,7 @@ def ErrorHandler( httperror ):
   hmac_plugin.SetHmacHeader( body, _hmac_secret )
   return body
 
+
 # For every error Bottle encounters it will use this as the default handler
 app.default_error_handler = ErrorHandler
 
