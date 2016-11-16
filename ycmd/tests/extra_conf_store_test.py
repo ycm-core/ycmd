@@ -26,7 +26,8 @@ from builtins import *  # noqa
 import inspect
 from mock import patch
 
-from hamcrest import assert_that, calling, equal_to, has_length, none, raises
+from hamcrest import ( assert_that, calling, equal_to, has_length, none, raises,
+                       same_instance )
 from ycmd import extra_conf_store
 from ycmd.responses import UnknownExtraConf
 from ycmd.tests import PathToTestFile
@@ -139,3 +140,29 @@ class ExtraConfStore_test():
     logger.exception.assert_called_with( 'Error occurred while '
                                          'loading global extra conf '
                                          '{0}'.format( extra_conf_file ) )
+
+
+  def Load_DoNotReloadExtraConf_NoForce_test( self ):
+    extra_conf_file = PathToTestFile( 'extra_conf', 'project',
+                                      '.ycm_extra_conf.py' )
+    with patch( 'ycmd.extra_conf_store._ShouldLoad', return_value = True ):
+      module = extra_conf_store.Load( extra_conf_file )
+      assert_that( inspect.ismodule( module ) )
+      assert_that( inspect.getfile( module ), equal_to( extra_conf_file ) )
+      assert_that(
+        extra_conf_store.Load( extra_conf_file ),
+        same_instance( module )
+      )
+
+
+  def Load_DoNotReloadExtraConf_ForceEqualsTrue_test( self ):
+    extra_conf_file = PathToTestFile( 'extra_conf', 'project',
+                                      '.ycm_extra_conf.py' )
+    with patch( 'ycmd.extra_conf_store._ShouldLoad', return_value = True ):
+      module = extra_conf_store.Load( extra_conf_file )
+      assert_that( inspect.ismodule( module ) )
+      assert_that( inspect.getfile( module ), equal_to( extra_conf_file ) )
+      assert_that(
+        extra_conf_store.Load( extra_conf_file, force = True ),
+        same_instance( module )
+      )
