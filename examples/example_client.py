@@ -168,6 +168,20 @@ class YcmdHandle( object ):
     self.PostToHandlerAndLog( COMPLETER_COMMANDS_HANDLER, request_json )
 
 
+  def SendGetReferencesRequest( self,
+                       test_filename,
+                       filetype,
+                       line_num,
+                       column_num ):
+    request_json = BuildRequestData( test_filename = test_filename,
+                                     command_arguments = ['GetReferences'],
+                                     filetype = filetype,
+                                     line_num = line_num,
+                                     column_num = column_num )
+    print( '==== Sending CppGetReferences request ====' )
+    self.PostToHandlerAndLog( COMPLETER_COMMANDS_HANDLER, request_json )
+
+
   def SendEventNotification( self,
                              event_enum,
                              test_filename,
@@ -451,6 +465,15 @@ def CppGotoDeclaration( server ):
                           line_num = 23,
                           column_num = 4 )
 
+def CppGetReferences( server ):
+  # NOTE: No need to load extra conf file or send FileReadyToParse event, it was
+  # already done in CppSemanticCompletionResults.
+
+  server.SendGetReferencesRequest( test_filename = 'some_cpp.cpp',
+                          filetype = 'cpp',
+                          line_num = 23,
+                          column_num = 4 )
+
 
 def CsharpSemanticCompletionResults( server ):
   # First such request starts the OmniSharpServer
@@ -476,7 +499,7 @@ def Main():
   LanguageAgnosticIdentifierCompletion( server )
   PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
-  CsharpSemanticCompletionResults( server )
+  # CsharpSemanticCompletionResults( server )
 
   # This will ask the server for a list of subcommands supported by a given
   # language completer.
@@ -485,6 +508,8 @@ def Main():
   # GoTo is an example of a completer subcommand.
   # Python and C# completers also support the GoTo subcommand.
   CppGotoDeclaration( server )
+  CppGetReferences( server )
+
 
   print( 'Shutting down server...' )
   server.Shutdown()
