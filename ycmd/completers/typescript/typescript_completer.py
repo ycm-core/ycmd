@@ -553,6 +553,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def _CleanUp( self ):
+    utils.CloseStandardStreams( self._tsserver_handle )
     self._tsserver_handle = None
     if not self.user_options[ 'server_keep_logfiles' ]:
       utils.RemoveIfExists( self._logfile )

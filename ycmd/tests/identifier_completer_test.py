@@ -23,9 +23,13 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import os
 from nose.tools import eq_
+from ycmd.user_options_store import DefaultOptions
 from ycmd.completers.all import identifier_completer as ic
+from ycmd.completers.all.identifier_completer import IdentifierCompleter
 from ycmd.request_wrap import RequestWrap
+from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
 
 
@@ -84,8 +88,16 @@ def PreviousIdentifier_Simple_test():
   eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo', 4 ) ) )
 
 
-def PreviousIdentifier_ColumnInMiddleStillWholeIdent_test():
-  eq_( 'foobar', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar', 4 ) ) )
+def PreviousIdentifier_WholeIdentShouldBeBeforeColumn_test():
+  eq_( '',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar',
+                                                    column_num = 4 ) ) )
+
+
+def PreviousIdentifier_DoNotWrap_test():
+  eq_( '',
+       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar\n bar',
+                                                    column_num = 4 ) ) )
 
 
 def PreviousIdentifier_IgnoreForwardIdents_test():
@@ -132,3 +144,39 @@ def PreviousIdentifier_IdentOnPreviousLine_JunkAfterIdent_test():
        ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo **;()\n   ',
                                                     column_num = 3,
                                                     line_num = 2 ) ) )
+
+
+def PreviousIdentifier_NoGoodIdentFound_test():
+  eq_( '',
+       ic._PreviousIdentifier( 5, BuildRequestWrap( 'foo\n ',
+                                                    column_num = 2,
+                                                    line_num = 2 ) ) )
+
+
+def FilterUnchangedTagFiles_NoFiles_test():
+  ident_completer = IdentifierCompleter( DefaultOptions() )
+  eq_( [], list( ident_completer._FilterUnchangedTagFiles( [] ) ) )
+
+
+def FilterUnchangedTagFiles_SkipBadFiles_test():
+  ident_completer = IdentifierCompleter( DefaultOptions() )
+  eq_( [],
+       list( ident_completer._FilterUnchangedTagFiles( [ '/some/tags' ] ) ) )
+
+
+def FilterUnchangedTagFiles_KeepGoodFiles_test():
+  ident_completer = IdentifierCompleter( DefaultOptions() )
+  tag_file = PathToTestFile( 'basic.tags' )
+  eq_( [ tag_file ],
+       list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ) )
+
+
+def FilterUnchangedTagFiles_SkipUnchangesFiles_test():
+  ident_completer = IdentifierCompleter( DefaultOptions() )
+
+  # simulate an already open tags file that didn't change in the meantime.
+  tag_file = PathToTestFile( 'basic.tags' )
+  ident_completer._tags_file_last_mtime[ tag_file ] = os.path.getmtime(
+      tag_file )
+
+  eq_( [], list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ) )

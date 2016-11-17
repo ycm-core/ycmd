@@ -54,3 +54,11 @@ third_party/tern_runtime/node_modules
 
 # Exclude vagrant directory
 .vagrant/
+
+# Exclude the coverage build output directory
+.build/
+
+# Exclude gcov output
+*.gcov
+# And python coverage output, when running manually
+coverage.xml

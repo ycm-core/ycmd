@@ -26,11 +26,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, equal_to, has_items, contains_string
+from hamcrest import ( assert_that, equal_to, has_items,
+                       contains_string, contains_inanyorder )
 from mock import patch
 from nose.tools import eq_
 
-from ycmd.tests import SharedYcmd
+from ycmd.tests import SharedYcmd, PathToTestFile
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     DummyCompleter, PatchCompleter,
                                     UserOption, ExpectedFailure )
@@ -69,6 +70,22 @@ def GetCompletions_IdentifierCompleter_Works_test( app ):
     has_items( CompletionEntryMatcher( 'foo', '[ID]' ),
                CompletionEntryMatcher( 'foogoo', '[ID]' ) )
   )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_FilterShortCandidates_test( app ):
+  with UserOption( 'min_num_identifier_candidate_chars', 4 ):
+    event_data = BuildRequest( contents = 'foo foogoo gooo',
+                               event_name = 'FileReadyToParse' )
+    app.post_json( '/event_notification', event_data )
+
+    completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+    response = app.post_json( '/completions',
+                              completion_data ).json[ 'completions' ]
+
+    assert_that( response,
+                 contains_inanyorder( CompletionEntryMatcher( 'foogoo' ),
+                                      CompletionEntryMatcher( 'gooo' ) ) )
 
 
 @SharedYcmd
@@ -191,6 +208,50 @@ def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test( app ):
   assert_that( results,
                has_items( CompletionEntryMatcher( 'foo' ),
                           CompletionEntryMatcher( 'zoo' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_TagsAdded_test( app ):
+  event_data = BuildRequest( event_name = 'FileReadyToParse',
+                             tag_files = [ PathToTestFile( 'basic.tags' ) ] )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo',
+                                  column_num = 3,
+                                  filetype = 'cpp' )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'foosy' ),
+                          CompletionEntryMatcher( 'fooaaa' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_JustFinishedIdentifier_test( app ):
+  event_data = BuildRequest( event_name = 'CurrentIdentifierFinished',
+                             column_num = 4,
+                             contents = 'foo' )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'foo' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_IdentifierCompleter_IdentifierUnderCursor_test( app ):
+  event_data = BuildRequest( event_name = 'InsertLeave',
+                             column_num = 2,
+                             contents = 'foo' )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'foo' ) ) )
 
 
 @SharedYcmd

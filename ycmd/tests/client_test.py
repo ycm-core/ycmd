@@ -42,9 +42,9 @@ from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
-from ycmd.utils import ( CreateLogfile, GetUnusedLocalhostPort, ReadFile,
-                         RemoveIfExists, SafePopen, SetEnviron, ToBytes,
-                         ToUnicode )
+from ycmd.utils import ( CloseStandardStreams, CreateLogfile,
+                         GetUnusedLocalhostPort, ReadFile, RemoveIfExists,
+                         SafePopen, SetEnviron, ToBytes, ToUnicode )
 
 HEADERS = { 'content-type': 'application/json' }
 HMAC_HEADER = 'x-ycm-hmac'
@@ -63,6 +63,7 @@ class Client_test( object ):
     self._servers = []
     self._logfiles = []
     self._options_dict = DefaultOptions()
+    self._popen_handle = None
 
 
   def setUp( self ):
@@ -75,6 +76,7 @@ class Client_test( object ):
     for server in self._servers:
       if server.is_running():
         server.terminate()
+    CloseStandardStreams( self._popen_handle )
     for logfile in self._logfiles:
       RemoveIfExists( logfile )
 
@@ -111,12 +113,12 @@ class Client_test( object ):
       ycmd_args.append( '--stdout={0}'.format( stdout ) )
       ycmd_args.append( '--stderr={0}'.format( stderr ) )
 
-      _popen_handle = SafePopen( ycmd_args,
-                                 stdin_windows = subprocess.PIPE,
-                                 stdout = subprocess.PIPE,
-                                 stderr = subprocess.PIPE,
-                                 env = env )
-      self._servers.append( psutil.Process( _popen_handle.pid ) )
+      self._popen_handle = SafePopen( ycmd_args,
+                                      stdin_windows = subprocess.PIPE,
+                                      stdout = subprocess.PIPE,
+                                      stderr = subprocess.PIPE,
+                                      env = env )
+      self._servers.append( psutil.Process( self._popen_handle.pid ) )
 
       self._WaitUntilReady()
       extra_conf = PathToTestFile( 'client', '.ycm_extra_conf.py' )
