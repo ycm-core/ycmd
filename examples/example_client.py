@@ -499,7 +499,7 @@ def Main():
   LanguageAgnosticIdentifierCompletion( server )
   PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
-  # CsharpSemanticCompletionResults( server )
+  CsharpSemanticCompletionResults( server )
 
   # This will ask the server for a list of subcommands supported by a given
   # language completer.
