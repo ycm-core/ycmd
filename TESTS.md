@@ -96,7 +96,6 @@ automated integration tests.
 Run it like this:
 
 ```
-$ pip install coverage
 $ ./run_tests.py --coverage
 ```
 
