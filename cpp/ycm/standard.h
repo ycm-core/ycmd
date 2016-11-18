@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/foreach.hpp>
-#include "CustomAssert.h"
 
 // We're most definitely not going to use
 // it as BOOST_FOREACH.
