@@ -243,7 +243,7 @@ Location TranslationUnit::GetDefinitionLocation(
 }
 
 static enum CXVisitorResult __visitor(void *context, CXCursor cursor, CXSourceRange range) {
-  // TODO:: Parse the range
+  // Ignore the range parameter
   (void)range;
   std::vector< Location > *locations = (std::vector< Location > *)context;
   locations->push_back(Location(clang_getCursorLocation(cursor)));
@@ -270,15 +270,17 @@ TranslationUnit::GetReferencesLocationList(
   if ( !CursorIsValid( cursor ) )
     return locations;
 
-  CXFile file = clang_getFile(clang_translation_unit_, filename_.c_str());
+  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  if( !file ) 
+      return locations;
+
   CXCursorAndRangeVisitor visitor = {
     .context = &locations,
     .visit = __visitor,
   };
 
-  CXResult ret = clang_findReferencesInFile(cursor, file, visitor);
-  // TODO:: Parse ret
-  (void)ret;
+  // Ignore the result here
+  clang_findReferencesInFile( cursor, file, visitor );
   return locations;
 }
 

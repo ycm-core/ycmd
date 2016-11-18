@@ -193,11 +193,11 @@ class ClangCompleter( Completer ):
     filename = request_data['filepath']
     if not filename:
       raise ValueError(INVALID_FILE_MESSAGE)
-    
+ 
     flags = self._FlagsForRequest(request_data)
     if not flags:
       raise ValueError(NO_COMPILE_FLAGS_MESSAGE)
-    
+ 
     files = self.GetUnsavedFilesVector(request_data)
     line = request_data['line_num']
     column = request_data['column_num']
@@ -209,7 +209,7 @@ class ClangCompleter( Completer ):
             flags,
             True)
     return [_ResponseForLocation(ref) for ref in references]
-    
+ 
   def _GoTo( self, request_data ):
     include_response = self._ResponseForInclude( request_data )
     if include_response:
