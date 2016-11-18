@@ -86,7 +86,7 @@ def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
 
 @SharedYcmd
 def MiscHandlers_LoadExtraConfFile_AlwaysJsonResponse_test( app ):
-  filepath = PathToTestFile( '.ycm_extra_conf.py' )
+  filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
   extra_conf_data = BuildRequest( filepath = filepath )
 
   assert_that( app.post_json( '/load_extra_conf_file', extra_conf_data ).json,
@@ -95,7 +95,7 @@ def MiscHandlers_LoadExtraConfFile_AlwaysJsonResponse_test( app ):
 
 @SharedYcmd
 def MiscHandlers_IgnoreExtraConfFile_AlwaysJsonResponse_test( app ):
-  filepath = PathToTestFile( '.ycm_extra_conf.py' )
+  filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
   extra_conf_data = BuildRequest( filepath = filepath )
 
   assert_that( app.post_json( '/ignore_extra_conf_file', extra_conf_data ).json,
