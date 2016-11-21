@@ -147,14 +147,13 @@ def Load( module_file, force = False ):
   if not module_file:
     return None
 
-  if not force:
-    with _module_for_module_file_lock:
-      if module_file in _module_for_module_file:
-        return _module_for_module_file[ module_file ]
+  with _module_for_module_file_lock:
+    if module_file in _module_for_module_file:
+      return _module_for_module_file[ module_file ]
 
-    if not _ShouldLoad( module_file ):
-      Disable( module_file )
-      return None
+  if not force and not _ShouldLoad( module_file ):
+    Disable( module_file )
+    return None
 
   # This has to be here because a long time ago, the ycm_extra_conf.py files
   # used to import clang_helpers.py from the cpp folder. This is not needed

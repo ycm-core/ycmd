@@ -283,7 +283,7 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
   } )
 
 
-@SharedYcmd
+@IsolatedYcmd
 def GetCompletions_WorksWithExplicitFlags_test( app ):
   app.post_json(
     '/ignore_extra_conf_file',
@@ -317,7 +317,7 @@ int main()
   eq_( 7, response_data[ 'completion_start_column' ] )
 
 
-@SharedYcmd
+@IsolatedYcmd
 def GetCompletions_NoCompletionsWhenAutoTriggerOff_test( app ):
   with UserOption( 'auto_trigger', False ):
     app.post_json(

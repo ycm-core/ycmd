@@ -16,7 +16,7 @@ compiler:
 script:
   - ci/travis/travis_script.sh
 after_success:
-  - codecov
+  - bash <(curl -s https://codecov.io/bash)
 env:
   global:
     - MONO_THREADS_PER_CPU=2000
