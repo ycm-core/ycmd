@@ -174,10 +174,13 @@ ClangCompleter::GetReferencesLocationList(
     translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
 
   if ( !unit ) {
-    return std::vector< Location >();;
+    return std::vector< Location >();
   }
 
-  return unit->GetReferencesLocationList( line, column, unsaved_files, reparse );
+  return unit->GetReferencesLocationList( line,
+                                          column,
+                                          unsaved_files,
+                                          reparse );
 }
 
 

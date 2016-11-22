@@ -160,7 +160,7 @@ class YcmdHandle( object ):
                        line_num,
                        column_num ):
     request_json = BuildRequestData( test_filename = test_filename,
-                                     command_arguments = ['GoTo'],
+                                     command_arguments = [ 'GoTo' ],
                                      filetype = filetype,
                                      line_num = line_num,
                                      column_num = column_num )
@@ -169,12 +169,12 @@ class YcmdHandle( object ):
 
 
   def SendGetReferencesRequest( self,
-                       test_filename,
-                       filetype,
-                       line_num,
-                       column_num ):
+                                test_filename,
+                                filetype,
+                                line_num,
+                                column_num ):
     request_json = BuildRequestData( test_filename = test_filename,
-                                     command_arguments = ['GetReferences'],
+                                     command_arguments = [ 'GetReferences' ],
                                      filetype = filetype,
                                      line_num = line_num,
                                      column_num = column_num )
@@ -470,9 +470,9 @@ def CppGetReferences( server ):
   # already done in CppSemanticCompletionResults.
 
   server.SendGetReferencesRequest( test_filename = 'some_cpp.cpp',
-                          filetype = 'cpp',
-                          line_num = 23,
-                          column_num = 4 )
+                                   filetype = 'cpp',
+                                   line_num = 23,
+                                   column_num = 4 )
 
 
 def CsharpSemanticCompletionResults( server ):

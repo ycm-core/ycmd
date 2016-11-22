@@ -242,11 +242,20 @@ Location TranslationUnit::GetDefinitionLocation(
   return Location( clang_getCursorLocation( definition_cursor ) );
 }
 
-static enum CXVisitorResult __visitor(void *context, CXCursor cursor, CXSourceRange range) {
-  // Ignore the range parameter
-  (void)range;
-  std::vector< Location > *locations = (std::vector< Location > *)context;
-  locations->push_back(Location(clang_getCursorLocation(cursor)));
+static enum CXVisitorResult __references_visitor(
+  void *context,
+  CXCursor cursor,
+  CXSourceRange range ) {
+  // Here we just need the location of the cursor, which can be retrieved by
+  // clang_getCursorLocation or clang_getRangeStart. clang_getRangeStart is
+  // much more effective the clang_getCursorLocation.
+  // So here we use clang_getRangeStart instead of clang_getCursorLocation.
+  // And ignore the cursor parameter.
+  //
+  (void)cursor;
+  std::vector< Location > *locations =
+      reinterpret_cast< std::vector < Location > * >( context );
+  locations->push_back( Location( clang_getRangeStart( range ) ) );
   return CXVisit_Continue;
 }
 
@@ -271,16 +280,18 @@ TranslationUnit::GetReferencesLocationList(
     return locations;
 
   CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
-  if( !file ) 
-      return locations;
+  if( !file )
+    return locations;
 
   CXCursorAndRangeVisitor visitor = {
     .context = &locations,
-    .visit = __visitor,
+    .visit = __references_visitor,
   };
 
-  // Ignore the result here
-  clang_findReferencesInFile( cursor, file, visitor );
+  if( CXResult_Invalid ==
+          clang_findReferencesInFile( cursor, file, visitor ) ) {
+    locations.clear();
+  }
   return locations;
 }
 
