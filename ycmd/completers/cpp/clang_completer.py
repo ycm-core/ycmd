@@ -212,7 +212,8 @@ class ClangCompleter( Completer ):
             column,
             files,
             flags,
-            True)
+            True,
+            False )
 
     return [_ResponseForLocation(ref.start_) for ref in ref_ranges]
 
@@ -308,7 +309,7 @@ class ClangCompleter( Completer ):
         column,
         files,
         flags,
-        reparse)
+        reparse )
 
     if not message:
       message = "No semantic information available"
@@ -370,14 +371,15 @@ class ClangCompleter( Completer ):
             column,
             files,
             flags,
-            True)
+            True,
+            True )
 
     if not ref_ranges:
       return responses.BuildFixItResponse( [] )
     else:
       return responses.BuildFixItResponse( [
-        responses.FixIt( 
-          ref_ranges[ 0 ].start_, 
+        responses.FixIt(
+          ref_ranges[ 0 ].start_,
           [ responses.FixItChunk( args[ 0 ], ref ) for ref in ref_ranges ]
         ) ] )
 

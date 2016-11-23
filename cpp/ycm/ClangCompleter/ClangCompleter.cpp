@@ -168,7 +168,8 @@ ClangCompleter::GetReferencesRangeList(
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
   const std::vector< std::string > &flags,
-  bool reparse ) {
+  bool reparse,
+  bool local_only ) {
   ReleaseGil unlock;
   shared_ptr< TranslationUnit > unit =
     translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
@@ -180,7 +181,8 @@ ClangCompleter::GetReferencesRangeList(
   return unit->GetReferencesRangeList( line,
                                        column,
                                        unsaved_files,
-                                       reparse );
+                                       reparse,
+                                       local_only );
 }
 
 

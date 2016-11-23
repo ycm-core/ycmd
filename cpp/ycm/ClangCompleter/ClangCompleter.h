@@ -81,7 +81,8 @@ public:
     int column,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags,
-    bool reparse = true );
+    bool reparse = true,
+    bool local_only = false );
 
   std::string GetTypeAtLocation(
     const std::string &filename,
