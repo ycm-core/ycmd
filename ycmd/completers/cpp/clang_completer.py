@@ -214,6 +214,8 @@ class ClangCompleter( Completer ):
             flags,
             True,
             False )
+    if not ref_ranges:
+      raise ValueError( 'No reference found!!!' )
 
     return [_ResponseForLocation(ref.start_) for ref in ref_ranges]
 
@@ -375,13 +377,13 @@ class ClangCompleter( Completer ):
             True )
 
     if not ref_ranges:
-      return responses.BuildFixItResponse( [] )
-    else:
-      return responses.BuildFixItResponse( [
-        responses.FixIt(
-          ref_ranges[ 0 ].start_,
-          [ responses.FixItChunk( args[ 0 ], ref ) for ref in ref_ranges ]
-        ) ] )
+      raise ValueError( 'Not a local symbol!!!' )
+    
+    return responses.BuildFixItResponse( [
+      responses.FixIt(
+        ref_ranges[ 0 ].start_,
+        [ responses.FixItChunk( args[ 0 ], ref ) for ref in ref_ranges ]
+      ) ] )
 
 
   def OnFileReadyToParse( self, request_data ):
