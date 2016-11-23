@@ -161,8 +161,8 @@ Location ClangCompleter::GetDefinitionLocation(
 }
 
 
-std::vector< Location >
-ClangCompleter::GetReferencesLocationList(
+std::vector< Range >
+ClangCompleter::GetReferencesRangeList(
   const std::string &filename,
   int line,
   int column,
@@ -174,13 +174,13 @@ ClangCompleter::GetReferencesLocationList(
     translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
 
   if ( !unit ) {
-    return std::vector< Location >();
+    return std::vector< Range >();
   }
 
-  return unit->GetReferencesLocationList( line,
-                                          column,
-                                          unsaved_files,
-                                          reparse );
+  return unit->GetReferencesRangeList( line,
+                                       column,
+                                       unsaved_files,
+                                       reparse );
 }
 
 

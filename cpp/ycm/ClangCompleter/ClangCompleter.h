@@ -75,7 +75,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_DLL_EXPORT std::vector< Location > GetReferencesLocationList(
+  YCM_DLL_EXPORT std::vector< Range > GetReferencesRangeList(
     const std::string &filename,
     int line,
     int column,

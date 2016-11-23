@@ -246,21 +246,19 @@ static enum CXVisitorResult __references_visitor(
   void *context,
   CXCursor cursor,
   CXSourceRange range ) {
-  // Here we just need the location of the cursor, which can be retrieved by
-  // clang_getCursorLocation or clang_getRangeStart. clang_getRangeStart is
-  // much more effective the clang_getCursorLocation.
-  // So here we use clang_getRangeStart instead of clang_getCursorLocation.
-  // And ignore the cursor parameter.
-  //
+  
+  // Here we just need the range info of the cursor, So ignore the 
+  // cursor parameter.
   (void)cursor;
-  std::vector< Location > *locations =
-      reinterpret_cast< std::vector < Location > * >( context );
-  locations->push_back( Location( clang_getRangeStart( range ) ) );
+  std::vector< Range > *ranges =
+      reinterpret_cast< std::vector < Range > * >( context );
+
+  ranges->push_back( Range( range ) );
   return CXVisit_Continue;
 }
 
-std::vector< Location >
-TranslationUnit::GetReferencesLocationList(
+std::vector< Range >
+TranslationUnit::GetReferencesRangeList(
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -269,30 +267,30 @@ TranslationUnit::GetReferencesLocationList(
     Reparse( unsaved_files );
 
   unique_lock< mutex > lock( clang_access_mutex_ );
-  std::vector< Location > locations;
+  std::vector< Range > ranges;
 
   if ( !clang_translation_unit_ )
-    return locations;
+    return ranges;
 
   CXCursor cursor = GetCursor( line, column );
 
   if ( !CursorIsValid( cursor ) )
-    return locations;
+    return ranges;
 
   CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
   if( !file )
-    return locations;
+    return ranges;
 
   CXCursorAndRangeVisitor visitor = {
-    .context = &locations,
+    .context = &ranges,
     .visit = __references_visitor,
   };
 
   if( CXResult_Invalid ==
           clang_findReferencesInFile( cursor, file, visitor ) ) {
-    locations.clear();
+    ranges.clear();
   }
-  return locations;
+  return ranges;
 }
 
 

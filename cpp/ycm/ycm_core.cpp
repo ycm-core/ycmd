@@ -97,7 +97,7 @@ BOOST_PYTHON_MODULE(ycm_core)
   class_< ClangCompleter, boost::noncopyable >( "ClangCompleter" )
     .def( "GetDeclarationLocation", &ClangCompleter::GetDeclarationLocation )
     .def( "GetDefinitionLocation", &ClangCompleter::GetDefinitionLocation )
-    .def( "GetReferencesLocationList", &ClangCompleter::GetReferencesLocationList )
+    .def( "GetReferencesRangeList", &ClangCompleter::GetReferencesRangeList )
     .def( "DeleteCachesForFile", &ClangCompleter::DeleteCachesForFile )
     .def( "UpdatingTranslationUnit", &ClangCompleter::UpdatingTranslationUnit )
     .def( "UpdateTranslationUnit", &ClangCompleter::UpdateTranslationUnit )
@@ -143,9 +143,6 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "column_number_", &Location::column_number_ )
     .def_readonly( "filename_", &Location::filename_ )
     .def( "IsValid", &Location::IsValid );
-
-  class_< std::vector< Location > >( "LocationVector" )
-    .def( vector_indexing_suite< std::vector< Location > >() );
 
   class_< Range >( "Range" )
     .def_readonly( "start_", &Range::start_ )
