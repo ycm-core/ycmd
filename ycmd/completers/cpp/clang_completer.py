@@ -123,6 +123,8 @@ class ClangCompleter( Completer ):
          self._GoToDeclaration( request_data ) ),
       'GetReferences'            : ( lambda self, request_data, args:
          self._GetReferences( request_data ) ),
+      'GotoReferences'           : ( lambda self, request_data, args:
+         self._GetReferences( request_data ) ),
       'GoTo'                     : ( lambda self, request_data, args:
          self._GoTo( request_data ) ),
       'GoToImprecise'            : ( lambda self, request_data, args:
