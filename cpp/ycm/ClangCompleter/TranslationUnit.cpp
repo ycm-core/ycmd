@@ -289,9 +289,10 @@ TranslationUnit::GetReferencesRangeList(
   // files. 
   if ( local_only && !clang_isCursorDefinition( cursor ) ) {
     cursor = clang_getCursorDefinition( cursor );
-    if ( !CursorIsValid( cursor ) ) {
+    if ( !CursorIsValid( cursor ) ||
+            clang_Location_isInSystemHeader(
+                clang_getCursorLocation( cursor ) ) )
         return ranges;
-    } 
   }
   
   CXCursorAndRangeVisitor visitor = {
