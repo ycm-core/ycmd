@@ -224,17 +224,9 @@ def CustomPythonCmakeArgs():
 
 def GetGenerator( args ):
   if OnWindows():
-    if args.msvc == 14:
-      generator = 'Visual Studio 14'
-    elif args.msvc == 12:
-      generator = 'Visual Studio 12'
-    else:
-      generator = 'Visual Studio 11'
-
-    if platform.architecture()[ 0 ] == '64bit':
-      generator = generator + ' Win64'
-    return generator
-
+    return 'Visual Studio {version}{arch}'.format(
+        version = args.msvc,
+        arch = ' Win64' if platform.architecture()[ 0 ] == '64bit' else '' )
   if PathToFirstExistingExecutable( ['ninja'] ):
     return 'Ninja'
   return 'Unix Makefiles'
@@ -256,8 +248,8 @@ def ParseArguments():
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
-  parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
-                       default = 14, help = 'Choose the Microsoft Visual '
+  parser.add_argument( '--msvc', type = int, choices = [ 12, 14, 15 ],
+                       default = 15, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--tern-completer',
                        action = 'store_true',

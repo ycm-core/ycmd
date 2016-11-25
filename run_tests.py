@@ -117,9 +117,9 @@ def ParseArguments():
                         COMPLETERS.keys()) )
   parser.add_argument( '--skip-build', action = 'store_true',
                        help = 'Do not build ycmd before testing.' )
-  parser.add_argument( '--msvc', type = int, choices = [ 11, 12, 14 ],
+  parser.add_argument( '--msvc', type = int, choices = [ 12, 14, 15 ],
                        help = 'Choose the Microsoft Visual '
-                       'Studio version. (default: 14).' )
+                       'Studio version. (default: 15).' )
   parser.add_argument( '--coverage', action = 'store_true',
                        help = 'Enable coverage report (requires coverage pkg)' )
   parser.add_argument( '--no-flake8', action = 'store_true',
