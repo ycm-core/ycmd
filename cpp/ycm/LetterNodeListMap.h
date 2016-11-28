@@ -66,6 +66,7 @@ class LetterNodeListMap {
 public:
   LetterNodeListMap();
   LetterNodeListMap( const LetterNodeListMap &other );
+  LetterNodeListMap &operator=( const LetterNodeListMap &other );
 
   NearestLetterNodeIndices &operator[] ( char letter );
 

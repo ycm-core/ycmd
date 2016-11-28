@@ -49,6 +49,12 @@ LetterNodeListMap::LetterNodeListMap( const LetterNodeListMap &other ) {
 }
 
 
+LetterNodeListMap &LetterNodeListMap::operator=( const LetterNodeListMap &other ) {
+  if ( this != &other && other.letters_ )
+    letters_.reset( new NearestLetterNodeArray( *other.letters_ ) );
+}
+
+
 NearestLetterNodeIndices &LetterNodeListMap::operator[] ( char letter ) {
   if ( !letters_ )
     letters_.reset( new NearestLetterNodeArray() );
