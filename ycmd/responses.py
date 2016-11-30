@@ -99,6 +99,7 @@ def BuildDetailedInfoResponse( text ):
 
 
 def BuildCompletionData( insertion_text,
+                         insertion_snippet = None,
                          extra_menu_info = None,
                          detailed_info = None,
                          menu_text = None,
@@ -108,6 +109,8 @@ def BuildCompletionData( insertion_text,
     'insertion_text': insertion_text
   }
 
+  if insertion_snippet:
+    completion_data[ 'insertion_snippet' ] = insertion_snippet
   if extra_menu_info:
     completion_data[ 'extra_menu_info' ] = extra_menu_info
   if menu_text:

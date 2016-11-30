@@ -224,6 +224,7 @@ def _GenerateCandidatesForPaths( absolute_paths ):
     completion_dicts.append(
       responses.BuildCompletionData(
         basename,
+        None,
         EXTRA_INFO_MAP[ extra_info[ basename ] ] ) )
 
   return completion_dicts

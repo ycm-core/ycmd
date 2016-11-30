@@ -61,6 +61,13 @@ struct CompletionData {
     return original_string_;
   }
 
+  // For supported clients. For a function like "int foo(int a, float b)", this
+  // is "int foo(${1:int a}, ${2:float b})". For other candidates without text
+  // placeholders, this is the same as the value of TextToInsertInBuffer.
+  std::string SnippetToInsertInBuffer() const {
+    return completion_snippet_;
+  }
+
   // Currently, here we show the full function signature (without the return
   // type) if the current completion is a function or just the raw TypedText if
   // the completion is, say, a data member. So for a function like "int foo(int
@@ -93,7 +100,8 @@ struct CompletionData {
       kind_ == other.kind_ &&
       everything_except_return_type_ == other.everything_except_return_type_ &&
       return_type_ == other.return_type_ &&
-      original_string_ == other.original_string_;
+      original_string_ == other.original_string_ &&
+      completion_snippet_ == other.completion_snippet_;
     // detailed_info_ doesn't matter
   }
 
@@ -109,6 +117,8 @@ struct CompletionData {
   // completion string.
   std::string original_string_;
 
+  std::string completion_snippet_;
+
   std::string everything_except_return_type_;
 
   std::string doc_string_;
@@ -119,7 +129,8 @@ private:
                              uint chunk_num,
                              bool &saw_left_paren,
                              bool &saw_function_params,
-                             bool &saw_placeholder );
+                             bool &saw_placeholder,
+                             uint &idx_placeholder );
 };
 
 } // namespace YouCompleteMe

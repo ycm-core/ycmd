@@ -403,6 +403,7 @@ class ClangCompleter( Completer ):
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data.TextToInsertInBuffer(),
+    insertion_snippet = completion_data.SnippetToInsertInBuffer(),
     menu_text = completion_data.MainCompletionText(),
     extra_menu_info = completion_data.ExtraMenuInfo(),
     kind = completion_data.kind_.name,

@@ -64,6 +64,24 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
 }
 
 
+TEST( ClangCompleterTest, BufferSnippetParens ) {
+  ClangCompleter completer;
+  std::vector< CompletionData > completions =
+    completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
+      15,
+      7,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  EXPECT_TRUE( !completions.empty() );
+  EXPECT_THAT( completions,
+               Contains(
+                 Property( &CompletionData::SnippetToInsertInBuffer,
+                           StrEq( "foobar(${1:int t})" ) ) ) );
+}
+
+
 TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
   ClangCompleter completer;
   std::vector< std::string > flags;
@@ -79,6 +97,8 @@ TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
 
   EXPECT_TRUE( !completions.empty() );
   EXPECT_THAT( completions[0].TextToInsertInBuffer(), StrEq( "withArg2:" ) );
+  EXPECT_THAT( completions[0].SnippetToInsertInBuffer(), StrEq(
+    "withArg2:${1:(int)} withArg3:${2:(int)}" ) );
 }
 
 
@@ -98,6 +118,9 @@ TEST( ClangCompleterTest, CandidatesObjCFuncForLocationInFile ) {
   EXPECT_TRUE( !completions.empty() );
   EXPECT_THAT(
     completions[0].TextToInsertInBuffer(),
+    StrEq( "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" ) );
+  EXPECT_THAT(
+    completions[0].SnippetToInsertInBuffer(),
     StrEq( "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" ) );
 }
 

@@ -121,8 +121,10 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
-          CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
-          CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
+          CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void', extra_params = {
+            'insertion_snippet': 'DO_SOMETHING_TO(${1:T &t})' } ),
+          CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void', extra_params = {
+            'insertion_snippet': 'DO_SOMETHING_WITH(${1:T *t})' } ),
         ),
         'errors': empty(),
       } )

@@ -113,6 +113,7 @@ class CsharpCompleter( Completer ):
     completion_type = self.CompletionType( request_data )
     return [ responses.BuildCompletionData(
                 completion[ 'CompletionText' ],
+                None,
                 completion[ 'DisplayText' ],
                 completion[ 'Description' ],
                 None,
