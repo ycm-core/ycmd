@@ -23,11 +23,11 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 
-from nose.tools import eq_, ok_
+from nose import SkipTest
+from nose.tools import eq_
 from webtest import AppError
 from hamcrest import assert_that, has_entries, contains
 import pprint
-import os.path
 
 from ycmd import user_options_store
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
@@ -35,15 +35,19 @@ from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     LocationMatcher,
-                                    StopCompleterServer,
-                                    WaitUntilCompleterServerReady )
+                                    StopCompleterServer )
 from ycmd.utils import ReadFile
 
 
+def Subcommands_GoTo_Basic_test():
+  yield _Subcommands_GoTo_Basic_test, True
+  yield _Subcommands_GoTo_Basic_test, False
+
+
 @SharedYcmd
-def Subcommands_GoTo_Basic_test( app ):
+def _Subcommands_GoTo_Basic_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest( completer_target = 'filetype_default',
@@ -57,14 +61,19 @@ def Subcommands_GoTo_Basic_test( app ):
     eq_( {
       'filepath': PathToTestFile( 'testy', 'Program.cs' ),
       'line_num': 7,
-      'column_num': 3
+      'column_num': 22 if use_roslyn else 3
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GoTo_Unicode_test():
+  yield _Subcommands_GoTo_Unicode_test, True
+  yield _Subcommands_GoTo_Unicode_test, False
+
+
 @SharedYcmd
-def Subcommands_GoTo_Unicode_test( app ):
+def _Subcommands_GoTo_Unicode_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'Unicode.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest( completer_target = 'filetype_default',
@@ -78,14 +87,19 @@ def Subcommands_GoTo_Unicode_test( app ):
     eq_( {
       'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
       'line_num': 30,
-      'column_num': 37
+      'column_num': 54 if use_roslyn else 37
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GoToImplementation_Basic_test():
+  yield _Subcommands_GoToImplementation_Basic_test, True
+  yield _Subcommands_GoToImplementation_Basic_test, False
+
+
 @SharedYcmd
-def Subcommands_GoToImplementation_Basic_test( app ):
+def _Subcommands_GoToImplementation_Basic_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -101,14 +115,19 @@ def Subcommands_GoToImplementation_Basic_test( app ):
     eq_( {
       'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
       'line_num': 30,
-      'column_num': 3
+      'column_num': 15 if use_roslyn else 3
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GoToImplementation_NoImplementation_test():
+  yield _Subcommands_GoToImplementation_NoImplementation_test, True
+  yield _Subcommands_GoToImplementation_NoImplementation_test, False
+
+
 @SharedYcmd
-def Subcommands_GoToImplementation_NoImplementation_test( app ):
+def _Subcommands_GoToImplementation_NoImplementation_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -131,10 +150,15 @@ def Subcommands_GoToImplementation_NoImplementation_test( app ):
         raise
 
 
+def Subcommands_CsCompleter_InvalidLocation_test():
+  yield _Subcommands_CsCompleter_InvalidLocation_test, True
+  yield _Subcommands_CsCompleter_InvalidLocation_test, False
+
+
 @SharedYcmd
-def Subcommands_CsCompleter_InvalidLocation_test( app ):
+def _Subcommands_CsCompleter_InvalidLocation_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -153,14 +177,22 @@ def Subcommands_CsCompleter_InvalidLocation_test( app ):
     except AppError as e:
       if 'Can\\\'t jump to implementation' in str(e):
         pass
+      elif 'No implementations found' in str(e):
+        pass
       else:
         raise
 
 
+def Subcommands_GoToImplementationElseDeclaration_NoImpl_test():
+  yield _Subcommands_GoToImplementationElseDeclaration_NoImpl_test, True
+  yield _Subcommands_GoToImplementationElseDeclaration_NoImpl_test, False
+
+
 @SharedYcmd
-def Subcommands_GoToImplementationElseDeclaration_NoImplementation_test( app ):
+def _Subcommands_GoToImplementationElseDeclaration_NoImpl_test( app,
+                                                                use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -176,15 +208,20 @@ def Subcommands_GoToImplementationElseDeclaration_NoImplementation_test( app ):
     eq_( {
       'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
       'line_num': 35,
-      'column_num': 3
+      'column_num': 8 if use_roslyn else 3
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GoToImplementationElseDeclaration_SingleImpl_test():
+  yield _Subcommands_GoToImplementationElseDeclaration_SingleImpl_test, True
+  yield _Subcommands_GoToImplementationElseDeclaration_SingleImpl_test, False
+
+
 @SharedYcmd
-def Subcommands_GoToImplementationElseDeclaration_SingleImplementation_test(
-  app ):
+def _Subcommands_GoToImplementationElseDeclaration_SingleImpl_test(
+    app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -200,15 +237,20 @@ def Subcommands_GoToImplementationElseDeclaration_SingleImplementation_test(
     eq_( {
       'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
       'line_num': 30,
-      'column_num': 3
+      'column_num': 15 if use_roslyn else 3
     }, app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GoToImplementationElseDeclaration_MultipleImpls_test():
+  yield _Subcommands_GoToImplementationElseDeclaration_MultipleImpls_test, True
+  yield _Subcommands_GoToImplementationElseDeclaration_MultipleImpls_test, False
+
+
 @SharedYcmd
-def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
-  app ):
+def _Subcommands_GoToImplementationElseDeclaration_MultipleImpls_test(
+    app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -224,18 +266,23 @@ def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
     eq_( [ {
       'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
       'line_num': 43,
-      'column_num': 3
+      'column_num': 15 if use_roslyn else 3
     }, {
       'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
       'line_num': 48,
-      'column_num': 3
+      'column_num': 15 if use_roslyn else 3
     } ], app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GetToImplementation_Unicode_test():
+  yield _Subcommands_GetToImplementation_Unicode_test, True
+  yield _Subcommands_GetToImplementation_Unicode_test, False
+
+
 @SharedYcmd
-def Subcommands_GetToImplementation_Unicode_test( app ):
+def _Subcommands_GetToImplementation_Unicode_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'Unicode.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -251,18 +298,23 @@ def Subcommands_GetToImplementation_Unicode_test( app ):
     eq_( [ {
       'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
       'line_num': 49,
-      'column_num': 54
+      'column_num': 66 if use_roslyn else 54
     }, {
       'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
       'line_num': 50,
-      'column_num': 50
+      'column_num': 62 if use_roslyn else 50
     } ], app.post_json( '/run_completer_command', goto_data ).json )
 
 
+def Subcommands_GetType_EmptyMessage_test():
+  yield _Subcommands_GetType_EmptyMessage_test, True
+  yield _Subcommands_GetType_EmptyMessage_test, False
+
+
 @SharedYcmd
-def Subcommands_GetType_EmptyMessage_test( app ):
+def _Subcommands_GetType_EmptyMessage_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     gettype_data = BuildRequest( completer_target = 'filetype_default',
@@ -274,14 +326,19 @@ def Subcommands_GetType_EmptyMessage_test( app ):
                                  filepath = filepath )
 
     eq_( {
-      u'message': u""
+      u'message': None if use_roslyn else u""
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
+def Subcommands_GetType_VariableDeclaration_test():
+  yield _Subcommands_GetType_VariableDeclaration_test, True
+  yield _Subcommands_GetType_VariableDeclaration_test, False
+
+
 @SharedYcmd
-def Subcommands_GetType_VariableDeclaration_test( app ):
+def _Subcommands_GetType_VariableDeclaration_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     gettype_data = BuildRequest( completer_target = 'filetype_default',
@@ -293,14 +350,19 @@ def Subcommands_GetType_VariableDeclaration_test( app ):
                                  filepath = filepath )
 
     eq_( {
-      u'message': u"string"
+      u'message': u"System.string" if use_roslyn else u"string"
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
+def Subcommands_GetType_VariableUsage_test():
+  yield _Subcommands_GetType_VariableUsage_test, True
+  yield _Subcommands_GetType_VariableUsage_test, False
+
+
 @SharedYcmd
-def Subcommands_GetType_VariableUsage_test( app ):
+def _Subcommands_GetType_VariableUsage_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     gettype_data = BuildRequest( completer_target = 'filetype_default',
@@ -316,10 +378,15 @@ def Subcommands_GetType_VariableUsage_test( app ):
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
+def Subcommands_GetType_Constant_test():
+  yield _Subcommands_GetType_Constant_test, True
+  yield _Subcommands_GetType_Constant_test, False
+
+
 @SharedYcmd
-def Subcommands_GetType_Constant_test( app ):
+def _Subcommands_GetType_Constant_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     gettype_data = BuildRequest( completer_target = 'filetype_default',
@@ -331,14 +398,19 @@ def Subcommands_GetType_Constant_test( app ):
                                  filepath = filepath )
 
     eq_( {
-      u'message': u"System.String"
+      u'message': None if use_roslyn else u"System.String"
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
+def Subcommands_GetType_DocsIgnored_test():
+  yield _Subcommands_GetType_DocsIgnored_test, True
+  yield _Subcommands_GetType_DocsIgnored_test, False
+
+
 @SharedYcmd
-def Subcommands_GetType_DocsIgnored_test( app ):
+def _Subcommands_GetType_DocsIgnored_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     gettype_data = BuildRequest( completer_target = 'filetype_default',
@@ -348,16 +420,25 @@ def Subcommands_GetType_DocsIgnored_test( app ):
                                  contents = contents,
                                  filetype = 'cs',
                                  filepath = filepath )
+    if use_roslyn:
+      message = u"int GetTypeTestCase.an_int_with_docs"
+    else:
+      message = u"int GetTypeTestCase.an_int_with_docs;"
 
     eq_( {
-      u'message': u"int GetTypeTestCase.an_int_with_docs;",
+      u'message': message,
     }, app.post_json( '/run_completer_command', gettype_data ).json )
 
 
+def Subcommands_GetDoc_Variable_test():
+  yield _Subcommands_GetDoc_Variable_test, True
+  yield _Subcommands_GetDoc_Variable_test, False
+
+
 @SharedYcmd
-def Subcommands_GetDoc_Variable_test( app ):
+def _Subcommands_GetDoc_Variable_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     getdoc_data = BuildRequest( completer_target = 'filetype_default',
@@ -368,16 +449,25 @@ def Subcommands_GetDoc_Variable_test( app ):
                                 filetype = 'cs',
                                 filepath = filepath )
 
+    detailed_info = ( 'int GetDocTestCase.an_int;\n'
+                      'an integer, or something' )
+    if use_roslyn:
+      detailed_info = ( 'int GetDocTestCase.an_int\n'
+                        'an integer, or something' )
     eq_( {
-      'detailed_info': 'int GetDocTestCase.an_int;\n'
-                       'an integer, or something',
+      'detailed_info': detailed_info
     }, app.post_json( '/run_completer_command', getdoc_data ).json )
 
 
+def Subcommands_GetDoc_Function_test():
+  yield _Subcommands_GetDoc_Function_test, True
+  yield _Subcommands_GetDoc_Function_test, False
+
+
 @SharedYcmd
-def Subcommands_GetDoc_Function_test( app ):
+def _Subcommands_GetDoc_Function_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     getdoc_data = BuildRequest( completer_target = 'filetype_default',
@@ -387,22 +477,32 @@ def Subcommands_GetDoc_Function_test( app ):
                                 contents = contents,
                                 filetype = 'cs',
                                 filepath = filepath )
+    if use_roslyn:
+      detailed_info = ( 'int GetDocTestCase.DoATest()\n'
+                        'Very important method.\n\nWith multiple lines of '
+                        'commentary\nAnd Format-\n-ting' )
+    else:
+      # It seems that Omnisharp server eats newlines
+      detailed_info = ( 'int GetDocTestCase.DoATest();\n'
+                        ' Very important method. With multiple lines of '
+                        'commentary And Format- -ting' )
 
-    # It seems that Omnisharp server eats newlines
+
     eq_( {
-      'detailed_info': 'int GetDocTestCase.DoATest();\n'
-                       ' Very important method. With multiple lines of '
-                       'commentary And Format- -ting',
+      'detailed_info': detailed_info,
     }, app.post_json( '/run_completer_command', getdoc_data ).json )
 
 
 def RunFixItTest( app,
+                  use_roslyn,
                   line,
                   column,
                   result_matcher,
                   filepath = [ 'testy', 'FixItTestCase.cs' ] ):
+  if use_roslyn:
+    raise SkipTest( "Roslyn doesn't seem to support FixIt  yet" )
   filepath = PathToTestFile( *filepath )
-  with WrapOmniSharpServer( app, filepath ):
+  with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
 
     fixit_data = BuildRequest( completer_target = 'filetype_default',
@@ -420,10 +520,15 @@ def RunFixItTest( app,
     assert_that( response, result_matcher )
 
 
+def Subcommands_FixIt_RemoveSingleLine_test():
+  yield _Subcommands_FixIt_RemoveSingleLine_test, True
+  yield _Subcommands_FixIt_RemoveSingleLine_test, False
+
+
 @SharedYcmd
-def Subcommands_FixIt_RemoveSingleLine_test( app ):
+def _Subcommands_FixIt_RemoveSingleLine_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 11, 1, has_entries( {
+  RunFixItTest( app, use_roslyn, 11, 1, has_entries( {
     'fixits': contains( has_entries( {
       'location': LocationMatcher( filepath, 11, 1 ),
       'chunks': contains( ChunkMatcher( '',
@@ -433,10 +538,15 @@ def Subcommands_FixIt_RemoveSingleLine_test( app ):
   } ) )
 
 
+def Subcommands_FixIt_MultipleLines_test():
+  yield _Subcommands_FixIt_MultipleLines_test, True
+  yield _Subcommands_FixIt_MultipleLines_test, False
+
+
 @SharedYcmd
-def Subcommands_FixIt_MultipleLines_test( app ):
+def _Subcommands_FixIt_MultipleLines_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 19, 1, has_entries( {
+  RunFixItTest( app, use_roslyn, 19, 1, has_entries( {
     'fixits': contains( has_entries ( {
       'location': LocationMatcher( filepath, 19, 1 ),
       'chunks': contains( ChunkMatcher( 'return On',
@@ -446,10 +556,15 @@ def Subcommands_FixIt_MultipleLines_test( app ):
   } ) )
 
 
+def Subcommands_FixIt_SpanFileEdge_test():
+  yield _Subcommands_FixIt_SpanFileEdge_test, True
+  yield _Subcommands_FixIt_SpanFileEdge_test, False
+
+
 @SharedYcmd
-def Subcommands_FixIt_SpanFileEdge_test( app ):
+def _Subcommands_FixIt_SpanFileEdge_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 1, 1, has_entries( {
+  RunFixItTest( app, use_roslyn, 1, 1, has_entries( {
     'fixits': contains( has_entries ( {
       'location': LocationMatcher( filepath, 1, 1 ),
       'chunks': contains( ChunkMatcher( 'System',
@@ -459,10 +574,15 @@ def Subcommands_FixIt_SpanFileEdge_test( app ):
   } ) )
 
 
+def Subcommands_FixIt_AddTextInLine_test():
+  yield _Subcommands_FixIt_AddTextInLine_test, True
+  yield _Subcommands_FixIt_AddTextInLine_test, False
+
+
 @SharedYcmd
-def Subcommands_FixIt_AddTextInLine_test( app ):
+def _Subcommands_FixIt_AddTextInLine_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 9, 1, has_entries( {
+  RunFixItTest( app, use_roslyn, 9, 1, has_entries( {
     'fixits': contains( has_entries ( {
       'location': LocationMatcher( filepath, 9, 1 ),
       'chunks': contains( ChunkMatcher( ', StringComparison.Ordinal',
@@ -472,10 +592,15 @@ def Subcommands_FixIt_AddTextInLine_test( app ):
   } ) )
 
 
+def Subcommands_FixIt_ReplaceTextInLine_test():
+  yield _Subcommands_FixIt_ReplaceTextInLine_test, True
+  yield _Subcommands_FixIt_ReplaceTextInLine_test, False
+
+
 @SharedYcmd
-def Subcommands_FixIt_ReplaceTextInLine_test( app ):
+def _Subcommands_FixIt_ReplaceTextInLine_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 10, 1, has_entries( {
+  RunFixItTest( app, use_roslyn, 10, 1, has_entries( {
     'fixits': contains( has_entries ( {
       'location': LocationMatcher( filepath, 10, 1 ),
       'chunks': contains( ChunkMatcher( 'const int',
@@ -485,10 +610,15 @@ def Subcommands_FixIt_ReplaceTextInLine_test( app ):
   } ) )
 
 
+def Subcommands_FixIt_Unicode_test():
+  yield _Subcommands_FixIt_Unicode_test, True
+  yield _Subcommands_FixIt_Unicode_test, False
+
+
 @SharedYcmd
-def Subcommands_FixIt_Unicode_test( app ):
+def _Subcommands_FixIt_Unicode_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'Unicode.cs' )
-  RunFixItTest( app, 30, 54, has_entries( {
+  RunFixItTest( app, use_roslyn, 30, 54, has_entries( {
     'fixits': contains( has_entries ( {
       'location': LocationMatcher( filepath, 30, 54 ),
       'chunks': contains( ChunkMatcher( ' readonly',
@@ -498,54 +628,13 @@ def Subcommands_FixIt_Unicode_test( app ):
   } ), filepath = [ 'testy', 'Unicode.cs' ] )
 
 
-@IsolatedYcmd()
-def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
+def Subcommands_StopServer_NoErrorIfNotStarted_test():
+  yield _Subcommands_StopServer_NoErrorIfNotStarted_test, True
+  yield _Subcommands_StopServer_NoErrorIfNotStarted_test, False
+
+
+@IsolatedYcmd
+def _Subcommands_StopServer_NoErrorIfNotStarted_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   StopCompleterServer( app, 'cs', filepath )
   # Success = no raise
-
-
-def StopServer_KeepLogFiles( app ):
-  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  contents = ReadFile( filepath )
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'cs',
-                             contents = contents,
-                             event_name = 'FileReadyToParse' )
-
-  app.post_json( '/event_notification', event_data )
-  WaitUntilCompleterServerReady( app, 'cs' )
-
-  event_data = BuildRequest( filetype = 'cs', filepath = filepath )
-
-  response = app.post_json( '/debug_info', event_data ).json
-
-  logfiles = []
-  for server in response[ 'completer' ][ 'servers' ]:
-    logfiles.extend( server[ 'logfiles' ] )
-
-  try:
-    for logfile in logfiles:
-      ok_( os.path.exists( logfile ),
-           'Logfile should exist at {0}'.format( logfile ) )
-  finally:
-    StopCompleterServer( app, 'cs', filepath )
-
-  if user_options_store.Value( 'server_keep_logfiles' ):
-    for logfile in logfiles:
-      ok_( os.path.exists( logfile ),
-           'Logfile should still exist at {0}'.format( logfile ) )
-  else:
-    for logfile in logfiles:
-      ok_( not os.path.exists( logfile ),
-           'Logfile should no longer exist at {0}'.format( logfile ) )
-
-
-@IsolatedYcmd( { 'server_keep_logfiles': 1 } )
-def Subcommands_StopServer_KeepLogFiles_test( app ):
-  StopServer_KeepLogFiles( app )
-
-
-@IsolatedYcmd( { 'server_keep_logfiles': 0 } )
-def Subcommands_StopServer_DoNotKeepLogFiles_test( app ):
-  StopServer_KeepLogFiles( app )

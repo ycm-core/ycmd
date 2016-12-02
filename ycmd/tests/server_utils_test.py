@@ -44,6 +44,7 @@ THIRD_PARTY_FOLDERS = (
   os.path.join( DIR_OF_THIRD_PARTY, 'godef' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'gocode' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'JediHTTP' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'omnisharp-roslyn' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'OmniSharpServer' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'racerd' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'requests' ),
