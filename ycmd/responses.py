@@ -100,14 +100,29 @@ def BuildDetailedInfoResponse( text ):
   }
 
 
-def BuildCompletionData( insertion_text,
+def BuildCompletionChunk( text,
+                          placeholder = False ):
+  completion_chunk = {
+    'text': text,
+    'placeholder': placeholder
+  }
+
+  return completion_chunk
+
+
+def BuildCompletionData( typed_text,
+                         completion_chunks = None,
                          extra_menu_info = None,
                          detailed_info = None,
                          menu_text = None,
                          kind = None,
                          extra_data = None ):
+  if completion_chunks is None:
+    completion_chunks = [ BuildCompletionChunk( typed_text ) ]
+
   completion_data = {
-    'insertion_text': insertion_text
+    'typed_text': typed_text,
+    'completion_chunks': completion_chunks
   }
 
   if extra_menu_info:

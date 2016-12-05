@@ -134,7 +134,11 @@ def ComputeCandidatesInner_test( completer, execute_command ):
     contents = ToBytes( ReadFile( PATH_TO_TEST_FILE ) ) )
   eq_( result, [ {
       'menu_text': u'Prefix',
-      'insertion_text': u'Prefix',
+      'typed_text': u'Prefix',
+      'completion_chunks': [{
+        'text': u'Prefix',
+        'placeholder': False
+      }],
       'extra_menu_info': u'func() string',
       'detailed_info': u'Prefix func() string func',
       'kind': u'func'

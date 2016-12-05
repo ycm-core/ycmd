@@ -250,7 +250,7 @@ class RustCompleter( Completer ):
       return []
 
     return [ responses.BuildCompletionData(
-                insertion_text = completion[ 'text' ],
+                typed_text = completion[ 'text' ],
                 kind = completion[ 'kind' ],
                 extra_menu_info = completion[ 'context' ],
                 extra_data = self._GetExtraData( completion ) )

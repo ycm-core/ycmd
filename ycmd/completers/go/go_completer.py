@@ -373,7 +373,7 @@ def _ComputeOffset( contents, line, column ):
 
 def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
-    insertion_text = completion_data[ 'name' ],
+    typed_text = completion_data[ 'name' ],
     menu_text = completion_data[ 'name' ],
     extra_menu_info = completion_data[ 'type' ],
     kind = completion_data[ 'class' ],

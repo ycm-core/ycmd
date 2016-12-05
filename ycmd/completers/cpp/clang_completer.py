@@ -408,7 +408,7 @@ class ClangCompleter( Completer ):
 
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
-    insertion_text = completion_data.TextToInsertInBuffer(),
+    typed_text = completion_data.TextToInsertInBuffer(),
     menu_text = completion_data.MainCompletionText(),
     extra_menu_info = completion_data.ExtraMenuInfo(),
     kind = completion_data.kind_.name,

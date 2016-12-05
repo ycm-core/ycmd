@@ -55,17 +55,17 @@ def FilterAndSortCandidates_OmniCompleter_Dictionary_test():
 
 
 def FilterAndSortCandidates_ServerCompleter_test():
-  _FilterAndSortCandidates_Match( [ { 'insertion_text': 'password' } ],
+  _FilterAndSortCandidates_Match( [ { 'typed_text': 'password' } ],
                                   'p',
-                                  [ { 'insertion_text': 'password' } ] )
+                                  [ { 'typed_text': 'password' } ] )
 
 
 @ExpectedFailure( 'Filtering does not support unicode characters',
                   contains_string( '[]' ) )
 def FilterAndSortCandidates_Unicode_test():
-  _FilterAndSortCandidates_Match( [ { 'insertion_text': 'ø' } ],
+  _FilterAndSortCandidates_Match( [ { 'typed_text': 'ø' } ],
                                   'ø',
-                                  [ { 'insertion_text': 'ø' } ] )
+                                  [ { 'typed_text': 'ø' } ] )
 
 
 @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',

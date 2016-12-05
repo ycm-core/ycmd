@@ -294,8 +294,8 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     if isinstance( candidates[ 0 ], dict ):
       if 'word' in candidates[ 0 ]:
         sort_property = 'word'
-      elif 'insertion_text' in candidates[ 0 ]:
-        sort_property = 'insertion_text'
+      elif 'typed_text' in candidates[ 0 ]:
+        sort_property = 'typed_text'
 
     return self.FilterAndSortCandidatesInner( candidates, sort_property, query )
 

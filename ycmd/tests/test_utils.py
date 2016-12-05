@@ -97,10 +97,10 @@ def ErrorMatcher( cls, msg = None ):
   return has_entries( entry )
 
 
-def CompletionEntryMatcher( insertion_text,
+def CompletionEntryMatcher( typed_text,
                             extra_menu_info = None,
                             extra_params = None ):
-  match = { 'insertion_text': insertion_text }
+  match = { 'typed_text': typed_text }
 
   if extra_menu_info:
     match.update( { 'extra_menu_info': extra_menu_info } )
