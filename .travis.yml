@@ -13,8 +13,7 @@ install:
   - source ci/travis/travis_install.sh
 compiler:
   - gcc
-script:
-  - ci/travis/travis_script.sh
+script: ./run_tests.py
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 env:
@@ -25,17 +24,16 @@ env:
     - YCM_CORES=3
     - COVERAGE=true
   matrix:
-    # Since 3.0.4, Flake8 is not working anymore on Python 2.6.
-    - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6 YCMD_FLAKE8=false
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6 YCMD_FLAKE8=false
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7 YCMD_FLAKE8=true
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3 YCMD_FLAKE8=true
+    - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
+    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
 matrix:
   exclude:
     - os: osx
-      env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6 YCMD_FLAKE8=false
+      env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
     - os: osx
-      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6 YCMD_FLAKE8=false
+      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/
