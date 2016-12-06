@@ -407,7 +407,7 @@ endif()
 # present in the same directory as our ycm_core.so is used.
 # And the extra `rpath` is helpful to find libclang.dylib's dependencies
 # if it is built with `--enable-shared` flag.
-if ( EXTERNAL_LIBCLANG_PATH AND APPLE )
+if ( EXTERNAL_LIBCLANG_PATH AND APPLE AND NOT USE_SYSTEM_LIBCLANG)
   get_filename_component(EXTRA_LIB_PATH ${EXTERNAL_LIBCLANG_PATH} DIRECTORY)
 
   set_target_properties(${PROJECT_NAME}
