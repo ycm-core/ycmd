@@ -209,22 +209,8 @@ def _SanitizeFlags( flags ):
   """Drops unsafe flags. Currently these are only -arch flags; they tend to
   crash libclang."""
 
-  sanitized_flags = []
-  saw_arch = False
-  for i, flag in enumerate( flags ):
-    if flag == '-arch':
-      saw_arch = True
-      continue
-    elif flag.startswith( '-arch' ):
-      continue
-    elif saw_arch:
-      saw_arch = False
-      continue
-
-    sanitized_flags.append( flag )
-
   vector = ycm_core.StringVector()
-  for flag in sanitized_flags:
+  for flag in flags:
     vector.append( ToCppStringCompatible( flag ) )
   return vector
 
