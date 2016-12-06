@@ -44,9 +44,11 @@ SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +
                          '"./install.py --omnisharp-completer".' )
 INVALID_FILE_MESSAGE = 'File is invalid.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
+OMNISHARP_BINARY = ( 'OmniSharp.exe' if utils.OnWindows() or utils.OnCygwin()
+                      else 'OmniSharp' )
 PATH_TO_OMNISHARP_BINARY = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
-                'third_party', 'omnisharp-roslyn', 'OmniSharp.exe' ) )
+                'third_party', 'omnisharp-roslyn', OMNISHARP_BINARY ) )
 LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
@@ -382,12 +384,6 @@ class CsharpSolutionCompleter( object ):
                   str( self._omnisharp_port ),
                   '-s',
                   u'{0}'.format( path_to_solutionfile ) ]
-
-      if not utils.OnWindows() and not utils.OnCygwin():
-        command.insert( 0, 'mono' )
-
-      if utils.OnCygwin():
-        command.extend( [ '--client-path-mode', 'Cygwin' ] )
 
       solutionfile = os.path.basename( path_to_solutionfile )
       self._filename_stdout = utils.CreateLogfile(
