@@ -46,8 +46,7 @@ INVALID_FILE_MESSAGE = 'File is invalid.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PATH_TO_OMNISHARP_BINARY = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
-                'third_party', 'OmniSharpServer', 'OmniSharp',
-                'bin', 'Release', 'OmniSharp.exe' ) )
+                'third_party', 'omnisharp-roslyn', 'OmniSharp.exe' ) )
 LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
@@ -414,7 +413,7 @@ class CsharpSolutionCompleter( object ):
       if self._ServerIsRunning():
         self._logger.info( 'Stopping OmniSharp server with PID {0}'.format(
                                self._omnisharp_phandle.pid ) )
-        self._GetResponse( '/stopserver' )
+        self._GetResponse( '/stopserver', returns_json = False )
         try:
           utils.WaitUntilProcessIsTerminated( self._omnisharp_phandle,
                                               timeout = 5 )
@@ -447,7 +446,8 @@ class CsharpSolutionCompleter( object ):
   def _ReloadSolution( self ):
     """ Reloads the solutions in the OmniSharp server """
     self._logger.info( 'Reloading Solution in OmniSharp server' )
-    return self._GetResponse( '/reloadsolution' )
+    self._GetResponse( '/reloadsolution', returns_json = False )
+    return True
 
 
   def CompletionType( self, request_data ):
@@ -550,13 +550,13 @@ class CsharpSolutionCompleter( object ):
   def _DefaultParameters( self, request_data ):
     """ Some very common request parameters """
     parameters = {}
-    parameters[ 'line' ] = request_data[ 'line_num' ]
-    parameters[ 'column' ] = request_data[ 'column_codepoint' ]
+    parameters[ 'Line' ] = request_data[ 'line_num' ]
+    parameters[ 'Column' ] = request_data[ 'column_codepoint' ]
 
     filepath = request_data[ 'filepath' ]
-    parameters[ 'buffer' ] = (
+    parameters[ 'Buffer' ] = (
       request_data[ 'file_data' ][ filepath ][ 'contents' ] )
-    parameters[ 'filename' ] = filepath
+    parameters[ 'FileName' ] = filepath
     return parameters
 
 
@@ -598,11 +598,17 @@ class CsharpSolutionCompleter( object ):
     return 'http://localhost:' + str( self._omnisharp_port )
 
 
-  def _GetResponse( self, handler, parameters = {}, timeout = None ):
+  def _GetResponse( self, handler, parameters = {}, timeout = None,
+                    returns_json = True ):
     """ Handle communication with server """
     target = urllib.parse.urljoin( self._ServerLocation(), handler )
-    response = requests.post( target, data = parameters, timeout = timeout )
-    return response.json()
+    self._logger.info( "Request: " + str(parameters) )
+    response = requests.post( target, json = parameters, timeout = timeout )
+    self._logger.info( "Response: " + response.text )
+    if returns_json:
+      return response.json()
+    else:
+      return None
 
 
   def _ChooseOmnisharpPort( self ):

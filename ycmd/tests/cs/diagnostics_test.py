@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, contains, contains_string, equal_to,
+from hamcrest import ( assert_that, has_items, contains_string, equal_to,
                        has_entries, has_entry )
 
 from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
@@ -54,7 +54,7 @@ def Diagnostics_Basic_test( app ):
                  has_entry(
                      'message',
                      contains_string(
-                       "Unexpected symbol `}'', expecting identifier" ) ) )
+                       "'Console' does not contain a definition for ''" ) ) )
 
 
 @SharedYcmd
@@ -73,64 +73,64 @@ def Diagnostics_ZeroBasedLineAndColumn_test( app ):
       results = app.post_json( '/event_notification', event_data ).json
 
     assert_that( results,
-                 contains(
+                 has_items(
                      has_entries( {
                        'kind': equal_to( 'ERROR' ),
                        'text': contains_string(
-                           "Unexpected symbol `}'', expecting identifier" ),
+                           "Identifier expected" ),
                        'location': has_entries( {
-                         'line_num': 11,
-                         'column_num': 2
+                         'line_num': 10,
+                         'column_num': 12
                        } ),
                        'location_extent': has_entries( {
                          'start': has_entries( {
-                           'line_num': 11,
-                           'column_num': 2,
+                           'line_num': 10,
+                           'column_num': 12,
                          } ),
                          'end': has_entries( {
-                           'line_num': 11,
-                           'column_num': 2,
+                           'line_num': 10,
+                           'column_num': 12,
                          } ),
                        } )
                      } ) ) )
 
 
-@SharedYcmd
-def Diagnostics_WithRange_test( app ):
-  filepath = PathToTestFile( 'testy', 'DiagnosticRange.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-
-    results = {}
-    for _ in ( 0, 1 ):  # First call always returns blank for some reason
-      event_data = BuildRequest( filepath = filepath,
-                                 event_name = 'FileReadyToParse',
-                                 filetype = 'cs',
-                                 contents = contents )
-
-      results = app.post_json( '/event_notification', event_data ).json
-
-    assert_that( results,
-                 contains(
-                     has_entries( {
-                       'kind': equal_to( 'WARNING' ),
-                       'text': contains_string(
-                           "Name should have prefix '_'" ),
-                       'location': has_entries( {
-                         'line_num': 3,
-                         'column_num': 16
-                       } ),
-                       'location_extent': has_entries( {
-                         'start': has_entries( {
-                           'line_num': 3,
-                           'column_num': 16,
-                         } ),
-                         'end': has_entries( {
-                           'line_num': 3,
-                           'column_num': 25,
-                         } ),
-                       } )
-                     } ) ) )
+# @SharedYcmd
+# def Diagnostics_WithRange_test( app ):
+#   filepath = PathToTestFile( 'testy', 'DiagnosticRange.cs' )
+#   with WrapOmniSharpServer( app, filepath ):
+#     contents = ReadFile( filepath )
+#
+#     results = {}
+#     for _ in ( 0, 1 ):  # First call always returns blank for some reason
+#       event_data = BuildRequest( filepath = filepath,
+#                                  event_name = 'FileReadyToParse',
+#                                  filetype = 'cs',
+#                                  contents = contents )
+#
+#       results = app.post_json( '/event_notification', event_data ).json
+#
+#     assert_that( results,
+#                  contains(
+#                      has_entries( {
+#                        'kind': equal_to( 'WARNING' ),
+#                        'text': contains_string(
+#                            "Name should have prefix '_'" ),
+#                        'location': has_entries( {
+#                          'line_num': 3,
+#                          'column_num': 16
+#                        } ),
+#                        'location_extent': has_entries( {
+#                          'start': has_entries( {
+#                            'line_num': 3,
+#                            'column_num': 16,
+#                          } ),
+#                          'end': has_entries( {
+#                            'line_num': 3,
+#                            'column_num': 25,
+#                          } ),
+#                        } )
+#                      } ) ) )
 
 
 @SharedYcmd
@@ -139,7 +139,7 @@ def Diagnostics_MultipleSolution_test( app ):
                 PathToTestFile( 'testy-multiple-solutions',
                                 'solution-named-like-folder',
                                 'testy', 'Program.cs' ) ]
-  lines = [ 11, 10 ]
+  lines = [ 10, 9 ]
   for filepath, line in zip( filepaths, lines ):
     with WrapOmniSharpServer( app, filepath ):
       contents = ReadFile( filepath )
@@ -154,23 +154,22 @@ def Diagnostics_MultipleSolution_test( app ):
         results = app.post_json( '/event_notification', event_data ).json
 
       assert_that( results,
-                   contains(
+                   has_items(
                        has_entries( {
                            'kind': equal_to( 'ERROR' ),
-                           'text': contains_string( "Unexpected symbol `}'', "
-                                                    "expecting identifier" ),
+                           'text': contains_string( "Identifier expected" ),
                            'location': has_entries( {
                              'line_num': line,
-                             'column_num': 2
+                             'column_num': 12
                            } ),
                            'location_extent': has_entries( {
                              'start': has_entries( {
                                'line_num': line,
-                               'column_num': 2,
+                               'column_num': 12,
                              } ),
                              'end': has_entries( {
                                'line_num': line,
-                               'column_num': 2,
+                               'column_num': 12,
                              } ),
                            } )
                        } ) ) )
