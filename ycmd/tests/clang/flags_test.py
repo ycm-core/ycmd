@@ -113,10 +113,10 @@ def SanitizeFlags_ArchNotRemoved_test():
   eq_( expected + not_to_remove,
        list( flags._SanitizeFlags( expected + not_to_remove ) ) )
 
-  eq_( expected + not_to_remove,
+  eq_( not_to_remove + expected,
        list( flags._SanitizeFlags( not_to_remove + expected ) ) )
 
-  eq_( expected + not_to_remove,
+  eq_( expected[ :1 ] + not_to_remove + expected[ -1: ],
        list( flags._SanitizeFlags(
          expected[ :1 ] + not_to_remove + expected[ -1: ] ) ) )
 
