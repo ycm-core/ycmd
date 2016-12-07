@@ -106,19 +106,19 @@ def SanitizeFlags_Passthrough_test():
        list( flags._SanitizeFlags( [ '-foo', '-bar' ] ) ) )
 
 
-def SanitizeFlags_ArchRemoved_test():
+def SanitizeFlags_ArchNotRemoved_test():
   expected = [ '-foo', '-bar' ]
-  to_remove = [ '-arch', 'arch_of_evil' ]
+  not_to_remove = [ '-arch', 'arch_of_evil' ]
 
-  eq_( expected,
-       list( flags._SanitizeFlags( expected + to_remove ) ) )
+  eq_( expected + not_to_remove,
+       list( flags._SanitizeFlags( expected + not_to_remove ) ) )
 
-  eq_( expected,
-       list( flags._SanitizeFlags( to_remove + expected ) ) )
+  eq_( expected + not_to_remove,
+       list( flags._SanitizeFlags( not_to_remove + expected ) ) )
 
-  eq_( expected,
+  eq_( expected + not_to_remove,
        list( flags._SanitizeFlags(
-         expected[ :1 ] + to_remove + expected[ -1: ] ) ) )
+         expected[ :1 ] + not_to_remove + expected[ -1: ] ) ) )
 
 
 def RemoveUnusedFlags_Passthrough_test():
