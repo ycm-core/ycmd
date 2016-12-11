@@ -85,6 +85,17 @@ def OnCiService():
   return 'CI' in os.environ
 
 
+def FindExecutableOrDie( executable, message ):
+  path = FindExecutable( executable )
+
+  if not path:
+    sys.exit( "ERROR: Unabel to find executable '{0}'. {1}".format(
+      executable,
+      message ) )
+
+  return path
+
+
 # On Windows, distutils.spawn.find_executable only works for .exe files
 # but .bat and .cmd files are also executables, so we use our own
 # implementation.
@@ -263,6 +274,8 @@ def ParseArguments():
                        help = 'Enable Rust semantic completion engine.' )
   parser.add_argument( '--js-completer', action = 'store_true',
                        help = 'Enable JavaScript semantic completion engine.' ),
+  parser.add_argument( '--java-completer', action = 'store_true',
+                       help = 'Enable Java semantic completion engine.' ),
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
@@ -466,24 +479,23 @@ def EnableCsCompleter():
 
 
 def EnableGoCompleter():
-  if not FindExecutable( 'go' ):
-    sys.exit( 'ERROR: go is required to build gocode.' )
+  go = FindExecutableOrDie( 'go', 'go is required to build gocode.' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
-  CheckCall( [ 'go', 'build' ] )
+  CheckCall( [ go, 'build' ] )
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
-  CheckCall( [ 'go', 'build', 'godef.go' ] )
+  CheckCall( [ go, 'build', 'godef.go' ] )
 
 
 def EnableRustCompleter():
   """
   Build racerd. This requires a reasonably new version of rustc/cargo.
   """
-  if not FindExecutable( 'cargo' ):
-    sys.exit( 'ERROR: cargo is required for the Rust completer.' )
+  cargo = FindExecutableOrDie( 'cargo',
+                               'cargo is required for the Rust completer.' )
 
   os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
-  args = [ 'cargo', 'build' ]
+  args = [ cargo, 'build' ]
   # We don't use the --release flag on CI services because it makes building
   # racerd 2.5x slower and we don't care about the speed of the produced racerd.
   if not OnCiService():
@@ -496,9 +508,7 @@ def EnableJavaScriptCompleter():
   node = PathToFirstExistingExecutable( [ 'nodejs', 'node' ] )
   if not node:
     sys.exit( 'ERROR: node is required to set up Tern.' )
-  npm = FindExecutable( 'npm' )
-  if not npm:
-    sys.exit( 'ERROR: npm is required to set up Tern.' )
+  npm = FindExecutableOrDie( 'npm', 'ERROR: npm is required to set up Tern.' )
 
   # We install Tern into a runtime directory. This allows us to control
   # precisely the version (and/or git commit) that is used by ycmd.  We use a
@@ -522,6 +532,25 @@ def EnableJavaScriptCompleter():
   CheckCall( [ npm, 'install', '--production' ] )
 
 
+def EnableJavaCompleter():
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT,
+                    'third_party',
+                    'eclipse.jdt.ls' ) )
+
+  if OnWindows():
+    mvnw = 'mvnw.cmd'
+  else:
+    mvnw = './mvnw'
+
+  # Maven actually just straight up sucks. There is seemingly no way to do
+  # working, reliable incremental builds. It also takes _forever_ doing things
+  # that you _don't want it to do_, like downloading the internet.
+  # Alas, I'm not aware of a better way, and these are the instructions provided
+  # by the people that made JDT language server, so we waste the user's time
+  # (somewhat) unnecessarily.
+  CheckCall( [ mvnw, 'clean', 'package' ] )
+
+
 def WritePythonUsedDuringBuild():
   path = p.join( DIR_OF_THIS_SCRIPT, 'PYTHON_USED_DURING_BUILDING' )
   with open( path, 'w' ) as f:
@@ -542,6 +571,8 @@ def Main():
     EnableJavaScriptCompleter()
   if args.rust_completer or args.racer_completer or args.all_completers:
     EnableRustCompleter()
+  if args.java_completer or args.all_completers:
+    EnableJavaCompleter()
 
 
 if __name__ == '__main__':
