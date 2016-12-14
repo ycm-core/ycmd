@@ -181,8 +181,11 @@ def PrepareFlagsForClang( flags, filename, add_extra_clang_flags = True ):
   flags = _RemoveUnusedFlags( flags, filename )
   if add_extra_clang_flags:
     flags = _EnableTypoCorrection( flags )
-  flags = _SanitizeFlags( flags )
-  return flags
+
+  vector = ycm_core.StringVector()
+  for flag in flags:
+    vector.append( ToCppStringCompatible( flag ) )
+  return vector
 
 
 def _RemoveXclangFlags( flags ):
@@ -203,16 +206,6 @@ def _RemoveXclangFlags( flags ):
     sanitized_flags.append( flag )
 
   return sanitized_flags
-
-
-def _SanitizeFlags( flags ):
-  """Drops unsafe flags. Currently these are only -arch flags; they tend to
-  crash libclang."""
-
-  vector = ycm_core.StringVector()
-  for flag in flags:
-    vector.append( ToCppStringCompatible( flag ) )
-  return vector
 
 
 def _RemoveFlagsPrecedingCompiler( flags ):

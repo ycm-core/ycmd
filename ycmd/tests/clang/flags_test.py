@@ -101,26 +101,6 @@ def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test( *args ):
     assert_that( flags_list, contains( '-x', 'c' ) )
 
 
-def SanitizeFlags_Passthrough_test():
-  eq_( [ '-foo', '-bar' ],
-       list( flags._SanitizeFlags( [ '-foo', '-bar' ] ) ) )
-
-
-def SanitizeFlags_ArchNotRemoved_test():
-  expected = [ '-foo', '-bar' ]
-  not_to_remove = [ '-arch', 'arch_of_evil' ]
-
-  eq_( expected + not_to_remove,
-       list( flags._SanitizeFlags( expected + not_to_remove ) ) )
-
-  eq_( not_to_remove + expected,
-       list( flags._SanitizeFlags( not_to_remove + expected ) ) )
-
-  eq_( expected[ :1 ] + not_to_remove + expected[ -1: ],
-       list( flags._SanitizeFlags(
-         expected[ :1 ] + not_to_remove + expected[ -1: ] ) ) )
-
-
 def RemoveUnusedFlags_Passthrough_test():
   eq_( [ '-foo', '-bar' ],
        flags._RemoveUnusedFlags( [ '-foo', '-bar' ], 'file' ) )
