@@ -23,7 +23,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from future.utils import PY2
-from ycmd.utils import ToBytes, ToUnicode
+from ycmd.utils import ToCppStringCompatible, ToUnicode
 import bottle
 
 
@@ -38,5 +38,6 @@ import bottle
 # making life easier for codebases that work across versions, thus preventing
 # tracebacks in the depths of WSGI server frameworks.
 def SetResponseHeader( name, value ):
-  name = ToBytes( name ) if PY2 else ToUnicode( name )
-  bottle.response.set_header( name, ToUnicode( value ) )
+  name = ToCppStringCompatible( name ) if PY2 else ToUnicode( name )
+  value = ToCppStringCompatible( value ) if PY2 else ToUnicode( value )
+  bottle.response.set_header( name, value )
