@@ -356,13 +356,3 @@ def Mac_PathsForAllMacToolchains_test():
        [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
          'XcodeDefault.xctoolchain/test',
          '/Library/Developer/CommandLineTools/test' ] )
-
-
-@patch( 'ycmd.utils.PathsToAllParentFolders', return_value = [] )
-def DefaultExtraConf_UseDefaultFlags_test( *args ):
-  flags_object = flags.Flags()
-  eq_( [ '-x',
-         'c++',
-         '-std=c++11',
-         '-I', '.' ], list ( flags_object.FlagsForFile( 'test.cpp',
-                                                          False ) ) )

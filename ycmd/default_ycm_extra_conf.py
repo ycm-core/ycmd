@@ -29,6 +29,7 @@
 # For more information, please refer to <http://unlicense.org/>
 
 import os
+import logging
 
 from ycmd import utils
 import ycm_core
@@ -78,13 +79,6 @@ import ycm_core
 #    flags.
 #  - Otherwise, if there is an entry in the database for the requested file,
 #    return those flags.
-#  - Otherwise, if we previously found any flags for a file in the same
-#    directory as the requested file, return those flags.
-#  - Otherwise, if we previously returned *any* flags for *any* file with the
-#    same file extension, return those.
-#  - Otherwise, if the file extension is known to us (c++, c, objective c), we
-#    return some absolutely arbitrary default flags, which might work for toy
-#    projects.
 #  - Otherwise, we really can't guess any flags, so return none (and thus a
 #    warning that we can't guess your flags).
 #
@@ -114,6 +108,11 @@ HEADER_EXTENSIONS = [ '.h', '.hxx', '.hpp', '.hh' ]
 # of heuristically locating the flags for a header file.
 SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 
+# List of compiler flags which are considered to be path flags and thus
+# requiring modification to ensure they are correctly relative to the compiler
+# directory
+PATH_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=' ]
+
 # }}}
 
 # Caches for heuristically guessing flags {{{
@@ -128,59 +127,11 @@ compilation_database_dir_map = dict()
 # at least some flags
 file_directory_heuristic_map = dict()
 
-# Assuming we can't find anything in the database, and we haven't previously
-# seen any compilation information for the directory of the file in question, we
-# simply return the last set of flags we successfully retrieved for any file
-# sharing the file extension. This might work for some percentage of files,
-# which is better than the 0% otherwise.
-last_compilation_info_ext_map = dict()
-
-# As a last gambit, we just return some generic flags. This won't work for
-# any large or complex project, but it might work for trivial/toy projects,
-# demos, school projects etc.
-
-# This map contains the flag lists to return for the supported file types. The
-# flags are arbitrary, but should work for a large number of toy projects (when
-# combined with the other os-specific flags added by ycmd).
-fallback_flags_filetype_map = {
-  'cpp':  [
-    '-x', 'c++',
-    '-std=c++11',
-    '-Wall',
-    '-Wextra',
-    '-I', '.'
-  ],
-  'c': [
-    '-x', 'c',
-    '-std=c99',
-    '-Wall',
-    '-Wextra',
-    '-I', '.'
-  ],
-  'objc': [
-    '-x', 'objective-c',
-    '-Wall',
-    '-Wextra',
-    '-I', '.'
-  ],
-}
-
-# This map contains the mapping of file extension (including the .) to the file
-# type we expect it to be. We would prefer to rely on the editor to tell us the
-# file type, but we can't because there is no way to force that to happen.
-fallback_flags_ext_map = {
-  '.cpp': fallback_flags_filetype_map[ 'cpp' ],
-  '.cxx': fallback_flags_filetype_map[ 'cpp' ],
-  '.cc':  fallback_flags_filetype_map[ 'cpp' ],
-  '.c':   fallback_flags_filetype_map[ 'c' ],
-  '.m':   fallback_flags_filetype_map[ 'objc' ],
-  '.mm':  fallback_flags_filetype_map[ 'objc' ], # sic: strictly obj-c++ ?
-}
-
 # }}}
 
 # Implementation {{{
 
+_logger = logging.getLogger( __file__ )
 
 # Return a compilation database object for the supplied path or None if none
 # could be found.
@@ -214,23 +165,6 @@ def FindCompilationDatabase( wd ):
   return None
 
 
-def HeaderPathManipulations( file_name ):
-  yield file_name
-
-  # Try some simple manipulations, like removing "include" from the path and
-  # replacing with "src" or "lib" (as used by llvm)
-
-  include_mappings = [
-    [ '/include/', '/src/' ],
-    [ '/include/', '/lib/' ],
-    [ '/include/clang/', '/lib/' ],
-  ]
-
-  for mapping in include_mappings:
-    if mapping[ 0 ] in file_name:
-      yield file_name.replace( mapping[ 0 ], mapping[ 1 ], 1 )
-
-
 # Find the compilation info structure from the supplied database for the
 # supplied file. If the source file is a header, try and find an appropriate
 # source file and return the compilation_info for that.
@@ -242,16 +176,15 @@ def GetCompilationInfoForFile( database, file_name, file_extension ):
   # should be good enough.
   if file_extension in HEADER_EXTENSIONS:
     # It's a header file
-    for candidate_file in HeaderPathManipulations( file_name ):
-      for extension in SOURCE_EXTENSIONS:
-        replacement_file = os.path.splitext( candidate_file )[ 0 ] + extension
-        if os.path.exists( replacement_file ):
-          # We found a corresponding source file with the same file_root. Try
-          # and get the flags for that file.
-          compilation_info = database.GetCompilationInfoForFile(
-            replacement_file )
-          if compilation_info.compiler_flags_:
-            return compilation_info
+    for extension in SOURCE_EXTENSIONS:
+      replacement_file = os.path.splitext( file_name )[ 0 ] + extension
+      if os.path.exists( replacement_file ):
+        # We found a corresponding source file with the same file_root. Try
+        # and get the flags for that file.
+        compilation_info = database.GetCompilationInfoForFile(
+          replacement_file )
+        if compilation_info.compiler_flags_:
+          return compilation_info
 
     # No corresponding source file was found, so we can't generate any flags for
     # this header file.
@@ -265,37 +198,21 @@ def GetCompilationInfoForFile( database, file_name, file_extension ):
   return None
 
 
-# In the absence of flags from a compilation database or heuristic, return some
-# generic flags, or None if we don't have any generic flags for the supplied
-# file extension.
-def GetDefaultFlagsForFile( extension ):
-  if extension in fallback_flags_ext_map:
-    return {
-      'flags':    fallback_flags_ext_map[ extension ],
-      'do_cache': True
-    }
-  else:
-    # OK we really have no clue about this filetype and we can't find any
-    # flags, even with outrageous guessing. Return nothing and warn the user
-    # that we couldn't find or guess any compiler flags.
-    return None
-
-
 def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
   if not working_directory:
     return list( flags )
   new_flags = []
   make_next_absolute = False
-  path_flags = [ '-isystem', '-I', '-iquote', '--sysroot=' ]
   for flag in flags:
     new_flag = flag
 
     if make_next_absolute:
       make_next_absolute = False
       if not flag.startswith( '/' ):
+        # TODO/FIXME: Is this startswith here correct on Windows?
         new_flag = os.path.join( working_directory, flag )
 
-    for path_flag in path_flags:
+    for path_flag in PATH_FLAGS:
       if flag == path_flag:
         make_next_absolute = True
         break
@@ -310,6 +227,11 @@ def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
   return new_flags
 
 
+EMPTY_FLAGS = {
+  'flags': [],
+}
+
+
 # ycmd calls this method to get the compile flags for a given file. It returns a
 # dictionary with 2 keys: 'flags' and 'do_cache', or None if no flags can be
 # found.
@@ -320,40 +242,37 @@ def FlagsForFile( file_name, **kwargs ):
   # Create or retrieve the cached compilation database object
   database = FindCompilationDatabase( file_dir )
   if database is None:
-    # We couldn't find a compilation database. Just return some absolutely
-    # generic flags based on the file extension.
-    #
-    # We don't bother cacheing this as that would just be a waste of memory and
-    # cycles.
-    return GetDefaultFlagsForFile( file_extension )
+    _logger.debug( 'FlagsForFile( {0} ): No compilation database found'.format(
+      file_name ) )
+    return EMPTY_FLAGS
+  elif database.AlreadyGettingFlags():
+    _logger.debug( 'FlagsForFile( {0} ): Compilation database busy'.format(
+      file_name ) )
+    return EMPTY_FLAGS
+  elif not database.DatabaseSuccessfullyLoaded():
+    _logger.debug(
+      'FlagsForFile( {0} ): Compilation database failed to load'.format(
+        file_name ) )
+    return EMPTY_FLAGS
 
   compilation_info = GetCompilationInfoForFile( database,
                                                 file_name,
                                                 file_extension )
 
-  if compilation_info is None:
-    print( "No flags in database for " + file_name )
-    if file_dir in file_directory_heuristic_map:
-      # We previously saw a file in this directory. As a guess, just
-      # return the flags for that file. Hopefully this will at least give some
-      # meaningful suggestions
-      print( " - Using flags for dir: " + file_dir )
-      compilation_info = file_directory_heuristic_map[ file_dir ]
-    elif file_extension in last_compilation_info_ext_map:
-      # OK there is nothing in the DB for this file, and we didn't cache any
-      # flags for the directory of the file requested, but we did find some
-      # flags previously for this file type. Return them. Once again, this is
-      # an outrageous guess, but it is better to return *some* flags, rather
-      # than nothing.
-      print( " - Using flags for extension: " + file_extension )
-      compilation_info = last_compilation_info_ext_map[ file_extension ]
-    else:
-      # No cache for this directory or file extension, we really can't conjure
-      # up any flags from the database, just return some absolutely generic
-      # fallback flags. These probably won't work for any actual project, but we
-      # try anyway.
-      print( " - Using generic flags" )
-      return GetDefaultFlagsForFile( file_extension )
+  if compilation_info is None and file_dir in file_directory_heuristic_map:
+    # We previously saw a file in this directory. As a guess, just
+    # return the flags for that file. Hopefully this will at least give some
+    # meaningful compilation
+    _logger.debug( 'FlagsForFile( {0} ): Using flags for directory: {1}'.format(
+      file_name,
+      file_dir ) )
+    compilation_info = file_directory_heuristic_map[ file_dir ]
+  else:
+    # No cache for this directory and we really can't conjure
+    # up any flags from the database.
+    _logger.debug( 'FlagsForFile( {0} ): No flags in database'.format(
+      file_name ) )
+    return EMPTY_FLAGS
 
   if file_dir not in file_directory_heuristic_map:
     # This is the first file we've seen in path file_dir. Cache the
@@ -361,19 +280,11 @@ def FlagsForFile( file_name, **kwargs ):
     # flags available
     file_directory_heuristic_map[ file_dir ] = compilation_info
 
-  # Cache the last successful set of compilation info that we found. As noted
-  # above, this is used when we completely fail to find any flags.
-  last_compilation_info_ext_map[ file_extension ] = compilation_info
-
   return {
     # We pass the compiler flags from the database unmodified.
     'flags': MakeRelativePathsInFlagsAbsolute(
       compilation_info.compiler_flags_,
       compilation_info.compiler_working_dir_ ),
-
-    # We always want to use ycmd's cache, as this significantly improves
-    # performance.
-    'do_cache': True
   }
 
 # }}}
