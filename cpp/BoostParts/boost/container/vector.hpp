@@ -1848,7 +1848,7 @@ class vector
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
    #else
-   BOOST_CONTAINER_FORCEINLINE BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
    #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -3120,7 +3120,7 @@ class vector
             }
             else{ //If trivial destructor, we can uninitialized copy + copy in a single uninitialized copy
                ::boost::container::uninitialized_move_alloc_n
-                  (this->m_holder.alloc(), pos, old_finish - pos, new_start + before_plus_new);
+                  (this->m_holder.alloc(), pos, static_cast<size_type>(old_finish - pos), new_start + before_plus_new);
                this->m_holder.m_size = new_size;
                old_values_destroyer.release();
             }

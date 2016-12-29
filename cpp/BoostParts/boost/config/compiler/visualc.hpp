@@ -190,6 +190,13 @@
 #  define BOOST_NO_CXX11_CONSTEXPR
 #endif
 
+// C++14 features supported by VC++ 15 Preview 5
+//
+#if (_MSC_VER < 1910)
+#  define BOOST_NO_CXX14_AGGREGATE_NSDMI
+#  define BOOST_NO_CXX14_CONSTEXPR
+#endif
+
 // MSVC including version 14 has not yet completely
 // implemented value-initialization, as is reported:
 // "VC++ does not value-initialize members of derived classes without
@@ -210,14 +217,6 @@
 // C++ 11:
 //
 #define BOOST_NO_TWO_PHASE_NAME_LOOKUP
-//
-// C++ 14:
-#if !defined(__cpp_aggregate_nsdmi) || (__cpp_aggregate_nsdmi < 201304)
-#  define BOOST_NO_CXX14_AGGREGATE_NSDMI
-#endif
-#if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304)
-#  define BOOST_NO_CXX14_CONSTEXPR
-#endif
 
 //
 // prefix and suffix headers:
@@ -294,8 +293,8 @@
 #endif
 
 //
-// last known and checked version is 19.00.23026 (VC++ 2015 RTM):
-#if (_MSC_VER > 1900)
+// last known and checked version is 19.10.24629 (VC++ 2017 RC):
+#if (_MSC_VER > 1910)
 #  if defined(BOOST_ASSERT_CONFIG)
 #     error "Unknown compiler version - please run the configure tests and report the results"
 #  else

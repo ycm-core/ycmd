@@ -128,7 +128,7 @@ namespace boost { namespace unordered { namespace detail {
     inline std::size_t insert_size(I i, I j, typename
         boost::unordered::detail::enable_if_forward<I, void*>::type = 0)
     {
-        return std::distance(i, j);
+        return static_cast<std::size_t>(std::distance(i, j));
     }
 
     template <class I>

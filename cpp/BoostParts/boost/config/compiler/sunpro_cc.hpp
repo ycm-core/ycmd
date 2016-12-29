@@ -152,7 +152,7 @@
 #if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304)
 #  define BOOST_NO_CXX14_CONSTEXPR
 #endif
-#if !defined(__cpp_decltype_auto) || (__cpp_decltype_auto < 201304)
+#if !defined(__cpp_decltype_auto) || (__cpp_decltype_auto < 201304) || (__cplusplus < 201402L)
 #  define BOOST_NO_CXX14_DECLTYPE_AUTO
 #endif
 #if (__cplusplus < 201304) // There's no SD6 check for this....

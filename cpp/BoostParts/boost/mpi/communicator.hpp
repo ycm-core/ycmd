@@ -1,4 +1,5 @@
 // Copyright (C) 2005, 2006 Douglas Gregor <doug.gregor -at- gmail.com>.
+// Copyright (C) 2016 K. Noel Belcourt <kbelco -at- sandia.gov>.
 
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -23,6 +24,7 @@
 #include <utility>
 #include <iterator>
 #include <stdexcept> // for std::range_error
+#include <vector>
 
 // For (de-)serializing sends and receives
 #include <boost/mpi/packed_oarchive.hpp>
@@ -272,6 +274,17 @@ class BOOST_MPI_DECL communicator
   template<typename T>
   void send(int dest, int tag, const T& value) const;
 
+  template<typename T, typename A>
+  void send(int dest, int tag, const std::vector<T,A>& value) const;
+
+  template<typename T, typename A>
+  void send_vector(int dest, int tag, const std::vector<T,A>& value, 
+    mpl::true_) const;
+
+  template<typename T, typename A>
+  void send_vector(int dest, int tag, const std::vector<T,A>& value, 
+    mpl::false_) const;
+
   /**
    *  @brief Send the skeleton of an object.
    *
@@ -383,6 +396,17 @@ class BOOST_MPI_DECL communicator
    */
   template<typename T>
   status recv(int source, int tag, T& value) const;
+
+  template<typename T, typename A>
+  status recv(int source, int tag, std::vector<T,A>& value) const;
+
+  template<typename T, typename A>
+  status recv_vector(int source, int tag, std::vector<T,A>& value,
+    mpl::true_) const;
+
+  template<typename T, typename A>
+  status recv_vector(int source, int tag, std::vector<T,A>& value,
+    mpl::false_) const;
 
   /**
    *  @brief Receive a skeleton from a remote process.
@@ -1187,6 +1211,30 @@ communicator::array_send_impl(int dest, int tag, const T* values, int n,
   send(dest, tag, oa);
 }
 
+template<typename T, typename A>
+void communicator::send_vector(int dest, int tag, 
+  const std::vector<T,A>& value, mpl::true_ true_type) const
+{
+  // send the vector size
+  typename std::vector<T,A>::size_type size = value.size();
+  send(dest, tag, size);
+  // send the data
+  this->array_send_impl(dest, tag, value.data(), size, true_type);
+}
+
+template<typename T, typename A>
+void communicator::send_vector(int dest, int tag, 
+  const std::vector<T,A>& value, mpl::false_ false_type) const
+{
+  this->send_impl(dest, tag, value, false_type);
+}
+
+template<typename T, typename A>
+void communicator::send(int dest, int tag, const std::vector<T,A>& value) const
+{
+  send_vector(dest, tag, value, is_mpi_datatype<T>());
+}
+
 // Array send must send the elements directly
 template<typename T>
 void communicator::send(int dest, int tag, const T* values, int n) const
@@ -1267,6 +1315,32 @@ communicator::array_recv_impl(int source, int tag, T* values, int n,
 
   stat.m_count = count;
   return stat;
+}
+
+template<typename T, typename A>
+status communicator::recv_vector(int source, int tag, 
+  std::vector<T,A>& value, mpl::true_ true_type) const
+{
+  // receive the vector size
+  typename std::vector<T,A>::size_type size = 0;
+  recv(source, tag, size);
+  // size the vector
+  value.resize(size);
+  // receive the data
+  return this->array_recv_impl(source, tag, value.data(), size, true_type);
+}
+
+template<typename T, typename A>
+status communicator::recv_vector(int source, int tag, 
+  std::vector<T,A>& value, mpl::false_ false_type) const
+{
+  return this->recv_impl(source, tag, value, false_type);
+}
+
+template<typename T, typename A>
+status communicator::recv(int source, int tag, std::vector<T,A>& value) const
+{
+  return recv_vector(source, tag, value, is_mpi_datatype<T>());
 }
 
 // Array receive must receive the elements directly into a buffer.

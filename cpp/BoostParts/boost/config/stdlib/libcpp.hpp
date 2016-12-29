@@ -32,10 +32,14 @@
 #endif
 
 #if __cplusplus < 201103
-#  define BOOST_NO_CXX11_HDR_ARRAY
+//
+// These two appear to be somewhat useable in C++03 mode, there may be others...
+//
+//#  define BOOST_NO_CXX11_HDR_ARRAY
+//#  define BOOST_NO_CXX11_HDR_FORWARD_LIST
+
 #  define BOOST_NO_CXX11_HDR_CODECVT
 #  define BOOST_NO_CXX11_HDR_CONDITION_VARIABLE
-#  define BOOST_NO_CXX11_HDR_FORWARD_LIST
 #  define BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 #  define BOOST_NO_CXX11_HDR_MUTEX
 #  define BOOST_NO_CXX11_HDR_RANDOM
@@ -73,6 +77,19 @@
 #if _LIBCPP_VERSION < 3700
 // libc++ uses a non-standard messages_base
 #define BOOST_NO_STD_MESSAGES
+#endif
+
+// C++14 features
+#if (_LIBCPP_VERSION < 3700) || (__cplusplus <= 201402L)
+#  define BOOST_NO_CXX14_STD_EXCHANGE
+#endif
+
+// C++17 features
+#if (_LIBCPP_VERSION < 3700) || (__cplusplus <= 201402L)
+#  define BOOST_NO_CXX17_STD_INVOKE
+#endif
+#if (_LIBCPP_VERSION < 4000) || (__cplusplus <= 201402L)
+#  define BOOST_NO_CXX17_STD_APPLY
 #endif
 
 #if (_LIBCPP_VERSION <= 1101) && !defined(BOOST_NO_CXX11_THREAD_LOCAL)

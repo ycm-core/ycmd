@@ -489,7 +489,7 @@ namespace fpe {
 enum masks {
     BOOST_FPE_OFF       = 0,
 
-#ifdef BOOST_SEH_BASED_SIGNAL_HANDLING
+#ifdef BOOST_SEH_BASED_SIGNAL_HANDLING /* *** */
     BOOST_FPE_DIVBYZERO = EM_ZERODIVIDE,
     BOOST_FPE_INEXACT   = EM_INEXACT,
     BOOST_FPE_INVALID   = EM_INVALID,
@@ -497,17 +497,49 @@ enum masks {
     BOOST_FPE_UNDERFLOW = EM_UNDERFLOW|EM_DENORMAL,
 
     BOOST_FPE_ALL       = MCW_EM,
-#elif defined(BOOST_NO_FENV_H) || defined(BOOST_CLANG)
-    BOOST_FPE_ALL       = 1,
-#else
-    BOOST_FPE_DIVBYZERO = FE_DIVBYZERO,
-    BOOST_FPE_INEXACT   = FE_INEXACT,
-    BOOST_FPE_INVALID   = FE_INVALID,
-    BOOST_FPE_OVERFLOW  = FE_OVERFLOW,
-    BOOST_FPE_UNDERFLOW = FE_UNDERFLOW,
 
-    BOOST_FPE_ALL       = FE_ALL_EXCEPT,
+#elif defined(BOOST_NO_FENV_H) || defined(BOOST_CLANG) /* *** */
+    BOOST_FPE_ALL       = BOOST_FPE_OFF,
+
+#else /* *** */
+
+#if defined(FE_DIVBYZERO)
+    BOOST_FPE_DIVBYZERO = FE_DIVBYZERO,
+#else
+    BOOST_FPE_DIVBYZERO = BOOST_FPE_OFF,
 #endif
+
+#if defined(FE_INEXACT)
+    BOOST_FPE_INEXACT   = FE_INEXACT,
+#else
+    BOOST_FPE_INEXACT   = BOOST_FPE_OFF,
+#endif
+
+#if defined(FE_INVALID)
+    BOOST_FPE_INVALID   = FE_INVALID,
+#else
+    BOOST_FPE_INVALID   = BOOST_FPE_OFF,
+#endif
+
+#if defined(FE_OVERFLOW)
+    BOOST_FPE_OVERFLOW  = FE_OVERFLOW,
+#else
+    BOOST_FPE_OVERFLOW  = BOOST_FPE_OFF,
+#endif
+
+#if defined(FE_UNDERFLOW)
+    BOOST_FPE_UNDERFLOW = FE_UNDERFLOW,
+#else
+    BOOST_FPE_UNDERFLOW = BOOST_FPE_OFF,
+#endif
+
+#if defined(FE_ALL_EXCEPT)
+    BOOST_FPE_ALL       = FE_ALL_EXCEPT,
+#else
+    BOOST_FPE_ALL       = BOOST_FPE_OFF,
+#endif
+
+#endif /* *** */
     BOOST_FPE_INV       = BOOST_FPE_ALL+1
 };
 

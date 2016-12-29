@@ -99,6 +99,7 @@ std::string WAIT_FOR_DEBUGGER = "wait_for_debugger";
 
 std::string HELP              = "help";
 std::string USAGE             = "usage";
+std::string VERSION           = "version";
 
 //____________________________________________________________________________//
 
@@ -148,12 +149,11 @@ register_parameters( rt::parameters_store& store )
                    "compiler, STL version and Boost version."
     ));
 
-    ///////////////////////////////////////////////
-
     build_info.add_cla_id( "--", BUILD_INFO, "=" );
     build_info.add_cla_id( "-", "i", " " );
     store.add( build_info );
 
+    ///////////////////////////////////////////////
 
     rt::option catch_sys_errors( CATCH_SYS_ERRORS, (
         rt::description = "Allows to switch between catching and ignoring system errors (signals).",
@@ -635,6 +635,14 @@ register_parameters( rt::parameters_store& store )
     ));
     usage.add_cla_id( "-", "?", " " );
     store.add( usage );
+
+    ///////////////////////////////////////////////
+
+    rt::option version( VERSION, (
+        rt::description = "Prints Boost.Test version and exits."
+    ));
+    version.add_cla_id( "--", VERSION, " " );
+    store.add( version );
 }
 
 static rt::arguments_store  s_arguments_store;
@@ -668,7 +676,11 @@ init( int& argc, char** argv )
         rt::finalize_arguments( s_parameters_store, s_arguments_store );
 
         // Report help if requested
-        if( runtime_config::get<bool>( USAGE ) ) {
+        if( runtime_config::get<bool>( VERSION ) ) {
+            parser->version( std::cerr );
+            BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );
+        }
+        else if( runtime_config::get<bool>( USAGE ) ) {
             parser->usage( std::cerr );
             BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );
         }

@@ -98,6 +98,7 @@
 #if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103)
 #  define BOOST_LIBSTDCXX11
 #endif
+
 //
 //  Decide which version of libstdc++ we have, normally
 //  stdlibc++ C++0x support is detected via __GNUC__, __GNUC_MINOR__, and possibly
@@ -122,7 +123,9 @@
 //
 #ifdef __clang__
 
-#if __has_include(<experimental/any>)
+#if __has_include(<experimental/memory_resource>)
+#  define BOOST_LIBSTDCXX_VERSION 60100
+#elif __has_include(<experimental/any>)
 #  define BOOST_LIBSTDCXX_VERSION 50100
 #elif __has_include(<shared_mutex>)
 #  define BOOST_LIBSTDCXX_VERSION 40900
@@ -139,6 +142,7 @@
 #elif __has_include(<array>)
 #  define BOOST_LIBSTDCXX_VERSION 40300
 #endif
+
 //
 //  GCC 4.8 and 9 add working versions of <atomic> and <regex> respectively.
 //  However, we have no test for these as the headers were present but broken
@@ -236,6 +240,9 @@
 // even for the simplest patterns such as "\d" or "[0-9]". This is the case at least in gcc up to 4.8, inclusively.
 #  define BOOST_NO_CXX11_HDR_REGEX
 #endif
+#if (BOOST_LIBSTDCXX_VERSION < 40900) || (__cplusplus <= 201103)
+#  define BOOST_NO_CXX14_STD_EXCHANGE
+#endif
 
 #if defined(__clang_major__) && ((__clang_major__ < 3) || ((__clang_major__ == 3) && (__clang_minor__ < 7)))
 // As of clang-3.6, libstdc++ header <atomic> throws up errors with clang:
@@ -249,6 +256,16 @@
 #  define BOOST_NO_CXX11_HDR_CODECVT
 #  define BOOST_NO_CXX11_ATOMIC_SMART_PTR
 #  define BOOST_NO_CXX11_STD_ALIGN
+#endif
+
+//
+//  C++17 features in GCC 6.1 and later
+//
+#if (BOOST_LIBSTDCXX_VERSION < 60100) || (__cplusplus <= 201402L)
+#  define BOOST_NO_CXX17_STD_INVOKE
+#endif
+#if (BOOST_LIBSTDCXX_VERSION < 70100) || (__cplusplus <= 201402L)
+#  define BOOST_NO_CXX17_STD_APPLY
 #endif
 
 #if defined(__has_include)
