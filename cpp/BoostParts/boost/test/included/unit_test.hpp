@@ -12,6 +12,8 @@
 #ifndef BOOST_INCLUDED_UNIT_TEST_FRAMEWORK_HPP_071894GER
 #define BOOST_INCLUDED_UNIT_TEST_FRAMEWORK_HPP_071894GER
 
+#define BOOST_TEST_INCLUDED
+
 #include <boost/test/impl/compiler_log_formatter.ipp>
 #include <boost/test/impl/junit_log_formatter.ipp>
 #include <boost/test/impl/debug.ipp>
@@ -32,7 +34,6 @@
 #include <boost/test/impl/junit_log_formatter.ipp>
 #include <boost/test/impl/xml_report_formatter.ipp>
 
-#define BOOST_TEST_INCLUDED
 #include <boost/test/unit_test.hpp>
 
 #endif // BOOST_INCLUDED_UNIT_TEST_FRAMEWORK_HPP_071894GER

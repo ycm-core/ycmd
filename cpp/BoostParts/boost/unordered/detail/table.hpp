@@ -84,6 +84,10 @@ namespace boost { namespace unordered { namespace detail {
         typedef typename Types::table table_impl;
         typedef typename Types::link_pointer link_pointer;
         typedef typename Types::policy policy;
+        typedef typename Types::iterator iterator;
+        typedef typename Types::c_iterator c_iterator;
+        typedef typename Types::l_iterator l_iterator;
+        typedef typename Types::cl_iterator cl_iterator;
 
         typedef boost::unordered::detail::functions<
             typename Types::hasher,
@@ -110,15 +114,6 @@ namespace boost { namespace unordered { namespace detail {
         typedef boost::unordered::detail::node_tmp<node_allocator>
             node_tmp;
 
-        typedef boost::unordered::iterator_detail::
-            iterator<node> iterator;
-        typedef boost::unordered::iterator_detail::
-            c_iterator<node> c_iterator;
-        typedef boost::unordered::iterator_detail::
-            l_iterator<node, policy> l_iterator;
-        typedef boost::unordered::iterator_detail::
-            cl_iterator<node, policy> cl_iterator;
-
         ////////////////////////////////////////////////////////////////////////
         // Members
 
@@ -129,6 +124,13 @@ namespace boost { namespace unordered { namespace detail {
         float mlf_;
         std::size_t max_load_;
         bucket_pointer buckets_;
+
+        ////////////////////////////////////////////////////////////////////////
+        // Node functions
+
+        static inline node_pointer next_node(link_pointer n) {
+            return static_cast<node_pointer>(n->next_);
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Data access
@@ -176,16 +178,16 @@ namespace boost { namespace unordered { namespace detail {
             return get_bucket(bucket_index)->next_;
         }
 
-        iterator begin() const
+        node_pointer begin() const
         {
-            return size_ ? iterator(get_previous_start()->next_) : iterator();
+            return size_ ? next_node(get_previous_start()) : node_pointer();
         }
 
-        iterator begin(std::size_t bucket_index) const
+        node_pointer begin(std::size_t bucket_index) const
         {
-            if (!size_) return iterator();
+            if (!size_) return node_pointer();
             link_pointer prev = get_previous_start(bucket_index);
-            return prev ? iterator(prev->next_) : iterator();
+            return prev ? next_node(prev) : node_pointer();
         }
         
         std::size_t hash_to_bucket(std::size_t hash_value) const
@@ -202,14 +204,14 @@ namespace boost { namespace unordered { namespace detail {
 
         std::size_t bucket_size(std::size_t index) const
         {
-            iterator it = begin(index);
-            if (!it.node_) return 0;
+            node_pointer n = begin(index);
+            if (!n) return 0;
 
             std::size_t count = 0;
-            while(it.node_ && hash_to_bucket(it.node_->hash_) == index)
+            while(n && hash_to_bucket(n->hash_) == index)
             {
                 ++count;
-                ++it;
+                n = next_node(n);
             }
 
             return count;
@@ -462,7 +464,7 @@ namespace boost { namespace unordered { namespace detail {
             node_pointer n = static_cast<node_pointer>(prev->next_);
             prev->next_ = n->next_;
 
-            boost::unordered::detail::func::destroy_value_impl(node_alloc(),
+            boost::unordered::detail::func::call_destroy(node_alloc(),
                 n->value_ptr());
             boost::unordered::detail::func::destroy(boost::addressof(*n));
             node_allocator_traits::deallocate(node_alloc(), n, 1);
@@ -584,11 +586,13 @@ namespace boost { namespace unordered { namespace detail {
         {
             // Strong exception safety.
             set_hash_functions new_func_this(*this, x);
-            new_func_this.commit();
             mlf_ = x.mlf_;
             recalculate_max_load();
 
-            if (!size_ && !x.size_) return;
+            if (!size_ && !x.size_) {
+                new_func_this.commit();
+                return;
+            }
 
             if (x.size_ >= max_load_) {
                 create_buckets(min_buckets_for_size(x.size_));
@@ -597,6 +601,7 @@ namespace boost { namespace unordered { namespace detail {
                 clear_buckets();
             }
 
+            new_func_this.commit();
             static_cast<table_impl*>(this)->assign_buckets(x);
         }
 
@@ -663,11 +668,13 @@ namespace boost { namespace unordered { namespace detail {
             }
             else {
                 set_hash_functions new_func_this(*this, x);
-                new_func_this.commit();
                 mlf_ = x.mlf_;
                 recalculate_max_load();
 
-                if (!size_ && !x.size_) return;
+                if (!size_ && !x.size_) {
+                    new_func_this.commit();
+                    return;
+                }
 
                 if (x.size_ >= max_load_) {
                     create_buckets(min_buckets_for_size(x.size_));
@@ -676,6 +683,7 @@ namespace boost { namespace unordered { namespace detail {
                     clear_buckets();
                 }
 
+                new_func_this.commit();
                 static_cast<table_impl*>(this)->move_assign_buckets(x);
             }
         }
@@ -695,7 +703,7 @@ namespace boost { namespace unordered { namespace detail {
         // Find Node
 
         template <typename Key, typename Hash, typename Pred>
-        iterator generic_find_node(
+        node_pointer generic_find_node(
                 Key const& k,
                 Hash const& hf,
                 Pred const& eq) const
@@ -704,7 +712,7 @@ namespace boost { namespace unordered { namespace detail {
                 find_node_impl(policy::apply_hash(hf, k), k, eq);
         }
 
-        iterator find_node(
+        node_pointer find_node(
                 std::size_t key_hash,
                 key_type const& k) const
         {
@@ -712,21 +720,10 @@ namespace boost { namespace unordered { namespace detail {
                 find_node_impl(key_hash, k, this->key_eq());
         }
 
-        iterator find_node(key_type const& k) const
+        node_pointer find_node(key_type const& k) const
         {
             return static_cast<table_impl const*>(this)->
                 find_node_impl(hash(k), k, this->key_eq());
-        }
-
-        iterator find_matching_node(iterator n) const
-        {
-            // TODO: Does this apply to C++11?
-            //
-            // For some stupid reason, I decided to support equality comparison
-            // when different hash functions are used. So I can't use the hash
-            // value from the node here.
-    
-            return find_node(get_key(*n));
         }
 
         // Reserve and rehash

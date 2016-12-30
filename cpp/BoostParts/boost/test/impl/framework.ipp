@@ -844,145 +844,161 @@ setup_loggers()
 
     BOOST_TEST_I_TRY {
 
-
-
 #ifdef BOOST_TEST_SUPPORT_TOKEN_ITERATOR
-    bool has_combined_logger = runtime_config::has( runtime_config::COMBINED_LOGGER )
-        && !runtime_config::get< std::vector<std::string> >( runtime_config::COMBINED_LOGGER ).empty();
+        bool has_combined_logger = runtime_config::has( runtime_config::COMBINED_LOGGER )
+            && !runtime_config::get< std::vector<std::string> >( runtime_config::COMBINED_LOGGER ).empty();
 #else
-    bool has_combined_logger = false;
+        bool has_combined_logger = false;
 #endif
 
-    if( !has_combined_logger ) {
-        unit_test_log.set_threshold_level( runtime_config::get<log_level>( runtime_config::LOG_LEVEL ) );
-        const output_format format = runtime_config::get<output_format>( runtime_config::LOG_FORMAT );
-        unit_test_log.set_format( format );
+        if( !has_combined_logger ) {
+            unit_test_log.set_threshold_level( runtime_config::get<log_level>( runtime_config::LOG_LEVEL ) );
+            const output_format format = runtime_config::get<output_format>( runtime_config::LOG_FORMAT );
+            unit_test_log.set_format( format );
 
-        runtime_config::stream_holder& stream_logger = s_frk_state().m_log_sinks[format];
-        if( runtime_config::has( runtime_config::LOG_SINK ) )
-            stream_logger.setup( runtime_config::get<const_string>( runtime_config::LOG_SINK ) );
-        unit_test_log.set_stream( stream_logger.ref() );
-    }
-    else
-    {
-
-        const std::vector<std::string>& v_output_format = runtime_config::get< std::vector<std::string> >( runtime_config::COMBINED_LOGGER ) ;
-
-        static const std::pair<const char*, log_level> all_log_levels[] = {
-            std::make_pair( "all"           , log_successful_tests ),
-            std::make_pair( "success"       , log_successful_tests ),
-            std::make_pair( "test_suite"    , log_test_units ),
-            std::make_pair( "unit_scope"    , log_test_units ),
-            std::make_pair( "message"       , log_messages ),
-            std::make_pair( "warning"       , log_warnings ),
-            std::make_pair( "error"         , log_all_errors ),
-            std::make_pair( "cpp_exception" , log_cpp_exception_errors ),
-            std::make_pair( "system_error"  , log_system_errors ),
-            std::make_pair( "fatal_error"   , log_fatal_errors ),
-            std::make_pair( "nothing"       , log_nothing )
-        };
-
-        static const std::pair<const char*, output_format> all_formats[] = {
-            std::make_pair( "HRF"  , OF_CLF ),
-            std::make_pair( "CLF"  , OF_CLF ),
-            std::make_pair( "XML"  , OF_XML ),
-            std::make_pair( "JUNIT", OF_JUNIT )
-        };
-
-
-      bool is_first = true;
-
-      BOOST_TEST_FOREACH( const_string, current_multi_config, v_output_format ) {
-
-#ifdef BOOST_TEST_SUPPORT_TOKEN_ITERATOR
-            utils::string_token_iterator current_config( current_multi_config, (utils::dropped_delimeters = ":",
-                                                                                utils::kept_delimeters = utils::dt_none) );
-
-            for( ; current_config != utils::string_token_iterator() ; ++current_config) {
-
-                utils::string_token_iterator current_format_specs( *current_config, (utils::keep_empty_tokens,
-                                                                                     utils::dropped_delimeters = ",",
-                                                                                     utils::kept_delimeters = utils::dt_none) );
-
-                output_format format = OF_INVALID ; // default
-                if( current_format_specs != utils::string_token_iterator() &&
-                    current_format_specs->size() ) {
-
-                    for(size_t elem=0; elem < sizeof(all_formats)/sizeof(all_formats[0]); elem++) {
-                        if(const_string(all_formats[elem].first) == *current_format_specs) {
-                            format = all_formats[elem].second;
-                            break;
-                        }
-                    }
-                }
-
-                BOOST_TEST_I_ASSRT( format != OF_INVALID,
-                                    boost::runtime::access_to_missing_argument()
-                                        << "Unable to determine the logger type from '"
-                                        << *current_config
-                                        << "'. Possible choices are: "
-                                        << std::accumulate(all_formats,
-                                                           all_formats + sizeof(all_formats)/sizeof(all_formats[0]),
-                                                           std::string(""),
-                                                           sum_to_first_only())
-                                  );
-
-                // activates this format
-                if( is_first ) {
-                    unit_test_log.set_format( format );
-                }
-                else {
-                    unit_test_log.add_format( format );
-                }
-                is_first = false;
-
-                unit_test_log_formatter * const formatter = unit_test_log.get_formatter(format);
-                BOOST_TEST_SETUP_ASSERT( formatter, "Logger setup error" );
-
-                log_level formatter_log_level = invalid_log_level;
-                if( !current_format_specs->size() ) {
-                    formatter_log_level = formatter->get_log_level(); // default log level given by the formatter
-                }
-                else if( ++current_format_specs != utils::string_token_iterator() ) {
-
-                    for(size_t elem=0; elem < sizeof(all_log_levels)/sizeof(all_log_levels[0]); elem++) {
-                        if(const_string(all_log_levels[elem].first) == *current_format_specs) {
-                            formatter_log_level = all_log_levels[elem].second;
-                            break;
-                        }
-                    }
-                }
-
-
-                BOOST_TEST_I_ASSRT( formatter_log_level != invalid_log_level,
-                                    boost::runtime::access_to_missing_argument()
-                                        << "Unable to determine the log level from '"
-                                        << *current_config
-                                        << "'. Possible choices are: "
-                                        << std::accumulate(all_log_levels,
-                                                           all_log_levels + sizeof(all_log_levels)/sizeof(all_log_levels[0]),
-                                                           std::string(""),
-                                                           sum_to_first_only())
-                                   );
-
-                unit_test_log.set_threshold_level( format, formatter_log_level );
-
-                runtime_config::stream_holder& stream_logger = s_frk_state().m_log_sinks[format];
-                if( ++current_format_specs != utils::string_token_iterator() &&
-                    current_format_specs->size() ) {
-                    stream_logger.setup( *current_format_specs );
-                }
-                else {
-                    stream_logger.setup( formatter->get_default_stream_description() );
-                }
-                unit_test_log.set_stream( format, stream_logger.ref() );
-
+            runtime_config::stream_holder& stream_logger = s_frk_state().m_log_sinks[format];
+            if( runtime_config::has( runtime_config::LOG_SINK ) )
+                stream_logger.setup( runtime_config::get<std::string>( runtime_config::LOG_SINK ) );
+            unit_test_log.set_stream( stream_logger.ref() );
         }
-#endif
-      }
+        else
+        {
 
-    }
-    }
+            const std::vector<std::string>& v_output_format = runtime_config::get< std::vector<std::string> >( runtime_config::COMBINED_LOGGER ) ;
+
+            static const std::pair<const char*, log_level> all_log_levels[] = {
+                std::make_pair( "all"           , log_successful_tests ),
+                std::make_pair( "success"       , log_successful_tests ),
+                std::make_pair( "test_suite"    , log_test_units ),
+                std::make_pair( "unit_scope"    , log_test_units ),
+                std::make_pair( "message"       , log_messages ),
+                std::make_pair( "warning"       , log_warnings ),
+                std::make_pair( "error"         , log_all_errors ),
+                std::make_pair( "cpp_exception" , log_cpp_exception_errors ),
+                std::make_pair( "system_error"  , log_system_errors ),
+                std::make_pair( "fatal_error"   , log_fatal_errors ),
+                std::make_pair( "nothing"       , log_nothing )
+            };
+
+            static const std::pair<const char*, output_format> all_formats[] = {
+                std::make_pair( "HRF"  , OF_CLF ),
+                std::make_pair( "CLF"  , OF_CLF ),
+                std::make_pair( "XML"  , OF_XML ),
+                std::make_pair( "JUNIT", OF_JUNIT )
+            };
+
+
+            bool is_first = true;
+
+            BOOST_TEST_FOREACH( const_string, current_multi_config, v_output_format ) {
+
+    #ifdef BOOST_TEST_SUPPORT_TOKEN_ITERATOR
+
+                // ':' may be used for file names: C:/tmp/mylogsink.xml
+                // we merge the tokens that start with / or \ with the previous one.
+                std::vector<std::string> v_processed_tokens;
+
+                {
+                    utils::string_token_iterator current_config( current_multi_config, (utils::dropped_delimeters = ":",
+                                                                                        utils::kept_delimeters = utils::dt_none) );
+
+                    for( ; current_config != utils::string_token_iterator() ; ++current_config) {
+                        std::string str_copy(current_config->begin(), current_config->end());
+                        if( ( str_copy[0] == '\\' || str_copy[0] == '/' )
+                            && v_processed_tokens.size() > 0) {
+                            v_processed_tokens.back() += ":" + str_copy; // ':' has been eaten up
+                        }
+                        else {
+                            v_processed_tokens.push_back(str_copy);
+                        }
+                    }
+                }
+
+                BOOST_TEST_FOREACH( std::string const&, current_config, v_processed_tokens ) {
+
+                    utils::string_token_iterator current_format_specs( current_config, (utils::keep_empty_tokens,
+                                                                                        utils::dropped_delimeters = ",",
+                                                                                        utils::kept_delimeters = utils::dt_none) );
+
+                    output_format format = OF_INVALID ; // default
+                    if( current_format_specs != utils::string_token_iterator() &&
+                        current_format_specs->size() ) {
+
+                        for(size_t elem=0; elem < sizeof(all_formats)/sizeof(all_formats[0]); elem++) {
+                            if(const_string(all_formats[elem].first) == *current_format_specs) {
+                                format = all_formats[elem].second;
+                                break;
+                            }
+                        }
+                    }
+
+                    BOOST_TEST_I_ASSRT( format != OF_INVALID,
+                                        boost::runtime::access_to_missing_argument()
+                                            << "Unable to determine the logger type from '"
+                                            << current_config
+                                            << "'. Possible choices are: "
+                                            << std::accumulate(all_formats,
+                                                               all_formats + sizeof(all_formats)/sizeof(all_formats[0]),
+                                                               std::string(""),
+                                                               sum_to_first_only())
+                                      );
+
+                    // activates this format
+                    if( is_first ) {
+                        unit_test_log.set_format( format );
+                    }
+                    else {
+                        unit_test_log.add_format( format );
+                    }
+                    is_first = false;
+
+                    unit_test_log_formatter * const formatter = unit_test_log.get_formatter(format);
+                    BOOST_TEST_SETUP_ASSERT( formatter, "Logger setup error" );
+
+                    log_level formatter_log_level = invalid_log_level;
+                    ++current_format_specs ;
+                    if( !current_format_specs->size() ) {
+                        formatter_log_level = formatter->get_log_level(); // default log level given by the formatter
+                    }
+                    else if( current_format_specs != utils::string_token_iterator() ) {
+
+                        for(size_t elem=0; elem < sizeof(all_log_levels)/sizeof(all_log_levels[0]); elem++) {
+                            if(const_string(all_log_levels[elem].first) == *current_format_specs) {
+                                formatter_log_level = all_log_levels[elem].second;
+                                break;
+                            }
+                        }
+                    }
+
+
+                    BOOST_TEST_I_ASSRT( formatter_log_level != invalid_log_level,
+                                        boost::runtime::access_to_missing_argument()
+                                            << "Unable to determine the log level from '"
+                                            << current_config
+                                            << "'. Possible choices are: "
+                                            << std::accumulate(all_log_levels,
+                                                               all_log_levels + sizeof(all_log_levels)/sizeof(all_log_levels[0]),
+                                                               std::string(""),
+                                                               sum_to_first_only())
+                                       );
+
+                    unit_test_log.set_threshold_level( format, formatter_log_level );
+
+                    runtime_config::stream_holder& stream_logger = s_frk_state().m_log_sinks[format];
+                    if( ++current_format_specs != utils::string_token_iterator() &&
+                        current_format_specs->size() ) {
+                        stream_logger.setup( *current_format_specs );
+                    }
+                    else {
+                        stream_logger.setup( formatter->get_default_stream_description() );
+                    }
+                    unit_test_log.set_stream( format, stream_logger.ref() );
+                }
+    #endif
+            } // for each logger
+
+        } // if/else new logger API
+    } // BOOST_TEST_I_TRY
     BOOST_TEST_I_CATCH( boost::runtime::init_error, ex ) {
         BOOST_TEST_SETUP_ASSERT( false, ex.msg );
     }
@@ -1021,7 +1037,7 @@ init( init_unit_test_func init_func, int argc, char* argv[] )
     results_reporter::set_format( runtime_config::get<output_format>( runtime_config::REPORT_FORMAT ) );
 
     if( runtime_config::has( runtime_config::REPORT_SINK ) )
-        s_frk_state().m_report_sink.setup( runtime_config::get<const_string>( runtime_config::REPORT_SINK ) );
+        s_frk_state().m_report_sink.setup( runtime_config::get<std::string>( runtime_config::REPORT_SINK ) );
     results_reporter::set_stream( s_frk_state().m_report_sink.ref() );
 
     // 40. Register default test observers

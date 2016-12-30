@@ -61,7 +61,7 @@ typedef parameter::parameters<boost::parameter::optional<tag::allocator>,
  *
  *  - \ref boost::lockfree::capacity, optional \n
  *    If this template argument is passed to the options, the size of the queue is set at compile-time.\n
- *    It this option implies \c fixed_sized<true>
+ *    This option implies \c fixed_sized<true>
  *
  *  - \ref boost::lockfree::allocator, defaults to \c boost::lockfree::allocator<std::allocator<void>> \n
  *    Specifies the allocator that is used for the internal freelist

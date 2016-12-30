@@ -66,7 +66,8 @@ namespace container {
    };
 
    template <int Dummy>
-   ::std::piecewise_construct_t *std_piecewise_construct_holder<Dummy>::dummy;
+   ::std::piecewise_construct_t *std_piecewise_construct_holder<Dummy>::dummy =
+      reinterpret_cast< ::std::piecewise_construct_t *>(0x01234);  //Avoid sanitizer errors on references to null pointers
 
 typedef const std::piecewise_construct_t & piecewise_construct_t;
 
@@ -84,7 +85,16 @@ typedef unspecified piecewise_construct_t;
 //! piecewise_construct_t
 static piecewise_construct_t piecewise_construct = BOOST_CONTAINER_DOC1ST(unspecified, *std_piecewise_construct_holder<>::dummy);
 
+///@cond
+
 namespace container_detail {
+
+struct piecewise_construct_use
+{
+   //Avoid warnings of unused "piecewise_construct"
+   piecewise_construct_use()
+   {  (void)&::boost::container::piecewise_construct;   }
+};
 
 template <class T1, class T2>
 struct pair;
@@ -129,6 +139,8 @@ struct pair_nat;
 
 template<typename T, typename U, typename V>
 void get(T); //to enable ADL
+
+///@endcond
 
 template <class T1, class T2>
 struct pair
@@ -415,36 +427,6 @@ inline void swap(pair<T1, T2>& x, pair<T1, T2>& y)
 
 }  //namespace container_detail {
 }  //namespace container {
-
-
-//Without this specialization recursive flat_(multi)map instantiation fails
-//because is_enum needs to instantiate the recursive pair, leading to a compilation error).
-//This breaks the cycle clearly stating that pair is not an enum avoiding any instantiation.
-template<class T>
-struct is_enum;
-
-template<class T, class U>
-struct is_enum< ::boost::container::container_detail::pair<T, U> >
-{
-   static const bool value = false;
-};
-
-template<class T, class U>
-struct is_enum< ::std::pair<T, U> >
-{
-   static const bool value = false;
-};
-
-template <class T>
-struct is_class;
-
-//This specialization is needed to avoid instantiation of pair in
-//is_class, and allow recursive maps.
-template <class T1, class T2>
-struct is_class< ::boost::container::container_detail::pair<T1, T2> >
-{
-   static const bool value = true;
-};
 
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
 

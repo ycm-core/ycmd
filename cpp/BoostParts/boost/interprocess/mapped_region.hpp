@@ -621,7 +621,10 @@ inline mapped_region::mapped_region
          throw interprocess_exception(err);
       }
       //Attach memory
-      void *base = ::shmat(map_hnd.handle, (void*)address, flag);
+      //Some old shmat implementation take the address as a non-const void pointer
+      //so uncast it to make code portable.
+      void *const final_address = const_cast<void *>(address);
+      void *base = ::shmat(map_hnd.handle, final_address, flag);
       if(base == (void*)-1){
          error_info err(system_error_code());
          throw interprocess_exception(err);

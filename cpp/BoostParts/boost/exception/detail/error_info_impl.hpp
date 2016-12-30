@@ -43,7 +43,7 @@ boost
     error_info:
         public exception_detail::error_info_base
         {
-		public:
+        public:
 
         typedef T value_type;
 
@@ -67,7 +67,7 @@ boost
             return value_;
             }
 
-		private:
+        private:
         error_info & operator=( error_info const & );
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         error_info & operator=( error_info && x );

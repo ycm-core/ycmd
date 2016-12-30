@@ -31,6 +31,15 @@ namespace boost { namespace unordered { namespace detail {
             extractor;
 
         typedef typename boost::unordered::detail::pick_policy<K>::type policy;
+
+        typedef boost::unordered::iterator_detail::
+            iterator<node> iterator;
+        typedef boost::unordered::iterator_detail::
+            c_iterator<node> c_iterator;
+        typedef boost::unordered::iterator_detail::
+            l_iterator<node, policy> l_iterator;
+        typedef boost::unordered::iterator_detail::
+            cl_iterator<node, policy> cl_iterator;
     };
 
     template <typename A, typename K, typename M, typename H, typename P>
@@ -56,6 +65,15 @@ namespace boost { namespace unordered { namespace detail {
             extractor;
 
         typedef typename boost::unordered::detail::pick_policy<K>::type policy;
+
+        typedef boost::unordered::iterator_detail::
+            iterator<node> iterator;
+        typedef boost::unordered::iterator_detail::
+            c_iterator<node> c_iterator;
+        typedef boost::unordered::iterator_detail::
+            l_iterator<node, policy> l_iterator;
+        typedef boost::unordered::iterator_detail::
+            cl_iterator<node, policy> cl_iterator;
     };
 
 }}}

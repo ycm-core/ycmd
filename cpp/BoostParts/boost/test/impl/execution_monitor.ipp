@@ -6,19 +6,16 @@
 
 //  See http://www.boost.org/libs/test for the library home page.
 //
-//  File        : $RCSfile$
-//
-//  Version     : $Revision$
-//
-//  Description : provides execution monitor implementation for all supported
-//  configurations, including Microsoft structured exception based, unix signals
-//  based and special workarounds for borland
-//
-//  Note that when testing requirements or user wishes preclude use of this
-//  file as a separate compilation unit, it may be included as a header file.
-//
-//  Header dependencies are deliberately restricted to reduce coupling to other
-//  boost libraries.
+///  @file
+///  Provides execution monitor implementation for all supported
+///  configurations, including Microsoft structured exception based, unix signals
+///  based and special workarounds for borland
+///
+///  Note that when testing requirements or user wishes preclude use of this
+///  file as a separate compilation unit, it may be included as a header file.
+///
+///  Header dependencies are deliberately restricted to reduce coupling to other
+///  boost libraries.
 // ***************************************************************************
 
 #ifndef BOOST_TEST_EXECUTION_MONITOR_IPP_012205GER
@@ -291,20 +288,20 @@ struct fpe_except_guard {
     : m_detect_fpe( detect_fpe )
     {
         // prepare fp exceptions control
-        m_previosly_enabled = fpe::disable( fpe::BOOST_FPE_ALL );
-        if( m_previosly_enabled != fpe::BOOST_FPE_INV && detect_fpe != fpe::BOOST_FPE_OFF )
+        m_previously_enabled = fpe::disable( fpe::BOOST_FPE_ALL );
+        if( m_previously_enabled != fpe::BOOST_FPE_INV && detect_fpe != fpe::BOOST_FPE_OFF )
             fpe::enable( detect_fpe );
     }
     ~fpe_except_guard()
     {
         if( m_detect_fpe != fpe::BOOST_FPE_OFF )
             fpe::disable( m_detect_fpe );
-        if( m_previosly_enabled != fpe::BOOST_FPE_INV )
-            fpe::enable( m_previosly_enabled );
+        if( m_previously_enabled != fpe::BOOST_FPE_INV )
+            fpe::enable( m_previously_enabled );
     }
 
     unsigned m_detect_fpe;
-    unsigned m_previosly_enabled;
+    unsigned m_previously_enabled;
 };
 
 
@@ -1360,7 +1357,7 @@ enable( unsigned mask )
 
 #if defined(UNDER_CE)
     /* Not Implemented in Windows CE */
-    return 0;
+    return BOOST_FPE_OFF;
 #elif defined(BOOST_SEH_BASED_SIGNAL_HANDLING)
     _clearfp();
 
@@ -1378,13 +1375,16 @@ enable( unsigned mask )
 #endif
 
     return ~old_cw & BOOST_FPE_ALL;
-#elif defined(__GLIBC__) && defined(__USE_GNU) && !defined(BOOST_CLANG) && !defined(BOOST_NO_FENV_H)
+#elif defined(__GLIBC__) && defined(__USE_GNU)
+    if (BOOST_FPE_ALL == BOOST_FPE_OFF)
+        /* Not Implemented */
+        return BOOST_FPE_OFF;
     feclearexcept(BOOST_FPE_ALL);
     int res = feenableexcept( mask );
     return res == -1 ? (unsigned)BOOST_FPE_INV : (unsigned)res;
 #else
     /* Not Implemented  */
-    return 0;
+    return BOOST_FPE_OFF;
 #endif
 }
 
@@ -1397,7 +1397,7 @@ disable( unsigned mask )
 
 #if defined(UNDER_CE)
     /* Not Implemented in Windows CE */
-    return 0;
+    return BOOST_FPE_INV;
 #elif defined(BOOST_SEH_BASED_SIGNAL_HANDLING)
     _clearfp();
 
@@ -1415,7 +1415,10 @@ disable( unsigned mask )
 #endif
 
     return ~old_cw & BOOST_FPE_ALL;
-#elif defined(__GLIBC__) && defined(__USE_GNU) && !defined(BOOST_CLANG) && !defined(BOOST_NO_FENV_H)
+#elif defined(__GLIBC__) && defined(__USE_GNU)
+    if (BOOST_FPE_ALL == BOOST_FPE_OFF)
+        /* Not Implemented */
+        return BOOST_FPE_INV;
     feclearexcept(BOOST_FPE_ALL);
     int res = fedisableexcept( mask );
     return res == -1 ? (unsigned)BOOST_FPE_INV : (unsigned)res;

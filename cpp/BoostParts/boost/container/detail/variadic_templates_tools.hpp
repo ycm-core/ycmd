@@ -136,21 +136,25 @@ typename get_impl<I, tuple<Values...> >::const_type get(const tuple<Values...>& 
 // in a function call.
 ////////////////////////////////////////////////////
 
-template<std::size_t ... Indexes>
-struct index_tuple{};
+template<std::size_t...> struct index_tuple{ typedef index_tuple type; };
 
-template<std::size_t Num, typename Tuple = index_tuple<> >
-struct build_number_seq;
+template<class S1, class S2> struct concat_index_tuple;
 
-template<std::size_t Num, std::size_t ... Indexes>
-struct build_number_seq<Num, index_tuple<Indexes...> >
-   : build_number_seq<Num - 1, index_tuple<Indexes..., sizeof...(Indexes)> >
+template<std::size_t... I1, std::size_t... I2>
+struct concat_index_tuple<index_tuple<I1...>, index_tuple<I2...>>
+  : index_tuple<I1..., (sizeof...(I1)+I2)...>{};
+
+template<std::size_t N> struct build_number_seq;
+
+template<std::size_t N> 
+struct build_number_seq
+   : concat_index_tuple<typename build_number_seq<N/2>::type
+                       ,typename build_number_seq<N - N/2 >::type
+   >::type
 {};
 
-template<std::size_t ... Indexes>
-struct build_number_seq<0, index_tuple<Indexes...> >
-{  typedef index_tuple<Indexes...> type;  };
-
+template<> struct build_number_seq<0> : index_tuple<>{};
+template<> struct build_number_seq<1> : index_tuple<0>{};
 
 }}}   //namespace boost { namespace container { namespace container_detail {
 

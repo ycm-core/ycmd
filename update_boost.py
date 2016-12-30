@@ -67,7 +67,10 @@ BOOST_LIBS_FOLDERS_TO_REMOVE = [
   'doc',
   'test',
   'examples',
-  'build'
+  'build',
+  # Numpy support was added in Boost 1.63.0. We remove its folder since it
+  # breaks the build and we don't need it.
+  'numpy'
 ]
 BOOST_LIBS_FILES_TO_REMOVE = [
   # Extracted with Boost 1.61.0 and breaks the build on Windows.

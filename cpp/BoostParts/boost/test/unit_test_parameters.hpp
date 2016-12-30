@@ -17,7 +17,7 @@
 // Boost.Test
 #include <boost/test/detail/global_typedef.hpp>
 #include <boost/test/utils/runtime/argument.hpp>
-#include	<boost/make_shared.hpp>
+#include <boost/make_shared.hpp>
 
 // STL
 #include <iostream>
