@@ -137,6 +137,10 @@ def FindCompilationDatabase( wd ):
     # Did we already cache a database for this path?
     if folder in compilation_database_dir_map:
       # Yep. Return that.
+      _logger.debug( 'Using cached result ({2}) in {0} for {1}'.format(
+        folder,
+        wd,
+        'database' if compilation_database_dir_map[ folder ] else 'None' ) )
       return compilation_database_dir_map[ folder ]
 
     # Guess not. Let's see if a compile_commands.json file already exists...
@@ -144,6 +148,9 @@ def FindCompilationDatabase( wd ):
     if os.path.exists( compile_commands ):
       # Yes, it exists. Create a database and cache it in our map.
       database = ycm_core.CompilationDatabase( folder )
+      _logger.debug( 'Found compilation database {0} for wd {1}'.format(
+          compile_commands,
+          wd ) )
       compilation_database_dir_map[ folder ] = database
       return database
 
@@ -225,9 +232,9 @@ EMPTY_FLAGS = {
 
 # }}}
 
-
 # Entry point {{{
-#
+
+
 # ycmd calls this method to get the compile flags for a given file. It returns a
 # dictionary with 2 keys: 'flags' and 'do_cache', or None if no flags can be
 # found.
