@@ -23,12 +23,20 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import os
+import tempfile
+import contextlib
+import json
+import shutil
+
 from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
 from mock import patch, Mock
 from ycmd.tests.test_utils import MacOnly
+from ycmd.responses import NoExtraConfDetected
+from ycmd.utils import ToUnicode
 
-from hamcrest import assert_that, contains
+from hamcrest import assert_that, calling, contains, raises, none
 
 
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
@@ -356,3 +364,151 @@ def Mac_PathsForAllMacToolchains_test():
        [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
          'XcodeDefault.xctoolchain/test',
          '/Library/Developer/CommandLineTools/test' ] )
+
+
+@contextlib.contextmanager
+def TemporaryProjectDir():
+  tmp_dir = tempfile.mkdtemp()
+  try:
+    yield tmp_dir
+  finally:
+    shutil.rmtree( tmp_dir )
+
+
+@contextlib.contextmanager
+def TemporaryProject( tmp_dir, compile_commands ):
+  path = os.path.join( tmp_dir, 'compile_commands.json' )
+
+  with open( path, 'w' ) as f:
+    f.write( ToUnicode( json.dumps( compile_commands, indent=2 ) ) )
+
+  try:
+    yield
+  finally:
+    os.unlink( path )
+
+
+def DefaultExtraConf_NoDatabase_test():
+  with TemporaryProjectDir() as tmp_dir:
+    assert_that(
+      calling( flags.Flags().FlagsForFile ).with_args(
+        os.path.join( tmp_dir, 'test.cc' ) ),
+      raises( NoExtraConfDetected ) )
+
+
+def DefaultExtraConf_FileNotInDatabase_test():
+  compile_commands = [ ]
+  with TemporaryProjectDir() as tmp_dir:
+    with TemporaryProject( tmp_dir, compile_commands ):
+      assert_that(
+        flags.Flags().FlagsForFile( os.path.join( tmp_dir, 'test.cc' ) ),
+        none() )
+
+
+def DefaultExtraConf_InvalidDatabase_test():
+  with TemporaryProjectDir() as tmp_dir:
+    with TemporaryProject( tmp_dir, 'this is junk' ):
+      assert_that(
+        calling( flags.Flags().FlagsForFile ).with_args(
+          os.path.join( tmp_dir, 'test.cc' ) ),
+        raises( NoExtraConfDetected ) )
+
+
+def DefaultExtraConf_UseFlagsFromDatabase_test():
+  with TemporaryProjectDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I. -I/abosolute/path -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+    with TemporaryProject( tmp_dir, compile_commands ):
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.cc' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  # Relative path made absolute
+                  '-I' + os.path.join( os.path.abspath( tmp_dir ), '.' ),
+                  '-I/abosolute/path',
+                  '-Wall' ) )
+
+
+def DefaultExtraConf_UseFlagsFromSameDir_test():
+  with TemporaryProjectDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I. -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+
+    with TemporaryProject( tmp_dir, compile_commands ):
+      # If we now ask for a file _not_ in the DB, we get none()
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test1.cc' ),
+          add_extra_clang_flags = False ),
+        none() )
+
+      # Then, we ask for a file that _is_ in the db. It will cache these flags
+      # against the files' directory.
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.cc' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  # Relative path made absolute
+                  '-I' + os.path.join( os.path.abspath( tmp_dir ), '.' ),
+                  '-Wall' ) )
+
+      # If we now ask for a file _not_ in the DB, but in the same dir, we should
+      # get the same flags
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test2.cc' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  # Relative path made absolute
+                  '-I' + os.path.join( os.path.abspath( tmp_dir ), '.' ),
+                  '-Wall' ) )
+
+
+def DefaultExtraConf_HeaderFileHeuristic_test():
+  with TemporaryProjectDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I. -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+
+    with TemporaryProject( tmp_dir, compile_commands ):
+      # If we ask for a header file, it returns the equivalent cc file
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.h' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  # Relative path made absolute
+                  '-I' + os.path.join( os.path.abspath( tmp_dir ), '.' ),
+                  '-Wall' ) )

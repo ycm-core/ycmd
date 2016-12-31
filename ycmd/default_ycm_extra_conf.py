@@ -101,8 +101,8 @@ SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 
 # List of compiler flags which are considered to be path flags and thus
 # requiring modification to ensure they are correctly relative to the compiler
-# directory
-PATH_FLAGS = [ '-isystem', '-I', '-iquote', '--sysroot=' ]
+# directory.
+PATH_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--isysroot=' ]
 
 # }}}
 
@@ -177,13 +177,10 @@ def GetCompilationInfoForFile( database, file_name, file_extension ):
     # It's a header file
     for extension in SOURCE_EXTENSIONS:
       replacement_file = os.path.splitext( file_name )[ 0 ] + extension
-      if os.path.exists( replacement_file ):
-        # We found a corresponding source file with the same file_root. Try
-        # and get the flags for that file.
-        compilation_info = database.GetCompilationInfoForFile(
-          replacement_file )
-        if compilation_info.compiler_flags_:
-          return compilation_info
+      compilation_info = database.GetCompilationInfoForFile(
+        replacement_file )
+      if compilation_info and compilation_info.compiler_flags_:
+        return compilation_info
 
     # No corresponding source file was found, so we can't generate any flags for
     # this header file.
@@ -207,19 +204,23 @@ def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
 
     if make_next_absolute:
       make_next_absolute = False
-      if not flag.startswith( '/' ):
-        # TODO/FIXME: Is this startswith here correct on Windows?
-        new_flag = os.path.join( working_directory, flag )
+      # os.path.join returns its last argument if it is already absolute
+      new_flag = os.path.abspath( os.path.join( working_directory, flag ) )
+    else:
+      for path_flag in PATH_FLAGS:
+        # Single dash argument alone, e.g. -isysroot <path>
+        if flag == path_flag:
+          make_next_absolute = True
+          break
 
-    for path_flag in PATH_FLAGS:
-      if flag == path_flag:
-        make_next_absolute = True
-        break
-
-      if flag.startswith( path_flag ):
-        path = flag[ len( path_flag ): ]
-        new_flag = path_flag + os.path.join( working_directory, path )
-        break
+        # Single dash argument with inbuilt path, e.g. -isysroot<path>
+        # or double-dash argument, e.g. --isysroot=<path>
+        if flag.startswith( path_flag ):
+          path = flag[ len( path_flag ): ]
+          # os.path.join returns its last argument if it is already absolute
+          new_flag = '{0}{1}'.format( path_flag,
+                                      os.path.join( working_directory, path ) )
+          break
 
     if new_flag:
       new_flags.append( new_flag )
@@ -263,13 +264,14 @@ def FlagsForFile( file_name, **kwargs ):
       # We previously saw a file in this directory. As a guess, just
       # return the flags for that file. Hopefully this will at least give some
       # meaningful compilation
-      _logger.debug( 'FlagsForFile( {0} ): Using flags for directory: {1}'.format(
-        file_name,
-        file_dir ) )
+      _logger.debug(
+        'FlagsForFile( {0} ): Using flags for directory: {1}'.format(
+          file_name,
+          file_dir ) )
       compilation_info = file_directory_heuristic_map[ file_dir ]
     else:
-      # No cache for this directory and we really can't conjure
-      # up any flags from the database.
+      # No cache for this directory and there are no flags for this file in the
+      # database.
       _logger.debug( 'FlagsForFile( {0} ): No flags in database'.format(
         file_name ) )
       return EMPTY_FLAGS

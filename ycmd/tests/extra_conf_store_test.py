@@ -32,6 +32,13 @@ from ycmd import extra_conf_store
 from ycmd.responses import UnknownExtraConf
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import UserOption
+
+# NOTE: We must not import default_ycm_extra_conf directly;  we
+# don't want Python to generate a .pyc or __pycache__ entry for it.
+#
+# This is because the extra_conf_store turns off such generation and its tests
+# require that the filename of the loaded module is the py file not any
+# associated pyc file.
 from ycmd.extra_conf_store import YCMD_DEFAULT_EXTRA_CONF_PATH
 
 
