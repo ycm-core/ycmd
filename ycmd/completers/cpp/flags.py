@@ -95,12 +95,14 @@ class Flags( object ):
         filename,
         client_data )
     except NoExtraConfDetected:
-      # We actually only raise this exception once globally, to avoid spamming
-      # the user on every request.
-      #
-      # However, (FIXME?), we should probably raise this for each new file (or
-      # directory?) visited.
-      if always_raise or not self.no_extra_conf_file_warning_posted:
+      if always_raise:
+        raise NoExtraConfDetected
+      elif not self.no_extra_conf_file_warning_posted:
+        # We actually only raise this exception once globally, to avoid spamming
+        # the user on every request.
+        #
+        # However, (FIXME?), we should probably raise this for each new file (or
+        # directory?) visited.
         self.no_extra_conf_file_warning_posted = True
         raise NoExtraConfDetected
       return None
