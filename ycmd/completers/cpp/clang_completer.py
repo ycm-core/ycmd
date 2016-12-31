@@ -34,7 +34,8 @@ from ycmd import extra_conf_store
 from ycmd.utils import ToCppStringCompatible, ToUnicode
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetIncludeStatementValue
-from ycmd.completers.cpp.flags import Flags, PrepareFlagsForClang
+from ycmd.completers.cpp.flags import ( Flags, PrepareFlagsForClang,
+                                        NoCompilationDatabase )
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
@@ -373,22 +374,49 @@ class ClangCompleter( Completer ):
     filename = request_data[ 'filepath' ]
     try:
       extra_conf = extra_conf_store.ModuleFileForSourceFile( filename )
-      flags = self._FlagsForRequest( request_data ) or []
-    except NoExtraConfDetected:
-      return ( 'C-family completer debug information:\n'
-               '  No configuration file found' )
     except UnknownExtraConf as error:
       return ( 'C-family completer debug information:\n'
                '  Configuration file found but not loaded\n'
                '  Configuration path: {0}'.format(
                  error.extra_conf_file ) )
-    if not extra_conf:
+
+    try:
+      # Note that it only raises NoExtraConfDetected:
+      #  - when extra_conf is None and,
+      #  - there is no compilation database
+      flags = self._FlagsForRequest( request_data )
+    except NoExtraConfDetected:
+      # No flags
       return ( 'C-family completer debug information:\n'
-               '  No configuration file found' )
+               '  No configuration file found\n'
+               '  No compilation database found' )
+
+    # If _FlagsForRequest returns None or raises, we use an empty list in
+    # practice.
+    flags = flags or []
+
+    if extra_conf:
+      # We got the flags from the extra conf file
+      return ( 'C-family completer debug information:\n'
+               '  Configuration file found and loaded\n'
+               '  Configuration path: {0}\n'
+               '  Flags: {1}'.format( extra_conf, list( flags ) ) )
+
+    try:
+      database = self._flags.FindCompilationDatabase(
+          os.path.dirname( filename ) )
+    except NoCompilationDatabase:
+      # No flags
+      return ( 'C-family completer debug information:\n'
+               '  No configuration file found\n'
+               '  No compilation database found' )
+
+    # We got the flags from the compilation database
     return ( 'C-family completer debug information:\n'
-             '  Configuration file found and loaded\n'
-             '  Configuration path: {0}\n'
-             '  Flags: {1}'.format( extra_conf, list( flags ) ) )
+             '  No configuration file found\n'
+             '  Using compilation database from: {0}\n'
+             '  Flags: {1}'.format( database.database_directory,
+                                    list( flags ) ) )
 
 
   def _FlagsForRequest( self, request_data ):
