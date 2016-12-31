@@ -258,20 +258,21 @@ def FlagsForFile( file_name, **kwargs ):
                                                 file_name,
                                                 file_extension )
 
-  if compilation_info is None and file_dir in file_directory_heuristic_map:
-    # We previously saw a file in this directory. As a guess, just
-    # return the flags for that file. Hopefully this will at least give some
-    # meaningful compilation
-    _logger.debug( 'FlagsForFile( {0} ): Using flags for directory: {1}'.format(
-      file_name,
-      file_dir ) )
-    compilation_info = file_directory_heuristic_map[ file_dir ]
-  else:
-    # No cache for this directory and we really can't conjure
-    # up any flags from the database.
-    _logger.debug( 'FlagsForFile( {0} ): No flags in database'.format(
-      file_name ) )
-    return EMPTY_FLAGS
+  if compilation_info is None:
+    if file_dir in file_directory_heuristic_map:
+      # We previously saw a file in this directory. As a guess, just
+      # return the flags for that file. Hopefully this will at least give some
+      # meaningful compilation
+      _logger.debug( 'FlagsForFile( {0} ): Using flags for directory: {1}'.format(
+        file_name,
+        file_dir ) )
+      compilation_info = file_directory_heuristic_map[ file_dir ]
+    else:
+      # No cache for this directory and we really can't conjure
+      # up any flags from the database.
+      _logger.debug( 'FlagsForFile( {0} ): No flags in database'.format(
+        file_name ) )
+      return EMPTY_FLAGS
 
   if file_dir not in file_directory_heuristic_map:
     # This is the first file we've seen in path file_dir. Cache the
