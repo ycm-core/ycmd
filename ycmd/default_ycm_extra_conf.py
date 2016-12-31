@@ -244,16 +244,13 @@ def FlagsForFile( file_name, **kwargs ):
   if database is None:
     _logger.debug( 'FlagsForFile( {0} ): No compilation database found'.format(
       file_name ) )
-    return EMPTY_FLAGS
-  elif database.AlreadyGettingFlags():
-    _logger.debug( 'FlagsForFile( {0} ): Compilation database busy'.format(
-      file_name ) )
-    return EMPTY_FLAGS
+
+    raise NoExtraConfDetected()
   elif not database.DatabaseSuccessfullyLoaded():
     _logger.debug(
       'FlagsForFile( {0} ): Compilation database failed to load'.format(
         file_name ) )
-    return EMPTY_FLAGS
+    raise NoExtraConfDetected()
 
   compilation_info = GetCompilationInfoForFile( database,
                                                 file_name,
