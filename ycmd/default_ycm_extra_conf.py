@@ -223,7 +223,11 @@ EMPTY_FLAGS = {
   'flags': [],
 }
 
+# }}}
 
+
+# Entry point {{{
+#
 # ycmd calls this method to get the compile flags for a given file. It returns a
 # dictionary with 2 keys: 'flags' and 'do_cache', or None if no flags can be
 # found.

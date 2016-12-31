@@ -32,7 +32,7 @@ from ycmd import extra_conf_store
 from ycmd.responses import UnknownExtraConf
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import UserOption
-from ycmd import default_ycm_extra_conf
+from ycmd.extra_conf_store import YCMD_DEFAULT_EXTRA_CONF_PATH
 
 
 class ExtraConfStore_test():
@@ -77,7 +77,7 @@ class ExtraConfStore_test():
       # We have to compare filenames, because ycmd imports the modules with
       # random names (to avoid clashes, of course)
       assert_that( extra_conf_store.ModuleForSourceFile( filename ).__file__,
-                   equal_to( default_ycm_extra_conf.__file__ ) )
+                   equal_to( YCMD_DEFAULT_EXTRA_CONF_PATH ) )
 
 
   def ModuleForSourceFile_GlobalExtraConf_test( self ):
@@ -87,6 +87,14 @@ class ExtraConfStore_test():
       module = extra_conf_store.ModuleForSourceFile( filename )
       assert_that( inspect.ismodule( module ) )
       assert_that( inspect.getfile( module ), equal_to( extra_conf_file ) )
+
+
+  def ModuleForSourceFile_DefaultExtraConf_test( self ):
+    filename = PathToTestFile( 'extra_conf', 'some_file' )
+    # We have to compare filenames, because ycmd imports the modules with
+    # random names (to avoid clashes, of course)
+    assert_that( extra_conf_store.ModuleForSourceFile( filename ).__file__,
+                 equal_to( YCMD_DEFAULT_EXTRA_CONF_PATH ) )
 
 
   @patch( 'ycmd.extra_conf_store._logger', autospec = True )
