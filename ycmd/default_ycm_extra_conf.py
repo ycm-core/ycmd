@@ -124,6 +124,7 @@ file_directory_heuristic_map = dict()
 
 _logger = logging.getLogger( __file__ )
 
+
 # Return a compilation database object for the supplied path or None if none
 # could be found.
 #
@@ -235,7 +236,6 @@ def FlagsForFile( file_name, **kwargs ):
   if database is None:
     _logger.debug( 'FlagsForFile( {0} ): No compilation database found'.format(
       file_name ) )
-
     raise NoExtraConfDetected()
   elif not database.DatabaseSuccessfullyLoaded():
     _logger.debug(

@@ -75,7 +75,8 @@ class Flags( object ):
   def FlagsForFile( self,
                     filename,
                     add_extra_clang_flags = True,
-                    client_data = None ):
+                    client_data = None,
+                    always_raise = False ):
 
     # Return flags from the cache if we have them
     if filename in self.flags_for_file:
@@ -93,13 +94,13 @@ class Flags( object ):
         extra_conf_store.ModuleForSourceFile( filename ),
         filename,
         client_data )
-    except NoCompilationDatabase:
+    except NoExtraConfDetected:
       # We actually only raise this exception once globally, to avoid spamming
       # the user on every request.
       #
       # However, (FIXME?), we should probably raise this for each new file (or
       # directory?) visited.
-      if not self.no_extra_conf_file_warning_posted:
+      if always_raise or not self.no_extra_conf_file_warning_posted:
         self.no_extra_conf_file_warning_posted = True
         raise NoExtraConfDetected
       return None

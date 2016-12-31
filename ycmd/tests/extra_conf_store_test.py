@@ -26,12 +26,13 @@ from builtins import *  # noqa
 import inspect
 from mock import patch
 
-from hamcrest import ( assert_that, calling, equal_to, has_length, none, raises,
+from hamcrest import ( assert_that, calling, equal_to, has_length, raises,
                        same_instance )
 from ycmd import extra_conf_store
 from ycmd.responses import UnknownExtraConf
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import UserOption
+from ycmd import default_ycm_extra_conf
 
 
 class ExtraConfStore_test():
@@ -73,7 +74,10 @@ class ExtraConfStore_test():
     extra_conf_file = PathToTestFile( 'extra_conf', 'project',
                                       '.ycm_extra_conf.py' )
     with UserOption( 'extra_conf_globlist', [ '!' + extra_conf_file ] ):
-      assert_that( extra_conf_store.ModuleForSourceFile( filename ), none() )
+      # We have to compare filenames, because ycmd imports the modules with
+      # random names (to avoid clashes, of course)
+      assert_that( extra_conf_store.ModuleForSourceFile( filename ).__file__,
+                   equal_to( default_ycm_extra_conf.__file__ ) )
 
 
   def ModuleForSourceFile_GlobalExtraConf_test( self ):
