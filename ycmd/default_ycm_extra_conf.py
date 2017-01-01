@@ -102,7 +102,7 @@ SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 # List of compiler flags which are considered to be path flags and thus
 # requiring modification to ensure they are correctly relative to the compiler
 # directory.
-PATH_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--isysroot=' ]
+PATH_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot=' ]
 
 # }}}
 

@@ -106,8 +106,8 @@ class DefaultYcmExtraConf_test():
         'expect': [ '--iquote=/test' ],
       },
       {
-        'flags':  [ '--isysroot=/test' ],
-        'expect': [ '--isysroot=/test' ],
+        'flags':  [ '--sysroot=/test' ],
+        'expect': [ '--sysroot=/test' ],
       },
 
       # Relative, positional arguments
@@ -171,8 +171,8 @@ class DefaultYcmExtraConf_test():
         'wd':     '/test',
       },
       {
-        'flags':  [ '--isysroot=test' ],
-        'expect': [ '--isysroot=/test/test' ],
+        'flags':  [ '--sysroot=test' ],
+        'expect': [ '--sysroot=/test/test' ],
         'wd':     '/test',
       },
     ]
@@ -276,7 +276,7 @@ class DefaultYcmExtraConf_test():
           '-ignored',
           '--I=test',
           '--ignored=ignored',
-          '--isysroot=test'
+          '--sysroot=test'
         ],
         'expect': [
           'ignored',
@@ -284,7 +284,7 @@ class DefaultYcmExtraConf_test():
           '-ignored',
           '--I=test',
           '--ignored=ignored',
-          '--isysroot=/test/test'
+          '--sysroot=/test/test'
         ],
         'wd': '/test',
       },
