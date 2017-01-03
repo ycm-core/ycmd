@@ -121,7 +121,7 @@ def GetCompletions():
 
   return _JsonResponse(
       BuildCompletionResponse( completions if completions else [],
-                               request_data.CompletionStartColumn(),
+                               request_data[ 'start_column' ],
                                errors = errors ) )
 
 

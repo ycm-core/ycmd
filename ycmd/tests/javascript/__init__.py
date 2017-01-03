@@ -86,14 +86,29 @@ def IsolatedYcmd( test ):
   started, no .ycm_extra_conf.py loaded, etc).
 
   Do NOT attach it to test generators but directly to the yielded tests."""
-  @functools.wraps( test )
-  def Wrapper( *args, **kwargs ):
-    old_server_state = handlers._server_state
-    app = SetUpApp()
-    try:
-      with CurrentWorkingDirectory( PathToTestFile() ):
-        test( app, *args, **kwargs )
-    finally:
-      StopCompleterServer( app, 'javascript' )
-      handlers._server_state = old_server_state
-  return Wrapper
+  return IsolatedYcmdInDirectory( PathToTestFile() )
+
+
+def IsolatedYcmdInDirectory( directory ):
+  """Defines a decorator to be attached to tests of this package. This decorator
+  passes a unique ycmd application as a parameter running in the directory
+  supplied. It should be used on tests that change the server state in a
+  irreversible way (ex: a semantic subserver is stopped or restarted) or expect
+  a clean state (ex: no semantic subserver started, no .ycm_extra_conf.py
+  loaded, etc).
+
+  Do NOT attach it to test generators but directly to the yielded tests."""
+  def Decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( *args, **kwargs ):
+      old_server_state = handlers._server_state
+      app = SetUpApp()
+      try:
+        with CurrentWorkingDirectory( directory ):
+          test( app, *args, **kwargs )
+      finally:
+        StopCompleterServer( app, 'javascript' )
+        handlers._server_state = old_server_state
+    return Wrapper
+
+  return Decorator
