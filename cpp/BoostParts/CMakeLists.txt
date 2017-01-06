@@ -72,10 +72,12 @@ add_library( BoostParts ${SOURCES} )
 
 #############################################################################
 
+# No warnings. We just use Boost as is so warnings coming from it are just
+# noise.
 if( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG )
-  # No warnings. We just use Boost as is so warnings coming from it are just
-  # noise.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" )
+elseif( MSVC )
+  add_definitions( /W0 -D_SCL_SECURE_NO_WARNINGS )
 endif()
 
 #############################################################################
