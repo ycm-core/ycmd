@@ -137,6 +137,12 @@ def ExtractIdentifiersFromText_Html_TemplateChars_test():
                has_item( 'goo' ) )
 
 
+def ExtractIdentifiersFromText_JavaScript_test():
+  eq_( [ "var", "foo", "require", "bar" ],
+       iu.ExtractIdentifiersFromText( "var foo = require('bar');",
+                                      'javascript' ) )
+
+
 def IsIdentifier_Default_test():
   ok_( iu.IsIdentifier( 'foo' ) )
   ok_( iu.IsIdentifier( 'foo129' ) )
