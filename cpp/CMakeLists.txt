@@ -130,8 +130,8 @@ endif()
 
 # For MSVC enable UNICODE and compilation on multiple processors
 if ( MSVC )
-  add_definitions( /DUNICODE /D_UNICODE /Zc:wchar_t-  )
-	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP" )
+  add_definitions( /DUNICODE /D_UNICODE /Zc:wchar_t- )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP" )
 endif()
 
 # Solves the conflict in names of hypot in python sources and boost::python
@@ -156,8 +156,9 @@ endif()
 if( WIN32 OR CYGWIN )
   # BOOST_PYTHON_SOURCE makes boost use the correct __declspec
   add_definitions( -DBOOST_PYTHON_SOURCE -DBOOST_THREAD_USE_LIB )
-  if ( 64_BIT_PLATFORM )
-    # Enables python compilation for 64-bit Windows
+  if ( NOT MSVC AND 64_BIT_PLATFORM )
+      # Enables Python compilation for 64-bit Windows. Already defined by Python
+      # headers when compiling with MSVC.
     add_definitions( -DMS_WIN64 )
   endif()
 endif()
