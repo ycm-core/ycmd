@@ -75,38 +75,55 @@ class Flags( object ):
   def FlagsForFile( self,
                     filename,
                     add_extra_clang_flags = True,
-                    client_data = None ):
-    try:
+                    client_data = None,
+                    always_raise = False ):
+
+    # Return flags from the cache if we have them
+    if filename in self.flags_for_file:
       return self.flags_for_file[ filename ]
-    except KeyError:
-      module = extra_conf_store.ModuleForSourceFile( filename )
-      if not module:
-        if not self.no_extra_conf_file_warning_posted:
-          self.no_extra_conf_file_warning_posted = True
-          raise NoExtraConfDetected
-        return None
 
-      results = _CallExtraConfFlagsForFile( module,
+    # Otherwise, call the `FlagsForFile` method on the user's extra-conf file
+    # (or the default extra-conf file if they don't have one)
+    #
+    # We allow the extra-conf file to raise NoExtraConfDetected. This might seem
+    # strange, but it works as a mechanism for the extra-conf file to say "this
+    # extra-conf file is not designed/written to handle this file". This is
+    # useful for global extra-conf and the default extra-conf.
+    try:
+      results = _CallExtraConfFlagsForFile(
+        extra_conf_store.ModuleForSourceFile( filename ),
+        filename,
+        client_data )
+    except NoExtraConfDetected:
+      if always_raise:
+        raise NoExtraConfDetected
+      elif not self.no_extra_conf_file_warning_posted:
+        # We actually only raise this exception once globally, to avoid spamming
+        # the user on every request.
+        #
+        # However, (FIXME?), we should probably raise this for each new file (or
+        # directory?) visited.
+        self.no_extra_conf_file_warning_posted = True
+        raise NoExtraConfDetected
+      return None
+
+    if not results or not results.get( 'flags_ready', True ):
+      return None
+
+    flags = _ExtractFlagsList( results )
+    if not flags:
+      return None
+
+    if add_extra_clang_flags:
+      flags += self.extra_clang_flags
+
+    sanitized_flags = PrepareFlagsForClang( flags,
                                             filename,
-                                            client_data )
+                                            add_extra_clang_flags )
 
-      if not results or not results.get( 'flags_ready', True ):
-        return None
-
-      flags = _ExtractFlagsList( results )
-      if not flags:
-        return None
-
-      if add_extra_clang_flags:
-        flags += self.extra_clang_flags
-
-      sanitized_flags = PrepareFlagsForClang( flags,
-                                              filename,
-                                              add_extra_clang_flags )
-
-      if results.get( 'do_cache', True ):
-        self.flags_for_file[ filename ] = sanitized_flags
-      return sanitized_flags
+    if results.get( 'do_cache', True ):
+      self.flags_for_file[ filename ] = sanitized_flags
+    return sanitized_flags
 
 
   def UserIncludePaths( self, filename, client_data ):
@@ -155,6 +172,9 @@ def _ExtractFlagsList( flags_for_file_output ):
 
 
 def _CallExtraConfFlagsForFile( module, filename, client_data ):
+  if not module:
+    raise NoExtraConfDetected
+
   # We want to ensure we pass a native py2 `str` on py2 and a native py3 `str`
   # (unicode) object on py3. That's the API we provide.
   # In a vacuum, always passing a unicode object (`unicode` on py2 and `str` on

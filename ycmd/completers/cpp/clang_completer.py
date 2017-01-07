@@ -373,7 +373,7 @@ class ClangCompleter( Completer ):
     filename = request_data[ 'filepath' ]
     try:
       extra_conf = extra_conf_store.ModuleFileForSourceFile( filename )
-      flags = self._FlagsForRequest( request_data ) or []
+      flags = self._FlagsForRequest( request_data, always_raise=True ) or []
     except NoExtraConfDetected:
       return ( 'C-family completer debug information:\n'
                '  No configuration file found' )
@@ -391,13 +391,15 @@ class ClangCompleter( Completer ):
              '  Flags: {1}'.format( extra_conf, list( flags ) ) )
 
 
-  def _FlagsForRequest( self, request_data ):
+  def _FlagsForRequest( self, request_data, always_raise=False ):
     filename = request_data[ 'filepath' ]
     if 'compilation_flags' in request_data:
       return PrepareFlagsForClang( request_data[ 'compilation_flags' ],
                                    filename )
     client_data = request_data.get( 'extra_conf_data', None )
-    return self._flags.FlagsForFile( filename, client_data = client_data )
+    return self._flags.FlagsForFile( filename,
+                                     client_data = client_data,
+                                     always_raise = always_raise )
 
 
 def ConvertCompletionData( completion_data ):

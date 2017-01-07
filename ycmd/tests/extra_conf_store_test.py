@@ -26,12 +26,20 @@ from builtins import *  # noqa
 import inspect
 from mock import patch
 
-from hamcrest import ( assert_that, calling, equal_to, has_length, none, raises,
+from hamcrest import ( assert_that, calling, equal_to, has_length, raises,
                        same_instance )
 from ycmd import extra_conf_store
 from ycmd.responses import UnknownExtraConf
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import UserOption
+
+# NOTE: We must not import default_ycm_extra_conf directly;  we
+# don't want Python to generate a .pyc or __pycache__ entry for it.
+#
+# This is because the extra_conf_store turns off such generation and its tests
+# require that the filename of the loaded module is the py file not any
+# associated pyc file.
+from ycmd.extra_conf_store import YCMD_DEFAULT_EXTRA_CONF_PATH
 
 
 class ExtraConfStore_test():
@@ -73,7 +81,10 @@ class ExtraConfStore_test():
     extra_conf_file = PathToTestFile( 'extra_conf', 'project',
                                       '.ycm_extra_conf.py' )
     with UserOption( 'extra_conf_globlist', [ '!' + extra_conf_file ] ):
-      assert_that( extra_conf_store.ModuleForSourceFile( filename ), none() )
+      # We have to compare filenames, because ycmd imports the modules with
+      # random names (to avoid clashes, of course)
+      assert_that( extra_conf_store.ModuleForSourceFile( filename ).__file__,
+                   equal_to( YCMD_DEFAULT_EXTRA_CONF_PATH ) )
 
 
   def ModuleForSourceFile_GlobalExtraConf_test( self ):
@@ -83,6 +94,14 @@ class ExtraConfStore_test():
       module = extra_conf_store.ModuleForSourceFile( filename )
       assert_that( inspect.ismodule( module ) )
       assert_that( inspect.getfile( module ), equal_to( extra_conf_file ) )
+
+
+  def ModuleForSourceFile_DefaultExtraConf_test( self ):
+    filename = PathToTestFile( 'extra_conf', 'some_file' )
+    # We have to compare filenames, because ycmd imports the modules with
+    # random names (to avoid clashes, of course)
+    assert_that( extra_conf_store.ModuleForSourceFile( filename ).__file__,
+                 equal_to( YCMD_DEFAULT_EXTRA_CONF_PATH ) )
 
 
   @patch( 'ycmd.extra_conf_store._logger', autospec = True )
