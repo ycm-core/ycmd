@@ -68,7 +68,7 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     # Spec:
     # http://www.ecma-international.org/ecma-262/6.0/#sec-names-and-keywords
     # Default identifier plus the dollar sign.
-    'javascript': re.compile( r"([^\W\d]|\$)[\w$]*", re.UNICODE ),
+    'javascript': re.compile( r"(?:[^\W\d]|\$)[\w$]*", re.UNICODE ),
 
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
     # Good summary: http://stackoverflow.com/a/449000/1672783
