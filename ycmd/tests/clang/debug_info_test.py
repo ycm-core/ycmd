@@ -23,9 +23,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import os
+
 from hamcrest import assert_that, contains_string, matches_regexp
 
-from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.clang import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
+                               TemporaryClangTestDir, TemporaryClangProject )
 from ycmd.tests.test_utils import BuildRequest
 
 
@@ -50,12 +53,14 @@ def DebugInfo_NoExtraConfFound_test( app ):
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
     contains_string( 'C-family completer debug information:\n'
-                     '  No configuration file found' ) )
+                     '  No configuration file found\n'
+                     '  No compilation database found' ) )
   # Second time, None is returned as the .ycm_extra_conf.py path.
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
     contains_string( 'C-family completer debug information:\n'
-                     '  No configuration file found' ) )
+                     '  No configuration file found\n'
+                     '  No compilation database found' ) )
 
 
 @IsolatedYcmd
@@ -68,3 +73,75 @@ def DebugInfo_ExtraConfFoundButNotLoaded_test( app ):
       'C-family completer debug information:\n'
       '  Configuration file found but not loaded\n'
       '  Configuration path: .+' ) )
+
+
+@IsolatedYcmd
+def DebugInfo_CompilationDatabase_test( app ):
+  with TemporaryClangTestDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I. -I/absolute/path -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      request_data = BuildRequest(
+        filepath = os.path.join( tmp_dir, 'test.cc' ),
+        filetype = 'cpp' )
+
+      assert_that(
+        app.post_json( '/debug_info', request_data ).json,
+        matches_regexp( 'C-family completer debug information:\n'
+                        '  No configuration file found\n'
+                        '  Using compilation database from: .+\n'
+                        '  Flags: .+-Wall.+' ) )
+
+      assert_that(
+        app.post_json( '/debug_info', request_data ).json,
+        matches_regexp( 'C-family completer debug information:\n'
+                        '  No configuration file found\n'
+                        '  Using compilation database from: .+\n'
+                        '  Flags: .+-Wall.+' ) )
+
+
+@IsolatedYcmd
+def DebugInfo_InvalidCompilationDatabase_test( app ):
+  with TemporaryClangTestDir() as tmp_dir:
+    compile_commands = 'garbage'
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      request_data = BuildRequest(
+        filepath = os.path.join( tmp_dir, 'test.cc' ),
+        filetype = 'cpp' )
+
+      assert_that(
+        app.post_json( '/debug_info', request_data ).json,
+        contains_string( 'C-family completer debug information:\n'
+                         '  No configuration file found\n'
+                         '  No compilation database found' ) )
+
+      assert_that(
+        app.post_json( '/debug_info', request_data ).json,
+        contains_string( 'C-family completer debug information:\n'
+                         '  No configuration file found\n'
+                         '  No compilation database found' ) )
+
+
+@IsolatedYcmd
+def DebugInfo_NoCompilationDatabase_test( app ):
+  with TemporaryClangTestDir() as tmp_dir:
+    request_data = BuildRequest(
+      filepath = os.path.join( tmp_dir, 'test.cc' ),
+      filetype = 'cpp' )
+
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      contains_string( 'C-family completer debug information:\n'
+                       '  No configuration file found\n'
+                       '  No compilation database found' ) )
+
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      contains_string( 'C-family completer debug information:\n'
+                       '  No configuration file found\n'
+                       '  No compilation database found' ) )

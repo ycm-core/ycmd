@@ -197,7 +197,9 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "AlreadyGettingFlags",
           &CompilationDatabase::AlreadyGettingFlags )
     .def( "GetCompilationInfoForFile",
-          &CompilationDatabase::GetCompilationInfoForFile );
+          &CompilationDatabase::GetCompilationInfoForFile )
+    .def_readonly( "database_directory",
+                   &CompilationDatabase::GetDatabaseDirectory );
 
   class_< CompilationInfoForFile,
       boost::shared_ptr< CompilationInfoForFile > >(

@@ -23,12 +23,16 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+import os
+
 from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
 from mock import patch, Mock
 from ycmd.tests.test_utils import MacOnly
+from ycmd.responses import NoExtraConfDetected
+from ycmd.tests.clang import TemporaryClangProject, TemporaryClangTestDir
 
-from hamcrest import assert_that, contains
+from hamcrest import assert_that, calling, contains, raises, none
 
 
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
@@ -356,3 +360,397 @@ def Mac_PathsForAllMacToolchains_test():
        [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
          'XcodeDefault.xctoolchain/test',
          '/Library/Developer/CommandLineTools/test' ] )
+
+
+def CompilationDatabase_NoDatabase_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    assert_that(
+      calling( flags.Flags().FlagsForFile ).with_args(
+        os.path.join( tmp_dir, 'test.cc' ) ),
+      raises( NoExtraConfDetected ) )
+
+
+def CompilationDatabase_FileNotInDatabase_test():
+  compile_commands = [ ]
+  with TemporaryClangTestDir() as tmp_dir:
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      assert_that(
+        flags.Flags().FlagsForFile( os.path.join( tmp_dir, 'test.cc' ) ),
+        none() )
+
+
+def CompilationDatabase_InvalidDatabase_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    with TemporaryClangProject( tmp_dir, 'this is junk' ):
+      assert_that(
+        calling( flags.Flags().FlagsForFile ).with_args(
+          os.path.join( tmp_dir, 'test.cc' ) ),
+        raises( NoExtraConfDetected ) )
+
+
+def CompilationDatabase_UseFlagsFromDatabase_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I. -I/absolute/path -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.cc' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  '-I' + os.path.normpath( tmp_dir ),
+                  '-I' + os.path.normpath( '/absolute/path' ),
+                  '-Wall' ) )
+
+
+def CompilationDatabase_UseFlagsFromSameDir_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      f = flags.Flags()
+
+      # If we now ask for a file _not_ in the DB, we get none()
+      assert_that(
+        f.FlagsForFile(
+          os.path.join( tmp_dir, 'test1.cc' ),
+          add_extra_clang_flags = False ),
+        none() )
+
+      # Then, we ask for a file that _is_ in the db. It will cache these flags
+      # against the files' directory.
+      assert_that(
+        f.FlagsForFile(
+          os.path.join( tmp_dir, 'test.cc' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  '-Wall' ) )
+
+      # If we now ask for a file _not_ in the DB, but in the same dir, we should
+      # get the same flags
+      assert_that(
+        f.FlagsForFile(
+          os.path.join( tmp_dir, 'test2.cc' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  '-Wall' ) )
+
+
+def CompilationDatabase_HeaderFileHeuristic_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      # If we ask for a header file, it returns the equivalent cc file
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.h' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-x',
+                  'c++',
+                  '-Wall' ) )
+
+
+def CompilationDatabase_HeaderFileHeuristicNotFound_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+    ]
+
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      # If we ask for a header file, it returns the equivalent cc file (if and
+      # only if there are flags for that file)
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'not_in_the_db.h' ),
+          add_extra_clang_flags = False ),
+        none() )
+
+
+def _MakeRelativePathsInFlagsAbsoluteTest( test ):
+  wd = test[ 'wd' ] if 'wd' in test else '/not_test'
+  assert_that(
+    flags._MakeRelativePathsInFlagsAbsolute( test[ 'flags' ], wd ),
+    contains( *test[ 'expect' ] ) )
+
+
+def MakeRelativePathsInFlagsAbsolute_test():
+  tests = [
+    # Already absolute, positional arguments
+    {
+      'flags':  [ '-isystem', '/test' ],
+      'expect': [ '-isystem', os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-I', '/test' ],
+      'expect': [ '-I', os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-iquote', '/test' ],
+      'expect': [ '-iquote', os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-isysroot', '/test' ],
+      'expect': [ '-isysroot', os.path.normpath( '/test' ) ],
+    },
+
+    # Already absolute, single arguments
+    {
+      'flags':  [ '-isystem/test' ],
+      'expect': [ '-isystem' + os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-I/test' ],
+      'expect': [ '-I' + os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-iquote/test' ],
+      'expect': [ '-iquote' + os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-isysroot/test' ],
+      'expect': [ '-isysroot' +  os.path.normpath( '/test' ) ],
+    },
+
+    # Already absolute, double-dash arguments
+    {
+      'flags':  [ '--isystem=/test' ],
+      'expect': [ '--isystem=/test' ],
+    },
+    {
+      'flags':  [ '--I=/test' ],
+      'expect': [ '--I=/test' ],
+    },
+    {
+      'flags':  [ '--iquote=/test' ],
+      'expect': [ '--iquote=/test' ],
+    },
+    {
+      'flags':  [ '--sysroot=/test' ],
+      'expect': [ '--sysroot=' + os.path.normpath( '/test' ) ],
+    },
+
+    # Relative, positional arguments
+    {
+      'flags':  [ '-isystem', 'test' ],
+      'expect': [ '-isystem', os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-I', 'test' ],
+      'expect': [ '-I', os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-iquote', 'test' ],
+      'expect': [ '-iquote', os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-isysroot', 'test' ],
+      'expect': [ '-isysroot', os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+
+    # Relative, single arguments
+    {
+      'flags':  [ '-isystemtest' ],
+      'expect': [ '-isystem' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-Itest' ],
+      'expect': [ '-I' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-iquotetest' ],
+      'expect': [ '-iquote' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-isysroottest' ],
+      'expect': [ '-isysroot' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+
+    # Already absolute, double-dash arguments
+    {
+      'flags':  [ '--isystem=test' ],
+      'expect': [ '--isystem=test' ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '--I=test' ],
+      'expect': [ '--I=test' ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '--iquote=test' ],
+      'expect': [ '--iquote=test' ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '--sysroot=test' ],
+      'expect': [ '--sysroot=' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+  ]
+
+  for test in tests:
+    yield _MakeRelativePathsInFlagsAbsoluteTest, test
+
+
+def MakeRelativePathsInFlagsAbsolute_IgnoreUnknown_test():
+  tests = [
+    {
+      'flags': [
+        'ignored',
+        '-isystem',
+        '/test',
+        '-ignored',
+        '-I',
+        '/test',
+        '--ignored=ignored'
+      ],
+      'expect': [
+        'ignored',
+        '-isystem', os.path.normpath( '/test' ),
+        '-ignored',
+        '-I', os.path.normpath( '/test' ),
+        '--ignored=ignored'
+      ]
+    },
+    {
+      'flags': [
+        'ignored',
+        '-isystem/test',
+        '-ignored',
+        '-I/test',
+        '--ignored=ignored'
+      ],
+      'expect': [
+        'ignored',
+        '-isystem' + os.path.normpath( '/test' ),
+        '-ignored',
+        '-I' + os.path.normpath( '/test/' ),
+        '--ignored=ignored'
+      ]
+    },
+    {
+      'flags': [
+        'ignored',
+        '--isystem=/test',
+        '-ignored',
+        '--I=/test',
+        '--ignored=ignored'
+      ],
+      'expect': [
+        'ignored',
+        '--isystem=/test',
+        '-ignored',
+        '--I=/test',
+        '--ignored=ignored'
+      ]
+    },
+    {
+      'flags': [
+        'ignored',
+        '-isystem', 'test',
+        '-ignored',
+        '-I', 'test',
+        '--ignored=ignored'
+      ],
+      'expect': [
+        'ignored',
+        '-isystem', os.path.normpath( '/test/test' ),
+        '-ignored',
+        '-I', os.path.normpath( '/test/test' ),
+        '--ignored=ignored'
+      ],
+      'wd': '/test',
+    },
+    {
+      'flags': [
+        'ignored',
+        '-isystemtest',
+        '-ignored',
+        '-Itest',
+        '--ignored=ignored'
+      ],
+      'expect': [
+        'ignored',
+        '-isystem' + os.path.normpath( '/test/test' ),
+        '-ignored',
+        '-I' + os.path.normpath( '/test/test' ),
+        '--ignored=ignored'
+      ],
+      'wd': '/test',
+    },
+    {
+      'flags': [
+        'ignored',
+        '--isystem=test',
+        '-ignored',
+        '--I=test',
+        '--ignored=ignored',
+        '--sysroot=test'
+      ],
+      'expect': [
+        'ignored',
+        '--isystem=test',
+        '-ignored',
+        '--I=test',
+        '--ignored=ignored',
+        '--sysroot=' + os.path.normpath( '/test/test' ),
+      ],
+      'wd': '/test',
+    },
+  ]
+
+  for test in tests:
+    yield _MakeRelativePathsInFlagsAbsoluteTest, test
+
+
+def MakeRelativePathsInFlagsAbsolute_NoWorkingDir_test():
+  yield _MakeRelativePathsInFlagsAbsoluteTest, {
+    'flags': [ 'list', 'of', 'flags', 'not', 'changed', '-Itest' ],
+    'expect': [ 'list', 'of', 'flags', 'not', 'changed', '-Itest' ],
+    'wd': ''
+  }

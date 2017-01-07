@@ -41,11 +41,11 @@ remove_pointer< CXCompileCommands >::type > CompileCommandsWrap;
 
 CompilationDatabase::CompilationDatabase(
   const boost::python::object &path_to_directory )
-  : is_loaded_( false ) {
+  : is_loaded_( false )
+  , path_to_directory_( GetUtf8String( path_to_directory ) ) {
   CXCompilationDatabase_Error status;
-  std::string path_to_directory_string = GetUtf8String( path_to_directory );
   compilation_database_ = clang_CompilationDatabase_fromDirectory(
-                            path_to_directory_string.c_str(),
+                            path_to_directory_.c_str(),
                             &status );
   is_loaded_ = status == CXCompilationDatabase_NoError;
 }
