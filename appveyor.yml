@@ -7,23 +7,24 @@ environment:
   USE_CLANG_COMPLETER: true
   COVERAGE: true
   matrix:
-  # We only test MSVC 11 and 12 with Python 3.5 on 64 bits.
+  # We only test MSVC 11 with Python 3.5 on 64 bits.
+  # MSVC 11 cannot build Python 3.6 extensions.
   - msvc: 11
     arch: 64
     python: 35
   - msvc: 12
     arch: 64
-    python: 35
+    python: 36
   - msvc: 14
     arch: 32
-    python: 35
+    python: 36
   # We only test Python 2.7 with MSVC 14 on 64 bits.
   - msvc: 14
     arch: 64
     python: 27
   - msvc: 14
     arch: 64
-    python: 35
+    python: 36
 install:
   - ci\appveyor\appveyor_install.bat
 build_script:
