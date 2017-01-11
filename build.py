@@ -66,7 +66,9 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   # OS X
   libpython{major}\.{minor}m?\.dylib|
   # Windows
-  python{major}{minor}\.lib
+  python{major}{minor}\.lib|
+  # Cygwin
+  libpython{major}\.{minor}\.dll\.a
   )$
 """
 
