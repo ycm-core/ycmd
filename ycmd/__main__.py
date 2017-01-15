@@ -21,8 +21,8 @@ from __future__ import print_function
 from __future__ import division
 # Other imports from `future` must be placed after SetUpPythonPath.
 
-import sys
 import os
+import sys
 
 sys.path.insert( 0, os.path.dirname( os.path.abspath( __file__ ) ) )
 from server_utils import SetUpPythonPath, CompatibleWithCurrentCore
@@ -32,14 +32,14 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-import atexit
-import sys
-import logging
-import json
 import argparse
-import signal
-import os
+import atexit
 import base64
+import json
+import logging
+import os
+import signal
+import warnings
 
 from ycmd import extra_conf_store, user_options_store, utils
 from ycmd.hmac_plugin import HmacPlugin
@@ -114,12 +114,18 @@ def ParseArguments():
                        help = 'optional file to use for stdout' )
   parser.add_argument( '--stderr', type = str, default = None,
                        help = 'optional file to use for stderr' )
+  # This argument is deprecated.
   parser.add_argument( '--keep_logfiles', action = 'store_true', default = None,
-                       help = 'retain logfiles after the server exits' )
+                       help = argparse.SUPPRESS )
   return parser.parse_args()
 
 
 def SetupLogging( log_level ):
+  def LogWarning( message, category, filename, lineno ):
+    warning = warnings.formatwarning( message, category, filename, lineno )
+    logger = logging.getLogger( 'py.warnings' )
+    logger.warning( warning )
+
   numeric_level = getattr( logging, log_level.upper(), None )
   if not isinstance( numeric_level, int ):
     raise ValueError( 'Invalid log level: %s' % log_level )
@@ -127,13 +133,37 @@ def SetupLogging( log_level ):
   # Has to be called before any call to logging.getLogger()
   logging.basicConfig( format = '%(asctime)s - %(levelname)s - %(message)s',
                        level = numeric_level )
+  # logging.captureWarnings is not available on Python 2.6.
+  warnings.showwarning = LogWarning
+  # Deprecation warnings are ignored by default.
+  warnings.simplefilter( 'always', DeprecationWarning )
 
 
-def SetupOptions( options_file ):
+def EnsureBackwardsCompatibilityForOptions( options, args ):
+  deprecated_keep_logfiles = None
+  if args.keep_logfiles is not None:
+    warnings.warn( "The '--keep_logfiles' argument is deprecated "
+                   "in favor of the 'keep_logfiles' option",
+                   DeprecationWarning )
+    deprecated_keep_logfiles = 1
+
+  if 'server_keep_logfiles' in options:
+    warnings.warn( "The 'server_keep_logfiles' option is deprecated "
+                   "in favor of the 'keep_logfiles' option",
+                   DeprecationWarning )
+    deprecated_keep_logfiles = options[ 'server_keep_logfiles' ]
+
+  if 'keep_logfiles' not in options and deprecated_keep_logfiles:
+    options[ 'keep_logfiles' ] = deprecated_keep_logfiles
+  return options
+
+
+def SetupOptions( args ):
   options = user_options_store.DefaultOptions()
-  user_options = json.loads( ReadFile( options_file ) )
+  user_options = json.loads( ReadFile( args.options_file ) )
+  user_options = EnsureBackwardsCompatibilityForOptions( user_options, args )
   options.update( user_options )
-  utils.RemoveIfExists( options_file )
+  utils.RemoveIfExists( args.options_file )
   hmac_secret = ToBytes( base64.b64decode( options[ 'hmac_secret' ] ) )
   del options[ 'hmac_secret' ]
   user_options_store.SetAll( options )
@@ -154,7 +184,7 @@ def Main():
     sys.stderr = OpenForStdHandle( args.stderr )
 
   SetupLogging( args.log )
-  options, hmac_secret = SetupOptions( args.options_file )
+  options, hmac_secret = SetupOptions( args )
 
   # This ensures that ycm_core is not loaded before extra conf
   # preload was run.
@@ -180,7 +210,7 @@ def Main():
   # in last in, first out order.
   atexit.register( CleanUpLogfiles, args.stdout,
                                     args.stderr,
-                                    args.keep_logfiles )
+                                    options[ 'keep_logfiles' ] )
   atexit.register( handlers.ServerCleanup )
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
                                         args.check_interval_seconds ) )

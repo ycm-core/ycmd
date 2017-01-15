@@ -120,7 +120,7 @@ class TernCompleter( Completer ):
   def __init__( self, user_options ):
     super( TernCompleter, self ).__init__( user_options )
 
-    self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._keep_logfiles = user_options[ 'keep_logfiles' ]
 
     # Used to ensure that starting/stopping of the server is synchronised
     self._server_state_mutex = threading.RLock()
@@ -470,7 +470,7 @@ class TernCompleter( Completer ):
     utils.CloseStandardStreams( self._server_handle )
     self._server_handle = None
     self._server_port = None
-    if not self._server_keep_logfiles:
+    if not self._keep_logfiles:
       utils.RemoveIfExists( self._server_stdout )
       self._server_stdout = None
       utils.RemoveIfExists( self._server_stderr )

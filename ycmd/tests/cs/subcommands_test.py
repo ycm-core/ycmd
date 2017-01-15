@@ -509,7 +509,7 @@ def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
 
 @IsolatedYcmd
 def StopServer_KeepLogFiles( app, keeping_log_files ):
-  with UserOption( 'server_keep_logfiles', keeping_log_files ):
+  with UserOption( 'keep_logfiles', keeping_log_files ):
     filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
     contents = ReadFile( filepath )
     event_data = BuildRequest( filepath = filepath,

@@ -46,7 +46,7 @@ def DebugInfo_ServerIsRunning_test( app ):
 
 @IsolatedYcmd
 def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
-  with UserOption( 'server_keep_logfiles', True ):
+  with UserOption( 'keep_logfiles', True ):
     StopCompleterServer( app, 'python' )
     request_data = BuildRequest( filetype = 'python' )
     assert_that(
@@ -62,7 +62,7 @@ def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
 
 @IsolatedYcmd
 def DebugInfo_ServerIsNotRunning_LogfilesDoNotExist_test( app ):
-  with UserOption( 'server_keep_logfiles', False ):
+  with UserOption( 'keep_logfiles', False ):
     StopCompleterServer( app, 'python' )
     request_data = BuildRequest( filetype = 'python' )
     assert_that(
