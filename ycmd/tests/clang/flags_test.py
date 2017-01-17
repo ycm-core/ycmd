@@ -32,7 +32,21 @@ from ycmd.tests.test_utils import MacOnly
 from ycmd.responses import NoExtraConfDetected
 from ycmd.tests.clang import TemporaryClangProject, TemporaryClangTestDir
 
-from hamcrest import assert_that, calling, contains, raises, none
+from hamcrest import assert_that, calling, contains, raises
+
+
+@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
+def FlagsForFile_FlagsNotReady_test( *args ):
+  fake_flags = {
+    'flags': [ ],
+    'flags_ready': False
+  }
+
+  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
+              return_value = fake_flags ):
+    flags_object = flags.Flags()
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    eq_( list( flags_list ), [ ] )
 
 
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
@@ -374,9 +388,9 @@ def CompilationDatabase_FileNotInDatabase_test():
   compile_commands = [ ]
   with TemporaryClangTestDir() as tmp_dir:
     with TemporaryClangProject( tmp_dir, compile_commands ):
-      assert_that(
+      eq_(
         flags.Flags().FlagsForFile( os.path.join( tmp_dir, 'test.cc' ) ),
-        none() )
+        [] )
 
 
 def CompilationDatabase_InvalidDatabase_test():
@@ -425,12 +439,12 @@ def CompilationDatabase_UseFlagsFromSameDir_test():
     with TemporaryClangProject( tmp_dir, compile_commands ):
       f = flags.Flags()
 
-      # If we now ask for a file _not_ in the DB, we get none()
-      assert_that(
+      # If we now ask for a file _not_ in the DB, we get []
+      eq_(
         f.FlagsForFile(
           os.path.join( tmp_dir, 'test1.cc' ),
           add_extra_clang_flags = False ),
-        none() )
+        [] )
 
       # Then, we ask for a file that _is_ in the db. It will cache these flags
       # against the files' directory.
@@ -496,11 +510,11 @@ def CompilationDatabase_HeaderFileHeuristicNotFound_test():
     with TemporaryClangProject( tmp_dir, compile_commands ):
       # If we ask for a header file, it returns the equivalent cc file (if and
       # only if there are flags for that file)
-      assert_that(
+      eq_(
         flags.Flags().FlagsForFile(
           os.path.join( tmp_dir, 'not_in_the_db.h' ),
           add_extra_clang_flags = False ),
-        none() )
+        [] )
 
 
 def _MakeRelativePathsInFlagsAbsoluteTest( test ):
