@@ -131,14 +131,14 @@ class Flags( object ):
       if not self.no_extra_conf_file_warning_posted:
         self.no_extra_conf_file_warning_posted = True
         raise NoExtraConfDetected
-      return None
+      return []
 
     if not results or not results.get( 'flags_ready', True ):
-      return None
+      return []
 
     flags = _ExtractFlagsList( results )
     if not flags:
-      return None
+      return []
 
     if add_extra_clang_flags:
       flags += self.extra_clang_flags
