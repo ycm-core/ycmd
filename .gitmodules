@@ -1,6 +1,3 @@
-[submodule "third_party/OmniSharpServer"]
-	path = third_party/OmniSharpServer
-	url = https://github.com/nosami/OmniSharpServer
 [submodule "third_party/argparse"]
 	path = third_party/argparse
 	url = https://github.com/bewest/argparse

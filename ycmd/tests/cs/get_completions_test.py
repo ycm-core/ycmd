@@ -25,8 +25,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, calling, empty, greater_than, has_item,
-                       has_items, has_entries, raises )
+from hamcrest import ( assert_that, calling, has_items, raises )
 from nose.tools import eq_
 from webtest import AppError
 
@@ -67,7 +66,7 @@ def GetCompletions_Unicode_test( app ):
     response_data = app.post_json( '/completions', completion_data ).json
     assert_that( response_data[ 'completions' ],
                  has_items(
-                   CompletionEntryMatcher( 'DoATest()' ),
+                   CompletionEntryMatcher( 'DoATest' ),
                    CompletionEntryMatcher( 'an_int' ),
                    CompletionEntryMatcher( 'a_unicøde' ),
                    CompletionEntryMatcher( 'øøø' ) ) )
@@ -116,154 +115,6 @@ def GetCompletions_PathWithSpace_test( app ):
                  has_items( CompletionEntryMatcher( 'CursorLeft' ),
                             CompletionEntryMatcher( 'CursorSize' ) ) )
     eq_( 12, response_data[ 'completion_start_column' ] )
-
-
-@SharedYcmd
-def GetCompletions_HasBothImportsAndNonImport_test( app ):
-  filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 12,
-                                    force_semantic = True,
-                                    query = 'Date' )
-    response_data = app.post_json( '/completions', completion_data ).json
-
-    assert_that(
-      response_data[ 'completions' ],
-      has_items( CompletionEntryMatcher( 'DateTime' ),
-                 CompletionEntryMatcher( 'DateTimeStyles' ) )
-    )
-
-
-@SharedYcmd
-def GetCompletions_ImportsOrderedAfter_test( app ):
-  filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 12,
-                                    force_semantic = True,
-                                    query = 'Date' )
-    response_data = app.post_json( '/completions', completion_data ).json
-
-    min_import_index = min(
-      loc for loc, val
-      in enumerate( response_data[ 'completions' ] )
-      if val[ 'extra_data' ][ 'required_namespace_import' ]
-    )
-
-    max_nonimport_index = max(
-      loc for loc, val
-      in enumerate( response_data[ 'completions' ] )
-      if not val[ 'extra_data' ][ 'required_namespace_import' ]
-    )
-
-    assert_that( min_import_index, greater_than( max_nonimport_index ) ),
-
-
-@SharedYcmd
-def GetCompletions_ForcedReturnsResults_test( app ):
-  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 21,
-                                    force_semantic = True,
-                                    query = 'Date' )
-    response_data = app.post_json( '/completions', completion_data ).json
-
-    assert_that( response_data[ 'completions' ],
-                 has_items( CompletionEntryMatcher( 'String' ),
-                            CompletionEntryMatcher( 'StringBuilder' ) ) )
-
-
-@SharedYcmd
-def GetCompletions_NonForcedReturnsNoResults_test( app ):
-  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cs',
-                               contents = contents,
-                               event_name = 'FileReadyToParse' )
-
-    app.post_json( '/event_notification', event_data )
-
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 21,
-                                    force_semantic = False,
-                                    query = 'Date' )
-    results = app.post_json( '/completions', completion_data ).json
-
-    # There are no semantic completions. However, we fall back to identifier
-    # completer in this case.
-    assert_that( results, has_entries( {
-      'completions': has_item( has_entries( {
-        'insertion_text' : 'String',
-        'extra_menu_info': '[ID]',
-      } ) ),
-      'errors': empty(),
-    } ) )
-
-
-@SharedYcmd
-def GetCompletions_ForcedDividesCache_test( app ):
-  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cs',
-                               contents = contents,
-                               event_name = 'FileReadyToParse' )
-
-    app.post_json( '/event_notification', event_data )
-
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 21,
-                                    force_semantic = True,
-                                    query = 'Date' )
-    results = app.post_json( '/completions', completion_data ).json
-
-    assert_that( results[ 'completions' ], not( empty() ) )
-    assert_that( results[ 'errors' ], empty() )
-
-    completion_data = BuildRequest( filepath = filepath,
-                                    filetype = 'cs',
-                                    contents = contents,
-                                    line_num = 9,
-                                    column_num = 21,
-                                    force_semantic = False,
-                                    query = 'Date' )
-    results = app.post_json( '/completions', completion_data ).json
-
-    # There are no semantic completions. However, we fall back to identifier
-    # completer in this case.
-    assert_that( results, has_entries( {
-      'completions': has_item( has_entries( {
-        'insertion_text' : 'String',
-        'extra_menu_info': '[ID]',
-      } ) ),
-      'errors': empty(),
-    } ) )
 
 
 @SharedYcmd
