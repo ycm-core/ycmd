@@ -1,4 +1,4 @@
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -28,7 +28,6 @@ from nose.tools import eq_, ok_
 from webtest import AppError
 from hamcrest import assert_that, has_entries, contains
 import pprint
-import re
 import os.path
 
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
@@ -522,36 +521,27 @@ def StopServer_KeepLogFiles( app, keeping_log_files ):
 
     event_data = BuildRequest( filetype = 'cs', filepath = filepath )
 
-    debuginfo = app.post_json( '/debug_info', event_data ).json
+    response = app.post_json( '/debug_info', event_data ).json
 
-    log_files_match = re.search( '^  OmniSharp logfiles:\n'
-                                 '    (.*)\n'
-                                 '    (.*)', debuginfo, re.MULTILINE )
-    stdout_logfiles_location = log_files_match.group( 1 )
-    stderr_logfiles_location = log_files_match.group( 2 )
+    logfiles = []
+    for server in response[ 'completer' ][ 'servers' ]:
+      logfiles.extend( server[ 'logfiles' ] )
 
     try:
-      ok_( os.path.exists(stdout_logfiles_location ),
-           "Logfile should exist at {0}".format( stdout_logfiles_location ) )
-      ok_( os.path.exists( stderr_logfiles_location ),
-           "Logfile should exist at {0}".format( stderr_logfiles_location ) )
+      for logfile in logfiles:
+        ok_( os.path.exists( logfile ),
+             'Logfile should exist at {0}'.format( logfile ) )
     finally:
       StopCompleterServer( app, 'cs', filepath )
 
     if keeping_log_files:
-      ok_( os.path.exists( stdout_logfiles_location ),
-           "Logfile should still exist at "
-           "{0}".format( stdout_logfiles_location ) )
-      ok_( os.path.exists( stderr_logfiles_location ),
-           "Logfile should still exist at "
-           "{0}".format( stderr_logfiles_location ) )
+      for logfile in logfiles:
+        ok_( os.path.exists( logfile ),
+             'Logfile should still exist at {0}'.format( logfile ) )
     else:
-      ok_( not os.path.exists( stdout_logfiles_location ),
-           "Logfile should no longer exist at "
-           "{0}".format( stdout_logfiles_location ) )
-      ok_( not os.path.exists( stderr_logfiles_location ),
-           "Logfile should no longer exist at "
-           "{0}".format( stderr_logfiles_location ) )
+      for logfile in logfiles:
+        ok_( not os.path.exists( logfile ),
+             'Logfile should no longer exist at {0}'.format( logfile ) )
 
 
 def Subcommands_StopServer_KeepLogFiles_test():

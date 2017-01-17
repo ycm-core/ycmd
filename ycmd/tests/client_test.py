@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -31,7 +31,6 @@ import functools
 import json
 import os
 import psutil
-import re
 import requests
 import subprocess
 import sys
@@ -171,18 +170,11 @@ class Client_test( object ):
                     filetype = filetype )
     ).json()
 
-    pid_match = re.search( 'process ID: (\d+)', response )
-    if not pid_match:
-      raise RuntimeError( 'Cannot find PID in debug informations for {0} '
-                          'filetype.'.format( filetype ) )
-    subserver_pid = int( pid_match.group( 1 ) )
-    self._servers.append( psutil.Process( subserver_pid ) )
-
-    logfiles = re.findall( '(\S+\.log)', response )
-    if not logfiles:
-      raise RuntimeError( 'Cannot find logfiles in debug informations for {0} '
-                          'filetype.'.format( filetype ) )
-    self._logfiles.extend( logfiles )
+    for server in response[ 'completer' ][ 'servers' ]:
+      pid = server[ 'pid' ]
+      if pid:
+        self._servers.append( psutil.Process( pid ) )
+      self._logfiles.extend( server[ 'logfiles' ] )
 
 
   def AssertServersAreRunning( self ):

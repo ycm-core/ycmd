@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -23,44 +23,29 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, matches_regexp
+from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
+                       instance_of )
 
-from ycmd.tests.typescript import IsolatedYcmd, SharedYcmd, StopCompleterServer
-from ycmd.tests.test_utils import BuildRequest, UserOption
+from ycmd.tests.typescript import SharedYcmd
+from ycmd.tests.test_utils import BuildRequest
 
 
 @SharedYcmd
-def DebugInfo_ServerIsRunning_test( app ):
+def DebugInfo_test( app ):
   request_data = BuildRequest( filetype = 'typescript' )
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    matches_regexp( 'TypeScript completer debug information:\n'
-                    '  TSServer running\n'
-                    '  TSServer process ID: \d+\n'
-                    '  TSServer executable: .+\n'
-                    '  TSServer logfile: .+' ) )
-
-
-@IsolatedYcmd
-def DebugInfo_ServerIsNotRunning_LogfilesExist_test( app ):
-  with UserOption( 'server_keep_logfiles', True ):
-    StopCompleterServer( app, filetype = 'typescript' )
-    request_data = BuildRequest( filetype = 'typescript' )
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      matches_regexp( 'TypeScript completer debug information:\n'
-                      '  TSServer no longer running\n'
-                      '  TSServer executable: .+\n'
-                      '  TSServer logfile: .+' ) )
-
-
-@IsolatedYcmd
-def DebugInfo_ServerIsNotRunning_LogfilesDoNotExist_test( app ):
-  with UserOption( 'server_keep_logfiles', False ):
-    StopCompleterServer( app, filetype = 'typescript' )
-    request_data = BuildRequest( filetype = 'typescript' )
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      matches_regexp( 'TypeScript completer debug information:\n'
-                      '  TSServer is not running\n'
-                      '  TSServer executable: .+' ) )
+    has_entry( 'completer', has_entries( {
+      'name': 'TypeScript',
+      'servers': contains( has_entries( {
+        'name': 'TSServer',
+        'is_running': instance_of( bool ),
+        'executable': instance_of( str ),
+        'pid': instance_of( int ),
+        'address': None,
+        'port': None,
+        'logfiles': contains( instance_of( str ) )
+      } ) ),
+      'items': empty()
+    } ) )
+  )

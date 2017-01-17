@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,8 +24,8 @@ standard_library.install_aliases()
 from builtins import *  # noqa
 
 import os
-
-from hamcrest import assert_that, contains_string, matches_regexp
+from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
+                       instance_of, matches_regexp )
 
 from ycmd.tests.clang import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
                                TemporaryClangTestDir, TemporaryClangProject )
@@ -33,55 +33,103 @@ from ycmd.tests.test_utils import BuildRequest
 
 
 @SharedYcmd
-def DebugInfo_ExtraConfLoaded_test( app ):
+def DebugInfo_FlagsWhenExtraConfLoadedAndNoCompilationDatabase_test( app ):
   app.post_json( '/load_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
   request_data = BuildRequest( filepath = PathToTestFile( 'basic.cpp' ),
                                filetype = 'cpp' )
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    matches_regexp( 'C-family completer debug information:\n'
-                    '  Configuration file found and loaded\n'
-                    '  Configuration path: .+\n'
-                    '  Flags: .+' ) )
+    has_entry( 'completer', has_entries( {
+      'name': 'C-family',
+      'servers': empty(),
+      'items': contains(
+        has_entries( {
+          'key': 'compilation database path',
+          'value': 'None'
+        } ),
+        has_entries( {
+          'key': 'flags',
+          'value': matches_regexp( "\['-x', 'c\+\+', .*\]" )
+        } )
+      )
+    } ) )
+  )
 
 
 @SharedYcmd
-def DebugInfo_NoExtraConfFound_test( app ):
+def DebugInfo_FlagsWhenNoExtraConfAndNoCompilationDatabase_test( app ):
   request_data = BuildRequest( filetype = 'cpp' )
-  # First time, an exception is raised when no .ycm_extra_conf.py file is found.
+  # First request, FlagsForFile raises a NoExtraConfDetected exception.
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    contains_string( 'C-family completer debug information:\n'
-                     '  No configuration file found\n'
-                     '  No compilation database found' ) )
-  # Second time, None is returned as the .ycm_extra_conf.py path.
+    has_entry( 'completer', has_entries( {
+      'name': 'C-family',
+      'servers': empty(),
+      'items': contains(
+        has_entries( {
+          'key': 'compilation database path',
+          'value': 'None'
+        } ),
+        has_entries( {
+          'key': 'flags',
+          'value': '[]'
+        } )
+      )
+    } ) )
+  )
+  # Second request, FlagsForFile returns None.
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    contains_string( 'C-family completer debug information:\n'
-                     '  No configuration file found\n'
-                     '  No compilation database found' ) )
+    has_entry( 'completer', has_entries( {
+      'name': 'C-family',
+      'servers': empty(),
+      'items': contains(
+        has_entries( {
+          'key': 'compilation database path',
+          'value': 'None'
+        } ),
+        has_entries( {
+          'key': 'flags',
+          'value': '[]'
+        } )
+      )
+    } ) )
+  )
 
 
 @IsolatedYcmd
-def DebugInfo_ExtraConfFoundButNotLoaded_test( app ):
+def DebugInfo_FlagsWhenExtraConfNotLoadedAndNoCompilationDatabase_test(
+  app ):
+
   request_data = BuildRequest( filepath = PathToTestFile( 'basic.cpp' ),
                                filetype = 'cpp' )
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
-    matches_regexp(
-      'C-family completer debug information:\n'
-      '  Configuration file found but not loaded\n'
-      '  Configuration path: .+' ) )
+    has_entry( 'completer', has_entries( {
+      'name': 'C-family',
+      'servers': empty(),
+      'items': contains(
+        has_entries( {
+          'key': 'compilation database path',
+          'value': 'None'
+        } ),
+        has_entries( {
+          'key': 'flags',
+          'value': '[]'
+        } )
+      )
+    } ) )
+  )
 
 
 @IsolatedYcmd
-def DebugInfo_CompilationDatabase_test( app ):
+def DebugInfo_FlagsWhenNoExtraConfAndCompilationDatabaseLoaded_test( app ):
   with TemporaryClangTestDir() as tmp_dir:
     compile_commands = [
       {
         'directory': tmp_dir,
-        'command': 'clang++ -x c++ -I. -I/absolute/path -Wall',
+        'command': 'clang++ -I. -I/absolute/path -Wall',
         'file': os.path.join( tmp_dir, 'test.cc' ),
       },
     ]
@@ -92,21 +140,26 @@ def DebugInfo_CompilationDatabase_test( app ):
 
       assert_that(
         app.post_json( '/debug_info', request_data ).json,
-        matches_regexp( 'C-family completer debug information:\n'
-                        '  No configuration file found\n'
-                        '  Using compilation database from: .+\n'
-                        '  Flags: .+-Wall.+' ) )
-
-      assert_that(
-        app.post_json( '/debug_info', request_data ).json,
-        matches_regexp( 'C-family completer debug information:\n'
-                        '  No configuration file found\n'
-                        '  Using compilation database from: .+\n'
-                        '  Flags: .+-Wall.+' ) )
+        has_entry( 'completer', has_entries( {
+          'name': 'C-family',
+          'servers': empty(),
+          'items': contains(
+            has_entries( {
+              'key': 'compilation database path',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'flags',
+              'value': matches_regexp(
+                  "\['clang\+\+', '-x', 'c\+\+', .*, '-Wall', .*\]" )
+            } )
+          )
+        } ) )
+      )
 
 
 @IsolatedYcmd
-def DebugInfo_InvalidCompilationDatabase_test( app ):
+def DebugInfo_FlagsWhenNoExtraConfAndInvalidCompilationDatabase_test( app ):
   with TemporaryClangTestDir() as tmp_dir:
     compile_commands = 'garbage'
     with TemporaryClangProject( tmp_dir, compile_commands ):
@@ -116,32 +169,18 @@ def DebugInfo_InvalidCompilationDatabase_test( app ):
 
       assert_that(
         app.post_json( '/debug_info', request_data ).json,
-        contains_string( 'C-family completer debug information:\n'
-                         '  No configuration file found\n'
-                         '  No compilation database found' ) )
-
-      assert_that(
-        app.post_json( '/debug_info', request_data ).json,
-        contains_string( 'C-family completer debug information:\n'
-                         '  No configuration file found\n'
-                         '  No compilation database found' ) )
-
-
-@IsolatedYcmd
-def DebugInfo_NoCompilationDatabase_test( app ):
-  with TemporaryClangTestDir() as tmp_dir:
-    request_data = BuildRequest(
-      filepath = os.path.join( tmp_dir, 'test.cc' ),
-      filetype = 'cpp' )
-
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      contains_string( 'C-family completer debug information:\n'
-                       '  No configuration file found\n'
-                       '  No compilation database found' ) )
-
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      contains_string( 'C-family completer debug information:\n'
-                       '  No configuration file found\n'
-                       '  No compilation database found' ) )
+        has_entry( 'completer', has_entries( {
+          'name': 'C-family',
+          'servers': empty(),
+          'items': contains(
+            has_entries( {
+              'key': 'compilation database path',
+              'value': 'None'
+            } ),
+            has_entries( {
+              'key': 'flags',
+              'value': '[]'
+            } )
+          )
+        } ) )
+      )
