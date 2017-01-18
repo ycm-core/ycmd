@@ -80,6 +80,7 @@ const boost::unordered_map < const char *,
         ( "Erlang"     , "erlang"     )
         ( "Fortran"    , "fortran"    )
         ( "Go"         , "go"         )
+        ( "Haskell"    , "haskell"    )
         ( "HTML"       , "html"       )
         ( "Java"       , "java"       )
         ( "JavaScript" , "javascript" )
