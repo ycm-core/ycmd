@@ -8,7 +8,8 @@ WebTest      >= 2.0.20
 ordereddict  >= 1.1
 nose-exclude >= 0.4.1
 unittest2    >= 1.1.0
-psutil       >= 3.3.0
+# psutil 5.0.1 is broken on Python 3.6 and Windows 64-bit
+psutil       >= 3.3.0, != 5.0.1
 # This needs to be kept in sync with submodule checkout in third_party
 future       == 0.15.2
 coverage     >= 4.2
