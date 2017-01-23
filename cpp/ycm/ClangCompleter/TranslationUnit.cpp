@@ -242,6 +242,49 @@ Location TranslationUnit::GetDefinitionLocation(
   return Location( clang_getCursorLocation( definition_cursor ) );
 }
 
+static enum CXVisitorResult __visitor(void *context, CXCursor cursor, CXSourceRange range) {
+  // Ignore the range parameter
+  (void)range;
+  std::vector< Location > *locations = (std::vector< Location > *)context;
+  locations->push_back(Location(clang_getCursorLocation(cursor)));
+  return CXVisit_Continue;
+}
+
+std::vector< Location >
+TranslationUnit::GetReferencesLocationList(
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  bool reparse ) {
+  if ( reparse )
+    Reparse( unsaved_files );
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+  std::vector< Location > locations;
+
+  if ( !clang_translation_unit_ )
+    return locations;
+
+  CXCursor cursor = GetCursor( line, column );
+
+  if ( !CursorIsValid( cursor ) )
+    return locations;
+
+  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  if( !file ) 
+      return locations;
+
+  CXCursorAndRangeVisitor visitor = {
+    .context = &locations,
+    .visit = __visitor,
+  };
+
+  // Ignore the result here
+  clang_findReferencesInFile( cursor, file, visitor );
+  return locations;
+}
+
+
 std::string TranslationUnit::GetTypeAtLocation(
   int line,
   int column,

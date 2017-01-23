@@ -122,6 +122,8 @@ class ClangCompleter( Completer ):
          self._GoToDefinition( request_data ) ),
       'GoToDeclaration'          : ( lambda self, request_data, args:
          self._GoToDeclaration( request_data ) ),
+      'GetReferences'            : ( lambda self, request_data, args:
+         self._GetReferences( request_data ) ),
       'GoTo'                     : ( lambda self, request_data, args:
          self._GoTo( request_data ) ),
       'GoToImprecise'            : ( lambda self, request_data, args:
@@ -188,7 +190,27 @@ class ClangCompleter( Completer ):
       raise RuntimeError( 'Can\'t jump to declaration.' )
     return _ResponseForLocation( location )
 
-
+  def _GetReferences( self, request_data ):
+    filename = request_data['filepath']
+    if not filename:
+      raise ValueError(INVALID_FILE_MESSAGE)
+ 
+    flags = self._FlagsForRequest(request_data)
+    if not flags:
+      raise ValueError(NO_COMPILE_FLAGS_MESSAGE)
+ 
+    files = self.GetUnsavedFilesVector(request_data)
+    line = request_data['line_num']
+    column = request_data['column_num']
+    references = getattr(self._completer, "GetReferencesLocationList")(
+            ToCppStringCompatible(filename),
+            line,
+            column,
+            files,
+            flags,
+            True)
+    return [_ResponseForLocation(ref) for ref in references]
+ 
   def _GoTo( self, request_data ):
     include_response = self._ResponseForInclude( request_data )
     if include_response:
