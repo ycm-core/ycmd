@@ -355,8 +355,10 @@ class TypeScriptCompleter( Completer ):
                            self._StopServer() ),
       'GoToDefinition' : ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
+      'GetReferences'  : ( lambda self, request_data, args:
+                           self._GetReferences( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
-                           self._GoToReferences( request_data ) ),
+                           self._GetReferences( request_data ) ),
       'GoToType'       : ( lambda self, request_data, args:
                            self._GoToType( request_data ) ),
       'GetType'        : ( lambda self, request_data, args:
@@ -402,7 +404,7 @@ class TypeScriptCompleter( Completer ):
       raise RuntimeError( 'Could not find definition' )
 
 
-  def _GoToReferences( self, request_data ):
+  def _GetReferences( self, request_data ):
     self._Reload( request_data )
     response = self._SendRequest( 'references', {
       'file':   request_data[ 'filepath' ],

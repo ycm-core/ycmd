@@ -69,9 +69,15 @@ if ( USE_CLANG_COMPLETER AND
     # (see YCM issues #778 and #2259), and is available for 32-bit and 64-bit
     # architectures.
     if ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-opensuse13.2" )
-      set( CLANG_SHA256
-           "9153b473dc37d2e21a260231e90e43b97aba1dff5d27f14c947815a90fbdc8d7" )
+      if ( EXISTS "/etc/debian_version" )
+        set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-debian8" )
+        set( CLANG_SHA256
+             "916e2c2c1411e7e568e856e614408a8072c1884339865e8cfabc71880f28a804" )
+      else()
+        set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-opensuse13.2" )
+        set( CLANG_SHA256
+             "9153b473dc37d2e21a260231e90e43b97aba1dff5d27f14c947815a90fbdc8d7" )
+      endif()
       set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
     else()
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i586-opensuse13.2" )

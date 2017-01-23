@@ -239,8 +239,10 @@ class TernCompleter( Completer ):
                                          self._GoToDefinition( request_data ) ),
       'GoTo':           ( lambda self, request_data, args:
                                          self._GoToDefinition( request_data ) ),
+      'GetReferences' : ( lambda self, request_data, args:
+                                         self._GetReferences( request_data ) ),
       'GoToReferences': ( lambda self, request_data, args:
-                                         self._GoToReferences( request_data ) ),
+                                         self._GetReferences( request_data ) ),
       'GetType':        ( lambda self, request_data, args:
                                          self._GetType( request_data) ),
       'GetDoc':         ( lambda self, request_data, args:
@@ -518,7 +520,7 @@ class TernCompleter( Completer ):
         response[ 'start' ][ 'ch' ] ) )
 
 
-  def _GoToReferences( self, request_data ):
+  def _GetReferences( self, request_data ):
     query = {
       'type': 'refs',
     }

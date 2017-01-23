@@ -76,6 +76,13 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
+  YCM_DLL_EXPORT std::vector< Range > GetReferencesRangeList(
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    bool reparse = true,
+    bool local_only = false );
+
   std::string GetTypeAtLocation(
     int line,
     int column,

@@ -75,6 +75,15 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
+  YCM_DLL_EXPORT std::vector< Range > GetReferencesRangeList(
+    const std::string &filename,
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    const std::vector< std::string > &flags,
+    bool reparse = true,
+    bool local_only = false );
+
   std::string GetTypeAtLocation(
     const std::string &filename,
     int line,

@@ -242,6 +242,73 @@ Location TranslationUnit::GetDefinitionLocation(
   return Location( clang_getCursorLocation( definition_cursor ) );
 }
 
+static enum CXVisitorResult __references_visitor(
+  void *context,
+  CXCursor cursor,
+  CXSourceRange range ) {
+  
+  // Here we just need the range info of the cursor, So ignore the 
+  // cursor parameter.
+  (void)cursor;
+  std::vector< Range > *ranges =
+      reinterpret_cast< std::vector < Range > * >( context );
+
+  ranges->push_back( Range( range ) );
+  return CXVisit_Continue;
+}
+
+
+std::vector< Range >
+TranslationUnit::GetReferencesRangeList(
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  bool reparse,
+  bool local_only ) {
+  if ( reparse )
+    Reparse( unsaved_files );
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+  std::vector< Range > ranges;
+
+  if ( !clang_translation_unit_ )
+    return ranges;
+
+  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  CXCursor cursor = clang_getCursor( clang_translation_unit_, 
+                                     clang_getLocation ( 
+                                       clang_translation_unit_,
+                                       file,
+                                       line,
+                                       column) );
+  if ( !CursorIsValid( cursor ) )
+    return ranges;
+ 
+  // Here we can only find all the references in the current file,
+  // so we could not rename the cursor that is declared in other 
+  // files. 
+  if ( local_only && !clang_isCursorDefinition( cursor ) ) {
+    cursor = clang_getCursorDefinition( cursor );
+    if ( !CursorIsValid( cursor ) ||
+            clang_Location_isInSystemHeader(
+                clang_getCursorLocation( cursor ) ) )
+        return ranges;
+  }
+  
+  CXCursorAndRangeVisitor visitor = {
+    .context = &ranges,
+    .visit = __references_visitor,
+  };
+
+  if( CXResult_Success != clang_findReferencesInFile( cursor, 
+                                                      file, 
+                                                      visitor ) ) {
+    ranges.clear();
+  }
+  return ranges;
+}
+
+
 std::string TranslationUnit::GetTypeAtLocation(
   int line,
   int column,

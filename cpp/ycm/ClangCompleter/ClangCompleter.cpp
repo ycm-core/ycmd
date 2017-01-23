@@ -160,6 +160,32 @@ Location ClangCompleter::GetDefinitionLocation(
   return unit->GetDefinitionLocation( line, column, unsaved_files, reparse );
 }
 
+
+std::vector< Range >
+ClangCompleter::GetReferencesRangeList(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse,
+  bool local_only ) {
+  ReleaseGil unlock;
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
+
+  if ( !unit ) {
+    return std::vector< Range >();
+  }
+
+  return unit->GetReferencesRangeList( line,
+                                       column,
+                                       unsaved_files,
+                                       reparse,
+                                       local_only );
+}
+
+
 std::string ClangCompleter::GetTypeAtLocation(
   const std::string &filename,
   int line,
