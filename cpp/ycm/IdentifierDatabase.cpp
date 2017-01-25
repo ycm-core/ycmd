@@ -24,7 +24,7 @@
 #include "Result.h"
 #include "Utils.h"
 
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 
 #include <algorithm>
 #include <cctype>
@@ -96,7 +96,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
     }
   }
 
-  boost::unordered_set< const Candidate * > seen_candidates;
+  std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
 
   {
