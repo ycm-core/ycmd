@@ -18,9 +18,9 @@
 #include "Result.h"
 #include "standard.h"
 #include "Utils.h"
-#include <boost/function.hpp>
 #include <algorithm>
 #include <locale>
+#include <functional>
 
 namespace YouCompleteMe {
 
@@ -47,7 +47,7 @@ bool StringLessThanWithLowercasePriority( const std::string &first,
   return std::lexicographical_compare(
            first.begin(), first.end(),
            second.begin(), second.end(),
-           boost::function< bool( const char &, const char & ) >(
+           std::function< bool( const char &, const char & ) >(
              &CharLessThanWithLowercasePriority ) );
 }
 
