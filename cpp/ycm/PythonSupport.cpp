@@ -110,7 +110,7 @@ boost::python::list FilterAndSortCandidates(
     std::sort( result_and_objects.begin(), result_and_objects.end() );
   }
 
-  foreach ( const ResultAnd< int > &result_and_object,
+  for ( const ResultAnd< int > &result_and_object :
             result_and_objects ) {
     filtered_candidates.append( candidates[ result_and_object.extra_object_ ] );
   }

@@ -245,7 +245,7 @@ using testing::internal::CopyArray;
 using testing::internal::CountIf;
 using testing::internal::EqFailure;
 using testing::internal::FloatingPoint;
-using testing::internal::ForEach;
+using testing::internal::for;
 using testing::internal::FormatEpochTimeInMillisAsIso8601;
 using testing::internal::FormatTimeInMillisAsSeconds;
 using testing::internal::GTestFlagSaver;
@@ -770,26 +770,26 @@ TEST(ContainerUtilityTest, CountIf) {
   EXPECT_EQ(2, CountIf(v, IsPositive));
 }
 
-// Tests ForEach().
+// Tests for().
 
 static int g_sum = 0;
 static void Accumulate(int n) { g_sum += n; }
 
-TEST(ContainerUtilityTest, ForEach) {
+TEST(ContainerUtilityTest : for) {
   std::vector<int> v;
   g_sum = 0;
-  ForEach(v, Accumulate);
+  for(v : Accumulate);
   EXPECT_EQ(0, g_sum);  // Works for an empty container;
 
   g_sum = 0;
   v.push_back(1);
-  ForEach(v, Accumulate);
+  for(v : Accumulate);
   EXPECT_EQ(1, g_sum);  // Works for a container with one element.
 
   g_sum = 0;
   v.push_back(20);
   v.push_back(300);
-  ForEach(v, Accumulate);
+  for(v : Accumulate);
   EXPECT_EQ(321, g_sum);
 }
 

@@ -45,9 +45,9 @@ void IdentifierDatabase::AddIdentifiers(
   const FiletypeIdentifierMap &filetype_identifier_map ) {
   boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
 
-  foreach ( const FiletypeIdentifierMap::value_type & filetype_and_map,
+  for ( const FiletypeIdentifierMap::value_type & filetype_and_map :
             filetype_identifier_map ) {
-    foreach( const FilepathToIdentifiers::value_type & filepath_and_identifiers,
+    for( const FilepathToIdentifiers::value_type & filepath_and_identifiers :
              filetype_and_map.second ) {
       AddIdentifiersNoLock( filepath_and_identifiers.second,
                             filetype_and_map.first,
@@ -102,9 +102,9 @@ void IdentifierDatabase::ResultsForQueryAndType(
 
   {
     boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
-    foreach ( const FilepathToCandidates::value_type & path_and_candidates,
+    for ( const FilepathToCandidates::value_type & path_and_candidates :
               *it->second ) {
-      foreach ( const Candidate * candidate, *path_and_candidates.second ) {
+      for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) )
           continue;
         else

@@ -66,7 +66,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
   {
     boost::lock_guard< boost::mutex > locker( holder_mutex_ );
 
-    foreach ( const std::string & candidate_text, strings ) {
+    for ( const std::string & candidate_text : strings ) {
       const std::string &validated_candidate_text =
         ValidatedCandidateText( candidate_text );
 
@@ -95,7 +95,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
   {
     boost::lock_guard< boost::mutex > locker( holder_mutex_ );
 
-    foreach ( const CompletionData & data, datas ) {
+    for ( const CompletionData & data : datas ) {
       const std::string &validated_candidate_text =
         ValidatedCandidateText( data.original_string_ );
 
@@ -117,7 +117,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
 #endif // USE_CLANG_COMPLETER
 
 CandidateRepository::~CandidateRepository() {
-  foreach ( const CandidateHolder::value_type & pair,
+  for ( const CandidateHolder::value_type & pair :
             candidate_holder_ ) {
     delete pair.second;
   }

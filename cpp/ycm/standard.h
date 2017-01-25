@@ -15,10 +15,4 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/foreach.hpp>
-
-// We're most definitely not going to use
-// it as BOOST_FOREACH.
-#define foreach BOOST_FOREACH
-
 typedef unsigned int uint;
