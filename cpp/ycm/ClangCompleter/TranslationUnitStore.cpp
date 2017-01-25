@@ -20,14 +20,12 @@
 #include "Utils.h"
 #include "exceptions.h"
 
-#include <boost/thread/locks.hpp>
-#include <memory>
 #include <boost/functional/hash.hpp>
 
-using boost::lock_guard;
+using std::lock_guard;
 using std::shared_ptr;
 using std::make_shared;
-using boost::mutex;
+using std::mutex;
 
 namespace YouCompleteMe {
 

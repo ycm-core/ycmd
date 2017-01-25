@@ -22,12 +22,11 @@
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
 
-#include <memory>
 #include <type_traits>
 
-using boost::unique_lock;
-using boost::mutex;
-using boost::try_to_lock_t;
+using std::unique_lock;
+using std::mutex;
+using std::try_to_lock_t;
 using std::shared_ptr;
 using std::remove_pointer;
 

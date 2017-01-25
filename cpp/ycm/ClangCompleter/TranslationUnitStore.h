@@ -26,7 +26,7 @@
 #include <memory>
 
 #include <boost/utility.hpp>
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 #include <boost/unordered_map.hpp>
 
 typedef void *CXIndex;
@@ -76,7 +76,7 @@ private:
   CXIndex clang_index_;
   TranslationUnitForFilename filename_to_translation_unit_;
   FlagsHashForFilename filename_to_flags_hash_;
-  boost::mutex filename_to_translation_unit_and_flags_mutex_;
+  std::mutex filename_to_translation_unit_and_flags_mutex_;
 };
 
 } // namespace YouCompleteMe

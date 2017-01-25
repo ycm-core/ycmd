@@ -22,8 +22,8 @@
 
 #include <boost/utility.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/thread/mutex.hpp>
 
+#include <mutex>
 #include <vector>
 #include <string>
 
@@ -64,9 +64,9 @@ private:
 
   const std::string &ValidatedCandidateText( const std::string &text );
 
-  boost::mutex holder_mutex_;
+  std::mutex holder_mutex_;
 
-  static boost::mutex singleton_mutex_;
+  static std::mutex singleton_mutex_;
   static CandidateRepository *instance_;
 
   const std::string empty_;

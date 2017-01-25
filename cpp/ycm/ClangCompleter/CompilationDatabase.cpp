@@ -23,14 +23,13 @@
 
 #include <memory>
 #include <type_traits>
-#include <boost/thread/locks.hpp>
 
-using boost::lock_guard;
-using boost::unique_lock;
-using boost::try_to_lock_t;
+using std::lock_guard;
+using std::unique_lock;
+using std::try_to_lock_t;
 using std::remove_pointer;
 using std::shared_ptr;
-using boost::mutex;
+using std::mutex;
 
 namespace YouCompleteMe {
 

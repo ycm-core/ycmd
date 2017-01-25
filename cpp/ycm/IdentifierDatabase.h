@@ -20,7 +20,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 
 #include <vector>
 #include <string>
@@ -95,7 +95,7 @@ private:
   CandidateRepository &candidate_repository_;
 
   FiletypeCandidateMap filetype_candidate_map_;
-  mutable boost::mutex filetype_candidate_map_mutex_;
+  mutable std::mutex filetype_candidate_map_mutex_;
 };
 
 } // namespace YouCompleteMe
