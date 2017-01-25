@@ -21,7 +21,6 @@
 #include "Utils.h"
 
 #include <boost/thread/locks.hpp>
-#include <boost/algorithm/string.hpp>
 
 #ifdef USE_CLANG_COMPLETER
 #  include "ClangCompleter/CompletionData.h"

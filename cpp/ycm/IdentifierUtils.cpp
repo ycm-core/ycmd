@@ -21,8 +21,7 @@
 
 #include <boost/unordered_map.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string/regex.hpp>
+#include <regex>
 
 namespace YouCompleteMe {
 
@@ -127,11 +126,10 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   std::string::const_iterator start = tags_file_contents.begin();
   std::string::const_iterator end   = tags_file_contents.end();
 
-  boost::smatch matches;
-  const boost::regex expression( TAG_REGEX );
-  const boost::match_flag_type options = boost::match_not_dot_newline;
+  std::smatch matches;
+  const std::regex expression( TAG_REGEX );
 
-  while ( boost::regex_search( start, end, matches, expression, options ) ) {
+  while ( std::regex_search( start, end, matches, expression ) ) {
     start = matches[ 0 ].second;
 
     std::string language( matches[ 3 ] );

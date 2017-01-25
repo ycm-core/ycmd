@@ -18,12 +18,9 @@
 #include "Result.h"
 #include "standard.h"
 #include "Utils.h"
-#include <boost/algorithm/string.hpp>
 #include <boost/function.hpp>
 #include <algorithm>
 #include <locale>
-
-using boost::algorithm::istarts_with;
 
 namespace YouCompleteMe {
 
@@ -201,6 +198,22 @@ bool Result::operator< ( const Result &other ) const {
   return StringLessThanWithLowercasePriority( *text_, *other.text_ );
 }
 
+
+bool istarts_with( std::string text, std::string query )
+{
+  bool starts_with_ignore_case = true;
+
+  for ( auto i=0; i < query.length(); ++i )
+  {
+    if ( toupper( text[i] ) != toupper( query[i] ) )
+    {
+      starts_with_ignore_case = false;
+      break;
+    }
+  }
+
+  return starts_with_ignore_case;
+}
 
 void Result::SetResultFeaturesFromQuery(
   const std::string &word_boundary_chars,

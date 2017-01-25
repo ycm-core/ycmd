@@ -18,8 +18,6 @@
 #include "CompletionData.h"
 #include "ClangUtils.h"
 
-#include <boost/algorithm/string/erase.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/move/move.hpp>
 
 namespace YouCompleteMe {
@@ -147,14 +145,19 @@ std::string OptionalChunkToString( CXCompletionString completion_string,
   return final_string;
 }
 
+bool ends_with(const std::string &str, const std::string &suffix)
+{
+  return str.size() >= suffix.size() &&
+         str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
 
 // foo( -> foo
 // foo() -> foo
 std::string RemoveTrailingParens( std::string text ) {
-  if ( boost::ends_with( text, "(" ) ) {
-    boost::erase_tail( text, 1 );
-  } else if ( boost::ends_with( text, "()" ) ) {
-    boost::erase_tail( text, 2 );
+  if ( ends_with( text, "(" ) ) {
+    text.substr( 0, text.length() - 1 );
+  } else if ( ends_with( text, "()" ) ) {
+    text.substr( 0, text.length() - 2 );
   }
 
   return text;
