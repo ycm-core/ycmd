@@ -21,7 +21,7 @@
 #include "DLLDefines.h"
 
 #include <vector>
-#include <boost/move/unique_ptr.hpp>
+#include <memory>
 #include <boost/utility.hpp>
 #include <array>
 
@@ -75,7 +75,7 @@ private:
   typedef std::array<NearestLetterNodeIndices , NUM_LETTERS>
     NearestLetterNodeArray;
 
-  boost::movelib::unique_ptr< NearestLetterNodeArray > letters_;
+  std::unique_ptr< NearestLetterNodeArray > letters_;
 };
 
 } // namespace YouCompleteMe
