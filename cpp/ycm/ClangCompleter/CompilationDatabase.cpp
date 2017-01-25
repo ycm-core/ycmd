@@ -21,16 +21,15 @@
 #include "ReleaseGil.h"
 #include "PythonSupport.h"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
+#include <memory>
+#include <type_traits>
 #include <boost/thread/locks.hpp>
 
 using boost::lock_guard;
 using boost::unique_lock;
 using boost::try_to_lock_t;
-using boost::remove_pointer;
-using boost::shared_ptr;
+using std::remove_pointer;
+using std::shared_ptr;
 using boost::mutex;
 
 namespace YouCompleteMe {

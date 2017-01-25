@@ -70,7 +70,7 @@ BOOST_PYTHON_MODULE(ycm_core)
           &IdentifierCompleter::CandidatesForQueryAndType );
 
   class_< std::vector< std::string >,
-      boost::shared_ptr< std::vector< std::string > > >( "StringVector" )
+      std::shared_ptr< std::vector< std::string > > >( "StringVector" )
     .def( vector_indexing_suite< std::vector< std::string > >() );
 
 #ifdef USE_CLANG_COMPLETER
@@ -134,7 +134,7 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def_readonly( "kind_", &CompletionData::kind_ );
 
   class_< std::vector< CompletionData >,
-      boost::shared_ptr< std::vector< CompletionData > > >( "CompletionVector" )
+      std::shared_ptr< std::vector< CompletionData > > >( "CompletionVector" )
     .def( vector_indexing_suite< std::vector< CompletionData > >() );
 
   class_< Location >( "Location" )
@@ -202,7 +202,7 @@ BOOST_PYTHON_MODULE(ycm_core)
                    &CompilationDatabase::GetDatabaseDirectory );
 
   class_< CompilationInfoForFile,
-      boost::shared_ptr< CompilationInfoForFile > >(
+      std::shared_ptr< CompilationInfoForFile > >(
           "CompilationInfoForFile", no_init )
     .def_readonly( "compiler_working_dir_",
                    &CompilationInfoForFile::compiler_working_dir_ )

@@ -34,7 +34,7 @@
 namespace YouCompleteMe {
 
 struct CompletionData;
-typedef boost::shared_ptr< std::vector< CompletionData > > AsyncCompletions;
+typedef std::shared_ptr< std::vector< CompletionData > > AsyncCompletions;
 
 class TranslationUnit : boost::noncopyable {
 public:

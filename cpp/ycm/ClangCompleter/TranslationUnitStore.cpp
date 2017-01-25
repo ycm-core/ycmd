@@ -21,12 +21,12 @@
 #include "exceptions.h"
 
 #include <boost/thread/locks.hpp>
-#include <boost/make_shared.hpp>
+#include <memory>
 #include <boost/functional/hash.hpp>
 
 using boost::lock_guard;
-using boost::shared_ptr;
-using boost::make_shared;
+using std::shared_ptr;
+using std::make_shared;
 using boost::mutex;
 
 namespace YouCompleteMe {
@@ -86,10 +86,10 @@ shared_ptr< TranslationUnit > TranslationUnitStore::GetOrCreate(
     filename_to_flags_hash_[ filename ] = HashForFlags( flags );
   }
 
-  boost::shared_ptr< TranslationUnit > unit;
+  std::shared_ptr< TranslationUnit > unit;
 
   try {
-    unit = boost::make_shared< TranslationUnit >( filename,
+    unit = make_shared< TranslationUnit >( filename,
                                                   unsaved_files,
                                                   flags,
                                                   clang_index_ );

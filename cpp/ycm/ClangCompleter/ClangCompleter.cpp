@@ -28,10 +28,9 @@
 #include "ReleaseGil.h"
 
 #include <clang-c/Index.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
-
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::unordered_map;
 
 namespace YouCompleteMe {

@@ -20,8 +20,8 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/python.hpp>
 #include <clang-c/CXCompilationDatabase.h>

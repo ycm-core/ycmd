@@ -22,14 +22,14 @@
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
+#include <memory>
+#include <type_traits>
 
 using boost::unique_lock;
 using boost::mutex;
 using boost::try_to_lock_t;
-using boost::shared_ptr;
-using boost::remove_pointer;
+using std::shared_ptr;
+using std::remove_pointer;
 
 namespace YouCompleteMe {
 
