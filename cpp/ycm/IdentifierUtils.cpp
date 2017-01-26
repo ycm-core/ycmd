@@ -19,7 +19,7 @@
 #include "Utils.h"
 #include "standard.h"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <regex>
 
 namespace YouCompleteMe {
@@ -59,9 +59,9 @@ struct StringEqualityComparer :
 //   :e $VIMRUNTIME/filetype.vim
 // This is a map of const char* and not std::string to prevent issues with
 // static initialization.
-const boost::unordered_map < const char *,
+const std::unordered_map < const char *,
       const char *,
-      boost::hash< std::string >,
+      std::hash< std::string >,
       StringEqualityComparer > LANG_TO_FILETYPE = {
         { "Ant"        , "ant"        },
         { "Asm"        , "asm"        },

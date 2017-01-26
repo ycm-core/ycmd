@@ -21,7 +21,7 @@
 #include "DLLDefines.h"
 
 #include <boost/utility.hpp>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 #include <mutex>
 #include <vector>
@@ -32,7 +32,7 @@ namespace YouCompleteMe {
 class Candidate;
 struct CompletionData;
 
-typedef boost::unordered_map< std::string, const Candidate * >
+typedef std::unordered_map< std::string, const Candidate * >
 CandidateHolder;
 
 

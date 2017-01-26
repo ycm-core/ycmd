@@ -27,7 +27,7 @@
 
 #include <boost/utility.hpp>
 #include <mutex>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 typedef void *CXIndex;
 
@@ -67,10 +67,10 @@ private:
   std::shared_ptr< TranslationUnit > GetNoLock( const std::string &filename );
 
 
-  typedef boost::unordered_map < std::string,
+  typedef std::unordered_map < std::string,
           std::shared_ptr< TranslationUnit > > TranslationUnitForFilename;
 
-  typedef boost::unordered_map < std::string,
+  typedef std::unordered_map < std::string,
           std::size_t > FlagsHashForFilename;
 
   CXIndex clang_index_;
