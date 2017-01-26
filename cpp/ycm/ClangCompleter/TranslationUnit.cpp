@@ -23,6 +23,7 @@
 #include "ClangHelpers.h"
 
 #include <type_traits>
+#include <algorithm>
 
 using std::unique_lock;
 using std::mutex;
@@ -104,7 +105,7 @@ TranslationUnit::TranslationUnit(
                          &clang_translation_unit_ );
 
   if ( result != CXError_Success )
-    boost_throw( ClangParseError() );
+    throw( ClangParseError() );
 }
 
 
@@ -364,7 +365,7 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
 
   if ( failure ) {
     Destroy();
-    boost_throw( ClangParseError() );
+    throw( ClangParseError() );
   }
 
   UpdateLatestDiagnostics();
