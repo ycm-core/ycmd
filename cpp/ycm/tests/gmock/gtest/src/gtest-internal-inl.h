@@ -292,7 +292,7 @@ inline int CountIf(const Container& c, Predicate predicate) {
 
 // Applies a function/functor to each element in the container.
 template <class Container, typename Functor>
-void for(const Container& c : Functor functor) {
+void ForEach(const Container& c, Functor functor) {
   std::for_each(c.begin(), c.end(), functor);
 }
 
@@ -709,7 +709,7 @@ class GTEST_API_ UnitTestImpl {
 
   // Clears the results of all tests, except the ad hoc tests.
   void ClearNonAdHocTestResult() {
-    for(test_cases_ : TestCase::ClearTestCaseResult);
+    ForEach(test_cases_, TestCase::ClearTestCaseResult);
   }
 
   // Clears the results of ad-hoc test assertions.

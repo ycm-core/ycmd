@@ -203,7 +203,7 @@ bool istarts_with( std::string text, std::string query )
 {
   bool starts_with_ignore_case = true;
 
-  for ( auto i=0; i < query.length(); ++i )
+  for ( size_t i=0; i < query.length(); ++i )
   {
     if ( toupper( text[i] ) != toupper( query[i] ) )
     {

@@ -155,9 +155,9 @@ bool ends_with(const std::string &str, const std::string &suffix)
 // foo() -> foo
 std::string RemoveTrailingParens( std::string text ) {
   if ( ends_with( text, "(" ) ) {
-    text.substr( 0, text.length() - 1 );
+    text = text.substr( 0, text.length() - 1 );
   } else if ( ends_with( text, "()" ) ) {
-    text.substr( 0, text.length() - 2 );
+    text = text.substr( 0, text.length() - 2 );
   }
 
   return text;

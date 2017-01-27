@@ -146,7 +146,7 @@
 namespace testing {
 
 using internal::CountIf;
-using internal::for;
+using internal::ForEach;
 using internal::GetElementOr;
 using internal::Shuffle;
 
@@ -2685,7 +2685,7 @@ TestCase::TestCase(const char* a_name, const char* a_type_param,
 // Destructor of TestCase.
 TestCase::~TestCase() {
   // Deletes every Test in the collection.
-  for(test_info_list_ : internal::Delete<TestInfo>);
+  ForEach(test_info_list_, internal::Delete<TestInfo>);
 }
 
 // Returns the i-th test among all the tests. i can range from 0 to
@@ -2740,7 +2740,7 @@ void TestCase::Run() {
 // Clears the results of all tests in this test case.
 void TestCase::ClearResult() {
   ad_hoc_test_result_.Clear();
-  for(test_info_list_ : TestInfo::ClearTestResult);
+  ForEach(test_info_list_, TestInfo::ClearTestResult);
 }
 
 // Shuffles the tests in this test case.
@@ -3220,7 +3220,7 @@ class TestEventRepeater : public TestEventListener {
 };
 
 TestEventRepeater::~TestEventRepeater() {
-  for(listeners_ : Delete<TestEventListener>);
+  ForEach(listeners_, Delete<TestEventListener>);
 }
 
 void TestEventRepeater::Append(TestEventListener *listener) {
@@ -4308,10 +4308,10 @@ UnitTestImpl::UnitTestImpl(UnitTest* parent)
 
 UnitTestImpl::~UnitTestImpl() {
   // Deletes every TestCase.
-  for(test_cases_ : internal::Delete<TestCase>);
+  ForEach(test_cases_, internal::Delete<TestCase>);
 
   // Deletes every Environment.
-  for(environments_ : internal::Delete<Environment>);
+  ForEach(environments_, internal::Delete<Environment>);
 
   delete os_stack_trace_getter_;
 }
@@ -4580,7 +4580,7 @@ bool UnitTestImpl::RunAllTests() {
     if (has_tests_to_run) {
       // Sets up all environments beforehand.
       repeater->OnEnvironmentsSetUpStart(*parent_);
-      for(environments_ : SetUpEnvironment);
+      ForEach(environments_, SetUpEnvironment);
       repeater->OnEnvironmentsSetUpEnd(*parent_);
 
       // Runs the tests only if there was no fatal failure during global
