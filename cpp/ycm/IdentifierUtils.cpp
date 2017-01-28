@@ -17,7 +17,6 @@
 
 #include "IdentifierUtils.h"
 #include "Utils.h"
-#include "standard.h"
 
 #include <unordered_map>
 #include <boost/assign/list_of.hpp>

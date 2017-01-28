@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "PythonSupport.h"
-#include "standard.h"
 #include "Result.h"
 #include "Candidate.h"
 #include "CandidateRepository.h"

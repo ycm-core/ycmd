@@ -26,7 +26,6 @@
 
 #include <clang-c/Index.h>
 #include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <mutex>
 #include <string>
@@ -35,7 +34,6 @@
 namespace YouCompleteMe {
 
 struct CompletionData;
-typedef boost::shared_ptr< std::vector< CompletionData > > AsyncCompletions;
 
 class TranslationUnit : boost::noncopyable {
 public:

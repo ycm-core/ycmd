@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Result.h"
-#include "standard.h"
 #include "Utils.h"
 #include <boost/algorithm/string.hpp>
 #include <functional>

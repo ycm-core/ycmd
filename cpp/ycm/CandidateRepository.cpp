@@ -17,7 +17,6 @@
 
 #include "CandidateRepository.h"
 #include "Candidate.h"
-#include "standard.h"
 #include "Utils.h"
 
 #include <mutex>

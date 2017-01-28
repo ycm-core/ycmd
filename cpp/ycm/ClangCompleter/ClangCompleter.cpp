@@ -32,7 +32,6 @@
 
 
 using boost::shared_ptr;
-using std::unordered_map;
 
 namespace YouCompleteMe {
 
