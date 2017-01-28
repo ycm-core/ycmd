@@ -21,18 +21,18 @@
 #include "DLLDefines.h"
 
 #include <boost/utility.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <mutex>
 
 namespace YouCompleteMe {
 
 class Candidate;
 struct CompletionData;
 
-typedef boost::unordered_map< std::string, const Candidate * >
+typedef std::unordered_map< std::string, const Candidate * >
 CandidateHolder;
 
 
@@ -64,9 +64,9 @@ private:
 
   const std::string &ValidatedCandidateText( const std::string &text );
 
-  boost::mutex holder_mutex_;
+  std::mutex holder_mutex_;
 
-  static boost::mutex singleton_mutex_;
+  static std::mutex singleton_mutex_;
   static CandidateRepository *instance_;
 
   const std::string empty_;

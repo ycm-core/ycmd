@@ -60,7 +60,7 @@ std::string GetWordBoundaryChars( const std::string &text ) {
 Bitset LetterBitsetFromString( const std::string &text ) {
   Bitset letter_bitset;
 
-  foreach ( char letter, text ) {
+  for ( char letter : text ) {
     int letter_index = IndexForLetter( letter );
 
     if ( IsInAsciiRange( letter_index ) )
@@ -86,7 +86,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
   LetterNode *node = root_node_.get();
   int index_sum = 0;
 
-  foreach ( char letter, query ) {
+  for ( char letter : query ) {
     const NearestLetterNodeIndices *nearest =
       node->NearestLetterNodesForLetter( letter );
 

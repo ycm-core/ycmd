@@ -20,8 +20,7 @@
 #include "standard.h"
 #include "Utils.h"
 
-#include <boost/thread/locks.hpp>
-#include <boost/algorithm/string.hpp>
+#include <mutex>
 
 #ifdef USE_CLANG_COMPLETER
 #  include "ClangCompleter/CompletionData.h"
@@ -38,11 +37,11 @@ const int MAX_CANDIDATE_SIZE = 80;
 }  // unnamed namespace
 
 
-boost::mutex CandidateRepository::singleton_mutex_;
+std::mutex CandidateRepository::singleton_mutex_;
 CandidateRepository *CandidateRepository::instance_ = NULL;
 
 CandidateRepository &CandidateRepository::Instance() {
-  boost::lock_guard< boost::mutex > locker( singleton_mutex_ );
+  std::lock_guard< std::mutex > locker( singleton_mutex_ );
 
   if ( !instance_ ) {
     static CandidateRepository repo;
@@ -54,7 +53,7 @@ CandidateRepository &CandidateRepository::Instance() {
 
 
 int CandidateRepository::NumStoredCandidates() {
-  boost::lock_guard< boost::mutex > locker( holder_mutex_ );
+  std::lock_guard< std::mutex > locker( holder_mutex_ );
   return candidate_holder_.size();
 }
 
@@ -65,9 +64,9 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
   candidates.reserve( strings.size() );
 
   {
-    boost::lock_guard< boost::mutex > locker( holder_mutex_ );
+    std::lock_guard< std::mutex > locker( holder_mutex_ );
 
-    foreach ( const std::string & candidate_text, strings ) {
+    for ( const std::string & candidate_text : strings ) {
       const std::string &validated_candidate_text =
         ValidatedCandidateText( candidate_text );
 
@@ -94,9 +93,9 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
   candidates.reserve( datas.size() );
 
   {
-    boost::lock_guard< boost::mutex > locker( holder_mutex_ );
+    std::lock_guard< std::mutex > locker( holder_mutex_ );
 
-    foreach ( const CompletionData & data, datas ) {
+    for ( const CompletionData & data : datas ) {
       const std::string &validated_candidate_text =
         ValidatedCandidateText( data.original_string_ );
 
@@ -118,7 +117,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
 #endif // USE_CLANG_COMPLETER
 
 CandidateRepository::~CandidateRepository() {
-  foreach ( const CandidateHolder::value_type & pair,
+  for ( const CandidateHolder::value_type & pair :
             candidate_holder_ ) {
     delete pair.second;
   }

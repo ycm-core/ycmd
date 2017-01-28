@@ -19,7 +19,7 @@
 #include "standard.h"
 #include "Utils.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/function.hpp>
+#include <functional>
 #include <algorithm>
 #include <locale>
 
@@ -50,7 +50,7 @@ bool StringLessThanWithLowercasePriority( const std::string &first,
   return std::lexicographical_compare(
            first.begin(), first.end(),
            second.begin(), second.end(),
-           boost::function< bool( const char &, const char & ) >(
+           std::function< bool( const char &, const char & ) >(
              &CharLessThanWithLowercasePriority ) );
 }
 

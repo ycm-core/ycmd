@@ -24,8 +24,7 @@
 #include "Result.h"
 #include "Utils.h"
 
-#include <boost/thread/locks.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 
@@ -42,11 +41,11 @@ IdentifierDatabase::IdentifierDatabase()
 
 void IdentifierDatabase::AddIdentifiers(
   const FiletypeIdentifierMap &filetype_identifier_map ) {
-  boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
 
-  foreach ( const FiletypeIdentifierMap::value_type & filetype_and_map,
+  for ( const FiletypeIdentifierMap::value_type & filetype_and_map :
             filetype_identifier_map ) {
-    foreach( const FilepathToIdentifiers::value_type & filepath_and_identifiers,
+    for( const FilepathToIdentifiers::value_type & filepath_and_identifiers :
              filetype_and_map.second ) {
       AddIdentifiersNoLock( filepath_and_identifiers.second,
                             filetype_and_map.first,
@@ -60,7 +59,7 @@ void IdentifierDatabase::AddIdentifiers(
   const std::vector< std::string > &new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
   AddIdentifiersNoLock( new_candidates, filetype, filepath );
 }
 
@@ -68,7 +67,7 @@ void IdentifierDatabase::AddIdentifiers(
 void IdentifierDatabase::ClearCandidatesStoredForFile(
   const std::string &filetype,
   const std::string &filepath ) {
-  boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
   GetCandidateSet( filetype, filepath ).clear();
 }
 
@@ -79,7 +78,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
   std::vector< Result > &results ) const {
   FiletypeCandidateMap::const_iterator it;
   {
-    boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
     it = filetype_candidate_map_.find( filetype );
 
     if ( it == filetype_candidate_map_.end() || query.empty() )
@@ -88,14 +87,14 @@ void IdentifierDatabase::ResultsForQueryAndType(
   Bitset query_bitset = LetterBitsetFromString( query );
   bool query_has_uppercase_letters = any_of( query, is_upper() );
 
-  boost::unordered_set< const Candidate * > seen_candidates;
+  std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
 
   {
-    boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
-    foreach ( const FilepathToCandidates::value_type & path_and_candidates,
+    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    for ( const FilepathToCandidates::value_type & path_and_candidates :
               *it->second ) {
-      foreach ( const Candidate * candidate, *path_and_candidates.second ) {
+      for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) )
           continue;
         else

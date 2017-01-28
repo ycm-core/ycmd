@@ -20,7 +20,7 @@
 
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/move/move.hpp>
+#include <utility>
 
 namespace YouCompleteMe {
 
@@ -182,7 +182,7 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
                           saw_placeholder );
   }
 
-  original_string_ = RemoveTrailingParens( boost::move( original_string_ ) );
+  original_string_ = RemoveTrailingParens( std::move( original_string_ ) );
   kind_ = CursorKindToCompletionKind( completion_result.CursorKind );
 
   detailed_info_.append( return_type_ )

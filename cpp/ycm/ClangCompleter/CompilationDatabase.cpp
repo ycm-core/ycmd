@@ -24,14 +24,13 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
-#include <boost/thread/locks.hpp>
 
-using boost::lock_guard;
-using boost::unique_lock;
-using boost::try_to_lock_t;
+using std::lock_guard;
+using std::unique_lock;
+using std::try_to_lock_t;
 using boost::remove_pointer;
 using boost::shared_ptr;
-using boost::mutex;
+using std::mutex;
 
 namespace YouCompleteMe {
 

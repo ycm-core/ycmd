@@ -21,13 +21,13 @@
 #include "TranslationUnit.h"
 #include "UnsavedFile.h"
 
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 typedef void *CXIndex;
 
@@ -67,16 +67,16 @@ private:
   boost::shared_ptr< TranslationUnit > GetNoLock( const std::string &filename );
 
 
-  typedef boost::unordered_map < std::string,
+  typedef std::unordered_map < std::string,
           boost::shared_ptr< TranslationUnit > > TranslationUnitForFilename;
 
-  typedef boost::unordered_map < std::string,
+  typedef std::unordered_map < std::string,
           std::size_t > FlagsHashForFilename;
 
   CXIndex clang_index_;
   TranslationUnitForFilename filename_to_translation_unit_;
   FlagsHashForFilename filename_to_flags_hash_;
-  boost::mutex filename_to_translation_unit_and_flags_mutex_;
+  std::mutex filename_to_translation_unit_and_flags_mutex_;
 };
 
 } // namespace YouCompleteMe

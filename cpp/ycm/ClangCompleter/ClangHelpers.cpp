@@ -24,10 +24,11 @@
 #include "Range.h"
 #include "PythonSupport.h"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <iostream>
+#include <utility>
 
-using boost::unordered_map;
+using std::unordered_map;
 
 namespace YouCompleteMe {
 namespace {
@@ -227,7 +228,7 @@ std::vector< CompletionData > ToCompletionDataVector(
                                      completions.size() );
 
     if ( index == completions.size() ) {
-      completions.push_back( boost::move( data ) );
+      completions.push_back( std::move( data ) );
     }
 
     else {

@@ -174,7 +174,6 @@ endif()
 # Putting the flag in add_definitions() works around the issue, even though it
 # shouldn't in theory go there.
 if ( CPP11_AVAILABLE )
-  message( "Your C++ compiler supports C++11, compiling in that mode." )
 
   # Cygwin needs its hand held a bit; see issue #473
   if ( CYGWIN AND CMAKE_COMPILER_IS_GNUCXX )
@@ -183,8 +182,8 @@ if ( CPP11_AVAILABLE )
     add_definitions( -std=c++0x )
   endif()
 else()
-  message(
-    "Your C++ compiler does NOT support C++11, compiling in C++03 mode." )
+  message( FATAL_ERROR
+    "Your C++ compiler does NOT support C++11." )
 endif()
 
 
