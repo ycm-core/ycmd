@@ -8,8 +8,6 @@ environment:
   COVERAGE: true
   matrix:
   # MSVC 11 not tested since we require C++11 features.
-    arch: 64
-    python: 35
   - msvc: 12
     arch: 64
     python: 36
