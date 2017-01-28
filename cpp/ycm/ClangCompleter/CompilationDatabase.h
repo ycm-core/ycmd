@@ -18,6 +18,7 @@
 #ifndef COMPILATIONDATABASE_H_ZT7MQXPG
 #define COMPILATIONDATABASE_H_ZT7MQXPG
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <boost/utility.hpp>
