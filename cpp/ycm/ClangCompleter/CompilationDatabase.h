@@ -22,7 +22,6 @@
 #include <vector>
 #include <string>
 #include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
 #include <mutex>
 #include <boost/python.hpp>
 #include <clang-c/CXCompilationDatabase.h>

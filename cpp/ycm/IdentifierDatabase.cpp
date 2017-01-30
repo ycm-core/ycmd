@@ -120,13 +120,13 @@ void IdentifierDatabase::ResultsForQueryAndType(
 std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
   const std::string &filetype,
   const std::string &filepath ) {
-  boost::shared_ptr< FilepathToCandidates > &path_to_candidates =
+  std::shared_ptr< FilepathToCandidates > &path_to_candidates =
     filetype_candidate_map_[ filetype ];
 
   if ( !path_to_candidates )
     path_to_candidates.reset( new FilepathToCandidates() );
 
-  boost::shared_ptr< std::set< const Candidate * > > &candidates =
+  std::shared_ptr< std::set< const Candidate * > > &candidates =
     ( *path_to_candidates )[ filepath ];
 
   if ( !candidates )

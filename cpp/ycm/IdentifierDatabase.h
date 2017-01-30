@@ -19,9 +19,9 @@
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
 #include <boost/utility.hpp>
-#include <unordered_map>
-#include <boost/shared_ptr.hpp>
 
+#include <unordered_map>
+#include <memory>
 #include <mutex>
 #include <vector>
 #include <string>
@@ -84,12 +84,12 @@ private:
 
   // filepath -> *( *candidate )
   typedef std::unordered_map < std::string,
-          boost::shared_ptr< std::set< const Candidate * > > >
+          std::shared_ptr< std::set< const Candidate * > > >
           FilepathToCandidates;
 
   // filetype -> *( filepath -> *( *candidate ) )
   typedef std::unordered_map < std::string,
-          boost::shared_ptr< FilepathToCandidates > > FiletypeCandidateMap;
+          std::shared_ptr< FilepathToCandidates > > FiletypeCandidateMap;
 
 
   CandidateRepository &candidate_repository_;
