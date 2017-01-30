@@ -31,6 +31,13 @@
 #  include "Documentation.h"
 #endif // USE_CLANG_COMPLETER
 
+/*
+ * iostream is included because there's a bug with python
+ * earlier than 2.7.12 and 3.5.3 on OSX and FreeBSD.
+ * When either no one else is using earlier versions of python
+ * or ycmd drops support for those, this include statement can be removed.
+ */
+#include <iostream>
 #include <boost/python.hpp>
 #include <boost/utility.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>

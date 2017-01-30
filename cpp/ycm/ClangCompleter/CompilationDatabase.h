@@ -18,6 +18,12 @@
 #ifndef COMPILATIONDATABASE_H_ZT7MQXPG
 #define COMPILATIONDATABASE_H_ZT7MQXPG
 
+/*
+ * iostream is included because there's a bug with python
+ * earlier than 2.7.12 and 3.5.3 on OSX and FreeBSD.
+ * When either no one else is using earlier versions of python
+ * or ycmd drops support for those, this include statement can be removed.
+ */
 #include <iostream>
 #include <vector>
 #include <string>
