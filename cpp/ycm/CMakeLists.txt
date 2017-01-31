@@ -68,7 +68,12 @@ if ( USE_CLANG_COMPLETER AND
     # needed for our use case and a source of problems on some distributions
     # (see YCM issues #778 and #2259), and is available for 32-bit and 64-bit
     # architectures.
-    if ( 64_BIT_PLATFORM )
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)")
+      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-aarch64-linux-gnu" )
+      set( CLANG_SHA256
+           "5ae2e0003c4aff00184560f27f7eef73b22f29d1582db99e37f6c1874dd41866" )
+      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+    elseif ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-opensuse13.2" )
       set( CLANG_SHA256
            "9153b473dc37d2e21a260231e90e43b97aba1dff5d27f14c947815a90fbdc8d7" )
