@@ -114,21 +114,22 @@ endif()
 
 # Determining the presence of C++11 support in the compiler
 set( CPP11_AVAILABLE false )
-if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+if ( CMAKE_COMPILER_IS_GNUCXX )
   if ( NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS  4.6 ) )
     set( CPP11_AVAILABLE true )
   endif()
-elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+elseif( COMPILER_IS_CLANG )
   if ( NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3 ) )
     set( CPP11_AVAILABLE true )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11" )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
   endif()
-elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" )
+elseif( MSVC )
   if ( NOT ( MSVC_VERSION LESS 1800 ) )
     set( CPP11_AVAILABLE true )
   endif()
 endif()
+
 #############################################################################
 
 # For MSVC enable UNICODE and compilation on multiple processors
@@ -184,8 +185,7 @@ if ( CPP11_AVAILABLE )
     add_definitions( -std=c++11 )
   endif()
 else()
-  message( FATAL_ERROR
-    "Your C++ compiler does NOT support C++11." )
+  message( FATAL_ERROR "Your C++ compiler does NOT support C++11." )
 endif()
 
 # Note: build.py always explicitly sets this option, so the default used here
