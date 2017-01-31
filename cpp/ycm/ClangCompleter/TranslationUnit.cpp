@@ -23,6 +23,7 @@
 #include "ClangHelpers.h"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_array.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
 
 using boost::unique_lock;
@@ -82,7 +83,7 @@ TranslationUnit::TranslationUnit(
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
-  foreach ( const std::string & flag, flags ) {
+  foreach ( const std::string &flag, flags ) {
     pointer_flags.push_back( flag.c_str() );
   }
 
@@ -425,7 +426,7 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
-    foreach( const Diagnostic& diagnostic, latest_diagnostics_ ) {
+    foreach ( const Diagnostic &diagnostic, latest_diagnostics_ ) {
       // Find all diagnostics for the supplied line which have FixIts attached
       if ( diagnostic.location_.line_number_ == static_cast< uint >( line ) ) {
         fixits.insert( fixits.end(),
@@ -478,6 +479,65 @@ DocumentationData TranslationUnit::GetDocsForLocationInFile(
   return DocumentationData( canonical_cursor );
 }
 
+
+std::vector< Token > TranslationUnit::GetSemanticTokens(
+  int start_line,
+  int start_column,
+  int end_line,
+  int end_column ) {
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+  CXSourceRange range = GetSourceRange( start_line, start_column,
+                                        end_line, end_column );
+
+  if ( clang_Range_isNull( range ) ) {
+    return std::vector< Token >();
+  }
+
+  CXToken *tokens = NULL;
+  uint num_tokens = 0;
+  clang_tokenize( clang_translation_unit_, range, &tokens, &num_tokens );
+
+  boost::scoped_array< CXCursor > cursors( new CXCursor[ num_tokens ] );
+  clang_annotateTokens( clang_translation_unit_, tokens, num_tokens,
+                        cursors.get() );
+
+  std::vector< Token > semantic_tokens;
+  semantic_tokens.reserve( num_tokens );
+
+  for ( uint i = 0; i < num_tokens; ++i ) {
+    CXTokenKind tokenKind = clang_getTokenKind( tokens[i] );
+    CXSourceRange tokenRange = clang_getTokenExtent( clang_translation_unit_,
+                                                     tokens[ i ] );
+    semantic_tokens.push_back( Token( tokenKind, tokenRange, cursors[ i ] ) );
+  }
+
+  clang_disposeTokens( clang_translation_unit_, tokens, num_tokens );
+  return semantic_tokens;
+}
+
+std::vector< Range > TranslationUnit::GetSkippedRanges() {
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  CXSourceRangeList *source_ranges =
+    clang_getSkippedRanges( clang_translation_unit_, file );
+
+  if ( source_ranges == NULL )
+    return std::vector< Range >();
+
+  std::vector< Range > skipped_ranges;
+  skipped_ranges.reserve( source_ranges->count );
+
+  for ( uint i = 0; i < source_ranges->count; ++i ) {
+    const CXSourceRange &range = source_ranges->ranges[ i ];
+    skipped_ranges.push_back( Range( range ) );
+  }
+
+  clang_disposeSourceRangeList( source_ranges );
+  return skipped_ranges;
+}
+
 CXCursor TranslationUnit::GetCursor( int line, int column ) {
   // ASSUMES A LOCK IS ALREADY HELD ON clang_access_mutex_!
   if ( !clang_translation_unit_ )
@@ -491,6 +551,23 @@ CXCursor TranslationUnit::GetCursor( int line, int column ) {
                                        column );
 
   return clang_getCursor( clang_translation_unit_, source_location );
+}
+
+CXSourceRange TranslationUnit::GetSourceRange(
+  int start_line, int start_column,
+  int end_line, int end_column ) {
+
+  // ASSUMES A LOCK IS ALREADY HELD ON clang_access_mutex_!
+  if ( !clang_translation_unit_ ) {
+    return clang_getNullRange();
+  }
+
+  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  CXSourceLocation start = clang_getLocation( clang_translation_unit_, file,
+                                              start_line, start_column );
+  CXSourceLocation end = clang_getLocation( clang_translation_unit_, file,
+                                            end_line, end_column );
+  return clang_getRange( start, end );
 }
 
 } // namespace YouCompleteMe

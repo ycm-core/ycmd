@@ -46,6 +46,8 @@ MAX_SERVER_WAIT_TIME_SECONDS = 5
 INCLUDE_YCMD_OUTPUT = False
 DEFINED_SUBCOMMANDS_HANDLER = '/defined_subcommands'
 CODE_COMPLETIONS_HANDLER = '/completions'
+SEMANTIC_TOKENS_HANDLER = '/semantic_tokens'
+SKIPPED_RANGES_HANDLER = '/skipped_ranges'
 COMPLETER_COMMANDS_HANDLER = '/run_completer_command'
 EVENT_HANDLER = '/event_notification'
 EXTRA_CONF_HANDLER = '/load_extra_conf_file'
@@ -152,6 +154,44 @@ class YcmdHandle( object ):
                                      column_num = column_num )
     print( '==== Sending code-completion request ====' )
     self.PostToHandlerAndLog( CODE_COMPLETIONS_HANDLER, request_json )
+
+
+  def SendSemanticTokensRequest( self,
+                                 test_filename,
+                                 filetype,
+                                 start_line,
+                                 start_column,
+                                 end_line,
+                                 end_column ):
+    filepath = PathToTestFile( test_filename )
+    request_json = {
+      'filepath': filepath,
+      'filetypes': [ filetype ],
+      'range': {
+        'start': {
+          'line_num': start_line,
+          'column_num': start_column,
+        },
+        'end': {
+          'line_num': end_line,
+          'column_num': end_column,
+        },
+      }
+    }
+    print( '==== Sending semantic-tokens request ====' )
+    self.PostToHandlerAndLog( SEMANTIC_TOKENS_HANDLER, request_json )
+
+
+  def SendSkippedRangesRequest( self,
+                                test_filename,
+                                filetype ):
+    filepath = PathToTestFile( test_filename )
+    request_json = {
+      'filepath': filepath,
+      'filetypes': [ filetype ],
+    }
+    print( '==== Sending skipped-ranges request ====' )
+    self.PostToHandlerAndLog( SKIPPED_RANGES_HANDLER, request_json )
 
 
   def SendGoToRequest( self,
@@ -436,6 +476,16 @@ def CppSemanticCompletionResults( server ):
                                     filetype = 'cpp',
                                     line_num = 25,
                                     column_num = 7 )
+
+  server.SendSemanticTokensRequest( test_filename = 'some_cpp.cpp',
+                                    filetype = 'cpp',
+                                    start_line = 15,
+                                    start_column = 1,
+                                    end_line = 22,
+                                    end_column = 2 )
+
+  server.SendSkippedRangesRequest( test_filename = 'some_cpp.cpp',
+                                   filetype = 'cpp' )
 
 
 def PythonGetSupportedCommands( server ):

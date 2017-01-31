@@ -370,6 +370,43 @@ class ClangCompleter( Completer ):
       closest_diagnostic.long_formatted_text_ )
 
 
+  def GetSemanticTokens( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    if not filename:
+      raise ValueError( INVALID_FILE_MESSAGE )
+
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( "Still parsing file, no tokens yet." )
+
+    source_range = request_data[ 'range' ]
+    start = source_range[ 'start' ]
+    end = source_range[ 'end' ]
+    start_line = start[ 'line_num' ]
+    start_column = start[ 'column_num' ]
+    end_line = end[ 'line_num' ]
+    end_column = end[ 'column_num' ]
+    semantic_tokens = self._completer.GetSemanticTokens(
+        ToCppStringCompatible( filename ),
+        start_line, start_column,
+        end_line, end_column )
+    return responses.BuildSemanticTokensResponse( semantic_tokens )
+
+
+  def GetSkippedRanges( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    if not filename:
+      raise ValueError( INVALID_FILE_MESSAGE )
+
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( "Still parsing file, no skipped ranges yet." )
+
+    skipped_ranges = self._completer.GetSkippedRanges(
+        ToCppStringCompatible( filename ) )
+    return responses.BuildSkippedRangesResponse( skipped_ranges )
+
+
   def DebugInfo( self, request_data ):
     try:
       # Note that it only raises NoExtraConfDetected:

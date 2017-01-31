@@ -16,11 +16,17 @@ struct Foo {
   int x;
   int y  // There's a missing semicolon here
   char c;
+#ifdef DEBUG
+  void print() const;
+#endif
 };
 
 int main()
 {
   Foo foo;
+#ifdef DEBUG
+  foo.print();
+#endif
   // The location after the dot is line 25, col 7
   foo.
 }

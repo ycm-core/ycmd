@@ -21,6 +21,7 @@
 #include "../DLLDefines.h"
 #include "UnsavedFile.h"
 #include "Diagnostic.h"
+#include "Token.h"
 #include "Location.h"
 #include "Documentation.h"
 
@@ -100,6 +101,14 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
+  std::vector< Token > GetSemanticTokens(
+    int start_line,
+    int start_column,
+    int end_line,
+    int end_column );
+
+  std::vector< Range > GetSkippedRanges();
+
 private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
 
@@ -109,6 +118,9 @@ private:
   void UpdateLatestDiagnostics();
 
   CXCursor GetCursor( int line, int column );
+
+  CXSourceRange GetSourceRange( int start_line, int start_column,
+                                int end_line, int end_column );
 
   /////////////////////////////
   // PRIVATE MEMBER VARIABLES

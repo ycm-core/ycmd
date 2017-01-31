@@ -21,6 +21,7 @@
 #include "../DLLDefines.h"
 #include "UnsavedFile.h"
 #include "Diagnostic.h"
+#include "Token.h"
 #include "TranslationUnitStore.h"
 #include "Documentation.h"
 
@@ -106,6 +107,15 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags,
     bool reparse = true );
+
+  std::vector< Token > GetSemanticTokens(
+    const std::string &filename,
+    int start_line,
+    int start_column,
+    int end_line,
+    int end_column );
+
+  std::vector< Range > GetSkippedRanges( const std::string &filename );
 
   void DeleteCachesForFile( const std::string &filename );
 

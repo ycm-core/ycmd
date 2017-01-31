@@ -24,6 +24,7 @@
 #  include "ClangUtils.h"
 #  include "CompletionData.h"
 #  include "Diagnostic.h"
+#  include "Token.h"
 #  include "Location.h"
 #  include "Range.h"
 #  include "UnsavedFile.h"
@@ -108,7 +109,9 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "GetFixItsForLocationInFile",
           &ClangCompleter::GetFixItsForLocationInFile )
     .def( "GetDocsForLocationInFile",
-          &ClangCompleter::GetDocsForLocationInFile );
+          &ClangCompleter::GetDocsForLocationInFile )
+    .def( "GetSemanticTokens", &ClangCompleter::GetSemanticTokens )
+    .def( "GetSkippedRanges", &ClangCompleter::GetSkippedRanges );
 
   enum_< CompletionKind >( "CompletionKind" )
     .value( "STRUCT", STRUCT )
@@ -182,6 +185,53 @@ BOOST_PYTHON_MODULE(ycm_core)
 
   class_< std::vector< Diagnostic > >( "DiagnosticVector" )
     .def( vector_indexing_suite< std::vector< Diagnostic > >() );
+
+  enum_< Token::Kind >( "TokenKind" )
+    .value( "Punctuation", Token::PUNCTUATION )
+    .value( "Comment", Token::COMMENT )
+    .value( "Keyword", Token::KEYWORD )
+    .value( "Literal", Token::LITERAL )
+    .value( "Identifier", Token::IDENTIFIER )
+    .export_values();
+
+  enum_< Token::Type >( "TokenType" )
+    .value( "Punctuation", Token::PUNCTUATION_TYPE )
+    .value( "Comment", Token::COMMENT_TYPE )
+    .value( "Keyword", Token::KEYWORD_TYPE )
+    .value( "Integer", Token::INTEGER )
+    .value( "Floating", Token::FLOATING )
+    .value( "Imaginary", Token::IMAGINARY )
+    .value( "String", Token::STRING )
+    .value( "Character", Token::CHARACTER )
+    .value( "Namespace", Token::NAMESPACE )
+    .value( "Class", Token::CLASS )
+    .value( "Structure", Token::STRUCTURE )
+    .value( "Union", Token::UNION )
+    .value( "TypeAlias", Token::TYPE_ALIAS )
+    .value( "MemberVariable", Token::MEMBER_VARIABLE )
+    .value( "StaticMemberVariable", Token::STATIC_MEMBER_VARIABLE )
+    .value( "GlobalVariable", Token::GLOBAL_VARIABLE )
+    .value( "Variable", Token::VARIABLE )
+    .value( "MemberFunction", Token::MEMBER_FUNCTION )
+    .value( "StaticMemberFunction", Token::STATIC_MEMBER_FUNCTION )
+    .value( "Function", Token::FUNCTION )
+    .value( "FunctionParameter", Token::FUNCTION_PARAMETER )
+    .value( "Enumeration", Token::ENUMERATION )
+    .value( "Enumerator", Token::ENUMERATOR )
+    .value( "TemplateParameter", Token::TEMPLATE_PARAMETER )
+    .value( "TemplateNonTypeParameter", Token::TEMPLATE_NON_TYPE_PARAMETER )
+    .value( "PreprocessingDirective", Token::PREPROCESSING_DIRECTIVE )
+    .value( "Macro", Token::MACRO )
+    .value( "Unsupported", Token::UNSUPPORTED )
+    .export_values();
+
+  class_< Token >( "Token" )
+    .def_readonly( "kind", &Token::kind )
+    .def_readonly( "type", &Token::type )
+    .def_readonly( "range", &Token::range );
+
+  class_< std::vector< Token > >( "TokenVector" )
+    .def( vector_indexing_suite< std::vector< Token > >() );
 
   class_< DocumentationData >( "DocumentationData" )
     .def_readonly( "comment_xml", &DocumentationData::comment_xml )
