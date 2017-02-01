@@ -116,8 +116,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
 #endif // USE_CLANG_COMPLETER
 
 CandidateRepository::~CandidateRepository() {
-  for ( const CandidateHolder::value_type & pair :
-            candidate_holder_ ) {
+  for ( const CandidateHolder::value_type & pair : candidate_holder_ ) {
     delete pair.second;
   }
 }

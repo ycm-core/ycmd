@@ -88,9 +88,9 @@ shared_ptr< TranslationUnit > TranslationUnitStore::GetOrCreate(
 
   try {
     unit = make_shared< TranslationUnit >( filename,
-                                                  unsaved_files,
-                                                  flags,
-                                                  clang_index_ );
+                                           unsaved_files,
+                                           flags,
+                                           clang_index_ );
   } catch ( ClangParseError & ) {
     Remove( filename );
     return unit;

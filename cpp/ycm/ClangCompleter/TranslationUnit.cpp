@@ -424,7 +424,7 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
-    for( const Diagnostic& diagnostic : latest_diagnostics_ ) {
+    for ( const Diagnostic& diagnostic : latest_diagnostics_ ) {
       // Find all diagnostics for the supplied line which have FixIts attached
       if ( diagnostic.location_.line_number_ == static_cast< uint >( line ) ) {
         fixits.insert( fixits.end(),

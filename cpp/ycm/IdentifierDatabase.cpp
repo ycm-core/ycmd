@@ -44,7 +44,7 @@ void IdentifierDatabase::AddIdentifiers(
 
   for ( const FiletypeIdentifierMap::value_type & filetype_and_map :
             filetype_identifier_map ) {
-    for( const FilepathToIdentifiers::value_type & filepath_and_identifiers :
+    for ( const FilepathToIdentifiers::value_type & filepath_and_identifiers :
              filetype_and_map.second ) {
       AddIdentifiersNoLock( filepath_and_identifiers.second,
                             filetype_and_map.first,
