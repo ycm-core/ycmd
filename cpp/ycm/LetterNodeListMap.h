@@ -21,9 +21,9 @@
 #include "DLLDefines.h"
 
 #include <vector>
-#include <boost/move/unique_ptr.hpp>
+#include <memory>
 #include <boost/utility.hpp>
-#include <boost/array.hpp>
+#include <array>
 
 #define NUM_LETTERS 128
 
@@ -49,7 +49,7 @@ YCM_DLL_EXPORT int IndexForLetter( char letter );
  * doesn't occur, it records -1, indicating it isn't present.
  *
  * The indices can be used to retrieve the corresponding LetterNode from
- * the root LetterNode, as it contains a vector of LetterNodes, one per 
+ * the root LetterNode, as it contains a vector of LetterNodes, one per
  * position in the original string.
  */
 struct NearestLetterNodeIndices {
@@ -72,10 +72,10 @@ public:
   YCM_DLL_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
 
 private:
-  typedef boost::array<NearestLetterNodeIndices , NUM_LETTERS>
+  typedef std::array<NearestLetterNodeIndices , NUM_LETTERS>
     NearestLetterNodeArray;
 
-  boost::movelib::unique_ptr< NearestLetterNodeArray > letters_;
+  std::unique_ptr< NearestLetterNodeArray > letters_;
 };
 
 } // namespace YouCompleteMe

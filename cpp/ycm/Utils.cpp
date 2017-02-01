@@ -19,7 +19,6 @@
 #include <cmath>
 #include <limits>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -32,15 +31,15 @@ bool AlmostEqual( double a, double b ) {
 }
 
 
-std::string ReadUtf8File( const fs::path &filepath ) {
-  fs::ifstream file( filepath, std::ios::in | std::ios::binary );
-  std::vector< char > contents( ( std::istreambuf_iterator< char >( file ) ),
-                                std::istreambuf_iterator< char >() );
-
-  if ( contents.size() == 0 )
-    return std::string();
-
-  return std::string( contents.begin(), contents.end() );
+std::vector< std::string > ReadUtf8File( const fs::path &filepath ) {
+  std::ifstream file;
+  file.open(filepath.string());
+  std::vector<std::string> lines;
+  std::string temp_line;
+  while (std::getline(file,temp_line))
+    lines.push_back(temp_line);
+  file.close();
+  return lines;
 }
 
 

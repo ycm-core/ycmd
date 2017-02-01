@@ -4482,7 +4482,7 @@ TestCase* UnitTestImpl::GetTestCase(const char* test_case_name,
 }
 
 // Helpers for setting up / tearing down the given environment.  They
-// are for use in the ForEach() function.
+// are for use in the for() function.
 static void SetUpEnvironment(Environment* env) { env->SetUp(); }
 static void TearDownEnvironment(Environment* env) { env->TearDown(); }
 

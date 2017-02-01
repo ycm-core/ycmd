@@ -22,10 +22,8 @@
 #include "IdentifierDatabase.h"
 
 #include <boost/utility.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 
+#include <memory>
 #include <vector>
 #include <string>
 

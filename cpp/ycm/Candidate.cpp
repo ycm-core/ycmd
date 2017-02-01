@@ -19,18 +19,21 @@
 #include "Candidate.h"
 #include "Result.h"
 
-#include <boost/algorithm/string.hpp>
+#include <algorithm>
 #include <cctype>
 #include <locale>
 
-using boost::algorithm::all;
-using boost::algorithm::is_lower;
-using boost::algorithm::is_print;
+using std::all_of;
+using std::islower;
+using std::isprint;
 
 namespace YouCompleteMe {
 
 bool IsPrintable( const std::string &text ) {
-  return all( text, is_print( std::locale::classic() ) );
+  for ( auto character : text )
+    if ( !isprint( character ) )
+      return false;
+  return true;
 }
 
 
@@ -60,7 +63,7 @@ std::string GetWordBoundaryChars( const std::string &text ) {
 Bitset LetterBitsetFromString( const std::string &text ) {
   Bitset letter_bitset;
 
-  foreach ( char letter, text ) {
+  for ( char letter : text ) {
     int letter_index = IndexForLetter( letter );
 
     if ( IsInAsciiRange( letter_index ) )
@@ -75,9 +78,17 @@ Candidate::Candidate( const std::string &text )
   :
   text_( text ),
   word_boundary_chars_( GetWordBoundaryChars( text ) ),
-  text_is_lowercase_( all( text, is_lower() ) ),
   letters_present_( LetterBitsetFromString( text ) ),
   root_node_( new LetterNode( text ) ) {
+    text_is_lowercase_ = true;
+    for ( auto character : text )
+    {
+      if ( islower( character ) )
+      {
+        text_is_lowercase_ = false;
+	break;
+      }
+    }
 }
 
 
@@ -86,7 +97,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
   LetterNode *node = root_node_.get();
   int index_sum = 0;
 
-  foreach ( char letter, query ) {
+  for ( char letter : query ) {
     const NearestLetterNodeIndices *nearest =
       node->NearestLetterNodesForLetter( letter );
 

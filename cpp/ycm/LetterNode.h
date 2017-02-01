@@ -22,9 +22,9 @@
 #include "LetterNodeListMap.h"
 
 #include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits.hpp>
+//#include <type_traits>
 
+#include <memory>
 #include <vector>
 #include <list>
 #include <string>

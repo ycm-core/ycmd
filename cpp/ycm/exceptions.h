@@ -18,11 +18,7 @@
 #ifndef EXCEPTIONS_H_3PHJ9YOB
 #define EXCEPTIONS_H_3PHJ9YOB
 
-#include <boost/exception/all.hpp>
-
 namespace YouCompleteMe {
-
-#define boost_throw(x) BOOST_THROW_EXCEPTION(x)
 
 // YouCompleteMe uses the "Exception types as semantic tags" idiom.
 // For more information, see this link:
@@ -31,7 +27,7 @@ namespace YouCompleteMe {
 /**
  * The common base for all exceptions.
  */
-struct ExceptionBase: virtual std::exception, virtual boost::exception {};
+struct ExceptionBase: virtual std::exception {};
 
 /**
  * Thrown when a file does not exist.

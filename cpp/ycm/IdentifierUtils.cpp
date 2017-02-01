@@ -19,10 +19,9 @@
 #include "Utils.h"
 #include "standard.h"
 
-#include <boost/unordered_map.hpp>
-#include <boost/assign/list_of.hpp>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string/regex.hpp>
+#include <unordered_map>
+#include <regex>
+#include <fstream>
 
 namespace YouCompleteMe {
 
@@ -39,9 +38,9 @@ const char *const TAG_REGEX =
   // The second field is the path to the file that has the identifier; either
   // absolute or relative to the tags file.
   "([^\\t\\n\\r]+)"
-  "\\t.*?"  // Non-greedy everything
+  "\\t[^\\n]*?"  // Non-greedy everything
   "language:([^\\t\\n\\r]+)"  // We want to capture the language of the file
-  ".*?$";
+  "[^\\n]*?$";
 
 // Only used as the equality comparer for the below unordered_map which stores
 // const char* pointers and not std::string but needs to hash based on string
@@ -61,52 +60,51 @@ struct StringEqualityComparer :
 //   :e $VIMRUNTIME/filetype.vim
 // This is a map of const char* and not std::string to prevent issues with
 // static initialization.
-const boost::unordered_map < const char *,
+const std::unordered_map < const char *,
       const char *,
-      boost::hash< std::string >,
-      StringEqualityComparer > LANG_TO_FILETYPE =
-        boost::assign::map_list_of
-        ( "Ant"        , "ant"        )
-        ( "Asm"        , "asm"        )
-        ( "Awk"        , "awk"        )
-        ( "Basic"      , "basic"      )
-        ( "C++"        , "cpp"        )
-        ( "C#"         , "cs"         )
-        ( "C"          , "c"          )
-        ( "COBOL"      , "cobol"      )
-        ( "DosBatch"   , "dosbatch"   )
-        ( "Eiffel"     , "eiffel"     )
-        ( "Elixir"     , "elixir"     )
-        ( "Erlang"     , "erlang"     )
-        ( "Fortran"    , "fortran"    )
-        ( "Go"         , "go"         )
-        ( "Haskell"    , "haskell"    )
-        ( "HTML"       , "html"       )
-        ( "Java"       , "java"       )
-        ( "JavaScript" , "javascript" )
-        ( "Lisp"       , "lisp"       )
-        ( "Lua"        , "lua"        )
-        ( "Make"       , "make"       )
-        ( "MatLab"     , "matlab"     )
-        ( "OCaml"      , "ocaml"      )
-        ( "Pascal"     , "pascal"     )
-        ( "Perl"       , "perl"       )
-        ( "PHP"        , "php"        )
-        ( "Python"     , "python"     )
-        ( "REXX"       , "rexx"       )
-        ( "Ruby"       , "ruby"       )
-        ( "Scheme"     , "scheme"     )
-        ( "Sh"         , "sh"         )
-        ( "SLang"      , "slang"      )
-        ( "SML"        , "sml"        )
-        ( "SQL"        , "sql"        )
-        ( "Tcl"        , "tcl"        )
-        ( "Tex"        , "tex"        )
-        ( "Vera"       , "vera"       )
-        ( "Verilog"    , "verilog"    )
-        ( "VHDL"       , "vhdl"       )
-        ( "Vim"        , "vim"        )
-        ( "YACC"       , "yacc"       );
+      std::hash< std::string >,
+      StringEqualityComparer > LANG_TO_FILETYPE = {
+        { "Ant"        , "ant"        },
+        { "Asm"        , "asm"        },
+        { "Awk"        , "awk"        },
+        { "Basic"      , "basic"      },
+        { "C++"        , "cpp"        },
+        { "C#"         , "cs"         },
+        { "C"          , "c"          },
+        { "COBOL"      , "cobol"      },
+        { "DosBatch"   , "dosbatch"   },
+        { "Eiffel"     , "eiffel"     },
+        { "Elixir"     , "elixir"     },
+        { "Erlang"     , "erlang"     },
+        { "Fortran"    , "fortran"    },
+        { "Go"         , "go"         },
+        { "Haskell"    , "haskell"    },
+        { "HTML"       , "html"       },
+        { "Java"       , "java"       },
+        { "JavaScript" , "javascript" },
+        { "Lisp"       , "lisp"       },
+        { "Lua"        , "lua"        },
+        { "Make"       , "make"       },
+        { "MatLab"     , "matlab"     },
+        { "OCaml"      , "ocaml"      },
+        { "Pascal"     , "pascal"     },
+        { "Perl"       , "perl"       },
+        { "PHP"        , "php"        },
+        { "Python"     , "python"     },
+        { "REXX"       , "rexx"       },
+        { "Ruby"       , "ruby"       },
+        { "Scheme"     , "scheme"     },
+        { "Sh"         , "sh"         },
+        { "SLang"      , "slang"      },
+        { "SML"        , "sml"        },
+        { "SQL"        , "sql"        },
+        { "Tcl"        , "tcl"        },
+        { "Tex"        , "tex"        },
+        { "Vera"       , "vera"       },
+        { "Verilog"    , "verilog"    },
+        { "VHDL"       , "vhdl"       },
+        { "Vim"        , "vim"        },
+        { "YACC"       , "yacc"       },};
 
 const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 
@@ -116,7 +114,7 @@ const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const fs::path &path_to_tag_file ) {
   FiletypeIdentifierMap filetype_identifier_map;
-  std::string tags_file_contents;
+  std::vector< std::string > tags_file_contents;
 
   try {
     tags_file_contents = ReadUtf8File( path_to_tag_file );
@@ -124,30 +122,28 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     return filetype_identifier_map;
   }
 
-  std::string::const_iterator start = tags_file_contents.begin();
-  std::string::const_iterator end   = tags_file_contents.end();
+  std::smatch matches;
+  const std::regex expression( TAG_REGEX );
 
-  boost::smatch matches;
-  const boost::regex expression( TAG_REGEX );
-  const boost::match_flag_type options = boost::match_not_dot_newline;
+  for ( auto line : tags_file_contents )
+  {
+    if ( std::regex_search( line, matches, expression ) ) {
 
-  while ( boost::regex_search( start, end, matches, expression, options ) ) {
-    start = matches[ 0 ].second;
+      std::string language( matches[ 3 ] );
+      std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
+                                              language.c_str(),
+                                              NOT_FOUND );
 
-    std::string language( matches[ 3 ] );
-    std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
-                                            language.c_str(),
-                                            NOT_FOUND );
+      if ( filetype == NOT_FOUND )
+        continue;
 
-    if ( filetype == NOT_FOUND )
-      continue;
+      std::string identifier( matches[ 1 ] );
+      fs::path path( matches[ 2 ].str() );
+      path = fs::absolute( path, path_to_tag_file.parent_path() )
+             .make_preferred();
 
-    std::string identifier( matches[ 1 ] );
-    fs::path path( matches[ 2 ].str() );
-    path = fs::absolute( path, path_to_tag_file.parent_path() )
-           .make_preferred();
-
-    filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
+      filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
+    }
   }
 
   return filetype_identifier_map;

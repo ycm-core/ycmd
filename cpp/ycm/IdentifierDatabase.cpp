@@ -24,13 +24,13 @@
 #include "Result.h"
 #include "Utils.h"
 
-#include <boost/thread/locks.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
+#include <unordered_set>
 
-using boost::algorithm::any_of;
-using boost::algorithm::is_upper;
+#include <algorithm>
+#include <cctype>
+
+using std::any_of;
+using std::isupper;
 
 
 namespace YouCompleteMe {
@@ -42,11 +42,11 @@ IdentifierDatabase::IdentifierDatabase()
 
 void IdentifierDatabase::AddIdentifiers(
   const FiletypeIdentifierMap &filetype_identifier_map ) {
-  boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
 
-  foreach ( const FiletypeIdentifierMap::value_type & filetype_and_map,
+  for ( const FiletypeIdentifierMap::value_type & filetype_and_map :
             filetype_identifier_map ) {
-    foreach( const FilepathToIdentifiers::value_type & filepath_and_identifiers,
+    for( const FilepathToIdentifiers::value_type & filepath_and_identifiers :
              filetype_and_map.second ) {
       AddIdentifiersNoLock( filepath_and_identifiers.second,
                             filetype_and_map.first,
@@ -60,7 +60,7 @@ void IdentifierDatabase::AddIdentifiers(
   const std::vector< std::string > &new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
   AddIdentifiersNoLock( new_candidates, filetype, filepath );
 }
 
@@ -68,7 +68,7 @@ void IdentifierDatabase::AddIdentifiers(
 void IdentifierDatabase::ClearCandidatesStoredForFile(
   const std::string &filetype,
   const std::string &filepath ) {
-  boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
   GetCandidateSet( filetype, filepath ).clear();
 }
 
@@ -79,23 +79,31 @@ void IdentifierDatabase::ResultsForQueryAndType(
   std::vector< Result > &results ) const {
   FiletypeCandidateMap::const_iterator it;
   {
-    boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
+    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
     it = filetype_candidate_map_.find( filetype );
 
     if ( it == filetype_candidate_map_.end() || query.empty() )
       return;
   }
   Bitset query_bitset = LetterBitsetFromString( query );
-  bool query_has_uppercase_letters = any_of( query, is_upper() );
+  bool query_has_uppercase_letters = false;
+  for ( auto characters : query )
+  {
+    if ( isupper( characters ) )
+    {
+      query_has_uppercase_letters = true;
+      break;
+    }
+  }
 
-  boost::unordered_set< const Candidate * > seen_candidates;
+  std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
 
   {
-    boost::lock_guard< boost::mutex > locker( filetype_candidate_map_mutex_ );
-    foreach ( const FilepathToCandidates::value_type & path_and_candidates,
+    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    for ( const FilepathToCandidates::value_type & path_and_candidates :
               *it->second ) {
-      foreach ( const Candidate * candidate, *path_and_candidates.second ) {
+      for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) )
           continue;
         else
@@ -122,13 +130,13 @@ void IdentifierDatabase::ResultsForQueryAndType(
 std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
   const std::string &filetype,
   const std::string &filepath ) {
-  boost::shared_ptr< FilepathToCandidates > &path_to_candidates =
+  std::shared_ptr< FilepathToCandidates > &path_to_candidates =
     filetype_candidate_map_[ filetype ];
 
   if ( !path_to_candidates )
     path_to_candidates.reset( new FilepathToCandidates() );
 
-  boost::shared_ptr< std::set< const Candidate * > > &candidates =
+  std::shared_ptr< std::set< const Candidate * > > &candidates =
     ( *path_to_candidates )[ filepath ];
 
   if ( !candidates )

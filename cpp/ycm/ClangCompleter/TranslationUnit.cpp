@@ -22,14 +22,14 @@
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
+#include <type_traits>
+#include <algorithm>
 
-using boost::unique_lock;
-using boost::mutex;
-using boost::try_to_lock_t;
-using boost::shared_ptr;
-using boost::remove_pointer;
+using std::unique_lock;
+using std::mutex;
+using std::try_to_lock_t;
+using std::shared_ptr;
+using std::remove_pointer;
 
 namespace YouCompleteMe {
 
@@ -82,7 +82,7 @@ TranslationUnit::TranslationUnit(
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
-  foreach ( const std::string & flag, flags ) {
+  for ( const std::string & flag : flags ) {
     pointer_flags.push_back( flag.c_str() );
   }
 
@@ -105,7 +105,7 @@ TranslationUnit::TranslationUnit(
                          &clang_translation_unit_ );
 
   if ( result != CXError_Success )
-    boost_throw( ClangParseError() );
+    throw( ClangParseError() );
 }
 
 
@@ -365,7 +365,7 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
 
   if ( failure ) {
     Destroy();
-    boost_throw( ClangParseError() );
+    throw( ClangParseError() );
   }
 
   UpdateLatestDiagnostics();
@@ -425,7 +425,7 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
-    foreach( const Diagnostic& diagnostic, latest_diagnostics_ ) {
+    for( const Diagnostic& diagnostic : latest_diagnostics_ ) {
       // Find all diagnostics for the supplied line which have FixIts attached
       if ( diagnostic.location_.line_number_ == static_cast< uint >( line ) ) {
         fixits.insert( fixits.end(),
