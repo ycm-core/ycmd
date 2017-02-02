@@ -47,9 +47,10 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 :: Rust configuration
 ::
 
-appveyor DownloadFile https://static.rust-lang.org/dist/rust-1.8.0-x86_64-pc-windows-msvc.exe
-rust-1.8.0-x86_64-pc-windows-msvc.exe /VERYSILENT /NORESTART /DIR="C:\Program Files\Rust"
-set PATH=C:\Program Files\Rust\bin;%PATH%
+appveyor DownloadFile https://static.rust-lang.org/rustup/dist/i686-pc-windows-gnu/rustup-init.exe
+rustup-init.exe -y
 
+set PATH=%USERPROFILE%\.cargo\bin;%PATH%
+rustup update
 rustc -Vv
 cargo -V
