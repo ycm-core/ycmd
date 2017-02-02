@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ClangUtils.h"
-#include "standard.h"
 
 namespace YouCompleteMe {
 

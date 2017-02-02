@@ -20,7 +20,6 @@
 #include "Result.h"
 #include "Candidate.h"
 #include "TranslationUnit.h"
-#include "standard.h"
 #include "CandidateRepository.h"
 #include "CompletionData.h"
 #include "Utils.h"

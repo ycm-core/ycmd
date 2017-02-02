@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "LetterNode.h"
-#include "standard.h"
 
 
 namespace YouCompleteMe {
@@ -33,7 +32,7 @@ LetterNode::LetterNode( const std::string &text )
 
   letternode_per_text_index_.reserve( text.size() );
 
-  for ( uint i = 0; i < text.size(); ++i ) {
+  for ( size_t i = 0; i < text.size(); ++i ) {
     letternode_per_text_index_.push_back( LetterNode( text[ i ], i ) );
     SetNodeIndexForLetterIfNearest( text[ i ], i );
   }

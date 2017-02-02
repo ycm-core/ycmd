@@ -17,12 +17,9 @@
 
 #include "Result.h"
 #include "Utils.h"
-#include <boost/algorithm/string.hpp>
 #include <functional>
 #include <algorithm>
 #include <locale>
-
-using boost::algorithm::istarts_with;
 
 namespace YouCompleteMe {
 
@@ -217,8 +214,19 @@ void Result::SetResultFeaturesFromQuery(
     num_wb_matches / static_cast< double >( query.length() );
   word_boundary_char_utilization_ =
     num_wb_matches / static_cast< double >( word_boundary_chars.length() );
-  query_is_candidate_prefix_ = istarts_with( *text_, query );
+  query_is_candidate_prefix_ = QueryIsPrefix( *text_, query );
 
 }
 
+
+bool Result::QueryIsPrefix( std::string text, std::string query ) {
+  if ( text.length() < query.length() )
+    return false;
+
+  for ( size_t i = 0; i < query.length(); ++i )
+    if ( toupper( query[ i ] ) != toupper( text[ i ] ) )
+      return false;
+
+  return true;
+}
 } // namespace YouCompleteMe

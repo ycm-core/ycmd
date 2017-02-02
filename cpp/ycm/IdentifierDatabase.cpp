@@ -24,11 +24,11 @@
 #include "Utils.h"
 
 #include <unordered_set>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
+#include <cctype>
+#include <algorithm>
 
-using boost::algorithm::any_of;
-using boost::algorithm::is_upper;
+using std::any_of;
+using std::isupper;
 
 
 namespace YouCompleteMe {
@@ -84,7 +84,9 @@ void IdentifierDatabase::ResultsForQueryAndType(
       return;
   }
   Bitset query_bitset = LetterBitsetFromString( query );
-  bool query_has_uppercase_letters = any_of( query, is_upper() );
+  bool query_has_uppercase_letters = any_of( query.cbegin(),
+                                             query.cend(),
+                                             []( char c ) { return isupper( c ); } );
 
   std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );

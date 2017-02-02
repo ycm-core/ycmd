@@ -21,12 +21,12 @@
 #include "CandidateRepository.h"
 #include "ReleaseGil.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
+#include <algorithm>
+#include <cctype>
 #include <vector>
 
-using boost::algorithm::any_of;
-using boost::algorithm::is_upper;
+using std::any_of;
+using std::isupper;
 using boost::python::len;
 using boost::python::str;
 using boost::python::extract;
@@ -81,7 +81,11 @@ boost::python::list FilterAndSortCandidates(
   {
     ReleaseGil unlock;
     Bitset query_bitset = LetterBitsetFromString( query );
-    bool query_has_uppercase_letters = any_of( query, is_upper() );
+    bool query_has_uppercase_letters = any_of( query.cbegin(),
+                                               query.cend(),
+                                               []( char c ){
+                                                 return isupper( c );
+                                               } );
 
     for ( int i = 0; i < num_candidates; ++i ) {
       const Candidate *candidate = repository_candidates[ i ];

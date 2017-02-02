@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "LetterNodeListMap.h"
-#include "standard.h"
 #include <algorithm>
 
 namespace YouCompleteMe {

@@ -103,7 +103,7 @@ private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
 
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files,
-                uint parse_options );
+                size_t parse_options );
 
   void UpdateLatestDiagnostics();
 
