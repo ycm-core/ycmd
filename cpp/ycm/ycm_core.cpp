@@ -15,6 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+/*
+ * iostream is included because there's a bug with python
+ * earlier than 2.7.12 and 3.5.3 on OSX and FreeBSD.
+ * When either no one else is using earlier versions of python
+ * or ycmd drops support for those, this include statement can be removed.
+ * Needs to be the absolute first header, so that it is imported
+ * before anything python related.
+ */
+#include <iostream>
 #include "IdentifierCompleter.h"
 #include "PythonSupport.h"
 #include "versioning.h"

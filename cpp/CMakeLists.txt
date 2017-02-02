@@ -115,15 +115,19 @@ endif()
 # Determining the presence of C++11 support in the compiler
 set( CPP11_AVAILABLE false )
 if ( CMAKE_COMPILER_IS_GNUCXX )
-  execute_process(
-    COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-  if ( GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6 )
+  if ( NOT  CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6  )
     set( CPP11_AVAILABLE true )
   endif()
 elseif( COMPILER_IS_CLANG )
-  set( CPP11_AVAILABLE true )
-  set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11" )
-  set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
+  if ( NOT  CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3  )
+    set( CPP11_AVAILABLE true )
+    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11" )
+    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
+  endif()
+elseif( MSVC )
+  if ( NOT  MSVC_VERSION LESS 1700  )
+    set( CPP11_AVAILABLE true )
+  endif()
 endif()
 
 #############################################################################
@@ -174,21 +178,15 @@ endif()
 # Putting the flag in add_definitions() works around the issue, even though it
 # shouldn't in theory go there.
 if ( CPP11_AVAILABLE )
-  message( "Your C++ compiler supports C++11, compiling in that mode." )
-
   # Cygwin needs its hand held a bit; see issue #473
   if ( CYGWIN AND CMAKE_COMPILER_IS_GNUCXX )
-    add_definitions( -std=gnu++0x )
+    add_definitions( -std=gnu++11 )
   else()
-    add_definitions( -std=c++0x )
+    add_definitions( -std=c++11 )
   endif()
 else()
-  message(
-    "Your C++ compiler does NOT support C++11, compiling in C++03 mode." )
+  message( FATAL_ERROR "Your C++ compiler does NOT support C++11." )
 endif()
-
-
-#############################################################################
 
 # Note: build.py always explicitly sets this option, so the default used here
 # rarely matters.

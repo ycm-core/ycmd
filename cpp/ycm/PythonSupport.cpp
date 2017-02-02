@@ -16,7 +16,6 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "PythonSupport.h"
-#include "standard.h"
 #include "Result.h"
 #include "Candidate.h"
 #include "CandidateRepository.h"
@@ -102,8 +101,7 @@ boost::python::list FilterAndSortCandidates(
     std::sort( result_and_objects.begin(), result_and_objects.end() );
   }
 
-  foreach ( const ResultAnd< int > &result_and_object,
-            result_and_objects ) {
+  for ( const ResultAnd< int > &result_and_object : result_and_objects ) {
     filtered_candidates.append( candidates[ result_and_object.extra_object_ ] );
   }
 

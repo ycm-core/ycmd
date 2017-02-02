@@ -19,10 +19,10 @@
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
 #include <boost/utility.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/shared_ptr.hpp>
 
+#include <unordered_map>
+#include <memory>
+#include <mutex>
 #include <vector>
 #include <string>
 #include <map>
@@ -83,19 +83,19 @@ private:
 
 
   // filepath -> *( *candidate )
-  typedef boost::unordered_map < std::string,
-          boost::shared_ptr< std::set< const Candidate * > > >
+  typedef std::unordered_map < std::string,
+          std::shared_ptr< std::set< const Candidate * > > >
           FilepathToCandidates;
 
   // filetype -> *( filepath -> *( *candidate ) )
-  typedef boost::unordered_map < std::string,
-          boost::shared_ptr< FilepathToCandidates > > FiletypeCandidateMap;
+  typedef std::unordered_map < std::string,
+          std::shared_ptr< FilepathToCandidates > > FiletypeCandidateMap;
 
 
   CandidateRepository &candidate_repository_;
 
   FiletypeCandidateMap filetype_candidate_map_;
-  mutable boost::mutex filetype_candidate_map_mutex_;
+  mutable std::mutex filetype_candidate_map_mutex_;
 };
 
 } // namespace YouCompleteMe
