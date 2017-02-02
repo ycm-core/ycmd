@@ -327,14 +327,6 @@ def UpdateUserOptions( options ):
   _server_state = server_state.ServerState( options )
 
 
-def SetServerStateToDefaults():
-  global _server_state, _logger
-  _logger = logging.getLogger( __name__ )
-  user_options_store.LoadDefaults()
-  _server_state = server_state.ServerState( user_options_store.GetAll() )
-  extra_conf_store.Reset()
-
-
 def KeepSubserversAlive( check_interval_seconds ):
   def Keepalive( check_interval_seconds ):
     while True:

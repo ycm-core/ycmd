@@ -39,7 +39,7 @@ import tempfile
 import time
 import stat
 
-from ycmd import handlers, user_options_store
+from ycmd import extra_conf_store, handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 from ycmd.utils import GetCurrentDirectory, OnMac, OnWindows, ToUnicode
@@ -187,9 +187,12 @@ def TemporaryExecutable( extension = '.exe' ):
     yield executable.name
 
 
-def SetUpApp():
+def SetUpApp( custom_options = {} ):
   bottle.debug( True )
-  handlers.SetServerStateToDefaults()
+  options = user_options_store.DefaultOptions()
+  options.update( custom_options )
+  handlers.UpdateUserOptions( options )
+  extra_conf_store.Reset()
   return TestApp( handlers.app )
 
 

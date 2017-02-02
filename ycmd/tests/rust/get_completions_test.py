@@ -23,14 +23,14 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_items
+from hamcrest import assert_that, empty, has_entry, has_items
 from mock import patch
 
 from ycmd.completers.rust.rust_completer import (
   ERROR_FROM_RACERD_MESSAGE, NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
 from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
-                                    ErrorMatcher, UserOption,
+                                    ErrorMatcher,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
@@ -58,8 +58,6 @@ def GetCompletions_Basic_test( app ):
 @SharedYcmd
 def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   app ):
-  WaitUntilCompleterServerReady( app, 'rust' )
-
   filepath = PathToTestFile( 'std_completions.rs' )
   contents = ReadFile( filepath )
 
@@ -96,18 +94,37 @@ def GetCompletions_WhenNoCompletionsFound_MentionRustSrcPath_test( app ):
                ErrorMatcher( RuntimeError, ERROR_FROM_RACERD_MESSAGE ) )
 
 
-@IsolatedYcmd
+# Set the rust_src_path option to a dummy folder.
+@IsolatedYcmd( { 'rust_src_path': PathToTestFile() } )
+def GetCompletions_NoCompletionsFound_ExistingRustSrcPath_test( app ):
+  WaitUntilCompleterServerReady( app, 'rust' )
+
+  filepath = PathToTestFile( 'test.rs' )
+  contents = ReadFile( filepath )
+
+  # Try to complete the pub keyword.
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'rust',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 1,
+                                  column_num = 2 )
+
+  response = app.post_json( '/completions', completion_data )
+  assert_that( response.json, has_entry( 'completions', empty() ) )
+
+
+@IsolatedYcmd( { 'rust_src_path': '/non/existing/rust/src/path' } )
 def GetCompletions_NonExistingRustSrcPathFromUserOption_test( app ):
-  with UserOption( 'rust_src_path', '/non/existing/rust/src/path' ):
-    response = app.get( '/ready',
-                        { 'subserver': 'rust' },
-                        expect_errors = True ).json
-    assert_that( response,
-                 ErrorMatcher( RuntimeError,
-                               NON_EXISTING_RUST_SOURCES_PATH_MESSAGE ) )
+  response = app.get( '/ready',
+                      { 'subserver': 'rust' },
+                      expect_errors = True ).json
+  assert_that( response,
+               ErrorMatcher( RuntimeError,
+                             NON_EXISTING_RUST_SOURCES_PATH_MESSAGE ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch.dict( 'os.environ', { 'RUST_SRC_PATH': '/non/existing/rust/src/path' } )
 def GetCompletions_NonExistingRustSrcPathFromEnvironmentVariable_test( app ):
   response = app.get( '/ready',
