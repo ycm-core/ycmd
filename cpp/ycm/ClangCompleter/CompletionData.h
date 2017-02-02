@@ -120,7 +120,8 @@ private:
                              bool &saw_function_params,
                              bool &saw_placeholder );
 
-  bool IdentifierEndsWith( std::string identifier, std::string end );
+  bool IdentifierEndsWith( const std::string &identifier,
+                           const std::string &end );
 };
 
 } // namespace YouCompleteMe

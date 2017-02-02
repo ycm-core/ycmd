@@ -219,7 +219,8 @@ void Result::SetResultFeaturesFromQuery(
 }
 
 
-bool Result::QueryIsPrefix( std::string text, std::string query ) {
+bool Result::QueryIsPrefix( const std::string &text,
+                            const std::string &query ) {
   if ( text.length() < query.length() )
     return false;
 

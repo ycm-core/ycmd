@@ -49,7 +49,8 @@ private:
     const std::string &query,
     const std::string &word_boundary_chars );
 
-  bool QueryIsPrefix( std::string text, std::string query );
+  bool QueryIsPrefix( const std::string &text,
+                      const std::string &query );
 
   // true when the query for which the result was created was an empty string;
   // in these cases we just use a lexicographic comparison

@@ -146,7 +146,8 @@ std::string OptionalChunkToString( CXCompletionString completion_string,
 }
 
 
-bool IdentifierEndsWith( std::string identifier, std::string end ) {
+bool IdentifierEndsWith( const std::string &identifier,
+                         const std::string &end ) {
   if ( identifier.size() >= end.size() )
     return 0 == identifier.compare( identifier.length() - end.length(),
                                     end.length(),
@@ -157,9 +158,9 @@ bool IdentifierEndsWith( std::string identifier, std::string end ) {
 // foo() -> foo
 std::string RemoveTrailingParens( std::string text ) {
   if ( IdentifierEndsWith( text, "(" ) ) {
-    text = text.substr( 0, text.length() - 1 );
+    text.erase( text.length() - 1, 1 );
   } else if ( IdentifierEndsWith( text, "()" ) ) {
-    text = text.substr( 0, text.length() - 2 );
+    text.erase( text.length() - 2, 2 );
   }
 
   return text;

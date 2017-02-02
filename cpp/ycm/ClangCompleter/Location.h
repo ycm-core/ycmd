@@ -32,7 +32,9 @@ struct Location {
       column_number_( 0 ),
       filename_( "" ) {}
 
-  Location( const std::string &filename, unsigned int line, unsigned int column )
+  Location( const std::string &filename,
+            unsigned int line,
+            unsigned int column )
     : line_number_( line ),
       column_number_( column ),
       filename_( filename ) {}
