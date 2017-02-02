@@ -45,10 +45,6 @@ def Value( key ):
   return _USER_OPTIONS[ key ]
 
 
-def LoadDefaults():
-  SetAll( DefaultOptions() )
-
-
 def DefaultOptions():
   settings_path = os.path.join(
       os.path.dirname( os.path.abspath( __file__ ) ), 'default_settings.json' )
