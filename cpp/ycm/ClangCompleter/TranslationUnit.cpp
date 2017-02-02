@@ -21,6 +21,7 @@
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
 
+#include <cstdlib>
 #include <algorithm>
 #include <memory>
 
