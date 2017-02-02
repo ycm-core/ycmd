@@ -23,8 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import assert_that, empty, has_entry, has_items
-from nose.tools import eq_
+from hamcrest import assert_that, has_items
 from mock import patch
 
 from ycmd.completers.rust.rust_completer import (
@@ -34,7 +33,6 @@ from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     ErrorMatcher, UserOption,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
-import requests
 
 
 @SharedYcmd
@@ -57,9 +55,7 @@ def GetCompletions_Basic_test( app ):
                           CompletionEntryMatcher( 'build_shuttle' ) ) )
 
 
-# This test is isolated because it affects the GoTo tests, although it
-# shouldn't.
-@IsolatedYcmd
+@SharedYcmd
 def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   app ):
   WaitUntilCompleterServerReady( app, 'rust' )
@@ -73,6 +69,25 @@ def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
                                   force_semantic = True,
                                   line_num = 5,
                                   column_num = 11 )
+
+  response = app.post_json( '/completions',
+                            completion_data,
+                            expect_errors = True ).json
+  assert_that( response,
+               ErrorMatcher( RuntimeError, ERROR_FROM_RACERD_MESSAGE ) )
+
+
+@SharedYcmd
+def GetCompletions_WhenNoCompletionsFound_MentionRustSrcPath_test( app ):
+  filepath = PathToTestFile( 'test.rs' )
+  contents = ReadFile( filepath )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'rust',
+                                  contents = contents,
+                                  force_semantic = True,
+                                  line_num = 4,
+                                  column_num = 1 )
 
   response = app.post_json( '/completions',
                             completion_data,
@@ -101,21 +116,3 @@ def GetCompletions_NonExistingRustSrcPathFromEnvironmentVariable_test( app ):
   assert_that( response,
                ErrorMatcher( RuntimeError,
                              NON_EXISTING_RUST_SOURCES_PATH_MESSAGE ) )
-
-
-@SharedYcmd
-def GetCompletions_NoCompletionsFound_test( app ):
-  filepath = PathToTestFile( 'test.rs' )
-  contents = ReadFile( filepath )
-
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'rust',
-                                  contents = contents,
-                                  force_semantic = True,
-                                  line_num = 4,
-                                  column_num = 1 )
-
-  response = app.post_json( '/completions', completion_data )
-
-  eq_( response.status_code, requests.codes.ok )
-  assert_that( response.json, has_entry( 'completions', empty() ) )
