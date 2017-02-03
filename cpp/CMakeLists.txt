@@ -181,7 +181,7 @@ if ( CPP11_AVAILABLE )
   # Cygwin needs its hand held a bit; see issue #473
   if ( CYGWIN AND CMAKE_COMPILER_IS_GNUCXX )
     add_definitions( -std=gnu++11 )
-  else()
+  elseif( NOT MSVC )
     add_definitions( -std=c++11 )
   endif()
 else()
