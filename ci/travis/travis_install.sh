@@ -68,17 +68,12 @@ echo -e "import coverage\ncoverage.process_startup()" > \
 # rust setup
 ############
 
-# Need rust available, but travis doesn't give it to you without language: rust
-pushd ${HOME}
-git clone --recursive https://github.com/brson/multirust
-cd multirust
-git reset --hard f3974f2b966476ad656afba311b50a9c23fe6d2e
-./build.sh
-./install.sh --prefix=${HOME}
-popd
+curl https://sh.rustup.rs -sSf | sh -s -- -y
 
-multirust update stable
-multirust default stable
+export PATH="${HOME}/.cargo/bin:${PATH}"
+rustup update
+rustc -Vv
+cargo -V
 
 ###############
 # Node.js setup
