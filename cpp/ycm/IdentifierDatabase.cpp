@@ -24,12 +24,13 @@
 #include "Utils.h"
 
 #include <unordered_set>
-#include <cctype>
+#include <locale>
 #include <algorithm>
 
 using std::any_of;
 using std::isupper;
 
+const std::locale loc("C");
 
 namespace YouCompleteMe {
 
@@ -86,7 +87,9 @@ void IdentifierDatabase::ResultsForQueryAndType(
   Bitset query_bitset = LetterBitsetFromString( query );
   bool query_has_uppercase_letters = any_of( query.cbegin(),
                                              query.cend(),
-                                             []( char c ) { return isupper( c ); } );
+                                             []( char c ) {
+                                               return isupper( c, loc );
+                                             } );
 
   std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );

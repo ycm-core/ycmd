@@ -19,19 +19,20 @@
 #include "Result.h"
 
 #include <algorithm>
-#include <cctype>
 #include <locale>
 
 using std::all_of;
 using std::islower;
 using std::isprint;
 
+const std::locale loc("C");
+
 namespace YouCompleteMe {
 
 bool IsPrintable( const std::string &text ) {
   return all_of( text.cbegin(),
                  text.cend(),
-                 []( char c ) { return isprint( c ); } );
+                 []( char c ) { return isprint( c, loc ); } );
 }
 
 
@@ -78,7 +79,7 @@ Candidate::Candidate( const std::string &text )
   word_boundary_chars_( GetWordBoundaryChars( text ) ),
   text_is_lowercase_( all_of( text.cbegin(),
                               text.cend(),
-                              []( char c ) { return islower( c ); } ) ),
+                              []( char c ) { return islower( c, loc ); } ) ),
   letters_present_( LetterBitsetFromString( text ) ),
   root_node_( new LetterNode( text ) ) {
 }

@@ -22,7 +22,7 @@
 #include "ReleaseGil.h"
 
 #include <algorithm>
-#include <cctype>
+#include <locale>
 #include <vector>
 
 using std::any_of;
@@ -32,6 +32,8 @@ using boost::python::str;
 using boost::python::extract;
 using boost::python::object;
 typedef boost::python::list pylist;
+
+const std::locale loc("C");
 
 namespace YouCompleteMe {
 
@@ -84,7 +86,7 @@ boost::python::list FilterAndSortCandidates(
     bool query_has_uppercase_letters = any_of( query.cbegin(),
                                                query.cend(),
                                                []( char c ){
-                                                 return isupper( c );
+                                                 return std::isupper( c, loc );
                                                } );
 
     for ( int i = 0; i < num_candidates; ++i ) {
