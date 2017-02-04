@@ -7,11 +7,8 @@ environment:
   USE_CLANG_COMPLETER: true
   COVERAGE: true
   matrix:
-  # We only test MSVC 11 with Python 3.5 on 64 bits.
-  # MSVC 11 cannot build Python 3.6 extensions.
-  - msvc: 11
-    arch: 64
-    python: 35
+  # We dropped MSVC 11 support because it lacks features from C++11
+  # and C99.
   - msvc: 12
     arch: 64
     python: 36

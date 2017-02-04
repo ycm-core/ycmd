@@ -125,7 +125,7 @@ elseif( COMPILER_IS_CLANG )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
   endif()
 elseif( MSVC )
-  if ( NOT  MSVC_VERSION LESS 1700  )
+  if ( NOT  MSVC_VERSION LESS 1800  )
     set( CPP11_AVAILABLE true )
   endif()
 endif()
@@ -169,9 +169,9 @@ endif()
 
 #############################################################################
 
-# When used with Clang, adding the -std=c++0x flag to CMAKE_CXX_FLAGS will cause
+# When used with Clang, adding the -std=c++11 flag to CMAKE_CXX_FLAGS will cause
 # the compiler to output a warning during linking:
-#  clang: warning: argument unused during compilation: '-std=c++0x'
+#  clang: warning: argument unused during compilation: '-std=c++11'
 # This is caused by cmake passing this flag to the linking stage which it
 # shouldn't do. It's ignored so it does no harm, but the warning is annoying.
 #
