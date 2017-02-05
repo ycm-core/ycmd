@@ -41,7 +41,6 @@
 #endif // USE_CLANG_COMPLETER
 
 #include <boost/python.hpp>
-#include <boost/utility.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 bool HasClangSupport() {

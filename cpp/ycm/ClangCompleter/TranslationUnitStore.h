@@ -25,18 +25,18 @@
 #include <string>
 #include <vector>
 #include <memory>
-
-#include <boost/utility.hpp>
 #include <unordered_map>
 
 typedef void *CXIndex;
 
 namespace YouCompleteMe {
 
-class TranslationUnitStore : boost::noncopyable {
+class TranslationUnitStore {
 public:
   TranslationUnitStore( CXIndex clang_index );
   ~TranslationUnitStore();
+  TranslationUnitStore( const TranslationUnitStore& ) = delete;
+  TranslationUnitStore& operator=( const TranslationUnitStore& ) = delete;
 
   // You can even call this function for the same filename from multiple
   // threads; the TU store will ensure only one TU is created.
