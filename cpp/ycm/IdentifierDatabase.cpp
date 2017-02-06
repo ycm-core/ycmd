@@ -19,7 +19,6 @@
 
 #include "Candidate.h"
 #include "CandidateRepository.h"
-#include "Detail.h"
 #include "IdentifierUtils.h"
 #include "Result.h"
 #include "Utils.h"
@@ -30,6 +29,12 @@
 using std::any_of;
 
 namespace YouCompleteMe {
+
+static bool IsUpper( char c )
+{
+  return std::isupper( c, std::locale::classic() );
+}
+
 
 IdentifierDatabase::IdentifierDatabase()
   : candidate_repository_( CandidateRepository::Instance() ) {
@@ -84,7 +89,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
   Bitset query_bitset = LetterBitsetFromString( query );
   bool query_has_uppercase_letters = any_of( query.cbegin(),
                                              query.cend(),
-					     detail::isupper );
+                                             IsUpper );
 
   std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );

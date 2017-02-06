@@ -17,7 +17,6 @@
 
 #include "Candidate.h"
 #include "Result.h"
-#include "Detail.h"
 
 #include <algorithm>
 
@@ -25,8 +24,18 @@ using std::all_of;
 
 namespace YouCompleteMe {
 
+static bool IsPrint( char c ) {
+  return std::isprint( c, std::locale::classic() );
+}
+
+
+static bool IsLower( char c ) {
+  return std::islower( c, std::locale::classic() );
+}
+
+
 bool IsPrintable( const std::string &text ) {
-  return all_of( text.cbegin(), text.cend(), detail::isprint );
+  return all_of( text.cbegin(), text.cend(), IsPrint );
 }
 
 
@@ -71,7 +80,7 @@ Candidate::Candidate( const std::string &text )
   :
   text_( text ),
   word_boundary_chars_( GetWordBoundaryChars( text ) ),
-  text_is_lowercase_( all_of( text.cbegin(), text.cend(), detail::islower ) ),
+  text_is_lowercase_( all_of( text.cbegin(), text.cend(), IsLower ) ),
   letters_present_( LetterBitsetFromString( text ) ),
   root_node_( new LetterNode( text ) ) {
 }

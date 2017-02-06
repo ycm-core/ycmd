@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "Detail.h"
 #include "PythonSupport.h"
 #include "Result.h"
 #include "Candidate.h"
@@ -57,6 +56,10 @@ std::vector< const Candidate * > CandidatesFromObjectList(
            candidate_strings );
 }
 
+static bool IsUpper( char c ) {
+  return std::isupper( c, std::locale::classic() );
+}
+
 } // unnamed namespace
 
 
@@ -82,7 +85,7 @@ boost::python::list FilterAndSortCandidates(
     Bitset query_bitset = LetterBitsetFromString( query );
     bool query_has_uppercase_letters = any_of( query.cbegin(),
                                                query.cend(),
-                                               detail::isupper );
+                                               IsUpper );
 
     for ( int i = 0; i < num_candidates; ++i ) {
       const Candidate *candidate = repository_candidates[ i ];
