@@ -154,6 +154,8 @@ bool IdentifierEndsWith( const std::string &identifier,
                                     end );
   return false;
 }
+
+
 // foo( -> foo
 // foo() -> foo
 std::string RemoveTrailingParens( std::string text ) {

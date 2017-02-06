@@ -227,4 +227,5 @@ bool Result::QueryIsPrefix( const std::string &text,
 
   return true;
 }
+
 } // namespace YouCompleteMe

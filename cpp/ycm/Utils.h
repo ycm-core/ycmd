@@ -77,6 +77,9 @@ bool Erase( Container &container, const Key &key ) {
   return false;
 }
 
+
+bool IsUpper( char c );
+
 } // namespace YouCompleteMe
 
 #endif /* end of include guard: UTILS_H_KEPMRPBH */

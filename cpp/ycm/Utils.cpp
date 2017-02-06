@@ -51,4 +51,10 @@ void WriteUtf8File( const fs::path &filepath, const std::string &contents ) {
   file.close();
 }
 
+
+bool IsUpper( char c )
+{
+  return std::isupper( c, std::locale::classic() );
+}
+
 } // namespace YouCompleteMe

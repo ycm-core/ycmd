@@ -20,6 +20,7 @@
 #include "Candidate.h"
 #include "CandidateRepository.h"
 #include "ReleaseGil.h"
+#include "Utils.h"
 
 #include <algorithm>
 #include <vector>
@@ -55,10 +56,6 @@ std::vector< const Candidate * > CandidatesFromObjectList(
 
   return CandidateRepository::Instance().GetCandidatesForStrings(
            candidate_strings );
-}
-
-static bool IsUpper( char c ) {
-  return std::isupper( c, std::locale::classic() );
 }
 
 } // unnamed namespace

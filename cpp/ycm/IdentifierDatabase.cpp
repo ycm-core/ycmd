@@ -31,12 +31,6 @@ using std::any_of;
 
 namespace YouCompleteMe {
 
-static bool IsUpper( char c )
-{
-  return std::isupper( c, std::locale::classic() );
-}
-
-
 IdentifierDatabase::IdentifierDatabase()
   : candidate_repository_( CandidateRepository::Instance() ) {
 }
