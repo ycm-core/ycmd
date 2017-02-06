@@ -221,9 +221,6 @@ void Result::SetResultFeaturesFromQuery(
 
 bool Result::QueryIsPrefix( const std::string &text,
                             const std::string &query ) {
-  if ( text.length() < query.length() )
-    return false;
-
   for ( size_t i = 0; i < query.length(); ++i )
     if ( toupper( query[ i ] ) != toupper( text[ i ] ) )
       return false;
