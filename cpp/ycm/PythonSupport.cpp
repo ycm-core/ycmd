@@ -82,7 +82,7 @@ boost::python::list FilterAndSortCandidates(
     Bitset query_bitset = LetterBitsetFromString( query );
     bool query_has_uppercase_letters = any_of( query.cbegin(),
                                                query.cend(),
-					       detail::isupper );
+                                               detail::isupper );
 
     for ( int i = 0; i < num_candidates; ++i ) {
       const Candidate *candidate = repository_candidates[ i ];
