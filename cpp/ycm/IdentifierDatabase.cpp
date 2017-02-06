@@ -25,6 +25,7 @@
 
 #include <unordered_set>
 #include <algorithm>
+#include <locale>
 
 using std::any_of;
 

@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <locale>
 
 using std::any_of;
 using boost::python::len;

@@ -19,6 +19,7 @@
 #include "Result.h"
 
 #include <algorithm>
+#include <locale>
 
 using std::all_of;
 
