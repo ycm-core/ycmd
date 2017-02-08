@@ -25,6 +25,8 @@ Known ycmd clients:
 - [YcmdCompletion][sublime-ycmd]: Sublime client
 - [kak-ycmd][]: Kakoune client.
 - [you-complete-me][vscode-you-complete-me]: VSCode client.
+- [gycm][]: Geany client.
+- [nano-ycmd][]: GNU nano client.
 
 Feel free to send a pull request adding a link to your client here if you've
 built one.
@@ -323,3 +325,5 @@ This software is licensed under the [GPL v3 license][gpl].
 [test-setup]: https://github.com/Valloric/ycmd/blob/master/TESTS.md
 [extra-conf-vim-data-doc]: https://github.com/Valloric/YouCompleteMe#the-gycm_extra_conf_vim_data-option
 [vscode-you-complete-me]: https://marketplace.visualstudio.com/items?itemName=RichardHe.you-complete-me
+[gycm]: https://github.com/jakeanq/gycm
+[nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
