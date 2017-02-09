@@ -54,5 +54,6 @@ class UltiSnipsCompleter( GeneralCompleter ):
     raw_candidates = request_data.get( 'ultisnips_snippets', [] )
     self._candidates = [
       responses.BuildCompletionData( snip[ 'trigger' ],
+                                     None,
                                      '<snip> ' + snip[ 'description' ] )
       for snip in raw_candidates ]

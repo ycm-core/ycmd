@@ -135,6 +135,7 @@ BOOST_PYTHON_MODULE(ycm_core)
 
   class_< CompletionData >( "CompletionData" )
     .def( "TextToInsertInBuffer", &CompletionData::TextToInsertInBuffer )
+    .def( "SnippetToInsertInBuffer", &CompletionData::SnippetToInsertInBuffer )
     .def( "MainCompletionText", &CompletionData::MainCompletionText )
     .def( "ExtraMenuInfo", &CompletionData::ExtraMenuInfo )
     .def( "DetailedInfoForPreviewWindow",

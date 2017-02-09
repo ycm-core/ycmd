@@ -210,6 +210,7 @@ class TernCompleter( Completer ):
       return doc
 
     return [ responses.BuildCompletionData( completion[ 'name' ],
+                                            None,
                                             completion.get( 'type', '?' ),
                                             BuildDoc( completion ) )
              for completion in completions ]

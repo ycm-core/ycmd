@@ -3,8 +3,8 @@ struct Foo {
   int y;
   char c;
 
-  int foobar() {
-    return 5;
+  int foobar(int t) {
+    return t;
   }
 };
 

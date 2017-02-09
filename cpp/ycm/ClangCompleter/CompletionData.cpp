@@ -148,6 +148,54 @@ std::string OptionalChunkToString( CXCompletionString completion_string,
 }
 
 
+std::string ChunkToSnippet( CXCompletionString completion_string,
+                            uint chunk_num,
+                            uint &idx_placeholder ) {
+  std::string snippet;
+
+  if ( !completion_string )
+    return snippet;
+
+  CXCompletionChunkKind kind = clang_getCompletionChunkKind(
+                                 completion_string, chunk_num );
+
+  if ( kind == CXCompletionChunk_Optional ) {
+    CXCompletionString optional_completion_string =
+      clang_getCompletionChunkCompletionString (
+        completion_string, chunk_num );
+
+    if ( optional_completion_string ) {
+      uint optional_num_chunks = clang_getNumCompletionChunks(
+                                   optional_completion_string );
+
+      for ( uint j = 0; j < optional_num_chunks; ++j ) {
+        snippet.append( ChunkToSnippet(
+          optional_completion_string, j, idx_placeholder ) );
+      }
+    }
+  }
+
+  else if ( kind == CXCompletionChunk_Informative ) {
+  }
+
+  else if ( kind == CXCompletionChunk_Placeholder ) {
+    idx_placeholder++;
+    snippet.append( "${" )
+    .append( std::to_string( idx_placeholder ) )
+    .append( ":" )
+    .append( ChunkToString( completion_string, chunk_num ) )
+    .append( "}" );
+  }
+
+  else {
+    snippet.append(
+      ChunkToString( completion_string, chunk_num ) );
+  }
+
+  return snippet;
+}
+
+
 // foo( -> foo
 // foo() -> foo
 std::string RemoveTrailingParens( std::string text ) {
@@ -173,13 +221,15 @@ CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   bool saw_left_paren = false;
   bool saw_function_params = false;
   bool saw_placeholder = false;
+  uint idx_placeholder = 0;
 
   for ( uint j = 0; j < num_chunks; ++j ) {
     ExtractDataFromChunk( completion_string,
                           j,
                           saw_left_paren,
                           saw_function_params,
-                          saw_placeholder );
+                          saw_placeholder,
+                          idx_placeholder );
   }
 
   original_string_ = RemoveTrailingParens( std::move( original_string_ ) );
@@ -199,7 +249,8 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
                                            uint chunk_num,
                                            bool &saw_left_paren,
                                            bool &saw_function_params,
-                                           bool &saw_placeholder ) {
+                                           bool &saw_placeholder,
+                                           uint &idx_placeholder ) {
   CXCompletionChunkKind kind = clang_getCompletionChunkKind(
                                  completion_string, chunk_num );
 
@@ -229,6 +280,9 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
       everything_except_return_type_.append(
         ChunkToString( completion_string, chunk_num ) );
     }
+
+    completion_snippet_.append(
+      ChunkToSnippet( completion_string, chunk_num, idx_placeholder ) );
   }
 
   switch ( kind ) {

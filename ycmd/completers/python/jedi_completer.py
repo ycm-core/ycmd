@@ -266,6 +266,7 @@ class JediCompleter( Completer ):
   def ComputeCandidatesInner( self, request_data ):
     return [ responses.BuildCompletionData(
                 completion[ 'name' ],
+                None,
                 completion[ 'description' ],
                 completion[ 'docstring' ],
                 extra_data = self._GetExtraData( completion ) )
