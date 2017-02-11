@@ -171,6 +171,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return True
 
 
+  def ServerIsReady( self ):
+    return self.ServerIsHealthy() and self._received_ready_message
+
+
   def ShouldUseNowInner( self, request_data ):
     if not self.ServerIsReady():
       return False
@@ -185,6 +189,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         self._server_stderr = None
 
     self._server_handle = None
+    self._received_ready_message = False
 
     try:
       rmtree( self._workspace_path )
@@ -288,6 +293,19 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       'RestartServer': ( lambda self, request_data, args:
                             self._RestartServer() ),
     }
+
+
+  def HandleServerMessage( self, request_data, notification ):
+    if notification[ 'method' ] == 'language/status':
+      message = notification[ 'params' ][ 'message' ]
+      message_type = notification[ 'params' ][ 'type' ]
+      if message_type == 'Started':
+        self._received_ready_message = True
+
+      return responses.BuildDisplayMessageResponse(
+        'Language server status: {0}'.format( message ) )
+
+    return None
 
 
   def _RestartServer( self ):

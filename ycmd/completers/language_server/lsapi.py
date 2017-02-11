@@ -56,7 +56,7 @@ def Initialise( request_id ):
     'rootPath': os.getcwd(), # deprecated
     'rootUri': _MakeUriForFile( os.getcwd() ),
     'initializationOptions': { },
-    'capabilities': { }
+    'capabilities': { 'trace': 'verbose' }
   } )
 
 
@@ -96,10 +96,8 @@ def Completion( request_id, request_data ):
       # TODO: The API asks for 0-based offsets. These -1's are not good enough
       # when using multi-byte characters. See the tern completer for an
       # approach.
-      #
-      # FIXME: start_codepoint!
       'line': request_data[ 'line_num' ] - 1,
-      'character': request_data[ 'start_column' ] - 1,
+      'character': request_data[ 'start_codepoint' ] - 1,
     }
   } )
 

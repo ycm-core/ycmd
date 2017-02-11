@@ -378,6 +378,15 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     return True
 
 
+  def PollForMessages( self, request_data ):
+    return self.PollForMessagesInner( request_data )
+
+
+  def PollForMessagesInner( self, request_data ):
+    # Most completers don't implement this
+    return False
+
+
 class CompletionsCache( object ):
   """Completions for a particular request. Importantly, columns are byte
   offsets, not unicode codepoints."""

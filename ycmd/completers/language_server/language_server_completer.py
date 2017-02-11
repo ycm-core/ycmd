@@ -173,12 +173,10 @@ class LanguageServerConnection( object ):
           last_line = read_bytes
 
           if not line.strip():
-            _logger.debug( "Headers complete" )
             headers_complete = True
             read_bytes += 1
             break
           else:
-            _logger.debug( "Header line: {0}".format( line ) )
             key, value = utils.ToUnicode( line ).split( ':', 1 )
             headers[ key.strip() ] = value.strip()
 
@@ -284,7 +282,6 @@ class StandardIOLanguageServerConnection( LanguageServerConnection,
 
   def _Write( self, data ):
     to_write = data + utils.ToBytes( '\r\n' )
-    _logger.debug( 'Writing: ' + utils.ToUnicode( to_write ) )
     self.server_stdin.write( to_write )
     self.server_stdin.flush()
 
@@ -303,21 +300,18 @@ class StandardIOLanguageServerConnection( LanguageServerConnection,
       # self.IsStopped()) means the server died unexpectedly.
       raise RuntimeError( "Connection to server died" )
 
-    _logger.debug( "Data!!: {0}".format( data ) )
     return data
 
 
 class LanguageServerCompleter( Completer ):
   def __init__( self, user_options):
     super( LanguageServerCompleter, self ).__init__( user_options )
-    self._latest_diagnostics = {
-      'uri': None,
-      'diagnostics': []
-    }
+
     self._syncType = 'Full'
 
     self._serverFileState = {}
     self._fileStateMutex = threading.Lock()
+    self._server = LanguageServerConnection()
 
 
   def GetServer( sefl ):
@@ -418,63 +412,104 @@ class LanguageServerCompleter( Completer ):
     if self.ServerIsReady():
       self._RefreshFiles( request_data )
 
-    def BuildDiagnostic( filename, diag ):
-      filename = lsapi.UriToFilePath( filename )
-      r = BuildRange( filename, diag[ 'range' ] )
-      SEVERITY = [
-        None,
-        'Error',
-        'Warning',
-        'Information',
-        'Hint',
-      ]
-      SEVERITY_TO_YCM_SEVERITY = {
-        'Error': 'ERROR',
-        'Warning': 'WARNING',
-        'Information': 'WARNING',
-        'Hint': 'WARNING'
-      }
+    # NOTE: We also return diagnostics asynchronously via the long-polling
+    # mechanism to avoid timing issues with the servers asynchronous publication
+    # of diagnostics.
+    # However, we _also_ return them here to refresh diagnostics after, say
+    # changing the active file in the editor.
+    uri = lsapi.MakeUriForFile( request_data[ 'filepath' ] )
+    if self._latest_diagnostics[ uri ]:
+      return [ BuildDiagnostic( request_data, uri, diag )
+               for diag in self._latest_diagnostics[ uri ] ]
 
-      return responses.BuildDiagnosticData ( responses.Diagnostic(
-        ranges = [ r ],
-        location = r.start_,
-        location_extent = r,
-        text = diag[ 'message' ],
-        kind = SEVERITY_TO_YCM_SEVERITY[ SEVERITY[ diag[ 'severity' ] ] ] ) )
 
-    # TODO: Maybe we need to prevent duplicates? Anyway, handle all of the
-    # notification messages
-    latest_diagnostics = None
+  def _PollForMessagesNoBlock( self, request_data, messages ):
+    notification = self.GetServer()._notifications.get_nowait( )
+    message = self._ConvertNotificationToMessage( request_data,
+                                                  notification )
+    if message:
+      messages.append( message )
+
+
+  def _PollForMessagesBlock( self, request_data ):
     try:
       while True:
         if not self.GetServer():
           # The server isn't running or something. Don't re-poll.
           return False
 
-        notification = self._server._notifications.get_nowait()
-        _logger.debug( 'notification {0}: {1}'.format(
-          notification[ 'method' ],
-          json.dumps( notification[ 'params' ], indent = 2 ) ) )
-
-        if notification[ 'method' ] == 'textDocument/publishDiagnostics':
-          _logger.debug( 'latest_diagnostics updated' )
-          latest_diagnostics = notification
+        notification = self.GetServer()._notifications.get( timeout=10 )
+        message = self._ConvertNotificationToMessage( request_data,
+                                                      notification )
+        if message:
+          return [ message ]
     except queue.Empty:
+      return True
+
+
+  def PollForMessagesInner( self, request_data ):
+    messages = list()
+
+    # scoop up any pending messages into one big list
+    try:
+      while True:
+        if not self.GetServer():
+          # The server isn't running or something. Don't re-poll.
+          return False
+
+        self._PollForMessagesNoBlock( request_data, messages )
+    except queue.Empty:
+      # We drained the queue
       pass
 
-    if latest_diagnostics is not None:
-      _logger.debug( 'new diagnostics, updating latest received' )
-      self._latest_diagnostics = latest_diagnostics[ 'params' ]
-    else:
-      _logger.debug( 'No new diagnostics, using latest received' )
+    # If we found some messages, return them immediately
+    if messages:
+      return messages
 
-    diags = [ BuildDiagnostic( self._latest_diagnostics[ 'uri' ], x )
-              for x in self._latest_diagnostics[ 'diagnostics' ] ]
-    _logger.debug( 'Diagnostics: {0}'.format( diags ) )
-    return diags
+    # otherwise, block until we get one
+    return self._PollForMessagesBlock( request_data )
+
+
+  def HandleServerMessage( self, request_data, notification ):
+    return None
+
+
+  def _ConvertNotificationToMessage( self, request_data, notification ):
+    response = self.HandleServerMessage( request_data, notification )
+
+    if response:
+      return response
+    elif notification[ 'method' ] == 'window/showMessage':
+      return responses.BuildDisplayMessageResponse(
+        notification[ 'params' ][ 'message' ] )
+    elif notification[ 'method' ] == 'textDocument/publishDiagnostics':
+      # Diagnostics are a little special. We only return diagnostics for the
+      # currently open file. The language server actually might sent us
+      # diagnostics for any file in the project, but (for now) we only show the
+      # current file.
+      #
+      # TODO(Ben): We should actually group up all the diagnostics messages,
+      # populating _latest_diagnostics, and then always send a single message if
+      # _any_ publishDiagnostics message was pending.
+      params = notification[ 'params' ]
+      uri = params[ 'uri' ]
+
+      # TODO(Ben): Does realpath break symlinks?
+      # e.g. we putting symlinks in the testdata for the source does not work
+      if os.path.realpath( lsapi.UriToFilePath( uri ) ) == os.path.realpath(
+        request_data[ 'filepath' ] ):
+        response = {
+          'diagnostics': [ BuildDiagnostic( request_data, uri, x )
+                           for x in params[ 'diagnostics' ] ]
+        }
+        return response
+
+    return None
 
 
   def _RefreshFiles( self, request_data ):
+    # FIXME: Provide a Reset method which clears this state. Restarting
+    # downstream servers would leave this cache in the incorrect state.
     with self._fileStateMutex:
       for file_name, file_data in iteritems( request_data[ 'file_data' ] ):
         file_state = 'New'
@@ -488,12 +523,12 @@ class LanguageServerCompleter( Completer ):
                                            file_data[ 'filetypes' ],
                                            file_data[ 'contents' ] )
         else:
-          # FIXME: DidChangeTextDocument doesn't actally do anything different
+          # FIXME: DidChangeTextDocument doesn't actually do anything different
           # from DidOpenTextDocument because we don't actually have a mechanism
           # for generating the diffs (which would just be a waste of time)
           #
-          # One option would be to just replcae the entire file, but some
-          # servers (i'm looking at you javac completer) don't update
+          # One option would be to just replace the entire file, but some
+          # servers (I'm looking at you javac completer) don't update
           # diagnostics until you open or save a document. Sigh.
           msg = lsapi.DidChangeTextDocument( file_name,
                                              file_data[ 'filetypes' ],
@@ -502,12 +537,18 @@ class LanguageServerCompleter( Completer ):
         self._serverFileState[ file_name ] = 'Open'
         self.GetServer().SendNotification( msg )
 
-      for file_name in iterkeys(self._serverFileState ):
+      stale_files = list()
+      for file_name in iterkeys( self._serverFileState ):
         if file_name not in request_data[ 'file_data' ]:
-          msg = lsapi.DidCloseTextDocument( file_name )
-          del self._serverFileState[ file_name ]
-          self.GetServer().SendNotification( msg )
+          stale_files.append( file_name )
 
+      # We can't change the dictionary entries while using iterkeys, so we do
+      # that in a separate loop.
+      # TODO(Ben): Is this better than just not using iterkeys?
+      for file_name in stale_files:
+          msg = lsapi.DidCloseTextDocument( file_name )
+          self.GetServer().SendNotification( msg )
+          del self._serverFileState[ file_name ]
 
   def _WaitForInitiliase( self ):
     request_id = self.GetServer().NextRequestId()
@@ -610,3 +651,28 @@ def BuildLocation( filename, loc ):
 def BuildRange( filename, r ):
   return responses.Range( BuildLocation( filename, r[ 'start' ] ),
                           BuildLocation( filename, r[ 'end' ] ) )
+
+
+def BuildDiagnostic( filename, diag ):
+  filename = lsapi.UriToFilePath( filename )
+  r = BuildRange( filename, diag[ 'range' ] )
+  SEVERITY = [
+    None,
+    'Error',
+    'Warning',
+    'Information',
+    'Hint',
+  ]
+  SEVERITY_TO_YCM_SEVERITY = {
+    'Error': 'ERROR',
+    'Warning': 'WARNING',
+    'Information': 'WARNING',
+    'Hint': 'WARNING'
+  }
+
+  return responses.BuildDiagnosticData ( responses.Diagnostic(
+    ranges = [ r ],
+    location = r.start_,
+    location_extent = r,
+    text = diag[ 'message' ],
+    kind = SEVERITY_TO_YCM_SEVERITY[ SEVERITY[ diag[ 'severity' ] ] ] ) )
