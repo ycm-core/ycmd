@@ -43,12 +43,13 @@ SERVER_IDLE_SUICIDE_SECONDS = 10800  # 3 hours
 MAX_SERVER_WAIT_TIME_SECONDS = 5
 
 # Set this to True to see ycmd's output interleaved with the client's
-INCLUDE_YCMD_OUTPUT = False
+INCLUDE_YCMD_OUTPUT = True
 DEFINED_SUBCOMMANDS_HANDLER = '/defined_subcommands'
 CODE_COMPLETIONS_HANDLER = '/completions'
 COMPLETER_COMMANDS_HANDLER = '/run_completer_command'
 EVENT_HANDLER = '/event_notification'
 EXTRA_CONF_HANDLER = '/load_extra_conf_file'
+RECEIVE_MESSAGES_HANDLER = '/receive_messages'
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
 PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..', 'ycmd' )
 PATH_TO_EXTRA_CONF = os.path.join( DIR_OF_THIS_SCRIPT, '.ycm_extra_conf.py' )
@@ -184,6 +185,13 @@ class YcmdHandle( object ):
     request_json[ 'event_name' ] = event_enum.name
     print( '==== Sending event notification ====' )
     self.PostToHandlerAndLog( EVENT_HANDLER, request_json )
+
+
+  def ReceiveMessages( self, test_filename, filetype ):
+    request_json = BuildRequestData( test_filename = test_filename,
+                                     filetype = filetype )
+    print( '==== Sending Messages request ====' )
+    self.PostToHandlerAndLog( RECEIVE_MESSAGES_HANDLER, request_json )
 
 
   def LoadExtraConfFile( self, extra_conf_filename ):
@@ -468,6 +476,40 @@ def CsharpSemanticCompletionResults( server ):
                                     column_num = 15 )
 
 
+def JavaMessages( server ):
+  # NOTE: The server will return diagnostic information about an error in the
+  # some_java.java file that we placed there intentionally (as an example).
+  # It is _not_returned in the FileReadyToParse, but the ReceiveMessages poll
+  server.SendEventNotification( Event.FileReadyToParse,
+                                test_filename = 'some_java.java',
+                                filetype = 'java' )
+
+  # Send the long poll 10 times (only the first N will return any useful
+  # messages)
+  for i in range(1, 6):
+    server.ReceiveMessages( test_filename = 'some_java.java',
+                            filetype = 'java' )
+
+  # Send a code complete request
+  server.SendCodeCompletionRequest( test_filename = 'some_java.java',
+                                    filetype = 'java',
+                                    line_num = 5,
+                                    column_num = 8 )
+
+  # NOTE: The server will return diagnostic information about an error in the
+  # some_java.java file that we placed there intentionally (as an example).
+  # It is _not_returned in the FileReadyToParse, but the ReceiveMessages poll
+  server.SendEventNotification( Event.FileReadyToParse,
+                                test_filename = 'some_java.java',
+                                filetype = 'java' )
+
+  # Send the long poll 10 times (only the first N will return any useful
+  # messages)
+  for i in range(1, 6):
+    server.ReceiveMessages( test_filename = 'some_java.java',
+                            filetype = 'java' )
+
+
 def Main():
   print( 'Trying to start server...' )
   server = YcmdHandle.StartYcmdAndReturnHandle()
@@ -477,6 +519,7 @@ def Main():
   PythonSemanticCompletionResults( server )
   CppSemanticCompletionResults( server )
   CsharpSemanticCompletionResults( server )
+  JavaMessages( server )
 
   # This will ask the server for a list of subcommands supported by a given
   # language completer.
