@@ -52,8 +52,7 @@ void WriteUtf8File( const fs::path &filepath, const std::string &contents ) {
 }
 
 
-bool IsUpper( char c )
-{
+bool IsUpper( char c ) {
   return std::isupper( c, std::locale::classic() );
 }
 
