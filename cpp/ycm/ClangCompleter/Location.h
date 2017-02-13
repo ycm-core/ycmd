@@ -18,7 +18,6 @@
 #ifndef LOCATION_H_6TLFQH4I
 #define LOCATION_H_6TLFQH4I
 
-#include "standard.h"
 #include "ClangUtils.h"
 
 #include <string>
@@ -33,14 +32,16 @@ struct Location {
       column_number_( 0 ),
       filename_( "" ) {}
 
-  Location( const std::string &filename, uint line, uint column )
+  Location( const std::string &filename,
+            unsigned int line,
+            unsigned int column )
     : line_number_( line ),
       column_number_( column ),
       filename_( filename ) {}
 
   Location( const CXSourceLocation &location ) {
     CXFile file;
-    uint unused_offset;
+    unsigned int unused_offset;
     clang_getExpansionLocation( location,
                                 &file,
                                 &line_number_,
@@ -60,8 +61,8 @@ struct Location {
     return !filename_.empty();
   }
 
-  uint line_number_;
-  uint column_number_;
+  unsigned int line_number_;
+  unsigned int column_number_;
 
   // The full, absolute path
   std::string filename_;

@@ -18,7 +18,6 @@
 #ifndef DIAGNOSTIC_H_BZH3BWIZ
 #define DIAGNOSTIC_H_BZH3BWIZ
 
-#include "standard.h"
 #include "Range.h"
 #include "Location.h"
 

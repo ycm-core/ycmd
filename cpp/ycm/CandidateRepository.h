@@ -20,8 +20,6 @@
 
 #include "DLLDefines.h"
 
-#include <boost/utility.hpp>
-
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -44,9 +42,12 @@ CandidateHolder;
 // work is not repeated.
 //
 // This class is thread-safe.
-class CandidateRepository : boost::noncopyable {
+class CandidateRepository {
 public:
   YCM_DLL_EXPORT static CandidateRepository &Instance();
+  // Make class noncopyable
+  CandidateRepository( const CandidateRepository& ) = delete;
+  CandidateRepository& operator=( const CandidateRepository& ) = delete;
 
   int NumStoredCandidates();
 

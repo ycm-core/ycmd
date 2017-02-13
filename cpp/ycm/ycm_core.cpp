@@ -41,7 +41,6 @@
 #endif // USE_CLANG_COMPLETER
 
 #include <boost/python.hpp>
-#include <boost/utility.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 bool HasClangSupport() {
@@ -220,10 +219,3 @@ BOOST_PYTHON_MODULE(ycm_core)
 
 #endif // USE_CLANG_COMPLETER
 }
-
-// Boost.Thread forces us to implement this.
-// We don't use any thread-specific (local) storage so it's fine to implement
-// this as an empty function.
-namespace boost {
-void tss_cleanup_implemented() {}
-};

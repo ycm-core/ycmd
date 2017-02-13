@@ -15,29 +15,35 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "standard.h"
 #include "Candidate.h"
 #include "Result.h"
 
-#include <boost/algorithm/string.hpp>
-#include <cctype>
+#include <algorithm>
 #include <locale>
 
-using boost::algorithm::all;
-using boost::algorithm::is_lower;
-using boost::algorithm::is_print;
+using std::all_of;
 
 namespace YouCompleteMe {
 
+static bool IsPrint( char c ) {
+  return std::isprint( c, std::locale::classic() );
+}
+
+
+static bool IsLower( char c ) {
+  return std::islower( c, std::locale::classic() );
+}
+
+
 bool IsPrintable( const std::string &text ) {
-  return all( text, is_print( std::locale::classic() ) );
+  return all_of( text.cbegin(), text.cend(), IsPrint );
 }
 
 
 std::string GetWordBoundaryChars( const std::string &text ) {
   std::string result;
 
-  for ( uint i = 0; i < text.size(); ++i ) {
+  for ( size_t i = 0; i < text.size(); ++i ) {
     bool is_first_char_but_not_punctuation = i == 0 && !ispunct( text[ i ] );
     bool is_good_uppercase = i > 0 &&
                              IsUppercase( text[ i ] ) &&
@@ -75,7 +81,7 @@ Candidate::Candidate( const std::string &text )
   :
   text_( text ),
   word_boundary_chars_( GetWordBoundaryChars( text ) ),
-  text_is_lowercase_( all( text, is_lower() ) ),
+  text_is_lowercase_( all_of( text.cbegin(), text.cend(), IsLower ) ),
   letters_present_( LetterBitsetFromString( text ) ),
   root_node_( new LetterNode( text ) ) {
 }

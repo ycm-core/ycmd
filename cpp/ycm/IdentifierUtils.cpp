@@ -19,7 +19,6 @@
 #include "Utils.h"
 
 #include <unordered_map>
-#include <boost/assign/list_of.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 
@@ -63,49 +62,49 @@ struct StringEqualityComparer :
 const std::unordered_map < const char *,
       const char *,
       boost::hash< std::string >,
-      StringEqualityComparer > LANG_TO_FILETYPE =
-        boost::assign::map_list_of
-        ( "Ant"        , "ant"        )
-        ( "Asm"        , "asm"        )
-        ( "Awk"        , "awk"        )
-        ( "Basic"      , "basic"      )
-        ( "C++"        , "cpp"        )
-        ( "C#"         , "cs"         )
-        ( "C"          , "c"          )
-        ( "COBOL"      , "cobol"      )
-        ( "DosBatch"   , "dosbatch"   )
-        ( "Eiffel"     , "eiffel"     )
-        ( "Elixir"     , "elixir"     )
-        ( "Erlang"     , "erlang"     )
-        ( "Fortran"    , "fortran"    )
-        ( "Go"         , "go"         )
-        ( "Haskell"    , "haskell"    )
-        ( "HTML"       , "html"       )
-        ( "Java"       , "java"       )
-        ( "JavaScript" , "javascript" )
-        ( "Lisp"       , "lisp"       )
-        ( "Lua"        , "lua"        )
-        ( "Make"       , "make"       )
-        ( "MatLab"     , "matlab"     )
-        ( "OCaml"      , "ocaml"      )
-        ( "Pascal"     , "pascal"     )
-        ( "Perl"       , "perl"       )
-        ( "PHP"        , "php"        )
-        ( "Python"     , "python"     )
-        ( "REXX"       , "rexx"       )
-        ( "Ruby"       , "ruby"       )
-        ( "Scheme"     , "scheme"     )
-        ( "Sh"         , "sh"         )
-        ( "SLang"      , "slang"      )
-        ( "SML"        , "sml"        )
-        ( "SQL"        , "sql"        )
-        ( "Tcl"        , "tcl"        )
-        ( "Tex"        , "tex"        )
-        ( "Vera"       , "vera"       )
-        ( "Verilog"    , "verilog"    )
-        ( "VHDL"       , "vhdl"       )
-        ( "Vim"        , "vim"        )
-        ( "YACC"       , "yacc"       );
+      StringEqualityComparer > LANG_TO_FILETYPE = {
+        { "Ant"        , "ant"        },
+        { "Asm"        , "asm"        },
+        { "Awk"        , "awk"        },
+        { "Basic"      , "basic"      },
+        { "C++"        , "cpp"        },
+        { "C#"         , "cs"         },
+        { "C"          , "c"          },
+        { "COBOL"      , "cobol"      },
+        { "DosBatch"   , "dosbatch"   },
+        { "Eiffel"     , "eiffel"     },
+        { "Elixir"     , "elixir"     },
+        { "Erlang"     , "erlang"     },
+        { "Fortran"    , "fortran"    },
+        { "Go"         , "go"         },
+        { "Haskell"    , "haskell"    },
+        { "HTML"       , "html"       },
+        { "Java"       , "java"       },
+        { "JavaScript" , "javascript" },
+        { "Lisp"       , "lisp"       },
+        { "Lua"        , "lua"        },
+        { "Make"       , "make"       },
+        { "MatLab"     , "matlab"     },
+        { "OCaml"      , "ocaml"      },
+        { "Pascal"     , "pascal"     },
+        { "Perl"       , "perl"       },
+        { "PHP"        , "php"        },
+        { "Python"     , "python"     },
+        { "REXX"       , "rexx"       },
+        { "Ruby"       , "ruby"       },
+        { "Scheme"     , "scheme"     },
+        { "Sh"         , "sh"         },
+        { "SLang"      , "slang"      },
+        { "SML"        , "sml"        },
+        { "SQL"        , "sql"        },
+        { "Tcl"        , "tcl"        },
+        { "Tex"        , "tex"        },
+        { "Vera"       , "vera"       },
+        { "Verilog"    , "verilog"    },
+        { "VHDL"       , "vhdl"       },
+        { "Vim"        , "vim"        },
+        { "YACC"       , "yacc"       }
+      };
 
 const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 

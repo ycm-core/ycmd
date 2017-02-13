@@ -21,8 +21,6 @@
 #include "DLLDefines.h"
 #include "LetterNode.h"
 
-#include <boost/utility.hpp>
-
 #include <memory>
 #include <string>
 #include <bitset>
@@ -42,10 +40,13 @@ YCM_DLL_EXPORT Bitset LetterBitsetFromString( const std::string &text );
 // Public for tests
 YCM_DLL_EXPORT std::string GetWordBoundaryChars( const std::string &text );
 
-class Candidate : boost::noncopyable {
+class Candidate {
 public:
 
   YCM_DLL_EXPORT explicit Candidate( const std::string &text );
+  // Make class noncopyable
+  Candidate( const Candidate& ) = delete;
+  Candidate& operator=( const Candidate& ) = delete;
 
   inline const std::string &Text() const {
     return text_;

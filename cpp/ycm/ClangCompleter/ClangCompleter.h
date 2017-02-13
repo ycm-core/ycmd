@@ -24,8 +24,6 @@
 #include "TranslationUnitStore.h"
 #include "Documentation.h"
 
-#include <boost/utility.hpp>
-
 #include <string>
 
 typedef struct CXTranslationUnitImpl *CXTranslationUnit;
@@ -40,10 +38,12 @@ typedef std::vector< CompletionData > CompletionDatas;
 
 
 // All filename parameters must be absolute paths.
-class ClangCompleter : boost::noncopyable {
+class ClangCompleter {
 public:
   YCM_DLL_EXPORT ClangCompleter();
   YCM_DLL_EXPORT ~ClangCompleter();
+  ClangCompleter( const ClangCompleter& ) = delete;
+  ClangCompleter& operator=( const ClangCompleter& ) = delete;
 
   bool UpdatingTranslationUnit( const std::string &filename );
 

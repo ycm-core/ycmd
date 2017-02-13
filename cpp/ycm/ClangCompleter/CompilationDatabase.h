@@ -27,11 +27,9 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <boost/utility.hpp>
 #include <mutex>
 #include <boost/python.hpp>
 #include <clang-c/CXCompilationDatabase.h>
-
 
 namespace YouCompleteMe {
 
@@ -42,10 +40,12 @@ struct CompilationInfoForFile {
 
 
 // Access to Clang's internal CompilationDatabase. This class is thread-safe.
-class CompilationDatabase : boost::noncopyable {
+class CompilationDatabase {
 public:
   // |path_to_directory| should be a string-like object.
   CompilationDatabase( const boost::python::object &path_to_directory );
+  CompilationDatabase( const CompilationDatabase& ) = delete;
+  CompilationDatabase& operator=( const CompilationDatabase& ) = delete;
   ~CompilationDatabase();
 
   bool DatabaseSuccessfullyLoaded();

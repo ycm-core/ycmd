@@ -25,7 +25,6 @@
 #include "Documentation.h"
 
 #include <clang-c/Index.h>
-#include <boost/utility.hpp>
 
 #include <mutex>
 #include <string>
@@ -35,13 +34,15 @@ namespace YouCompleteMe {
 
 struct CompletionData;
 
-class TranslationUnit : boost::noncopyable {
+class TranslationUnit {
 public:
 
   // This constructor creates an invalid, sentinel TU. All of it's methods
   // return empty vectors, and IsCurrentlyUpdating always returns true so that
   // no callers try to rely on the invalid TU.
   TranslationUnit();
+  TranslationUnit( const TranslationUnit& ) = delete;
+  TranslationUnit& operator=( const TranslationUnit& ) = delete;
 
   YCM_DLL_EXPORT TranslationUnit(
     const std::string &filename,
@@ -103,7 +104,7 @@ private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
 
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files,
-                uint parse_options );
+                size_t parse_options );
 
   void UpdateLatestDiagnostics();
 

@@ -18,7 +18,6 @@
 #ifndef COMPLETIONDATA_H_2JCTF1NU
 #define COMPLETIONDATA_H_2JCTF1NU
 
-#include "standard.h"
 #include <string>
 #include <clang-c/Index.h>
 
@@ -116,10 +115,13 @@ struct CompletionData {
 private:
 
   void ExtractDataFromChunk( CXCompletionString completion_string,
-                             uint chunk_num,
+                             size_t chunk_num,
                              bool &saw_left_paren,
                              bool &saw_function_params,
                              bool &saw_placeholder );
+
+  bool IdentifierEndsWith( const std::string &identifier,
+                           const std::string &end );
 };
 
 } // namespace YouCompleteMe
