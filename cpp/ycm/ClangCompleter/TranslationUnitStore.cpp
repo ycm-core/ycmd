@@ -20,7 +20,7 @@
 #include "Utils.h"
 #include "exceptions.h"
 
-#include <boost/functional/hash.hpp>
+#include <functional>
 
 using std::lock_guard;
 using std::shared_ptr;
@@ -32,7 +32,18 @@ namespace YouCompleteMe {
 namespace {
 
 std::size_t HashForFlags( const std::vector< std::string > &flags ) {
-  return boost::hash< std::vector< std::string > >()( flags );
+  /* 
+   * The way boost::hash implements hash< std::vector<T> > goes after the
+   * described way in "Library Extension Technical Report - Issue List"
+   * section 6.18. When (if) it ends up in the STL this whole function could br
+   * replaced with:
+   *
+   * return std::hash< std::vecto< std::string > >()( flags );
+   */
+  size_t seed = 0;
+  for ( auto flag : flags )
+    seed ^= std::hash< std::string >()( flag ) + ( seed<<6 ) + ( seed>>2 );
+  return seed;
 }
 
 }  // unnamed namespace
