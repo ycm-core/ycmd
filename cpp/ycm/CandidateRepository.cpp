@@ -84,36 +84,6 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
   return candidates;
 }
 
-#ifdef USE_CLANG_COMPLETER
-
-std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
-  const std::vector< CompletionData > &datas ) {
-  std::vector< const Candidate * > candidates;
-  candidates.reserve( datas.size() );
-
-  {
-    std::lock_guard< std::mutex > locker( holder_mutex_ );
-
-    for ( const CompletionData & data : datas ) {
-      const std::string &validated_candidate_text =
-        ValidatedCandidateText( data.original_string_ );
-
-      const Candidate *&candidate = GetValueElseInsert(
-                                      candidate_holder_,
-                                      validated_candidate_text,
-                                      NULL );
-
-      if ( !candidate )
-        candidate = new Candidate( validated_candidate_text );
-
-      candidates.push_back( candidate );
-    }
-  }
-
-  return candidates;
-}
-
-#endif // USE_CLANG_COMPLETER
 
 CandidateRepository::~CandidateRepository() {
   for ( const CandidateHolder::value_type & pair : candidate_holder_ ) {
