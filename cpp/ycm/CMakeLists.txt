@@ -30,7 +30,11 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION "4.0.0" )
+  set( CLANG_MAJOR_VERSION 4 )
+  set( CLANG_MINOR_VERSION 0 )
+  set( CLANG_PATCH_VERSION 0 )
+  set( CLANG_VERSION
+       "${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}.${CLANG_PATCH_VERSION}" )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
@@ -296,7 +300,7 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     set( EXTERNAL_LIBCLANG_PATH ${TEMP} )
   else()
     # For Macs, we do things differently; look further in this file.
-    if ( NOT APPLE )
+    if ( NOT APPLE AND NOT MSVC )
       # Setting this to true makes sure that libraries we build will have our
       # rpath set even without having to do "make install"
       set( CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
@@ -306,15 +310,18 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
       # our libraries require, in particular the Python one (from pyenv for
       # instance).
       set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
+      # When loading our library, the dynamic linker will look for
+      # libclang.so.4, not libclang.so.4.x.
+      file( RENAME
+            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}
+            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION} )
     endif()
   endif()
 
-  # In Clang 3.7, the library target is a symlink of the soversion one.
-  # Since it will be copied in the project folder, we need the symlinked
-  # library.
+  # On Linux, the library target is a symlink of the soversion one.  Since it
+  # will be copied in the project folder, we need the symlinked library.
   get_filename_component( LIBCLANG_TARGET "${EXTERNAL_LIBCLANG_PATH}" REALPATH )
-  message(
-    "Using external libclang: ${LIBCLANG_TARGET}" )
+  message( "Using external libclang: ${LIBCLANG_TARGET}" )
 else()
   set( LIBCLANG_TARGET )
 endif()
