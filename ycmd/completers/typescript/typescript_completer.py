@@ -45,7 +45,7 @@ MAX_DETAILED_COMPLETIONS = 100
 RESPONSE_TIMEOUT_SECONDS = 10
 
 # On Debian-based distributions, node is by default installed as nodejs.
-PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node', 'nodejs' ] )
+PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'nodejs', 'node' ] )
 
 LOGFILE_FORMAT = 'tsserver_'
 
@@ -94,7 +94,7 @@ def FindTsserverBinary():
     'tsserver' ) )
 
 
-def ShouldEnableTypescriptCompleter():
+def ShouldEnableTypeScriptCompleter():
   if not PATH_TO_NODE:
     _logger.warning( 'Not using TypeScript completer: unable to find node' )
     return False

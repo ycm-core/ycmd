@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Google Inc.
+# Copyright (C) 2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -23,12 +23,23 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
+from mock import patch, DEFAULT
+from nose.tools import ok_
+
 from ycmd.completers.typescript.typescript_completer import (
-    ShouldEnableTypeScriptCompleter, TypeScriptCompleter )
+    ShouldEnableTypeScriptCompleter )
 
 
-def GetCompleter( user_options ):
-  if not ShouldEnableTypeScriptCompleter():
-    return None
+def ShouldEnableTypeScriptCompleter_NodeAndTsserverFound_test():
+  ok_( ShouldEnableTypeScriptCompleter() )
 
-  return TypeScriptCompleter( user_options )
+
+@patch( 'ycmd.completers.typescript.typescript_completer.PATH_TO_NODE', None )
+def ShouldEnableTypeScriptCompleter_NodeNotFound_test( *args ):
+  ok_( not ShouldEnableTypeScriptCompleter() )
+
+
+@patch( 'ycmd.utils.FindExecutable',
+        lambda exe: None if exe == 'tsserver' else DEFAULT )
+def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
+  ok_( not ShouldEnableTypeScriptCompleter() )
