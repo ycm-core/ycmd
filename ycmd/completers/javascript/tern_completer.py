@@ -49,7 +49,8 @@ PATH_TO_TERN_BINARY = os.path.abspath(
     'bin',
     'tern' ) )
 
-PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'node' ] )
+# On Debian-based distributions, node is by default installed as nodejs.
+PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'nodejs', 'node' ] )
 
 # host name/address on which the tern server should listen
 # note: we use 127.0.0.1 rather than localhost because on some platforms
