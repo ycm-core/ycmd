@@ -382,7 +382,7 @@ def Subcommands_GoToType_test( app ):
                has_entries( {
                  'filepath': filepath,
                  'line_num': 2,
-                 'column_num': 1,
+                 'column_num': 7,
                } ) )
 
 
