@@ -1,11 +1,10 @@
-language: csharp
+language: generic
 os:
   - linux
   - osx
+dist: trusty
 osx_image: xcode8
 sudo: false
-mono:
-  - 4.2.3
 before_install:
   - git submodule update --init --recursive
 install:
@@ -18,8 +17,6 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 env:
   global:
-    - MONO_THREADS_PER_CPU=2000
-    - MONO_MANAGED_WATCHER=disabled
     # Travis can run out of RAM, so we need to be careful here.
     - YCM_CORES=3
     - COVERAGE=true
@@ -43,11 +40,14 @@ addons:
      #   https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
      - ubuntu-toolchain-r-test  # for new libstdc++
      - george-edison55-precise-backports # for a more recent version of cmake (3.2.3)
+     - mono # for installing Mono
     packages:
      - cmake-data
      - cmake
      # 4.8.1 is the first version of GCC with full C++11 support.
      - g++-4.8
+     # Required to build the OmniSharp server.
+     - mono-devel
      - ninja-build
      # Everything below is a Python build dep (though it depends on Python
      # version). We need them because pyenv builds Python.
