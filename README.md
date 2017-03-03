@@ -42,7 +42,7 @@ that **ycmd runs on Python 2.6, 2.7 and 3.3+.**
 
 First, install the dependencies:
 ```
-sudo apt-get install build-essential cmake python-dev
+sudo apt-get install build-essential cmake python-dev mono-xbuild
 ```
 
 When you first clone the repository you'll need to update the submodules:
