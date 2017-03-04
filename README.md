@@ -40,18 +40,24 @@ This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can 
 found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts). Note
 that **ycmd runs on Python 2.6, 2.7 and 3.3+.**
 
-First, install the dependencies:
+First, install the minimal dependencies:
 ```
-sudo apt-get install build-essential cmake python-dev mono-xbuild
+sudo apt-get install build-essential cmake python-dev
 ```
+
+Next, install the language specific dependencies you need:
+- `sudo apt-get install golang-go` for Go.
+- `sudo apt-get install npm` for JavaScript and TypeScript.
+- `sudo apt-get install mono-xbuild` for C#.
+- Concerning Rust, install Cargo and rustc with [rustup](https://www.rustup.rs/).
 
 When you first clone the repository you'll need to update the submodules:
 ```
 git submodule update --init --recursive
 ```
 
-Then run `./build.py --all`.
-This should get you going.
+Then run `./build.py --all` or any of the specific completers listed by
+`./build.py --help`. This should get you going.
 
 For more detailed instructions on building ycmd, see [YCM's
 instructions][ycm-install] (ignore the Vim-specific parts).
