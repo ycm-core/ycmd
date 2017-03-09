@@ -19,12 +19,12 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
+# Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
-from future.utils import native
 
 from base64 import b64decode, b64encode
+from future.moves.urllib.parse import urljoin, urlparse
+from future.utils import native
 from hamcrest import assert_that, empty, equal_to, is_in
 from tempfile import NamedTemporaryFile
 import functools
@@ -35,7 +35,6 @@ import requests
 import subprocess
 import sys
 import time
-import urllib.parse
 
 from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
 from ycmd.tests import PathToTestFile
@@ -222,7 +221,7 @@ class Client_test( object ):
 
 
   def _BuildUri( self, handler ):
-    return native( ToBytes( urllib.parse.urljoin( self._location, handler ) ) )
+    return native( ToBytes( urljoin( self._location, handler ) ) )
 
 
   def _ExtraHeaders( self, method, request_uri, request_body = None ):
@@ -231,7 +230,7 @@ class Client_test( object ):
     headers = dict( HEADERS )
     headers[ HMAC_HEADER ] = b64encode(
         CreateRequestHmac( ToBytes( method ),
-                           ToBytes( urllib.parse.urlparse( request_uri ).path ),
+                           ToBytes( urlparse( request_uri ).path ),
                            request_body,
                            self._hmac_secret ) )
     return headers

@@ -20,16 +20,17 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
+# Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
-from future.utils import iteritems
 
 from collections import defaultdict
-import ycm_core
-import re
+from future.utils import iteritems
 import os.path
+import re
 import textwrap
+import xml.etree.ElementTree
+
+import ycm_core
 from ycmd import responses
 from ycmd.utils import ToCppStringCompatible, ToUnicode
 from ycmd.completers.completer import Completer
@@ -38,8 +39,6 @@ from ycmd.completers.cpp.flags import ( Flags, PrepareFlagsForClang,
                                         NoCompilationDatabase )
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
-
-import xml.etree.ElementTree
 
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
