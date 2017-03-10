@@ -72,23 +72,6 @@ TEST( LetterNodeTest, ThrowOnNonAsciiCharacters ) {
   //   €: \xe2\x82\xac
   //   𐍈: \xf0\x90\x8d\x88
   ASSERT_THROW( LetterNode root_node( "uni¢𐍈d€" ), std::out_of_range );
-
-  /*
-   * Since what() is not standardised for std::array
-   * we do not test against its string value.
-   *
-   * When it gets standardised this part of code can
-   * be uncommented to check against the what() part
-   * of the error. To make the test valid, once the
-   * string checking is re-enabled, the string literal
-   * that is the argument of StrEq will have to be
-   * changed as well
-   */
-  // try {
-  //   LetterNode root_node( "uni¢𐍈d€" );
-  // } catch ( std::out_of_range error ) {
-  //   EXPECT_THAT( error.what(), StrEq( "array<>: index out of range" ) );
-  // }
 }
 
 } // namespace YouCompleteMe
