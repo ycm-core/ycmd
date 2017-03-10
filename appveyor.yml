@@ -7,25 +7,27 @@ environment:
   USE_CLANG_COMPLETER: true
   COVERAGE: true
   matrix:
-  # We dropped MSVC 11 support because it lacks features from C++11
-  # and C99.
-  - msvc: 12
+  # We dropped MSVC 11 support because it lacks features from C++11 and C99.
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     arch: 64
     python: 36
-  - msvc: 14
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    arch: 64
+    python: 36
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 32
     python: 36
-  # We only test Python 2.7 with MSVC 14 on 64 bits.
-  - msvc: 14
+  # We only test Python 2.7 with MSVC 15 on 64-bit.
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 64
     python: 27
-  - msvc: 14
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 64
     python: 36
 install:
   - ci\appveyor\appveyor_install.bat
 build_script:
-  - python run_tests.py --msvc %MSVC%
+  - ci\appveyor\appveyor_build.bat
 after_build:
   - codecov
 # Disable automatic tests
