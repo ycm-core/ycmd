@@ -61,7 +61,7 @@ struct StringEqualityComparer :
 // static initialization.
 const std::unordered_map < const char *,
       const char *,
-      boost::hash< std::string >,
+      std::hash< std::string >,
       StringEqualityComparer > LANG_TO_FILETYPE = {
         { "Ant"        , "ant"        },
         { "Asm"        , "asm"        },

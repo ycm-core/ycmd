@@ -72,12 +72,6 @@ TEST( LetterNodeTest, ThrowOnNonAsciiCharacters ) {
   //   €: \xe2\x82\xac
   //   𐍈: \xf0\x90\x8d\x88
   ASSERT_THROW( LetterNode root_node( "uni¢𐍈d€" ), std::out_of_range );
-
-  try {
-    LetterNode root_node( "uni¢𐍈d€" );
-  } catch ( std::out_of_range error ) {
-    EXPECT_THAT( error.what(), StrEq( "array<>: index out of range" ) );
-  }
 }
 
 } // namespace YouCompleteMe

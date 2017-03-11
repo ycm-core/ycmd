@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <vector>
 #include <locale>
+#include <utility>
 
 using std::any_of;
 using boost::python::len;
@@ -96,7 +97,7 @@ boost::python::list FilterAndSortCandidates(
 
       if ( result.IsSubsequence() ) {
         ResultAnd< int > result_and_object( result, i );
-        result_and_objects.push_back( boost::move( result_and_object ) );
+        result_and_objects.push_back( std::move( result_and_object ) );
       }
     }
 
