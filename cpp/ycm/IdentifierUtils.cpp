@@ -19,12 +19,11 @@
 #include "Utils.h"
 
 #include <unordered_map>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string/regex.hpp>
+#include <regex>
 
 namespace YouCompleteMe {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace {
 
@@ -37,9 +36,9 @@ const char *const TAG_REGEX =
   // The second field is the path to the file that has the identifier; either
   // absolute or relative to the tags file.
   "([^\\t\\n\\r]+)"
-  "\\t.*?"  // Non-greedy everything
+  "\\t[^\\n]*?"  // Non-greedy everything
   "language:([^\\t\\n\\r]+)"  // We want to capture the language of the file
-  ".*?$";
+  "[^\\n]*?$";
 
 // Only used as the equality comparer for the below unordered_map which stores
 // const char* pointers and not std::string but needs to hash based on string
@@ -125,11 +124,10 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   std::string::const_iterator start = tags_file_contents.begin();
   std::string::const_iterator end   = tags_file_contents.end();
 
-  boost::smatch matches;
-  const boost::regex expression( TAG_REGEX );
-  const boost::match_flag_type options = boost::match_not_dot_newline;
+  std::smatch matches;
+  const std::regex expression( TAG_REGEX );
 
-  while ( boost::regex_search( start, end, matches, expression, options ) ) {
+  while ( std::regex_search( start, end, matches, expression, options ) ) {
     start = matches[ 0 ].second;
 
     std::string language( matches[ 3 ] );
