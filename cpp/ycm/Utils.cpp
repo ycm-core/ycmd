@@ -36,9 +36,8 @@ std::vector< std::string > ReadUtf8File( const fs::path &filepath ) {
   fs::ifstream file( filepath, std::ios::in | std::ios::binary );
   std::string line;
   std::vector< std::string > contents;
-  while( getline( file, line ) )
-  {
-	  contents.push_back(line);
+  while( getline( file, line ) ) {
+    contents.push_back(line);
   }
 
   if ( contents.size() == 0 )
