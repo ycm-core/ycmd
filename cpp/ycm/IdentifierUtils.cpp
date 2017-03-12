@@ -23,7 +23,7 @@
 
 namespace YouCompleteMe {
 
-namespace fs = std::filesystem;
+namespace fs = boost::filesystem;
 
 namespace {
 
@@ -113,7 +113,7 @@ const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const fs::path &path_to_tag_file ) {
   FiletypeIdentifierMap filetype_identifier_map;
-  std::string tags_file_contents;
+  std::vector< std::string > tags_file_contents;
 
   try {
     tags_file_contents = ReadUtf8File( path_to_tag_file );
@@ -121,29 +121,27 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     return filetype_identifier_map;
   }
 
-  std::string::const_iterator start = tags_file_contents.begin();
-  std::string::const_iterator end   = tags_file_contents.end();
-
   std::smatch matches;
   const std::regex expression( TAG_REGEX );
 
-  while ( std::regex_search( start, end, matches, expression, options ) ) {
-    start = matches[ 0 ].second;
+  for ( auto line : tags_file_contents )
+  {
+    if ( std::regex_search( line, matches, expression ) )
+    {
+      std::string language( matches[ 3 ] );
+      std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
+                                              language.c_str(),
+                                              NOT_FOUND );
+      if ( filetype == NOT_FOUND )
+        continue;
 
-    std::string language( matches[ 3 ] );
-    std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
-                                            language.c_str(),
-                                            NOT_FOUND );
+      std::string identifier( matches[ 1 ] );
+      fs::path path( matches[ 2 ].str() );
+      path = fs::absolute( path, path_to_tag_file.parent_path() )
+              .make_preferred();
 
-    if ( filetype == NOT_FOUND )
-      continue;
-
-    std::string identifier( matches[ 1 ] );
-    fs::path path( matches[ 2 ].str() );
-    path = fs::absolute( path, path_to_tag_file.parent_path() )
-           .make_preferred();
-
-    filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
+      filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
+    }
   }
 
   return filetype_identifier_map;
