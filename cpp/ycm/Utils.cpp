@@ -37,7 +37,7 @@ std::vector< std::string > ReadUtf8File( const fs::path &filepath ) {
   std::string line;
   std::vector< std::string > contents;
   while( getline( file, line ) ) {
-    contents.push_back(line);
+    contents.push_back( line );
   }
 
   if ( contents.size() == 0 )

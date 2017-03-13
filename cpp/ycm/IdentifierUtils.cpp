@@ -124,10 +124,8 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   std::smatch matches;
   const std::regex expression( TAG_REGEX );
 
-  for ( auto line : tags_file_contents )
-  {
-    if ( std::regex_search( line, matches, expression ) )
-    {
+  for ( auto line : tags_file_contents ) {
+    if ( std::regex_search( line, matches, expression ) ) {
       std::string language( matches[ 3 ] );
       std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
                                               language.c_str(),
@@ -140,7 +138,8 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
       path = fs::absolute( path, path_to_tag_file.parent_path() )
               .make_preferred();
 
-      filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
+      filetype_identifier_map[ filetype ][ path.string() ]
+              .push_back( identifier );
     }
   }
 
