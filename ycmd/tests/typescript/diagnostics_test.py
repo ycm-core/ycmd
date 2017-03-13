@@ -63,19 +63,19 @@ def Diagnostics_FileReadyToParse_test( app ):
                  'text': equal_to( expected_text ),
                  'location': has_entries( {
                    'column_num': 1,
-                   'filepath': ends_with('testdata/test.ts'),
+                   'filepath': ends_with( 'test.ts' ),
                    'line_num': 35
                  } ),
                  'location_extent': has_entries( {
                    'start': has_entries( {
                      'column_num': 1,
-                     'filepath': ends_with('testdata/test.ts'),
+                     'filepath': ends_with( 'test.ts' ),
                      'line_num': 35
                    } ),
                    'end': has_entries( {
                      'column_num': 1,
                      'line_num': 35,
-                     'filepath': ends_with('testdata/test.ts')
+                     'filepath': ends_with( 'test.ts' )
                    } ),
                  } )
                } ) )
@@ -92,16 +92,17 @@ def Diagnostics_DetailedDiagnostics_test( app ):
                              event_name = 'BufferVisit' )
   app.post_json( '/event_notification', event_data )
 
-  diag_data = BuildRequest( filepath = main_filepath,
+  event_data = BuildRequest( filepath = main_filepath,
                             filetype = 'typescript',
                             contents = main_contents,
                             line_num = 35,
                             column_num = 6 )
 
+  results = app.post_json( '/detailed_diagnostic', event_data ).json
+
   expected_message = 'Property \'nonExistingMethod\' ' \
                      'does not exist on type \'Bar\'.'
 
-  results = app.post_json( '/detailed_diagnostic', diag_data ).json
   assert_that( results,
                has_entry(
                    'message',

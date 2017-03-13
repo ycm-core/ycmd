@@ -139,8 +139,8 @@ def GetByteOffsetDistanceFromTsDiagnosticRange(
 
   if (start_difference >= 0) and (end_difference <= 0):
     return 0
-  else:
-    return min(abs(start_difference), abs(end_difference))
+
+  return min(abs(start_difference), abs(end_difference))
 
 
 class TypeScriptCompleter( Completer ):
@@ -435,20 +435,18 @@ class TypeScriptCompleter( Completer ):
     self._Reload( request_data )
 
     diagnostics = self.GetDiagnosticsForCurrentFile( request_data )
-    diagnostic_data = [ responses.BuildDiagnosticData( x )
+    return [ responses.BuildDiagnosticData( x )
                         for x in diagnostics ]
-
-    return diagnostic_data
 
 
   def GetTsDiagnosticsForCurrentFile( self, filename, request_data ):
     # This returns the data the TypeScript server responded with.
-    # Note that its that "offset" values represent codepoint offsets,
+    # Note that its "offset" values represent codepoint offsets,
     # not byte offsets, which are required by the ycmd API.
 
     ts_diagnostics = itertools.chain(
-      self._GetSemanticDiagnostics(filename),
-      self._GetSyntacticDiagnostics(filename)
+      self._GetSemanticDiagnostics( filename ),
+      self._GetSyntacticDiagnostics( filename )
     )
 
     return ts_diagnostics
@@ -477,7 +475,7 @@ class TypeScriptCompleter( Completer ):
       ts_diagnostics
     ) )
 
-    if len(ts_diagnostics_on_line) is 0:
+    if not ts_diagnostics_on_line:
       raise ValueError( NO_DIAGNOSTIC_MESSAGE )
 
     closest_ts_diagnostic = None
@@ -490,7 +488,7 @@ class TypeScriptCompleter( Completer ):
         ts_diagnostic
       )
       if ( distance < distance_to_closest_ts_diagnostic
-            or closest_ts_diagnostic is None ):
+            or not closest_ts_diagnostic ):
         distance_to_closest_ts_diagnostic = distance
         closest_ts_diagnostic = ts_diagnostic
 
