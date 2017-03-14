@@ -435,7 +435,7 @@ endif()
 # for our module
 set_target_properties( ${PROJECT_NAME} PROPERTIES PREFIX "")
 
-if ( WIN32 OR CYGWIN )
+if ( WIN32 OR CYGWIN OR MSYS )
   # DLL platforms put dlls in the RUNTIME_OUTPUT_DIRECTORY
   # First for the generic no-config case (e.g. with mingw)
   set_target_properties( ${PROJECT_NAME} PROPERTIES
@@ -450,8 +450,8 @@ if ( WIN32 OR CYGWIN )
   if ( WIN32 )
     # This is the extension for compiled Python modules on Windows
     set_target_properties( ${PROJECT_NAME} PROPERTIES SUFFIX ".pyd")
-  elseif ( CYGWIN )
-    # This is the extension for compiled Python modules in Cygwin
+  elseif ( CYGWIN OR MSYS )
+    # This is the extension for compiled Python modules in Cygwin and msys
     set_target_properties( ${PROJECT_NAME} PROPERTIES SUFFIX ".dll")
   endif()
 else()

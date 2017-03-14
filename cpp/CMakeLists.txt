@@ -152,12 +152,12 @@ endif()
 # TODO: remove this when it's fixed upstream (probably boost 1.53).
 add_definitions( -DBOOST_THREAD_DONT_USE_CHRONO )
 
-if( MSVC OR CYGWIN )
+if( MSVC OR CYGWIN OR MSYS)
   # BOOST_ALL_NO_LIB turns off MSVC library autolinking
   add_definitions( -DBOOST_ALL_NO_LIB )
 endif()
 
-if( WIN32 OR CYGWIN )
+if( WIN32 OR CYGWIN OR MSYS)
   # BOOST_PYTHON_SOURCE makes boost use the correct __declspec
   add_definitions( -DBOOST_PYTHON_SOURCE -DBOOST_THREAD_USE_LIB )
   if ( NOT MSVC AND 64_BIT_PLATFORM )
