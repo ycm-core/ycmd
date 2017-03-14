@@ -487,8 +487,8 @@ class TypeScriptCompleter( Completer ):
         line_value,
         ts_diagnostic
       )
-      if ( distance < distance_to_closest_ts_diagnostic
-            or not closest_ts_diagnostic ):
+      if ( not closest_ts_diagnostic
+            or distance < distance_to_closest_ts_diagnostic ):
         distance_to_closest_ts_diagnostic = distance
         closest_ts_diagnostic = ts_diagnostic
 
