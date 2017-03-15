@@ -52,7 +52,7 @@ PATH_TO_JEDIHTTP = os.path.abspath(
                 'third_party', 'JediHTTP', 'jedihttp.py' ) )
 
 
-class JediCompleter( Completer ):
+class PythonCompleter( Completer ):
   """
   A Completer that uses the Jedi engine HTTP wrapper JediHTTP.
   https://jedi.readthedocs.org/en/latest/
@@ -60,7 +60,7 @@ class JediCompleter( Completer ):
   """
 
   def __init__( self, user_options ):
-    super( JediCompleter, self ).__init__( user_options )
+    super( PythonCompleter, self ).__init__( user_options )
     self._server_lock = threading.RLock()
     self._jedihttp_port = None
     self._jedihttp_phandle = None
