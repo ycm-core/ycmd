@@ -30,60 +30,59 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION "3.9.0" )
+  set( CLANG_MAJOR_VERSION 4 )
+  set( CLANG_MINOR_VERSION 0 )
+  set( CLANG_PATCH_VERSION 0 )
+  set( CLANG_VERSION
+       "${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}.${CLANG_PATCH_VERSION}" )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "bd689aaeafa19832016d5a4917405a73b21bc5281846c0cb816e9545cf99e82b" )
+         "5504064916d0651c185ceff85871298f31e2eaf4abf1333b2c36f5eed5e9cde6" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win64" )
       set( CLANG_SHA256
-           "3e5b53a79266d3f7f1d5cb4d94283fe2bc61f9689e55f39e3939364f4076b0c9" )
+           "9bb800e42a4568c7a6e217dac1b613741ee9811eea2fa65ca8c20702728003e9" )
     else()
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win32" )
       set( CLANG_SHA256
-           "b4eaa1fa9872e2c76268f32fc597148cfa14c57b7d13e1edd9b9b6496cdf7de8" )
+           "aabe2a31182d9adce8146c86fe92e19d911b7cc1cb240cdb790f314c819c92e2" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
-  elseif ( ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" )
+  elseif ( CMAKE_SYSTEM_NAME MATCHES "FreeBSD" )
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-amd64-unknown-freebsd10" )
       set( CLANG_SHA256
-           "df35eaeabec7a474b3c3737c798a0c817795ebbd12952c665c52b2f98abcb6de" )
-      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+           "e8878b589c2558aeb9733661e9a23fd47d41be0dc200aa50acf7a7eb1ab53eee" )
     else()
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i386-unknown-freebsd10" )
       set( CLANG_SHA256
-           "16c612019ece5ba1f846740e77c7c1a39b813acb5bcfbfe9f8af32d7c28caa60" )
-      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+           "f3bfd0e4778d5e6b94f774e4531a61a662c7688e08b54cef5e5fc53711e65243" )
     endif()
+    set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+  elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
+    set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-aarch64-linux-gnu" )
+    set( CLANG_SHA256
+         "e019e073041d20d848f07aa4b8c7acad23c0e620c69ae24bbe65fec8c54b94f8" )
+    set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
-    # Among the prebuilt binaries available upstream, only the Ubuntu 14.04
-    # and openSUSE 13.2 ones are working on Ubuntu 14.04 (and 12.04 which is
-    # required for Travis builds). We choose openSUSE over Ubuntu 14.04 because
-    # it does not have the terminfo library (libtinfo) dependency, which is not
-    # needed for our use case and a source of problems on some distributions
-    # (see YCM issues #778 and #2259), and is available for 32-bit and 64-bit
-    # architectures.
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)")
-      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-aarch64-linux-gnu" )
+    # Among the prebuilt binaries available upstream for Ubuntu, only 14.04 is
+    # working on Travis (16.04 and 16.10 are too recent).
+    if ( 64_BIT_PLATFORM )
+      set( CLANG_DIRNAME
+           "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-14.04" )
       set( CLANG_SHA256
-           "5ae2e0003c4aff00184560f27f7eef73b22f29d1582db99e37f6c1874dd41866" )
-      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
-    elseif ( 64_BIT_PLATFORM )
-      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-opensuse13.2" )
-      set( CLANG_SHA256
-           "9153b473dc37d2e21a260231e90e43b97aba1dff5d27f14c947815a90fbdc8d7" )
-      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+           "1d15b6337ffc0876ed1a9827cae566e24639e0f5d7d186b2de04c38d762336b4" )
     else()
-      set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i586-opensuse13.2" )
-      set( CLANG_SHA256
-           "92309be874810fb5ca3f9037bb400783be89fa6bc96ed141b04297f59e389692" )
-      set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+      message( FATAL_ERROR
+        "No prebuilt Clang ${CLANG_VERSION} binaries for 32-bit Linux. "
+        "You'll have to compile Clang ${CLANG_VERSION} from source. "
+        "See the YCM docs for details on how to use a user-compiled libclang." )
     endif()
+    set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   endif()
 
   # Check if the Clang archive is already downloaded and its checksum is correct.
@@ -301,7 +300,7 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     set( EXTERNAL_LIBCLANG_PATH ${TEMP} )
   else()
     # For Macs, we do things differently; look further in this file.
-    if ( NOT APPLE )
+    if ( NOT APPLE AND NOT MSVC )
       # Setting this to true makes sure that libraries we build will have our
       # rpath set even without having to do "make install"
       set( CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
@@ -311,15 +310,18 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
       # our libraries require, in particular the Python one (from pyenv for
       # instance).
       set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
+      # When loading our library, the dynamic linker will look for
+      # libclang.so.4, not libclang.so.4.x.
+      file( RENAME
+            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}
+            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION} )
     endif()
   endif()
 
-  # In Clang 3.7, the library target is a symlink of the soversion one.
-  # Since it will be copied in the project folder, we need the symlinked
-  # library.
+  # On Linux, the library target is a symlink of the soversion one.  Since it
+  # will be copied in the project folder, we need the symlinked library.
   get_filename_component( LIBCLANG_TARGET "${EXTERNAL_LIBCLANG_PATH}" REALPATH )
-  message(
-    "Using external libclang: ${LIBCLANG_TARGET}" )
+  message( "Using external libclang: ${LIBCLANG_TARGET}" )
 else()
   set( LIBCLANG_TARGET )
 endif()
@@ -366,35 +368,6 @@ if( LIBCLANG_TARGET )
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
-
-    if( APPLE )
-      # In OS X El Capitan, Apple introduced System Integrity Protection.
-      # Amongst other things, this introduces features to the dynamic loader
-      # (dyld) which cause it to "sanitise" (and complain about) embedded
-      # LC_RPATH entries which contain @executable_path when then are loaded
-      # into "restricted" binaries.  For our purposes, "restricted" here means
-      # "supplied by Apple" and includes the system versions of python.  For
-      # unknown reasons, the libclang.dylib that comes from llvm.org includes an
-      # LC_RPATH entry '@executable_path/../lib' which causes the OS X dynamic
-      # loader to print a cryptic warning to stderr of the form:
-      #
-      #    dyld: warning, LC_RPATH @executable_path/../lib in
-      #    /path/to/ycmd/libclang.dylib being ignored in restricted program
-      #    because of @executable_path
-      #
-      # In order to prevent this harmless and annoying message appearing, we
-      # simply strip the rpath entry from the dylib.  There's no way any
-      # @executable_path that python might have could be in any way useful to
-      # libclang.dylib, so this seems perfectly safe.
-      get_filename_component( LIBCLANG_TAIL ${LIBCLANG_TARGET} NAME )
-      add_custom_command( TARGET ${PROJECT_NAME}
-                          POST_BUILD
-                          COMMAND install_name_tool
-                          "-delete_rpath"
-                          "@executable_path/../lib"
-                          "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LIBCLANG_TAIL}"
-                        )
-    endif()
   endif()
 endif()
 
