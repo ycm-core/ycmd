@@ -30,7 +30,7 @@ import sys
 from ycmd import utils
 from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE
 from ycmd.tests.python import IsolatedYcmd
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher, UserOption
+from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 
 
 class CalledWith( BaseMatcher ):
@@ -76,40 +76,36 @@ def was_called_with_python( python ):
   return CalledWith( python )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.utils.SafePopen' )
 def UserDefinedPython_WithoutAnyOption_DefaultToYcmdPython_test( app, *args ):
   app.get( '/ready', { 'subserver': 'python' } )
   assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd( { 'python_binary_path': '/non/existing/path/python' } )
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.utils.FindExecutable', return_value = None )
 def UserDefinedPython_WhenNonExistentPythonIsGiven_ReturnAnError_test( app,
                                                                        *args ):
-  python = '/non/existing/path/python'
-  with UserOption( 'python_binary_path', python ):
-    response = app.get( '/ready',
-                        { 'subserver': 'python' },
-                        expect_errors = True ).json
+  response = app.get( '/ready',
+                      { 'subserver': 'python' },
+                      expect_errors = True ).json
 
-    msg = BINARY_NOT_FOUND_MESSAGE.format( python )
-    assert_that( response, ErrorMatcher( RuntimeError, msg ) )
-    utils.SafePopen.assert_not_called()
+  msg = BINARY_NOT_FOUND_MESSAGE.format( '/non/existing/path/python' )
+  assert_that( response, ErrorMatcher( RuntimeError, msg ) )
+  utils.SafePopen.assert_not_called()
 
 
-@IsolatedYcmd
+@IsolatedYcmd( { 'python_binary_path': '/existing/python' } )
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.utils.FindExecutable', side_effect = lambda x: x )
 def UserDefinedPython_WhenExistingPythonIsGiven_ThatIsUsed_test( app, *args ):
-  python = '/existing/python'
-  with UserOption( 'python_binary_path', python ):
-    app.get( '/ready', { 'subserver': 'python' } ).json
-    assert_that( utils.SafePopen, was_called_with_python( python ) )
+  app.get( '/ready', { 'subserver': 'python' } ).json
+  assert_that( utils.SafePopen, was_called_with_python( '/existing/python' ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.utils.FindExecutable', side_effect = lambda x: x )
 def UserDefinedPython_RestartServerWithoutArguments_WillReuseTheLastPython_test(
@@ -120,7 +116,7 @@ def UserDefinedPython_RestartServerWithoutArguments_WillReuseTheLastPython_test(
   assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.utils.FindExecutable', side_effect = lambda x: x )
 def UserDefinedPython_RestartServerWithArgument_WillUseTheSpecifiedPython_test(
@@ -132,7 +128,7 @@ def UserDefinedPython_RestartServerWithArgument_WillUseTheSpecifiedPython_test(
   assert_that( utils.SafePopen, was_called_with_python( python ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.utils.SafePopen' )
 @patch( 'ycmd.utils.FindExecutable', return_value = None )
 def UserDefinedPython_RestartServerWithNonExistingPythonArgument_test( app,

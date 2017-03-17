@@ -87,7 +87,7 @@ def IsolatedYcmd( custom_options = {} ):
 
     @IsolatedYcmd( { 'rust_src_path': '/some/path' } )
     def CustomRustSrcPath_test( app ):
-        ...
+      ...
   """
   def Decorator( test ):
     @functools.wraps( test )

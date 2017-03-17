@@ -33,7 +33,7 @@ from nose.tools import eq_
 from ycmd.tests import IsolatedYcmd, SharedYcmd, PathToTestFile
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     DummyCompleter, PatchCompleter,
-                                    UserOption, ExpectedFailure )
+                                    ExpectedFailure )
 
 
 @SharedYcmd
@@ -71,20 +71,19 @@ def GetCompletions_IdentifierCompleter_Works_test( app ):
   )
 
 
-@SharedYcmd
+@IsolatedYcmd( { 'min_num_identifier_candidate_chars': 4 } )
 def GetCompletions_IdentifierCompleter_FilterShortCandidates_test( app ):
-  with UserOption( 'min_num_identifier_candidate_chars', 4 ):
-    event_data = BuildRequest( contents = 'foo foogoo gooo',
-                               event_name = 'FileReadyToParse' )
-    app.post_json( '/event_notification', event_data )
+  event_data = BuildRequest( contents = 'foo foogoo gooo',
+                             event_name = 'FileReadyToParse' )
+  app.post_json( '/event_notification', event_data )
 
-    completion_data = BuildRequest( contents = 'oo', column_num = 3 )
-    response = app.post_json( '/completions',
-                              completion_data ).json[ 'completions' ]
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  response = app.post_json( '/completions',
+                            completion_data ).json[ 'completions' ]
 
-    assert_that( response,
-                 contains_inanyorder( CompletionEntryMatcher( 'foogoo' ),
-                                      CompletionEntryMatcher( 'gooo' ) ) )
+  assert_that( response,
+               contains_inanyorder( CompletionEntryMatcher( 'foogoo' ),
+                                    CompletionEntryMatcher( 'gooo' ) ) )
 
 
 @SharedYcmd
@@ -309,43 +308,40 @@ def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   )
 
 
-@SharedYcmd
+@IsolatedYcmd( { 'use_ultisnips_completer': 0 } )
 def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test( app ):
-  with UserOption( 'use_ultisnips_completer', False ):
-    event_data = BuildRequest(
-      event_name = 'BufferVisit',
-      ultisnips_snippets = [
-          {'trigger': 'foo', 'description': 'bar'},
-          {'trigger': 'zoo', 'description': 'goo'},
-      ] )
+  event_data = BuildRequest(
+    event_name = 'BufferVisit',
+    ultisnips_snippets = [
+        {'trigger': 'foo', 'description': 'bar'},
+        {'trigger': 'zoo', 'description': 'goo'},
+    ] )
 
-    app.post_json( '/event_notification', event_data )
+  app.post_json( '/event_notification', event_data )
 
-    completion_data = BuildRequest( contents = 'oo ', column_num = 3 )
+  completion_data = BuildRequest( contents = 'oo ', column_num = 3 )
 
-    eq_( [],
-         app.post_json( '/completions',
-                        completion_data ).json[ 'completions' ] )
+  eq_( [],
+       app.post_json( '/completions',
+                      completion_data ).json[ 'completions' ] )
 
 
-@SharedYcmd
+@IsolatedYcmd( { 'semantic_triggers': { 'dummy_filetype': [ '_' ] } } )
 @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
         return_value = [ 'some_candidate' ] )
 def GetCompletions_SemanticCompleter_WorksWhenTriggerIsIdentifier_test(
   app, *args ):
-  with UserOption( 'semantic_triggers',
-                   { 'dummy_filetype': [ '_' ] } ):
-    with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-      completion_data = BuildRequest( filetype = 'dummy_filetype',
-                                      contents = 'some_can',
-                                      column_num = 9 )
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'some_can',
+                                    column_num = 9 )
 
-      results = app.post_json( '/completions',
-                               completion_data ).json[ 'completions' ]
-      assert_that(
-        results,
-        has_items( CompletionEntryMatcher( 'some_candidate' ) )
-      )
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'some_candidate' ) )
+    )
 
 
 @SharedYcmd
