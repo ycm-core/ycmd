@@ -21,24 +21,24 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
+# Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
-from future import standard_library
-standard_library.install_aliases()
-from future.utils import itervalues
 
 from collections import defaultdict
+from future.utils import itervalues
+from future.moves.urllib.parse import urljoin
+import logging
 import os
 import re
+import requests
+import threading
+
 from ycmd.completers.completer import Completer
+from ycmd.completers.completer_utils import GetFileContents
+from ycmd.completers.cs import solutiondetection
 from ycmd.utils import ForceSemanticCompletion, CodepointOffsetToByteOffset
 from ycmd import responses
 from ycmd import utils
-from ycmd.completers.completer_utils import GetFileContents
-import requests
-import urllib.parse
-import logging
-from . import solutiondetection
-import threading
 
 SERVER_NOT_FOUND_MSG = ( 'OmniSharp server binary not found at {0}. ' +
                          'Did you compile it? You can do so by running ' +
@@ -584,7 +584,7 @@ class CsharpSolutionCompleter( object ):
 
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
-    target = urllib.parse.urljoin( self._ServerLocation(), handler )
+    target = urljoin( self._ServerLocation(), handler )
     response = requests.post( target, data = parameters, timeout = timeout )
     return response.json()
 

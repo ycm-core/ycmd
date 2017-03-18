@@ -21,12 +21,10 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from future import standard_library
-from future.utils import iteritems
-standard_library.install_aliases()
+# Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from future.utils import PY2
+from future.utils import iteritems, PY2
 from hamcrest import contains_string, has_entry, has_entries, assert_that
 from mock import patch
 from webtest import TestApp

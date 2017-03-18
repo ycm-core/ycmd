@@ -22,10 +22,8 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+# Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
-from future import standard_library
-from future.utils import native
-standard_library.install_aliases()
 
 from ycmd.utils import ToBytes, ToUnicode, ProcessIsRunning
 from ycmd.completers.completer import Completer
@@ -33,9 +31,10 @@ from ycmd import responses, utils, hmac_utils
 from tempfile import NamedTemporaryFile
 
 from base64 import b64encode
+from future.utils import native
+from future.moves.urllib.parse import urljoin
 import json
 import logging
-import urllib.parse
 import requests
 import threading
 import sys
@@ -199,7 +198,7 @@ class JediCompleter( Completer ):
   def _GetResponse( self, handler, request_data = {} ):
     """POST JSON data to JediHTTP server and return JSON response."""
     handler = ToBytes( handler )
-    url = urllib.parse.urljoin( self._jedihttp_host, handler )
+    url = urljoin( self._jedihttp_host, handler )
     parameters = self._TranslateRequestForJediHTTP( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
     extra_headers = self._ExtraHeaders( handler, body )

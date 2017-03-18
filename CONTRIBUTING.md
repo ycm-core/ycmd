@@ -113,8 +113,7 @@ Here's what you should watch out for:
     from __future__ import unicode_literals
     from __future__ import print_function
     from __future__ import division
-    from future import standard_library
-    standard_library.install_aliases()
+    # Not installing aliases from python-future; it's unreliable and slow.
     from builtins import *  # noqa
     ```
 
@@ -147,6 +146,12 @@ Here's what you should watch out for:
 - If you run tests and get failures on importing ycm_core that mention
   `initycm_core` or `PyInit_ycm_core`, you've built the C++ parts of ycmd for
   py2 and are trying to run tests in py3 (or vice-versa). Rebuild!
+- Use the `urllib` module from `python-future`:
+
+    ```python
+    from future.moves.urllib.parse import urljoin, urlparse
+    ```
+
 
 [build-bots]: https://travis-ci.org/Valloric/ycmd
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users

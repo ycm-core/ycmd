@@ -21,14 +21,13 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
+# Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.utils import ToBytes
-
 from nose.tools import eq_
-from ..request_wrap import RequestWrap
+
+from ycmd.utils import ToBytes
+from ycmd.request_wrap import RequestWrap
 
 
 def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
