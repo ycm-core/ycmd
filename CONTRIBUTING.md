@@ -146,10 +146,10 @@ Here's what you should watch out for:
 - If you run tests and get failures on importing ycm_core that mention
   `initycm_core` or `PyInit_ycm_core`, you've built the C++ parts of ycmd for
   py2 and are trying to run tests in py3 (or vice-versa). Rebuild!
-- Use the `urllib` module from `python-future`:
+- Import the `urljoin` and `urlparse` functions from `ycmd/utils.py`:
 
     ```python
-    from future.moves.urllib.parse import urljoin, urlparse
+    from ycmd.utils import urljoin, urlparse
     ```
 
 
