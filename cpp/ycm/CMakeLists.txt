@@ -25,16 +25,16 @@ option( USE_SYSTEM_LIBCLANG "Set to ON to use the system libclang library" OFF )
 set( PATH_TO_LLVM_ROOT "" CACHE PATH "Path to the root of a LLVM+Clang binary distribution" )
 set( EXTERNAL_LIBCLANG_PATH "" CACHE PATH "Path to the libclang library to use" )
 
+set( CLANG_MAJOR_VERSION 4 )
+set( CLANG_MINOR_VERSION 0 )
+set( CLANG_PATCH_VERSION 0 )
+set( CLANG_VERSION
+      "${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}.${CLANG_PATCH_VERSION}" )
+
 if ( USE_CLANG_COMPLETER AND
      NOT USE_SYSTEM_LIBCLANG AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
-
-  set( CLANG_MAJOR_VERSION 4 )
-  set( CLANG_MINOR_VERSION 0 )
-  set( CLANG_PATCH_VERSION 0 )
-  set( CLANG_VERSION
-       "${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}.${CLANG_PATCH_VERSION}" )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
