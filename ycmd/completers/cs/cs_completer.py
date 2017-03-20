@@ -26,7 +26,6 @@ from builtins import *  # noqa
 
 from collections import defaultdict
 from future.utils import itervalues
-from future.moves.urllib.parse import urljoin
 import logging
 import os
 import re
@@ -36,7 +35,8 @@ import threading
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents
 from ycmd.completers.cs import solutiondetection
-from ycmd.utils import ForceSemanticCompletion, CodepointOffsetToByteOffset
+from ycmd.utils import ( ForceSemanticCompletion, CodepointOffsetToByteOffset,
+                         urljoin )
 from ycmd import responses
 from ycmd import utils
 

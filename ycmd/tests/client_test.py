@@ -23,7 +23,6 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from base64 import b64decode, b64encode
-from future.moves.urllib.parse import urljoin, urlparse
 from future.utils import native
 from hamcrest import assert_that, empty, equal_to, is_in
 from tempfile import NamedTemporaryFile
@@ -42,7 +41,8 @@ from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
 from ycmd.utils import ( CloseStandardStreams, CreateLogfile,
                          GetUnusedLocalhostPort, ReadFile, RemoveIfExists,
-                         SafePopen, SetEnviron, ToBytes, ToUnicode )
+                         SafePopen, SetEnviron, ToBytes, ToUnicode, urljoin,
+                         urlparse )
 
 HEADERS = { 'content-type': 'application/json' }
 HMAC_HEADER = 'x-ycm-hmac'

@@ -22,11 +22,10 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.utils import ToBytes, SetEnviron, ProcessIsRunning
+from ycmd.utils import ToBytes, SetEnviron, ProcessIsRunning, urljoin
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
-from future.moves.urllib.parse import urljoin
 from future.utils import iteritems, native
 import logging
 import requests
