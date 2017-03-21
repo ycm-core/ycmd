@@ -55,5 +55,13 @@ TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
                ContainerEq( expected ) );
 }
 
+TEST( IdentifierUtilsTest, NonExistentTagsFile ) {
+  fs::path testfile = PathToTestFile( "UnrealFile" );
+
+  FiletypeIdentifierMap expected;
+
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), ContainerEq( expected ) );
+}
+
 } // namespace YouCompleteMe
 
