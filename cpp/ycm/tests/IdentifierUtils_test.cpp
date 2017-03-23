@@ -55,5 +55,29 @@ TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
                ContainerEq( expected ) );
 }
 
+
+TEST( IdentifierUtilsTest, TagFileIsDirectory ) {
+  fs::path testfile = PathToTestFile( "directory.tags" );
+  FiletypeIdentifierMap expected;
+
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), ContainerEq( expected ) );
+}
+
+
+TEST( IdentifierUtilsTest, TagFileIsEmpty ) {
+  fs::path testfile = PathToTestFile( "empty.tags" );
+  FiletypeIdentifierMap expected;
+
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), ContainerEq( expected ) );
+}
+
+
+TEST( IdentifierUtilsTest, TagFileInvalidPath ) {
+  fs::path testfile = PathToTestFile( "invalid_path_to_tag_file.tags" );
+  FiletypeIdentifierMap expected;
+
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), ContainerEq( expected ) );
+}
+
 } // namespace YouCompleteMe
 
