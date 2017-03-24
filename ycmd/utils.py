@@ -396,10 +396,18 @@ def GetShortPathName( path ):
 def LoadPythonSource( name, pathname ):
   if PY2:
     import imp
-    return imp.load_source( name, pathname )
-  else:
-    import importlib
-    return importlib.machinery.SourceFileLoader( name, pathname ).load_module()
+    try:
+      return imp.load_source( name, pathname )
+    except UnicodeEncodeError:
+      # imp.load_source doesn't handle non-ASCII characters in pathname. See
+      # http://bugs.python.org/issue9425
+      source = ReadFile( pathname )
+      module = imp.new_module( name )
+      module.__file__ = pathname
+      exec( source, module.__dict__ )
+      return module
+  import importlib
+  return importlib.machinery.SourceFileLoader( name, pathname ).load_module()
 
 
 def SplitLines( contents ):

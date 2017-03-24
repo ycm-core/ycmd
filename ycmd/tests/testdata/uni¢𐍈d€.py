@@ -1,0 +1,2 @@
+def SomeMethod():
+  return True
