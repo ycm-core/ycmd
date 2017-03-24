@@ -1,5 +1,3 @@
-
-#
 # Copyright (C) 2017 ycmd contributors
 #
 # This file is part of ycmd.
@@ -27,13 +25,12 @@ from builtins import *  # noqa
 
 from hamcrest import ( assert_that,
                        contains_string,
-                       ends_with,
                        equal_to,
                        has_entry,
                        has_entries )
 
 from ycmd.tests.typescript import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( BuildRequest )
+from ycmd.tests.test_utils import BuildRequest
 from ycmd.utils import ReadFile
 
 
@@ -54,8 +51,8 @@ def Diagnostics_FileReadyToParse_test( app ):
                              event_name = 'FileReadyToParse' )
   results = app.post_json( '/event_notification', event_data ).json
 
-  expected_text = 'Property \'nonExistingMethod\' ' \
-                  'does not exist on type \'Bar\'.'
+  expected_text = ( 'Property \'nonExistingMethod\' '
+                    'does not exist on type \'Bar\'.' )
 
   assert_that( results[1],
                has_entries( {
@@ -63,19 +60,19 @@ def Diagnostics_FileReadyToParse_test( app ):
                  'text': equal_to( expected_text ),
                  'location': has_entries( {
                    'column_num': 1,
-                   'filepath': ends_with( 'test.ts' ),
+                   'filepath': main_filepath,
                    'line_num': 35
                  } ),
                  'location_extent': has_entries( {
                    'start': has_entries( {
                      'column_num': 1,
-                     'filepath': ends_with( 'test.ts' ),
+                     'filepath': main_filepath,
                      'line_num': 35
                    } ),
                    'end': has_entries( {
                      'column_num': 1,
                      'line_num': 35,
-                     'filepath': ends_with( 'test.ts' )
+                     'filepath': main_filepath
                    } ),
                  } )
                } ) )
@@ -93,15 +90,15 @@ def Diagnostics_DetailedDiagnostics_test( app ):
   app.post_json( '/event_notification', event_data )
 
   event_data = BuildRequest( filepath = main_filepath,
-                            filetype = 'typescript',
-                            contents = main_contents,
-                            line_num = 35,
-                            column_num = 6 )
+                             filetype = 'typescript',
+                             contents = main_contents,
+                             line_num = 35,
+                             column_num = 6 )
 
   results = app.post_json( '/detailed_diagnostic', event_data ).json
 
-  expected_message = 'Property \'nonExistingMethod\' ' \
-                     'does not exist on type \'Bar\'.'
+  expected_message = ( 'Property \'nonExistingMethod\' '
+                       'does not exist on type \'Bar\'.' )
 
   assert_that( results,
                has_entry(

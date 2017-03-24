@@ -135,12 +135,12 @@ def GetByteOffsetDistanceFromTsDiagnosticRange(
                                                         byte_offset )
 
   start_difference = codepoint_offset - ts_start_offset
-  end_difference = codepoint_offset - (ts_end_offset - 1)
+  end_difference = codepoint_offset - ( ts_end_offset - 1 )
 
-  if (start_difference >= 0) and (end_difference <= 0):
+  if start_difference >= 0 and end_difference <= 0:
     return 0
 
-  return min(abs(start_difference), abs(end_difference))
+  return min( abs( start_difference ), abs( end_difference ) )
 
 
 class TypeScriptCompleter( Completer ):
@@ -191,6 +191,9 @@ class TypeScriptCompleter( Completer ):
     # Used to prevent threads from concurrently reading and writing to
     # the pending response dictionary
     self._pending_lock = threading.Lock()
+
+    self._max_diagnostics_to_display = user_options[
+      'max_diagnostics_to_display' ]
 
     _logger.info( 'Enabling typescript completion' )
 
@@ -435,8 +438,7 @@ class TypeScriptCompleter( Completer ):
     self._Reload( request_data )
 
     diagnostics = self.GetDiagnosticsForCurrentFile( request_data )
-    return [ responses.BuildDiagnosticData( x )
-                        for x in diagnostics ]
+    return [ responses.BuildDiagnosticData( x ) for x in diagnostics ]
 
 
   def GetTsDiagnosticsForCurrentFile( self, filename, request_data ):
@@ -444,12 +446,13 @@ class TypeScriptCompleter( Completer ):
     # Note that its "offset" values represent codepoint offsets,
     # not byte offsets, which are required by the ycmd API.
 
-    ts_diagnostics = itertools.chain(
+    ts_diagnostics = list( itertools.chain(
       self._GetSemanticDiagnostics( filename ),
       self._GetSyntacticDiagnostics( filename )
-    )
+    ) )
 
     return ts_diagnostics
+
 
   def GetDiagnosticsForCurrentFile( self, request_data ):
     filename = request_data[ 'filepath' ]
@@ -459,7 +462,7 @@ class TypeScriptCompleter( Completer ):
                                                           request_data )
 
     return [ TsDiagnosticToYcmdDiagnostic( filename, line_value, x )
-             for x in ts_diagnostics ]
+             for x in ts_diagnostics[ : self._max_diagnostics_to_display ] ]
 
 
   def GetDetailedDiagnostic( self, request_data ):
@@ -498,8 +501,7 @@ class TypeScriptCompleter( Completer ):
       closest_ts_diagnostic
     )
 
-    return responses.BuildDisplayMessageResponse(
-      closest_diagnostic.text_ )
+    return responses.BuildDisplayMessageResponse( closest_diagnostic.text_ )
 
 
   def _GetSemanticDiagnostics( self, filename ):
@@ -513,7 +515,7 @@ class TypeScriptCompleter( Completer ):
     return self._SendRequest( 'syntacticDiagnosticsSync', {
       'file': filename,
       'includeLinePosition': True
-    })
+    } )
 
 
   def _GoToDefinition( self, request_data ):
