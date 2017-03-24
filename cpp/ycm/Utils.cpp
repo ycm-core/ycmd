@@ -33,14 +33,18 @@ bool AlmostEqual( double a, double b ) {
 
 
 std::string ReadUtf8File( const fs::path &filepath ) {
-  fs::ifstream file( filepath, std::ios::in | std::ios::binary );
-  std::vector< char > contents( ( std::istreambuf_iterator< char >( file ) ),
-                                std::istreambuf_iterator< char >() );
-
-  if ( contents.size() == 0 )
-    return std::string();
-
-  return std::string( contents.begin(), contents.end() );
+  // fs::is_empty() can throw basic_filesystem_error< Path >
+  // in case filepath doesn't exist, or
+  // in case filepath's file_status is "other".
+  // "other" in this case means everything that is not a regular file,
+  // directory or a symlink.
+  if ( !fs::is_empty( filepath ) && fs::is_regular_file( filepath ) ) {
+    fs::ifstream file( filepath, std::ios::in | std::ios::binary );
+    std::vector< char > contents( ( std::istreambuf_iterator< char >( file ) ),
+                                  std::istreambuf_iterator< char >() );
+    return std::string( contents.begin(), contents.end() );
+  }
+  return std::string();
 }
 
 
