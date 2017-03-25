@@ -29,8 +29,10 @@ import subprocess
 import tempfile
 import ycm_core
 from future.utils import native
+from hamcrest import assert_that, equal_to, has_property, instance_of
 from mock import patch, call
 from nose.tools import eq_, ok_, raises
+from types import ModuleType
 from ycmd import utils
 from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly, UnixOnly,
                                     CurrentWorkingDirectory,
@@ -545,6 +547,16 @@ def FindExecutable_CurrentDirectory_test():
 def FindExecutable_AdditionalPathExt_test():
   with TemporaryExecutable( extension = '.xyz' ) as executable:
     eq_( executable, utils.FindExecutable( executable ) )
+
+
+def LoadPythonSource_UnicodePath_test():
+  filename = PathToTestFile( u'uni¢𐍈d€.py' )
+  module = utils.LoadPythonSource( 'module_name', filename )
+  assert_that( module, instance_of( ModuleType ) )
+  assert_that( module.__file__, equal_to( filename ) )
+  assert_that( module.__name__, equal_to( 'module_name' ) )
+  assert_that( module, has_property( 'SomeMethod' ) )
+  assert_that( module.SomeMethod(), equal_to( True ) )
 
 
 @Py2Only
