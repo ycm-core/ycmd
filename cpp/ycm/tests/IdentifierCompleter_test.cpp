@@ -322,8 +322,8 @@ TEST( IdentifierCompleterTest, ManyCandidateSimpleWrongFileType ) {
                    "foobar",
                    "foobartest",
                    "Foobartest" ),
-                 "c",
-                 "foo" ).CandidatesForQueryAndType( "fbr", "cpp" ),
+                 std::string( "c" ),
+                 std::string( "foo" ) ).CandidatesForQueryAndType( "fbr", "cpp" ),
                IsEmpty() );
 }
 

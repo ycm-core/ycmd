@@ -78,6 +78,8 @@ TEST( IdentifierUtilsTest, TagLanguageMissing ) {
   EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
                ContainerEq( FiletypeIdentifierMap() ) );
 }
+
+
 TEST( IdentifierUtilsTest, TagFileInvalidPath ) {
   fs::path testfile = PathToTestFile( "invalid_path_to_tag_file.tags" );
 
