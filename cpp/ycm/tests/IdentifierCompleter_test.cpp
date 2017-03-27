@@ -298,7 +298,34 @@ TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
 
 }
 
-// TODO: tests for filepath and filetype candidate storing
+
+// Filetype checking
+TEST( IdentifierCompleterTest, ManyCandidateSimpleFileType ) {
+  IdentifierCompleter completer;
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "foobar",
+                   "foobartest",
+                   "Foobartest" ),
+                 std::string( "c" ),
+                 std::string( "foo" ) ).CandidatesForQueryAndType( "fbr", "c" ),
+               WhenSorted( ElementsAre( "Foobartest",
+                                        "foobar",
+                                        "foobartest" ) ) );
+}
+
+
+TEST( IdentifierCompleterTest, ManyCandidateSimpleWrongFileType ) {
+  IdentifierCompleter completer;
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "foobar",
+                   "foobartest",
+                   "Foobartest" ),
+                 std::string( "c" ),
+                 std::string( "foo" ) ).CandidatesForQueryAndType( "fbr", "cpp" ),
+               IsEmpty() );
+}
 
 } // namespace YouCompleteMe
 
