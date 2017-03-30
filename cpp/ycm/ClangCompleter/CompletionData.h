@@ -119,9 +119,6 @@ private:
                              bool &saw_left_paren,
                              bool &saw_function_params,
                              bool &saw_placeholder );
-
-  bool IdentifierEndsWith( const std::string &identifier,
-                           const std::string &end );
 };
 
 } // namespace YouCompleteMe
