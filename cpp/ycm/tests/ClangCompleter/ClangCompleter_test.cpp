@@ -42,7 +42,7 @@ TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
 
-  EXPECT_TRUE( !completions.empty() );
+  ASSERT_TRUE( !completions.empty() );
 }
 
 
@@ -56,7 +56,7 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
 
-  EXPECT_TRUE( !completions.empty() );
+  ASSERT_TRUE( !completions.empty() );
   EXPECT_THAT( completions,
                Contains(
                  Property( &CompletionData::TextToInsertInBuffer,
@@ -77,7 +77,7 @@ TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
       std::vector< UnsavedFile >(),
       flags );
 
-  EXPECT_TRUE( !completions.empty() );
+  ASSERT_TRUE( !completions.empty() );
   EXPECT_THAT( completions[0].TextToInsertInBuffer(), StrEq( "withArg2:" ) );
 }
 
@@ -95,7 +95,7 @@ TEST( ClangCompleterTest, CandidatesObjCFuncForLocationInFile ) {
       std::vector< UnsavedFile >(),
       flags );
 
-  EXPECT_TRUE( !completions.empty() );
+  ASSERT_TRUE( !completions.empty() );
   EXPECT_THAT(
     completions[0].TextToInsertInBuffer(),
     StrEq( "(void)test:(int)arg1 withArg2:(int)arg2 withArg3:(int)arg3" ) );
