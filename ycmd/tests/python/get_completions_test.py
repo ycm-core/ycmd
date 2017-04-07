@@ -153,7 +153,7 @@ def GetCompletions_Unicode_InLine_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains(
-          CompletionEntryMatcher( 'center', 'function: builtins.str.center' )
+          CompletionEntryMatcher( 'center', 'def center' )
         ),
         'errors': empty(),
       } )
