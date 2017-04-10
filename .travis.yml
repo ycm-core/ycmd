@@ -44,8 +44,9 @@ addons:
     packages:
      - cmake-data
      - cmake
-     # 4.8.1 is the first version of GCC with full C++11 support.
-     - g++-4.8
+     # 4.9 is the first version of GCC with good enough C++11 support; in
+     # particular regex support.
+     - g++-4.9
      # Required to build the OmniSharp server.
      - mono-devel
      - ninja-build
