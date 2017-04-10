@@ -43,7 +43,7 @@ std::vector< std::string > ReadUtf8File( const fs::path &filepath ) {
     fs::ifstream file( filepath, std::ios::in | std::ios::binary );
     std::string line;
     while( getline( file, line ) ) {
-      contents.push_back( line );
+      contents.emplace_back( std::move( line ) );
     }
   }
   return contents;

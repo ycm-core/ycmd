@@ -31,14 +31,14 @@ namespace {
 // http://ctags.sourceforge.net/FORMAT
 // TL;DR: The only supported format is the one Exuberant Ctags emits.
 const char *const TAG_REGEX =
-  "^([^\\t\\n\\r]+)"  // The first field is the identifier
+  "^([^\\t]+)"  // The first field is the identifier
   "\\t"  // A TAB char is the field separator
   // The second field is the path to the file that has the identifier; either
   // absolute or relative to the tags file.
-  "([^\\t\\n\\r]+)"
-  "\\t[^\\n]*?"  // Non-greedy everything
-  "language:([^\\t\\n\\r]+)"  // We want to capture the language of the file
-  "[^\\n]*?$";
+  "([^\\t]+)"
+  "\\t.*"
+  "language:([^\\t]+)"  // We want to capture the language of the file
+  ".*$";
 
 // Only used as the equality comparer for the below unordered_map which stores
 // const char* pointers and not std::string but needs to hash based on string
@@ -112,34 +112,34 @@ const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const fs::path &path_to_tag_file ) {
-  FiletypeIdentifierMap filetype_identifier_map;
   std::vector< std::string > tags_file_contents;
 
   try {
     tags_file_contents = ReadUtf8File( path_to_tag_file );
   } catch ( ... ) {
-    return filetype_identifier_map;
+    return {};
   }
 
+  FiletypeIdentifierMap filetype_identifier_map;
   std::smatch matches;
-  const std::regex expression( TAG_REGEX );
+  const std::regex expression( TAG_REGEX, std::regex::optimize );
 
-  for ( auto line : tags_file_contents ) {
+  for ( const auto& line : tags_file_contents ) {
     if ( std::regex_search( line, matches, expression ) ) {
-      std::string language( matches[ 3 ] );
-      std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
+      const std::string language( matches[ 3 ] );
+      const std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
                                               language.c_str(),
                                               NOT_FOUND );
       if ( filetype == NOT_FOUND )
         continue;
 
-      std::string identifier( matches[ 1 ] );
+      const std::string identifier( matches[ 1 ] );
       fs::path path( matches[ 2 ].str() );
       path = fs::absolute( path, path_to_tag_file.parent_path() )
               .make_preferred();
 
       filetype_identifier_map[ filetype ][ path.string() ]
-              .push_back( identifier );
+              .emplace_back( identifier );
     }
   }
 
