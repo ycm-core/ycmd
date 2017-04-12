@@ -35,14 +35,6 @@ bool CursorIsValid( CXCursor cursor ) {
          !clang_isInvalid( clang_getCursorKind( cursor ) );
 }
 
-bool CursorIsReference( CXCursor cursor ) {
-  return clang_isReference( clang_getCursorKind( cursor ) );
-}
-
-bool CursorIsDeclaration( CXCursor cursor ) {
-  return clang_isDeclaration( clang_getCursorKind( cursor ) );
-}
-
 std::string CXFileToFilepath( CXFile file ) {
   return CXStringToString( clang_getFileName( file ) );
 }
