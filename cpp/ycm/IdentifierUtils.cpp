@@ -139,7 +139,7 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
               .make_preferred();
 
       filetype_identifier_map[ filetype ][ path.string() ]
-              .emplace_back( identifier );
+              .emplace_back( std::move( identifier ) );
     }
   }
 
