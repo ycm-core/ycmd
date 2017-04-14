@@ -266,7 +266,7 @@ include_directories(
 
 # One can use the system libclang.[so|dylib] like so:
 #   cmake -DUSE_SYSTEM_LIBCLANG=1 [...]
-# One can also explicitely pick the external libclang.[so|dylib] for use like so:
+# One can also explicitly pick the external libclang.[so|dylib] for use like so:
 #   cmake -DEXTERNAL_LIBCLANG_PATH=/path/to/libclang.so [...]
 # The final .so we build will then first look in the same dir in which it is
 # located for libclang.so. This is provided by the rpath = $ORIGIN feature.
