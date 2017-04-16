@@ -97,7 +97,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
       node->NearestLetterNodesForLetter( letter );
 
     if ( !nearest )
-      return Result( false );
+      return Result();
 
     // When the query letter is uppercase, then we force an uppercase match
     // but when the query letter is lowercase, then it can match both an
@@ -113,7 +113,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
     }
 
     if ( !node )
-      return Result( false );
+      return Result();
 
     index_sum += node->Index();
   }
