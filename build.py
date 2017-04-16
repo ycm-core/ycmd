@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # Passing an environment variable containing unicode literals to a subprocess
 # on Windows and Python2 raises a TypeError. Since there is no unicode
