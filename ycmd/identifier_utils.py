@@ -115,6 +115,7 @@ FILETYPE_TO_IDENTIFIER_REGEX[ 'elisp' ] = (
 FILETYPE_TO_IDENTIFIER_REGEX[ 'lisp' ] = (
   FILETYPE_TO_IDENTIFIER_REGEX[ 'clojure' ] )
 
+FILETYPE_TO_IDENTIFIER_REGEX[ 'lisp' ] = FILETYPE_TO_IDENTIFIER_REGEX[ 'clojure' ]
 
 def IdentifierRegexForFiletype( filetype ):
   return FILETYPE_TO_IDENTIFIER_REGEX.get( filetype, DEFAULT_IDENTIFIER_REGEX )
