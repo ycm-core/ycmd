@@ -34,15 +34,23 @@ using ::testing::Contains;
 
 TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
   ClangCompleter completer;
-  std::vector< CompletionData > completions =
+  std::vector< CompletionData > completions_class =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      15,
+      26,
+      7,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+  std::vector< CompletionData > completions_struct =
+    completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
+      27,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
 
-  ASSERT_TRUE( !completions.empty() );
+  ASSERT_TRUE( !completions_struct.empty() );
+  ASSERT_TRUE( !completions_class.empty() );
 }
 
 
@@ -51,7 +59,7 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      15,
+      26,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -60,7 +68,7 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
   EXPECT_THAT( completions,
                Contains(
                  Property( &CompletionData::TextToInsertInBuffer,
-                           StrEq( "foobar" ) ) ) );
+                           StrEq( "barbar" ) ) ) );
 }
 
 
@@ -109,15 +117,51 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
 
   // Clang operates on the reasonable assumption that line and column numbers
   // are 1-based.
-  Location actual_location =
+  Location actual_location_struct =
     completer.GetDefinitionLocation(
       filename,
-      13,
+      23,
       3,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
 
-  EXPECT_EQ( Location( filename, 1, 8 ), actual_location );
+  Location actual_location_class_method =
+    completer.GetDefinitionLocation(
+      filename,
+      26,
+      7,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  Location actual_location_class =
+    completer.GetDefinitionLocation(
+      filename,
+      24,
+      3,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  Location actual_location_enum_value =
+    completer.GetDefinitionLocation(
+      filename,
+      28,
+      25,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  Location actual_location_enum =
+    completer.GetDefinitionLocation(
+      filename,
+      28,
+      3,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  EXPECT_EQ( Location( filename, 11, 8 ), actual_location_struct );
+  EXPECT_EQ( Location( filename, 1, 7 ), actual_location_class );
+  EXPECT_EQ( Location( filename, 20, 35 ), actual_location_enum );
+  EXPECT_EQ( Location( filename, 20, 16 ), actual_location_enum_value );
+  EXPECT_EQ( Location( filename, 7, 8 ), actual_location_class_method );
 }
 
 
@@ -127,7 +171,7 @@ TEST( ClangCompleterTest, GetDocString ) {
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      11,
+      27,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -138,6 +182,61 @@ TEST( ClangCompleterTest, GetDocString ) {
       break;
     }
   }
+}
+
+
+TEST( ClangCompleterTest, NoTranslationUnit ) {
+  ClangCompleter completer;
+
+  const std::string filename;
+  const std::vector< UnsavedFile > unsaved_files;
+  const std::vector< std::string > flags;
+
+  EXPECT_EQ( std::vector< Diagnostic >(),
+             completer.UpdateTranslationUnit( filename, unsaved_files, flags) );
+
+  EXPECT_EQ( std::vector< CompletionData >(),
+             completer.CandidatesForLocationInFile( filename,
+                                                    1,
+                                                    1,
+                                                    unsaved_files,
+                                                    flags ) );
+
+  EXPECT_EQ( Location(), completer.GetDeclarationLocation( filename,
+                                                           1,
+                                                           1,
+                                                           unsaved_files,
+                                                           flags ) );
+  EXPECT_EQ( Location(), completer.GetDefinitionLocation( filename,
+                                                          1,
+                                                          1,
+                                                          unsaved_files,
+                                                          flags ) );
+  EXPECT_EQ( std::string( "no unit" ),
+             completer.GetTypeAtLocation( filename,
+                                          1,
+                                          1,
+                                          unsaved_files,
+                                          flags ) );
+  EXPECT_EQ( std::string( "no unit" ),
+             completer.GetEnclosingFunctionAtLocation( filename,
+                                                       1,
+                                                       1,
+                                                       unsaved_files,
+                                                       flags ) );
+  EXPECT_EQ( std::vector< FixIt >(),
+             completer.GetFixItsForLocationInFile( filename,
+                                                   1,
+                                                   1,
+                                                   unsaved_files,
+                                                   flags ) );
+
+  EXPECT_EQ( DocumentationData(),
+             completer.GetDocsForLocationInFile( filename,
+                                                 1,
+                                                 1,
+                                                 unsaved_files,
+                                                 flags ) );
 }
 
 } // namespace YouCompleteMe

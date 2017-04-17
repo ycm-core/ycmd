@@ -47,6 +47,15 @@ struct DocumentationData {
   std::string canonical_type;
   /// The display name of the referenced cursor
   std::string display_name;
+
+  bool operator == ( const DocumentationData &other ) const {
+    return comment_xml == other.comment_xml &&
+           raw_comment == other.raw_comment &&
+           brief_comment == other.brief_comment &&
+           canonical_type == other.canonical_type &&
+           display_name == other.display_name;
+  }
+
 };
 
 } // namespace YouCompleteMe

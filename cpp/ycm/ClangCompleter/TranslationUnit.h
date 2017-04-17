@@ -40,7 +40,7 @@ public:
   // This constructor creates an invalid, sentinel TU. All of it's methods
   // return empty vectors, and IsCurrentlyUpdating always returns true so that
   // no callers try to rely on the invalid TU.
-  TranslationUnit();
+  YCM_DLL_EXPORT TranslationUnit();
   TranslationUnit( const TranslationUnit& ) = delete;
   TranslationUnit& operator=( const TranslationUnit& ) = delete;
 
@@ -54,12 +54,12 @@ public:
 
   void Destroy();
 
-  bool IsCurrentlyUpdating() const;
+  YCM_DLL_EXPORT bool IsCurrentlyUpdating() const;
 
   std::vector< Diagnostic > Reparse(
     const std::vector< UnsavedFile > &unsaved_files );
 
-  std::vector< CompletionData > CandidatesForLocation(
+  YCM_DLL_EXPORT std::vector< CompletionData > CandidatesForLocation(
     int line,
     int column,
     const std::vector< UnsavedFile > &unsaved_files );
@@ -76,13 +76,13 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
-  std::string GetTypeAtLocation(
+  YCM_DLL_EXPORT std::string GetTypeAtLocation(
     int line,
     int column,
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
-  std::string GetEnclosingFunctionAtLocation(
+  YCM_DLL_EXPORT std::string GetEnclosingFunctionAtLocation(
     int line,
     int column,
     const std::vector< UnsavedFile > &unsaved_files,
@@ -94,7 +94,7 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
-  DocumentationData GetDocsForLocationInFile(
+  YCM_DLL_EXPORT DocumentationData GetDocsForLocationInFile(
     int line,
     int column,
     const std::vector< UnsavedFile > &unsaved_files,

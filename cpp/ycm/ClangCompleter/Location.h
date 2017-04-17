@@ -27,10 +27,7 @@ namespace YouCompleteMe {
 
 struct Location {
   // Creates an invalid location
-  Location()
-    : line_number_( 0 ),
-      column_number_( 0 ),
-      filename_( "" ) {}
+  Location() : line_number_( 0 ), column_number_( 0 ), filename_( "" ) {}
 
   Location( const std::string &filename,
             unsigned int line,
@@ -51,10 +48,9 @@ struct Location {
   }
 
   bool operator== ( const Location &other ) const {
-    return
-      line_number_ == other.line_number_ &&
-      column_number_ == other.column_number_ &&
-      filename_ == other.filename_;
+    return line_number_ == other.line_number_ &&
+           column_number_ == other.column_number_ &&
+           filename_ == other.filename_;
   }
 
   bool IsValid() {

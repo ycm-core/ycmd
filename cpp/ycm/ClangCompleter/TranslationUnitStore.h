@@ -33,14 +33,14 @@ namespace YouCompleteMe {
 
 class TranslationUnitStore {
 public:
-  TranslationUnitStore( CXIndex clang_index );
-  ~TranslationUnitStore();
+  YCM_DLL_EXPORT TranslationUnitStore( CXIndex clang_index );
+  YCM_DLL_EXPORT ~TranslationUnitStore();
   TranslationUnitStore( const TranslationUnitStore& ) = delete;
   TranslationUnitStore& operator=( const TranslationUnitStore& ) = delete;
 
   // You can even call this function for the same filename from multiple
   // threads; the TU store will ensure only one TU is created.
-  std::shared_ptr< TranslationUnit > GetOrCreate(
+  YCM_DLL_EXPORT std::shared_ptr< TranslationUnit > GetOrCreate(
     const std::string &filename,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags );
