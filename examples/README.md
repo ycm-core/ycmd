@@ -8,7 +8,7 @@ First make sure you have built ycmd; see the top-level README for details.
 Then install all the Python requirements with [pip][] (run as admin/super user):
 
 ```
-pip install -r requirements.txt --use-mirrors
+sudo pip install -r requirements.txt
 ```
 
 Then just run `./example_client.py` from the console. It will start `ycmd`, send
