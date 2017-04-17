@@ -128,8 +128,8 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     if ( std::regex_search( line, matches, expression ) ) {
       const std::string language( matches[ 3 ] );
       const std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
-                                              language.c_str(),
-                                              NOT_FOUND );
+                                                    language.c_str(),
+                                                    NOT_FOUND );
       if ( filetype == NOT_FOUND )
         continue;
 
