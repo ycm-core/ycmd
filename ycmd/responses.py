@@ -30,7 +30,7 @@ from ycmd.utils import ProcessIsRunning
 YCM_EXTRA_CONF_FILENAME = '.ycm_extra_conf.py'
 
 CONFIRM_CONF_FILE_MESSAGE = ('Found {0}. Load? \n\n(Question can be turned '
-                             'off with options, see YCM docs)')
+                             'off with options, see :h ycm_confirm_extra_conf)')
 
 NO_EXTRA_CONF_FILENAME_MESSAGE = ( 'No {0} file detected, so no compile flags '
   'are available. Thus no semantic support for C/C++/ObjC/ObjC++. Go READ THE '
