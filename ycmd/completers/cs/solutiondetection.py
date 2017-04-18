@@ -86,6 +86,12 @@ def GuessFile( filepath ):
   for i in reversed( range( len( tokens ) - 1 ) ):
     path = os.path.join( *tokens[ : i + 1 ] )
     candidates = glob.glob1( path, '*.sln' )
+
+    """ If there's no .sln file, try to find a project.json file for
+    dotnetcore (https://dotnet.github.io) projects """
+    if len( candidates ) == 0:
+      candidates = glob.glob1( path, 'project.json' )
+
     if len( candidates ) > 0:
       # do the whole procedure only for the first solution file(s) you find
       return _SolutionTestCheckHeuristics( candidates, tokens, i )
