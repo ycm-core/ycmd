@@ -94,11 +94,11 @@ TranslationUnit::TranslationUnit(
                                  ? &cxunsaved_files[ 0 ] : NULL;
 
   // Actually parse the translation unit.
-  CXErrorCode result = clang_parseTranslationUnit2FullArgv(
+  CXErrorCode result = clang_parseTranslationUnit2(
                          clang_index,
                          filename.c_str(),
-                         &pointer_flags[ 0 ],
-                         pointer_flags.size(),
+                         &pointer_flags[ 1 ],
+                         pointer_flags.size() - 1,
                          const_cast<CXUnsavedFile *>( unsaved ),
                          cxunsaved_files.size(),
                          EditingOptions(),
