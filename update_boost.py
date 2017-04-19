@@ -29,52 +29,35 @@ import requests
 CHUNK_SIZE = 1024 * 1024 # 1 MB
 
 BOOST_VERSION_REGEX = re.compile( 'Version (\d+\.\d+\.\d+)' )
-BOOST_URL = ( 'https://sourceforge.net/projects/boost/files/boost/'
-              '{version}/{archive}/download' )
+BOOST_URL = ( 'https://dl.bintray.com/boostorg/release/'
+              '{version}/source/{archive}' )
 BOOST_NAME = 'boost_{version_}'
 BOOST_ARCHIVE = BOOST_NAME + '.tar.bz2'
 BOOST_PARTS = [
-  'boost/utility.hpp',
   'boost/python.hpp',
-  'boost/bind.hpp',
-  'boost/lambda/lambda.hpp',
-  'boost/exception/all.hpp',
-  'boost/tuple/tuple_io.hpp',
-  'boost/tuple/tuple_comparison.hpp',
-  'boost/regex.hpp',
-  'boost/foreach.hpp',
-  'boost/smart_ptr.hpp',
-  'boost/algorithm/string_regex.hpp',
-  'boost/thread.hpp',
-  'boost/unordered_map.hpp',
-  'boost/unordered_set.hpp',
-  'boost/format.hpp',
-  'boost/ptr_container/ptr_container.hpp',
-  'boost/filesystem.hpp',
-  'boost/filesystem/fstream.hpp',
-  'boost/utility.hpp',
-  'boost/algorithm/cxx11/any_of.hpp',
-  'atomic',
-  'lockfree',
-  'assign',
-  'system'
+  'boost/filesystem.hpp'
 ]
 BOOST_LIBS_FOLDERS_TO_REMOVE = [
   'assign',
-  'mpi',
-  'config',
-  'lockfree',
-  'doc',
-  'test',
-  'examples',
+  'atomic',
   'build',
+  'chrono',
+  'config',
+  'date_time',
+  'doc',
+  'examples',
+  'exception',
+  'lockfree',
+  'mpi',
+  'regex',
+  'serialization',
+  'smart_ptr',
+  'test',
+  'thread',
+  'timer',
   # Numpy support was added in Boost 1.63.0. We remove its folder since it
   # breaks the build and we don't need it.
   'numpy'
-]
-BOOST_LIBS_FILES_TO_REMOVE = [
-  # Extracted with Boost 1.61.0 and breaks the build on Windows.
-  'xml_woarchive.cpp'
 ]
 BOOST_LIBS_EXTENSIONS_TO_KEEP = [
   '.hpp',
@@ -137,8 +120,7 @@ def CleanBoostParts( boost_libs_dir ):
         rmtree( os.path.join( root, directory ) )
     for filename in files:
       extension = os.path.splitext( filename )[ 1 ]
-      if ( filename in BOOST_LIBS_FILES_TO_REMOVE or
-           extension not in BOOST_LIBS_EXTENSIONS_TO_KEEP ):
+      if extension not in BOOST_LIBS_EXTENSIONS_TO_KEEP:
         os.remove( os.path.join( root, filename ) )
 
 

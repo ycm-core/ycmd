@@ -583,6 +583,25 @@ namespace std{ using ::type_info; }
 #  define BOOST_GPU_ENABLED
 #  endif
 
+// BOOST_RESTRICT ---------------------------------------------//
+// Macro to use in place of 'restrict' keyword variants
+#if !defined(BOOST_RESTRICT)
+#  if defined(_MSC_VER)
+#    define BOOST_RESTRICT __restrict
+#    if !defined(BOOST_NO_RESTRICT_REFERENCES) && (_MSC_FULL_VER < 190023026)
+#      define BOOST_NO_RESTRICT_REFERENCES
+#    endif
+#  elif defined(__GNUC__) && __GNUC__ > 3
+     // Clang also defines __GNUC__ (as 4)
+#    define BOOST_RESTRICT __restrict__
+#  else
+#    define BOOST_RESTRICT
+#    if !defined(BOOST_NO_RESTRICT_REFERENCES)
+#      define BOOST_NO_RESTRICT_REFERENCES
+#    endif
+#  endif
+#endif
+
 // BOOST_FORCEINLINE ---------------------------------------------//
 // Macro to use in place of 'inline' to force a function to be inline
 #if !defined(BOOST_FORCEINLINE)
@@ -604,7 +623,7 @@ namespace std{ using ::type_info; }
 #  elif defined(__GNUC__) && __GNUC__ > 3
      // Clang also defines __GNUC__ (as 4)
 #    if defined(__CUDACC__)
-       // nvcc doesn't always parse __noinline__, 
+       // nvcc doesn't always parse __noinline__,
        // see: https://svn.boost.org/trac/boost/ticket/9392
 #      define BOOST_NOINLINE __attribute__ ((noinline))
 #    else

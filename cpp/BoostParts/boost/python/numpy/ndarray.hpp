@@ -16,6 +16,8 @@
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/python/numpy/numpy_object_mgr_traits.hpp>
 #include <boost/python/numpy/dtype.hpp>
+#include <boost/python/numpy/config.hpp>
+
 #include <vector>
 
 namespace boost { namespace python { namespace numpy {
@@ -26,7 +28,8 @@ namespace boost { namespace python { namespace numpy {
  *  @todo This could have a lot more functionality (like boost::python::numeric::array).
  *        Right now all that exists is what was needed to move raw data between C++ and Python.
  */
-class ndarray : public object
+ 
+class BOOST_NUMPY_DECL ndarray : public object
 {
 
   /**
@@ -139,32 +142,32 @@ public:
 /**
  *  @brief Construct a new array with the given shape and data type, with data initialized to zero.
  */
-ndarray zeros(python::tuple const & shape, dtype const & dt);
-ndarray zeros(int nd, Py_intptr_t const * shape, dtype const & dt);
+BOOST_NUMPY_DECL ndarray zeros(python::tuple const & shape, dtype const & dt);
+BOOST_NUMPY_DECL ndarray zeros(int nd, Py_intptr_t const * shape, dtype const & dt);
 
 /**
  *  @brief Construct a new array with the given shape and data type, with data left uninitialized.
  */
-ndarray empty(python::tuple const & shape, dtype const & dt);
-ndarray empty(int nd, Py_intptr_t const * shape, dtype const & dt);
+BOOST_NUMPY_DECL ndarray empty(python::tuple const & shape, dtype const & dt);
+BOOST_NUMPY_DECL ndarray empty(int nd, Py_intptr_t const * shape, dtype const & dt);
 
 /**
  *  @brief Construct a new array from an arbitrary Python sequence.
  *
  *  @todo This does't seem to handle ndarray subtypes the same way that "numpy.array" does in Python.
  */
-ndarray array(object const & obj);
-ndarray array(object const & obj, dtype const & dt);
+BOOST_NUMPY_DECL ndarray array(object const & obj);
+BOOST_NUMPY_DECL ndarray array(object const & obj, dtype const & dt);
 
 namespace detail 
 {
 
-ndarray from_data_impl(void * data,
-		       dtype const & dt,
-		       std::vector<Py_intptr_t> const & shape,
-		       std::vector<Py_intptr_t> const & strides,
-		       object const & owner,
-		       bool writeable);
+BOOST_NUMPY_DECL ndarray from_data_impl(void * data,
+					dtype const & dt,
+					std::vector<Py_intptr_t> const & shape,
+					std::vector<Py_intptr_t> const & strides,
+					object const & owner,
+					bool writeable);
 
 template <typename Container>
 ndarray from_data_impl(void * data,
@@ -180,12 +183,12 @@ ndarray from_data_impl(void * data,
   return from_data_impl(data, dt, shape_, strides_, owner, writeable);    
 }
 
-ndarray from_data_impl(void * data,
-		       dtype const & dt,
-		       object const & shape,
-		       object const & strides,
-		       object const & owner,
-		       bool writeable);
+BOOST_NUMPY_DECL ndarray from_data_impl(void * data,
+					dtype const & dt,
+					object const & shape,
+					object const & strides,
+					object const & owner,
+					bool writeable);
 
 } // namespace boost::python::numpy::detail
 
@@ -247,39 +250,53 @@ inline ndarray from_data(void const * data,
  *  @param[in] nd_max  Maximum number of dimensions.
  *  @param[in] flags   Bitwise OR of flags specifying additional requirements.
  */
-ndarray from_object(object const & obj, dtype const & dt,
-                    int nd_min, int nd_max, ndarray::bitflag flags=ndarray::NONE);
+BOOST_NUMPY_DECL ndarray from_object(object const & obj,
+				     dtype const & dt,
+				     int nd_min,
+				     int nd_max,
+				     ndarray::bitflag flags=ndarray::NONE);
 
-inline ndarray from_object(object const & obj, dtype const & dt,
-                           int nd, ndarray::bitflag flags=ndarray::NONE)
+BOOST_NUMPY_DECL inline ndarray from_object(object const & obj,
+					    dtype const & dt,
+					    int nd,
+					    ndarray::bitflag flags=ndarray::NONE)
 {
   return from_object(obj, dt, nd, nd, flags);
 }
 
-inline ndarray from_object(object const & obj, dtype const & dt, ndarray::bitflag flags=ndarray::NONE)
+BOOST_NUMPY_DECL inline ndarray from_object(object const & obj,
+					    dtype const & dt,
+					    ndarray::bitflag flags=ndarray::NONE)
 {
   return from_object(obj, dt, 0, 0, flags);
 }
 
-ndarray from_object(object const & obj, int nd_min, int nd_max,
-                    ndarray::bitflag flags=ndarray::NONE);
+BOOST_NUMPY_DECL ndarray from_object(object const & obj,
+				     int nd_min,
+				     int nd_max,
+				     ndarray::bitflag flags=ndarray::NONE);
 
-inline ndarray from_object(object const & obj, int nd, ndarray::bitflag flags=ndarray::NONE)
+BOOST_NUMPY_DECL inline ndarray from_object(object const & obj,
+					    int nd,
+					    ndarray::bitflag flags=ndarray::NONE)
 {
   return from_object(obj, nd, nd, flags);
 }
 
-inline ndarray from_object(object const & obj, ndarray::bitflag flags=ndarray::NONE)
+BOOST_NUMPY_DECL inline ndarray from_object(object const & obj,
+					    ndarray::bitflag flags=ndarray::NONE)
 {
   return from_object(obj, 0, 0, flags);
 }
 
-inline ndarray::bitflag operator|(ndarray::bitflag a, ndarray::bitflag b)
+BOOST_NUMPY_DECL inline ndarray::bitflag operator|(ndarray::bitflag a,
+						   ndarray::bitflag b)
 {
   return ndarray::bitflag(int(a) | int(b));
 }
 
-inline ndarray::bitflag operator&(ndarray::bitflag a, ndarray::bitflag b)
+BOOST_NUMPY_DECL inline ndarray::bitflag operator&(ndarray::bitflag a,
+						   ndarray::bitflag b)
 {
   return ndarray::bitflag(int(a) & int(b));
 }

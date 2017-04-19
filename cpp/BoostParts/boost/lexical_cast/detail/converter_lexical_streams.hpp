@@ -576,12 +576,13 @@ namespace boost {
 #endif
 
 #if defined(BOOST_NO_STRINGSTREAM)
-                std::istrstream stream(start, finish - start);
+                std::istrstream stream(start, static_cast<std::istrstream::streamsize>(finish - start));
 #else
-                BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::buffer_t buf;
+                typedef BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::buffer_t buffer_t;
+                buffer_t buf;
                 // Usually `istream` and `basic_istream` do not modify 
                 // content of buffer; `buffer_t` assures that this is true
-                buf.setbuf(const_cast<CharT*>(start), finish - start);
+                buf.setbuf(const_cast<CharT*>(start), static_cast<typename buffer_t::streamsize>(finish - start));
 #if defined(BOOST_NO_STD_LOCALE)
                 std::istream stream(&buf);
 #else

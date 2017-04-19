@@ -141,6 +141,7 @@
 //
 #  define BOOST_HAS_LONG_LONG
 
+#define BOOST_NO_CXX11_SFINAE_EXPR
 
 // C++ 14:
 #if !defined(__cpp_aggregate_nsdmi) || (__cpp_aggregate_nsdmi < 201304)

@@ -7,6 +7,8 @@
 #ifndef boost_python_numpy_numpy_object_mgr_traits_hpp_
 #define boost_python_numpy_numpy_object_mgr_traits_hpp_
 
+#include <boost/python/numpy/config.hpp>
+
 /**
  *  @brief Macro that specializes object_manager_traits by requiring a 
  *         source-file implementation of get_pytype().
@@ -14,7 +16,7 @@
 
 #define NUMPY_OBJECT_MANAGER_TRAITS(manager)                            \
 template <>								\
-struct object_manager_traits<manager>					\
+struct BOOST_NUMPY_DECL object_manager_traits<manager>			\
 {									\
   BOOST_STATIC_CONSTANT(bool, is_specialized = true);			\
   static inline python::detail::new_reference adopt(PyObject* x)	\

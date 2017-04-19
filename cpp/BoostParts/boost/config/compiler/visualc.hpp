@@ -190,7 +190,7 @@
 #  define BOOST_NO_CXX11_CONSTEXPR
 #endif
 
-// C++14 features supported by VC++ 15 Preview 5
+// C++14 features supported by VC++ 14.1 (Visual Studio 2017)
 //
 #if (_MSC_VER < 1910)
 #  define BOOST_NO_CXX14_AGGREGATE_NSDMI
@@ -217,6 +217,27 @@
 // C++ 11:
 //
 #define BOOST_NO_TWO_PHASE_NAME_LOOKUP
+#define BOOST_NO_CXX11_SFINAE_EXPR
+
+//
+// Things that don't work in clr mode:
+//
+#ifdef _M_CEE
+#ifndef BOOST_NO_CXX11_THREAD_LOCAL
+#  define BOOST_NO_CXX11_THREAD_LOCAL
+#endif
+#ifndef BOOST_NO_SFINAE_EXPR
+#  define BOOST_NO_SFINAE_EXPR
+#endif
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+#  define BOOST_NO_CXX11_REF_QUALIFIERS
+#endif
+#endif
+#ifdef _M_CEE_PURE
+#ifndef BOOST_NO_CXX11_CONSTEXPR
+#  define BOOST_NO_CXX11_CONSTEXPR
+#endif
+#endif
 
 //
 // prefix and suffix headers:
@@ -282,8 +303,10 @@
 #     define BOOST_COMPILER_VERSION 11.0
 #   elif _MSC_VER < 1900
 #     define BOOST_COMPILER_VERSION 12.0
-#   elif _MSC_VER < 2000
+#   elif _MSC_VER < 1910
 #     define BOOST_COMPILER_VERSION 14.0
+#   elif _MSC_VER < 1920
+#     define BOOST_COMPILER_VERSION 14.1
 #   else
 #     define BOOST_COMPILER_VERSION _MSC_VER
 #   endif
@@ -293,7 +316,7 @@
 #endif
 
 //
-// last known and checked version is 19.10.24629 (VC++ 2017 RC):
+// last known and checked version is 19.10.25017 (VC++ 2017):
 #if (_MSC_VER > 1910)
 #  if defined(BOOST_ASSERT_CONFIG)
 #     error "Unknown compiler version - please run the configure tests and report the results"

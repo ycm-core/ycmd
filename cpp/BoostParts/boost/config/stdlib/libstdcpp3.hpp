@@ -101,8 +101,8 @@
 
 //
 //  Decide which version of libstdc++ we have, normally
-//  stdlibc++ C++0x support is detected via __GNUC__, __GNUC_MINOR__, and possibly
-//  __GNUC_PATCHLEVEL__ at the suggestion of Jonathan Wakely, one of the stdlibc++
+//  libstdc++ C++0x support is detected via __GNUC__, __GNUC_MINOR__, and possibly
+//  __GNUC_PATCHLEVEL__ at the suggestion of Jonathan Wakely, one of the libstdc++
 //  developers. He also commented:
 //
 //       "I'm not sure how useful __GLIBCXX__ is for your purposes, for instance in
@@ -110,7 +110,7 @@
 //       Although 4.3.0 was released earlier than 4.2.4, it has better C++0x support
 //       than any release in the 4.2 series."
 //
-//  Another resource for understanding stdlibc++ features is:
+//  Another resource for understanding libstdc++ features is:
 //  http://gcc.gnu.org/onlinedocs/libstdc++/manual/status.html#manual.intro.status.standard.200x
 //
 //  However, using the GCC version number fails when the compiler is clang since this
@@ -222,7 +222,7 @@
 //
 #if (BOOST_LIBSTDCXX_VERSION < 40700) || !defined(BOOST_LIBSTDCXX11)
 // Note that although <chrono> existed prior to 4.7, "steady_clock" is spelled "monotonic_clock"
-// so 4.7.0 is the first truely conforming one.
+// so 4.7.0 is the first truly conforming one.
 #  define BOOST_NO_CXX11_HDR_CHRONO
 #  define BOOST_NO_CXX11_ALLOCATOR
 #endif
