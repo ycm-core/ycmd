@@ -32,7 +32,7 @@ bool AlmostEqual( double a, double b );
 
 // Reads the entire contents of the specified file. If the file does not exist,
 // an exception is thrown.
-std::string ReadUtf8File( const fs::path &filepath );
+std::vector< std::string > ReadUtf8File( const fs::path &filepath );
 
 // Writes the entire contents of the specified file. If the file does not exist,
 // an exception is thrown.
