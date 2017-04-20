@@ -25,16 +25,12 @@ option( USE_SYSTEM_LIBCLANG "Set to ON to use the system libclang library" OFF )
 set( PATH_TO_LLVM_ROOT "" CACHE PATH "Path to the root of a LLVM+Clang binary distribution" )
 set( EXTERNAL_LIBCLANG_PATH "" CACHE PATH "Path to the libclang library to use" )
 
-set( CLANG_MAJOR_VERSION 4 )
-set( CLANG_MINOR_VERSION 0 )
-set( CLANG_PATCH_VERSION 0 )
-set( CLANG_VERSION
-      "${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}.${CLANG_PATCH_VERSION}" )
-
 if ( USE_CLANG_COMPLETER AND
      NOT USE_SYSTEM_LIBCLANG AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
+
+  set( CLANG_VERSION 4.0.0 )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
@@ -310,11 +306,6 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
       # our libraries require, in particular the Python one (from pyenv for
       # instance).
       set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
-      # When loading our library, the dynamic linker will look for
-      # libclang.so.4, not libclang.so.4.x.
-      file( RENAME
-            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}
-            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION} )
     endif()
   endif()
 
@@ -368,6 +359,22 @@ if( LIBCLANG_TARGET )
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
+
+    if( NOT APPLE )
+      # When loading our library, the dynamic linker may look for
+      # libclang.so.x instead of libclang.so.x.y. Create the corresponding
+      # symlink.
+      get_filename_component( LIBCLANG_NAME ${LIBCLANG_TARGET} NAME )
+      string( REGEX REPLACE "([^.]+).([0-9]+).([0-9]+)$" "\\1.\\2"
+              LIBCLANG_SONAME ${LIBCLANG_NAME} )
+      add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        "${LIBCLANG_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LIBCLANG_SONAME}"
+      )
+    endif()
   endif()
 endif()
 
