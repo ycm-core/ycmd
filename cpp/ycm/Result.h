@@ -24,8 +24,7 @@ namespace YouCompleteMe {
 
 class Result {
 public:
-  Result();
-  explicit Result( bool is_subsequence );
+  explicit Result( bool is_subsequence = false );
 
   Result( bool is_subsequence,
           const std::string *text,
