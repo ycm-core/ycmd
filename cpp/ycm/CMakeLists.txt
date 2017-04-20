@@ -312,9 +312,15 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
       set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
       # When loading our library, the dynamic linker will look for
       # libclang.so.4, not libclang.so.4.x.
-      file( RENAME
-            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}
-            ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION} )
+      if( NOT EXISTS "${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}" )
+        if( EXISTS ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION} )
+          file( RENAME
+                ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION}
+                ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION} )
+        else ( )
+          message( "Required lib file missing: ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}.${CLANG_MINOR_VERSION} or ${EXTERNAL_LIBCLANG_PATH}.${CLANG_MAJOR_VERSION}" )
+        endif()
+      endif()
     endif()
   endif()
 
