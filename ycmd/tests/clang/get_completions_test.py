@@ -275,6 +275,8 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
           CompletionEntryMatcher( 'do_', '[ID]' ),
           CompletionEntryMatcher( 'do_something', '[ID]' ),
           CompletionEntryMatcher( 'do_another_thing', '[ID]' ),
+          CompletionEntryMatcher( 'DO_SOMETHING_TO', '[ID]' ),
+          CompletionEntryMatcher( 'DO_SOMETHING_VIA', '[ID]' )
         ),
         'errors': empty()
       } )

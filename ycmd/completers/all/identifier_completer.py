@@ -229,7 +229,7 @@ def _IdentifiersFromBuffer( text,
                             filetype,
                             collect_from_comments_and_strings ):
   if not collect_from_comments_and_strings:
-    text = identifier_utils.RemoveIdentifierFreeText( text )
+    text = identifier_utils.RemoveIdentifierFreeText( text, filetype )
   idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
   vector = ycm_core.StringVector()
   for ident in idents:

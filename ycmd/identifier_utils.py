@@ -26,30 +26,76 @@ from builtins import *  # noqa
 
 import re
 
-COMMENT_AND_STRING_REGEX = re.compile(
-  "//.*?$" # Anything following '//'
-  "|"
-  "#.*?$"  # Anything following '#'
-  "|"
-  "/\*(?:\n|.)*?\*/"  # C-style comments, '/* ... */'
-  "|"
-  # Python-style multi-line single-quote string
-  "'''(?:\n|.)*?'''"
-  "|"
-  # Python-style multi-line double-quote string
-  '"""(?:\n|.)*?"""'
-  "|"
-  # Anything inside single quotes, '...', but mind:
-  #  1. that the starting single quote is not escaped
-  #  2. the escaped slash (\\)
-  #  3. the escaped single quote inside the string
-  r"(?<!\\)'(?:\\\\|\\'|.)*?'"
-  "|"
-  # Anything inside double quotes, "...", but mind:
-  #  1. that the starting double quote is not escaped
-  #  2. the escaped slash (\\)
-  #  3. the escaped double quote inside the string
-  r'(?<!\\)"(?:\\\\|\\"|.)*?"', re.MULTILINE )
+C_STYLE_COMMENT = "/\*(?:\n|.)*?\*/"
+CPP_STYLE_COMMENT = "//.*?$"
+PYTHON_STYLE_COMMENT = "#.*?$"
+# Anything inside single quotes, '...', but mind:
+#  1. that the starting single quote is not escaped
+#  2. the escaped slash (\\)
+#  3. the escaped single quote inside the string
+SINGLE_QUOTE_STRING = r"(?<!\\)'(?:\\\\|\\'|.)*?'"
+# Anything inside double quotes, "...", but mind:
+#  1. that the starting double quote is not escaped
+#  2. the escaped slash (\\)
+#  3. the escaped double quote inside the string
+DOUBLE_QUOTE_STRING = r'(?<!\\)"(?:\\\\|\\"|.)*?"'
+# Anything inside back quotes, `...`, but mind:
+#  1. that the starting back quote is not escaped
+#  2. the escaped slash (\\)
+#  3. the escaped back quote inside the string
+BACK_QUOTE_STRING = r'(?<!\\)`(?:\\\\|\\`|.)*?`'
+# Python-style multiline single-quote string
+MULTILINE_SINGLE_QUOTE_STRING = "'''(?:\n|.)*?'''"
+# Python-style multiline double-quote string
+MULTILINE_DOUBLE_QUOTE_STRING = '"""(?:\n|.)*?"""'
+
+DEFAULT_COMMENT_AND_STRING_REGEX = re.compile( "|".join( [
+  C_STYLE_COMMENT,
+  CPP_STYLE_COMMENT,
+  PYTHON_STYLE_COMMENT,
+  MULTILINE_SINGLE_QUOTE_STRING,
+  MULTILINE_DOUBLE_QUOTE_STRING,
+  SINGLE_QUOTE_STRING,
+  DOUBLE_QUOTE_STRING ] ), re.MULTILINE )
+
+FILETYPE_TO_COMMENT_AND_STRING_REGEX = {
+  # Spec:
+  # http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf
+  'cpp': re.compile( "|".join( [ C_STYLE_COMMENT,
+                                 CPP_STYLE_COMMENT,
+                                 SINGLE_QUOTE_STRING,
+                                 DOUBLE_QUOTE_STRING ] ), re.MULTILINE ),
+
+  # Spec:
+  # https://golang.org/ref/spec#Comments
+  # https://golang.org/ref/spec#String_literals
+  # https://golang.org/ref/spec#Rune_literals
+  'go': re.compile( "|".join( [ C_STYLE_COMMENT,
+                                CPP_STYLE_COMMENT,
+                                SINGLE_QUOTE_STRING,
+                                DOUBLE_QUOTE_STRING,
+                                BACK_QUOTE_STRING ] ), re.MULTILINE ),
+
+  # Spec:
+  # https://docs.python.org/3.6/reference/lexical_analysis.html#comments
+  # https://docs.python.org/3.6/reference/lexical_analysis.html#literals
+  'python': re.compile( "|".join( [ PYTHON_STYLE_COMMENT,
+                                    MULTILINE_SINGLE_QUOTE_STRING,
+                                    MULTILINE_DOUBLE_QUOTE_STRING,
+                                    SINGLE_QUOTE_STRING,
+                                    DOUBLE_QUOTE_STRING ] ), re.MULTILINE ),
+
+  # Spec:
+  # https://doc.rust-lang.org/reference.html#comments
+  # https://doc.rust-lang.org/reference.html#character-and-string-literals
+  'rust': re.compile( "|".join( [ CPP_STYLE_COMMENT,
+                                  SINGLE_QUOTE_STRING,
+                                  DOUBLE_QUOTE_STRING ] ), re.MULTILINE )
+}
+
+for filetype in [ 'c', 'objc', 'objcpp', 'javascript', 'typescript' ]:
+  FILETYPE_TO_COMMENT_AND_STRING_REGEX[ filetype ] = (
+    FILETYPE_TO_COMMENT_AND_STRING_REGEX[ 'cpp' ] )
 
 # At least c++ and javascript support unicode identifiers, and identifiers may
 # start with unicode character, e.g. ålpha. So we need to accept any identifier
@@ -116,12 +162,17 @@ FILETYPE_TO_IDENTIFIER_REGEX[ 'lisp' ] = (
   FILETYPE_TO_IDENTIFIER_REGEX[ 'clojure' ] )
 
 
+def CommentAndStringRegexForFiletype( filetype ):
+  return FILETYPE_TO_COMMENT_AND_STRING_REGEX.get(
+    filetype, DEFAULT_COMMENT_AND_STRING_REGEX )
+
+
 def IdentifierRegexForFiletype( filetype ):
   return FILETYPE_TO_IDENTIFIER_REGEX.get( filetype, DEFAULT_IDENTIFIER_REGEX )
 
 
-def RemoveIdentifierFreeText( text ):
-  return COMMENT_AND_STRING_REGEX.sub( '', text )
+def RemoveIdentifierFreeText( text, filetype = None ):
+  return CommentAndStringRegexForFiletype( filetype ).sub( '', text )
 
 
 def ExtractIdentifiersFromText( text, filetype = None ):
