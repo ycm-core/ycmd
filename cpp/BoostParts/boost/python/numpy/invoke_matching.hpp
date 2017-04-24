@@ -19,7 +19,7 @@ namespace boost { namespace python { namespace numpy {
 namespace detail 
 {
 
-struct add_pointer_meta 
+struct BOOST_NUMPY_DECL add_pointer_meta
 {
   template <typename T>
   struct apply 
@@ -29,8 +29,8 @@ struct add_pointer_meta
 
 };
 
-struct dtype_template_match_found {};
-struct nd_template_match_found {};
+struct BOOST_NUMPY_DECL dtype_template_match_found {};
+struct BOOST_NUMPY_DECL nd_template_match_found {};
 
 template <typename Function>
 struct dtype_template_invoker 

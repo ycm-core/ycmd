@@ -348,6 +348,10 @@ public:
 
 #endif
 
+public:
+    // forward declaration for optional zero-copy serialization support
+    class serialize_impl;
+    friend class serialize_impl;
 
 private:
     BOOST_STATIC_CONSTANT(block_width_type, ulong_width = std::numeric_limits<unsigned long>::digits);

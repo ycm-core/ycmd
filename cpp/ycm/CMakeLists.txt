@@ -208,7 +208,7 @@ if ( APPLE )
 endif()
 
 if ( USE_SYSTEM_BOOST )
-  set( Boost_COMPONENTS filesystem system regex thread )
+  set( Boost_COMPONENTS filesystem system )
   if( USE_PYTHON2 )
     list( APPEND Boost_COMPONENTS python )
   else()

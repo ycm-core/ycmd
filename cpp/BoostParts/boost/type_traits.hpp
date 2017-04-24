@@ -130,6 +130,7 @@
 #include <boost/type_traits/is_volatile.hpp>
 #include <boost/type_traits/make_signed.hpp>
 #include <boost/type_traits/make_unsigned.hpp>
+#include <boost/type_traits/make_void.hpp>
 #include <boost/type_traits/rank.hpp>
 #include <boost/type_traits/remove_all_extents.hpp>
 #include <boost/type_traits/remove_bounds.hpp>

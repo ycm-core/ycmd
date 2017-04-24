@@ -62,6 +62,18 @@ namespace boost
 {
     namespace hash_detail
     {
+#if defined(_HAS_AUTO_PTR_ETC) && !_HAS_AUTO_PTR_ETC
+        template <typename T>
+        struct hash_base
+        {
+            typedef T argument_type;
+            typedef std::size_t result_type;
+        };
+#else
+        template <typename T>
+        struct hash_base : std::unary_function<T, std::size_t> {};
+#endif
+
         struct enable_hash_value { typedef std::size_t type; };
 
         template <typename T> struct basic_numbers {};
@@ -419,7 +431,7 @@ namespace boost
 
 #define BOOST_HASH_SPECIALIZE(type) \
     template <> struct hash<type> \
-         : public std::unary_function<type, std::size_t> \
+         : public boost::hash_detail::hash_base<type> \
     { \
         std::size_t operator()(type v) const \
         { \
@@ -429,7 +441,7 @@ namespace boost
 
 #define BOOST_HASH_SPECIALIZE_REF(type) \
     template <> struct hash<type> \
-         : public std::unary_function<type, std::size_t> \
+         : public boost::hash_detail::hash_base<type> \
     { \
         std::size_t operator()(type const& v) const \
         { \
@@ -483,7 +495,7 @@ namespace boost
 
     template <class T>
     struct hash<T*>
-        : public std::unary_function<T*, std::size_t>
+        : public boost::hash_detail::hash_base<T*>
     {
         std::size_t operator()(T* v) const
         {
@@ -516,7 +528,7 @@ namespace boost
         {
             template <class T>
             struct inner
-                : public std::unary_function<T, std::size_t>
+                : public boost::hash_detail::hash_base<T>
             {
                 std::size_t operator()(T val) const
                 {
