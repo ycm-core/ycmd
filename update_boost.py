@@ -14,6 +14,7 @@ import tarfile
 from tempfile import mkdtemp
 from shutil import rmtree
 from distutils.dir_util import copy_tree
+from multiprocessing import cpu_count
 
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = os.path.join( DIR_OF_THIS_SCRIPT, 'third_party' )
@@ -142,6 +143,7 @@ def ExtractBoostParts( args ):
                                               '.sh' ) )
     subprocess.call( [ bootstrap ] )
     subprocess.call( [ os.path.join( os.curdir, 'b2' ),
+                       '-j' + str( cpu_count() ),
                        os.path.join( 'tools', 'bcp' ) ] )
     boost_parts_dir = os.path.join( os.curdir, 'boost_parts' )
     os.mkdir( boost_parts_dir )
