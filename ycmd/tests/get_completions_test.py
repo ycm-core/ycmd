@@ -25,12 +25,12 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, equal_to, has_items,
+from hamcrest import ( assert_that, empty, equal_to, has_items,
                        contains_string, contains_inanyorder )
 from mock import patch
 from nose.tools import eq_
 
-from ycmd.tests import SharedYcmd, PathToTestFile
+from ycmd.tests import IsolatedYcmd, SharedYcmd, PathToTestFile
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     DummyCompleter, PatchCompleter,
                                     UserOption, ExpectedFailure )
@@ -239,6 +239,22 @@ def GetCompletions_IdentifierCompleter_JustFinishedIdentifier_test( app ):
                has_items( CompletionEntryMatcher( 'foo' ) ) )
 
 
+@IsolatedYcmd
+def GetCompletions_IdentifierCompleter_IgnoreFinishedIdentifierInString_test(
+  app ):
+
+  event_data = BuildRequest( event_name = 'CurrentIdentifierFinished',
+                             column_num = 6,
+                             contents = '"foo"' )
+
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, empty() )
+
+
 @SharedYcmd
 def GetCompletions_IdentifierCompleter_IdentifierUnderCursor_test( app ):
   event_data = BuildRequest( event_name = 'InsertLeave',
@@ -251,6 +267,21 @@ def GetCompletions_IdentifierCompleter_IdentifierUnderCursor_test( app ):
                            completion_data ).json[ 'completions' ]
   assert_that( results,
                has_items( CompletionEntryMatcher( 'foo' ) ) )
+
+
+@IsolatedYcmd
+def GetCompletions_IdentifierCompleter_IgnoreCursorIdentifierInString_test(
+  app ):
+
+  event_data = BuildRequest( event_name = 'InsertLeave',
+                             column_num = 3,
+                             contents = '"foo"' )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( contents = 'oo', column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, empty() )
 
 
 @SharedYcmd

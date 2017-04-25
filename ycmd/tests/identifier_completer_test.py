@@ -39,117 +39,152 @@ def BuildRequestWrap( contents, column_num, line_num = 1 ):
 
 
 def GetCursorIdentifier_StartOfLine_test():
-  eq_( 'foo', ic._GetCursorIdentifier( BuildRequestWrap( 'foo', 1 ) ) )
-  eq_( 'fooBar', ic._GetCursorIdentifier( BuildRequestWrap( 'fooBar', 1 ) ) )
+  eq_( 'foo', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', 1 ) ) )
+  eq_( 'fooBar', ic._GetCursorIdentifier( False,
+                                          BuildRequestWrap( 'fooBar', 1 ) ) )
 
 
 def GetCursorIdentifier_EndOfLine_test():
-  eq_( 'foo', ic._GetCursorIdentifier( BuildRequestWrap( 'foo', 3 ) ) )
+  eq_( 'foo', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', 3 ) ) )
 
 
 def GetCursorIdentifier_PastEndOfLine_test():
-  eq_( '', ic._GetCursorIdentifier( BuildRequestWrap( 'foo', 11 ) ) )
+  eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', 11 ) ) )
 
 
 def GetCursorIdentifier_NegativeColumn_test():
-  eq_( 'foo', ic._GetCursorIdentifier( BuildRequestWrap( 'foo', -10 ) ) )
+  eq_( 'foo', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', -10 ) ) )
 
 
 def GetCursorIdentifier_StartOfLine_StopsAtNonIdentifierChar_test():
-  eq_( 'foo', ic._GetCursorIdentifier( BuildRequestWrap( 'foo(goo)', 1 ) ) )
+  eq_( 'foo', ic._GetCursorIdentifier( False,
+                                       BuildRequestWrap( 'foo(goo)', 1 ) ) )
 
 
 def GetCursorIdentifier_AtNonIdentifier_test():
-  eq_( 'goo', ic._GetCursorIdentifier( BuildRequestWrap( 'foo(goo)', 4 ) ) )
+  eq_( 'goo', ic._GetCursorIdentifier( False,
+                                       BuildRequestWrap( 'foo(goo)', 4 ) ) )
 
 
 def GetCursorIdentifier_WalksForwardForIdentifier_test():
-  eq_( 'foo', ic._GetCursorIdentifier( BuildRequestWrap( '       foo', 1 ) ) )
+  eq_( 'foo', ic._GetCursorIdentifier( False,
+                                       BuildRequestWrap( '       foo', 1 ) ) )
 
 
 def GetCursorIdentifier_FindsNothingForward_test():
-  eq_( '', ic._GetCursorIdentifier( BuildRequestWrap( 'foo   ()***()', 5 ) ) )
+  eq_( '', ic._GetCursorIdentifier( False,
+                                    BuildRequestWrap( 'foo   ()***()', 5 ) ) )
 
 
 def GetCursorIdentifier_SingleCharIdentifier_test():
-  eq_( 'f', ic._GetCursorIdentifier( BuildRequestWrap( '    f    ', 1 ) ) )
+  eq_( 'f', ic._GetCursorIdentifier( False,
+                                     BuildRequestWrap( '    f    ', 1 ) ) )
 
 
 def GetCursorIdentifier_StartsInMiddleOfIdentifier_test():
-  eq_( 'foobar', ic._GetCursorIdentifier( BuildRequestWrap( 'foobar', 4 ) ) )
+  eq_( 'foobar', ic._GetCursorIdentifier( False,
+                                          BuildRequestWrap( 'foobar', 4 ) ) )
 
 
 def GetCursorIdentifier_LineEmpty_test():
-  eq_( '', ic._GetCursorIdentifier( BuildRequestWrap( '', 12 ) ) )
+  eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( '', 12 ) ) )
+
+
+def GetCursorIdentifier_IgnoreIdentifierFromCommentsAndStrings_test():
+  eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( '"foobar"', 4 ) ) )
+
+
+def GetCursorIdentifier_CollectIdentifierFromCommentsAndStrings_test():
+  eq_( 'foobar', ic._GetCursorIdentifier( True,
+                                          BuildRequestWrap( '"foobar"', 4 ) ) )
 
 
 def PreviousIdentifier_Simple_test():
-  eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo', 4 ) ) )
+  eq_( 'foo', ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo', 4 ) ) )
 
 
 def PreviousIdentifier_WholeIdentShouldBeBeforeColumn_test():
   eq_( '',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar',
-                                                    column_num = 4 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foobar',
+                                                           column_num = 4 ) ) )
 
 
 def PreviousIdentifier_DoNotWrap_test():
   eq_( '',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foobar\n bar',
-                                                    column_num = 4 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foobar\n bar',
+                                                           column_num = 4 ) ) )
 
 
 def PreviousIdentifier_IgnoreForwardIdents_test():
   eq_( 'foo',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo bar zoo', 4 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo bar zoo',
+                                                           4 ) ) )
 
 
 def PreviousIdentifier_IgnoreTooSmallIdent_test():
-  eq_( '', ic._PreviousIdentifier( 4, BuildRequestWrap( 'foo', 4 ) ) )
+  eq_( '', ic._PreviousIdentifier( 4, False, BuildRequestWrap( 'foo', 4 ) ) )
 
 
 def PreviousIdentifier_IgnoreTooSmallIdent_DontContinueLooking_test():
-  eq_( '', ic._PreviousIdentifier( 4, BuildRequestWrap( 'abcde foo', 10 ) ) )
+  eq_( '', ic._PreviousIdentifier( 4, False, BuildRequestWrap( 'abcde foo',
+                                                               10 ) ) )
 
 
 def PreviousIdentifier_WhitespaceAfterIdent_test():
-  eq_( 'foo', ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo     ', 6 ) ) )
+  eq_( 'foo', ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo     ',
+                                                                  6 ) ) )
 
 
 def PreviousIdentifier_JunkAfterIdent_test():
   eq_( 'foo',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo  ;;()**   ', 13 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo  ;;()**   ',
+                                                           13 ) ) )
 
 
 def PreviousIdentifier_IdentInMiddleOfJunk_test():
   eq_( 'aa',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo  ;;(aa)**   ', 13 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo  ;;(aa)**   ',
+                                                           13 ) ) )
 
 
 def PreviousIdentifier_IdentOnPreviousLine_test():
   eq_( 'foo',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo\n   ',
-                                                    column_num = 3,
-                                                    line_num = 2 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo\n   ',
+                                                           column_num = 3,
+                                                           line_num = 2 ) ) )
 
   eq_( 'foo',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo\n',
-                                                    column_num = 1,
-                                                    line_num = 2 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo\n',
+                                                           column_num = 1,
+                                                           line_num = 2 ) ) )
 
 
 def PreviousIdentifier_IdentOnPreviousLine_JunkAfterIdent_test():
   eq_( 'foo',
-       ic._PreviousIdentifier( 2, BuildRequestWrap( 'foo **;()\n   ',
-                                                    column_num = 3,
-                                                    line_num = 2 ) ) )
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo **;()\n   ',
+                                                           column_num = 3,
+                                                           line_num = 2 ) ) )
 
 
 def PreviousIdentifier_NoGoodIdentFound_test():
   eq_( '',
-       ic._PreviousIdentifier( 5, BuildRequestWrap( 'foo\n ',
-                                                    column_num = 2,
-                                                    line_num = 2 ) ) )
+       ic._PreviousIdentifier( 5, False, BuildRequestWrap( 'foo\n ',
+                                                           column_num = 2,
+                                                           line_num = 2 ) ) )
+
+
+def PreviousIdentifier_IgnoreIdentifierFromCommentsAndStrings_test():
+  eq_( '',
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( '"foo"\n',
+                                                           column_num = 1,
+                                                           line_num = 2 ) ) )
+
+
+def PreviousIdentifier_CollectIdentifierFromCommentsAndStrings_test():
+  eq_( 'foo',
+       ic._PreviousIdentifier( 2, True, BuildRequestWrap( '"foo"\n',
+                                                          column_num = 1,
+                                                          line_num = 2 ) ) )
 
 
 def FilterUnchangedTagFiles_NoFiles_test():
