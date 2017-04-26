@@ -207,6 +207,9 @@ def IdentifierAtIndex( text, index, filetype = None ):
     return ''
 
   for match in IdentifierRegexForFiletype( filetype ).finditer( text ):
-    if match.end() > index:
+    if match.start() > index:
+      return ''
+    
+    if match.start() < index < match.end():
       return match.group()
   return ''
