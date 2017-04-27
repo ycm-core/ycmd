@@ -177,6 +177,7 @@ def IsIdentifier_TypeScript_test():
 
 def IsIdentifier_Css_test():
   ok_( iu.IsIdentifier( 'foo'      , 'css' ) )
+  ok_( iu.IsIdentifier( 'a'        , 'css' ) )
   ok_( iu.IsIdentifier( 'a1'       , 'css' ) )
   ok_( iu.IsIdentifier( 'a-'       , 'css' ) )
   ok_( iu.IsIdentifier( 'a-b'      , 'css' ) )
@@ -184,12 +185,14 @@ def IsIdentifier_Css_test():
   ok_( iu.IsIdentifier( '-ms-foo'  , 'css' ) )
   ok_( iu.IsIdentifier( '-_o'      , 'css' ) )
   ok_( iu.IsIdentifier( 'font-face', 'css' ) )
+  ok_( iu.IsIdentifier( 'αβγ'      , 'css' ) )
 
   ok_( not iu.IsIdentifier( '-3b', 'css' ) )
   ok_( not iu.IsIdentifier( '-3' , 'css' ) )
+  ok_( not iu.IsIdentifier( '--', 'css' ) )
   ok_( not iu.IsIdentifier( '3'  , 'css' ) )
-  ok_( not iu.IsIdentifier( 'a'  , 'css' ) )
   ok_( not iu.IsIdentifier( '' , 'css' ) )
+  ok_( not iu.IsIdentifier( '€', 'css' ) )
 
 
 def IsIdentifier_R_test():
