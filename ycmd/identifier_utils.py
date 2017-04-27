@@ -115,9 +115,8 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
     # Default identifier plus the dollar sign.
     'javascript': re.compile( r"(?:[^\W\d]|\$)[\w$]*", re.UNICODE ),
 
-    # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
-    # Good summary: http://stackoverflow.com/a/449000/1672783
-    'css': re.compile( r"-?[_a-zA-Z]+[\w-]+", re.UNICODE ),
+    # Spec: https://www.w3.org/TR/css-syntax-3/#ident-token-diagram
+    'css': re.compile( r"-?[^\W\d][\w-]*", re.UNICODE ),
 
     # Spec: http://www.w3.org/TR/html5/syntax.html#tag-name-state
     # But not quite since not everything we want to pull out is a tag name. We
