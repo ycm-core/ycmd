@@ -25,7 +25,7 @@ from builtins import *  # noqa
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest import assert_that, has_item, contains, equal_to, is_not  # noqa
 from mock import patch
-import sys
+from distutils.spawn import find_executable
 
 from ycmd import utils
 from ycmd.completers.python.jedi_completer import BINARY_NOT_FOUND_MESSAGE
@@ -80,7 +80,8 @@ def was_called_with_python( python ):
 @patch( 'ycmd.utils.SafePopen' )
 def UserDefinedPython_WithoutAnyOption_DefaultToYcmdPython_test( app, *args ):
   app.get( '/ready', { 'subserver': 'python' } )
-  assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
+  assert_that( utils.SafePopen,
+               was_called_with_python( find_executable('python') ) )
 
 
 @IsolatedYcmd
@@ -117,7 +118,8 @@ def UserDefinedPython_RestartServerWithoutArguments_WillReuseTheLastPython_test(
   request = BuildRequest( filetype = 'python',
                           command_arguments = [ 'RestartServer' ] )
   app.post_json( '/run_completer_command', request )
-  assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
+  assert_that( utils.SafePopen,
+               was_called_with_python( find_executable('python') ) )
 
 
 @IsolatedYcmd
@@ -146,4 +148,5 @@ def UserDefinedPython_RestartServerWithNonExistingPythonArgument_test( app,
 
   msg = BINARY_NOT_FOUND_MESSAGE.format( python )
   assert_that( response, ErrorMatcher( RuntimeError, msg ) )
-  assert_that( utils.SafePopen, was_called_with_python( sys.executable ) )
+  assert_that( utils.SafePopen,
+               was_called_with_python( find_executable('python') ) )
