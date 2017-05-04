@@ -496,16 +496,17 @@ def SplitLines_test():
     ( ' \n', [ ' ', '' ] ),
     ( ' \n ', [ ' ', ' ' ] ),
     ( 'test\n', [ 'test', '' ] ),
-    ( '\r', [ '', '' ] ),
-    ( '\r ', [ '', ' ' ] ),
-    ( 'test\r', [ 'test', '' ] ),
-    ( '\n\r', [ '', '', '' ] ),
-    ( '\r\n', [ '', '' ] ),
-    ( '\r\n\n', [ '', '', '' ] ),
-    # Other behaviors are just the behavior of splitlines, so just a couple of
-    # tests to prove that we don't mangle it.
+    # Ignore \r on purpose.
+    ( '\r', [ '\r' ] ),
+    ( '\r ', [ '\r ' ] ),
+    ( 'test\r', [ 'test\r' ] ),
+    ( '\n\r', [ '', '\r' ] ),
+    ( '\r\n', [ '\r', '' ] ),
+    ( '\r\n\n', [ '\r', '', '' ] ),
     ( 'test\ntesting', [ 'test', 'testing' ] ),
     ( '\ntesting', [ '', 'testing' ] ),
+    # Do not split lines on \f and \v characters.
+    ( '\f\n\v', [ '\f', '\v' ] )
   ]
 
   for test in tests:
