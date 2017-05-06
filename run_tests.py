@@ -83,6 +83,11 @@ COMPLETERS = {
     'test': [ '--exclude-dir=ycmd/tests/python' ],
     'aliases': [ 'jedi', 'jedihttp', ]
   },
+  'swift': {
+    'build': [ '--swift-completer' ],
+    'test': [ '--exclude-dir=ycmd/tests/swift' ],
+    'aliases': ['swift' ]
+  },
 }
 
 
