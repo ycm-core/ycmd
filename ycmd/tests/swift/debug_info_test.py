@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Stephen Sugden <me@stephensugden.com>
+# Copyright (C) 2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,8 +22,28 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.completers.swift.swift_completer import SwiftCompleter
+from hamcrest import assert_that, contains, has_entry, has_entries, instance_of
+
+from ycmd.tests.swift import SharedYcmd
+from ycmd.tests.test_utils import BuildRequest
 
 
-def GetCompleter( user_options ):
-  return SwiftCompleter( user_options )
+@SharedYcmd
+def DebugInfo_test( app ):
+  request_data = BuildRequest( filetype = 'swift' )
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entry( 'completer', has_entries( {
+      'name': 'Swift',
+      'servers': contains( has_entries( {
+        'name': 'SwiftySwiftVim',
+        'is_running': instance_of( bool ),
+        'executable': instance_of( str ),
+        'pid': instance_of( int ),
+        'address': instance_of( str ),
+        'port': instance_of( int ),
+        'logfiles': contains( instance_of( str ),
+                              instance_of( str ) )
+      } ) )
+    } ) )
+  )

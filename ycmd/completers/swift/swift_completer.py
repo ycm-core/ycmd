@@ -33,7 +33,6 @@ from future.utils import native
 import json
 import logging
 import requests
-import threading
 import os
 
 
@@ -43,6 +42,7 @@ LOGFILE_FORMAT = 'http_{port}_{std}_'
 PATH_TO_SSVIMHTTP = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
                 'third_party', 'swiftyswiftvim', 'build', 'http_server' ) )
+
 
 class SwiftCompleter( Completer ):
   '''
@@ -59,11 +59,11 @@ class SwiftCompleter( Completer ):
     self._logfile_stderr = None
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._hmac_secret = ''
-    self._message = 'SSVIM'
     self._StartServer()
 
   def SupportedFiletypes( self ):
     return [ 'swift' ]
+
 
   def Shutdown( self ):
     self._StopServer()
@@ -73,26 +73,26 @@ class SwiftCompleter( Completer ):
     '''
     Check if the server is alive AND ready to serve requests.
     '''
+    self._logger.info( 'Got SSVIM Healthy Request' )
     if not self._ServerIsRunning():
-      self._logger.debug( 'JediHTTP not running.' )
-      return False
+      self._logger.info( 'SSVIM not running.' )
       try:
-        self._logger.error( 'Check Ready' )
-        value = bool( self._GetResponse( '/status' ) )
-        self._logger.error( 'ISReady:', value )
+        return bool( self._GetResponse( '/status' ) )
       except requests.exceptions.ConnectionError as e:
         self._logger.error( 'Failed Ready' )
         self._logger.exception( e )
-    return False
-
+        return False
+    return True
 
   def _ServerIsRunning( self ):
     '''
     Check if the server is alive. That doesn't necessarily mean it's ready to
     serve requests; that's checked by ServerIsHealthy.
     '''
-    return ( bool( self._http_port ) and
+    status = ( bool( self._http_port ) and
                ProcessIsRunning( self._http_phandle ) )
+    self._logger.debug( 'Healthy Status ' + str(status) )
+    return status
 
 
   def RestartServer( self, binary = None ):
@@ -130,7 +130,7 @@ class SwiftCompleter( Completer ):
     self._logger.info( 'Starting SSVIM server' )
     self._http_port = utils.GetUnusedLocalhostPort()
     self._http_host = ToBytes( 'http://0.0.0.0:{0}'.format(
-    self._http_port ) )
+      self._http_port ) )
     self._logger.info( 'using port {0}'.format( self._http_port ) )
     self._hmac_secret = self._GenerateHmacSecret()
 
@@ -155,6 +155,7 @@ class SwiftCompleter( Completer ):
                                                   stdout = logout,
                                                   stderr = logerr )
 
+    self._logger.info( 'Started SSVIM server' )
 
   def _GenerateHmacSecret( self ):
     return os.urandom( HMAC_SECRET_LENGTH )
@@ -165,6 +166,7 @@ class SwiftCompleter( Completer ):
     # predefined levels above (DEBUG, INFO, WARNING, etc.).
     log_level = max( self._logger.getEffectiveLevel(), logging.DEBUG )
     return logging.getLevelName( log_level ).lower()
+
 
   def _DebugDumpRequest(self, request_data):
     # This is debugging utility to extract all of
@@ -185,7 +187,7 @@ class SwiftCompleter( Completer ):
     extra_headers = self._ExtraHeaders( handler, body )
     extra_headers = []
 
-    self._logger.error( 'Making SSVIM request: %s %s %s %s', 'POST', url,
+    self._logger.debug( 'Making SSVIM request: %s %s %s %s', 'POST', url,
                         extra_headers, body )
 
     response = requests.request( native( bytes( b'POST' ) ),
@@ -196,7 +198,7 @@ class SwiftCompleter( Completer ):
     # use the headers to infer json
     response.raise_for_status()
     value = response.json()
-    self._logger.error( 'Got SSVIM response: %s %s %s %s', 'POST', url,
+    self._logger.debug( 'Got SSVIM response: %s %s %s %s', 'POST', url,
                         value, value.keys())
     return value
 
@@ -228,7 +230,8 @@ class SwiftCompleter( Completer ):
     flags = []
     flags.append( '-sdk' )
     flags.append(
-        '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' )
+          '/Applications/Xcode.app/Contents/Developer/Platforms'
+        + '/MacOSX.platform/Developer/SDKs/MacOSX.sdk' )
     flags.append( '-target' )
     flags.append( 'x86_64-apple-macosx10.12' )
 
@@ -239,6 +242,7 @@ class SwiftCompleter( Completer ):
       'file_name': path,
       'flags': flags
     }
+
 
   def _GetExtraData( self, completion ):
       location = {}
@@ -256,8 +260,10 @@ class SwiftCompleter( Completer ):
       else:
         return None
 
+
   def ShouldUseNowInner( self, request_data ):
     return True
+
 
   def ComputeCandidatesInner( self, request_data ):
     return [ responses.BuildCompletionData(
@@ -267,48 +273,45 @@ class SwiftCompleter( Completer ):
                 extra_data = self._GetExtraData( completion ) )
              for completion in self._FetchCompletions( request_data ) ]
 
+
   def CompletionType( self, request_data ):
-    # Classify query types 
-    # Type 1 is the initial completion type. 
+    query = request_data[ 'query' ]
+
+    # If there is no query classify based on the line value
+    if len( query ) == 0:
+        return hash( request_data[ 'line_value' ] )
+
+    # Classify query types
+    # Type 1 is the initial completion type.
     # For many completions, this represents available operators
     initial_completion_type = 1
-    if len(request_data[ 'query' ]) == 1: 
-        return initial_completion_type
+    if len( query ) == 1:
+        return request_data[ 'start_column' ] + initial_completion_type
 
     # When the query's length is larger than 1, completions are static for that
-    # character value. 
+    # character value for a given start_column
     # Offset character types to avoid collision with other types
-    char_val = ord(request_data[ 'line_value' ][0])
-    return char_val + 1000
+    char_val = ord( query[0] )
+    return request_data[ 'start_column' ] + char_val + 1000
+
 
   def _FetchCompletions( self, request_data ):
     logging.debug( 'Request SSVIM Completions' )
     response = self._GetResponse( '/completions',
-                              request_data )
-    
+                                    request_data )
     # Build a completion Document with the completion portion of the response
-    # TODO: we will likely want to insert more data into responses.
-    # The API should likely package completions as a nested key
-    # instead of the root object
     completion_doc = SwiftCompletionDocument( response, request_data )
     return completion_doc.completions()
 
+
   def GetSubcommandsMap( self ):
     return {
-      'GetDiagnostics' : ( lambda self, request_data, args:
-                           self._GetDiagnostics( request_data ) ),
       'StopServer'     : ( lambda self, request_data, args:
                            self.Shutdown() ),
       'RestartServer'  : ( lambda self, request_data, args:
                            self.RestartServer( *args ) )
     }
 
-  def _GetDiagnostics( self, request_data ):
-    logging.error( '_GetDiagnostics', request_data[ 'filepath' ])
-
-  def _BuildDetailedInfoResponse( self, definition_list ):
-    docs = [ definition[ 'docstring' ] for definition in definition_list ]
-    return responses.BuildDetailedInfoResponse( '\n---\n'.join( docs ) )
 
   def DebugInfo( self, request_data ):
     http_server = responses.DebugInfoServer(
@@ -322,32 +325,13 @@ class SwiftCompleter( Completer ):
     return responses.BuildDebugInfoResponse(
         name = 'Swift',
         servers = [ http_server ],
-        )
+    )
 
 
 class SwiftCompletion():
   '''
-  {
-    'key.kind': 'source.lang.swift.decl.function.method.instance',
-    'key.name': '`self`() -> Self',
-    'key.sourcetext': '`self`() -> Self {\n<#code#>\n}',
-    'key.description': '`self`() -> Self',
-    'key.typename': '',
-    'key.context': 'source.codecompletion.context.superclass',
-    'key.num_bytes_to_erase': 0,
-    'key.substructure': {
-    'key.nameoffset': 0,
-    'key.namelength': 16
-    },
-    'key.associated_usrs': 'c:objc(pl)NSObject(im)self',
-    'key.modulename': 'ObjectiveC.NSObject'
-  }
+  Represent a Swift Completion
   '''
-
-  def docstring(self):
-    if self.docbrief:
-      return self.description + '\n' + self.docbrief
-    return self.description + '\n' + self.context
 
   def __init__(self, json_value, request_data):
     self.module_path = ''
@@ -361,19 +345,25 @@ class SwiftCompletion():
     self.context = json_value.get( 'key.context' )
     self.docbrief = json_value.get( 'key.doc.brief' )
 
+
+  def docstring(self):
+    if self.docbrief:
+      return self.description + '\n' + self.docbrief
+    return self.description + '\n' + self.context
+
+
 class SwiftCompletionDocument():
-  def completions(self):
-    completions = []
-    for json_completion in self.json[ 'key.results' ]:
-      completion = SwiftCompletion( json_completion, self.request_data )
-      completions.append( completion )
-    return completions
-
-  def usages():
-    return self.json_string
-
   def __init__(self, value, request_data):
     self.json = value
     self.request_data = request_data
 
 
+  def completions(self):
+    # TODO: we will likely want to insert more data into responses.
+    # The API should likely package completions as a nested key
+    # instead of the root object
+    completions = []
+    for json_completion in self.json[ 'key.results' ]:
+      completion = SwiftCompletion( json_completion, self.request_data )
+      completions.append( completion )
+    return completions
