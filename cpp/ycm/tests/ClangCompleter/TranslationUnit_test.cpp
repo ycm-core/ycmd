@@ -15,7 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "TranslationUnit.h"
+#include "TranslationUnitStore.h"
+#include "CompletionData.h"
 #include "exceptions.h"
 #include "Utils.h"
 #include <gtest/gtest.h>
@@ -132,6 +133,57 @@ TEST_F( TranslationUnitTest, GoToDeclarationWorksOnDefinition ) {
   EXPECT_EQ( 14, location.line_number_ );
   EXPECT_EQ( 6, location.column_number_ );
   EXPECT_TRUE( !location.filename_.empty() );
+}
+
+
+TEST_F( TranslationUnitTest, InvalidTranslationUnitStore ) {
+  std::string filename( "invalid_file_name" );
+  std::vector< UnsavedFile > unsaved_files;
+  std::vector< std::string > flags;
+
+  TranslationUnitStore translation_unit_store{ clang_index_ };
+  std::shared_ptr< TranslationUnit > unit = translation_unit_store
+                                             .GetOrCreate( filename,
+                                                           unsaved_files,
+                                                           flags );
+
+  EXPECT_EQ( std::shared_ptr< TranslationUnit >(), unit );
+}
+
+
+TEST_F( TranslationUnitTest, InvalidTranslationUnit ) {
+
+  TranslationUnit unit;
+
+  EXPECT_TRUE( unit.IsCurrentlyUpdating() );
+
+  EXPECT_EQ( std::vector< CompletionData >(),
+             unit.CandidatesForLocation( 1, 1, std::vector< UnsavedFile >() ) );
+
+  EXPECT_EQ( Location(),
+             unit.GetDeclarationLocation( 1,
+                                          1,
+                                          std::vector< UnsavedFile >() ) );
+
+  EXPECT_EQ( Location(),
+             unit.GetDefinitionLocation( 1,
+                                         1,
+                                         std::vector< UnsavedFile >() ) );
+
+  EXPECT_EQ( std::string( "Internal error: no translation unit" ),
+             unit.GetTypeAtLocation( 1, 1, std::vector< UnsavedFile >() ) );
+
+  EXPECT_EQ( std::string( "Internal error: no translation unit" ),
+             unit.GetEnclosingFunctionAtLocation( 1,
+                                                  1,
+                                                  std::vector< UnsavedFile >()
+                                                ) );
+
+  EXPECT_EQ( DocumentationData(),
+             unit.GetDocsForLocationInFile( 1,
+                                            1,
+                                            std::vector< UnsavedFile >(), false
+                                          ) );
 }
 
 } // namespace YouCompleteMe

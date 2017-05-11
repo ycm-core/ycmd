@@ -1,3 +1,13 @@
+class Bar {
+public:
+  int x;
+  int y;
+  char c;
+
+  void barbar() {
+    x = 5;
+  }
+};
 struct Foo {
   int x; //!< A docstring.
   int y;
@@ -7,10 +17,13 @@ struct Foo {
     return 5;
   }
 };
-
+typedef enum { VALUE_1, VALUE_2 } enum_test;
 int main()
 {
   Foo foo;
-  // The location after the dot is line 15, col 7
-  foo.
+  Bar bar;
+  // The location after the dots are lines 26 and 27, column 3
+  bar.barbar();
+  foo.x = 3;
+  enum_test enumerate = VALUE_1;
 }
