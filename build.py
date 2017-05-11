@@ -422,7 +422,7 @@ def BuildGoCode():
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
   CheckCall( [ 'go', 'build' ] )
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
-  CheckCall( [ 'go', 'build' ] )
+  CheckCall( [ 'go', 'build', 'godef.go' ] )
 
 
 def BuildRacerd():
