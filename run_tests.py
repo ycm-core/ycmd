@@ -159,6 +159,10 @@ def FixupCompleters( parsed_args ):
     else:
       completers.add( 'cfamily' )
 
+  # Currently, swift is tested on OSX with the Xcode SourceKit
+  if sys.platform != 'darwin':
+    completers.remove( 'swift' )
+
   return list( completers )
 
 

@@ -23,7 +23,11 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from ycmd.completers.swift.swift_completer import SwiftCompleter
+from ycmd.completers.swift.swift_completer import ShouldEnableSwiftCompleter
 
 
 def GetCompleter( user_options ):
-  return SwiftCompleter( user_options )
+  if ShouldEnableSwiftCompleter():
+    return SwiftCompleter( user_options )
+  return None
+

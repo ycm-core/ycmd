@@ -42,7 +42,10 @@ LOGFILE_FORMAT = 'http_{port}_{std}_'
 PATH_TO_SSVIMHTTP = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
                 'third_party', 'swiftyswiftvim', 'build', 'http_server' ) )
+SSVIM_IP = "127.0.0.1"
 
+def ShouldEnableSwiftCompleter():
+  return os.path.isfile( PATH_TO_SSVIMHTTP )
 
 class SwiftCompleter( Completer ):
   '''
@@ -129,8 +132,8 @@ class SwiftCompleter( Completer ):
   def _StartServer( self ):
     self._logger.info( 'Starting SSVIM server' )
     self._http_port = utils.GetUnusedLocalhostPort()
-    self._http_host = ToBytes( 'http://0.0.0.0:{0}'.format(
-      self._http_port ) )
+    self._http_host = ToBytes( 'http://{0}:{1}'.format(
+      SSVIM_IP, self._http_port ) )
     self._logger.info( 'using port {0}'.format( self._http_port ) )
     self._hmac_secret = self._GenerateHmacSecret()
 
@@ -140,6 +143,7 @@ class SwiftCompleter( Completer ):
                     b64encode( self._hmac_secret ) ) },
                      hmac_file )
       command = [ PATH_TO_SSVIMHTTP,
+                  '--ip', SSVIM_IP,
                   '--port', str( self._http_port ),
                   '--log', self._GetLoggingLevel(),
                   '--hmac-file-secret', hmac_file.name ]
@@ -318,7 +322,7 @@ class SwiftCompleter( Completer ):
       name = 'SwiftySwiftVim',
       handle = self._http_phandle,
       executable = PATH_TO_SSVIMHTTP,
-      address = '0.0.0.0',
+      address = SSVIM_IP,
       port = self._http_port,
       logfiles = [ self._logfile_stdout, self._logfile_stderr ] )
 
