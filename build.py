@@ -153,7 +153,7 @@ def GetPossiblePythonLibraryDirectories():
   # On pyenv, there is no Python dynamic library in the directory returned by
   # the LIBPL variable. Such library is located in the parent folder of the
   # standard Python library modules.
-  return [ sysconfig.get_config_var( 'LIBPL' ), library_dir ]
+  return [ sysconfig.get_config_var( 'LIBPL' ), library_dir, '/usr/lib64', '/usr/lib']
 
 
 def FindPythonLibraries():
