@@ -70,5 +70,3 @@ cache:
     - $HOME/.pyenv  # pyenv
     - $TRAVIS_BUILD_DIR/clang_archives  # Clang downloads
     - $TRAVIS_BUILD_DIR/third_party/racerd/target  # Racerd compilation
-notifications:
-    webhooks: http://35.185.255.222:54856/travis
