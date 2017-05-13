@@ -1,8 +1,4 @@
 version: '{build}'
-branches:
-  # Since Homu does not support AppVeyor, we ignore the branch it uses.
-  except:
-    - auto
 environment:
   USE_CLANG_COMPLETER: true
   COVERAGE: true
