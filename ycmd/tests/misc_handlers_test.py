@@ -173,3 +173,17 @@ def MiscHandlers_DebugInfo_ExtraConfFoundButNotLoaded_test( app ):
       'completer': None
     } )
   )
+
+
+@SharedYcmd
+def MiscHandlers_Ready_WithFiletypeCompleter_test( app ):
+  with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+    assert_that( app.get( '/ready', { 'subserver': "dummy_filetype" } ).json,
+                 equal_to( True ) )
+
+
+@SharedYcmd
+def MiscHandlers_Ready_NoFiletypeCompleter_test( app ):
+  with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+    assert_that( app.get( '/ready', { 'subserver': "another_filetype" } ).json,
+                 equal_to( True ) )
