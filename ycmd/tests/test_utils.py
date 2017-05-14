@@ -209,20 +209,17 @@ def StopCompleterServer( app, filetype, filepath = '/foo' ):
                  expect_errors = True )
 
 
-def WaitUntilCompleterServerReady( app, filetype ):
-  retries = 100
+def WaitUntilCompleterServerReady( app, filetype, timeout = 30 ):
+  expiration = time.time() + timeout
+  while True:
+    if time.time() > expiration:
+      raise RuntimeError( 'Waited for the {0} subserver to be ready for '
+                          '{1} seconds, aborting.'.format( filetype, timeout ) )
 
-  while retries > 0:
-    result = app.get( '/ready', { 'subserver': filetype } ).json
-    if result:
+    if app.get( '/ready', { 'subserver': filetype } ).json:
       return
 
-    time.sleep( 0.2 )
-    retries = retries - 1
-
-  raise RuntimeError(
-    'Timeout waiting for "{0}" filetype completer'.format( filetype ) )
-
+    time.sleep( 0.1 )
 
 
 def ClearCompletionsCache():

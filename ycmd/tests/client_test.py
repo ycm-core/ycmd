@@ -130,7 +130,7 @@ class Client_test( object ):
     return response.json()
 
 
-  def _WaitUntilReady( self, filetype = None, timeout = 20 ):
+  def _WaitUntilReady( self, filetype = None, timeout = 30 ):
     expiration = time.time() + timeout
     while True:
       try:
