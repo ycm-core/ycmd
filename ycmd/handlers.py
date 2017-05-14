@@ -159,8 +159,11 @@ def GetReady():
 
 
 def _IsSubserverReady( filetype ):
-  completer = _server_state.GetFiletypeCompleter( [filetype] )
-  return completer.ServerIsReady()
+  if _server_state.FiletypeCompletionAvailable( [ filetype ] ):
+    completer = _server_state.GetFiletypeCompleter( [ filetype ] )
+    return completer.ServerIsReady()
+  else:
+    return True
 
 
 @app.post( '/semantic_completion_available' )
