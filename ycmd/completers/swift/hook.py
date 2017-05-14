@@ -30,4 +30,3 @@ def GetCompleter( user_options ):
   if ShouldEnableSwiftCompleter():
     return SwiftCompleter( user_options )
   return None
-

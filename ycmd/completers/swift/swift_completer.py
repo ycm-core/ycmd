@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2012 Jerry Marino <i@jerrymarino.com>
+# Copyright (C) 2017 Jerry Marino <i@jerrymarino.com>
 #               2017      ycmd contributors
 #
 # This file is part of ycmd.
@@ -26,6 +26,8 @@ from builtins import *  # noqa
 from ycmd.utils import ToBytes, ToUnicode, ProcessIsRunning, urljoin
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
+from ycmd.completers.swift.swift_flags import Flags
+
 from tempfile import NamedTemporaryFile
 
 from base64 import b64encode
@@ -44,8 +46,10 @@ PATH_TO_SSVIMHTTP = os.path.abspath(
                 'third_party', 'swiftyswiftvim', 'build', 'http_server' ) )
 SSVIM_IP = "127.0.0.1"
 
+
 def ShouldEnableSwiftCompleter():
   return os.path.isfile( PATH_TO_SSVIMHTTP )
+
 
 class SwiftCompleter( Completer ):
   '''
@@ -62,6 +66,7 @@ class SwiftCompleter( Completer ):
     self._logfile_stderr = None
     self._keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._hmac_secret = ''
+    self._flags = Flags()
     self._StartServer()
 
   def SupportedFiletypes( self ):
@@ -191,6 +196,7 @@ class SwiftCompleter( Completer ):
     extra_headers = self._ExtraHeaders( handler, body )
     extra_headers = []
 
+
     self._logger.debug( 'Making SSVIM request: %s %s %s %s', 'POST', url,
                         extra_headers, body )
 
@@ -228,16 +234,7 @@ class SwiftCompleter( Completer ):
     # The server expects columns to start at 0, not 1, and for
     # them to be unicode codepoint offsets.
     col = request_data[ 'start_codepoint' ] - 1
-
-    # Bundle default flags for the latest OSX sdk.
-    # TODO: Support this at the client level
-    flags = []
-    flags.append( '-sdk' )
-    flags.append(
-          '/Applications/Xcode.app/Contents/Developer/Platforms'
-        + '/MacOSX.platform/Developer/SDKs/MacOSX.sdk' )
-    flags.append( '-target' )
-    flags.append( 'x86_64-apple-macosx10.12' )
+    flags = self._FlagsForRequest( request_data )
 
     return {
       'contents': source,
@@ -298,6 +295,9 @@ class SwiftCompleter( Completer ):
     char_val = ord( query[0] )
     return request_data[ 'start_column' ] + char_val + 1000
 
+  def _FlagsForRequest( self, request_data ):
+    filename = request_data[ 'filepath' ]
+    return self._flags.FlagsForFile( filename )
 
   def _FetchCompletions( self, request_data ):
     logging.debug( 'Request SSVIM Completions' )
