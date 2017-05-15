@@ -17,4 +17,5 @@ be in the root directory of the examples. This template was generated from a
 build of these files under xcodebuild, with the following manual changes:
 
 - replace the source root with __SRCROOT__
-- remove 10.3 version requirement to run on older Xcodes
+- remove 10.3 version requirement
+- strip out flags that pass missing build artifacts
