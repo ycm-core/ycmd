@@ -177,6 +177,9 @@ class SwiftCompleter( Completer ):
     return logging.getLevelName( log_level ).lower()
 
 
+# codecov skip start
+
+
   def _DebugDumpRequest(self, request_data):
     # This is debugging utility to extract all of
     # the fields from request data
@@ -185,6 +188,9 @@ class SwiftCompleter( Completer ):
       out[key] = request_data.get(key)
     self._logger.debug( 'SSVIM request: %s', out )
     return out
+
+
+# codecov skip end
 
 
   def _GetResponse( self, handler, request_data = {} ):

@@ -12,11 +12,11 @@ class MySwift : NSObject {
     func sayHello(toPerson: String, otherPerson: String?){
         print("hello \(toPerson), and \(otherPerson)");
     }
-    func someOtherFunc(){
+    func someOtherMethod(){
     }
 
-    func anotherFunction(){
-         self.someOtherFunc()
+    func anotherMethod(){
+         self.someOtherMethod()
     }
 }
 

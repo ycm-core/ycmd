@@ -24,6 +24,7 @@ from builtins import *  # noqa
 
 import functools
 import os
+import sys
 
 from ycmd import handlers
 from ycmd.tests.test_utils import ( ClearCompletionsCache, SetUpApp,
@@ -57,6 +58,26 @@ def tearDownPackage():
   StopCompleterServer( shared_app, 'swift' )
 
 
+def WriteBasicExampleCompilationDatabase():
+  """ Write a basic compilation database to a file we need absolute paths in the
+  comp DB."""
+  template_path = PathToTestFile( 'iOS/Basic/',
+    'compile_commands.json.template' )
+  basic_src_root = os.path.dirname( template_path )
+  with open( template_path ) as template:
+    subbed_db_content = template.read().replace( '__SRCROOT__', basic_src_root )
+    with open( basic_src_root + '/compile_commands.json', 'w' ) as absolute_db:
+      absolute_db.write( subbed_db_content )
+
+
+def BasicTest( test ):
+  @functools.wraps( test )
+  def Wrapper( *args, **kwargs ):
+    WriteBasicExampleCompilationDatabase()
+    return test( *args, **kwargs )
+  return Wrapper
+
+
 def SharedYcmd( test ):
   """Defines a decorator to be attached to tests of this package. This decorator
   passes the shared ycmd application as a parameter.
@@ -66,9 +87,18 @@ def SharedYcmd( test ):
 
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
+    WriteBasicExampleCompilationDatabase()
     ClearCompletionsCache()
     return test( shared_app, *args, **kwargs )
   return Wrapper
+
+
+def OSXOnlySharedYcmd( test ):
+  """ A subset of tests can only run on OSX. For example, ones that depend on
+  completions using an Apple SDK"""
+  if sys.platform == 'darwin':
+    return SharedYcmd( test )
+  return None
 
 
 def IsolatedYcmd( custom_options = {} ):
