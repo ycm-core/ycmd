@@ -32,6 +32,30 @@ from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
 @SharedYcmd
+def MiscHandlers_Healthy_test( app ):
+  assert_that( app.get( '/healthy' ).json, equal_to( True ) )
+
+
+@SharedYcmd
+def MiscHandlers_Healthy_Subserver_test( app ):
+  with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+    assert_that( app.get( '/healthy', { 'subserver': 'dummy_filetype' } ).json,
+                 equal_to( True ) )
+
+
+@SharedYcmd
+def MiscHandlers_Ready_test( app ):
+  assert_that( app.get( '/ready' ).json, equal_to( True ) )
+
+
+@SharedYcmd
+def MiscHandlers_Ready_Subserver_test( app ):
+  with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+    assert_that( app.get( '/ready', { 'subserver': 'dummy_filetype' } ).json,
+                 equal_to( True ) )
+
+
+@SharedYcmd
 def MiscHandlers_SemanticCompletionAvailable_test( app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
