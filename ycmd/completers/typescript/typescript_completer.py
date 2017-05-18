@@ -392,7 +392,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def SupportedFiletypes( self ):
-    return [ 'typescript' ]
+    return [ 'typescript', 'javascript' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -402,6 +402,19 @@ class TypeScriptCompleter( Completer ):
       'line':   request_data[ 'line_num' ],
       'offset': request_data[ 'start_codepoint' ]
     } )
+
+    # Figure out the filetype because JavaScript and TypeScript need slightly
+    # different behavior
+    try:
+      filetype = request_data[ 'filetypes' ][ 0 ]
+    except KeyError:
+      filetype = None
+
+    if filetype == 'javascript':
+      # When tsserver is used with JavaScript files, it will also return any
+      # identifiers found in the file. Filter those out since there is already
+      # identifier completion.
+      entries = list(filter(lambda e: e[ 'kind' ] != 'warning', entries))
 
     # A less detailed version of the completion data is returned
     # if there are too many entries. This improves responsiveness.

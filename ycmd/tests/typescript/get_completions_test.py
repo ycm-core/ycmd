@@ -35,18 +35,20 @@ from ycmd.utils import ReadFile
 
 
 def RunTest( app, test ):
-  filepath = PathToTestFile( 'test.ts' )
+  testfile = test.get( 'testfile', 'test.ts' )
+  filetype = test.get( 'filetype', 'typescript' )
+  filepath = PathToTestFile( testfile )
   contents = ReadFile( filepath )
 
   event_data = BuildRequest( filepath = filepath,
-                             filetype = 'typescript',
+                             filetype = filetype,
                              contents = contents,
                              event_name = 'BufferVisit' )
 
   app.post_json( '/event_notification', event_data )
 
   completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'typescript',
+                                  filetype = filetype,
                                   contents = contents,
                                   force_semantic = True,
                                   line_num = 17,
@@ -169,3 +171,23 @@ def GetCompletions_ServerIsNotRunning_test( app ):
   assert_that(
     calling( app.post_json ).with_args( '/completions', completion_data ),
     raises( AppError, 'TSServer is not running.' ) )
+
+
+@SharedYcmd
+def GetJavaScriptCompletions_Basic_test( app ):
+  RunTest( app, {
+    'testfile': 'test.js',
+    'filetype': 'javascript',
+    'expect': {
+      'data': has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'methodA', extra_params = {
+            'menu_text': 'methodA (method) Foo.methodA(): void' } ),
+          CompletionEntryMatcher( 'methodB', extra_params = {
+            'menu_text': 'methodB (method) Foo.methodB(): void' } ),
+          CompletionEntryMatcher( 'methodC', extra_params = {
+            'menu_text': ( 'methodC (method) Foo.methodC(a: any): void' ) } ),
+        )
+      } )
+    }
+  } )
