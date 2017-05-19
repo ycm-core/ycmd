@@ -69,6 +69,7 @@ class SwiftCompleter( Completer ):
     self._flags = Flags()
     self._StartServer()
 
+
   def SupportedFiletypes( self ):
     return [ 'swift' ]
 
@@ -92,6 +93,7 @@ class SwiftCompleter( Completer ):
         return False
     return True
 
+
   def _ServerIsRunning( self ):
     '''
     Check if the server is alive. That doesn't necessarily mean it's ready to
@@ -99,7 +101,7 @@ class SwiftCompleter( Completer ):
     '''
     status = ( bool( self._http_port ) and
                ProcessIsRunning( self._http_phandle ) )
-    self._logger.debug( 'Healthy Status ' + str(status) )
+    self._logger.debug( 'Healthy Status ' + str( status ) )
     return status
 
 
@@ -161,8 +163,8 @@ class SwiftCompleter( Completer ):
       with utils.OpenForStdHandle( self._logfile_stdout ) as logout:
         with utils.OpenForStdHandle( self._logfile_stderr ) as logerr:
           self._http_phandle = utils.SafePopen( command,
-                                                  stdout = logout,
-                                                  stderr = logerr )
+                                                stdout = logout,
+                                                stderr = logerr )
 
     self._logger.info( 'Started SSVIM server' )
 
@@ -171,26 +173,10 @@ class SwiftCompleter( Completer ):
 
 
   def _GetLoggingLevel( self ):
-    # Tests are run with the NOTSET logging level but JediHTTP only accepts the
-    # predefined levels above (DEBUG, INFO, WARNING, etc.).
+    # Tests are run with the NOTSET logging level and the server accepts the
+    # predefined levels (DEBUG, INFO, WARNING, etc.).
     log_level = max( self._logger.getEffectiveLevel(), logging.DEBUG )
     return logging.getLevelName( log_level ).lower()
-
-
-# codecov skip start
-
-
-  def _DebugDumpRequest(self, request_data):
-    # This is debugging utility to extract all of
-    # the fields from request data
-    out = {}
-    for key in request_data._computed_key:
-      out[key] = request_data.get(key)
-    self._logger.debug( 'SSVIM request: %s', out )
-    return out
-
-
-# codecov skip end
 
 
   def _GetResponse( self, handler, request_data = {} ):
@@ -200,8 +186,6 @@ class SwiftCompleter( Completer ):
     parameters = self._PrepareRequestBody( request_data )
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
     extra_headers = self._ExtraHeaders( handler, body )
-    extra_headers = []
-
 
     self._logger.debug( 'Making SSVIM request: %s %s %s %s', 'POST', url,
                         extra_headers, body )
@@ -210,8 +194,6 @@ class SwiftCompleter( Completer ):
                                  native( url ),
                                  data = body,
                                  headers = extra_headers )
-    # Assume the entire protocol operations on JSON
-    # use the headers to infer json
     response.raise_for_status()
     value = response.json()
     self._logger.debug( 'Got SSVIM response: %s %s %s %s', 'POST', url,
@@ -252,19 +234,19 @@ class SwiftCompleter( Completer ):
 
 
   def _GetExtraData( self, completion ):
-      location = {}
-      if completion.module_path:
-        location.filepath = completion.module_path
-      if completion.line:
-        location.line_num = completion.line
-      if completion.column:
-        location.column_num = completion.column + 1
+    location = {}
+    if completion.module_path:
+      location.filepath = completion.module_path
+    if completion.line:
+      location.line_num = completion.line
+    if completion.column:
+      location.column_num = completion.column + 1
 
-      if location:
-        extra_data = {}
-        extra_data.location = location
-        return extra_data
-      else:
+    if location:
+      extra_data = {}
+      extra_data.location = location
+      return extra_data
+    else:
         return None
 
 
@@ -286,14 +268,14 @@ class SwiftCompleter( Completer ):
 
     # If there is no query classify based on the line value
     if len( query ) == 0:
-        return hash( request_data[ 'line_value' ] )
+      return hash( request_data[ 'line_value' ] )
 
     # Classify query types
     # Type 1 is the initial completion type.
     # For many completions, this represents available operators
     initial_completion_type = 1
     if len( query ) == 1:
-        return request_data[ 'start_column' ] + initial_completion_type
+      return request_data[ 'start_column' ] + initial_completion_type
 
     # When the query's length is larger than 1, completions are static for that
     # character value for a given start_column
@@ -343,7 +325,7 @@ class SwiftCompletion():
   Represent a Swift Completion
   '''
 
-  def __init__(self, json_value, request_data):
+  def __init__( self, json_value, request_data ):
     self.module_path = ''
     self.name = json_value.get( 'key.sourcetext' )
     self.description = json_value.get( 'key.description' )
@@ -356,19 +338,19 @@ class SwiftCompletion():
     self.docbrief = json_value.get( 'key.doc.brief' )
 
 
-  def docstring(self):
+  def docstring( self ):
     if self.docbrief:
       return self.description + '\n' + self.docbrief
     return self.description + '\n' + self.context
 
 
 class SwiftCompletionDocument():
-  def __init__(self, value, request_data):
+  def __init__( self, value, request_data ):
     self.json = value
     self.request_data = request_data
 
 
-  def completions(self):
+  def completions( self ):
     # TODO: we will likely want to insert more data into responses.
     # The API should likely package completions as a nested key
     # instead of the root object

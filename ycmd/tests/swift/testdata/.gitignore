@@ -1,1 +1,4 @@
+# Ignore generated test data: The compilation database needs absolute paths to
+# the files: there is a template compile_commands.json.template, which is
+# written to this file during test runs.
 ios/Basic/compile_commands.json
