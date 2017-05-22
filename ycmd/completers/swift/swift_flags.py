@@ -20,6 +20,7 @@ import json
 import shlex
 import os
 import threading
+import logging
 from ycmd.utils import PathsToAllParentFolders
 
 
@@ -31,9 +32,11 @@ class CompilationDatabase( object ):
   def Load( self, db_file_name ):
     with open( db_file_name ) as json_db:
       self._raw_value = json.load( json_db )
+      logging.debug("Loaded JSON Raw Value: " + str(self._raw_value))
     self._db_hash =  CompilationDatabaseHash( db_file_name )
 
   def _RawCommandForFile( self, compilable_file ):
+    logging.debug("Raw Command For File: " + compilable_file)
     for entry in self._raw_value:
       if entry[ 'file' ] == compilable_file:
         return entry[ 'command' ]
@@ -93,6 +96,7 @@ class Flags( object ):
       with self._db_lock:
         self._dbs_by_folder[ folder ] = db
         return db
+    logging.debug("No DB For File: " + path)
     return None
 
   def _RawCommandForFile( self, compilable_file ):
@@ -115,8 +119,10 @@ class Flags( object ):
     with self._flag_lock:
       cached_flags = self._flags_for_file.get( compilable_file )
       if cached_flags:
+        logging.debug("Cached Flags: " + str(cached_flags))
         return cached_flags
     command = self._RawCommandForFile( compilable_file )
+    logging.debug("Raw Command: " + str(command))
     # The system will work without any flags specified by the client
     if not command:
       return []

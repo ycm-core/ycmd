@@ -9,6 +9,9 @@
 import Foundation
 
 class MySwift : NSObject {
+    /// Say Hello
+    /// @param toPerson: the receiver
+    /// @param otherPerson: another receiver
     func sayHello(toPerson: String, otherPerson: String?){
         print("hello \(toPerson), and \(otherPerson)");
     }

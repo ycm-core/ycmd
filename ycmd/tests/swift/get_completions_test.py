@@ -38,7 +38,7 @@ def GetCompletions_Basic_test( app ):
                                   filetype = 'swift',
                                   contents = contents,
                                   force_semantic = True,
-                                  line_num = 19,
+                                  line_num = 22,
                                   column_num = 15 )
 
   results = app.post_json( '/completions',

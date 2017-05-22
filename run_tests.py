@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
+from ycmd.utils import OnMac
 
 import platform
 import os
@@ -86,7 +87,7 @@ COMPLETERS = {
   'swift': {
     'build': [ '--swift-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/swift' ],
-    'aliases': ['swift' ]
+    'aliases': [ 'swift' ]
   },
 }
 
@@ -160,7 +161,7 @@ def FixupCompleters( parsed_args ):
       completers.add( 'cfamily' )
 
   # Currently, swift is tested on OSX with the Xcode SourceKit
-  if sys.platform != 'darwin':
+  if not OnMac:
     completers.remove( 'swift' )
 
   return list( completers )

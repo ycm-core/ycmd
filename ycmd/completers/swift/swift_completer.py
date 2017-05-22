@@ -35,12 +35,13 @@ from future.utils import native
 import json
 import logging
 import requests
+import threading
 import os
 
 
 HMAC_SECRET_LENGTH = 16
 SSVIMHTTP_HMAC_HEADER = 'x-http-hmac'
-LOGFILE_FORMAT = 'http_{port}_{std}_'
+LOGFILE_FORMAT = 'swiftyswift_http_{port}_{std}_'
 PATH_TO_SSVIMHTTP = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
                 'third_party', 'swiftyswiftvim', 'build', 'http_server' ) )
@@ -59,6 +60,7 @@ class SwiftCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( SwiftCompleter, self ).__init__( user_options )
+    self._server_lock = threading.RLock()
     self._http_port = None
     self._http_phandle = None
     self._logger = logging.getLogger( __name__ )
@@ -99,10 +101,11 @@ class SwiftCompleter( Completer ):
     Check if the server is alive. That doesn't necessarily mean it's ready to
     serve requests; that's checked by ServerIsHealthy.
     '''
-    status = ( bool( self._http_port ) and
-               ProcessIsRunning( self._http_phandle ) )
-    self._logger.debug( 'Healthy Status ' + str( status ) )
-    return status
+    with self._server_lock:
+      status = ( bool( self._http_port ) and
+                 ProcessIsRunning( self._http_phandle ) )
+      self._logger.debug( 'Healthy Status ' + str( status ) )
+      return status
 
 
   def RestartServer( self, binary = None ):
@@ -112,18 +115,19 @@ class SwiftCompleter( Completer ):
 
 
   def _StopServer( self ):
-    if self._ServerIsRunning():
-      self._logger.info( 'Stopping SSVIM server with PID {0}'.format(
-                               self._http_phandle.pid ) )
-      self._GetResponse( '/shutdown' )
-      try:
-        utils.WaitUntilProcessIsTerminated( self._http_phandle,
-                                            timeout = 5 )
-        self._logger.info( 'SSVIM server stopped' )
-      except RuntimeError:
-        self._logger.exception( 'Error while stopping SSVIM server' )
+    with self._server_lock:
+      if self._ServerIsRunning():
+        self._logger.info( 'Stopping SSVIM server with PID {0}'.format(
+                                 self._http_phandle.pid ) )
+        self._GetResponse( '/shutdown' )
+        try:
+          utils.WaitUntilProcessIsTerminated( self._http_phandle,
+                                              timeout = 5 )
+          self._logger.info( 'SSVIM server stopped' )
+        except RuntimeError:
+          self._logger.exception( 'Error while stopping SSVIM server' )
 
-      self._CleanUp()
+        self._CleanUp()
 
 
   def _CleanUp( self ):
@@ -137,36 +141,38 @@ class SwiftCompleter( Completer ):
 
 
   def _StartServer( self ):
-    self._logger.info( 'Starting SSVIM server' )
-    self._http_port = utils.GetUnusedLocalhostPort()
-    self._http_host = ToBytes( 'http://{0}:{1}'.format(
-      SSVIM_IP, self._http_port ) )
-    self._logger.info( 'using port {0}'.format( self._http_port ) )
-    self._hmac_secret = self._GenerateHmacSecret()
+    with self._server_lock:
+      self._logger.info( 'Starting SSVIM server' )
+      self._http_port = utils.GetUnusedLocalhostPort()
+      self._http_host = ToBytes( 'http://{0}:{1}'.format(
+        SSVIM_IP, self._http_port ) )
+      self._logger.info( 'using port {0}'.format( self._http_port ) )
+      self._hmac_secret = self._GenerateHmacSecret()
 
-    # The server will delete the secret_file after it's done reading it
-    with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
-      json.dump( { 'hmac_secret': ToUnicode(
-                    b64encode( self._hmac_secret ) ) },
-                     hmac_file )
-      command = [ PATH_TO_SSVIMHTTP,
-                  '--ip', SSVIM_IP,
-                  '--port', str( self._http_port ),
-                  '--log', self._GetLoggingLevel(),
-                  '--hmac-file-secret', hmac_file.name ]
+      # The server will delete the secret_file after it's done reading it
+      with NamedTemporaryFile( delete = False, mode = 'w+' ) as hmac_file:
+        json.dump( { 'hmac_secret': ToUnicode(
+                      b64encode( self._hmac_secret ) ) },
+                       hmac_file )
+        command = [ PATH_TO_SSVIMHTTP,
+                    '--ip', SSVIM_IP,
+                    '--port', str( self._http_port ),
+                    '--log', self._GetLoggingLevel(),
+                    '--hmac-file-secret', hmac_file.name ]
 
-      self._logfile_stdout = utils.CreateLogfile(
-        LOGFILE_FORMAT.format( port = self._http_port, std = 'stdout' ) )
-      self._logfile_stderr = utils.CreateLogfile(
-        LOGFILE_FORMAT.format( port = self._http_port, std = 'stderr' ) )
+        self._logfile_stdout = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._http_port, std = 'stdout' ) )
+        self._logfile_stderr = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._http_port, std = 'stderr' ) )
 
-      with utils.OpenForStdHandle( self._logfile_stdout ) as logout:
-        with utils.OpenForStdHandle( self._logfile_stderr ) as logerr:
-          self._http_phandle = utils.SafePopen( command,
-                                                stdout = logout,
-                                                stderr = logerr )
+        with utils.OpenForStdHandle( self._logfile_stdout ) as logout:
+          with utils.OpenForStdHandle( self._logfile_stderr ) as logerr:
+            self._http_phandle = utils.SafePopen( command,
+                                                  stdout = logout,
+                                                  stderr = logerr )
 
-    self._logger.info( 'Started SSVIM server' )
+      self._logger.info( 'Started SSVIM server' )
+
 
   def _GenerateHmacSecret( self ):
     return os.urandom( HMAC_SECRET_LENGTH )
@@ -219,10 +225,10 @@ class SwiftCompleter( Completer ):
     path = request_data[ 'filepath' ]
     source = request_data[ 'file_data' ][ path ][ 'contents' ]
     line = request_data[ 'line_num' ]
-    # The server expects columns to start at 0, not 1, and for
-    # them to be unicode codepoint offsets.
-    col = request_data[ 'start_codepoint' ] - 1
-    flags = self._FlagsForRequest( request_data )
+    col = request_data[ 'start_codepoint' ]
+
+    filename = request_data[ 'filepath' ]
+    flags = self._flags.FlagsForFile( filename )
 
     return {
       'contents': source,
@@ -247,7 +253,7 @@ class SwiftCompleter( Completer ):
       extra_data.location = location
       return extra_data
     else:
-        return None
+      return None
 
 
   def ShouldUseNowInner( self, request_data ):
@@ -255,45 +261,16 @@ class SwiftCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
+    logging.debug( 'Request SSVIM Completions' )
+    response = self._GetResponse( '/completions', request_data )
+    # Build a completion Document with the completion portion of the response
+    completion_doc = SwiftCompletionDocument( response, request_data )
     return [ responses.BuildCompletionData(
                 completion.name,
                 completion.description,
-                completion.docstring(),
+                completion.docbrief,
                 extra_data = self._GetExtraData( completion ) )
-             for completion in self._FetchCompletions( request_data ) ]
-
-
-  def CompletionType( self, request_data ):
-    query = request_data[ 'query' ]
-
-    # If there is no query classify based on the line value
-    if len( query ) == 0:
-      return hash( request_data[ 'line_value' ] )
-
-    # Classify query types
-    # Type 1 is the initial completion type.
-    # For many completions, this represents available operators
-    initial_completion_type = 1
-    if len( query ) == 1:
-      return request_data[ 'start_column' ] + initial_completion_type
-
-    # When the query's length is larger than 1, completions are static for that
-    # character value for a given start_column
-    # Offset character types to avoid collision with other types
-    char_val = ord( query[0] )
-    return request_data[ 'start_column' ] + char_val + 1000
-
-  def _FlagsForRequest( self, request_data ):
-    filename = request_data[ 'filepath' ]
-    return self._flags.FlagsForFile( filename )
-
-  def _FetchCompletions( self, request_data ):
-    logging.debug( 'Request SSVIM Completions' )
-    response = self._GetResponse( '/completions',
-                                    request_data )
-    # Build a completion Document with the completion portion of the response
-    completion_doc = SwiftCompletionDocument( response, request_data )
-    return completion_doc.completions()
+             for completion in completion_doc.GetCompletions() ]
 
 
   def GetSubcommandsMap( self ):
@@ -327,7 +304,9 @@ class SwiftCompletion():
 
   def __init__( self, json_value, request_data ):
     self.module_path = ''
-    self.name = json_value.get( 'key.sourcetext' )
+    # TODO: Give the user the option to use for placeholders for quick typing:
+    # insertion_text is conditionally ( key.sourcetext ).
+    self.name = json_value.get( 'key.name' )
     self.description = json_value.get( 'key.description' )
     self.type = 'swift'
     self.line = 0
@@ -335,13 +314,18 @@ class SwiftCompletion():
 
     self.modulename = json_value.get( 'key.modulename' )
     self.context = json_value.get( 'key.context' )
-    self.docbrief = json_value.get( 'key.doc.brief' )
+    json_docbrief = json_value.get( 'key.doc.brief' )
 
-
-  def docstring( self ):
-    if self.docbrief:
-      return self.description + '\n' + self.docbrief
-    return self.description + '\n' + self.context
+    if json_docbrief:
+      self.docbrief = self.description + '\n' + json_docbrief
+    else:
+      # If we don't have a docbrief, format some information to
+      # help the user comprehend where this came from.
+      if self.modulename:
+        topline = self.modulename + ' - ' + self.description
+      else:
+        topline = self.description
+      self.docbrief = topline + '\n' + self.context
 
 
 class SwiftCompletionDocument():
@@ -350,7 +334,7 @@ class SwiftCompletionDocument():
     self.request_data = request_data
 
 
-  def completions( self ):
+  def GetCompletions( self ):
     # TODO: we will likely want to insert more data into responses.
     # The API should likely package completions as a nested key
     # instead of the root object

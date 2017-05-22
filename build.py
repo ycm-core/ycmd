@@ -250,7 +250,7 @@ def ParseArguments():
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
                        help = 'Build C# semantic completion engine.' )
   parser.add_argument( '--swift-completer', action = 'store_true',
-                       help = 'Build swift semantic completion engine.' )
+                       help = 'Build Swift semantic completion engine.' )
   parser.add_argument( '--gocode-completer', action = 'store_true',
                        help = 'Build Go semantic completion engine.' )
   parser.add_argument( '--racer-completer', action = 'store_true',

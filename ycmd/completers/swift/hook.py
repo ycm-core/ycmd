@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Stephen Sugden <me@stephensugden.com>
+# Copyright (C) 2017, Jerry Marino <i@jerrymarino.com>
 #
 # This file is part of ycmd.
 #
