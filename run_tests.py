@@ -161,7 +161,7 @@ def FixupCompleters( parsed_args ):
       completers.add( 'cfamily' )
 
   # Currently, swift is tested on OSX with the Xcode SourceKit
-  if not OnMac:
+  if not OnMac():
     completers.remove( 'swift' )
 
   return list( completers )
