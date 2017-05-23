@@ -239,23 +239,6 @@ class SwiftCompleter( Completer ):
     }
 
 
-  def _GetExtraData( self, completion ):
-    location = {}
-    if completion.module_path:
-      location.filepath = completion.module_path
-    if completion.line:
-      location.line_num = completion.line
-    if completion.column:
-      location.column_num = completion.column + 1
-
-    if location:
-      extra_data = {}
-      extra_data.location = location
-      return extra_data
-    else:
-      return None
-
-
   def ShouldUseNowInner( self, request_data ):
     return True
 
@@ -268,8 +251,7 @@ class SwiftCompleter( Completer ):
     return [ responses.BuildCompletionData(
                 completion.name,
                 completion.description,
-                completion.docbrief,
-                extra_data = self._GetExtraData( completion ) )
+                completion.docbrief )
              for completion in completion_doc.GetCompletions() ]
 
 
@@ -309,8 +291,6 @@ class SwiftCompletion():
     self.name = json_value.get( 'key.name' )
     self.description = json_value.get( 'key.description' )
     self.type = 'swift'
-    self.line = 0
-    self.column = 0
 
     self.modulename = json_value.get( 'key.modulename' )
     self.context = json_value.get( 'key.context' )

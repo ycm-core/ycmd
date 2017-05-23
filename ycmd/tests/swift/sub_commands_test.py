@@ -26,11 +26,20 @@ from hamcrest import assert_that, equal_to
 
 from ycmd.tests.swift import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
+from os import system
+
+
+def _KillServer( app ):
+  completion_data = BuildRequest( filetype = 'swift' )
+  debug_info = app.post_json( '/debug_info', completion_data ).json
+  server_info = debug_info[ 'completer' ][ 'servers' ][ 0 ]
+  pid = server_info[ 'pid' ]
+  system( 'kill -9 ' + str( pid ) )
 
 
 @SharedYcmd
 def Shutdown_test( app ):
-  completion_data = BuildRequest( filetype = 'swift')
+  completion_data = BuildRequest( filetype = 'swift' )
 
   response = app.post_json( '/shutdown',
                            completion_data )
@@ -39,3 +48,22 @@ def Shutdown_test( app ):
   # it's self off. The completer will rasie an exception after 5 seconds
   # otherwise.
   assert_that( response.status_code, equal_to( 200 ) )
+
+  # Don't wait for the process to exit.
+  _KillServer( app )
+
+  # Make sure that shutdown will work.
+  is_healty = app.get( '/healthy',
+                       { 'subserver' : 'swift' } ).json
+  assert_that( is_healty, equal_to( False ) )
+
+
+@SharedYcmd
+def UnHealthy_test( app ):
+  # Kill the process. We should be not returning true if the server
+  # fails goes down for external reasons
+  _KillServer( app )
+
+  is_healty = app.get( '/healthy',
+                       { 'subserver' : 'swift' } ).json
+  assert_that( is_healty, equal_to( False ) )
