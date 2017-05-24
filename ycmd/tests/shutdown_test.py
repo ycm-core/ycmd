@@ -25,6 +25,7 @@ from builtins import *  # noqa
 from hamcrest import assert_that, equal_to
 
 from ycmd.tests.client_test import Client_test
+from ycmd.utils import OnMac
 
 
 class Shutdown_test( Client_test ):
@@ -51,6 +52,9 @@ class Shutdown_test( Client_test ):
                   'python',
                   'typescript',
                   'rust' ]
+    if OnMac():
+      filetypes.append( 'swift' )
+
     for filetype in filetypes:
       self.StartSubserverForFiletype( filetype )
     self.AssertServersAreRunning()
@@ -81,6 +85,9 @@ class Shutdown_test( Client_test ):
                   'python',
                   'typescript',
                   'rust' ]
+    if OnMac():
+      filetypes.append( 'swift' )
+
     for filetype in filetypes:
       self.StartSubserverForFiletype( filetype )
     self.AssertServersAreRunning()

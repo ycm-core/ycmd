@@ -201,10 +201,17 @@ class SwiftCompleter( Completer ):
                                  data = body,
                                  headers = extra_headers )
     response.raise_for_status()
-    value = response.json()
-    self._logger.debug( 'Got SSVIM response: %s %s %s %s', 'POST', url,
-                        value, value.keys())
-    return value
+    try:
+      value = response.json()
+
+      self._logger.debug( 'Got SSVIM response: %s %s %s %s',
+                          'POST', url, value, value.keys() )
+      return value
+    except:
+      value = {}
+      self._logger.debug( 'Got SSVIM response: %s %s %s %s',
+                          'POST', url, value, value.keys() )
+      return value
 
 
   def _ExtraHeaders( self, handler, body ):
