@@ -246,10 +246,6 @@ class SwiftCompleter( Completer ):
     }
 
 
-  def ShouldUseNowInner( self, request_data ):
-    return True
-
-
   def ComputeCandidatesInner( self, request_data ):
     logging.debug( 'Request SSVIM Completions' )
     response = self._GetResponse( '/completions', request_data )
@@ -257,8 +253,8 @@ class SwiftCompleter( Completer ):
     completion_doc = SwiftCompletionDocument( response, request_data )
     return [ responses.BuildCompletionData(
                 completion.name,
-                completion.description,
-                completion.docbrief )
+                menu_text = completion.description,
+                detailed_info = completion.docbrief )
              for completion in completion_doc.GetCompletions() ]
 
 
