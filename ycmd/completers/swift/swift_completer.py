@@ -194,7 +194,7 @@ class SwiftCompleter( Completer ):
     extra_headers = self._ExtraHeaders( handler, body )
 
     self._logger.debug( 'Making SSVIM request: %s %s %s %s', 'POST', url,
-                        extra_headers, body )
+                         extra_headers, body )
 
     response = requests.request( native( bytes( b'POST' ) ),
                                  native( url ),
