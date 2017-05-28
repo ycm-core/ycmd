@@ -37,6 +37,7 @@ import logging
 import requests
 import threading
 import os
+import time
 
 
 HMAC_SECRET_LENGTH = 16
@@ -88,7 +89,7 @@ class SwiftCompleter( Completer ):
     if not self._ServerIsRunning():
       self._logger.info( 'SSVIM not running.' )
       try:
-        return bool( self._GetResponse( '/status' ) )
+        return bool( self._GetResponse( '/status', timeout = 0.2 ) )
       except requests.exceptions.ConnectionError as e:
         self._logger.error( 'Failed Ready' )
         self._logger.exception( e )
@@ -171,7 +172,29 @@ class SwiftCompleter( Completer ):
                                                   stdout = logout,
                                                   stderr = logerr )
 
+      self._WaitForInitialSwiftySwiftVimBoot()
       self._logger.info( 'Started SSVIM server' )
+
+
+  # Wait for initial Swifty Swift Vim Boot. Wait until the process writes
+  # stdout ( startup message ). Tasks in the backends startup process ( like
+  # dynamic linking and setting up the HTTP stack ) make it impossible for the
+  # backend to respond to requests after immediately launching the process. If
+  # the process isn't ready, YCMD will fail.
+  def _WaitForInitialSwiftySwiftVimBoot( self ):
+    # Timeout: in profiling runs on a 2014 MBA, I observed booting to take less
+    # than 100ms. After starting the service once it was dramatically reduced.
+    timeout = 5.0
+    expiration = time.time() + timeout
+    while True:
+      if time.time() > expiration:
+        raise RuntimeError( 'Waited SSVIM to boot for {0} seconds, '
+                            'aborting.'.format( timeout ) )
+      if os.stat( self._logfile_stdout ).st_size != 0:
+        break
+      if os.stat( self._logfile_stderr ).st_size != 0:
+        break
+      time.sleep( 0.1 )
 
 
   def _GenerateHmacSecret( self ):
@@ -185,7 +208,7 @@ class SwiftCompleter( Completer ):
     return logging.getLevelName( log_level ).lower()
 
 
-  def _GetResponse( self, handler, request_data = {} ):
+  def _GetResponse( self, handler, request_data = {}, timeout = None ):
     '''POST JSON requests and return JSON response.'''
     handler = ToBytes( handler )
     url = urljoin( self._http_host, handler )
@@ -199,7 +222,8 @@ class SwiftCompleter( Completer ):
     response = requests.request( native( bytes( b'POST' ) ),
                                  native( url ),
                                  data = body,
-                                 headers = extra_headers )
+                                 headers = extra_headers,
+                                 timeout = timeout )
     response.raise_for_status()
     try:
       value = response.json()
@@ -247,7 +271,7 @@ class SwiftCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
-    logging.debug( 'Request SSVIM Completions' )
+    logging.info( 'Request SSVIM Completions' )
     response = self._GetResponse( '/completions', request_data )
     # Build a completion Document with the completion portion of the response
     completion_doc = SwiftCompletionDocument( response, request_data )
