@@ -232,10 +232,9 @@ class SwiftCompleter( Completer ):
                           'POST', url, value, value.keys() )
       return value
     except:
-      value = {}
-      self._logger.debug( 'Got SSVIM response: %s %s %s %s',
-                          'POST', url, value, value.keys() )
-      return value
+      self._logger.debug( 'Failed to parse SSVIM response: %s %s',
+                          'POST', url )
+      return {}
 
 
   def _ExtraHeaders( self, handler, body ):
