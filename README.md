@@ -44,6 +44,10 @@ First, install the minimal dependencies:
 ```
 sudo apt-get install build-essential cmake python-dev
 ```
+on Fedora 23+
+```
+sudo dnf install python git cmake tar xz clang make
+```
 
 Next, install the language specific dependencies you need:
 - `sudo apt-get install golang-go` for Go.
