@@ -145,7 +145,7 @@ def FixupCompleters( parsed_args ):
     completers = completers.difference( parsed_args.no_completers )
   elif parsed_args.no_clang_completer:
     print( 'WARNING: The "--no-clang-completer" flag is deprecated. '
-           'Please use "--no-completer cfamily" instead.' )
+           'Please use "--no-completers cfamily" instead.' )
     completers.remove( 'cfamily' )
 
   if 'USE_CLANG_COMPLETER' in os.environ:
