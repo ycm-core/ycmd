@@ -392,7 +392,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def SupportedFiletypes( self ):
-    return [ 'typescript' ]
+    return [ 'typescript', 'typescript.tsx' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
