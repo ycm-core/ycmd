@@ -22,12 +22,9 @@
 #include "ReleaseGil.h"
 #include "Utils.h"
 
-#include <algorithm>
 #include <vector>
-#include <locale>
 #include <utility>
 
-using std::any_of;
 using boost::python::len;
 using boost::python::str;
 using boost::python::extract;
@@ -82,9 +79,7 @@ boost::python::list FilterAndSortCandidates(
   {
     ReleaseGil unlock;
     Bitset query_bitset = LetterBitsetFromString( query );
-    bool query_has_uppercase_letters = any_of( query.cbegin(),
-                                               query.cend(),
-                                               IsUpper );
+    bool query_has_uppercase_letters = HasUppercase( query );
 
     for ( int i = 0; i < num_candidates; ++i ) {
       const Candidate *candidate = repository_candidates[ i ];

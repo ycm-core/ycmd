@@ -16,19 +16,8 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "LetterNodeListMap.h"
-#include <algorithm>
 
 namespace YouCompleteMe {
-
-bool IsUppercase( char letter ) {
-  return 'A' <= letter && letter <= 'Z';
-}
-
-
-bool IsInAsciiRange( int index ) {
-  return 0 <= index && index < NUM_LETTERS;
-}
-
 
 int IndexForLetter( char letter ) {
   if ( IsUppercase( letter ) )

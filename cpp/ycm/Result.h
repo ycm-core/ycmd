@@ -28,6 +28,7 @@ public:
 
   Result( bool is_subsequence,
           const std::string *text,
+          const std::string *case_swapped_text,
           bool text_is_lowercase,
           int char_match_index_sum,
           const std::string &word_boundary_chars,
@@ -85,6 +86,10 @@ private:
 
   // points to the full candidate text
   const std::string *text_;
+
+  // like text_ but with lowercase letters converted to uppercase and vice
+  // versa.
+  const std::string *case_swapped_text_;
 
 };
 
