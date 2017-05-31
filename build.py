@@ -330,12 +330,27 @@ def RunYcmdTests( build_dir ):
   if OnWindows():
     # We prepend the folder of the ycm_core_tests executable to the PATH
     # instead of overwriting it so that the executable is able to find the
-    # python35.dll library.
+    # Python library.
     new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT + ';' + new_env[ 'PATH' ]
   else:
     new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
 
   CheckCall( p.join( tests_dir, 'ycm_core_tests' ), env = new_env )
+
+
+def RunYcmdBenchmarks( build_dir ):
+  benchmarks_dir = p.join( build_dir, 'ycm', 'benchmarks' )
+  new_env = os.environ.copy()
+
+  if OnWindows():
+    # We prepend the folder of the ycm_core_tests executable to the PATH
+    # instead of overwriting it so that the executable is able to find the
+    # Python library.
+    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT + ';' + new_env[ 'PATH' ]
+  else:
+    new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
+
+  CheckCall( p.join( benchmarks_dir, 'ycm_core_benchmarks' ), env = new_env )
 
 
 # On Windows, if the ycmd library is in use while building it, a LNK1104
@@ -390,20 +405,27 @@ def BuildYcmdLib( args ):
 
     CheckCall( [ 'cmake' ] + full_cmake_args, exit_message = exit_message )
 
-    build_target = ( 'ycm_core' if 'YCM_TESTRUN' not in os.environ else
-                     'ycm_core_tests' )
+    build_targets = [ 'ycm_core' ]
+    if 'YCM_TESTRUN' in os.environ:
+      build_targets.append( 'ycm_core_tests' )
+    if 'YCM_BENCHMARK' in os.environ:
+      build_targets.append( 'ycm_core_benchmarks' )
 
-    build_command = [ 'cmake', '--build', '.', '--target', build_target ]
     if OnWindows():
       config = 'Debug' if args.enable_debug else 'Release'
-      build_command.extend( [ '--config', config ] )
+      build_config = [ '--config', config ]
     else:
-      build_command.extend( [ '--', '-j', str( NumCores() ) ] )
+      build_config = [ '--', '-j', str( NumCores() ) ]
 
-    CheckCall( build_command, exit_message = exit_message )
+    for target in build_targets:
+      build_command = ( [ 'cmake', '--build', '.', '--target', target ] +
+                        build_config )
+      CheckCall( build_command, exit_message = exit_message )
 
     if 'YCM_TESTRUN' in os.environ:
       RunYcmdTests( build_dir )
+    if 'YCM_BENCHMARK' in os.environ:
+      RunYcmdBenchmarks( build_dir )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
 

@@ -7,4 +7,8 @@ if %msvc% == 2013 (
   set msvc=15
 )
 
-python run_tests.py --msvc %msvc%
+if defined YCM_BENCHMARK (
+  python benchmark.py --msvc %msvc%
+) else (
+  python run_tests.py --msvc %msvc%
+)

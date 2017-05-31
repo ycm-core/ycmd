@@ -12,9 +12,10 @@ install:
   - source ci/travis/travis_install.sh
 compiler:
   - gcc
-script: ./run_tests.py
+script:
+  - ci/travis/travis_script.sh
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - if [ "${COVERAGE}" == "true" ]; then bash <(curl -s https://codecov.io/bash); fi
 env:
   global:
     # Travis can run out of RAM, so we need to be careful here.
@@ -25,6 +26,7 @@ env:
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
     - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
+    - YCM_BENCHMARK=true YCMD_PYTHON_VERSION=3.3 COVERAGE=false
 matrix:
   exclude:
     - os: osx

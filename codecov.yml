@@ -14,12 +14,13 @@ coverage:
     changes: true
 
   # We don't want statistics for the tests themselves and certainly not for the
-  # boost libraries. Note that while we exclude the gcov data for these patterns
-  # in the codecov call (codecov --gcov-glob ...), the fact that our code
-  # references these areas also means we need to tell codecov itself to ignore
-  # them from the stats.
+  # benchmarks and boost libraries. Note that while we exclude the gcov data for
+  # these patterns in the codecov call (codecov --gcov-glob ...), the fact that
+  # our code references these areas also means we need to tell codecov itself to
+  # ignore them from the stats.
   ignore:
   - .*/tests/.*
+  - .*/benchmarks/.*
   - .*/BoostParts/.*
 
 comment:
