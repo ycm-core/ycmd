@@ -420,7 +420,8 @@ def BuildOmniSharp():
     sys.exit( 'ERROR: msbuild or xbuild is required to build Omnisharp.' )
 
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'OmniSharpServer' ) )
-  CheckCall( [ build_command, '/property:Configuration=Release' ] )
+  CheckCall( [ build_command, '/property:Configuration=Release',
+                              '/property:TargetFrameworkVersion=v4.5' ] )
 
 
 def BuildGoCode():
