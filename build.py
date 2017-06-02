@@ -161,6 +161,17 @@ def GetGlobalPythonPrefix():
   return sys.prefix
 
 
+def CheckOutput( args, **kwargs ):
+  exit_message = kwargs.get( 'exit_message', None )
+  kwargs.pop( 'exit_message', None )
+  try:
+    return subprocess.check_output( args, **kwargs )
+  except subprocess.CalledProcessError as error:
+    if exit_message:
+      sys.exit( exit_message )
+    sys.exit( error.returncode )
+
+
 def GetPossiblePythonLibraryDirectories():
   prefix = GetGlobalPythonPrefix()
 
@@ -475,30 +486,48 @@ def EnableNewCsCompleter():
     except OSError:
       pass
     os.chdir( build_dir )
-    version = "v1.9-alpha14"
+    version = "v1.19.0"
     url_pattern = ( "https://github.com/OmniSharp/omnisharp-roslyn/"
                     "releases/download/{0}/{1}" )
     if OnWindows() or OnCygwin():
-      if platform.machine().endswith( '64' ):
-        url_file = 'omnisharp-win-x64-netcoreapp1.0.zip'
+      dotnetversion_output = CheckOutput( [ 'reg', 'query', 
+          'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\full',
+          '/v', 'version' ] )
+      dotnet_46_pattern = re.compile( 'version\sREG_SZ\s*4.6.\d*' )
+      if ( dotnet_46_pattern.match( dotnetversion_output ) ):
+        if platform.machine().endswith( '64' ):
+          url_file = 'omnisharp-win-x64-net46.zip'
+        else:
+          url_file = 'omnisharp-win-x86-net46.zip'
+      elif FindExecutable( 'dotnet' ): # TODO: min version?
+        if platform.machine().endswith( '64' ):
+          url_file = 'omnisharp-win-x64-netcoreapp1.1.zip'
+        else:
+          url_file = 'omnisharp-win-x86-netcoreapp1.1.zip'
       else:
-        url_file = 'omnisharp-win-x86-netcoreapp1.0.zip'
-    elif OnMac():
-      url_file = 'omnisharp-osx-x64-netcoreapp1.0.tar.gz'
+        sys.exit( 'ERROR: .NET 4.6 or .NET Core is required to set up Roslyn Omnisharp.' )
     else:
-      disto_package_names = {
-        'Centos': 'omnisharp-centos-x64-netcoreapp1.0.tar.gz',
-        'debian': 'omnisharp-debian-x64-netcoreapp1.0.tar.gz',
-        'rhel': 'omnisharp-rhel-x64-netcoreapp1.0.tar.gz',
-        'Ubuntu': 'omnisharp-ubuntu-x64-netcoreapp1.0.tar.gz'
-      }
-      supported_dists = disto_package_names.keys()
-      disto = platform.linux_distribution( supported_dists = supported_dists,
-                                        full_distribution_name = False )[ 0 ]
-      try:
-        url_file = disto_package_names[ disto ]
-      except KeyValue:
-        url_file = 'omnisharp-linux-x64-netcoreapp1.0.tar.gz'
+      if FindExecutable( 'mono' ): # TODO: min version?
+        url_file = 'omnisharp-mono.tar.gz'
+      elif FindExecutable( 'dotnet' ): # TODO: min version?
+        if OnMac():
+          url_file = 'omnisharp-osx-x64-netcoreapp1.1.tar.gz'
+        else:
+          disto_package_names = {
+            'Centos': 'omnisharp-centos.7-x64-netcoreapp1.1.tar.gz',
+            'debian': 'omnisharp-debian.8-x64-netcoreapp1.1.tar.gz',
+            'rhel': 'omnisharp-rhel.7.2-x64-netcoreapp1.1.tar.gz',
+            'Ubuntu': 'omnisharp-ubuntu.16.10-x64-netcoreapp1.1.tar.gz'
+          }
+          supported_dists = disto_package_names.keys()
+          disto = platform.linux_distribution( supported_dists = supported_dists,
+                                            full_distribution_name = False )[ 0 ]
+          try:
+            url_file = disto_package_names[ disto ]
+          except KeyValue:
+            sys.exit( 'ERROR: Mono is required to set up Roslyn Omnisharp on this distro.' )
+      else:
+        sys.exit( 'ERROR: Mono or .NET Core is required to set up Roslyn Omnisharp on this distro.' )
 
     try:
       os.mkdir( version )
@@ -515,7 +544,7 @@ def EnableNewCsCompleter():
         fh.write( result.content )
 
     if OnCygwin():
-      extract_command = [ 'unzip', file_path ]
+      extract_command = [ 'unzip', '-o', file_path ]
     elif OnWindows():
       try:
         import _winreg
