@@ -41,7 +41,7 @@ from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents
 from ycmd.completers.cs import solutiondetection
 from ycmd.utils import ( ForceSemanticCompletion, CodepointOffsetToByteOffset,
-                         urljoin )
+                         ToUnicode, urljoin )
 from ycmd import responses
 from ycmd import utils
 
@@ -382,7 +382,6 @@ class CsharpSolutionCompleter( object ):
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
     self._server_state_lock = threading.RLock()
-    self._session = None
 
 
   def CodeCheck( self, request_data ):
@@ -502,7 +501,6 @@ class CsharpSolutionCompleter( object ):
   def _CleanUp( self ):
     self._omnisharp_port = None
     self._omnisharp_phandle = None
-    self._session = None
 
 
   def _RestartServer( self ):
@@ -674,10 +672,8 @@ class CsharpSolutionCompleter( object ):
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
     target = urljoin( self._ServerLocation(), handler )
-    if self._session is None:
-      self._session = Session()
     self._logger.info( u'Sending request' )
-    response = self._session.post( target,
+    response = requests.post( target,
                                    json = parameters,
                                    timeout = timeout )
     self._logger.info( u'Received response request' )
