@@ -20,12 +20,17 @@ environment:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 64
     python: 36
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    arch: 64
+    python: 36
+    YCM_BENCHMARK: true
+    COVERAGE: false
 install:
   - ci\appveyor\appveyor_install.bat
 build_script:
   - ci\appveyor\appveyor_build.bat
 after_build:
-  - codecov
+  - if %COVERAGE% == true ( codecov )
 # Disable automatic tests
 test: off
 cache:

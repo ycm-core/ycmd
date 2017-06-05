@@ -53,6 +53,9 @@ public:
   YCM_DLL_EXPORT std::vector< const Candidate * > GetCandidatesForStrings(
     const std::vector< std::string > &strings );
 
+  // This should only be used to isolate tests and benchmarks.
+  YCM_DLL_EXPORT void ClearCandidates();
+
 private:
   CandidateRepository() {};
   ~CandidateRepository();
