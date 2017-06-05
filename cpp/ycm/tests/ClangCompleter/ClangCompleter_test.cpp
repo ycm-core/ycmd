@@ -37,14 +37,14 @@ TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
   std::vector< CompletionData > completions_class =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      26,
+      29,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
   std::vector< CompletionData > completions_struct =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      27,
+      30,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -59,7 +59,7 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      26,
+      29,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -69,6 +69,26 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
                Contains(
                  Property( &CompletionData::TextToInsertInBuffer,
                            StrEq( "barbar" ) ) ) );
+}
+
+
+TEST( ClangCompleterTest, MemberFunctionWithDefaults ) {
+  ClangCompleter completer;
+  std::vector< CompletionData > completions =
+    completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
+      30,
+      7,
+      std::vector< UnsavedFile >(),
+      std::vector< std::string >() );
+
+  for ( size_t i = 0; i < completions.size(); ++i ) {
+    if ( completions[i].TextToInsertInBuffer() == "foobar" ) {
+      EXPECT_STREQ( "foobar( int a, float b, char c )",
+                    completions[i].MainCompletionText().c_str() );
+      break;
+    }
+  }
 }
 
 
@@ -120,7 +140,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_struct =
     completer.GetDefinitionLocation(
       filename,
-      23,
+      26,
       3,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -128,7 +148,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_class_method =
     completer.GetDefinitionLocation(
       filename,
-      26,
+      29,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -136,7 +156,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_class =
     completer.GetDefinitionLocation(
       filename,
-      24,
+      27,
       3,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -144,7 +164,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_enum_value =
     completer.GetDefinitionLocation(
       filename,
-      28,
+      31,
       25,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
@@ -152,15 +172,15 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_enum =
     completer.GetDefinitionLocation(
       filename,
-      28,
+      31,
       3,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
 
-  EXPECT_EQ( Location( filename, 11, 8 ), actual_location_struct );
+  EXPECT_EQ( Location( filename, 12, 8 ), actual_location_struct );
   EXPECT_EQ( Location( filename, 1, 7 ), actual_location_class );
-  EXPECT_EQ( Location( filename, 20, 35 ), actual_location_enum );
-  EXPECT_EQ( Location( filename, 20, 16 ), actual_location_enum_value );
+  EXPECT_EQ( Location( filename, 22, 35 ), actual_location_enum );
+  EXPECT_EQ( Location( filename, 22, 16 ), actual_location_enum_value );
   EXPECT_EQ( Location( filename, 7, 8 ), actual_location_class_method );
 }
 
@@ -171,7 +191,7 @@ TEST( ClangCompleterTest, GetDocString ) {
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
-      27,
+      30,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
