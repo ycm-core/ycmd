@@ -106,6 +106,7 @@ class Flags( object ):
     # Keys are directory names and values are ycm_core.CompilationInfo
     # instances. Values may not be None.
     self.file_directory_heuristic_map = dict()
+    self.last_flags = EMPTY_FLAGS
 
 
   def FlagsForFile( self,
@@ -220,8 +221,8 @@ class Flags( object ):
         compilation_info = self.file_directory_heuristic_map[ file_dir ]
       except KeyError:
         # No cache for this directory and there are no flags for this file in
-        # the database.
-        return EMPTY_FLAGS
+        # the database, use the last flags
+        return self.last_flags
 
     # If this is the first file we've seen in path file_dir, cache the
     # compilation_info for it in case we see a file in the same dir with no
@@ -231,11 +232,12 @@ class Flags( object ):
     # could be executing this method in parallel.
     self.file_directory_heuristic_map.setdefault( file_dir, compilation_info )
 
-    return {
+    self.last_flags = {
       'flags': _MakeRelativePathsInFlagsAbsolute(
         compilation_info.compiler_flags_,
         compilation_info.compiler_working_dir_ ),
     }
+    return self.last_flags
 
 
   # Return a compilation database object for the supplied path. Raises
