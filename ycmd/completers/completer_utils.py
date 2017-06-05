@@ -249,6 +249,7 @@ DEFAULT_FILETYPE_TRIGGERS = {
     r're!^\s*[^\W\d]\w*\s',     # bracketless calls
     r're!\[.*\]\s',             # method composition
   ],
+  'swift' : [ '.', 're![_a-zA-Z]' ],
   'ocaml' : [ '.', '#' ],
   'cpp,objcpp' : [ '->', '.', '::' ],
   'perl' : [ '->' ],
