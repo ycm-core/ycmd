@@ -209,7 +209,7 @@ def StopCompleterServer( app, filetype, filepath = '/foo' ):
                  expect_errors = True )
 
 
-def WaitUntilCompleterServerReady( app, filetype, timeout = 30 ):
+def WaitUntilCompleterServerReady( app, filetype, timeout = 40 ):
   expiration = time.time() + timeout
   while True:
     if time.time() > expiration:
