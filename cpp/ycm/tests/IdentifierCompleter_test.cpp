@@ -292,6 +292,31 @@ TEST( IdentifierCompleterTest, EmptyCandidatesForNonPrintable ) {
 }
 
 
+TEST( IdentifierCompleterTest, LotOfCandidates ) {
+  // Generate a lot of candidates of the form [a-z]{5} in reverse order.
+  std::vector< std::string > candidates;
+  for ( int i = 0; i < 2048; ++i ) {
+    std::string candidate = "";
+    int letter = i;
+    for ( int pos = 0; pos < 5; letter /= 26, ++pos ) {
+      candidate = std::string( 1, letter % 26 + 'a' ) + candidate;
+    }
+    candidates.insert( candidates.begin(), candidate );
+  }
+
+  IdentifierCompleter completer( candidates );
+
+  std::reverse( candidates.begin(), candidates.end() );
+
+  EXPECT_THAT( completer.CandidatesForQuery( "aa" ),
+               candidates );
+
+  EXPECT_THAT( completer.CandidatesForQuery( "aa", 2 ),
+               ElementsAre( "aaaaa",
+                            "aaaab" ) );
+}
+
+
 TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
   IdentifierCompleter completer;
   std::vector< std::string > tag_files;

@@ -74,21 +74,26 @@ void IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles(
 
 
 std::vector< std::string > IdentifierCompleter::CandidatesForQuery(
-  const std::string &query ) const {
-  return CandidatesForQueryAndType( query, "" );
+  const std::string &query,
+  const size_t max_candidates ) const {
+  return CandidatesForQueryAndType( query, "", max_candidates );
 }
 
 
 std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
   const std::string &query,
-  const std::string &filetype ) const {
+  const std::string &filetype,
+  const size_t max_candidates ) const {
   ReleaseGil unlock;
 
   if ( !IsPrintable( query ) )
     return std::vector< std::string >();
 
   std::vector< Result > results;
-  identifier_database_.ResultsForQueryAndType( query, filetype, results );
+  identifier_database_.ResultsForQueryAndType( query,
+                                               filetype,
+                                               results,
+                                               max_candidates );
 
   std::vector< std::string > candidates;
   candidates.reserve( results.size() );

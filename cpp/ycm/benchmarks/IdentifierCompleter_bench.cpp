@@ -39,15 +39,20 @@ BENCHMARK_DEFINE_F( IdentifierCompleterFixture, CandidatesWithCommonPrefix )(
   IdentifierCompleter completer( candidates );
 
   while ( state.KeepRunning() )
-    completer.CandidatesForQuery( "aA" );
+    completer.CandidatesForQuery( "aA", state.range( 1 ) );
 
   state.SetComplexityN( state.range( 0 ) );
 }
 
 
 BENCHMARK_REGISTER_F( IdentifierCompleterFixture, CandidatesWithCommonPrefix )
-    ->RangeMultiplier( 2 )
-    ->Range( 1, 1 << 16 )
+    ->RangeMultiplier( 1 << 4 )
+    ->Ranges( { { 1, 1 << 16 }, { 0, 0 } } )
+    ->Complexity();
+
+BENCHMARK_REGISTER_F( IdentifierCompleterFixture, CandidatesWithCommonPrefix )
+    ->RangeMultiplier( 1 << 4 )
+    ->Ranges( { { 1, 1 << 16 }, { 10, 10 } } )
     ->Complexity();
 
 } // namespace YouCompleteMe

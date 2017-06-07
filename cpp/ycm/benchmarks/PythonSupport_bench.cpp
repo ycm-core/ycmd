@@ -52,7 +52,8 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
     state.PauseTiming();
     CandidateRepository::Instance().ClearCandidates();
     state.ResumeTiming();
-    FilterAndSortCandidates( candidates, "insertion_text", "aA" );
+    FilterAndSortCandidates( candidates, "insertion_text", "aA",
+                             state.range( 1 ) );
   }
 
   state.SetComplexityN( state.range( 0 ) );
@@ -75,10 +76,12 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
   }
 
   // Store the candidates in the repository.
-  FilterAndSortCandidates( candidates, "insertion_text", "aA" );
+  FilterAndSortCandidates( candidates, "insertion_text", "aA",
+                           state.range( 1 ) );
 
   while ( state.KeepRunning() )
-    FilterAndSortCandidates( candidates, "insertion_text", "aA" );
+    FilterAndSortCandidates( candidates, "insertion_text", "aA",
+                             state.range( 1 ) );
 
   state.SetComplexityN( state.range( 0 ) );
 }
@@ -86,15 +89,27 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
 
 BENCHMARK_REGISTER_F( PythonSupportFixture,
                       FilterAndSortUnstoredCandidatesWithCommonPrefix )
-    ->RangeMultiplier( 2 )
-    ->Range( 1, 1 << 16 )
+    ->RangeMultiplier( 1 << 4 )
+    ->Ranges( { { 1, 1 << 16 }, { 0, 0 } } )
+    ->Complexity();
+
+BENCHMARK_REGISTER_F( PythonSupportFixture,
+                      FilterAndSortUnstoredCandidatesWithCommonPrefix )
+    ->RangeMultiplier( 1 << 4 )
+    ->Ranges( { { 1, 1 << 16 }, { 50, 50 } } )
     ->Complexity();
 
 
 BENCHMARK_REGISTER_F( PythonSupportFixture,
                       FilterAndSortStoredCandidatesWithCommonPrefix )
-    ->RangeMultiplier( 2 )
-    ->Range( 1, 1 << 16 )
+    ->RangeMultiplier( 1 << 4 )
+    ->Ranges( { { 1, 1 << 16 }, { 0, 0 } } )
+    ->Complexity();
+
+BENCHMARK_REGISTER_F( PythonSupportFixture,
+                      FilterAndSortStoredCandidatesWithCommonPrefix )
+    ->RangeMultiplier( 1 << 4 )
+    ->Ranges( { { 1, 1 << 16 }, { 50, 50 } } )
     ->Complexity();
 
 } // namespace YouCompleteMe

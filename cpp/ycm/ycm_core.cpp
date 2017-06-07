@@ -43,6 +43,9 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+using namespace boost::python;
+using namespace YouCompleteMe;
+
 bool HasClangSupport() {
 #ifdef USE_CLANG_COMPLETER
   return true;
@@ -52,16 +55,25 @@ bool HasClangSupport() {
 }
 
 
+BOOST_PYTHON_FUNCTION_OVERLOADS( FilterAndSortCandidatesOverloads,
+                                 FilterAndSortCandidates,
+                                 3, 4 )
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( CandidatesForQueryAndTypeOverloads,
+                                        CandidatesForQueryAndType,
+                                        2, 3 )
+
+
 BOOST_PYTHON_MODULE(ycm_core)
 {
-  using namespace boost::python;
-  using namespace YouCompleteMe;
-
   // Necessary because of usage of the ReleaseGil class
   PyEval_InitThreads();
 
   def( "HasClangSupport", HasClangSupport );
-  def( "FilterAndSortCandidates", FilterAndSortCandidates );
+
+  def( "FilterAndSortCandidates", FilterAndSortCandidates,
+                                  FilterAndSortCandidatesOverloads() );
+
   def( "YcmCoreVersion", YcmCoreVersion );
 
   // This is exposed so that we can test it.
@@ -75,7 +87,8 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( "AddIdentifiersToDatabaseFromTagFiles",
           &IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles )
     .def( "CandidatesForQueryAndType",
-          &IdentifierCompleter::CandidatesForQueryAndType );
+          &IdentifierCompleter::CandidatesForQueryAndType,
+          CandidatesForQueryAndTypeOverloads() );
 
   class_< std::vector< std::string >,
       std::shared_ptr< std::vector< std::string > > >( "StringVector" )
