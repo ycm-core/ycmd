@@ -32,9 +32,9 @@ boost::python::list FilterAndSortCandidates(
   const std::string &query );
 
 /// Given a Python object that's supposed to be "string-like", returns a UTF-8
-/// encoded std::string. If the object can't be converted to a string, returns an
-/// empty one.
-std::string GetUtf8String( const boost::python::object &string_or_unicode );
+/// encoded std::string. Raises an exception if the object can't be converted to
+/// a string. Supports newstr and newbytes from python-future on Python 2.
+std::string GetUtf8String( const boost::python::object &value );
 
 } // namespace YouCompleteMe
 
