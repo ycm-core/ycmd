@@ -432,6 +432,9 @@ def SplitLines( contents ):
   # ''.splitlines() returns [], but we want [ '' ]
   if contents == '':
     return [ '' ]
+  
+  # Fix decoding error
+  contents = contents.decode('utf-8')
 
   lines = contents.splitlines()
 
