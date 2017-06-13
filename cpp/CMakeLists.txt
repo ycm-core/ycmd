@@ -177,7 +177,45 @@ if ( CPP11_AVAILABLE )
     add_definitions( -std=c++11 )
   endif()
 else()
+  # Platform-specific advice goes here. In particular, we have plenty of users
+  # in corporate environments on RHEL/CentOS, where the default system compiler
+  # is too old.
+  #
+  # We use lsb_release on linux systems to detect the distro/verseion.
+  # Other platforms (Mac, Windows) won't have this, and it might not be installed
+  # on all linux installations, but it is the _most_ portable way.
+  find_program( LSB_RELEASE lsb_release )
+  if ( NOT ${LSB_RELEASE} STREQUAL "LSB_RELEASE-NOTFOUND" )
+    execute_process( COMMAND ${LSB_RELEASE} -is
+                     OUTPUT_VARIABLE LSB_RELEASE_ID
+                     OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process( COMMAND ${LSB_RELEASE} -rs
+                     OUTPUT_VARIABLE LSB_RELEASE_VERSION
+                     OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # on RHEL and CentOS, users require the devtoolset-3
+    # or greater. However, we recommended the devtoolset-6 because it is the
+    # newest at the time of writing. And why not.
+    if ( ${LSB_RELEASE_ID} STREQUAL "CentOS" OR
+       ${LSB_RELEASE_ID} STREQUAL "REHL" )
+      message( STATUS "NOTE: You appear to be on ${LSB_RELEASE_ID} version "
+      "${LSB_RELEASE_VERSION}. In order to use this application, you require a "
+      "more modern compiler than the default compiler on this platform. "
+      "Please install the devtoolset-6 or greater. For example, see this link: "
+      "https://www.softwarecollections.org/en/scls/rhscl/devtoolset-6/" )
+
+      # Finally, just check if it is installed and they just need to activate it
+      if ( EXISTS /opt/rh/devtoolset-6 )
+        message( STATUS "NOTE: It looks like you have the devtoolset-6 "
+                        "installed in /opt/rh/devtoolset-6, so you probably "
+                        "just need to activate it and re-run the installation. "
+                        "For example: source /opt/rh/devtoolset-6/enable")
+      endif()
+    endif()
+  endif()
+
   message( FATAL_ERROR "Your C++ compiler does NOT fully support C++11." )
+
 endif()
 
 # Note: build.py always explicitly sets this option, so the default used here
