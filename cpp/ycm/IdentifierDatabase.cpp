@@ -24,10 +24,6 @@
 #include "Utils.h"
 
 #include <unordered_set>
-#include <algorithm>
-#include <locale>
-
-using std::any_of;
 
 namespace YouCompleteMe {
 
@@ -82,9 +78,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
       return;
   }
   Bitset query_bitset = LetterBitsetFromString( query );
-  bool query_has_uppercase_letters = any_of( query.cbegin(),
-                                             query.cend(),
-                                             IsUpper );
+  bool query_has_uppercase_letters = HasUppercase( query );
 
   std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );

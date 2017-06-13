@@ -78,7 +78,19 @@ bool Erase( Container &container, const Key &key ) {
 }
 
 
-bool IsUpper( char c );
+YCM_DLL_EXPORT bool IsAscii( char letter );
+YCM_DLL_EXPORT bool IsAlpha( char letter );
+YCM_DLL_EXPORT bool IsPrintable( char letter );
+YCM_DLL_EXPORT bool IsPrintable( const std::string &text );
+YCM_DLL_EXPORT bool IsPunctuation( char letter );
+YCM_DLL_EXPORT bool IsLowercase( char letter );
+YCM_DLL_EXPORT bool IsLowercase( const std::string &text );
+YCM_DLL_EXPORT bool IsUppercase( char letter );
+YCM_DLL_EXPORT char Lowercase( char letter );
+YCM_DLL_EXPORT char Uppercase( char letter );
+YCM_DLL_EXPORT bool HasUppercase( const std::string &text );
+YCM_DLL_EXPORT char SwapCase( char letter );
+YCM_DLL_EXPORT std::string SwapCase( const std::string &text );
 
 } // namespace YouCompleteMe
 

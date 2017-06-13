@@ -19,6 +19,7 @@
 #define LETTERNODELISTMAP_H_BRK2UMC1
 
 #include "DLLDefines.h"
+#include "Utils.h"
 
 #include <vector>
 #include <memory>
@@ -30,8 +31,6 @@ namespace YouCompleteMe {
 
 class LetterNode;
 
-YCM_DLL_EXPORT bool IsUppercase( char letter );
-bool IsInAsciiRange( int index );
 YCM_DLL_EXPORT int IndexForLetter( char letter );
 
 /*

@@ -58,8 +58,98 @@ void WriteUtf8File( const fs::path &filepath, const std::string &contents ) {
 }
 
 
-bool IsUpper( char c ) {
-  return std::isupper( c, std::locale::classic() );
+// A character is ASCII if it's in the range 0-127 i.e. its most significant bit
+// is 0.
+bool IsAscii( char letter ) {
+  return !( letter & 0x80 );
+}
+
+
+bool IsAlpha( char letter ) {
+  return IsLowercase( letter ) || IsUppercase( letter );
+}
+
+
+bool IsPrintable( char letter ) {
+  return ' ' <= letter && letter <= '~';
+}
+
+
+bool IsPrintable( const std::string &text ) {
+  for ( char letter : text ) {
+    if ( !IsPrintable( letter ) )
+      return false;
+  }
+  return true;
+}
+
+
+bool IsPunctuation( char letter ) {
+  return ( '!' <= letter && letter <= '/' ) ||
+         ( ':' <= letter && letter <= '@' ) ||
+         ( '[' <= letter && letter <= '`' ) ||
+         ( '{' <= letter && letter <= '~' );
+}
+
+
+bool IsLowercase( char letter ) {
+  return 'a' <= letter && letter <= 'z';
+}
+
+
+// A string is assumed to be in lowercase if none of its characters are
+// uppercase.
+bool IsLowercase( const std::string &text ) {
+  for ( char letter : text ) {
+    if ( IsUppercase( letter ) )
+      return false;
+  }
+  return true;
+}
+
+
+bool IsUppercase( char letter ) {
+  return 'A' <= letter && letter <= 'Z';
+}
+
+
+// An uppercase character can be converted to lowercase and vice versa by
+// flipping its third most significant bit.
+char Lowercase( char letter ) {
+  if ( IsUppercase( letter ) )
+    return letter ^ 0x20;
+  return letter;
+}
+
+
+char Uppercase( char letter ) {
+  if ( IsLowercase( letter ) )
+    return letter ^ 0x20;
+  return letter;
+}
+
+
+bool HasUppercase( const std::string &text ) {
+  for ( char letter : text ) {
+    if ( IsUppercase( letter ) )
+      return true;
+  }
+  return false;
+}
+
+
+char SwapCase( char letter ) {
+  if ( IsAlpha( letter ) )
+    return letter ^ 0x20;
+  return letter;
+}
+
+
+std::string SwapCase( const std::string &text ) {
+  std::string result;
+  for ( char letter : text )
+    result.push_back( SwapCase( letter ) );
+  return result;
 }
 
 } // namespace YouCompleteMe

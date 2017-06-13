@@ -29,10 +29,6 @@ namespace YouCompleteMe {
 
 class Result;
 
-// Returns true if text contains only printable characters: ASCII characters in
-// the range 32-126.
-bool IsPrintable( const std::string &text );
-
 typedef std::bitset< NUM_LETTERS > Bitset;
 
 YCM_DLL_EXPORT Bitset LetterBitsetFromString( const std::string &text );
@@ -63,6 +59,7 @@ public:
 
 private:
   std::string text_;
+  std::string case_swapped_text_;
   std::string word_boundary_chars_;
   bool text_is_lowercase_;
   Bitset letters_present_;
