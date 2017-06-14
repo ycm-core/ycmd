@@ -23,7 +23,7 @@ namespace YouCompleteMe {
 
 class IdentifierCompleterFixture : public benchmark::Fixture {
 public:
-  void SetUp( const benchmark::State& state ) {
+  void SetUp( const benchmark::State& ) {
     CandidateRepository::Instance().ClearCandidates();
   }
 };
