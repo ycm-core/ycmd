@@ -508,6 +508,9 @@ def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
   )
 
 
+@ExpectedFailure( 'Filtering and sorting does not support candidates with '
+                  'non-ASCII characters.',
+                  contains_string( "value for 'completions' no item matches" ) )
 @SharedYcmd
 def GetCompletions_UnicodeInLine_test( app ):
   RunTest( app, {
@@ -536,9 +539,8 @@ def GetCompletions_UnicodeInLine_test( app ):
   } )
 
 
-@ExpectedFailure( 'Filtering and sorting does not work when the candidate '
-                  'contains non-ASCII characters. This is due to the way '
-                  'the filtering and sorting code works.',
+@ExpectedFailure( 'Filtering and sorting does not support candidates with '
+                  'non-ASCII characters.',
                   contains_string( "value for 'completions' no item matches" ) )
 @SharedYcmd
 def GetCompletions_UnicodeInLineFilter_test( app ):

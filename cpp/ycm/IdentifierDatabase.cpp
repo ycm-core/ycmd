@@ -74,7 +74,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
     std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
     it = filetype_candidate_map_.find( filetype );
 
-    if ( it == filetype_candidate_map_.end() || query.empty() )
+    if ( it == filetype_candidate_map_.end() )
       return;
   }
   Bitset query_bitset = LetterBitsetFromString( query );
@@ -93,7 +93,8 @@ void IdentifierDatabase::ResultsForQueryAndType(
         else
           seen_candidates.insert( candidate );
 
-        if ( !candidate->MatchesQueryBitset( query_bitset ) )
+        if ( candidate->Text().empty() ||
+             !candidate->MatchesQueryBitset( query_bitset ) )
           continue;
 
         Result result = candidate->QueryMatchResult(

@@ -215,10 +215,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       return []
 
     candidates = self._GetCandidatesFromSubclass( request_data )
-    if request_data[ 'query' ]:
-      candidates = self.FilterAndSortCandidates( candidates,
-                                                 request_data[ 'query' ] )
-    return candidates
+    return self.FilterAndSortCandidates( candidates, request_data[ 'query' ] )
 
 
   def _GetCandidatesFromSubclass( self, request_data ):

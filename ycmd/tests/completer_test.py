@@ -60,6 +60,18 @@ def FilterAndSortCandidates_ServerCompleter_test():
                                   [ { 'insertion_text': 'password' } ] )
 
 
+def FilterAndSortCandidates_SortOnEmptyQuery_test():
+  _FilterAndSortCandidates_Match( [ 'foo', 'bar' ],
+                                  '',
+                                  [ 'bar', 'foo' ] )
+
+
+def FilterAndSortCandidates_IgnoreEmptyCandidate_test():
+  _FilterAndSortCandidates_Match( [ '' ],
+                                  '',
+                                  [] )
+
+
 @ExpectedFailure( 'Filtering does not support unicode characters',
                   contains_string( '[]' ) )
 def FilterAndSortCandidates_Unicode_test():

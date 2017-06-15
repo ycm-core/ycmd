@@ -65,9 +65,6 @@ boost::python::list FilterAndSortCandidates(
   const std::string &query ) {
   pylist filtered_candidates;
 
-  if ( query.empty() )
-    return candidates;
-
   if ( !IsPrintable( query ) )
     return boost::python::list();
 
@@ -84,7 +81,8 @@ boost::python::list FilterAndSortCandidates(
     for ( int i = 0; i < num_candidates; ++i ) {
       const Candidate *candidate = repository_candidates[ i ];
 
-      if ( !candidate->MatchesQueryBitset( query_bitset ) )
+      if ( candidate->Text().empty() ||
+           !candidate->MatchesQueryBitset( query_bitset ) )
         continue;
 
       Result result = candidate->QueryMatchResult( query,
