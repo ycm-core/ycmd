@@ -197,7 +197,7 @@ else()
     # or greater. However, we recommended the devtoolset-6 because it is the
     # newest at the time of writing. And why not.
     if ( ${LSB_RELEASE_ID} STREQUAL "CentOS" OR
-       ${LSB_RELEASE_ID} STREQUAL "REHL" )
+         ${LSB_RELEASE_ID} STREQUAL "RedHatEnterpriseServer" )
       message( STATUS "NOTE: You appear to be on ${LSB_RELEASE_ID} version "
       "${LSB_RELEASE_VERSION}. In order to use this application, you require a "
       "more modern compiler than the default compiler on this platform. "
