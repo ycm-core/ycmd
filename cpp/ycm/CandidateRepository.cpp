@@ -86,6 +86,9 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
 
 
 void CandidateRepository::ClearCandidates() {
+  for ( const CandidateHolder::value_type & pair : candidate_holder_ ) {
+    delete pair.second;
+  }
   candidate_holder_.clear();
 }
 
