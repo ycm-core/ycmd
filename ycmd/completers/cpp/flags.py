@@ -33,12 +33,12 @@ from ycmd.utils import ( ToCppStringCompatible, OnMac, OnWindows, ToUnicode,
 from ycmd.responses import NoExtraConfDetected
 
 
+# -include-pch and --sysroot= must be listed before -include and --sysroot
+# respectively because the latter is a prefix of the former (and the algorithm
+# checks prefixes).
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
-                  '-gcc-toolchain', '-include', '-include-pch', '-iframework',
+                  '-gcc-toolchain', '-include-pch', '-include', '-iframework',
                   '-F', '-imacros' ]
-
-# --sysroot= must be first (or at least, before --sysroot) because the latter is
-# a prefix of the former (and the algorithm checks prefixes)
 PATH_FLAGS =  [ '--sysroot=' ] + INCLUDE_FLAGS
 
 # We need to remove --fcolor-diagnostics because it will cause shell escape
