@@ -576,6 +576,10 @@ def MakeRelativePathsInFlagsAbsolute_test():
       'flags':  [ '-isysroot', '/test' ],
       'expect': [ '-isysroot', os.path.normpath( '/test' ) ],
     },
+    {
+      'flags':  [ '-include-pch', '/test' ],
+      'expect': [ '-include-pch', os.path.normpath( '/test' ) ],
+    },
 
     # Already absolute, single arguments
     {
@@ -592,7 +596,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
     },
     {
       'flags':  [ '-isysroot/test' ],
-      'expect': [ '-isysroot' +  os.path.normpath( '/test' ) ],
+      'expect': [ '-isysroot' + os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '-include-pch/test' ],
+      'expect': [ '-include-pch' + os.path.normpath( '/test' ) ],
     },
 
     # Already absolute, double-dash arguments
@@ -611,6 +619,10 @@ def MakeRelativePathsInFlagsAbsolute_test():
     {
       'flags':  [ '--sysroot=/test' ],
       'expect': [ '--sysroot=' + os.path.normpath( '/test' ) ],
+    },
+    {
+      'flags':  [ '--include-pch=/test' ],
+      'expect': [ '--include-pch=/test' ],
     },
 
     # Relative, positional arguments
@@ -632,6 +644,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
     {
       'flags':  [ '-isysroot', 'test' ],
       'expect': [ '-isysroot', os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-include-pch', 'test' ],
+      'expect': [ '-include-pch', os.path.normpath( '/test/test' ) ],
       'wd':     '/test',
     },
 
@@ -656,6 +673,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
       'expect': [ '-isysroot' + os.path.normpath( '/test/test' ) ],
       'wd':     '/test',
     },
+    {
+      'flags':  [ '-include-pchtest' ],
+      'expect': [ '-include-pch' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
 
     # Already absolute, double-dash arguments
     {
@@ -676,6 +698,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
     {
       'flags':  [ '--sysroot=test' ],
       'expect': [ '--sysroot=' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '--include-pch=test' ],
+      'expect': [ '--include-pch=test' ],
       'wd':     '/test',
     },
   ]
