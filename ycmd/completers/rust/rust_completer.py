@@ -128,17 +128,11 @@ class RustCompleter( Completer ):
     Attempt to read user option for rust_src_path. Fallback to environment
     variable if it's not provided.
     """
-    rust_src_path = self.user_options[ 'rust_src_path' ]
+    rust_src_path = ( self.user_options[ 'rust_src_path' ] or
+                      os.environ.get( 'RUST_SRC_PATH' ) )
 
-    # Early return if user provided config
     if rust_src_path:
-      return rust_src_path
-
-    # Fall back to environment variable
-    env_key = 'RUST_SRC_PATH'
-    if env_key in os.environ:
-      return os.environ[ env_key ]
-
+      return os.path.expanduser( os.path.expandvars( rust_src_path ) )
     return None
 
 
