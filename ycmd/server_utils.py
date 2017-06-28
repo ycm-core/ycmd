@@ -146,9 +146,9 @@ def PathToNearestThirdPartyFolder( path ):
 
 
 def IsStandardLibraryFolder( path ):
-  return (os.path.isfile( path ) \
-          and PYTHON_STDLIB_ZIP_REGEX.match( os.path.basename( path ) )) \
-         or os.path.isfile( os.path.join( path, 'os.py' ) )
+  return ( ( os.path.isfile( path )
+             and PYTHON_STDLIB_ZIP_REGEX.match( os.path.basename( path ) ) )
+           or os.path.isfile( os.path.join( path, 'os.py' ) ) )
 
 
 def IsVirtualEnvLibraryFolder( path ):
