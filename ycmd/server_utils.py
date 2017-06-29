@@ -28,6 +28,7 @@ import os
 import re
 import sys
 
+PYTHON_STDLIB_ZIP_REGEX = re.compile( "python[23][0-9].zip" )
 CORE_MISSING_ERROR_REGEX = re.compile( "No module named '?ycm_core'?" )
 CORE_PYTHON2_ERROR_REGEX = re.compile(
   'dynamic module does not define (?:init|module export) '
@@ -145,7 +146,9 @@ def PathToNearestThirdPartyFolder( path ):
 
 
 def IsStandardLibraryFolder( path ):
-  return os.path.isfile( os.path.join( path, 'os.py' ) )
+  return ( ( os.path.isfile( path )
+             and PYTHON_STDLIB_ZIP_REGEX.match( os.path.basename( path ) ) )
+           or os.path.isfile( os.path.join( path, 'os.py' ) ) )
 
 
 def IsVirtualEnvLibraryFolder( path ):
