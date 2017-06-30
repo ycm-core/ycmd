@@ -24,6 +24,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from hamcrest import assert_that, calling, equal_to, raises
 from nose.tools import eq_
 
 from ycmd.utils import ToBytes
@@ -228,3 +229,92 @@ def Query_UnicodeSinglecharExclusive_test():
   eq_( '',
        RequestWrap( PrepareJson( column_num = 5,
                                  contents = 'abc.ø' ) )[ 'query' ] )
+
+
+def StartColumn_Set_test():
+  wrap = RequestWrap( PrepareJson( column_num = 11,
+                                   contents = 'this \'test',
+                                   filetype = 'javascript' ) )
+  eq_( wrap[ 'start_column' ], 7 )
+  eq_( wrap[ 'start_codepoint' ], 7 )
+  eq_( wrap[ 'query' ], "test" )
+
+  wrap[ 'start_column' ] = 6
+  eq_( wrap[ 'start_column' ], 6 )
+  eq_( wrap[ 'start_codepoint' ], 6 )
+  eq_( wrap[ 'query' ], "'test" )
+
+
+def StartColumn_SetUnicode_test():
+  wrap = RequestWrap( PrepareJson( column_num = 14,
+                                   contents = '†eß† \'test',
+                                   filetype = 'javascript' ) )
+  eq_( 7,  wrap[ 'start_codepoint' ] )
+  eq_( 12, wrap[ 'start_column' ] )
+  eq_( wrap[ 'query' ], "te" )
+
+  wrap[ 'start_column' ] = 11
+  eq_( wrap[ 'start_column' ], 11 )
+  eq_( wrap[ 'start_codepoint' ], 6 )
+  eq_( wrap[ 'query' ], "'te" )
+
+
+def StartCodepoint_Set_test():
+  wrap = RequestWrap( PrepareJson( column_num = 11,
+                                   contents = 'this \'test',
+                                   filetype = 'javascript' ) )
+  eq_( wrap[ 'start_column' ], 7 )
+  eq_( wrap[ 'start_codepoint' ], 7 )
+  eq_( wrap[ 'query' ], "test" )
+
+  wrap[ 'start_codepoint' ] = 6
+  eq_( wrap[ 'start_column' ], 6 )
+  eq_( wrap[ 'start_codepoint' ], 6 )
+  eq_( wrap[ 'query' ], "'test" )
+
+
+def StartCodepoint_SetUnicode_test():
+  wrap = RequestWrap( PrepareJson( column_num = 14,
+                                   contents = '†eß† \'test',
+                                   filetype = 'javascript' ) )
+  eq_( 7,  wrap[ 'start_codepoint' ] )
+  eq_( 12, wrap[ 'start_column' ] )
+  eq_( wrap[ 'query' ], "te" )
+
+  wrap[ 'start_codepoint' ] = 6
+  eq_( wrap[ 'start_column' ], 11 )
+  eq_( wrap[ 'start_codepoint' ], 6 )
+  eq_( wrap[ 'query' ], "'te" )
+
+
+def Calculated_SetMethod_test():
+  assert_that(
+    calling( RequestWrap( PrepareJson( ) ).__setitem__ ).with_args(
+      'line_value', '' ),
+    raises( ValueError, 'Key "line_value" is read-only' ) )
+
+
+def Calculated_SetOperator_test():
+  # Differs from the above in that it use [] operator rather than __setitem__
+  # directly. And it uses a different property for extra credit.
+  wrap = RequestWrap( PrepareJson() )
+  try:
+    wrap[ 'query' ] = 'test'
+  except ValueError as error:
+    assert_that( str( error ),
+                 equal_to( 'Key "query" is read-only' ) )
+  else:
+    raise AssertionError( 'Expected setting "query" to fail' )
+
+
+def NonCalculated_Set_test():
+  # Differs from the above in that it use [] operator rather than __setitem__
+  # directly. And it uses a different property for extra credit.
+  wrap = RequestWrap( PrepareJson() )
+  try:
+    wrap[ 'column_num' ] = 10
+  except ValueError as error:
+    assert_that( str( error ),
+                 equal_to( 'Key "column_num" is read-only' ) )
+  else:
+    raise AssertionError( 'Expected setting "column_num" to fail' )
