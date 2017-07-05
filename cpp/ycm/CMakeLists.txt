@@ -30,48 +30,46 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION 4.0.0 )
+  set( CLANG_VERSION 4.0.1 )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "5504064916d0651c185ceff85871298f31e2eaf4abf1333b2c36f5eed5e9cde6" )
+         "5f697801a46239c04251730b7ccccd3ebbacb9043ad381a061ae6812409e9eae" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win64" )
       set( CLANG_SHA256
-           "9bb800e42a4568c7a6e217dac1b613741ee9811eea2fa65ca8c20702728003e9" )
+           "139ba95f9f88199cdc419a674f0a85df3568367623486336843207a4982e36e9" )
     else()
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win32" )
       set( CLANG_SHA256
-           "aabe2a31182d9adce8146c86fe92e19d911b7cc1cb240cdb790f314c819c92e2" )
+           "0071e699965d7a0f62f59536a1a16843d1f6919af4c596a82c2a03f05ea34ca6" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
   elseif ( CMAKE_SYSTEM_NAME MATCHES "FreeBSD" )
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-amd64-unknown-freebsd10" )
       set( CLANG_SHA256
-           "e8878b589c2558aeb9733661e9a23fd47d41be0dc200aa50acf7a7eb1ab53eee" )
+           "685b1381e152ae0341a736a1ad38c1fae91e71e6461da7223e81269ffdef3986" )
     else()
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i386-unknown-freebsd10" )
       set( CLANG_SHA256
-           "f3bfd0e4778d5e6b94f774e4531a61a662c7688e08b54cef5e5fc53711e65243" )
+           "9b22e796f847be612b9b33f7a93987386dee0928f6547f61148d9e6edbc6256c" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( CLANG_SHA256
-         "e019e073041d20d848f07aa4b8c7acad23c0e620c69ae24bbe65fec8c54b94f8" )
+         "603c0c2a507a97cf4f4e42082d90ee6ea4acd677b748e8541cf4806dcee182c3" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
-    # Among the prebuilt binaries available upstream for Ubuntu, only 14.04 is
-    # working on Travis (16.04 and 16.10 are too recent).
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME
-           "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-14.04" )
+           "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-debian8" )
       set( CLANG_SHA256
-           "1d15b6337ffc0876ed1a9827cae566e24639e0f5d7d186b2de04c38d762336b4" )
+           "ca48a4def4cbc9dd6af3f46ce1dc2bd903d26c7ad51387f57884ad1eaa58e42f" )
     else()
       message( FATAL_ERROR
         "No prebuilt Clang ${CLANG_VERSION} binaries for 32-bit Linux. "
