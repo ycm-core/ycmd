@@ -10,8 +10,6 @@ before_install:
 install:
   # source because it sets up env vars on some platforms
   - source ci/travis/travis_install.sh
-compiler:
-  - gcc
 script:
   - ci/travis/travis_script.sh
 after_success:
@@ -21,18 +19,22 @@ env:
     # Travis can run out of RAM, so we need to be careful here.
     - YCM_CORES=3
     - COVERAGE=true
+    - USE_CLANG_COMPLETER=true
   matrix:
-    - USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.7
-    - USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=3.3
-    - YCM_BENCHMARK=true YCMD_PYTHON_VERSION=3.3 COVERAGE=false
+    - YCMD_PYTHON_VERSION=2.6 USE_CLANG_COMPLETER=false
+    - YCMD_PYTHON_VERSION=2.6
+    - YCMD_PYTHON_VERSION=2.7
+    - YCMD_PYTHON_VERSION=3.3
+    - YCMD_PYTHON_VERSION=3.3 YCM_COMPILER=clang
+    - YCMD_PYTHON_VERSION=3.3 YCM_BENCHMARK=true COVERAGE=false
 matrix:
   exclude:
     - os: osx
-      env: USE_CLANG_COMPLETER=false YCMD_PYTHON_VERSION=2.6
+      env: YCMD_PYTHON_VERSION=2.6 USE_CLANG_COMPLETER=false
     - os: osx
-      env: USE_CLANG_COMPLETER=true YCMD_PYTHON_VERSION=2.6
+      env: YCMD_PYTHON_VERSION=2.6
+    - os: osx
+      env: YCMD_PYTHON_VERSION=3.3 YCM_COMPILER=clang
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/
@@ -49,6 +51,9 @@ addons:
      # 4.9 is the first version of GCC with good enough C++11 support; in
      # particular regex support.
      - g++-4.9
+     # Install Clang 3.4 and its standard library.
+     - clang
+     - libc++-dev
      # Required to build the OmniSharp server.
      - mono-devel
      - ninja-build
