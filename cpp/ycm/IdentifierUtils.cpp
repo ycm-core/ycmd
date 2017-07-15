@@ -113,14 +113,14 @@ const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const fs::path &path_to_tag_file ) {
   std::vector< std::string > tags_file_contents;
+  FiletypeIdentifierMap filetype_identifier_map;
 
   try {
     tags_file_contents = ReadUtf8File( path_to_tag_file );
   } catch ( ... ) {
-    return {};
+    return filetype_identifier_map;
   }
 
-  FiletypeIdentifierMap filetype_identifier_map;
   std::smatch matches;
   const std::regex expression( TAG_REGEX, std::regex::optimize );
 
