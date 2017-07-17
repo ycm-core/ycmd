@@ -220,6 +220,10 @@ The return value must be one of the following:
 
   - `flags`: (mandatory) a list of compiler flags.
 
+  - `include_paths_relative_to_dir': (optional) the directory to which the
+    include paths in the list of flags are relative. Defaults to ycmd working
+    directory.
+
   - `do_cache`: (optional) a boolean indicating whether or not the result of
     this call (i.e. the list of flags) should be cached for this file name.
     Defaults to `True`. If unsure, the default is almost always correct.
