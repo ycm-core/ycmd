@@ -115,7 +115,7 @@ endif()
 # Determining the presence of C++11 support in the compiler
 set( CPP11_AVAILABLE false )
 if ( CMAKE_COMPILER_IS_GNUCXX )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9 )
+  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8 )
     set( CPP11_AVAILABLE true )
   endif()
 elseif( COMPILER_IS_CLANG )
