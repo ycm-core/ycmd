@@ -48,9 +48,8 @@ addons:
     packages:
      - cmake-data
      - cmake
-     # 4.9 is the first version of GCC with good enough C++11 support; in
-     # particular regex support.
-     - g++-4.9
+     # 4.8 is the first version of GCC with good enough C++11 support.
+     - g++-4.8
      # Install Clang 3.4 and its standard library.
      - clang
      - libc++-dev
