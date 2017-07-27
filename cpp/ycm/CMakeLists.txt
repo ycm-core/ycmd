@@ -321,7 +321,7 @@ if ( EXTRA_RPATH )
 endif()
 
 # Needed on Linux machines, but not on Macs and OpenBSD
-if ( UNIX AND NOT ( APPLE OR SYSTEM_IS_OPENBSD ) )
+if ( UNIX AND NOT ( APPLE OR SYSTEM_IS_OPENBSD OR HAIKU ) )
   set( EXTRA_LIBS rt )
 endif()
 
