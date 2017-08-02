@@ -525,6 +525,7 @@ def Main():
   args = ParseArguments()
   ExitIfYcmdLibInUseOnWindows()
   BuildYcmdLib( args )
+  WritePythonUsedDuringBuild()
   if args.omnisharp_completer or args.all_completers:
     BuildOmniSharp()
   if args.gocode_completer or args.all_completers:
@@ -533,7 +534,6 @@ def Main():
     SetUpTern()
   if args.racer_completer or args.all_completers:
     BuildRacerd()
-  WritePythonUsedDuringBuild()
 
 
 if __name__ == '__main__':
