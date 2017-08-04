@@ -87,6 +87,7 @@ YCM_DLL_EXPORT bool IsLowercase( char letter );
 YCM_DLL_EXPORT bool IsLowercase( const std::string &text );
 YCM_DLL_EXPORT bool IsUppercase( char letter );
 YCM_DLL_EXPORT char Lowercase( char letter );
+YCM_DLL_EXPORT std::string Lowercase( const std::string &text );
 YCM_DLL_EXPORT char Uppercase( char letter );
 YCM_DLL_EXPORT bool HasUppercase( const std::string &text );
 YCM_DLL_EXPORT char SwapCase( char letter );

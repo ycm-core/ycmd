@@ -119,6 +119,12 @@ char Lowercase( char letter ) {
   return letter;
 }
 
+std::string Lowercase( const std::string &text ) {
+  std::string result;
+  for ( char letter : text )
+    result.push_back( Lowercase( letter ) );
+  return result;
+}
 
 char Uppercase( char letter ) {
   if ( IsLowercase( letter ) )
