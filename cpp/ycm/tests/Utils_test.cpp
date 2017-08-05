@@ -107,6 +107,8 @@ TEST( UtilsTest, Lowercase ) {
   EXPECT_EQ( Lowercase( 'A' ), 'a' );
   EXPECT_EQ( Lowercase( 'Z' ), 'z' );
   EXPECT_EQ( Lowercase( ';' ), ';' );
+
+  EXPECT_EQ( Lowercase( "lOwER_CasE" ), "lower_case" );
 }
 
 TEST( UtilsTest, Uppercase ) {

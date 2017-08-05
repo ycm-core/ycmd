@@ -13,3 +13,5 @@ Floo::goo	/foo/zoo	language:C
 !goo	/foo/goo maa	language:C
 zoro	/foo	language:fakelang
 #bleh	/m_oo	123ntoh;;;\"eu	language:C#	;\"
+API	foo.bar	/^        class TEST $/;"       c	language:FooBar
+DELETE	foo.bar	/^        DELETE:  =>$/;"   m	language:FooBar

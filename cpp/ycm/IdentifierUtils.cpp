@@ -106,8 +106,6 @@ const std::unordered_map < const char *,
         { "YACC"       , "yacc"       }
       };
 
-const char *const NOT_FOUND = "YCMFOOBAR_NOT_FOUND";
-
 }  // unnamed namespace
 
 
@@ -135,10 +133,7 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     std::string language( matches[ 3 ] );
     std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
                                             language.c_str(),
-                                            NOT_FOUND );
-
-    if ( filetype == NOT_FOUND )
-      continue;
+                                            Lowercase( language ).c_str() );
 
     std::string identifier( matches[ 1 ] );
     fs::path path( matches[ 2 ].str() );

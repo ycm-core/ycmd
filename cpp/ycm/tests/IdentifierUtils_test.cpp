@@ -49,7 +49,14 @@ TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
   expected[ "c" ][ ( root / "foo" / "zoo" ).string() ].push_back( "Floo::goo" );
   expected[ "c" ][ ( root / "foo" / "goo maa" ).string() ].push_back( "!goo" );
 
+  expected[ "fakelang" ][ ( root / "foo" ).string() ].push_back( "zoro" );
+
   expected[ "cs" ][ ( root / "m_oo" ).string() ].push_back( "#bleh" );
+
+  expected[ "foobar" ][ ( testfile_parent / "foo.bar" ).string() ]
+  .push_back( "API" );
+  expected[ "foobar" ][ ( testfile_parent / "foo.bar" ).string() ]
+  .push_back( "DELETE" );
 
   EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
                ContainerEq( expected ) );
