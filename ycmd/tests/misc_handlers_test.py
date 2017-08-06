@@ -175,7 +175,7 @@ def MiscHandlers_DebugInfo_NoExtraConfFound_test( app ):
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def MiscHandlers_DebugInfo_ExtraConfFoundButNotLoaded_test( app ):
   filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
   request_data = BuildRequest( filepath = filepath )
