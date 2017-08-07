@@ -30,46 +30,46 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION 4.0.1 )
+  set( CLANG_VERSION 5.0.0 )
 
   if ( APPLE )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-x86_64-apple-darwin" )
     set( CLANG_SHA256
-         "5f697801a46239c04251730b7ccccd3ebbacb9043ad381a061ae6812409e9eae" )
+         "326be172ccb61210c9ae5dced27204977e249ec6589521cc30f82fd0904b0671" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win64" )
       set( CLANG_SHA256
-           "139ba95f9f88199cdc419a674f0a85df3568367623486336843207a4982e36e9" )
+           "2b93843bd15623dc0e1bb52af85f2c0b41a89b6c1e613e6e6bd0da597c2639eb" )
     else()
       set( CLANG_DIRNAME "LLVM-${CLANG_VERSION}-win32" )
       set( CLANG_SHA256
-           "0071e699965d7a0f62f59536a1a16843d1f6919af4c596a82c2a03f05ea34ca6" )
+           "b7a7565680d3aad66c17f789c115b738be4af3bc16e2589923f7a940f32439f6" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.exe" )
   elseif ( CMAKE_SYSTEM_NAME MATCHES "FreeBSD" )
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-amd64-unknown-freebsd10" )
       set( CLANG_SHA256
-           "685b1381e152ae0341a736a1ad38c1fae91e71e6461da7223e81269ffdef3986" )
+           "e55b646390da0a24e27f9761eecf0b31936483c9a3e84c12de0bb1a0d95bab6c" )
     else()
       set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-i386-unknown-freebsd10" )
       set( CLANG_SHA256
-           "9b22e796f847be612b9b33f7a93987386dee0928f6547f61148d9e6edbc6256c" )
+           "2ea32ad7cd30d8e849113747b5bfda8e6eb0fb2f9b01cbe9eb61e884c0bd69eb" )
     endif()
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( CLANG_SHA256
-         "603c0c2a507a97cf4f4e42082d90ee6ea4acd677b748e8541cf4806dcee182c3" )
+         "28545a43b6fdfa9b287f31b5186fe8a643eb77c585da638e9847a3d09564d362" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME
-           "clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-debian8" )
+           "clang+llvm-${CLANG_VERSION}-linux-x86_64-ubuntu14.04" )
       set( CLANG_SHA256
-           "ca48a4def4cbc9dd6af3f46ce1dc2bd903d26c7ad51387f57884ad1eaa58e42f" )
+           "58c1171f326108cfb7641441c5ede7846d58823bce3206c86a84c7ef7748860d" )
     else()
       message( FATAL_ERROR
         "No prebuilt Clang ${CLANG_VERSION} binaries for 32-bit Linux. "
@@ -98,7 +98,7 @@ if ( USE_CLANG_COMPLETER AND
   if( CLANG_DOWNLOAD )
     message( "Downloading Clang ${CLANG_VERSION}" )
 
-    set( CLANG_URL "http://llvm.org/releases/${CLANG_VERSION}" )
+    set( CLANG_URL "http://releases.llvm.org/${CLANG_VERSION}" )
     file(
       DOWNLOAD "${CLANG_URL}/${CLANG_FILENAME}" "${CLANG_LOCAL_FILE}"
       SHOW_PROGRESS EXPECTED_HASH SHA256=${CLANG_SHA256}
