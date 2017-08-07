@@ -23,11 +23,12 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from future.utils import iteritems, iterkeys
+import abc
+import collections
 import logging
-import threading
 import os
 import queue
-import json
+import threading
 
 from ycmd.completers.completer import Completer
 # from ycmd.completers.completer_utils import GetFileContents
@@ -311,7 +312,7 @@ class LanguageServerCompleter( Completer ):
 
     self._serverFileState = {}
     self._fileStateMutex = threading.Lock()
-    self._server = LanguageServerConnection()
+    self._latest_diagnostics = collections.defaultdict( list )
 
 
   def GetServer( sefl ):
@@ -493,6 +494,7 @@ class LanguageServerCompleter( Completer ):
       # _any_ publishDiagnostics message was pending.
       params = notification[ 'params' ]
       uri = params[ 'uri' ]
+      self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
 
       # TODO(Ben): Does realpath break symlinks?
       # e.g. we putting symlinks in the testdata for the source does not work
@@ -572,23 +574,35 @@ class LanguageServerCompleter( Completer ):
         self._syncType ) )
 
 
-  def _GetType( self, request_data ):
-    request_id = self._server.NextRequestId()
-    response = self._server.GetResponse( request_id,
+  def _GetHoverResponse( self, request_data ):
+    request_id = self.GetServer().NextRequestId()
+    response = self.GetServer().GetResponse( request_id,
                                          lsapi.Hover( request_id,
                                                       request_data ) )
 
-    if isinstance( response[ 'result' ][ 'contents' ], list ):
-      if len( response[ 'result' ][ 'contents' ] ):
-        info = response[ 'result' ][ 'contents' ][ 0 ]
-      else:
-        raise RuntimeError( 'No information' )
+    return response[ 'result' ][ 'contents' ]
+
+
+  def LocationListToGoTo( self, response ):
+    if len( response[ 'result' ] ) > 1:
+      positions = response[ 'result' ]
+      return [
+        responses.BuildGoToResponseFromLocation(
+          # TODO: Codepoint to byte offset
+          responses.Location(
+            position[ 'range' ][ 'start' ][ 'line' ] + 1,
+            position[ 'range' ][ 'start' ][ 'character' ] + 1,
+            lsapi.UriToFilePath( position[ 'uri' ] ) )
+        ) for position in positions
+      ]
     else:
-      info = response[ 'result' ][ 'contents' ]
-
-
-
-    return responses.BuildDisplayMessageResponse( str( info ) )
+      position = response[ 'result' ][ 0 ]
+      return responses.BuildGoToResponseFromLocation(
+        # TODO: Codepoint to byte offset
+        responses.Location( position[ 'range' ][ 'start' ][ 'line' ] + 1,
+                            position[ 'range' ][ 'start' ][ 'character' ] + 1,
+                            lsapi.UriToFilePath( position[ 'uri' ] ) )
+      )
 
 
   def _GoToDeclaration( self, request_data ):
@@ -598,25 +612,7 @@ class LanguageServerCompleter( Completer ):
                                                                request_data ) )
 
     if isinstance( response[ 'result' ], list ):
-      if len( response[ 'result' ] ) > 1:
-        positions = response[ 'result' ]
-        return [
-          responses.BuildGoToResponseFromLocation(
-            # TODO: Codepoint to byte offset
-            responses.Location(
-              position[ 'range' ][ 'start' ][ 'line' ] + 1,
-              position[ 'range' ][ 'start' ][ 'character' ] + 1,
-              lsapi.UriToFilePath( position[ 'uri' ] ) )
-          ) for position in positions
-        ]
-      else:
-        position = response[ 'result' ][ 0 ]
-        return responses.BuildGoToResponseFromLocation(
-          # TODO: Codepoint to byte offset
-          responses.Location( position[ 'range' ][ 'start' ][ 'line' ] + 1,
-                              position[ 'range' ][ 'start' ][ 'character' ] + 1,
-                              lsapi.UriToFilePath( position[ 'uri' ] ) )
-        )
+      return self.LocationListToGoTo( response )
     else:
       position = response[ 'result' ]
       return responses.BuildGoToResponseFromLocation(
@@ -625,6 +621,104 @@ class LanguageServerCompleter( Completer ):
                             position[ 'range' ][ 'start' ][ 'character' ] + 1,
                             lsapi.UriToFilePath( position[ 'uri' ] ) )
       )
+
+
+  def _GoToReferences( self, request_data ):
+    request_id = self.GetServer().NextRequestId()
+    response = self.GetServer().GetResponse( request_id,
+                                             lsapi.References( request_id,
+                                                               request_data ) )
+
+    return self.LocationListToGoTo( response )
+
+
+  def _CodeAction( self, request_data, args ):
+    # FIXME: We need to do this for all such requests
+    self._RefreshFiles( request_data )
+
+    line_num_ls = request_data[ 'line_num' ] - 1
+
+    def WithinRange( diag ):
+      r = diag[ 'range' ]
+
+      start = r[ 'start' ]
+      end = r[ 'end' ]
+
+      if line_num_ls < start[ 'line' ] or line_num_ls > end[ 'line' ]:
+        return False
+
+      return True
+
+    # TODO: Do we need to do this? I mean, could we just send the whole current
+    # line as the range, as this is effectively what we do for other completers
+    #
+    # TODO: HACK: using internal lsapi method
+    file_diagnostics = self._latest_diagnostics[
+        lsapi._MakeUriForFile( request_data[ 'filepath' ] ) ]
+
+    matched_diagnostics = [
+      d for d in file_diagnostics if WithinRange( d )
+    ]
+
+    request_id = self.GetServer().NextRequestId()
+    if matched_diagnostics:
+      code_actions = self.GetServer().GetResponse(
+        request_id,
+        lsapi.CodeAction( request_id,
+                          request_data,
+                          matched_diagnostics[ 0 ][ 'range' ],
+                          matched_diagnostics ) )
+
+    else:
+      code_actions = self.GetServer().GetResponse(
+        request_id,
+        lsapi.CodeAction(
+          request_id,
+          request_data,
+          # Use the whole line
+          {
+            'start': {
+              'line': line_num_ls,
+              'character': 0,
+            },
+            'end': {
+              'line': line_num_ls,
+              'character': len( request_data[ 'line_value' ] ) - 1,
+            }
+          },
+          [] ) )
+
+    response = [ self.HandleServerCommand( request_data, c )
+                 for c in code_actions[ 'result' ] ]
+
+    # Else, show a list of actions to the user to select which one to apply.
+    # This is (probably) a more common workflow for "code action".
+    return responses.BuildFixItResponse( [ r for r in response if r ] )
+
+
+  @abc.abstractmethod
+  def HandleServerCommand( self, request_data, command ):
+    _logger.debug( 'What is going on?' )
+    return None
+
+
+  def _Rename( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( 'Please specify a new name to rename it to.\n'
+                        'Usage: RefactorRename <new name>' )
+
+    new_name = args[ 0 ]
+
+    request_id = self.GetServer().NextRequestId()
+    response = self.GetServer().GetResponse(
+      request_id,
+      lsapi.Rename( request_id,
+                    request_data,
+                    new_name ),
+      timeout = 30 )
+
+    return responses.BuildFixItResponse(
+      [ WorkspaceEditToFixIt( request_data, response[ 'result' ] ) ] )
 
 
   def _GetInsertionText( self, request_data, item ):
@@ -731,3 +825,28 @@ def BuildDiagnostic( filename, diag ):
     location_extent = r,
     text = diag[ 'message' ],
     kind = SEVERITY_TO_YCM_SEVERITY[ SEVERITY[ diag[ 'severity' ] ] ] ) )
+
+
+def TextEditToChunks( uri, text_edit ):
+  filepath = lsapi.UriToFilePath( uri )
+  return [
+    responses.FixItChunk( change[ 'newText' ],
+                          BuildRange( filepath, change[ 'range' ] ) )
+    for change in text_edit
+  ]
+
+
+def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
+  if 'changes' not in workspace_edit:
+    return None
+
+  chunks = list()
+  for uri in iterkeys( workspace_edit[ 'changes' ] ):
+    chunks.extend( TextEditToChunks( uri, workspace_edit[ 'changes' ][ uri ] ) )
+
+  return responses.FixIt(
+    responses.Location( request_data[ 'line_num' ],
+                        request_data[ 'column_num' ],
+                        request_data[ 'filepath' ] ),
+    chunks,
+    text )

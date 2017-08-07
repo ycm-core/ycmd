@@ -118,6 +118,31 @@ def Definition( request_id, request_data ):
                        BuildTextDocumentPositionParams( request_data ) )
 
 
+def CodeAction( request_id, request_data, best_match_range, diagnostics ):
+  return BuildRequest( request_id, 'textDocument/codeAction', {
+    'textDocument': {
+      'uri': _MakeUriForFile( request_data[ 'filepath' ] ),
+    },
+    'range': best_match_range,
+    'context': {
+      'diagnostics': diagnostics,
+    },
+  } )
+
+
+def Rename( request_id, request_data, new_name ):
+  return BuildRequest( request_id, 'textDocument/rename', {
+    'textDocument': {
+      'uri': _MakeUriForFile( request_data[ 'filepath' ] ),
+    },
+    'position': {
+      'line': request_data[ 'line_num' ] - 1,
+      'character': request_data[ 'start_column' ] - 1,
+    },
+    'newName': new_name,
+  } )
+
+
 def BuildTextDocumentPositionParams( request_data ):
   return {
     'textDocument': {
@@ -128,6 +153,12 @@ def BuildTextDocumentPositionParams( request_data ):
       'character': request_data[ 'start_column' ] - 1,
     },
   }
+
+
+def References( request_id, request_data ):
+  request = BuildTextDocumentPositionParams( request_data )
+  request[ 'context' ] = { 'includeDeclaration': True }
+  return BuildRequest( request_id, 'textDocument/references', request )
 
 
 def _MakeUriForFile( file_name ):
