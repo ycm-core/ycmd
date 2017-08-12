@@ -184,10 +184,13 @@ def Load( module_file, force = False ):
 def _MatchesGlobPattern( filename, glob ):
   """Returns true if a filename matches a given pattern. A '~' in glob will be
   expanded to the home directory and checking will be performed using absolute
-  paths. See the documentation of fnmatch for the supported patterns."""
+  paths with symlinks resolved (except on Windows). See the documentation of
+  fnmatch for the supported patterns."""
 
-  abspath = os.path.abspath( filename )
-  return fnmatch( abspath, os.path.abspath( os.path.expanduser( glob ) ) )
+  # NOTE: os.path.realpath does not resolve symlinks on Windows.
+  # See https://bugs.python.org/issue9949
+  realpath = os.path.realpath( filename )
+  return fnmatch( realpath, os.path.realpath( os.path.expanduser( glob ) ) )
 
 
 def _ExtraConfModuleSourceFilesForFile( filename ):
