@@ -173,6 +173,15 @@ def TemporaryExecutable( extension = '.exe' ):
     yield executable.name
 
 
+@contextlib.contextmanager
+def TemporarySymlink( source, link ):
+  os.symlink( source, link )
+  try:
+    yield
+  finally:
+    os.remove( link )
+
+
 def SetUpApp( custom_options = {} ):
   bottle.debug( True )
   options = user_options_store.DefaultOptions()
