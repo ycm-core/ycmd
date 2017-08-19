@@ -84,7 +84,7 @@ TEST( ClangCompleterTest, MemberFunctionWithDefaults ) {
 
   for ( size_t i = 0; i < completions.size(); ++i ) {
     if ( completions[i].TextToInsertInBuffer() == "foobar" ) {
-      EXPECT_STREQ( "foobar( int a, float b, char c )",
+      EXPECT_STREQ( "foobar( int a, float b = 3.0, char c = '\\n' )",
                     completions[i].MainCompletionText().c_str() );
       break;
     }
