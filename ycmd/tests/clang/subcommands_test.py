@@ -344,7 +344,7 @@ def Subcommands_GetType_test():
     # On Ns:: (Unknown)
     [{'line_num': 21, 'column_num':  3}, 'Unknown type'], # sic
     # On Type (Type)
-    [{'line_num': 21, 'column_num':  8}, 'Type => Ns::BasicType<char>'], # sic
+    [{'line_num': 21, 'column_num':  8}, 'Ns::Type => Ns::BasicType<char>'],
     # On "a" (Ns::Type)
     [{'line_num': 21, 'column_num': 15}, 'Ns::Type => Ns::BasicType<char>'],
     [{'line_num': 22, 'column_num': 13}, 'Ns::Type => Ns::BasicType<char>'],
