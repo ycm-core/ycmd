@@ -605,7 +605,7 @@ template<class Archive, class T>
 inline void load(Archive & ar, T &t){
     // if this assertion trips. It means we're trying to load a
     // const object with a compiler that doesn't have correct
-    // funtion template ordering.  On other compilers, this is
+    // function template ordering.  On other compilers, this is
     // handled below.
     detail::check_const_loading< T >();
     typedef

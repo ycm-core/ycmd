@@ -20,7 +20,7 @@
 #endif
 #elif defined(_LIBCPP_VERSION)
 // https://github.com/llvm-mirror/libcxx/blob/release_30/include/utility#L206
-#if LIBCPP_VERSION >= 3000
+#if _LIBCPP_VERSION >= 3000
 #define BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT 1
 #endif
 #elif defined(BOOST_MSVC)
@@ -32,6 +32,8 @@
 #endif
 #endif
 
+// TODO: Use piecewise construction by default? Is it safe to assume that an
+//       unknown library has it?
 #if !defined(BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT)
 #define BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT 0
 #endif

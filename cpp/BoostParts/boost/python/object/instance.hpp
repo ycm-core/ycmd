@@ -6,7 +6,7 @@
 # define INSTANCE_DWA200295_HPP
 
 # include <boost/python/detail/prefix.hpp>
-# include <boost/type_traits/alignment_traits.hpp>
+
 # include <cstddef>
 
 namespace boost { namespace python
@@ -25,8 +25,8 @@ struct instance
     PyObject* weakrefs; 
     instance_holder* objects;
 
-    typedef typename type_with_alignment<
-        ::boost::alignment_of<Data>::value
+    typedef typename boost::python::detail::type_with_alignment<
+        boost::python::detail::alignment_of<Data>::value
     >::type align_t;
           
     union

@@ -10,9 +10,7 @@
 #include <boost/python/type_id.hpp>
 #include <boost/python/converter/registry.hpp>
 #include <boost/python/converter/registrations.hpp>
-#include <boost/type_traits/transform_traits.hpp>
-#include <boost/type_traits/cv_traits.hpp>
-#include <boost/type_traits/is_void.hpp>
+#include <boost/python/detail/type_traits.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/type.hpp>
 #include <memory>
@@ -44,8 +42,8 @@ namespace detail
 template <class T>
 struct registered
   : detail::registered_base<
-        typename add_reference<
-            typename add_cv<T>::type
+        typename boost::python::detail::add_lvalue_reference<
+            typename boost::python::detail::add_cv<T>::type
         >::type
     >
 {

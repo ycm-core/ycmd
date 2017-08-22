@@ -53,8 +53,12 @@
 // MacOS
 #  define BOOST_PLATFORM_CONFIG "boost/config/platform/macos.hpp"
 
+#elif defined(__TOS_MVS__)
+// IBM z/OS
+#  define BOOST_PLATFORM_CONFIG "boost/config/platform/zos.hpp"
+
 #elif defined(__IBMCPP__) || defined(_AIX)
-// IBM
+// IBM AIX
 #  define BOOST_PLATFORM_CONFIG "boost/config/platform/aix.hpp"
 
 #elif defined(__amigaos__)
@@ -97,7 +101,7 @@
 #     define BOOST_HAS_UNISTD_H
 #  endif
 
-#  include <boost/config/posix_features.hpp>
+#  include <boost/config/detail/posix_features.hpp>
 
 #  endif
 
@@ -122,6 +126,7 @@
 #  include "boost/config/platform/win32.hpp"
 #  include "boost/config/platform/beos.hpp"
 #  include "boost/config/platform/macos.hpp"
+#  include "boost/config/platform/zos.hpp"
 #  include "boost/config/platform/aix.hpp"
 #  include "boost/config/platform/amigaos.hpp"
 #  include "boost/config/platform/qnxnto.hpp"
@@ -129,7 +134,7 @@
 #  include "boost/config/platform/symbian.hpp" 
 #  include "boost/config/platform/cray.hpp" 
 #  include "boost/config/platform/vms.hpp" 
-#  include <boost/config/posix_features.hpp>
+#  include <boost/config/detail/posix_features.hpp>
 
 
 

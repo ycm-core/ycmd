@@ -347,7 +347,7 @@ struct allocator_traits
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       //! <b>Effects</b>: calls <code>a.construct(p, std::forward<Args>(args)...)</code> if that call is well-formed;
-      //! otherwise, invokes <code>::new (static_cast<void*>(p)) T(std::forward<Args>(args)...)</code>
+      //! otherwise, invokes <code>`placement new` (static_cast<void*>(p)) T(std::forward<Args>(args)...)</code>
       template <class T, class ...Args>
       BOOST_CONTAINER_FORCEINLINE static void construct(Allocator & a, T* p, BOOST_FWD_REF(Args)... args)
       {

@@ -64,7 +64,7 @@ collection_load_impl(
     Archive & ar,
     T & t,
     collection_size_type count,
-    item_version_type
+    item_version_type /*item_version*/
 ){
     t.resize(count);
     typename T::iterator hint;
