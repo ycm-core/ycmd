@@ -23,6 +23,7 @@
 #pragma once
 #endif
 
+#include <vector>
 #include <boost/math/special_functions/detail/round_fwd.hpp>
 #include <boost/math/tools/promotion.hpp> // for argument promotion.
 #include <boost/math/policies/policy.hpp>
@@ -181,10 +182,24 @@ namespace boost
    template <class T>
    typename tools::promote_args<T>::type
          legendre_p(int l, T x);
+   template <class T>
+   typename tools::promote_args<T>::type
+          legendre_p_prime(int l, T x);
+
+
+   template <class T, class Policy>
+   inline std::vector<T> legendre_p_zeros(int l, const Policy& pol);
+
+   template <class T>
+   inline std::vector<T> legendre_p_zeros(int l);
+
 #if !BOOST_WORKAROUND(BOOST_MSVC, <= 1310)
    template <class T, class Policy>
    typename boost::enable_if_c<policies::is_policy<Policy>::value, typename tools::promote_args<T>::type>::type
          legendre_p(int l, T x, const Policy& pol);
+   template <class T, class Policy>
+   inline typename boost::enable_if_c<policies::is_policy<Policy>::value, typename tools::promote_args<T>::type>::type
+      legendre_p_prime(int l, T x, const Policy& pol);
 #endif
    template <class T>
    typename tools::promote_args<T>::type
@@ -1147,6 +1162,10 @@ namespace boost
 \
    template <class T>\
    inline typename boost::math::tools::promote_args<T>::type \
+   legendre_p_prime(int l, T x){ return ::boost::math::legendre_p(l, x, Policy()); }\
+\
+   template <class T>\
+   inline typename boost::math::tools::promote_args<T>::type \
    legendre_q(unsigned l, T x){ return ::boost::math::legendre_q(l, x, Policy()); }\
 \
    using ::boost::math::legendre_next;\
@@ -1593,5 +1612,3 @@ template <class OutputIterator, class T>\
 
 
 #endif // BOOST_MATH_SPECIAL_MATH_FWD_HPP
-
-

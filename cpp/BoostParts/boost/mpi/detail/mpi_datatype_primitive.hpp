@@ -25,10 +25,10 @@ namespace std{
 #include <boost/assert.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/serialization/array.hpp>
-#include <boost/serialization/detail/get_data.hpp>
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+#include <boost/mpi/detail/antiques.hpp>
 
 namespace boost { namespace mpi { namespace detail {
 
@@ -80,18 +80,18 @@ public:
        BOOST_MPI_CHECK_RESULT(MPI_Type_create_struct,
                     (
                       addresses.size(),
-                      boost::serialization::detail::get_data(lengths),
-                      boost::serialization::detail::get_data(addresses),
-                      boost::serialization::detail::get_data(types),
+                      c_data(lengths),
+                      c_data(addresses),
+                      c_data(types),
                       &datatype_
                     ));
 #else
         BOOST_MPI_CHECK_RESULT(MPI_Type_struct,
                                (
                                 addresses.size(),
-                                boost::serialization::detail::get_data(lengths),
-                                boost::serialization::detail::get_data(addresses),
-                                boost::serialization::detail::get_data(types),
+                                c_data(lengths),
+                                c_data(addresses),
+                                c_data(types),
                                 &datatype_
                                 ));
 #endif

@@ -29,7 +29,8 @@ template <class T, class H, class P, class A>
 inline bool operator!=(
     unordered_set<T, H, P, A> const&, unordered_set<T, H, P, A> const&);
 template <class T, class H, class P, class A>
-inline void swap(unordered_set<T, H, P, A>& m1, unordered_set<T, H, P, A>& m2);
+inline void swap(unordered_set<T, H, P, A>& m1, unordered_set<T, H, P, A>& m2)
+    BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(m1.swap(m2)));
 
 template <class T, class H = boost::hash<T>, class P = std::equal_to<T>,
     class A = std::allocator<T> >
@@ -43,7 +44,8 @@ inline bool operator!=(unordered_multiset<T, H, P, A> const&,
     unordered_multiset<T, H, P, A> const&);
 template <class T, class H, class P, class A>
 inline void swap(
-    unordered_multiset<T, H, P, A>& m1, unordered_multiset<T, H, P, A>& m2);
+    unordered_multiset<T, H, P, A>& m1, unordered_multiset<T, H, P, A>& m2)
+    BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(m1.swap(m2)));
 
 template <class N, class T, class A> class node_handle_set;
 template <class N, class T, class A> struct insert_return_type_set;

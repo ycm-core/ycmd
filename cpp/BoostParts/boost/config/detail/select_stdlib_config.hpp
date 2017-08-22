@@ -66,6 +66,10 @@
 // MSL standard lib:
 #  define BOOST_STDLIB_CONFIG "boost/config/stdlib/msl.hpp"
 
+#elif defined(__IBMCPP__) && defined(__COMPILER_VER__) && defined(__MVS__)
+// IBM z/OS XL C/C++
+#  define BOOST_STDLIB_CONFIG "boost/config/stdlib/xlcpp_zos.hpp"
+
 #elif defined(__IBMCPP__)
 // take the default VACPP std lib
 #  define BOOST_STDLIB_CONFIG "boost/config/stdlib/vacpp.hpp"
@@ -98,6 +102,7 @@
 #  include "boost/config/stdlib/libstdcpp3.hpp"
 #  include "boost/config/stdlib/sgi.hpp"
 #  include "boost/config/stdlib/msl.hpp"
+#  include "boost/config/stdlib/xlcpp_zos.hpp"
 #  include "boost/config/stdlib/vacpp.hpp"
 #  include "boost/config/stdlib/modena.hpp"
 #  include "boost/config/stdlib/dinkumware.hpp"

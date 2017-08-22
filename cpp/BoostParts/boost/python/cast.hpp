@@ -6,9 +6,8 @@
 # define CAST_DWA200269_HPP
 
 # include <boost/python/detail/prefix.hpp>
+# include <boost/python/detail/type_traits.hpp>
 
-# include <boost/type_traits/same_traits.hpp>
-# include <boost/type_traits/cv_traits.hpp>
 # include <boost/type.hpp>
 # include <boost/python/base_type_traits.hpp>
 # include <boost/python/detail/convertible.hpp>
@@ -76,9 +75,9 @@ namespace detail
   template <class Source, class Target>
   inline Target* upcast_impl(Source* x, Target*)
   {
-      typedef typename add_cv<Source>::type src_t;
-      typedef typename add_cv<Target>::type target_t;
-      bool const same = is_same<src_t,target_t>::value;
+      typedef typename detail::add_cv<Source>::type src_t;
+      typedef typename detail::add_cv<Target>::type target_t;
+      bool const same = detail::is_same<src_t,target_t>::value;
       
       return detail::upcaster<same>::execute(x, (Target*)0);
   }

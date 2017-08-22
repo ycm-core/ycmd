@@ -42,7 +42,7 @@ addressof(T& o) BOOST_NOEXCEPT
 
 } /* boost */
 #else
-#include <boost/detail/workaround.hpp>
+#include <boost/config/workaround.hpp>
 #include <cstddef>
 
 namespace boost {
@@ -117,7 +117,6 @@ struct address_of<const volatile addressof_null_t> {
 } /* detail */
 
 #if defined(BOOST_NO_CXX11_SFINAE_EXPR) || \
-    defined(BOOST_NO_CXX11_RVALUE_REFERENCES) || \
     defined(BOOST_NO_CXX11_CONSTEXPR) || \
     defined(BOOST_NO_CXX11_DECLTYPE)
 #define BOOST_CORE_NO_CONSTEXPR_ADDRESSOF
@@ -171,7 +170,7 @@ const T (*addressof(const T (&o)[N]) BOOST_NOEXCEPT)[N]
 namespace detail {
 
 template<class T>
-T&& addressof_declval() BOOST_NOEXCEPT;
+T addressof_declval() BOOST_NOEXCEPT;
 
 template<class>
 struct addressof_void {
@@ -258,6 +257,16 @@ addressof(T& o) BOOST_NOEXCEPT
     return detail::addressof(o);
 }
 #endif
+
+} /* boost */
+#endif
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && \
+    !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
+namespace boost {
+
+template<class T>
+const T* addressof(const T&&) = delete;
 
 } /* boost */
 #endif

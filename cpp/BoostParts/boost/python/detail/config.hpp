@@ -105,7 +105,11 @@
 // Set the name of our library, this will get undef'ed by auto_link.hpp
 // once it's done with it:
 //
-#define BOOST_LIB_NAME boost_python
+#if PY_MAJOR_VERSION == 2
+#  define BOOST_LIB_NAME boost_python
+#elif PY_MAJOR_VERSION == 3
+#  define BOOST_LIB_NAME boost_python3
+#endif
 //
 // If we're importing code from a dll, then tell auto_link.hpp about it:
 //

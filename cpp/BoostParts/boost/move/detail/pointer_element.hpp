@@ -1,15 +1,15 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2014-2014. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2014-2017. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-// See http://www.boost.org/libs/intrusive for documentation.
+// See http://www.boost.org/libs/move for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_INTRUSIVE_DETAIL_POINTER_ELEMENT_HPP
-#define BOOST_INTRUSIVE_DETAIL_POINTER_ELEMENT_HPP
+#ifndef BOOST_MOVE_DETAIL_POINTER_ELEMENT_HPP
+#define BOOST_MOVE_DETAIL_POINTER_ELEMENT_HPP
 
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
@@ -19,12 +19,12 @@
 #  pragma once
 #endif
 
-#ifndef BOOST_INTRUSIVE_DETAIL_WORKAROUND_HPP
-#include <boost/intrusive/detail/workaround.hpp>
-#endif   //BOOST_INTRUSIVE_DETAIL_WORKAROUND_HPP
+#ifndef BOOST_MOVE_DETAIL_WORKAROUND_HPP
+#include <boost/move/detail/workaround.hpp>
+#endif   //BOOST_MOVE_DETAIL_WORKAROUND_HPP
 
 namespace boost {
-namespace intrusive {
+namespace movelib {
 namespace detail{
 
 //////////////////////
@@ -147,7 +147,7 @@ struct pointer_element_impl
 template<class Ptr>
 struct pointer_element_impl<Ptr, false>
 {
-   typedef typename boost::intrusive::detail::first_param<Ptr>::type type;
+   typedef typename boost::movelib::detail::first_param<Ptr>::type type;
 };
 
 }  //namespace detail{
@@ -155,14 +155,14 @@ struct pointer_element_impl<Ptr, false>
 template <typename Ptr>
 struct pointer_element
 {
-   typedef typename ::boost::intrusive::detail::pointer_element_impl<Ptr>::type type;
+   typedef typename ::boost::movelib::detail::pointer_element_impl<Ptr>::type type;
 };
 
 template <typename T>
 struct pointer_element<T*>
 {  typedef T type; };
 
-}  //namespace container {
+}  //namespace movelib {
 }  //namespace boost {
 
-#endif // defined(BOOST_INTRUSIVE_DETAIL_POINTER_ELEMENT_HPP)
+#endif // defined(BOOST_MOVE_DETAIL_POINTER_ELEMENT_HPP)

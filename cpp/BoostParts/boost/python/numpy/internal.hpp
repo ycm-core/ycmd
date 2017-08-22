@@ -15,6 +15,7 @@
  */
 
 #include <boost/python.hpp>
+#include <boost/python/numpy/config.hpp>
 #ifdef BOOST_PYTHON_NUMPY_INTERNAL
 #define NO_IMPORT_ARRAY
 #define NO_IMPORT_UFUNC

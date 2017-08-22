@@ -136,6 +136,7 @@
 #include <boost/type_traits/remove_bounds.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/remove_cv_ref.hpp>
 #include <boost/type_traits/remove_extent.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/type_traits/remove_reference.hpp>

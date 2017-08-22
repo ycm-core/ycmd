@@ -27,7 +27,7 @@
 #include <boost/mpl/joint_view.hpp>
 #include <boost/mpl/back.hpp>
 
-#include <boost/type_traits/is_same.hpp>
+#include <boost/python/detail/type_traits.hpp>
 
 #include <boost/preprocessor/enum_params_with_a_default.hpp>
 #include <boost/preprocessor/enum_params.hpp>

@@ -30,8 +30,8 @@ import requests
 CHUNK_SIZE = 1024 * 1024 # 1 MB
 
 BOOST_VERSION_REGEX = re.compile( 'Version (\d+\.\d+\.\d+)' )
-BOOST_URL = ( 'https://sourceforge.net/projects/boost/files/boost/'
-              '{version}/{archive}/download' )
+BOOST_URL = (
+  'http://dl.bintray.com/boostorg/release/{version}/source/{archive}' )
 BOOST_NAME = 'boost_{version_}'
 BOOST_ARCHIVE = BOOST_NAME + '.tar.bz2'
 BOOST_PARTS = [

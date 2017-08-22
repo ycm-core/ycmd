@@ -18,8 +18,9 @@
 
 #include <boost/assert.hpp>
 #include <cstddef> // size_t
+#ifndef BOOST_NO_CWCHAR
 #include <cwchar> //  mbstate_t
-
+#endif
 #include <boost/config.hpp>
 #if defined(BOOST_NO_STDC_NAMESPACE)
 namespace std{ 

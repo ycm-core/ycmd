@@ -30,3 +30,22 @@
 #if defined(_MSC_VER)
 #  define BOOST_NO_CXX11_CONSTEXPR
 #endif
+
+#ifdef __CUDACC__
+//
+// When compiing .cu files, there's a bunch of stuff that doesn't work with msvc:
+//
+#if defined(_MSC_VER)
+#  define BOOST_NO_CXX14_DIGIT_SEPARATORS
+#  define BOOST_NO_CXX11_UNICODE_LITERALS
+#endif
+//
+// And this one effects the NVCC front end,
+// See https://svn.boost.org/trac/boost/ticket/13049
+//
+#if (__CUDACC_VER__ >= 80000) && (__CUDACC_VER__ < 80100)
+#  define BOOST_NO_CXX11_NOEXCEPT
+#endif
+
+#endif
+
