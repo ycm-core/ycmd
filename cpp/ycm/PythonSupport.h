@@ -18,6 +18,8 @@
 #ifndef PYTHONSUPPORT_H_KWGFEX0V
 #define PYTHONSUPPORT_H_KWGFEX0V
 
+#include "DLLDefines.h"
+
 #include <boost/python.hpp>
 
 namespace YouCompleteMe {
@@ -26,7 +28,7 @@ namespace YouCompleteMe {
 /// python list |candidates|, a |candidate_property| on which to filter and sort
 /// the candidates and a user query, returns a new sorted python list with the
 /// original objects that survived the filtering.
-boost::python::list FilterAndSortCandidates(
+YCM_DLL_EXPORT boost::python::list FilterAndSortCandidates(
   const boost::python::list &candidates,
   const std::string &candidate_property,
   const std::string &query );
