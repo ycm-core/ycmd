@@ -161,7 +161,7 @@ class FilenameCompleter( Completer ):
       paths.extend( os.path.join( include_path, path_dir, relative_path ) for
                     relative_path in relative_paths  )
 
-    return sorted( set( paths ) )
+    return paths
 
 
 def _GetAbsolutePathForCompletions( path_dir,
