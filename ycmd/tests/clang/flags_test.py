@@ -22,11 +22,13 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import contextlib
 import os
 
 from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
-from mock import patch, Mock
+from mock import patch, MagicMock, Mock
+from types import ModuleType
 from ycmd.tests.test_utils import MacOnly
 from ycmd.responses import NoExtraConfDetected
 from ycmd.tests.clang import TemporaryClangProject, TemporaryClangTestDir
@@ -34,88 +36,140 @@ from ycmd.tests.clang import TemporaryClangProject, TemporaryClangTestDir
 from hamcrest import assert_that, calling, contains, has_item, not_, raises
 
 
-@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
-def FlagsForFile_FlagsNotReady_test( *args ):
-  fake_flags = {
-    'flags': [ ],
-    'flags_ready': False
-  }
+@contextlib.contextmanager
+def MockExtraConfModule( flags_for_file_function ):
+  module = MagicMock( spec = ModuleType )
+  module.FlagsForFile = flags_for_file_function
+  with patch( 'ycmd.extra_conf_store.ModuleForSourceFile',
+              return_value = module ):
+    yield
 
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = fake_flags ):
-    flags_object = flags.Flags()
+
+def FlagsForFile_FlagsNotReady_test():
+  flags_object = flags.Flags()
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [],
+      'flags_ready': False
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
-    eq_( list( flags_list ), [ ] )
+    eq_( list( flags_list ), [] )
 
 
 @patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
 def FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved_test( *args ):
-  fake_flags = {
-    'flags': [ bytes( b'-c' ), '-c', bytes( b'-foo' ), '-bar' ]
-  }
+  flags_object = flags.Flags()
 
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = fake_flags ):
-    flags_object = flags.Flags()
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ bytes( b'-c' ), '-c', bytes( b'-foo' ), '-bar' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     eq_( list( flags_list ), [ '-foo', '-bar' ] )
 
 
-@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
-def FlagsForFile_FlagsCachedByDefault_test( *args ):
+def FlagsForFile_FlagsCachedByDefault_test():
   flags_object = flags.Flags()
 
-  results = { 'flags': [ '-x', 'c' ] }
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = results ):
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list, contains( '-x', 'c' ) )
 
-  results[ 'flags' ] = [ '-x', 'c++' ]
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = results ):
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c++' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list, contains( '-x', 'c' ) )
 
 
-@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
-def FlagsForFile_FlagsNotCachedWhenDoCacheIsFalse_test( *args ):
+def FlagsForFile_FlagsNotCachedWhenDoCacheIsFalse_test():
   flags_object = flags.Flags()
 
-  results = {
-    'flags': [ '-x', 'c' ],
-    'do_cache': False
-  }
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = results ):
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c' ],
+      'do_cache': False
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list, contains( '-x', 'c' ) )
 
-  results[ 'flags' ] = [ '-x', 'c++' ]
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = results ):
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c++' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list, contains( '-x', 'c++' ) )
 
 
-@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
-def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test( *args ):
+def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test():
   flags_object = flags.Flags()
 
-  results = {
-    'flags': [ '-x', 'c' ],
-    'do_cache': True
-  }
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = results ):
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c' ],
+      'do_cache': True
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list, contains( '-x', 'c' ) )
 
-  results[ 'flags' ] = [ '-x', 'c++' ]
-  with patch( 'ycmd.completers.cpp.flags._CallExtraConfFlagsForFile',
-              return_value = results ):
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c++' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
     flags_list = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list, contains( '-x', 'c' ) )
+
+
+def FlagsForFile_DoNotMakeRelativePathsAbsoluteByDefault_test():
+  flags_object = flags.Flags()
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c', '-I', 'header' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list,
+                 contains( '-x', 'c',
+                           '-I', 'header' ) )
+
+
+def FlagsForFile_MakeRelativePathsAbsoluteIfOptionSpecified_test():
+  flags_object = flags.Flags()
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-x', 'c', '-I', 'header' ],
+      'include_paths_relative_to_dir': '/working_dir/'
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list = flags_object.FlagsForFile( '/foo', False )
+    assert_that( flags_list,
+                 contains( '-x', 'c',
+                           '-I', os.path.normpath( '/working_dir/header' ) ) )
 
 
 def RemoveUnusedFlags_Passthrough_test():

@@ -290,9 +290,15 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
   # For the sake of backwards compatibility, we need to first check whether the
   # FlagsForFile function in the extra conf module even allows keyword args.
   if inspect.getargspec( module.FlagsForFile ).keywords:
-    return module.FlagsForFile( filename, client_data = client_data )
+    results = module.FlagsForFile( filename, client_data = client_data )
   else:
-    return module.FlagsForFile( filename )
+    results = module.FlagsForFile( filename )
+
+  results[ 'flags' ] = _MakeRelativePathsInFlagsAbsolute(
+      results[ 'flags' ],
+      results.get( 'include_paths_relative_to_dir' ) )
+
+  return results
 
 
 def _SysRootSpecifedIn( flags ):
