@@ -220,7 +220,7 @@ The return value must be one of the following:
 
   - `flags`: (mandatory) a list of compiler flags.
 
-  - `include_paths_relative_to_dir': (optional) the directory to which the
+  - `include_paths_relative_to_dir`: (optional) the directory to which the
     include paths in the list of flags are relative. Defaults to ycmd working
     directory.
 
