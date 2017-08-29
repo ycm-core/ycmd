@@ -28,12 +28,19 @@ using ::testing::WhenSorted;
 namespace YouCompleteMe {
 
 
-// This differs from what we expect from the ClangCompleter. That one should
-// return results for an empty query.
-TEST( IdentifierCompleterTest, EmptyQueryNoResults ) {
+TEST( IdentifierCompleterTest, SortOnEmptyQuery ) {
   EXPECT_THAT( IdentifierCompleter(
                  StringVector(
-                   "foobar" ) ).CandidatesForQuery( "" ),
+                   "foo",
+                   "bar" ) ).CandidatesForQuery( "" ),
+               ElementsAre( "bar",
+                            "foo" ) );
+}
+
+TEST( IdentifierCompleterTest, IgnoreEmptyCandidate ) {
+  EXPECT_THAT( IdentifierCompleter(
+                 StringVector(
+                   "" ) ).CandidatesForQuery( "" ),
                IsEmpty() );
 }
 
