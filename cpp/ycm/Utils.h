@@ -20,6 +20,8 @@
 
 #include "DLLDefines.h"
 
+#include <cmath>
+#include <limits>
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -28,7 +30,114 @@ namespace fs = boost::filesystem;
 
 namespace YouCompleteMe {
 
-bool AlmostEqual( double a, double b );
+inline bool AlmostEqual( double a, double b ) {
+  return std::abs( a - b ) <=
+         ( std::numeric_limits< double >::epsilon() *
+           std::max( std::abs( a ), std::abs( b ) ) );
+}
+
+
+YCM_DLL_EXPORT inline bool IsLowercase( char letter ) {
+  return 'a' <= letter && letter <= 'z';
+}
+
+
+YCM_DLL_EXPORT inline bool IsUppercase( char letter ) {
+  return 'A' <= letter && letter <= 'Z';
+}
+
+
+// A character is ASCII if it's in the range 0-127 i.e. its most significant bit
+// is 0.
+YCM_DLL_EXPORT inline bool IsAscii( char letter ) {
+  return !( letter & 0x80 );
+}
+
+
+YCM_DLL_EXPORT inline bool IsAlpha( char letter ) {
+  return IsLowercase( letter ) || IsUppercase( letter );
+}
+
+
+YCM_DLL_EXPORT inline bool IsPrintable( char letter ) {
+  return ' ' <= letter && letter <= '~';
+}
+
+
+YCM_DLL_EXPORT inline bool IsPrintable( const std::string &text ) {
+  for ( char letter : text ) {
+    if ( !IsPrintable( letter ) )
+      return false;
+  }
+  return true;
+}
+
+
+YCM_DLL_EXPORT inline bool IsPunctuation( char letter ) {
+  return ( '!' <= letter && letter <= '/' ) ||
+         ( ':' <= letter && letter <= '@' ) ||
+         ( '[' <= letter && letter <= '`' ) ||
+         ( '{' <= letter && letter <= '~' );
+}
+
+
+// A string is assumed to be in lowercase if none of its characters are
+// uppercase.
+YCM_DLL_EXPORT inline bool IsLowercase( const std::string &text ) {
+  for ( char letter : text ) {
+    if ( IsUppercase( letter ) )
+      return false;
+  }
+  return true;
+}
+
+
+// An uppercase character can be converted to lowercase and vice versa by
+// flipping its third most significant bit.
+YCM_DLL_EXPORT inline char Lowercase( char letter ) {
+  if ( IsUppercase( letter ) )
+    return letter ^ 0x20;
+  return letter;
+}
+
+
+YCM_DLL_EXPORT inline std::string Lowercase( const std::string &text ) {
+  std::string result;
+  for ( char letter : text )
+    result.push_back( Lowercase( letter ) );
+  return result;
+}
+
+
+YCM_DLL_EXPORT inline char Uppercase( char letter ) {
+  if ( IsLowercase( letter ) )
+    return letter ^ 0x20;
+  return letter;
+}
+
+
+YCM_DLL_EXPORT inline bool HasUppercase( const std::string &text ) {
+  for ( char letter : text ) {
+    if ( IsUppercase( letter ) )
+      return true;
+  }
+  return false;
+}
+
+
+YCM_DLL_EXPORT inline char SwapCase( char letter ) {
+  if ( IsAlpha( letter ) )
+    return letter ^ 0x20;
+  return letter;
+}
+
+
+YCM_DLL_EXPORT inline std::string SwapCase( const std::string &text ) {
+  std::string result;
+  for ( char letter : text )
+    result.push_back( SwapCase( letter ) );
+  return result;
+}
 
 // Reads the entire contents of the specified file. If the file does not exist,
 // an exception is thrown.
@@ -76,22 +185,6 @@ bool Erase( Container &container, const Key &key ) {
 
   return false;
 }
-
-
-YCM_DLL_EXPORT bool IsAscii( char letter );
-YCM_DLL_EXPORT bool IsAlpha( char letter );
-YCM_DLL_EXPORT bool IsPrintable( char letter );
-YCM_DLL_EXPORT bool IsPrintable( const std::string &text );
-YCM_DLL_EXPORT bool IsPunctuation( char letter );
-YCM_DLL_EXPORT bool IsLowercase( char letter );
-YCM_DLL_EXPORT bool IsLowercase( const std::string &text );
-YCM_DLL_EXPORT bool IsUppercase( char letter );
-YCM_DLL_EXPORT char Lowercase( char letter );
-YCM_DLL_EXPORT std::string Lowercase( const std::string &text );
-YCM_DLL_EXPORT char Uppercase( char letter );
-YCM_DLL_EXPORT bool HasUppercase( const std::string &text );
-YCM_DLL_EXPORT char SwapCase( char letter );
-YCM_DLL_EXPORT std::string SwapCase( const std::string &text );
 
 } // namespace YouCompleteMe
 
