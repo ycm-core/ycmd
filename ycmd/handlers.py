@@ -135,7 +135,8 @@ def FilterAndSortCandidates():
   return _JsonResponse( FilterAndSortCandidatesWrap(
     request_data[ 'candidates'],
     request_data[ 'sort_property' ],
-    request_data[ 'query' ] ) )
+    request_data[ 'query' ],
+    _server_state.user_options[ 'max_num_candidates' ] ) )
 
 
 @app.get( '/healthy' )

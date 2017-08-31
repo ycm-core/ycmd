@@ -482,7 +482,7 @@ def GetCompletions_ClientDataGivenToExtraConf_test( app ):
   assert_that( results, has_item( CompletionEntryMatcher( 'x' ) ) )
 
 
-@SharedYcmd
+@IsolatedYcmd( { 'max_num_candidates': 0 } )
 def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
   app.post_json(
     '/load_extra_conf_file',
