@@ -18,8 +18,6 @@
 #ifndef PYTHONSUPPORT_H_KWGFEX0V
 #define PYTHONSUPPORT_H_KWGFEX0V
 
-#include "DLLDefines.h"
-
 #include <boost/python.hpp>
 
 namespace YouCompleteMe {
@@ -30,7 +28,7 @@ namespace YouCompleteMe {
 /// original objects that survived the filtering. This list contains at most
 /// |max_candidates|. If |max_candidates| is omitted or 0, all candidates are
 /// sorted.
-YCM_DLL_EXPORT boost::python::list FilterAndSortCandidates(
+YCM_EXPORT boost::python::list FilterAndSortCandidates(
   const boost::python::list &candidates,
   const std::string &candidate_property,
   const std::string &query,

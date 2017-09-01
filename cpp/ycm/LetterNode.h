@@ -18,7 +18,6 @@
 #ifndef LETTERNODE_H_EIZ6JVWC
 #define LETTERNODE_H_EIZ6JVWC
 
-#include "DLLDefines.h"
 #include "LetterNodeListMap.h"
 
 #include <vector>
@@ -32,7 +31,7 @@ class LetterNode {
 public:
   LetterNode( char letter, int index );
 
-  YCM_DLL_EXPORT explicit LetterNode( const std::string &text );
+  YCM_EXPORT explicit LetterNode( const std::string &text );
 
   inline bool LetterIsUppercase() const {
     return is_uppercase_;
