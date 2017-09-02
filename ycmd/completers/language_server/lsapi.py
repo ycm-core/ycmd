@@ -24,19 +24,22 @@ from builtins import *  # noqa
 
 import os
 import json
-from urllib import parse as urlparse
 
 from collections import defaultdict
+from ycmd.utils import ( pathname2url, ToBytes, ToUnicode, url2pathname,
+                         urljoin )
 
-from ycmd.utils import ToBytes, ToUnicode
 
-
-# TODO: Need a whole document management system!
+# FIXME: We might need a whole document management system eventually. For now,
+# we just update the file version every time we refresh a file (even if it
+# hasn't changed).
 LAST_VERSION = defaultdict( int )
 
 
 def BuildRequest( request_id, method, parameters ):
-  return _Message( {
+  """Builds a JSON RPC request message with the supplied ID, method and method
+  parameters"""
+  return _BuildMessageData( {
     'id': request_id,
     'method': method,
     'params': parameters,
@@ -44,17 +47,20 @@ def BuildRequest( request_id, method, parameters ):
 
 
 def BuildNotification( method, parameters ):
-  return _Message( {
+  """Builds a JSON RPC notification message with the supplied method and
+  method parameters"""
+  return _BuildMessageData( {
     'method': method,
     'params': parameters,
   } )
 
 
 def Initialise( request_id ):
+  """Build the Language Server initialise request"""
   return BuildRequest( request_id, 'initialize', {
     'processId': os.getpid(),
     'rootPath': os.getcwd(), # deprecated
-    'rootUri': _MakeUriForFile( os.getcwd() ),
+    'rootUri': FilePathToUri( os.getcwd() ),
     'initializationOptions': { },
     'capabilities': { 'trace': 'verbose' }
   } )
@@ -64,7 +70,7 @@ def DidOpenTextDocument( file_name, file_types, file_contents ):
   LAST_VERSION[ file_name ] = LAST_VERSION[ file_name ] + 1
   return BuildNotification( 'textDocument/didOpen', {
     'textDocument': {
-      'uri': _MakeUriForFile( file_name ),
+      'uri': FilePathToUri( file_name ),
       'languageId': '/'.join( file_types ),
       'version': LAST_VERSION[ file_name ],
       'text': file_contents
@@ -74,14 +80,18 @@ def DidOpenTextDocument( file_name, file_types, file_contents ):
 
 def DidChangeTextDocument( file_name, file_types, file_contents ):
   # FIXME: The servers seem to all state they want incremental updates. It
-  # remains to be seen if they really do.
+  # remains to be seen if they really do. So far, no actual server tested has
+  # actually required this, but it might be necessary for performance reasons in
+  # some cases. However, as the logic for diffing previous file versions, etc.
+  # is highly complex, it should only be implemented if it becomes strictly
+  # necessary (perhaps with client support).
   return DidOpenTextDocument( file_name, file_types, file_contents )
 
 
 def DidCloseTextDocument( file_name ):
   return BuildNotification( 'textDocument/didClose', {
     'textDocument': {
-      'uri': _MakeUriForFile( file_name ),
+      'uri': FilePathToUri( file_name ),
       'version': LAST_VERSION[ file_name ],
     },
   } )
@@ -90,15 +100,9 @@ def DidCloseTextDocument( file_name ):
 def Completion( request_id, request_data ):
   return BuildRequest( request_id, 'textDocument/completion', {
     'textDocument': {
-      'uri': _MakeUriForFile( request_data[ 'filepath' ] ),
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
-    'position': {
-      # TODO: The API asks for 0-based offsets. These -1's are not good enough
-      # when using multi-byte characters. See the tern completer for an
-      # approach.
-      'line': request_data[ 'line_num' ] - 1,
-      'character': request_data[ 'start_codepoint' ] - 1,
-    }
+    'position': Position( request_data ),
   } )
 
 
@@ -121,7 +125,7 @@ def Definition( request_id, request_data ):
 def CodeAction( request_id, request_data, best_match_range, diagnostics ):
   return BuildRequest( request_id, 'textDocument/codeAction', {
     'textDocument': {
-      'uri': _MakeUriForFile( request_data[ 'filepath' ] ),
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
     'range': best_match_range,
     'context': {
@@ -133,25 +137,18 @@ def CodeAction( request_id, request_data, best_match_range, diagnostics ):
 def Rename( request_id, request_data, new_name ):
   return BuildRequest( request_id, 'textDocument/rename', {
     'textDocument': {
-      'uri': _MakeUriForFile( request_data[ 'filepath' ] ),
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
-    'position': {
-      'line': request_data[ 'line_num' ] - 1,
-      'character': request_data[ 'start_column' ] - 1,
-    },
-    'newName': new_name,
+    'position': Position( request_data ),
   } )
 
 
 def BuildTextDocumentPositionParams( request_data ):
   return {
     'textDocument': {
-      'uri': _MakeUriForFile( request_data[ 'filepath' ] ),
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
-    'position': {
-      'line': request_data[ 'line_num' ] - 1,
-      'character': request_data[ 'start_column' ] - 1,
-    },
+    'position': Position( request_data ),
   }
 
 
@@ -161,18 +158,28 @@ def References( request_id, request_data ):
   return BuildRequest( request_id, 'textDocument/references', request )
 
 
-def _MakeUriForFile( file_name ):
-  return 'file://{0}'.format( file_name )
+def Position( request_data ):
+  # The API requires 0-based unicode offsets.
+  return {
+    'line': request_data[ 'line_num' ] - 1,
+    'character': request_data[ 'start_column' ] - 1,
+  }
+
+
+def FilePathToUri( file_name ):
+  return urljoin( 'file:', pathname2url( file_name ) )
 
 
 def UriToFilePath( uri ):
-  # TODO: This assumes file://
-  # TODO: work out how urlparse works with __future__
-  return urlparse.urlparse( uri ).path
+  # NOTE: This assumes the URI starts with file:
+  return url2pathname( uri[ 5 : ] )
 
 
-def _Message( message ):
+def _BuildMessageData( message ):
   message[ 'jsonrpc' ] = '2.0'
+  # NOTE: sort_keys=True is needed to workaround a 'limitation' of clangd where
+  # it requires keys to be in a specific order, due to a somewhat naive
+  # json/yaml parser.
   data = ToBytes( json.dumps( message, sort_keys=True ) )
   packet = ToBytes( 'Content-Length: {0}\r\n'
                     'Content-Type: application/vscode-jsonrpc;charset=utf8\r\n'
@@ -182,4 +189,5 @@ def _Message( message ):
 
 
 def Parse( data ):
+  """Reads the raw language server data |data| into a Python dictionary"""
   return json.loads( ToUnicode( data ) )
