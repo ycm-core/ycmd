@@ -18,16 +18,14 @@
 
 #include <boost/assert.hpp>
 #include <cstddef> // size_t
-#ifndef BOOST_NO_CWCHAR
 #include <cwchar> //  mbstate_t
-#endif
+
 #include <boost/config.hpp>
 #if defined(BOOST_NO_STDC_NAMESPACE)
 namespace std{ 
     using ::mbstate_t;
 } // namespace std
 #endif
-
 #include <boost/archive/detail/utf8_codecvt_facet.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 

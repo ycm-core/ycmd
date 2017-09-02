@@ -17,9 +17,7 @@
 
 #include <cstring> // strlen
 #include <cstdlib> // mbtowc
-#ifndef BOOST_NO_CWCHAR
 #include <cwchar>  // wcslen
-#endif
 
 #include <boost/config.hpp>
 #if defined(BOOST_NO_STDC_NAMESPACE)

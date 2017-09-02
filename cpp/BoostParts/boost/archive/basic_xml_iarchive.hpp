@@ -89,7 +89,8 @@ protected:
     // leaving the archive in an undetermined state
     BOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load_override(class_id_type & t);
-    void load_override(class_id_optional_type & /* t */){}
+    BOOST_ARCHIVE_OR_WARCHIVE_DECL void
+    load_override(class_id_optional_type & /* t */){}
     BOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load_override(object_id_type & t);
     BOOST_ARCHIVE_OR_WARCHIVE_DECL void

@@ -254,7 +254,7 @@ namespace boost
 #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
     template <class T> struct hash
-        : boost::hash_detail::hash_base<T>
+        : std::unary_function<T, std::size_t>
     {
 #if !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
         std::size_t operator()(T const& val) const
@@ -271,7 +271,7 @@ namespace boost
 
 #if BOOST_WORKAROUND(__DMC__, <= 0x848)
     template <class T, unsigned int n> struct hash<T[n]>
-        : boost::hash_detail::hash_base<T[n]>
+        : std::unary_function<T[n], std::size_t>
     {
         std::size_t operator()(const T* val) const
         {
@@ -296,7 +296,7 @@ namespace boost
         {
             template <class T>
             struct inner
-                : boost::hash_detail::hash_base<T>
+                : std::unary_function<T, std::size_t>
             {
 #if !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
                 std::size_t operator()(T const& val) const

@@ -159,8 +159,6 @@ template <static_min_max_unsigned_type Value1, static_min_max_unsigned_type Valu
     struct static_unsigned_max;
 
 
-namespace integer
-{
 //  From <boost/integer/common_factor_ct.hpp>
 
 #ifdef BOOST_NO_INTEGRAL_INT64_T
@@ -182,7 +180,6 @@ template < typename IntegerType >
 template < typename IntegerType >
     class lcm_evaluator;
 
-} // namespace integer
 
 }  // namespace boost
 

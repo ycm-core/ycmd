@@ -14,8 +14,6 @@
 #include <boost/python.hpp>
 #include <boost/python/numpy/numpy_object_mgr_traits.hpp>
 #include <boost/python/numpy/ndarray.hpp>
-#include <boost/python/numpy/config.hpp>
-
 
 namespace boost { namespace python { namespace numpy {
 
@@ -29,7 +27,7 @@ namespace boost { namespace python { namespace numpy {
  *            bad things happen when Python shuts down.  I think this solution is safe, but I'd
  *            love to get that confirmed.
  */
-class BOOST_NUMPY_DECL matrix : public ndarray 
+class matrix : public ndarray 
 {
   static object construct(object_cref obj, dtype const & dt, bool copy);
   static object construct(object_cref obj, bool copy);

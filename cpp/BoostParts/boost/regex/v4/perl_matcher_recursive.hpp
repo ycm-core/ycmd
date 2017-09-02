@@ -900,27 +900,10 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_recursion()
    {
       recursion_stack.reserve(50);
    }
-   //
-   // See if we've seen this recursion before at this location, if we have then
-   // we need to prevent infinite recursion:
-   //
-   for(typename std::vector<recursion_info<results_type> >::reverse_iterator i = recursion_stack.rbegin(); i != recursion_stack.rend(); ++i)
-   {
-      if(i->idx == static_cast<const re_brace*>(static_cast<const re_jump*>(pstate)->alt.p)->index)
-      {
-         if(i->location_of_start == position)
-            return false;
-         break;
-      }
-   }
-   //
-   // Now get on with it:
-   //
    recursion_stack.push_back(recursion_info<results_type>());
    recursion_stack.back().preturn_address = pstate->next.p;
    recursion_stack.back().results = *m_presult;
    recursion_stack.back().repeater_stack = next_count;
-   recursion_stack.back().location_of_start = position;
    pstate = static_cast<const re_jump*>(pstate)->alt.p;
    recursion_stack.back().idx = static_cast<const re_brace*>(pstate)->index;
 
@@ -996,7 +979,6 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_match()
          recursion_stack.push_back(recursion_info<results_type>());
          recursion_stack.back().preturn_address = saved_state;
          recursion_stack.back().results = *m_presult;
-         recursion_stack.back().location_of_start = position;
          return false;
       }
       return true;

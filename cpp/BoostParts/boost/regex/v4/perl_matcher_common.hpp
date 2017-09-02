@@ -90,7 +90,7 @@ void perl_matcher<BidiIterator, Allocator, traits>::construct_init(const basic_r
    match_any_mask = static_cast<unsigned char>((f & match_not_dot_newline) ? BOOST_REGEX_DETAIL_NS::test_not_newline : BOOST_REGEX_DETAIL_NS::test_newline);
    // Disable match_any if requested in the state machine:
    if(e.get_data().m_disable_match_any)
-      m_match_flags &= regex_constants::match_not_any;
+      m_match_flags &= ~regex_constants::match_any;
 }
 
 template <class BidiIterator, class Allocator, class traits>

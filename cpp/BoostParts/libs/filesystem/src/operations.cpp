@@ -101,7 +101,6 @@ using std::wstring;
       // See MinGW's windef.h
 #     define WINVER 0x501
 #   endif
-#   include <cwchar>
 #   include <io.h>
 #   include <windows.h>
 #   include <winnt.h>
@@ -329,10 +328,9 @@ namespace
 
   //  general helpers  -----------------------------------------------------------------//
 
-  bool is_empty_directory(const path& p, error_code* ec)
+  bool is_empty_directory(const path& p)
   {
-    return (ec != 0 ? fs::directory_iterator(p, *ec) : fs::directory_iterator(p))
-      == end_dir_itr;
+    return fs::directory_iterator(p)== end_dir_itr;
   }
 
   bool not_found_error(int errval); // forward declaration
@@ -518,115 +516,25 @@ namespace
       || errval == ERROR_BAD_PATHNAME  // "//nosuch" on Win64
       || errval == ERROR_BAD_NETPATH;  // "//nosuch" on Win32
   }
-  
-  // File name case-insensitive comparison needs to be locale- and collation-independent. 
-  // The approach used below follows a combined strategy described in the following
-  // articles:
-  // http://archives.miloush.net/michkap/archive/2005/10/17/481600.html
-  // http://archives.miloush.net/michkap/archive/2007/09/14/4900107.html
-  // http://archives.miloush.net/michkap/archive/2007/10/12/5396685.html
-  // CompareStringOrdinal is only available on newer systems and is just a wrapper of
-  // RtlCompareUnicodeString, but measurements showed that RtlEqualUnicodeString has better
-  // performance. Therefore we use RtlEqualUnicodeString, and if that does not exist 
-  // we perform the equivalent characterwise comparsion using LCMapString and uppercase 
-  // binary equality. Instead of calling RtlInitUnicodeString we use wcslen directly
-  // because that results in better performance as well.
 
-  //  Windows ntdll.dll functions that may or may not be present
-  //  must be accessed through pointers
-  typedef struct _UNICODE_STRING {
-    USHORT Length;
-    USHORT MaximumLength;
-    PWSTR  Buffer;
-  } UNICODE_STRING;
-
-  typedef const UNICODE_STRING *PCUNICODE_STRING;
-
-  typedef BOOLEAN (WINAPI *PtrRtlEqualUnicodeString)(
-    /*_In_*/ PCUNICODE_STRING String1,
-    /*_In_*/ PCUNICODE_STRING String2,
-    /*_In_*/ BOOLEAN          CaseInSensitive
-  );
-
-  PtrRtlEqualUnicodeString rtl_equal_unicode_string_api = PtrRtlEqualUnicodeString(
-    ::GetProcAddress(
-      ::GetModuleHandleW(L"ntdll.dll"), "RtlEqualUnicodeString"));
-
-#ifndef LOCALE_INVARIANT
-#  define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))
+// some distributions of mingw as early as GLIBCXX__ 20110325 have _stricmp, but the
+// offical 4.6.2 release with __GLIBCXX__ 20111026  doesn't. Play it safe for now, and
+// only use _stricmp if _MSC_VER is defined
+#if defined(_MSC_VER) // || (defined(__GLIBCXX__) && __GLIBCXX__ >= 20110325)
+#  define BOOST_FILESYSTEM_STRICMP _stricmp
+#else
+#  define BOOST_FILESYSTEM_STRICMP strcmp
 #endif
 
-  bool equal_string_ordinal_ic_1(const wchar_t* s1, const wchar_t* s2)
-  {
-    std::size_t len1 = std::wcslen(s1);
-    UNICODE_STRING us1;
-    us1.Buffer = const_cast<wchar_t*>(s1);
-    us1.Length = static_cast<USHORT>(sizeof(*s1) * len1);
-    us1.MaximumLength = static_cast<USHORT>(us1.Length + sizeof(*s1));
-    std::size_t len2 = std::wcslen(s2);
-    UNICODE_STRING us2;
-    us2.Buffer = const_cast<wchar_t*>(s2);
-    us2.Length = static_cast<USHORT>(sizeof(*s2) * len2);
-    us2.MaximumLength = static_cast<USHORT>(us2.Length + sizeof(*s2));
-    BOOLEAN res = rtl_equal_unicode_string_api(&us1, &us2, TRUE);
-    return res != FALSE;
-  }
-
-  inline
-  wchar_t to_upper_invariant(wchar_t input)
-  {
-    wchar_t result;
-    // According to 
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd318144(v=vs.85).aspx
-    // "When transforming between uppercase and lowercase, the function always maps a 
-    // single character to a single character."
-    int res = ::LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, &input, 1, &result, 1); 
-    if (res != 0)
-      return result;
-    assert(!"LCMapStringW failed to convert a character to upper case");
-    return input; // Should never happen, but this is a safe fallback.
-  }
-  
-  bool equal_string_ordinal_ic_2(const wchar_t* s1, const wchar_t* s2)
-  {
-    for (;; ++s1, ++s2)
-    {
-      const wchar_t c1 = *s1;
-      const wchar_t c2 = *s2;
-      if (c1 == c2)
-      {
-        if (!c1)
-          return true; // We have reached the end of both strings, no difference found.
-      }
-      else
-      {
-        if (!c1 || !c2)
-          return false; // We have reached the end of one string
-        // This needs to be upper case to match the behavior of the operating system,
-        // see http://archives.miloush.net/michkap/archive/2005/10/17/481600.html
-        const wchar_t u1 = to_upper_invariant(c1);
-        const wchar_t u2 = to_upper_invariant(c2);
-        if (u1 != u2)
-          return false; // strings are different
-      }
-    }
-  }  
-  
-  typedef bool (*Ptr_equal_string_ordinal_ic)(const wchar_t*, const wchar_t*);
-
-  Ptr_equal_string_ordinal_ic equal_string_ordinal_ic = 
-    rtl_equal_unicode_string_api ? equal_string_ordinal_ic_1 : equal_string_ordinal_ic_2;
-  
   perms make_permissions(const path& p, DWORD attr)
   {
     perms prms = fs::owner_read | fs::group_read | fs::others_read;
     if  ((attr & FILE_ATTRIBUTE_READONLY) == 0)
       prms |= fs::owner_write | fs::group_write | fs::others_write;
-    path ext = p.extension();
-    if (equal_string_ordinal_ic(ext.c_str(), L".exe")
-      || equal_string_ordinal_ic(ext.c_str(), L".com")
-      || equal_string_ordinal_ic(ext.c_str(), L".bat")
-      || equal_string_ordinal_ic(ext.c_str(), L".cmd"))
+    if (BOOST_FILESYSTEM_STRICMP(p.extension().string().c_str(), ".exe") == 0
+      || BOOST_FILESYSTEM_STRICMP(p.extension().string().c_str(), ".com") == 0
+      || BOOST_FILESYSTEM_STRICMP(p.extension().string().c_str(), ".bat") == 0
+      || BOOST_FILESYSTEM_STRICMP(p.extension().string().c_str(), ".cmd") == 0)
       prms |= fs::owner_exe | fs::group_exe | fs::others_exe;
     return prms;
   }
@@ -788,7 +696,7 @@ namespace
 
   PtrCreateHardLinkW create_hard_link_api = PtrCreateHardLinkW(
     ::GetProcAddress(
-      ::GetModuleHandleW(L"kernel32.dll"), "CreateHardLinkW"));
+      ::GetModuleHandle(TEXT("kernel32.dll")), "CreateHardLinkW"));
 
   typedef BOOLEAN (WINAPI *PtrCreateSymbolicLinkW)(
     /*__in*/ LPCWSTR lpSymlinkFileName,
@@ -798,7 +706,7 @@ namespace
 
   PtrCreateSymbolicLinkW create_symbolic_link_api = PtrCreateSymbolicLinkW(
     ::GetProcAddress(
-      ::GetModuleHandleW(L"kernel32.dll"), "CreateSymbolicLinkW"));
+      ::GetModuleHandle(TEXT("kernel32.dll")), "CreateSymbolicLinkW"));
 
 #endif
 
@@ -1409,7 +1317,7 @@ namespace detail
         p, ec, "boost::filesystem::is_empty"))
       return false;        
     return S_ISDIR(path_stat.st_mode)
-      ? is_empty_directory(p, ec)
+      ? is_empty_directory(p)
       : path_stat.st_size == 0;
 #   else
 
@@ -1421,7 +1329,7 @@ namespace detail
     if (ec != 0) ec->clear();
     return 
       (fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        ? is_empty_directory(p, ec)
+        ? is_empty_directory(p)
         : (!fad.nFileSizeHigh && !fad.nFileSizeLow);
 #   endif
   }
@@ -1712,7 +1620,7 @@ namespace detail
 #   ifdef BOOST_POSIX_API
     struct BOOST_STATVFS vfs;
     space_info info;
-    if (!error(::BOOST_STATVFS(p.c_str(), &vfs) ? BOOST_ERRNO : 0,
+    if (!error(::BOOST_STATVFS(p.c_str(), &vfs)!= 0,
       p, ec, "boost::filesystem::space"))
     {
       info.capacity 

@@ -511,8 +511,7 @@ bool basic_regex_parser<charT, traits>::parse_open_paren()
       this->fail(regex_constants::error_paren, ::boost::BOOST_REGEX_DETAIL_NS::distance(m_base, m_end));
       return false;
    }
-   if(this->m_traits.syntax_type(*m_position) != regex_constants::syntax_close_mark)
-      return false;
+   BOOST_ASSERT(this->m_traits.syntax_type(*m_position) == regex_constants::syntax_close_mark);
 #ifndef BOOST_NO_STD_DISTANCE
    if(markid && (this->flags() & regbase::save_subexpression_location))
       this->m_pdata->m_subs.at(markid - 1).second = std::distance(m_base, m_position);
@@ -902,7 +901,7 @@ escape_type_class_jump:
          }
          if(negative)
             i = 1 + m_mark_count - i;
-         if(((i > 0) && (i < std::numeric_limits<unsigned>::digits) && (i - 1 < static_cast<boost::intmax_t>(sizeof(unsigned) * CHAR_BIT)) && (this->m_backrefs & (1u << (i-1)))) || ((i > 10000) && (this->m_pdata->get_id(i) > 0) && (this->m_pdata->get_id(i)-1 < static_cast<boost::intmax_t>(sizeof(unsigned) * CHAR_BIT)) && (this->m_backrefs & (1u << (this->m_pdata->get_id(i)-1)))))
+         if(((i > 0) && (this->m_backrefs & (1u << (i-1)))) || ((i > 10000) && (this->m_pdata->get_id(i) > 0) && (this->m_backrefs & (1u << (this->m_pdata->get_id(i)-1)))))
          {
             m_position = pc;
             re_brace* pb = static_cast<re_brace*>(this->append_state(syntax_element_backref, sizeof(re_brace)));
@@ -2597,7 +2596,7 @@ option_group_jump:
          re_alt* alt = static_cast<re_alt*>(this->insert_state(expected_alt_point, syntax_element_alt, sizeof(re_alt)));
          alt->alt.i = this->m_pdata->m_data.size() - this->getoffset(alt);
       }
-      else if(((std::ptrdiff_t)this->m_pdata->m_data.size() > (static_cast<re_alt*>(b)->alt.i + this->getoffset(b))) && (static_cast<re_alt*>(b)->alt.i > 0) && this->getaddress(static_cast<re_alt*>(b)->alt.i, b)->type == syntax_element_alt)
+      else if(this->getaddress(static_cast<re_alt*>(b)->alt.i, b)->type == syntax_element_alt)
       {
          // Can't have seen more than one alternative:
          // Rewind to start of (? sequence:
@@ -2861,10 +2860,6 @@ bool basic_regex_parser<charT, traits>::parse_perl_verb()
       }
       break;
    }
-   // Rewind to start of (* sequence:
-   --m_position;
-   while(this->m_traits.syntax_type(*m_position) != regex_constants::syntax_open_mark) --m_position;
-   fail(regex_constants::error_perl_extension, m_position - m_base);
    return false;
 }
 

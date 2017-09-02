@@ -5,7 +5,7 @@
 #ifndef VOID_PTR_DWA200239_HPP
 # define VOID_PTR_DWA200239_HPP
 
-# include <boost/python/detail/type_traits.hpp>
+# include <boost/type_traits/remove_cv.hpp>
 
 namespace boost { namespace python { namespace detail { 
 

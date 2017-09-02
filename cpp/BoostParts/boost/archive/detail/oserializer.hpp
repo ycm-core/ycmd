@@ -56,9 +56,8 @@
 #include <boost/serialization/type_info_implementation.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/void_cast.hpp>
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/collection_size_type.hpp>
-#include <boost/serialization/array_wrapper.hpp>
-
 #include <boost/serialization/singleton.hpp>
 
 #include <boost/archive/archive_exception.hpp>
@@ -502,14 +501,7 @@ struct save_array_type
         );
         boost::serialization::collection_size_type count(c);
         ar << BOOST_SERIALIZATION_NVP(count);
-        // explict template arguments to pass intel C++ compiler
-        ar << serialization::make_array<
-            const value_type,
-            boost::serialization::collection_size_type
-        >(
-            static_cast<const value_type *>(&t[0]),
-            count
-        );
+        ar << serialization::make_array(static_cast<value_type const*>(&t[0]),count);
     }
 };
 
