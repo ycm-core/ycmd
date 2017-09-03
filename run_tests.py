@@ -42,7 +42,9 @@ import argparse
 def RunFlake8():
   print( 'Running flake8' )
   subprocess.check_call( [
-    'flake8',
+    sys.executable,
+    # __main__ is required on Python 2.6.
+    '-m', 'flake8.__main__',
     p.join( DIR_OF_THIS_SCRIPT, 'ycmd' )
   ] )
 
@@ -208,7 +210,9 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   else:
     nosetests_args.append( p.join( DIR_OF_THIS_SCRIPT, 'ycmd' ) )
 
-  subprocess.check_call( [ 'nosetests' ] + nosetests_args )
+  subprocess.check_call( [ sys.executable,
+                           # __main__ is required on Python 2.6.
+                           '-m', 'nose.__main__' ] + nosetests_args )
 
 
 def Main():
