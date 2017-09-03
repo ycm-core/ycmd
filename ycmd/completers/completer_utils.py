@@ -167,7 +167,8 @@ def FiletypeCompleterExistsForFiletype( filetype ):
   return os.path.exists( PathToFiletypeCompleterPluginLoader( filetype ) )
 
 
-def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
+def FilterAndSortCandidatesWrap( candidates, sort_property, query,
+                                 max_candidates ):
   from ycm_core import FilterAndSortCandidates
 
   # The c++ interface we use only understands the (*native*) 'str' type (i.e.
@@ -180,7 +181,8 @@ def FilterAndSortCandidatesWrap( candidates, sort_property, query ):
   # C++ layer.
   return FilterAndSortCandidates( candidates,
                                   ToCppStringCompatible( sort_property ),
-                                  ToCppStringCompatible( query ) )
+                                  ToCppStringCompatible( query ),
+                                  max_candidates )
 
 
 TRIGGER_REGEX_PREFIX = 're!'
