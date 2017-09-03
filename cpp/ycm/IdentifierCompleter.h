@@ -67,11 +67,13 @@ public:
 
   // Only provided for tests!
   YCM_DLL_EXPORT std::vector< std::string > CandidatesForQuery(
-    const std::string &query ) const;
+    const std::string &query,
+    const size_t max_candidates = 0 ) const;
 
   YCM_DLL_EXPORT std::vector< std::string > CandidatesForQueryAndType(
     const std::string &query,
-    const std::string &filetype ) const;
+    const std::string &filetype,
+    const size_t max_candidates = 0 ) const;
 
 private:
 

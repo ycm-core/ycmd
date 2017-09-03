@@ -186,6 +186,43 @@ bool Erase( Container &container, const Key &key ) {
   return false;
 }
 
+
+// Shrink a vector to its sorted |num_sorted_elements| smallest elements. If
+// |num_sorted_elements| is 0 or larger than the vector size, sort the whole
+// vector.
+template <typename Element>
+void PartialSort( std::vector< Element > &elements,
+                  const size_t num_sorted_elements ) {
+
+  size_t nb_elements = elements.size();
+  size_t max_elements = num_sorted_elements > 0 &&
+                        nb_elements >= num_sorted_elements ?
+                        num_sorted_elements : nb_elements;
+
+  // When the number of elements to sort is more than 1024 and one sixty-fourth
+  // of the total number of elements, switch to std::nth_element followed by
+  // std::sort. This heuristic is based on the observation that
+  // std::partial_sort (heapsort) is the most efficient algorithm when the
+  // number of elements to sort is small and that std::nth_element (introselect)
+  // combined with std::sort (introsort) always perform better than std::sort
+  // alone in other cases.
+  if ( max_elements <= std::max( static_cast< size_t >( 1024 ),
+                                 nb_elements / 64 ) ) {
+    std::partial_sort( elements.begin(),
+                       elements.begin() + max_elements,
+                       elements.end() );
+  } else {
+    std::nth_element( elements.begin(),
+                      elements.begin() + max_elements,
+                      elements.end() );
+    std::sort( elements.begin(), elements.begin() + max_elements );
+  }
+
+  // Remove the unsorted elements. Use erase instead of resize as it doesn't
+  // require a default constructor on Element.
+  elements.erase( elements.begin() + max_elements, elements.end() );
+}
+
 } // namespace YouCompleteMe
 
 #endif /* end of include guard: UTILS_H_KEPMRPBH */
