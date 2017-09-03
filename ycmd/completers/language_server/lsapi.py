@@ -27,7 +27,7 @@ import json
 
 from collections import defaultdict
 from ycmd.utils import ( pathname2url, ToBytes, ToUnicode, url2pathname,
-                         urljoin )
+                         urljoin, GetCurrentDirectory )
 
 
 # FIXME: We might need a whole document management system eventually. For now,
@@ -57,10 +57,15 @@ def BuildNotification( method, parameters ):
 
 def Initialise( request_id ):
   """Build the Language Server initialise request"""
+
+  # FIXME: We actually need the project_directory passed in, e.g. from the
+  # request_data. For now, just get the current working directory of the server
+  project_directory = GetCurrentDirectory()
+
   return BuildRequest( request_id, 'initialize', {
     'processId': os.getpid(),
-    'rootPath': os.getcwd(), # deprecated
-    'rootUri': FilePathToUri( os.getcwd() ),
+    'rootPath': project_directory,
+    'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': { },
     'capabilities': { 'trace': 'verbose' }
   } )
@@ -139,6 +144,7 @@ def Rename( request_id, request_data, new_name ):
     'textDocument': {
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
+    'newName': new_name,
     'position': Position( request_data ),
   } )
 
@@ -172,7 +178,7 @@ def FilePathToUri( file_name ):
 
 def UriToFilePath( uri ):
   # NOTE: This assumes the URI starts with file:
-  return url2pathname( uri[ 5 : ] )
+  return os.path.normpath( url2pathname( uri[ 5 : ] ) )
 
 
 def _BuildMessageData( message ):

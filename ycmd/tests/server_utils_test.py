@@ -48,7 +48,9 @@ THIRD_PARTY_FOLDERS = (
   os.path.join( DIR_OF_THIRD_PARTY, 'racerd' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'requests' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'tern_runtime' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'waitress' )
+  os.path.join( DIR_OF_THIRD_PARTY, 'waitress' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls' ),
+  os.path.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls-workspace' ),
 )
 
 
