@@ -229,10 +229,13 @@ def _RemoveSmallCandidates( candidates, min_num_candidate_size_chars ):
 
 def _GetCursorIdentifier( collect_from_comments_and_strings,
                           request_data ):
-  line = request_data[ 'line_value' ]
+  filepath = request_data[ 'filepath' ]
+  contents = request_data[ 'file_data' ][ filepath ][ 'contents' ]
   filetype = request_data[ 'first_filetype' ]
   if not collect_from_comments_and_strings:
-    line = identifier_utils.RemoveIdentifierFreeText( line, filetype )
+    contents = identifier_utils.RemoveIdentifierFreeText( contents, filetype )
+  contents_per_line = SplitLines( contents )
+  line = contents_per_line[ request_data[ 'line_num' ] - 1 ]
   return identifier_utils.IdentifierAtIndex(
       line,
       request_data[ 'column_codepoint' ] - 1,
