@@ -43,7 +43,7 @@ def RemoveIdentifierFreeText_CstyleComments_test():
   eq_( "foo \nbar \nqux",
        iu.RemoveIdentifierFreeText( "foo \nbar /* foo */\nqux" ) )
 
-  eq_( "foo \nbar \nqux",
+  eq_( "foo \nbar \n\nqux",
        iu.RemoveIdentifierFreeText( "foo \nbar /* foo \n foo2 */\nqux" ) )
 
 
@@ -90,10 +90,10 @@ def RemoveIdentifierFreeText_NoMultilineString_test():
 
 
 def RemoveIdentifierFreeText_PythonMultilineString_test():
-  eq_( "\nzoo",
+  eq_( "\n\n\nzoo",
        iu.RemoveIdentifierFreeText( "\"\"\"\nfoobar\n\"\"\"\nzoo" ) )
 
-  eq_( "\nzoo",
+  eq_( "\n\n\nzoo",
        iu.RemoveIdentifierFreeText( "'''\nfoobar\n'''\nzoo" ) )
 
 

@@ -92,11 +92,19 @@ def GetCursorIdentifier_LineEmpty_test():
 
 def GetCursorIdentifier_IgnoreIdentifierFromCommentsAndStrings_test():
   eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( '"foobar"', 4 ) ) )
+  eq_( '', ic._GetCursorIdentifier( False,
+                                    BuildRequestWrap( '/*\n'
+                                                      ' * foobar\n'
+                                                      ' */', 5, 2 ) ) )
 
 
 def GetCursorIdentifier_CollectIdentifierFromCommentsAndStrings_test():
   eq_( 'foobar', ic._GetCursorIdentifier( True,
                                           BuildRequestWrap( '"foobar"', 4 ) ) )
+  eq_( 'foobar', ic._GetCursorIdentifier( True,
+                                          BuildRequestWrap( '/*\n'
+                                                            ' * foobar\n'
+                                                            ' */', 5, 2 ) ) )
 
 
 def PreviousIdentifier_Simple_test():
@@ -178,6 +186,12 @@ def PreviousIdentifier_IgnoreIdentifierFromCommentsAndStrings_test():
        ic._PreviousIdentifier( 2, False, BuildRequestWrap( '"foo"\n',
                                                            column_num = 1,
                                                            line_num = 2 ) ) )
+  eq_( '',
+       ic._PreviousIdentifier( 2, False, BuildRequestWrap( '/*\n'
+                                                           ' * foo\n'
+                                                           ' */',
+                                                           column_num = 2,
+                                                           line_num = 3 ) ) )
 
 
 def PreviousIdentifier_CollectIdentifierFromCommentsAndStrings_test():
@@ -185,6 +199,12 @@ def PreviousIdentifier_CollectIdentifierFromCommentsAndStrings_test():
        ic._PreviousIdentifier( 2, True, BuildRequestWrap( '"foo"\n',
                                                           column_num = 1,
                                                           line_num = 2 ) ) )
+  eq_( 'foo',
+       ic._PreviousIdentifier( 2, True, BuildRequestWrap( '/*\n'
+                                                          ' * foo\n'
+                                                          ' */',
+                                                          column_num = 2,
+                                                          line_num = 3 ) ) )
 
 
 def FilterUnchangedTagFiles_NoFiles_test():
