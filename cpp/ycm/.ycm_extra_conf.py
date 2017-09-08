@@ -28,6 +28,8 @@
 #
 # For more information, please refer to <http://unlicense.org/>
 
+from distutils.sysconfig import get_python_inc
+import platform
 import os
 import ycm_core
 
@@ -45,25 +47,16 @@ flags = [
 # You 100% do NOT need -DUSE_CLANG_COMPLETER in your flags; only the YCM
 # source code needs it.
 '-DUSE_CLANG_COMPLETER',
-# THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
-# language to use when compiling headers. So it will guess. Badly. So C++
-# headers will be compiled as C headers. You don't want that so ALWAYS specify
-# a "-std=<something>".
-# For a C project, you would set this to something like 'c99' instead of
-# 'c++11'.
-'-std=c++11',
-# ...and the same thing goes for the magic -x option which specifies the
-# language that the files to be compiled are written in. This is mostly
-# relevant for c++ headers.
+# THIS IS IMPORTANT! Without the '-x' flag, Clang won't know which language to
+# use when compiling headers. So it will guess. Badly. So C++ headers will be
+# compiled as C headers. You don't want that so ALWAYS specify the '-x' flag.
 # For a C project, you would set this to 'c' instead of 'c++'.
 '-x',
 'c++',
 '-isystem',
 '../BoostParts',
 '-isystem',
-# This path will only work on OS X, but extra paths that don't exist are not
-# harmful
-'/System/Library/Frameworks/Python.framework/Headers',
+get_python_inc(),
 '-isystem',
 '../llvm/include',
 '-isystem',
@@ -80,7 +73,15 @@ flags = [
 './tests/gmock',
 '-isystem',
 './tests/gmock/include',
+'-isystem',
+'./benchmarks/benchmark/include',
 ]
+
+# Clang automatically sets the '-std=' flag to 'c++14' for MSVC 2015 or later,
+# which is required for compiling the standard library, and to 'c++11' for older
+# versions.
+if platform.system() != 'Windows':
+  flags.append( '-std=c++11' )
 
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
