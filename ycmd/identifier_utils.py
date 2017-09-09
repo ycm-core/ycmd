@@ -25,6 +25,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import re
+from ycmd.utils import SplitLines
 
 C_STYLE_COMMENT = "/\*(?:\n|.)*?\*/"
 CPP_STYLE_COMMENT = "//.*?$"
@@ -170,8 +171,13 @@ def IdentifierRegexForFiletype( filetype ):
   return FILETYPE_TO_IDENTIFIER_REGEX.get( filetype, DEFAULT_IDENTIFIER_REGEX )
 
 
+def ReplaceWithEmptyLines( regex_match ):
+  return '\n' * ( len( SplitLines( regex_match.group( 0 ) ) ) - 1 )
+
+
 def RemoveIdentifierFreeText( text, filetype = None ):
-  return CommentAndStringRegexForFiletype( filetype ).sub( '', text )
+  return CommentAndStringRegexForFiletype( filetype ).sub(
+    ReplaceWithEmptyLines, text )
 
 
 def ExtractIdentifiersFromText( text, filetype = None ):
