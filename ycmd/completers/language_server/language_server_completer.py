@@ -48,14 +48,17 @@ MESSAGE_POLL_TIMEOUT       = 10
 
 
 class Response( object ):
-  def __init__( self ):
+  def __init__( self, response_callback=None ):
     self._event = threading.Event()
     self._message = None
+    self._response_callback = response_callback
 
 
   def ResponseReceived( self, message ):
     self._message = message
     self._event.set()
+    if self._response_callback:
+      self._response_callback( self, message )
 
 
   def AwaitResponse( self, timeout ):
@@ -121,8 +124,8 @@ class LanguageServerConnection( object ):
       return str( self._lastId )
 
 
-  def GetResponse( self, request_id, message, timeout ):
-    response = Response()
+  def GetResponseAsync( self, request_id, message, response_callback=None ):
+    response = Response( response_callback )
 
     with self._responseMutex:
       assert request_id not in self._responses
@@ -131,6 +134,11 @@ class LanguageServerConnection( object ):
     _logger.debug( 'TX: Sending message {0}'.format( message ) )
 
     self._Write( message )
+    return response
+
+
+  def GetResponse( self, request_id, message, timeout ):
+    response = self.GetResponseAsync( request_id, message )
     return response.AwaitResponse( timeout )
 
 
@@ -325,12 +333,18 @@ class StandardIOLanguageServerConnection( LanguageServerConnection,
 class LanguageServerCompleter( Completer ):
   def __init__( self, user_options):
     super( LanguageServerCompleter, self ).__init__( user_options )
-
-    self._syncType = 'Full'
-
-    self._serverFileState = {}
     self._fileStateMutex = threading.Lock()
+    self._ServerReset()
+
+
+  def _ServerReset( self ):
+    with self._fileStateMutex:
+      self._serverFileState = {}
+
     self._latest_diagnostics = collections.defaultdict( list )
+    self._syncType = 'Full'
+    self._initialise_response = None
+    self._initialise_event = threading.Event()
 
 
   @abc.abstractmethod
@@ -341,8 +355,21 @@ class LanguageServerCompleter( Completer ):
     pass
 
 
+  def ServerIsReady( self ):
+    if self._initialise_event.is_set():
+      # We already got the initialise response
+      return True
+
+    if self._initialise_response is None:
+      # We never sent the initialise response
+      return False
+
+    # Initialise request in progress. Will be handled asynchronously.
+    return False
+
+
   def ComputeCandidatesInner( self, request_data ):
-    if not self.ServerIsHealthy():
+    if not self.ServerIsReady():
       return None
 
     self._RefreshFiles( request_data )
@@ -425,8 +452,10 @@ class LanguageServerCompleter( Completer ):
 
 
   def OnFileReadyToParse( self, request_data ):
-    if self.ServerIsReady():
-      self._RefreshFiles( request_data )
+    if not self.ServerIsReady():
+      return
+
+    self._RefreshFiles( request_data )
 
     # NOTE: We also return diagnostics asynchronously via the long-polling
     # mechanism to avoid timing issues with the servers asynchronous publication
@@ -568,14 +597,24 @@ class LanguageServerCompleter( Completer ):
           del self._serverFileState[ file_name ]
 
 
-  def _WaitForInitiliase( self ):
+  def _SendInitialiseAsync( self ):
+    if self._initialise_response:
+      raise AssertionError( 'Attempt to send multiple initialise requests' )
+
     request_id = self.GetServer().NextRequestId()
-
     msg = lsapi.Initialise( request_id )
-    response = self.GetServer().GetResponse( request_id,
-                                             msg,
-                                             REQUEST_TIMEOUT_INITIALISE )
 
+    def response_handler( response, message ):
+      self._HandleInitialiseInPollThread( message )
+
+    self._initialise_response = self.GetServer().GetResponseAsync(
+      request_id,
+      msg,
+      response_handler )
+
+
+  def _HandleInitialiseInPollThread( self, response ):
+    # TODO: Mutex
     self._server_capabilities = response[ 'result' ][ 'capabilities' ]
 
     if 'textDocumentSync' in response[ 'result' ][ 'capabilities' ]:
@@ -589,8 +628,14 @@ class LanguageServerCompleter( Completer ):
       _logger.info( 'Language Server requires sync type of {0}'.format(
         self._syncType ) )
 
+    self._initialise_event.set()
+    self._initialise_response = None
+
 
   def _GetHoverResponse( self, request_data ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initialising. Please wait.' )
+
     request_id = self.GetServer().NextRequestId()
     response = self.GetServer().GetResponse(
       request_id,
@@ -619,6 +664,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def _GoToDeclaration( self, request_data ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initialising. Please wait.' )
+
     request_id = self.GetServer().NextRequestId()
     response = self.GetServer().GetResponse(
       request_id,
@@ -635,6 +683,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def _GoToReferences( self, request_data ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initialising. Please wait.' )
+
     request_id = self.GetServer().NextRequestId()
     response = self.GetServer().GetResponse(
       request_id,
@@ -646,6 +697,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def _CodeAction( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initialising. Please wait.' )
+
     # FIXME: We need to do this for all such requests
     self._RefreshFiles( request_data )
 
@@ -712,6 +766,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def _Rename( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initialising. Please wait.' )
+
     if len( args ) != 1:
       raise ValueError( 'Please specify a new name to rename it to.\n'
                         'Usage: RefactorRename <new name>' )

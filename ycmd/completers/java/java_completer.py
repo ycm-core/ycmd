@@ -124,6 +124,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         str( os.getpid() ) )
 
       self._Reset()
+
       try :
         self._StartServer()
       except:
@@ -172,7 +173,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def ServerIsReady( self ):
-    return self.ServerIsHealthy() and self._received_ready_message
+    return ( self.ServerIsHealthy() and
+             self._received_ready_message.is_set() and
+             super( JavaCompleter, self ).ServerIsReady() )
 
 
   def ShouldUseNowInner( self, request_data ):
@@ -189,7 +192,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         self._server_stderr = None
 
     self._server_handle = None
-    self._received_ready_message = False
+    self._received_ready_message = threading.Event()
 
     try:
       rmtree( self._workspace_path )
@@ -199,6 +202,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         self._workspace_path ) )
 
     self._server = None
+
+    self._ServerReset()
 
 
   def _StartServer( self ):
@@ -239,7 +244,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         _logger.warning( 'JDT Language Server failed to start' )
         return
 
-
       def notification_handler( server, message ):
         self._HandleNotificationInPollThread( message )
 
@@ -252,7 +256,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       self._server.start()
 
-      # Awaiting connection
       try:
         self._server.TryServerConnection()
       except language_server_completer.LanguageServerConnectionTimeout:
@@ -261,7 +264,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         self._StopServer()
         return
 
-    self._WaitForInitiliase()
+    self._SendInitialiseAsync()
 
 
   def _StopServer( self ):
@@ -327,7 +330,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       if message_type == 'Started':
         _logger.info( 'Java Language Server initialised successfully.' )
-        self._received_ready_message = True
+        self._received_ready_message.set()
 
 
   def HandleServerMessage( self, request_data, notification ):
