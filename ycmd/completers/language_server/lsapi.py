@@ -71,6 +71,14 @@ def Initialise( request_id ):
   } )
 
 
+def Shutdown( request_id ):
+  return BuildRequest( request_id, 'shutdown', None )
+
+
+def Exit():
+  return BuildNotification( 'exit', None )
+
+
 def DidOpenTextDocument( file_name, file_types, file_contents ):
   LAST_VERSION[ file_name ] = LAST_VERSION[ file_name ] + 1
   return BuildNotification( 'textDocument/didOpen', {

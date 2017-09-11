@@ -264,6 +264,45 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._SendInitialiseAsync()
 
 
+  def _StopServerCleanly( self ):
+    # Try and shutdown cleanly
+    if self._ServerIsRunning():
+      _logger.info( 'Stopping java server with PID {0}'.format(
+                        self._server_handle.pid ) )
+
+      self._ShutdownServer()
+
+      try:
+        utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                            timeout = 5 )
+
+        if self._server:
+          self._server.join()
+
+        _logger.info( 'JDT Language server stopped' )
+      except Exception:
+        _logger.exception( 'Error while stopping java server' )
+
+
+  def _StopServerForecefully( self ):
+    if self._ServerIsRunning():
+      _logger.info( 'Killing java server with PID {0}'.format(
+                        self._server_handle.pid ) )
+
+      self._server_handle.terminate()
+
+      try:
+        utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                            timeout = 5 )
+
+        if self._server:
+          self._server.join()
+
+        _logger.info( 'JDT Language server killed' )
+      except Exception:
+        _logger.exception( 'Error while killing java server' )
+
+
   def _StopServer( self ):
     with self._server_state_mutex:
       # We don't use utils.CloseStandardStreams, because the stdin/out is
@@ -271,26 +310,17 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       if self._server_handle and self._server_handle.stderr:
         self._server_handle.stderr.close()
 
+      # Tell the connection to expect the server to disconnect
       if self._server:
         self._server.stop()
 
-      if self._ServerIsRunning():
-        _logger.info( 'Stopping java server with PID {0}'.format(
-                          self._server_handle.pid ) )
+      # Tell the server to exit using the shutdown request.
+      self._StopServerCleanly()
 
-        self._server_handle.terminate()
+      # If the server is still running, e.g. due to erros, kill it
+      self._StopServerForecefully()
 
-        try:
-          utils.WaitUntilProcessIsTerminated( self._server_handle,
-                                              timeout = 5 )
-
-          if self._server:
-            self._server.join()
-
-          _logger.info( 'JDT Language server stopped' )
-        except RuntimeError:
-          _logger.exception( 'Error while stopping java server' )
-
+      # Tidy up our internal state
       self._Reset()
 
 
