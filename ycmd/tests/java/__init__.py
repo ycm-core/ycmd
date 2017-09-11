@@ -30,8 +30,7 @@ from ycmd import handlers
 from ycmd.tests.test_utils import ( ClearCompletionsCache,
                                     CurrentWorkingDirectory,
                                     SetUpApp,
-                                    StopCompleterServer,
-                                    BuildRequest )
+                                    StopCompleterServer )
 from ycmd.utils import GetCurrentDirectory
 
 shared_app = None
@@ -130,17 +129,5 @@ def WaitUntilCompleterServerReady( app, timeout = 30 ):
 
     if app.get( '/ready', { 'subserver': filetype } ).json:
       return
-    else:
-      # Poll for messages. The server requires this to handle async messages,
-      # and will not become ready without them.
-      # FIXME: Is this really what we want? It's tricky to actually handle these
-      # things without some trigger.
-      app.post_json( '/receive_messages', BuildRequest( **{
-        'filetype'  : 'java',
-        'filepath'  : PathToTestFile( 'DEFAULT_PROJECT_DIR' ),
-        'line_num'  : 1,
-        'column_num': 1,
-        'contents': ''
-      } ) )
 
     time.sleep( 0.1 )

@@ -239,10 +239,15 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         _logger.warning( 'JDT Language Server failed to start' )
         return
 
+
+      def notification_handler( server, message ):
+        self._HandleNotificationInPollThread( message )
+
       self._server = (
         language_server_completer.StandardIOLanguageServerConnection(
           self._server_handle.stdin,
-          self._server_handle.stdout )
+          self._server_handle.stdout,
+          notification_handler )
       )
 
       self._server.start()
@@ -316,15 +321,18 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     }
 
 
-  def HandleServerMessage( self, request_data, notification ):
+  def _HandleNotificationInPollThread( self, notification ):
     if notification[ 'method' ] == 'language/status':
-      message = notification[ 'params' ][ 'message' ]
       message_type = notification[ 'params' ][ 'type' ]
 
       if message_type == 'Started':
         _logger.info( 'Java Language Server initialised successfully.' )
         self._received_ready_message = True
 
+
+  def HandleServerMessage( self, request_data, notification ):
+    if notification[ 'method' ] == 'language/status':
+      message = notification[ 'params' ][ 'message' ]
       return responses.BuildDisplayMessageResponse(
         'Initialising Java completer: {0}'.format( message ) )
 

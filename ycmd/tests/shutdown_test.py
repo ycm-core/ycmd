@@ -47,6 +47,7 @@ class Shutdown_test( Client_test ):
 
     filetypes = [ 'cs',
                   'go',
+                  'java',
                   'javascript',
                   'python',
                   'typescript',
@@ -77,6 +78,7 @@ class Shutdown_test( Client_test ):
 
     filetypes = [ 'cs',
                   'go',
+                  'java',
                   'javascript',
                   'python',
                   'typescript',

@@ -61,10 +61,6 @@ def PollForMessages( app, request_data, drain=True ):
       raise RuntimeError( 'Waited for diagnostics to be ready for '
                           '10 seconds, aborting.' )
 
-    # Poll for messages. The server requires this to handle async messages,
-    # and will not become ready without them.
-    # FIXME: Is this really what we want? It's tricky to actually handle these
-    # things without some trigger.
     response = app.post_json( '/receive_messages', BuildRequest( **Merge ( {
       'filetype'  : 'java',
       'line_num'  : 1,
@@ -185,7 +181,7 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
     'fixit_available': False
   } ) )
 
-  # Poll unti we receive the diags asyncronously
+  # Poll until we receive the diags asynchronously
   for message in PollForMessages( app,
                                   { 'filepath': filepath,
                                     'contents': contents },
