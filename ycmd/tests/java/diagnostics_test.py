@@ -22,10 +22,16 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from future.utils import iterkeys
 from hamcrest import ( assert_that, contains, has_entries )
 from nose.tools import eq_
 
-from ycmd.tests.java import ( PathToTestFile, SharedYcmd, DEFAULT_PROJECT_DIR )
+from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
+                              IsolatedYcmdInDirectory,
+                              PathToTestFile,
+                              SharedYcmd,
+                              WaitUntilCompleterServerReady )
+
 from ycmd.tests.test_utils import ( BuildRequest )
 from ycmd.utils import ReadFile
 
@@ -48,18 +54,75 @@ def RangeMatch( start, end ):
   } )
 
 
+def ProjectPath( *args ):
+  return PathToTestFile( DEFAULT_PROJECT_DIR,
+                         'src',
+                         'com',
+                         'test',
+                         *args )
+
+
+DIAG_MATCHERS_PER_FILE = {
+  ProjectPath( 'TestFactory.java' ): contains(
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'The value of the field TestFactory.Bar.testString is not used',
+      'location': PositionMatch( 15, 19 ),
+      'location_extent': RangeMatch( ( 15, 19 ), ( 15, 29 ) ),
+      'ranges': contains( RangeMatch( ( 15, 19 ), ( 15, 29 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'Wibble cannot be resolved to a type',
+      'location': PositionMatch( 18, 24 ),
+      'location_extent': RangeMatch( ( 18, 24 ), ( 18, 30 ) ),
+      'ranges': contains( RangeMatch( ( 18, 24 ), ( 18, 30 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'Wibble cannot be resolved to a variable',
+      'location': PositionMatch( 19, 15 ),
+      'location_extent': RangeMatch( ( 19, 15 ), ( 19, 21 ) ),
+      'ranges': contains( RangeMatch( ( 19, 15 ), ( 19, 21 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'Type mismatch: cannot convert from int to boolean',
+      'location': PositionMatch( 27, 10 ),
+      'location_extent': RangeMatch( ( 27, 10 ), ( 27, 16 ) ),
+      'ranges': contains( RangeMatch( ( 27, 10 ), ( 27, 16 ) ) ),
+      'fixit_available': False
+    } ),
+  ),
+  ProjectPath( 'TestWidgetImpl.java' ): contains(
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'The value of the local variable a is not used',
+      'location': PositionMatch( 15, 9 ),
+      'location_extent': RangeMatch( ( 15, 9 ), ( 15, 10 ) ),
+      'ranges': contains( RangeMatch( ( 15, 9 ), ( 15, 10 ) ) ),
+      'fixit_available': False
+    } ),
+  ),
+}
+
+
 def Merge( request, data ):
   kw = dict( request )
   kw.update( data )
   return kw
 
 
-def PollForMessages( app, request_data, drain=True ):
-  expiration = time.time() + 5
+def PollForMessages( app, request_data ):
+  TIMEOUT = 30
+  expiration = time.time() + TIMEOUT
   while True:
     if time.time() > expiration:
       raise RuntimeError( 'Waited for diagnostics to be ready for '
-                          '10 seconds, aborting.' )
+                          '{0} seconds, aborting.'.format( TIMEOUT ) )
 
     response = app.post_json( '/receive_messages', BuildRequest( **Merge ( {
       'filetype'  : 'java',
@@ -72,8 +135,6 @@ def PollForMessages( app, request_data, drain=True ):
     if isinstance( response, bool ):
       if not response:
         raise RuntimeError( 'The message poll was aborted by the server' )
-      elif drain:
-        return
     elif isinstance( response, list ):
       for message in response:
         yield message
@@ -85,17 +146,9 @@ def PollForMessages( app, request_data, drain=True ):
 
 @SharedYcmd
 def FileReadyToParse_Diagnostics_Simple_test( app ):
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'test',
-                             'TestFactory.java' )
+  filepath = ProjectPath( 'TestFactory.java' )
   contents = ReadFile( filepath )
 
-  # During server initialisation, jdtls reads the project files off the disk.
-  # This means that when the test module initialised (waiting for the /ready
-  # response), we actually already handled the messages, so they should be in
-  # the diagnostics cache.
   event_data = BuildRequest( event_name = 'FileReadyToParse',
                              contents = contents,
                              filepath = filepath,
@@ -105,63 +158,21 @@ def FileReadyToParse_Diagnostics_Simple_test( app ):
 
   print( 'completer response: {0}'.format( pformat( results ) ) )
 
-  assert_that(
-    results,
-    contains(
-      has_entries( {
-        'kind': 'WARNING',
-        'text': 'The value of the field TestFactory.Bar.testString is not used',
-        'location': PositionMatch( 15, 19 ),
-        'location_extent': RangeMatch( ( 15, 19 ), ( 15, 29 ) ),
-        'ranges': contains( RangeMatch( ( 15, 19 ), ( 15, 29 ) ) ),
-        'fixit_available': False
-      } ),
-      has_entries( {
-        'kind': 'ERROR',
-        'text': 'Wibble cannot be resolved to a type',
-        'location': PositionMatch( 18, 24 ),
-        'location_extent': RangeMatch( ( 18, 24 ), ( 18, 30 ) ),
-        'ranges': contains( RangeMatch( ( 18, 24 ), ( 18, 30 ) ) ),
-        'fixit_available': False
-      } ),
-      has_entries( {
-        'kind': 'ERROR',
-        'text': 'Wibble cannot be resolved to a variable',
-        'location': PositionMatch( 19, 15 ),
-        'location_extent': RangeMatch( ( 19, 15 ), ( 19, 21 ) ),
-        'ranges': contains( RangeMatch( ( 19, 15 ), ( 19, 21 ) ) ),
-        'fixit_available': False
-      } ),
-      has_entries( {
-        'kind': 'ERROR',
-        'text': 'Type mismatch: cannot convert from int to boolean',
-        'location': PositionMatch( 27, 10 ),
-        'location_extent': RangeMatch( ( 27, 10 ), ( 27, 16 ) ),
-        'ranges': contains( RangeMatch( ( 27, 10 ), ( 27, 16 ) ) ),
-        'fixit_available': False
-      } ),
-    )
-  )
+  assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
-@SharedYcmd
+@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR ) )
 def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
+  WaitUntilCompleterServerReady( app )
+
   contents = '''
     package com.test;
     class Test {
       public String test
     }
   '''
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'test',
-                             'Test.java' )
+  filepath = ProjectPath( 'Test.java' )
 
-  # During server initialisation, jdtls reads the project files off the disk.
-  # This means that when the test module initialised (waiting for the /ready
-  # response), we actually already handled the messages, so they should be in
-  # the diagnostics cache.
   event_data = BuildRequest( event_name = 'FileReadyToParse',
                              contents = contents,
                              filepath = filepath,
@@ -169,7 +180,8 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
 
   results = app.post_json( '/event_notification', event_data ).json
 
-  # This is a new file, so the diagnostics can't possibly be available.
+  # This is a new file, so the diagnostics can't possibly be available when the
+  # initial parse request is sent. We receive these asynchronously.
   eq_( results, {} )
 
   diag_matcher = contains( has_entries( {
@@ -181,15 +193,15 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
     'fixit_available': False
   } ) )
 
-  # Poll until we receive the diags asynchronously
+  # Poll until we receive the diags
   for message in PollForMessages( app,
                                   { 'filepath': filepath,
-                                    'contents': contents },
-                                  drain=True ):
+                                    'contents': contents } ):
     print( 'Message {0}'.format( pformat( message ) ) )
-    if 'diagnostics' in message:
+    if 'diagnostics' in message and message[ 'filepath' ] == filepath:
       assert_that( message, has_entries( {
-        'diagnostics': diag_matcher
+        'diagnostics': diag_matcher,
+        'filepath': filepath
       } ) )
       break
 
@@ -198,3 +210,33 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
   print( 'completer response: {0}'.format( pformat( results ) ) )
 
   assert_that( results, diag_matcher )
+
+
+@SharedYcmd
+def Poll_Diagnostics_ProjectWide_test( app ):
+  filepath = ProjectPath( 'TestLauncher.java' )
+  contents = ReadFile( filepath )
+
+  # Poll until we receive _all_ the diags asynchronously
+  to_see = sorted( iterkeys( DIAG_MATCHERS_PER_FILE ) )
+  seen = dict()
+  for message in PollForMessages( app,
+                                  { 'filepath': filepath,
+                                    'contents': contents } ):
+    print( 'Message {0}'.format( pformat( message ) ) )
+    if 'diagnostics' in message:
+      seen[ message[ 'filepath' ] ] = True
+      if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
+        raise AssertionError(
+          'Received diagnostics for unexpected file {0}. '
+          'Only expected {1}'.format( message[ 'filepath' ], to_see ) )
+      assert_that( message, has_entries( {
+        'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
+        'filepath': message[ 'filepath' ]
+      } ) )
+
+    if sorted( iterkeys( seen ) ) == to_see:
+      break
+
+    # Eventually PollForMessages will throw a timeout exception and we'll fail
+    # if we don't see all of the expected diags

@@ -333,18 +333,17 @@ class StandardIOLanguageServerConnection( LanguageServerConnection,
 class LanguageServerCompleter( Completer ):
   def __init__( self, user_options):
     super( LanguageServerCompleter, self ).__init__( user_options )
-    self._fileStateMutex = threading.Lock()
+    self._mutex = threading.Lock()
     self._ServerReset()
 
 
   def _ServerReset( self ):
-    with self._fileStateMutex:
+    with self._mutex:
       self._serverFileState = {}
-
-    self._latest_diagnostics = collections.defaultdict( list )
-    self._syncType = 'Full'
-    self._initialise_response = None
-    self._initialise_event = threading.Event()
+      self._latest_diagnostics = collections.defaultdict( list )
+      self._syncType = 'Full'
+      self._initialise_response = None
+      self._initialise_event = threading.Event()
 
 
   @abc.abstractmethod
@@ -463,9 +462,10 @@ class LanguageServerCompleter( Completer ):
     # However, we _also_ return them here to refresh diagnostics after, say
     # changing the active file in the editor.
     uri = lsapi.FilePathToUri( request_data[ 'filepath' ] )
-    if self._latest_diagnostics[ uri ]:
-      return [ BuildDiagnostic( request_data, uri, diag )
-               for diag in self._latest_diagnostics[ uri ] ]
+    with self._mutex:
+      if uri in self._latest_diagnostics:
+        return [ BuildDiagnostic( request_data, uri, diag )
+                 for diag in self._latest_diagnostics[ uri ] ]
 
 
   def _PollForMessagesNoBlock( self, request_data, messages ):
@@ -517,38 +517,36 @@ class LanguageServerCompleter( Completer ):
     return self._PollForMessagesBlock( request_data )
 
 
-  def HandleServerMessage( self, request_data, notification ):
-    return None
+  def _GetDefaultNotificationHandler( self ):
+    def handler( server, notification ):
+      self._HandleNotificationInPollThread( notification )
+    return handler
+
+
+  def _HandleNotificationInPollThread( self, notification ):
+    if notification[ 'method' ] == 'textDocument/publishDiagnostics':
+      # Some clients might not use a message poll, so we must store the
+      # diagnostics and return them in OnFileReadyToParse
+      params = notification[ 'params' ]
+      uri = params[ 'uri' ]
+      with self._mutex:
+        self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
 
 
   def _ConvertNotificationToMessage( self, request_data, notification ):
-    response = self.HandleServerMessage( request_data, notification )
-
-    if response:
-      return response
-    elif notification[ 'method' ] == 'window/showMessage':
+    if notification[ 'method' ] == 'window/showMessage':
       return responses.BuildDisplayMessageResponse(
         notification[ 'params' ][ 'message' ] )
     elif notification[ 'method' ] == 'textDocument/publishDiagnostics':
-      # Diagnostics are a little special. We only return diagnostics for the
-      # requested file, but store them for every file. Language servers can
-      # return diagnostics for the whole project, but this request is
-      # specifically for a particular file.
-      # Any messages we handle which are for other files are returned in the
-      # OnFileReadyToParse request.
       params = notification[ 'params' ]
       uri = params[ 'uri' ]
-      self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
-
-      # TODO(Ben): Does realpath break symlinks?
-      # e.g. we putting symlinks in the testdata for the source does not work
-      if os.path.realpath( lsapi.UriToFilePath( uri ) ) == os.path.realpath(
-        request_data[ 'filepath' ] ):
-        response = {
-          'diagnostics': [ BuildDiagnostic( request_data, uri, x )
-                           for x in params[ 'diagnostics' ] ]
-        }
-        return response
+      filepath = lsapi.UriToFilePath( uri )
+      response = {
+        'diagnostics': [ BuildDiagnostic( request_data, uri, x )
+                         for x in params[ 'diagnostics' ] ],
+        'filepath': filepath
+      }
+      return response
 
     return None
 
@@ -556,7 +554,7 @@ class LanguageServerCompleter( Completer ):
   def _RefreshFiles( self, request_data ):
     # FIXME: Provide a Reset method which clears this state. Restarting
     # downstream servers would leave this cache in the incorrect state.
-    with self._fileStateMutex:
+    with self._mutex:
       for file_name, file_data in iteritems( request_data[ 'file_data' ] ):
         file_state = 'New'
         if file_name in self._serverFileState:
@@ -598,38 +596,39 @@ class LanguageServerCompleter( Completer ):
 
 
   def _SendInitialiseAsync( self ):
-    if self._initialise_response:
-      raise AssertionError( 'Attempt to send multiple initialise requests' )
+    with self._mutex:
+      if self._initialise_response:
+        raise AssertionError( 'Attempt to send multiple initialise requests' )
 
-    request_id = self.GetServer().NextRequestId()
-    msg = lsapi.Initialise( request_id )
+      request_id = self.GetServer().NextRequestId()
+      msg = lsapi.Initialise( request_id )
 
-    def response_handler( response, message ):
-      self._HandleInitialiseInPollThread( message )
+      def response_handler( response, message ):
+        self._HandleInitialiseInPollThread( message )
 
-    self._initialise_response = self.GetServer().GetResponseAsync(
-      request_id,
-      msg,
-      response_handler )
+      self._initialise_response = self.GetServer().GetResponseAsync(
+        request_id,
+        msg,
+        response_handler )
 
 
   def _HandleInitialiseInPollThread( self, response ):
-    # TODO: Mutex
-    self._server_capabilities = response[ 'result' ][ 'capabilities' ]
+    with self._mutex:
+      self._server_capabilities = response[ 'result' ][ 'capabilities' ]
 
-    if 'textDocumentSync' in response[ 'result' ][ 'capabilities' ]:
-      SYNC_TYPE = [
-        'None',
-        'Full',
-        'Incremental'
-      ]
-      self._syncType = SYNC_TYPE[
-        response[ 'result' ][ 'capabilities' ][ 'textDocumentSync' ] ]
-      _logger.info( 'Language Server requires sync type of {0}'.format(
-        self._syncType ) )
+      if 'textDocumentSync' in response[ 'result' ][ 'capabilities' ]:
+        SYNC_TYPE = [
+          'None',
+          'Full',
+          'Incremental'
+        ]
+        self._syncType = SYNC_TYPE[
+          response[ 'result' ][ 'capabilities' ][ 'textDocumentSync' ] ]
+        _logger.info( 'Language Server requires sync type of {0}'.format(
+          self._syncType ) )
 
-    self._initialise_event.set()
-    self._initialise_response = None
+      self._initialise_response = None
+      self._initialise_event.set()
 
 
   def _GetHoverResponse( self, request_data ):
@@ -714,8 +713,9 @@ class LanguageServerCompleter( Completer ):
 
       return True
 
-    file_diagnostics = self._latest_diagnostics[
-        lsapi.FilePathToUri( request_data[ 'filepath' ] ) ]
+    with self._mutex:
+      file_diagnostics = list( self._latest_diagnostics[
+          lsapi.FilePathToUri( request_data[ 'filepath' ] ) ] )
 
     matched_diagnostics = [
       d for d in file_diagnostics if WithinRange( d )

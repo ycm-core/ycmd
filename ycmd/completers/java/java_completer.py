@@ -244,14 +244,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         _logger.warning( 'JDT Language Server failed to start' )
         return
 
-      def notification_handler( server, message ):
-        self._HandleNotificationInPollThread( message )
-
       self._server = (
         language_server_completer.StandardIOLanguageServerConnection(
           self._server_handle.stdin,
           self._server_handle.stdout,
-          notification_handler )
+          self._GetDefaultNotificationHandler() )
       )
 
       self._server.start()
@@ -269,14 +266,15 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def _StopServer( self ):
     with self._server_state_mutex:
-      if self._ServerIsRunning():
-        # We don't use utils.CloseStandardStreams, because the stdin/out is
-        # connected to our server connector. Just close stderr.
-        if self._server_handle and self._server_handle.stderr:
-          self._server_handle.stderr.close()
+      # We don't use utils.CloseStandardStreams, because the stdin/out is
+      # connected to our server connector. Just close stderr.
+      if self._server_handle and self._server_handle.stderr:
+        self._server_handle.stderr.close()
 
+      if self._server:
         self._server.stop()
 
+      if self._ServerIsRunning():
         _logger.info( 'Stopping java server with PID {0}'.format(
                           self._server_handle.pid ) )
 
@@ -286,12 +284,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           utils.WaitUntilProcessIsTerminated( self._server_handle,
                                               timeout = 5 )
 
-          self._server.join()
+          if self._server:
+            self._server.join()
 
           _logger.info( 'JDT Language server stopped' )
         except RuntimeError:
           _logger.exception( 'Error while stopping java server' )
-
 
       self._Reset()
 
@@ -332,14 +330,18 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         _logger.info( 'Java Language Server initialised successfully.' )
         self._received_ready_message.set()
 
+    super( JavaCompleter, self )._HandleNotificationInPollThread( notification )
 
-  def HandleServerMessage( self, request_data, notification ):
+
+  def _ConvertNotificationToMessage( self, request_data, notification ):
     if notification[ 'method' ] == 'language/status':
       message = notification[ 'params' ][ 'message' ]
       return responses.BuildDisplayMessageResponse(
         'Initialising Java completer: {0}'.format( message ) )
 
-    return None
+    return super( JavaCompleter, self )._ConvertNotificationToMessage(
+      request_data,
+      notification )
 
 
   def GetType( self, request_data ):
