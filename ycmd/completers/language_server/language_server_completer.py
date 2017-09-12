@@ -39,6 +39,7 @@ from ycmd.completers.language_server import lsapi
 
 _logger = logging.getLogger( __name__ )
 
+SERVER_LOG_PREFIX = 'Server reported: '
 
 REQUEST_TIMEOUT_COMPLETION = 1
 REQUEST_TIMEOUT_INITIALISE = 30
@@ -588,9 +589,22 @@ class LanguageServerCompleter( Completer ):
 
 
   def _ConvertNotificationToMessage( self, request_data, notification ):
+
+    log_level = [
+      None, # 1-based enum from LSP
+      logging.ERROR,
+      logging.WARNING,
+      logging.INFO,
+      logging.DEBUG,
+    ]
+
     if notification[ 'method' ] == 'window/showMessage':
       return responses.BuildDisplayMessageResponse(
         notification[ 'params' ][ 'message' ] )
+    elif notification[ 'method' ] == 'window/logMessage':
+      params = notification[ 'params' ]
+      _logger.log( log_level[ int( params[ 'type' ] ) ],
+                   SERVER_LOG_PREFIX + params[ 'message' ] )
     elif notification[ 'method' ] == 'textDocument/publishDiagnostics':
       params = notification[ 'params' ]
       uri = params[ 'uri' ]

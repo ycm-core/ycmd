@@ -130,4 +130,4 @@ def WaitUntilCompleterServerReady( app, timeout = 30 ):
     if app.get( '/ready', { 'subserver': filetype } ).json:
       return
 
-    time.sleep( 0.1 )
+    time.sleep( 0.5 )
