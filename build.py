@@ -30,7 +30,14 @@ if not ( ( PY_MAJOR == 2 and PY_MINOR >= 6 ) or
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
+POSSIBLY_EMPTY_THIRD_PARTY_DIRS = [
+  'eclipse.jdt.ls-workspace'
+]
+
 for folder in os.listdir( DIR_OF_THIRD_PARTY ):
+  if folder in POSSIBLY_EMPTY_THIRD_PARTY_DIRS:
+    continue
+
   abs_folder_path = p.join( DIR_OF_THIRD_PARTY, folder )
   if p.isdir( abs_folder_path ) and not os.listdir( abs_folder_path ):
     sys.exit(

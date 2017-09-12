@@ -22,17 +22,16 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import glob
+import hashlib
 import logging
 import os
-import threading
-import glob
+import shutil
 import tempfile
-
-from shutil import rmtree
+import threading
 from subprocess import PIPE
 
 from ycmd import ( utils, responses )
-
 from ycmd.completers.language_server import language_server_completer
 
 _logger = logging.getLogger( __name__ )
@@ -48,6 +47,40 @@ LANGUAGE_SERVER_HOME = os.path.join( os.path.dirname( __file__ ),
                                      'repository')
 
 PATH_TO_JAVA = utils.PathToFirstExistingExecutable( [ 'java' ] )
+
+PROJECT_FILE_TAILS = [
+  '.project',
+  'pom.xml',
+  'build.gradle'
+]
+
+WORKSPACE_ROOT_PATH = os.path.join( os.path.dirname( __file__ ),
+                                    '..',
+                                    '..',
+                                    '..',
+                                    'third_party',
+                                    'eclipse.jdt.ls-workspace' )
+
+# The authors of jdt.ls say that we should re-use workspaces. They also say that
+# occasionally, the workspace becomes corrupt, and has to be deleted. This is
+# frustrating.
+#
+# Pros for re-use:
+#  - Startup time is significantly improved. This could be very meaningful on
+#    larger projects
+#
+# Cons:
+#  - A little more complexity (we has the project path to create the workspace
+#    dir)
+#  - It breaks our tests which expect the logs to be deleted
+#  - It can lead to multiple jdt.js instances using the same workspace (BAD)
+#  - It breaks our tests which do exactly that
+#
+# So:
+#  - By _default_ we use a clean workspace (see default_settings.json) on each
+#    Vim instance
+#  - An option is available to re-use workspaces
+CLEAN_WORKSPACE_OPTION = 'java_jdtls_use_clean_workspace'
 
 
 def ShouldEnableJavaCompleter():
@@ -96,11 +129,42 @@ def _LauncherConfiguration():
   return os.path.abspath( os.path.join( LANGUAGE_SERVER_HOME, config ) )
 
 
+def _MakeProjectFilesForPath( path ):
+  for tail in PROJECT_FILE_TAILS:
+    yield os.path.join( path, tail )
+
+
+def _FindProjectDir( starting_dir ):
+  for path in utils.PathsToAllParentFolders( starting_dir ):
+    for project_file in _MakeProjectFilesForPath( path ):
+      if os.path.isfile( project_file ):
+        return path
+
+  return starting_dir
+
+
+def _WorkspaceDirForProject( project_dir, use_clean_workspace ):
+  if use_clean_workspace:
+    temp_path = os.path.join( WORKSPACE_ROOT_PATH, 'temp' )
+
+    try:
+      os.makedirs( temp_path )
+    except OSError:
+      pass
+
+    return tempfile.mkdtemp( dir=temp_path )
+
+  project_dir_hash = hashlib.sha256( utils.ToBytes( project_dir ) )
+  return os.path.join( WORKSPACE_ROOT_PATH,
+                       utils.ToUnicode( project_dir_hash.hexdigest() ) )
+
+
 class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
     super( JavaCompleter, self ).__init__( user_options )
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._use_clean_workspace = user_options[ CLEAN_WORKSPACE_OPTION ]
 
     # Used to ensure that starting/stopping of the server is synchronised
     self._server_state_mutex = threading.RLock()
@@ -168,24 +232,31 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def DebugInfo( self, request_data ):
+    items = [
+      responses.DebugInfoItem( 'Java Path', PATH_TO_JAVA ),
+      responses.DebugInfoItem( 'Launcher Config.', self._launcher_config ),
+    ]
+
+    if self._project_dir:
+      items.append( responses.DebugInfoItem( 'Project Directory',
+                                             self._project_dir ) )
+
+    if self._workspace_path:
+      items.append( responses.DebugInfoItem( 'Workspace Path',
+                                             self._workspace_path ) )
     return responses.BuildDebugInfoResponse(
       name = "Java",
       servers = [
         responses.DebugInfoServer(
           name = "Java Language Server",
           handle = self._server_handle,
-          executable = LANGUAGE_SERVER_HOME,
+          executable = self._launcher_path,
           logfiles = [
             self._server_stderr,
             os.path.join( self._workspace_path, '.metadata', '.log' )
           ] )
       ],
-      items = [
-        responses.DebugInfoItem( 'Workspace Path', self._workspace_path ),
-        responses.DebugInfoItem( 'Java Path', PATH_TO_JAVA ),
-        responses.DebugInfoItem( 'jdt.ls Path', _PathToLauncherJar() ),
-        responses.DebugInfoItem( 'Launcher Config.', _LauncherConfiguration() ),
-      ] )
+      items = items )
 
 
   def Shutdown( self ):
@@ -205,6 +276,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
              super( JavaCompleter, self ).ServerIsReady() )
 
 
+  def _GetProjectDirectory( self ):
+    return self._project_dir
+
+
   def _ServerIsRunning( self ):
     return utils.ProcessIsRunning( self._server_handle )
 
@@ -221,19 +296,20 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         utils.RemoveIfExists( self._server_stderr )
         self._server_stderr = None
 
-    if self._workspace_path:
+    if self._workspace_path and self._use_clean_workspace:
       try:
-        rmtree( self._workspace_path )
+        shutil.rmtree( self._workspace_path )
       except OSError:
-        # We actually just ignore the error because there's really not much
-        # else we can do
-        _logger.exception( 'Failed to remove workspace path: {0}'.format(
+        _logger.exception( 'Failed to clean up workspace dir {0}'.format(
           self._workspace_path ) )
 
-    self._workspace_path = tempfile.mkdtemp()
-    self._server_handle = None
+    self._launcher_path = _PathToLauncherJar()
+    self._launcher_config = _LauncherConfiguration()
+    self._workspace_path = None
+    self._project_dir = None
     self._received_ready_message = threading.Event()
 
+    self._server_handle = None
     self._connection = None
 
     self.ServerReset()
@@ -243,6 +319,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     with self._server_state_mutex:
       _logger.info( 'Starting JDT Language Server...' )
 
+      self._project_dir = _FindProjectDir( utils.GetCurrentDirectory() )
+      self._workspace_path = _WorkspaceDirForProject(
+        self._project_dir,
+        self._use_clean_workspace )
+
       command = [
         PATH_TO_JAVA,
         '-Declipse.application=org.eclipse.jdt.ls.core.id1',
@@ -250,9 +331,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         '-Declipse.product=org.eclipse.jdt.ls.core.product',
         '-Dlog.level=ALL',
         '-jar',
-        _PathToLauncherJar(),
+        self._launcher_path,
         '-configuration',
-        _LauncherConfiguration(),
+        self._launcher_config,
         '-data',
         self._workspace_path
       ]

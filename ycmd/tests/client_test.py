@@ -32,8 +32,10 @@ import os
 import psutil
 import requests
 import subprocess
+import shutil
 import sys
 import time
+import tempfile
 
 from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
 from ycmd.tests import PathToTestFile
@@ -69,6 +71,10 @@ class Client_test( object ):
     self._options_dict[ 'hmac_secret' ] = ToUnicode(
       b64encode( self._hmac_secret ) )
 
+    self._orig_working_dir = os.getcwd()
+    self._working_dir = tempfile.mkdtemp()
+    os.chdir( self._working_dir )
+
 
   def tearDown( self ):
     for server in self._servers:
@@ -77,6 +83,9 @@ class Client_test( object ):
     CloseStandardStreams( self._popen_handle )
     for logfile in self._logfiles:
       RemoveIfExists( logfile )
+
+    os.chdir( self._orig_working_dir )
+    shutil.rmtree( self._working_dir )
 
 
   def Start( self, idle_suicide_seconds = 60,

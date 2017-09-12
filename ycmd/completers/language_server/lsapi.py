@@ -26,8 +26,11 @@ import os
 import json
 
 from collections import defaultdict
-from ycmd.utils import ( pathname2url, ToBytes, ToUnicode, url2pathname,
-                         urljoin, GetCurrentDirectory )
+from ycmd.utils import ( pathname2url,
+                         ToBytes,
+                         ToUnicode,
+                         url2pathname,
+                         urljoin )
 
 
 # FIXME: We might need a whole document management system eventually. For now,
@@ -55,12 +58,8 @@ def BuildNotification( method, parameters ):
   } )
 
 
-def Initialise( request_id ):
+def Initialise( request_id, project_directory ):
   """Build the Language Server initialise request"""
-
-  # FIXME: We actually need the project_directory passed in, e.g. from the
-  # request_data. For now, just get the current working directory of the server
-  project_directory = GetCurrentDirectory()
 
   return BuildRequest( request_id, 'initialize', {
     'processId': os.getpid(),
@@ -200,11 +199,10 @@ def _BuildMessageData( message ):
   data = ToBytes( json.dumps( message, sort_keys=True ) )
   packet = ToBytes( 'Content-Length: {0}\r\n'
                     'Content-Type: application/vscode-jsonrpc;charset=utf8\r\n'
-                    '\r\n'
-                     .format( len(data) ) ) + data
+                    '\r\n'.format( len(data) ) ) + data
   return packet
 
 
 def Parse( data ):
-  """Reads the raw language server data |data| into a Python dictionary"""
+  """Reads the raw language server message payload into a Python dictionary"""
   return json.loads( ToUnicode( data ) )
