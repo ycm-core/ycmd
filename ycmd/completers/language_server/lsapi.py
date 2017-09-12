@@ -189,7 +189,7 @@ def FilePathToUri( file_name ):
 
 def UriToFilePath( uri ):
   # NOTE: This assumes the URI starts with file:
-  return os.path.normpath( url2pathname( uri[ 5 : ] ) )
+  return os.path.abspath( url2pathname( uri[ 5 : ] ) )
 
 
 def _BuildMessageData( message ):
