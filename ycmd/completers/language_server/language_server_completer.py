@@ -657,6 +657,7 @@ class LanguageServerCompleter( Completer ):
       # We can't change the dictionary entries while using iterkeys, so we do
       # that in a separate loop.
       # TODO(Ben): Is this better than just not using iterkeys?
+      # TODO(Ben): Isn't there a client->server event when a buffer is closed?
       for file_name in stale_files:
           msg = lsapi.DidCloseTextDocument( file_name )
           self.GetServer().SendNotification( msg )

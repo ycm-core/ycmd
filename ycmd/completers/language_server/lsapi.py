@@ -92,13 +92,16 @@ def DidOpenTextDocument( file_name, file_types, file_contents ):
 
 
 def DidChangeTextDocument( file_name, file_types, file_contents ):
-  # FIXME: The servers seem to all state they want incremental updates. It
-  # remains to be seen if they really do. So far, no actual server tested has
-  # actually required this, but it might be necessary for performance reasons in
-  # some cases. However, as the logic for diffing previous file versions, etc.
-  # is highly complex, it should only be implemented if it becomes strictly
-  # necessary (perhaps with client support).
-  return DidOpenTextDocument( file_name, file_types, file_contents )
+  LAST_VERSION[ file_name ] = LAST_VERSION[ file_name ] + 1
+  return BuildNotification( 'textDocument/didChange', {
+    'textDocument': {
+      'uri': FilePathToUri( file_name ),
+      'version': LAST_VERSION[ file_name ],
+    },
+    'contentChanges': [
+      { 'text': file_contents },
+    ],
+  } )
 
 
 def DidCloseTextDocument( file_name ):
