@@ -254,9 +254,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           logfiles = [
             self._server_stderr,
             os.path.join( self._workspace_path, '.metadata', '.log' )
-          ] )
-      ],
-      items = items )
+          ],
+          extras = items
+        )
+      ] )
 
 
   def Shutdown( self ):

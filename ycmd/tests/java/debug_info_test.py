@@ -45,7 +45,17 @@ def DebugInfo_test( app ):
         'executable': instance_of( str ),
         'pid': instance_of( int ),
         'logfiles': contains( instance_of( str ),
-                              instance_of( str ) )
+                              instance_of( str ) ),
+        'extras': contains(
+          has_entries( { 'key': 'Java Path',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Launcher Config.',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Project Directory',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Workspace Path',
+                         'value': instance_of( str ) } )
+        )
       } ) )
     } ) )
   )
