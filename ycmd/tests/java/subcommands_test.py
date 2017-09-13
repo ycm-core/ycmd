@@ -351,9 +351,9 @@ def Subcommands_GoToReferences_test( app ):
                                        'com',
                                        'test',
                                        'TestLauncher.java' ),
-           'column_num': 7,
+           'column_num': 13,
            # 'description': '',
-           'line_num': 8
+           'line_num': 25
          } ] )
 
 
@@ -370,7 +370,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
       'command': 'RefactorRename',
       'arguments': [ 'renamed_l' ],
       'filepath': filepath,
-      'line_num': 15,
+      'line_num': 21,
       'column_num': 5,
     },
     'expect': {
@@ -379,13 +379,13 @@ def Subcommands_RefactorRename_Simple_test( app ):
         'fixits': contains( has_entries( {
           'chunks': contains(
               ChunkMatcher( 'renamed_l',
-                            LocationMatcher( filepath, 14, 18 ),
-                            LocationMatcher( filepath, 14, 19 ) ),
+                            LocationMatcher( filepath, 20, 18 ),
+                            LocationMatcher( filepath, 20, 19 ) ),
               ChunkMatcher( 'renamed_l',
-                            LocationMatcher( filepath, 15, 5 ),
-                            LocationMatcher( filepath, 15, 6 ) ),
+                            LocationMatcher( filepath, 21, 5 ),
+                            LocationMatcher( filepath, 21, 6 ) ),
           ),
-          'location': LocationMatcher( filepath, 15, 5 )
+          'location': LocationMatcher( filepath, 21, 5 )
         } ) )
       } )
     }
@@ -421,8 +421,8 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
       'command': 'RefactorRename',
       'arguments': [ 'a-quite-long-string' ],
       'filepath': TestLauncher,
-      'line_num': 8,
-      'column_num': 7,
+      'line_num': 25,
+      'column_num': 13,
     },
     'expect': {
       'response': requests.codes.ok,
@@ -439,14 +439,14 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
               LocationMatcher( TestFactory, 28, 33 ) ),
             ChunkMatcher(
               'a-quite-long-string',
-              LocationMatcher( TestLauncher, 8, 7 ),
-              LocationMatcher( TestLauncher, 8, 31 ) ),
+              LocationMatcher( TestLauncher, 25, 13 ),
+              LocationMatcher( TestLauncher, 25, 37 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( TestWidgetImpl, 20, 15 ),
               LocationMatcher( TestWidgetImpl, 20, 39 ) ),
           ),
-          'location': LocationMatcher( TestLauncher, 8, 7 )
+          'location': LocationMatcher( TestLauncher, 25, 13 )
         } ) )
       } )
     }

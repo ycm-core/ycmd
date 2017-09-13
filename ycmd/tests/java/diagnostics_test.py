@@ -23,7 +23,7 @@ from __future__ import division
 from builtins import *  # noqa
 
 from future.utils import iterkeys
-from hamcrest import ( assert_that, contains, has_entries )
+from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries )
 from nose.tools import eq_
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
@@ -63,7 +63,7 @@ def ProjectPath( *args ):
 
 
 DIAG_MATCHERS_PER_FILE = {
-  ProjectPath( 'TestFactory.java' ): contains(
+  ProjectPath( 'TestFactory.java' ): contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
       'text': 'The value of the field TestFactory.Bar.testString is not used',
@@ -97,13 +97,42 @@ DIAG_MATCHERS_PER_FILE = {
       'fixit_available': False
     } ),
   ),
-  ProjectPath( 'TestWidgetImpl.java' ): contains(
+  ProjectPath( 'TestWidgetImpl.java' ): contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
       'text': 'The value of the local variable a is not used',
       'location': PositionMatch( 15, 9 ),
       'location_extent': RangeMatch( ( 15, 9 ), ( 15, 10 ) ),
       'ranges': contains( RangeMatch( ( 15, 9 ), ( 15, 10 ) ) ),
+      'fixit_available': False
+    } ),
+  ),
+  ProjectPath( 'TestLauncher.java' ): contains_inanyorder (
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'The type new TestLauncher.Launchable(){} must implement the '
+              'inherited abstract method TestLauncher.Launchable.launch('
+              'TestFactory)',
+      'location': PositionMatch( 21, 16 ),
+      'location_extent': RangeMatch( ( 21, 16 ), ( 21, 28 ) ),
+      'ranges': contains( RangeMatch( ( 21, 16 ), ( 21, 28 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'The method launch() of type new TestLauncher.Launchable(){} '
+              'must override or implement a supertype method',
+      'location': PositionMatch( 23, 19 ),
+      'location_extent': RangeMatch( ( 23, 19 ), ( 23, 27 ) ),
+      'ranges': contains( RangeMatch( ( 23, 19 ), ( 23, 27 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'Cannot make a static reference to the non-static field factory',
+      'location': PositionMatch( 24, 32 ),
+      'location_extent': RangeMatch( ( 24, 32 ), ( 24, 39 ) ),
+      'ranges': contains( RangeMatch( ( 24, 32 ), ( 24, 39 ) ) ),
       'fixit_available': False
     } ),
   ),

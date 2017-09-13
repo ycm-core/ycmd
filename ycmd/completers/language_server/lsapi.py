@@ -178,7 +178,7 @@ def Position( request_data ):
   # The API requires 0-based unicode offsets.
   return {
     'line': request_data[ 'line_num' ] - 1,
-    'character': request_data[ 'start_column' ] - 1,
+    'character': request_data[ 'start_codepoint' ] - 1,
   }
 
 

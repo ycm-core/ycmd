@@ -27,13 +27,14 @@ from hamcrest import ( assert_that,
                        contains_inanyorder,
                        empty,
                        matches_regexp,
-                       has_entries )
+                       has_entries,
+                       instance_of )
 from nose.tools import eq_
 
 from pprint import pformat
 import requests
 
-from ycmd.tests.java import ( PathToTestFile, SharedYcmd )
+from ycmd.tests.java import ( DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher )
 from ycmd.utils import ReadFile
@@ -47,6 +48,14 @@ def _Merge( request, data ):
   kw = dict( request )
   kw.update( data )
   return kw
+
+
+def ProjectPath( *args ):
+  return PathToTestFile( DEFAULT_PROJECT_DIR,
+                         'src',
+                         'com',
+                         'test',
+                         *args )
 
 
 def RunTest( app, test ):
@@ -122,11 +131,7 @@ def GetCompletions_NoQuery_test( app ):
     'description': 'semantic completion works for builtin types (no query)',
     'request': {
       'filetype'  : 'java',
-      'filepath'  : PathToTestFile( 'simple_eclipse_project',
-                                    'src',
-                                    'com',
-                                    'test',
-                                    'TestFactory.java' ),
+      'filepath'  : ProjectPath( 'TestFactory.java' ),
       'line_num'  : 27,
       'column_num': 12,
     },
@@ -151,11 +156,7 @@ def GetCompletions_WithQuery_test( app ):
     'description': 'semantic completion works for builtin types (no query)',
     'request': {
       'filetype'  : 'java',
-      'filepath'  : PathToTestFile( 'simple_eclipse_project',
-                                    'src',
-                                    'com',
-                                    'test',
-                                    'TestFactory.java' ),
+      'filepath'  : ProjectPath( 'TestFactory.java' ),
       'line_num'  : 27,
       'column_num': 15,
     },
@@ -173,16 +174,95 @@ def GetCompletions_WithQuery_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_Package_test( app ):
+  RunTest( app, {
+    'description': 'completion works for package statements',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'wobble', 'Wibble.java' ),
+      'line_num'  : 1,
+      'column_num': 18,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 18,
+        'completions': contains(
+          CompletionEntryMatcher( 'com.test.wobble', None, {
+            'extra_data': has_entries( {
+              'fixits': instance_of( list )
+            } )
+          } ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_Import_Class_test( app ):
+  RunTest( app, {
+    'description': 'completion works for import statements',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'TestLauncher.java' ),
+      'line_num'  : 4,
+      'column_num': 34,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 34,
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'Tset;', None, {
+            'menu_text': 'Tset - com.youcompleteme.testing',
+          } ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_Import_Module_test( app ):
+  RunTest( app, {
+    'description': 'completion works for import statements',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'TestLauncher.java' ),
+      'line_num'  : 3,
+      'column_num': 26,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 26,
+        'completions': contains(
+          CompletionEntryMatcher( 'testing', None, {
+            'menu_text': 'com.youcompleteme.testing',
+            'extra_data': has_entries( {
+              'fixits': instance_of( list )
+            } ),
+          } ),
+          CompletionEntryMatcher( 'Test;', None, {
+            'menu_text': 'Test - com.youcompleteme',
+          } ),
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
 def GetCompletions_WithSnippet_test( app ):
   RunTest( app, {
     'description': 'semantic completion works for builtin types (no query)',
     'request': {
       'filetype'  : 'java',
-      'filepath'  : PathToTestFile( 'simple_eclipse_project',
-                                    'src',
-                                    'com',
-                                    'test',
-                                    'TestFactory.java' ),
+      'filepath'  : ProjectPath( 'TestFactory.java' ),
       'line_num'  : 19,
       'column_num': 25,
     },

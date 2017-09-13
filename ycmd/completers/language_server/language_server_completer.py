@@ -40,7 +40,7 @@ _logger = logging.getLogger( __name__ )
 
 SERVER_LOG_PREFIX = 'Server reported: '
 
-REQUEST_TIMEOUT_COMPLETION = 1
+REQUEST_TIMEOUT_COMPLETION = 5
 REQUEST_TIMEOUT_INITIALISE = 30
 REQUEST_TIMEOUT_COMMAND    = 30
 CONNECTION_TIMEOUT         = 5
@@ -539,13 +539,17 @@ class LanguageServerCompleter( Completer ):
       # _at all_ here.
 
       if do_resolve:
-        resolve_id = self.GetConnection().NextRequestId()
-        resolve = lsapi.ResolveCompletion( resolve_id, item )
-        response = self.GetConnection().GetResponse(
-          resolve_id,
-          resolve,
-          REQUEST_TIMEOUT_COMPLETION )
-        item = response[ 'result' ]
+        try:
+          resolve_id = self.GetConnection().NextRequestId()
+          resolve = lsapi.ResolveCompletion( resolve_id, item )
+          response = self.GetConnection().GetResponse(
+            resolve_id,
+            resolve,
+            REQUEST_TIMEOUT_COMPLETION )
+          item = response[ 'result' ]
+        except ResponseFailedException:
+          _logger.exception( 'A completion item could not be resolved. Using '
+                             'basic data.' )
 
       # Note Vim only displays the first character, so we map them to the
       # documented Vim kinds:
@@ -943,44 +947,33 @@ def InsertionTextForItem( request_data, item ):
   else:
     insertion_text = item[ 'label' ]
 
+  additional_text_edits = []
+
   # Per the protocol, textEdit takes precedence over insertText, and must be
   # on the same line (and containing) the originally requested position
   if 'textEdit' in item and item[ 'textEdit' ]:
-    new_range = item[ 'textEdit' ][ 'range' ]
-    additional_text_edits = []
+    # The insertion text contains newlines or starts before the start
+    # position. This is tricky: most clients (i.e. Vim) won't support this. So
+    # we cheat. Set the insertable text to the simple text, and put and
+    # additionalTextEdit instead. We manipulate the real textEdit so that it
+    # replaces the inserted text with the real textEdit.
+    fixup_textedit = dict( item[ 'textEdit' ] )
+    fixup_textedit[ 'range' ][ 'end' ][ 'character' ] = (
+      fixup_textedit[ 'range' ][ 'end' ][ 'character' ] + len(
+        insertion_text ) )
+    additional_text_edits.append( fixup_textedit )
 
-    if ( new_range[ 'start' ][ 'line' ] != new_range[ 'end' ][ 'line' ] or
-         new_range[ 'start' ][ 'line' ] + 1 != request_data[ 'line_num' ] ):
-      # We can't support completions that span lines. The protocol forbids it
-      raise ValueError( 'Invalid textEdit supplied. Must be on a single '
-                          'line' )
-    elif '\n' in item[ 'textEdit' ][ 'newText' ]:
-      # The insertion text contains newlines. This is tricky: most clients
-      # (i.e. Vim) won't support this. So we cheat. Set the insertable text to
-      # the simple text, and put and additionalTextEdit instead. We manipulate
-      # the real textEdit so that it replaces the inserted text with the real
-      # textEdit.
-      fixup_textedit = dict( item[ 'textEdit' ] )
-      fixup_textedit[ 'range' ][ 'end' ][ 'character' ] = (
-        fixup_textedit[ 'range' ][ 'end' ][ 'character' ] + len(
-          insertion_text ) )
-      additional_text_edits.append( fixup_textedit )
-    else:
-      request_data[ 'start_codepoint' ] = (
-        new_range[ 'start' ][ 'character' ] + 1 )
-      insertion_text = item[ 'textEdit' ][ 'newText' ]
+  additional_text_edits.extend( item.get( 'additionalTextEdits', [] ) )
 
-    additional_text_edits.extend( item.get( 'additionalTextEdits', [] ) )
+  if additional_text_edits:
+    chunks = [ responses.FixItChunk( e[ 'newText' ],
+                                     BuildRange( request_data,
+                                                 request_data[ 'filepath' ],
+                                                 e[ 'range' ] ) )
+               for e in additional_text_edits ]
 
-    if additional_text_edits:
-      chunks = [ responses.FixItChunk( e[ 'newText' ],
-                                       BuildRange( request_data,
-                                                   request_data[ 'filepath' ],
-                                                   e[ 'range' ] ) )
-                 for e in additional_text_edits ]
-
-      fixits = responses.BuildFixItResponse(
-        [ responses.FixIt( chunks[ 0].range.start_, chunks ) ] )
+    fixits = responses.BuildFixItResponse(
+      [ responses.FixIt( chunks[ 0].range.start_, chunks ) ] )
 
   if 'insertTextFormat' in item and item[ 'insertTextFormat' ]:
     text_format = INSERT_TEXT_FORMAT[ item[ 'insertTextFormat' ] ]
