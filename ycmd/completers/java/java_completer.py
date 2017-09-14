@@ -34,6 +34,8 @@ from subprocess import PIPE
 from ycmd import ( utils, responses )
 from ycmd.completers.language_server import language_server_completer
 
+NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
+
 _logger = logging.getLogger( __name__ )
 
 LANGUAGE_SERVER_HOME = os.path.join( os.path.dirname( __file__ ),
@@ -463,11 +465,15 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     if isinstance( hover_response, list ):
       if len( hover_response ):
-        get_type_java = hover_response[ 0 ][ 'value' ]
+        try:
+          get_type_java = hover_response[ 0 ][ 'value' ]
+        except( TypeError ):
+          raise RuntimeError( 'No information' )
       else:
         raise RuntimeError( 'No information' )
     else:
       get_type_java = hover_response
+
 
     return responses.BuildDisplayMessageResponse( get_type_java )
 
@@ -485,6 +491,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         raise RuntimeError( 'No information' )
     else:
       get_doc_java = hover_response
+
+    get_doc_java = get_doc_java.rstrip()
+
+    if get_doc_java == '':
+      raise ValueError( NO_DOCUMENTATION_MESSAGE )
 
     return responses.BuildDisplayMessageResponse( get_doc_java.rstrip() )
 

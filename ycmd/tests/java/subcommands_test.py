@@ -26,13 +26,21 @@ from hamcrest import assert_that, contains, has_entries
 from nose.tools import eq_
 from pprint import pformat
 import requests
+import logging
 
 from ycmd.utils import ReadFile
-from ycmd.tests.java import PathToTestFile, SharedYcmd
+from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
+from ycmd.tests.java import ( PathToTestFile,
+                              SharedYcmd,
+                              IsolatedYcmdInDirectory,
+                              WaitUntilCompleterServerReady,
+                              DEFAULT_PROJECT_DIR )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     LocationMatcher )
+
+_logger = logging.getLogger( __name__ )
 
 
 @SharedYcmd
@@ -94,6 +102,34 @@ def RunTest( app, test, contents = None ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
+@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+def Subcommands_GetDoc_NoDoc_test( app ):
+  WaitUntilCompleterServerReady( app )
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'AbstractTestWidget.java' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'java',
+                             line_num = 18,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.internal_server_error )
+
+  assert_that( response.json,
+               ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+
+
 @SharedYcmd
 def Subcommands_GetDoc_Method_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -143,6 +179,35 @@ def Subcommands_GetDoc_Class_test( app ):
                     ' This concrete implementation is the equivalent'
                     ' of the main function in other languages'
   } )
+
+
+@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+def Subcommands_GetType_NoKnownType_test( app ):
+  WaitUntilCompleterServerReady( app )
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestWidgetImpl.java' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'java',
+                             line_num = 28,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GetType' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.internal_server_error )
+
+  assert_that( response.json,
+               ErrorMatcher( RuntimeError,
+                             'No information' ) )
 
 
 @SharedYcmd
@@ -290,29 +355,62 @@ def Subcommands_GetType_Method_test( app ):
          'message': 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()'
   } )
 
-# Commented out because of an overlooked corner case
-# @SharedYcmd
-# def Subcommands_GetType_Class_test( app ):
-#   filepath = PathToTestFile( 'simple_eclipse_project',
-#                              'src',
-#                              'com',
-#                              'test',
-#                              'TestWidgetImpl.java' )
-#   contents = ReadFile( filepath )
-#
-#   event_data = BuildRequest( filepath = filepath,
-#                              filetype = 'java',
-#                              line_num = 15,
-#                              column_num = 13,
-#                              contents = contents,
-#                              command_arguments = [ 'GetType' ],
-#                              completer_target = 'filetype_default' )
-#
-#   response = app.post_json( '/run_completer_command', event_data ).json
-#
-#   eq_( response, {
-#     'message': ''
-#   } )
+
+@SharedYcmd
+def Subcommands_GetType_LiteralValue_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestWidgetImpl.java' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'java',
+                             line_num = 15,
+                             column_num = 13,
+                             contents = contents,
+                             command_arguments = [ 'GetType' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.internal_server_error )
+
+  assert_that( response.json,
+               ErrorMatcher( RuntimeError,
+                             'No information' ) )
+
+
+@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+def Subcommands_GoToReferences_NoReferences_test( app ):
+  WaitUntilCompleterServerReady( app )
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'AbstractTestWidget.java' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'java',
+                             line_num = 18,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GoToReferences' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.internal_server_error )
+
+  assert_that( response.json,
+               ErrorMatcher( RuntimeError,
+                             'Cannot jump to location' ) )
 
 
 @SharedYcmd

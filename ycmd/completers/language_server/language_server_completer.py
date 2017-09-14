@@ -1048,17 +1048,20 @@ def LocationListToGoTo( request_data, response ):
   if not response:
     raise RuntimeError( 'Cannot jump to location' )
 
-  if len( response[ 'result' ] ) > 1:
-    positions = response[ 'result' ]
-    return [
-      responses.BuildGoToResponseFromLocation(
-        PositionToLocation( request_data,
-                             position ) ) for position in positions
-    ]
-  else:
-    position = response[ 'result' ][ 0 ]
-    return responses.BuildGoToResponseFromLocation(
-      PositionToLocation( request_data, position ) )
+  try:
+    if len( response[ 'result' ] ) > 1:
+      positions = response[ 'result' ]
+      return [
+        responses.BuildGoToResponseFromLocation(
+          PositionToLocation( request_data,
+                               position ) ) for position in positions
+      ]
+    else:
+      position = response[ 'result' ][ 0 ]
+      return responses.BuildGoToResponseFromLocation(
+        PositionToLocation( request_data, position ) )
+  except( IndexError ):
+    raise RuntimeError( 'Cannot jump to location' )
 
 
 def PositionToLocation( request_data, position ):
