@@ -32,25 +32,18 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               SharedYcmd,
                               WaitUntilCompleterServerReady )
 
-from ycmd.tests.test_utils import ( BuildRequest )
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    LocationMatcher )
 from ycmd.utils import ReadFile
 
 import time
 from pprint import pformat
 
 
-# TODO: Replace with ChunkMatcher, LocationMatcher, etc.
-def PositionMatch( line, column ):
+def RangeMatch( filepath, start, end ):
   return has_entries( {
-    'line_num': line,
-    'column_num': column
-  } )
-
-
-def RangeMatch( start, end ):
-  return has_entries( {
-    'start': PositionMatch( *start ),
-    'end': PositionMatch( *end ),
+    'start': LocationMatcher( filepath, *start ),
+    'end': LocationMatcher( filepath, *end ),
   } )
 
 
@@ -62,77 +55,81 @@ def ProjectPath( *args ):
                          *args )
 
 
+TestFactory = ProjectPath( 'TestFactory.java' )
+TestLauncher = ProjectPath( 'TestLauncher.java' )
+TestWidgetImpl = ProjectPath( 'TestWidgetImpl.java' )
+
 DIAG_MATCHERS_PER_FILE = {
-  ProjectPath( 'TestFactory.java' ): contains_inanyorder(
+  TestFactory: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
       'text': 'The value of the field TestFactory.Bar.testString is not used',
-      'location': PositionMatch( 15, 19 ),
-      'location_extent': RangeMatch( ( 15, 19 ), ( 15, 29 ) ),
-      'ranges': contains( RangeMatch( ( 15, 19 ), ( 15, 29 ) ) ),
+      'location': LocationMatcher( TestFactory, 15, 19 ),
+      'location_extent': RangeMatch( TestFactory, ( 15, 19 ), ( 15, 29 ) ),
+      'ranges': contains( RangeMatch( TestFactory, ( 15, 19 ), ( 15, 29 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Wibble cannot be resolved to a type',
-      'location': PositionMatch( 18, 24 ),
-      'location_extent': RangeMatch( ( 18, 24 ), ( 18, 30 ) ),
-      'ranges': contains( RangeMatch( ( 18, 24 ), ( 18, 30 ) ) ),
+      'location': LocationMatcher( TestFactory, 18, 24 ),
+      'location_extent': RangeMatch( TestFactory, ( 18, 24 ), ( 18, 30 ) ),
+      'ranges': contains( RangeMatch( TestFactory, ( 18, 24 ), ( 18, 30 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Wibble cannot be resolved to a variable',
-      'location': PositionMatch( 19, 15 ),
-      'location_extent': RangeMatch( ( 19, 15 ), ( 19, 21 ) ),
-      'ranges': contains( RangeMatch( ( 19, 15 ), ( 19, 21 ) ) ),
+      'location': LocationMatcher( TestFactory, 19, 15 ),
+      'location_extent': RangeMatch( TestFactory, ( 19, 15 ), ( 19, 21 ) ),
+      'ranges': contains( RangeMatch( TestFactory, ( 19, 15 ), ( 19, 21 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Type mismatch: cannot convert from int to boolean',
-      'location': PositionMatch( 27, 10 ),
-      'location_extent': RangeMatch( ( 27, 10 ), ( 27, 16 ) ),
-      'ranges': contains( RangeMatch( ( 27, 10 ), ( 27, 16 ) ) ),
+      'location': LocationMatcher( TestFactory, 27, 10 ),
+      'location_extent': RangeMatch( TestFactory, ( 27, 10 ), ( 27, 16 ) ),
+      'ranges': contains( RangeMatch( TestFactory, ( 27, 10 ), ( 27, 16 ) ) ),
       'fixit_available': False
     } ),
   ),
-  ProjectPath( 'TestWidgetImpl.java' ): contains_inanyorder(
+  TestWidgetImpl: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
       'text': 'The value of the local variable a is not used',
-      'location': PositionMatch( 15, 9 ),
-      'location_extent': RangeMatch( ( 15, 9 ), ( 15, 10 ) ),
-      'ranges': contains( RangeMatch( ( 15, 9 ), ( 15, 10 ) ) ),
+      'location': LocationMatcher( TestWidgetImpl, 15, 9 ),
+      'location_extent': RangeMatch( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ),
+      'ranges': contains( RangeMatch( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ) ),
       'fixit_available': False
     } ),
   ),
-  ProjectPath( 'TestLauncher.java' ): contains_inanyorder (
+  TestLauncher: contains_inanyorder (
     has_entries( {
       'kind': 'ERROR',
       'text': 'The type new TestLauncher.Launchable(){} must implement the '
               'inherited abstract method TestLauncher.Launchable.launch('
               'TestFactory)',
-      'location': PositionMatch( 21, 16 ),
-      'location_extent': RangeMatch( ( 21, 16 ), ( 21, 28 ) ),
-      'ranges': contains( RangeMatch( ( 21, 16 ), ( 21, 28 ) ) ),
+      'location': LocationMatcher( TestLauncher, 21, 16 ),
+      'location_extent': RangeMatch( TestLauncher, ( 21, 16 ), ( 21, 28 ) ),
+      'ranges': contains( RangeMatch( TestLauncher, ( 21, 16 ), ( 21, 28 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'The method launch() of type new TestLauncher.Launchable(){} '
               'must override or implement a supertype method',
-      'location': PositionMatch( 23, 19 ),
-      'location_extent': RangeMatch( ( 23, 19 ), ( 23, 27 ) ),
-      'ranges': contains( RangeMatch( ( 23, 19 ), ( 23, 27 ) ) ),
+      'location': LocationMatcher( TestLauncher, 23, 19 ),
+      'location_extent': RangeMatch( TestLauncher, ( 23, 19 ), ( 23, 27 ) ),
+      'ranges': contains( RangeMatch( TestLauncher, ( 23, 19 ), ( 23, 27 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Cannot make a static reference to the non-static field factory',
-      'location': PositionMatch( 24, 32 ),
-      'location_extent': RangeMatch( ( 24, 32 ), ( 24, 39 ) ),
-      'ranges': contains( RangeMatch( ( 24, 32 ), ( 24, 39 ) ) ),
+      'location': LocationMatcher( TestLauncher, 24, 32 ),
+      'location_extent': RangeMatch( TestLauncher, ( 24, 32 ), ( 24, 39 ) ),
+      'ranges': contains( RangeMatch( TestLauncher, ( 24, 32 ), ( 24, 39 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -216,9 +213,9 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
   diag_matcher = contains( has_entries( {
     'kind': 'ERROR',
     'text': 'Syntax error, insert ";" to complete ClassBodyDeclarations',
-    'location': PositionMatch( 4, 21 ),
-    'location_extent': RangeMatch( ( 4, 21 ), ( 4, 25 ) ),
-    'ranges': contains( RangeMatch( ( 4, 21 ), ( 4, 25 ) ) ),
+    'location': LocationMatcher( filepath, 4, 21 ),
+    'location_extent': RangeMatch( filepath, ( 4, 21 ), ( 4, 25 ) ),
+    'ranges': contains( RangeMatch( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
     'fixit_available': False
   } ) )
 
