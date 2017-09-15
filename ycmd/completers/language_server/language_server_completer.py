@@ -837,6 +837,8 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initialising. Please wait.' )
 
+    self._RefreshFiles( request_data )
+
     request_id = self.GetConnection().NextRequestId()
     response = self.GetConnection().GetResponse(
       request_id,
@@ -850,6 +852,8 @@ class LanguageServerCompleter( Completer ):
   def GoToDeclaration( self, request_data ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initialising. Please wait.' )
+
+    self._RefreshFiles( request_data )
 
     request_id = self.GetConnection().NextRequestId()
     response = self.GetConnection().GetResponse(
@@ -870,6 +874,8 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initialising. Please wait.' )
 
+    self._RefreshFiles( request_data )
+
     request_id = self.GetConnection().NextRequestId()
     response = self.GetConnection().GetResponse(
       request_id,
@@ -884,7 +890,6 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initialising. Please wait.' )
 
-    # FIXME: We (probably) need to do this for all such requests
     self._RefreshFiles( request_data )
 
     line_num_ls = request_data[ 'line_num' ] - 1
@@ -951,6 +956,9 @@ class LanguageServerCompleter( Completer ):
     if len( args ) != 1:
       raise ValueError( 'Please specify a new name to rename it to.\n'
                         'Usage: RefactorRename <new name>' )
+
+
+    self._RefreshFiles( request_data )
 
     new_name = args[ 0 ]
 
