@@ -751,12 +751,10 @@ class LanguageServerCompleter( Completer ):
                                            file_data[ 'contents' ] )
         else:
           # FIXME: DidChangeTextDocument doesn't actually do anything different
-          # from DidOpenTextDocument because we don't actually have a mechanism
-          # for generating the diffs (which would just be a waste of time)
-          #
-          # One option would be to just replace the entire file, but some
-          # servers (I'm looking at you javac completer) don't update
-          # diagnostics until you open or save a document. Sigh.
+          # from DidOpenTextDocument other than send the right message, because
+          # we don't actually have a mechanism for generating the diffs or
+          # proper document versioning or lifecycle management. This isn't
+          # strictly necessary, but might lead to performance problems.
           msg = lsapi.DidChangeTextDocument( file_name,
                                              file_data[ 'filetypes' ],
                                              file_data[ 'contents' ] )
@@ -771,7 +769,6 @@ class LanguageServerCompleter( Completer ):
 
       # We can't change the dictionary entries while using iterkeys, so we do
       # that in a separate loop.
-      # TODO(Ben): Isn't there a client->server event when a buffer is closed?
       for file_name in stale_files:
           msg = lsapi.DidCloseTextDocument( file_name )
           self.GetConnection().SendNotification( msg )

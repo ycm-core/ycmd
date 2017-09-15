@@ -33,7 +33,6 @@ from hamcrest import (
 from nose.tools import eq_
 from pprint import pformat
 import requests
-import logging
 
 from ycmd.utils import ReadFile
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
@@ -46,8 +45,6 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     LocationMatcher )
-
-_logger = logging.getLogger( __name__ )
 
 
 @SharedYcmd
