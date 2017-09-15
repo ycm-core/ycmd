@@ -96,20 +96,23 @@ def RunTest( app, test ):
 
 
 OBJECT_METHODS = [
-  CompletionEntryMatcher( 'equals', 'Object' ),
-  CompletionEntryMatcher( 'getClass', 'Object' ),
-  CompletionEntryMatcher( 'hashCode', 'Object' ),
-  CompletionEntryMatcher( 'notify', 'Object' ),
-  CompletionEntryMatcher( 'notifyAll', 'Object' ),
-  CompletionEntryMatcher( 'toString', 'Object' ),
+  CompletionEntryMatcher( 'equals', 'Object', { 'kind': 'Function' } ),
+  CompletionEntryMatcher( 'getClass', 'Object', { 'kind': 'Function' } ),
+  CompletionEntryMatcher( 'hashCode', 'Object', { 'kind': 'Function' } ),
+  CompletionEntryMatcher( 'notify', 'Object', { 'kind': 'Function' } ),
+  CompletionEntryMatcher( 'notifyAll', 'Object', { 'kind': 'Function' } ),
+  CompletionEntryMatcher( 'toString', 'Object', { 'kind': 'Function' } ),
   CompletionEntryMatcher( 'wait', 'Object', {
     'menu_text': matches_regexp( 'wait\\(long .*, int .*\\) : void' ),
+    'kind': 'Function',
   } ),
   CompletionEntryMatcher( 'wait', 'Object', {
     'menu_text': matches_regexp( 'wait\\(long .*\\) : void' ),
+    'kind': 'Function',
   } ),
   CompletionEntryMatcher( 'wait', 'Object', {
     'menu_text': 'wait() : void',
+    'kind': 'Function',
   } ),
 ]
 
@@ -141,8 +144,12 @@ def GetCompletions_NoQuery_test( app ):
       'data': has_entries( {
         'completions': contains_inanyorder(
           *WithObjectMethods(
-            CompletionEntryMatcher( 'test', 'TestFactory.Bar' ),
-            CompletionEntryMatcher( 'testString', 'TestFactory.Bar' )
+            CompletionEntryMatcher( 'test', 'TestFactory.Bar', {
+              'kind': 'Field'
+            } ),
+            CompletionEntryMatcher( 'testString', 'TestFactory.Bar', {
+              'kind': 'Field'
+            } )
           )
         ),
         'errors': empty(),
@@ -165,8 +172,12 @@ def GetCompletions_WithQuery_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
-            CompletionEntryMatcher( 'test', 'TestFactory.Bar' ),
-            CompletionEntryMatcher( 'testString', 'TestFactory.Bar' )
+            CompletionEntryMatcher( 'test', 'TestFactory.Bar', {
+              'kind': 'Field'
+            } ),
+            CompletionEntryMatcher( 'testString', 'TestFactory.Bar', {
+              'kind': 'Field'
+            } )
         ),
         'errors': empty(),
       } )
@@ -189,7 +200,9 @@ def GetCompletions_Package_test( app ):
       'data': has_entries( {
         'completion_start_column': 9,
         'completions': contains(
-          CompletionEntryMatcher( 'com.test.wobble', None ),
+          CompletionEntryMatcher( 'com.test.wobble', None, {
+            'kind': 'Module'
+          } ),
         ),
         'errors': empty(),
       } )
@@ -213,7 +226,8 @@ def GetCompletions_Import_Class_test( app ):
         'completion_start_column': 34,
         'completions': contains(
           CompletionEntryMatcher( 'Tset;', None, {
-            'menu_text': 'Tset - com.youcompleteme.testing'
+            'menu_text': 'Tset - com.youcompleteme.testing',
+            'kind': 'Class',
           } )
         ),
         'errors': empty(),
@@ -240,15 +254,19 @@ def GetCompletions_Import_Classes_test( app ):
         'completions': contains(
           CompletionEntryMatcher( 'A;', None, {
             'menu_text': 'A - com.test.wobble',
+            'kind': 'Class',
           } ),
           CompletionEntryMatcher( 'A_Very_Long_Class_Here;', None, {
             'menu_text': 'A_Very_Long_Class_Here - com.test.wobble',
+            'kind': 'Class',
           } ),
           CompletionEntryMatcher( 'Waggle;', None, {
             'menu_text': 'Waggle - com.test.wobble',
+            'kind': 'Class',
           } ),
           CompletionEntryMatcher( 'Wibble;', None, {
             'menu_text': 'Wibble - com.test.wobble',
+            'kind': 'Class',
           } ),
         ),
         'errors': empty(),
@@ -275,9 +293,11 @@ def GetCompletions_Import_ModuleAndClass_test( app ):
         'completions': contains(
           CompletionEntryMatcher( 'testing.*;', None, {
             'menu_text': 'com.youcompleteme.testing',
+            'kind': 'Module',
           } ),
           CompletionEntryMatcher( 'Test;', None, {
             'menu_text': 'Test - com.youcompleteme',
+            'kind': 'Class',
           } ),
         ),
         'errors': empty(),
@@ -304,6 +324,7 @@ def GetCompletions_WithFixIt_test( app ):
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'CUTHBERT', 'com.test.wobble.Wibble',
           {
+            'kind': 'Field',
             'extra_data': has_entries( {
               'fixits': contains( has_entries( {
                 'chunks': contains(
@@ -360,7 +381,9 @@ def GetCompletions_RejectMultiLineInsertion_test( app ):
       'data': has_entries( {
         'completion_start_column': 16,
         'completions': contains(
-          CompletionEntryMatcher( 'TestLauncher', 'com.test.TestLauncher' )
+          CompletionEntryMatcher( 'TestLauncher', 'com.test.TestLauncher', {
+            'kind': 'Constructor'
+          } )
           # Note: There would be a suggestion here for the _real_ thing we want,
           # which is a TestLauncher.Launchable, but this would generate the code
           # for an anonymous inner class via a completion TextEdit (not

@@ -548,39 +548,26 @@ class LanguageServerCompleter( Completer ):
 
 
   def ResolveCompletionItems( self, items, request_data, do_resolve ):
-    _logger.debug( 'Completion Start: {0}'.format( request_data[
-      'start_codepoint' ] ) )
-    # Note Vim only displays the first character, so we map them to the
-    # documented Vim kinds:
-    #
-    #   v variable
-    #   f function or method
-    #   m member of a struct or class
-    #   t typedef
-    #   d #define or macro
-    #
-    # FIXME: I'm not happy with this completely. We're losing useful info,
-    # perhaps unnecessarily.
     ITEM_KIND = [
       None,  # 1-based
-      'd',   # 'Text',
-      'f',   # 'Method',
-      'f',   # 'Function',
-      'f',   # 'Constructor',
-      'm',   # 'Field',
-      'm',   # 'Variable',
-      't',   # 'Class',
-      't',   # 'Interface',
-      't',   # 'Module',
-      't',   # 'Property',
-      't',   # 'Unit',
-      'd',   # 'Value',
-      't',   # 'Enum',
-      'd',   # 'Keyword',
-      'd',   # 'Snippet',
-      'd',   # 'Color',
-      'd',   # 'File',
-      'd',   # 'Reference',
+      'Text',
+      'Method',
+      'Function',
+      'Constructor',
+      'Field',
+      'Variable',
+      'Class',
+      'Interface',
+      'Module',
+      'Property',
+      'Unit',
+      'Value',
+      'Enum',
+      'Keyword',
+      'Snippet',
+      'Color',
+      'File',
+      'Reference',
     ]
 
     completions = list()
