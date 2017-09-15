@@ -287,7 +287,7 @@ def GetCompletions_Import_ModuleAndClass_test( app ):
 
 
 @SharedYcmd
-def GetCompletions_WithSnippet_test( app ):
+def GetCompletions_WithFixIt_test( app ):
   filepath = ProjectPath( 'TestFactory.java' )
   RunTest( app, {
     'description': 'semantic completion works for builtin types (no query)',

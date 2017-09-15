@@ -93,6 +93,24 @@ DIAG_MATCHERS_PER_FILE = {
       'ranges': contains( RangeMatch( TestFactory, ( 27, 10 ), ( 27, 16 ) ) ),
       'fixit_available': False
     } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'Type mismatch: cannot convert from int to boolean',
+      'location': LocationMatcher( TestFactory, 30, 10 ),
+      'location_extent': RangeMatch( TestFactory, ( 30, 10 ), ( 30, 16 ) ),
+      'ranges': contains( RangeMatch( TestFactory, ( 30, 10 ), ( 30, 16 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'The method doSomethingVaguelyUseful() in the type '
+              'AbstractTestWidget is not applicable for the arguments '
+              '(TestFactory.Bar)',
+      'location': LocationMatcher( TestFactory, 30, 23 ),
+      'location_extent': RangeMatch( TestFactory, ( 30, 23 ), ( 30, 47 ) ),
+      'ranges': contains( RangeMatch( TestFactory, ( 30, 23 ), ( 30, 47 ) ) ),
+      'fixit_available': False
+    } ),
   ),
   TestWidgetImpl: contains_inanyorder(
     has_entries( {

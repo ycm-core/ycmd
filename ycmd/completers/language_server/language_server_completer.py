@@ -884,7 +884,7 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initialising. Please wait.' )
 
-    # FIXME: We need to do this for all such requests
+    # FIXME: We (probably) need to do this for all such requests
     self._RefreshFiles( request_data )
 
     line_num_ls = request_data[ 'line_num' ] - 1
@@ -939,7 +939,7 @@ class LanguageServerCompleter( Completer ):
     response = [ self.HandleServerCommand( request_data, c )
                  for c in code_actions[ 'result' ] ]
 
-    # Else, show a list of actions to the user to select which one to apply.
+    # Show a list of actions to the user to select which one to apply.
     # This is (probably) a more common workflow for "code action".
     return responses.BuildFixItResponse( [ r for r in response if r ] )
 

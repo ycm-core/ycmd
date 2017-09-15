@@ -22,7 +22,14 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains, has_entries
+from hamcrest import (
+  assert_that,
+  contains,
+  contains_inanyorder,
+  empty,
+  has_entries,
+  instance_of,
+)
 from nose.tools import eq_
 from pprint import pformat
 import requests
@@ -573,3 +580,260 @@ def Subcommands_RefactorRename_Missing_New_Name_test( app ):
                             'Usage: RefactorRename <new name>' ),
     }
   } )
+
+
+@SharedYcmd
+def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
+  RunTest( app, {
+    'description': description,
+    'request': {
+      'command': 'FixIt',
+      'line_num': line,
+      'column_num': col,
+      'filepath': filepath,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': fixits_for_line,
+    }
+  } )
+
+
+def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  # Note: The code actions for creating variables are really not very useful.
+  # The import is, however, and the FixIt almost exactly matches the one
+  # supplied when completing 'CUTHBERT' and auto-inserting.
+  fixits_for_line = has_entries ( {
+    'fixits': contains_inanyorder(
+      has_entries( {
+        'text': "Import 'Wibble' (com.test.wobble)",
+        'chunks': contains(
+          # When doing an import, eclipse likes to add two newlines
+          # after the package. I suppose this is config in real eclipse,
+          # but there's no mechanism to configure this in jdtl afaik.
+          ChunkMatcher( '\n\n',
+                        LocationMatcher( filepath, 1, 18 ),
+                        LocationMatcher( filepath, 1, 18 ) ),
+          # OK, so it inserts the import
+          ChunkMatcher( 'import com.test.wobble.Wibble;',
+                        LocationMatcher( filepath, 1, 18 ),
+                        LocationMatcher( filepath, 1, 18 ) ),
+          # More newlines. Who doesn't like newlines?!
+          ChunkMatcher( '\n\n',
+                        LocationMatcher( filepath, 1, 18 ),
+                        LocationMatcher( filepath, 1, 18 ) ),
+          # For reasons known only to the eclipse JDT developers, it
+          # seems to want to delete the lines after the package first.
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 1, 18 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create field 'Wibble'",
+        'chunks': contains (
+          ChunkMatcher( '\n\n',
+                        LocationMatcher( filepath, 16, 4 ),
+                        LocationMatcher( filepath, 16, 4 ) ),
+          ChunkMatcher( 'private Object Wibble;',
+                        LocationMatcher( filepath, 16, 4 ),
+                        LocationMatcher( filepath, 16, 4 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create constant 'Wibble'",
+        'chunks': contains (
+          ChunkMatcher( '\n\n',
+                        LocationMatcher( filepath, 16, 4 ),
+                        LocationMatcher( filepath, 16, 4 ) ),
+          ChunkMatcher( 'private static final String Wibble = null;',
+                        LocationMatcher( filepath, 16, 4 ),
+                        LocationMatcher( filepath, 16, 4 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create parameter 'Wibble'",
+        'chunks': contains (
+          ChunkMatcher( ', ',
+                        LocationMatcher( filepath, 18, 32 ),
+                        LocationMatcher( filepath, 18, 32 ) ),
+          ChunkMatcher( 'Object Wibble',
+                        LocationMatcher( filepath, 18, 32 ),
+                        LocationMatcher( filepath, 18, 32 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create local variable 'Wibble'",
+        'chunks': contains (
+          ChunkMatcher( 'Object Wibble;',
+                        LocationMatcher( filepath, 19, 5 ),
+                        LocationMatcher( filepath, 19, 5 ) ),
+          ChunkMatcher( '\n	',
+                        LocationMatcher( filepath, 19, 5 ),
+                        LocationMatcher( filepath, 19, 5 ) ),
+        ),
+      } ),
+    )
+  } )
+
+  yield ( RunFixItTest, 'FixIt works at the first char of the line',
+          filepath, 19, 1, fixits_for_line )
+
+  yield ( RunFixItTest, 'FixIt works at the begin of the range of the diag.',
+          filepath, 19, 15, fixits_for_line )
+
+  yield ( RunFixItTest, 'FixIt works at the end of the range of the diag.',
+          filepath, 19, 20, fixits_for_line )
+
+  yield ( RunFixItTest, 'FixIt works at the end of line',
+          filepath, 19, 34, fixits_for_line )
+
+
+def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  # TODO: As there is only one option, we automatically apply it.
+  # In Java case this might not be the right thing. It's a code assist, not a
+  # FixIt really. Perhaps we should change the client to always ask for
+  # confirmation?
+  fixits = has_entries ( {
+    'fixits': contains(
+      has_entries( {
+        'text': "Change type of 'test' to 'boolean'",
+        'chunks': contains(
+          # For some reason, eclipse returns modifies as deletes + adds,
+          # although overlapping ranges aren't allowed.
+          ChunkMatcher( 'boolean',
+                        LocationMatcher( filepath, 14, 12 ),
+                        LocationMatcher( filepath, 14, 12 ) ),
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 14, 12 ),
+                        LocationMatcher( filepath, 14, 15 ) ),
+        ),
+      } ),
+    )
+  } )
+
+  yield ( RunFixItTest, 'FixIts can change lines as well as add them',
+          filepath, 27, 12, fixits )
+
+
+def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  fixits = has_entries ( {
+    'fixits': contains_inanyorder(
+      has_entries( {
+        'text': "Remove 'testString', keep assignments with side effects",
+        'chunks': contains(
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 14, 21 ),
+                        LocationMatcher( filepath, 15, 5 ) ),
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 15, 5 ),
+                        LocationMatcher( filepath, 15, 30 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create getter and setter for 'testString'...",
+        # The edit reported for this is juge and uninteresting really. Manual
+        # testing can show that it works. This test is really about the previous
+        # FixIt (and nonetheless, the previous tests ensure that we correctly
+        # populate the chunks list; the contents all come from jdt.ls)
+        'chunks': instance_of( list )
+      } ),
+    )
+  } )
+
+  yield ( RunFixItTest, 'FixIts can change lines as well as add them',
+          filepath, 15, 29, fixits )
+
+
+def Subcommands_FixIt_MultipleDiags_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  fixits = has_entries ( {
+    'fixits': contains(
+      has_entries( {
+        'text': "Change type of 'test' to 'boolean'",
+        'chunks': contains(
+          # For some reason, eclipse returns modifies as deletes + adds,
+          # although overlapping ranges aren't allowed.
+          ChunkMatcher( 'boolean',
+                        LocationMatcher( filepath, 14, 12 ),
+                        LocationMatcher( filepath, 14, 12 ) ),
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 14, 12 ),
+                        LocationMatcher( filepath, 14, 15 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Remove argument to match 'doSomethingVaguelyUseful()'",
+        'chunks': contains(
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 30, 48 ),
+                        LocationMatcher( filepath, 30, 50 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Change method 'doSomethingVaguelyUseful()': Add parameter "
+                "'Bar'",
+        # Again, this produces quite a lot of fussy little changes (that
+        # actually lead to broken code, but we can't really help that), and
+        # having them in this test would just be brittle without proving
+        # anything about our code
+        'chunks': instance_of( list ),
+      } ),
+      has_entries( {
+        'text': "Create method 'doSomethingVaguelyUseful(Bar)' in type "
+                "'AbstractTestWidget'",
+        # Again, this produces quite a lot of fussy little changes (that
+        # actually lead to broken code, but we can't really help that), and
+        # having them in this test would just be brittle without proving
+        # anything about our code
+        'chunks': instance_of( list ),
+      } ),
+    )
+  } )
+
+  yield ( RunFixItTest, 'diags are merged in FixIt options - start of line',
+          filepath, 30, 1, fixits )
+  yield ( RunFixItTest, 'diags are merged in FixIt options - start of diag 1',
+          filepath, 30, 10, fixits )
+  yield ( RunFixItTest, 'diags are merged in FixIt options - end of diag 1',
+          filepath, 30, 15, fixits )
+  yield ( RunFixItTest, 'diags are merged in FixIt options - start of diag 2',
+          filepath, 30, 23, fixits )
+  yield ( RunFixItTest, 'diags are merged in FixIt options - end of diag 2',
+          filepath, 30, 46, fixits )
+  yield ( RunFixItTest, 'diags are merged in FixIt options - end of line',
+          filepath, 30, 55, fixits )
+
+
+def Subcommands_FixIt_NoDiagnostics_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  yield ( RunFixItTest, "no FixIts means you gotta code it yo' self",
+          filepath, 1, 1, has_entries( { 'fixits': empty() } ) )

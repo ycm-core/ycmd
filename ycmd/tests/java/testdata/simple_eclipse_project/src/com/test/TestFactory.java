@@ -27,6 +27,7 @@ public class TestFactory {
     if ( b.test ) {
       w.doSomethingVaguelyUseful();
     }
+    if ( b.test ) { w.doSomethingVaguelyUseful( b ); }
     return w;
   }
 }
