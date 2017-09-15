@@ -341,3 +341,32 @@ def GetCompletions_WithSnippet_test( app ):
       } )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_RejectMultiLineInsertion_test( app ):
+  filepath = ProjectPath( 'TestLauncher.java' )
+  RunTest( app, {
+    'description': 'completion works for import statements',
+    'request': {
+      'filetype'      : 'java',
+      'filepath'      : filepath,
+      'line_num'      : 21,
+      'column_num'    : 16,
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 16,
+        'completions': contains(
+          CompletionEntryMatcher( 'TestLauncher', 'com.test.TestLauncher' )
+          # Note: There would be a suggestion here for the _real_ thing we want,
+          # which is a TestLauncher.Launchable, but this would generate the code
+          # for an anonymous inner class via a completion TextEdit (not
+          # AdditionalTextEdit) which we don't support.
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )

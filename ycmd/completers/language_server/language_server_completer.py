@@ -1015,18 +1015,54 @@ def InsertionTextForItem( request_data, item ):
   additional_text_edits = []
 
   # Per the protocol, textEdit takes precedence over insertText, and must be
-  # on the same line (and containing) the originally requested position
+  # on the same line (and containing) the originally requested position. These
+  # are a pain, and require fixing up later in some cases, as most of our
+  # clients won't be able to apply arbitrary edits (only 'completion', as
+  # opposed to 'content assist').
   if 'textEdit' in item and item[ 'textEdit' ]:
     textEdit = item[ 'textEdit' ]
     edit_range = textEdit[ 'range' ]
     start_codepoint = edit_range[ 'start' ][ 'character' ] + 1
-    assert edit_range[ 'start' ][ 'line' ] == edit_range[ 'end' ][ 'line' ]
-    assert start_codepoint <= request_data[ 'start_codepoint' ]
+    end_codepoint = edit_range[ 'end' ][ 'character' ] + 1
+
+    # Conservatively rejecting candidates that breach the protocol
+    if edit_range[ 'start' ][ 'line' ] != edit_range[ 'end' ][ 'line' ]:
+      raise IncompatibleCompletionException(
+        "The TextEdit '{0}' spans multiple lines".format(
+          textEdit[ 'newText' ] ) )
+
+    if start_codepoint > request_data[ 'start_codepoint' ]:
+      raise IncompatibleCompletionException(
+        "The TextEdit '{0}' starts after the start position".format(
+          textEdit[ 'newText' ] ) )
+
+    if end_codepoint < request_data[ 'start_codepoint' ]:
+      raise IncompatibleCompletionException(
+        "The TextEdit '{0}' ends before the start position".format(
+          textEdit[ 'newText' ] ) )
+
 
     insertion_text = textEdit[ 'newText' ]
 
     if '\n' in textEdit[ 'newText' ]:
-      # Most clients won't support this, at least not for now
+      # jdt.ls can return completions which generate code, such as
+      # getters/setters and entire anonymous classes.
+      #
+      # In order to support this we would need to do something like:
+      #  - invent some insertion_text based on label/insertText (or perhaps
+      #    '<snippet>'
+      #   - insert a textEdit in additionalTextEdits which deletes this
+      #     insertion
+      #   - or perhaps just modify this textEdit to undo that change?
+      #   - or perhaps somehow support insertion_text of '' (this doesn't work
+      #     because of filtering/sorting, etc.).
+      #  - insert this textEdit in additionalTextEdits
+      #
+      # These textEdits would need a lot of fixing up and is currently out of
+      # scope.
+      #
+      # These sorts of completions aren't really in the spirit of ycmd at the
+      # moment anyway. So for now, we just ignore this candidate.
       raise IncompatibleCompletionException( textEdit[ 'newText' ] )
 
   additional_text_edits.extend( item.get( 'additionalTextEdits', [] ) )
@@ -1039,7 +1075,7 @@ def InsertionTextForItem( request_data, item ):
                for e in additional_text_edits ]
 
     fixits = responses.BuildFixItResponse(
-      [ responses.FixIt( chunks[ 0].range.start_, chunks ) ] )
+      [ responses.FixIt( chunks[ 0 ].range.start_, chunks ) ] )
 
   return ( insertion_text, fixits, start_codepoint )
 
