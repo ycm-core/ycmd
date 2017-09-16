@@ -117,7 +117,10 @@ def Completion( request_id, request_data ):
     'textDocument': {
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
-    'position': Position( request_data ),
+    'position': {
+      'line': request_data[ 'line_num' ] - 1,
+      'character': request_data[ 'start_codepoint' ] - 1,
+    }
   } )
 
 
@@ -178,7 +181,7 @@ def Position( request_data ):
   # The API requires 0-based unicode offsets.
   return {
     'line': request_data[ 'line_num' ] - 1,
-    'character': request_data[ 'start_codepoint' ] - 1,
+    'character': request_data[ 'column_codepoint' ] - 1,
   }
 
 

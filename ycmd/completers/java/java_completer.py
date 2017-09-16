@@ -471,16 +471,15 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     hover_response = self.GetHoverResponse( request_data )
 
     if isinstance( hover_response, list ):
-      if len( hover_response ):
-        try:
-          get_type_java = hover_response[ 0 ][ 'value' ]
-        except( TypeError ):
-          raise RuntimeError( 'No information' )
-      else:
+      if not len( hover_response ):
+        raise RuntimeError( 'No information' )
+
+      try:
+        get_type_java = hover_response[ 0 ][ 'value' ]
+      except( TypeError ):
         raise RuntimeError( 'No information' )
     else:
       get_type_java = hover_response
-
 
     return responses.BuildDisplayMessageResponse( get_type_java )
 
@@ -489,19 +488,19 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     hover_response = self.GetHoverResponse( request_data )
 
     if isinstance( hover_response, list ):
-      if len( hover_response ):
-        get_doc_java = ''
-        for docstring in hover_response:
-          if not isinstance( docstring, dict ):
-            get_doc_java += docstring + '\n'
-      else:
+      if not len( hover_response ):
         raise RuntimeError( 'No information' )
+
+      get_doc_java = ''
+      for docstring in hover_response:
+        if not isinstance( docstring, dict ):
+          get_doc_java += docstring + '\n'
     else:
       get_doc_java = hover_response
 
     get_doc_java = get_doc_java.rstrip()
 
-    if get_doc_java == '':
+    if not get_doc_java:
       raise ValueError( NO_DOCUMENTATION_MESSAGE )
 
     return responses.BuildDisplayMessageResponse( get_doc_java.rstrip() )

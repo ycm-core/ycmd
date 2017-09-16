@@ -1,4 +1,5 @@
 # Copyright (C) 2017 ycmd contributors
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -58,6 +59,11 @@ def ProjectPath( *args ):
 TestFactory = ProjectPath( 'TestFactory.java' )
 TestLauncher = ProjectPath( 'TestLauncher.java' )
 TestWidgetImpl = ProjectPath( 'TestWidgetImpl.java' )
+youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
+                                     'src',
+                                     'com',
+                                     'youcompleteme',
+                                     'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
   TestFactory: contains_inanyorder(
@@ -128,26 +134,41 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'The type new TestLauncher.Launchable(){} must implement the '
               'inherited abstract method TestLauncher.Launchable.launch('
               'TestFactory)',
-      'location': LocationMatcher( TestLauncher, 21, 16 ),
-      'location_extent': RangeMatch( TestLauncher, ( 21, 16 ), ( 21, 28 ) ),
-      'ranges': contains( RangeMatch( TestLauncher, ( 21, 16 ), ( 21, 28 ) ) ),
+      'location': LocationMatcher( TestLauncher, 28, 16 ),
+      'location_extent': RangeMatch( TestLauncher, ( 28, 16 ), ( 28, 28 ) ),
+      'ranges': contains( RangeMatch( TestLauncher, ( 28, 16 ), ( 28, 28 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'The method launch() of type new TestLauncher.Launchable(){} '
               'must override or implement a supertype method',
-      'location': LocationMatcher( TestLauncher, 23, 19 ),
-      'location_extent': RangeMatch( TestLauncher, ( 23, 19 ), ( 23, 27 ) ),
-      'ranges': contains( RangeMatch( TestLauncher, ( 23, 19 ), ( 23, 27 ) ) ),
+      'location': LocationMatcher( TestLauncher, 30, 19 ),
+      'location_extent': RangeMatch( TestLauncher, ( 30, 19 ), ( 30, 27 ) ),
+      'ranges': contains( RangeMatch( TestLauncher, ( 30, 19 ), ( 30, 27 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Cannot make a static reference to the non-static field factory',
-      'location': LocationMatcher( TestLauncher, 24, 32 ),
-      'location_extent': RangeMatch( TestLauncher, ( 24, 32 ), ( 24, 39 ) ),
-      'ranges': contains( RangeMatch( TestLauncher, ( 24, 32 ), ( 24, 39 ) ) ),
+      'location': LocationMatcher( TestLauncher, 31, 32 ),
+      'location_extent': RangeMatch( TestLauncher, ( 31, 32 ), ( 31, 39 ) ),
+      'ranges': contains( RangeMatch( TestLauncher, ( 31, 32 ), ( 31, 39 ) ) ),
+      'fixit_available': False
+    } ),
+  ),
+  youcompleteme_Test: contains(
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'The method doUnicødeTes() in the type Test is not applicable '
+              'for the arguments (String)',
+      'location': LocationMatcher( youcompleteme_Test, 13, 10 ),
+      'location_extent': RangeMatch( youcompleteme_Test,
+                                     ( 13, 10 ),
+                                     ( 13, 23 ) ),
+      'ranges': contains( RangeMatch( youcompleteme_Test,
+                                      ( 13, 10 ),
+                                      ( 13, 23 ) ) ),
       'fixit_available': False
     } ),
   ),

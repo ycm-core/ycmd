@@ -1,4 +1,5 @@
 # Copyright (C) 2017 ycmd contributors
+# encoding: utf-8
 #
 # This file is part of ycmd.
 #
@@ -95,7 +96,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-OBJECT_METHODS = [
+PUBLIC_OBJECT_METHODS = [
   CompletionEntryMatcher( 'equals', 'Object', { 'kind': 'Function' } ),
   CompletionEntryMatcher( 'getClass', 'Object', { 'kind': 'Function' } ),
   CompletionEntryMatcher( 'hashCode', 'Object', { 'kind': 'Function' } ),
@@ -126,7 +127,7 @@ OBJECT_METHODS = [
 #
 # and focus on what we care about.
 def WithObjectMethods( *args ):
-  return list( OBJECT_METHODS ) + list( args )
+  return list( PUBLIC_OBJECT_METHODS ) + list( args )
 
 
 @SharedYcmd
@@ -372,7 +373,7 @@ def GetCompletions_RejectMultiLineInsertion_test( app ):
     'request': {
       'filetype'      : 'java',
       'filepath'      : filepath,
-      'line_num'      : 21,
+      'line_num'      : 28,
       'column_num'    : 16,
       'force_semantic': True
     },
@@ -389,6 +390,42 @@ def GetCompletions_RejectMultiLineInsertion_test( app ):
           # for an anonymous inner class via a completion TextEdit (not
           # AdditionalTextEdit) which we don't support.
         ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_UnicodeIdentifier_test( app ):
+  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+  RunTest( app, {
+    'description': 'Completion works for unicode identifier',
+    'request': {
+      'filetype'      : 'java',
+      'filepath'      : filepath,
+      'line_num'      : 16,
+      'column_num'    : 35,
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 35,
+        'completions': contains_inanyorder( *WithObjectMethods(
+          CompletionEntryMatcher( 'a_test', 'Test.TéstClass', {
+            'kind': 'Field',
+            'detailed_info': 'a_test : int\n\n',
+          } ),
+          CompletionEntryMatcher( 'testywesty', 'Test.TéstClass', {
+            'kind': 'Field',
+            'detailed_info': 'testywesty : String\n\nTest in the west ',
+          } ),
+        ) ),
         'errors': empty(),
       } )
     },
