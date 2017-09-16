@@ -29,6 +29,7 @@ from nose.tools import eq_
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmdInDirectory,
                               PathToTestFile,
+                              PollForMessages,
                               SharedYcmd,
                               WaitUntilCompleterServerReady )
 
@@ -36,7 +37,6 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher )
 from ycmd.utils import ReadFile
 
-import time
 from pprint import pformat
 
 
@@ -152,40 +152,6 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
   ),
 }
-
-
-def Merge( request, data ):
-  kw = dict( request )
-  kw.update( data )
-  return kw
-
-
-def PollForMessages( app, request_data ):
-  TIMEOUT = 30
-  expiration = time.time() + TIMEOUT
-  while True:
-    if time.time() > expiration:
-      raise RuntimeError( 'Waited for diagnostics to be ready for '
-                          '{0} seconds, aborting.'.format( TIMEOUT ) )
-
-    response = app.post_json( '/receive_messages', BuildRequest( **Merge ( {
-      'filetype'  : 'java',
-      'line_num'  : 1,
-      'column_num': 1,
-    }, request_data ) ) ).json
-
-    print( 'poll response: {0}'.format( pformat( response ) ) )
-
-    if isinstance( response, bool ):
-      if not response:
-        raise RuntimeError( 'The message poll was aborted by the server' )
-    elif isinstance( response, list ):
-      for message in response:
-        yield message
-    else:
-      raise AssertionError( 'Message poll response was wrong type' )
-
-    time.sleep( 0.25 )
 
 
 @SharedYcmd

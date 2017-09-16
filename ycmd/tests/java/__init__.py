@@ -25,9 +25,11 @@ from builtins import *  # noqa
 import functools
 import os
 import time
+from pprint import pformat
 
 from ycmd import handlers
-from ycmd.tests.test_utils import ( ClearCompletionsCache,
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    ClearCompletionsCache,
                                     CurrentWorkingDirectory,
                                     SetUpApp,
                                     StopCompleterServer )
@@ -83,17 +85,6 @@ def SharedYcmd( test ):
   return Wrapper
 
 
-def IsolatedYcmd( test ):
-  """Defines a decorator to be attached to tests of this package. This decorator
-  passes a unique ycmd application as a parameter. It should be used on tests
-  that change the server state in a irreversible way (ex: a semantic subserver
-  is stopped or restarted) or expect a clean state (ex: no semantic subserver
-  started, no .ycm_extra_conf.py loaded, etc).
-
-  Do NOT attach it to test generators but directly to the yielded tests."""
-  return IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR ) )
-
-
 def IsolatedYcmdInDirectory( directory ):
   """Defines a decorator to be attached to tests of this package. This decorator
   passes a unique ycmd application as a parameter running in the directory
@@ -131,3 +122,36 @@ def WaitUntilCompleterServerReady( app, timeout = 30 ):
       return
 
     time.sleep( 0.5 )
+
+
+def PollForMessages( app, request_data ):
+  TIMEOUT = 30
+  expiration = time.time() + TIMEOUT
+  while True:
+    if time.time() > expiration:
+      raise RuntimeError( 'Waited for diagnostics to be ready for '
+                          '{0} seconds, aborting.'.format( TIMEOUT ) )
+
+    default_args = {
+      'filetype'  : 'java',
+      'line_num'  : 1,
+      'column_num': 1,
+    }
+    args = dict( default_args )
+    args.update( request_data )
+
+    response = app.post_json( '/receive_messages', BuildRequest( **args ) ).json
+
+    print( 'poll response: {0}'.format( pformat( response ) ) )
+
+    if isinstance( response, bool ):
+      if not response:
+        raise RuntimeError( 'The message poll was aborted by the server' )
+    elif isinstance( response, list ):
+      for message in response:
+        yield message
+    else:
+      raise AssertionError( 'Message poll response was wrong type: {0}'.format(
+        type( response ).__name__ ) )
+
+    time.sleep( 0.25 )

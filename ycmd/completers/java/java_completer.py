@@ -180,6 +180,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._Reset()
 
       try :
+        # When we start the server initially, we don't have the request data, so
+        # we use the ycmd working directory. The RestartServer subcommand uses
+        # the client's working directory if it is supplied.
+        #
+        # FIXME: We could start the server in the FileReadyToParse event, though
+        # this requires some additional complexity and state management.
         self._StartServer()
       except:
         _logger.exception( "The java language server failed to start." )
@@ -215,11 +221,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       # Handled by us
       'RestartServer': (
-        lambda self, request_data, args: self._RestartServer(
-        ) ),
+        lambda self, request_data, args: self._RestartServer( request_data )
+      ),
       'StopServer': (
-        lambda self, request_data, args: self._StopServer(
-        ) ),
+        lambda self, request_data, args: self._StopServer()
+      ),
       'GetDoc': (
         lambda self, request_data, args: self.GetDoc( request_data )
       ),
@@ -287,10 +293,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return utils.ProcessIsRunning( self._server_handle )
 
 
-  def _RestartServer( self ):
+  def _RestartServer( self, request_data ):
     with self._server_state_mutex:
       self._StopServer()
-      self._StartServer()
+      self._StartServer( request_data.get( 'working_dir' ) )
 
 
   def _Reset( self ):
@@ -318,11 +324,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self.ServerReset()
 
 
-  def _StartServer( self ):
+  def _StartServer( self, working_dir=None ):
     with self._server_state_mutex:
       _logger.info( 'Starting JDT Language Server...' )
 
-      self._project_dir = _FindProjectDir( utils.GetCurrentDirectory() )
+      self._project_dir = _FindProjectDir(
+        working_dir if working_dir else utils.GetCurrentDirectory() )
       self._workspace_path = _WorkspaceDirForProject(
         self._project_dir,
         self._use_clean_workspace )
@@ -392,7 +399,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       # Tell the server to exit using the shutdown request.
       self._StopServerCleanly()
 
-      # If the server is still running, e.g. due to erros, kill it
+      # If the server is still running, e.g. due to errors, kill it
       self._StopServerForecefully()
 
       # Tidy up our internal state
