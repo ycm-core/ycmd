@@ -291,9 +291,14 @@ std::string TranslationUnit::GetTypeAtLocation(
   CXType canonical_type = clang_getCanonicalType( type );
 
   if ( !clang_equalTypes( type, canonical_type ) ) {
-    type_description += " => ";
-    type_description += CXStringToString(
-                          clang_getTypeSpelling( canonical_type ) );
+    std::string canonical_type_description = CXStringToString(
+      clang_getTypeSpelling( canonical_type ) );
+
+    // Clang may return that the canonical type of a symbol is distinct from its
+    // type even though they result in the same string. Only append the
+    // canonical type if the strings are different.
+    if ( type_description != canonical_type_description )
+      type_description += " => " + canonical_type_description;
   }
 
   return type_description;

@@ -371,26 +371,26 @@ def Subcommands_GetType_test():
     [{'line_num': 44, 'column_num': 12}, 'Foo *'],
     [{'line_num': 44, 'column_num': 18}, 'int'],
 
-    # Auto in declaration (canonical types apparently differ)
-    [{'line_num': 24, 'column_num':  3}, 'Foo & => Foo &'], # sic
-    [{'line_num': 24, 'column_num': 11}, 'Foo & => Foo &'], # sic
+    # Auto in declaration
+    [{'line_num': 24, 'column_num':  3}, 'Foo &'],
+    [{'line_num': 24, 'column_num': 11}, 'Foo &'],
     [{'line_num': 24, 'column_num': 18}, 'Foo'],
-    [{'line_num': 25, 'column_num':  3}, 'Foo * => Foo *'], # sic
-    [{'line_num': 25, 'column_num': 11}, 'Foo * => Foo *'], # sic
+    [{'line_num': 25, 'column_num':  3}, 'Foo *'],
+    [{'line_num': 25, 'column_num': 11}, 'Foo *'],
     [{'line_num': 25, 'column_num': 18}, 'Foo'],
-    [{'line_num': 27, 'column_num':  3}, 'const Foo & => const Foo &'], # sic
-    [{'line_num': 27, 'column_num': 16}, 'const Foo & => const Foo &'], # sic
-    [{'line_num': 28, 'column_num':  3}, 'const Foo * => const Foo *'], # sic
-    [{'line_num': 28, 'column_num': 16}, 'const Foo * => const Foo *'], # sic
+    [{'line_num': 27, 'column_num':  3}, 'const Foo &'],
+    [{'line_num': 27, 'column_num': 16}, 'const Foo &'],
+    [{'line_num': 28, 'column_num':  3}, 'const Foo *'],
+    [{'line_num': 28, 'column_num': 16}, 'const Foo *'],
 
-    # Auto in usage (canonical types apparently differ)
-    [{'line_num': 30, 'column_num': 14}, 'const Foo => const Foo'], # sic
+    # Auto in usage
+    [{'line_num': 30, 'column_num': 14}, 'const Foo'],
     [{'line_num': 30, 'column_num': 21}, 'const int'],
-    [{'line_num': 31, 'column_num': 14}, 'const Foo * => const Foo *'], # sic
+    [{'line_num': 31, 'column_num': 14}, 'const Foo *'],
     [{'line_num': 31, 'column_num': 22}, 'const int'],
-    [{'line_num': 32, 'column_num': 13}, 'Foo => Foo'], # sic
+    [{'line_num': 32, 'column_num': 13}, 'Foo'],
     [{'line_num': 32, 'column_num': 19}, 'int'],
-    [{'line_num': 33, 'column_num': 13}, 'Foo * => Foo *'], # sic
+    [{'line_num': 33, 'column_num': 13}, 'Foo *'],
     [{'line_num': 33, 'column_num': 20}, 'int'],
 
     # Unicode
