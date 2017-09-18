@@ -181,7 +181,7 @@ else()
   # in corporate environments on RHEL/CentOS, where the default system compiler
   # is too old.
   #
-  # We use lsb_release on linux systems to detect the distro/verseion.
+  # We use lsb_release on linux systems to detect the distro/version.
   # Other platforms (Mac, Windows) won't have this, and it might not be installed
   # on all linux installations, but it is the _most_ portable way.
   find_program( LSB_RELEASE lsb_release )
@@ -216,6 +216,16 @@ else()
 
   message( FATAL_ERROR "Your C++ compiler does NOT fully support C++11." )
 
+endif()
+
+# Gentoo detection. Needed because Gentoo is a special snowflake that puts
+# llvm in weird places.
+set( GENTOO_LINUX FALSE )
+if ( EXISTS /etc/os-release )
+  file( READ /etc/os-release CONTENTS )
+  if ( CONTENTS MATCHES "Gentoo" )
+    set( GENTOO_LINUX TRUE )
+  endif()
 endif()
 
 # Note: build.py always explicitly sets this option, so the default used here

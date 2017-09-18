@@ -204,7 +204,10 @@ endif()
 
 if ( USE_SYSTEM_BOOST )
   set( Boost_COMPONENTS filesystem regex system )
-  if( USE_PYTHON2 )
+  # Gentoo allows a very convenient system-wide python version switching
+  # that handles symlinks of everything needed, including Boost.Python.
+  # Thus, on Gentoo, we want to always link against boost_python.
+  if( USE_PYTHON2 OR GENTOO_LINUX )
     list( APPEND Boost_COMPONENTS python )
   else()
     list( APPEND Boost_COMPONENTS python3 )
@@ -278,6 +281,8 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     file( GLOB SYS_LLVM_PATHS "/usr/lib/llvm*/lib" )
     # On FreeBSD , llvm install into /usr/local/llvm-xy
     file ( GLOB FREEBSD_LLVM_PATHS "/usr/local/llvm*/lib")
+    # On Gentoo, llvm installs into /usr/lib/llvm/x/
+    file ( GLOB GENTOO_LLVM_PATHS "/usr/lib*/llvm/*/lib*" )
     # Need TEMP because find_library does not work with an option variable
     # On Debian-based systems only a symlink to libclang.so.1 is created
     find_library( TEMP
@@ -290,6 +295,7 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
                   /usr/lib/llvm
                   ${SYS_LLVM_PATHS}
                   ${FREEBSD_LLVM_PATHS}
+                  ${GENTOO_LLVM_PATHS}
                   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib
                   /Library/Developer/CommandLineTools/usr/lib )
     set( EXTERNAL_LIBCLANG_PATH ${TEMP} )
