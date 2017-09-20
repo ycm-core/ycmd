@@ -101,8 +101,8 @@ completer that provides semantic completion for C-family languages.  There's
 also a Jedi-based completer for semantic completion for Python, an
 OmniSharp-based completer for C#, a [Gocode][gocode]-based completer for Go
 (using [Godef][godef] for jumping to definitions), a TSServer-based completer
-for TypeScript and a [jdt.ls][jdtls]-based server for Java. More will be added
-with time.
+for JavaScript and TypeScript, and a [jdt.ls][jdtls]-based server for Java. More
+will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).

@@ -365,7 +365,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def SupportedFiletypes( self ):
-    return [ 'typescript' ]
+    return [ 'javascript', 'typescript' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -477,11 +477,20 @@ class TypeScriptCompleter( Completer ):
                                    request_data[ 'column_num' ],
                                    filepath )
 
-    fixits = [ responses.FixIt( location,
-                                _BuildFixItForChanges( request_data,
-                                                       fix[ 'changes' ] ),
-                                fix[ 'description' ] )
-               for fix in ts_fixes ]
+    fixits = []
+    for fix in ts_fixes:
+      description = fix[ 'description' ]
+      # TSServer returns these fixits for every error in JavaScript files.
+      # Ignore them since they are not useful.
+      if description in [ 'Ignore this error message',
+                          'Disable checking for this file' ]:
+        continue
+
+      fixit = responses.FixIt( location,
+                               _BuildFixItForChanges( request_data,
+                                                      fix[ 'changes' ] ),
+                               description )
+      fixits.append( fixit )
 
     contents = GetFileLines( request_data, filepath )
 

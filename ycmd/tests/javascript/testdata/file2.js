@@ -1,3 +1,1 @@
-
-console.log( global );
-
+new Bar().testMethod();

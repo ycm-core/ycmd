@@ -126,75 +126,57 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  3,  1 ),
                           LocationMatcher( filepath,  3,  3 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  4,  1 ),
                           LocationMatcher( filepath,  4,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath,  4, 14 ),
                           LocationMatcher( filepath,  4, 14 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  5,  1 ),
                           LocationMatcher( filepath,  5,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath,  5, 14 ),
                           LocationMatcher( filepath,  5, 14 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  6,  1 ),
                           LocationMatcher( filepath,  6,  3 ) ),
-
             ChunkMatcher( '        ',
                           LocationMatcher( filepath,  7,  1 ),
                           LocationMatcher( filepath,  7,  5 ) ),
-
             ChunkMatcher( '            ',
                           LocationMatcher( filepath,  8,  1 ),
                           LocationMatcher( filepath,  8,  7 ) ),
-
             ChunkMatcher( '            ',
                           LocationMatcher( filepath,  9,  1 ),
                           LocationMatcher( filepath,  9,  7 ) ),
-
             ChunkMatcher( '        ',
                           LocationMatcher( filepath, 10,  1 ),
                           LocationMatcher( filepath, 10,  5 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath, 11,  1 ),
                           LocationMatcher( filepath, 11,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath, 11,  6 ),
                           LocationMatcher( filepath, 11,  6 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath, 27,  1 ),
                           LocationMatcher( filepath, 27,  3 ) ),
-
             ChunkMatcher( '     ',
                           LocationMatcher( filepath, 28,  1 ),
                           LocationMatcher( filepath, 28,  4 ) ),
-
             ChunkMatcher( '     ',
                           LocationMatcher( filepath, 29,  1 ),
                           LocationMatcher( filepath, 29,  4 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath, 30,  1 ),
                           LocationMatcher( filepath, 30,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath, 30, 17 ),
                           LocationMatcher( filepath, 30, 17 ) ),
-
           )
         } ) )
       } )
@@ -221,75 +203,57 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  3,  1 ),
                           LocationMatcher( filepath,  3,  3 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  4,  1 ),
                           LocationMatcher( filepath,  4,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath,  4, 14 ),
                           LocationMatcher( filepath,  4, 14 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  5,  1 ),
                           LocationMatcher( filepath,  5,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath,  5, 14 ),
                           LocationMatcher( filepath,  5, 14 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  6,  1 ),
                           LocationMatcher( filepath,  6,  3 ) ),
-
             ChunkMatcher( '\t\t',
                           LocationMatcher( filepath,  7,  1 ),
                           LocationMatcher( filepath,  7,  5 ) ),
-
             ChunkMatcher( '\t\t\t',
                           LocationMatcher( filepath,  8,  1 ),
                           LocationMatcher( filepath,  8,  7 ) ),
-
             ChunkMatcher( '\t\t\t',
                           LocationMatcher( filepath,  9,  1 ),
                           LocationMatcher( filepath,  9,  7 ) ),
-
             ChunkMatcher( '\t\t',
                           LocationMatcher( filepath, 10,  1 ),
                           LocationMatcher( filepath, 10,  5 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath, 11,  1 ),
                           LocationMatcher( filepath, 11,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath, 11,  6 ),
                           LocationMatcher( filepath, 11,  6 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath, 27,  1 ),
                           LocationMatcher( filepath, 27,  3 ) ),
-
             ChunkMatcher( '\t ',
                           LocationMatcher( filepath, 28,  1 ),
                           LocationMatcher( filepath, 28,  4 ) ),
-
             ChunkMatcher( '\t ',
                           LocationMatcher( filepath, 29,  1 ),
                           LocationMatcher( filepath, 29,  4 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath, 30,  1 ),
                           LocationMatcher( filepath, 30,  3 ) ),
-
             ChunkMatcher( ' ',
                           LocationMatcher( filepath, 30, 17 ),
                           LocationMatcher( filepath, 30, 17 ) ),
-
           )
         } ) )
       } )
@@ -326,31 +290,24 @@ def Subcommands_Format_Range_Spaces_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  6,  1 ),
                           LocationMatcher( filepath,  6,  3 ) ),
-
             ChunkMatcher( '        ',
                           LocationMatcher( filepath,  7,  1 ),
                           LocationMatcher( filepath,  7,  5 ) ),
-
             ChunkMatcher( '            ',
                           LocationMatcher( filepath,  8,  1 ),
                           LocationMatcher( filepath,  8,  7 ) ),
-
             ChunkMatcher( '            ',
                           LocationMatcher( filepath,  9,  1 ),
                           LocationMatcher( filepath,  9,  7 ) ),
-
             ChunkMatcher( '        ',
                           LocationMatcher( filepath, 10,  1 ),
                           LocationMatcher( filepath, 10,  5 ) ),
-
             ChunkMatcher( '    ',
                           LocationMatcher( filepath, 11,  1 ),
                           LocationMatcher( filepath, 11,  3 ) ),
-
           )
         } ) )
       } )
@@ -387,31 +344,24 @@ def Subcommands_Format_Range_Tabs_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  6,  1 ),
                           LocationMatcher( filepath,  6,  3 ) ),
-
             ChunkMatcher( '\t\t',
                           LocationMatcher( filepath,  7,  1 ),
                           LocationMatcher( filepath,  7,  5 ) ),
-
             ChunkMatcher( '\t\t\t',
                           LocationMatcher( filepath,  8,  1 ),
                           LocationMatcher( filepath,  8,  7 ) ),
-
             ChunkMatcher( '\t\t\t',
                           LocationMatcher( filepath,  9,  1 ),
                           LocationMatcher( filepath,  9,  7 ) ),
-
             ChunkMatcher( '\t\t',
                           LocationMatcher( filepath, 10,  1 ),
                           LocationMatcher( filepath, 10,  5 ) ),
-
             ChunkMatcher( '\t',
                           LocationMatcher( filepath, 11,  1 ),
                           LocationMatcher( filepath, 11,  3 ) ),
-
           )
         } ) )
       } )
