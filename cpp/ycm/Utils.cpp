@@ -40,12 +40,4 @@ std::string ReadUtf8File( const fs::path &filepath ) {
   return std::string();
 }
 
-
-void WriteUtf8File( const fs::path &filepath, const std::string &contents ) {
-  fs::ofstream file;
-  file.open( filepath );
-  file << contents;
-  file.close();
-}
-
 } // namespace YouCompleteMe

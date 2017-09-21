@@ -18,7 +18,6 @@
 #include "TranslationUnitStore.h"
 #include "TranslationUnit.h"
 #include "Utils.h"
-#include "exceptions.h"
 
 #include <functional>
 
@@ -106,9 +105,9 @@ shared_ptr< TranslationUnit > TranslationUnitStore::GetOrCreate(
                                            unsaved_files,
                                            flags,
                                            clang_index_ );
-  } catch ( ClangParseError & ) {
+  } catch ( const ClangParseError & ) {
     Remove( filename );
-    return unit;
+    throw;
   }
 
   {

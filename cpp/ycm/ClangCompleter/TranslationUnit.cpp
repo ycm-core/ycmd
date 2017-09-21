@@ -17,7 +17,6 @@
 
 #include "TranslationUnit.h"
 #include "CompletionData.h"
-#include "exceptions.h"
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
 
@@ -95,18 +94,17 @@ TranslationUnit::TranslationUnit(
                                  ? &cxunsaved_files[ 0 ] : nullptr;
 
   // Actually parse the translation unit.
-  CXErrorCode result = clang_parseTranslationUnit2FullArgv(
-                         clang_index,
-                         filename.c_str(),
-                         &pointer_flags[ 0 ],
-                         pointer_flags.size(),
-                         const_cast<CXUnsavedFile *>( unsaved ),
-                         cxunsaved_files.size(),
-                         EditingOptions(),
-                         &clang_translation_unit_ );
-
-  if ( result != CXError_Success ) {
-    throw( ClangParseError() );
+  CXErrorCode failure = clang_parseTranslationUnit2FullArgv(
+                          clang_index,
+                          filename.c_str(),
+                          &pointer_flags[ 0 ],
+                          pointer_flags.size(),
+                          const_cast<CXUnsavedFile *>( unsaved ),
+                          cxunsaved_files.size(),
+                          EditingOptions(),
+                          &clang_translation_unit_ );
+  if ( failure != CXError_Success ) {
+    throw ClangParseError( failure );
   }
 }
 
@@ -374,7 +372,7 @@ void TranslationUnit::Reparse(
 // param though.
 void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
                                size_t parse_options ) {
-  int failure = 0;
+  CXErrorCode failure;
   {
     unique_lock< mutex > lock( clang_access_mutex_ );
 
@@ -385,15 +383,18 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
     CXUnsavedFile *unsaved = unsaved_files.size() > 0
                              ? &unsaved_files[ 0 ] : nullptr;
 
-    failure = clang_reparseTranslationUnit( clang_translation_unit_,
-                                            unsaved_files.size(),
-                                            unsaved,
-                                            parse_options );
+    // This function should technically return a CXErrorCode enum but return an
+    // int instead.
+    failure = static_cast< CXErrorCode >(
+      clang_reparseTranslationUnit( clang_translation_unit_,
+                                    unsaved_files.size(),
+                                    unsaved,
+                                    parse_options ) );
   }
 
-  if ( failure ) {
+  if ( failure != CXError_Success ) {
     Destroy();
-    throw( ClangParseError() );
+    throw ClangParseError( failure );
   }
 
   UpdateLatestDiagnostics();
