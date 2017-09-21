@@ -813,6 +813,9 @@ class LanguageServerCompleter( Completer ):
         _logger.info( 'Language Server requires sync type of {0}'.format(
           self._syncType ) )
 
+
+      self.GetConnection().SendNotification( lsapi.Initialised() )
+
       self._initialise_response = None
       self._initialise_event.set()
 

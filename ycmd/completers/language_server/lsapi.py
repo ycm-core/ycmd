@@ -70,6 +70,10 @@ def Initialise( request_id, project_directory ):
   } )
 
 
+def Initialised():
+  return BuildNotification( 'initialized', {} )
+
+
 def Shutdown( request_id ):
   return BuildRequest( request_id, 'shutdown', None )
 
