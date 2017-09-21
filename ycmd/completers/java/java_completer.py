@@ -336,6 +336,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       command = [
         PATH_TO_JAVA,
+        '-Dfile.encoding=UTF-8',
         '-Declipse.application=org.eclipse.jdt.ls.core.id1',
         '-Dosgi.bundles.defaultStartLevel=4',
         '-Declipse.product=org.eclipse.jdt.ls.core.product',
