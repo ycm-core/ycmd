@@ -235,14 +235,14 @@ class GoCompleter( Completer ):
       if self._ServerIsRunning():
         _logger.info( 'Stopping Gocode server with PID {0}'.format(
                           self._gocode_handle.pid ) )
-        self._ExecuteCommand( [ self._gocode_binary_path,
-                                '-sock', 'tcp',
-                                '-addr', self._gocode_host,
-                                'close' ] )
         try:
+          self._ExecuteCommand( [ self._gocode_binary_path,
+                                  '-sock', 'tcp',
+                                  '-addr', self._gocode_host,
+                                  'close' ] )
           utils.WaitUntilProcessIsTerminated( self._gocode_handle, timeout = 5 )
           _logger.info( 'Gocode server stopped' )
-        except RuntimeError:
+        except Exception:
           _logger.exception( 'Error while stopping Gocode server' )
 
       self._CleanUp()

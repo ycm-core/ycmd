@@ -699,12 +699,12 @@ class TypeScriptCompleter( Completer ):
       if self._ServerIsRunning():
         _logger.info( 'Stopping TSServer with PID {0}'.format(
                           self._tsserver_handle.pid ) )
-        self._SendCommand( 'exit' )
         try:
+          self._SendCommand( 'exit' )
           utils.WaitUntilProcessIsTerminated( self._tsserver_handle,
                                               timeout = 5 )
           _logger.info( 'TSServer stopped' )
-        except RuntimeError:
+        except Exception:
           _logger.exception( 'Error while stopping TSServer' )
 
       self._CleanUp()
@@ -713,7 +713,7 @@ class TypeScriptCompleter( Completer ):
   def _CleanUp( self ):
     utils.CloseStandardStreams( self._tsserver_handle )
     self._tsserver_handle = None
-    if not self.user_options[ 'server_keep_logfiles' ]:
+    if not self.user_options[ 'server_keep_logfiles' ] and self._logfile:
       utils.RemoveIfExists( self._logfile )
       self._logfile = None
 

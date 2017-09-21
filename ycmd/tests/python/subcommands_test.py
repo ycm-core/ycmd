@@ -208,18 +208,18 @@ def Subcommands_GoToReferences_test( app ):
     {
       'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
-      'description': 'a = f()',
+      'description': 'f',
       'line_num': 4
     },
     {
       'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
-      'description': 'b = f()',
+      'description': 'f',
       'line_num': 5
     },
     {
       'filepath': PathToTestFile( 'goto_references.py' ),
       'column_num': 5,
-      'description': 'c = f()',
+      'description': 'f',
       'line_num': 6
     } ] )

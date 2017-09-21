@@ -480,10 +480,12 @@ class TernCompleter( Completer ):
     self._server_handle = None
     self._server_port = None
     if not self._server_keep_logfiles:
-      utils.RemoveIfExists( self._server_stdout )
-      self._server_stdout = None
-      utils.RemoveIfExists( self._server_stderr )
-      self._server_stderr = None
+      if self._server_stdout:
+        utils.RemoveIfExists( self._server_stdout )
+        self._server_stdout = None
+      if self._server_stderr:
+        utils.RemoveIfExists( self._server_stderr )
+        self._server_stderr = None
 
 
   def _ServerIsRunning( self ):

@@ -398,12 +398,12 @@ class CsharpSolutionCompleter( object ):
       if self._ServerIsRunning():
         self._logger.info( 'Stopping OmniSharp server with PID {0}'.format(
                                self._omnisharp_phandle.pid ) )
-        self._GetResponse( '/stopserver' )
         try:
+          self._GetResponse( '/stopserver' )
           utils.WaitUntilProcessIsTerminated( self._omnisharp_phandle,
                                               timeout = 5 )
           self._logger.info( 'OmniSharp server stopped' )
-        except RuntimeError:
+        except Exception:
           self._logger.exception( 'Error while stopping OmniSharp server' )
 
       self._CleanUp()
