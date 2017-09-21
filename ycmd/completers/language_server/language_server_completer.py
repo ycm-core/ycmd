@@ -477,6 +477,7 @@ class LanguageServerCompleter( Completer ):
       self._syncType = 'Full'
       self._initialise_response = None
       self._initialise_event = threading.Event()
+      self._on_initialise_complete_handlers = list()
 
 
   def ShutdownServer( self ):
@@ -626,7 +627,12 @@ class LanguageServerCompleter( Completer ):
 
 
   def OnFileReadyToParse( self, request_data ):
-    if not self.ServerIsReady():
+    if not self.ServerIsHealthy():
+      return
+
+    if not self._initialise_event.is_set():
+      self._OnInitialiseComplete( lambda self: self._RefreshFiles(
+        request_data ) )
       return
 
     self._RefreshFiles( request_data )
@@ -814,11 +820,19 @@ class LanguageServerCompleter( Completer ):
         _logger.info( 'Language Server requires sync type of {0}'.format(
           self._syncType ) )
 
-
       self.GetConnection().SendNotification( lsapi.Initialised() )
 
       self._initialise_response = None
       self._initialise_event.set()
+
+    for handler in self._on_initialise_complete_handlers:
+      handler( self )
+
+    self._on_initialise_complete_handlers = list()
+
+
+  def _OnInitialiseComplete( self, handler ):
+    self._on_initialise_complete_handlers.append( handler )
 
 
   def GetHoverResponse( self, request_data ):
