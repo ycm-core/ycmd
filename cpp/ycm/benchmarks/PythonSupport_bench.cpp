@@ -1,4 +1,4 @@
-// Copyright (C) 2017 ycmd contributors
+// Copyright (C) 2017-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -18,6 +18,8 @@
 #include "benchmark/benchmark_api.h"
 #include "BenchUtils.h"
 #include "CandidateRepository.h"
+#include "CharacterRepository.h"
+#include "CodePointRepository.h"
 // iostream is included because of a bug with Python earlier than 2.7.12
 // and 3.5.3 on OSX and FreeBSD.
 #include <iostream>
@@ -28,6 +30,8 @@ namespace YouCompleteMe {
 class PythonSupportFixture : public benchmark::Fixture {
 public:
   void SetUp( const benchmark::State& state ) {
+    CodePointRepository::Instance().ClearCodePoints();
+    CharacterRepository::Instance().ClearCharacters();
     CandidateRepository::Instance().ClearCandidates();
   }
 };
@@ -50,6 +54,7 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
 
   while ( state.KeepRunning() ) {
     state.PauseTiming();
+    CharacterRepository::Instance().ClearCharacters();
     CandidateRepository::Instance().ClearCandidates();
     state.ResumeTiming();
     FilterAndSortCandidates( candidates, "insertion_text", "aA",

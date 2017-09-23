@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -29,14 +29,13 @@ import requests
 import ycm_core
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entry, has_entries,
-                       contains_string )
+                       has_item, has_items, has_entry, has_entries )
 
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
 from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
-                                    ErrorMatcher, ExpectedFailure, WindowsOnly )
+                                    ErrorMatcher, WindowsOnly )
 from ycmd.utils import ReadFile
 
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
@@ -623,9 +622,6 @@ def GetCompletions_ClangCLDriverExec_IncludeStatementCandidate_test( app ):
   } )
 
 
-@ExpectedFailure( 'Filtering and sorting does not support candidates with '
-                  'non-ASCII characters.',
-                  contains_string( "value for 'completions' no item matches" ) )
 @SharedYcmd
 def GetCompletions_UnicodeInLine_test( app ):
   RunTest( app, {
@@ -654,9 +650,6 @@ def GetCompletions_UnicodeInLine_test( app ):
   } )
 
 
-@ExpectedFailure( 'Filtering and sorting does not support candidates with '
-                  'non-ASCII characters.',
-                  contains_string( "value for 'completions' no item matches" ) )
 @SharedYcmd
 def GetCompletions_UnicodeInLineFilter_test( app ):
   RunTest( app, {

@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -19,9 +19,6 @@
 #define IDENTIFIERUTILS_CPP_WFFUZNET
 
 #include "IdentifierDatabase.h"
-
-#include <vector>
-#include <string>
 
 #include <boost/filesystem.hpp>
 

@@ -1,5 +1,6 @@
-# Copyright (C) 2016 ycmd contributors.
 # encoding: utf-8
+#
+# Copyright (C) 2016-2018 ycmd contributors.
 #
 # This file is part of ycmd.
 #
@@ -23,11 +24,10 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.tests.test_utils import DummyCompleter, ExpectedFailure
+from ycmd.tests.test_utils import DummyCompleter
 from ycmd.user_options_store import DefaultOptions
 from mock import patch
 from nose.tools import eq_
-from hamcrest import contains_string
 
 
 def _FilterAndSortCandidates_Match( candidates, query, expected_matches ):
@@ -72,8 +72,6 @@ def FilterAndSortCandidates_IgnoreEmptyCandidate_test():
                                   [] )
 
 
-@ExpectedFailure( 'Filtering does not support unicode characters',
-                  contains_string( '[]' ) )
 def FilterAndSortCandidates_Unicode_test():
   _FilterAndSortCandidates_Match( [ { 'insertion_text': 'ø' } ],
                                   'ø',

@@ -18,43 +18,38 @@
 #ifndef RESULT_H_CZYD2SGN
 #define RESULT_H_CZYD2SGN
 
+#include "Candidate.h"
+
 #include <string>
 
 namespace YouCompleteMe {
 
 class Result {
 public:
-  explicit Result( bool is_subsequence = false );
+  Result();
+  ~Result() = default;
 
-  Result( bool is_subsequence,
-          const std::string *text,
-          const std::string *case_swapped_text,
-          bool text_is_lowercase,
-          int char_match_index_sum,
-          const std::string &word_boundary_chars,
-          const std::string &query );
+  Result( const Candidate *candidate,
+          const Word *query,
+          size_t char_match_index_sum,
+          bool query_is_candidate_prefix_ );
 
   bool operator< ( const Result &other ) const;
+
+  inline const std::string &Text() const {
+    return candidate_->Text();
+  }
+
+  inline size_t NumWordBoundaryChars() const {
+    return candidate_->WordBoundaryChars().size();
+  }
 
   inline bool IsSubsequence() const {
     return is_subsequence_;
   }
 
-  inline const std::string *Text() const {
-    return text_;
-  }
-
 private:
-  void SetResultFeaturesFromQuery(
-    const std::string &query,
-    const std::string &word_boundary_chars );
-
-  bool QueryIsPrefix( const std::string &text,
-                      const std::string &query );
-
-  // true when the query for which the result was created was an empty string;
-  // in these cases we just use a lexicographic comparison
-  bool query_is_empty_;
+  void SetResultFeaturesFromQuery();
 
   // true when the characters of the query are a subsequence of the characters
   // in the candidate text, e.g. the characters "abc" are a subsequence for
@@ -65,32 +60,36 @@ private:
   // true when the first character of the query and the candidate match
   bool first_char_same_in_query_and_text_;
 
-  // number of word boundary matches / number of chars in query
-  double ratio_of_word_boundary_chars_in_query_;
-
-  // number of word boundary matches / number of all word boundary chars
-  double word_boundary_char_utilization_;
-
   // true when the query is a prefix of the candidate string, e.g. "foo" query
   // for "foobar" candidate.
   bool query_is_candidate_prefix_;
-
-  // true when the candidate text is all lowercase, e.g. "foo" candidate.
-  bool text_is_lowercase_;
 
   // The sum of the indexes of all the letters the query "hit" in the candidate
   // text. For instance, the result for the query "abc" in the candidate
   // "012a45bc8" has char_match_index_sum of 3 + 6 + 7 = 16 because those are
   // the char indexes of those letters in the candidate string.
-  int char_match_index_sum_;
+  size_t char_match_index_sum_;
 
-  // points to the full candidate text
-  const std::string *text_;
+  // The number of characters in the query that match word boundary characters
+  // in the candidate. Characters must match in the same order of appearance
+  // (i.e. these characters must be a subsequence of the word boundary
+  // characters). Case is ignored. A character is a word boundary character if
+  // one of these is true:
+  //  - this is the first character and not a punctuation;
+  //  - the character is uppercase but not the previous one;
+  //  - the character is a letter and the previous one is a punctuation.
+  size_t num_wb_matches_;
 
-  // like text_ but with lowercase letters converted to uppercase and vice
-  // versa.
-  const std::string *case_swapped_text_;
+  // NOTE: we don't use references for the query and the candidate because we
+  // are sorting results through std::sort or std::partial_sort and these
+  // functions require move assignments which is not possible with reference
+  // members.
 
+  // Points to the candidate.
+  const Candidate *candidate_;
+
+  // Points to the query.
+  const Word *query_;
 };
 
 template< class T >

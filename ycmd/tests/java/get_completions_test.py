@@ -1,5 +1,6 @@
-# Copyright (C) 2017-2018 ycmd contributors
 # encoding: utf-8
+#
+# Copyright (C) 2017-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -426,6 +427,10 @@ def GetCompletions_UnicodeIdentifier_test( app ):
             'kind': 'Field',
             'detailed_info': 'a_test : int\n\n',
           } ),
+          CompletionEntryMatcher( 'åtest', 'Test.TéstClass', {
+            'kind': 'Field',
+            'detailed_info': 'åtest : boolean\n\n',
+          } ),
           CompletionEntryMatcher( 'testywesty', 'Test.TéstClass', {
             'kind': 'Field',
           } ),
@@ -469,6 +474,10 @@ def GetCompletions_ResolveFailed_test( app ):
             CompletionEntryMatcher( 'a_test', 'Test.TéstClass', {
               'kind': 'Field',
               'detailed_info': 'a_test : int\n\n',
+            } ),
+            CompletionEntryMatcher( 'åtest', 'Test.TéstClass', {
+              'kind': 'Field',
+              'detailed_info': 'åtest : boolean\n\n',
             } ),
             CompletionEntryMatcher( 'testywesty', 'Test.TéstClass', {
               'kind': 'Field',

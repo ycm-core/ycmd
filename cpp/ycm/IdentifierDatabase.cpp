@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2013-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -79,8 +79,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
       return;
     }
   }
-  Bitset query_bitset = LetterBitsetFromString( query );
-  bool query_has_uppercase_letters = HasUppercase( query );
+  Word query_object( query );
 
   std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
@@ -96,13 +95,12 @@ void IdentifierDatabase::ResultsForQueryAndType(
           seen_candidates.insert( candidate );
         }
 
-        if ( candidate->Text().empty() ||
-             !candidate->MatchesQueryBitset( query_bitset ) ) {
+        if ( candidate->IsEmpty() ||
+             !candidate->ContainsBytes( query_object ) ) {
           continue;
         }
 
-        Result result = candidate->QueryMatchResult(
-                          query, query_has_uppercase_letters );
+        Result result = candidate->QueryMatchResult( query_object );
 
         if ( result.IsSubsequence() ) {
           results.push_back( result );
