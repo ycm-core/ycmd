@@ -21,6 +21,7 @@ if sys.version_info[ 0 ] < 3:
             platform.python_version() )
 
 from base64 import b64encode, b64decode
+from tempfile import NamedTemporaryFile
 import collections
 import hashlib
 import hmac
@@ -29,7 +30,6 @@ import os
 import socket
 import subprocess
 import sys
-import tempfile
 import urllib.parse
 import time
 
@@ -77,17 +77,17 @@ class YcmdHandle( object ):
     hmac_secret = os.urandom( HMAC_SECRET_LENGTH )
     prepared_options[ 'hmac_secret' ] = str( b64encode( hmac_secret ), 'utf-8' )
 
-    # The temp options file is deleted by ycmd during startup
-    with tempfile.NamedTemporaryFile( mode = 'w+', delete = False ) \
-        as options_file:
+    # The temp options file is deleted by ycmd during startup.
+    with NamedTemporaryFile( mode = 'w+', delete = False ) as options_file:
       json.dump( prepared_options, options_file )
-      server_port = GetUnusedLocalhostPort()
-      ycmd_args = [ sys.executable,
-                    PATH_TO_YCMD,
-                    '--port={0}'.format( server_port ),
-                    '--options_file={0}'.format( options_file.name ),
-                    '--idle_suicide_seconds={0}'.format(
-                      SERVER_IDLE_SUICIDE_SECONDS ) ]
+
+    server_port = GetUnusedLocalhostPort()
+    ycmd_args = [ sys.executable,
+                  PATH_TO_YCMD,
+                  '--port={0}'.format( server_port ),
+                  '--options_file={0}'.format( options_file.name ),
+                  '--idle_suicide_seconds={0}'.format(
+                    SERVER_IDLE_SUICIDE_SECONDS ) ]
 
     std_handles = None if INCLUDE_YCMD_OUTPUT else subprocess.PIPE
     child_handle = subprocess.Popen( ycmd_args,

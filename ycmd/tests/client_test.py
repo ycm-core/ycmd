@@ -81,46 +81,46 @@ class Client_test( object ):
 
   def Start( self, idle_suicide_seconds = 60,
              check_interval_seconds = 60 * 10 ):
-    # The temp options file is deleted by ycmd during startup
+    # The temp options file is deleted by ycmd during startup.
     with NamedTemporaryFile( mode = 'w+', delete = False ) as options_file:
       json.dump( self._options_dict, options_file )
-      options_file.flush()
-      self._port = GetUnusedLocalhostPort()
-      self._location = 'http://127.0.0.1:' + str( self._port )
 
-      # Define environment variable to enable subprocesses coverage. See:
-      # http://coverage.readthedocs.org/en/coverage-4.0.3/subprocess.html
-      env = os.environ.copy()
-      SetEnviron( env, 'COVERAGE_PROCESS_START', '.coveragerc' )
+    self._port = GetUnusedLocalhostPort()
+    self._location = 'http://127.0.0.1:' + str( self._port )
 
-      ycmd_args = [
-        sys.executable,
-        PATH_TO_YCMD,
-        '--port={0}'.format( self._port ),
-        '--options_file={0}'.format( options_file.name ),
-        '--log=debug',
-        '--idle_suicide_seconds={0}'.format( idle_suicide_seconds ),
-        '--check_interval_seconds={0}'.format( check_interval_seconds ),
-      ]
+    # Define environment variable to enable subprocesses coverage. See:
+    # http://coverage.readthedocs.org/en/coverage-4.0.3/subprocess.html
+    env = os.environ.copy()
+    SetEnviron( env, 'COVERAGE_PROCESS_START', '.coveragerc' )
 
-      stdout = CreateLogfile(
-          LOGFILE_FORMAT.format( port = self._port, std = 'stdout' ) )
-      stderr = CreateLogfile(
-          LOGFILE_FORMAT.format( port = self._port, std = 'stderr' ) )
-      self._logfiles.extend( [ stdout, stderr ] )
-      ycmd_args.append( '--stdout={0}'.format( stdout ) )
-      ycmd_args.append( '--stderr={0}'.format( stderr ) )
+    ycmd_args = [
+      sys.executable,
+      PATH_TO_YCMD,
+      '--port={0}'.format( self._port ),
+      '--options_file={0}'.format( options_file.name ),
+      '--log=debug',
+      '--idle_suicide_seconds={0}'.format( idle_suicide_seconds ),
+      '--check_interval_seconds={0}'.format( check_interval_seconds ),
+    ]
 
-      self._popen_handle = SafePopen( ycmd_args,
-                                      stdin_windows = subprocess.PIPE,
-                                      stdout = subprocess.PIPE,
-                                      stderr = subprocess.PIPE,
-                                      env = env )
-      self._servers.append( psutil.Process( self._popen_handle.pid ) )
+    stdout = CreateLogfile(
+        LOGFILE_FORMAT.format( port = self._port, std = 'stdout' ) )
+    stderr = CreateLogfile(
+        LOGFILE_FORMAT.format( port = self._port, std = 'stderr' ) )
+    self._logfiles.extend( [ stdout, stderr ] )
+    ycmd_args.append( '--stdout={0}'.format( stdout ) )
+    ycmd_args.append( '--stderr={0}'.format( stderr ) )
 
-      self._WaitUntilReady()
-      extra_conf = PathToTestFile( 'client', '.ycm_extra_conf.py' )
-      self.PostRequest( 'load_extra_conf_file', { 'filepath': extra_conf } )
+    self._popen_handle = SafePopen( ycmd_args,
+                                    stdin_windows = subprocess.PIPE,
+                                    stdout = subprocess.PIPE,
+                                    stderr = subprocess.PIPE,
+                                    env = env )
+    self._servers.append( psutil.Process( self._popen_handle.pid ) )
+
+    self._WaitUntilReady()
+    extra_conf = PathToTestFile( 'client', '.ycm_extra_conf.py' )
+    self.PostRequest( 'load_extra_conf_file', { 'filepath': extra_conf } )
 
 
   def _IsReady( self, filetype = None ):
