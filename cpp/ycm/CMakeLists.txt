@@ -207,7 +207,7 @@ if ( USE_SYSTEM_BOOST )
   # Gentoo allows a very convenient system-wide python version switching
   # that handles symlinks of everything needed, including Boost.Python.
   # Thus, on Gentoo, we want to always link against boost_python.
-  if( USE_PYTHON2 OR GENTOO_LINUX )
+  if( USE_PYTHON2 OR DISTRIBUTION STREQUAL "Gentoo" )
     list( APPEND Boost_COMPONENTS python )
   else()
     list( APPEND Boost_COMPONENTS python3 )
