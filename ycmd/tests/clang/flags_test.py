@@ -438,36 +438,28 @@ def CompilationDatabase_NoDatabase_test():
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags._MacIncludePaths',
-        return_value = [ 'sentinel_value_for_testing' ] )
-def PrepareFlagsForClang_NoSysroot_test( *args ):
+@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
+        [ 'sentinel_value_for_testing' ] )
+def AddMacIncludePaths_NoSysroot_test():
   assert_that(
-    list( flags.PrepareFlagsForClang( [ '-test', '--test1', '--test2=test' ],
-                                      'test.cc',
-                                      True ) ),
+    flags._AddMacIncludePaths( [ '-test', '--test1', '--test2=test' ] ),
     has_item( 'sentinel_value_for_testing' ) )
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags._MacIncludePaths',
-        return_value = [ 'sentinel_value_for_testing' ] )
-def PrepareFlagsForClang_Sysroot_test( *args ):
+@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
+        [ 'sentinel_value_for_testing' ] )
+def AddIncludePaths_Sysroot_test():
   assert_that(
-    list( flags.PrepareFlagsForClang( [ '-isysroot', 'test1', '--test2=test' ],
-                                      'test.cc',
-                                      True ) ),
+    flags._AddMacIncludePaths( [ '-isysroot', 'test1', '--test2=test' ] ),
     not_( has_item( 'sentinel_value_for_testing' ) ) )
 
   assert_that(
-    list( flags.PrepareFlagsForClang( [ '-test', '--sysroot', 'test1' ],
-                                      'test.cc',
-                                      True ) ),
+    flags._AddMacIncludePaths( [ '-test', '--sysroot', 'test1' ] ),
     not_( has_item( 'sentinel_value_for_testing' ) ) )
 
   assert_that(
-    list( flags.PrepareFlagsForClang( [ '-test', 'test1', '--sysroot=test' ],
-                                      'test.cc',
-                                      True ) ),
+    flags._AddMacIncludePaths( [ '-test', 'test1', '--sysroot=test' ] ),
     not_( has_item( 'sentinel_value_for_testing' ) ) )
 
 

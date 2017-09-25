@@ -141,6 +141,7 @@ class Flags( object ):
 
     if add_extra_clang_flags:
       flags += self.extra_clang_flags
+      flags = _AddMacIncludePaths( flags )
 
     sanitized_flags = PrepareFlagsForClang( flags,
                                             filename,
@@ -277,9 +278,6 @@ def PrepareFlagsForClang( flags, filename, add_extra_clang_flags = True ):
   flags = _RemoveXclangFlags( flags )
   flags = _RemoveUnusedFlags( flags, filename )
   if add_extra_clang_flags:
-    if OnMac() and not _SysRootSpecifedIn( flags ):
-      for path in _MacIncludePaths():
-        flags.extend( [ '-isystem', path ] )
     flags = _EnableTypoCorrection( flags )
 
   vector = ycm_core.StringVector()
@@ -476,9 +474,11 @@ if OnMac():
   )
 
 
-def _MacIncludePaths():
-  # This method exists for testing only
-  return MAC_INCLUDE_PATHS
+def _AddMacIncludePaths( flags ):
+  if OnMac() and not _SysRootSpecifedIn( flags ):
+    for path in MAC_INCLUDE_PATHS:
+      flags.extend( [ '-isystem', path ] )
+  return flags
 
 
 def _ExtraClangFlags():
