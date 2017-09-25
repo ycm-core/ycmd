@@ -18,7 +18,10 @@
 
 # include <boost/python/refcount.hpp>
 
-# include <boost/python/detail/type_traits.hpp>
+# include <boost/type_traits/is_pointer.hpp>
+# include <boost/type_traits/is_polymorphic.hpp>
+
+# include <boost/mpl/bool.hpp>
 
 # if defined(__ICL) && __ICL < 600 
 #  include <boost/shared_ptr.hpp>
@@ -35,7 +38,7 @@ struct to_python_indirect
     inline PyObject*
     operator()(U const& ref) const
     {
-        return this->execute(const_cast<U&>(ref), detail::is_pointer<U>());
+        return this->execute(const_cast<U&>(ref), is_pointer<U>());
     }
 #ifndef BOOST_PYTHON_NO_PY_SIGNATURES
     inline PyTypeObject const*
@@ -46,20 +49,20 @@ struct to_python_indirect
 #endif
  private:
     template <class U>
-    inline PyObject* execute(U* ptr, detail::true_) const
+    inline PyObject* execute(U* ptr, mpl::true_) const
     {
         // No special NULL treatment for references
         if (ptr == 0)
             return python::detail::none();
         else
-            return this->execute(*ptr, detail::false_());
+            return this->execute(*ptr, mpl::false_());
     }
     
     template <class U>
-    inline PyObject* execute(U const& x, detail::false_) const
+    inline PyObject* execute(U const& x, mpl::false_) const
     {
         U* const p = &const_cast<U&>(x);
-        if (detail::is_polymorphic<U>::value)
+        if (is_polymorphic<U>::value)
         {
             if (PyObject* o = detail::wrapper_base_::owner(p))
                 return incref(o);

@@ -130,13 +130,11 @@
 #include <boost/type_traits/is_volatile.hpp>
 #include <boost/type_traits/make_signed.hpp>
 #include <boost/type_traits/make_unsigned.hpp>
-#include <boost/type_traits/make_void.hpp>
 #include <boost/type_traits/rank.hpp>
 #include <boost/type_traits/remove_all_extents.hpp>
 #include <boost/type_traits/remove_bounds.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_cv.hpp>
-#include <boost/type_traits/remove_cv_ref.hpp>
 #include <boost/type_traits/remove_extent.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/type_traits/remove_reference.hpp>

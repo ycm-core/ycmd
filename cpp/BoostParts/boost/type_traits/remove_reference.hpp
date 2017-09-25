@@ -48,11 +48,6 @@ template <class T> struct remove_reference<T&volatile>{ typedef T type; };
 template <class T> struct remove_reference<T&const volatile>{ typedef T type; };
 #endif
 
-#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-
-   template <class T> using remove_reference_t = typename remove_reference<T>::type;
-
-#endif
 
 } // namespace boost
 

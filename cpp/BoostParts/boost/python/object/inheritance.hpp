@@ -8,8 +8,9 @@
 # include <boost/python/type_id.hpp>
 # include <boost/shared_ptr.hpp>
 # include <boost/mpl/if.hpp>
+# include <boost/type_traits/is_polymorphic.hpp>
+# include <boost/type_traits/is_base_and_derived.hpp>
 # include <boost/detail/workaround.hpp>
-# include <boost/python/detail/type_traits.hpp>
 
 namespace boost { namespace python { namespace objects {
 
@@ -57,7 +58,7 @@ struct non_polymorphic_id_generator
 template <class T>
 struct dynamic_id_generator
   : mpl::if_<
-        boost::python::detail::is_polymorphic<T>
+        boost::is_polymorphic<T>
         , boost::python::objects::polymorphic_id_generator<T>
         , boost::python::objects::non_polymorphic_id_generator<T>
     >
@@ -103,7 +104,7 @@ struct implicit_cast_generator
 template <class Source, class Target>
 struct cast_generator
   : mpl::if_<
-        boost::python::detail::is_base_and_derived<Target,Source>
+        is_base_and_derived<Target,Source>
       , implicit_cast_generator<Source,Target>
       , dynamic_cast_generator<Source,Target>
     >

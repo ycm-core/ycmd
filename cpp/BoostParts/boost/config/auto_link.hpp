@@ -161,15 +161,10 @@ BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
      // vc12:
 #    define BOOST_LIB_TOOLSET "vc120"
 
-#  elif defined(BOOST_MSVC) && (BOOST_MSVC < 1910)
+# elif defined(BOOST_MSVC)
 
-     // vc14:
-#    define BOOST_LIB_TOOLSET "vc140"
-
-#  elif defined(BOOST_MSVC)
-
-     // vc14.1:
-#    define BOOST_LIB_TOOLSET "vc141"
+   // vc14:
+#  define BOOST_LIB_TOOLSET "vc140"
 
 #  elif defined(__BORLANDC__)
 

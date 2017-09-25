@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------
 
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
+#include <boost/detail/workaround.hpp>
 
 #if !(defined BOOST_NO_EXCEPTIONS)
 #    define BOOST_TRY { try

@@ -11,7 +11,7 @@
 
 namespace boost { namespace python { namespace detail {
 
-struct exception_handler;
+struct BOOST_PYTHON_DECL_FORWARD exception_handler;
 
 typedef function2<bool, exception_handler const&, function0<void> const&> handler_function;
 

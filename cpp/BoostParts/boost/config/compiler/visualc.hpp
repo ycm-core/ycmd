@@ -107,7 +107,7 @@
 //
 // TR1 features:
 //
-#if (_MSC_VER >= 1700) && defined(_HAS_CXX17) && (_HAS_CXX17 > 0)
+#if _MSC_VER >= 1700
 // # define BOOST_HAS_TR1_HASH			// don't know if this is true yet.
 // # define BOOST_HAS_TR1_TYPE_TRAITS	// don't know if this is true yet.
 # define BOOST_HAS_TR1_UNORDERED_MAP
@@ -190,10 +190,11 @@
 #  define BOOST_NO_CXX11_CONSTEXPR
 #endif
 
-// C++14 features supported by VC++ 14.1 (Visual Studio 2017)
+// C++14 features supported by VC++ 15 Preview 5
 //
 #if (_MSC_VER < 1910)
 #  define BOOST_NO_CXX14_AGGREGATE_NSDMI
+#  define BOOST_NO_CXX14_CONSTEXPR
 #endif
 
 // MSVC including version 14 has not yet completely
@@ -216,33 +217,6 @@
 // C++ 11:
 //
 #define BOOST_NO_TWO_PHASE_NAME_LOOKUP
-#define BOOST_NO_CXX11_SFINAE_EXPR
-// C++ 14:
-#  define BOOST_NO_CXX14_CONSTEXPR
-// C++ 17:
-#define BOOST_NO_CXX17_STRUCTURED_BINDINGS
-#define BOOST_NO_CXX17_INLINE_VARIABLES
-#define BOOST_NO_CXX17_FOLD_EXPRESSIONS
-
-//
-// Things that don't work in clr mode:
-//
-#ifdef _M_CEE
-#ifndef BOOST_NO_CXX11_THREAD_LOCAL
-#  define BOOST_NO_CXX11_THREAD_LOCAL
-#endif
-#ifndef BOOST_NO_SFINAE_EXPR
-#  define BOOST_NO_SFINAE_EXPR
-#endif
-#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
-#  define BOOST_NO_CXX11_REF_QUALIFIERS
-#endif
-#endif
-#ifdef _M_CEE_PURE
-#ifndef BOOST_NO_CXX11_CONSTEXPR
-#  define BOOST_NO_CXX11_CONSTEXPR
-#endif
-#endif
 
 //
 // prefix and suffix headers:
@@ -308,10 +282,8 @@
 #     define BOOST_COMPILER_VERSION 11.0
 #   elif _MSC_VER < 1900
 #     define BOOST_COMPILER_VERSION 12.0
-#   elif _MSC_VER < 1910
+#   elif _MSC_VER < 2000
 #     define BOOST_COMPILER_VERSION 14.0
-#   elif _MSC_VER < 1920
-#     define BOOST_COMPILER_VERSION 14.1
 #   else
 #     define BOOST_COMPILER_VERSION _MSC_VER
 #   endif
@@ -321,7 +293,7 @@
 #endif
 
 //
-// last known and checked version is 19.10.25017 (VC++ 2017):
+// last known and checked version is 19.10.24629 (VC++ 2017 RC):
 #if (_MSC_VER > 1910)
 #  if defined(BOOST_ASSERT_CONFIG)
 #     error "Unknown compiler version - please run the configure tests and report the results"

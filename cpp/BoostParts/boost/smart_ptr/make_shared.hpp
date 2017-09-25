@@ -9,7 +9,8 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 //
-//  See http://www.boost.org/libs/smart_ptr/ for documentation.
+//  See http://www.boost.org/libs/smart_ptr/make_shared.html
+//  for documentation.
 
 #include <boost/smart_ptr/make_shared_object.hpp>
 

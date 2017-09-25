@@ -81,57 +81,51 @@ namespace serialization {
 // attempt to retieve a mutable instances while locked will
 // generate a assertion if compiled for debug.
 
-// note usage of BOOST_DLLEXPORT.  These functions are in danger of
-// being eliminated by the optimizer when building an application in
-// release mode. Usage of the macro is meant to signal the compiler/linker
-// to avoid dropping these functions which seem to be unreferenced.
-// This usage is not related to autolinking.
-
 class BOOST_SYMBOL_VISIBLE singleton_module :
     public boost::noncopyable
 {
 private:
-    BOOST_SERIALIZATION_DECL BOOST_DLLEXPORT static bool & get_lock() BOOST_USED;
+    static bool & get_lock();
 public:
-    BOOST_DLLEXPORT static void lock(){
-        get_lock() = true;
-    }
-    BOOST_DLLEXPORT static void unlock(){
-        get_lock() = false;
-    }
-    BOOST_DLLEXPORT static bool is_locked(){
-        return get_lock();
+    BOOST_SERIALIZATION_DECL static void lock();
+    BOOST_SERIALIZATION_DECL static void unlock();
+    BOOST_SERIALIZATION_DECL static bool is_locked();
+};
+
+#include <boost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
+
+namespace detail {
+
+template<class T>
+class singleton_wrapper : public T
+{
+public:
+    static bool m_is_destroyed;
+    ~singleton_wrapper(){
+        m_is_destroyed = true;
     }
 };
+
+template<class T>
+bool detail::singleton_wrapper< T >::m_is_destroyed = false;
+
+} // detail
 
 template <class T>
 class singleton : public singleton_module
 {
 private:
-    static T & m_instance;
+    BOOST_DLLEXPORT static T & instance;
     // include this to provoke instantiation at pre-execution time
     static void use(T const *) {}
-    static T & get_instance() {
-        // use a wrapper so that types T with protected constructors
-        // can be used
-        class singleton_wrapper : public T {};
-        static singleton_wrapper t;
+    BOOST_DLLEXPORT static T & get_instance() {
+        static detail::singleton_wrapper< T > t;
         // refer to instance, causing it to be instantiated (and
         // initialized at startup on working compilers)
-        BOOST_ASSERT(! is_destroyed());
-        // note that the following is absolutely essential.
-        // commenting out this statement will cause compilers to fail to
-        // construct the instance at pre-execution time.  This would prevent
-        // our usage/implementation of "locking" and introduce uncertainty into
-        // the sequence of object initializaition.
-        use(& m_instance);
+        BOOST_ASSERT(! detail::singleton_wrapper< T >::m_is_destroyed);
+        use(& instance);
         return static_cast<T &>(t);
     }
-    static bool & get_is_destroyed(){
-        static bool is_destroyed;
-        return is_destroyed;
-    }
-
 public:
     BOOST_DLLEXPORT static T & get_mutable_instance(){
         BOOST_ASSERT(! is_locked());
@@ -141,23 +135,15 @@ public:
         return get_instance();
     }
     BOOST_DLLEXPORT static bool is_destroyed(){
-        return get_is_destroyed();
-    }
-    BOOST_DLLEXPORT singleton(){
-        get_is_destroyed() = false;
-    }
-    BOOST_DLLEXPORT ~singleton() {
-        get_is_destroyed() = true;
+        return detail::singleton_wrapper< T >::m_is_destroyed;
     }
 };
 
 template<class T>
-T & singleton< T >::m_instance = singleton< T >::get_instance();
+BOOST_DLLEXPORT T & singleton< T >::instance = singleton< T >::get_instance();
 
 } // namespace serialization
 } // namespace boost
-
-#include <boost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
 
 #ifdef BOOST_MSVC
 #pragma warning(pop)

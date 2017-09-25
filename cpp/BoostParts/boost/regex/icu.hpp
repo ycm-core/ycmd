@@ -410,7 +410,7 @@ void copy_results(MR1& out, MR2 const& in)
       if(in[i].captures().size())
       {
          out[i].get_captures().assign(in[i].captures().size(), typename MR1::value_type());
-         for(int j = 0; j < (int)out[i].captures().size(); ++j)
+         for(int j = 0; j < out[i].captures().size(); ++j)
          {
             out[i].get_captures()[j].first = in[i].captures()[j].first.base();
             out[i].get_captures()[j].second = in[i].captures()[j].second.base();

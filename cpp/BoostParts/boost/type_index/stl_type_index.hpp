@@ -1,5 +1,5 @@
 //
-// Copyright (c) Antony Polukhin, 2013-2017.
+// Copyright (c) Antony Polukhin, 2013-2015.
 //
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -39,12 +39,6 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/or.hpp>
-
-#if !((defined(_MSC_VER) && _MSC_VER > 1600) \
-    || (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__)) \
-    || (defined(__GNUC__) && __GNUC__ > 4 && __cplusplus >= 201103 ))
-#   include <boost/functional/hash.hpp>
-#endif
 
 #if (defined(__EDG_VERSION__) && __EDG_VERSION__ < 245) \
         || (defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 744)
@@ -180,9 +174,7 @@ inline std::string stl_type_index::pretty_name() const {
 
 
 inline std::size_t stl_type_index::hash_code() const BOOST_NOEXCEPT {
-#if (defined(_MSC_VER) && _MSC_VER > 1600) \
-    || (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__)) \
-    || (defined(__GNUC__) && __GNUC__ > 4 && __cplusplus >= 201103)
+#if _MSC_VER > 1600 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__))
     return data_->hash_code();
 #else
     return boost::hash_range(raw_name(), raw_name() + std::strlen(raw_name()));

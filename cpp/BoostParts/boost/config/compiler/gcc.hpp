@@ -253,7 +253,6 @@
 #if (BOOST_GCC_VERSION < 40800) || !defined(BOOST_GCC_CXX11)
 #  define BOOST_NO_CXX11_ALIGNAS
 #  define BOOST_NO_CXX11_THREAD_LOCAL
-#  define BOOST_NO_CXX11_SFINAE_EXPR
 #endif
 
 // C++0x features in 4.8.1 and later
@@ -286,28 +285,6 @@
 #endif
 #if !defined(__cpp_variable_templates) || (__cpp_variable_templates < 201304)
 #  define BOOST_NO_CXX14_VARIABLE_TEMPLATES
-#endif
-
-// C++17
-#if !defined(__cpp_structured_bindings) || (__cpp_structured_bindings < 201606)
-#  define BOOST_NO_CXX17_STRUCTURED_BINDINGS
-#endif
-#if !defined(__cpp_inline_variables) || (__cpp_inline_variables < 201606)
-#  define BOOST_NO_CXX17_INLINE_VARIABLES
-#endif
-#if !defined(__cpp_fold_expressions) || (__cpp_fold_expressions < 201603)
-#  define BOOST_NO_CXX17_FOLD_EXPRESSIONS
-#endif
-
-#if __GNUC__ >= 7
-#  define BOOST_FALLTHROUGH __attribute__((fallthrough))
-#endif
-
-#ifdef __MINGW32__
-// Currently (June 2017) thread_local is broken on mingw for all current compiler releases, see
-// https://sourceforge.net/p/mingw-w64/bugs/527/
-// Not setting this causes program termination on thread exit.
-#define BOOST_NO_CXX11_THREAD_LOCAL
 #endif
 
 //

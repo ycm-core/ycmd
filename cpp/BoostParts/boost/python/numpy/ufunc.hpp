@@ -15,7 +15,6 @@
 #include <boost/python/numpy/numpy_object_mgr_traits.hpp>
 #include <boost/python/numpy/dtype.hpp>
 #include <boost/python/numpy/ndarray.hpp>
-#include <boost/python/numpy/config.hpp>
 
 namespace boost { namespace python { namespace numpy {
 
@@ -35,7 +34,7 @@ namespace boost { namespace python { namespace numpy {
  *        It's more dangerous than most object managers, however - maybe it actually belongs in
  *        a detail namespace?
  */
-class BOOST_NUMPY_DECL multi_iter : public object
+class multi_iter : public object
 {
 public:
 
@@ -62,13 +61,13 @@ public:
 };
 
 /// @brief Construct a multi_iter over a single sequence or scalar object.
-BOOST_NUMPY_DECL multi_iter make_multi_iter(object const & a1);
+multi_iter make_multi_iter(object const & a1);
 
 /// @brief Construct a multi_iter by broadcasting two objects.
-BOOST_NUMPY_DECL multi_iter make_multi_iter(object const & a1, object const & a2);
+multi_iter make_multi_iter(object const & a1, object const & a2);
 
 /// @brief Construct a multi_iter by broadcasting three objects.
-BOOST_NUMPY_DECL multi_iter make_multi_iter(object const & a1, object const & a2, object const & a3);
+multi_iter make_multi_iter(object const & a1, object const & a2, object const & a3);
 
 /**
  *  @brief Helps wrap a C++ functor taking a single scalar argument as a broadcasting ufunc-like

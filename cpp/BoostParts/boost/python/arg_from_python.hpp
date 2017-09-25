@@ -9,7 +9,7 @@
 # include <boost/python/converter/arg_from_python.hpp>
 # if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1400)) \
     || BOOST_WORKAROUND(BOOST_INTEL_WIN, BOOST_TESTED_AT(800))
-# include <boost/python/detail/type_traits.hpp>
+# include <boost/type_traits/remove_cv.hpp>
 #endif
 
 namespace boost { namespace python { 
@@ -19,7 +19,7 @@ struct arg_from_python
     : converter::select_arg_from_python<
 # if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1400)) \
     || BOOST_WORKAROUND(BOOST_INTEL_WIN, BOOST_TESTED_AT(800))
-          typename detail::remove_cv<T>::type
+          typename boost::remove_cv<T>::type
 # else
           T
 # endif 
@@ -28,7 +28,7 @@ struct arg_from_python
     typedef typename converter::select_arg_from_python<
 # if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1400)) \
     || BOOST_WORKAROUND(BOOST_INTEL_WIN, BOOST_TESTED_AT(800))
-          typename detail::remove_cv<T>::type
+          typename boost::remove_cv<T>::type
 # else
           T
 # endif 
