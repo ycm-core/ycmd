@@ -19,6 +19,7 @@ import re
 import shlex
 import subprocess
 import sys
+import stat
 
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 if not ( ( PY_MAJOR == 2 and PY_MINOR >= 6 ) or
@@ -383,6 +384,13 @@ def ExitIfYcmdLibInUseOnWindows():
       sys.exit( 'ERROR: ycmd library is currently in use. '
                 'Stop all ycmd instances before compilation.' )
 
+def TryRemoveReadonly(func, path, exc):
+    if not os.access(path, os.W_OK):
+        # Is the error an access error ?
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+    else:
+        raise
 
 def BuildYcmdLib( args ):
   if args.build_dir:
@@ -391,7 +399,7 @@ def BuildYcmdLib( args ):
     if os.path.exists( build_dir ):
       print( 'The supplied build directory ' + build_dir + ' exists, '
              'deleting it.' )
-      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor(), onerror=TryRemoveReadonly)
 
     os.makedirs( build_dir )
   else:
@@ -443,7 +451,7 @@ def BuildYcmdLib( args ):
     if args.build_dir:
       print( 'The build files are in: ' + build_dir )
     else:
-      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor(), onerror=TryRemoveReadonly)
 
 
 def BuildOmniSharp():
