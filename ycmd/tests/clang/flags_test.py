@@ -604,6 +604,34 @@ def CompilationDatabase_HeaderFileHeuristicNotFound_test():
         [] )
 
 
+def CompilationDatabase_ExplicitHeaderFileEntry_test():
+  with TemporaryClangTestDir() as tmp_dir:
+    # Have an explicit header file entry which should take priority over the
+    # corresponding source file
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I. -I/absolute/path -Wall',
+        'file': os.path.join( tmp_dir, 'test.cc' ),
+      },
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -I/absolute/path -Wall',
+        'file': os.path.join( tmp_dir, 'test.h' ),
+      },
+    ]
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.h' ),
+          add_extra_clang_flags = False ),
+        contains( 'clang++',
+                  '-x',
+                  'c++',
+                  '-I' + os.path.normpath( '/absolute/path' ),
+                  '-Wall' ) )
+
+
 def _MakeRelativePathsInFlagsAbsoluteTest( test ):
   wd = test[ 'wd' ] if 'wd' in test else '/not_test'
   assert_that(
