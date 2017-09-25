@@ -5,3 +5,6 @@
 #include "c.hpp" // system/c.hpp
 #include <c.hpp> // system/c.hpp
 // not an #include line
+
+#include "dir with spaces/d.hpp"
+#include <system/

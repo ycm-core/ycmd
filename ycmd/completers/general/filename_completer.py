@@ -28,10 +28,6 @@ import re
 from collections import defaultdict
 
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import ( AtIncludeStatementStart,
-                                              GetIncludeStatementValue )
-from ycmd.completers.cpp.clang_completer import InCFamilyFile
-from ycmd.completers.cpp.flags import Flags
 from ycmd.utils import GetCurrentDirectory, OnWindows, ToUnicode
 from ycmd import responses
 
@@ -45,7 +41,6 @@ class FilenameCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( FilenameCompleter, self ).__init__( user_options )
-    self._flags = Flags()
 
     # On Windows, backslashes are also valid path separators.
     self._triggers = [ '/', '\\' ] if OnWindows() else [ '/' ]
@@ -77,15 +72,6 @@ class FilenameCompleter( Completer ):
       """ % { 'sep': '/\\\\' if OnWindows() else '/' }, re.X )
 
 
-  def ShouldCompleteIncludeStatement( self, request_data ):
-    start_codepoint = request_data[ 'start_codepoint' ] - 1
-    current_line = request_data[ 'line_value' ]
-    filepath = request_data[ 'filepath' ]
-    filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
-    return ( InCFamilyFile( filetypes ) and
-             AtIncludeStatementStart( current_line[ : start_codepoint ] ) )
-
-
   def ShouldUseNowInner( self, request_data ):
     current_line = request_data[ 'line_value' ]
     start_codepoint = request_data[ 'start_codepoint' ]
@@ -94,10 +80,8 @@ class FilenameCompleter( Completer ):
     # note: 1-based still. we subtract 1 when indexing into current_line
     trigger_codepoint = start_codepoint - 1
 
-    return (
-        trigger_codepoint > 0 and
-         ( current_line[ trigger_codepoint - 1 ] in self._triggers or
-           self.ShouldCompleteIncludeStatement( request_data ) ) )
+    return ( trigger_codepoint > 0 and
+             current_line[ trigger_codepoint - 1 ] in self._triggers )
 
 
   def SupportedFiletypes( self ):
@@ -108,21 +92,7 @@ class FilenameCompleter( Completer ):
     current_line = request_data[ 'line_value' ]
     start_codepoint = request_data[ 'start_codepoint' ] - 1
     filepath = request_data[ 'filepath' ]
-    filetypes = request_data[ 'file_data' ][ filepath ][ 'filetypes' ]
     line = current_line[ : start_codepoint ]
-
-    if InCFamilyFile( filetypes ):
-      path_dir, quoted_include = (
-              GetIncludeStatementValue( line, check_closing = False ) )
-      if path_dir is not None:
-        # We do what GCC does for <> versus "":
-        # http://gcc.gnu.org/onlinedocs/cpp/Include-Syntax.html
-        client_data = request_data.get( 'extra_conf_data', None )
-        return _GenerateCandidatesForPaths(
-          self.GetPathsIncludeCase( path_dir,
-                                    quoted_include,
-                                    filepath,
-                                    client_data ) )
 
     path_match = self._path_regex.search( line )
     path_dir = os.path.expanduser(
@@ -132,36 +102,12 @@ class FilenameCompleter( Completer ):
     # working directory of ycmd
     working_dir = request_data.get( 'working_dir' )
 
-    return _GenerateCandidatesForPaths(
-      _GetPathsStandardCase(
+    return GenerateCandidatesForPaths(
+      _GetAbsolutePaths(
         path_dir,
         self.user_options[ 'filepath_completion_use_working_dir' ],
         filepath,
         working_dir) )
-
-
-  def GetPathsIncludeCase( self, path_dir, quoted_include, filepath,
-                           client_data ):
-    paths = []
-    quoted_include_paths, include_paths = (
-            self._flags.UserIncludePaths( filepath, client_data ) )
-
-    if quoted_include:
-      include_paths.extend( quoted_include_paths )
-
-    for include_path in include_paths:
-      unicode_path = ToUnicode( os.path.join( include_path, path_dir ) )
-      try:
-        # We need to pass a unicode string to get unicode strings out of
-        # listdir.
-        relative_paths = os.listdir( unicode_path )
-      except:
-        relative_paths = []
-
-      paths.extend( os.path.join( include_path, path_dir, relative_path ) for
-                    relative_path in relative_paths  )
-
-    return paths
 
 
 def _GetAbsolutePathForCompletions( path_dir,
@@ -190,7 +136,7 @@ def _GetAbsolutePathForCompletions( path_dir,
                          path_dir )
 
 
-def _GetPathsStandardCase( path_dir, use_working_dir, filepath, working_dir ):
+def _GetAbsolutePaths( path_dir, use_working_dir, filepath, working_dir ):
   absolute_path_dir = _GetAbsolutePathForCompletions( path_dir,
                                                       use_working_dir,
                                                       filepath,
@@ -207,7 +153,7 @@ def _GetPathsStandardCase( path_dir, use_working_dir, filepath, working_dir ):
            for relative_path in relative_paths )
 
 
-def _GenerateCandidatesForPaths( absolute_paths ):
+def GenerateCandidatesForPaths( absolute_paths ):
   extra_info = defaultdict( int )
   basenames = []
   for absolute_path in absolute_paths:

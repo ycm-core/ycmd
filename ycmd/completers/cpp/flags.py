@@ -158,43 +158,6 @@ class Flags( object ):
     return _CallExtraConfFlagsForFile( module, filename, client_data )
 
 
-  def UserIncludePaths( self, filename, client_data ):
-    flags = [ ToUnicode( x ) for x in
-              self.FlagsForFile( filename, client_data = client_data ) ]
-
-    quoted_include_paths = [ os.path.dirname( filename ) ]
-    include_paths = []
-
-    if flags:
-      quote_flag = '-iquote'
-      path_flags = [ '-isystem', '-I' ]
-
-      try:
-        it = iter( flags )
-        for flag in it:
-          flag_len = len( flag )
-          if flag.startswith( quote_flag ):
-            quote_flag_len = len( quote_flag )
-            # Add next flag to the include paths if current flag equals to
-            # '-iquote', or add remaining string otherwise.
-            quoted_include_paths.append( next( it )
-                                         if flag_len == quote_flag_len
-                                         else flag[ quote_flag_len: ] )
-          else:
-            for path_flag in path_flags:
-              if flag.startswith( path_flag ):
-                path_flag_len = len( path_flag )
-                include_paths.append( next( it )
-                                      if flag_len == path_flag_len
-                                      else flag[ path_flag_len: ] )
-                break
-      except StopIteration:
-        pass
-
-    return ( [ x for x in quoted_include_paths if x ],
-             [ x for x in include_paths if x ] )
-
-
   def Clear( self ):
     self.flags_for_file.clear()
     self.compilation_database_dir_map.clear()
@@ -618,3 +581,38 @@ def _GetCompilationInfoForFile( database, file_name, file_extension ):
   # No corresponding source file was found, so we can't generate any flags for
   # this source file.
   return None
+
+
+def UserIncludePaths( flags, filename ):
+  quoted_include_paths = [ os.path.dirname( filename ) ]
+  include_paths = []
+
+  if flags:
+    quote_flag = '-iquote'
+    path_flags = [ '-isystem', '-I' ]
+
+    try:
+      it = iter( flags )
+      for flag in it:
+        flag_len = len( flag )
+        if flag.startswith( quote_flag ):
+          quote_flag_len = len( quote_flag )
+          # Add next flag to the include paths if current flag equals to
+          # '-iquote', or add remaining string otherwise.
+          quoted_include_path = ( next( it ) if flag_len == quote_flag_len else
+                                  flag[ quote_flag_len: ] )
+          if quoted_include_path:
+            quoted_include_paths.append( ToUnicode( quoted_include_path ) )
+        else:
+          for path_flag in path_flags:
+            if flag.startswith( path_flag ):
+              path_flag_len = len( path_flag )
+              include_path = ( next( it ) if flag_len == path_flag_len else
+                               flag[ path_flag_len: ] )
+              if include_path:
+                include_paths.append( ToUnicode( include_path ) )
+              break
+    except StopIteration:
+      pass
+
+  return quoted_include_paths, include_paths
