@@ -615,4 +615,6 @@ def _GetCompilationInfoForFile( database, file_name, file_extension ):
       if compilation_info and compilation_info.compiler_flags_:
         return compilation_info
 
+  # No corresponding source file was found, so we can't generate any flags for
+  # this source file.
   return None
