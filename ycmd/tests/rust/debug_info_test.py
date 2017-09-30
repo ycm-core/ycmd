@@ -22,7 +22,8 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains, has_entries, has_entry, instance_of
+from hamcrest import ( any_of, assert_that, contains, has_entries, has_entry,
+                       instance_of, none )
 
 from ycmd.tests.rust import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
@@ -47,7 +48,7 @@ def DebugInfo_test( app ):
       } ) ),
       'items': contains( has_entries( {
         'key': 'Rust sources',
-        'value': None
+        'value': any_of( none(), instance_of( str ) )
       } ) )
     } ) )
   )
