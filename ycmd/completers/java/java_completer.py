@@ -241,6 +241,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def DebugInfo( self, request_data ):
     items = [
+      responses.DebugInfoItem( 'Startup Status', self._server_init_status ),
       responses.DebugInfoItem( 'Java Path', PATH_TO_JAVA ),
       responses.DebugInfoItem( 'Launcher Config.', self._launcher_config ),
     ]
@@ -252,6 +253,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     if self._workspace_path:
       items.append( responses.DebugInfoItem( 'Workspace Path',
                                              self._workspace_path ) )
+
     return responses.BuildDebugInfoResponse(
       name = "Java",
       servers = [
@@ -317,6 +319,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._workspace_path = None
     self._project_dir = None
     self._received_ready_message = threading.Event()
+    self._server_init_status = 'Not started'
 
     self._server_handle = None
     self._connection = None
@@ -453,6 +456,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       if message_type == 'Started':
         _logger.info( 'Java Language Server initialised successfully.' )
         self._received_ready_message.set()
+
+      self._server_init_status = notification[ 'params' ][ 'message' ]
 
     super( JavaCompleter, self )._HandleNotificationInPollThread( notification )
 

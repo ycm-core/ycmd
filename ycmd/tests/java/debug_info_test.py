@@ -47,6 +47,8 @@ def DebugInfo_test( app ):
         'logfiles': contains( instance_of( str ),
                               instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': instance_of( str ) } ),
           has_entries( { 'key': 'Java Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Launcher Config.',

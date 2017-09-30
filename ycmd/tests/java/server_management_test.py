@@ -55,6 +55,8 @@ def Subcommands_RestartServer_test( app ):
         'logfiles': contains( instance_of( str ),
                               instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': instance_of( str ) } ),
           has_entries( { 'key': 'Java Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Launcher Config.',
@@ -113,6 +115,8 @@ def Subcommands_RestartServer_test( app ):
         'logfiles': contains( instance_of( str ),
                               instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': instance_of( str ) } ),
           has_entries( { 'key': 'Java Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Launcher Config.',
@@ -147,6 +151,8 @@ def Subcommands_ProjectDetection_EclipseParent( app ):
         'logfiles': contains( instance_of( str ),
                               instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': instance_of( str ) } ),
           has_entries( { 'key': 'Java Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Launcher Config.',
@@ -184,6 +190,8 @@ def Subcommands_ProjectDetection_MavenParent( app ):
         'logfiles': contains( instance_of( str ),
                               instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': instance_of( str ) } ),
           has_entries( { 'key': 'Java Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Launcher Config.',
@@ -221,6 +229,8 @@ def Subcommands_ProjectDetection_GradleParent( app ):
         'logfiles': contains( instance_of( str ),
                               instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': instance_of( str ) } ),
           has_entries( { 'key': 'Java Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Launcher Config.',
