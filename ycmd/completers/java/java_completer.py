@@ -168,7 +168,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._use_clean_workspace = user_options[ CLEAN_WORKSPACE_OPTION ]
 
-    # Used to ensure that starting/stopping of the server is synchronised
+    # Used to ensure that starting/stopping of the server is synchronized
     self._server_state_mutex = threading.RLock()
 
 
@@ -454,7 +454,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       message_type = notification[ 'params' ][ 'type' ]
 
       if message_type == 'Started':
-        _logger.info( 'Java Language Server initialised successfully.' )
+        _logger.info( 'Java Language Server initialized successfully.' )
         self._received_ready_message.set()
 
       self._server_init_status = notification[ 'params' ][ 'message' ]
@@ -466,7 +466,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     if notification[ 'method' ] == 'language/status':
       message = notification[ 'params' ][ 'message' ]
       return responses.BuildDisplayMessageResponse(
-        'Initialising Java completer: {0}'.format( message ) )
+        'Initializing Java completer: {0}'.format( message ) )
 
     return super( JavaCompleter, self )._ConvertNotificationToMessage(
       request_data,

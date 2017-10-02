@@ -820,7 +820,7 @@ class LanguageServerCompleter( Completer ):
         _logger.info( 'Language Server requires sync type of {0}'.format(
           self._syncType ) )
 
-      self.GetConnection().SendNotification( lsapi.Initialised() )
+      self.GetConnection().SendNotification( lsapi.Initialized() )
 
       self._initialise_response = None
       self._initialise_event.set()
@@ -837,7 +837,7 @@ class LanguageServerCompleter( Completer ):
 
   def GetHoverResponse( self, request_data ):
     if not self.ServerIsReady():
-      raise RuntimeError( 'Server is initialising. Please wait.' )
+      raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._RefreshFiles( request_data )
 
@@ -853,7 +853,7 @@ class LanguageServerCompleter( Completer ):
 
   def GoToDeclaration( self, request_data ):
     if not self.ServerIsReady():
-      raise RuntimeError( 'Server is initialising. Please wait.' )
+      raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._RefreshFiles( request_data )
 
@@ -877,7 +877,7 @@ class LanguageServerCompleter( Completer ):
 
   def GoToReferences( self, request_data ):
     if not self.ServerIsReady():
-      raise RuntimeError( 'Server is initialising. Please wait.' )
+      raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._RefreshFiles( request_data )
 
@@ -893,7 +893,7 @@ class LanguageServerCompleter( Completer ):
 
   def CodeAction( self, request_data, args ):
     if not self.ServerIsReady():
-      raise RuntimeError( 'Server is initialising. Please wait.' )
+      raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._RefreshFiles( request_data )
 
@@ -956,7 +956,7 @@ class LanguageServerCompleter( Completer ):
 
   def Rename( self, request_data, args ):
     if not self.ServerIsReady():
-      raise RuntimeError( 'Server is initialising. Please wait.' )
+      raise RuntimeError( 'Server is initializing. Please wait.' )
 
     if len( args ) != 1:
       raise ValueError( 'Please specify a new name to rename it to.\n'

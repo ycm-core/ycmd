@@ -70,7 +70,7 @@ def Initialise( request_id, project_directory ):
   } )
 
 
-def Initialised():
+def Initialized():
   return BuildNotification( 'initialized', {} )
 
 
