@@ -351,7 +351,7 @@ def Subcommands_GoToReferences_test( app ):
                                        'com',
                                        'test',
                                        'TestLauncher.java' ),
-           'column_num': 13,
+           'column_num': 11,
            # 'description': '',
            'line_num': 25
          } ] )
@@ -439,8 +439,8 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
               LocationMatcher( TestFactory, 28, 33 ) ),
             ChunkMatcher(
               'a-quite-long-string',
-              LocationMatcher( TestLauncher, 25, 13 ),
-              LocationMatcher( TestLauncher, 25, 37 ) ),
+              LocationMatcher( TestLauncher, 25, 11 ),
+              LocationMatcher( TestLauncher, 25, 35 ) ),
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( TestWidgetImpl, 20, 15 ),

@@ -27,8 +27,7 @@ from hamcrest import ( assert_that,
                        contains_inanyorder,
                        empty,
                        matches_regexp,
-                       has_entries,
-                       instance_of )
+                       has_entries )
 from nose.tools import eq_
 
 from pprint import pformat
@@ -36,7 +35,9 @@ import requests
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
-                                    CompletionEntryMatcher )
+                                    ChunkMatcher,
+                                    CompletionEntryMatcher,
+                                    LocationMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -186,13 +187,9 @@ def GetCompletions_Package_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completion_start_column': 18,
+        'completion_start_column': 9,
         'completions': contains(
-          CompletionEntryMatcher( 'com.test.wobble', None, {
-            'extra_data': has_entries( {
-              'fixits': instance_of( list )
-            } )
-          } ),
+          CompletionEntryMatcher( 'com.test.wobble', None ),
         ),
         'errors': empty(),
       } )
@@ -214,9 +211,44 @@ def GetCompletions_Import_Class_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 34,
-        'completions': contains_inanyorder(
+        'completions': contains(
           CompletionEntryMatcher( 'Tset;', None, {
-            'menu_text': 'Tset - com.youcompleteme.testing',
+            'menu_text': 'Tset - com.youcompleteme.testing'
+          } )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_Import_Classes_test( app ):
+  filepath = ProjectPath( 'TestLauncher.java' )
+  RunTest( app, {
+    'description': 'completion works for import statements',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : filepath,
+      'line_num'  : 3,
+      'column_num': 52,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 52,
+        'completions': contains(
+          CompletionEntryMatcher( 'A;', None, {
+            'menu_text': 'A - com.test.wobble',
+          } ),
+          CompletionEntryMatcher( 'A_Very_Long_Class_Here;', None, {
+            'menu_text': 'A_Very_Long_Class_Here - com.test.wobble',
+          } ),
+          CompletionEntryMatcher( 'Waggle;', None, {
+            'menu_text': 'Waggle - com.test.wobble',
+          } ),
+          CompletionEntryMatcher( 'Wibble;', None, {
+            'menu_text': 'Wibble - com.test.wobble',
           } ),
         ),
         'errors': empty(),
@@ -226,12 +258,13 @@ def GetCompletions_Import_Class_test( app ):
 
 
 @SharedYcmd
-def GetCompletions_Import_Module_test( app ):
+def GetCompletions_Import_ModuleAndClass_test( app ):
+  filepath = ProjectPath( 'TestLauncher.java' )
   RunTest( app, {
     'description': 'completion works for import statements',
     'request': {
       'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestLauncher.java' ),
+      'filepath'  : filepath,
       'line_num'  : 3,
       'column_num': 26,
     },
@@ -240,11 +273,8 @@ def GetCompletions_Import_Module_test( app ):
       'data': has_entries( {
         'completion_start_column': 26,
         'completions': contains(
-          CompletionEntryMatcher( 'testing', None, {
+          CompletionEntryMatcher( 'testing.*;', None, {
             'menu_text': 'com.youcompleteme.testing',
-            'extra_data': has_entries( {
-              'fixits': instance_of( list )
-            } ),
           } ),
           CompletionEntryMatcher( 'Test;', None, {
             'menu_text': 'Test - com.youcompleteme',
@@ -258,21 +288,21 @@ def GetCompletions_Import_Module_test( app ):
 
 @SharedYcmd
 def GetCompletions_WithSnippet_test( app ):
+  filepath = ProjectPath( 'TestFactory.java' )
   RunTest( app, {
     'description': 'semantic completion works for builtin types (no query)',
     'request': {
       'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestFactory.java' ),
+      'filepath'  : filepath,
       'line_num'  : 19,
       'column_num': 25,
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains_inanyorder( CompletionEntryMatcher(
-          'CUTHBERT',
-          'com.test.wobble.Wibble',
-          # FIXME: Replace with ChunkMatcher, LocationMatcher, etc.
+        'completion_start_column': 22,
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher( 'CUTHBERT', 'com.test.wobble.Wibble',
           {
             'extra_data': has_entries( {
               'fixits': contains( has_entries( {
@@ -280,79 +310,28 @@ def GetCompletions_WithSnippet_test( app ):
                   # For some reason, jdtls feels it's OK to replace the text
                   # before the cursor. Perhaps it does this to canonicalise the
                   # path ?
-                  has_entries( {
-                    'replacement_text': 'Wibble',
-                    'range': has_entries( {
-                      'start': has_entries( {
-                        'line_num': 19,
-                        'column_num': 15,
-                      } ),
-                      'end': has_entries( {
-                        'line_num': 19,
-                        'column_num': 21,
-                      } )
-                    } ),
-                  } ),
+                  ChunkMatcher( 'Wibble',
+                                LocationMatcher( filepath, 19, 15 ),
+                                LocationMatcher( filepath, 19, 21 ) ),
                   # When doing an import, eclipse likes to add two newlines
                   # after the package. I suppose this is config in real eclipse,
                   # but there's no mechanism to configure this in jdtl afaik.
-                  has_entries( {
-                    'replacement_text': '\n\n',
-                    'range': has_entries( {
-                      'start': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } ),
-                      'end': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } )
-                    } ),
-                  } ),
+                  ChunkMatcher( '\n\n',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 1, 18 ) ),
                   # OK, so it inserts the import
-                  has_entries( {
-                    'replacement_text': 'import com.test.wobble.Wibble;',
-                    'range': has_entries( {
-                      'start': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } ),
-                      'end': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } )
-                    } ),
-                  } ),
+                  ChunkMatcher( 'import com.test.wobble.Wibble;',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 1, 18 ) ),
                   # More newlines. Who doesn't like newlines?!
-                  has_entries( {
-                    'replacement_text': '\n\n',
-                    'range': has_entries( {
-                      'start': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } ),
-                      'end': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } )
-                    } ),
-                  } ),
+                  ChunkMatcher( '\n\n',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 1, 18 ) ),
                   # For reasons known only to the eclipse JDT developers, it
                   # seems to want to delete the lines after the package first.
-                  #
-                  has_entries( {
-                    'replacement_text': '',
-                    'range': has_entries( {
-                      'start': has_entries( {
-                        'line_num': 1,
-                        'column_num': 18,
-                      } ),
-                      'end': has_entries( {
-                        'line_num': 3,
-                        'column_num': 1,
-                      } )
-                    } ),
-                  } ),
+                  ChunkMatcher( '',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 3, 1 ) ),
                 ),
               } ) ),
             } ),

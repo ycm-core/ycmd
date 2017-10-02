@@ -1,6 +1,6 @@
 package com.test;
 
-import com.youcompleteme.*;
+import com.youcompleteme.*; import com.test.wobble.*;
 import com.youcompleteme.testing.Tset;
 
 class TestLauncher {

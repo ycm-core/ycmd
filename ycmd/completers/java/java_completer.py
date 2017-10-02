@@ -331,12 +331,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         '-Dosgi.bundles.defaultStartLevel=4',
         '-Declipse.product=org.eclipse.jdt.ls.core.product',
         '-Dlog.level=ALL',
-        '-jar',
-        self._launcher_path,
-        '-configuration',
-        self._launcher_config,
-        '-data',
-        self._workspace_path
+        '-jar', self._launcher_path,
+        '-configuration', self._launcher_config,
+        '-data', self._workspace_path,
       ]
 
       _logger.debug( 'Starting java-server with the following command: '

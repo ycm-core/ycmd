@@ -26,6 +26,7 @@ from future.utils import iteritems, iterkeys
 import abc
 import collections
 import logging
+import os
 import queue
 import threading
 
@@ -56,6 +57,10 @@ class ResponseAbortedException( Exception ):
 
 
 class ResponseFailedException( Exception ):
+  pass
+
+
+class IncompatibleCompletionException( Exception ):
   pass
 
 
@@ -512,7 +517,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def ShouldUseNowInner( self, request_data ):
-    return self.ServerIsReady()
+    return ( self.ServerIsReady() and
+             super( LanguageServerCompleter, self ).ShouldUseNowInner(
+               request_data ) )
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -532,12 +539,59 @@ class LanguageServerCompleter( Completer ):
       self._server_capabilities[ 'completionProvider' ].get( 'resolveProvider',
                                                              False ) )
 
-    def MakeCompletion( item ):
-      # First, resolve the completion.
-      # TODO: Maybe we need some way to do this based on a trigger
-      # TODO: Need a better API around request IDs. We no longer care about them
-      # _at all_ here.
+    if isinstance( response[ 'result' ], list ):
+      items = response[ 'result' ]
+    else:
+      items = response[ 'result' ][ 'items' ]
 
+    return self.ResolveCompletionItems( items, request_data, do_resolve )
+
+
+  def ResolveCompletionItems( self, items, request_data, do_resolve ):
+    _logger.debug( 'Completion Start: {0}'.format( request_data[
+      'start_codepoint' ] ) )
+    # Note Vim only displays the first character, so we map them to the
+    # documented Vim kinds:
+    #
+    #   v variable
+    #   f function or method
+    #   m member of a struct or class
+    #   t typedef
+    #   d #define or macro
+    #
+    # FIXME: I'm not happy with this completely. We're losing useful info,
+    # perhaps unnecessarily.
+    ITEM_KIND = [
+      None,  # 1-based
+      'd',   # 'Text',
+      'f',   # 'Method',
+      'f',   # 'Function',
+      'f',   # 'Constructor',
+      'm',   # 'Field',
+      'm',   # 'Variable',
+      't',   # 'Class',
+      't',   # 'Interface',
+      't',   # 'Module',
+      't',   # 'Property',
+      't',   # 'Unit',
+      'd',   # 'Value',
+      't',   # 'Enum',
+      'd',   # 'Keyword',
+      'd',   # 'Snippet',
+      'd',   # 'Color',
+      'd',   # 'File',
+      'd',   # 'Reference',
+    ]
+
+    completions = list()
+    start_codepoints = list()
+    min_start_codepoint = request_data[ 'start_codepoint' ]
+
+    # First generate all of the completion items and store their
+    # start_codepoints.  Then, we fix-up the completion texts to use the
+    # earliest start_codepoint by borrowing text from the original line.
+    for item in items:
+      # First, resolve the completion.
       if do_resolve:
         try:
           resolve_id = self.GetConnection().NextRequestId()
@@ -551,42 +605,17 @@ class LanguageServerCompleter( Completer ):
           _logger.exception( 'A completion item could not be resolved. Using '
                              'basic data.' )
 
-      # Note Vim only displays the first character, so we map them to the
-      # documented Vim kinds:
-      #
-      #   v variable
-      #   f function or method
-      #   m member of a struct or class
-      #   t typedef
-      #   d #define or macro
-      #
-      # FIXME: I'm not happy with this completely. We're losing useful info,
-      # perhaps unnecessarily.
-      ITEM_KIND = [
-        None,  # 1-based
-        'd',   # 'Text',
-        'f',   # 'Method',
-        'f',   # 'Function',
-        'f',   # 'Constructor',
-        'm',   # 'Field',
-        'm',   # 'Variable',
-        't',   # 'Class',
-        't',   # 'Interface',
-        't',   # 'Module',
-        't',   # 'Property',
-        't',   # 'Unit',
-        'd',   # 'Value',
-        't',   # 'Enum',
-        'd',   # 'Keyword',
-        'd',   # 'Snippet',
-        'd',   # 'Color',
-        'd',   # 'File',
-        'd',   # 'Reference',
-      ]
+      try:
+        ( insertion_text, fixits, start_codepoint ) = (
+          InsertionTextForItem( request_data, item ) )
+      except IncompatibleCompletionException:
+        _logger.exception( 'Ignoring incompatible completion suggestion '
+                           '{0}'.format( item ) )
+        continue
 
-      ( insertion_text, fixits ) = InsertionTextForItem( request_data, item )
+      min_start_codepoint = min( min_start_codepoint, start_codepoint )
 
-      return responses.BuildCompletionData(
+      completions.append( responses.BuildCompletionData(
         insertion_text,
         extra_menu_info = item.get( 'detail', None ),
         detailed_info = ( item[ 'label' ] +
@@ -594,13 +623,18 @@ class LanguageServerCompleter( Completer ):
                           item.get( 'documentation', '' ) ),
         menu_text = item[ 'label' ],
         kind = ITEM_KIND[ item.get( 'kind', 0 ) ],
-        extra_data = fixits )
+        extra_data = fixits ) )
+      start_codepoints.append( start_codepoint )
 
-    if isinstance( response[ 'result' ], list ):
-      items = response[ 'result' ]
-    else:
-      items = response[ 'result' ][ 'items' ]
-    return [ MakeCompletion( i ) for i in items ]
+    if ( len( completions ) > 1 and
+         min_start_codepoint != request_data[ 'start_codepoint' ] ):
+      return FixUpCompletionPrefixes( completions,
+                                      start_codepoints,
+                                      request_data,
+                                      min_start_codepoint )
+
+    request_data[ 'start_codepoint' ] = min_start_codepoint
+    return completions
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -932,15 +966,46 @@ class LanguageServerCompleter( Completer ):
       [ WorkspaceEditToFixIt( request_data, response[ 'result' ] ) ] )
 
 
+def FixUpCompletionPrefixes( completions,
+                             start_codepoints,
+                             request_data,
+                             min_start_codepoint ):
+  # Fix up the insertion texts so they share the same start_codepoint by
+  # borrowing text from the source
+  line = request_data[ 'line_value' ]
+  for completion, start_codepoint in zip( completions, start_codepoints ):
+    to_borrow = start_codepoint - min_start_codepoint
+    if to_borrow > 0:
+      borrow = line[ start_codepoint - to_borrow - 1 : start_codepoint - 1 ]
+      new_insertion_text = borrow + completion[ 'insertion_text' ]
+      completion[ 'insertion_text' ] = new_insertion_text
+
+  # Finally, remove any common prefix
+  common_prefix_len = len( os.path.commonprefix(
+    [ c[ 'insertion_text' ] for c in completions ] ) )
+  for completion in completions:
+    completion[ 'insertion_text' ] = completion[ 'insertion_text' ][
+      common_prefix_len : ]
+
+  # The start column is the earliest start point that we fixed up plus the
+  # length of the common prefix that we subsequently removed.
+  #
+  # Phew. That was hard work.
+  request_data[ 'start_codepoint' ] = min_start_codepoint + common_prefix_len
+  return completions
+
+
 def InsertionTextForItem( request_data, item ):
   INSERT_TEXT_FORMAT = [
     None, # 1-based
     'PlainText',
     'Snippet'
   ]
+  assert INSERT_TEXT_FORMAT[ item.get( 'insertTextFormat', 1 ) ] == 'PlainText'
 
   fixits = None
 
+  start_codepoint = request_data[ 'start_codepoint' ]
   # We will alwyas have one of insertText or label
   if 'insertText' in item and item[ 'insertText' ]:
     insertion_text = item[ 'insertText' ]
@@ -952,16 +1017,17 @@ def InsertionTextForItem( request_data, item ):
   # Per the protocol, textEdit takes precedence over insertText, and must be
   # on the same line (and containing) the originally requested position
   if 'textEdit' in item and item[ 'textEdit' ]:
-    # The insertion text contains newlines or starts before the start
-    # position. This is tricky: most clients (i.e. Vim) won't support this. So
-    # we cheat. Set the insertable text to the simple text, and put and
-    # additionalTextEdit instead. We manipulate the real textEdit so that it
-    # replaces the inserted text with the real textEdit.
-    fixup_textedit = dict( item[ 'textEdit' ] )
-    fixup_textedit[ 'range' ][ 'end' ][ 'character' ] = (
-      fixup_textedit[ 'range' ][ 'end' ][ 'character' ] + len(
-        insertion_text ) )
-    additional_text_edits.append( fixup_textedit )
+    textEdit = item[ 'textEdit' ]
+    edit_range = textEdit[ 'range' ]
+    start_codepoint = edit_range[ 'start' ][ 'character' ] + 1
+    assert edit_range[ 'start' ][ 'line' ] == edit_range[ 'end' ][ 'line' ]
+    assert start_codepoint <= request_data[ 'start_codepoint' ]
+
+    insertion_text = textEdit[ 'newText' ]
+
+    if '\n' in textEdit[ 'newText' ]:
+      # Most clients won't support this, at least not for now
+      raise IncompatibleCompletionException( textEdit[ 'newText' ] )
 
   additional_text_edits.extend( item.get( 'additionalTextEdits', [] ) )
 
@@ -975,16 +1041,7 @@ def InsertionTextForItem( request_data, item ):
     fixits = responses.BuildFixItResponse(
       [ responses.FixIt( chunks[ 0].range.start_, chunks ) ] )
 
-  if 'insertTextFormat' in item and item[ 'insertTextFormat' ]:
-    text_format = INSERT_TEXT_FORMAT[ item[ 'insertTextFormat' ] ]
-  else:
-    text_format = 'PlainText'
-
-  if text_format != 'PlainText':
-    raise ValueError( 'Snippet completions are not supported and should not'
-                      ' be returned by the language server.' )
-
-  return ( insertion_text, fixits )
+  return ( insertion_text, fixits, start_codepoint )
 
 
 def LocationListToGoTo( request_data, response ):
