@@ -292,6 +292,13 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return {
       'RestartServer': ( lambda self, request_data, args:
                             self._RestartServer() ),
+
+      # TODO: We should be able to determine the set of things available from
+      # the capabilities supplied on initialise
+      'GetType':       (lambda self, request_data, args:
+                            self._GetType( request_data ) ),
+      'GoToDeclaration': (lambda self, request_data, args:
+                            self._GoToDeclaration( request_data ) ),
     }
 
 

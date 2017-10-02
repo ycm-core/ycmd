@@ -572,6 +572,61 @@ class LanguageServerCompleter( Completer ):
         self._syncType ) )
 
 
+  def _GetType( self, request_data ):
+    request_id = self._server.NextRequestId()
+    response = self._server.GetResponse( request_id,
+                                         lsapi.Hover( request_id,
+                                                      request_data ) )
+
+    if isinstance( response[ 'result' ][ 'contents' ], list ):
+      if len( response[ 'result' ][ 'contents' ] ):
+        info = response[ 'result' ][ 'contents' ][ 0 ]
+      else:
+        raise RuntimeError( 'No information' )
+    else:
+      info = response[ 'result' ][ 'contents' ]
+
+
+
+    return responses.BuildDisplayMessageResponse( str( info ) )
+
+
+  def _GoToDeclaration( self, request_data ):
+    request_id = self.GetServer().NextRequestId()
+    response = self.GetServer().GetResponse( request_id,
+                                             lsapi.Definition( request_id,
+                                                               request_data ) )
+
+    if isinstance( response[ 'result' ], list ):
+      if len( response[ 'result' ] ) > 1:
+        positions = response[ 'result' ]
+        return [
+          responses.BuildGoToResponseFromLocation(
+            # TODO: Codepoint to byte offset
+            responses.Location(
+              position[ 'range' ][ 'start' ][ 'line' ] + 1,
+              position[ 'range' ][ 'start' ][ 'character' ] + 1,
+              lsapi.UriToFilePath( position[ 'uri' ] ) )
+          ) for position in positions
+        ]
+      else:
+        position = response[ 'result' ][ 0 ]
+        return responses.BuildGoToResponseFromLocation(
+          # TODO: Codepoint to byte offset
+          responses.Location( position[ 'range' ][ 'start' ][ 'line' ] + 1,
+                              position[ 'range' ][ 'start' ][ 'character' ] + 1,
+                              lsapi.UriToFilePath( position[ 'uri' ] ) )
+        )
+    else:
+      position = response[ 'result' ]
+      return responses.BuildGoToResponseFromLocation(
+        # TODO: Codepoint to byte offset
+        responses.Location( position[ 'range' ][ 'start' ][ 'line' ] + 1,
+                            position[ 'range' ][ 'start' ][ 'character' ] + 1,
+                            lsapi.UriToFilePath( position[ 'uri' ] ) )
+      )
+
+
   def _GetInsertionText( self, request_data, item ):
     # TODO: We probably need to implement this and (at least) strip out the
     # snippet parts?
