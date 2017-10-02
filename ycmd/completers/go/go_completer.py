@@ -36,7 +36,7 @@ from ycmd.completers.completer import Completer
 
 BINARY_NOT_FOUND_MESSAGE = ( '{0} binary not found. Did you build it? '
                              'You can do so by running '
-                             '"./install.py --gocode-completer".' )
+                             '"./install.py --go-completer".' )
 SHELL_ERROR_MESSAGE = ( 'Command {command} failed with code {code} and error '
                         '"{error}".' )
 COMPUTE_OFFSET_ERROR_MESSAGE = ( 'Go completer could not compute byte offset '

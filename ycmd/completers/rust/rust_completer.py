@@ -56,7 +56,7 @@ HMAC_SECRET_LENGTH = 16
 
 BINARY_NOT_FOUND_MESSAGE = (
   'racerd binary not found. Did you build it? '
-  'You can do so by running "./build.py --racer-completer".' )
+  'You can do so by running "./build.py --rust-completer".' )
 NON_EXISTING_RUST_SOURCES_PATH_MESSAGE = (
   'Rust sources path does not exist. Check the value of the rust_src_path '
   'option or the RUST_SRC_PATH environment variable.' )
