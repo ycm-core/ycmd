@@ -63,7 +63,7 @@ LOGFILE_FORMAT = 'tern_{port}_{std}_'
 def ShouldEnableTernCompleter():
   """Returns whether or not the tern completer is 'installed'. That is whether
   or not the tern submodule has a 'node_modules' directory. This is pretty much
-  the only way we can know if the user added '--tern-completer' on
+  the only way we can know if the user added '--js-completer' on
   install or manually ran 'npm install' in the tern submodule directory."""
 
   if not PATH_TO_NODE:

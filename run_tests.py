@@ -56,22 +56,22 @@ COMPLETERS = {
     'aliases': [ 'c', 'cpp', 'c++', 'objc', 'clang', ]
   },
   'cs': {
-    'build': [ '--omnisharp-completer' ],
+    'build': [ '--cs-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/cs' ],
     'aliases': [ 'omnisharp', 'csharp', 'c#' ]
   },
   'javascript': {
-    'build': [ '--tern-completer' ],
+    'build': [ '--js-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/javascript' ],
     'aliases': [ 'js', 'tern' ]
   },
   'go': {
-    'build': [ '--gocode-completer' ],
+    'build': [ '--go-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/go' ],
     'aliases': [ 'gocode' ]
   },
   'rust': {
-    'build': [ '--racer-completer' ],
+    'build': [ '--rust-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/rust' ],
     'aliases': [ 'racer', 'racerd', ]
   },

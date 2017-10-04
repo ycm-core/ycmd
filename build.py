@@ -254,25 +254,24 @@ def GetGenerator( args ):
 def ParseArguments():
   parser = argparse.ArgumentParser()
   parser.add_argument( '--clang-completer', action = 'store_true',
-                       help = 'Build C-family semantic completion engine.' )
-  parser.add_argument( '--system-libclang', action = 'store_true',
-                       help = 'Use system libclang instead of downloading one '
-                       'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
-  parser.add_argument( '--omnisharp-completer', action = 'store_true',
-                       help = 'Build C# semantic completion engine.' )
-  parser.add_argument( '--gocode-completer', action = 'store_true',
-                       help = 'Build Go semantic completion engine.' )
-  parser.add_argument( '--racer-completer', action = 'store_true',
-                       help = 'Build rust semantic completion engine.' )
+                       help = 'Enable C-family semantic completion engine.' )
+  parser.add_argument( '--cs-completer', action = 'store_true',
+                       help = 'Enable C# semantic completion engine.' )
+  parser.add_argument( '--go-completer', action = 'store_true',
+                       help = 'Enable Go semantic completion engine.' )
+  parser.add_argument( '--rust-completer', action = 'store_true',
+                       help = 'Enable Rust semantic completion engine.' )
+  parser.add_argument( '--js-completer', action = 'store_true',
+                       help = 'Enable JavaScript semantic completion engine.' ),
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!')
+  parser.add_argument( '--system-libclang', action = 'store_true',
+                       help = 'Use system libclang instead of downloading one '
+                       'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
   parser.add_argument( '--msvc', type = int, choices = [ 12, 14, 15 ],
                        default = 15, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
-  parser.add_argument( '--tern-completer',
-                       action = 'store_true',
-                       help   = 'Enable tern javascript completer' ),
   parser.add_argument( '--all',
                        action = 'store_true',
                        help   = 'Enable all supported completers',
@@ -290,6 +289,16 @@ def ParseArguments():
                                 'specified directory, and do not delete the '
                                 'build output. This is useful for incremental '
                                 'builds, and required for coverage data' )
+
+  # These options are deprecated.
+  parser.add_argument( '--omnisharp-completer', action = 'store_true',
+                       help = argparse.SUPPRESS )
+  parser.add_argument( '--gocode-completer', action = 'store_true',
+                       help = argparse.SUPPRESS )
+  parser.add_argument( '--racer-completer', action = 'store_true',
+                       help = argparse.SUPPRESS )
+  parser.add_argument( '--tern-completer', action = 'store_true',
+                       help = argparse.SUPPRESS ),
 
   args = parser.parse_args()
 
@@ -446,7 +455,7 @@ def BuildYcmdLib( args ):
       rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
 
 
-def BuildOmniSharp():
+def EnableCsCompleter():
   build_command = PathToFirstExistingExecutable(
     [ 'msbuild', 'msbuild.exe', 'xbuild' ] )
   if not build_command:
@@ -457,7 +466,7 @@ def BuildOmniSharp():
                               '/property:TargetFrameworkVersion=v4.5' ] )
 
 
-def BuildGoCode():
+def EnableGoCompleter():
   if not FindExecutable( 'go' ):
     sys.exit( 'ERROR: go is required to build gocode.' )
 
@@ -467,7 +476,7 @@ def BuildGoCode():
   CheckCall( [ 'go', 'build', 'godef.go' ] )
 
 
-def BuildRacerd():
+def EnableRustCompleter():
   """
   Build racerd. This requires a reasonably new version of rustc/cargo.
   """
@@ -483,7 +492,7 @@ def BuildRacerd():
   CheckCall( args )
 
 
-def SetUpTern():
+def EnableJavaScriptCompleter():
   # On Debian-based distributions, node is by default installed as nodejs.
   node = PathToFirstExistingExecutable( [ 'nodejs', 'node' ] )
   if not node:
@@ -526,14 +535,14 @@ def Main():
   ExitIfYcmdLibInUseOnWindows()
   BuildYcmdLib( args )
   WritePythonUsedDuringBuild()
-  if args.omnisharp_completer or args.all_completers:
-    BuildOmniSharp()
-  if args.gocode_completer or args.all_completers:
-    BuildGoCode()
-  if args.tern_completer or args.all_completers:
-    SetUpTern()
-  if args.racer_completer or args.all_completers:
-    BuildRacerd()
+  if args.cs_completer or args.omnisharp_completer or args.all_completers:
+    EnableCsCompleter()
+  if args.go_completer or args.gocode_completer or args.all_completers:
+    EnableGoCompleter()
+  if args.js_completer or args.tern_completer or args.all_completers:
+    EnableJavaScriptCompleter()
+  if args.rust_completer or args.racer_completer or args.all_completers:
+    EnableRustCompleter()
 
 
 if __name__ == '__main__':
