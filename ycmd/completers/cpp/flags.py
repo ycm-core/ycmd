@@ -456,6 +456,7 @@ except OSError:
   except OSError:
     MAC_CLANG_TOOLCHAIN_DIRS = []
 
+
 # Returns a list containing the supplied path as a suffix of each of the known
 # Mac toolchains
 def _PathsForAllMacToolchains( path ):
