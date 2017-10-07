@@ -423,10 +423,11 @@ def Mac_LatestMacClangIncludes_NoSuchDirectory_test():
 
 @MacOnly
 def Mac_PathsForAllMacToolchains_test():
-  eq_( flags._PathsForAllMacToolchains( 'test' ),
+  assert_that(
        [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
          'XcodeDefault.xctoolchain/test',
-         '/Library/Developer/CommandLineTools/test' ] )
+         '/Library/Developer/CommandLineTools/test' ],
+       has_item( flags._PathsForAllMacToolchains( 'test' ) ) )
 
 
 def CompilationDatabase_NoDatabase_test():
