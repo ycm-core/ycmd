@@ -107,7 +107,7 @@ class ClangCompleter( Completer ):
     current_line = request_data[ 'line_value' ]
     line = current_line[ : column_codepoint ]
     path_dir, quoted_include, start_codepoint = (
-        GetIncludeStatementValue( line, check_closing = False ) )
+        GetIncompleteIncludeValue( line ) )
     if start_codepoint is None:
       return None
 
@@ -280,8 +280,7 @@ class ClangCompleter( Completer ):
     Throws RuntimeError if cursor is on include statement and corresponding
     include file not found."""
     current_line = request_data[ 'line_value' ]
-    include_file_name, quoted_include, _ = GetIncludeStatementValue(
-        current_line )
+    include_file_name, quoted_include = GetFullIncludeValue( current_line )
     if not include_file_name:
       return None
 
@@ -578,38 +577,46 @@ def _GetAbsolutePath( include_file_name, include_paths ):
   return None
 
 
-def GetIncludeStatementValue( line, check_closing = True ):
-  """Returns the tuple |include_value|, |quoted_include|, |start_codepoint|
+def GetIncompleteIncludeValue( line ):
+  """Returns the tuple |include_value|, |quoted_include|, and |start_codepoint|
   where:
-  - |include_value| is the string from the opening quote or bracket of the
-    include statement in |line|. If |check_closing| is True, the whole string
-    between the quotes or brackets is returned. None if no include statement is
-    found or if |check_closing| is True and there is no closing quote or
-    bracket;
+  - |include_value| is the string starting from the opening quote or bracket of
+    the include statement in |line|. None if no include statement is found;
   - |quoted_include| is True if the statement is a quoted include, False
     otherwise;
   - |start_column| is the 1-based column where the completion should start (i.e.
     at the last path separator '/' or at the opening quote or bracket). None if
-    no include statement is matched or |check_closing| is True."""
+    no include statement is matched."""
   match = INCLUDE_REGEX.match( line )
-  include_value = None
-  quoted_include = False
-  start_codepoint = None
-  if match:
-    include_start = match.end( 1 ) + 1
-    quoted_include = ( line[ include_start - 1 ] == '"' )
-    if not check_closing:
-      separator_char = '/'
-      separator_char_pos = line.rfind( separator_char, match.end( 1 ) )
-      if separator_char_pos != -1:
-        include_value = line[ include_start : separator_char_pos + 1 ]
-        start_codepoint = separator_char_pos + 2
-      else:
-        include_value = ''
-        start_codepoint = include_start + 1
-    else:
-      close_char = '"' if quoted_include else '>'
-      close_char_pos = line.find( close_char, match.end() )
-      if close_char_pos != -1:
-        include_value = line[ include_start : close_char_pos ]
-  return include_value, quoted_include, start_codepoint
+  if not match:
+    return None, False, None
+
+  include_start = match.end( 1 ) + 1
+  quoted_include = ( line[ include_start - 1 ] == '"' )
+  separator_char = '/'
+  separator_char_pos = line.rfind( separator_char, match.end( 1 ) )
+  if separator_char_pos == -1:
+    return '', quoted_include, include_start + 1
+  return ( line[ include_start : separator_char_pos + 1 ],
+           quoted_include,
+           separator_char_pos + 2 )
+
+
+
+def GetFullIncludeValue( line ):
+  """Returns the tuple |include_value| and |quoted_include| where:
+  - |include_value| is the whole string inside the quotes or brackets of the
+    include statement in |line|. None if no include statement is found;
+  - |quoted_include| is True if the statement is a quoted include, False
+    otherwise."""
+  match = INCLUDE_REGEX.match( line )
+  if not match:
+    return None, False
+
+  include_start = match.end( 1 ) + 1
+  quoted_include = ( line[ include_start - 1 ] == '"' )
+  close_char = '"' if quoted_include else '>'
+  close_char_pos = line.find( close_char, match.end() )
+  if close_char_pos == -1:
+    return None, quoted_include
+  return line[ include_start : close_char_pos ], quoted_include
