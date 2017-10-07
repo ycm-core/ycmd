@@ -438,11 +438,23 @@ def _RemoveUnusedFlags( flags, filename ):
 #
 # Most users have xcode installed, but in order to be as compatible as
 # possible we consider both possible installation locations
-MAC_CLANG_TOOLCHAIN_DIRS = [
-  '/Applications/Xcode.app/Contents/Developer/Toolchains/'
-    'XcodeDefault.xctoolchain',
-  '/Library/Developer/CommandLineTools'
-]
+try:
+  os.stat(
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+    'XcodeDefault.xctoolchain'
+  )
+  MAC_CLANG_TOOLCHAIN_DIRS = [
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+    'XcodeDefault.xctoolchain'
+  ]
+except OSError:
+  try:
+    os.stat('/Library/Developer/CommandLineTools')
+    MAC_CLANG_TOOLCHAIN_DIRS = [
+      '/Library/Developer/CommandLineTools'
+    ]
+  except OSError:
+    MAC_CLANG_TOOLCHAIN_DIRS = []
 
 
 # Returns a list containing the supplied path as a suffix of each of the known

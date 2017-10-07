@@ -34,6 +34,7 @@ from ycmd.responses import NoExtraConfDetected
 from ycmd.tests.clang import TemporaryClangProject, TemporaryClangTestDir
 
 from hamcrest import assert_that, calling, contains, has_item, not_, raises
+from hamcrest import any_of
 
 
 @contextlib.contextmanager
@@ -423,10 +424,10 @@ def Mac_LatestMacClangIncludes_NoSuchDirectory_test():
 
 @MacOnly
 def Mac_PathsForAllMacToolchains_test():
-  eq_( flags._PathsForAllMacToolchains( 'test' ),
-       [ '/Applications/Xcode.app/Contents/Developer/Toolchains/'
-         'XcodeDefault.xctoolchain/test',
-         '/Library/Developer/CommandLineTools/test' ] )
+  assert_that( flags._PathsForAllMacToolchains( 'test' ),
+    has_item(any_of('/Applications/Xcode.app/Contents/Developer/Toolchains/'
+      'XcodeDefault.xctoolchain/test',
+      '/Library/Developer/CommandLineTools/test' ) ) )
 
 
 def CompilationDatabase_NoDatabase_test():
