@@ -27,7 +27,7 @@ import os
 
 from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
-from mock import patch, MagicMock, Mock
+from mock import patch, MagicMock
 from types import ModuleType
 from ycmd.tests.test_utils import MacOnly
 from ycmd.responses import NoExtraConfDetected
@@ -59,7 +59,6 @@ def FlagsForFile_FlagsNotReady_test():
     eq_( list( flags_list ), [] )
 
 
-@patch( 'ycmd.extra_conf_store.ModuleForSourceFile', return_value = Mock() )
 def FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved_test( *args ):
   flags_object = flags.Flags()
 
@@ -170,6 +169,56 @@ def FlagsForFile_MakeRelativePathsAbsoluteIfOptionSpecified_test():
     assert_that( flags_list,
                  contains( '-x', 'c',
                            '-I', os.path.normpath( '/working_dir/header' ) ) )
+
+
+@MacOnly
+@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
+        [ 'sentinel_value_for_testing' ] )
+def FlagsForFile_AddMacIncludePathsWithoutSysroot_test():
+  flags_object = flags.Flags()
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-test', '--test1', '--test2=test' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, has_item( 'sentinel_value_for_testing' ) )
+
+
+@MacOnly
+@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
+        [ 'sentinel_value_for_testing' ] )
+def FlagsForFile_DoNotAddMacIncludePathsWithSysroot_test():
+  flags_object = flags.Flags()
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-isysroot', 'test1', '--test2=test' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-test', '--sysroot', 'test1' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
+
+  def FlagsForFile( filename ):
+    return {
+      'flags': [ '-test', 'test1', '--sysroot=test' ]
+    }
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
 
 
 def RemoveUnusedFlags_Passthrough_test():
@@ -435,32 +484,6 @@ def CompilationDatabase_NoDatabase_test():
       calling( flags.Flags().FlagsForFile ).with_args(
         os.path.join( tmp_dir, 'test.cc' ) ),
       raises( NoExtraConfDetected ) )
-
-
-@MacOnly
-@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
-        [ 'sentinel_value_for_testing' ] )
-def AddMacIncludePaths_NoSysroot_test():
-  assert_that(
-    flags._AddMacIncludePaths( [ '-test', '--test1', '--test2=test' ] ),
-    has_item( 'sentinel_value_for_testing' ) )
-
-
-@MacOnly
-@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
-        [ 'sentinel_value_for_testing' ] )
-def AddIncludePaths_Sysroot_test():
-  assert_that(
-    flags._AddMacIncludePaths( [ '-isysroot', 'test1', '--test2=test' ] ),
-    not_( has_item( 'sentinel_value_for_testing' ) ) )
-
-  assert_that(
-    flags._AddMacIncludePaths( [ '-test', '--sysroot', 'test1' ] ),
-    not_( has_item( 'sentinel_value_for_testing' ) ) )
-
-  assert_that(
-    flags._AddMacIncludePaths( [ '-test', 'test1', '--sysroot=test' ] ),
-    not_( has_item( 'sentinel_value_for_testing' ) ) )
 
 
 def CompilationDatabase_FileNotInDatabase_test():
