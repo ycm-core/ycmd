@@ -432,23 +432,26 @@ def _RemoveUnusedFlags( flags, filename ):
   return new_flags
 
 
-# There are 2 ways to get a development enviornment (as standard) on OS X:
-#  - install XCode.app, or
-#  - install the command-line tools (xcode-select --install)
-#
-# Most users have xcode installed, but in order to be as compatible as
-# possible we consider both possible installation locations
-MAC_CLANG_TOOLCHAIN_DIRS = [
-  '/Applications/Xcode.app/Contents/Developer/Toolchains/'
-    'XcodeDefault.xctoolchain',
-  '/Library/Developer/CommandLineTools'
-]
+# Return the path to the macOS toolchain root directory to use for system
+# includes. If no toolchain is found, returns None.
+def _SelectMacToolchain():
+  # There are 2 ways to get a development enviornment (as standard) on OS X:
+  #  - install XCode.app, or
+  #  - install the command-line tools (xcode-select --install)
+  #
+  # Most users have xcode installed, but in order to be as compatible as
+  # possible we consider both possible installation locations
+  MAC_CLANG_TOOLCHAIN_DIRS = [
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+      'XcodeDefault.xctoolchain',
+    '/Library/Developer/CommandLineTools'
+  ]
 
+  for toolchain in MAC_CLANG_TOOLCHAIN_DIRS:
+    if _MacClangIncludeDirExists( toolchain ):
+      return toolchain
 
-# Returns a list containing the supplied path as a suffix of each of the known
-# Mac toolchains
-def _PathsForAllMacToolchains( path ):
-  return [ os.path.join( x, path ) for x in MAC_CLANG_TOOLCHAIN_DIRS ]
+  return None
 
 
 # Ultimately, this method exists only for testability
@@ -465,25 +468,24 @@ def _MacClangIncludeDirExists( candidate_include ):
   return os.path.exists( candidate_include )
 
 
-# Add in any clang headers found in the installed toolchains. These are
+# Add in any clang headers found in the supplied toolchain. These are
 # required for the same reasons as described below, but unfortuantely, these
 # are in versioned directories and there is no easy way to find the "correct"
 # version. We simply pick the highest version in the first toolchain that we
 # find, as this is the most likely to be correct.
-def _LatestMacClangIncludes():
-  for path in MAC_CLANG_TOOLCHAIN_DIRS:
-    # we use the first toolchain which actually contains any versions, rather
-    # than trying all of the toolchains and picking the highest. We
-    # favour Xcode over CommandLineTools as using Xcode is more common.
-    # It might be possible to extrace this information from xcode-select, though
-    # xcode-select -p does not point at the toolchain directly
-    candidates_dir = os.path.join( path, 'usr', 'lib', 'clang' )
-    versions = _GetMacClangVersionList( candidates_dir )
+def _LatestMacClangIncludes( toolchain ):
+  # we use the first toolchain which actually contains any versions, rather
+  # than trying all of the toolchains and picking the highest. We
+  # favour Xcode over CommandLineTools as using Xcode is more common.
+  # It might be possible to extrace this information from xcode-select, though
+  # xcode-select -p does not point at the toolchain directly
+  candidates_dir = os.path.join( toolchain, 'usr', 'lib', 'clang' )
+  versions = _GetMacClangVersionList( candidates_dir )
 
-    for version in reversed( sorted( versions ) ):
-      candidate_include = os.path.join( candidates_dir, version, 'include' )
-      if _MacClangIncludeDirExists( candidate_include ):
-        return [ candidate_include ]
+  for version in reversed( sorted( versions ) ):
+    candidate_include = os.path.join( candidates_dir, version, 'include' )
+    if _MacClangIncludeDirExists( candidate_include ):
+      return [ candidate_include ]
 
   return []
 
@@ -499,18 +501,22 @@ if OnMac():
   # See the following for details:
   #  - Valloric/YouCompleteMe#303
   #  - Valloric/YouCompleteMe#2268
-  MAC_INCLUDE_PATHS = (
-    _PathsForAllMacToolchains( 'usr/include/c++/v1' ) +
-    [ '/usr/local/include' ] +
-    _PathsForAllMacToolchains( 'usr/include' ) +
-    [ '/usr/include', '/System/Library/Frameworks', '/Library/Frameworks' ] +
-    _LatestMacClangIncludes() +
-    # We include the MacOS platform SDK because some meaningful parts of the
-    # standard library are located there. If users are compiling for (say)
-    # iPhone.platform, etc. they should appear earlier in the include path.
-    [ '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/'
-      'Developer/SDKs/MacOSX.sdk/usr/include' ]
-  )
+  toolchain = _SelectMacToolchain()
+  if toolchain:
+    MAC_INCLUDE_PATHS = (
+      [ os.path.join( toolchain, 'usr/include/c++/v1' ),
+        '/usr/local/include',
+        os.path.join( toolchain, 'usr/include' ),
+        '/usr/include',
+        '/System/Library/Frameworks',
+        '/Library/Frameworks' ] +
+      _LatestMacClangIncludes( toolchain ) +
+      # We include the MacOS platform SDK because some meaningful parts of the
+      # standard library are located there. If users are compiling for (say)
+      # iPhone.platform, etc. they should appear earlier in the include path.
+      [ '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/'
+        'Developer/SDKs/MacOSX.sdk/usr/include' ]
+    )
 
 
 def _MacIncludePaths():
