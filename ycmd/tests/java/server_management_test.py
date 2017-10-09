@@ -27,11 +27,25 @@ from hamcrest import ( assert_that,
                        contains,
                        has_entries,
                        has_entry,
-                       instance_of )
+                       has_item )
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmdInDirectory,
                               WaitUntilCompleterServerReady )
 from ycmd.tests.test_utils import BuildRequest
+
+
+def _ProjectDirectoryMatcher( project_directory ):
+  return has_entry(
+    'completer',
+    has_entry( 'servers', contains(
+      has_entry( 'extras', has_item(
+        has_entries( {
+          'key': 'Project Directory',
+          'value': project_directory,
+        } )
+      ) )
+    ) )
+  )
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
@@ -43,32 +57,8 @@ def Subcommands_RestartServer_test( app ):
 
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains( has_entries( {
-        'name': 'Java Language Server',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
-        'extras': contains(
-          has_entries( { 'key': 'Startup Status',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Project Directory',
-                         'value': eclipse_project } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } )
-        )
-      } ) )
-    } ) )
-  )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               _ProjectDirectoryMatcher( eclipse_project ) )
 
   # Restart the server with a different client working directory
   filepath = PathToTestFile( 'simple_maven_project',
@@ -103,32 +93,8 @@ def Subcommands_RestartServer_test( app ):
 
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains( has_entries( {
-        'name': 'Java Language Server',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
-        'extras': contains(
-          has_entries( { 'key': 'Startup Status',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Project Directory',
-                         'value': maven_project } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } )
-        )
-      } ) )
-    } ) )
-  )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               _ProjectDirectoryMatcher( maven_project ) )
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project', 'src' ) )
@@ -139,32 +105,8 @@ def Subcommands_ProjectDetection_EclipseParent( app ):
 
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains( has_entries( {
-        'name': 'Java Language Server',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
-        'extras': contains(
-          has_entries( { 'key': 'Startup Status',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Project Directory',
-                         'value': project } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } )
-        )
-      } ) )
-    } ) )
-  )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               _ProjectDirectoryMatcher( project ) )
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_maven_project',
@@ -178,32 +120,8 @@ def Subcommands_ProjectDetection_MavenParent( app ):
 
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains( has_entries( {
-        'name': 'Java Language Server',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
-        'extras': contains(
-          has_entries( { 'key': 'Startup Status',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Project Directory',
-                         'value': project } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } )
-        )
-      } ) )
-    } ) )
-  )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               _ProjectDirectoryMatcher( project ) )
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_gradle_project',
@@ -217,29 +135,5 @@ def Subcommands_ProjectDetection_GradleParent( app ):
 
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains( has_entries( {
-        'name': 'Java Language Server',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
-        'extras': contains(
-          has_entries( { 'key': 'Startup Status',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Project Directory',
-                         'value': project } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } )
-        )
-      } ) )
-    } ) )
-  )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               _ProjectDirectoryMatcher( project ) )

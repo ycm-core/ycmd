@@ -86,13 +86,13 @@ CLEAN_WORKSPACE_OPTION = 'java_jdtls_use_clean_workspace'
 
 
 def ShouldEnableJavaCompleter():
-  _logger.info( 'Looking for java language server (eclipse.jdt.ls)' )
+  _logger.info( 'Looking for jdt.ls' )
   if not PATH_TO_JAVA:
     _logger.warning( "Not enabling java completion: Couldn't find java" )
     return False
 
   if not os.path.exists( LANGUAGE_SERVER_HOME ):
-    _logger.warning( 'Not using java completion: not installed' )
+    _logger.warning( 'Not using java completion: jdt.ls is not installed' )
     return False
 
   if not _PathToLauncherJar():
@@ -188,7 +188,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         # this requires some additional complexity and state management.
         self._StartServer()
       except:
-        _logger.exception( "The java language server failed to start." )
+        _logger.exception( "jdt.ls failed to start." )
         self._StopServer()
 
 
@@ -258,7 +258,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       name = "Java",
       servers = [
         responses.DebugInfoServer(
-          name = "Java Language Server",
+          name = "jdt.ls Java Language Server",
           handle = self._server_handle,
           executable = self._launcher_path,
           logfiles = [
@@ -329,7 +329,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def _StartServer( self, working_dir=None ):
     with self._server_state_mutex:
-      _logger.info( 'Starting JDT Language Server...' )
+      _logger.info( 'Starting jdt.ls Language Server...' )
 
       self._project_dir = _FindProjectDir(
         working_dir if working_dir else utils.GetCurrentDirectory() )
@@ -352,7 +352,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       _logger.debug( 'Starting java-server with the following command: '
                      '{0}'.format( ' '.join( command ) ) )
 
-      LOGFILE_FORMAT = 'java_language_server_{pid}_{std}_'
+      LOGFILE_FORMAT = 'jdt.ls_{pid}_{std}_'
 
       self._server_stderr = utils.CreateLogfile(
           LOGFILE_FORMAT.format( pid = os.getpid(), std = 'stderr' ) )
@@ -364,9 +364,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
                                                stderr = stderr )
 
       if self._ServerIsRunning():
-        _logger.info( 'JDT Language Server started' )
+        _logger.info( 'jdt.ls Language Server started' )
       else:
-        _logger.warning( 'JDT Language Server failed to start' )
+        _logger.warning( 'jdt.ls Language Server failed to start' )
         return
 
       self._connection = (
@@ -381,8 +381,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       try:
         self._connection.AwaitServerConnection()
       except language_server_completer.LanguageServerConnectionTimeout:
-        _logger.warn( 'Java language server failed to start, or did not '
-                      'connect successfully' )
+        _logger.warn( 'jdt.ls failed to start, or did not connect '
+                      'successfully' )
         self._StopServer()
         return
 
@@ -425,14 +425,14 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         if self._connection:
           self._connection.join()
 
-        _logger.info( 'JDT Language server stopped' )
+        _logger.info( 'jdt.ls Language server stopped' )
       except Exception:
-        _logger.exception( 'Error while stopping java server' )
+        _logger.exception( 'Error while stopping jdt.ls server' )
 
 
   def _StopServerForecefully( self ):
     if self._ServerIsRunning():
-      _logger.info( 'Killing java server with PID {0}'.format(
+      _logger.info( 'Killing jdt.ls server with PID {0}'.format(
                         self._server_handle.pid ) )
 
       self._server_handle.terminate()
@@ -444,9 +444,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         if self._connection:
           self._connection.join()
 
-        _logger.info( 'JDT Language server killed' )
+        _logger.info( 'jdt.ls Language server killed' )
       except Exception:
-        _logger.exception( 'Error while killing java server' )
+        _logger.exception( 'Error while killing jdt.ls server' )
 
 
   def _HandleNotificationInPollThread( self, notification ):
@@ -454,7 +454,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       message_type = notification[ 'params' ][ 'type' ]
 
       if message_type == 'Started':
-        _logger.info( 'Java Language Server initialized successfully.' )
+        _logger.info( 'jdt.ls initialized successfully.' )
         self._received_ready_message.set()
 
       self._server_init_status = notification[ 'params' ][ 'message' ]

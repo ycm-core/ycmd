@@ -40,7 +40,7 @@ def DebugInfo_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'Java',
       'servers': contains( has_entries( {
-        'name': 'Java Language Server',
+        'name': 'jdt.ls Java Language Server',
         'is_running': instance_of( bool ),
         'executable': instance_of( str ),
         'pid': instance_of( int ),
