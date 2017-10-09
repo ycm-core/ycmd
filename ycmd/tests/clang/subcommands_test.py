@@ -287,6 +287,18 @@ def Subcommands_GoToInclude_Fail_test():
     calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
+  # Unclosed #include statement.
+  test = { 'request': [ 10, 13 ], 'response': '' }
+  assert_that(
+    calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
+    raises( AppError, 'Not an include/import line.' ) )
+  assert_that(
+    calling( RunGoToIncludeTest ).with_args( 'GoTo', test ),
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
+  assert_that(
+    calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
+
 
 @SharedYcmd
 def RunGetSemanticTest( app, filename, test, command):

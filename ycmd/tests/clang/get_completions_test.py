@@ -483,7 +483,7 @@ def GetCompletions_ClientDataGivenToExtraConf_test( app ):
 
 
 @IsolatedYcmd( { 'max_num_candidates': 0 } )
-def GetCompletions_FilenameCompleter_ClientDataGivenToExtraConf_test( app ):
+def GetCompletions_Include_ClientDataGivenToExtraConf_test( app ):
   app.post_json(
     '/load_extra_conf_file',
     { 'filepath': PathToTestFile( 'client_data',
@@ -561,6 +561,403 @@ def GetCompletions_UnicodeInLineFilter_test( app ):
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'member_with_å_unicøde', 'int' ),
         ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_AtStart_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include "',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 11,
+      'compilation_flags': [ '-x', 'cpp' ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
+          CompletionEntryMatcher( 'a.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'main.cpp',           '[File]' ),
+          CompletionEntryMatcher( 'quote',              '[Dir]' ),
+          CompletionEntryMatcher( 'system',             '[Dir]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_UserIncludeFlag_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include " with a -I flag',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-I', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
+          CompletionEntryMatcher( 'a.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'main.cpp',           '[File]' ),
+          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
+          CompletionEntryMatcher( 'system',             '[Dir]'  )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_SystemIncludeFlag_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include " with a -isystem flag',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-isystem', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
+          CompletionEntryMatcher( 'a.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'main.cpp',           '[File]' ),
+          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
+          CompletionEntryMatcher( 'system',             '[Dir]'  )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_QuoteIncludeFlag_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include " with a -iquote flag',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iquote', PathToTestFile( 'test-include', 'quote' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
+          CompletionEntryMatcher( 'a.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'b.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'main.cpp',           '[File]' ),
+          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
+          CompletionEntryMatcher( 'system',             '[Dir]'  )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_MultipleIncludeFlags_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include " with multiple -I flags',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-I', PathToTestFile( 'test-include', 'dir with spaces' ),
+        '-I', PathToTestFile( 'test-include', 'quote' ),
+        '-I', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
+          CompletionEntryMatcher( 'a.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'b.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'd.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
+          CompletionEntryMatcher( 'main.cpp',           '[File]' ),
+          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
+          CompletionEntryMatcher( 'system',             '[Dir]'  )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include "quote/',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 27,
+      'compilation_flags': [ '-x', 'cpp' ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 27,
+        'completions': contains(
+          CompletionEntryMatcher( 'd.hpp', '[File]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_AfterDot_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include "quote/b.',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 28,
+      'compilation_flags': [ '-x', 'cpp' ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 27,
+        'completions': contains(
+          CompletionEntryMatcher( 'd.hpp', '[File]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_QuotedInclude_AfterSpace_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include "dir with ',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 9,
+      'column_num': 20,
+      'compilation_flags': [ '-x', 'cpp' ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'dir with spaces', '[Dir]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_AtStart_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include <',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 10,
+      'column_num': 11,
+      'compilation_flags': [ '-x', 'cpp' ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': empty(),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_UserIncludeFlag_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include < with a -I flag',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 10,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-I', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'a.hpp', '[File]' ),
+          CompletionEntryMatcher( 'c.hpp', '[File]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_SystemIncludeFlag_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include < with a -isystem flag',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 10,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-isystem', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'a.hpp', '[File]' ),
+          CompletionEntryMatcher( 'c.hpp', '[File]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_QuoteIncludeFlag_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include < with a -iquote flag',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 10,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iquote', PathToTestFile( 'test-include', 'quote' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': empty(),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_MultipleIncludeFlags_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include < with multiple -I flags',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 10,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-I', PathToTestFile( 'test-include', 'dir with spaces' ),
+        '-I', PathToTestFile( 'test-include', 'quote' ),
+        '-I', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'a.hpp', '[File]' ),
+          CompletionEntryMatcher( 'b.hpp', '[File]' ),
+          CompletionEntryMatcher( 'c.hpp', '[File]' ),
+          CompletionEntryMatcher( 'd.hpp', '[File]' )
+        ),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include <system/',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 10,
+      'column_num': 18,
+      'compilation_flags': [ '-x', 'cpp' ],
+      # NOTE: when not forcing semantic, it falls back to the filename
+      # completer and returns the root folder entries.
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 18,
+        'completions': empty(),
         'errors': empty(),
       } )
     },

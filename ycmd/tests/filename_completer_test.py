@@ -31,7 +31,7 @@ from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.request_wrap import RequestWrap
 from ycmd import user_options_store
 from ycmd.tests import IsolatedYcmd
-from ycmd.tests.test_utils import CurrentWorkingDirectory
+from ycmd.tests.test_utils import BuildRequest, CurrentWorkingDirectory
 from ycmd.utils import GetCurrentDirectory, ToBytes
 
 TEST_DIR = os.path.dirname( os.path.abspath( __file__ ) )
@@ -41,31 +41,25 @@ DATA_DIR = os.path.join( TEST_DIR,
                          'inner_dir' )
 PATH_TO_TEST_FILE = os.path.join( DATA_DIR, "test.cpp" )
 
-REQUEST_DATA = {
-  'line_num': 1,
-  'filepath' : PATH_TO_TEST_FILE,
-  'file_data' : { PATH_TO_TEST_FILE : { 'filetypes' : [ 'cpp' ] } }
-}
-
 
 def _CompletionResultsForLine( filename_completer,
                                contents,
                                extra_data = None,
                                column_num = None ):
-  request = REQUEST_DATA.copy()
 
   # Strictly, column numbers are *byte* offsets, not character offsets. If
   # the contents of the file contain unicode characters, then we should manually
   # supply the correct byte offset.
   column_num = len( contents ) + 1 if not column_num else column_num
 
-  request[ 'column_num' ] = column_num
-  request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = contents
+  request = BuildRequest( column_num = column_num,
+                          filepath = PATH_TO_TEST_FILE,
+                          contents = contents )
   if extra_data:
     request.update( extra_data )
 
-  request = RequestWrap( request )
-  candidates = filename_completer.ComputeCandidatesInner( request )
+  request_data = RequestWrap( request )
+  candidates = filename_completer.ComputeCandidatesInner( request_data )
   return [ ( c[ 'insertion_text' ], c[ 'extra_menu_info' ] )
           for c in candidates ]
 
@@ -74,33 +68,26 @@ def _ShouldUseNowForLine( filename_completer,
                           contents,
                           extra_data = None,
                           column_num = None ):
-  request = REQUEST_DATA.copy()
 
   # Strictly, column numbers are *byte* offsets, not character offsets. If
   # the contents of the file contain unicode characters, then we should manually
   # supply the correct byte offset.
   column_num = len( contents ) + 1 if not column_num else column_num
 
-  request[ 'column_num' ] = column_num
-  request[ 'file_data' ][ PATH_TO_TEST_FILE ][ 'contents' ] = contents
+  request = BuildRequest( column_num = column_num,
+                          filepath = PATH_TO_TEST_FILE,
+                          contents = contents )
   if extra_data:
     request.update( extra_data )
 
-  request = RequestWrap( request )
-  return filename_completer.ShouldUseNow( request )
+  request_data = RequestWrap( request )
+  return filename_completer.ShouldUseNow( request_data )
 
 
 class FilenameCompleter_test( object ):
   def setUp( self ):
     self._filename_completer = FilenameCompleter(
       user_options_store.DefaultOptions() )
-
-    # We cache include flags for test.cpp file for unit testing.
-    self._filename_completer._flags.flags_for_file[ PATH_TO_TEST_FILE ] = [
-      "-I", os.path.join( DATA_DIR, "include" ),
-      "-I", os.path.join( DATA_DIR, "include", "Qt" ),
-      "-I", os.path.join( DATA_DIR, "include", "QtGui" ),
-    ]
 
 
   def _CompletionResultsForLine( self, contents, column_num=None ):
@@ -113,42 +100,6 @@ class FilenameCompleter_test( object ):
     return _ShouldUseNowForLine( self._filename_completer,
                                  contents,
                                  column_num = column_num )
-
-
-  def QuotedIncludeCompletion_test( self ):
-    data = self._CompletionResultsForLine( '#include "' )
-    assert_that( data, contains_inanyorder(
-      ( 'QDialog',     '[File]'     ),
-      ( 'QWidget',     '[File]'     ),
-      ( 'Qt',          '[Dir]'      ),
-      ( 'QtGui',       '[File&Dir]' ),
-      ( 'foo漢字.txt', '[File]'     ),
-      ( 'include',     '[Dir]'      ),
-      ( 'test.cpp',    '[File]'     ),
-      ( 'test.hpp',    '[File]'     )
-    ) )
-
-    data = self._CompletionResultsForLine( '#include "include/' )
-    assert_that( data, contains_inanyorder(
-      ( 'Qt',    '[Dir]' ),
-      ( 'QtGui', '[Dir]' )
-    ) )
-
-
-  def IncludeCompletion_test( self ):
-    data = self._CompletionResultsForLine( '#include <' )
-    assert_that( data, contains_inanyorder(
-      ( 'QDialog', '[File]'     ),
-      ( 'QWidget', '[File]'     ),
-      ( 'Qt',      '[Dir]'      ),
-      ( 'QtGui',   '[File&Dir]' )
-    ) )
-
-    data = self._CompletionResultsForLine( '#include <QtGui/' )
-    assert_that( data, contains_inanyorder(
-      ( 'QDialog', '[File]' ),
-      ( 'QWidget', '[File]' )
-    ) )
 
 
   def SystemPathCompletion_test( self ):

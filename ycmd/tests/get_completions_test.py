@@ -284,6 +284,18 @@ def GetCompletions_IdentifierCompleter_IgnoreCursorIdentifierInString_test(
 
 
 @SharedYcmd
+def GetCompletions_FilenameCompleter_Works_test( app ):
+  filepath = PathToTestFile( 'filename_completer', 'test.foo' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  contents = './',
+                                  column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               has_items( CompletionEntryMatcher( 'inner_dir', '[Dir]' ) ) )
+
+
+@SharedYcmd
 def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   event_data = BuildRequest(
     event_name = 'BufferVisit',
