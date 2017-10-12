@@ -901,13 +901,17 @@ class LanguageServerCompleter( Completer ):
     elif notification[ 'method' ] == 'textDocument/publishDiagnostics':
       params = notification[ 'params' ]
       uri = params[ 'uri' ]
-      filepath = lsapi.UriToFilePath( uri )
-      response = {
-        'diagnostics': [ BuildDiagnostic( request_data, uri, x )
-                         for x in params[ 'diagnostics' ] ],
-        'filepath': filepath
-      }
-      return response
+      try:
+        filepath = lsapi.UriToFilePath( uri )
+        response = {
+          'diagnostics': [ BuildDiagnostic( request_data, uri, x )
+                           for x in params[ 'diagnostics' ] ],
+          'filepath': filepath
+        }
+        return response
+      except lsapi.InvalidUriException:
+        _logger.exception( 'Ignoring diagnostics for unrecognised URI' )
+        pass
 
     return None
 
@@ -1343,6 +1347,10 @@ def PositionToLocationAndDescription( request_data, position ):
     filename = lsapi.UriToFilePath( position[ 'uri' ] )
     file_contents = utils.SplitLines( GetFileContents( request_data,
                                                        filename ) )
+  except lsapi.InvalidUriException:
+    _logger.debug( "Invalid URI, file contents not available in GoTo" )
+    filename = ''
+    file_contents = []
   except IOError:
     file_contents = []
 
@@ -1395,7 +1403,12 @@ def BuildRange( request_data, filename, r ):
 
 def BuildDiagnostic( request_data, uri, diag ):
   """Return a ycmd diagnostic from a LSP diagnostic."""
-  filename = lsapi.UriToFilePath( uri )
+  try:
+    filename = lsapi.UriToFilePath( uri )
+  except lsapi.InvalidUriException:
+    _logger.debug( 'Invalid URI received for diagnostic' )
+    filename = ''
+
   r = BuildRange( request_data, filename, diag[ 'range' ] )
   SEVERITY = [
     None,
@@ -1421,7 +1434,12 @@ def BuildDiagnostic( request_data, uri, diag ):
 
 def TextEditToChunks( request_data, uri, text_edit ):
   """Returns a list of FixItChunks from a LSP textEdit."""
-  filepath = lsapi.UriToFilePath( uri )
+  try:
+    filepath = lsapi.UriToFilePath( uri )
+  except lsapi.InvalidUriException:
+    _logger.debug( 'Invalid filepath received in TextEdit' )
+    filepath = ''
+
   return [
     responses.FixItChunk( change[ 'newText' ],
                           BuildRange( request_data,

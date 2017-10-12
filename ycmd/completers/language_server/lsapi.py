@@ -39,6 +39,13 @@ from ycmd.utils import ( pathname2url,
 LAST_VERSION = defaultdict( int )
 
 
+class InvalidUriException( Exception ):
+  """Raised when trying to convert a server URI to a file path but the scheme
+  was not supported. Only the file: scheme is supported"""
+  pass
+
+
+
 def BuildRequest( request_id, method, parameters ):
   """Builds a JSON RPC request message with the supplied ID, method and method
   parameters"""
@@ -194,7 +201,9 @@ def FilePathToUri( file_name ):
 
 
 def UriToFilePath( uri ):
-  # NOTE: This assumes the URI starts with file:
+  if uri [ : 5 ] != "file:":
+    raise InvalidUriException( uri )
+
   return os.path.abspath( url2pathname( uri[ 5 : ] ) )
 
 
