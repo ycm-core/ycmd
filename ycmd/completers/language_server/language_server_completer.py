@@ -1074,7 +1074,7 @@ class LanguageServerCompleter( Completer ):
       position = response[ 'result' ]
       try:
         return responses.BuildGoToResponseFromLocation(
-          PositionToLocation( request_data, position ) )
+          *PositionToLocationAndDescription( request_data, position ) )
       except KeyError:
         raise RuntimeError( 'Cannot jump to location' )
 
@@ -1323,30 +1323,42 @@ def LocationListToGoTo( request_data, response ):
       positions = response[ 'result' ]
       return [
         responses.BuildGoToResponseFromLocation(
-          PositionToLocation( request_data,
-                               position ) ) for position in positions
+          *PositionToLocationAndDescription( request_data,
+                                             position ) )
+        for position in positions
       ]
     else:
       position = response[ 'result' ][ 0 ]
       return responses.BuildGoToResponseFromLocation(
-        PositionToLocation( request_data, position ) )
+        *PositionToLocationAndDescription( request_data, position ) )
   except IndexError:
     raise RuntimeError( 'Cannot jump to location' )
   except KeyError:
     raise RuntimeError( 'Cannot jump to location' )
 
 
-def PositionToLocation( request_data, position ):
+def PositionToLocationAndDescription( request_data, position ):
   """Convert a LSP position to a ycmd location."""
-  return BuildLocation( request_data,
-                        lsapi.UriToFilePath( position[ 'uri' ] ),
-                        position[ 'range' ][ 'start' ] )
+  try:
+    filename = lsapi.UriToFilePath( position[ 'uri' ] )
+    file_contents = utils.SplitLines( GetFileContents( request_data,
+                                                       filename ) )
+  except IOError:
+    file_contents = []
+
+  return BuildLocationAndDescription( request_data,
+                                      filename,
+                                      file_contents,
+                                      position[ 'range' ][ 'start' ] )
 
 
-def BuildLocation( request_data, filename, loc ):
-  """Returns a ycmd Location for the supplied filename and LSP location.
+def BuildLocationAndDescription( request_data, filename, file_contents, loc ):
+  """Returns a tuple of (
+    - ycmd Location for the supplied filename and LSP location
+    - contents of the line at that location
+  )
   Importantly, converts from LSP unicode offset to ycmd byte offset."""
-  file_contents = utils.SplitLines( GetFileContents( request_data, filename ) )
+
   try:
     line_value = file_contents[ loc[ 'line' ] ]
     column = utils.CodepointOffsetToByteOffset( line_value,
@@ -1354,17 +1366,31 @@ def BuildLocation( request_data, filename, loc ):
   except IndexError:
     # This can happen when there are stale diagnostics in OnFileReadyToParse,
     # just return the value as-is.
+    line_value = ""
     column = loc[ 'character' ] + 1
 
-  return responses.Location( loc[ 'line' ] + 1,
-                             column,
-                             filename = filename )
+  return ( responses.Location( loc[ 'line' ] + 1,
+                               column,
+                               filename = filename ),
+           line_value )
 
 
 def BuildRange( request_data, filename, r ):
   """Returns a ycmd range from a LSP range |r|."""
-  return responses.Range( BuildLocation( request_data, filename, r[ 'start' ] ),
-                          BuildLocation( request_data, filename, r[ 'end' ] ) )
+  try:
+    file_contents = utils.SplitLines( GetFileContents( request_data,
+                                                       filename ) )
+  except IOError:
+    file_contents = []
+
+  return responses.Range( BuildLocationAndDescription( request_data,
+                                                       filename,
+                                                       file_contents,
+                                                       r[ 'start' ] )[ 0 ],
+                          BuildLocationAndDescription( request_data,
+                                                       filename,
+                                                       file_contents,
+                                                       r[ 'end' ] )[ 0 ] )
 
 
 def BuildDiagnostic( request_data, uri, diag ):

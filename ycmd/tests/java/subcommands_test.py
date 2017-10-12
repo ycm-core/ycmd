@@ -501,7 +501,7 @@ def Subcommands_GoToReferences_test( app ):
                                        'test',
                                        'TestFactory.java' ),
            'column_num': 9,
-           # 'description': '',
+           'description': "      w.doSomethingVaguelyUseful();",
            'line_num': 28
          },
          {
@@ -511,7 +511,7 @@ def Subcommands_GoToReferences_test( app ):
                                        'test',
                                        'TestLauncher.java' ),
            'column_num': 11,
-           # 'description': '',
+           'description': "        w.doSomethingVaguelyUseful();",
            'line_num': 32
          } ] )
 
