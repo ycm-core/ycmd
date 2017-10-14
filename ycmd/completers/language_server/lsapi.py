@@ -38,6 +38,42 @@ from ycmd.utils import ( pathname2url,
 # hasn't changed).
 LAST_VERSION = defaultdict( int )
 
+INSERT_TEXT_FORMAT = [
+  None, # 1-based
+  'PlainText',
+  'Snippet'
+]
+
+ITEM_KIND = [
+  None,  # 1-based
+  'Text',
+  'Method',
+  'Function',
+  'Constructor',
+  'Field',
+  'Variable',
+  'Class',
+  'Interface',
+  'Module',
+  'Property',
+  'Unit',
+  'Value',
+  'Enum',
+  'Keyword',
+  'Snippet',
+  'Color',
+  'File',
+  'Reference',
+]
+
+SEVERITY = [
+  None,
+  'Error',
+  'Warning',
+  'Information',
+  'Hint',
+]
+
 
 class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme

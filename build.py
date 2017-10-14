@@ -97,7 +97,7 @@ def FindExecutableOrDie( executable, message ):
   path = FindExecutable( executable )
 
   if not path:
-    sys.exit( "ERROR: Unabel to find executable '{0}'. {1}".format(
+    sys.exit( "ERROR: Unable to find executable '{0}'. {1}".format(
       executable,
       message ) )
 

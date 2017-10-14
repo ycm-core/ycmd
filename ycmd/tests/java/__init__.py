@@ -33,6 +33,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CurrentWorkingDirectory,
                                     SetUpApp,
                                     StopCompleterServer )
+from ycmd.tests import test_utils
 from ycmd.utils import GetCurrentDirectory
 
 shared_app = None
@@ -111,17 +112,7 @@ def IsolatedYcmdInDirectory( directory ):
 
 
 def WaitUntilCompleterServerReady( app, timeout = 30 ):
-  expiration = time.time() + timeout
-  filetype = 'java'
-  while True:
-    if time.time() > expiration:
-      raise RuntimeError( 'Waited for the {0} subserver to be ready for '
-                          '{1} seconds, aborting.'.format( filetype, timeout ) )
-
-    if app.get( '/ready', { 'subserver': filetype } ).json:
-      return
-
-    time.sleep( 0.5 )
+  test_utils.WaitUntilCompleterServerReady( app, 'java', timeout )
 
 
 def PollForMessages( app, request_data ):

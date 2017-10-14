@@ -47,6 +47,13 @@ REQUEST_TIMEOUT_COMMAND    = 30
 CONNECTION_TIMEOUT         = 5
 MESSAGE_POLL_TIMEOUT       = 10
 
+SEVERITY_TO_YCM_SEVERITY = {
+  'Error': 'ERROR',
+  'Warning': 'WARNING',
+  'Information': 'WARNING',
+  'Hint': 'WARNING'
+}
+
 
 class ResponseTimeoutException( Exception ):
   """Raised by LanguageServerConnection if a request exceeds the supplied
@@ -455,8 +462,7 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
 
 
   def _Write( self, data ):
-    bytes_to_write = data + utils.ToBytes( '\r\n' )
-    self._server_stdin.write( bytes_to_write )
+    self._server_stdin.write( data )
     self._server_stdin.flush()
 
 
@@ -650,27 +656,6 @@ class LanguageServerCompleter( Completer ):
   def ResolveCompletionItems( self, items, request_data ):
     """Issue the resolve request for each completion item in |items|, then fix
     up the items such that a single start codepoint is used."""
-    ITEM_KIND = [
-      None,  # 1-based
-      'Text',
-      'Method',
-      'Function',
-      'Constructor',
-      'Field',
-      'Variable',
-      'Class',
-      'Interface',
-      'Module',
-      'Property',
-      'Unit',
-      'Value',
-      'Enum',
-      'Keyword',
-      'Snippet',
-      'Color',
-      'File',
-      'Reference',
-    ]
 
     # We might not actually need to issue the resolve request if the server
     # claims that it doesn't support it. However, we still might need to fix up
@@ -747,7 +732,7 @@ class LanguageServerCompleter( Completer ):
                           '\n\n' +
                           item.get( 'documentation', '' ) ),
         menu_text = item[ 'label' ],
-        kind = ITEM_KIND[ item.get( 'kind', 0 ) ],
+        kind = lsapi.ITEM_KIND[ item.get( 'kind', 0 ) ],
         extra_data = fixits ) )
       start_codepoints.append( start_codepoint )
 
@@ -1231,14 +1216,10 @@ def InsertionTextForItem( request_data, item ):
                           selecting this completion
      - start_codepoint  = the start column at which the text should be inserted
   )"""
-  INSERT_TEXT_FORMAT = [
-    None, # 1-based
-    'PlainText',
-    'Snippet'
-  ]
   # We explicitly state that we do not support completion types of "Snippet".
   # Abort this request if the server is buggy and ignores us.
-  assert INSERT_TEXT_FORMAT[ item.get( 'insertTextFormat', 1 ) ] == 'PlainText'
+  assert lsapi.INSERT_TEXT_FORMAT[
+    item.get( 'insertTextFormat', 1 ) ] == 'PlainText'
 
   fixits = None
 
@@ -1410,26 +1391,13 @@ def BuildDiagnostic( request_data, uri, diag ):
     filename = ''
 
   r = BuildRange( request_data, filename, diag[ 'range' ] )
-  SEVERITY = [
-    None,
-    'Error',
-    'Warning',
-    'Information',
-    'Hint',
-  ]
-  SEVERITY_TO_YCM_SEVERITY = {
-    'Error': 'ERROR',
-    'Warning': 'WARNING',
-    'Information': 'WARNING',
-    'Hint': 'WARNING'
-  }
 
   return responses.BuildDiagnosticData ( responses.Diagnostic(
     ranges = [ r ],
     location = r.start_,
     location_extent = r,
     text = diag[ 'message' ],
-    kind = SEVERITY_TO_YCM_SEVERITY[ SEVERITY[ diag[ 'severity' ] ] ] ) )
+    kind = SEVERITY_TO_YCM_SEVERITY[ lsapi.SEVERITY[ diag[ 'severity' ] ] ] ) )
 
 
 def TextEditToChunks( request_data, uri, text_edit ):

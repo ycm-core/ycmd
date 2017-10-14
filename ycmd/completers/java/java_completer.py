@@ -31,7 +31,7 @@ import tempfile
 import threading
 from subprocess import PIPE
 
-from ycmd import ( utils, responses )
+from ycmd import utils, responses
 from ycmd.completers.language_server import language_server_completer
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
@@ -72,7 +72,7 @@ WORKSPACE_ROOT_PATH = os.path.join( os.path.dirname( __file__ ),
 #    larger projects
 #
 # Cons:
-#  - A little more complexity (we has the project path to create the workspace
+#  - A little more complexity (we hash the project path to create the workspace
 #    dir)
 #  - It breaks our tests which expect the logs to be deleted
 #  - It can lead to multiple jdt.js instances using the same workspace (BAD)
@@ -80,7 +80,7 @@ WORKSPACE_ROOT_PATH = os.path.join( os.path.dirname( __file__ ),
 #
 # So:
 #  - By _default_ we use a clean workspace (see default_settings.json) on each
-#    Vim instance
+#    ycmd instance
 #  - An option is available to re-use workspaces
 CLEAN_WORKSPACE_OPTION = 'java_jdtls_use_clean_workspace'
 
@@ -177,7 +177,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._server_handle = None
       self._server_stderr = None
       self._workspace_path = None
-      self._Reset()
+      self._CleanUp()
 
       try :
         # When we start the server initially, we don't have the request data, so
@@ -187,7 +187,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         # FIXME: We could start the server in the FileReadyToParse event, though
         # this requires some additional complexity and state management.
         self._StartServer()
-      except:
+      except Exception:
+        # We must catch any exception, to ensure that we do not end up with a
+        # rogue instance of jdt.ls running.
         _logger.exception( "jdt.ls failed to start." )
         self._StopServer()
 
@@ -263,7 +265,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           executable = self._launcher_path,
           logfiles = [
             self._server_stderr,
-            os.path.join( self._workspace_path, '.metadata', '.log' )
+            ( os.path.join( self._workspace_path, '.metadata', '.log' )
+              if self._workspace_path else None )
           ],
           extras = items
         )
@@ -274,11 +277,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._StopServer()
 
 
-  def ServerIsHealthy( self, request_data = {} ):
-    if not self._ServerIsRunning():
-      return False
-
-    return True
+  def ServerIsHealthy( self ):
+    return self._ServerIsRunning()
 
 
   def ServerIsReady( self ):
@@ -301,7 +301,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._StartServer( request_data.get( 'working_dir' ) )
 
 
-  def _Reset( self ):
+  def _CleanUp( self ):
     if not self._server_keep_logfiles:
       if self._server_stderr:
         utils.RemoveIfExists( self._server_stderr )
@@ -363,11 +363,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
                                                stdout = PIPE,
                                                stderr = stderr )
 
-      if self._ServerIsRunning():
-        _logger.info( 'jdt.ls Language Server started' )
-      else:
-        _logger.warning( 'jdt.ls Language Server failed to start' )
+      if not self._ServerIsRunning():
+        _logger.error( 'jdt.ls Language Server failed to start' )
         return
+
+      _logger.info( 'jdt.ls Language Server started' )
 
       self._connection = (
         language_server_completer.StandardIOLanguageServerConnection(
@@ -381,8 +381,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       try:
         self._connection.AwaitServerConnection()
       except language_server_completer.LanguageServerConnectionTimeout:
-        _logger.warn( 'jdt.ls failed to start, or did not connect '
-                      'successfully' )
+        _logger.error( 'jdt.ls failed to start, or did not connect '
+                       'successfully' )
         self._StopServer()
         return
 
@@ -404,10 +404,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._StopServerCleanly()
 
       # If the server is still running, e.g. due to errors, kill it
-      self._StopServerForecefully()
+      self._StopServerForcefully()
 
       # Tidy up our internal state
-      self._Reset()
+      self._CleanUp()
 
 
   def _StopServerCleanly( self ):
@@ -430,7 +430,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         _logger.exception( 'Error while stopping jdt.ls server' )
 
 
-  def _StopServerForecefully( self ):
+  def _StopServerForcefully( self ):
     if self._ServerIsRunning():
       _logger.info( 'Killing jdt.ls server with PID {0}'.format(
                         self._server_handle.pid ) )
