@@ -130,12 +130,12 @@ class JediCompleter( Completer ):
       if self._ServerIsRunning():
         self._logger.info( 'Stopping JediHTTP server with PID {0}'.format(
                                self._jedihttp_phandle.pid ) )
-        self._jedihttp_phandle.terminate()
         try:
+          self._GetResponse( '/shutdown' )
           utils.WaitUntilProcessIsTerminated( self._jedihttp_phandle,
                                               timeout = 5 )
           self._logger.info( 'JediHTTP server stopped' )
-        except RuntimeError:
+        except Exception:
           self._logger.exception( 'Error while stopping JediHTTP server' )
 
       self._CleanUp()
@@ -145,10 +145,12 @@ class JediCompleter( Completer ):
     self._jedihttp_phandle = None
     self._jedihttp_port = None
     if not self._keep_logfiles:
-      utils.RemoveIfExists( self._logfile_stdout )
-      self._logfile_stdout = None
-      utils.RemoveIfExists( self._logfile_stderr )
-      self._logfile_stderr = None
+      if self._logfile_stdout:
+        utils.RemoveIfExists( self._logfile_stdout )
+        self._logfile_stdout = None
+      if self._logfile_stderr:
+        utils.RemoveIfExists( self._logfile_stderr )
+        self._logfile_stderr = None
 
 
   def _StartServer( self ):
