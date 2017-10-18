@@ -23,6 +23,8 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from mock import patch
+
 from hamcrest import ( assert_that,
                        contains,
                        has_entries,
@@ -137,3 +139,50 @@ def Subcommands_ProjectDetection_GradleParent( app ):
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
                _ProjectDirectoryMatcher( project ) )
+
+
+@IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
+@patch( 'ycmd.completers.java.java_completer.JavaCompleter.ShutdownServer',
+        side_effect = AssertionError )
+def CloseServer_Unclean_test( app,
+                              stop_server_cleanly ):
+  WaitUntilCompleterServerReady( app )
+
+  filepath = PathToTestFile( 'simple_maven_project',
+                             'src',
+                             'main',
+                             'java',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  app.post_json(
+    '/event_notification',
+    BuildRequest(
+      filepath = filepath,
+      filetype = 'java',
+      working_dir = PathToTestFile( 'simple_eclipse_project' ),
+      event_name = 'FileReadyToParse',
+    )
+  )
+
+  WaitUntilCompleterServerReady( app )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filepath = filepath,
+      filetype = 'java',
+      working_dir = PathToTestFile( 'simple_eclipse_project' ),
+      command_arguments = [ 'StopServer' ],
+    ),
+  )
+
+  request_data = BuildRequest( filetype = 'java' )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )

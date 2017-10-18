@@ -162,7 +162,7 @@ class LanguageServerConnection( threading.Thread ):
     Implementations of this class are required to provide the following methods:
       - _TryServerConnectionBlocking: Connect to the server and return when the
                                       connection is established
-      - _Close: Close any sockets or channels prior to the thread exit
+      - Close: Close any sockets or channels prior to the thread exit
       - _Write: Write some data to the server
       - _Read: Read some data from the server, blocking until some data is
                available
@@ -179,8 +179,8 @@ class LanguageServerConnection( threading.Thread ):
 
     - Call stop() prior to shutting down the downstream server (see
       LanguageServerCompleter.ShutdownServer to do that part)
-    - Call join() after closing down the downstream server to wait for this
-      thread to exit
+    - Call Close() to close any remaining streams. Do this in a request thread.
+      DO NOT CALL THIS FROM THE DISPATCH THREAD.
 
     Footnote: Why does this interface exist?
 
@@ -247,12 +247,15 @@ class LanguageServerConnection( threading.Thread ):
 
       _logger.debug( 'Connection was closed cleanly' )
 
-    self._Close()
-
 
   def stop( self ):
     # Note lowercase stop() to match threading.Thread.start()
     self._stop_event.set()
+
+
+  def Close( self ):
+    self.join()
+    self._Close()
 
 
   def IsStopped( self ):

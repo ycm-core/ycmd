@@ -393,6 +393,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     with self._server_state_mutex:
       # We don't use utils.CloseStandardStreams, because the stdin/out is
       # connected to our server connector. Just close stderr.
+      #
+      # The other streams are closed by the LanguageServerConnection when we
+      # call Close.
       if self._server_handle and self._server_handle.stderr:
         self._server_handle.stderr.close()
 
@@ -416,14 +419,14 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       _logger.info( 'Stopping java server with PID {0}'.format(
                         self._server_handle.pid ) )
 
-      self.ShutdownServer()
-
       try:
+        self.ShutdownServer()
+
         utils.WaitUntilProcessIsTerminated( self._server_handle,
                                             timeout = 5 )
 
         if self._connection:
-          self._connection.join()
+          self._connection.Close()
 
         _logger.info( 'jdt.ls Language server stopped' )
       except Exception:
@@ -442,7 +445,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
                                             timeout = 5 )
 
         if self._connection:
-          self._connection.join()
+          self._connection.Close()
 
         _logger.info( 'jdt.ls Language server killed' )
       except Exception:
