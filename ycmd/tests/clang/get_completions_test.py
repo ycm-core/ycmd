@@ -1098,3 +1098,56 @@ def GetCompletions_TranslateClangExceptionToPython_test( app ):
                             "Failed to parse the translation unit." )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_Unity_test( app ):
+  RunTest( app, {
+    'description': 'Completion returns from file included in TU, but not in '
+                   'opened file',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'unitya.cc' ),
+      'line_num'  : 10,
+      'column_num': 24,
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 20,
+        'completions': contains(
+          CompletionEntryMatcher( 'this_is_an_it', 'int' ),
+        ),
+        'errors': empty(),
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def GetCompletions_UnityInclude_test( app ):
+  RunTest( app, {
+    'description': 'Completion returns for includes in unity setup',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'unitya.cc' ),
+      'line_num'  : 1,
+      'column_num': 17,
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': has_items(
+          CompletionEntryMatcher( 'unity.h', '[File]' ),
+          CompletionEntryMatcher( 'unity.cc', '[File]' ),
+          CompletionEntryMatcher( 'unitya.cc', '[File]' ),
+        ),
+        'errors': empty(),
+      } )
+    }
+  } )

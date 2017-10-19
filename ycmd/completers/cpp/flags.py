@@ -117,6 +117,13 @@ class Flags( object ):
                     filename,
                     add_extra_clang_flags = True,
                     client_data = None ):
+    """Returns a tuple describing the compiler invocation required to parse the
+    file |filename|. The tuple contains 2 entries:
+      1. A list of the compiler flags to use,
+      2. The name of the translation unit to parse.
+    Note that the second argument might not be the same as the |filename|
+    argument to this method in the event that the extra conf file overrides the
+    translation unit, e.g. in the case of a "unity" build."""
 
     # The try-catch here is to avoid a synchronisation primitive. This method
     # may be called from multiple threads, and python gives us
@@ -135,14 +142,26 @@ class Flags( object ):
       if not self.no_extra_conf_file_warning_posted:
         self.no_extra_conf_file_warning_posted = True
         raise NoExtraConfDetected
-      return []
+      return [], filename
 
     if not results or not results.get( 'flags_ready', True ):
-      return []
+      return [], filename
+
+    return self._ParseFlagsFromExtraConfOrDatabase( filename,
+                                                    results,
+                                                    add_extra_clang_flags )
+
+
+  def _ParseFlagsFromExtraConfOrDatabase( self,
+                                          filename,
+                                          results,
+                                          add_extra_clang_flags ):
+    if 'override_filename' in results:
+      filename = results[ 'override_filename' ] or filename
 
     flags = _ExtractFlagsList( results )
     if not flags:
-      return []
+      return [], filename
 
     if add_extra_clang_flags:
       flags += self.extra_clang_flags
@@ -154,8 +173,9 @@ class Flags( object ):
                                             _ShouldAllowWinStyleFlags( flags ) )
 
     if results.get( 'do_cache', True ):
-      self.flags_for_file[ filename ] = sanitized_flags
-    return sanitized_flags
+      self.flags_for_file[ filename ] = sanitized_flags, filename
+
+    return sanitized_flags, filename
 
 
   def _GetFlagsFromExtraConfOrDatabase( self, module, filename, client_data ):

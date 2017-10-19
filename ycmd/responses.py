@@ -139,7 +139,8 @@ def BuildLocationData( location ):
   return {
     'line_num': location.line_number_,
     'column_num': location.column_number_,
-    'filepath': location.filename_,
+    'filepath': ( os.path.normpath( location.filename_ )
+                  if location.filename_ else '' ),
   }
 
 
