@@ -202,6 +202,14 @@ def GetUnusedLocalhostPort():
   return port
 
 
+def RemoveDirIfExists( dirname ):
+  try:
+    import shutil
+    shutil.rmtree( dirname )
+  except OSError:
+    pass
+
+
 def RemoveIfExists( filename ):
   try:
     os.remove( filename )

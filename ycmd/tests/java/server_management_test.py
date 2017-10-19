@@ -23,8 +23,10 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from mock import patch
+import functools
+import os
 
+from mock import patch
 from hamcrest import ( assert_that,
                        contains,
                        has_entries,
@@ -33,7 +35,8 @@ from hamcrest import ( assert_that,
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmdInDirectory,
                               WaitUntilCompleterServerReady )
-from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.test_utils import BuildRequest, TemporaryTestDir
+from ycmd import utils
 
 
 def _ProjectDirectoryMatcher( project_directory ):
@@ -48,6 +51,28 @@ def _ProjectDirectoryMatcher( project_directory ):
       ) )
     ) )
   )
+
+
+def TidyJDTProjectFiles( dir_name ):
+  """Defines a test decorator which deletes the .project etc. files that are
+  created by the jdt.ls server when it detects a project. This ensures the tests
+  actually check that jdt.ls detects the project."""
+  def decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( *args, **kwargs ):
+      utils.RemoveIfExists( os.path.join( dir_name, '.project' ) )
+      utils.RemoveIfExists( os.path.join( dir_name, '.classpath' ) )
+      utils.RemoveDirIfExists( os.path.join( dir_name, '.settings' ) )
+      try:
+        test( *args, **kwargs )
+      finally:
+        utils.RemoveIfExists( os.path.join( dir_name, '.project' ) )
+        utils.RemoveIfExists( os.path.join( dir_name, '.classpath' ) )
+        utils.RemoveDirIfExists( os.path.join( dir_name, '.settings' ) )
+
+    return Wrapper
+
+  return decorator
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
@@ -100,7 +125,7 @@ def Subcommands_RestartServer_test( app ):
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project', 'src' ) )
-def Subcommands_ProjectDetection_EclipseParent( app ):
+def Subcommands_ProjectDetection_EclipseParent_test( app ):
   WaitUntilCompleterServerReady( app )
 
   project = PathToTestFile( 'simple_eclipse_project' )
@@ -111,11 +136,14 @@ def Subcommands_ProjectDetection_EclipseParent( app ):
                _ProjectDirectoryMatcher( project ) )
 
 
+@TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_maven_project',
                                           'src',
+                                          'main',
                                           'java',
+                                          'com',
                                           'test' ) )
-def Subcommands_ProjectDetection_MavenParent( app ):
+def Subcommands_ProjectDetection_MavenParent_test( app ):
   WaitUntilCompleterServerReady( app )
 
   project = PathToTestFile( 'simple_maven_project' )
@@ -126,11 +154,14 @@ def Subcommands_ProjectDetection_MavenParent( app ):
                _ProjectDirectoryMatcher( project ) )
 
 
+@TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_gradle_project',
                                           'src',
+                                          'main',
                                           'java',
+                                          'com',
                                           'test' ) )
-def Subcommands_ProjectDetection_GradleParent( app ):
+def Subcommands_ProjectDetection_GradleParent_test( app ):
   WaitUntilCompleterServerReady( app )
 
   project = PathToTestFile( 'simple_gradle_project' )
@@ -139,6 +170,21 @@ def Subcommands_ProjectDetection_GradleParent( app ):
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
                _ProjectDirectoryMatcher( project ) )
+
+
+def Subcommands_ProjectDetection_NoParent_test():
+  with TemporaryTestDir() as tmp_dir:
+
+    @IsolatedYcmdInDirectory( tmp_dir )
+    def Test( app ):
+      WaitUntilCompleterServerReady( app )
+
+      # Run the debug info to check that we have the correct project dir (cwd)
+      request_data = BuildRequest( filetype = 'java' )
+      assert_that( app.post_json( '/debug_info', request_data ).json,
+                   _ProjectDirectoryMatcher( os.path.realpath( tmp_dir ) ) )
+
+    yield Test
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
