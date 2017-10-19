@@ -46,6 +46,15 @@ _module_file_for_source_file = {}
 _module_file_for_source_file_lock = Lock()
 
 
+def Get():
+  return _module_for_module_file, _module_file_for_source_file
+
+
+def Set( state ):
+  global _module_for_module_file, _module_file_for_source_file
+  _module_for_module_file, _module_file_for_source_file = state
+
+
 def Reset():
   global _module_for_module_file, _module_file_for_source_file
   _module_for_module_file = {}

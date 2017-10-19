@@ -29,9 +29,8 @@ import contextlib
 import json
 import shutil
 
-from ycmd import handlers
 from ycmd.utils import ToUnicode
-from ycmd.tests.test_utils import ClearCompletionsCache, SetUpApp
+from ycmd.tests.test_utils import ClearCompletionsCache, IsolatedApp, SetUpApp
 
 shared_app = None
 
@@ -77,7 +76,7 @@ def IsolatedYcmd( custom_options = {} ):
 
   Example usage:
 
-    from ycmd.tests.python import IsolatedYcmd
+    from ycmd.tests.clang import IsolatedYcmd
 
     @IsolatedYcmd( { 'auto_trigger': 0 } )
     def CustomAutoTrigger_test( app ):
@@ -86,11 +85,8 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      old_server_state = handlers._server_state
-      try:
-        test( SetUpApp( custom_options ), *args, **kwargs )
-      finally:
-        handlers._server_state = old_server_state
+      with IsolatedApp( custom_options ) as app:
+        test( app, *args, **kwargs )
     return Wrapper
   return Decorator
 

@@ -25,11 +25,9 @@ from builtins import *  # noqa
 import functools
 import os
 
-from ycmd import handlers
 from ycmd.tests.test_utils import ( ClearCompletionsCache,
-                                    CurrentWorkingDirectory,
-                                    SetUpApp,
-                                    StopCompleterServer,
+                                    CurrentWorkingDirectory, IsolatedApp,
+                                    SetUpApp, StopCompleterServer,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import GetCurrentDirectory
 
@@ -101,14 +99,11 @@ def IsolatedYcmdInDirectory( directory ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      old_server_state = handlers._server_state
-      app = SetUpApp()
-      try:
-        with CurrentWorkingDirectory( directory ):
-          test( app, *args, **kwargs )
-      finally:
-        StopCompleterServer( app, 'javascript' )
-        handlers._server_state = old_server_state
+      with IsolatedApp() as app:
+        try:
+          with CurrentWorkingDirectory( directory ):
+            test( app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'javascript' )
     return Wrapper
-
   return Decorator

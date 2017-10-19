@@ -25,8 +25,7 @@ from builtins import *  # noqa
 import functools
 import os
 
-from ycmd import handlers
-from ycmd.tests.test_utils import ClearCompletionsCache, SetUpApp
+from ycmd.tests.test_utils import ClearCompletionsCache, IsolatedApp, SetUpApp
 
 shared_app = None
 
@@ -81,11 +80,7 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      old_server_state = handlers._server_state
-      app = SetUpApp( custom_options )
-      try:
+      with IsolatedApp( custom_options ) as app:
         test( app, *args, **kwargs )
-      finally:
-        handlers._server_state = old_server_state
     return Wrapper
   return Decorator
