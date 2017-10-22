@@ -249,3 +249,115 @@ def Diagnostics_MultipleMissingIncludes_test( app ):
       'fixit_available': False
     } ),
   ) )
+
+
+@IsolatedYcmd()
+def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
+  contents = ReadFile( PathToTestFile( 'location_extent.cc' ) )
+
+  event_data = BuildRequest( contents = contents,
+                             event_name = 'FileReadyToParse',
+                             filetype = 'cpp',
+                             compilation_flags = [ '-x', 'c++' ] )
+
+  response = app.post_json( '/event_notification', event_data ).json
+
+  pprint( response )
+
+  assert_that( response, contains(
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( {
+        'line_num': 2,
+        'column_num': 9,
+        'filepath': '/foo'
+      } ),
+      'location_extent': has_entries( {
+        'start': has_entries( {
+          'line_num': 2,
+          'column_num': 9,
+          'filepath': '/foo'
+        } ),
+        'end': has_entries( {
+          'line_num': 2,
+          'column_num': 9,
+          'filepath': '/foo'
+        } ),
+      } ),
+      'ranges': empty(),
+      'text': equal_to( "expected ';' at end of declaration list" ),
+      'fixit_available': True
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( {
+        'line_num': 5,
+        'column_num': 1,
+        'filepath': '/foo'
+      } ),
+      'location_extent': has_entries( {
+        'start': has_entries( {
+          'line_num': 5,
+          'column_num': 1,
+          'filepath': '/foo'
+        } ),
+        'end': has_entries( {
+          'line_num': 6,
+          'column_num': 11,
+          'filepath': '/foo'
+        } )
+      } ),
+      'ranges': empty(),
+      'text': equal_to( "unknown type name 'multiline_identifier'" ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( {
+        'line_num': 8,
+        'column_num': 7,
+        'filepath': '/foo'
+      } ),
+      'location_extent': has_entries( {
+        'start': has_entries( {
+          'line_num': 8,
+          'column_num': 7,
+          'filepath': '/foo'
+        } ),
+        'end': has_entries( {
+          'line_num': 8,
+          'column_num': 11,
+          'filepath': '/foo'
+        } )
+      } ),
+      'ranges': contains(
+        # FIXME: empty ranges from libclang should be ignored.
+        has_entries( {
+          'start': has_entries( {
+            'line_num': 0,
+            'column_num': 0,
+            'filepath': ''
+          } ),
+          'end': has_entries( {
+            'line_num': 0,
+            'column_num': 0,
+            'filepath': ''
+          } )
+        } ),
+        has_entries( {
+          'start': has_entries( {
+            'line_num': 8,
+            'column_num': 7,
+            'filepath': '/foo'
+          } ),
+          'end': has_entries( {
+            'line_num': 8,
+            'column_num': 11,
+            'filepath': '/foo'
+          } )
+        } )
+      ),
+      'text': equal_to( 'constructor cannot have a return type' ),
+      'fixit_available': False
+    } )
+  ) )

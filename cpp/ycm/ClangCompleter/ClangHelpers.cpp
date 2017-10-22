@@ -161,25 +161,24 @@ Range GetLocationExtent( CXSourceLocation source_location,
   // I've tried many simpler ways of doing this and they all fail in various
   // situations.
 
-  CXSourceRange range = clang_getCursorExtent(
-                          clang_getCursor( translation_unit, source_location ) );
+  CXSourceRange range = clang_getRange( source_location, source_location );
   CXToken *tokens;
   unsigned int num_tokens;
   clang_tokenize( translation_unit, range, &tokens, &num_tokens );
 
   Location location( source_location );
-  Range final_range;
+  Range final_range( range );
 
   for ( size_t i = 0; i < num_tokens; ++i ) {
+    CXToken token = tokens[ i ];
+    if ( clang_getTokenKind( token ) == CXToken_Comment )
+      continue;
+
     Location token_location( clang_getTokenLocation( translation_unit,
-                                                     tokens[ i ] ) );
+                                                     token ) );
 
     if ( token_location == location ) {
-      std::string name = CXStringToString(
-                           clang_getTokenSpelling( translation_unit, tokens[ i ] ) );
-      Location end_location = location;
-      end_location.column_number_ += name.length();
-      final_range = Range( location, end_location );
+      final_range = Range( clang_getTokenExtent( translation_unit, token ) );
       break;
     }
   }
