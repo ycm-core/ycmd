@@ -34,7 +34,7 @@ from nose.tools import eq_
 from pprint import pformat
 import requests
 
-from ycmd.tests.java import ( DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd )
+from ycmd.tests.java import DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CompletionEntryMatcher,
@@ -162,7 +162,7 @@ def GetCompletions_NoQuery_test( app ):
 @SharedYcmd
 def GetCompletions_WithQuery_test( app ):
   RunTest( app, {
-    'description': 'semantic completion works for builtin types (no query)',
+    'description': 'semantic completion works for builtin types (with query)',
     'request': {
       'filetype'  : 'java',
       'filepath'  : ProjectPath( 'TestFactory.java' ),
@@ -214,7 +214,7 @@ def GetCompletions_Package_test( app ):
 @SharedYcmd
 def GetCompletions_Import_Class_test( app ):
   RunTest( app, {
-    'description': 'completion works for import statements',
+    'description': 'completion works for import statements with a single class',
     'request': {
       'filetype'  : 'java',
       'filepath'  : ProjectPath( 'TestLauncher.java' ),
@@ -241,7 +241,7 @@ def GetCompletions_Import_Class_test( app ):
 def GetCompletions_Import_Classes_test( app ):
   filepath = ProjectPath( 'TestLauncher.java' )
   RunTest( app, {
-    'description': 'completion works for import statements',
+    'description': 'completion works for imports with multiple classes',
     'request': {
       'filetype'  : 'java',
       'filepath'  : filepath,
@@ -280,7 +280,7 @@ def GetCompletions_Import_Classes_test( app ):
 def GetCompletions_Import_ModuleAndClass_test( app ):
   filepath = ProjectPath( 'TestLauncher.java' )
   RunTest( app, {
-    'description': 'completion works for import statements',
+    'description': 'completion works for imports of classes and modules',
     'request': {
       'filetype'  : 'java',
       'filepath'  : filepath,
@@ -311,7 +311,7 @@ def GetCompletions_Import_ModuleAndClass_test( app ):
 def GetCompletions_WithFixIt_test( app ):
   filepath = ProjectPath( 'TestFactory.java' )
   RunTest( app, {
-    'description': 'semantic completion works for builtin types (no query)',
+    'description': 'semantic completion with when additional textEdit',
     'request': {
       'filetype'  : 'java',
       'filepath'  : filepath,
@@ -369,7 +369,7 @@ def GetCompletions_WithFixIt_test( app ):
 def GetCompletions_RejectMultiLineInsertion_test( app ):
   filepath = ProjectPath( 'TestLauncher.java' )
   RunTest( app, {
-    'description': 'completion works for import statements',
+    'description': 'completion item discarded when not valid',
     'request': {
       'filetype'      : 'java',
       'filepath'      : filepath,

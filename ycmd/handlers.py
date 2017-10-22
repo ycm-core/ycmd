@@ -259,8 +259,9 @@ def ReceiveMessages():
   request_data = RequestWrap( request.json )
   try:
     completer = _GetCompleterForRequestData( request_data )
-  except:
-    # No semantic completer for this filetype, don't requery
+  except Exception:
+    # No semantic completer for this filetype, don't requery. This is not an
+    # error.
     return _JsonResponse( False )
 
   return _JsonResponse( completer.PollForMessages( request_data ) )

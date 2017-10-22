@@ -95,11 +95,11 @@ def IsolatedYcmd( custom_options = {} ):
 def TemporaryClangProject( tmp_dir, compile_commands ):
   """Context manager to create a compilation database in a directory and delete
   it when the test completes. |tmp_dir| is the directory in which to create the
-  database file (typically used in conjunction with |TemporaryClangTestDir|) and
+  database file (typically used in conjunction with |TemporaryTestDir|) and
   |compile_commands| is a python object representing the compilation database.
 
   e.g.:
-    with TemporaryClangTestDir() as tmp_dir:
+    with TemporaryTestDir() as tmp_dir:
       database = [
         {
           'directory': os.path.join( tmp_dir, dir ),

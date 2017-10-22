@@ -24,7 +24,7 @@ from __future__ import division
 from builtins import *  # noqa
 
 from future.utils import iterkeys
-from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries )
+from hamcrest import assert_that, contains, contains_inanyorder, has_entries
 from nose.tools import eq_
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
@@ -34,8 +34,7 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               SharedYcmd,
                               WaitUntilCompleterServerReady )
 
-from ycmd.tests.test_utils import ( BuildRequest,
-                                    LocationMatcher )
+from ycmd.tests.test_utils import BuildRequest, LocationMatcher
 from ycmd.utils import ReadFile
 
 from pprint import pformat

@@ -484,7 +484,7 @@ def JavaMessages( server ):
                                 test_filename = 'some_java.java',
                                 filetype = 'java' )
 
-  # Send the long poll 10 times (only the first N will return any useful
+  # Send the long poll 5 times (only the first N will return any useful
   # messages)
   for i in range(1, 6):
     server.ReceiveMessages( test_filename = 'some_java.java',
@@ -503,7 +503,7 @@ def JavaMessages( server ):
                                 test_filename = 'some_java.java',
                                 filetype = 'java' )
 
-  # Send the long poll 10 times (only the first N will return any useful
+  # Send the long poll 5 times (only the first N will return any useful
   # messages)
   for i in range(1, 6):
     server.ReceiveMessages( test_filename = 'some_java.java',

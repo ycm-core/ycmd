@@ -545,17 +545,14 @@ def EnableJavaCompleter():
                     'third_party',
                     'eclipse.jdt.ls' ) )
 
-  if OnWindows():
-    mvnw = 'mvnw.cmd'
-  else:
-    mvnw = './mvnw'
+  mvnw = 'mvnw.cmd' if OnWindows() else './mvnw'
 
   # Maven actually just straight up sucks. There is seemingly no way to do
   # working, reliable incremental builds. It also takes _forever_ doing things
   # that you _don't want it to do_, like downloading the internet.
   # Alas, I'm not aware of a better way, and these are the instructions provided
-  # by the people that made JDT language server, so we waste the user's time
-  # (somewhat) unnecessarily.
+  # by the people that made jdt.ls, so we waste the user's time (somewhat)
+  # unnecessarily.
   CheckCall( [ mvnw, 'clean', 'package' ] )
 
 

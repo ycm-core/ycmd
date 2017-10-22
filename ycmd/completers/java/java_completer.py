@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -73,9 +73,9 @@ WORKSPACE_ROOT_PATH = os.path.join( os.path.dirname( __file__ ),
 #
 # Cons:
 #  - A little more complexity (we hash the project path to create the workspace
-#    dir)
+#    directory)
 #  - It breaks our tests which expect the logs to be deleted
-#  - It can lead to multiple jdt.js instances using the same workspace (BAD)
+#  - It can lead to multiple jdt.ls instances using the same workspace (BAD)
 #  - It breaks our tests which do exactly that
 #
 # So:
@@ -171,7 +171,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     # Used to ensure that starting/stopping of the server is synchronized
     self._server_state_mutex = threading.RLock()
 
-
     with self._server_state_mutex:
       self._connection = None
       self._server_handle = None
@@ -181,7 +180,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       try :
         # When we start the server initially, we don't have the request data, so
-        # we use the ycmd working directory. The RestartServer subcommand uses
+        # we use the ycmd working directory. The RestartServer sub-command uses
         # the client's working directory if it is supplied.
         #
         # FIXME: We could start the server in the FileReadyToParse event, though
@@ -214,11 +213,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         lambda self, request_data, args: self.GoToReferences( request_data )
       ),
       'FixIt': (
-        lambda self, request_data, args: self.CodeAction( request_data,
-                                                          args )
+        lambda self, request_data, args: self.GetCodeActions( request_data,
+                                                              args )
       ),
       'RefactorRename': (
-        lambda self, request_data, args: self.Rename( request_data, args )
+        lambda self, request_data, args: self.RefactorRename( request_data,
+                                                              args )
       ),
 
       # Handled by us
@@ -352,11 +352,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       _logger.debug( 'Starting java-server with the following command: '
                      '{0}'.format( ' '.join( command ) ) )
 
-      LOGFILE_FORMAT = 'jdt.ls_{pid}_{std}_'
-
-      self._server_stderr = utils.CreateLogfile(
-          LOGFILE_FORMAT.format( pid = os.getpid(), std = 'stderr' ) )
-
+      self._server_stderr = utils.CreateLogfile( 'jdt.ls_stderr_' )
       with utils.OpenForStdHandle( self._server_stderr ) as stderr:
         self._server_handle = utils.SafePopen( command,
                                                stdin = PIPE,
@@ -376,7 +372,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           self.GetDefaultNotificationHandler() )
       )
 
-      self._connection.start()
+      self._connection.Start()
 
       try:
         self._connection.AwaitServerConnection()
@@ -386,11 +382,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         self._StopServer()
         return
 
-    self.SendInitialise()
+    self.SendInitialize()
 
 
   def _StopServer( self ):
     with self._server_state_mutex:
+      _logger.info( 'Shutting down jdt.ls...' )
       # We don't use utils.CloseStandardStreams, because the stdin/out is
       # connected to our server connector. Just close stderr.
       #
@@ -401,7 +398,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       # Tell the connection to expect the server to disconnect
       if self._connection:
-        self._connection.stop()
+        self._connection.Stop()
 
       # Tell the server to exit using the shutdown request.
       self._StopServerCleanly()
@@ -411,6 +408,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       # Tidy up our internal state
       self._CleanUp()
+
+      _logger.info( 'Shutting down jdt.ls...complete.' )
 
 
   def _StopServerCleanly( self ):
@@ -452,7 +451,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         _logger.exception( 'Error while killing jdt.ls server' )
 
 
-  def _HandleNotificationInPollThread( self, notification ):
+  def HandleNotificationInPollThread( self, notification ):
     if notification[ 'method' ] == 'language/status':
       message_type = notification[ 'params' ][ 'type' ]
 
@@ -462,16 +461,16 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       self._server_init_status = notification[ 'params' ][ 'message' ]
 
-    super( JavaCompleter, self )._HandleNotificationInPollThread( notification )
+    super( JavaCompleter, self ).HandleNotificationInPollThread( notification )
 
 
-  def _ConvertNotificationToMessage( self, request_data, notification ):
+  def ConvertNotificationToMessage( self, request_data, notification ):
     if notification[ 'method' ] == 'language/status':
       message = notification[ 'params' ][ 'message' ]
       return responses.BuildDisplayMessageResponse(
         'Initializing Java completer: {0}'.format( message ) )
 
-    return super( JavaCompleter, self )._ConvertNotificationToMessage(
+    return super( JavaCompleter, self ).ConvertNotificationToMessage(
       request_data,
       notification )
 
@@ -481,12 +480,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     if isinstance( hover_response, list ):
       if not len( hover_response ):
-        raise RuntimeError( 'No information' )
+        raise RuntimeError( 'Unknown type' )
 
       try:
         get_type_java = hover_response[ 0 ][ 'value' ]
-      except( TypeError ):
-        raise RuntimeError( 'No information' )
+      except TypeError:
+        raise RuntimeError( 'Unknown type' )
     else:
       get_type_java = hover_response
 
@@ -498,7 +497,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     if isinstance( hover_response, list ):
       if not len( hover_response ):
-        raise RuntimeError( 'No information' )
+        raise RuntimeError( NO_DOCUMENTATION_MESSAGE )
 
       get_doc_java = ''
       for docstring in hover_response:
@@ -510,9 +509,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     get_doc_java = get_doc_java.rstrip()
 
     if not get_doc_java:
-      raise ValueError( NO_DOCUMENTATION_MESSAGE )
+      raise RuntimeError( NO_DOCUMENTATION_MESSAGE )
 
-    return responses.BuildDisplayMessageResponse( get_doc_java.rstrip() )
+    return responses.BuildDetailedInfoResponse( get_doc_java )
 
 
   def HandleServerCommand( self, request_data, command ):

@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2017 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -101,15 +101,20 @@ def BuildNotification( method, parameters ):
   } )
 
 
-def Initialise( request_id, project_directory ):
-  """Build the Language Server initialise request"""
+def Initialize( request_id, project_directory ):
+  """Build the Language Server initialize request"""
 
   return BuildRequest( request_id, 'initialize', {
     'processId': os.getpid(),
     'rootPath': project_directory,
     'rootUri': FilePathToUri( project_directory ),
-    'initializationOptions': { },
-    'capabilities': { 'trace': 'verbose' }
+    'initializationOptions': {
+      # We don't currently support any server-specific options.
+    },
+    'capabilities': {
+      # We don't currently support any of the client capabilities, so we don't
+      # include anything in here.
+    },
   } )
 
 
@@ -225,7 +230,7 @@ def References( request_id, request_data ):
 
 
 def Position( request_data ):
-  # The API requires 0-based unicode offsets.
+  # The API requires 0-based Unicode offsets.
   return {
     'line': request_data[ 'line_num' ] - 1,
     'character': request_data[ 'column_codepoint' ] - 1,
@@ -247,10 +252,9 @@ def _BuildMessageData( message ):
   message[ 'jsonrpc' ] = '2.0'
   # NOTE: sort_keys=True is needed to workaround a 'limitation' of clangd where
   # it requires keys to be in a specific order, due to a somewhat naive
-  # json/yaml parser.
+  # JSON/YAML parser.
   data = ToBytes( json.dumps( message, sort_keys=True ) )
   packet = ToBytes( 'Content-Length: {0}\r\n'
-                    'Content-Type: application/vscode-jsonrpc;charset=utf8\r\n'
                     '\r\n'.format( len(data) ) ) + data
   return packet
 

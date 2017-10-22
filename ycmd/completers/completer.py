@@ -31,6 +31,9 @@ from future.utils import with_metaclass
 
 NO_USER_COMMANDS = 'This completer does not define any commands.'
 
+# Number of seconds to block before returning True in PollForMessages
+MESSAGE_POLL_TIMEOUT = 10
+
 
 class Completer( with_metaclass( abc.ABCMeta, object ) ):
   """A base class for all Completers in YCM.
@@ -145,9 +148,24 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   Override the Shutdown() member function if your Completer subclass needs to do
   custom cleanup logic on server shutdown.
 
+  If the completer server provides unsolicited messages, such as used in
+  Language Server Protocol, then you can override the PollForMessagesInner
+  method. This method is called by the client in the "long poll" fashion to
+  receive unsolicited messages. The method should block until a message is
+  available and return a message response when one becomes available, or True if
+  no message becomes available before the timeout. The return value must be one
+  of the following:
+   - a list of messages to send to the client
+   - True if a timeout occurred, and the poll should be restarted
+   - False if an error occurred, and no further polling should be attempted
+
   If your completer uses an external server process, then it can be useful to
   implement the ServerIsHealthy member function to handle the /healthy request.
-  This is very useful for the test suite."""
+  This is very useful for the test suite.
+
+  If your server is based on the Language Server Protocol (LSP), take a look at
+  language_server/language_server_completer, which provides most of the work
+  necessary to get a LSP-based completion engine up and running."""
 
   def __init__( self, user_options ):
     self.user_options = user_options
@@ -379,11 +397,14 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
   def PollForMessages( self, request_data ):
-    return self.PollForMessagesInner( request_data )
+    return self.PollForMessagesInner( request_data, MESSAGE_POLL_TIMEOUT )
 
 
-  def PollForMessagesInner( self, request_data ):
-    # Most completers don't implement this
+  def PollForMessagesInner( self, request_data, timeout ):
+    # Most completers don't implement this. It's only required where unsolicited
+    # messages or diagnostics are supported, such as in the Language Server
+    # Protocol. As such, the default implementation just returns False, meaning
+    # that unsolicited messages are not supported for this filetype.
     return False
 
 

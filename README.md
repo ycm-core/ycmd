@@ -90,8 +90,9 @@ There are also several semantic engines in YCM. There's a libclang-based
 completer that provides semantic completion for C-family languages.  There's
 also a Jedi-based completer for semantic completion for Python, an
 OmniSharp-based completer for C#, a [Gocode][gocode]-based completer for Go
-(using [Godef][godef] for jumping to definitions), and a TSServer-based
-completer for TypeScript. More will be added with time.
+(using [Godef][godef] for jumping to definitions), a TSServer-based completer
+for TypeScript and a [jdt.ls][jdtls]-based server for Java. More will be added
+with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -339,3 +340,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [vscode-you-complete-me]: https://marketplace.visualstudio.com/items?itemName=RichardHe.you-complete-me
 [gycm]: https://github.com/jakeanq/gycm
 [nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
+[jdtls]: https://github.com/eclipse/eclipse.jdt.ls
