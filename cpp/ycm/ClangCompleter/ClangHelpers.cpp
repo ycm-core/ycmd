@@ -171,6 +171,9 @@ Range GetLocationExtent( CXSourceLocation source_location,
 
   for ( size_t i = 0; i < num_tokens; ++i ) {
     CXToken token = tokens[ i ];
+    if ( clang_getTokenKind( token ) == CXToken_Comment )
+      continue;
+
     Location token_location( clang_getTokenLocation( translation_unit,
                                                      token ) );
 

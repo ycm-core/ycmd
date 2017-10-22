@@ -1,5 +1,5 @@
 class Test {
-  Test()
+  Test()// ignore comment
 };
 
 multiline_\
