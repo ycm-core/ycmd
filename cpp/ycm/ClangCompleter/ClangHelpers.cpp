@@ -167,7 +167,7 @@ Range GetLocationExtent( CXSourceLocation source_location,
   clang_tokenize( translation_unit, range, &tokens, &num_tokens );
 
   Location location( source_location );
-  Range final_range;
+  Range final_range( range );
 
   for ( size_t i = 0; i < num_tokens; ++i ) {
     CXToken token = tokens[ i ];

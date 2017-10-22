@@ -272,18 +272,16 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
         'column_num': 9,
         'filepath': '/foo'
       } ),
-      # NOTE: we always return a location extent even if we can't find one since
-      # clients expect this field to always exist.
       'location_extent': has_entries( {
         'start': has_entries( {
-          'line_num': 0,
-          'column_num': 0,
-          'filepath': ''
+          'line_num': 2,
+          'column_num': 9,
+          'filepath': '/foo'
         } ),
         'end': has_entries( {
-          'line_num': 0,
-          'column_num': 0,
-          'filepath': ''
+          'line_num': 2,
+          'column_num': 9,
+          'filepath': '/foo'
         } ),
       } ),
       'ranges': empty(),
