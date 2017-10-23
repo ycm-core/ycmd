@@ -23,6 +23,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import logging
 import os
 import re
 from collections import defaultdict
@@ -32,6 +33,8 @@ from ycmd.utils import GetCurrentDirectory, OnWindows, ToUnicode
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
+
+_logger = logging.getLogger( __name__ )
 
 
 class FilenameCompleter( Completer ):
@@ -146,7 +149,8 @@ def _GetAbsolutePaths( path_dir, use_working_dir, filepath, working_dir ):
     # We need to pass a unicode string to get unicode strings out of
     # listdir.
     relative_paths = os.listdir( ToUnicode( absolute_path_dir ) )
-  except:
+  except Exception:
+    _logger.exception( 'Error while listing %s folder.', absolute_path_dir )
     relative_paths = []
 
   return ( os.path.join( absolute_path_dir, relative_path )
