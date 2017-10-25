@@ -123,7 +123,9 @@ class IdentifierCompleter( GeneralCompleter ):
     for tag_file in tag_files:
       try:
         current_mtime = os.path.getmtime( tag_file )
-      except:
+      except Exception:
+        self._logger.exception(
+            'Error while getting %s last modification time.', tag_file )
         continue
       last_mtime = self._tags_file_last_mtime[ tag_file ]
 

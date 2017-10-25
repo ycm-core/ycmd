@@ -30,6 +30,12 @@ import os.path
 import re
 import textwrap
 import xml.etree.ElementTree
+# Python 2.6 raises a different exception when an error occurs while parsing XML
+# from a string (e.g. an empty string).
+try:
+  from xml.etree.ElementTree import ParseError as XmlParseError
+except ImportError:
+  from xml.parsers.expat import ExpatError as XmlParseError
 
 import ycm_core
 from ycmd import responses
@@ -553,7 +559,7 @@ def _BuildGetDocResponse( doc_data ):
   # future, we can use this XML for more interesting things.
   try:
     root = xml.etree.ElementTree.fromstring( doc_data.comment_xml )
-  except:
+  except XmlParseError:
     raise ValueError( NO_DOCUMENTATION_MESSAGE )
 
   # Note: declaration is False-y if it has no child elements, hence the below

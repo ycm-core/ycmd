@@ -247,7 +247,7 @@ class TernCompleter( Completer ):
     # empty request just containing the file data
     try:
       self._PostRequest( {}, request_data )
-    except:
+    except Exception:
       # The server might not be ready yet or the server might not be running.
       # in any case, just ignore this we'll hopefully get another parse request
       # soon.
