@@ -38,7 +38,7 @@ from ycmd.responses import NoExtraConfDetected
 # checks prefixes).
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
                   '-gcc-toolchain', '-include-pch', '-include', '-iframework',
-                  '-F', '-imacros' ]
+                  '-F', '-imacros' , '-resource-dir', '-frewrite-map-file']
 PATH_FLAGS =  [ '--sysroot=' ] + INCLUDE_FLAGS
 
 # We need to remove --fcolor-diagnostics because it will cause shell escape
@@ -47,7 +47,9 @@ STATE_FLAGS_TO_SKIP = set( [ '-c',
                              '-MP',
                              '-MD',
                              '-MMD',
-                             '--fcolor-diagnostics' ] )
+                             '--fcolor-diagnostics',
+                             '-fcolor-diagnostics',
+                             '-Qunused-arguments'] )
 
 # The -M* flags spec:
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
@@ -330,6 +332,10 @@ def _AddLanguageFlagWhenAppropriate( flags ):
 
   # First flag is now the compiler path or a flag starting with a dash.
   first_flag = flags[ 0 ]
+
+  # If there's already a -x directive, don't add another one
+  if '-x' in flags:
+    return flags
 
   if ( not first_flag.startswith( '-' ) and
        CPP_COMPILER_REGEX.search( first_flag ) ):
