@@ -189,7 +189,7 @@ TRIGGER_REGEX_PREFIX = 're!'
 
 DEFAULT_FILETYPE_TRIGGERS = {
   'c' : [ '->', '.' ],
-  'objc' : [
+  'objc,objcpp' : [
     '->',
     '.',
     r're!\[[_a-zA-Z]+\w*\s',    # bracketed calls
