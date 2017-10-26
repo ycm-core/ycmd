@@ -396,13 +396,8 @@ def ExitIfYcmdLibInUseOnWindows():
 def BuildYcmdLib( args ):
   if args.build_dir:
     build_dir = os.path.abspath( args.build_dir )
-
-    if os.path.exists( build_dir ):
-      print( 'The supplied build directory ' + build_dir + ' exists, '
-             'deleting it.' )
-      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
-
-    os.makedirs( build_dir )
+    if not os.path.exists( build_dir ):
+      os.makedirs( build_dir )
   else:
     build_dir = mkdtemp( prefix = 'ycm_build_' )
 
