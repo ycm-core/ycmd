@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -650,13 +650,14 @@ class LanguageServerCompleter( Completer ):
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
       - StartServer : Return True if the server was started.
-      - Language : a string used to identify the language in user's extra conf
     - Optionally override methods to customise behavior:
-      - _GetProjectDirectory
-      - _GetTriggerCharacters
+      - ConvertNotificationToMessage
+      - GetCompleterName
+      - GetProjectDirectory
+      - GetTriggerCharacters
       - GetDefaultNotificationHandler
       - HandleNotificationInPollThread
-      - ConvertNotificationToMessage
+      - Language
 
   Startup
 
@@ -741,6 +742,9 @@ class LanguageServerCompleter( Completer ):
     #    cached query is a prefix of the subsequent queries.
     self._completions_cache = LanguageServerCompletionsCache()
 
+    self._completer_name = self.__class__.__name__.replace( 'Completer', '' )
+    self._language = self._completer_name.lower()
+
 
   def ServerReset( self ):
     """Clean up internal state related to the running server instance.
@@ -759,9 +763,15 @@ class LanguageServerCompleter( Completer ):
       self._settings = {}
       self._server_started = False
 
-  @abc.abstractmethod
+
+  def GetCompleterName( self ):
+    return self._completer_name
+
+
   def Language( self ):
-    pass # pragma: no cover
+    """Returns the string used to identify the language in user's
+    .ycm_extra_conf.py file. Default to the completer name in lower case."""
+    return self._language
 
 
   @abc.abstractmethod
@@ -778,7 +788,7 @@ class LanguageServerCompleter( Completer ):
     # server by first sending a shutdown request, and on its completion sending
     # and exit notification (which does not receive a response). Some buggy
     # servers exit on receipt of the shutdown request, so we handle that too.
-    if self.ServerIsReady():
+    if self._ServerIsInitialized():
       request_id = self.GetConnection().NextRequestId()
       msg = lsp.Shutdown( request_id )
 
@@ -807,7 +817,7 @@ class LanguageServerCompleter( Completer ):
         self._initialize_event.set()
 
 
-  def ServerIsReady( self ):
+  def _ServerIsInitialized( self ):
     """Returns True if the server is running and the initialization exchange has
     completed successfully. Implementations must not issue requests until this
     method returns True."""
@@ -826,9 +836,13 @@ class LanguageServerCompleter( Completer ):
     return False
 
 
+  def ServerIsReady( self ):
+    return self._ServerIsInitialized()
+
+
   def ShouldUseNowInner( self, request_data ):
     # We should only do _anything_ after the initialize exchange has completed.
-    return ( self.ServerIsReady() and
+    return ( self._ServerIsInitialized() and
              super( LanguageServerCompleter, self ).ShouldUseNowInner(
                request_data ) )
 
@@ -841,7 +855,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data, codepoint ):
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       return None, False
 
     self._UpdateServerWithFileContents( request_data )
@@ -1454,7 +1468,7 @@ class LanguageServerCompleter( Completer ):
     del self._server_file_state[ file_state.filename ]
 
 
-  def _GetProjectDirectory( self, request_data, extra_conf_dir ):
+  def GetProjectDirectory( self, request_data, extra_conf_dir ):
     """Return the directory in which the server should operate. Language server
     protocol and most servers have a concept of a 'project directory'. Where a
     concrete completer can detect this better, it should override this method,
@@ -1479,7 +1493,7 @@ class LanguageServerCompleter( Completer ):
     This must be called immediately after establishing the connection with the
     language server. Implementations must not issue further requests to the
     server until the initialize exchange has completed. This can be detected by
-    calling this class's implementation of ServerIsReady.
+    calling this class's implementation of _ServerIsInitialized.
     The extra_conf_dir parameter is the value returned from
     _GetSettingsFromExtraConf, which must be called before calling this method.
     It is called before starting the server in OnFileReadyToParse."""
@@ -1487,8 +1501,8 @@ class LanguageServerCompleter( Completer ):
     with self._server_info_mutex:
       assert not self._initialize_response
 
-      self._project_directory = self._GetProjectDirectory( request_data,
-                                                           extra_conf_dir )
+      self._project_directory = self.GetProjectDirectory( request_data,
+                                                          extra_conf_dir )
       request_id = self.GetConnection().NextRequestId()
 
       # FIXME: According to the discussion on
@@ -1512,7 +1526,7 @@ class LanguageServerCompleter( Completer ):
         response_handler )
 
 
-  def _GetTriggerCharacters( self, server_trigger_characters ):
+  def GetTriggerCharacters( self, server_trigger_characters ):
     """Given the server trigger characters supplied in the initialize response,
     returns the trigger characters to merge with the ycmd-defined ones. By
     default, all server trigger characters are merged in. Note this might not be
@@ -1560,7 +1574,7 @@ class LanguageServerCompleter( Completer ):
                       self.Language(),
                       server_trigger_characters )
 
-        trigger_characters = self._GetTriggerCharacters(
+        trigger_characters = self.GetTriggerCharacters(
           server_trigger_characters )
 
         if trigger_characters:
@@ -1613,7 +1627,7 @@ class LanguageServerCompleter( Completer ):
     """Return the raw LSP response to the hover request for the supplied
     context. Implementations can use this for e.g. GetDoc and GetType requests,
     depending on the particular server response."""
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -1648,7 +1662,7 @@ class LanguageServerCompleter( Completer ):
     multiple locations or a location the cursor does not belong since the user
     wants to jump somewhere else. If that's the last handler, the location is
     returned anyway."""
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -1668,7 +1682,7 @@ class LanguageServerCompleter( Completer ):
   def GetCodeActions( self, request_data, args ):
     """Performs the codeAction request and returns the result as a FixIt
     response."""
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -1736,7 +1750,7 @@ class LanguageServerCompleter( Completer ):
 
   def RefactorRename( self, request_data, args ):
     """Issues the rename request and returns the result as a FixIt response."""
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     if len( args ) != 1:
@@ -1753,14 +1767,17 @@ class LanguageServerCompleter( Completer ):
       lsp.Rename( request_id, request_data, new_name ),
       REQUEST_TIMEOUT_COMMAND )
 
-    return responses.BuildFixItResponse(
-      [ WorkspaceEditToFixIt( request_data, response[ 'result' ] ) ] )
+    fixit = WorkspaceEditToFixIt( request_data, response[ 'result' ] )
+    if not fixit:
+      raise RuntimeError( 'Cannot rename under cursor.' )
+
+    return responses.BuildFixItResponse( [ fixit ] )
 
 
   def Format( self, request_data ):
     """Issues the formatting or rangeFormatting request (depending on the
     presence of a range) and returns the result as a FixIt response."""
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -1790,7 +1807,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def GetCommandResponse( self, request_data, command, arguments ):
-    if not self.ServerIsReady():
+    if not self._ServerIsInitialized():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -1808,7 +1825,7 @@ class LanguageServerCompleter( Completer ):
       if not self.ServerIsHealthy():
         return 'Dead'
 
-      if not self.ServerIsReady():
+      if not self._ServerIsInitialized():
         return 'Starting...'
 
       return 'Initialized'
@@ -1829,12 +1846,15 @@ def _CompletionItemToCompletionData( insertion_text, item, fixits ):
     kind = lsp.ITEM_KIND[ item.get( 'kind' ) or 0 ]
   except IndexError:
     kind = lsp.ITEM_KIND[ 0 ] # Fallback to None for unsupported kinds.
+
+  documentation = item.get( 'documentation' ) or ''
+  if isinstance( documentation, dict ):
+    documentation = documentation[ 'value' ]
+
   return responses.BuildCompletionData(
     insertion_text,
     extra_menu_info = item.get( 'detail' ),
-    detailed_info = ( item[ 'label' ] +
-                      '\n\n' +
-                      ( item.get( 'documentation' ) or '' ) ),
+    detailed_info = item[ 'label' ] + '\n\n' + documentation,
     menu_text = item[ 'label' ],
     kind = kind,
     extra_data = fixits )

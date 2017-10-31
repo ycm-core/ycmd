@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -300,7 +300,7 @@ def LanguageServerCompleter_GoTo_test():
     column_num = 3
   ) )
 
-  @patch.object( completer, 'ServerIsReady', return_value = True )
+  @patch.object( completer, '_ServerIsInitialized', return_value = True )
   def Test( responses, command, exception, throws, *args ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
@@ -633,7 +633,7 @@ def LanguageServerCompleter_GetCompletions_List_test():
     { 'result': { 'label': 'test' } },
   ]
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ completion_response ] +
@@ -658,7 +658,7 @@ def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test():
     { 'result': { 'label': 'test' } },
   ]
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ completion_response ] +
@@ -687,7 +687,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test():
     }
   }
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     request_data = RequestWrap( BuildRequest(
       column_num = 2,
       contents = 'a',
@@ -772,7 +772,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test():
     }
   }
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     # User starts by typing the character "a".
     request_data = RequestWrap( BuildRequest(
       column_num = 2,
@@ -947,7 +947,7 @@ def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test():
 
   fixit_response = { 'result': [] }
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ fixit_response ] ):
@@ -1004,7 +1004,7 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test():
   completer.GetConnection()._notifications.put( notification )
   completer.HandleNotificationInPollThread( notification )
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     completer.OnFileReadyToParse( request_data )
     # Simulate receipt of response and initialization complete
     initialize_response = {
@@ -1078,7 +1078,7 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test():
   completer.GetConnection()._notifications.put( notification )
   completer.HandleNotificationInPollThread( notification )
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     completer.OnFileReadyToParse( request_data )
     # Simulate receipt of response and initialization complete
     initialize_response = {
@@ -1125,7 +1125,7 @@ def LanguageServerCompleter_GetHoverResponse_test():
                                             column_num = 1,
                                             contents = '' ) )
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ { 'result': None } ] ):
@@ -1166,7 +1166,7 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test():
   completer.GetConnection()._notifications.put( notification )
   completer.HandleNotificationInPollThread( notification )
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     completer.OnFileReadyToParse( request_data )
     # Simulate receipt of response and initialization complete
     initialize_response = {
@@ -1225,7 +1225,7 @@ def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test():
   completer.GetConnection()._notifications.put( notification )
   completer.HandleNotificationInPollThread( notification )
 
-  with patch.object( completer, 'ServerIsReady', return_value = True ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
     completer.OnFileReadyToParse( request_data )
     # Simulate receipt of response and initialization complete
     initialize_response = {

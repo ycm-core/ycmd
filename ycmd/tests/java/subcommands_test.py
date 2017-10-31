@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 # encoding: utf-8
 #
 # This file is part of ycmd.
@@ -83,7 +83,7 @@ def Subcommands_DefinedSubcommands_test( app ):
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
-def Subcommands_ServerNotReady_test():
+def Subcommands_ServerNotInitialized_test():
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -94,7 +94,7 @@ def Subcommands_ServerNotReady_test():
 
   @WithRetry
   @SharedYcmd
-  @patch.object( completer, 'ServerIsReady', return_value = False )
+  @patch.object( completer, '_ServerIsInitialized', return_value = False )
   def Test( app, cmd, arguments, *args ):
     RunTest( app, {
       'description': 'Subcommand ' + cmd + ' handles server not ready',

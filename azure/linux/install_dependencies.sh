@@ -52,6 +52,10 @@ ${HOME}/.pyenv/versions/${YCM_PYTHON_VERSION}/lib/python${YCM_PYTHON_VERSION%.*}
 # Rust setup
 #
 
-curl https://sh.rustup.rs -sSf | sh -s -- -y
+# rustup is required to enable the Rust completer on Python versions older than
+# 2.7.9.
+if [ "${YCM_PYTHON_VERSION}" == "2.7.1" ]; then
+  curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain none
+fi
 
 set +e

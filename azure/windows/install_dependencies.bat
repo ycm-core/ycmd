@@ -19,13 +19,6 @@ C:\Python\Scripts\pip install -r test_requirements.txt
 C:\Python\python -c "with open('C:\Python\Lib\site-packages\sitecustomize.py', 'w') as f: f.write('import coverage\ncoverage.process_startup()')"
 
 ::
-:: Rust configuration
-::
-
-curl https://win.rustup.rs/x86_64 -o rustup-init.exe
-rustup-init.exe -y
-
-::
 :: Go configuration
 ::
 
