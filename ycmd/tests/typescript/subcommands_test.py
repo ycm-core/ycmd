@@ -353,7 +353,7 @@ def Subcommands_GoTo_Fail_test( app ):
                             goto_data,
                             expect_errors = True ).json
   assert_that( response,
-               ErrorMatcher( RuntimeError, 'Could not find definition' ) )
+               ErrorMatcher( RuntimeError, 'Could not find definition.' ) )
 
 
 @SharedYcmd
@@ -409,7 +409,7 @@ def Subcommands_GoToType_fail_test( app ):
                             goto_data,
                             expect_errors = True ).json
   assert_that( response,
-               ErrorMatcher( RuntimeError, 'Could not find type definition' ) )
+               ErrorMatcher( RuntimeError, 'Could not find type definition.' ) )
 
 
 @SharedYcmd
