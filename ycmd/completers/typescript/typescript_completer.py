@@ -287,17 +287,24 @@ class TypeScriptCompleter( Completer ):
     # The headers are pretty similar to HTTP.
     # At the time of writing, 'Content-Length' is the only supplied header.
     headers = {}
+    invalid_headers = False
     while True:
       headerline = self._tsserver_handle.stdout.readline().strip()
       if not headerline:
         break
-      key, value = utils.ToUnicode( headerline ).split( ':', 1 )
+      try:
+        key, value = utils.ToUnicode( headerline ).split( ':', 1 )
+      except ValueError:
+        invalid_headers = True
+        continue
       headers[ key.strip() ] = value.strip()
 
     # The response message is a JSON object which comes back on one line.
     # Since this might change in the future, we use the 'Content-Length'
     # header.
     if 'Content-Length' not in headers:
+      if invalid_headers:
+        return { 'type': 'invalid headers' }
       raise RuntimeError( "Missing 'Content-Length' header" )
     content_length = int( headers[ 'Content-Length' ] )
     # TSServer adds a newline at the end of the response message and counts it
