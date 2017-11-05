@@ -122,7 +122,8 @@ if ( USE_CLANG_COMPLETER AND
         "7-zip is needed to extract the files from the Clang installer. "
         "Install it and try again." )
     endif()
-    execute_process( COMMAND ${7Z_EXECUTABLE} x ${CLANG_FILENAME} OUTPUT_QUIET )
+    execute_process( COMMAND
+                     ${7Z_EXECUTABLE} -y x ${CLANG_FILENAME} OUTPUT_QUIET )
   else()
     execute_process( COMMAND tar -xzf ${CLANG_FILENAME} )
   endif()
