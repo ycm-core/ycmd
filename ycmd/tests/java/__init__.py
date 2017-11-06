@@ -27,10 +27,10 @@ import os
 import time
 from pprint import pformat
 
-from ycmd import handlers
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
                                     CurrentWorkingDirectory,
+                                    IsolatedApp,
                                     SetUpApp,
                                     StopCompleterServer )
 from ycmd.tests import test_utils
@@ -98,14 +98,12 @@ def IsolatedYcmdInDirectory( directory ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      old_server_state = handlers._server_state
-      app = SetUpApp()
-      try:
-        with CurrentWorkingDirectory( directory ):
-          test( app, *args, **kwargs )
-      finally:
-        StopCompleterServer( app, 'java' )
-        handlers._server_state = old_server_state
+      with IsolatedApp() as app:
+        try:
+          with CurrentWorkingDirectory( directory ):
+            test( app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'java' )
     return Wrapper
 
   return Decorator

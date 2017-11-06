@@ -28,7 +28,6 @@ import contextlib
 import json
 
 
-from ycmd.tests.test_utils import TemporaryTestDir as TemporaryClangTestDir # noqa
 from ycmd.utils import ToUnicode
 from ycmd.tests.test_utils import ClearCompletionsCache, IsolatedApp, SetUpApp
 

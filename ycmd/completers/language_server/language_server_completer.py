@@ -188,13 +188,13 @@ class LanguageServerConnection( threading.Thread ):
 
   Startup
 
-  - Call start() and AwaitServerConnection()
+  - Call Start() and AwaitServerConnection()
   - AwaitServerConnection() throws LanguageServerConnectionTimeout if the
     server fails to connect in a reasonable time.
 
   Shutdown
 
-  - Call stop() prior to shutting down the downstream server (see
+  - Call Stop() prior to shutting down the downstream server (see
     LanguageServerCompleter.ShutdownServer to do that part)
   - Call Close() to close any remaining streams. Do this in a request thread.
     DO NOT CALL THIS FROM THE DISPATCH THREAD. That is, Close() must not be
@@ -283,8 +283,12 @@ class LanguageServerConnection( threading.Thread ):
 
 
   def Close( self ):
-    self.join()
     self.Shutdown()
+    try:
+      self.join()
+    except RuntimeError:
+      _logger.exception( "Shutting down dispatch thread while it isn't active" )
+      # This actually isn't a problem in practice.
 
 
   def IsStopped( self ):
@@ -332,7 +336,7 @@ class LanguageServerConnection( threading.Thread ):
 
   def AwaitServerConnection( self ):
     """Language server completer implementations should call this after starting
-    the server and the message pump (start()) to await successful connection to
+    the server and the message pump (Start()) to await successful connection to
     the server being established.
 
     Returns no meaningful value, but may throw LanguageServerConnectionTimeout

@@ -76,7 +76,7 @@ def TidyJDTProjectFiles( dir_name ):
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
-def Subcommands_RestartServer_test( app ):
+def ServerManagement_RestartServer_test( app ):
   WaitUntilCompleterServerReady( app )
 
   eclipse_project = PathToTestFile( 'simple_eclipse_project' )
@@ -125,7 +125,7 @@ def Subcommands_RestartServer_test( app ):
 
 
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project', 'src' ) )
-def Subcommands_ProjectDetection_EclipseParent_test( app ):
+def ServerManagement_ProjectDetection_EclipseParent_test( app ):
   WaitUntilCompleterServerReady( app )
 
   project = PathToTestFile( 'simple_eclipse_project' )
@@ -143,7 +143,7 @@ def Subcommands_ProjectDetection_EclipseParent_test( app ):
                                           'java',
                                           'com',
                                           'test' ) )
-def Subcommands_ProjectDetection_MavenParent_test( app ):
+def ServerManagement_ProjectDetection_MavenParent_test( app ):
   WaitUntilCompleterServerReady( app )
 
   project = PathToTestFile( 'simple_maven_project' )
@@ -161,7 +161,7 @@ def Subcommands_ProjectDetection_MavenParent_test( app ):
                                           'java',
                                           'com',
                                           'test' ) )
-def Subcommands_ProjectDetection_GradleParent_test( app ):
+def ServerManagement_ProjectDetection_GradleParent_test( app ):
   WaitUntilCompleterServerReady( app )
 
   project = PathToTestFile( 'simple_gradle_project' )
@@ -172,7 +172,7 @@ def Subcommands_ProjectDetection_GradleParent_test( app ):
                _ProjectDirectoryMatcher( project ) )
 
 
-def Subcommands_ProjectDetection_NoParent_test():
+def ServerManagement_ProjectDetection_NoParent_test():
   with TemporaryTestDir() as tmp_dir:
 
     @IsolatedYcmdInDirectory( tmp_dir )
@@ -190,7 +190,7 @@ def Subcommands_ProjectDetection_NoParent_test():
 @IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
 @patch( 'ycmd.completers.java.java_completer.JavaCompleter.ShutdownServer',
         side_effect = AssertionError )
-def CloseServer_Unclean_test( app,
+def ServerManagement_CloseServer_Unclean_test( app,
                               stop_server_cleanly ):
   WaitUntilCompleterServerReady( app )
 
