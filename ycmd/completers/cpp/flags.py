@@ -589,35 +589,29 @@ def _GetCompilationInfoForFile( database, file_name, file_extension ):
   return None
 
 
-def UserIncludePaths( flags, filename ):
-  quoted_include_paths = [ os.path.dirname( filename ) ]
+def UserIncludePaths( user_flags, filename ):
+  quoted_include_paths = [ ( ToUnicode( os.path.dirname( filename ) ), False ) ]
   include_paths = []
 
-  if flags:
-    quote_flag = '-iquote'
-    path_flags = [ '-isystem', '-I' ]
+  if user_flags:
+    include_flags = { '-iquote':  ( quoted_include_paths, False ),
+                      '-I':       ( include_paths, False ),
+                      '-isystem': ( include_paths, True ) }
 
     try:
-      it = iter( flags )
-      for flag in it:
-        flag_len = len( flag )
-        if flag.startswith( quote_flag ):
-          quote_flag_len = len( quote_flag )
-          # Add next flag to the include paths if current flag equals to
-          # '-iquote', or add remaining string otherwise.
-          quoted_include_path = ( next( it ) if flag_len == quote_flag_len else
-                                  flag[ quote_flag_len: ] )
-          if quoted_include_path:
-            quoted_include_paths.append( ToUnicode( quoted_include_path ) )
-        else:
-          for path_flag in path_flags:
-            if flag.startswith( path_flag ):
-              path_flag_len = len( path_flag )
-              include_path = ( next( it ) if flag_len == path_flag_len else
-                               flag[ path_flag_len: ] )
-              if include_path:
-                include_paths.append( ToUnicode( include_path ) )
-              break
+      it = iter( user_flags )
+      for user_flag in it:
+        user_flag_len = len( user_flag )
+        for flag in include_flags:
+          if user_flag.startswith( flag ):
+            flag_len = len( flag )
+            include_path = ( next( it ) if user_flag_len == flag_len else
+                             user_flag[ flag_len: ] )
+            if include_path:
+              container = include_flags[ flag ]
+              container[ 0 ].append( ( ToUnicode( include_path ),
+                                       container[ 1 ] ) )
+            break
     except StopIteration:
       pass
 
