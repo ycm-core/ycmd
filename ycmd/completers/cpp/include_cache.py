@@ -29,11 +29,15 @@ import os
 
 from collections import defaultdict
 from ycmd import responses
-
-EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
+from ycmd.completers.general.filename_completer import ( GetPathType,
+                                                         GetPathTypeName )
 
 
 class IncludeEntry( object ):
+  """ Represents single include completion candidate.
+  name is the name/string of the completion candidate,
+  entry_type is an integer indicating whether the candidate is a
+  'File', 'Dir' or both (See EXTRA_INFO_MAP in filename_completer). """
 
   def __init__( self, name, entry_type ):
     self.name = name
@@ -41,6 +45,8 @@ class IncludeEntry( object ):
 
 
 class IncludeList( object ):
+  """ Helper class fo combining include completion candidates from
+  several include paths. """
 
   def __init__( self ):
     self._includes = defaultdict( int )
@@ -55,7 +61,7 @@ class IncludeList( object ):
     includes = []
     for name, include_type in iteritems( self._includes ):
       includes.append( responses.BuildCompletionData(
-        name, EXTRA_INFO_MAP[ include_type ] ) )
+        name, GetPathTypeName( include_type ) ) )
     return includes
 
 
@@ -65,28 +71,61 @@ class IncludeCache( object ):
     self._cache = {}
 
 
+  def Clear( self ):
+    self._cache = {}
+
+
   def GetIncludes( self, path, cache ):
     includes = None
     if cache:
-      includes = self._cache.get( path )
+      includes = self._GetCached( path )
 
     if includes is None:
-      includes = self._GetIncludes( path )
+      includes = self._ListIncludes( path )
       if cache:
-        self._cache[ path ] = includes
+        self._AddToCache( path, includes )
+
     return includes
 
 
-  def _GetIncludes( self, path ):
+  def _AddToCache( self, path, includes ):
+    mtime = _GetModificationTime( path )
+    self._cache[ path ] = ( mtime, includes )
+
+
+  def _GetCached( self, path ):
+    includes = None
+    cache_entry = self._cache.get( path )
+    if cache_entry:
+      mtime = _GetModificationTime( path )
+      if mtime > cache_entry[ 0 ]:
+        del self._cache[ path ]
+      else:
+        includes = cache_entry[ 1 ]
+
+    return includes
+
+
+  def _ListIncludes( self, path ):
     try:
       names = os.listdir( path )
     except Exception:
-      names = []
+      return []
 
     includes = []
     for name in names:
       inc_path = os.path.join(path, name)
-      entry_type = 2 if os.path.isdir( inc_path ) else 1
-      includes.append( IncludeEntry( name, entry_type ) )
+      try:
+        entry_type = GetPathType( inc_path )
+        includes.append( IncludeEntry( name, entry_type ) )
+      except Exception:
+        pass
 
     return includes
+
+
+def _GetModificationTime( path ):
+  try:
+    return os.path.getmtime( path )
+  except Exception:
+    return 0

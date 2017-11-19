@@ -26,13 +26,17 @@ from builtins import *  # noqa
 import logging
 import os
 import re
-from collections import defaultdict
 
 from ycmd.completers.completer import Completer
 from ycmd.utils import GetCurrentDirectory, OnWindows, ToUnicode
 from ycmd import responses
 
-EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
+FILE = 1
+DIR = 2
+# This mapping is also used for the #include completion.
+# We have option N3, because when using Qt with specific include paths
+# configuration both file & dir entries can exist.
+EXTRA_INFO_MAP = { FILE : '[File]', DIR : '[Dir]', 3 : '[File&Dir]' }
 
 _logger = logging.getLogger( __name__ )
 
@@ -105,8 +109,8 @@ class FilenameCompleter( Completer ):
     # working directory of ycmd
     working_dir = request_data.get( 'working_dir' )
 
-    return GenerateCandidatesForPaths(
-      _GetAbsolutePaths(
+    return GeneratePathCompletionData(
+      _GetPathCompletionCandidates(
         path_dir,
         self.user_options[ 'filepath_completion_use_working_dir' ],
         filepath,
@@ -139,40 +143,46 @@ def _GetAbsolutePathForCompletions( path_dir,
                          path_dir )
 
 
-def _GetAbsolutePaths( path_dir, use_working_dir, filepath, working_dir ):
+def _GetPathCompletionCandidates( path_dir, use_working_dir,
+                                  filepath, working_dir ):
+
   absolute_path_dir = _GetAbsolutePathForCompletions( path_dir,
                                                       use_working_dir,
                                                       filepath,
                                                       working_dir )
-
+  entries = []
+  unicode_path = ToUnicode( absolute_path_dir )
   try:
     # We need to pass a unicode string to get unicode strings out of
     # listdir.
-    relative_paths = os.listdir( ToUnicode( absolute_path_dir ) )
+    relative_paths = os.listdir( unicode_path )
   except Exception:
     _logger.exception( 'Error while listing %s folder.', absolute_path_dir )
     relative_paths = []
 
-  return ( os.path.join( absolute_path_dir, relative_path )
-           for relative_path in relative_paths )
+  for rel_path in relative_paths:
+    try:
+      absolute_path = os.path.join( unicode_path, rel_path )
+      entries.append( ( rel_path, GetPathType( absolute_path ) ) )
+    except Exception:
+      pass
+
+  return entries
 
 
-def GenerateCandidatesForPaths( absolute_paths ):
-  extra_info = defaultdict( int )
-  basenames = []
-  for absolute_path in absolute_paths:
-    basename = os.path.basename( absolute_path )
-    if extra_info[ basename ] == 0:
-      basenames.append( basename )
-    is_dir = os.path.isdir( absolute_path )
-    extra_info[ basename ] |= ( 2 if is_dir else 1 )
+def GetPathType( path ):
+  return DIR if os.path.isdir( path ) else FILE
 
+
+def GetPathTypeName( path_type ):
+  return EXTRA_INFO_MAP[ path_type ]
+
+
+def GeneratePathCompletionData( entries ):
   completion_dicts = []
-  # Keep original ordering
-  for basename in basenames:
+  for entry in entries:
     completion_dicts.append(
-      responses.BuildCompletionData(
-        basename,
-        EXTRA_INFO_MAP[ extra_info[ basename ] ] ) )
+      responses.BuildCompletionData( entry[ 0 ],
+        GetPathTypeName( entry[ 1 ] ) ) )
 
   return completion_dicts

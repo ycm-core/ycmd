@@ -184,6 +184,8 @@ class ClangCompleter( Completer ):
          self._GoToInclude( request_data ) ),
       'ClearCompilationFlagCache': ( lambda self, request_data, args:
          self._ClearCompilationFlagCache() ),
+      'ClearIncludeCache'        : ( lambda self, request_data, args:
+         self._ClearIncludeCache() ),
       'GetType'                  : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data, func = 'GetTypeAtLocation' ) ),
       'GetTypeImprecise'         : ( lambda self, request_data, args:
@@ -341,6 +343,7 @@ class ClangCompleter( Completer ):
 
     return response_builder( message )
 
+
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()
 
@@ -369,6 +372,11 @@ class ClangCompleter( Completer ):
     # in a nice way
 
     return responses.BuildFixItResponse( fixits )
+
+
+  def _ClearIncludeCache( self ):
+    self._include_cache.Clear()
+
 
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]
