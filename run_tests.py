@@ -193,17 +193,24 @@ def BuildYcmdLibs( args ):
 def NoseTests( parsed_args, extra_nosetests_args ):
   # Always passing --with-id to nosetests enables non-surprising usage of
   # its --failed flag.
-  nosetests_args = [ '-v', '--with-id' ]
+  # By default, nose does not include files starting with a underscore in its
+  # report but we want __main__.py to be included. Only ignore files starting
+  # with a dot and setup.py.
+  nosetests_args = [ '-v', '--with-id', '--ignore-files=(^\.|^setup\.py$)' ]
 
   for key in COMPLETERS:
     if key not in parsed_args.completers:
       nosetests_args.extend( COMPLETERS[ key ][ 'test' ] )
 
   if parsed_args.coverage:
-    nosetests_args += [ '--with-coverage',
+    # We need to exclude the ycmd/tests/python/testdata directory since it
+    # contains Python files and its base name starts with "test".
+    nosetests_args += [ '--exclude-dir=ycmd/tests/python/testdata',
+                        '--with-coverage',
                         '--cover-erase',
                         '--cover-package=ycmd',
-                        '--cover-html' ]
+                        '--cover-html',
+                        '--cover-inclusive' ]
 
   if extra_nosetests_args:
     nosetests_args.extend( extra_nosetests_args )

@@ -34,6 +34,10 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 pip install codecov
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+:: Enable coverage for Python subprocesses. See:
+:: http://coverage.readthedocs.io/en/latest/subprocess.html
+python -c "with open('%python_path%\Lib\site-packages\sitecustomize.py', 'w') as f: f.write('import coverage\ncoverage.process_startup()')"
+
 ::
 :: Typescript configuration
 ::
