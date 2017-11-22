@@ -35,11 +35,11 @@ import requests
 
 from ycmd.utils import ReadFile
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
-from ycmd.tests.java import ( PathToTestFile,
+from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
+                              IsolatedYcmd,
+                              PathToTestFile,
                               SharedYcmd,
-                              IsolatedYcmdInDirectory,
-                              WaitUntilCompleterServerReady,
-                              DEFAULT_PROJECT_DIR )
+                              StartJavaCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
@@ -105,9 +105,10 @@ def RunTest( app, test, contents = None ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+@IsolatedYcmd
 def Subcommands_GetDoc_NoDoc_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -184,9 +185,10 @@ def Subcommands_GetDoc_Class_test( app ):
   } )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+@IsolatedYcmd
 def Subcommands_GetType_NoKnownType_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -415,9 +417,10 @@ def Subcommands_GetType_LiteralValue_test( app ):
                ErrorMatcher( RuntimeError, 'Unknown type' ) )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+@IsolatedYcmd
 def Subcommands_GoTo_NoLocation_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -443,9 +446,10 @@ def Subcommands_GoTo_NoLocation_test( app ):
                ErrorMatcher( RuntimeError, 'Cannot jump to location' ) )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR  ) )
+@IsolatedYcmd
 def Subcommands_GoToReferences_NoReferences_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',

@@ -38,15 +38,16 @@ NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
 
 _logger = logging.getLogger( __name__ )
 
-LANGUAGE_SERVER_HOME = os.path.join( os.path.dirname( __file__ ),
-                                     '..',
-                                     '..',
-                                     '..',
-                                     'third_party',
-                                     'eclipse.jdt.ls',
-                                     'org.eclipse.jdt.ls.product',
-                                     'target',
-                                     'repository')
+LANGUAGE_SERVER_HOME = os.path.abspath( os.path.join(
+  os.path.dirname( __file__ ),
+  '..',
+  '..',
+  '..',
+  'third_party',
+  'eclipse.jdt.ls',
+  'org.eclipse.jdt.ls.product',
+  'target',
+  'repository' ) )
 
 PATH_TO_JAVA = utils.PathToFirstExistingExecutable( [ 'java' ] )
 
@@ -56,12 +57,13 @@ PROJECT_FILE_TAILS = [
   'build.gradle'
 ]
 
-WORKSPACE_ROOT_PATH = os.path.join( os.path.dirname( __file__ ),
-                                    '..',
-                                    '..',
-                                    '..',
-                                    'third_party',
-                                    'eclipse.jdt.ls-workspace' )
+WORKSPACE_ROOT_PATH = os.path.abspath( os.path.join(
+  os.path.dirname( __file__ ),
+  '..',
+  '..',
+  '..',
+  'third_party',
+  'eclipse.jdt.ls-workspace' ) )
 
 # The authors of jdt.ls say that we should re-use workspaces. They also say that
 # occasionally, the workspace becomes corrupt, and has to be deleted. This is
@@ -171,26 +173,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     # Used to ensure that starting/stopping of the server is synchronized
     self._server_state_mutex = threading.RLock()
 
-    with self._server_state_mutex:
-      self._connection = None
-      self._server_handle = None
-      self._server_stderr = None
-      self._workspace_path = None
-      self._CleanUp()
-
-      try :
-        # When we start the server initially, we don't have the request data, so
-        # we use the ycmd working directory. The RestartServer sub-command uses
-        # the client's working directory if it is supplied.
-        #
-        # FIXME: We could start the server in the FileReadyToParse event, though
-        # this requires some additional complexity and state management.
-        self._StartServer()
-      except Exception:
-        # We must catch any exception, to ensure that we do not end up with a
-        # rogue instance of jdt.ls running.
-        _logger.exception( "jdt.ls failed to start." )
-        self._StopServer()
+    self._connection = None
+    self._server_handle = None
+    self._server_stderr = None
+    self._workspace_path = None
+    self._CleanUp()
 
 
   def SupportedFiletypes( self ):
@@ -241,6 +228,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return self._connection
 
 
+  def OnFileReadyToParse( self, request_data ):
+    self._StartServer( request_data )
+
+    return super( JavaCompleter, self ).OnFileReadyToParse( request_data )
+
+
   def DebugInfo( self, request_data ):
     items = [
       responses.DebugInfoItem( 'Startup Status', self._server_init_status ),
@@ -287,7 +280,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
              super( JavaCompleter, self ).ServerIsReady() )
 
 
-  def _GetProjectDirectory( self ):
+  def _GetProjectDirectory( self, request_data ):
     return self._project_dir
 
 
@@ -298,7 +291,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def _RestartServer( self, request_data ):
     with self._server_state_mutex:
       self._StopServer()
-      self._StartServer( request_data.get( 'working_dir' ) )
+      self._StartServer( request_data )
 
 
   def _CleanUp( self ):
@@ -320,6 +313,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._project_dir = None
     self._received_ready_message = threading.Event()
     self._server_init_status = 'Not started'
+    self._server_started = False
 
     self._server_handle = None
     self._connection = None
@@ -327,12 +321,17 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self.ServerReset()
 
 
-  def _StartServer( self, working_dir=None ):
+  def _StartServer( self, request_data ):
     with self._server_state_mutex:
+      if self._server_started:
+        return
+
+      self._server_started = True
+
       _logger.info( 'Starting jdt.ls Language Server...' )
 
       self._project_dir = _FindProjectDir(
-        working_dir if working_dir else utils.GetCurrentDirectory() )
+        os.path.dirname( request_data[ 'filepath' ] ) )
       self._workspace_path = _WorkspaceDirForProject(
         self._project_dir,
         self._use_clean_workspace )
@@ -382,7 +381,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         self._StopServer()
         return
 
-    self.SendInitialize()
+    self.SendInitialize( request_data )
 
 
   def _StopServer( self ):

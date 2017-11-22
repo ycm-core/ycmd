@@ -999,16 +999,16 @@ class LanguageServerCompleter( Completer ):
           del self._server_file_state[ file_name ]
 
 
-  def _GetProjectDirectory( self ):
+  def _GetProjectDirectory( self, request_data ):
     """Return the directory in which the server should operate. Language server
     protocol and most servers have a concept of a 'project directory'. By
-    default this is the working directory of the ycmd server, but
+    default this is the filepath directory of the initial request, but
     implementations may override this for example if there is a language- or
     server-specific notion of a project that can be detected."""
-    return utils.GetCurrentDirectory()
+    return os.path.dirname( request_data[ 'filepath' ] )
 
 
-  def SendInitialize( self ):
+  def SendInitialize( self, request_data ):
     """Sends the initialize request asynchronously.
     This must be called immediately after establishing the connection with the
     language server. Implementations must not issue further requests to the
@@ -1019,7 +1019,8 @@ class LanguageServerCompleter( Completer ):
       assert not self._initialize_response
 
       request_id = self.GetConnection().NextRequestId()
-      msg = lsp.Initialize( request_id, self._GetProjectDirectory() )
+      msg = lsp.Initialize( request_id,
+                            self._GetProjectDirectory( request_data  ) )
 
       def response_handler( response, message ):
         if message is None:

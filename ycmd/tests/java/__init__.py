@@ -29,15 +29,12 @@ from pprint import pformat
 
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
-                                    CurrentWorkingDirectory,
                                     IsolatedApp,
                                     SetUpApp,
-                                    StopCompleterServer )
-from ycmd.tests import test_utils
-from ycmd.utils import GetCurrentDirectory
+                                    StopCompleterServer,
+                                    WaitUntilCompleterServerReady )
 
 shared_app = None
-shared_current_dir = None
 DEFAULT_PROJECT_DIR = 'simple_eclipse_project'
 
 
@@ -51,25 +48,30 @@ def setUpPackage():
   by all tests using the SharedYcmd decorator in this package. Additional
   configuration that is common to these tests, like starting a semantic
   subserver, should be done here."""
-  global shared_app, shared_current_dir
-
-  shared_current_dir = GetCurrentDirectory()
-
-  # By default, we use the eclipse project for convenience. This means we don't
-  # have to @IsolatedYcmdInDirectory( DEFAULT_PROJECT_DIR ) for every test
-  os.chdir( PathToTestFile( DEFAULT_PROJECT_DIR ) )
+  global shared_app
 
   shared_app = SetUpApp()
-  WaitUntilCompleterServerReady( shared_app )
+  # By default, we use the eclipse project for convenience. This means we don't
+  # have to @IsolatedYcmdInDirectory( DEFAULT_PROJECT_DIR ) for every test
+  StartJavaCompleterServerInDirectory( shared_app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
 
 
 def tearDownPackage():
   """Cleans up the tests using the SharedYcmd decorator in this package. It is
   executed once after running all the tests in the package."""
-  global shared_app, shared_current_dir
+  global shared_app
 
   StopCompleterServer( shared_app, 'java' )
-  os.chdir( shared_current_dir )
+
+
+def StartJavaCompleterServerInDirectory( app, directory ):
+  app.post_json( '/event_notification',
+                 BuildRequest(
+                   filepath = os.path.join( directory, 'test.java' ),
+                   event_name = 'FileReadyToParse',
+                   filetype = 'java' ) )
+  WaitUntilCompleterServerReady( shared_app, 'java' )
 
 
 def SharedYcmd( test ):
@@ -86,31 +88,22 @@ def SharedYcmd( test ):
   return Wrapper
 
 
-def IsolatedYcmdInDirectory( directory ):
+def IsolatedYcmd( test ):
   """Defines a decorator to be attached to tests of this package. This decorator
-  passes a unique ycmd application as a parameter running in the directory
-  supplied. It should be used on tests that change the server state in a
-  irreversible way (ex: a semantic subserver is stopped or restarted) or expect
-  a clean state (ex: no semantic subserver started, no .ycm_extra_conf.py
-  loaded, etc).
+  passes a unique ycmd application as a parameter. It should be used on tests
+  that change the server state in a irreversible way (ex: a semantic subserver
+  is stopped or restarted) or expect a clean state (ex: no semantic subserver
+  started, no .ycm_extra_conf.py loaded, etc).
 
   Do NOT attach it to test generators but directly to the yielded tests."""
-  def Decorator( test ):
-    @functools.wraps( test )
-    def Wrapper( *args, **kwargs ):
-      with IsolatedApp() as app:
-        try:
-          with CurrentWorkingDirectory( directory ):
-            test( app, *args, **kwargs )
-        finally:
-          StopCompleterServer( app, 'java' )
-    return Wrapper
-
-  return Decorator
-
-
-def WaitUntilCompleterServerReady( app, timeout = 30 ):
-  test_utils.WaitUntilCompleterServerReady( app, 'java', timeout )
+  @functools.wraps( test )
+  def Wrapper( *args, **kwargs ):
+    with IsolatedApp() as app:
+      try:
+        test( app, *args, **kwargs )
+      finally:
+        StopCompleterServer( app, 'java' )
+  return Wrapper
 
 
 def PollForMessages( app, request_data ):

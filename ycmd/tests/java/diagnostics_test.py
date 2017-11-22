@@ -28,11 +28,11 @@ from hamcrest import assert_that, contains, contains_inanyorder, has_entries
 from nose.tools import eq_
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
-                              IsolatedYcmdInDirectory,
+                              IsolatedYcmd,
                               PathToTestFile,
                               PollForMessages,
                               SharedYcmd,
-                              WaitUntilCompleterServerReady )
+                              StartJavaCompleterServerInDirectory )
 
 from ycmd.tests.test_utils import BuildRequest, LocationMatcher
 from ycmd.utils import ReadFile
@@ -191,9 +191,10 @@ def FileReadyToParse_Diagnostics_Simple_test( app ):
   assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( DEFAULT_PROJECT_DIR ) )
+@IsolatedYcmd
 def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
 
   contents = '''
     package com.test;

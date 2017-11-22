@@ -33,9 +33,11 @@ from hamcrest import ( assert_that,
                        has_entry,
                        has_item )
 from ycmd.tests.java import ( PathToTestFile,
-                              IsolatedYcmdInDirectory,
-                              WaitUntilCompleterServerReady )
-from ycmd.tests.test_utils import BuildRequest, TemporaryTestDir
+                              IsolatedYcmd,
+                              StartJavaCompleterServerInDirectory )
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    TemporaryTestDir,
+                                    WaitUntilCompleterServerReady )
 from ycmd import utils
 
 
@@ -75,9 +77,10 @@ def TidyJDTProjectFiles( dir_name ):
   return decorator
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
+@IsolatedYcmd
 def ServerManagement_RestartServer_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory(
+    app, PathToTestFile( 'simple_eclipse_project' ) )
 
   eclipse_project = PathToTestFile( 'simple_eclipse_project' )
   maven_project = PathToTestFile( 'simple_maven_project' )
@@ -106,7 +109,7 @@ def ServerManagement_RestartServer_test( app ):
     ),
   )
 
-  WaitUntilCompleterServerReady( app )
+  WaitUntilCompleterServerReady( app, 'java' )
 
   app.post_json(
     '/event_notification',
@@ -124,9 +127,10 @@ def ServerManagement_RestartServer_test( app ):
                _ProjectDirectoryMatcher( maven_project ) )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project', 'src' ) )
+@IsolatedYcmd
 def ServerManagement_ProjectDetection_EclipseParent_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory(
+    app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
   project = PathToTestFile( 'simple_eclipse_project' )
 
@@ -137,14 +141,15 @@ def ServerManagement_ProjectDetection_EclipseParent_test( app ):
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmdInDirectory( PathToTestFile( 'simple_maven_project',
-                                          'src',
-                                          'main',
-                                          'java',
-                                          'com',
-                                          'test' ) )
+@IsolatedYcmd
 def ServerManagement_ProjectDetection_MavenParent_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( 'simple_maven_project',
+                                                       'src',
+                                                       'main',
+                                                       'java',
+                                                       'com',
+                                                       'test' ) )
 
   project = PathToTestFile( 'simple_maven_project' )
 
@@ -155,14 +160,15 @@ def ServerManagement_ProjectDetection_MavenParent_test( app ):
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmdInDirectory( PathToTestFile( 'simple_gradle_project',
-                                          'src',
-                                          'main',
-                                          'java',
-                                          'com',
-                                          'test' ) )
+@IsolatedYcmd
 def ServerManagement_ProjectDetection_GradleParent_test( app ):
-  WaitUntilCompleterServerReady( app )
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( 'simple_gradle_project',
+                                                       'src',
+                                                       'main',
+                                                       'java',
+                                                       'com',
+                                                       'test' ) )
 
   project = PathToTestFile( 'simple_gradle_project' )
 
@@ -175,51 +181,29 @@ def ServerManagement_ProjectDetection_GradleParent_test( app ):
 def ServerManagement_ProjectDetection_NoParent_test():
   with TemporaryTestDir() as tmp_dir:
 
-    @IsolatedYcmdInDirectory( tmp_dir )
+    @IsolatedYcmd
     def Test( app ):
-      WaitUntilCompleterServerReady( app )
+      StartJavaCompleterServerInDirectory( app, tmp_dir )
 
       # Run the debug info to check that we have the correct project dir (cwd)
       request_data = BuildRequest( filetype = 'java' )
       assert_that( app.post_json( '/debug_info', request_data ).json,
-                   _ProjectDirectoryMatcher( os.path.realpath( tmp_dir ) ) )
+                   _ProjectDirectoryMatcher( tmp_dir ) )
 
     yield Test
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( 'simple_eclipse_project' ) )
+@IsolatedYcmd
 @patch( 'ycmd.completers.java.java_completer.JavaCompleter.ShutdownServer',
         side_effect = AssertionError )
-def ServerManagement_CloseServer_Unclean_test( app,
-                              stop_server_cleanly ):
-  WaitUntilCompleterServerReady( app )
-
-  filepath = PathToTestFile( 'simple_maven_project',
-                             'src',
-                             'main',
-                             'java',
-                             'com',
-                             'test',
-                             'TestFactory.java' )
-
-  app.post_json(
-    '/event_notification',
-    BuildRequest(
-      filepath = filepath,
-      filetype = 'java',
-      working_dir = PathToTestFile( 'simple_eclipse_project' ),
-      event_name = 'FileReadyToParse',
-    )
-  )
-
-  WaitUntilCompleterServerReady( app )
+def ServerManagement_CloseServer_Unclean_test( app, stop_server_cleanly ):
+  StartJavaCompleterServerInDirectory(
+    app, PathToTestFile( 'simple_eclipse_project' ) )
 
   app.post_json(
     '/run_completer_command',
     BuildRequest(
-      filepath = filepath,
       filetype = 'java',
-      working_dir = PathToTestFile( 'simple_eclipse_project' ),
       command_arguments = [ 'StopServer' ],
     ),
   )
