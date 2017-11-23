@@ -377,7 +377,7 @@ def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
 
   include_flags = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
                     '-gcc-toolchain', '-include', '-include-pch',
-                    '-iframework', '-F', '-imacros' ]
+                    '-iframework', '-F', '-imacros', '-idirafter' ]
   to_remove = [ '/moo/boo' ]
   filename = 'file'
 
@@ -691,6 +691,10 @@ def MakeRelativePathsInFlagsAbsolute_test():
       'flags':  [ '-include-pch', '/test' ],
       'expect': [ '-include-pch', os.path.normpath( '/test' ) ],
     },
+    {
+      'flags':  [ '-idirafter', '/test' ],
+      'expect': [ '-idirafter', os.path.normpath( '/test' ) ],
+    },
 
     # Already absolute, single arguments
     {
@@ -713,6 +717,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
       'flags':  [ '-include-pch/test' ],
       'expect': [ '-include-pch' + os.path.normpath( '/test' ) ],
     },
+    {
+      'flags':  [ '-idirafter/test' ],
+      'expect': [ '-idirafter' + os.path.normpath( '/test' ) ],
+    },
+
 
     # Already absolute, double-dash arguments
     {
@@ -734,6 +743,10 @@ def MakeRelativePathsInFlagsAbsolute_test():
     {
       'flags':  [ '--include-pch=/test' ],
       'expect': [ '--include-pch=/test' ],
+    },
+    {
+      'flags':  [ '--idirafter=/test' ],
+      'expect': [ '--idirafter=/test' ],
     },
 
     # Relative, positional arguments
@@ -760,6 +773,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
     {
       'flags':  [ '-include-pch', 'test' ],
       'expect': [ '-include-pch', os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '-idirafter', 'test' ],
+      'expect': [ '-idirafter', os.path.normpath( '/test/test' ) ],
       'wd':     '/test',
     },
 
@@ -789,6 +807,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
       'expect': [ '-include-pch' + os.path.normpath( '/test/test' ) ],
       'wd':     '/test',
     },
+    {
+      'flags':  [ '-idiraftertest' ],
+      'expect': [ '-idirafter' + os.path.normpath( '/test/test' ) ],
+      'wd':     '/test',
+    },
 
     # Already absolute, double-dash arguments
     {
@@ -814,6 +837,11 @@ def MakeRelativePathsInFlagsAbsolute_test():
     {
       'flags':  [ '--include-pch=test' ],
       'expect': [ '--include-pch=test' ],
+      'wd':     '/test',
+    },
+    {
+      'flags':  [ '--idirafter=test' ],
+      'expect': [ '--idirafter=test' ],
       'wd':     '/test',
     },
   ]
