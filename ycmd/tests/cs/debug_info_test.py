@@ -56,8 +56,7 @@ def DebugInfo_ServerIsRunning_test( app ):
         'pid': instance_of( int ),
         'address': instance_of( str ),
         'port': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
+        'logfiles': empty(),
         'extras': contains( has_entries( {
           'key': 'solution',
           'value': instance_of( str )

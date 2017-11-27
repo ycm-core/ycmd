@@ -52,7 +52,7 @@ NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PATH_TO_LEGACY_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
   '..', '..', '..', 'third_party', 'OmniSharpServer',
-  'OmniSharp', 'bin', 'Debug', 'OmniSharp.exe' )
+  'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
 ROSLYN_OMNISHARP_BINARY = 'OmniSharp'
 if utils.OnWindows() or utils.OnCygwin():
   ROSLYN_OMNISHARP_BINARY = 'Omnisharp.exe'
@@ -192,10 +192,6 @@ class CsharpCompleter( Completer ):
       'GetDoc'                           : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetDoc' ) ),
-      'ServerIsRunning'                  : ( lambda self, request_data, args:
-         self._SolutionSubcommand( request_data,
-                                   method = 'ServerIsRunning',
-                                   no_request_data = True ) ),
       'ServerIsHealthy'                  : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = 'ServerIsHealthy',
@@ -322,7 +318,7 @@ class CsharpCompleter( Completer ):
         executable = completer._omnisharp_path,
         address = 'localhost',
         port = completer._omnisharp_port,
-        logfiles = [ completer._filename_stdout, completer._filename_stderr ],
+        logfiles = [],
         extras = [ solution_item ] )
 
       return responses.BuildDebugInfoResponse( name = 'C#',
@@ -512,7 +508,10 @@ class CsharpSolutionCompleter( object ):
   def _ReloadSolution( self ):
     """ Reloads the solutions in the OmniSharp server """
     self._logger.info( 'Reloading Solution in OmniSharp server' )
-    return self._GetResponse( '/reloadsolution' )
+    try:
+        return self._GetResponse( '/reloadsolution' )
+    except ValueError:
+        pass
 
 
   def CompletionType( self, request_data ):

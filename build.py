@@ -495,7 +495,7 @@ def EnableNewCsCompleter():
           '/v', 'version' ] )
       dotnet_46_pattern = re.compile( 'version\s*REG_SZ\s*4.[67].\d*' )
       
-      if ( dotnet_46_pattern.search( dotnetversion_output ) ):
+      if ( dotnet_46_pattern.search( ToUnicode( dotnetversion_output ) ) ):
         if platform.machine().endswith( '64' ):
           url_file = 'omnisharp.http-win-x64.zip'
         else:
@@ -554,6 +554,17 @@ def EnableNewCsCompleter():
       subprocess.check_call( [ "chmod", "a+x" ] + exes + dlls  )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
+
+
+def ToUnicode( value ):
+  if not value:
+    return str()
+  if isinstance( value, str ):
+    return value
+  if isinstance( value, bytes ):
+    # All incoming text should be utf8
+    return str( value, 'utf8' )
+  return str( value )
 
 
 def EnableGoCompleter():

@@ -31,6 +31,7 @@ from inspect import getargspec
 from ycmd import handlers
 from ycmd.tests.test_utils import ( ClearCompletionsCache, IsolatedApp,
                                     SetUpApp, BuildRequest )
+from ycmd.utils import ReadFile
 
 shared_legacy_app = None
 shared_roslyn_app = None
@@ -44,11 +45,25 @@ def PathToTestFile( *args ):
 
 
 def StartOmniSharpServer( app, filepath ):
+  contents = ReadFile( filepath )
+  event_data = BuildRequest( filepath = filepath,
+                            event_name = 'FileReadyToParse',
+                            filetype = 'cs',
+                            contents = contents )
+
+  app.post_json( '/event_notification', event_data ).json
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ "StartServer" ],
+                               command_arguments = [ 'ReloadSolution' ],
                                filepath = filepath,
                                filetype = 'cs' ) )
+  for n in range(0, 1): 
+    event_data = BuildRequest( filepath = filepath,
+                              event_name = 'FileReadyToParse',
+                              filetype = 'cs',
+                              contents = contents )
+
+    app.post_json( '/event_notification', event_data ).json
 
 
 def StopOmniSharpServer( app, filepath ):
@@ -60,7 +75,7 @@ def StopOmniSharpServer( app, filepath ):
 
 
 def WaitUntilOmniSharpServerReady( app, filepath ):
-  retries = 200
+  retries = 20
   success = False
 
   while retries > 0:
@@ -69,12 +84,12 @@ def WaitUntilOmniSharpServerReady( app, filepath ):
       success = True
       break
     request = BuildRequest( completer_target = 'filetype_default',
-                            command_arguments = [ 'ServerIsRunning' ],
+                            command_arguments = [ 'ServerIsReady' ],
                             filepath = filepath,
                             filetype = 'cs' )
     result = app.post_json( '/run_completer_command', request ).json
-    if not result:
-      raise RuntimeError( "OmniSharp failed during startup." )
+    ##if not result:
+    ##  raise RuntimeError( "OmniSharp failed during startup." )
     time.sleep( 0.2 )
     retries = retries - 1
 
