@@ -472,7 +472,7 @@ class CsharpSolutionCompleter( object ):
     for _ in range( 5 ):
       try:
         self._GetResponse( '/stopserver', timeout = .5 )
-      except:
+      except Exception:
         pass
       for _ in range( 10 ):
         if not self._ServerIsRunning():

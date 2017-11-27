@@ -163,7 +163,7 @@ def SharedYcmd( test ):
     try:
       argindex = argspec.index( 'use_roslyn' )
       use_roslyn = args[ argindex - 1 ]
-    except:
+    except Exception:
       if 'use_roslyn' in kwargs:
         use_roslyn = kwargs[ 'use_roslyn' ]
       else:
