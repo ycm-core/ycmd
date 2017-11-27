@@ -378,7 +378,20 @@ class TernCompleter( Completer ):
     return os.path.join( self._server_working_dir, path )
 
 
-  # TODO: this function is way too long. Consider refactoring it.
+  def _SetServerProjectFileAndWorkingDirectory( self, request_data ):
+    filepath = request_data[ 'filepath' ]
+    self._server_project_file = FindTernProjectFile( filepath )
+    if not self._server_project_file:
+      _logger.warning( 'No .tern-project file detected: %s', filepath )
+      self._server_working_dir = os.path.dirname( filepath )
+      return
+
+    _logger.info( 'Detected Tern configuration file at: %s',
+                  self._server_project_file )
+    self._server_working_dir = os.path.dirname( self._server_project_file )
+    _logger.info( 'Tern paths are relative to: %s', self._server_working_dir )
+
+
   def _StartServer( self, request_data ):
     with self._server_state_mutex:
       if self._server_started:
@@ -388,23 +401,9 @@ class TernCompleter( Completer ):
 
       _logger.info( 'Starting Tern server...' )
 
-      filepath = request_data[ 'filepath' ]
-      self._server_project_file = FindTernProjectFile( filepath )
-      if not self._server_project_file:
-        _logger.warning( 'No .tern-project file detected: %s', filepath )
-        self._server_working_dir = os.path.dirname( filepath )
-      else:
-        _logger.info( 'Detected Tern configuration file at: %s',
-                      self._server_project_file )
-        self._server_working_dir = os.path.dirname( self._server_project_file )
-      _logger.info( 'Tern paths are relative to: %s', self._server_working_dir )
+      self._SetServerProjectFileAndWorkingDirectory( request_data )
 
       self._server_port = utils.GetUnusedLocalhostPort()
-
-      if _logger.isEnabledFor( logging.DEBUG ):
-        extra_args = [ '--verbose' ]
-      else:
-        extra_args = []
 
       command = [ PATH_TO_NODE,
                   PATH_TO_TERN_BINARY,
@@ -413,43 +412,37 @@ class TernCompleter( Completer ):
                   '--host',
                   SERVER_HOST,
                   '--persistent',
-                  '--no-port-file' ] + extra_args
+                  '--no-port-file' ]
 
-      _logger.debug( 'Starting tern with the following command: '
-                    + ' '.join( command ) )
+      if _logger.isEnabledFor( logging.DEBUG ):
+        command.append( '--verbose' )
 
-      try:
-        self._server_stdout = utils.CreateLogfile(
-            LOGFILE_FORMAT.format( port = self._server_port, std = 'stdout' ) )
+      _logger.debug( 'Starting tern with the following command: %s', command )
 
-        self._server_stderr = utils.CreateLogfile(
-            LOGFILE_FORMAT.format( port = self._server_port, std = 'stderr' ) )
+      self._server_stdout = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._server_port, std = 'stdout' ) )
 
-        # We need to open a pipe to stdin or the Tern server is killed.
-        # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
-        # For unknown reasons, this is only needed on Windows and for Python
-        # 3.4+ on other platforms.
-        with utils.OpenForStdHandle( self._server_stdout ) as stdout:
-          with utils.OpenForStdHandle( self._server_stderr ) as stderr:
-            self._server_handle = utils.SafePopen(
-              command,
-              stdin = PIPE,
-              stdout = stdout,
-              stderr = stderr,
-              cwd = self._server_working_dir )
-      except Exception:
-        _logger.exception( 'Unable to start Tern server' )
-        self._CleanUp()
+      self._server_stderr = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._server_port, std = 'stderr' ) )
 
-      if self._server_port and self._ServerIsRunning():
-        _logger.info( 'Tern Server started with pid: ' +
-                      str( self._server_handle.pid ) +
-                      ' listening on port ' +
-                      str( self._server_port ) )
-        _logger.info( 'Tern Server log files are: ' +
-                      self._server_stdout +
-                      ' and ' +
-                      self._server_stderr )
+      # We need to open a pipe to stdin or the Tern server is killed.
+      # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
+      # For unknown reasons, this is only needed on Windows and for Python
+      # 3.4+ on other platforms.
+      with utils.OpenForStdHandle( self._server_stdout ) as stdout:
+        with utils.OpenForStdHandle( self._server_stderr ) as stderr:
+          self._server_handle = utils.SafePopen(
+            command,
+            stdin = PIPE,
+            stdout = stdout,
+            stderr = stderr,
+            cwd = self._server_working_dir )
+
+      if self._ServerIsRunning():
+        _logger.info( 'Tern Server started with pid: %s listening on port %s',
+                      self._server_handle.pid, self._server_port )
+        _logger.info( 'Tern Server log files are: %s and %s',
+                      self._server_stdout, self._server_stderr )
 
         self._do_tern_project_check = True
       else:
