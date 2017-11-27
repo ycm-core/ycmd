@@ -29,7 +29,6 @@ from webtest import AppError
 from hamcrest import assert_that, has_entries, contains
 import pprint
 
-from ycmd import user_options_store
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
                             WrapOmniSharpServer )
 from ycmd.tests.test_utils import ( BuildRequest,

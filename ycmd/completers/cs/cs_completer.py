@@ -34,7 +34,6 @@ import re
 import requests
 import threading
 import traceback
-from requests import ( Session )
 from subprocess import ( PIPE )
 
 from ycmd.completers.completer import Completer

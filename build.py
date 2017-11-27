@@ -486,48 +486,32 @@ def EnableNewCsCompleter():
     except OSError:
       pass
     os.chdir( build_dir )
-    version = "v1.19.0"
+    version = "v1.27.2"
     url_pattern = ( "https://github.com/OmniSharp/omnisharp-roslyn/"
                     "releases/download/{0}/{1}" )
     if OnWindows() or OnCygwin():
       dotnetversion_output = CheckOutput( [ 'reg', 'query', 
           'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\full',
           '/v', 'version' ] )
-      dotnet_46_pattern = re.compile( 'version\sREG_SZ\s*4.6.\d*' )
-      if ( dotnet_46_pattern.match( dotnetversion_output ) ):
+      dotnet_46_pattern = re.compile( 'version\s*REG_SZ\s*4.[67].\d*' )
+      
+      if ( dotnet_46_pattern.search( dotnetversion_output ) ):
         if platform.machine().endswith( '64' ):
-          url_file = 'omnisharp-win-x64-net46.zip'
+          url_file = 'omnisharp.http-win-x64.zip'
         else:
-          url_file = 'omnisharp-win-x86-net46.zip'
-      elif FindExecutable( 'dotnet' ): # TODO: min version?
-        if platform.machine().endswith( '64' ):
-          url_file = 'omnisharp-win-x64-netcoreapp1.1.zip'
-        else:
-          url_file = 'omnisharp-win-x86-netcoreapp1.1.zip'
+          url_file = 'omnisharp.http-win-x86.zip'
       else:
-        sys.exit( 'ERROR: .NET 4.6 or .NET Core is required to set up Roslyn Omnisharp.' )
+        sys.exit( 'ERROR: .NET 4.6 or .NET 4.7 is required to set up Roslyn Omnisharp.' )
     else:
       if FindExecutable( 'mono' ): # TODO: min version?
-        url_file = 'omnisharp-mono.tar.gz'
+        url_file = 'omnisharp.http-mono.tar.gz'
       elif FindExecutable( 'dotnet' ): # TODO: min version?
         if OnMac():
-          url_file = 'omnisharp-osx-x64-netcoreapp1.1.tar.gz'
+          url_file = 'omnisharp.http-osx.tar.gz'
         else:
-          disto_package_names = {
-            'Centos': 'omnisharp-centos.7-x64-netcoreapp1.1.tar.gz',
-            'debian': 'omnisharp-debian.8-x64-netcoreapp1.1.tar.gz',
-            'rhel': 'omnisharp-rhel.7.2-x64-netcoreapp1.1.tar.gz',
-            'Ubuntu': 'omnisharp-ubuntu.16.10-x64-netcoreapp1.1.tar.gz'
-          }
-          supported_dists = disto_package_names.keys()
-          disto = platform.linux_distribution( supported_dists = supported_dists,
-                                            full_distribution_name = False )[ 0 ]
-          try:
-            url_file = disto_package_names[ disto ]
-          except KeyValue:
-            sys.exit( 'ERROR: Mono is required to set up Roslyn Omnisharp on this distro.' )
+          url_file = 'omnisharp.http-linux-x64.tar.gz' # TODO x86?
       else:
-        sys.exit( 'ERROR: Mono or .NET Core is required to set up Roslyn Omnisharp on this distro.' )
+        sys.exit( 'ERROR: Mono or .NET Core is required to set up Roslyn Omnisharp.' )
 
     try:
       os.mkdir( version )

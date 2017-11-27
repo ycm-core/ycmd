@@ -24,14 +24,9 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-<<<<<<< HEAD
 from hamcrest import ( assert_that, calling, contains_string, empty,
                        greater_than, has_item, has_items, has_entries, raises )
-=======
-from hamcrest import ( assert_that, calling, empty, greater_than, has_item,
-                       has_items, has_entries, raises )
 from nose import SkipTest
->>>>>>> Support using omnisharp-roslyn
 from nose.tools import eq_
 from webtest import AppError
 
