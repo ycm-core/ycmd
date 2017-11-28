@@ -206,6 +206,6 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
     contains( has_entries( {
       'key': 'configuration file',
-      'value': os.path.expanduser( '~/.tern-config' )
+      'value': os.path.join( os.path.expanduser( '~' ), '.tern-config' )
     } ) )
   )
