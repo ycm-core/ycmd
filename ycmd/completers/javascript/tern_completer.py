@@ -382,11 +382,10 @@ class TernCompleter( Completer ):
     if not self._server_project_file:
       _logger.warning( 'No .tern-project file detected: %s', filepath )
       self._server_working_dir = os.path.dirname( filepath )
-      return
-
-    _logger.info( 'Detected Tern configuration file at: %s',
-                  self._server_project_file )
-    self._server_working_dir = os.path.dirname( self._server_project_file )
+    else:
+      _logger.info( 'Detected Tern configuration file at: %s',
+                    self._server_project_file )
+      self._server_working_dir = os.path.dirname( self._server_project_file )
     _logger.info( 'Tern paths are relative to: %s', self._server_working_dir )
 
 
