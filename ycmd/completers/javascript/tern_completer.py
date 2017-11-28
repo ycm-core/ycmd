@@ -90,10 +90,8 @@ def GlobalConfigExists( tern_config ):
 
 
 def FindTernProjectFile( starting_directory ):
-  """Finds the path to either a Tern project file or the user's global Tern
-  configuration file. If found, a tuple is returned containing the path and a
-  boolean indicating if the path is to a .tern-project file. If not found,
-  returns (None, False)."""
+  """Returns the path to either a Tern project file or the user's global Tern
+  configuration file."""
   for folder in utils.PathsToAllParentFolders( starting_directory ):
     tern_project = os.path.join( folder, '.tern-project' )
     if os.path.exists( tern_project ):
@@ -105,7 +103,7 @@ def FindTernProjectFile( starting_directory ):
   # don't warn if we find one. The point is that if the user has a .tern-config
   # set up, then she has deliberately done so and a ycmd warning is unlikely
   # to be anything other than annoying.
-  tern_config = os.path.expanduser( '~/.tern-config' )
+  tern_config = os.path.join( os.path.expanduser( '~' ), '.tern-config' )
   if GlobalConfigExists( tern_config ):
     return tern_config
 
@@ -439,9 +437,9 @@ class TernCompleter( Completer ):
             cwd = self._server_working_dir )
 
       if self._ServerIsRunning():
-        _logger.info( 'Tern Server started with pid: %s listening on port %s',
+        _logger.info( 'Tern Server started with pid %d listening on port %d',
                       self._server_handle.pid, self._server_port )
-        _logger.info( 'Tern Server log files are: %s and %s',
+        _logger.info( 'Tern Server log files are %s and %s',
                       self._server_stdout, self._server_stderr )
 
         self._do_tern_project_check = True
@@ -473,6 +471,8 @@ class TernCompleter( Completer ):
 
   def _CleanUp( self ):
     utils.CloseStandardStreams( self._server_handle )
+
+    self._do_tern_project_check = False
 
     self._server_handle = None
     self._server_port = None
