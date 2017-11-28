@@ -28,12 +28,12 @@ from nose.tools import eq_
 from pprint import pformat
 import requests
 
-from ycmd.tests.javascript import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.javascript import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
+                                    StartJavaScriptCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
-                                    LocationMatcher,
-                                    WaitUntilCompleterServerReady )
+                                    LocationMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -159,7 +159,7 @@ def Subcommands_GoTo_test( app ):
 
 @IsolatedYcmd
 def Subcommands_GoTo_RelativePath_test( app ):
-  WaitUntilCompleterServerReady( app, 'javascript' )
+  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
   RunTest(
     app,
     {
@@ -397,7 +397,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
 # an extra file into tern's project memory)
 @IsolatedYcmd
 def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
-  WaitUntilCompleterServerReady( app, 'javascript' )
+  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
 
   file1 = PathToTestFile( 'file1.js' )
   file2 = PathToTestFile( 'file2.js' )
