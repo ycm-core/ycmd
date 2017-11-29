@@ -34,6 +34,7 @@ import re
 import requests
 import threading
 import traceback
+import subprocess
 from subprocess import ( PIPE )
 
 from ycmd.completers.completer import Completer
@@ -416,7 +417,8 @@ class CsharpSolutionCompleter( object ):
 
       self._logger.info( 'Starting OmniSharp server with: ' + str( command ) )
 
-      self._omnisharp_phandle = utils.SafePopen(
+      # SafePopen breaks OmnisharpRoslyn, so using Popen directly
+      self._omnisharp_phandle = subprocess.Popen(
           command, stdout = PIPE, stderr = PIPE )
       for target in [
         self._GenerateOutLoop( self._omnisharp_phandle.stdout, "O" ),

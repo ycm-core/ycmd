@@ -142,9 +142,9 @@ def WrapOmniSharpServer( app, filepath, use_roslyn ):
   SetRoslynState( app, filepath, use_roslyn )
   if ( app not in shared_app_filepaths
        or filepath not in shared_app_filepaths[ app ] ):
-    StartOmniSharpServer( app, filepath )
     if app in shared_app_filepaths:
       shared_app_filepaths[ app ].append( filepath )
+  StartOmniSharpServer( app, filepath )
   WaitUntilOmniSharpServerReady( app, filepath )
   yield
 
