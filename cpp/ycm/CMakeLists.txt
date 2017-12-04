@@ -64,6 +64,11 @@ if ( USE_CLANG_COMPLETER AND
     set( CLANG_SHA256
          "28545a43b6fdfa9b287f31b5186fe8a643eb77c585da638e9847a3d09564d362" )
     set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
+  elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)" )
+    set( CLANG_DIRNAME "clang+llvm-${CLANG_VERSION}-armv7a-linux-gnueabihf" )
+    set( CLANG_SHA256
+         "dbc7331b6be3d8340d6ab1ea656549df0a586d3ad4ae2b89b6eab9b08688e56c" )
+    set( CLANG_FILENAME "${CLANG_DIRNAME}.tar.xz" )
   else()
     if ( 64_BIT_PLATFORM )
       set( CLANG_DIRNAME
