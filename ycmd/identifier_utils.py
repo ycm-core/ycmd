@@ -149,6 +149,11 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
 
     # Spec: http://doc.perl6.org/language/syntax
     'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
+
+    # Spec: https://tools.ietf.org/html/rfc6020
+    # Section 6.2
+    # namespace + identifier
+    'yang': re.compile( r"[a-zA-Z][\w:.-]*", re.UNICODE ),
 }
 
 FILETYPE_TO_IDENTIFIER_REGEX[ 'typescript' ] = (
