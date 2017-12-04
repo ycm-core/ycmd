@@ -385,7 +385,8 @@ def _RemoveUnusedFlags( flags, filename ):
     # remove that.
     if ( not current_flag_starts_with_dash and
           ( not previous_flag_starts_with_dash or
-            ( not previous_flag_is_include and '/' in flag ) ) ):
+            ( not previous_flag_is_include and '/' in flag ) ) 
+          and (os.path.realpath(flag) == flag ) ):
       continue
 
     new_flags.append( flag )
