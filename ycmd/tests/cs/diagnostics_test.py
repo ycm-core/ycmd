@@ -62,7 +62,6 @@ def Diagnostics_ZeroBasedLineAndColumn_test( app ):
   with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
-    results = {}
     for _ in ( 0, 1 ):  # First call always returns blank for some reason
       event_data = BuildRequest( filepath = filepath,
                                  event_name = 'FileReadyToParse',
@@ -100,7 +99,6 @@ def Diagnostics_WithRange_test( app ):
   with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
-    results = {}
     for _ in ( 0, 1 ):  # First call always returns blank for some reason
       event_data = BuildRequest( filepath = filepath,
                                  event_name = 'FileReadyToParse',
@@ -143,7 +141,6 @@ def Diagnostics_MultipleSolution_test( app ):
     with WrapOmniSharpServer( app, filepath ):
       contents = ReadFile( filepath )
 
-      results = {}
       for _ in ( 0, 1 ):  # First call always returns blank for some reason
         event_data = BuildRequest( filepath = filepath,
                                    event_name = 'FileReadyToParse',
@@ -173,3 +170,41 @@ def Diagnostics_MultipleSolution_test( app ):
                              } ),
                            } )
                        } ) ) )
+
+
+@SharedYcmd
+def Diagnostics_HandleZeroColumnDiagnostic_test( app ):
+  filepath = PathToTestFile( 'testy', 'ZeroColumnDiagnostic.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    for _ in ( 0, 1 ):  # First call always returns blank for some reason
+      event_data = BuildRequest( filepath = filepath,
+                                 event_name = 'FileReadyToParse',
+                                 filetype = 'cs',
+                                 contents = contents )
+
+      results = app.post_json( '/event_notification', event_data ).json
+
+    assert_that( results,
+                 contains(
+                     has_entries( {
+                       'kind': equal_to( 'ERROR' ),
+                       'text': contains_string(
+                           "Unexpected symbol `}'', "
+                           "expecting `;'', `{'', or `where''" ),
+                       'location': has_entries( {
+                         'line_num': 3,
+                         'column_num': 1
+                       } ),
+                       'location_extent': has_entries( {
+                         'start': has_entries( {
+                           'line_num': 3,
+                           'column_num': 1,
+                         } ),
+                         'end': has_entries( {
+                           'line_num': 3,
+                           'column_num': 1,
+                         } ),
+                       } )
+                     } ) ) )
