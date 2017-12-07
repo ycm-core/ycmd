@@ -82,6 +82,8 @@ def WaitUntilOmniSharpServerReady( app, filepath ):
     time.sleep( 0.2 )
     retries = retries - 1
 
+  time.sleep( 10 )
+
   if not success:
     raise RuntimeError( "Timeout waiting for OmniSharpServer" )
 
@@ -127,14 +129,13 @@ def tearDownPackage():
 @contextmanager
 def WrapOmniSharpServer( app, filepath, use_roslyn ):
   global shared_app_filepaths
-
-  SetRoslynState( app, filepath, use_roslyn )
   if ( app not in shared_app_filepaths
        or filepath not in shared_app_filepaths[ app ] ):
     if app in shared_app_filepaths:
       shared_app_filepaths[ app ].append( filepath )
-  StartOmniSharpServer( app, filepath )
-  WaitUntilOmniSharpServerReady( app, filepath )
+    SetRoslynState( app, filepath, use_roslyn )
+    StartOmniSharpServer( app, filepath )
+    WaitUntilOmniSharpServerReady( app, filepath )
   yield
 
 
