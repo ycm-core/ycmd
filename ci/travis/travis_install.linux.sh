@@ -26,7 +26,7 @@ export PYTHON_CONFIGURE_OPTS="--enable-shared"
 nvm install 4
 
 # Libuv is required for Omnisharp-Roslyn and isn't in accessible repos
-curl -sSL https://github.com/libuv/libuv/archive/v1.4.2.tar.gz | tar zxfv - -C /tmp && cd /tmp/libuv-1.4.2/
+curl -sSL https://github.com/libuv/libuv/archive/v1.18.0.tar.gz | tar zxfv - -C /tmp && cd /tmp/libuv-1.18.0/
 sh autogen.sh
 ./configure --prefix=$HOME/libuvinstall
 make

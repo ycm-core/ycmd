@@ -167,7 +167,7 @@ def CheckOutput( args, **kwargs ):
   kwargs.pop( 'exit_message', None )
   try:
     proc = subprocess.Popen( args, **kwargs )
-    return proc.communicate()[][0]
+    return proc.communicate()[0]
   except subprocess.CalledProcessError as error:
     if exit_message:
       sys.exit( exit_message )
