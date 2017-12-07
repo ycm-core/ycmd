@@ -68,6 +68,7 @@ addons:
      - llvm
      - libncurses5-dev
      - libncursesw5-dev
+     - libuv1
 cache:
   directories:
     - $HOME/.cache/pip  # Python packages from pip

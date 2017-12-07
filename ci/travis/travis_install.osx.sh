@@ -14,7 +14,8 @@ REQUIREMENTS="node.js
               readline
               autoconf
               pkg-config
-              openssl"
+              openssl
+              libuv"
 
 # Install Node, Go, Mono, Ninja, pyenv and dependencies.
 for pkg in $REQUIREMENTS; do
