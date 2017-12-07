@@ -24,3 +24,12 @@ export PYTHON_CONFIGURE_OPTS="--enable-shared"
 
 # Pre-installed Node.js is too old. Install latest Node.js v4 LTS.
 nvm install 4
+
+# Libuv is required for Omnisharp-Roslyn and isn't in accessible repos
+curl -sSL https://github.com/libuv/libuv/archive/v1.4.2.tar.gz | tar zxfv - -C /tmp && cd /tmp/libuv-1.4.2/
+sh autogen.sh
+./configure --prefix=$HOME/libuvinstall
+make
+make install
+export LD_LIBRARY_PATH="$HOME/libuvinstall/lib"
+cd $OLDPWD
