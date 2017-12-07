@@ -164,8 +164,9 @@ def GetGlobalPythonPrefix():
 def CheckOutput( args, **kwargs ):
   exit_message = kwargs.get( 'exit_message', None )
   kwargs.pop( 'exit_message', None )
+  kwargs.setdefault( 'stdout', subprocess.PIPE )
   try:
-    proc = subprocess.Popen( args, **kwargs, stdout = subprocess.PIPE )
+    proc = subprocess.Popen( args, **kwargs )
     return proc.communicate()[0]
   except subprocess.CalledProcessError as error:
     if exit_message:
