@@ -28,8 +28,7 @@ nvm install 4
 # Libuv is required for Omnisharp-Roslyn and isn't in accessible repos
 curl -sSL https://github.com/libuv/libuv/archive/v1.18.0.tar.gz | tar zxfv - -C /tmp && cd /tmp/libuv-1.18.0/
 sh autogen.sh
-./configure --prefix=$HOME/libuvinstall
+./configure
 make
 make install
-export LD_LIBRARY_PATH="$HOME/libuvinstall/lib"
 cd $OLDPWD
