@@ -4,9 +4,10 @@ environment:
   COVERAGE: true
   matrix:
   # We dropped MSVC 11 support because it lacks features from C++11 and C99.
-  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-    arch: 64
-    python: 36
+  # We dropped MSVC 13 support because it lacks .NET 4.6 on that image
+  #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+  #  arch: 64
+  #  python: 36
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     arch: 64
     python: 36
