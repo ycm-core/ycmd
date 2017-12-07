@@ -503,6 +503,9 @@ def EnableNewCsCompleter():
       else:
         sys.exit( 'ERROR: .NET 4.6 or .NET 4.7 is required to set up Roslyn Omnisharp.' )
     else:
+      libuv_output = CheckOutput( [ 'ld', '-luv', '-w' ] )
+      if 'library not found for -luv' in libuv_output:
+        sys.exit( 'ERROR: libuv is required to set up Roslyn Omnisharp.' )
       if FindExecutable( 'mono' ): # TODO: min version?
         url_file = 'omnisharp.http-mono.tar.gz'
       elif FindExecutable( 'dotnet' ): # TODO: min version?

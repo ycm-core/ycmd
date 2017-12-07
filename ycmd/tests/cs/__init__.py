@@ -57,7 +57,7 @@ def StartOmniSharpServer( app, filepath ):
                                command_arguments = [ 'ReloadSolution' ],
                                filepath = filepath,
                                filetype = 'cs' ) )
-  for n in range(0, 1): 
+  for n in range(0, 1):
     event_data = BuildRequest( filepath = filepath,
                               event_name = 'FileReadyToParse',
                               filetype = 'cs',
@@ -75,7 +75,7 @@ def StopOmniSharpServer( app, filepath ):
 
 
 def WaitUntilOmniSharpServerReady( app, filepath ):
-  retries = 20
+  retries = 200
   success = False
 
   while retries > 0:
@@ -88,13 +88,15 @@ def WaitUntilOmniSharpServerReady( app, filepath ):
                             filepath = filepath,
                             filetype = 'cs' )
     result = app.post_json( '/run_completer_command', request ).json
-    ##if not result:
-    ##  raise RuntimeError( "OmniSharp failed during startup." )
+    # if not result:
+    #   raise RuntimeError( "OmniSharp failed during startup." )
     time.sleep( 0.2 )
     retries = retries - 1
 
   if not success:
     raise RuntimeError( "Timeout waiting for OmniSharpServer" )
+
+  time.sleep( 10 )
 
 
 def setUpPackage():
@@ -197,7 +199,7 @@ def SharedYcmd( test ):
   return Wrapper
 
 
-def IsolatedYcmd( custom_options = {} ):
+def IsolatedYcmd( test ):
   """Defines a decorator to be attached to tests of this package. This decorator
   passes a unique ycmd application as a parameter. It should be used on tests
   that change the server state in a irreversible way (ex: a semantic subserver
@@ -215,13 +217,12 @@ def IsolatedYcmd( custom_options = {} ):
     def CustomServerKeepLogfiles_test( app ):
       ...
   """
-  def Decorator( test ):
-    @functools.wraps( test )
-    def Wrapper( *args, **kwargs ):
-      with IsolatedApp( custom_options ) as app:
-        app.post_json(
-          '/ignore_extra_conf_file',
-          { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
-        test( app, *args, **kwargs )
-    return Wrapper
-  return Decorator
+
+  @functools.wraps( test )
+  def Wrapper( *args, **kwargs ):
+    with IsolatedApp( {} ) as app:
+      app.post_json(
+        '/ignore_extra_conf_file',
+        { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
+      test( app, *args, **kwargs )
+  return Wrapper

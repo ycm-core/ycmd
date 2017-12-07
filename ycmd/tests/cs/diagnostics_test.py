@@ -23,7 +23,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from hamcrest import ( assert_that, contains, contains_string, equal_to,
-                       has_entries )
+                       has_entries, has_item )
 
 from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
 from ycmd.tests.test_utils import BuildRequest
@@ -72,27 +72,50 @@ def _Diagnostics_WithRange_test( app, use_roslyn ):
 
       results = app.post_json( '/event_notification', event_data ).json
 
-    assert_that( results,
-                 contains(
-                     has_entries( {
-                       'kind': equal_to( 'WARNING' ),
-                       'text': contains_string(
-                           "Name should have prefix '_'" ),
-                       'location': has_entries( {
-                         'line_num': 3,
-                         'column_num': 16
-                       } ),
-                       'location_extent': has_entries( {
-                         'start': has_entries( {
-                           'line_num': 3,
-                           'column_num': 16,
-                         } ),
-                         'end': has_entries( {
-                           'line_num': 3,
-                           'column_num': 25,
-                         } ),
-                       } )
-                     } ) ) )
+    if use_roslyn:
+      assert_that( results,
+                  has_item(
+                      has_entries( {
+                        'kind': equal_to( 'WARNING' ),
+                        'text': contains_string(
+                            "is assigned but its value is never used" ),
+                        'location': has_entries( {
+                          'line_num': 6,
+                          'column_num': 13
+                        } ),
+                        'location_extent': has_entries( {
+                          'start': has_entries( {
+                            'line_num': 6,
+                            'column_num': 13,
+                          } ),
+                          'end': has_entries( {
+                            'line_num': 6,
+                            'column_num': 16,
+                          } ),
+                        } )
+                      } ) ) )
+    else:
+      assert_that( results,
+                  has_item(
+                      has_entries( {
+                        'kind': equal_to( 'WARNING' ),
+                        'text': contains_string(
+                            "Name should have prefix '_'" ),
+                        'location': has_entries( {
+                          'line_num': 3,
+                          'column_num': 16
+                        } ),
+                        'location_extent': has_entries( {
+                          'start': has_entries( {
+                            'line_num': 3,
+                            'column_num': 16,
+                          } ),
+                          'end': has_entries( {
+                            'line_num': 3,
+                            'column_num': 25,
+                          } ),
+                        } )
+                      } ) ) )
 
 
 def Diagnostics_MultipleSolution_test():
@@ -123,7 +146,10 @@ def _Diagnostics_MultipleSolution_test( app, use_roslyn ):
 
 
 def _Diagnostics_CsCompleter_ExpectedResult( use_roslyn, flag ):
-  def build_matcher( kind, message, line, column ):
+  def build_matcher( kind, message, line, column,
+                     end_line = -1, end_column = -1 ):
+    end_column = end_column if end_column >= 0 else column
+    end_line = end_line if end_line >= 0 else line
     return has_entries( {
       'kind': equal_to( kind ),
       'text': contains_string( message ),
@@ -137,8 +163,8 @@ def _Diagnostics_CsCompleter_ExpectedResult( use_roslyn, flag ):
           'column_num': column
         } ),
         'end': has_entries( {
-          'line_num': line,
-          'column_num': column
+          'line_num': end_line,
+          'column_num': end_column
         } ),
       } )
     } )
@@ -156,14 +182,14 @@ def _Diagnostics_CsCompleter_ExpectedResult( use_roslyn, flag ):
     )
     entries.append(
       build_matcher( 'WARNING',
-        "is assigned but its value is never used", 9, 8 ),
+        "is assigned but its value is never used", 9, 8, 9, 11 ),
     )
-    if flag:
-      entries.append(
-        build_matcher( 'ERROR',
-          "Program has more than one entry point defined. Compile with /main"
-          + " to specify the type that contains the entry point.", 7, 22 ),
-      )
+    # if flag:
+    #   entries.append(
+    #     build_matcher( 'ERROR',
+    #       "Program has more than one entry point defined. Compile with /main"
+    #       + " to specify the type that contains the entry point.", 7, 22 ),
+    #   )
   else:
     entries.append(
       build_matcher( 'ERROR', "Unexpected symbol `}'', expecting identifier",
