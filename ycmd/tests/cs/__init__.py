@@ -51,6 +51,8 @@ def StartOmniSharpServer( app, filepath ):
                             filetype = 'cs',
                             contents = contents )
 
+  time.sleep( 10 )
+
   app.post_json( '/event_notification', event_data ).json
   app.post_json( '/run_completer_command',
                  BuildRequest( completer_target = 'filetype_default',
@@ -78,6 +80,8 @@ def WaitUntilOmniSharpServerReady( app, filepath ):
   retries = 200
   success = False
 
+  time.sleep( 5 )
+
   while retries > 0:
     result = app.get( '/ready', { 'subserver': 'cs' } ).json
     if result:
@@ -96,7 +100,7 @@ def WaitUntilOmniSharpServerReady( app, filepath ):
   if not success:
     raise RuntimeError( "Timeout waiting for OmniSharpServer" )
 
-  time.sleep( 10 )
+  time.sleep( 5 )
 
 
 def setUpPackage():
