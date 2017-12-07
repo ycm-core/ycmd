@@ -50,22 +50,7 @@ def StartOmniSharpServer( app, filepath ):
                             event_name = 'FileReadyToParse',
                             filetype = 'cs',
                             contents = contents )
-
-  time.sleep( 10 )
-
   app.post_json( '/event_notification', event_data ).json
-  app.post_json( '/run_completer_command',
-                 BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ 'ReloadSolution' ],
-                               filepath = filepath,
-                               filetype = 'cs' ) )
-  for n in range(0, 1):
-    event_data = BuildRequest( filepath = filepath,
-                              event_name = 'FileReadyToParse',
-                              filetype = 'cs',
-                              contents = contents )
-
-    app.post_json( '/event_notification', event_data ).json
 
 
 def StopOmniSharpServer( app, filepath ):
@@ -77,30 +62,28 @@ def StopOmniSharpServer( app, filepath ):
 
 
 def WaitUntilOmniSharpServerReady( app, filepath ):
-  retries = 200
+  retries = 2000
   success = False
 
-  time.sleep( 5 )
-
   while retries > 0:
-    result = app.get( '/ready', { 'subserver': 'cs' } ).json
-    if result:
-      success = True
-      break
-    request = BuildRequest( completer_target = 'filetype_default',
-                            command_arguments = [ 'ServerIsReady' ],
-                            filepath = filepath,
-                            filetype = 'cs' )
-    result = app.post_json( '/run_completer_command', request ).json
-    # if not result:
-    #   raise RuntimeError( "OmniSharp failed during startup." )
+    try:
+      request = BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ 'ServerIsReady' ],
+                              filepath = filepath,
+                              filetype = 'cs' )
+      result = app.post_json( '/run_completer_command', request ).json
+      if result:
+        success = True
+        break
+      # if not result:
+      #   raise RuntimeError( "OmniSharp failed during startup." )
+    except Exception:
+      pass
     time.sleep( 0.2 )
     retries = retries - 1
 
   if not success:
     raise RuntimeError( "Timeout waiting for OmniSharpServer" )
-
-  time.sleep( 5 )
 
 
 def setUpPackage():

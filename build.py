@@ -507,7 +507,7 @@ def EnableNewCsCompleter():
     else:
       # TODO - improve this check
       libuv_output = CheckOutput( [ 'gcc', '-luv' ], stderr = subprocess.STDOUT )
-      if 'library not found for -luv' in libuv_output:
+      if 'library not found for -luv' in ToUnicode( libuv_output ):
         sys.exit( 'ERROR: libuv is required to set up Roslyn Omnisharp.' )
       if FindExecutable( 'mono' ): # TODO: min version?
         url_file = 'omnisharp.http-mono.tar.gz'
