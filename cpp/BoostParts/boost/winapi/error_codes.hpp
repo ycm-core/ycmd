@@ -1,22 +1,20 @@
-//  error_codes.hpp  --------------------------------------------------------------//
+/*
+ * Copyright 2016 Andrey Semashev
+ *
+ * Distributed under the Boost Software License, Version 1.0.
+ * See http://www.boost.org/LICENSE_1_0.txt
+ */
 
-//  Copyright 2016 Andrey Semashev
+#ifndef BOOST_WINAPI_ERROR_CODES_HPP_INCLUDED_
+#define BOOST_WINAPI_ERROR_CODES_HPP_INCLUDED_
 
-//  Distributed under the Boost Software License, Version 1.0.
-//  See http://www.boost.org/LICENSE_1_0.txt
-
-
-#ifndef BOOST_DETAIL_WINAPI_ERROR_CODES_HPP_
-#define BOOST_DETAIL_WINAPI_ERROR_CODES_HPP_
-
-#include <boost/detail/winapi/basic_types.hpp>
+#include <boost/winapi/basic_types.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
 namespace boost {
-namespace detail {
 namespace winapi {
 
 BOOST_CONSTEXPR_OR_CONST DWORD_ FACILITY_XPS_ = 82;
@@ -2953,7 +2951,6 @@ BOOST_CONSTEXPR_OR_CONST DWORD_ STORE_ERROR_PENDING_COM_TRANSACTION_ = 15863;
 BOOST_CONSTEXPR_OR_CONST DWORD_ STORE_ERROR_LICENSE_REVOKED_ = 15864;
 
 } // namespace winapi
-} // namespace detail
 } // namespace boost
 
-#endif // BOOST_DETAIL_WINAPI_ERROR_CODES_HPP_
+#endif // BOOST_WINAPI_ERROR_CODES_HPP_INCLUDED_

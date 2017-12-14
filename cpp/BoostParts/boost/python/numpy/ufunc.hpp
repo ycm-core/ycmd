@@ -106,7 +106,7 @@ struct unary_ufunc
     dtype in_dtype = dtype::get_builtin<TArgument>();
     dtype out_dtype = dtype::get_builtin<TResult>();
     ndarray in_array = from_object(input, in_dtype, ndarray::ALIGNED);
-    ndarray out_array = (output != object()) ?
+    ndarray out_array = ! output.is_none() ?
       from_object(output, out_dtype, ndarray::ALIGNED | ndarray::WRITEABLE)
       : zeros(in_array.get_nd(), in_array.get_shape(), out_dtype);
     multi_iter iter = make_multi_iter(in_array, out_array);
@@ -171,7 +171,7 @@ struct binary_ufunc
     ndarray in1_array = from_object(input1, in1_dtype, ndarray::ALIGNED);
     ndarray in2_array = from_object(input2, in2_dtype, ndarray::ALIGNED);
     multi_iter iter = make_multi_iter(in1_array, in2_array);
-    ndarray out_array = (output != object())
+    ndarray out_array = !output.is_none()
       ? from_object(output, out_dtype, ndarray::ALIGNED | ndarray::WRITEABLE)
       : zeros(iter.get_nd(), iter.get_shape(), out_dtype);
     iter = make_multi_iter(in1_array, in2_array, out_array);

@@ -76,7 +76,7 @@ namespace detail
       registry::lookup_shared_ptr(type_id<shared_ptr<T> >());
   }
 
-#if __cplusplus >= 201103L
+#if !defined(BOOST_NO_CXX11_SMART_PTR)
   template <class T>
   inline void
   register_shared_ptr0(std::shared_ptr<T>*)

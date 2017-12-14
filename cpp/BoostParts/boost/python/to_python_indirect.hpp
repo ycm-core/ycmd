@@ -83,7 +83,7 @@ namespace detail
           // copy constructor.
 # if defined(__ICL) && __ICL < 600 
           typedef boost::shared_ptr<T> smart_pointer;
-# elif __cplusplus < 201103L
+# elif defined(BOOST_NO_CXX11_SMART_PTR)
           typedef std::auto_ptr<T> smart_pointer;
 # else
           typedef std::unique_ptr<T> smart_pointer;

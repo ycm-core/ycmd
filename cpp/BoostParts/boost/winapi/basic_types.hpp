@@ -1,17 +1,17 @@
-//  basic_types.hpp  --------------------------------------------------------------//
+/*
+ * Copyright 2010 Vicente J. Botet Escriba
+ * Copyright 2015 Andrey Semashev
+ *
+ * Distributed under the Boost Software License, Version 1.0.
+ * See http://www.boost.org/LICENSE_1_0.txt
+ */
 
-//  Copyright 2010 Vicente J. Botet Escriba
-//  Copyright 2015 Andrey Semashev
-
-//  Distributed under the Boost Software License, Version 1.0.
-//  See http://www.boost.org/LICENSE_1_0.txt
-
-#ifndef BOOST_DETAIL_WINAPI_BASIC_TYPES_HPP
-#define BOOST_DETAIL_WINAPI_BASIC_TYPES_HPP
+#ifndef BOOST_WINAPI_BASIC_TYPES_HPP_INCLUDED_
+#define BOOST_WINAPI_BASIC_TYPES_HPP_INCLUDED_
 
 #include <cstdarg>
 #include <boost/cstdint.hpp>
-#include <boost/detail/winapi/config.hpp>
+#include <boost/winapi/config.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
@@ -53,32 +53,31 @@ typedef void* HANDLE;
 #endif
 
 #if defined(STRICT)
-#define BOOST_DETAIL_WINAPI_DECLARE_HANDLE(x) struct x##__; typedef struct x##__ *x
+#define BOOST_WINAPI_DETAIL_DECLARE_HANDLE(x) struct x##__; typedef struct x##__ *x
 #else
-#define BOOST_DETAIL_WINAPI_DECLARE_HANDLE(x) typedef void* x
+#define BOOST_WINAPI_DETAIL_DECLARE_HANDLE(x) typedef void* x
 #endif
 
 #if !defined( BOOST_USE_WINDOWS_H )
 extern "C" {
 union _LARGE_INTEGER;
 struct _SECURITY_ATTRIBUTES;
-BOOST_DETAIL_WINAPI_DECLARE_HANDLE(HINSTANCE);
+BOOST_WINAPI_DETAIL_DECLARE_HANDLE(HINSTANCE);
 typedef HINSTANCE HMODULE;
 }
 #endif
 
 #if defined(__GNUC__)
-#define BOOST_DETAIL_WINAPI_MAY_ALIAS __attribute__ ((__may_alias__))
+#define BOOST_WINAPI_DETAIL_EXTENSION __extension__
 #else
-#define BOOST_DETAIL_WINAPI_MAY_ALIAS
+#define BOOST_WINAPI_DETAIL_EXTENSION
 #endif
 
-// MinGW64 gcc 4.8.2 fails to compile function declarations with boost::detail::winapi::VOID_ arguments even though
+// MinGW64 gcc 4.8.2 fails to compile function declarations with boost::winapi::VOID_ arguments even though
 // the typedef expands to void. In Windows SDK, VOID is a macro which unfolds to void. We use our own macro in such cases.
-#define BOOST_DETAIL_WINAPI_VOID void
+#define BOOST_WINAPI_DETAIL_VOID void
 
 namespace boost {
-namespace detail {
 namespace winapi {
 #if defined( BOOST_USE_WINDOWS_H )
 
@@ -90,6 +89,8 @@ typedef ::PBOOLEAN PBOOLEAN_;
 typedef ::BYTE BYTE_;
 typedef ::PBYTE PBYTE_;
 typedef ::LPBYTE LPBYTE_;
+typedef ::UCHAR UCHAR_;
+typedef ::PUCHAR PUCHAR_;
 typedef ::WORD WORD_;
 typedef ::PWORD PWORD_;
 typedef ::LPWORD LPWORD_;
@@ -112,6 +113,8 @@ typedef ::PLONG PLONG_;
 typedef ::LPLONG LPLONG_;
 typedef ::ULONG ULONG_;
 typedef ::PULONG PULONG_;
+typedef ::LONGLONG ULONG64_;
+typedef ::ULONGLONG PULONG64_;
 typedef ::LONGLONG LONGLONG_;
 typedef ::ULONGLONG ULONGLONG_;
 typedef ::INT_PTR INT_PTR_;
@@ -135,6 +138,10 @@ typedef ::WCHAR WCHAR_;
 typedef ::LPWSTR LPWSTR_;
 typedef ::LPCWSTR LPCWSTR_;
 
+// ::NTSTATUS is defined in ntdef.h, which is not included by windows.h by default
+typedef LONG_ NTSTATUS_;
+typedef NTSTATUS_ *PNTSTATUS_;
+
 #else // defined( BOOST_USE_WINDOWS_H )
 
 typedef int BOOL_;
@@ -143,6 +150,8 @@ typedef BOOL_* LPBOOL_;
 typedef unsigned char BYTE_;
 typedef BYTE_* PBYTE_;
 typedef BYTE_* LPBYTE_;
+typedef unsigned char UCHAR_;
+typedef UCHAR_* PUCHAR_;
 typedef BYTE_ BOOLEAN_;
 typedef BOOLEAN_* PBOOLEAN_;
 typedef unsigned short WORD_;
@@ -168,6 +177,8 @@ typedef LONG_* PLONG_;
 typedef LONG_* LPLONG_;
 typedef unsigned long ULONG_;
 typedef ULONG_* PULONG_;
+typedef boost::uint64_t ULONG64_;
+typedef ULONG64_ * PULONG64_;
 
 typedef boost::int64_t LONGLONG_;
 typedef boost::uint64_t ULONGLONG_;
@@ -208,11 +219,19 @@ typedef wchar_t WCHAR_;
 typedef WCHAR_ *LPWSTR_;
 typedef const WCHAR_ *LPCWSTR_;
 
+typedef long NTSTATUS_;
+typedef NTSTATUS_ * PNTSTATUS_;
+
 #endif // defined( BOOST_USE_WINDOWS_H )
 
 typedef ::HMODULE HMODULE_;
 
-typedef union BOOST_DETAIL_WINAPI_MAY_ALIAS _LARGE_INTEGER {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
+#endif
+
+typedef union BOOST_MAY_ALIAS _LARGE_INTEGER {
     struct {
         DWORD_ LowPart;
         LONG_ HighPart;
@@ -220,7 +239,11 @@ typedef union BOOST_DETAIL_WINAPI_MAY_ALIAS _LARGE_INTEGER {
     LONGLONG_ QuadPart;
 } LARGE_INTEGER_, *PLARGE_INTEGER_;
 
-typedef struct BOOST_DETAIL_WINAPI_MAY_ALIAS _SECURITY_ATTRIBUTES {
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+
+typedef struct BOOST_MAY_ALIAS _SECURITY_ATTRIBUTES {
     DWORD_  nLength;
     LPVOID_ lpSecurityDescriptor;
     BOOL_   bInheritHandle;
@@ -228,6 +251,5 @@ typedef struct BOOST_DETAIL_WINAPI_MAY_ALIAS _SECURITY_ATTRIBUTES {
 
 }
 }
-}
 
-#endif // BOOST_DETAIL_WINAPI_BASIC_TYPES_HPP
+#endif // BOOST_WINAPI_BASIC_TYPES_HPP_INCLUDED_

@@ -267,6 +267,11 @@
 #  define BOOST_ATTRIBUTE_UNUSED __attribute__((unused))
 #endif
 
+// Type aliasing hint.
+#if __has_attribute(__may_alias__)
+#  define BOOST_MAY_ALIAS __attribute__((__may_alias__))
+#endif
+
 #ifndef BOOST_COMPILER
 #  define BOOST_COMPILER "Clang version " __clang_version__
 #endif

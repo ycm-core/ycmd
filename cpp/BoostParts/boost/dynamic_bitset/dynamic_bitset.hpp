@@ -977,7 +977,7 @@ template <typename Block, typename Allocator>
 dynamic_bitset<Block, Allocator>&
 dynamic_bitset<Block, Allocator>::set()
 {
-  std::fill(m_bits.begin(), m_bits.end(), ~Block(0));
+  std::fill(m_bits.begin(), m_bits.end(), static_cast<Block>(~0));
   m_zero_unused_bits();
   return *this;
 }
@@ -1056,7 +1056,7 @@ bool dynamic_bitset<Block, Allocator>::all() const
     }
 
     const block_width_type extra_bits = count_extra_bits();
-    block_type const all_ones = ~static_cast<Block>(0);
+    block_type const all_ones = static_cast<Block>(~0);
 
     if (extra_bits == 0) {
         for (size_type i = 0, e = num_blocks(); i < e; ++i) {

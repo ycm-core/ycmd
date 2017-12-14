@@ -175,6 +175,7 @@
 #endif
 #if !defined(_CPPLIB_VER) || (_CPPLIB_VER < 650)
 #  define BOOST_NO_CXX17_STD_INVOKE
+#  define BOOST_NO_CXX17_ITERATOR_TRAITS
 #endif
 
 #if defined(BOOST_INTEL) && (BOOST_INTEL <= 1400)

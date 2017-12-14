@@ -367,12 +367,9 @@ namespace boost
 #include <stddef.h>
 #endif
 
-// PGI seems to not support intptr_t/uintptr_t properly. BOOST_HAS_STDINT_H is not defined for this compiler by Boost.Config.
-#if !defined(__PGIC__)
-
 #if (defined(BOOST_WINDOWS) && !defined(_WIN32_WCE)) \
     || (defined(_XOPEN_UNIX) && (_XOPEN_UNIX+0 > 0) && !defined(__UCLIBC__)) \
-    || defined(__CYGWIN__) \
+    || defined(__CYGWIN__) || defined(__VXWORKS__) \
     || defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__) \
     || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || (defined(sun) && !defined(BOOST_HAS_STDINT_H)) || defined(INTPTR_MAX)
 
@@ -392,8 +389,6 @@ namespace boost {
 #define BOOST_HAS_INTPTR_T
 
 #endif
-
-#endif // !defined(__PGIC__)
 
 #endif // BOOST_CSTDINT_HPP
 

@@ -144,7 +144,7 @@ namespace boost
 
     } // namespace errc
 
-# ifndef BOOST_SYSTEM_NO_DEPRECATED
+# ifdef BOOST_SYSTEM_ENABLE_DEPRECATED
     namespace posix = errc;
     namespace posix_error = errc;
 # endif
@@ -198,7 +198,7 @@ namespace boost
 #endif
     //  deprecated synonyms ------------------------------------------------------------//
 
-#ifndef BOOST_SYSTEM_NO_DEPRECATED
+#ifdef BOOST_SYSTEM_ENABLE_DEPRECATED
     inline const error_category &  get_system_category() { return system_category(); }
     inline const error_category &  get_generic_category() { return generic_category(); }
     inline const error_category &  get_posix_category() { return generic_category(); }
@@ -208,6 +208,12 @@ namespace boost
       = generic_category();
     static const error_category &  native_ecat    BOOST_ATTRIBUTE_UNUSED
       = system_category();
+#endif
+
+#ifdef BOOST_MSVC
+#pragma warning(push)
+// 'this' : used in base member initializer list
+#pragma warning(disable: 4355)
 #endif
 
     //  class error_category  ------------------------------------------------//
@@ -327,6 +333,10 @@ namespace boost
       bool operator<( const error_category & rhs ) const BOOST_SYSTEM_NOEXCEPT
         { return std::less<const error_category*>()( this, &rhs ); }
     };
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
     //  class error_condition  ---------------------------------------------------------//
 
@@ -523,7 +533,7 @@ namespace boost
     };
 
     //  predefined error_code object used as "throw on error" tag
-# ifndef BOOST_SYSTEM_NO_DEPRECATED
+# ifdef BOOST_SYSTEM_ENABLE_DEPRECATED
     BOOST_SYSTEM_DECL extern error_code throws;
 # endif
 
@@ -532,8 +542,9 @@ namespace boost
     //  "throws" function in namespace boost rather than namespace boost::system.
 
   }  // namespace system
-
-  namespace detail { inline system::error_code * throws() { return 0; } }
+                                                               
+  namespace detail
+  {
     //  Misuse of the error_code object is turned into a noisy failure by
     //  poisoning the reference. This particular implementation doesn't
     //  produce warnings or errors from popular compilers, is very efficient
@@ -541,8 +552,17 @@ namespace boost
     //  from order of initialization problems. In practice, it also seems
     //  cause user function error handling implementation errors to be detected
     //  very early in the development cycle.
+    inline system::error_code* throws()
+    {
+      // See github.com/boostorg/system/pull/12 by visigoth for why the return
+      // is poisoned with (1) rather than (0). A test, test_throws_usage(), has
+      // been added to error_code_test.cpp, and as visigoth mentioned it fails
+      // on clang for release builds with a return of 0 but works fine with (1).
+      return reinterpret_cast<system::error_code*>(1);
+    }
+  }
 
-  inline system::error_code & throws()
+  inline system::error_code& throws()
     { return *detail::throws(); }
 
   namespace system

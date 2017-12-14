@@ -103,6 +103,8 @@
 #  define BOOST_NO_CXX98_BINDERS
 #endif
 
+#define BOOST_NO_CXX17_ITERATOR_TRAITS
+
 #if (_LIBCPP_VERSION <= 1101) && !defined(BOOST_NO_CXX11_THREAD_LOCAL)
 // This is a bit of a sledgehammer, because really it's just libc++abi that has no
 // support for thread_local, leading to linker errors such as
