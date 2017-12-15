@@ -28,10 +28,9 @@ from nose.tools import eq_
 from pprint import pformat
 import requests
 
-from ycmd.tests.javascript import ( PathToTestFile, SharedYcmd,
-                                    IsolatedYcmdInDirectory )
-from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
-                                    WaitUntilCompleterServerReady )
+from ycmd.tests.javascript import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
+                                    StartJavaScriptCompleterServerInDirectory )
+from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 # The following properties/methods are in Object.prototype, so are present
@@ -484,9 +483,9 @@ def GetCompletions_Unicode_InFile_test( app ):
   } )
 
 
-@IsolatedYcmdInDirectory( PathToTestFile( 'node' ) )
+@IsolatedYcmd
 def GetCompletions_ChangeStartColumn_test( app ):
-  WaitUntilCompleterServerReady( app, 'javascript' )
+  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile( 'node' ) )
   RunTest( app, {
     'description': 'the completion_start_column is updated by tern',
     'request': {

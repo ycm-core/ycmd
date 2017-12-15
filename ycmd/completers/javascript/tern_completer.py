@@ -90,14 +90,12 @@ def GlobalConfigExists( tern_config ):
 
 
 def FindTernProjectFile( starting_directory ):
-  """Finds the path to either a Tern project file or the user's global Tern
-  configuration file. If found, a tuple is returned containing the path and a
-  boolean indicating if the path is to a .tern-project file. If not found,
-  returns (None, False)."""
+  """Returns the path to either a Tern project file or the user's global Tern
+  configuration file."""
   for folder in utils.PathsToAllParentFolders( starting_directory ):
     tern_project = os.path.join( folder, '.tern-project' )
     if os.path.exists( tern_project ):
-      return ( tern_project, True )
+      return tern_project
 
   # As described here: http://ternjs.net/doc/manual.html#server a global
   # .tern-config file is also supported for the Tern server. This can provide
@@ -105,11 +103,11 @@ def FindTernProjectFile( starting_directory ):
   # don't warn if we find one. The point is that if the user has a .tern-config
   # set up, then she has deliberately done so and a ycmd warning is unlikely
   # to be anything other than annoying.
-  tern_config = os.path.expanduser( '~/.tern-config' )
+  tern_config = os.path.join( os.path.expanduser( '~' ), '.tern-config' )
   if GlobalConfigExists( tern_config ):
-    return ( tern_config, False )
+    return tern_config
 
-  return ( None, False )
+  return None
 
 
 class TernCompleter( Completer ):
@@ -127,21 +125,17 @@ class TernCompleter( Completer ):
 
     self._do_tern_project_check = False
 
-    # Used to determine the absolute path of files returned by the tern server.
-    # When a .tern_project file exists, paths are returned relative to it.
-    # Otherwise, they are returned relative to the working directory of the tern
-    # server.
-    self._server_paths_relative_to = None
-
     self._server_handle = None
     self._server_port = None
     self._server_stdout = None
     self._server_stderr = None
 
-    self._StartServer()
+    self._server_started = False
+    self._server_working_dir = None
+    self._server_project_file = None
 
 
-  def _WarnIfMissingTernProject( self ):
+  def _WarnIfMissingTernProject( self, request_data ):
     # The Tern server will operate without a .tern-project file. However, it
     # does not operate optimally, and will likely lead to issues reported that
     # JavaScript completion is not working properly. So we raise a warning if we
@@ -150,34 +144,19 @@ class TernCompleter( Completer ):
     # We do this check after the server has started because the server does
     # have nonzero use without a project file, however limited. We only do this
     # check once, though because the server can only handle one project at a
-    # time. This doesn't catch opening a file which is not part of the project
-    # or any of those things, but we can only do so much. We'd like to enhance
-    # ycmd to handle this better, but that is a FIXME for now.
-    if self._ServerIsRunning() and self._do_tern_project_check:
-      self._do_tern_project_check = False
+    # time.
+    if not self._ServerIsRunning() or not self._do_tern_project_check:
+      return
 
-      current_dir = utils.GetCurrentDirectory()
-      ( tern_project, is_project ) = FindTernProjectFile( current_dir )
-      if not tern_project:
-        _logger.warning( 'No .tern-project file detected: ' + current_dir )
-        raise RuntimeError( 'Warning: Unable to detect a .tern-project file '
-                            'in the hierarchy before ' + current_dir +
-                            ' and no global .tern-config file was found. '
-                            'This is required for accurate JavaScript '
-                            'completion. Please see the User Guide for '
-                            'details.' )
-      else:
-        _logger.info( 'Detected Tern configuration file at: ' + tern_project )
-
-        # Paths are relative to the project file if it exists, otherwise they
-        # are relative to the working directory of Tern server (which is the
-        # same as the working directory of ycmd).
-        self._server_paths_relative_to = (
-          os.path.dirname( tern_project ) if is_project else current_dir )
-
-        _logger.info( 'Tern paths are relative to: '
-                      + self._server_paths_relative_to )
-
+    self._do_tern_project_check = False
+    filepath = request_data[ 'filepath' ]
+    if not FindTernProjectFile( filepath ):
+      raise RuntimeError( 'Warning: Unable to detect a .tern-project file '
+                          'in the hierarchy before ' + filepath +
+                          ' and no global .tern-config file was found. '
+                          'This is required for accurate JavaScript '
+                          'completion. Please see the User Guide for '
+                          'details.' )
 
 
   def _GetServerAddress( self ):
@@ -241,7 +220,9 @@ class TernCompleter( Completer ):
 
 
   def OnFileReadyToParse( self, request_data ):
-    self._WarnIfMissingTernProject()
+    self._StartServer( request_data )
+
+    self._WarnIfMissingTernProject( request_data )
 
     # Keep tern server up to date with the file data. We do this by sending an
     # empty request just containing the file data
@@ -257,7 +238,7 @@ class TernCompleter( Completer ):
   def GetSubcommandsMap( self ):
     return {
       'RestartServer':  ( lambda self, request_data, args:
-                                         self._RestartServer() ),
+                                         self._RestartServer( request_data ) ),
       'StopServer':     ( lambda self, request_data, args:
                                          self._StopServer() ),
       'GoToDefinition': ( lambda self, request_data, args:
@@ -281,13 +262,19 @@ class TernCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     with self._server_state_mutex:
+      extras = [
+        responses.DebugInfoItem( key = 'configuration file',
+                                 value = self._server_project_file )
+      ]
+
       tern_server = responses.DebugInfoServer(
         name = 'Tern',
         handle = self._server_handle,
         executable = PATH_TO_TERN_BINARY,
         address = SERVER_HOST,
         port = self._server_port,
-        logfiles = [ self._server_stdout, self._server_stderr ] )
+        logfiles = [ self._server_stdout, self._server_stderr ],
+        extras = extras )
 
       return responses.BuildDebugInfoResponse( name = 'JavaScript',
                                                servers = [ tern_server ] )
@@ -380,30 +367,40 @@ class TernCompleter( Completer ):
 
   def _ServerPathToAbsolute( self, path ):
     """Given a path returned from the tern server, return it as an absolute
-    path.
-
-    In particular, if the path is a relative path, return an absolute path
-    assuming that it is relative to the location of the .tern-project file."""
+    path. In particular, if the path is a relative path, return an absolute path
+    assuming that it is relative to the working directory of the Tern server
+    (which is the location of the .tern-project file if there is one)."""
     if os.path.isabs( path ):
       return path
 
-    return os.path.join( self._server_paths_relative_to, path )
+    return os.path.join( self._server_working_dir, path )
 
 
-  # TODO: this function is way too long. Consider refactoring it.
-  def _StartServer( self ):
+  def _SetServerProjectFileAndWorkingDirectory( self, request_data ):
+    filepath = request_data[ 'filepath' ]
+    self._server_project_file = FindTernProjectFile( filepath )
+    if not self._server_project_file:
+      _logger.warning( 'No .tern-project file detected: %s', filepath )
+      self._server_working_dir = os.path.dirname( filepath )
+    else:
+      _logger.info( 'Detected Tern configuration file at: %s',
+                    self._server_project_file )
+      self._server_working_dir = os.path.dirname( self._server_project_file )
+    _logger.info( 'Tern paths are relative to: %s', self._server_working_dir )
+
+
+  def _StartServer( self, request_data ):
     with self._server_state_mutex:
-      if self._ServerIsRunning():
+      if self._server_started:
         return
+
+      self._server_started = True
 
       _logger.info( 'Starting Tern server...' )
 
-      self._server_port = utils.GetUnusedLocalhostPort()
+      self._SetServerProjectFileAndWorkingDirectory( request_data )
 
-      if _logger.isEnabledFor( logging.DEBUG ):
-        extra_args = [ '--verbose' ]
-      else:
-        extra_args = []
+      self._server_port = utils.GetUnusedLocalhostPort()
 
       command = [ PATH_TO_NODE,
                   PATH_TO_TERN_BINARY,
@@ -412,51 +409,47 @@ class TernCompleter( Completer ):
                   '--host',
                   SERVER_HOST,
                   '--persistent',
-                  '--no-port-file' ] + extra_args
+                  '--no-port-file' ]
 
-      _logger.debug( 'Starting tern with the following command: '
-                    + ' '.join( command ) )
+      if _logger.isEnabledFor( logging.DEBUG ):
+        command.append( '--verbose' )
 
-      try:
-        self._server_stdout = utils.CreateLogfile(
-            LOGFILE_FORMAT.format( port = self._server_port, std = 'stdout' ) )
+      _logger.debug( 'Starting tern with the following command: %s', command )
 
-        self._server_stderr = utils.CreateLogfile(
-            LOGFILE_FORMAT.format( port = self._server_port, std = 'stderr' ) )
+      self._server_stdout = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._server_port, std = 'stdout' ) )
 
-        # We need to open a pipe to stdin or the Tern server is killed.
-        # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
-        # For unknown reasons, this is only needed on Windows and for Python
-        # 3.4+ on other platforms.
-        with utils.OpenForStdHandle( self._server_stdout ) as stdout:
-          with utils.OpenForStdHandle( self._server_stderr ) as stderr:
-            self._server_handle = utils.SafePopen( command,
-                                                  stdin = PIPE,
-                                                  stdout = stdout,
-                                                  stderr = stderr )
-      except Exception:
-        _logger.exception( 'Unable to start Tern server' )
-        self._CleanUp()
+      self._server_stderr = utils.CreateLogfile(
+          LOGFILE_FORMAT.format( port = self._server_port, std = 'stderr' ) )
 
-      if self._server_port and self._ServerIsRunning():
-        _logger.info( 'Tern Server started with pid: ' +
-                      str( self._server_handle.pid ) +
-                      ' listening on port ' +
-                      str( self._server_port ) )
-        _logger.info( 'Tern Server log files are: ' +
-                      self._server_stdout +
-                      ' and ' +
-                      self._server_stderr )
+      # We need to open a pipe to stdin or the Tern server is killed.
+      # See https://github.com/ternjs/tern/issues/740#issuecomment-203979749
+      # For unknown reasons, this is only needed on Windows and for Python
+      # 3.4+ on other platforms.
+      with utils.OpenForStdHandle( self._server_stdout ) as stdout:
+        with utils.OpenForStdHandle( self._server_stderr ) as stderr:
+          self._server_handle = utils.SafePopen(
+            command,
+            stdin = PIPE,
+            stdout = stdout,
+            stderr = stderr,
+            cwd = self._server_working_dir )
+
+      if self._ServerIsRunning():
+        _logger.info( 'Tern Server started with pid %d listening on port %d',
+                      self._server_handle.pid, self._server_port )
+        _logger.info( 'Tern Server log files are %s and %s',
+                      self._server_stdout, self._server_stderr )
 
         self._do_tern_project_check = True
       else:
         _logger.warning( 'Tern server did not start successfully' )
 
 
-  def _RestartServer( self ):
+  def _RestartServer( self, request_data ):
     with self._server_state_mutex:
       self._StopServer()
-      self._StartServer()
+      self._StartServer( request_data )
 
 
   def _StopServer( self ):
@@ -477,6 +470,9 @@ class TernCompleter( Completer ):
 
   def _CleanUp( self ):
     utils.CloseStandardStreams( self._server_handle )
+
+    self._do_tern_project_check = False
+
     self._server_handle = None
     self._server_port = None
     if not self._server_keep_logfiles:
@@ -486,6 +482,10 @@ class TernCompleter( Completer ):
       if self._server_stderr:
         utils.RemoveIfExists( self._server_stderr )
         self._server_stderr = None
+
+    self._server_started = False
+    self._server_working_dir = None
+    self._server_project_file = None
 
 
   def _ServerIsRunning( self ):
