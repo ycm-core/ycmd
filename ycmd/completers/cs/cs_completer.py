@@ -88,8 +88,9 @@ class CsharpCompleter( Completer ):
 
 
   def Shutdown( self ):
-    for solutioncompleter in itervalues( self._completer_per_solution ):
-      solutioncompleter._StopServer()
+    if self.user_options[ 'auto_stop_csharp_server' ]:
+      for solutioncompleter in itervalues( self._completer_per_solution ):
+        solutioncompleter._StopServer()
 
 
   def SupportedFiletypes( self ):
@@ -420,16 +421,11 @@ class CsharpSolutionCompleter( object ):
       # SafePopen breaks OmnisharpRoslyn, so using Popen directly
       self._omnisharp_phandle = subprocess.Popen(
           command, stdout = PIPE, stderr = PIPE )
-      threads = []
       for target in [
         self._GenerateOutLoop( self._omnisharp_phandle.stdout, "O" ),
         self._GenerateOutLoop( self._omnisharp_phandle.stderr, "E" )
       ]:
-        threads.append( threading.Thread( target = target ) )
-
-      for thread in threads:
-        thread.daemon = True
-        thread.start()
+        threading.Thread( target = target ).start()
 
       self._logger.info( 'Starting OmniSharp server' )
 
