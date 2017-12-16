@@ -406,11 +406,19 @@ class CsharpSolutionCompleter( object ):
 
       self._ChooseOmnisharpPort()
 
-      command = [ self._omnisharp_path,
+      omnisharp_path = self._omnisharp_path
+      command_path = path_to_solutionfile
+
+      # Copied from SafePopen - see there for details
+      if ( utils.OnWindows() and PY2 ):
+        omnisharp_path = utils.ConvertArgsToShortPath( omnisharp_path )
+        command_path = utils.ConvertArgsToShortPath( command_path )
+
+      command = [ omnisharp_path,
                   '-p',
                   str( self._omnisharp_port ),
                   '-s',
-                  u'{0}'.format( path_to_solutionfile ) ]
+                  u'{0}'.format( command_path ) ]
 
       if ( not utils.OnWindows() and not utils.OnCygwin()
            and self._omnisharp_path.endswith( '.exe' ) ):
