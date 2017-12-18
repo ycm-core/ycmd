@@ -31,6 +31,7 @@ import requests
 
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 from ycmd.tests.javascript import IsolatedYcmd, PathToTestFile
+from ycmd import utils
 
 
 @IsolatedYcmd
@@ -49,10 +50,16 @@ def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains( has_entries( {
-      'key': 'configuration file',
-      'value': PathToTestFile( '.tern-project' )
-    } ) )
+    contains(
+      has_entries( {
+        'key': 'configuration file',
+        'value': PathToTestFile( '.tern-project' )
+      } ),
+      has_entries( {
+        'key': 'working directory',
+        'value': PathToTestFile()
+      } )
+    )
   )
 
 
@@ -72,10 +79,16 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains( has_entries( {
-      'key': 'configuration file',
-      'value': PathToTestFile( '.tern-project' )
-    } ) )
+    contains(
+      has_entries( {
+        'key': 'configuration file',
+        'value': PathToTestFile( '.tern-project' )
+      } ),
+      has_entries( {
+        'key': 'working directory',
+        'value': PathToTestFile()
+      } )
+    )
   )
 
 
@@ -112,10 +125,16 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains( has_entries( {
-      'key': 'configuration file',
-      'value': none()
-    } ) )
+    contains(
+      has_entries( {
+        'key': 'configuration file',
+        'value': none()
+      } ),
+      has_entries( {
+        'key': 'working directory',
+        'value': utils.GetCurrentDirectory()
+      } )
+    )
   )
 
   # Check that a subsequent call does *not* raise the error.
@@ -178,10 +197,16 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains( has_entries( {
-      'key': 'configuration file',
-      'value': PathToTestFile( '.tern-project' )
-    } ) )
+    contains(
+      has_entries( {
+        'key': 'configuration file',
+        'value': PathToTestFile( '.tern-project' )
+      } ),
+      has_entries( {
+        'key': 'working directory',
+        'value': PathToTestFile()
+      } )
+    )
   )
 
 
@@ -189,6 +214,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = True )
 def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):
+  # No working directory is given.
   response = app.post_json( '/event_notification',
                             BuildRequest( filepath = PathToTestFile( '..' ),
                                           event_name = 'FileReadyToParse',
@@ -204,8 +230,37 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains( has_entries( {
-      'key': 'configuration file',
-      'value': os.path.join( os.path.expanduser( '~' ), '.tern-config' )
-    } ) )
+    contains(
+      has_entries( {
+        'key': 'configuration file',
+        'value': os.path.join( os.path.expanduser( '~' ), '.tern-config' )
+      } ),
+      has_entries( {
+        'key': 'working directory',
+        'value': utils.GetCurrentDirectory()
+      } )
+    )
+  )
+
+  # Restart the server with a working directory.
+  app.post_json( '/run_completer_command',
+                 BuildRequest( filepath = PathToTestFile( '..' ),
+                               command_arguments = [ 'RestartServer' ],
+                               filetype = 'javascript',
+                               working_dir = PathToTestFile() ) )
+
+  debug_info = app.post_json( '/debug_info',
+                              BuildRequest( filetype = 'javascript' ) ).json
+  assert_that(
+    debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
+    contains(
+      has_entries( {
+        'key': 'configuration file',
+        'value': os.path.join( os.path.expanduser( '~' ), '.tern-config' )
+      } ),
+      has_entries( {
+        'key': 'working directory',
+        'value': PathToTestFile()
+      } )
+    )
   )
