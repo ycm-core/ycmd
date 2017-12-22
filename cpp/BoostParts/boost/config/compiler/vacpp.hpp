@@ -65,6 +65,11 @@
 #define BOOST_NO_PARTIAL_SPECIALIZATION_IMPLICIT_DEFAULT_ARGS
 #endif
 
+// Type aliasing hint. Supported since XL C++ 13.1
+#if (__IBMCPP__ >= 1310)
+#  define BOOST_MAY_ALIAS __attribute__((__may_alias__))
+#endif
+
 //
 // C++0x features
 //

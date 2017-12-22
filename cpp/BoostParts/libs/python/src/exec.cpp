@@ -16,7 +16,7 @@ namespace python
 
 object BOOST_PYTHON_DECL eval(str string, object global, object local)
 {
-    return eval(python::extract<char const *>(string));
+    return eval(python::extract<char const *>(string), global, local);
 }
 
 object BOOST_PYTHON_DECL eval(char const *string, object global, object local)
@@ -39,7 +39,7 @@ object BOOST_PYTHON_DECL eval(char const *string, object global, object local)
 
 object BOOST_PYTHON_DECL exec(str string, object global, object local)
 {
-    return exec(python::extract<char const *>(string));
+    return exec(python::extract<char const *>(string), global, local);
 }
 
 object BOOST_PYTHON_DECL exec(char const *string, object global, object local)

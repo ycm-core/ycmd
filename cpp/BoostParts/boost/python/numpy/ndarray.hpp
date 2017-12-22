@@ -86,11 +86,11 @@ public:
   /// @brief Copy the scalar (deep for all non-object fields).
   ndarray copy() const;
 
-  /// @brief Return the size of the nth dimension.
-  Py_intptr_t shape(int n) const { return get_shape()[n]; }
+  /// @brief Return the size of the nth dimension. raises IndexError if k not in [-get_nd() : get_nd()-1 ]
+  Py_intptr_t shape(int n) const;
 
-  /// @brief Return the stride of the nth dimension.
-  Py_intptr_t strides(int n) const { return get_strides()[n]; }
+  /// @brief Return the stride of the nth dimension. raises IndexError if k not in [-get_nd() : get_nd()-1]
+  Py_intptr_t strides(int n) const;
     
   /**
    *  @brief Return the array's raw data pointer.

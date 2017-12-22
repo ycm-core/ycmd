@@ -315,6 +315,10 @@
 #if __GNUC__ >= 4
 #  define BOOST_ATTRIBUTE_UNUSED __attribute__((__unused__))
 #endif
+
+// Type aliasing hint. Supported since gcc 3.3.
+#define BOOST_MAY_ALIAS __attribute__((__may_alias__))
+
 //
 // __builtin_unreachable:
 #if BOOST_GCC_VERSION >= 40800
@@ -338,10 +342,10 @@
 #  error "Compiler not configured - please reconfigure"
 #endif
 //
-// last known and checked version is 4.9:
-#if (BOOST_GCC_VERSION > 40900)
+// last known and checked version is 7.1:
+#if (BOOST_GCC_VERSION > 70100)
 #  if defined(BOOST_ASSERT_CONFIG)
-#     error "Unknown compiler version - please run the configure tests and report the results"
+#     error "Boost.Config is older than your compiler - please check for an updated Boost release."
 #  else
 // we don't emit warnings here anymore since there are no defect macros defined for
 // gcc post 3.4, so any failures are gcc regressions...

@@ -48,7 +48,7 @@ inline PyObject* get(mpl::int_<N>, PyObject* const& args_)
     return PyTuple_GET_ITEM(args_,N);
 }
 
-inline unsigned arity(PyObject* const& args_)
+inline Py_ssize_t arity(PyObject* const& args_)
 {
     return PyTuple_GET_SIZE(args_);
 }

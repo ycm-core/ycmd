@@ -14,7 +14,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 /*`
 [heading `BOOST_PLAT_MINGW`]
 
-[@http://en.wikipedia.org/wiki/MinGW MinGW] platform.
+[@http://en.wikipedia.org/wiki/MinGW MinGW] platform, either variety.
 Version number available as major, minor, and patch.
 
 [table
@@ -56,7 +56,7 @@ Version number available as major, minor, and patch.
 #   include <boost/predef/detail/platform_detected.h>
 #endif
 
-#define BOOST_PLAT_MINGW_NAME "MinGW"
+#define BOOST_PLAT_MINGW_NAME "MinGW (any variety)"
 
 #endif
 

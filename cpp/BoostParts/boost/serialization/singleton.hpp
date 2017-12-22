@@ -91,7 +91,11 @@ class BOOST_SYMBOL_VISIBLE singleton_module :
     public boost::noncopyable
 {
 private:
-    BOOST_SERIALIZATION_DECL BOOST_DLLEXPORT static bool & get_lock() BOOST_USED;
+    BOOST_DLLEXPORT static bool & get_lock() BOOST_USED {
+        static bool lock = false;
+        return lock;
+    }
+
 public:
     BOOST_DLLEXPORT static void lock(){
         get_lock() = true;
@@ -115,17 +119,28 @@ private:
         // use a wrapper so that types T with protected constructors
         // can be used
         class singleton_wrapper : public T {};
-        static singleton_wrapper t;
+
+        // Use a heap-allocated instance to work around static variable
+        // destruction order issues: this inner singleton_wrapper<>
+        // instance may be destructed before the singleton<> instance.
+        // Using a 'dumb' static variable lets us precisely choose the
+        // time destructor is invoked.
+        static singleton_wrapper *t = 0;
+
         // refer to instance, causing it to be instantiated (and
         // initialized at startup on working compilers)
         BOOST_ASSERT(! is_destroyed());
+
         // note that the following is absolutely essential.
         // commenting out this statement will cause compilers to fail to
         // construct the instance at pre-execution time.  This would prevent
         // our usage/implementation of "locking" and introduce uncertainty into
         // the sequence of object initializaition.
         use(& m_instance);
-        return static_cast<T &>(t);
+
+        if (!t)
+            t = new singleton_wrapper;
+        return static_cast<T &>(*t);
     }
     static bool & get_is_destroyed(){
         static bool is_destroyed;
@@ -147,6 +162,9 @@ public:
         get_is_destroyed() = false;
     }
     BOOST_DLLEXPORT ~singleton() {
+        if (!get_is_destroyed()) {
+            delete &(get_instance());
+        }
         get_is_destroyed() = true;
     }
 };

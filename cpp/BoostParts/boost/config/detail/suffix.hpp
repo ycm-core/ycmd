@@ -602,6 +602,14 @@ namespace std{ using ::type_info; }
 #  endif
 #endif
 
+// BOOST_MAY_ALIAS -----------------------------------------------//
+// The macro expands to an attribute to mark a type that is allowed to alias other types.
+// The macro is defined in the compiler-specific headers.
+#if !defined(BOOST_MAY_ALIAS)
+#  define BOOST_NO_MAY_ALIAS
+#  define BOOST_MAY_ALIAS
+#endif
+
 // BOOST_FORCEINLINE ---------------------------------------------//
 // Macro to use in place of 'inline' to force a function to be inline
 #if !defined(BOOST_FORCEINLINE)

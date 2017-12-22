@@ -263,6 +263,30 @@ namespace boost
    typename tools::promote_args<T1, T2, T3>::type
       hermite_next(unsigned n, T1 x, T2 Hn, T3 Hnm1);
 
+   template<class T1, class T2, class T3>
+   typename tools::promote_args<T1, T2, T3>::type chebyshev_next(T1 const & x, T2 const & Tn, T3 const & Tn_1);
+
+   template <class Real, class Policy>
+   typename tools::promote_args<Real>::type
+      chebyshev_t(unsigned n, Real const & x, const Policy&);
+   template<class Real>
+   typename tools::promote_args<Real>::type chebyshev_t(unsigned n, Real const & x);
+   
+   template <class Real, class Policy>
+   typename tools::promote_args<Real>::type
+      chebyshev_u(unsigned n, Real const & x, const Policy&);
+   template<class Real>
+   typename tools::promote_args<Real>::type chebyshev_u(unsigned n, Real const & x);
+
+   template <class Real, class Policy>
+   typename tools::promote_args<Real>::type
+      chebyshev_t_prime(unsigned n, Real const & x, const Policy&);
+   template<class Real>
+   typename tools::promote_args<Real>::type chebyshev_t_prime(unsigned n, Real const & x);
+
+   template<class Real, class T2>
+   Real chebyshev_clenshaw_recurrence(const Real* const c, size_t length, const T2& x);
+
    template <class T1, class T2>
    std::complex<typename tools::promote_args<T1, T2>::type>
          spherical_harmonic(unsigned n, int m, T1 theta, T2 phi);
@@ -1189,6 +1213,19 @@ namespace boost
    hermite(unsigned n, T x){ return ::boost::math::hermite(n, x, Policy()); }\
 \
    using boost::math::hermite_next;\
+\
+   using boost::math::chebyshev_next;\
+\
+  template<class Real>\
+  Real chebyshev_t(unsigned n, Real const & x){ return ::boost::math::chebyshev_t(n, x, Policy()); }\
+\
+  template<class Real>\
+  Real chebyshev_u(unsigned n, Real const & x){ return ::boost::math::chebyshev_u(n, x, Policy()); }\
+\
+  template<class Real>\
+  Real chebyshev_t_prime(unsigned n, Real const & x){ return ::boost::math::chebyshev_t_prime(n, x, Policy()); }\
+\
+  using ::boost::math::chebyshev_clenshaw_recurrence;\
 \
    template <class T1, class T2>\
    inline std::complex<typename boost::math::tools::promote_args<T1, T2>::type> \

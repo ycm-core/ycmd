@@ -13,27 +13,17 @@
 #error "wide char i/o not supported on this platform"
 #endif
 
-// std::codecvt_utf8 doesn't seem to work for any versions of msvc
+// use boost's utf8 codecvt facet
+#include <boost/archive/detail/decl.hpp>
+#define BOOST_UTF8_BEGIN_NAMESPACE \
+     namespace boost { namespace archive { namespace detail {
+#define BOOST_UTF8_DECL BOOST_ARCHIVE_DECL
+#define BOOST_UTF8_END_NAMESPACE }}}
 
-#if defined(_MSC_VER) || defined(BOOST_NO_CXX11_HDR_CODECVT)
-    // use boost's utf8 codecvt facet
-    #include <boost/archive/detail/decl.hpp>
-    #define BOOST_UTF8_BEGIN_NAMESPACE \
-         namespace boost { namespace archive { namespace detail {
-    #define BOOST_UTF8_DECL BOOST_ARCHIVE_DECL
-    #define BOOST_UTF8_END_NAMESPACE }}}
+#include <boost/detail/utf8_codecvt_facet.hpp>
 
-    #include <boost/detail/utf8_codecvt_facet.hpp>
-
-    #undef BOOST_UTF8_END_NAMESPACE
-    #undef BOOST_UTF8_DECL
-    #undef BOOST_UTF8_BEGIN_NAMESPACE
-#else
-    // use the standard vendor supplied facet
-    #include <codecvt>
-    namespace boost { namespace archive { namespace detail {
-        typedef std::codecvt_utf8<wchar_t> utf8_codecvt_facet;
-    } } }
-#endif
+#undef BOOST_UTF8_END_NAMESPACE
+#undef BOOST_UTF8_DECL
+#undef BOOST_UTF8_BEGIN_NAMESPACE
 
 #endif // BOOST_ARCHIVE_DETAIL_UTF8_CODECVT_FACET_HPP

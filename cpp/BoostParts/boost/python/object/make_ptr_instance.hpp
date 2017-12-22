@@ -21,7 +21,7 @@ struct make_ptr_instance
     template <class Arg>
     static inline Holder* construct(void* storage, PyObject*, Arg& x)
     {
-#if __cplusplus < 201103L
+#if defined(BOOST_NO_CXX11_SMART_PTR)
       return new (storage) Holder(x);
 #else
       return new (storage) Holder(std::move(x));
@@ -58,7 +58,7 @@ struct make_ptr_instance
     static inline PyTypeObject* get_derived_class_object(boost::python::detail::true_, U const volatile* x)
     {
         converter::registration const* r = converter::registry::query(
-            type_info(typeid(*get_pointer(x)))
+            type_info(typeid(*x))
         );
         return r ? r->m_class_object : 0;
     }

@@ -1,15 +1,14 @@
-//  character_code_conversion.hpp  --------------------------------------------------------------//
+/*
+ * Copyright 2016 Andrey Semashev
+ *
+ * Distributed under the Boost Software License, Version 1.0.
+ * See http://www.boost.org/LICENSE_1_0.txt
+ */
 
-//  Copyright 2016 Andrey Semashev
+#ifndef BOOST_WINAPI_CHARACTER_CODE_CONVERSION_HPP_INCLUDED_
+#define BOOST_WINAPI_CHARACTER_CODE_CONVERSION_HPP_INCLUDED_
 
-//  Distributed under the Boost Software License, Version 1.0.
-//  See http://www.boost.org/LICENSE_1_0.txt
-
-
-#ifndef BOOST_DETAIL_WINAPI_CHARACTER_CODE_CONVERSION_HPP
-#define BOOST_DETAIL_WINAPI_CHARACTER_CODE_CONVERSION_HPP
-
-#include <boost/detail/winapi/basic_types.hpp>
+#include <boost/winapi/basic_types.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
@@ -20,29 +19,28 @@ extern "C" {
 
 BOOST_SYMBOL_IMPORT int WINAPI
 MultiByteToWideChar(
-    boost::detail::winapi::UINT_ CodePage,
-    boost::detail::winapi::DWORD_ dwFlags,
-    boost::detail::winapi::LPCSTR_ lpMultiByteStr,
+    boost::winapi::UINT_ CodePage,
+    boost::winapi::DWORD_ dwFlags,
+    boost::winapi::LPCSTR_ lpMultiByteStr,
     int cbMultiByte,
-    boost::detail::winapi::LPWSTR_ lpWideCharStr,
+    boost::winapi::LPWSTR_ lpWideCharStr,
     int cchWideChar);
 
 BOOST_SYMBOL_IMPORT int WINAPI
 WideCharToMultiByte(
-    boost::detail::winapi::UINT_ CodePage,
-    boost::detail::winapi::DWORD_ dwFlags,
-    boost::detail::winapi::LPCWSTR_ lpWideCharStr,
+    boost::winapi::UINT_ CodePage,
+    boost::winapi::DWORD_ dwFlags,
+    boost::winapi::LPCWSTR_ lpWideCharStr,
     int cchWideChar,
-    boost::detail::winapi::LPSTR_ lpMultiByteStr,
+    boost::winapi::LPSTR_ lpMultiByteStr,
     int cbMultiByte,
-    boost::detail::winapi::LPCSTR_ lpDefaultChar,
-    boost::detail::winapi::LPBOOL_ lpUsedDefaultChar);
+    boost::winapi::LPCSTR_ lpDefaultChar,
+    boost::winapi::LPBOOL_ lpUsedDefaultChar);
 
 } // extern "C"
 #endif // #if !defined( BOOST_USE_WINDOWS_H )
 
 namespace boost {
-namespace detail {
 namespace winapi {
 
 #if defined( BOOST_USE_WINDOWS_H )
@@ -102,7 +100,6 @@ using ::MultiByteToWideChar;
 using ::WideCharToMultiByte;
 
 } // namespace winapi
-} // namespace detail
 } // namespace boost
 
-#endif // BOOST_DETAIL_WINAPI_CHARACTER_CODE_CONVERSION_HPP
+#endif // BOOST_WINAPI_CHARACTER_CODE_CONVERSION_HPP_INCLUDED_
