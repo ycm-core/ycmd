@@ -90,12 +90,14 @@ def GlobalConfigExists( tern_config ):
 
 
 def FindTernProjectFile( starting_directory ):
-  """Returns the path to either a Tern project file or the user's global Tern
-  configuration file."""
+  """Finds the path to either a Tern project file or the user's global Tern
+  configuration file. If found, a tuple is returned containing the path and a
+  boolean indicating if the path is to a .tern-project file. If not found,
+  returns ( None, False )."""
   for folder in utils.PathsToAllParentFolders( starting_directory ):
     tern_project = os.path.join( folder, '.tern-project' )
     if os.path.exists( tern_project ):
-      return tern_project
+      return tern_project, True
 
   # As described here: http://ternjs.net/doc/manual.html#server a global
   # .tern-config file is also supported for the Tern server. This can provide
@@ -105,9 +107,9 @@ def FindTernProjectFile( starting_directory ):
   # to be anything other than annoying.
   tern_config = os.path.join( os.path.expanduser( '~' ), '.tern-config' )
   if GlobalConfigExists( tern_config ):
-    return tern_config
+    return tern_config, False
 
-  return None
+  return None, False
 
 
 class TernCompleter( Completer ):
@@ -150,7 +152,8 @@ class TernCompleter( Completer ):
 
     self._do_tern_project_check = False
     filepath = request_data[ 'filepath' ]
-    if not FindTernProjectFile( filepath ):
+    project_file, _ = FindTernProjectFile( filepath )
+    if not project_file:
       raise RuntimeError( 'Warning: Unable to detect a .tern-project file '
                           'in the hierarchy before ' + filepath +
                           ' and no global .tern-config file was found. '
@@ -264,7 +267,9 @@ class TernCompleter( Completer ):
     with self._server_state_mutex:
       extras = [
         responses.DebugInfoItem( key = 'configuration file',
-                                 value = self._server_project_file )
+                                 value = self._server_project_file ),
+        responses.DebugInfoItem( key = 'working directory',
+                                 value = self._server_working_dir )
       ]
 
       tern_server = responses.DebugInfoServer(
@@ -378,14 +383,18 @@ class TernCompleter( Completer ):
 
   def _SetServerProjectFileAndWorkingDirectory( self, request_data ):
     filepath = request_data[ 'filepath' ]
-    self._server_project_file = FindTernProjectFile( filepath )
+    self._server_project_file, is_project = FindTernProjectFile( filepath )
+    working_dir = request_data.get( 'working_dir',
+                                    utils.GetCurrentDirectory() )
     if not self._server_project_file:
       _logger.warning( 'No .tern-project file detected: %s', filepath )
-      self._server_working_dir = os.path.dirname( filepath )
+      self._server_working_dir = working_dir
     else:
       _logger.info( 'Detected Tern configuration file at: %s',
                     self._server_project_file )
-      self._server_working_dir = os.path.dirname( self._server_project_file )
+      self._server_working_dir = (
+        os.path.dirname( self._server_project_file ) if is_project else
+        working_dir )
     _logger.info( 'Tern paths are relative to: %s', self._server_working_dir )
 
 
