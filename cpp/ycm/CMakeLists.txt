@@ -283,12 +283,16 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     else ()
       set( ENV_LIB_PATHS "" )
     endif()
+    find_program( LLVM_CONFIG_EXECUTABLE NAMES llvm-config )
+    if ( LLVM_CONFIG_EXECUTABLE )
+      execute_process( COMMAND ${LLVM_CONFIG_EXECUTABLE} --libdir
+                       OUTPUT_VARIABLE LLVM_CONFIG_PATH
+                       OUTPUT_STRIP_TRAILING_WHITESPACE )
+    endif()
     # On Debian-based systems, llvm installs into /usr/lib/llvm-x.y.
     file( GLOB SYS_LLVM_PATHS "/usr/lib/llvm*/lib" )
     # On FreeBSD , llvm install into /usr/local/llvm-xy
     file ( GLOB FREEBSD_LLVM_PATHS "/usr/local/llvm*/lib")
-    # On Gentoo, llvm installs into /usr/lib/llvm/x/
-    file ( GLOB GENTOO_LLVM_PATHS "/usr/lib*/llvm/*/lib*" )
     # Need TEMP because find_library does not work with an option variable
     # On Debian-based systems only a symlink to libclang.so.1 is created
     find_library( TEMP
@@ -297,11 +301,11 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
                   libclang.so.1
                   PATHS
                   ${ENV_LIB_PATHS}
+                  ${LLVM_CONFIG_PATH}
                   /usr/lib
                   /usr/lib/llvm
                   ${SYS_LLVM_PATHS}
                   ${FREEBSD_LLVM_PATHS}
-                  ${GENTOO_LLVM_PATHS}
                   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib
                   /Library/Developer/CommandLineTools/usr/lib )
     set( EXTERNAL_LIBCLANG_PATH ${TEMP} )
