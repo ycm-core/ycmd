@@ -25,14 +25,9 @@ namespace YouCompleteMe {
 //   http://www.boost.org/doc/libs/1_50_0/libs/exception/doc/exception_types_as_simple_semantic_tags.html
 
 /**
- * The common base for all exceptions.
- */
-struct ExceptionBase: virtual std::exception {};
-
-/**
  * Thrown when a file does not exist.
  */
-struct ClangParseError : virtual ExceptionBase {};
+struct YCM_EXPORT ClangParseError : virtual std::exception {};
 
 } // namespace YouCompleteMe
 

@@ -18,8 +18,6 @@
 #ifndef CANDIDATEREPOSITORY_H_K9OVCMHG
 #define CANDIDATEREPOSITORY_H_K9OVCMHG
 
-#include "DLLDefines.h"
-
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -43,18 +41,18 @@ CandidateHolder;
 // This class is thread-safe.
 class CandidateRepository {
 public:
-  YCM_DLL_EXPORT static CandidateRepository &Instance();
+  YCM_EXPORT static CandidateRepository &Instance();
   // Make class noncopyable
   CandidateRepository( const CandidateRepository& ) = delete;
   CandidateRepository& operator=( const CandidateRepository& ) = delete;
 
   int NumStoredCandidates();
 
-  YCM_DLL_EXPORT std::vector< const Candidate * > GetCandidatesForStrings(
+  YCM_EXPORT std::vector< const Candidate * > GetCandidatesForStrings(
     const std::vector< std::string > &strings );
 
   // This should only be used to isolate tests and benchmarks.
-  YCM_DLL_EXPORT void ClearCandidates();
+  YCM_EXPORT void ClearCandidates();
 
 private:
   CandidateRepository() {};
