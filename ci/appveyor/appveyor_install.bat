@@ -58,3 +58,15 @@ set PATH=%USERPROFILE%\.cargo\bin;%PATH%
 rustup update
 rustc -Vv
 cargo -V
+
+::
+:: Java Configuration (Java 8 required for jdt.ls)
+::
+if %arch% == 32 (
+  set "JAVA_HOME=C:\Program Files (x86)\Java\jdk1.8.0"
+) else (
+  set "JAVA_HOME=C:\Program Files\Java\jdk1.8.0"
+)
+
+set PATH=%JAVA_HOME%\bin;%PATH%
+java -version

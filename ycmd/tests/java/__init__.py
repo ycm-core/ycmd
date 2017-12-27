@@ -36,6 +36,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
 
 shared_app = None
 DEFAULT_PROJECT_DIR = 'simple_eclipse_project'
+SERVER_STARTUP_TIMEOUT = 120 # seconds
 
 
 def PathToTestFile( *args ):
@@ -71,7 +72,7 @@ def StartJavaCompleterServerInDirectory( app, directory ):
                    filepath = os.path.join( directory, 'test.java' ),
                    event_name = 'FileReadyToParse',
                    filetype = 'java' ) )
-  WaitUntilCompleterServerReady( shared_app, 'java' )
+  WaitUntilCompleterServerReady( shared_app, 'java', SERVER_STARTUP_TIMEOUT )
 
 
 def SharedYcmd( test ):
@@ -106,13 +107,17 @@ def IsolatedYcmd( test ):
   return Wrapper
 
 
-def PollForMessages( app, request_data ):
-  TIMEOUT = 30
-  expiration = time.time() + TIMEOUT
+class PollForMessagesTimeoutException( Exception ):
+  pass
+
+
+def PollForMessages( app, request_data, timeout = 30 ):
+  expiration = time.time() + timeout
   while True:
     if time.time() > expiration:
-      raise RuntimeError( 'Waited for diagnostics to be ready for '
-                          '{0} seconds, aborting.'.format( TIMEOUT ) )
+      raise PollForMessagesTimeoutException(
+        'Waited for diagnostics to be ready for {0} seconds, aborting.'.format(
+          timeout ) )
 
     default_args = {
       'filetype'  : 'java',

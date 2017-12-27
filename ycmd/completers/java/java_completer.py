@@ -45,7 +45,6 @@ LANGUAGE_SERVER_HOME = os.path.abspath( os.path.join(
   '..',
   'third_party',
   'eclipse.jdt.ls',
-  'org.eclipse.jdt.ls.product',
   'target',
   'repository' ) )
 
@@ -63,7 +62,8 @@ WORKSPACE_ROOT_PATH = os.path.abspath( os.path.join(
   '..',
   '..',
   'third_party',
-  'eclipse.jdt.ls-workspace' ) )
+  'eclipse.jdt.ls',
+  'workspace' ) )
 
 # The authors of jdt.ls say that we should re-use workspaces. They also say that
 # occasionally, the workspace becomes corrupt, and has to be deleted. This is
@@ -462,16 +462,35 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def GetType( self, request_data ):
     hover_response = self.GetHoverResponse( request_data )
 
-    if isinstance( hover_response, list ):
-      if not len( hover_response ):
-        raise RuntimeError( 'Unknown type' )
+    # The LSP defines the hover response as either:
+    # - a string
+    # - a list of strings
+    # - an object with keys language, value
+    # - a list of objects with keys language, value
+    # - an object with keys kind, value
 
-      try:
-        get_type_java = hover_response[ 0 ][ 'value' ]
-      except TypeError:
-        raise RuntimeError( 'Unknown type' )
-    else:
-      get_type_java = hover_response
+    # That's right. All of the above.
+
+    # However it would appear that jdt.ls only ever returns useful data when it
+    # is a list of objects-with-keys-language-value, and the type information is
+    # always in the first such list element, so we only handle that case and
+    # throw any other time.
+
+    # Strictly we seem to receive:
+    # - [""]
+    #   when there really is no documentation or type info available
+    # - [{language:java, value:<type info>}]
+    #   when there only the type information is available
+    # - [{language:java, value:<type info>},
+    #    'doc line 1',
+    #    'doc line 2',
+    #    ...]
+    #   when there is type and documentation information available.
+
+    try:
+      get_type_java = hover_response[ 0 ][ 'value' ]
+    except ( KeyError, TypeError, IndexError ):
+      raise RuntimeError( 'Unknown type' )
 
     return responses.BuildDisplayMessageResponse( get_type_java )
 
@@ -479,23 +498,42 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def GetDoc( self, request_data ):
     hover_response = self.GetHoverResponse( request_data )
 
+    # The LSP defines the hover response as either:
+    # - a string
+    # - a list of strings
+    # - an object with keys language, value
+    # - a list of objects with keys language, value
+    # - an object with keys kind, value
+
+    # That's right. All of the above.
+
+    # However it would appear that jdt.ls only ever returns useful data when it
+    # is a list of objects-with-keys-language-value, so we only handle that case
+    # and throw any other time.
+
+    # Strictly we seem to receive:
+    # - [""]
+    #   when there really is no documentation or type info available
+    # - [{language:java, value:<type info>}]
+    #   when there only the type information is available
+    # - [{language:java, value:<type info>},
+    #    'doc line 1',
+    #    'doc line 2',
+    #    ...]
+    #   when there is type and documentation information available.
+
+    documentation = ''
     if isinstance( hover_response, list ):
-      if not len( hover_response ):
-        raise RuntimeError( NO_DOCUMENTATION_MESSAGE )
+      for item in hover_response:
+        if isinstance( item, str ):
+          documentation += item + '\n'
 
-      get_doc_java = ''
-      for docstring in hover_response:
-        if not isinstance( docstring, dict ):
-          get_doc_java += docstring + '\n'
-    else:
-      get_doc_java = hover_response
+    documentation = documentation.rstrip()
 
-    get_doc_java = get_doc_java.rstrip()
-
-    if not get_doc_java:
+    if not documentation:
       raise RuntimeError( NO_DOCUMENTATION_MESSAGE )
 
-    return responses.BuildDetailedInfoResponse( get_doc_java )
+    return responses.BuildDetailedInfoResponse( documentation )
 
 
   def HandleServerCommand( self, request_data, command ):

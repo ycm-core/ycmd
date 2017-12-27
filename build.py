@@ -19,6 +19,9 @@ import re
 import shlex
 import subprocess
 import sys
+import tarfile
+import shutil
+import hashlib
 
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 if not ( ( PY_MAJOR == 2 and PY_MINOR >= 6 ) or
@@ -47,8 +50,10 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
     )
 
 sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
+sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'requests' ) ) )
 
 import argparse
+import requests
 
 NO_DYNAMIC_PYTHON_ERROR = (
   'ERROR: found static Python library ({library}) but a dynamic one is '
@@ -79,6 +84,12 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   libpython{major}\.{minor}\.dll\.a
   )$
 """
+
+JDTLS_MILESTONE = '0.11.0'
+JDTLS_BUILD_STAMP = '201801162212'
+JDTLS_SHA256 = (
+  '5afa45d1ba3d38d4c6c9ef172874b430730ee168db365c5e5209b39d53deab23'
+)
 
 
 def OnMac():
@@ -541,19 +552,58 @@ def EnableJavaScriptCompleter():
 
 
 def EnableJavaCompleter():
-  os.chdir( p.join( DIR_OF_THIS_SCRIPT,
-                    'third_party',
-                    'eclipse.jdt.ls' ) )
+  TARGET = p.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls', 'target', )
+  REPOSITORY = p.join( TARGET, 'repository' )
+  CACHE = p.join( TARGET, 'cache' )
 
-  mvnw = 'mvnw.cmd' if OnWindows() else './mvnw'
+  JDTLS_SERVER_URL_FORMAT = ( 'http://download.eclipse.org/jdtls/milestones/'
+                              '{jdtls_milestone}/{jdtls_package_name}' )
+  JDTLS_PACKAGE_NAME_FORMAT = ( 'jdt-language-server-{jdtls_milestone}-'
+                                '{jdtls_build_stamp}.tar.gz' )
 
-  # Maven actually just straight up sucks. There is seemingly no way to do
-  # working, reliable incremental builds. It also takes _forever_ doing things
-  # that you _don't want it to do_, like downloading the internet.
-  # Alas, I'm not aware of a better way, and these are the instructions provided
-  # by the people that made jdt.ls, so we waste the user's time (somewhat)
-  # unnecessarily.
-  CheckCall( [ mvnw, 'clean', 'package' ] )
+  package_name = JDTLS_PACKAGE_NAME_FORMAT.format(
+      jdtls_milestone = JDTLS_MILESTONE,
+      jdtls_build_stamp = JDTLS_BUILD_STAMP )
+  url = JDTLS_SERVER_URL_FORMAT.format(
+      jdtls_milestone = JDTLS_MILESTONE,
+      jdtls_build_stamp = JDTLS_BUILD_STAMP,
+      jdtls_package_name = package_name )
+  file_name = p.join( CACHE, package_name )
+
+  if p.exists( REPOSITORY ):
+    shutil.rmtree( REPOSITORY )
+
+  os.makedirs( REPOSITORY )
+
+  if not p.exists( CACHE ):
+    os.makedirs( CACHE )
+  elif p.exists( file_name ):
+    with open( file_name, 'rb' ) as existing_file:
+      existing_sha256 = hashlib.sha256( existing_file.read() ).hexdigest()
+    if existing_sha256 != JDTLS_SHA256:
+      print( 'Cached tar file does not match checksum. Removing...' )
+      os.remove( file_name )
+
+
+  if p.exists( file_name ):
+    print( 'Using cached jdt.ls: {0}'.format( file_name ) )
+  else:
+    print( "Downloading jdt.ls from {0}...".format( url ) )
+    request = requests.get( url, stream = True )
+    with open( file_name, 'wb' ) as package_file:
+      package_file.write( request.content )
+    request.close()
+
+  print( "Extracting jdt.ls to {0}...".format( REPOSITORY ) )
+  # We can't use tarfile.open as a context manager, as it isn't supported in
+  # python 2.6
+  try:
+    package_tar = tarfile.open( file_name )
+    package_tar.extractall( REPOSITORY )
+  finally:
+    package_tar.close()
+
+  print( "Done installing jdt.ls" )
 
 
 def WritePythonUsedDuringBuild():

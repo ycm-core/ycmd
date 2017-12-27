@@ -23,6 +23,7 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import time
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
@@ -44,6 +45,13 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     LocationMatcher )
+from mock import patch
+from ycmd.completers.language_server import language_server_protocol as lsp
+from ycmd import handlers
+from ycmd.completers.language_server.language_server_completer import (
+  ResponseTimeoutException,
+  ResponseFailedException
+)
 
 
 @SharedYcmd
@@ -59,8 +67,45 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GoToReferences',
                  'RefactorRename',
                  'RestartServer' ] ),
-       app.post_json( '/defined_subcommands',
-                      subcommands_data ).json )
+       app.post_json( '/defined_subcommands', subcommands_data ).json )
+
+
+def Subcommands_ServerNotReady_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'AbstractTestWidget.java' )
+
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+  @SharedYcmd
+  @patch.object( completer, 'ServerIsReady', return_value = False )
+  def Test( app, cmd, arguments, *args ):
+    RunTest( app, {
+      'description': 'Subcommand ' + cmd + ' handles server not ready',
+      'request': {
+        'command': cmd,
+        'line_num': 1,
+        'column_num': 1,
+        'filepath': filepath,
+        'arguments': arguments,
+      },
+      'expect': {
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( RuntimeError,
+                              'Server is initializing. Please wait.' ),
+      }
+    } )
+
+  yield Test, 'GoTo', []
+  yield Test, 'GoToDeclaration', []
+  yield Test, 'GoToDefinition', []
+  yield Test, 'GoToReferences', []
+  yield Test, 'GetType', []
+  yield Test, 'GetDoc', []
+  yield Test, 'FixIt', []
+  yield Test, 'RefactorRename', [ 'test' ]
 
 
 def RunTest( app, test, contents = None ):
@@ -978,6 +1023,63 @@ def Subcommands_FixIt_Unicode_test():
 
 
 @SharedYcmd
+def Subcommands_FixIt_InvalidURI_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestFactory.java' )
+
+  fixits = has_entries ( {
+    'fixits': contains(
+      has_entries( {
+        'text': "Change type of 'test' to 'boolean'",
+        'chunks': contains(
+          # For some reason, eclipse returns modifies as deletes + adds,
+          # although overlapping ranges aren't allowed.
+          ChunkMatcher( 'boolean',
+                        LocationMatcher( '', 14, 12 ),
+                        LocationMatcher( '', 14, 12 ) ),
+          ChunkMatcher( '',
+                        LocationMatcher( '', 14, 12 ),
+                        LocationMatcher( '', 14, 15 ) ),
+        ),
+      } ),
+    )
+  } )
+
+  contents = ReadFile( filepath )
+  # Wait for jdt.ls to have parsed the file and returned some diagnostics
+  for tries in range( 0, 60 ):
+    results = app.post_json( '/event_notification',
+                             BuildRequest( filepath = filepath,
+                                           filetype = 'java',
+                                           contents = contents,
+                                           event_name = 'FileReadyToParse' ) )
+    if results.json:
+      break
+
+    time.sleep( .25 )
+
+  with patch(
+    'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
+    side_effect = lsp.InvalidUriException ):
+    RunTest( app, {
+      'description': 'Invalid URIs do not make us crash',
+      'request': {
+        'command': 'FixIt',
+        'line_num': 27,
+        'column_num': 12,
+        'filepath': filepath,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': fixits,
+      }
+    } )
+
+
+@SharedYcmd
 def RunGoToTest( app, description, filepath, line, col, cmd, goto_response ):
   RunTest( app, {
     'description': description,
@@ -1060,3 +1162,140 @@ def Subcommands_GoTo_test():
               test[ 'request' ][ 'col' ],
               command,
               test[ 'response' ] )
+
+
+@SharedYcmd
+@patch( 'ycmd.completers.language_server.language_server_completer.'
+        'REQUEST_TIMEOUT_COMMAND',
+        5 )
+def Subcommands_RequestTimeout_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  with patch.object(
+    handlers._server_state.GetFiletypeCompleter( [ 'java' ] ).GetConnection(),
+    'WriteData' ):
+    RunTest( app, {
+      'description': 'Request timeout throws an error',
+      'request': {
+        'command': 'FixIt',
+        'line_num': 1,
+        'column_num': 1,
+        'filepath': filepath,
+      },
+      'expect': {
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( ResponseTimeoutException, 'Response Timeout' )
+      }
+    } )
+
+
+@SharedYcmd
+def Subcommands_RequestFailed_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  connection = handlers._server_state.GetFiletypeCompleter(
+    [ 'java' ] ).GetConnection()
+
+  def WriteJunkToServer( data ):
+    junk = data.replace( bytes( b'textDocument/codeAction' ),
+                         bytes( b'textDocument/codeFAILED' ) )
+
+    with connection._stdin_lock:
+       connection._server_stdin.write( junk )
+       connection._server_stdin.flush()
+
+
+  with patch.object( connection, 'WriteData', side_effect = WriteJunkToServer ):
+    RunTest( app, {
+      'description': 'Response errors propagate to the client',
+      'request': {
+        'command': 'FixIt',
+        'line_num': 1,
+        'column_num': 1,
+        'filepath': filepath,
+      },
+      'expect': {
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( ResponseFailedException )
+      }
+    } )
+
+
+@SharedYcmd
+def Subcommands_IndexOutOfRange_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  RunTest( app, {
+    'description': 'Request error handles the error',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 99,
+      'column_num': 99,
+      'filepath': filepath,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( { 'fixits': empty() } ),
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_DifferntFileTypesUpdate_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  RunTest( app, {
+    'description': 'Request error handles the error',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 99,
+      'column_num': 99,
+      'filepath': filepath,
+      'file_data': {
+        '!/bin/sh': {
+          'filetypes': [],
+          'contents': 'this should be ignored by the completer',
+        },
+        '/path/to/non/project/file': {
+          'filetypes': [ 'c' ],
+          'contents': 'this should be ignored by the completer',
+        },
+        PathToTestFile( 'simple_eclipse_project',
+                        'src',
+                        'com',
+                        'test',
+                        'TestLauncher.java' ): {
+          'filetypes': [ 'some', 'java', 'junk', 'also' ],
+          'contents': ReadFile( PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) ),
+        },
+        '!/usr/bin/sh': {
+          'filetypes': [ 'java' ],
+          'contents': '\n',
+        },
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( { 'fixits': empty() } ),
+    }
+  } )

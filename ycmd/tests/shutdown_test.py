@@ -28,11 +28,11 @@ from ycmd.tests.client_test import Client_test
 
 # Time to wait for all the servers to shutdown. Tweak for the CI environment.
 #
-# NOTE: The timeout is 1 minute. That is a long time, but the java sub-server
+# NOTE: The timeout is 2 minutes. That is a long time, but the java sub-server
 # (jdt.ls) takes a _long time_ to finally actually shut down. This is because it
 # is based on eclipse, which must do whatever eclipse must do when it shuts down
 # its workspace.
-SUBSERVER_SHUTDOWN_TIMEOUT = 60
+SUBSERVER_SHUTDOWN_TIMEOUT = 120
 
 
 class Shutdown_test( Client_test ):

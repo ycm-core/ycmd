@@ -201,7 +201,19 @@ class Location( object ):
     absolute path of the file"""
     self.line_number_ = line
     self.column_number_ = column
-    self.filename_ = os.path.realpath( filename )
+    if filename:
+      self.filename_ = os.path.realpath( filename )
+    else:
+      # When the filename passed (e.g. by a server) can't be recognized or
+      # parsed, we send an empty filename. This at least allows the client to
+      # know there _is_ a reference, but not exactly where it is. This can
+      # happen with the Java completer which sometimes returns references using
+      # a custom/undocumented URI scheme. Typically, such URIs point to .class
+      # files or other binary data which clients can't display anyway.
+      # FIXME: Sending a location with an empty filename could be considered a
+      # strict breach of our own protocol. Perhaps completers should be required
+      # to simply skip such a location.
+      self.filename_ = filename
 
 
 def BuildDiagnosticData( diagnostic ):

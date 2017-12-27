@@ -24,10 +24,16 @@ from builtins import *  # noqa
 
 import os
 
-from hamcrest import assert_that, equal_to, is_not
+from hamcrest import assert_that, equal_to, calling, has_entries, is_not, raises
 from mock import patch
 
-from ycmd.completers.java import java_completer
+from ycmd import handlers
+from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.java import ( PathToTestFile,
+                              SharedYcmd,
+                              StartJavaCompleterServerInDirectory )
+from ycmd.completers.java import java_completer, hook
+from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
 
 
 def ShouldEnableJavaCompleter_NoJava_test():
@@ -67,3 +73,159 @@ def WorkspaceDirForProject_UniqueDir_test():
     is_not( equal_to( java_completer._WorkspaceDirForProject( os.getcwd(),
                                                               True ) ) )
   )
+
+
+@SharedYcmd
+def JavaCompleter_GetType_test( app ):
+  StartJavaCompleterServerInDirectory( app, PathToTestFile() )
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+  # The LSP defines the hover response as either:
+  # - a string
+  # - a list of strings
+  # - an object with keys language, value
+  # - a list of objects with keys language, value
+  # = an object with keys kind, value
+
+  with patch.object( completer, 'GetHoverResponse', return_value = '' ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
+  with patch.object( completer, 'GetHoverResponse', return_value = 'string' ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
+  with patch.object( completer, 'GetHoverResponse', return_value = [] ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
+  with patch.object( completer,
+                     'GetHoverResponse',
+                     return_value = [ 'a', 'b' ] ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
+  with patch.object( completer,
+                     'GetHoverResponse',
+                     return_value = { 'language': 'java', 'value': 'test' } ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
+  with patch.object(
+    completer,
+    'GetHoverResponse',
+    return_value = [ { 'language': 'java', 'value': 'test' } ] ):
+    assert_that( completer.GetType( BuildRequest() ),
+                 has_entries( { 'message': 'test' } ) )
+
+  with patch.object(
+    completer,
+    'GetHoverResponse',
+    return_value = [ { 'language': 'java', 'value': 'test' },
+                     { 'language': 'java', 'value': 'not test' } ] ):
+    assert_that( completer.GetType( BuildRequest() ),
+                 has_entries( { 'message': 'test' } ) )
+
+  with patch.object(
+    completer,
+    'GetHoverResponse',
+    return_value = [ { 'language': 'java', 'value': 'test' },
+                     'line 1',
+                     'line 2' ] ):
+    assert_that( completer.GetType( BuildRequest() ),
+                 has_entries( { 'message': 'test' } ) )
+
+
+  with patch.object( completer,
+                     'GetHoverResponse',
+                     return_value = { 'kind': 'plaintext', 'value': 'test' } ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
+
+@SharedYcmd
+def JavaCompleter_GetDoc_test( app ):
+  StartJavaCompleterServerInDirectory( app, PathToTestFile() )
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+  # The LSP defines the hover response as either:
+  # - a string
+  # - a list of strings
+  # - an object with keys language, value
+  # - a list of objects with keys language, value
+  # = an object with keys kind, value
+
+  with patch.object( completer, 'GetHoverResponse', return_value = '' ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE) )
+
+  with patch.object( completer, 'GetHoverResponse', return_value = 'string' ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE) )
+
+  with patch.object( completer, 'GetHoverResponse', return_value = [] ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE) )
+
+  with patch.object( completer,
+                     'GetHoverResponse',
+                     return_value = [ 'a', 'b' ] ):
+    assert_that( completer.GetDoc( BuildRequest() ),
+                 has_entries( { 'detailed_info': 'a\nb' } ) )
+
+  with patch.object( completer,
+                     'GetHoverResponse',
+                     return_value = { 'language': 'java', 'value': 'test' } ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
+
+  with patch.object(
+    completer,
+    'GetHoverResponse',
+    return_value = [ { 'language': 'java', 'value': 'test' } ] ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
+
+  with patch.object(
+    completer,
+    'GetHoverResponse',
+    return_value = [ { 'language': 'java', 'value': 'test' },
+                     { 'language': 'java', 'value': 'not test' } ] ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
+
+  with patch.object(
+    completer,
+    'GetHoverResponse',
+    return_value = [ { 'language': 'java', 'value': 'test' },
+                     'line 1',
+                     'line 2' ] ):
+    assert_that( completer.GetDoc( BuildRequest() ),
+                 has_entries( { 'detailed_info': 'line 1\nline 2' } ) )
+
+
+  with patch.object( completer,
+                     'GetHoverResponse',
+                     return_value = { 'kind': 'plaintext', 'value': 'test' } ):
+    assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+@SharedYcmd
+def JavaCompleter_UnknownCommand_test( app ):
+  StartJavaCompleterServerInDirectory( app, PathToTestFile() )
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+  notification = {
+    'command': 'this_is_not_a_real_command',
+    'params': {}
+  }
+  assert_that( completer.HandleServerCommand( BuildRequest(), notification ),
+               equal_to( None ) )
+
+
+
+@patch( 'ycmd.completers.java.java_completer.ShouldEnableJavaCompleter',
+        return_value = False )
+def JavaHook_JavaNotEnabled():
+  assert_that( hook.GetCompleter(), equal_to( None ) )

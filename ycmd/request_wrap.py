@@ -31,6 +31,8 @@ from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          SplitLines )
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
+import logging
+_logger = logging.getLogger( __name__ )
 
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
@@ -46,7 +48,8 @@ class RequestWrap( object ):
     # by setter_method) are cached in _cached_computed.  setter_method may be
     # None for read-only items.
     self._computed_key = {
-      # Unicode string representation of the current line
+      # Unicode string representation of the current line. If the line requested
+      # is not in the file, returns ''.
       'line_value': ( self._CurrentLine, None ),
 
       # The calculated start column, as a codepoint offset into the
@@ -119,7 +122,14 @@ class RequestWrap( object ):
     current_file = self._request[ 'filepath' ]
     contents = self._request[ 'file_data' ][ current_file ][ 'contents' ]
 
-    return SplitLines( contents )[ self._request[ 'line_num' ] - 1 ]
+    try:
+      return SplitLines( contents )[ self._request[ 'line_num' ] - 1 ]
+    except IndexError:
+      _logger.exception( 'Client returned invalid line number {0} '
+                         'for file {1}. Assuming empty.'.format(
+                           self._request[ 'line_num' ],
+                           self._request[ 'filepath' ] ) )
+      return ''
 
 
   def _GetCompletionStartColumn( self ):

@@ -51,36 +51,36 @@ CONNECTION_TIMEOUT         = 5
 class ResponseTimeoutException( Exception ):
   """Raised by LanguageServerConnection if a request exceeds the supplied
   time-to-live."""
-  pass
+  pass # pragma: no cover
 
 
 class ResponseAbortedException( Exception ):
   """Raised by LanguageServerConnection if a request is canceled due to the
   server shutting down."""
-  pass
+  pass # pragma: no cover
 
 
 class ResponseFailedException( Exception ):
   """Raised by LanguageServerConnection if a request returns an error"""
-  pass
+  pass # pragma: no cover
 
 
 class IncompatibleCompletionException( Exception ):
   """Internal exception returned when a completion item is encountered which is
   not supported by ycmd, or where the completion item is invalid."""
-  pass
+  pass # pragma: no cover
 
 
 class LanguageServerConnectionTimeout( Exception ):
   """Raised by LanguageServerConnection if the connection to the server is not
   established with the specified timeout."""
-  pass
+  pass # pragma: no cover
 
 
 class LanguageServerConnectionStopped( Exception ):
   """Internal exception raised by LanguageServerConnection when the server is
   successfully shut down according to user request."""
-  pass
+  pass # pragma: no cover
 
 
 class Response( object ):
@@ -122,7 +122,7 @@ class Response( object ):
 
   def AwaitResponse( self, timeout ):
     """Called by clients to wait synchronously for either a response to be
-    received of for |timeout| seconds to have passed.
+    received or for |timeout| seconds to have passed.
     Returns the message, or:
         - throws ResponseFailedException if the request fails
         - throws ResponseTimeoutException in case of timeout
@@ -216,22 +216,22 @@ class LanguageServerConnection( threading.Thread ):
   """
   @abc.abstractmethod
   def TryServerConnectionBlocking( self ):
-    pass
+    pass # pragma: no cover
 
 
   @abc.abstractmethod
   def Shutdown( self ):
-    pass
+    pass # pragma: no cover
 
 
   @abc.abstractmethod
   def WriteData( self, data ):
-    pass
+    pass # pragma: no cover
 
 
   @abc.abstractmethod
   def ReadData( self, size=-1 ):
-    pass
+    pass # pragma: no cover
 
 
   def __init__( self, notification_handler = None ):
@@ -270,6 +270,14 @@ class LanguageServerConnection( threading.Thread ):
                          'unexpectedly. Issue a RestartServer command to '
                          'recover.' )
 
+      # Abort any outstanding requests
+      with self._response_mutex:
+        for _, response in iteritems( self._responses ):
+          response.Abort()
+        self._responses.clear()
+
+      # Close any remaining sockets or files
+      self.Shutdown()
 
 
   def Start( self ):
@@ -484,6 +492,15 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
     self._server_stdin = server_stdin
     self._server_stdout = server_stdout
 
+    # NOTE: All access to the stdin/out objects must be synchronised due to the
+    # long-running `read` operations that are done on stdout, and how our
+    # shutdown request will come from another (arbitrary) thread. It is not
+    # legal in Python to close a stdio file while there is a pending read. This
+    # can lead to IOErrors due to "concurrent operations' on files.
+    # See https://stackoverflow.com/q/29890603/2327209
+    self._stdin_lock = threading.Lock()
+    self._stdout_lock = threading.Lock()
+
 
   def TryServerConnectionBlocking( self ):
     # standard in/out don't need to wait for the server to connect to us
@@ -491,30 +508,36 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
 
 
   def Shutdown( self ):
-    if not self._server_stdin.closed:
-      self._server_stdin.close()
+    with self._stdin_lock:
+      if not self._server_stdin.closed:
+        self._server_stdin.close()
 
-    if not self._server_stdout.closed:
-      self._server_stdout.close()
+    with self._stdout_lock:
+      if not self._server_stdout.closed:
+        self._server_stdout.close()
 
 
   def WriteData( self, data ):
-    self._server_stdin.write( data )
-    self._server_stdin.flush()
+    with self._stdin_lock:
+      self._server_stdin.write( data )
+      self._server_stdin.flush()
 
 
   def ReadData( self, size=-1 ):
-    if size > -1:
-      data = self._server_stdout.read( size )
-    else:
-      data = self._server_stdout.readline()
-
-    if self.IsStopped():
-      raise LanguageServerConnectionStopped()
+    data = None
+    with self._stdout_lock:
+      if not self._server_stdout.closed:
+        if size > -1:
+          data = self._server_stdout.read( size )
+        else:
+          data = self._server_stdout.readline()
 
     if not data:
       # No data means the connection was severed. Connection severed when (not
       # self.IsStopped()) means the server died unexpectedly.
+      if self.IsStopped():
+        raise LanguageServerConnectionStopped()
+
       raise RuntimeError( "Connection to server died" )
 
     return data
@@ -579,12 +602,12 @@ class LanguageServerCompleter( Completer ):
     """Method that must be implemented by derived classes to return an instance
     of LanguageServerConnection appropriate for the language server in
     question"""
-    pass
+    pass # pragma: no cover
 
 
   @abc.abstractmethod
   def HandleServerCommand( self, request_data, command ):
-    pass
+    pass # pragma: no cover
 
 
   def __init__( self, user_options):
@@ -612,7 +635,7 @@ class LanguageServerCompleter( Completer ):
     Implementations are required to call this after disconnection and killing
     the downstream server."""
     with self._server_info_mutex:
-      self._server_file_state = {}
+      self._server_file_state = lsp.ServerFileStateStore()
       self._latest_diagnostics = collections.defaultdict( list )
       self._sync_type = 'Full'
       self._initialize_response = None
@@ -955,6 +978,13 @@ class LanguageServerCompleter( Completer ):
     return None
 
 
+  def _AnySupportedFileType( self, file_types ):
+    for supported in self.SupportedFiletypes():
+      if supported in file_types:
+        return True
+    return False
+
+
   def _UpdateServerWithFileContents( self, request_data ):
     """Update the server with the current contents of all open buffers, and
     close any buffers no longer open.
@@ -962,41 +992,112 @@ class LanguageServerCompleter( Completer ):
     This method should be called frequently and in any event before a
     synchronous operation."""
     with self._server_info_mutex:
-      for file_name, file_data in iteritems( request_data[ 'file_data' ] ):
-        file_state = 'New'
-        if file_name in self._server_file_state:
-          file_state = self._server_file_state[ file_name ]
+      self._UpdateDirtyFilesUnderLock( request_data )
+      files_to_purge = self._UpdateSavedFilesUnderLock( request_data )
+      self._PurgeMissingFilesUnderLock( files_to_purge )
 
-        _logger.debug( 'Refreshing file {0}: State is {1}'.format(
-          file_name, file_state ) )
-        if file_state == 'New' or self._sync_type == 'Full':
-          msg = lsp.DidOpenTextDocument( file_name,
-                                         file_data[ 'filetypes' ],
-                                         file_data[ 'contents' ] )
-        else:
-          # FIXME: DidChangeTextDocument doesn't actually do anything different
-          # from DidOpenTextDocument other than send the right message, because
-          # we don't actually have a mechanism for generating the diffs or
-          # proper document version or life-cycle management. This isn't
-          # strictly necessary, but might lead to performance problems.
-          msg = lsp.DidChangeTextDocument( file_name,
-                                           file_data[ 'filetypes' ],
-                                           file_data[ 'contents' ] )
 
-        self._server_file_state[ file_name ] = 'Open'
+  def _UpdateDirtyFilesUnderLock( self, request_data ):
+    for file_name, file_data in iteritems( request_data[ 'file_data' ] ):
+      if not self._AnySupportedFileType( file_data[ 'filetypes' ] ):
+        continue
+
+      file_state = self._server_file_state[ file_name ]
+      action = file_state.GetDirtyFileAction( file_data[ 'contents' ] )
+
+      _logger.debug( 'Refreshing file {0}: State is {1}/action {2}'.format(
+        file_name, file_state.state, action ) )
+
+      if action == lsp.ServerFileState.OPEN_FILE:
+        msg = lsp.DidOpenTextDocument( file_state,
+                                       file_data[ 'filetypes' ],
+                                       file_data[ 'contents' ] )
+
+        self.GetConnection().SendNotification( msg )
+      elif action == lsp.ServerFileState.CHANGE_FILE:
+        # FIXME: DidChangeTextDocument doesn't actually do anything
+        # different from DidOpenTextDocument other than send the right
+        # message, because we don't actually have a mechanism for generating
+        # the diffs. This isn't strictly necessary, but might lead to
+        # performance problems.
+        msg = lsp.DidChangeTextDocument( file_state, file_data[ 'contents' ] )
+
         self.GetConnection().SendNotification( msg )
 
-      stale_files = list()
-      for file_name in iterkeys( self._server_file_state ):
-        if file_name not in request_data[ 'file_data' ]:
-          stale_files.append( file_name )
 
-      # We can't change the dictionary entries while using iterkeys, so we do
-      # that in a separate loop.
-      for file_name in stale_files:
-          msg = lsp.DidCloseTextDocument( file_name )
-          self.GetConnection().SendNotification( msg )
-          del self._server_file_state[ file_name ]
+  def _UpdateSavedFilesUnderLock( self, request_data ):
+    files_to_purge = list()
+    for file_name, file_state in iteritems( self._server_file_state ):
+      if file_name in request_data[ 'file_data' ]:
+        continue
+
+      # We also need to tell the server the contents of any files we have said
+      # are open, but are not 'dirty' in the editor. This is because after
+      # sending a didOpen notification, we own the contents of the file.
+      #
+      # So for any file that is in the server map, and open, but not supplied in
+      # the request, we check to see if its on-disk contents match the latest in
+      # the server. If they don't, we send an update.
+      #
+      # FIXME: This is really inefficient currently, as it reads the entire file
+      # on every update. It might actually be better to close files which have
+      # been saved and are no longer "dirty", though that would likely be less
+      # efficient for downstream servers which cache e.g. AST.
+      try:
+        contents = GetFileContents( request_data, file_name )
+      except IOError:
+        _logger.exception( 'Error getting contents for open file: {0}'.format(
+          file_name ) )
+
+        # The file no longer exists (it might have been a temporary file name)
+        # or it is no longer accessible, so we should state that it is closed.
+        # If it were still open it would have been in the request_data.
+        #
+        # We have to do this in a separate loop because we can't change
+        # self._server_file_state while iterating it.
+        files_to_purge.append( file_name )
+        continue
+
+      action = file_state.GetSavedFileAction( contents )
+      if action == lsp.ServerFileState.CHANGE_FILE:
+        msg = lsp.DidChangeTextDocument( file_state, contents )
+        self.GetConnection().SendNotification( msg )
+
+    return files_to_purge
+
+
+  def _PurgeMissingFilesUnderLock( self, files_to_purge ):
+    # ycmd clients only send buffers which have changed, and are required to
+    # send BufferUnload autocommand when files are closed.
+    for file_name in files_to_purge:
+      self._PurgeFileFromServer( file_name )
+
+
+  def OnBufferUnload( self, request_data ):
+    if not self.ServerIsHealthy():
+      return
+
+    # If we haven't finished initializing yet, we need to queue up a call to
+    # _PurgeFileFromServer. This ensures that the server is up to date
+    # as soon as we are able to send more messages. This is important because
+    # server start up can be quite slow and we must not block the user, while we
+    # must keep the server synchronized.
+    if not self._initialize_event.is_set():
+      self._OnInitializeComplete(
+        lambda self: self._PurgeFileFromServer( request_data[ 'filepath' ] ) )
+      return
+
+    self._PurgeFileFromServer( request_data[ 'filepath' ] )
+
+
+  def _PurgeFileFromServer( self, file_path ):
+    file_state = self._server_file_state[ file_path ]
+    action = file_state.GetFileCloseAction()
+    if action == lsp.ServerFileState.CLOSE_FILE:
+      msg = lsp.DidCloseTextDocument( file_state )
+      self.GetConnection().SendNotification( msg )
+
+    del self._server_file_state[ file_state.filename ]
 
 
   def _GetProjectDirectory( self, request_data ):
@@ -1024,7 +1125,7 @@ class LanguageServerCompleter( Completer ):
 
       def response_handler( response, message ):
         if message is None:
-          raise ResponseAbortedException( 'Initialize request aborted' )
+          return
 
         self._HandleInitializeInPollThread( message )
 
@@ -1052,10 +1153,17 @@ class LanguageServerCompleter( Completer ):
         _logger.info( 'Language server requires sync type of {0}'.format(
           self._sync_type ) )
 
-      # We must notify the server that we received the initialize response.
-      # There are other things that could happen here, such as loading custom
-      # server configuration, but we don't support that (yet).
+      # We must notify the server that we received the initialize response (for
+      # no apparent reason, other than that's what the protocol says).
       self.GetConnection().SendNotification( lsp.Initialized() )
+
+      # Some language servers require the use of didChangeConfiguration event,
+      # even though it is not clear in the specification that it is mandatory,
+      # nor when it should be sent.  VSCode sends it immediately after
+      # initialized notification, so we do the same. In future, we might
+      # support getting this config from ycm_extra_conf or the client, but for
+      # now, we send an empty object.
+      self.GetConnection().SendNotification( lsp.DidChangeConfiguration( {} ) )
 
       # Notify the other threads that we have completed the initialize exchange.
       self._initialize_response = None
@@ -1113,13 +1221,15 @@ class LanguageServerCompleter( Completer ):
 
     if isinstance( response[ 'result' ], list ):
       return _LocationListToGoTo( request_data, response )
-    else:
+    elif response[ 'result' ]:
       position = response[ 'result' ]
       try:
         return responses.BuildGoToResponseFromLocation(
           *_PositionToLocationAndDescription( request_data, position ) )
       except KeyError:
         raise RuntimeError( 'Cannot jump to location' )
+    else:
+      raise RuntimeError( 'Cannot jump to location' )
 
 
   def GoToReferences( self, request_data ):
@@ -1177,6 +1287,8 @@ class LanguageServerCompleter( Completer ):
         REQUEST_TIMEOUT_COMMAND )
 
     else:
+      line_value = request_data[ 'line_value' ]
+
       code_actions = self.GetConnection().GetResponse(
         request_id,
         lsp.CodeAction(
@@ -1190,7 +1302,7 @@ class LanguageServerCompleter( Completer ):
             },
             'end': {
               'line': line_num_ls,
-              'character': len( request_data[ 'line_value' ] ) - 1,
+              'character': len( line_value ) - 1,
             }
           },
           [] ),

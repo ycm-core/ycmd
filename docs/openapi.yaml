@@ -167,7 +167,19 @@ definitions:
     type: object
     description: |-
       An object mapping whose keys are the absolute paths to the
-      files and whose values are data relating to dirty buffers.
+      files and whose values are data relating unsaved buffers.
+
+      An unsaved buffer is any file that is opened in the editor and has been
+      changed without saving the contents to disk.
+
+      The file referred to in the request `filepath` entry must _always_ be
+      included. For most requests this is the user's current buffer, but may
+      be any buffer (e.g. in the case of closing a buffer which is not current).
+
+      When a file is closed in the editor, a `BufferUnload` event should be sent
+      and the file should not be included in further `FileDataMap` entries
+      until (or unless) it is opened and changed again.
+
     additionalProperties:
       $ref: "#/definitions/FileData"
 
@@ -512,9 +524,9 @@ paths:
             believes that it is worthwhile reparsing the current file and
             updating semantic engines'' ASTs and reporting things like updated
             diagnostics.
-          - `BufferUnload` (optional)
+          - `BufferUnload`
             Call when the user closes a buffer that was previously known to be
-            open.
+            open. Closing buffers is important to limit resource usage.
           - `BufferVisit` (optional)
             Call when the user focusses on a buffer that is already known.
             *Note*: The `ultisnips_snippets` property is optional when firing

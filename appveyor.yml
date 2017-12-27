@@ -39,3 +39,5 @@ cache:
   - '%USERPROFILE%\.cargo'  # Cargo package deps
   - '%APPVEYOR_BUILD_FOLDER%\clang_archives'  # Clang downloads
   - '%APPVEYOR_BUILD_FOLDER%\third_party\racerd\target'  # Racerd compilation
+     # jdt.ls download
+  - '%APPVEYOR_BUILD_FOLDER%\third_party\eclipse.jdt.ls\target\cache'

@@ -34,12 +34,14 @@ from nose.tools import eq_
 from pprint import pformat
 import requests
 
+from ycmd import handlers
 from ycmd.tests.java import DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CompletionEntryMatcher,
                                     LocationMatcher )
 from ycmd.utils import ReadFile
+from mock import patch
 
 
 def _CombineRequest( request, data ):
@@ -423,10 +425,84 @@ def GetCompletions_UnicodeIdentifier_test( app ):
           } ),
           CompletionEntryMatcher( 'testywesty', 'Test.TéstClass', {
             'kind': 'Field',
-            'detailed_info': 'testywesty : String\n\nTest in the west ',
           } ),
         ) ),
         'errors': empty(),
       } )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_ResolveFailed_test( app ):
+  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  from ycmd.completers.language_server import language_server_protocol as lsapi
+
+  def BrokenResolveCompletion( request_id, completion ):
+    return lsapi.BuildRequest( request_id, 'completionItem/FAIL', completion )
+
+  with patch( 'ycmd.completers.language_server.language_server_protocol.'
+              'ResolveCompletion',
+              side_effect = BrokenResolveCompletion ):
+    RunTest( app, {
+      'description': 'Completion works for unicode identifier',
+      'request': {
+        'filetype'      : 'java',
+        'filepath'      : filepath,
+        'line_num'      : 16,
+        'column_num'    : 35,
+        'force_semantic': True
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 35,
+          'completions': contains_inanyorder( *WithObjectMethods(
+            CompletionEntryMatcher( 'a_test', 'Test.TéstClass', {
+              'kind': 'Field',
+              'detailed_info': 'a_test : int\n\n',
+            } ),
+            CompletionEntryMatcher( 'testywesty', 'Test.TéstClass', {
+              'kind': 'Field',
+            } ),
+          ) ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+@SharedYcmd
+def Subcommands_ServerNotReady_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'AbstractTestWidget.java' )
+
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+  with patch.object( completer, 'ServerIsReady', return_value = False ):
+    RunTest( app, {
+      'description': 'Completion works for unicode identifier',
+      'request': {
+        'filetype'      : 'java',
+        'filepath'      : filepath,
+        'line_num'      : 16,
+        'column_num'    : 35,
+        'force_semantic': True
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'completions': empty(),
+          'completion_start_column': 6
+        } ),
+      }
+    } )
