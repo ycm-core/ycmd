@@ -307,9 +307,13 @@ definitions:
         enum:
           - WARNING
           - ERROR
+          - INFORMATION
+          - HINT
         description: |-
           The type of diagnostic being reported. Typically semantic engines will
-          differentiate between warnings and fatal errors.
+          differentiate between warnings and fatal errors. Informational and
+          hint messages should be treated as warnings where the client does not
+          differentiate.
       fixit_available:
         type: boolean
         description: |-
@@ -508,6 +512,71 @@ definitions:
         description: Additional debugging information.
         items:
           $ref: "#/definitions/ItemData"
+
+  MessagePollResponse:
+    type: boolean
+    description: |-
+      When `true` is returned, the request timed out (meaning no
+      messages were returned in the poll period). Clients should
+      send another `receive_messages` request immediately.
+
+      When `false` is returned, the server determined that message
+      polling should abort for the current file type context. Clients
+      should not re-send this request until the filetype being edited
+      changes or the server is restarted.
+
+  MessageList:
+    type: array
+    description: |-
+      A list of messages in the sequence they should be handled.
+
+      The type of message in each item is determined by the property name:
+
+      - An object with a property `message` is a *simple display message* where
+        the property value is the message.
+      - An object with a property `diagnostics` contains diagnotics for a
+        project file. The value of the property is described below.
+    items:
+      $ref: '#/definitions/Message'
+
+  Message:
+    type: object
+    description:
+      An object containing a single asynchronous message.
+
+      It is either a `SimpleDisplayMessage` or a `DiagnosticsMessage`
+    properties:
+      message:
+        $ref: '#/definitions/SimpleDisplayMessage'
+        description: If present, this object is a `SimpleDisplayMessage`
+      diagnostics:
+        $ref: '#/definitions/DiagnosticsMessage'
+        description: If present, this object is a `DiagnosticsMessage`
+
+  SimpleDisplayMessage:
+    type: string
+    description: |-
+      A message for display to the user. Note: the message should be displayed
+      discreetly (such as in a status bar) and should not block the user or
+      interrupt them.
+
+  DiagnosticsMessage:
+    type: object
+    description: |-
+      Diagnostics for a particular file. Note: diagnostics may be supplied for
+      any arbitrary file. The client is responsible for displaying the
+      diagnostics in an appropriate manner. The server supplies an empty set of
+      diagnostics to clear the diagnostics for a particular file.
+    required:
+      - filepath
+      - diagnostics
+    properties:
+      filpath:
+        $ref: '#/definitions/FilePath'
+      diagnotics:
+        type: array
+        items:
+          $ref: "#/definitions/DiagnosticData"
 
 paths:
   /event_notification:
@@ -1152,6 +1221,87 @@ paths:
                 items:
                   - description: "description"
                     value: "value"
+        500:
+          description: An error occurred.
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
+  /receive_messages:
+    post:
+      summary: Long poll for asynchronous server messages.
+      description: |-
+        Return asynchronous messages from the server. This request is
+        used by clients in a "long poll" style, and does not return until
+        either:
+
+        - A message (or messages) becomes available, in which case a list of
+          messages is returned, or
+        - a timeout occurs (after 60s), in which case `true` is returned and
+          the client should re-send this request, or
+        - for some reason the server determined that the client should stop
+          sending `receive_messages` requests, in which case `false` is
+          returned, and the client should only send the request again when
+          something substantial changes such as a new file type is opened, or
+          the completer server is manually restarted.
+
+        The following types of event are delivered asynchronously for certain
+        filetypes:
+
+        - Status messages to be displayed unobtrusively to the user
+        - Diagnostics (for Java only)
+
+        This message is optional. Clients do not require to implement this
+        method, but it is strongly recommended for certain languages to offer
+        the best user experience.
+      produces:
+        application/json
+      parameters:
+        - name: request_data
+          in: body
+          description: |-
+            The context data, including the current cursor position, and details
+            of dirty buffers.
+          required: true
+          schema:
+            $ref: "#/definitions/SimpleRequest"
+      responses:
+        200:
+          description: |-
+            Messages are ready, the request timed out, or the request
+            is not supported and should not be retried.
+
+            The response may be **one of** `MessagePollResponse` or
+            `MessagesList`.
+          schema:
+            allOf:
+            - $ref: '#/definitions/MessagePollResponse'
+            - $ref: '#/definitions/MessageList'
+          examples:
+            application/json:
+              - message: 'Initializing: 19% complete'
+              - message: 'Initializing: Done.'
+              - diagonostics:
+                  filepath: '/file'
+                  diagnotics:
+                  - ranges:
+                    - start: { line_num: 10, column_num: 11, filepath: '/file' }
+                      end: { line_num: 10, column_num: 20, filepath: '/file' }
+                    location: { line_num: 10, column_num: 11, filepath: '/file' }
+                    location_extent:
+                      start: { line_num: 10, column_num: 11, filepath: '/file' }
+                      end: { line_num: 10, column_num: 11, filepath: '/file' }
+                    text: Very naughty code!
+                    kind: WARNING
+                    fixit_available: false
+                  - ranges:
+                    - start: { line_num: 19, column_num: 11, filepath: '/file' }
+                      end: { line_num: 19, column_num: 20, filepath: '/file' }
+                    location: { line_num: 19, column_num: 11, filepath: '/file' }
+                    location_extent:
+                      start: { line_num: 19, column_num: 11, filepath: '/file' }
+                      end: { line_num: 19, column_num: 11, filepath: '/file' }
+                    text: Very dangerous code!
+                    kind: ERROR
+                    fixit_available: true
         500:
           description: An error occurred.
           schema:
