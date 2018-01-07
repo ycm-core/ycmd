@@ -18,7 +18,6 @@
 #ifndef LETTERNODELISTMAP_H_BRK2UMC1
 #define LETTERNODELISTMAP_H_BRK2UMC1
 
-#include "DLLDefines.h"
 #include "Utils.h"
 
 #include <vector>
@@ -31,7 +30,7 @@ namespace YouCompleteMe {
 
 class LetterNode;
 
-YCM_DLL_EXPORT int IndexForLetter( char letter );
+YCM_EXPORT int IndexForLetter( char letter );
 
 /*
  * This struct is used as part of the LetterNodeListMap structure.
@@ -67,7 +66,7 @@ public:
 
   NearestLetterNodeIndices &operator[] ( char letter );
 
-  YCM_DLL_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
+  YCM_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
 
 private:
   typedef std::array<NearestLetterNodeIndices , NUM_LETTERS>

@@ -92,5 +92,6 @@
 // C++17 features
 #  define BOOST_NO_CXX17_STD_APPLY
 #  define BOOST_NO_CXX17_STD_INVOKE
+#  define BOOST_NO_CXX17_ITERATOR_TRAITS
 
 #define BOOST_STDLIB "Metrowerks Standard Library version " BOOST_STRINGIZE(__MSL_CPP__)

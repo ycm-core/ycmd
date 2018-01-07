@@ -3,7 +3,6 @@ os:
   - linux
   - osx
 dist: trusty
-osx_image: xcode8
 sudo: false
 before_install:
   - git submodule update --init --recursive

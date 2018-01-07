@@ -13,7 +13,7 @@
 namespace boost { namespace python { namespace detail { 
 
 BOOST_PYTHON_IS_XXX_DEF(shared_ptr, shared_ptr, 1)
-#if __cplusplus >= 201103L
+#if !defined(BOOST_NO_CXX11_SMART_PTR)
 template <typename T>
 struct is_shared_ptr<std::shared_ptr<T> > : std::true_type {};
 #endif

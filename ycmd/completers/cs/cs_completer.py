@@ -25,7 +25,7 @@ from __future__ import division
 from builtins import *  # noqa
 
 from collections import defaultdict
-from future.utils import itervalues
+from future.utils import itervalues, PY2
 import logging
 import os
 import errno
@@ -783,8 +783,12 @@ def _IndexToLineColumn( text, index ):
 
 
 def _BuildLocation( request_data, filename, line_num, column_num ):
-  if line_num <= 0 or column_num <= 0:
+  if line_num <= 0:
     return None
+  # OmniSharp sometimes incorrectly returns 0 for the column number. Assume the
+  # column is 1 in that case.
+  if column_num <= 0:
+    column_num = 1
   contents = utils.SplitLines( GetFileContents( request_data, filename ) )
   line_value = contents[ line_num - 1 ]
   return responses.Location(

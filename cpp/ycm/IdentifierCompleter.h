@@ -18,7 +18,6 @@
 #ifndef COMPLETER_H_7AR4UGXE
 #define COMPLETER_H_7AR4UGXE
 
-#include "DLLDefines.h"
 #include "IdentifierDatabase.h"
 
 #include <vector>
@@ -36,10 +35,10 @@ public:
   IdentifierCompleter( const IdentifierCompleter& ) = delete;
   IdentifierCompleter& operator=( const IdentifierCompleter ) = delete;
 
-  YCM_DLL_EXPORT IdentifierCompleter();
-  YCM_DLL_EXPORT IdentifierCompleter(
+  YCM_EXPORT IdentifierCompleter();
+  YCM_EXPORT IdentifierCompleter(
     const std::vector< std::string > &candidates );
-  YCM_DLL_EXPORT IdentifierCompleter(
+  YCM_EXPORT IdentifierCompleter(
                        const std::vector< std::string > &candidates,
                        const std::string &filetype,
                        const std::string &filepath );
@@ -56,7 +55,7 @@ public:
     const std::string &filetype,
     const std::string &filepath );
 
-  YCM_DLL_EXPORT void AddIdentifiersToDatabaseFromTagFiles(
+  YCM_EXPORT void AddIdentifiersToDatabaseFromTagFiles(
     const std::vector< std::string > &absolute_paths_to_tag_files );
 
   void AddIdentifiersToDatabaseFromBuffer(
@@ -66,11 +65,11 @@ public:
     bool collect_from_comments_and_strings );
 
   // Only provided for tests!
-  YCM_DLL_EXPORT std::vector< std::string > CandidatesForQuery(
+  YCM_EXPORT std::vector< std::string > CandidatesForQuery(
     const std::string &query,
     const size_t max_candidates = 0 ) const;
 
-  YCM_DLL_EXPORT std::vector< std::string > CandidatesForQueryAndType(
+  YCM_EXPORT std::vector< std::string > CandidatesForQueryAndType(
     const std::string &query,
     const std::string &filetype,
     const size_t max_candidates = 0 ) const;

@@ -42,12 +42,13 @@ import os
 
 HMAC_SECRET_LENGTH = 16
 JEDIHTTP_HMAC_HEADER = 'x-jedihttp-hmac'
+JEDIHTTP_IDLE_SUICIDE_SECONDS = 1800  # 30 minutes
 BINARY_NOT_FOUND_MESSAGE = ( 'The specified python interpreter {0} ' +
                              'was not found. Did you specify it correctly?' )
 LOGFILE_FORMAT = 'jedihttp_{port}_{std}_'
 PATH_TO_JEDIHTTP = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', '..',
-                'third_party', 'JediHTTP', 'jedihttp.py' ) )
+                'third_party', 'JediHTTP', 'jedihttp' ) )
 
 
 class JediCompleter( Completer ):
@@ -167,11 +168,13 @@ class JediCompleter( Completer ):
         json.dump( { 'hmac_secret': ToUnicode(
                         b64encode( self._hmac_secret ) ) },
                    hmac_file )
-        command = [ self._python_binary_path,
-                    PATH_TO_JEDIHTTP,
-                    '--port', str( self._jedihttp_port ),
-                    '--log', self._GetLoggingLevel(),
-                    '--hmac-file-secret', hmac_file.name ]
+        command = [
+          self._python_binary_path,
+          PATH_TO_JEDIHTTP,
+          '--port', str( self._jedihttp_port ),
+          '--log', self._GetLoggingLevel(),
+          '--hmac-file-secret', hmac_file.name,
+          '--idle-suicide-seconds', str( JEDIHTTP_IDLE_SUICIDE_SECONDS ) ]
 
       self._logfile_stdout = utils.CreateLogfile(
           LOGFILE_FORMAT.format( port = self._jedihttp_port, std = 'stdout' ) )

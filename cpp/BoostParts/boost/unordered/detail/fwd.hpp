@@ -32,8 +32,7 @@
 #endif
 #endif
 
-// TODO: Use piecewise construction by default? Is it safe to assume that an
-//       unknown library has it?
+// Assume that an unknown library does not support piecewise construction.
 #if !defined(BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT)
 #define BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT 0
 #endif
@@ -43,17 +42,17 @@
 #endif
 
 namespace boost {
-namespace unordered {
+  namespace unordered {
 #if BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT
-using std::piecewise_construct_t;
-using std::piecewise_construct;
+    using std::piecewise_construct_t;
+    using std::piecewise_construct;
 #else
-struct piecewise_construct_t
-{
-};
-const piecewise_construct_t piecewise_construct = piecewise_construct_t();
+    struct piecewise_construct_t
+    {
+    };
+    const piecewise_construct_t piecewise_construct = piecewise_construct_t();
 #endif
-}
+  }
 }
 
 #endif

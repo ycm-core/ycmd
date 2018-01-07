@@ -247,6 +247,7 @@ extern "C" char *gets (char *__s);
 #if (BOOST_LIBSTDCXX_VERSION < 40600) || !defined(BOOST_LIBSTDCXX11)
 #  define BOOST_NO_CXX11_HDR_TYPEINDEX
 #  define BOOST_NO_CXX11_ADDRESSOF
+#  define BOOST_NO_CXX17_ITERATOR_TRAITS
 #endif
 
 //  C++0x features in GCC 4.7.0 and later
