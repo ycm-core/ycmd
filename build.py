@@ -493,11 +493,11 @@ def EnableNewCsCompleter():
     url_pattern = ( "https://github.com/OmniSharp/omnisharp-roslyn/"
                     "releases/download/{0}/{1}" )
     if OnWindows() or OnCygwin():
-      dotnetversion_output = CheckOutput( [ 'reg', 'query', 
+      dotnetversion_output = CheckOutput( [ 'reg', 'query',
           'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\full',
           '/v', 'version' ] )
       dotnet_46_pattern = re.compile( 'version\s*REG_SZ\s*4.[67].\d*' )
-      
+
       if ( dotnet_46_pattern.search( ToUnicode( dotnetversion_output ) ) ):
         if platform.machine().endswith( '64' ):
           url_file = 'omnisharp.http-win-x64.zip'
