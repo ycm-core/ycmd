@@ -53,14 +53,13 @@ PATH_TO_LEGACY_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
   '..', '..', '..', 'third_party', 'OmniSharpServer',
   'OmniSharp', 'bin', 'Release', 'OmniSharp.exe' )
-ROSLYN_OMNISHARP_BINARY = 'OmniSharp'
-MONO_MODE = 1 # TODO
-if utils.OnWindows() or utils.OnCygwin() or MONO_MODE:
-  ROSLYN_OMNISHARP_BINARY = 'OmniSharp.exe'
 PATH_TO_ROSLYN_OMNISHARP_BINARY = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
-  '..', '..', '..', 'third_party', 'omnisharp-roslyn', ROSLYN_OMNISHARP_BINARY
+  '..', '..', '..', 'third_party', 'omnisharp-roslyn', 'OmniSharp'
 )
+if ( not os.path.isfile( PATH_TO_ROSLYN_OMNISHARP_BINARY )
+     and os.path.isfile( PATH_TO_ROSLYN_OMNISHARP_BINARY + '.exe' ) ):
+  PATH_TO_ROSLYN_OMNISHARP_BINARY += '.exe'
 LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
