@@ -501,7 +501,7 @@ def RunFixItTest( app,
                   result_matcher,
                   filepath = [ 'testy', 'FixItTestCase.cs' ] ):
   if use_roslyn:
-    raise SkipTest( "Roslyn doesn't seem to support FixIt  yet" )
+    raise SkipTest( "Waiting on this to implemented in Roslyn" )
   filepath = PathToTestFile( *filepath )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )

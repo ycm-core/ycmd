@@ -140,14 +140,13 @@ def _GetCompletions_PathWithSpace_test( app, use_roslyn ):
 
 
 def GetCompletions_HasBothImportsAndNonImport_test():
-  yield _GetCompletions_HasBothImportsAndNonImport_test, True
+  # Roslyn doesn't have this feature
+  # yield _GetCompletions_HasBothImportsAndNonImport_test, True
   yield _GetCompletions_HasBothImportsAndNonImport_test, False
 
 
 @SharedYcmd
 def _GetCompletions_HasBothImportsAndNonImport_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't seem to support want importable type yet" )
   filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
@@ -169,14 +168,13 @@ def _GetCompletions_HasBothImportsAndNonImport_test( app, use_roslyn ):
 
 
 def GetCompletions_ImportsOrderedAfter_test():
-  yield _GetCompletions_ImportsOrderedAfter_test, True
+  # Roslyn doesn't have this feature
+  # yield _GetCompletions_ImportsOrderedAfter_test, True
   yield _GetCompletions_ImportsOrderedAfter_test, False
 
 
 @SharedYcmd
 def _GetCompletions_ImportsOrderedAfter_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't seem to support want importable type yet" )
   filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
@@ -206,14 +204,13 @@ def _GetCompletions_ImportsOrderedAfter_test( app, use_roslyn ):
 
 
 def GetCompletions_ForcedReturnsResults_test():
-  yield _GetCompletions_ForcedReturnsResults_test, True
+  # Roslyn doesn't have this feature
+  # yield _GetCompletions_ForcedReturnsResults_test, True
   yield _GetCompletions_ForcedReturnsResults_test, False
 
 
 @SharedYcmd
 def _GetCompletions_ForcedReturnsResults_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't seem to support forced option yet" )
   filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
@@ -233,14 +230,13 @@ def _GetCompletions_ForcedReturnsResults_test( app, use_roslyn ):
 
 
 def GetCompletions_NonForcedReturnsNoResults_test():
-  yield _GetCompletions_NonForcedReturnsNoResults_test, True
+  # Roslyn doesn't have this feature
+  # yield _GetCompletions_NonForcedReturnsNoResults_test, True
   yield _GetCompletions_NonForcedReturnsNoResults_test, False
 
 
 @SharedYcmd
 def _GetCompletions_NonForcedReturnsNoResults_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't seem to support forced option yet" )
   filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
@@ -272,14 +268,13 @@ def _GetCompletions_NonForcedReturnsNoResults_test( app, use_roslyn ):
 
 
 def GetCompletions_ForcedDividesCache_test():
-  yield _GetCompletions_ForcedDividesCache_test, True
+  # Roslyn doesn't have this feature
+  # yield _GetCompletions_ForcedDividesCache_test, True
   yield _GetCompletions_ForcedDividesCache_test, False
 
 
 @SharedYcmd
 def _GetCompletions_ForcedDividesCache_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't seem to support forced option yet" )
   filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     contents = ReadFile( filepath )
@@ -323,14 +318,13 @@ def _GetCompletions_ForcedDividesCache_test( app, use_roslyn ):
 
 
 def GetCompletions_ReloadSolution_Basic_test():
-  yield _GetCompletions_ReloadSolution_Basic_test, True
+  # Roslyn doesn't have this endpoint (yet)  
+  # yield _GetCompletions_ReloadSolution_Basic_test, True
   yield _GetCompletions_ReloadSolution_Basic_test, False
 
 
 @SharedYcmd
 def _GetCompletions_ReloadSolution_Basic_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't return proper JSON for this" )
   filepath = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath, use_roslyn ):
     result = app.post_json(
@@ -344,14 +338,13 @@ def _GetCompletions_ReloadSolution_Basic_test( app, use_roslyn ):
 
 
 def GetCompletions_ReloadSolution_MultipleSolution_test():
-  yield _GetCompletions_ReloadSolution_MultipleSolution_test, True
+  # Roslyn doesn't have this endpoint (yet)  
+  # yield _GetCompletions_ReloadSolution_MultipleSolution_test, True
   yield _GetCompletions_ReloadSolution_MultipleSolution_test, False
 
 
 @SharedYcmd
 def _GetCompletions_ReloadSolution_MultipleSolution_test( app, use_roslyn ):
-  if use_roslyn:
-    raise SkipTest( "Roslyn doesn't return proper JSON for this" )
   filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
                 PathToTestFile( 'testy-multiple-solutions',
                                 'solution-named-like-folder',
