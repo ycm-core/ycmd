@@ -431,7 +431,7 @@ class CsharpSolutionCompleter( object ):
 
       self._logger.info( 'Starting OmniSharp server with: ' + str( command ) )
 
-      solutionfile = os.path.basename( path_to_solutionfile )
+      solutionfile = os.path.basename( self._solution_path )
       self._filename_stdout = utils.CreateLogfile(
           LOGFILE_FORMAT.format( port = self._omnisharp_port,
                                  sln = solutionfile,
