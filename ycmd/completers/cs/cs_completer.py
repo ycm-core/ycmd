@@ -414,10 +414,9 @@ class CsharpSolutionCompleter( object ):
       omnisharp_path = self._omnisharp_path
       command_path = path_to_solutionfile
 
-      # Copied from SafePopen - see there for details
-      if ( utils.OnWindows() and PY2 ):
-        omnisharp_path = utils.ConvertArgsToShortPath( omnisharp_path )
-        command_path = utils.ConvertArgsToShortPath( command_path )
+      # Roslyn fails unless you open it in shell in Window on Python 2
+      # Shell isn't preferred, but I don't see any other way to resolve
+      shell_required = PY2 and utils.OnWindows()
 
       command = [ omnisharp_path,
                   '-p',
@@ -443,9 +442,9 @@ class CsharpSolutionCompleter( object ):
 
       with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
         with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
-          # SafePopen breaks OmnisharpRoslyn, so using Popen directly
-          self._omnisharp_phandle = subprocess.Popen(
-              command, stdout = fstdout, stderr = fstderr )
+          self._omnisharp_phandle = utils.SafePopen(
+              command, stdout = fstdout, stderr = fstderr,
+              shell = shell_required )
 
       self._logger.info( 'Starting OmniSharp server' )
 
