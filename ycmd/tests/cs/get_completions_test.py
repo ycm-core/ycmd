@@ -318,7 +318,7 @@ def _GetCompletions_ForcedDividesCache_test( app, use_roslyn ):
 
 
 def GetCompletions_ReloadSolution_Basic_test():
-  # Roslyn doesn't have this endpoint (yet)  
+  # Roslyn doesn't have this endpoint (yet)
   # yield _GetCompletions_ReloadSolution_Basic_test, True
   yield _GetCompletions_ReloadSolution_Basic_test, False
 
@@ -338,7 +338,7 @@ def _GetCompletions_ReloadSolution_Basic_test( app, use_roslyn ):
 
 
 def GetCompletions_ReloadSolution_MultipleSolution_test():
-  # Roslyn doesn't have this endpoint (yet)  
+  # Roslyn doesn't have this endpoint (yet)
   # yield _GetCompletions_ReloadSolution_MultipleSolution_test, True
   yield _GetCompletions_ReloadSolution_MultipleSolution_test, False
 
