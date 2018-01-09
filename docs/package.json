@@ -1,0 +1,7 @@
+{
+  "description": "Dependencies for building the API docs",
+  "dependencies": {
+    "bootprint": "^1.0.0",
+    "bootprint-openapi": "^1.0.1"
+  }
+}

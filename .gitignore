@@ -63,3 +63,7 @@ third_party/tern_runtime/package-lock.json
 *.gcov
 # And python coverage output, when running manually
 coverage.xml
+
+# API docs
+docs/node_modules
+docs/package-lock.json
