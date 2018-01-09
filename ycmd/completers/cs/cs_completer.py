@@ -115,7 +115,13 @@ class CsharpCompleter( Completer ):
 
 
   def ShouldUseNowInner( self, request_data ):
-    return True
+    """ Preempt the identity completer always, since the C# completer is fast
+    enough to do so and it will returns more relevant results. Fallback to use
+    the triggers, which are by default . -> and :: """
+    if ( self.QueryLengthAboveMinThreshold( request_data ) ):
+      return True
+    else:
+      return super( CsharpCompleter, self ).ShouldUseNowInner( request_data )
 
 
   def CompletionType( self, request_data ):
