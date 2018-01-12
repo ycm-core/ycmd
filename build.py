@@ -336,6 +336,9 @@ def GetCmakeArgs( parsed_args ):
   use_python2 = 'ON' if PY_MAJOR == 2 else 'OFF'
   cmake_args.append( '-DUSE_PYTHON2=' + use_python2 )
 
+  if OnTravisOrAppVeyor():
+    cmake_args.append( '-DUSE_LIBCLANG_PACKAGE=ON' )
+
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
   # We use shlex split to properly parse quoted CMake arguments.
   cmake_args.extend( shlex.split( extra_cmake_args ) )
