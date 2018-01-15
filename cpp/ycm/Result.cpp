@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -58,17 +58,16 @@ int NumWordBoundaryCharMatches( const std::string &query,
 } // unnamed namespace
 
 Result::Result( bool is_subsequence )
-  :
-  query_is_empty_( true ),
-  is_subsequence_( is_subsequence ),
-  first_char_same_in_query_and_text_( false ),
-  ratio_of_word_boundary_chars_in_query_( 0 ),
-  word_boundary_char_utilization_( 0 ),
-  query_is_candidate_prefix_( false ),
-  text_is_lowercase_( false ),
-  char_match_index_sum_( 0 ),
-  text_( NULL ),
-  case_swapped_text_( NULL ) {
+  : query_is_empty_( true ),
+    is_subsequence_( is_subsequence ),
+    first_char_same_in_query_and_text_( false ),
+    ratio_of_word_boundary_chars_in_query_( 0 ),
+    word_boundary_char_utilization_( 0 ),
+    query_is_candidate_prefix_( false ),
+    text_is_lowercase_( false ),
+    char_match_index_sum_( 0 ),
+    text_( NULL ),
+    case_swapped_text_( NULL ) {
 }
 
 
@@ -79,17 +78,16 @@ Result::Result( bool is_subsequence,
                 int char_match_index_sum,
                 const std::string &word_boundary_chars,
                 const std::string &query )
-  :
-  query_is_empty_( true ),
-  is_subsequence_( is_subsequence ),
-  first_char_same_in_query_and_text_( false ),
-  ratio_of_word_boundary_chars_in_query_( 0 ),
-  word_boundary_char_utilization_( 0 ),
-  query_is_candidate_prefix_( false ),
-  text_is_lowercase_( text_is_lowercase ),
-  char_match_index_sum_( char_match_index_sum ),
-  text_( text ),
-  case_swapped_text_( case_swapped_text ) {
+  : query_is_empty_( true ),
+    is_subsequence_( is_subsequence ),
+    first_char_same_in_query_and_text_( false ),
+    ratio_of_word_boundary_chars_in_query_( 0 ),
+    word_boundary_char_utilization_( 0 ),
+    query_is_candidate_prefix_( false ),
+    text_is_lowercase_( text_is_lowercase ),
+    char_match_index_sum_( char_match_index_sum ),
+    text_( text ),
+    case_swapped_text_( case_swapped_text ) {
   if ( is_subsequence )
     SetResultFeaturesFromQuery( word_boundary_chars, query );
 }

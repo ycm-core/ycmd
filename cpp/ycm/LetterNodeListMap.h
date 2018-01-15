@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -52,8 +52,8 @@ YCM_EXPORT int IndexForLetter( char letter );
 struct NearestLetterNodeIndices {
   NearestLetterNodeIndices()
     : indexOfFirstOccurrence( -1 ),
-      indexOfFirstUppercaseOccurrence( -1 )
-  {}
+      indexOfFirstUppercaseOccurrence( -1 ) {
+  }
 
   short indexOfFirstOccurrence;
   short indexOfFirstUppercaseOccurrence;
