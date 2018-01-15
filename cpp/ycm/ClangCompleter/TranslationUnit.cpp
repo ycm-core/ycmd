@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -64,8 +64,8 @@ void EnsureCompilerNamePresent( std::vector< const char * > &flags ) {
 
 }  // unnamed namespace
 
-typedef shared_ptr <
-remove_pointer< CXCodeCompleteResults >::type > CodeCompleteResultsWrap;
+using CodeCompleteResultsWrap =
+  shared_ptr< remove_pointer< CXCodeCompleteResults >::type >;
 
 TranslationUnit::TranslationUnit()
   : filename_( "" ),

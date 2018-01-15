@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -25,7 +25,7 @@
 
 #include <string>
 
-typedef struct CXTranslationUnitImpl *CXTranslationUnit;
+using CXTranslationUnit = CXTranslationUnitImpl*;
 
 namespace YouCompleteMe {
 
@@ -33,7 +33,7 @@ class TranslationUnit;
 struct CompletionData;
 struct Location;
 
-typedef std::vector< CompletionData > CompletionDatas;
+using CompletionDatas = std::vector< CompletionData >;
 
 
 // All filename parameters must be absolute paths.

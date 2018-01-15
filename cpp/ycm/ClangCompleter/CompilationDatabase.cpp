@@ -31,8 +31,8 @@ using std::mutex;
 
 namespace YouCompleteMe {
 
-typedef shared_ptr <
-remove_pointer< CXCompileCommands >::type > CompileCommandsWrap;
+using CompileCommandsWrap =
+  shared_ptr< remove_pointer< CXCompileCommands >::type >;
 
 
 CompilationDatabase::CompilationDatabase(

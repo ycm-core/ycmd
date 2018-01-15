@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2013-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -28,8 +28,8 @@
 
 namespace YouCompleteMe {
 
-typedef std::shared_ptr <
-std::remove_pointer< CXDiagnostic >::type > DiagnosticWrap;
+using DiagnosticWrap =
+  std::shared_ptr< std::remove_pointer< CXDiagnostic >::type >;
 
 std::vector< CompletionData > ToCompletionDataVector(
   CXCodeCompleteResults *results );
