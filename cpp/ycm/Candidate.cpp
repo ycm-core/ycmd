@@ -84,7 +84,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
     // but when the query letter is lowercase, then it can match both an
     // uppercase and a lowercase letter. This is by design and it's much
     // better than forcing lowercase letter matches.
-    node = NULL;
+    node = nullptr;
     if ( case_sensitive && IsUppercase( letter ) ) {
       if ( nearest->indexOfFirstUppercaseOccurrence >= 0 )
         node = ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
