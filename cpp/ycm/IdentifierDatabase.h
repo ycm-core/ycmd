@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2013-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -34,12 +34,11 @@ class CandidateRepository;
 
 
 // filepath -> identifiers
-typedef std::map< std::string, std::vector< std::string > >
-FilepathToIdentifiers;
+using FilepathToIdentifiers = std::map< std::string,
+                                        std::vector< std::string > >;
 
 // filetype -> (filepath -> identifiers)
-typedef std::map< std::string, FilepathToIdentifiers >
-FiletypeIdentifierMap;
+using FiletypeIdentifierMap = std::map< std::string, FilepathToIdentifiers >;
 
 
 // This class stores the database of identifiers the identifier completer has
@@ -84,13 +83,13 @@ private:
 
 
   // filepath -> *( *candidate )
-  typedef std::unordered_map < std::string,
-          std::shared_ptr< std::set< const Candidate * > > >
-          FilepathToCandidates;
+  using FilepathToCandidates =
+    std::unordered_map < std::string,
+                         std::shared_ptr< std::set< const Candidate * > > >;
 
   // filetype -> *( filepath -> *( *candidate ) )
-  typedef std::unordered_map < std::string,
-          std::shared_ptr< FilepathToCandidates > > FiletypeCandidateMap;
+  using FiletypeCandidateMap =
+    std::unordered_map < std::string, std::shared_ptr< FilepathToCandidates > >;
 
 
   CandidateRepository &candidate_repository_;
