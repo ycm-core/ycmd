@@ -85,7 +85,7 @@ def OnCygwin():
   return platform.system().startswith("CYGWIN")
 
 
-def OnTravisOrAppVeyor():
+def OnCiService():
   return 'CI' in os.environ
 
 
@@ -355,6 +355,9 @@ def GetCmakeArgs( parsed_args ):
   use_python2 = 'ON' if PY_MAJOR == 2 else 'OFF'
   cmake_args.append( '-DUSE_PYTHON2=' + use_python2 )
 
+  if OnCiService():
+    cmake_args.append( '-DUSE_LIBCLANG_PACKAGE=ON' )
+
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
   # We use shlex split to properly parse quoted CMake arguments.
   cmake_args.extend( shlex.split( extra_cmake_args ) )
@@ -466,7 +469,7 @@ def BuildYcmdLib( args ):
     if args.build_dir:
       print( 'The build files are in: ' + build_dir )
     else:
-      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+      rmtree( build_dir, ignore_errors = OnCiService() )
 
 
 def EnableLegacyCsCompleter():
@@ -593,9 +596,9 @@ def EnableRustCompleter():
 
   os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
   args = [ 'cargo', 'build' ]
-  # We don't use the --release flag on Travis/AppVeyor because it makes building
+  # We don't use the --release flag on CI services because it makes building
   # racerd 2.5x slower and we don't care about the speed of the produced racerd.
-  if not OnTravisOrAppVeyor():
+  if not OnCiService():
     args.append( '--release' )
   CheckCall( args )
 

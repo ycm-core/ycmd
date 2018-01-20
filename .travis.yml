@@ -1,7 +1,4 @@
 language: generic
-os:
-  - linux
-  - osx
 dist: trusty
 sudo: false
 before_install:
@@ -26,14 +23,6 @@ env:
     - YCMD_PYTHON_VERSION=3.3
     - YCMD_PYTHON_VERSION=3.3 YCM_COMPILER=clang
     - YCMD_PYTHON_VERSION=3.3 YCM_BENCHMARK=true COVERAGE=false
-matrix:
-  exclude:
-    - os: osx
-      env: YCMD_PYTHON_VERSION=2.6 USE_CLANG_COMPLETER=false
-    - os: osx
-      env: YCMD_PYTHON_VERSION=2.6
-    - os: osx
-      env: YCMD_PYTHON_VERSION=3.3 YCM_COMPILER=clang
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/

@@ -8,18 +8,31 @@ set -e
 # commands.
 unset -f cd popd pushd
 
-####################
-# OS-specific setup
-####################
+################
+# Compiler setup
+################
 
-# Requirements of OS-specific install:
-#  - install any software which is not installed by Travis configuration
-#  - set up everything necessary so that pyenv can build python
-source ci/travis/travis_install.${TRAVIS_OS_NAME}.sh
+# We can't use sudo, so we have to approximate the behaviour of the following:
+# $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
 
-#############
-# pyenv setup
-#############
+mkdir -p ${HOME}/bin
+
+if [ "${YCM_COMPILER}" == "clang" ]; then
+  ln -s /usr/bin/clang++ ${HOME}/bin/c++
+  ln -s /usr/bin/clang ${HOME}/bin/cc
+  # Tell CMake to compile with libc++ when using Clang.
+  export EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS} -DHAS_LIBCXX11=ON"
+else
+  ln -s /usr/bin/g++-4.9 ${HOME}/bin/c++
+  ln -s /usr/bin/gcc-4.9 ${HOME}/bin/cc
+fi
+ln -s /usr/bin/gcov-4.9 ${HOME}/bin/gcov
+
+export PATH=${HOME}/bin:${PATH}
+
+##############
+# Python setup
+##############
 
 PYENV_ROOT="${HOME}/.pyenv"
 
@@ -46,6 +59,10 @@ else
   PYENV_VERSION="3.3.6"
 fi
 
+# In order to work with ycmd, python *must* be built as a shared library. This
+# is set via the PYTHON_CONFIGURE_OPTS option.
+export PYTHON_CONFIGURE_OPTS="--enable-shared"
+
 pyenv install --skip-existing ${PYENV_VERSION}
 pyenv rehash
 pyenv global ${PYENV_VERSION}
@@ -57,11 +74,6 @@ python_version=$(python -c 'import sys; print( "{0}.{1}".format( sys.version_inf
 echo "Checking python version (actual ${python_version} vs expected ${YCMD_PYTHON_VERSION})"
 test ${python_version} == ${YCMD_PYTHON_VERSION}
 
-
-############
-# pip setup
-############
-
 pip install -U pip wheel setuptools
 pip install -r test_requirements.txt
 
@@ -71,7 +83,7 @@ echo -e "import coverage\ncoverage.process_startup()" > \
   ${PYENV_ROOT}/versions/${PYENV_VERSION}/lib/python${YCMD_PYTHON_VERSION}/site-packages/sitecustomize.py
 
 ############
-# rust setup
+# Rust setup
 ############
 
 curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -81,10 +93,30 @@ rustup update
 rustc -Vv
 cargo -V
 
-###############
-# Node.js setup
-###############
+##################
+# JavaScript setup
+##################
+
+# Pre-installed Node.js is too old. Install latest Node.js v4 LTS.
+nvm install 4
+
+##################
+# TypeScript setup
+##################
 
 npm install -g typescript
 
 set +e
+
+##################
+# Omnisharp-Roslyn setup
+##################
+# Libuv is required for Omnisharp-Roslyn and isn't in accessible repos
+curl -sSL https://github.com/libuv/libuv/archive/v1.18.0.tar.gz | tar zxfv - -C /tmp && cd /tmp/libuv-1.18.0/
+sh autogen.sh
+./configure --prefix=$HOME/libuvinstall
+make
+make install
+export LD_LIBRARY_PATH="$HOME/libuvinstall/lib"
+export LIBRARY_PATH="$HOME/libuvinstall/lib"
+cd $OLDPWD

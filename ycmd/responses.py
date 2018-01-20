@@ -93,8 +93,8 @@ def BuildDisplayMessageResponse( text ):
 
 
 def BuildDetailedInfoResponse( text ):
-  """ Retuns the response object for displaying detailed information about types
-  and usage, suach as within a preview window"""
+  """ Returns the response object for displaying detailed information about types
+  and usage, such as within a preview window"""
   return {
     'detailed_info': text
   }
