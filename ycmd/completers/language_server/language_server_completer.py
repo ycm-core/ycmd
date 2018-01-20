@@ -129,7 +129,7 @@ class Response( object ):
         - throws ResponseAbortedException in case the server is shut down."""
     self._event.wait( timeout )
 
-    if not self._event.isSet():
+    if not self._event.is_set():
       raise ResponseTimeoutException( 'Response Timeout' )
 
     if self._message is None:
@@ -352,7 +352,7 @@ class LanguageServerConnection( threading.Thread ):
     clients should shut down their server and reset their state."""
     self._connection_event.wait( timeout = CONNECTION_TIMEOUT )
 
-    if not self._connection_event.isSet():
+    if not self._connection_event.is_set():
       raise LanguageServerConnectionTimeout(
         'Timed out waiting for server to connect' )
 
@@ -674,6 +674,14 @@ class LanguageServerCompleter( Completer ):
     if self.ServerIsHealthy():
       self.GetConnection().SendNotification( lsp.Exit() )
 
+    # If any threads are waiting for the initialize exchange to complete,
+    # release them, as there is no chance of getting a response now.
+    if ( self._initialize_response is not None and
+         not self._initialize_event.is_set() ):
+      with self._server_info_mutex:
+        self._initialize_response = None
+        self._initialize_event.set()
+
 
   def ServerIsReady( self ):
     """Returns True if the server is running and the initialization exchange has
@@ -873,6 +881,12 @@ class LanguageServerCompleter( Completer ):
     If there are no messages pending, returns an empty list. Returns False if an
     error occurred and no further polling should be attempted."""
     messages = list()
+
+    if not self._initialize_event.is_set():
+      # The request came before we started up, there cannot be any messages
+      # pending, and in any case they will be handled later.
+      return messages
+
     try:
       while True:
         if not self.GetConnection():
@@ -901,6 +915,17 @@ class LanguageServerCompleter( Completer ):
     """
     try:
       while True:
+        if not self._initialize_event.is_set():
+          # The request came before we started up, wait for startup to complete,
+          # then tell the client to re-send the request. Note, we perform this
+          # check on every iteration, as the server may be legitimately
+          # restarted while this loop is running.
+          self._initialize_event.wait( timeout=timeout )
+
+          # If the timeout is hit waiting for the server to be ready, we return
+          # False and kill the message poll.
+          return self._initialize_event.is_set()
+
         if not self.GetConnection():
           # The server isn't running or something. Don't re-poll, as this will
           # just cause errors.

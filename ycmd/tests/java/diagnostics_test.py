@@ -46,6 +46,7 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
 
 from ycmd.tests.test_utils import BuildRequest, LocationMatcher
 from ycmd.utils import ReadFile
+from ycmd.completers import completer
 
 from pprint import pformat
 from mock import patch
@@ -596,6 +597,7 @@ def PollForMessages_InvalidUri_test( app, *args ):
 
 
 @IsolatedYcmd
+@patch.object( completer, 'MESSAGE_POLL_TIMEOUT', 2 )
 def PollForMessages_ServerNotRunning_test( app ):
   StartJavaCompleterServerInDirectory(
     app,
