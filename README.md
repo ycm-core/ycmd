@@ -2,7 +2,7 @@ ycmd: a code-completion & comprehension server
 ==============================================
 
 [![Linux build status](https://img.shields.io/travis/Valloric/ycmd/master.svg?label=Linux)](https://travis-ci.org/Valloric/ycmd)
-[![macOS build status](https://img.shields.io/circleci/project/github/Valloric/ycmd/circleci.svg?label=macOS)](https://circleci.com/gh/Valloric/ycmd)
+[![macOS build status](https://img.shields.io/circleci/project/github/Valloric/ycmd/master.svg?label=macOS)](https://circleci.com/gh/Valloric/ycmd)
 [![Windows build status](https://img.shields.io/appveyor/ci/Valloric/ycmd/master.svg?label=Windows)](https://ci.appveyor.com/project/Valloric/ycmd)
 [![Coverage status](https://img.shields.io/codecov/c/github/Valloric/ycmd/master.svg)](https://codecov.io/gh/Valloric/ycmd)
 
