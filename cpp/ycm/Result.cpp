@@ -66,8 +66,8 @@ Result::Result( bool is_subsequence )
     query_is_candidate_prefix_( false ),
     text_is_lowercase_( false ),
     char_match_index_sum_( 0 ),
-    text_( NULL ),
-    case_swapped_text_( NULL ) {
+    text_( nullptr ),
+    case_swapped_text_( nullptr ) {
 }
 
 

@@ -69,7 +69,7 @@ using CodeCompleteResultsWrap =
 
 TranslationUnit::TranslationUnit()
   : filename_( "" ),
-    clang_translation_unit_( NULL ) {
+    clang_translation_unit_( nullptr ) {
 }
 
 TranslationUnit::TranslationUnit(
@@ -78,7 +78,7 @@ TranslationUnit::TranslationUnit(
   const std::vector< std::string > &flags,
   CXIndex clang_index )
   : filename_( filename ),
-    clang_translation_unit_( NULL ) {
+    clang_translation_unit_( nullptr ) {
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
@@ -91,7 +91,7 @@ TranslationUnit::TranslationUnit(
   std::vector< CXUnsavedFile > cxunsaved_files =
     ToCXUnsavedFiles( unsaved_files );
   const CXUnsavedFile *unsaved = cxunsaved_files.size() > 0
-                                 ? &cxunsaved_files[ 0 ] : NULL;
+                                 ? &cxunsaved_files[ 0 ] : nullptr;
 
   // Actually parse the translation unit.
   CXErrorCode result = clang_parseTranslationUnit2FullArgv(
@@ -118,7 +118,7 @@ void TranslationUnit::Destroy() {
 
   if ( clang_translation_unit_ ) {
     clang_disposeTranslationUnit( clang_translation_unit_ );
-    clang_translation_unit_ = NULL;
+    clang_translation_unit_ = nullptr;
   }
 }
 
@@ -158,7 +158,7 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
   std::vector< CXUnsavedFile > cxunsaved_files =
     ToCXUnsavedFiles( unsaved_files );
   const CXUnsavedFile *unsaved = cxunsaved_files.size() > 0
-                                 ? &cxunsaved_files[ 0 ] : NULL;
+                                 ? &cxunsaved_files[ 0 ] : nullptr;
 
   // codeCompleteAt reparses the TU if the underlying source file has changed on
   // disk since the last time the TU was updated and there are no unsaved files.
@@ -360,7 +360,7 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
       return;
 
     CXUnsavedFile *unsaved = unsaved_files.size() > 0
-                             ? &unsaved_files[ 0 ] : NULL;
+                             ? &unsaved_files[ 0 ] : nullptr;
 
     failure = clang_reparseTranslationUnit( clang_translation_unit_,
                                             unsaved_files.size(),
