@@ -1,3 +1,5 @@
+# coding: utf-8
+#
 # Copyright (C) 2017 ycmd contributors
 #
 # This file is part of ycmd.
@@ -180,3 +182,26 @@ def FilePathToUri_Unix_test():
 def FilePathToUri_Windows_test():
   assert_that( lsp.FilePathToUri( 'C:\\usr\\local\\test\\test.test' ),
                equal_to( 'file:///C:/usr/local/test/test.test' ) )
+
+
+def CodepointsToUTF16CodeUnitsAndReverse_test():
+  def Test( line_value, codepoints, code_units ):
+    assert_that( lsp.CodepointsToUTF16CodeUnits( line_value, codepoints ),
+                 equal_to( code_units ) )
+    assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
+                 equal_to( codepoints ) )
+
+  tests = (
+    ( '', 0, 0 ),
+    ( 'abcdef', 1, 1 ),
+    ( 'abcdef', 2, 2 ),
+    ( 'abc', 4, 4 ),
+    ( '😉test', len( '😉' ), 2 ),
+    ( '😉', len( '😉' ), 2 ),
+    ( '😉test', len( '😉' ) + 1, 3 ),
+    ( 'te😉st', 1, 1 ),
+    ( 'te😉st', 2 + len( '😉' ) + 1, 5 ),
+  )
+
+  for test in tests:
+    yield Test, test[ 0 ], test[ 1 ], test[ 2 ]

@@ -257,9 +257,8 @@ def GetCompletions_RejectInvalid_test():
   }
 
   assert_that(
-    calling( lsc._GetCompletionItemStartCodepointOrReject ).with_args(
-      text_edit, request_data ),
-    raises( lsc.IncompatibleCompletionException ) )
+    lsc._GetCompletionItemStartCodepointOrReject( text_edit, request_data ),
+    equal_to( 7 ) )
 
   text_edit = {
     'newText': 'blah',
@@ -270,9 +269,8 @@ def GetCompletions_RejectInvalid_test():
   }
 
   assert_that(
-    calling( lsc._GetCompletionItemStartCodepointOrReject ).with_args(
-      text_edit, request_data ),
-    raises( lsc.IncompatibleCompletionException ) )
+    lsc._GetCompletionItemStartCodepointOrReject( text_edit, request_data ),
+    equal_to( 7 ) )
 
 
 def WorkspaceEditToFixIt_test():

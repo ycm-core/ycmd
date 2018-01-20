@@ -1327,7 +1327,9 @@ class LanguageServerCompleter( Completer ):
             },
             'end': {
               'line': line_num_ls,
-              'character': len( line_value ) - 1,
+              'character': lsp.CodepointsToUTF16CodeUnits(
+                line_value,
+                len( line_value ) ) - 1,
             }
           },
           [] ),
@@ -1482,8 +1484,6 @@ def _InsertionTextForItem( request_data, item ):
 
 def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
   edit_range = text_edit[ 'range' ]
-  start_codepoint = edit_range[ 'start' ][ 'character' ] + 1
-  end_codepoint = edit_range[ 'end' ][ 'character' ] + 1
 
   # Conservatively rejecting candidates that breach the protocol
   if edit_range[ 'start' ][ 'line' ] != edit_range[ 'end' ][ 'line' ]:
@@ -1491,14 +1491,17 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
       "The TextEdit '{0}' spans multiple lines".format(
         text_edit[ 'newText' ] ) )
 
+  file_contents = utils.SplitLines(
+    GetFileContents( request_data, request_data[ 'filepath' ] ) )
+  line_value = file_contents[ edit_range[ 'start' ][ 'line' ] ]
+
+  start_codepoint = lsp.UTF16CodeUnitsToCodepoints(
+    line_value,
+    edit_range[ 'start' ][ 'character' ] + 1 )
+
   if start_codepoint > request_data[ 'start_codepoint' ]:
     raise IncompatibleCompletionException(
       "The TextEdit '{0}' starts after the start position".format(
-        text_edit[ 'newText' ] ) )
-
-  if end_codepoint < request_data[ 'start_codepoint' ]:
-    raise IncompatibleCompletionException(
-      "The TextEdit '{0}' ends before the start position".format(
         text_edit[ 'newText' ] ) )
 
   return start_codepoint
@@ -1559,8 +1562,9 @@ def _BuildLocationAndDescription( request_data, filename, file_contents, loc ):
 
   try:
     line_value = file_contents[ loc[ 'line' ] ]
-    column = utils.CodepointOffsetToByteOffset( line_value,
-                                                loc[ 'character' ] + 1 )
+    column = utils.CodepointOffsetToByteOffset(
+      line_value,
+      lsp.UTF16CodeUnitsToCodepoints( line_value, loc[ 'character' ] + 1 ) )
   except IndexError:
     # This can happen when there are stale diagnostics in OnFileReadyToParse,
     # just return the value as-is.

@@ -345,3 +345,41 @@ def _BuildMessageData( message ):
 def Parse( data ):
   """Reads the raw language server message payload into a Python dictionary"""
   return json.loads( ToUnicode( data ) )
+
+
+def CodepointsToUTF16CodeUnits( line_value, codepoint_offset ):
+  """Return the 1-based UTF16 code unit offset equivalent to the 1-based unicode
+  icodepoint offset |codepoint_offset| in the the Unicode string |line_value|"""
+  # Language server protocol requires offsets to be in utf16 code _units_.
+  # Each code unit is 2 bytes.
+  # So we re-encode the line as utf-16 and divide the length in bytes by 2.
+  #
+  # Of course, this is a terrible API, but until all the servers support any
+  # change out of
+  # https://github.com/Microsoft/language-server-protocol/issues/376 then we
+  # have to jump through hoops.
+  if codepoint_offset > len( line_value ):
+    return ( len( line_value.encode( 'utf-16-le' ) ) + 2 ) // 2
+
+  value_as_utf16 = line_value[ : codepoint_offset ].encode( 'utf-16-le' )
+  return len( value_as_utf16 ) // 2
+
+
+def UTF16CodeUnitsToCodepoints( line_value, code_unit_offset ):
+  """Return the 1-based codepoint offset into the unicode string |line_value|
+  equivalent to the 1-based UTF16 code unit offset |code_unit_offset| into a
+  utf16 encoded version of |line_value|"""
+  # As above, LSP returns offsets in utf16 code units. So we convert the line to
+  # UTF16, snip everything up to the code_unit_offset * 2 bytes (each code unit
+  # is 2 bytes), then re-encode as unicode and return the length (in
+  # codepoints).
+  value_as_utf16_bytes = ToBytes( line_value.encode( 'utf-16-le' ) )
+
+  byte_offset_utf16 = code_unit_offset * 2
+  if byte_offset_utf16 > len( value_as_utf16_bytes ):
+    # If the offset points off the end of the string, then the codepoint offset
+    # is one-past-the-end of the string in unicode codepoints
+    return len( line_value ) + 1
+
+  bytes_included = value_as_utf16_bytes[ : code_unit_offset * 2 ]
+  return len( bytes_included.decode( 'utf-16-le' ) )
