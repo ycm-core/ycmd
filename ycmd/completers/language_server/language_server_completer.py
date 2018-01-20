@@ -797,12 +797,17 @@ class LanguageServerCompleter( Completer ):
     start_codepoints = list()
     min_start_codepoint = request_data[ 'start_codepoint' ]
 
+    # Resolving takes some time, so only do it if there are fewer than 100
+    # candidates.
+    resolve_completion_items = ( len( items ) < 100 and
+      self._resolve_completion_items )
+
     # First generate all of the completion items and store their
     # start_codepoints. Then, we fix-up the completion texts to use the
     # earliest start_codepoint by borrowing text from the original line.
     for item in items:
       # First, resolve the completion.
-      if self._resolve_completion_items:
+      if resolve_completion_items:
         item = self._ResolveCompletionItem( item )
 
       try:
