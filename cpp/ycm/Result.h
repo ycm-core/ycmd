@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -96,7 +96,9 @@ private:
 template< class T >
 struct ResultAnd {
   ResultAnd( const Result &result, T extra_object )
-    : extra_object_( extra_object ), result_( result ) {}
+    : extra_object_( extra_object ),
+      result_( result ) {
+  }
 
   bool operator< ( const ResultAnd &other ) const {
     return result_ < other.result_;
@@ -109,7 +111,9 @@ struct ResultAnd {
 template< class T >
 struct ResultAnd<T * > {
   ResultAnd( const Result &result, const T *extra_object )
-    : extra_object_( extra_object ), result_( result ) {}
+    : extra_object_( extra_object ),
+      result_( result ) {
+  }
 
   bool operator< ( const ResultAnd &other ) const {
     return result_ < other.result_;

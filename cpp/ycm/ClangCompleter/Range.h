@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2013-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -27,7 +27,9 @@ struct Range {
   Range() {}
 
   Range( const Location &start_location, const Location &end_location )
-    : start_( start_location ), end_( end_location ) {}
+    : start_( start_location ),
+      end_( end_location ) {
+  }
 
   Range( const CXSourceRange &range );
 

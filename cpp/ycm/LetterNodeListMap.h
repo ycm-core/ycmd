@@ -52,8 +52,8 @@ YCM_EXPORT int IndexForLetter( char letter );
 struct NearestLetterNodeIndices {
   NearestLetterNodeIndices()
     : indexOfFirstOccurrence( -1 ),
-      indexOfFirstUppercaseOccurrence( -1 )
-  {}
+      indexOfFirstUppercaseOccurrence( -1 ) {
+  }
 
   short indexOfFirstOccurrence;
   short indexOfFirstUppercaseOccurrence;
