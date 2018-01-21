@@ -24,10 +24,9 @@ from builtins import *  # noqa
 
 import functools
 import os
-import tempfile
 import contextlib
 import json
-import shutil
+
 
 from ycmd.utils import ToUnicode
 from ycmd.tests.test_utils import ClearCompletionsCache, IsolatedApp, SetUpApp
@@ -92,28 +91,14 @@ def IsolatedYcmd( custom_options = {} ):
 
 
 @contextlib.contextmanager
-def TemporaryClangTestDir():
-  """Context manager to execute a test with a temporary workspace area. The
-  workspace is deleted upon completion of the test. This is useful particularly
-  for testing compilation databases, as they require actual absolute paths.
-  See also |TemporaryClangProject|. The context manager yields the path of the
-  temporary directory."""
-  tmp_dir = tempfile.mkdtemp()
-  try:
-    yield tmp_dir
-  finally:
-    shutil.rmtree( tmp_dir )
-
-
-@contextlib.contextmanager
 def TemporaryClangProject( tmp_dir, compile_commands ):
   """Context manager to create a compilation database in a directory and delete
   it when the test completes. |tmp_dir| is the directory in which to create the
-  database file (typically used in conjunction with |TemporaryClangTestDir|) and
+  database file (typically used in conjunction with |TemporaryTestDir|) and
   |compile_commands| is a python object representing the compilation database.
 
   e.g.:
-    with TemporaryClangTestDir() as tmp_dir:
+    with TemporaryTestDir() as tmp_dir:
       database = [
         {
           'directory': os.path.join( tmp_dir, dir ),

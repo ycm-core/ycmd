@@ -37,9 +37,9 @@ Building
 **If you're looking to develop ycmd, see the [instructions for setting up a dev
 environment][dev-setup] and for [running the tests][test-setup].**
 
-This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can be
-found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts). Note
-that **ycmd runs on Python 2.6, 2.7 and 3.3+.**
+This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can
+be found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
+Note that **ycmd runs on Python 2.6, 2.7 and 3.3+.**
 
 First, install the minimal dependencies:
 ```
@@ -74,7 +74,8 @@ API notes
   header. The HMAC is computed from the shared secret passed to the server on
   startup and the request/response body. The digest algorithm is SHA-256. The
   server will also include the HMAC in its responses; you _must_ verify it
-  before using the response. See [`example_client.py`][example-client] to see how it's done.
+  before using the response. See [`example_client.py`][example-client] to see
+  how it's done.
 
 How ycmd works
 --------------
@@ -86,11 +87,12 @@ provided previously and any tags files produced by ctags. This engine is
 non-semantic.
 
 There are also several semantic engines in YCM. There's a libclang-based
-completer that provides semantic completion for C-family languages.  There's also a
-Jedi-based completer for semantic completion for Python, an OmniSharp-based
-completer for C#, a [Gocode][gocode]-based completer for Go (using [Godef][godef]
-for jumping to definitions), and a TSServer-based
-completer for TypeScript. More will be added with time.
+completer that provides semantic completion for C-family languages.  There's
+also a Jedi-based completer for semantic completion for Python, an
+OmniSharp-based completer for C#, a [Gocode][gocode]-based completer for Go
+(using [Godef][godef] for jumping to definitions), a TSServer-based completer
+for TypeScript and a [jdt.ls][jdtls]-based server for Java. More will be added
+with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -338,3 +340,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [vscode-you-complete-me]: https://marketplace.visualstudio.com/items?itemName=RichardHe.you-complete-me
 [gycm]: https://github.com/jakeanq/gycm
 [nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
+[jdtls]: https://github.com/eclipse/eclipse.jdt.ls

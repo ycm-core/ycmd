@@ -26,6 +26,14 @@ from hamcrest import assert_that, equal_to
 
 from ycmd.tests.client_test import Client_test
 
+# Time to wait for all the servers to shutdown. Tweak for the CI environment.
+#
+# NOTE: The timeout is 2 minutes. That is a long time, but the java sub-server
+# (jdt.ls) takes a _long time_ to finally actually shut down. This is because it
+# is based on eclipse, which must do whatever eclipse must do when it shuts down
+# its workspace.
+SUBSERVER_SHUTDOWN_TIMEOUT = 120
+
 
 class Shutdown_test( Client_test ):
 
@@ -37,7 +45,7 @@ class Shutdown_test( Client_test ):
     response = self.PostRequest( 'shutdown' )
     self.AssertResponse( response )
     assert_that( response.json(), equal_to( True ) )
-    self.AssertServersShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = SUBSERVER_SHUTDOWN_TIMEOUT )
     self.AssertLogfilesAreRemoved()
 
 
@@ -47,6 +55,7 @@ class Shutdown_test( Client_test ):
 
     filetypes = [ 'cs',
                   'go',
+                  'java',
                   'javascript',
                   'python',
                   'typescript',
@@ -58,7 +67,7 @@ class Shutdown_test( Client_test ):
     response = self.PostRequest( 'shutdown' )
     self.AssertResponse( response )
     assert_that( response.json(), equal_to( True ) )
-    self.AssertServersShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = SUBSERVER_SHUTDOWN_TIMEOUT )
     self.AssertLogfilesAreRemoved()
 
 
@@ -67,7 +76,7 @@ class Shutdown_test( Client_test ):
     self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
     self.AssertServersAreRunning()
 
-    self.AssertServersShutDown( timeout = 5 )
+    self.AssertServersShutDown( timeout = SUBSERVER_SHUTDOWN_TIMEOUT )
     self.AssertLogfilesAreRemoved()
 
 
@@ -77,6 +86,7 @@ class Shutdown_test( Client_test ):
 
     filetypes = [ 'cs',
                   'go',
+                  'java',
                   'javascript',
                   'python',
                   'typescript',
@@ -85,5 +95,5 @@ class Shutdown_test( Client_test ):
       self.StartSubserverForFiletype( filetype )
     self.AssertServersAreRunning()
 
-    self.AssertServersShutDown( timeout = 15 )
+    self.AssertServersShutDown( timeout = SUBSERVER_SHUTDOWN_TIMEOUT + 10 )
     self.AssertLogfilesAreRemoved()

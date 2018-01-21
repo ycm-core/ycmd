@@ -29,9 +29,9 @@ from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
 from mock import patch, MagicMock
 from types import ModuleType
-from ycmd.tests.test_utils import MacOnly
+from ycmd.tests.test_utils import MacOnly, TemporaryTestDir
 from ycmd.responses import NoExtraConfDetected
-from ycmd.tests.clang import TemporaryClangProject, TemporaryClangTestDir
+from ycmd.tests.clang import TemporaryClangProject
 
 from hamcrest import assert_that, calling, contains, has_item, not_, raises
 
@@ -493,7 +493,7 @@ def Mac_SelectMacToolchain_CommandLineTools_test( *args ):
 
 
 def CompilationDatabase_NoDatabase_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     assert_that(
       calling( flags.Flags().FlagsForFile ).with_args(
         os.path.join( tmp_dir, 'test.cc' ) ),
@@ -502,7 +502,7 @@ def CompilationDatabase_NoDatabase_test():
 
 def CompilationDatabase_FileNotInDatabase_test():
   compile_commands = [ ]
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     with TemporaryClangProject( tmp_dir, compile_commands ):
       eq_(
         flags.Flags().FlagsForFile( os.path.join( tmp_dir, 'test.cc' ) ),
@@ -510,7 +510,7 @@ def CompilationDatabase_FileNotInDatabase_test():
 
 
 def CompilationDatabase_InvalidDatabase_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     with TemporaryClangProject( tmp_dir, 'this is junk' ):
       assert_that(
         calling( flags.Flags().FlagsForFile ).with_args(
@@ -519,7 +519,7 @@ def CompilationDatabase_InvalidDatabase_test():
 
 
 def CompilationDatabase_UseFlagsFromDatabase_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     compile_commands = [
       {
         'directory': tmp_dir,
@@ -543,7 +543,7 @@ def CompilationDatabase_UseFlagsFromDatabase_test():
 
 
 def CompilationDatabase_UseFlagsFromSameDir_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     compile_commands = [
       {
         'directory': tmp_dir,
@@ -590,7 +590,7 @@ def CompilationDatabase_UseFlagsFromSameDir_test():
 
 
 def CompilationDatabase_HeaderFileHeuristic_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     compile_commands = [
       {
         'directory': tmp_dir,
@@ -614,7 +614,7 @@ def CompilationDatabase_HeaderFileHeuristic_test():
 
 
 def CompilationDatabase_HeaderFileHeuristicNotFound_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     compile_commands = [
       {
         'directory': tmp_dir,
@@ -634,7 +634,7 @@ def CompilationDatabase_HeaderFileHeuristicNotFound_test():
 
 
 def CompilationDatabase_ExplicitHeaderFileEntry_test():
-  with TemporaryClangTestDir() as tmp_dir:
+  with TemporaryTestDir() as tmp_dir:
     # Have an explicit header file entry which should take priority over the
     # corresponding source file
     compile_commands = [
