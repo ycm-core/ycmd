@@ -524,7 +524,7 @@ def EnableNewCsCompleter():
     except OSError:
       pass
     os.chdir( build_dir )
-    version = "v1.27.2"
+    version = "v1.28.0"
     url_pattern = ( "https://github.com/OmniSharp/omnisharp-roslyn/"
                     "releases/download/{0}/{1}" )
     if OnWindows() or OnCygwin():
