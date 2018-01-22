@@ -1,11 +1,8 @@
-# Flake8 3.x dropped support of Python 2.6 and 3.3
-flake8       <  3.0.0; python_version == '2.6' or python_version == '3.3'
-flake8       >= 3.0.0; python_version == '2.7' or python_version >  '3.3'
+flake8       >= 3.0.0
 mock         >= 1.3.0
 nose         >= 1.3.7
 PyHamcrest   >= 1.8.5
-# WebTest 2.0.24 dropped support of Python 2.6
-WebTest      >= 2.0.20, < 2.0.24
+WebTest      >= 2.0.20
 ordereddict  >= 1.1
 nose-exclude >= 0.4.1
 unittest2    >= 1.1.0

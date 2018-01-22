@@ -102,7 +102,7 @@ all been worked out for you with Vagrant. Save yourself the trouble and use it.
 Writing code that runs on Python 2 & 3
 ======================================
 
-We support Python 2.6, 2.7 and 3.3+. Since we use
+We support Python 2.7 and 3.4+. Since we use
 [`python-future`][python-future], you should mostly write Python 3 as normal.
 Here's what you should watch out for:
 

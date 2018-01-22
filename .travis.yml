@@ -17,12 +17,11 @@ env:
     - COVERAGE=true
     - USE_CLANG_COMPLETER=true
   matrix:
-    - YCMD_PYTHON_VERSION=2.6 USE_CLANG_COMPLETER=false
-    - YCMD_PYTHON_VERSION=2.6
+    - YCMD_PYTHON_VERSION=2.7 USE_CLANG_COMPLETER=false
     - YCMD_PYTHON_VERSION=2.7
-    - YCMD_PYTHON_VERSION=3.3
-    - YCMD_PYTHON_VERSION=3.3 YCM_COMPILER=clang
-    - YCMD_PYTHON_VERSION=3.3 YCM_BENCHMARK=true COVERAGE=false
+    - YCMD_PYTHON_VERSION=3.4
+    - YCMD_PYTHON_VERSION=3.4 YCM_COMPILER=clang
+    - YCMD_PYTHON_VERSION=3.4 YCM_BENCHMARK=true COVERAGE=false
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/

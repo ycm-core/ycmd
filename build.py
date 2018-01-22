@@ -24,10 +24,10 @@ import shutil
 import hashlib
 
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
-if not ( ( PY_MAJOR == 2 and PY_MINOR >= 6 ) or
-         ( PY_MAJOR == 3 and PY_MINOR >= 3 ) or
+if not ( ( PY_MAJOR == 2 and PY_MINOR == 7 ) or
+         ( PY_MAJOR == 3 and PY_MINOR >= 4 ) or
          PY_MAJOR > 3 ):
-  sys.exit( 'ycmd requires Python >= 2.6 or >= 3.3; '
+  sys.exit( 'ycmd requires Python 2.7 or >= 3.4; '
             'your version of Python is ' + sys.version )
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
@@ -59,7 +59,7 @@ NO_PYTHON_LIBRARY_ERROR = 'ERROR: unable to find an appropriate Python library.'
 # Regular expressions used to find static and dynamic Python libraries.
 # Notes:
 #  - Python 3 library name may have an 'm' suffix on Unix platforms, for
-#    instance libpython3.3m.so;
+#    instance libpython3.4m.so;
 #  - the linker name (the soname without the version) does not always
 #    exist so we look for the versioned names too;
 #  - on Windows, the .lib extension is used instead of the .dll one. See
@@ -588,13 +588,8 @@ def EnableJavaCompleter():
     request.close()
 
   print( "Extracting jdt.ls to {0}...".format( REPOSITORY ) )
-  # We can't use tarfile.open as a context manager, as it isn't supported in
-  # python 2.6
-  try:
-    package_tar = tarfile.open( file_name )
+  with tarfile.open( file_name ) as package_tar:
     package_tar.extractall( REPOSITORY )
-  finally:
-    package_tar.close()
 
   print( "Done installing jdt.ls" )
 

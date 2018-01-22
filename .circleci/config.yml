@@ -59,7 +59,7 @@ jobs:
       - *save-cache
       - *upload-coverage
     environment:
-      YCMD_PYTHON_VERSION: 3.3
+      YCMD_PYTHON_VERSION: 3.4
   benchmark:
     <<: *common
     steps:
@@ -72,7 +72,7 @@ jobs:
           command: ./benchmark.py
       - *save-cache
     environment:
-      YCMD_PYTHON_VERSION: 3.3
+      YCMD_PYTHON_VERSION: 3.4
 workflows:
   version: 2
   build:

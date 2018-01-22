@@ -1,6 +1,6 @@
 # ycmd example client
 
-The example client **requires** Python 3.3+ (unlike ycmd which also runs on
+The example client **requires** Python 3.4+ (unlike ycmd which also runs on
 Python 2).
 
 First make sure you have built ycmd; see the top-level README for details.
