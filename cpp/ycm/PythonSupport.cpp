@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012, 2013 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -29,7 +29,7 @@ using boost::python::len;
 using boost::python::str;
 using boost::python::extract;
 using boost::python::object;
-typedef boost::python::list pylist;
+using pylist = boost::python::list;
 
 namespace YouCompleteMe {
 

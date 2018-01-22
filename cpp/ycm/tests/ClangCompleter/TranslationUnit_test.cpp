@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -57,7 +57,7 @@ TEST_F( TranslationUnitTest, ExceptionThrownOnParseFailure ) {
   EXPECT_THROW( TranslationUnit( test_file.string(),
                                  std::vector< UnsavedFile >(),
                                  flags,
-                                 NULL ),
+                                 nullptr ),
                 ClangParseError );
 }
 

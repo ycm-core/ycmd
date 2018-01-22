@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2013-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -27,7 +27,7 @@
 #include <memory>
 #include <unordered_map>
 
-typedef void *CXIndex;
+using CXIndex = void*;
 
 namespace YouCompleteMe {
 
@@ -67,11 +67,10 @@ private:
   std::shared_ptr< TranslationUnit > GetNoLock( const std::string &filename );
 
 
-  typedef std::unordered_map < std::string,
-          std::shared_ptr< TranslationUnit > > TranslationUnitForFilename;
+  using TranslationUnitForFilename =
+    std::unordered_map< std::string, std::shared_ptr< TranslationUnit > >;
 
-  typedef std::unordered_map < std::string,
-          std::size_t > FlagsHashForFilename;
+  using FlagsHashForFilename = std::unordered_map< std::string, std::size_t >;
 
   CXIndex clang_index_;
   TranslationUnitForFilename filename_to_translation_unit_;

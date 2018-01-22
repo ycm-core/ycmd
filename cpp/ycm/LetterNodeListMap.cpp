@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -49,7 +49,7 @@ NearestLetterNodeIndices &LetterNodeListMap::operator[] ( char letter ) {
 
 NearestLetterNodeIndices *LetterNodeListMap::ListPointerAt( char letter ) {
   if ( !letters_ )
-    return NULL;
+    return nullptr;
 
   return &letters_->at( IndexForLetter( letter ) );
 }

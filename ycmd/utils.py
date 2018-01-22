@@ -33,15 +33,18 @@ import tempfile
 import time
 
 
-# Idiom to import urljoin and urlparse on Python 2 and 3. By exposing these
-# functions here, we can import them directly from this module:
+# Idiom to import pathname2url, url2pathname, urljoin, and urlparse on Python 2
+# and 3. By exposing these functions here, we can import them directly from this
+# module:
 #
-#   from ycmd.utils import urljoin, urlparse
+#   from ycmd.utils import pathname2url, url2pathname, urljoin, urlparse
 #
 if PY2:
   from urlparse import urljoin, urlparse
+  from urllib import pathname2url, url2pathname
 else:
   from urllib.parse import urljoin, urlparse  # noqa
+  from urllib.request import pathname2url, url2pathname  # noqa
 
 
 # Creation flag to disable creating a console window on Windows. See
@@ -197,6 +200,14 @@ def GetUnusedLocalhostPort():
   port = sock.getsockname()[ 1 ]
   sock.close()
   return port
+
+
+def RemoveDirIfExists( dirname ):
+  try:
+    import shutil
+    shutil.rmtree( dirname )
+  except OSError:
+    pass
 
 
 def RemoveIfExists( filename ):

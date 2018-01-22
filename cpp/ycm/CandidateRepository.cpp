@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -37,7 +37,7 @@ const int MAX_CANDIDATE_SIZE = 80;
 
 
 std::mutex CandidateRepository::singleton_mutex_;
-CandidateRepository *CandidateRepository::instance_ = NULL;
+CandidateRepository *CandidateRepository::instance_ = nullptr;
 
 CandidateRepository &CandidateRepository::Instance() {
   std::lock_guard< std::mutex > locker( singleton_mutex_ );
@@ -72,7 +72,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
       const Candidate *&candidate = GetValueElseInsert(
                                       candidate_holder_,
                                       validated_candidate_text,
-                                      NULL );
+                                      nullptr );
 
       if ( !candidate )
         candidate = new Candidate( validated_candidate_text );

@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -28,7 +28,7 @@ namespace YouCompleteMe {
 
 class Result;
 
-typedef std::bitset< NUM_LETTERS > Bitset;
+using Bitset = std::bitset< NUM_LETTERS >;
 
 YCM_EXPORT Bitset LetterBitsetFromString( const std::string &text );
 

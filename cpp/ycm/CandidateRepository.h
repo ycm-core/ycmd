@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -27,8 +27,7 @@ namespace YouCompleteMe {
 
 class Candidate;
 
-typedef std::unordered_map< std::string, const Candidate * >
-CandidateHolder;
+using CandidateHolder = std::unordered_map< std::string, const Candidate * >;
 
 
 // This singleton stores already built Candidate objects for candidate strings

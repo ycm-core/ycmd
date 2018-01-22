@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -59,13 +59,12 @@ Bitset LetterBitsetFromString( const std::string &text ) {
 
 
 Candidate::Candidate( const std::string &text )
-  :
-  text_( text ),
-  case_swapped_text_( SwapCase( text ) ),
-  word_boundary_chars_( GetWordBoundaryChars( text ) ),
-  text_is_lowercase_( IsLowercase( text ) ),
-  letters_present_( LetterBitsetFromString( text ) ),
-  root_node_( new LetterNode( text ) ) {
+  : text_( text ),
+    case_swapped_text_( SwapCase( text ) ),
+    word_boundary_chars_( GetWordBoundaryChars( text ) ),
+    text_is_lowercase_( IsLowercase( text ) ),
+    letters_present_( LetterBitsetFromString( text ) ),
+    root_node_( new LetterNode( text ) ) {
 }
 
 
@@ -85,7 +84,7 @@ Result Candidate::QueryMatchResult( const std::string &query,
     // but when the query letter is lowercase, then it can match both an
     // uppercase and a lowercase letter. This is by design and it's much
     // better than forcing lowercase letter matches.
-    node = NULL;
+    node = nullptr;
     if ( case_sensitive && IsUppercase( letter ) ) {
       if ( nearest->indexOfFirstUppercaseOccurrence >= 0 )
         node = ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];

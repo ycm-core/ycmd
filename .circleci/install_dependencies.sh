@@ -105,4 +105,15 @@ echo "export PATH=${CARGO_PATH}:\$PATH" >> $BASH_ENV
 
 npm install -g typescript
 
+#################
+# Java 8 setup
+#################
+
+java -version
+JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+if [[ "$JAVA_VERSION" < "1.8" ]]; then
+  echo "Java version $JAVA_VERSION is too old" 1>&2
+  exit 1
+fi
+
 set +e
