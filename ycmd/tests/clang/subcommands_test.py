@@ -45,6 +45,7 @@ from ycmd.utils import ReadFile
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'cpp' )
   eq_( sorted( [ 'ClearCompilationFlagCache',
+                 'ClearIncludeCache',
                  'FixIt',
                  'GetDoc',
                  'GetDocImprecise',

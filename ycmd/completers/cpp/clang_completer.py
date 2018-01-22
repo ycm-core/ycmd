@@ -45,8 +45,7 @@ from ycmd.completers.cpp.flags import ( Flags, PrepareFlagsForClang,
                                         NoCompilationDatabase,
                                         UserIncludePaths )
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
-from ycmd.completers.general.filename_completer import (
-    GenerateCandidatesForPaths )
+from ycmd.completers.cpp.include_cache import IncludeCache, IncludeList
 from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
@@ -68,6 +67,7 @@ class ClangCompleter( Completer ):
       'max_diagnostics_to_display' ]
     self._completer = ycm_core.ClangCompleter()
     self._flags = Flags()
+    self._include_cache = IncludeCache()
     self._diagnostic_store = None
     self._files_being_compiled = EphemeralValuesSet()
     self._logger = logging.getLogger( __name__ )
@@ -127,20 +127,13 @@ class ClangCompleter( Completer ):
     if quoted_include:
       include_paths.extend( quoted_include_paths )
 
-    paths = []
-    for include_path in include_paths:
-      unicode_path = ToUnicode( os.path.join( include_path, path_dir ) )
-      try:
-        # We need to pass a unicode string to get unicode strings out of
-        # listdir.
-        relative_paths = os.listdir( unicode_path )
-      except Exception:
-        self._logger.exception( 'Error while listing %s folder.', unicode_path )
-        relative_paths = []
+    includes = IncludeList()
+    for include in include_paths:
+      unicode_path = ToUnicode( os.path.join( include[ 0 ], path_dir ) )
+      includes.AddIncludes(
+        self._include_cache.GetIncludes( unicode_path, include[ 1 ] ) )
 
-      paths.extend( os.path.join( include_path, path_dir, relative_path ) for
-                    relative_path in relative_paths  )
-    return paths
+    return includes.GetIncludes()
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -148,9 +141,9 @@ class ClangCompleter( Completer ):
     if not filename:
       return
 
-    paths = self.GetIncludePaths( request_data )
-    if paths is not None:
-      return GenerateCandidatesForPaths( paths )
+    includes = self.GetIncludePaths( request_data )
+    if includes is not None:
+      return includes
 
     if self._completer.UpdatingTranslationUnit(
         ToCppStringCompatible( filename ) ):
@@ -191,6 +184,8 @@ class ClangCompleter( Completer ):
          self._GoToInclude( request_data ) ),
       'ClearCompilationFlagCache': ( lambda self, request_data, args:
          self._ClearCompilationFlagCache() ),
+      'ClearIncludeCache'        : ( lambda self, request_data, args:
+         self._ClearIncludeCache() ),
       'GetType'                  : ( lambda self, request_data, args:
          self._GetSemanticInfo( request_data, func = 'GetTypeAtLocation' ) ),
       'GetTypeImprecise'         : ( lambda self, request_data, args:
@@ -348,6 +343,7 @@ class ClangCompleter( Completer ):
 
     return response_builder( message )
 
+
   def _ClearCompilationFlagCache( self ):
     self._flags.Clear()
 
@@ -376,6 +372,11 @@ class ClangCompleter( Completer ):
     # in a nice way
 
     return responses.BuildFixItResponse( fixits )
+
+
+  def _ClearIncludeCache( self ):
+    self._include_cache.Clear()
+
 
   def OnFileReadyToParse( self, request_data ):
     filename = request_data[ 'filepath' ]
@@ -575,9 +576,9 @@ def _BuildGetDocResponse( doc_data ):
       ToUnicode( _FormatRawComment( doc_data.raw_comment ) ) ) )
 
 
-def _GetAbsolutePath( include_file_name, include_paths ):
-  for path in include_paths:
-    include_file_path = os.path.join( path, include_file_name )
+def _GetAbsolutePath( include_file_name, includes ):
+  for include in includes:
+    include_file_path = os.path.join( include[ 0 ], include_file_name )
     if os.path.isfile( include_file_path ):
       return include_file_path
   return None
