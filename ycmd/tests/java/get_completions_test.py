@@ -28,7 +28,8 @@ from hamcrest import ( assert_that,
                        contains_inanyorder,
                        empty,
                        matches_regexp,
-                       has_entries )
+                       has_entries,
+                       has_item )
 from nose.tools import eq_
 
 from pprint import pformat
@@ -506,3 +507,28 @@ def Subcommands_ServerNotReady_test( app ):
         } ),
       }
     } )
+
+
+@SharedYcmd
+def GetCompletions_MoreThan100NoResolve_test( app ):
+  RunTest( app, {
+    'description': 'We guess the right start codepoint without resolving',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'TestLauncher.java' ),
+      'line_num'  : 4,
+      'column_num': 15,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item(
+          CompletionEntryMatcher( 'com.youcompleteme', None, {
+            'kind': 'Module'
+          } ),
+        ),
+        'completion_start_column': 8,
+        'errors': empty(),
+      } )
+    },
+  } )

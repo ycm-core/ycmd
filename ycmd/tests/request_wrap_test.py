@@ -45,6 +45,27 @@ def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
   }
 
 
+def Prefix_test():
+  tests = [
+    ( 'abc.def', 5, 'abc.' ),
+    ( 'abc.def', 6, 'abc.' ),
+    ( 'abc.def', 8, 'abc.' ),
+    ( 'abc.def', 4, '' ),
+    ( 'abc.', 5, 'abc.' ),
+    ( 'abc.', 4, '' ),
+    ( '', 1, '' ),
+  ]
+
+  def Test( line, col, prefix ):
+    eq_( prefix,
+         RequestWrap( PrepareJson( line_num = 1,
+                                   contents = line,
+                                   column_num = col ) )[ 'prefix' ] )
+
+  for test in tests:
+    yield Test, test[ 0 ], test[ 1 ], test[ 2 ]
+
+
 def LineValue_OneLine_test():
   eq_( 'zoo',
        RequestWrap( PrepareJson( line_num = 1,
