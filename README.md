@@ -23,7 +23,8 @@ Known ycmd clients:
 - [YouCompleteMe][ycm]: Vim client, stable and exposes all ycmd features.
 - [emacs-ycmd][]: Emacs client.
 - [you-complete-me][atom-you-complete-me]: Atom client.
-- [YcmdCompletion][sublime-ycmd]: Sublime client
+- [YcmdCompletion][sublime-ycmd-completion]: Sublime client
+- [sublime-ycmd][sublime-ycmd]: Sublime Text 3 client.
 - [kak-ycmd][]: Kakoune client.
 - [you-complete-me][vscode-you-complete-me]: VSCode client.
 - [gycm][]: Geany client.
@@ -314,7 +315,8 @@ This software is licensed under the [GPL v3 license][gpl].
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycm]: http://valloric.github.io/YouCompleteMe/
 [atom-you-complete-me]: https://atom.io/packages/you-complete-me
-[sublime-ycmd]: https://packagecontrol.io/packages/YcmdCompletion
+[sublime-ycmd-completion]: https://packagecontrol.io/packages/YcmdCompletion
+[sublime-ycmd]: https://packagecontrol.io/packages/YouCompleteMe
 [semver]: http://semver.org/
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
