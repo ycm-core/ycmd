@@ -35,8 +35,8 @@ built one.
 
 Building
 --------
-**If you're looking to develop ycmd, see the [instructions for setting up a dev
-environment][dev-setup] and for [running the tests][test-setup].**
+**If you're looking to develop ycmd, see the [instructions for running the
+tests][test-setup].**
 
 This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can
 be found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).

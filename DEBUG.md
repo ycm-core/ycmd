@@ -1,29 +1,3 @@
-# Setting up for ycmd development
-
-We use Vagrant for development. The VM will have **all** dependencies already
-set up correctly so you won't have to do anything. (If you find something
-missing, please file a bug.)
-
-NOTE: The virtual machine that is created requires 3GB of RAM, so you likely
-need at least 8GB of RAM to use this environment.
-
-1. Install [Vagrant][].
-2. `cd` into the folder where you checked out ycmd.
-3. `$ vagrant up && vagrant ssh`. This will take a while because the VM is being
-   built and set up. Only needs to happen once though.
-4. You are now in the VM. Run the tests with `$ ./run_tests.py`.
-5. Hack away. When done, exit the ssh connection with `exit`.
-6. `$ vagrant suspend` so that you can quickly get back to hacking later.
-7. Later on: `$ vagrant resume && vagrant ssh`. This will be _much_ faster.
-
-That's it!
-
-You can switch between Python versions with `pyenv global 2.6.6` and `pyenv
-global 3.3.0`.
-
-If you ever feel like you've screwed up the VM, just kill it with
-`vagrant destroy` and then run `vagrant up` again to get to a clean state.
-
 # Debugging the Python layer
 
 There are a number of Python debuggers. Presented here are just a couple of
@@ -83,12 +57,10 @@ See the pyclewn docs for more info.
 If you want to debug the c++ code using gdb (or your favourite graphical
 debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
 
-1. Ensure your Python is built with debug enabled. In the vagrant system that's
-   as simple as:
+1. Ensure your Python is built with debug enabled. On Linux that's as simple as
+   installing [pyenv][] and running the commands:
 
 ```sh
-    vagrant up
-    vagrant ssh
     export OPT='-g' # Ensure Python binary has debugging info
     export PYTHON_CONFIGURE_OPTS='--enable-shared --with-pydebug'
     pyenv install 2.7.11 # or whatever version
@@ -120,26 +92,21 @@ debugger, e.g. [pyclewn][] in Vim), there are a few things you need to do:
      - The binary must be signed. See
        https://sourceware.org/gdb/wiki/BuildingOnDarwin
      - You *can not* debug system Python. Again: you *must* use a Python that is
-       *not* the one provided by Apple. Use pyenv. That is the rule.
+       *not* the one provided by Apple. Use [pyenv][]. That is the rule.
        Don't argue.
 
   Don't ask why. It's for security.
 
-3. Here you have choices: either use a Python debugger to break the tests, or
-   manually use Vim to simulate the scenario you want to debug. In any case, you
-   will need the PID of the running Python process hosting ycmd to attach to.
-   Getting this is left as an exercise, but one approach is to simply
-   install vim with `apt-get install vim` and to get a copy of YouCompleteMe
-   into `$HOME/.vim/bundle` and symlink `/vargant` as
-   `$HOME/.vim/bundle/third_party/ycmd`. Anyway, once you have the PID you can
-   simply attach to the Python process, for example:
-
+4. Here you have choices: either use a Python debugger to break the tests, or
+   manually use Vim and [YouCompleteMe][] to simulate the scenario you want to
+   debug. In any case, you will need the PID of the running Python process
+   hosting ycmd to attach to. For example using Vim:
    - `:YcmDebugInfo` to get the pid
    - `gdb: attach <PID>`
    - `break YouCompleteMe::FilterAndSortCandidates`
 
-
-[vagrant]: https://www.vagrantup.com/
+[YouCompleteMe]: https://github.com/Valloric/YouCompleteMe
+[pyenv]: https://github.com/pyenv/pyenv
 [pyclewn]: http://pyclewn.sourceforge.net
-[pyclewn-install]: http://pyclewn.sourceforge.net/install.html
+[pyclewn-install]: https://sourceforge.net/p/pyclewn/pyclewn/ci/default/tree/INSTALL
 [ipdb]: https://pypi.python.org/pypi/ipdb
