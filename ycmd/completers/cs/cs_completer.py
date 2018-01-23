@@ -33,7 +33,7 @@ import time
 import re
 import requests
 import threading
-from subprocess import ( PIPE )
+from subprocess import PIPE
 
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents
