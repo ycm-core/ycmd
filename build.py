@@ -63,7 +63,7 @@ NO_PYTHON_LIBRARY_ERROR = 'ERROR: unable to find an appropriate Python library.'
 #  - the linker name (the soname without the version) does not always
 #    exist so we look for the versioned names too;
 #  - on Windows, the .lib extension is used instead of the .dll one. See
-#    http://xenophilia.org/winvunix.html to understand why.
+#    https://en.wikipedia.org/wiki/Dynamic-link_library#Import_libraries
 STATIC_PYTHON_LIBRARY_REGEX = '^libpython{major}\.{minor}m?\.a$'
 DYNAMIC_PYTHON_LIBRARY_REGEX = """
   ^(?:
