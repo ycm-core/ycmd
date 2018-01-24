@@ -770,18 +770,22 @@ class LanguageServerCompleter( Completer ):
     #
     # Important note on the following logic:
     #
-    # Language server protocol _requires_ that clients support textEdits in
+    # Language server protocol requires that clients support textEdits in
     # completion items. It imposes some restrictions on the textEdit, namely:
     #   * the edit range must cover at least the original requested position,
     #   * and that it is on a single line.
+    #
+    # We only get textEdits (usually) for items which were successfully
+    # resolved. Otherwise we just get insertion text, which might overlap the
+    # existing text.
     #
     # Importantly there is no restriction that all edits start and end at the
     # same point.
     #
     # ycmd protocol only supports a single start column, so we must post-process
-    # the completion items as follows:
+    # the completion items to work out a single start column to use, as follows:
     #   * read all completion items text and start codepoint and store them
-    #   * store the minimum textEdit start point encountered
+    #   * store the minimum start codepoint encountered
     #   * go back through the completion items and modify them so that they
     #     contain enough text to start from the minimum start codepoint
     #   * set the completion start codepoint to the minimum start point
@@ -795,11 +799,12 @@ class LanguageServerCompleter( Completer ):
     #
     completions = list()
     start_codepoints = list()
+    unique_start_codepoints = list()
     min_start_codepoint = request_data[ 'start_codepoint' ]
 
     # Resolving takes some time, so only do it if there are fewer than 100
     # candidates.
-    resolve_completion_items = ( len( items ) < 100 and
+    resolve_completion_items = ( len( items ) <= 100 and
       self._resolve_completion_items )
 
     # First generate all of the completion items and store their
@@ -826,8 +831,11 @@ class LanguageServerCompleter( Completer ):
                                                            item,
                                                            fixits ) )
       start_codepoints.append( start_codepoint )
+      if start_codepoint not in unique_start_codepoints:
+        unique_start_codepoints.append( start_codepoint )
 
     if ( len( completions ) > 1 and
+         len( unique_start_codepoints ) > 1 and
          min_start_codepoint != request_data[ 'start_codepoint' ] ):
       # We need to fix up the completions, go do that
       return _FixUpCompletionPrefixes( completions,
@@ -1471,6 +1479,13 @@ def _InsertionTextForItem( request_data, item ):
       # These sorts of completions aren't really in the spirit of ycmd at the
       # moment anyway. So for now, we just ignore this candidate.
       raise IncompatibleCompletionException( insertion_text )
+  else:
+    # Calculate the start codepoint based on the overlapping text in the
+    # insertion text and the existing text. This is the behavior of Visual
+    # Studio Code and therefore de-facto undocumented required behavior of LSP
+    # clients.
+    start_codepoint -= FindOverlapLength( request_data[ 'prefix' ],
+                                          insertion_text )
 
   additional_text_edits.extend( item.get( 'additionalTextEdits', [] ) )
 
@@ -1485,6 +1500,86 @@ def _InsertionTextForItem( request_data, item ):
       [ responses.FixIt( chunks[ 0 ].range.start_, chunks ) ] )
 
   return insertion_text, fixits, start_codepoint
+
+
+def FindOverlapLength( line_value, insertion_text ):
+  """Return the length of the longest suffix of |line_value| which is a prefix
+  of |insertion_text|"""
+
+  # Credit: https://neil.fraser.name/news/2010/11/04/
+
+  # Example of what this does:
+  # line_value:     import com.
+  # insertion_text:        com.youcompleteme.test
+  # Overlap:               ^..^
+  # Overlap Len:           4
+
+  # Calculated as follows:
+  #   - truncate:
+  #      line_value     = import com.
+  #      insertion_text = com.youcomp
+  #   - assume overlap length 1
+  #      overlap_text = "."
+  #      position     = 3
+  #      overlap set to be 4
+  #      com. compared with com.: longest_overlap = 4
+  #   - assume overlap length 5
+  #      overlap_text = " com."
+  #      position     = -1
+  #      return 4 (from previous iteration)
+
+  # More complex example: 'Some CoCo' vs 'CoCo Bean'
+  #   No truncation
+  #   Iter 1 (overlap = 1): p('o') = 1, overlap = 2, Co==Co, best = 2 (++)
+  #   Iter 2 (overlap = 3): p('oCo') = 1 overlap = 4, CoCo==CoCo, best = 4 (++)
+  #   Iter 3 (overlap = 5): p(' CoCo') = -1, return 4
+
+  # And the non-overlap case "aaab" "caab":
+  #   Iter 1 (overlap = 1): p('b') = 3, overlap = 4, aaab!=caab, return 0
+
+  line_value_len = len( line_value )
+  insertion_text_len = len( insertion_text )
+
+  # Bail early if either are empty
+  if line_value_len == 0 or insertion_text_len == 0:
+    return 0
+
+  # Truncate so that they are the same length. Keep the overlapping sections
+  # (suffix of line_value, prefix of insertion_text).
+  if line_value_len > insertion_text_len:
+    line_value = line_value[ -insertion_text_len : ]
+  elif insertion_text_len > line_value_len:
+    insertion_text = insertion_text[ : line_value_len ]
+
+  # Worst case is full overlap, but that's trivial to check.
+  if insertion_text == line_value:
+    return min( line_value_len, insertion_text_len )
+
+  longest_matching_overlap = 0
+
+  # Assume a single-character of overlap, and find where this appears (if at
+  # all) in the insertion_text
+  overlap = 1
+  while True:
+    # Find the position of the overlap-length suffix of line_value within
+    # insertion_text
+    overlap_text = line_value[ -overlap : ]
+    position = insertion_text.find( overlap_text )
+
+    # If it isn't found, then we're done, return the last known overlap length.
+    if position == -1:
+      return longest_matching_overlap
+
+    # Assume that all of the characters up to where this suffix was found
+    # overlap. If they do, assume 1 more character of overlap, and continue.
+    # Otherwise, we're done.
+    overlap += position
+
+    # If the overlap section matches, then we know this is the longest overlap
+    # we've seen so far.
+    if line_value[ -overlap : ] == insertion_text[ : overlap ]:
+      longest_matching_overlap = overlap
+      overlap += 1
 
 
 def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):

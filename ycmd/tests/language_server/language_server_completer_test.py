@@ -384,3 +384,32 @@ def LanguageServerCompleter_GetCompletions_List_test():
                                      resolve_responses ):
       assert_that( completer.ComputeCandidatesInner( request_data ),
                    has_items( has_entries( { 'insertion_text': 'test' } ) ) )
+
+
+def FindOverlapLength_test():
+  tests = [
+    ( '', '', 0 ),
+    ( 'a', 'a', 1 ),
+    ( 'a', 'b', 0 ),
+    ( 'abcdef', 'abcdefg', 6 ),
+    ( 'abcdefg', 'abcdef', 0 ),
+    ( 'aaab', 'aaab', 4 ),
+    ( 'abab', 'ab', 2 ),
+    ( 'aab', 'caab', 0 ),
+    ( 'abab', 'abababab', 4 ),
+    ( 'aaab', 'baaa', 1 ),
+    ( 'test.', 'test.test', 5 ),
+    ( 'test.', 'test', 0 ),
+    ( 'test', 'testtest', 4 ),
+    ( '', 'testtest', 0 ),
+    ( 'test', '', 0 ),
+    ( 'Some CoCo', 'CoCo Beans', 4 ),
+    ( 'Have some CoCo and CoCo', 'CoCo and CoCo is here.', 13 ),
+    ( 'TEST xyAzA', 'xyAzA test', 5 ),
+  ]
+
+  def Test( line, text, overlap ):
+    assert_that( lsc.FindOverlapLength( line, text ), equal_to( overlap ) )
+
+  for test in tests:
+    yield Test, test[ 0 ], test[ 1 ], test[ 2 ]

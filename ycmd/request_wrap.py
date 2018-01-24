@@ -79,6 +79,10 @@ class RequestWrap( object ):
       # of the identifier to be completed
       'query': ( self._Query, None ),
 
+      # Unicode string representation of the line value up to the character
+      # before the start of 'query'
+      'prefix': ( self._Prefix, None ),
+
       'filetypes': ( self._Filetypes, None ),
 
       'first_filetype': ( self._FirstFiletype, None ),
@@ -183,6 +187,10 @@ class RequestWrap( object ):
     return self[ 'line_value' ][
         self[ 'start_codepoint' ] - 1 : self[ 'column_codepoint' ] - 1
     ]
+
+
+  def _Prefix( self ):
+    return self[ 'line_value' ][ : ( self[ 'start_codepoint' ] - 1 ) ]
 
 
   def _FirstFiletype( self ):
