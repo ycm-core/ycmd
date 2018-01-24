@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -20,54 +20,6 @@
 namespace YouCompleteMe {
 
 namespace fs = boost::filesystem;
-
-std::vector< std::string > StringVector( const std::string &a,
-                                         const std::string &b,
-                                         const std::string &c,
-                                         const std::string &d,
-                                         const std::string &e,
-                                         const std::string &f,
-                                         const std::string &g,
-                                         const std::string &h,
-                                         const std::string &i ) {
-  std::vector< std::string > string_vector;
-  string_vector.push_back( a );
-
-  if ( !b.empty() ) {
-    string_vector.push_back( b );
-  }
-
-  if ( !c.empty() ) {
-    string_vector.push_back( c );
-  }
-
-  if ( !d.empty() ) {
-    string_vector.push_back( d );
-  }
-
-  if ( !e.empty() ) {
-    string_vector.push_back( e );
-  }
-
-  if ( !f.empty() ) {
-    string_vector.push_back( f );
-  }
-
-  if ( !g.empty() ) {
-    string_vector.push_back( g );
-  }
-
-  if ( !h.empty() ) {
-    string_vector.push_back( h );
-  }
-
-  if ( !i.empty() ) {
-    string_vector.push_back( i );
-  }
-
-  return string_vector;
-}
-
 
 boost::filesystem::path PathToTestFile( const std::string &filepath ) {
   fs::path path_to_testdata = fs::current_path() / fs::path( "testdata" );
