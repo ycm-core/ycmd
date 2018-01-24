@@ -13,8 +13,9 @@ certain filetypes, ycmd can also provide diagnostic errors and warnings.
 ycmd was originally part of [YouCompleteMe][ycm]'s codebase, but has been split
 out into a separate project so that it can be used in editors other than Vim.
 
-The best way to learn how to interact with ycmd is by reading through (and
-running) the [`example_client.py`][example-client] file. See the [README for the
+Check [the API documentation][api-docs] if you want to implement a client. A
+good way to learn how to interact with ycmd is by reading through (and running)
+the [`example_client.py`][example-client] file. See the [README for the
 examples][example-readme] folder for details on how to run the example client.
 
 Known ycmd clients:
@@ -343,3 +344,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [gycm]: https://github.com/jakeanq/gycm
 [nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
 [jdtls]: https://github.com/eclipse/eclipse.jdt.ls
+[api-docs]: https://valloric.github.io/ycmd/
