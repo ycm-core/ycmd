@@ -104,8 +104,9 @@ bool IsMainCompletionTextInfo( CXCompletionChunkKind kind ) {
 
 std::string ChunkToString( CXCompletionString completion_string,
                            size_t chunk_num ) {
-  if ( !completion_string )
+  if ( !completion_string ) {
     return std::string();
+  }
 
   return YouCompleteMe::CXStringToString(
            clang_getCompletionChunkText( completion_string, chunk_num ) );
@@ -116,14 +117,16 @@ std::string OptionalChunkToString( CXCompletionString completion_string,
                                    size_t chunk_num ) {
   std::string final_string;
 
-  if ( !completion_string )
+  if ( !completion_string ) {
     return final_string;
+  }
 
   CXCompletionString optional_completion_string =
     clang_getCompletionChunkCompletionString( completion_string, chunk_num );
 
-  if ( !optional_completion_string )
+  if ( !optional_completion_string ) {
     return final_string;
+  }
 
   size_t optional_num_chunks = clang_getNumCompletionChunks(
                                optional_completion_string );
@@ -135,9 +138,7 @@ std::string OptionalChunkToString( CXCompletionString completion_string,
     if ( kind == CXCompletionChunk_Optional ) {
       final_string.append( OptionalChunkToString( optional_completion_string,
                                                   j ) );
-    }
-
-    else {
+    } else {
       final_string.append( ChunkToString( optional_completion_string, j ) );
     }
   }
@@ -148,10 +149,12 @@ std::string OptionalChunkToString( CXCompletionString completion_string,
 
 bool IdentifierEndsWith( const std::string &identifier,
                          const std::string &end ) {
-  if ( identifier.size() >= end.size() )
+  if ( identifier.size() >= end.size() ) {
     return 0 == identifier.compare( identifier.length() - end.length(),
                                     end.length(),
                                     end );
+  }
+
   return false;
 }
 
@@ -174,8 +177,9 @@ std::string RemoveTrailingParens( std::string text ) {
 CompletionData::CompletionData( const CXCompletionResult &completion_result ) {
   CXCompletionString completion_string = completion_result.CompletionString;
 
-  if ( !completion_string )
+  if ( !completion_string ) {
     return;
+  }
 
   size_t num_chunks = clang_getNumCompletionChunks( completion_string );
   bool saw_left_paren = false;
@@ -214,26 +218,20 @@ void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
   if ( IsMainCompletionTextInfo( kind ) ) {
     if ( kind == CXCompletionChunk_LeftParen ) {
       saw_left_paren = true;
-    }
-
-    else if ( saw_left_paren &&
-              !saw_function_params &&
-              kind != CXCompletionChunk_RightParen &&
-              kind != CXCompletionChunk_Informative ) {
+    } else if ( saw_left_paren &&
+                !saw_function_params &&
+                kind != CXCompletionChunk_RightParen &&
+                kind != CXCompletionChunk_Informative ) {
       saw_function_params = true;
       everything_except_return_type_.append( " " );
-    }
-
-    else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
+    } else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
       everything_except_return_type_.append( " " );
     }
 
     if ( kind == CXCompletionChunk_Optional ) {
       everything_except_return_type_.append(
         OptionalChunkToString( completion_string, chunk_num ) );
-    }
-
-    else {
+    } else {
       everything_except_return_type_.append(
         ChunkToString( completion_string, chunk_num ) );
     }

@@ -74,8 +74,9 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
                                       validated_candidate_text,
                                       nullptr );
 
-      if ( !candidate )
+      if ( !candidate ) {
         candidate = new Candidate( validated_candidate_text );
+      }
 
       candidates.push_back( candidate );
     }
@@ -104,8 +105,9 @@ CandidateRepository::~CandidateRepository() {
 const std::string &CandidateRepository::ValidatedCandidateText(
   const std::string &candidate_text ) {
   if ( candidate_text.size() <= MAX_CANDIDATE_SIZE &&
-       IsPrintable( candidate_text ) )
+       IsPrintable( candidate_text ) ) {
     return candidate_text;
+  }
 
   return empty_;
 }

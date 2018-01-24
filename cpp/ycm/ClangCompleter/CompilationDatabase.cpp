@@ -67,8 +67,9 @@ CompilationInfoForFile CompilationDatabase::GetCompilationInfoForFile(
   const boost::python::object &path_to_file ) {
   CompilationInfoForFile info;
 
-  if ( !is_loaded_ )
+  if ( !is_loaded_ ) {
     return info;
+  }
 
   std::string path_to_file_string = GetUtf8String( path_to_file );
   ReleaseGil unlock;

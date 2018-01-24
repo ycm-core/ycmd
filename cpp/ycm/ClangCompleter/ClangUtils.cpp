@@ -22,8 +22,9 @@ namespace YouCompleteMe {
 std::string CXStringToString( CXString text ) {
   std::string final_string;
 
-  if ( !text.data )
+  if ( !text.data ) {
     return final_string;
+  }
 
   final_string = std::string( clang_getCString( text ) );
   clang_disposeString( text );

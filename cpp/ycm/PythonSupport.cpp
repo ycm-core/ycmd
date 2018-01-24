@@ -66,8 +66,9 @@ boost::python::list FilterAndSortCandidates(
   const size_t max_candidates ) {
   pylist filtered_candidates;
 
-  if ( !IsPrintable( query ) )
+  if ( !IsPrintable( query ) ) {
     return boost::python::list();
+  }
 
   size_t num_candidates = len( candidates );
   std::vector< const Candidate * > repository_candidates =
@@ -83,8 +84,9 @@ boost::python::list FilterAndSortCandidates(
       const Candidate *candidate = repository_candidates[ i ];
 
       if ( candidate->Text().empty() ||
-           !candidate->MatchesQueryBitset( query_bitset ) )
+           !candidate->MatchesQueryBitset( query_bitset ) ) {
         continue;
+      }
 
       Result result = candidate->QueryMatchResult( query,
                                                    query_has_uppercase_letters );
@@ -112,29 +114,34 @@ std::string GetUtf8String( const boost::python::object &value ) {
   // they are UTF-8 encoded when converted to std::string.
   extract< std::string > to_string( value );
 
-  if ( to_string.check() )
+  if ( to_string.check() ) {
     return to_string();
+  }
 #else
   std::string type = extract< std::string >( value.attr( "__class__" )
                                                   .attr( "__name__" ) );
 
-  if ( type == "str" )
+  if ( type == "str" ) {
     return extract< std::string >( value );
+  }
 
-  if ( type == "unicode" )
+  if ( type == "unicode" ) {
     // unicode -> str
     return extract< std::string >( value.attr( "encode" )( "utf8" ) );
+  }
 
   // newstr and newbytes have a __native__ method that convert them
   // respectively to unicode and str.
-  if ( type == "newstr" )
+  if ( type == "newstr" ) {
     // newstr -> unicode -> str
     return extract< std::string >( value.attr( "__native__" )()
                                         .attr( "encode" )( "utf8" ) );
+  }
 
-  if ( type == "newbytes" )
+  if ( type == "newbytes" ) {
     // newbytes -> str
     return extract< std::string >( value.attr( "__native__" )() );
+  }
 #endif
 
   return extract< std::string >( str( value ).encode( "utf8" ) );

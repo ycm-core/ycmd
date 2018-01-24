@@ -38,8 +38,9 @@ BENCHMARK_DEFINE_F( IdentifierCompleterFixture, CandidatesWithCommonPrefix )(
                                                    state.range( 0 ) );
   IdentifierCompleter completer( candidates );
 
-  while ( state.KeepRunning() )
+  while ( state.KeepRunning() ) {
     completer.CandidatesForQuery( "aA", state.range( 1 ) );
+  }
 
   state.SetComplexityN( state.range( 0 ) );
 }

@@ -64,8 +64,9 @@ YCM_EXPORT inline bool IsPrintable( char letter ) {
 
 YCM_EXPORT inline bool IsPrintable( const std::string &text ) {
   for ( char letter : text ) {
-    if ( !IsPrintable( letter ) )
+    if ( !IsPrintable( letter ) ) {
       return false;
+    }
   }
   return true;
 }
@@ -83,8 +84,9 @@ YCM_EXPORT inline bool IsPunctuation( char letter ) {
 // uppercase.
 YCM_EXPORT inline bool IsLowercase( const std::string &text ) {
   for ( char letter : text ) {
-    if ( IsUppercase( letter ) )
+    if ( IsUppercase( letter ) ) {
       return false;
+    }
   }
   return true;
 }
@@ -93,47 +95,53 @@ YCM_EXPORT inline bool IsLowercase( const std::string &text ) {
 // An uppercase character can be converted to lowercase and vice versa by
 // flipping its third most significant bit.
 YCM_EXPORT inline char Lowercase( char letter ) {
-  if ( IsUppercase( letter ) )
+  if ( IsUppercase( letter ) ) {
     return letter ^ 0x20;
+  }
   return letter;
 }
 
 
 YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
   std::string result;
-  for ( char letter : text )
+  for ( char letter : text ) {
     result.push_back( Lowercase( letter ) );
+  }
   return result;
 }
 
 
 YCM_EXPORT inline char Uppercase( char letter ) {
-  if ( IsLowercase( letter ) )
+  if ( IsLowercase( letter ) ) {
     return letter ^ 0x20;
+  }
   return letter;
 }
 
 
 YCM_EXPORT inline bool HasUppercase( const std::string &text ) {
   for ( char letter : text ) {
-    if ( IsUppercase( letter ) )
+    if ( IsUppercase( letter ) ) {
       return true;
+    }
   }
   return false;
 }
 
 
 YCM_EXPORT inline char SwapCase( char letter ) {
-  if ( IsAlpha( letter ) )
+  if ( IsAlpha( letter ) ) {
     return letter ^ 0x20;
+  }
   return letter;
 }
 
 
 YCM_EXPORT inline std::string SwapCase( const std::string &text ) {
   std::string result;
-  for ( char letter : text )
+  for ( char letter : text ) {
     result.push_back( SwapCase( letter ) );
+  }
   return result;
 }
 

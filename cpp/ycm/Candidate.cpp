@@ -50,8 +50,9 @@ Bitset LetterBitsetFromString( const std::string &text ) {
   for ( char letter : text ) {
     int letter_index = IndexForLetter( letter );
 
-    if ( IsAscii( letter_index ) )
+    if ( IsAscii( letter_index ) ) {
       letter_bitset.set( letter_index );
+    }
   }
 
   return letter_bitset;
@@ -77,8 +78,9 @@ Result Candidate::QueryMatchResult( const std::string &query,
     const NearestLetterNodeIndices *nearest =
       node->NearestLetterNodesForLetter( letter );
 
-    if ( !nearest )
+    if ( !nearest ) {
       return Result();
+    }
 
     // When the query letter is uppercase, then we force an uppercase match
     // but when the query letter is lowercase, then it can match both an
@@ -86,15 +88,18 @@ Result Candidate::QueryMatchResult( const std::string &query,
     // better than forcing lowercase letter matches.
     node = nullptr;
     if ( case_sensitive && IsUppercase( letter ) ) {
-      if ( nearest->indexOfFirstUppercaseOccurrence >= 0 )
+      if ( nearest->indexOfFirstUppercaseOccurrence >= 0 ) {
         node = ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
+      }
     } else {
-      if ( nearest->indexOfFirstOccurrence >= 0 )
+      if ( nearest->indexOfFirstOccurrence >= 0 ) {
         node = ( *root_node_ )[ nearest->indexOfFirstOccurrence ];
+      }
     }
 
-    if ( !node )
+    if ( !node ) {
       return Result();
+    }
 
     index_sum += node->Index();
   }
