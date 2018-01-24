@@ -61,8 +61,9 @@ bool ClangCompleter::UpdatingTranslationUnit( const std::string &filename ) {
   ReleaseGil unlock;
   shared_ptr< TranslationUnit > unit = translation_unit_store_.Get( filename );
 
-  if ( !unit )
+  if ( !unit ) {
     return false;
+  }
 
   // Thankfully, an invalid, sentinel TU always returns true for
   // IsCurrentlyUpdating, so no caller will try to rely on the TU object, even
@@ -83,8 +84,9 @@ std::vector< Diagnostic > ClangCompleter::UpdateTranslationUnit(
                                          flags,
                                          translation_unit_created );
 
-  if ( !unit )
+  if ( !unit ) {
     return std::vector< Diagnostic >();
+  }
 
   try {
     return unit->Reparse( unsaved_files );
@@ -112,8 +114,9 @@ ClangCompleter::CandidatesForLocationInFile(
   shared_ptr< TranslationUnit > unit =
     translation_unit_store_.GetOrCreate( filename, unsaved_files, flags );
 
-  if ( !unit )
+  if ( !unit ) {
     return std::vector< CompletionData >();
+  }
 
   return unit->CandidatesForLocation( line,
                                       column,

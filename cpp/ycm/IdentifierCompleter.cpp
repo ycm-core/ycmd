@@ -86,8 +86,9 @@ std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
   const size_t max_candidates ) const {
   ReleaseGil unlock;
 
-  if ( !IsPrintable( query ) )
+  if ( !IsPrintable( query ) ) {
     return std::vector< std::string >();
+  }
 
   std::vector< Result > results;
   identifier_database_.ResultsForQueryAndType( query,

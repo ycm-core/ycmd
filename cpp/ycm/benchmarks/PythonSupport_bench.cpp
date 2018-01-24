@@ -79,9 +79,10 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
   FilterAndSortCandidates( candidates, "insertion_text", "aA",
                            state.range( 1 ) );
 
-  while ( state.KeepRunning() )
+  while ( state.KeepRunning() ) {
     FilterAndSortCandidates( candidates, "insertion_text", "aA",
                              state.range( 1 ) );
+  }
 
   state.SetComplexityN( state.range( 0 ) );
 }

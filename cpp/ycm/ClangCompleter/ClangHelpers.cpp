@@ -53,8 +53,9 @@ FixIt BuildFixIt( const std::string& text,
   FixIt fixit;
 
   size_t num_chunks = clang_getDiagnosticNumFixIts( diagnostic );
-  if ( !num_chunks )
+  if ( !num_chunks ) {
     return fixit;
+  }
 
   fixit.chunks.reserve( num_chunks );
   fixit.location = Location( clang_getDiagnosticLocation( diagnostic ) );
@@ -95,27 +96,31 @@ void BuildFullDiagnosticDataFromChildren(
 
   // Populate any fixit attached to this diagnostic.
   FixIt fixit = BuildFixIt( diag_text, diagnostic );
-  if ( fixit.chunks.size() > 0 )
+  if ( fixit.chunks.size() > 0 ) {
     fixits.push_back( fixit );
+  }
 
   // Note: clang docs say that a CXDiagnosticSet retrieved with
   // clang_getChildDiagnostics do NOT need to be released with
   // clang_diposeDiagnosticSet
   CXDiagnosticSet diag_set = clang_getChildDiagnostics( diagnostic );
 
-  if ( !diag_set )
+  if ( !diag_set ) {
     return;
+  }
 
   size_t num_child_diagnostics = clang_getNumDiagnosticsInSet( diag_set );
 
-  if ( !num_child_diagnostics )
+  if ( !num_child_diagnostics ) {
     return;
+  }
 
   for ( size_t i = 0; i < num_child_diagnostics; ++i ) {
     CXDiagnostic child_diag = clang_getDiagnosticInSet( diag_set, i );
 
-    if( !child_diag )
+    if( !child_diag ) {
       continue;
+    }
 
     full_diagnostic_text.append( "\n" );
 
@@ -130,8 +135,9 @@ void BuildFullDiagnosticDataFromChildren(
 // unavailable completion strings refer to entities that are private/protected,
 // deprecated etc.
 bool CompletionStringAvailable( CXCompletionString completion_string ) {
-  if ( !completion_string )
+  if ( !completion_string ) {
     return false;
+  }
 
   return clang_getCompletionAvailability( completion_string ) ==
          CXAvailability_Available;
@@ -171,8 +177,9 @@ Range GetLocationExtent( CXSourceLocation source_location,
 
   for ( size_t i = 0; i < num_tokens; ++i ) {
     CXToken token = tokens[ i ];
-    if ( clang_getTokenKind( token ) == CXToken_Comment )
+    if ( clang_getTokenKind( token ) == CXToken_Comment ) {
       continue;
+    }
 
     Location token_location( clang_getTokenLocation( translation_unit,
                                                      token ) );
@@ -208,8 +215,9 @@ std::vector< CompletionData > ToCompletionDataVector(
   CXCodeCompleteResults *results ) {
   std::vector< CompletionData > completions;
 
-  if ( !results || !results->Results )
+  if ( !results || !results->Results ) {
     return completions;
+  }
 
   completions.reserve( results->NumResults );
   unordered_map< std::string, size_t > seen_data;
@@ -217,8 +225,9 @@ std::vector< CompletionData > ToCompletionDataVector(
   for ( size_t i = 0; i < results->NumResults; ++i ) {
     CXCompletionResult completion_result = results->Results[ i ];
 
-    if ( !CompletionStringAvailable( completion_result.CompletionString ) )
+    if ( !CompletionStringAvailable( completion_result.CompletionString ) ) {
       continue;
+    }
 
     CompletionData data( completion_result );
     size_t index = GetValueElseInsert( seen_data,
@@ -227,9 +236,7 @@ std::vector< CompletionData > ToCompletionDataVector(
 
     if ( index == completions.size() ) {
       completions.push_back( std::move( data ) );
-    }
-
-    else {
+    } else {
       // If we have already seen this completion, then this is an overload of a
       // function we have seen. We add the signature of the overload to the
       // detailed information.
@@ -249,16 +256,18 @@ Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
                             CXTranslationUnit translation_unit ) {
   Diagnostic diagnostic;
 
-  if ( !diagnostic_wrap )
+  if ( !diagnostic_wrap ) {
     return diagnostic;
+  }
 
   diagnostic.kind_ = DiagnosticSeverityToType(
                        clang_getDiagnosticSeverity( diagnostic_wrap.get() ) );
 
   // If this is an "ignored" diagnostic, there's no point in continuing since we
   // won't display those to the user
-  if ( diagnostic.kind_ == INFORMATION )
+  if ( diagnostic.kind_ == INFORMATION ) {
     return diagnostic;
+  }
 
   CXSourceLocation source_location =
     clang_getDiagnosticLocation( diagnostic_wrap.get() );

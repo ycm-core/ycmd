@@ -33,29 +33,37 @@ std::vector< std::string > StringVector( const std::string &a,
   std::vector< std::string > string_vector;
   string_vector.push_back( a );
 
-  if ( !b.empty() )
+  if ( !b.empty() ) {
     string_vector.push_back( b );
+  }
 
-  if ( !c.empty() )
+  if ( !c.empty() ) {
     string_vector.push_back( c );
+  }
 
-  if ( !d.empty() )
+  if ( !d.empty() ) {
     string_vector.push_back( d );
+  }
 
-  if ( !e.empty() )
+  if ( !e.empty() ) {
     string_vector.push_back( e );
+  }
 
-  if ( !f.empty() )
+  if ( !f.empty() ) {
     string_vector.push_back( f );
+  }
 
-  if ( !g.empty() )
+  if ( !g.empty() ) {
     string_vector.push_back( g );
+  }
 
-  if ( !h.empty() )
+  if ( !h.empty() ) {
     string_vector.push_back( h );
+  }
 
-  if ( !i.empty() )
+  if ( !i.empty() ) {
     string_vector.push_back( i );
+  }
 
   return string_vector;
 }
