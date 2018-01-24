@@ -207,6 +207,18 @@
                     </tr>
                     <tr>
                             <td class="swagger--summary-path" rowspan="1">
+                                <a href="#path--receive_messages">/receive_messages</a>
+                            </td>
+                        <td>
+                            <a href="#operation--receive_messages-post">POST</a>
+                        </td>
+                        <td>
+                            <p>Long poll for asynchronous server messages.</p>
+        
+                        </td>
+                    </tr>
+                    <tr>
+                            <td class="swagger--summary-path" rowspan="1">
                                 <a href="#path--run_completer_command">/run_completer_command</a>
                             </td>
                         <td>
@@ -878,7 +890,7 @@
                 <div class="panel-body">
                     <section class="sw-operation-description">
                         <p>The server needs to react to a number of client events in order to
-            provide things like diagnotics and to handler downstream server states
+            provide things like diagnostics and to handle downstream server states
             etc. The client must inform the server of the following events,
             populating the event name in the <code>event_name</code> property:</p>
             <ul>
@@ -886,11 +898,11 @@
             Call when a new buffer is opened or after the user has
             stopped typing for some time, or at any other time when the client
             believes that it is worthwhile reparsing the current file and
-            updating semantic engines&#39;&#39; ASTs and reporting things like updated
+            updating semantic engines&#39; ASTs and reporting things like updated
             diagnostics.</li>
-            <li><code>BufferUnload</code> (optional)
+            <li><code>BufferUnload</code>
             Call when the user closes a buffer that was previously known to be
-            open.</li>
+            open. Closing buffers is important to limit resource usage.</li>
             <li><code>BufferVisit</code> (optional)
             Call when the user focusses on a buffer that is already known.
             <em>Note</em>: The <code>ultisnips_snippets</code> property is optional when firing
@@ -1164,9 +1176,9 @@
                     <section class="sw-operation-description">
                         <p>For filetypes not natively supported by ycmd, clients can often
             determine a set of suitable candidate completion suggestions by other
-            means. In Vim this is is typically from the <code>omnifunc</code> and other
-            clients will have equivalents.</p>
-            <p>This endpoint allows clients to use ycmd&#39;&#39;s powerful filtering and
+            means. In Vim this is typically from the <code>omnifunc</code> and other clients
+            will have equivalents.</p>
+            <p>This endpoint allows clients to use ycmd&#39;s powerful filtering and
             ranking capabilities (including longest-common-subsequence and
             word-boundary-character ranking) on arbitrary sets of identifiers.</p>
             <p><em>NOTE:</em> This API is primarily intended for use when subclassing the
@@ -1558,6 +1570,127 @@
                 </div>
             </div>
         
+        <span id="path--receive_messages"></span>
+            <div id="operation--receive_messages-post" class="swagger--panel-operation-post panel">
+                <div class="panel-heading">
+                    <div class="operation-summary">Long poll for asynchronous server messages.</div>
+                    <h3 class="panel-title"><span class="operation-name">POST</span> <strong>/receive_messages</strong></h3>
+                </div>
+                <div class="panel-body">
+                    <section class="sw-operation-description">
+                        <p>Return asynchronous messages from the server. This request is
+            used by clients in a &quot;long poll&quot; style, and does not return until
+            either:</p>
+            <ul>
+            <li>A message (or messages) becomes available, in which case a list of
+            messages is returned, or</li>
+            <li>a timeout occurs (after 60s), in which case <code>true</code> is returned and
+            the client should re-send this request, or</li>
+            <li>for some reason the server determined that the client should stop
+            sending <code>receive_messages</code> requests, in which case <code>false</code> is
+            returned, and the client should only send the request again when
+            something substantial changes such as a new file type is opened, or
+            the completer server is manually restarted.</li>
+            </ul>
+            <p>The following types of event are delivered asynchronously for certain
+            filetypes:</p>
+            <ul>
+            <li>Status messages to be displayed unobtrusively to the user.</li>
+            <li>Diagnostics (for Java only).</li>
+            </ul>
+            <p>This message is optional. Clients do not require to implement this
+            method, but it is strongly recommended for certain languages to offer
+            the best user experience.</p>
+            
+                    </section>
+            
+                        
+                            <section class="sw-request-body">
+                                
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><p>The context data, including the current cursor position, and details
+                        of dirty buffers.</p>
+                        </p>
+                                            </div>
+                                            <div class="col-md-6 sw-request-model">
+                            <div  class="panel panel-definition">
+                                <div class="panel-body">
+                                            <a class="json-schema-ref" href="#/definitions/SimpleRequest">SimpleRequest</a>
+                                </div>
+                            </div></div>
+                                        </div>
+                            </section>        
+                    
+                        <section class="sw-responses">
+                                <p>
+                    </p>
+                    
+                            <dl>
+                                    <dt class="sw-response-200">
+                                        200 OK
+                                    
+                                    </dt>
+                                    <dd class="sw-response-200">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>Messages are ready, the request timed out, or the request
+                                            is not supported and should not be retried.</p>
+                                            <p>The response may be <strong>one of</strong> <code>MessagePollResponse</code> or
+                                            <code>MessagesList</code>.</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                    <div class="col-md-6 sw-response-examples">
+                                                        <div class="label label-default">Example for application/json</div>
+                                                        <pre>[<br>    {<br>        "<span class="hljs-attribute">message</span>": <span class="hljs-value"><span class="hljs-string">"Initializing: 19% complete"</span><br>    </span>},<br>    {<br>        "<span class="hljs-attribute">message</span>": <span class="hljs-value"><span class="hljs-string">"Initializing: Done."</span><br>    </span>},<br>    {<br>        "<span class="hljs-attribute">diagonostics</span>": <span class="hljs-value">{<br>            "<span class="hljs-attribute">diagnotics</span>": <span class="hljs-value">[<br>                {<br>                    "<span class="hljs-attribute">fixit_available</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,<br>                    "<span class="hljs-attribute">kind</span>": <span class="hljs-value"><span class="hljs-string">"WARNING"</span></span>,<br>                    "<span class="hljs-attribute">location</span>": <span class="hljs-value">{<br>                        "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                        "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                        "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">10</span><br>                    </span>}</span>,<br>                    "<span class="hljs-attribute">location_extent</span>": <span class="hljs-value">{<br>                        "<span class="hljs-attribute">end</span>": <span class="hljs-value">{<br>                            "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                            "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                            "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">10</span><br>                        </span>}</span>,<br>                        "<span class="hljs-attribute">start</span>": <span class="hljs-value">{<br>                            "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                            "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                            "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">10</span><br>                        </span>}<br>                    </span>}</span>,<br>                    "<span class="hljs-attribute">ranges</span>": <span class="hljs-value">[<br>                        {<br>                            "<span class="hljs-attribute">end</span>": <span class="hljs-value">{<br>                                "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">20</span></span>,<br>                                "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                                "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">10</span><br>                            </span>}</span>,<br>                            "<span class="hljs-attribute">start</span>": <span class="hljs-value">{<br>                                "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                                "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                                "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">10</span><br>                            </span>}<br>                        </span>}<br>                    ]</span>,<br>                    "<span class="hljs-attribute">text</span>": <span class="hljs-value"><span class="hljs-string">"Very naughty code!"</span><br>                </span>},<br>                {<br>                    "<span class="hljs-attribute">fixit_available</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,<br>                    "<span class="hljs-attribute">kind</span>": <span class="hljs-value"><span class="hljs-string">"ERROR"</span></span>,<br>                    "<span class="hljs-attribute">location</span>": <span class="hljs-value">{<br>                        "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                        "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                        "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">19</span><br>                    </span>}</span>,<br>                    "<span class="hljs-attribute">location_extent</span>": <span class="hljs-value">{<br>                        "<span class="hljs-attribute">end</span>": <span class="hljs-value">{<br>                            "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                            "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                            "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">19</span><br>                        </span>}</span>,<br>                        "<span class="hljs-attribute">start</span>": <span class="hljs-value">{<br>                            "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                            "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                            "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">19</span><br>                        </span>}<br>                    </span>}</span>,<br>                    "<span class="hljs-attribute">ranges</span>": <span class="hljs-value">[<br>                        {<br>                            "<span class="hljs-attribute">end</span>": <span class="hljs-value">{<br>                                "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">20</span></span>,<br>                                "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                                "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">19</span><br>                            </span>}</span>,<br>                            "<span class="hljs-attribute">start</span>": <span class="hljs-value">{<br>                                "<span class="hljs-attribute">column_num</span>": <span class="hljs-value"><span class="hljs-number">11</span></span>,<br>                                "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span></span>,<br>                                "<span class="hljs-attribute">line_num</span>": <span class="hljs-value"><span class="hljs-number">19</span><br>                            </span>}<br>                        </span>}<br>                    ]</span>,<br>                    "<span class="hljs-attribute">text</span>": <span class="hljs-value"><span class="hljs-string">"Very dangerous code!"</span><br>                </span>}<br>            ]</span>,<br>            "<span class="hljs-attribute">filepath</span>": <span class="hljs-value"><span class="hljs-string">"/file"</span><br>        </span>}<br>    </span>}<br>]</pre>
+                                                    </div>
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                            
+                                                                <section class="json-schema-allOf">
+                                                                    <section class="json-schema-allOf-inherited">
+                                                                        <ul>
+                                                                                    <a class="json-schema-ref" href="#/definitions/MessagePollResponse">MessagePollResponse</a>
+                                                                                    <a class="json-schema-ref" href="#/definitions/MessageList">MessageList</a>
+                                                                        </ul>
+                                                                    </section>
+                                                                    <section class="json-schema-allOf-additional">
+                                                                    </section>
+                                                                </section>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                                    <dt class="sw-response-500">
+                                        500 Internal Server Error
+                                    
+                                    </dt>
+                                    <dd class="sw-response-500">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>An error occurred.</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                                <a class="json-schema-ref" href="#/definitions/ExceptionResponse">ExceptionResponse</a>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                            </dl>
+                        </section>
+                </div>
+            </div>
+        
         <span id="path--run_completer_command"></span>
             <div id="operation--run_completer_command-post" class="swagger--panel-operation-post panel">
                 <div class="panel-heading">
@@ -1575,14 +1708,14 @@
             which is the command name followed by any command- and
             completer-specific additional arguments. This &quot;command line&quot; is passed
             in the <code>command_arguments</code> property.</p>
-            <p>The list of available subcommands for a particular semantic compelter
+            <p>The list of available subcommands for a particular semantic completer
             can be queried using the <code>/defined_subcommands</code> endpoint.</p>
             <p>Subcommands may return one of a number of actions, depending on the
             type of command. The following types of response are returned:</p>
             <ul>
             <li>A <em>simple display message</em> response. This is identified where the
             type of the response is scalar (i.e. boolean, number, string) or the
-            type of the response is am obkect with a <code>message</code> property. These
+            type of the response is an object with a <code>message</code> property. These
             messages are typically only a single line and can be displayed in
             a message-box or similarly echoed in a status bar or equivalent.</li>
             <li>A <em>FixIt</em> response. This is identified where the type of the response
@@ -2461,6 +2594,10 @@
                                                                     <span class="json-property-enum-item">WARNING</span>
                                                                 ,
                                                                     <span class="json-property-enum-item">ERROR</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">INFORMATION</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">HINT</span>
                                                                 
                                                             }
                                                             </span>
@@ -2470,7 +2607,9 @@
                                                 </dt>
                                                 <dd>
                                                     <p>The type of diagnostic being reported. Typically semantic engines will
-                                    differentiate between warnings and fatal errors.</p>
+                                    differentiate between warnings and fatal errors. Informational and
+                                    hint messages should be treated as warnings where the client does not
+                                    differentiate.</p>
                                     
                                                     <div class="json-inner-schema">
                                                         
@@ -2518,6 +2657,67 @@
                                                     
                                                 </div>
                                             </section>    </div>
+                </div>        
+                <div id="definition-DiagnosticsMessage" class="panel panel-definition">
+                        <div class="panel-heading">
+                                <h3 class="panel-title"><a name="/definitions/DiagnosticsMessage"></a>DiagnosticsMessage:
+                                    <span class="json-property-type">
+                <span class="json-property-type">object</span>
+                <span class="json-property-range" title="Value limits"></span>
+                
+                </span>
+                                </h3>
+                        </div>
+                    <div class="panel-body">
+                                <section class="json-schema-description">
+                                    <p>Diagnostics for a particular file. Note: diagnostics may be supplied for
+                            any arbitrary file. The client is responsible for displaying the
+                            diagnostics in an appropriate manner. The server supplies an empty set of
+                            diagnostics to clear the diagnostics for a particular file.</p>
+                            
+                                </section>
+                            
+                                    <section class="json-schema-properties">
+                                        <dl>
+                                                <dt data-property-name="filpath">
+                                                    <span class="json-property-name">filpath:</span>
+                                                    
+                                                    <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/FilePath">FilePath</a>
+                                                    </span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="diagnotics">
+                                                    <span class="json-property-name">diagnotics:</span>
+                                                    
+                                                    <span class="json-property-type">object[]</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                                        <section class="json-schema-array-items">
+                                                                            
+                                                                            <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/DiagnosticData">DiagnosticData</a>
+                                                                            </span>
+                                                                            <span class="json-property-range" title="Value limits"></span>
+                                                                            
+                                                                            <div class="json-inner-schema">
+                                                                                
+                                                                            </div>
+                                                                        </section>                </div>
+                                                </dd>
+                                        </dl>
+                                    </section>
+                    </div>
                 </div>        
                 <div id="definition-Exception" class="panel panel-definition">
                         <div class="panel-heading">
@@ -2666,7 +2866,7 @@
                                                         <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
-                                                    <p>The entire contents of the buffer encoded as UTF-8</p>
+                                                    <p>The entire contents of the buffer encoded as UTF-8.</p>
                                     
                                                     <div class="json-inner-schema">
                                                         
@@ -2689,7 +2889,15 @@
                     <div class="panel-body">
                                 <section class="json-schema-description">
                                     <p>An object mapping whose keys are the absolute paths to the
-                            files and whose values are data relating to dirty buffers.</p>
+                            files and whose values are data relating unsaved buffers.</p>
+                            <p>An unsaved buffer is any file that is opened in the editor and has been
+                            changed without saving the contents to disk.</p>
+                            <p>The file referred to in the request <code>filepath</code> entry must <em>always</em> be
+                            included. For most requests this is the user&#39;s current buffer, but may
+                            be any buffer (e.g. in the case of closing a buffer which is not current).</p>
+                            <p>When a file is closed in the editor, a <code>BufferUnload</code> event should be sent
+                            and the file should not be included in further <code>FileDataMap</code> entries
+                            until (or unless) it is opened and changed again.</p>
                             
                                 </section>
                             
@@ -2966,6 +3174,117 @@
                                     </section>
                     </div>
                 </div>        
+                <div id="definition-Message" class="panel panel-definition">
+                        <div class="panel-heading">
+                                <h3 class="panel-title"><a name="/definitions/Message"></a>Message:
+                                    <span class="json-property-type">
+                <span class="json-property-type">object</span>
+                <span class="json-property-range" title="Value limits"></span>
+                
+                </span>
+                                </h3>
+                        </div>
+                    <div class="panel-body">
+                                <section class="json-schema-description">
+                                    <p>An object containing a single asynchronous message.
+                            It is either a <code>SimpleDisplayMessage</code> or a <code>DiagnosticsMessage</code></p>
+                            
+                                </section>
+                            
+                                    <section class="json-schema-properties">
+                                        <dl>
+                                                <dt data-property-name="message">
+                                                    <span class="json-property-name">message:</span>
+                                                    
+                                                    <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/SimpleDisplayMessage">SimpleDisplayMessage</a>
+                                                    </span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>If present, this object is a <code>SimpleDisplayMessage</code></p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="diagnostics">
+                                                    <span class="json-property-name">diagnostics:</span>
+                                                    
+                                                    <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/DiagnosticsMessage">DiagnosticsMessage</a>
+                                                    </span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>If present, this object is a <code>DiagnosticsMessage</code></p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                        </dl>
+                                    </section>
+                    </div>
+                </div>        
+                <div id="definition-MessageList" class="panel panel-definition">
+                        <div class="panel-heading">
+                                <h3 class="panel-title"><a name="/definitions/MessageList"></a>MessageList:
+                                    <span class="json-property-type">
+                <span class="json-property-type">object[]</span>
+                <span class="json-property-range" title="Value limits"></span>
+                
+                </span>
+                                </h3>
+                        </div>
+                    <div class="panel-body">
+                                <section class="json-schema-description">
+                                    <p>A list of messages in the sequence they should be handled.</p>
+                            <p>The type of message in each item is determined by the property name:</p>
+                            <ul>
+                            <li>An object with a property <code>message</code> is a <em>simple display message</em> where
+                            the property value is the message.</li>
+                            <li>An object with a property <code>diagnostics</code> contains diagnotics for a
+                            project file. The value of the property is described below.</li>
+                            </ul>
+                            
+                                </section>
+                            
+                                            <section class="json-schema-array-items">
+                                                
+                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/Message">Message</a>
+                                                </span>
+                                                <span class="json-property-range" title="Value limits"></span>
+                                                
+                                                <div class="json-inner-schema">
+                                                    
+                                                </div>
+                                            </section>    </div>
+                </div>        
+                <div id="definition-MessagePollResponse" class="panel panel-definition">
+                        <div class="panel-heading">
+                                <h3 class="panel-title"><a name="/definitions/MessagePollResponse"></a>MessagePollResponse:
+                                    <span class="json-property-type">
+                <span class="json-property-type">boolean</span>
+                <span class="json-property-range" title="Value limits"></span>
+                
+                </span>
+                                </h3>
+                        </div>
+                    <div class="panel-body">
+                                <section class="json-schema-description">
+                                    <p>When <code>true</code> is returned, the request timed out (meaning no
+                            messages were returned in the poll period). Clients should
+                            send another <code>receive_messages</code> request immediately.</p>
+                            <p>When <code>false</code> is returned, the server determined that message
+                            polling should abort for the current file type context. Clients
+                            should not re-send this request until the filetype being edited
+                            changes or the server is restarted.</p>
+                            
+                                </section>
+                            
+                    </div>
+                </div>        
                 <div id="definition-Range" class="panel panel-definition">
                         <div class="panel-heading">
                                 <h3 class="panel-title"><a name="/definitions/Range"></a>Range:
@@ -3176,6 +3495,26 @@
                                                 </dd>
                                         </dl>
                                     </section>
+                    </div>
+                </div>        
+                <div id="definition-SimpleDisplayMessage" class="panel panel-definition">
+                        <div class="panel-heading">
+                                <h3 class="panel-title"><a name="/definitions/SimpleDisplayMessage"></a>SimpleDisplayMessage:
+                                    <span class="json-property-type">
+                <span class="json-property-type">string</span>
+                <span class="json-property-range" title="Value limits"></span>
+                
+                </span>
+                                </h3>
+                        </div>
+                    <div class="panel-body">
+                                <section class="json-schema-description">
+                                    <p>A message for display to the user. Note: the message should be displayed
+                            discreetly (such as in a status bar) and should not block the user or
+                            interrupt them.</p>
+                            
+                                </section>
+                            
                     </div>
                 </div>        
                 <div id="definition-SimpleRequest" class="panel panel-definition">

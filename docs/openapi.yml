@@ -162,7 +162,7 @@ definitions:
           type: string
       contents:
         type: string
-        description: The entire contents of the buffer encoded as UTF-8
+        description: The entire contents of the buffer encoded as UTF-8.
   FileDataMap:
     type: object
     description: |-
@@ -584,14 +584,14 @@ paths:
       summary: Notify the server of various client events.
       description: |-
         The server needs to react to a number of client events in order to
-        provide things like diagnotics and to handler downstream server states
+        provide things like diagnostics and to handle downstream server states
         etc. The client must inform the server of the following events,
         populating the event name in the `event_name` property:
           - `FileReadyToParse`
             Call when a new buffer is opened or after the user has
             stopped typing for some time, or at any other time when the client
             believes that it is worthwhile reparsing the current file and
-            updating semantic engines'' ASTs and reporting things like updated
+            updating semantic engines' ASTs and reporting things like updated
             diagnostics.
           - `BufferUnload`
             Call when the user closes a buffer that was previously known to be
@@ -702,7 +702,7 @@ paths:
         completer-specific additional arguments. This "command line" is passed
         in the `command_arguments` property.
 
-        The list of available subcommands for a particular semantic compelter
+        The list of available subcommands for a particular semantic completer
         can be queried using the `/defined_subcommands` endpoint.
 
         Subcommands may return one of a number of actions, depending on the
@@ -710,7 +710,7 @@ paths:
 
         - A *simple display message* response. This is identified where the
           type of the response is scalar (i.e. boolean, number, string) or the
-          type of the response is am obkect with a `message` property. These
+          type of the response is an object with a `message` property. These
           messages are typically only a single line and can be displayed in
           a message-box or similarly echoed in a status bar or equivalent.
         - A *FixIt* response. This is identified where the type of the response
@@ -892,10 +892,10 @@ paths:
       description: |-
         For filetypes not natively supported by ycmd, clients can often
         determine a set of suitable candidate completion suggestions by other
-        means. In Vim this is is typically from the `omnifunc` and other
-        clients will have equivalents.
+        means. In Vim this is typically from the `omnifunc` and other clients
+        will have equivalents.
 
-        This endpoint allows clients to use ycmd''s powerful filtering and
+        This endpoint allows clients to use ycmd's powerful filtering and
         ranking capabilities (including longest-common-subsequence and
         word-boundary-character ranking) on arbitrary sets of identifiers.
 
@@ -1246,8 +1246,8 @@ paths:
         The following types of event are delivered asynchronously for certain
         filetypes:
 
-        - Status messages to be displayed unobtrusively to the user
-        - Diagnostics (for Java only)
+        - Status messages to be displayed unobtrusively to the user.
+        - Diagnostics (for Java only).
 
         This message is optional. Clients do not require to implement this
         method, but it is strongly recommended for certain languages to offer
