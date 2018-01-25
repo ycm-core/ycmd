@@ -62,7 +62,8 @@ def StopOmniSharpServer( app, filepath ):
 
 
 def WaitUntilOmniSharpServerReady( app, filepath ):
-  retries = 2000
+  # 5 minutes since CI can be slow to startup
+  retries = 5*60/0.2
   success = False
 
   while retries > 0:
@@ -82,6 +83,7 @@ def WaitUntilOmniSharpServerReady( app, filepath ):
     time.sleep( 0.2 )
     retries = retries - 1
 
+  # Omnisharp isn't quite ready when it says it is, so wait a little longer
   time.sleep( 10 )
 
   if not success:
