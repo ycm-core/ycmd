@@ -55,7 +55,7 @@ def GenerateApiDocs():
 
   bootprint = FindExecutable( os.path.join( DIR_OF_DOCS, 'node_modules',
                                             '.bin', 'bootprint' ) )
-  api = os.path.join( DIR_OF_DOCS, 'openapi.yaml' )
+  api = os.path.join( DIR_OF_DOCS, 'openapi.yml' )
   subprocess.call( [ bootprint, 'openapi', api, DIR_OF_DOCS ] )
 
 
