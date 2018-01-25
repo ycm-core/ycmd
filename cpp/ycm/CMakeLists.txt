@@ -116,7 +116,7 @@ if ( USE_CLANG_COMPLETER AND
     set( CLANG_PACKAGE "libclang" )
   else()
     set( CLANG_URL
-         "http://releases.llvm.org/${CLANG_VERSION}/${CLANG_FILENAME}" )
+         "https://releases.llvm.org/${CLANG_VERSION}/${CLANG_FILENAME}" )
     set( CLANG_PACKAGE "Clang" )
   endif()
 
