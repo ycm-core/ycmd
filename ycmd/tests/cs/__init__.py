@@ -63,7 +63,7 @@ def StopOmniSharpServer( app, filepath ):
 
 def WaitUntilOmniSharpServerReady( app, filepath ):
   # 5 minutes since CI can be slow to startup
-  retries = 5*60/0.2
+  retries = 5 * 60 / 0.2
   success = False
 
   while retries > 0:

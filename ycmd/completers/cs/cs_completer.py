@@ -810,18 +810,18 @@ def _ConvertFilenameForCygwin( filename, direction ):
     direction = True if direction else False
 
     try:
-        return _cygpath_data[ direction ][ 'Data' ][ filename ]
+      return _cygpath_data[ direction ][ 'Data' ][ filename ]
     except KeyError:
-        cygpath = _cygpath_data[ direction ][ 'Process' ]
-        if not cygpath:
+      cygpath = _cygpath_data[ direction ][ 'Process' ]
+      if not cygpath:
         dir_arg = '-w' if direction else '-u'
         command = [ 'cygpath', '-f', '-', dir_arg ]
         cygpath = utils.SafePopen( command , stdout = PIPE, stdin = PIPE )
         _cygpath_data[ direction ][ 'Process' ] = cygpath
 
-        cygpath.stdin.write( filename + "\n" )
-        result = cygpath.stdout.readline().rstrip()
+      cygpath.stdin.write( filename + "\n" )
+      result = cygpath.stdout.readline().rstrip()
 
-        _cygpath_data[ direction ][ 'Data' ][ filename ] = result
+      _cygpath_data[ direction ][ 'Data' ][ filename ] = result
 
-        return result
+      return result
