@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -24,16 +24,6 @@
 #include <boost/filesystem.hpp>
 
 namespace YouCompleteMe {
-
-std::vector< std::string > StringVector( const std::string &a,
-                                         const std::string &b = std::string(),
-                                         const std::string &c = std::string(),
-                                         const std::string &d = std::string(),
-                                         const std::string &e = std::string(),
-                                         const std::string &f = std::string(),
-                                         const std::string &g = std::string(),
-                                         const std::string &h = std::string(),
-                                         const std::string &i = std::string() );
 
 boost::filesystem::path PathToTestFile( const std::string &filepath );
 

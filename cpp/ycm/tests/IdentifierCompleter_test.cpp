@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -29,265 +29,233 @@ namespace YouCompleteMe {
 
 
 TEST( IdentifierCompleterTest, SortOnEmptyQuery ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foo",
-                   "bar" ) ).CandidatesForQuery( "" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foo",
+                 "bar" } ).CandidatesForQuery( "" ),
                ElementsAre( "bar",
                             "foo" ) );
 }
 
 TEST( IdentifierCompleterTest, IgnoreEmptyCandidate ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "" ) ).CandidatesForQuery( "" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "" } ).CandidatesForQuery( "" ),
                IsEmpty() );
 }
 
 TEST( IdentifierCompleterTest, NoDuplicatesReturned ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "foobar",
-                   "foobar" ) ).CandidatesForQuery( "foo" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "foobar",
+                 "foobar" } ).CandidatesForQuery( "foo" ),
                ElementsAre( "foobar" ) );
 }
 
 
 TEST( IdentifierCompleterTest, OneCandidate ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar" ) ).CandidatesForQuery( "fbr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar" } ).CandidatesForQuery( "fbr" ),
                ElementsAre( "foobar" ) );
 }
 
 TEST( IdentifierCompleterTest, ManyCandidateSimple ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "foobartest",
-                   "Foobartest" ) ).CandidatesForQuery( "fbr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "foobartest",
+                 "Foobartest" } ).CandidatesForQuery( "fbr" ),
                WhenSorted( ElementsAre( "Foobartest",
                                         "foobar",
                                         "foobartest" ) ) );
 }
 
 TEST( IdentifierCompleterTest, SmartCaseFiltering ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "fooBar",
-                   "fooBaR" ) ).CandidatesForQuery( "fBr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "fooBar",
+                 "fooBaR" } ).CandidatesForQuery( "fBr" ),
                ElementsAre( "fooBaR",
                             "fooBar" ) );
 }
 
 TEST( IdentifierCompleterTest, FirstCharSameAsQueryWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "afoobar" ) ).CandidatesForQuery( "fbr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "afoobar" } ).CandidatesForQuery( "fbr" ),
                ElementsAre( "foobar",
                             "afoobar" ) );
 }
 
 TEST( IdentifierCompleterTest, CompleteMatchForWordBoundaryCharsWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "FooBarQux",
-                   "FBaqux" ) ).CandidatesForQuery( "fbq" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "FooBarQux",
+                 "FBaqux" } ).CandidatesForQuery( "fbq" ),
                ElementsAre( "FooBarQux",
                             "FBaqux" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "CompleterTest",
-                   "CompleteMatchForWordBoundaryCharsWins" ) )
+  EXPECT_THAT( IdentifierCompleter( {
+                 "CompleterTest",
+                 "CompleteMatchForWordBoundaryCharsWins" } )
                .CandidatesForQuery( "ct" ),
                ElementsAre( "CompleterTest",
                             "CompleteMatchForWordBoundaryCharsWins" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "FooBar",
-                   "FooBarRux" ) ).CandidatesForQuery( "fbr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "FooBar",
+                 "FooBarRux" } ).CandidatesForQuery( "fbr" ),
                ElementsAre( "FooBarRux",
                             "FooBar" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foo-bar",
-                   "foo-bar-rux" ) ).CandidatesForQuery( "fbr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foo-bar",
+                 "foo-bar-rux" } ).CandidatesForQuery( "fbr" ),
                ElementsAre( "foo-bar-rux",
                             "foo-bar" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foo.bar",
-                   "foo.bar.rux" ) ).CandidatesForQuery( "fbr" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foo.bar",
+                 "foo.bar.rux" } ).CandidatesForQuery( "fbr" ),
                ElementsAre( "foo.bar.rux",
                             "foo.bar" ) );
 }
 
 TEST( IdentifierCompleterTest, RatioUtilizationTieBreak ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "aGaaFooBarQux",
-                   "aBaafbq" ) ).CandidatesForQuery( "fbq" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "aGaaFooBarQux",
+                 "aBaafbq" } ).CandidatesForQuery( "fbq" ),
                ElementsAre( "aGaaFooBarQux",
                             "aBaafbq" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "aFooBarQux",
-                   "afbq" ) ).CandidatesForQuery( "fbq" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "aFooBarQux",
+                 "afbq" } ).CandidatesForQuery( "fbq" ),
                ElementsAre( "aFooBarQux",
                             "afbq" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "acaaCaaFooGxx",
-                   "aCaafoog" ) ).CandidatesForQuery( "caafoo" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "acaaCaaFooGxx",
+                 "aCaafoog" } ).CandidatesForQuery( "caafoo" ),
                ElementsAre( "acaaCaaFooGxx",
                             "aCaafoog" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "FooBarQux",
-                   "FooBarQuxZaa" ) ).CandidatesForQuery( "fbq" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "FooBarQux",
+                 "FooBarQuxZaa" } ).CandidatesForQuery( "fbq" ),
                ElementsAre( "FooBarQux",
                             "FooBarQuxZaa" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "FooBar",
-                   "FooBarRux" ) ).CandidatesForQuery( "fba" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "FooBar",
+                 "FooBarRux" } ).CandidatesForQuery( "fba" ),
                ElementsAre( "FooBar",
                             "FooBarRux" ) );
 }
 
 TEST( IdentifierCompleterTest, QueryPrefixOfCandidateWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "fbaroo" ) ).CandidatesForQuery( "foo" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "fbaroo" } ).CandidatesForQuery( "foo" ),
                ElementsAre( "foobar",
                             "fbaroo" ) );
 }
 
 TEST( IdentifierCompleterTest, LowerMatchCharIndexSumWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "ratio_of_word_boundary_chars_in_query_",
-                   "first_char_same_in_query_and_text_" ) )
-               .CandidatesForQuery( "charinq" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "ratio_of_word_boundary_chars_in_query_",
+                 "first_char_same_in_query_and_text_"
+               } ).CandidatesForQuery( "charinq" ),
                ElementsAre( "first_char_same_in_query_and_text_",
                             "ratio_of_word_boundary_chars_in_query_" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "barfooq",
-                   "barquxfoo" ) ).CandidatesForQuery( "foo" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "barfooq",
+                 "barquxfoo" } ).CandidatesForQuery( "foo" ),
                ElementsAre( "barfooq",
                             "barquxfoo" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "xxxxxxabc",
-                   "xxabcxxxx" ) ).CandidatesForQuery( "abc" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "xxxxxxabc",
+                 "xxabcxxxx" } ).CandidatesForQuery( "abc" ),
                ElementsAre( "xxabcxxxx",
                             "xxxxxxabc" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "FooBarQux",
-                   "FaBarQux" ) ).CandidatesForQuery( "fbq" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "FooBarQux",
+                 "FaBarQux" } ).CandidatesForQuery( "fbq" ),
                ElementsAre( "FaBarQux",
                             "FooBarQux" ) );
 }
 
 TEST( IdentifierCompleterTest, ShorterCandidateWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "CompleterT",
-                   "CompleterTest" ) ).CandidatesForQuery( "co" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "CompleterT",
+                 "CompleterTest" } ).CandidatesForQuery( "co" ),
                ElementsAre( "CompleterT",
                             "CompleterTest" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "CompleterT",
-                   "CompleterTest" ) ).CandidatesForQuery( "plet" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "CompleterT",
+                 "CompleterTest" } ).CandidatesForQuery( "plet" ),
                ElementsAre( "CompleterT",
                             "CompleterTest" ) );
 }
 
 TEST( IdentifierCompleterTest, SameLowercaseCandidateWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "Foobar" ) ).CandidatesForQuery( "foo" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "Foobar" } ).CandidatesForQuery( "foo" ),
                ElementsAre( "foobar",
                             "Foobar" ) );
 
 }
 
 TEST( IdentifierCompleterTest, PreferLowercaseCandidate ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "chatContentExtension",
-                   "ChatContentExtension" ) ).CandidatesForQuery(
-                 "chatContent" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "chatContentExtension",
+                 "ChatContentExtension"
+               } ).CandidatesForQuery( "chatContent" ),
                ElementsAre( "chatContentExtension",
                             "ChatContentExtension" ) );
 
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "fooBar",
-                   "FooBar" ) ).CandidatesForQuery( "oba" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "fooBar",
+                 "FooBar" } ).CandidatesForQuery( "oba" ),
                ElementsAre( "fooBar",
                             "FooBar" ) );
 }
 
 TEST( IdentifierCompleterTest, ShorterAndLowercaseWins ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "STDIN_FILENO",
-                   "stdin" ) ).CandidatesForQuery( "std" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "STDIN_FILENO",
+                 "stdin" } ).CandidatesForQuery( "std" ),
                ElementsAre( "stdin",
                             "STDIN_FILENO" ) );
 }
 
 
 TEST( IdentifierCompleterTest, NonAlnumChars ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "font-family",
-                   "font-face" ) ).CandidatesForQuery( "fo" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "font-family",
+                 "font-face" } ).CandidatesForQuery( "fo" ),
                ElementsAre( "font-face",
                             "font-family" ) );
 }
 
 
 TEST( IdentifierCompleterTest, NonAlnumStartChar ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "-zoo-foo" ) ).CandidatesForQuery( "-z" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "-zoo-foo" } ).CandidatesForQuery( "-z" ),
                ElementsAre( "-zoo-foo" ) );
 }
 
 
 TEST( IdentifierCompleterTest, EmptyCandidatesForUnicode ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "uni¢𐍈d€" ) ).CandidatesForQuery( "¢" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "uni¢𐍈d€" } ).CandidatesForQuery( "¢" ),
                IsEmpty() );
 }
 
 
 TEST( IdentifierCompleterTest, EmptyCandidatesForNonPrintable ) {
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "\x01\x1f\x7f" ) ).CandidatesForQuery( "\x1f" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "\x01\x1f\x7f" } ).CandidatesForQuery( "\x1f" ),
                IsEmpty() );
 }
 
@@ -334,13 +302,11 @@ TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
 // Filetype checking
 TEST( IdentifierCompleterTest, ManyCandidateSimpleFileType ) {
   IdentifierCompleter completer;
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "foobartest",
-                   "Foobartest" ),
-                 std::string( "c" ),
-                 std::string( "foo" ) ).CandidatesForQueryAndType( "fbr", "c" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "foobartest",
+                 "Foobartest"
+               }, "c", "foo" ).CandidatesForQueryAndType( "fbr", "c" ),
                WhenSorted( ElementsAre( "Foobartest",
                                         "foobar",
                                         "foobartest" ) ) );
@@ -349,13 +315,11 @@ TEST( IdentifierCompleterTest, ManyCandidateSimpleFileType ) {
 
 TEST( IdentifierCompleterTest, ManyCandidateSimpleWrongFileType ) {
   IdentifierCompleter completer;
-  EXPECT_THAT( IdentifierCompleter(
-                 StringVector(
-                   "foobar",
-                   "foobartest",
-                   "Foobartest" ),
-                 std::string( "c" ),
-                 std::string( "foo" ) ).CandidatesForQueryAndType( "fbr", "cpp" ),
+  EXPECT_THAT( IdentifierCompleter( {
+                 "foobar",
+                 "foobartest",
+                 "Foobartest"
+               }, "c", "foo" ).CandidatesForQueryAndType( "fbr", "cpp" ),
                IsEmpty() );
 }
 
