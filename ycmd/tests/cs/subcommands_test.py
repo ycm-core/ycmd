@@ -639,3 +639,23 @@ def _Subcommands_StopServer_NoErrorIfNotStarted_test( app, use_roslyn ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   StopCompleterServer( app, 'cs', filepath )
   # Success = no raise
+
+
+@IsolatedYcmd
+def Subcommands_SetOmnisharpPath_ErrorIfPathDoesntExist_test( app ):
+  missing_exe = PathToTestFile( 'testy', 'IDontExist' )
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  setpath_data = BuildRequest( completer_target = 'filetype_default',
+                               command_arguments = [ 'SetOmnisharpPath',
+                                                     missing_exe ],
+                               filetype = 'cs',
+                               filepath = filepath )
+
+  try:
+    app.post_json( '/run_completer_command', setpath_data ).json
+    raise Exception( 'Expected "OmniSharp server binary not found"' )
+  except AppError as e:
+    if 'OmniSharp server binary not found' in str(e):
+      pass
+    else:
+      raise
