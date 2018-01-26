@@ -687,8 +687,8 @@ class CsharpSolutionCompleter( object ):
     target = urljoin( self._ServerLocation(), handler )
     self._logger.info( u'Sending request' )
     response = requests.post( target,
-                                   json = parameters,
-                                   timeout = timeout )
+                              json = parameters,
+                              timeout = timeout )
     self._logger.info( u'Received response request' )
     return response.json()
 
