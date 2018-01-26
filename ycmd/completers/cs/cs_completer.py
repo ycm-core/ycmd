@@ -490,14 +490,14 @@ class CsharpSolutionCompleter( object ):
     if phandle is not None:
       self._logger.info( 'Killing OmniSharp server' )
       for stream in [ phandle.stderr, phandle.stdout ]:
-        if stream is not None:
+        if stream is not None: # pragma: no cover
           stream.close()
       try:
         phandle.kill()
       except OSError as e:
         if e.errno == errno.ESRCH: # No such process
           pass
-        else:
+        else: # pragma: no cover
           raise
 
 
@@ -524,9 +524,9 @@ class CsharpSolutionCompleter( object ):
     """ Reloads the solutions in the OmniSharp server """
     self._logger.info( 'Reloading Solution in OmniSharp server' )
     try:
-        return self._GetResponse( '/reloadsolution' )
+      return self._GetResponse( '/reloadsolution' )
     except ValueError:
-        pass
+      return False
 
 
   def CompletionType( self, request_data ):
