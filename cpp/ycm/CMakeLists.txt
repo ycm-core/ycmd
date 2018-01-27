@@ -409,7 +409,7 @@ if( LIBCLANG_TARGET )
       COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
 
-    if( NOT APPLE )
+    if( NOT APPLE AND NOT WIN32 )
       # When loading our library, the dynamic linker may look for
       # libclang.so.x instead of libclang.so.x.y. Create the corresponding
       # symlink.
