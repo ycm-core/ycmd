@@ -38,7 +38,6 @@ from ycmd.tests import PathToTestFile
 DIR_OF_THIRD_PARTY = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', 'third_party' ) )
 THIRD_PARTY_FOLDERS = (
-  os.path.join( DIR_OF_THIRD_PARTY, 'argparse' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'bottle' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'godef' ),
@@ -98,12 +97,11 @@ def CompatibleWithCurrentCore_Missing_test():
 
 def CompatibleWithCurrentCore_Python2_test():
   import_exception_messages = [
-    # Raised on Linux and OS X with Python 3.3 and 3.4.
+    # Raised on Linux and OS X with Python 3.4.
     'dynamic module does not define init function (PyInit_ycm_core).',
     # Raised on Linux and OS X with Python 3.5.
     'dynamic module does not define module export function (PyInit_ycm_core).',
     # Raised on Windows.
-    'Module use of python26.dll conflicts with this version of Python.',
     'Module use of python27.dll conflicts with this version of Python.'
   ]
 

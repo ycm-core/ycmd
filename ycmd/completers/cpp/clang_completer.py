@@ -30,12 +30,7 @@ import os.path
 import re
 import textwrap
 import xml.etree.ElementTree
-# Python 2.6 raises a different exception when an error occurs while parsing XML
-# from a string (e.g. an empty string).
-try:
-  from xml.etree.ElementTree import ParseError as XmlParseError
-except ImportError:
-  from xml.parsers.expat import ExpatError as XmlParseError
+from xml.etree.ElementTree import ParseError as XmlParseError
 
 import ycm_core
 from ycmd import responses

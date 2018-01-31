@@ -252,8 +252,7 @@ endif()
 option( USE_PYTHON2 "If on, link to Python 2 instead of 3" ON )
 
 if ( USE_PYTHON2 )
-  set( Python_ADDITIONAL_VERSIONS 2.7 2.6 )
-  find_package( PythonLibs 2.6 REQUIRED )  # 2.6 is ONLY the mininum
+  find_package( PythonLibs 2.7 REQUIRED )
 
   if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
     message( FATAL_ERROR
@@ -262,8 +261,8 @@ if ( USE_PYTHON2 )
       "necessary python2 headers & libraries." )
   endif()
 else()
-  set( Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4 3.3 )
-  find_package( PythonLibs 3.3 REQUIRED )  # 3.3 is ONLY the mininum
+  set( Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4 )
+  find_package( PythonLibs 3.4 REQUIRED )  # 3.4 is ONLY the mininum
 endif()
 
 #############################################################################
