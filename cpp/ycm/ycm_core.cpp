@@ -95,6 +95,8 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( vector_indexing_suite< std::vector< std::string > >() );
 
 #ifdef USE_CLANG_COMPLETER
+  PythonException< ClangParseError >( "ClangParseError" );
+
   def( "ClangVersion", ClangVersion );
 
   // CAREFUL HERE! For filename and contents we are referring directly to

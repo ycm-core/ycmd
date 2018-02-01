@@ -149,11 +149,6 @@ YCM_EXPORT inline std::string SwapCase( const std::string &text ) {
 // an exception is thrown.
 std::string ReadUtf8File( const fs::path &filepath );
 
-// Writes the entire contents of the specified file. If the file does not exist,
-// an exception is thrown.
-YCM_EXPORT void WriteUtf8File( const fs::path &filepath,
-                                   const std::string &contents );
-
 template <class Container, class Key>
 typename Container::mapped_type &
 GetValueElseInsert( Container &container,

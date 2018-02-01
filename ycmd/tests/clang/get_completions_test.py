@@ -26,6 +26,7 @@ from builtins import *  # noqa
 
 import json
 import requests
+import ycm_core
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entry, has_entries,
@@ -69,7 +70,9 @@ def RunTest( app, test ):
     'filepath': PathToTestFile( *extra_conf ) } )
 
 
-  contents = ReadFile( test[ 'request' ][ 'filepath' ] )
+  request = test[ 'request' ]
+  contents = ( request[ 'contents' ] if 'contents' in request else
+               ReadFile( request[ 'filepath' ] ) )
 
   def CombineRequest( request, data ):
     kw = request
@@ -81,7 +84,7 @@ def RunTest( app, test ):
   # throws an exception and the easiest way to do that is to throw from
   # within the FlagsForFile function.
   app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
+                 CombineRequest( request, {
                    'event_name': 'FileReadyToParse',
                    'contents': contents,
                  } ),
@@ -90,7 +93,7 @@ def RunTest( app, test ):
   # We also ignore errors here, but then we check the response code ourself.
   # This is to allow testing of requests returning errors.
   response = app.post_json( '/completions',
-                            CombineRequest( test[ 'request' ], {
+                            CombineRequest( request, {
                               'contents': contents
                             } ),
                             expect_errors = True )
@@ -960,5 +963,26 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
         'completions': empty(),
         'errors': empty(),
       } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_TranslateClangExceptionToPython_test( app ):
+  RunTest( app, {
+    'description': 'The ClangParseError C++ exception is properly translated '
+                   'to a Python exception',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype'  : 'cpp',
+      # libclang fails to parse a file that doesn't exist.
+      'filepath'  : PathToTestFile( 'non_existing_file' ),
+      'contents'  : '',
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( ycm_core.ClangParseError,
+                            "Failed to parse the translation unit." )
     },
   } )
