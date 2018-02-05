@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 # encoding: utf-8
 #
 # This file is part of ycmd.
@@ -191,12 +191,12 @@ DIAG_MATCHERS_PER_FILE = {
 }
 
 
-def _WaitForDiagnoticsForFile( app,
-                               filepath,
-                               contents,
-                               diags_filepath,
-                               diags_are_ready = lambda d: True,
-                               **kwargs ):
+def _WaitForDiagnosticsForFile( app,
+                                filepath,
+                                contents,
+                                diags_filepath,
+                                diags_are_ready = lambda d: True,
+                                **kwargs ):
   diags = None
   try:
     for message in PollForMessages( app,
@@ -222,7 +222,7 @@ def _WaitForDiagnoticsForFile( app,
   return diags
 
 
-def _WaitForDiagnoticsToBeReaady( app, filepath, contents, **kwargs ):
+def _WaitForDiagnosticsToBeReady( app, filepath, contents, **kwargs ):
   results = None
   for tries in range( 0, 60 ):
     event_data = BuildRequest( event_name = 'FileReadyToParse',
@@ -247,7 +247,7 @@ def FileReadyToParse_Diagnostics_Simple_test( app ):
   contents = ReadFile( filepath )
 
   # It can take a while for the diagnostics to be ready
-  results = _WaitForDiagnoticsToBeReaady( app, filepath, contents )
+  results = _WaitForDiagnosticsToBeReady( app, filepath, contents )
   print( 'completer response: {0}'.format( pformat( results ) ) )
 
   assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
@@ -361,7 +361,7 @@ def FileReadyToParse_Diagnostics_InvalidURI_test( app, uri_to_filepath, *args ):
   contents = ReadFile( filepath )
 
   # It can take a while for the diagnostics to be ready
-  results = _WaitForDiagnoticsToBeReaady( app, filepath, contents )
+  results = _WaitForDiagnosticsToBeReady( app, filepath, contents )
   print( 'Completer response: {0}'.format( json.dumps( results, indent=2 ) ) )
 
   uri_to_filepath.assert_called()
@@ -502,17 +502,17 @@ def FileReadyToParse_ChangeFileContentsFileData_test( app ):
   StartJavaCompleterServerInDirectory( app, ProjectPath() )
 
   # It can take a while for the diagnostics to be ready
-  results = _WaitForDiagnoticsToBeReaady( app,
+  results = _WaitForDiagnosticsToBeReady( app,
                                           filepath,
                                           contents )
   assert results
 
   # Check that we have diagnostics for the saved file
-  diags = _WaitForDiagnoticsForFile( app,
-                                     filepath,
-                                     contents,
-                                     unsaved_buffer_path,
-                                     lambda d: d )
+  diags = _WaitForDiagnosticsForFile( app,
+                                      filepath,
+                                      contents,
+                                      unsaved_buffer_path,
+                                      lambda d: d )
   assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
 
   # Now update the unsaved file with new contents
@@ -524,11 +524,11 @@ def FileReadyToParse_ChangeFileContentsFileData_test( app ):
   app.post_json( '/event_notification', event_data )
 
   # Check that we have no diagnostics for the dirty file
-  diags = _WaitForDiagnoticsForFile( app,
-                                     filepath,
-                                     contents,
-                                     unsaved_buffer_path,
-                                     lambda d: not d )
+  diags = _WaitForDiagnosticsForFile( app,
+                                      filepath,
+                                      contents,
+                                      unsaved_buffer_path,
+                                      lambda d: not d )
   assert_that( diags, empty() )
 
   # Now send the request again, but don't include the unsaved file. It should be
@@ -540,11 +540,11 @@ def FileReadyToParse_ChangeFileContentsFileData_test( app ):
   app.post_json( '/event_notification', event_data )
 
   # Check that we now have diagnostics for the previously-dirty file
-  diags = _WaitForDiagnoticsForFile( app,
-                                     filepath,
-                                     contents,
-                                     unsaved_buffer_path,
-                                     lambda d: d )
+  diags = _WaitForDiagnosticsForFile( app,
+                                      filepath,
+                                      contents,
+                                      unsaved_buffer_path,
+                                      lambda d: d )
 
   assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
 
