@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 # encoding: utf-8
 #
 # This file is part of ycmd.
@@ -581,7 +581,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries ( {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
               ChunkMatcher( 'renamed_l',
@@ -632,7 +632,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries ( {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
@@ -701,7 +701,7 @@ def Subcommands_RefactorRename_Unicode_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries ( {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
@@ -749,7 +749,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
   # Note: The code actions for creating variables are really not very useful.
   # The import is, however, and the FixIt almost exactly matches the one
   # supplied when completing 'CUTHBERT' and auto-inserting.
-  fixits_for_line = has_entries ( {
+  fixits_for_line = has_entries( {
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Import 'Wibble' (com.test.wobble)",
@@ -846,7 +846,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
   # In Java case this might not be the right thing. It's a code assist, not a
   # FixIt really. Perhaps we should change the client to always ask for
   # confirmation?
-  fixits = has_entries ( {
+  fixits = has_entries( {
     'fixits': contains(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
@@ -875,7 +875,7 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
                              'test',
                              'TestFactory.java' )
 
-  fixits = has_entries ( {
+  fixits = has_entries( {
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove 'testString', keep assignments with side effects",
@@ -910,7 +910,7 @@ def Subcommands_FixIt_MultipleDiags_test():
                              'test',
                              'TestFactory.java' )
 
-  fixits = has_entries ( {
+  fixits = has_entries( {
     'fixits': contains(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
@@ -986,7 +986,7 @@ def Subcommands_FixIt_Unicode_test():
                              'youcompleteme',
                              'Test.java' )
 
-  fixits = has_entries ( {
+  fixits = has_entries( {
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove argument to match 'doUnicødeTes()'",
@@ -1030,7 +1030,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
                              'test',
                              'TestFactory.java' )
 
-  fixits = has_entries ( {
+  fixits = has_entries( {
     'fixits': contains(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
@@ -1130,7 +1130,7 @@ def Subcommands_GoTo_test():
     { 'request': { 'line': 26, 'col': 22, 'filepath': filepath },
       'response': { 'line_num': 26, 'column_num': 22, 'filepath': filepath },
       'description': 'GoTo works for jumping to the same position' },
-    # # Static method
+    # Static method
     { 'request': { 'line': 37, 'col': 11, 'filepath': filepath },
       'response': { 'line_num': 13, 'column_num': 21, 'filepath': filepath },
       'description': 'GoTo works for static method' },
@@ -1143,7 +1143,7 @@ def Subcommands_GoTo_test():
       'response': { 'line_num': 21, 'column_num': 32, 'filepath': filepath },
       'description': 'GoTo works for argument variable' },
     # Class
-    { 'request': { 'line': 27, 'col': 30, 'filepath': filepath },
+    { 'request': { 'line': 27, 'col': 10, 'filepath': filepath },
       'response': { 'line_num': 6, 'column_num': 7, 'filepath': filepath },
       'description': 'GoTo works for jumping to class declaration' },
     # Unicode
@@ -1161,7 +1161,7 @@ def Subcommands_GoTo_test():
               test[ 'request' ][ 'line' ],
               test[ 'request' ][ 'col' ],
               command,
-              test[ 'response' ] )
+              has_entries( test[ 'response' ] ) )
 
 
 @SharedYcmd
