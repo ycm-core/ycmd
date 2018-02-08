@@ -26,7 +26,9 @@ import os
 import json
 import hashlib
 
-from ycmd.utils import ( pathname2url,
+from ycmd.utils import ( ByteOffsetToCodepointOffset,
+                         pathname2url,
+                         SplitLines,
                          ToBytes,
                          ToUnicode,
                          url2pathname,
@@ -293,7 +295,9 @@ def Rename( request_id, request_data, new_name ):
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
     'newName': new_name,
-    'position': Position( request_data ),
+    'position': Position( request_data[ 'line_num' ],
+                          request_data[ 'line_value' ],
+                          request_data[ 'column_codepoint' ] )
   } )
 
 
@@ -302,7 +306,9 @@ def BuildTextDocumentPositionParams( request_data ):
     'textDocument': {
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
-    'position': Position( request_data ),
+    'position': Position( request_data[ 'line_num' ],
+                          request_data[ 'line_value' ],
+                          request_data[ 'column_codepoint' ] )
   }
 
 
@@ -312,11 +318,67 @@ def References( request_id, request_data ):
   return BuildRequest( request_id, 'textDocument/references', request )
 
 
-def Position( request_data ):
-  # The API requires 0-based Unicode offsets.
+def Position( line_num, line_value, column_codepoint ):
+  # The API requires 0-based line number and 0-based UTF-16 offset.
   return {
-    'line': request_data[ 'line_num' ] - 1,
-    'character': request_data[ 'column_codepoint' ] - 1,
+    'line': line_num - 1,
+    'character': CodepointsToUTF16CodeUnits( line_value, column_codepoint ) - 1
+  }
+
+
+def Formatting( request_id, request_data ):
+  return BuildRequest( request_id, 'textDocument/formatting', {
+    'textDocument': {
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
+    },
+    'options': FormattingOptions( request_data )
+  } )
+
+
+def RangeFormatting( request_id, request_data ):
+  return BuildRequest( request_id, 'textDocument/rangeFormatting', {
+    'textDocument': {
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
+    },
+    'range': Range( request_data ),
+    'options': FormattingOptions( request_data )
+  } )
+
+
+def FormattingOptions( request_data ):
+  options = request_data[ 'options' ]
+  return {
+    'tabSize': options[ 'tab_size' ],
+    'insertSpaces': options[ 'insert_spaces' ]
+  }
+
+
+def Range( request_data ):
+  filepath = request_data[ 'filepath' ]
+  lines = SplitLines( request_data[ 'file_data' ][ filepath ][ 'contents' ] )
+
+  start = request_data[ 'range' ][ 'start' ]
+  start_line_num = start[ 'line_num' ]
+  start_line_value = lines[ start_line_num - 1 ]
+  start_codepoint = ByteOffsetToCodepointOffset( start_line_value,
+                                                 start[ 'column_num' ] )
+
+  end = request_data[ 'range' ][ 'end' ]
+  end_line_num = end[ 'line_num' ]
+  end_line_value = lines[ end_line_num - 1 ]
+  end_codepoint = ByteOffsetToCodepointOffset( end_line_value,
+                                               end[ 'column_num' ] )
+
+  # LSP requires to use the start of the next line as the end position for a
+  # range that ends with a newline.
+  if end_codepoint >= len( end_line_value ):
+    end_line_num += 1
+    end_line_value = ''
+    end_codepoint = 1
+
+  return {
+    'start': Position( start_line_num, start_line_value, start_codepoint ),
+    'end': Position( end_line_num, end_line_value, end_codepoint )
   }
 
 
@@ -348,8 +410,9 @@ def Parse( data ):
 
 
 def CodepointsToUTF16CodeUnits( line_value, codepoint_offset ):
-  """Return the 1-based UTF16 code unit offset equivalent to the 1-based unicode
-  icodepoint offset |codepoint_offset| in the the Unicode string |line_value|"""
+  """Return the 1-based UTF-16 code unit offset equivalent to the 1-based
+  unicode codepoint offset |codepoint_offset| in the Unicode string
+  |line_value|"""
   # Language server protocol requires offsets to be in utf16 code _units_.
   # Each code unit is 2 bytes.
   # So we re-encode the line as utf-16 and divide the length in bytes by 2.
@@ -367,8 +430,8 @@ def CodepointsToUTF16CodeUnits( line_value, codepoint_offset ):
 
 def UTF16CodeUnitsToCodepoints( line_value, code_unit_offset ):
   """Return the 1-based codepoint offset into the unicode string |line_value|
-  equivalent to the 1-based UTF16 code unit offset |code_unit_offset| into a
-  utf16 encoded version of |line_value|"""
+  equivalent to the 1-based UTF-16 code unit offset |code_unit_offset| into a
+  UTF-16 encoded version of |line_value|"""
   # As above, LSP returns offsets in utf16 code units. So we convert the line to
   # UTF16, snip everything up to the code_unit_offset * 2 bytes (each code unit
   # is 2 bytes), then re-encode as unicode and return the length (in

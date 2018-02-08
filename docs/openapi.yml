@@ -104,7 +104,7 @@ info:
     YCM README.md for the list of filetypes recognized by ycmd for semantic
     completion.
 
-  version: 0.1.0
+  version: 0.2.0
 
 externalDocs:
   description: ycmd GitHub page
@@ -742,6 +742,7 @@ paths:
               - filepath
               - file_data
               - command_arguments
+              - options
             properties:
               line_num:
                 $ref: "#/definitions/LineNumber"
@@ -763,16 +764,39 @@ paths:
                   `GoTo`).
                 items:
                   type: string
+              range:
+                description: |-
+                  The range to which the command is applied (only used by the
+                  *Format* command).
+                $ref: "#/definitions/Range"
+              options:
+                type: object
+                description: |-
+                  A set of editor-related options for the current buffer (only
+                  used by the *Format* command).
+                required:
+                  - tab_size
+                  - insert_spaces
+                properties:
+                  tab_size:
+                    description: The size of a tabulation in spaces.
+                    type: integer
+                  insert_spaces:
+                    description: Use spaces to represent tabulations.
+                    type: boolean
             example:
-                line_num: 10
-                column_num: 20
-                filepath: "/home/test/dev/test.js"
-                file_data:
-                  "/home/test/dev/test.js":
-                    filetypes: [ 'javascript' ]
-                    contents: "<file contents>"
-                completer_target: "filetype_default"
-                command_arguments: [ 'RefactorRename', 'Testing' ]
+              line_num: 10
+              column_num: 20
+              filepath: "/home/test/dev/test.js"
+              file_data:
+                "/home/test/dev/test.js":
+                  filetypes: [ 'javascript' ]
+                  contents: "<file contents>"
+              completer_target: "filetype_default"
+              command_arguments: [ 'RefactorRename', 'Testing' ]
+              options:
+                tab_size: 4
+                insert_spaces: true
       responses:
         200:
           description: |-
