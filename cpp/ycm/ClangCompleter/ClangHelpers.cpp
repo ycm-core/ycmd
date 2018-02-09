@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2013-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -17,14 +17,13 @@
 
 #include "ClangHelpers.h"
 #include "ClangUtils.h"
-#include "Utils.h"
-#include "UnsavedFile.h"
 #include "Location.h"
 #include "Range.h"
 #include "PythonSupport.h"
+#include "UnsavedFile.h"
+#include "Utils.h"
 
 #include <unordered_map>
-#include <iostream>
 #include <utility>
 
 using std::unordered_map;

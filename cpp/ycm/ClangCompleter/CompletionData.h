@@ -87,14 +87,6 @@ struct CompletionData {
     return doc_string_;
   }
 
-  bool operator== ( const CompletionData &other ) const {
-    return kind_ == other.kind_ &&
-           return_type_ == other.return_type_ &&
-           original_string_ == other.original_string_ &&
-           everything_except_return_type_ == other.everything_except_return_type_;
-    // detailed_info_ doesn't matter
-  }
-
   std::string detailed_info_;
 
   std::string return_type_;

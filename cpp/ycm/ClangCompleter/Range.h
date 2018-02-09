@@ -33,12 +33,6 @@ struct Range {
 
   Range( const CXSourceRange &range );
 
-  bool operator== ( const Range &other ) const {
-    return
-      start_ == other.start_ &&
-      end_ == other.end_;
-  }
-
   Location start_;
   Location end_;
 };

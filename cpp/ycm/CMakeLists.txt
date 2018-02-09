@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012  Google Inc.
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of YouCompleteMe.
 #
@@ -194,19 +194,13 @@ endif()
 
 if ( USE_SYSTEM_BOOST )
   set( Boost_COMPONENTS filesystem regex system )
-  # Gentoo allows a very convenient system-wide python version switching
-  # that handles symlinks of everything needed, including Boost.Python.
-  # Thus, on Gentoo, we want to always link against boost_python.
-  if( USE_PYTHON2 OR DISTRIBUTION STREQUAL "Gentoo" )
-    list( APPEND Boost_COMPONENTS python )
-  else()
-    list( APPEND Boost_COMPONENTS python3 )
-  endif()
   find_package( Boost REQUIRED COMPONENTS ${Boost_COMPONENTS} )
 else()
   set( Boost_INCLUDE_DIR ${BoostParts_SOURCE_DIR} )
   set( Boost_LIBRARIES BoostParts )
 endif()
+
+set( PYBIND11_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pybind11" )
 
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
@@ -243,6 +237,7 @@ endif()
 include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIR}
+  ${PYBIND11_INCLUDES_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
   )

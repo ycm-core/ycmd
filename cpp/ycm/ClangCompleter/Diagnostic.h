@@ -42,10 +42,6 @@ struct FixItChunk {
   /// The range within the file to replace with replacement_text.
   Range range;
 
-  bool operator == ( const FixItChunk &other ) const {
-    return replacement_text == other.replacement_text &&
-           range == other.range;
-  }
 };
 
 /// Collection of FixItChunks which, when applied together, fix a particular
@@ -61,20 +57,9 @@ struct FixIt {
   /// multiple diagnostics offering different fixit options. The text is
   /// displayed to the user, allowing them choose which diagnostic to apply.
   std::string text;
-
-  bool operator==( const FixIt &other ) const {
-    return chunks == other.chunks &&
-           location == other.location;
-  }
 };
 
 struct Diagnostic {
-  bool operator== ( const Diagnostic &other ) const {
-    return
-      location_ == other.location_ &&
-      kind_ == other.kind_ &&
-      text_ == other.text_;
-  }
 
   Location location_;
 

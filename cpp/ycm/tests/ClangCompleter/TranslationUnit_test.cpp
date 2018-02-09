@@ -191,11 +191,9 @@ TEST_F( TranslationUnitTest, InvalidTranslationUnit ) {
 
   EXPECT_TRUE( unit.IsCurrentlyUpdating() );
 
-  EXPECT_EQ( std::vector< CompletionData >(),
-             unit.CandidatesForLocation( "",
-                                         1,
-                                         1,
-                                         std::vector< UnsavedFile >() ) );
+  std::vector< CompletionData > completion_data_vector =
+      unit.CandidatesForLocation( "", 1, 1, std::vector< UnsavedFile >() );
+  EXPECT_TRUE( completion_data_vector.empty() );
 
   EXPECT_EQ( Location(),
              unit.GetDeclarationLocation( "",

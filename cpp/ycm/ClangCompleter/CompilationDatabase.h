@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -18,18 +18,11 @@
 #ifndef COMPILATIONDATABASE_H_ZT7MQXPG
 #define COMPILATIONDATABASE_H_ZT7MQXPG
 
-/*
- * iostream is included because there's a bug with python
- * earlier than 2.7.12 and 3.5.3 on OSX and FreeBSD.
- * When either no one else is using earlier versions of python
- * or ycmd drops support for those, this include statement can be removed.
- */
-#include <iostream>
-#include <vector>
-#include <string>
-#include <mutex>
-#include <boost/python.hpp>
 #include <clang-c/CXCompilationDatabase.h>
+#include <mutex>
+#include <pybind11/pybind11.h>
+#include <string>
+#include <vector>
 
 namespace YouCompleteMe {
 
@@ -43,7 +36,7 @@ struct CompilationInfoForFile {
 class CompilationDatabase {
 public:
   // |path_to_directory| should be a string-like object.
-  CompilationDatabase( const boost::python::object &path_to_directory );
+  CompilationDatabase( pybind11::object path_to_directory );
   CompilationDatabase( const CompilationDatabase& ) = delete;
   CompilationDatabase& operator=( const CompilationDatabase& ) = delete;
   ~CompilationDatabase();
@@ -58,7 +51,7 @@ public:
   // serialized since Clang internals are not thread-safe.
   // |path_to_file| should be a string-like object.
   CompilationInfoForFile GetCompilationInfoForFile(
-    const boost::python::object &path_to_file );
+    pybind11::object path_to_file );
 
   std::string GetDatabaseDirectory() {
     return path_to_directory_;

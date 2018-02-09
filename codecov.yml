@@ -22,6 +22,7 @@ coverage:
   - .*/tests/.*
   - .*/benchmarks/.*
   - .*/BoostParts/.*
+  - .*/pybind11/.*
 
 comment:
   layout: "header, diff, changes, uncovered"

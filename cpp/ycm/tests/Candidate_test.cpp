@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include "Candidate.h"
 #include "Result.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using ::testing::Not;
 

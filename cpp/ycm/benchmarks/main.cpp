@@ -1,4 +1,4 @@
-// Copyright (C) 2017 ycmd contributors
+// Copyright (C) 2017-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -15,17 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "benchmark/benchmark_api.h"
-// iostream is included because of a bug with Python earlier than 2.7.12
-// and 3.5.3 on OSX and FreeBSD.
-#include <iostream>
-#include <boost/python.hpp>
-
+#include <benchmark/benchmark_api.h>
+#include <pybind11/embed.h>
 
 int main( int argc, char** argv ) {
-  Py_Initialize();
-  // Necessary because of usage of the ReleaseGil class.
-  PyEval_InitThreads();
+  pybind11::scoped_interpreter guard{};
 
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
