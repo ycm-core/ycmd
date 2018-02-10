@@ -76,7 +76,7 @@ class CsharpCompleter( Completer ):
     self._max_diagnostics_to_display = user_options[
       'max_diagnostics_to_display' ]
     self._solution_state_lock = threading.Lock()
-    self._omnisharp_path = PATH_TO_LEGACY_OMNISHARP_BINARY
+    self._omnisharp_path = PATH_TO_ROSLYN_OMNISHARP_BINARY
 
     if not os.path.isfile( self._omnisharp_path ):
       raise RuntimeError(
@@ -490,14 +490,14 @@ class CsharpSolutionCompleter( object ):
     if phandle is not None:
       self._logger.info( 'Killing OmniSharp server' )
       for stream in [ phandle.stderr, phandle.stdout ]:
-        if stream is not None: # pragma: no cover
+        if stream is not None:
           stream.close()
       try:
         phandle.kill()
       except OSError as e:
         if e.errno == errno.ESRCH: # No such process
           pass
-        else: # pragma: no cover
+        else:
           raise
 
 
