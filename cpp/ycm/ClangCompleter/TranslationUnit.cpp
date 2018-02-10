@@ -415,7 +415,7 @@ void TranslationUnit::UpdateLatestDiagnostics() {
                         clang_disposeDiagnostic ),
         clang_translation_unit_ );
 
-    if ( diagnostic.kind_ != INFORMATION ) {
+    if ( diagnostic.kind_ != DiagnosticKind::INFORMATION ) {
       latest_diagnostics_.push_back( diagnostic );
     }
   }

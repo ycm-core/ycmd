@@ -26,7 +26,7 @@
 
 namespace YouCompleteMe {
 
-enum DiagnosticKind {
+enum class DiagnosticKind {
   INFORMATION = 0,
   ERROR,
   WARNING

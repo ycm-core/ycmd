@@ -27,27 +27,27 @@ namespace {
 CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
   switch ( kind ) {
     case CXCursor_StructDecl:
-      return STRUCT;
+      return CompletionKind::STRUCT;
 
     case CXCursor_ClassDecl:
     case CXCursor_ClassTemplate:
     case CXCursor_ObjCInterfaceDecl:
     case CXCursor_ObjCImplementationDecl:
-      return CLASS;
+      return CompletionKind::CLASS;
 
     case CXCursor_EnumDecl:
-      return ENUM;
+      return CompletionKind::ENUM;
 
     case CXCursor_UnexposedDecl:
     case CXCursor_UnionDecl:
     case CXCursor_TypedefDecl:
-      return TYPE;
+      return CompletionKind::TYPE;
 
     case CXCursor_FieldDecl:
     case CXCursor_ObjCIvarDecl:
     case CXCursor_ObjCPropertyDecl:
     case CXCursor_EnumConstantDecl:
-      return MEMBER;
+      return CompletionKind::MEMBER;
 
     case CXCursor_FunctionDecl:
     case CXCursor_CXXMethod:
@@ -57,23 +57,23 @@ CompletionKind CursorKindToCompletionKind( CXCursorKind kind ) {
     case CXCursor_Destructor:
     case CXCursor_ObjCClassMethodDecl:
     case CXCursor_ObjCInstanceMethodDecl:
-      return FUNCTION;
+      return CompletionKind::FUNCTION;
 
     case CXCursor_VarDecl:
-      return VARIABLE;
+      return CompletionKind::VARIABLE;
 
     case CXCursor_MacroDefinition:
-      return MACRO;
+      return CompletionKind::MACRO;
 
     case CXCursor_ParmDecl:
-      return PARAMETER;
+      return CompletionKind::PARAMETER;
 
     case CXCursor_Namespace:
     case CXCursor_NamespaceAlias:
-      return NAMESPACE;
+      return CompletionKind::NAMESPACE;
 
     default:
-      return UNKNOWN;
+      return CompletionKind::UNKNOWN;
   }
 }
 
