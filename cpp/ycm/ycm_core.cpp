@@ -134,18 +134,17 @@ BOOST_PYTHON_MODULE(ycm_core)
           &ClangCompleter::GetDocsForLocationInFile );
 
   enum_< CompletionKind >( "CompletionKind" )
-    .value( "STRUCT", STRUCT )
-    .value( "CLASS", CLASS )
-    .value( "ENUM", ENUM )
-    .value( "TYPE", TYPE )
-    .value( "MEMBER", MEMBER )
-    .value( "FUNCTION", FUNCTION )
-    .value( "VARIABLE", VARIABLE )
-    .value( "MACRO", MACRO )
-    .value( "PARAMETER", PARAMETER )
-    .value( "NAMESPACE", NAMESPACE )
-    .value( "UNKNOWN", UNKNOWN )
-    .export_values();
+    .value( "STRUCT", CompletionKind::STRUCT )
+    .value( "CLASS", CompletionKind::CLASS )
+    .value( "ENUM", CompletionKind::ENUM )
+    .value( "TYPE", CompletionKind::TYPE )
+    .value( "MEMBER", CompletionKind::MEMBER )
+    .value( "FUNCTION", CompletionKind::FUNCTION )
+    .value( "VARIABLE", CompletionKind::VARIABLE )
+    .value( "MACRO", CompletionKind::MACRO )
+    .value( "PARAMETER", CompletionKind::PARAMETER )
+    .value( "NAMESPACE", CompletionKind::NAMESPACE )
+    .value( "UNKNOWN", CompletionKind::UNKNOWN );
 
   class_< CompletionData >( "CompletionData" )
     .def( "TextToInsertInBuffer", &CompletionData::TextToInsertInBuffer )
@@ -189,10 +188,9 @@ BOOST_PYTHON_MODULE(ycm_core)
     .def( vector_indexing_suite< std::vector< FixIt > >() );
 
   enum_< DiagnosticKind >( "DiagnosticKind" )
-    .value( "ERROR", ERROR )
-    .value( "WARNING", WARNING )
-    .value( "INFORMATION", INFORMATION )
-    .export_values();
+    .value( "ERROR", DiagnosticKind::ERROR )
+    .value( "WARNING", DiagnosticKind::WARNING )
+    .value( "INFORMATION", DiagnosticKind::INFORMATION );
 
   class_< Diagnostic >( "Diagnostic" )
     .def_readonly( "ranges_", &Diagnostic::ranges_ )

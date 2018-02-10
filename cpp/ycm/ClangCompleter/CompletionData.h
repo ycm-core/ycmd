@@ -23,7 +23,7 @@
 
 namespace YouCompleteMe {
 
-enum CompletionKind {
+enum class CompletionKind {
   STRUCT = 0,
   CLASS,
   ENUM,

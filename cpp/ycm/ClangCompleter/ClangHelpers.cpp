@@ -36,15 +36,15 @@ DiagnosticKind DiagnosticSeverityToType( CXDiagnosticSeverity severity ) {
   switch ( severity ) {
     case CXDiagnostic_Ignored:
     case CXDiagnostic_Note:
-      return INFORMATION;
+      return DiagnosticKind::INFORMATION;
 
     case CXDiagnostic_Warning:
-      return WARNING;
+      return DiagnosticKind::WARNING;
 
     case CXDiagnostic_Error:
     case CXDiagnostic_Fatal:
     default:
-      return ERROR;
+      return DiagnosticKind::ERROR;
   }
 }
 
@@ -265,7 +265,7 @@ Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
 
   // If this is an "ignored" diagnostic, there's no point in continuing since we
   // won't display those to the user
-  if ( diagnostic.kind_ == INFORMATION ) {
+  if ( diagnostic.kind_ == DiagnosticKind::INFORMATION ) {
     return diagnostic;
   }
 
