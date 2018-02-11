@@ -1403,6 +1403,36 @@ class LanguageServerCompleter( Completer ):
       [ WorkspaceEditToFixIt( request_data, response[ 'result' ] ) ] )
 
 
+  def Format( self, request_data ):
+    """Issues the formatting or rangeFormatting request (depending on the
+    presence of a range) and returns the result as a FixIt response."""
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    self._UpdateServerWithFileContents( request_data )
+
+    request_id = self.GetConnection().NextRequestId()
+    if 'range' in request_data:
+      message = lsp.RangeFormatting( request_id, request_data )
+    else:
+      message = lsp.Formatting( request_id, request_data )
+
+    response = self.GetConnection().GetResponse( request_id,
+                                                 message,
+                                                 REQUEST_TIMEOUT_COMMAND )
+    chunks = [ responses.FixItChunk( text_edit[ 'newText' ],
+                                     _BuildRange( request_data,
+                                                  request_data[ 'filepath' ],
+                                                  text_edit[ 'range' ] ) )
+               for text_edit in response[ 'result' ] or [] ]
+
+    return responses.BuildFixItResponse( [ responses.FixIt(
+      responses.Location( request_data[ 'line_num' ],
+                          request_data[ 'column_num' ],
+                          request_data[ 'filepath' ] ),
+      chunks ) ] )
+
+
 def _CompletionItemToCompletionData( insertion_text, item, fixits ):
   return responses.BuildCompletionData(
     insertion_text,

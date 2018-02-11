@@ -59,6 +59,7 @@ def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'java' )
 
   eq_( sorted( [ 'FixIt',
+                 'Format',
                  'GoToDeclaration',
                  'GoToDefinition',
                  'GoTo',
@@ -105,6 +106,7 @@ def Subcommands_ServerNotReady_test():
   yield Test, 'GetType', []
   yield Test, 'GetDoc', []
   yield Test, 'FixIt', []
+  yield Test, 'Format', []
   yield Test, 'RefactorRename', [ 'test' ]
 
 
@@ -1080,6 +1082,302 @@ def Subcommands_FixIt_InvalidURI_test( app ):
 
 
 @SharedYcmd
+def Subcommands_Format_WholeFile_Spaces_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+  RunTest( app, {
+    'description': 'Formatting is applied on the whole file '
+                   'with tabs composed of 4 spaces by default',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath,  3, 20 ),
+                          LocationMatcher( filepath,  4,  3 ) ),
+            ChunkMatcher( '\n\n    ',
+                          LocationMatcher( filepath,  4, 22 ),
+                          LocationMatcher( filepath,  6,  3 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath,  6, 34 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath,  7, 35 ),
+                          LocationMatcher( filepath,  8,  5 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath,  8, 25 ),
+                          LocationMatcher( filepath,  8, 26 ) ),
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath,  8, 27 ),
+                          LocationMatcher( filepath,  9,  3 ) ),
+            ChunkMatcher( '\n\n    ',
+                          LocationMatcher( filepath,  9,  4 ),
+                          LocationMatcher( filepath, 11,  3 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 11, 29 ),
+                          LocationMatcher( filepath, 12,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 12, 26 ),
+                          LocationMatcher( filepath, 13,  5 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath, 13, 24 ),
+                          LocationMatcher( filepath, 13, 25 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath, 13, 29 ),
+                          LocationMatcher( filepath, 13, 30 ) ),
+            ChunkMatcher( '\n\n        ',
+                          LocationMatcher( filepath, 13, 32 ),
+                          LocationMatcher( filepath, 15,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 15, 58 ),
+                          LocationMatcher( filepath, 16,  5 ) ),
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath, 16, 42 ),
+                          LocationMatcher( filepath, 17,  3 ) ),
+            ChunkMatcher( '\n\n    ',
+                          LocationMatcher( filepath, 17,  4 ),
+                          LocationMatcher( filepath, 20,  3 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 20, 28 ),
+                          LocationMatcher( filepath, 21,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 21, 28 ),
+                          LocationMatcher( filepath, 22,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 22, 30 ),
+                          LocationMatcher( filepath, 23,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 23, 23 ),
+                          LocationMatcher( filepath, 24,  5 ) ),
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath, 24, 27 ),
+                          LocationMatcher( filepath, 25,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_Format_WholeFile_Tabs_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+  RunTest( app, {
+    'description': 'Formatting is applied on the whole file '
+                   'with tabs composed of 2 spaces',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': False
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '\n\t',
+                          LocationMatcher( filepath,  3, 20 ),
+                          LocationMatcher( filepath,  4,  3 ) ),
+            ChunkMatcher( '\n\n\t',
+                          LocationMatcher( filepath,  4, 22 ),
+                          LocationMatcher( filepath,  6,  3 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath,  6, 34 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath,  7, 35 ),
+                          LocationMatcher( filepath,  8,  5 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath,  8, 25 ),
+                          LocationMatcher( filepath,  8, 26 ) ),
+            ChunkMatcher( '\n\t',
+                          LocationMatcher( filepath,  8, 27 ),
+                          LocationMatcher( filepath,  9,  3 ) ),
+            ChunkMatcher( '\n\n\t',
+                          LocationMatcher( filepath,  9,  4 ),
+                          LocationMatcher( filepath, 11,  3 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 11, 29 ),
+                          LocationMatcher( filepath, 12,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 12, 26 ),
+                          LocationMatcher( filepath, 13,  5 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath, 13, 24 ),
+                          LocationMatcher( filepath, 13, 25 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath, 13, 29 ),
+                          LocationMatcher( filepath, 13, 30 ) ),
+            ChunkMatcher( '\n\n\t\t',
+                          LocationMatcher( filepath, 13, 32 ),
+                          LocationMatcher( filepath, 15,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 15, 58 ),
+                          LocationMatcher( filepath, 16,  5 ) ),
+            ChunkMatcher( '\n\t',
+                          LocationMatcher( filepath, 16, 42 ),
+                          LocationMatcher( filepath, 17,  3 ) ),
+            ChunkMatcher( '\n\n\t',
+                          LocationMatcher( filepath, 17,  4 ),
+                          LocationMatcher( filepath, 20,  3 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 20, 28 ),
+                          LocationMatcher( filepath, 21,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 21, 28 ),
+                          LocationMatcher( filepath, 22,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 22, 30 ),
+                          LocationMatcher( filepath, 23,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 23, 23 ),
+                          LocationMatcher( filepath, 24,  5 ) ),
+            ChunkMatcher( '\n\t',
+                          LocationMatcher( filepath, 24, 27 ),
+                          LocationMatcher( filepath, 25,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_Format_Range_Spaces_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+  RunTest( app, {
+    'description': 'Formatting is applied on some part of the file '
+                   'with tabs composed of 4 spaces by default',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'range': {
+        'start': {
+          'line_num': 20,
+          'column_num': 1,
+        },
+        'end': {
+          'line_num': 25,
+          'column_num': 4
+        }
+      },
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath, 20,  1 ),
+                          LocationMatcher( filepath, 20,  3 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 20, 28 ),
+                          LocationMatcher( filepath, 21,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 21, 28 ),
+                          LocationMatcher( filepath, 22,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 22, 30 ),
+                          LocationMatcher( filepath, 23,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath, 23, 23 ),
+                          LocationMatcher( filepath, 24,  5 ) ),
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath, 24, 27 ),
+                          LocationMatcher( filepath, 25,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_Format_Range_Tabs_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+  RunTest( app, {
+    'description': 'Formatting is applied on some part of the file '
+                   'with tabs instead of spaces',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'range': {
+        'start': {
+          'line_num': 20,
+          'column_num': 1,
+        },
+        'end': {
+          'line_num': 25,
+          'column_num': 4
+        }
+      },
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': False
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath, 20,  1 ),
+                          LocationMatcher( filepath, 20,  3 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 20, 28 ),
+                          LocationMatcher( filepath, 21,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 21, 28 ),
+                          LocationMatcher( filepath, 22,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 22, 30 ),
+                          LocationMatcher( filepath, 23,  5 ) ),
+            ChunkMatcher( '\n\t\t',
+                          LocationMatcher( filepath, 23, 23 ),
+                          LocationMatcher( filepath, 24,  5 ) ),
+            ChunkMatcher( '\n\t',
+                          LocationMatcher( filepath, 24, 27 ),
+                          LocationMatcher( filepath, 25,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
 def RunGoToTest( app, description, filepath, line, col, cmd, goto_response ):
   RunTest( app, {
     'description': description,
@@ -1253,7 +1551,7 @@ def Subcommands_IndexOutOfRange_test( app ):
 
 
 @SharedYcmd
-def Subcommands_DifferntFileTypesUpdate_test( app ):
+def Subcommands_DifferentFileTypesUpdate_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',

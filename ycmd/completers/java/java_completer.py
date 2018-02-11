@@ -207,6 +207,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         lambda self, request_data, args: self.RefactorRename( request_data,
                                                               args )
       ),
+      'Format': (
+        lambda self, request_data, args: self.Format( request_data )
+      ),
 
       # Handled by us
       'RestartServer': (
