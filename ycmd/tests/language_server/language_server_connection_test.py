@@ -27,6 +27,8 @@ from ycmd.completers.language_server import language_server_completer as lsc
 from hamcrest import assert_that, calling, equal_to, raises
 from ycmd.tests.language_server import MockConnection
 
+import queue
+
 
 def LanguageServerConnection_ReadPartialMessage_test():
    connection = MockConnection()
@@ -121,3 +123,39 @@ def LanguageServerConnection_CloseTwice_test():
                      side_effect=RuntimeError ):
     connection.Close()
     connection.Close()
+
+
+@patch.object( lsc, 'MAX_QUEUED_MESSAGES', 2 )
+def LanguageServerConnection_AddNotificationToQueue_RingBuffer():
+  connection = MockConnection()
+  notifications = connection._notifications
+
+  # Queue empty
+
+  assert_that( calling( notifications.get_nowait(), raises( queue.Empty ) ) )
+
+  # Queue partially full, then drained
+
+  connection._AddNotificationToQueue( 'one' )
+
+  assert_that( notifications.get_nowait(), equal_to( 'one' ) )
+  assert_that( calling( notifications.get_nowait(), raises( queue.Empty ) ) )
+
+  # Queue full, then drained
+
+  connection._AddNotificationToQueue( 'one' )
+  connection._AddNotificationToQueue( 'two' )
+
+  assert_that( notifications.get_nowait(), equal_to( 'one' ) )
+  assert_that( notifications.get_nowait(), equal_to( 'two' ) )
+  assert_that( calling( notifications.get_nowait(), raises( queue.Empty ) ) )
+
+  # Queue full, then new notification, then drained
+
+  connection._AddNotificationToQueue( 'one' )
+  connection._AddNotificationToQueue( 'two' )
+  connection._AddNotificationToQueue( 'three' )
+
+  assert_that( notifications.get_nowait(), equal_to( 'two' ) )
+  assert_that( notifications.get_nowait(), equal_to( 'three' ) )
+  assert_that( calling( notifications.get_nowait(), raises( queue.Empty ) ) )

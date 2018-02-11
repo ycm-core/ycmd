@@ -47,6 +47,9 @@ REQUEST_TIMEOUT_INITIALISE = 30
 REQUEST_TIMEOUT_COMMAND    = 30
 CONNECTION_TIMEOUT         = 5
 
+# Size of the notification ring buffer
+MAX_QUEUED_MESSAGES = 250
+
 
 class ResponseTimeoutException( Exception ):
   """Raised by LanguageServerConnection if a request exceeds the supplied
@@ -240,7 +243,7 @@ class LanguageServerConnection( threading.Thread ):
     self._last_id = 0
     self._responses = {}
     self._response_mutex = threading.Lock()
-    self._notifications = queue.Queue()
+    self._notifications = queue.Queue( maxsize=MAX_QUEUED_MESSAGES )
 
     self._connection_event = threading.Event()
     self._stop_event = threading.Event()
@@ -468,14 +471,35 @@ class LanguageServerConnection( threading.Thread ):
         message_id = str( message[ 'id' ] )
         assert message_id in self._responses
         self._responses[ message_id ].ResponseReceived( message )
-        del self._responses[ message_id  ]
+        del self._responses[ message_id ]
     else:
-      self._notifications.put( message )
+      self._AddNotificationToQueue( message )
 
       # If there is an immediate (in-message-pump-thread) handler configured,
       # call it.
       if self._notification_handler:
         self._notification_handler( self, message )
+
+
+  def _AddNotificationToQueue( self, message ):
+    while True:
+      try:
+        self._notifications.put_nowait( message )
+        return
+      except queue.Full:
+        pass
+
+      # The queue (ring buffer) is full.  This indicates either a slow
+      # consumer or the message poll is not running. In any case, rather than
+      # infinitely queueing, discard the oldest message and try again.
+      try:
+        self._notifications.get_nowait()
+      except queue.Empty:
+        # This is only a theoretical possibility to prevent this thread
+        # blocking in the unlikely event that all elements are removed from
+        # the queue between put_nowait and get_nowait. Unfortunately, this
+        # isn't testable without a debugger, so coverage will show up red.
+        pass # pragma: no cover
 
 
 class StandardIOLanguageServerConnection( LanguageServerConnection ):
