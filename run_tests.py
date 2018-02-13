@@ -173,6 +173,7 @@ def BuildYcmdLibs( args ):
     build_cmd = [
       sys.executable,
       p.join( DIR_OF_THIS_SCRIPT, 'build.py' ),
+      '--quiet',
     ]
 
     for key in COMPLETERS:
@@ -232,6 +233,7 @@ def Main():
     RunFlake8()
   BuildYcmdLibs( parsed_args )
   NoseTests( parsed_args, nosetests_args )
+
 
 if __name__ == "__main__":
   Main()
