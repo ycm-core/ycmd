@@ -25,9 +25,11 @@ from builtins import *  # noqa
 from mock import patch
 from hamcrest import ( assert_that,
                        calling,
+                       empty,
                        equal_to,
                        contains,
                        has_entries,
+                       has_entry,
                        has_items,
                        raises )
 
@@ -413,3 +415,35 @@ def FindOverlapLength_test():
 
   for test in tests:
     yield Test, test[ 0 ], test[ 1 ], test[ 2 ]
+
+
+def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test():
+  completer = MockCompleter()
+  request_data = RequestWrap( BuildRequest( line_num = 1,
+                                            column_num = 1,
+                                            contents = '' ) )
+
+  fixit_response = { 'result': [] }
+
+  with patch.object( completer, 'ServerIsReady', return_value = True ):
+    with patch.object( completer.GetConnection(),
+                       'GetResponse',
+                       side_effect = [ fixit_response ] ):
+      with patch( 'ycmd.completers.language_server.language_server_protocol.'
+                  'CodeAction' ) as code_action:
+        assert_that( completer.GetCodeActions( request_data, [] ),
+                     has_entry( 'fixits', empty() ) )
+        assert_that(
+          # Range passed to lsp.CodeAction.
+          code_action.call_args[ 0 ][ 2 ],
+          has_entries( {
+            'start': has_entries( {
+              'line': 0,
+              'character': 0
+            } ),
+            'end': has_entries( {
+              'line': 0,
+              'character': 0
+            } )
+          } )
+        )
