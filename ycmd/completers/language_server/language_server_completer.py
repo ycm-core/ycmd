@@ -1366,7 +1366,7 @@ class LanguageServerCompleter( Completer ):
               'line': line_num_ls,
               'character': lsp.CodepointsToUTF16CodeUnits(
                 line_value,
-                len( line_value ) ) - 1,
+                len( line_value ) + 1 ) - 1,
             }
           },
           [] ),
