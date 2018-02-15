@@ -162,6 +162,28 @@ def ServerManagement_ProjectDetection_MavenParent_test( app ):
                _ProjectDirectoryMatcher( project ) )
 
 
+@TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project',
+                                      'simple_submodule' ) )
+@TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
+@IsolatedYcmd
+def ServerManagement_ProjectDetection_MavenParent_Submodule_test( app ):
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( 'simple_maven_project',
+                                                       'simple_submodule',
+                                                       'src',
+                                                       'main',
+                                                       'java',
+                                                       'com',
+                                                       'test' ) )
+
+  project = PathToTestFile( 'simple_maven_project' )
+
+  # Run the debug info to check that we have the correct project dir
+  request_data = BuildRequest( filetype = 'java' )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               _ProjectDirectoryMatcher( project ) )
+
+
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
 @IsolatedYcmd
 def ServerManagement_ProjectDetection_GradleParent_test( app ):
