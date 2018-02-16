@@ -24,11 +24,14 @@ from builtins import *  # noqa
 
 # Must not import ycm_core here! Vim imports completer, which imports this file.
 # We don't want ycm_core inside Vim.
+import logging
 import os
 import re
 from collections import defaultdict
 from future.utils import iteritems
 from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile
+
+_logger = logging.getLogger( __name__ )
 
 
 class PreparedTriggers( object ):
@@ -222,4 +225,8 @@ def GetFileContents( request_data, filename ):
   if filename in file_data:
     return ToUnicode( file_data[ filename ][ 'contents' ] )
 
-  return ToUnicode( ReadFile( filename ) )
+  try:
+    return ToUnicode( ReadFile( filename ) )
+  except IOError:
+    _logger.exception( 'Error reading file {}'.format( filename ) )
+    return ''
