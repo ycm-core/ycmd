@@ -45,13 +45,13 @@ Note that **ycmd runs on Python 2.7 and 3.4+.**
 
 First, install the minimal dependencies:
 ```
-sudo apt-get install build-essential cmake python-dev
+sudo apt install build-essential cmake python-dev
 ```
 
 Next, install the language specific dependencies you need:
-- `sudo apt-get install golang-go` for Go.
-- `sudo apt-get install npm` for JavaScript and TypeScript.
-- `sudo apt-get install mono-devel` for C#.
+- `sudo apt install golang-go` for Go.
+- `sudo apt install npm` for JavaScript and TypeScript.
+- `sudo apt install mono-devel` for C#.
 - Concerning Rust, install Cargo and rustc with [rustup](https://www.rustup.rs/).
 
 When you first clone the repository you'll need to update the submodules:
