@@ -40,7 +40,8 @@ from ycmd.tests.java import DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CompletionEntryMatcher,
-                                    LocationMatcher )
+                                    LocationMatcher,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 from mock import patch
 
@@ -63,6 +64,7 @@ def ProjectPath( *args ):
                          *args )
 
 
+@WithRetry
 def RunTest( app, test ):
   """
   Method to run a simple completion test and verify the result
