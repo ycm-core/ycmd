@@ -350,6 +350,88 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
 
 
 @IsolatedYcmd
+def Poll_Diagnostics_ChangeFileContents_test( app ):
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
+
+  filepath = youcompleteme_Test
+  old_contents = """package com.youcompleteme;
+
+public class Test {
+  public String test;
+}"""
+
+  messages_for_filepath = []
+
+  def PollForMessagesInAnotherThread( filepath, contents ):
+    for message in PollForMessages( app,
+                                    { 'filepath': filepath,
+                                      'contents': contents } ):
+      if 'filepath' in message and message[ 'filepath' ] == filepath:
+        messages_for_filepath.append( message )
+
+  poll_task = threading.Thread( target = PollForMessagesInAnotherThread,
+                                args = ( filepath, old_contents ) )
+  poll_task.daemon = True
+  poll_task.start()
+
+  new_contents = """package com.youcompleteme;
+
+public class Test {
+  public String test;
+  public String test;
+}"""
+
+  event_data = BuildRequest( event_name = 'FileReadyToParse',
+                             contents = new_contents,
+                             filepath = filepath,
+                             filetype = 'java' )
+  app.post_json( '/event_notification', event_data ).json
+
+  expiration = time.time() + 10
+  while True:
+    try:
+      assert_that(
+        messages_for_filepath,
+        has_item( has_entries( {
+          'filepath': filepath,
+          'diagnostics': contains(
+            has_entries( {
+              'kind': 'ERROR',
+              'text': 'Duplicate field Test.test',
+              'location': LocationMatcher( youcompleteme_Test, 4, 17 ),
+              'location_extent': RangeMatch( youcompleteme_Test,
+                                             ( 4, 17 ),
+                                             ( 4, 21 ) ),
+              'ranges': contains( RangeMatch( youcompleteme_Test,
+                                              ( 4, 17 ),
+                                              ( 4, 21 ) ) ),
+              'fixit_available': False
+            } ),
+            has_entries( {
+              'kind': 'ERROR',
+              'text': 'Duplicate field Test.test',
+              'location': LocationMatcher( youcompleteme_Test, 5, 17 ),
+              'location_extent': RangeMatch( youcompleteme_Test,
+                                             ( 5, 17 ),
+                                             ( 5, 21 ) ),
+              'ranges': contains( RangeMatch( youcompleteme_Test,
+                                              ( 5, 17 ),
+                                              ( 5, 21 ) ) ),
+              'fixit_available': False
+            } )
+          )
+        } ) )
+      )
+      break
+    except AssertionError:
+      if time.time() > expiration:
+        raise
+
+      time.sleep( 0.25 )
+
+
+@IsolatedYcmd
 @patch(
   'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
   side_effect = lsp.InvalidUriException )
