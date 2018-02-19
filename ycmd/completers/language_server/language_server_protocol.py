@@ -106,6 +106,7 @@ class ServerFileState( object ):
     self.version = 0
     self.state = ServerFileState.CLOSED
     self.checksum = None
+    self.contents = ''
 
 
   def GetDirtyFileAction( self, contents ):
@@ -122,7 +123,7 @@ class ServerFileState( object ):
     else:
       action = ServerFileState.CHANGE_FILE
 
-    return self._SendNewVersion( new_checksum, action )
+    return self._SendNewVersion( new_checksum, action, contents )
 
 
   def GetSavedFileAction( self, contents ):
@@ -137,7 +138,9 @@ class ServerFileState( object ):
     if self.checksum.digest() == new_checksum.digest():
       return ServerFileState.NO_ACTION
 
-    return self._SendNewVersion( new_checksum, ServerFileState.CHANGE_FILE )
+    return self._SendNewVersion( new_checksum,
+                                 ServerFileState.CHANGE_FILE,
+                                 contents )
 
 
   def GetFileCloseAction( self ):
@@ -151,10 +154,11 @@ class ServerFileState( object ):
     return ServerFileState.NO_ACTION
 
 
-  def _SendNewVersion( self, new_checksum, action ):
+  def _SendNewVersion( self, new_checksum, action, contents ):
     self.checksum = new_checksum
     self.version = self.version + 1
     self.state = ServerFileState.OPEN
+    self.contents = contents
 
     return action
 
