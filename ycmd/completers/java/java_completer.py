@@ -361,12 +361,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
                                                stdout = PIPE,
                                                stderr = stderr )
 
-      if not self._ServerIsRunning():
-        _logger.error( 'jdt.ls Language Server failed to start' )
-        return
-
-      _logger.info( 'jdt.ls Language Server started' )
-
       self._connection = (
         language_server_completer.StandardIOLanguageServerConnection(
           self._server_handle.stdin,
@@ -383,6 +377,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
                        'successfully' )
         self._StopServer()
         return
+
+    _logger.info( 'jdt.ls Language Server started' )
 
     self.SendInitialize( request_data )
 
