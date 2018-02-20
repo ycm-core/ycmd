@@ -50,29 +50,22 @@ YCM_EXPORT int IndexForLetter( char letter );
  * position in the original string.
  */
 struct NearestLetterNodeIndices {
-  NearestLetterNodeIndices()
-    : indexOfFirstOccurrence( -1 ),
-      indexOfFirstUppercaseOccurrence( -1 ) {
-  }
-
-  short indexOfFirstOccurrence;
-  short indexOfFirstUppercaseOccurrence;
+  uint16_t indexOfFirstOccurrence = 0;
+  uint16_t indexOfFirstUppercaseOccurrence = 0;
 };
 
 class LetterNodeListMap {
 public:
-  LetterNodeListMap();
-  LetterNodeListMap( const LetterNodeListMap &other );
+  // export for tests
+  YCM_EXPORT const NearestLetterNodeIndices &ListPointerAt( char letter ) const;
 
-  NearestLetterNodeIndices &operator[] ( char letter );
-
-  YCM_EXPORT NearestLetterNodeIndices *ListPointerAt( char letter );
+  void SetNodeIndexForLetterIfNearest( char letter, uint16_t index );
 
 private:
   using NearestLetterNodeArray = std::array< NearestLetterNodeIndices,
                                              NUM_LETTERS >;
 
-  std::unique_ptr< NearestLetterNodeArray > letters_;
+  NearestLetterNodeArray letters_;
 };
 
 } // namespace YouCompleteMe

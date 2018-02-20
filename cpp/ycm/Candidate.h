@@ -62,7 +62,7 @@ private:
   std::string word_boundary_chars_;
   bool text_is_lowercase_;
   Bitset letters_present_;
-  const std::unique_ptr< LetterNode > root_node_;
+  LetterNode root_node_;
 };
 
 } // namespace YouCompleteMe
