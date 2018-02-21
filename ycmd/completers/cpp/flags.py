@@ -65,6 +65,9 @@ FILE_FLAGS_TO_SKIP = set( [ '-MF',
 # See Valloric/ycmd#266
 CPP_COMPILER_REGEX = re.compile( r'\+\+(-\d+(\.\d+){0,2})?$' )
 
+# Use a regex to match all the possible forms of clang-cl or cl compiler
+CL_COMPILER_REGEX = re.compile( r'(?:cl|clang-cl)(.exe)?$', re.IGNORECASE )
+
 # List of file extensions to be considered "header" files and thus not present
 # in the compilation database. The logic will try and find an associated
 # "source" file (see SOURCE_EXTENSIONS below) and use the flags for that.
@@ -242,13 +245,17 @@ def _ExtractFlagsList( flags_for_file_output ):
 
 
 def _ShouldAllowWinStyleFlags( flags ):
-  enable_windows_style_flags = False
   if OnWindows():
-    for flag in flags:
+    # Iterate in reverse because we only care
+    # about the last occurrence of --driver-mode flag.
+    for flag in reversed( flags ):
       if flag.startswith( '--driver-mode' ):
-        enable_windows_style_flags = ( flag == '--driver-mode=cl' )
+        return flag == '--driver-mode=cl'
+    # If there was no --driver-mode flag,
+    # check if we are using a compiler like clang-cl.
+    return bool( CL_COMPILER_REGEX.search( flags[ 0 ] ) )
 
-  return enable_windows_style_flags
+  return False
 
 
 def _CallExtraConfFlagsForFile( module, filename, client_data ):
