@@ -435,10 +435,45 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                                   expected[ :1 ] + to_remove + expected[ 1: ]
                                 ) ) )
 
-  # clang-cl and --dirver-mode=gcc
+  # clang-cl and --driver-mode=gcc
   expected = [ 'clang-cl', '-foo', '-xc++', '--driver-mode=gcc',
                '-bar', 'include_dir' ]
   to_remove = [ 'unrelated_file', '/I', 'include_dir_other' ]
+  filename = 'file'
+
+  eq_( expected,
+       flags._RemoveUnusedFlags( expected + to_remove,
+                                 filename,
+                                 _ShouldAllowWinStyleFlags(
+                                   expected + to_remove ) ) )
+  eq_( expected,
+       flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                 filename,
+                                 _ShouldAllowWinStyleFlags(
+                                   expected[ :1 ] + to_remove + expected[ 1: ]
+                                 ) ) )
+
+
+  # cl only with extension
+  expected = [ 'cl.EXE', '-foo', '-xc++', '-bar', 'include_dir' ]
+  to_remove = [ '-c', 'path\\to\\unrelated_file' ]
+  filename = 'file'
+
+  eq_( expected,
+       flags._RemoveUnusedFlags( expected + to_remove,
+                                 filename,
+                                 _ShouldAllowWinStyleFlags(
+                                   expected + to_remove ) ) )
+  eq_( expected,
+       flags._RemoveUnusedFlags( expected[ :1 ] + to_remove + expected[ 1: ],
+                                 filename,
+                                 _ShouldAllowWinStyleFlags(
+                                   expected[ :1 ] + to_remove + expected[ 1: ]
+                                 ) ) )
+
+  # cl path with Windows separators
+  expected = [ 'path\\to\\cl', '-foo', '-xc++', '/I', 'path\\to\\include\\dir' ]
+  to_remove = [ '-c', 'path\\to\\unrelated_file' ]
   filename = 'file'
 
   eq_( expected,
