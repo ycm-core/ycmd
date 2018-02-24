@@ -429,8 +429,7 @@ def _RemoveUnusedFlags( flags, filename, enable_windows_style_flags ):
     # "foo.cpp" when we are compiling "foo.h" because the comp db doesn't have
     # flags for headers. The returned flags include "foo.cpp" and we need to
     # remove that.
-    if _SkipStrayFilenameFlag( flag,
-                               current_flag,
+    if _SkipStrayFilenameFlag( current_flag,
                                previous_flag,
                                enable_windows_style_flags ):
       continue
@@ -440,8 +439,7 @@ def _RemoveUnusedFlags( flags, filename, enable_windows_style_flags ):
   return new_flags
 
 
-def _SkipStrayFilenameFlag( flag,
-                            current_flag,
+def _SkipStrayFilenameFlag( current_flag,
                             previous_flag,
                             enable_windows_style_flags ):
   current_flag_starts_with_slash = current_flag.startswith( '/' )
@@ -452,7 +450,11 @@ def _SkipStrayFilenameFlag( flag,
 
   previous_flag_is_include = ( previous_flag in INCLUDE_FLAGS or
                                ( enable_windows_style_flags and
-                                 flag in INCLUDE_FLAGS_WIN_STYLE ) )
+                                 previous_flag in INCLUDE_FLAGS_WIN_STYLE ) )
+
+  current_flag_may_be_path = ( '/' in current_flag or
+                               ( enable_windows_style_flags and
+                                 '\\' in current_flag ) )
 
   return ( not ( current_flag_starts_with_dash or
                  ( enable_windows_style_flags and
@@ -460,7 +462,7 @@ def _SkipStrayFilenameFlag( flag,
            ( not ( previous_flag_starts_with_dash or
                    ( enable_windows_style_flags and
                      previous_flag_starts_with_slash ) ) or
-             ( not previous_flag_is_include and '/' in flag ) ) )
+             ( not previous_flag_is_include and current_flag_may_be_path ) ) )
 
 
 # Return the path to the macOS toolchain root directory to use for system
