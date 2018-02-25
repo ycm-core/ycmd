@@ -1,6 +1,4 @@
-/*===---- stdbool.h - Standard header for booleans -------------------------===
- *
- * Copyright (c) 2008 Eli Friedman
+/*===---- clwbintrin.h - CLWB intrinsic ------------------------------------===
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +21,32 @@
  *===-----------------------------------------------------------------------===
  */
 
-#ifndef __STDBOOL_H
-#define __STDBOOL_H
-
-/* Don't define bool, true, and false in C++, except as a GNU extension. */
-#ifndef __cplusplus
-#define bool _Bool
-#define true 1
-#define false 0
-#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
-/* Define _Bool as a GNU extension. */
-#define _Bool bool
-#if __cplusplus < 201103L
-/* For C++98, define bool, false, true as a GNU extension. */
-#define bool  bool
-#define false false
-#define true  true
-#endif
+#ifndef __IMMINTRIN_H
+#error "Never use <clwbintrin.h> directly; include <immintrin.h> instead."
 #endif
 
-#define __bool_true_false_are_defined 1
+#ifndef __CLWBINTRIN_H
+#define __CLWBINTRIN_H
 
-#endif /* __STDBOOL_H */
+/* Define the default attributes for the functions in this file. */
+#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__,  __target__("clwb")))
+
+/// \brief Writes back to memory the cache line (if modified) that contains the
+/// linear address specified in \a __p from any level of the cache hierarchy in
+/// the cache coherence domain
+///
+/// \headerfile <immintrin.h>
+///
+/// This intrinsic corresponds to the <c> CLWB </c> instruction.
+///
+/// \param __p
+///    A pointer to the memory location used to identify the cache line to be
+///    written back.
+static __inline__ void __DEFAULT_FN_ATTRS
+_mm_clwb(void const *__p) {
+  __builtin_ia32_clwb(__p);
+}
+
+#undef __DEFAULT_FN_ATTRS
+
+#endif

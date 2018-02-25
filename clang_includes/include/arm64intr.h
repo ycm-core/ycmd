@@ -1,6 +1,4 @@
-/*===---- stdbool.h - Standard header for booleans -------------------------===
- *
- * Copyright (c) 2008 Eli Friedman
+/*===---- arm64intr.h - ARM64 Windows intrinsics -------------------------------===
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +21,29 @@
  *===-----------------------------------------------------------------------===
  */
 
-#ifndef __STDBOOL_H
-#define __STDBOOL_H
+/* Only include this if we're compiling for the windows platform. */
+#ifndef _MSC_VER
+#include_next <arm64intr.h>
+#else
 
-/* Don't define bool, true, and false in C++, except as a GNU extension. */
-#ifndef __cplusplus
-#define bool _Bool
-#define true 1
-#define false 0
-#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
-/* Define _Bool as a GNU extension. */
-#define _Bool bool
-#if __cplusplus < 201103L
-/* For C++98, define bool, false, true as a GNU extension. */
-#define bool  bool
-#define false false
-#define true  true
-#endif
-#endif
+#ifndef __ARM64INTR_H
+#define __ARM64INTR_H
 
-#define __bool_true_false_are_defined 1
+typedef enum
+{
+  _ARM64_BARRIER_SY    = 0xF,
+  _ARM64_BARRIER_ST    = 0xE,
+  _ARM64_BARRIER_LD    = 0xD,
+  _ARM64_BARRIER_ISH   = 0xB,
+  _ARM64_BARRIER_ISHST = 0xA,
+  _ARM64_BARRIER_ISHLD = 0x9,
+  _ARM64_BARRIER_NSH   = 0x7,
+  _ARM64_BARRIER_NSHST = 0x6,
+  _ARM64_BARRIER_NSHLD = 0x5,
+  _ARM64_BARRIER_OSH   = 0x3,
+  _ARM64_BARRIER_OSHST = 0x2,
+  _ARM64_BARRIER_OSHLD = 0x1
+} _ARM64INTR_BARRIER_TYPE;
 
-#endif /* __STDBOOL_H */
+#endif /* __ARM64INTR_H */
+#endif /* _MSC_VER */
