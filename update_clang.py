@@ -17,6 +17,7 @@ import sys
 import tempfile
 import tarfile
 import hashlib
+from distutils.spawn import find_executable
 
 try:
   import lzma
@@ -68,7 +69,7 @@ LLVM_DOWNLOAD_DATA = {
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
     'files_to_copy': [
-      os.path.join( 'lib', 'libclang.dylib' ),
+      os.path.join( 'lib', 'libclang.dylib' )
     ]
   },
   'x86_64-linux-gnu-ubuntu-14.04': {
@@ -77,8 +78,48 @@ LLVM_DOWNLOAD_DATA = {
     'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
     'files_to_copy': [
       os.path.join( 'lib', 'libclang.so' ),
-      os.path.join( 'lib', 'libclang.so.5' ),
-      os.path.join( 'lib', 'libclang.so.5.0' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
+    ]
+  },
+  'i386-unknown-freebsd10': {
+    'format': 'lzma',
+    'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
+    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+    'files_to_copy': [
+      os.path.join( 'lib', 'libclang.so' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
+    ]
+  },
+  'amd64-unknown-freebsd10': {
+    'format': 'lzma',
+    'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
+    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+    'files_to_copy': [
+      os.path.join( 'lib', 'libclang.so' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
+    ]
+  },
+  'aarch64-linux-gnu': {
+    'format': 'lzma',
+    'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
+    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+    'files_to_copy': [
+      os.path.join( 'lib', 'libclang.so' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
+    ]
+  },
+  'armv7a-linux-gnueabihf': {
+    'format': 'lzma',
+    'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
+    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+    'files_to_copy': [
+      os.path.join( 'lib', 'libclang.so' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' ),
+      os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
     ]
   },
 }
@@ -109,9 +150,8 @@ def DownloadClangLicense( version, destination ):
   return file_name
 
 
-def DownloadClang( url ):
-  print( 'Downloading {0}'.format( url ) )
-
+def Download( url ):
+  print( 'Downloading {}'.format( url.rsplit( '/', 1 )[ -1 ] ) )
   request = requests.get( url, stream=True )
   request.raise_for_status()
   content = request.content
@@ -119,10 +159,9 @@ def DownloadClang( url ):
   return content
 
 
-def ExtractClangLZMA( compressed_data, destination ):
+def ExtractLZMA( compressed_data, destination ):
   uncompressed_data = BytesIO( lzma.decompress( compressed_data ) )
 
-  print( 'Extracting...' )
   with tarfile.TarFile( fileobj=uncompressed_data, mode='r' ) as tar_file:
     a_member = tar_file.getmembers()[ 0 ]
     tar_file.extractall( destination )
@@ -132,23 +171,34 @@ def ExtractClangLZMA( compressed_data, destination ):
                        a_member.name.split( os.path.sep )[ 0 ] )
 
 
-def ExtractClang7Z( llvm_package, archive, destination ):
+def Extract7Z( llvm_package, archive, destination ):
   # Extract with appropriate tool
   if OnWindows():
-    command = [ '7z.exe' ]
-  elif OnMac():
-    command = [ '/Applications/Keka.app/Contents/Resources/keka7z' ]
-  else:
-    raise AssertionError( 'Dont know where to find 7zip on this platform' )
+    # The winreg module is named _winreg on Python 2.
+    try:
+      import winreg
+    except ImportError:
+      import _winreg as winreg
 
-  command.extend( [
+    with winreg.OpenKey( winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\7-Zip' ) as key:
+      executable = os.path.join( winreg.QueryValueEx( key, "Path" )[ 0 ],
+                                '7z.exe' )
+  elif OnMac():
+    executable = '/Applications/Keka.app/Contents/Resources/keka7z'
+  else:
+    # On Linux, p7zip 16.02 is required.
+    executable = find_executable( '7z' )
+
+  command = [
+    executable,
     '-y',
     'x',
     archive,
     '-o' + destination
-  ] )
+  ]
 
-  subprocess.check_call( command )
+  # Silence 7-Zip output.
+  subprocess.check_call( command, stdout = subprocess.PIPE )
 
   return destination
 
@@ -157,18 +207,23 @@ def MakeBundle( files_to_copy,
                 license_file_name,
                 source_dir,
                 bundle_file_name,
-                hashes ):
-  print( "Bundling files from {0}".format( source_dir ) )
+                hashes,
+                version ):
+  archive_name = os.path.basename( bundle_file_name )
+  print( 'Bundling files to {}'.format( archive_name ) )
   with tarfile.open( name=bundle_file_name, mode='w:bz2' ) as tar_file:
     tar_file.add( license_file_name, arcname='LICENSE.TXT' )
     for file_name in files_to_copy:
-      tar_file.add( name = os.path.join( source_dir, file_name ),
-                    arcname = file_name )
+      arcname = file_name.format( llvm_version = version )
+      name = os.path.join( source_dir, arcname )
+      if not os.path.exists( name ):
+        raise RuntimeError( 'File {} does not exist.'.format( name ) )
+      tar_file.add( name = name, arcname = arcname )
 
-  print( "Calculating checksum: " )
+  sys.stdout.write( 'Calculating checksum: ' )
   with open( bundle_file_name, 'rb' ) as f:
-    hashes[ bundle_file_name ] = hashlib.sha256( f.read() ).hexdigest()
-    print( 'Hash is: {0}'.format( hashes[ bundle_file_name ] ) )
+    hashes[ archive_name ] = hashlib.sha256( f.read() ).hexdigest()
+    print( hashes[ archive_name ] )
 
 
 def UploadBundleToBintray( user_name,
@@ -236,16 +291,17 @@ def PrepareBundleLZMA( cache_dir, llvm_package, download_url, temp_dir ):
   package_dir = None
   if cache_dir:
     archive = os.path.join( cache_dir, llvm_package )
-    print( 'Loading cached archive: {0}'.format( archive ) )
+    print( 'Extracting cached {}'.format( llvm_package ) )
     try:
       with open( archive, 'rb' ) as f:
-        package_dir = ExtractClangLZMA( f.read(), temp_dir )
+        package_dir = ExtractLZMA( f.read(), temp_dir )
     except IOError:
       pass
 
   if not package_dir:
-    compressed_data = DownloadClang( download_url )
-    package_dir = ExtractClangLZMA( compressed_data, temp_dir )
+    compressed_data = Download( download_url )
+    print( 'Extracting {}'.format( llvm_package ) )
+    package_dir = ExtractLZMA( compressed_data, temp_dir )
 
   return package_dir
 
@@ -253,17 +309,19 @@ def PrepareBundleLZMA( cache_dir, llvm_package, download_url, temp_dir ):
 def PrepareBundleNSIS( cache_dir, llvm_package, download_url, temp_dir ):
   if cache_dir:
     archive = os.path.join( cache_dir, llvm_package )
-    print( 'Loading cached archive: {0}'.format( archive ) )
+    print( 'Extracting cached {}'.format( llvm_package ) )
   else:
-    compressed_data = DownloadClang( download_url )
+    compressed_data = Download( download_url )
     archive = os.path.join( temp_dir, llvm_package )
     with open( archive, 'wb' ) as f:
       f.write( compressed_data )
+    print( 'Extracting {}'.format( llvm_package ) )
 
-  return ExtractClang7Z( llvm_package, archive, temp_dir )
+  return Extract7Z( llvm_package, archive, temp_dir )
 
 
-def BundleAndUpload( args, output_dir, os_name, download_data, hashes ):
+def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
+                     license_file_name, hashes ):
   llvm_package = download_data[ 'llvm_package' ].format(
     os_name = os_name,
     llvm_version = args.version )
@@ -271,40 +329,66 @@ def BundleAndUpload( args, output_dir, os_name, download_data, hashes ):
     os_name = os_name,
     llvm_version = args.version )
   download_url = (
-    'http://releases.llvm.org/{llvm_version}/{llvm_package}'.format(
+    'https://releases.llvm.org/{llvm_version}/{llvm_package}'.format(
       llvm_version = args.version,
       llvm_package = llvm_package ) )
 
   ycmd_package_file = os.path.join( output_dir, ycmd_package )
-  with TemporaryDirectory() as temp_dir:
-    license_file_name = DownloadClangLicense( args.version, temp_dir )
 
-    if download_data[ 'format' ] == 'lzma':
-      package_dir = PrepareBundleLZMA( args.from_cache,
-                                       llvm_package,
-                                       download_url,
-                                       temp_dir )
-    elif download_data[ 'format' ] == 'nsis':
-      package_dir = PrepareBundleNSIS( args.from_cache,
-                                       llvm_package,
-                                       download_url,
-                                       temp_dir )
-    else:
-      raise AssertionError( 'Format not yet implemented: {0}'.format(
-        download_data[ 'format' ] ) )
+  if download_data[ 'format' ] == 'lzma':
+    package_dir = PrepareBundleLZMA( args.from_cache,
+                                     llvm_package,
+                                     download_url,
+                                     temp_dir )
+  elif download_data[ 'format' ] == 'nsis':
+    package_dir = PrepareBundleNSIS( args.from_cache,
+                                     llvm_package,
+                                     download_url,
+                                     temp_dir )
+  else:
+    raise AssertionError( 'Format not yet implemented: {}'.format(
+      download_data[ 'format' ] ) )
 
-    MakeBundle( download_data[ 'files_to_copy' ],
-                license_file_name,
-                package_dir,
-                ycmd_package_file,
-                hashes )
+  MakeBundle( download_data[ 'files_to_copy' ],
+              license_file_name,
+              package_dir,
+              ycmd_package_file,
+              hashes,
+              args.version )
 
-    if not args.no_upload:
-      UploadBundleToBintray( args.bt_user,
-                             args.bt_token,
-                             os_name,
-                             args.version,
-                             ycmd_package_file )
+  if not args.no_upload:
+    UploadBundleToBintray( args.bt_user,
+                           args.bt_token,
+                           os_name,
+                           args.version,
+                           ycmd_package_file )
+
+
+def Overwrite( src, dest ):
+  if os.path.exists( dest ):
+    shutil.rmtree( dest )
+  shutil.copytree( src, dest )
+
+
+def UpdateClangHeaders( args, temp_dir ):
+  src_name = 'cfe-{version}.src'.format( version = args.version )
+  archive_name = src_name + '.tar.xz'
+
+  compressed_data = Download( 'https://releases.llvm.org/{version}/'
+                              '{archive}'.format( version = args.version,
+                                                  archive = archive_name ) )
+  print( 'Extracting {}'.format( archive_name ) )
+  src = ExtractLZMA( compressed_data, temp_dir )
+
+  print( 'Updating Clang headers...' )
+  includes_dir = os.path.join(
+    DIR_OF_THIS_SCRIPT, 'clang_includes', 'include' )
+  Overwrite( os.path.join( src, 'lib', 'Headers' ), includes_dir )
+  os.remove( os.path.join( includes_dir, 'CMakeLists.txt' ) )
+
+  Overwrite( os.path.join( src, 'include', 'clang-c' ),
+             os.path.join( DIR_OF_THIS_SCRIPT, 'cpp', 'llvm', 'include',
+                           'clang-c' ) )
 
 
 def Main():
@@ -314,14 +398,18 @@ def Main():
 
   try:
     hashes = dict()
-    for os_name, download_data in iteritems( LLVM_DOWNLOAD_DATA ):
-      BundleAndUpload( args, output_dir, os_name, download_data, hashes )
+    with TemporaryDirectory() as temp_dir:
+      license_file_name = DownloadClangLicense( args.version, temp_dir )
+      for os_name, download_data in iteritems( LLVM_DOWNLOAD_DATA ):
+        BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
+                         license_file_name, hashes )
+      UpdateClangHeaders( args, temp_dir )
   finally:
     if not args.output_dir:
       shutil.rmtree( output_dir )
 
   for bundle_file_name, sha256 in iteritems( hashes ):
-    print( "Checksum for {bundle_file_name}: {sha256}".format(
+    print( 'Checksum for {bundle_file_name}: {sha256}'.format(
       bundle_file_name = bundle_file_name,
       sha256 = sha256 ) )
 
