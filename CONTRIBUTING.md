@@ -94,10 +94,6 @@ Creating good pull requests
     sometimes what you want can be done in a different way if the reason for the
     change is known. _What goal is your change trying to accomplish?_
 
-You should also use our [Vagrant config when working on ycmd][dev-setup].
-There's _tons_ of gotchas when setting up the correct environment and they've
-all been worked out for you with Vagrant. Save yourself the trouble and use it.
-
 
 Writing code that runs on Python 2 & 3
 ======================================
@@ -156,6 +152,5 @@ Here's what you should watch out for:
 [build-bots]: https://travis-ci.org/Valloric/ycmd
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycmd-tests]: https://github.com/Valloric/ycmd/blob/master/TESTS.md
-[dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md
 [python-future]: http://python-future.org/index.html
 [what-else]: http://python-future.org/what_else.html
