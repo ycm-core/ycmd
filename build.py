@@ -349,6 +349,9 @@ def ParseArguments():
                        action = 'store_true',
                        help = 'Quiet installation mode. Just print overall '
                               'progress and errors' )
+  parser.add_argument( '--skip-build',
+                       action = 'store_true',
+                       help = "Don't build ycm_core lib, just install deps" )
 
 
   # These options are deprecated.
@@ -670,9 +673,10 @@ def WritePythonUsedDuringBuild():
 
 def Main():
   args = ParseArguments()
-  ExitIfYcmdLibInUseOnWindows()
-  BuildYcmdLib( args )
-  WritePythonUsedDuringBuild()
+  if not args.skip_build:
+    ExitIfYcmdLibInUseOnWindows()
+    BuildYcmdLib( args )
+    WritePythonUsedDuringBuild()
   if args.cs_completer or args.omnisharp_completer or args.all_completers:
     EnableCsCompleter( args )
   if args.go_completer or args.gocode_completer or args.all_completers:
