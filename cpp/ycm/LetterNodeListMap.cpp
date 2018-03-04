@@ -28,34 +28,22 @@ int IndexForLetter( char letter ) {
 }
 
 
-LetterNodeListMap::LetterNodeListMap() {
+const NearestLetterNodeIndices &LetterNodeListMap::ListPointerAt( char letter ) const {
+  return letters_.at( IndexForLetter( letter ) );
 }
 
 
-LetterNodeListMap::LetterNodeListMap( const LetterNodeListMap &other ) {
-  if ( other.letters_ ) {
-    letters_.reset( new NearestLetterNodeArray( *other.letters_ ) );
-  }
-}
-
-
-NearestLetterNodeIndices &LetterNodeListMap::operator[] ( char letter ) {
-  if ( !letters_ ) {
-    letters_.reset( new NearestLetterNodeArray() );
+void LetterNodeListMap::SetNodeIndexForLetterIfNearest( char letter, uint16_t index ) {
+  NearestLetterNodeIndices& currentLetterNodeIndices = letters_.at( IndexForLetter( letter ) );
+  if ( IsUppercase( letter ) ) {
+    if ( currentLetterNodeIndices.indexOfFirstUppercaseOccurrence == 0 ) {
+      currentLetterNodeIndices.indexOfFirstUppercaseOccurrence = index;
+    }
   }
 
-  int letter_index = IndexForLetter( letter );
-
-  return letters_->at( letter_index );
-}
-
-
-NearestLetterNodeIndices *LetterNodeListMap::ListPointerAt( char letter ) {
-  if ( !letters_ ) {
-    return nullptr;
+  if ( currentLetterNodeIndices.indexOfFirstOccurrence == 0 ) {
+    currentLetterNodeIndices.indexOfFirstOccurrence = index;
   }
-
-  return &letters_->at( IndexForLetter( letter ) );
 }
 
 } // namespace YouCompleteMe

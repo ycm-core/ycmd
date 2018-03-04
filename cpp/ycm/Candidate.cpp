@@ -65,18 +65,17 @@ Candidate::Candidate( const std::string &text )
     word_boundary_chars_( GetWordBoundaryChars( text ) ),
     text_is_lowercase_( IsLowercase( text ) ),
     letters_present_( LetterBitsetFromString( text ) ),
-    root_node_( new LetterNode( text ) ) {
+    root_node_( text ) {
 }
 
 
 Result Candidate::QueryMatchResult( const std::string &query,
                                     bool case_sensitive ) const {
-  LetterNode *node = root_node_.get();
+  size_t node_index = 0;
   int index_sum = 0;
 
   for ( char letter : query ) {
-    const NearestLetterNodeIndices *nearest =
-      node->NearestLetterNodesForLetter( letter );
+    const NearestLetterNodeIndices *nearest = root_node_.NearestLetterNodesForLetter( node_index, letter );
 
     if ( !nearest ) {
       return Result();
@@ -86,22 +85,17 @@ Result Candidate::QueryMatchResult( const std::string &query,
     // but when the query letter is lowercase, then it can match both an
     // uppercase and a lowercase letter. This is by design and it's much
     // better than forcing lowercase letter matches.
-    node = nullptr;
     if ( case_sensitive && IsUppercase( letter ) ) {
-      if ( nearest->indexOfFirstUppercaseOccurrence >= 0 ) {
-        node = ( *root_node_ )[ nearest->indexOfFirstUppercaseOccurrence ];
-      }
+      node_index = nearest->indexOfFirstUppercaseOccurrence;
     } else {
-      if ( nearest->indexOfFirstOccurrence >= 0 ) {
-        node = ( *root_node_ )[ nearest->indexOfFirstOccurrence ];
-      }
+      node_index = nearest->indexOfFirstOccurrence;
     }
 
-    if ( !node ) {
+    if ( node_index == 0 ) {
       return Result();
     }
 
-    index_sum += node->Index();
+    index_sum += node_index - 1;
   }
 
   return Result( true, &text_, &case_swapped_text_, text_is_lowercase_,

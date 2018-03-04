@@ -20,41 +20,14 @@
 
 namespace YouCompleteMe {
 
-LetterNode::LetterNode( char letter, int index )
-  : index_( index ),
-    is_uppercase_( IsUppercase( letter ) ) {
-}
-
-
-LetterNode::LetterNode( const std::string &text )
-  : index_( -1 ),
-    is_uppercase_( false ) {
-
-  letternode_per_text_index_.reserve( text.size() );
+LetterNode::LetterNode( const std::string &text ) 
+ : letternodemap_per_text_index_( text.size() ) {
 
   for ( size_t i = 0; i < text.size(); ++i ) {
-    letternode_per_text_index_.push_back( LetterNode( text[ i ], i ) );
-    SetNodeIndexForLetterIfNearest( text[ i ], i );
-  }
-
-  for ( size_t i = 0; i < text.size(); ++i ) {
-    for ( size_t j = i + 1; j < text.size(); ++j ) {
-      letternode_per_text_index_[ i ].SetNodeIndexForLetterIfNearest( text[ j ],
-                                                                      j );
+    for ( size_t j = i; j < text.size(); ++j ) {
+      letternodemap_per_text_index_[ i ].SetNodeIndexForLetterIfNearest( text[ j ],
+                                                                      j + 1 );
     }
-  }
-}
-
-void LetterNode::SetNodeIndexForLetterIfNearest( char letter, short index ) {
-  NearestLetterNodeIndices& currentLetterNodeIndices = letters_[ letter ];
-  if ( IsUppercase( letter ) ) {
-    if ( currentLetterNodeIndices.indexOfFirstUppercaseOccurrence == -1 ) {
-      currentLetterNodeIndices.indexOfFirstUppercaseOccurrence = index;
-    }
-  }
-
-  if ( currentLetterNodeIndices.indexOfFirstOccurrence == -1 ) {
-    currentLetterNodeIndices.indexOfFirstOccurrence = index;
   }
 }
 

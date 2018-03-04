@@ -27,37 +27,24 @@
 
 namespace YouCompleteMe {
 
+// LetterNodes are indexed by number [0..N], 0 being the root node that doesn't
+// represent a character in the input, N representing the last character
 class LetterNode {
 public:
-  LetterNode( char letter, int index );
-
   YCM_EXPORT explicit LetterNode( const std::string &text );
 
-  inline bool LetterIsUppercase() const {
-    return is_uppercase_;
-  }
+  inline const NearestLetterNodeIndices *NearestLetterNodesForLetter( size_t node_index, char letter ) const {
+    if (node_index >= letternodemap_per_text_index_.size()) {
+      return nullptr;
+    }
 
-  inline const NearestLetterNodeIndices *NearestLetterNodesForLetter(
-    char letter ) {
-
-    return letters_.ListPointerAt( letter );
-  }
-
-  void SetNodeIndexForLetterIfNearest( char letter, short index );
-
-  inline int Index() const {
-    return index_;
-  }
-
-  inline LetterNode *operator[]( int index ) {
-    return &letternode_per_text_index_[ index ];
+    return &letternodemap_per_text_index_[ node_index ].ListPointerAt( letter );
   }
 
 private:
-  LetterNodeListMap letters_;
-  std::vector<LetterNode> letternode_per_text_index_;
-  int index_;
-  bool is_uppercase_;
+  // [0..N) maps, since from the last character you can't find
+  // any other characters anyway
+  std::vector<LetterNodeListMap> letternodemap_per_text_index_;
 };
 
 } // namespace YouCompleteMe

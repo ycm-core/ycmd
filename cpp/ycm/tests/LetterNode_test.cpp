@@ -29,40 +29,26 @@ using ::testing::StrEq;
 
 TEST( LetterNodeTest, AsciiText ) {
   LetterNode root_node( "ascIi_texT" );
-  EXPECT_THAT( root_node,
-               AllOf( Property( &LetterNode::Index, -1 ),
-                      Property( &LetterNode::LetterIsUppercase, false ) ) );
 
   const NearestLetterNodeIndices *nearest_nodes =
-    root_node.NearestLetterNodesForLetter( 'i' );
+    root_node.NearestLetterNodesForLetter( 0, 'i' );
 
-  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
-               AllOf( Property( &LetterNode::Index, 3 ),
-                      Property( &LetterNode::LetterIsUppercase, true ) ) );
-  EXPECT_THAT(  root_node[ nearest_nodes->indexOfFirstUppercaseOccurrence ],
-                AllOf( Property( &LetterNode::Index, 3 ),
-                       Property( &LetterNode::LetterIsUppercase, true ) ) );
+  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, 4 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, 4 );
 
-  LetterNode *node = root_node[ nearest_nodes->indexOfFirstOccurrence ];
+  nearest_nodes = root_node.NearestLetterNodesForLetter(nearest_nodes->indexOfFirstOccurrence, 'i');
 
-  nearest_nodes = node->NearestLetterNodesForLetter( 'i' );
-  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
-               AllOf( Property( &LetterNode::Index, 4 ),
-                      Property( &LetterNode::LetterIsUppercase, false ) ) );
-  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, -1 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, 5 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, 0 );
 
+  nearest_nodes = root_node.NearestLetterNodesForLetter(5, 't');
+  
+  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, 7 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, 10 );
 
-  nearest_nodes = node->NearestLetterNodesForLetter( 't' );
-  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstOccurrence ],
-               AllOf( Property( &LetterNode::Index, 6 ),
-                      Property( &LetterNode::LetterIsUppercase, false ) ) );
-  EXPECT_THAT( root_node[ nearest_nodes->indexOfFirstUppercaseOccurrence ],
-               AllOf( Property( &LetterNode::Index, 9 ),
-                      Property( &LetterNode::LetterIsUppercase, true ) ) );
-
-  nearest_nodes = node->NearestLetterNodesForLetter( 'c' );
-  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, -1 );
-  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, -1 );
+  nearest_nodes = root_node.NearestLetterNodesForLetter(5, 'c');
+  EXPECT_EQ( nearest_nodes->indexOfFirstOccurrence, 0 );
+  EXPECT_EQ( nearest_nodes->indexOfFirstUppercaseOccurrence, 0 );
 }
 
 
