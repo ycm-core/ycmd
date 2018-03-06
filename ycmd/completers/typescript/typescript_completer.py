@@ -25,7 +25,6 @@ from builtins import *  # noqa
 import json
 import logging
 import os
-import re
 import subprocess
 import itertools
 import threading
@@ -38,6 +37,7 @@ from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
+from ycmd.utils import re
 
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'

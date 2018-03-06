@@ -26,10 +26,10 @@ from builtins import *  # noqa
 # We don't want ycm_core inside Vim.
 import logging
 import os
-import re
 from collections import defaultdict
 from future.utils import iteritems
-from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile, SplitLines
+from ycmd.utils import ( ToCppStringCompatible, ToUnicode, re, ReadFile,
+                         SplitLines )
 
 _logger = logging.getLogger( __name__ )
 

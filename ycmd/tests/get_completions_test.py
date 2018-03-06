@@ -176,6 +176,29 @@ def GetCompletions_IdentifierCompleter_UnicodeQuery_InLine_test( app ):
   )
 
 
+@IsolatedYcmd()
+def GetCompletions_IdentifierCompleter_Unicode_MultipleCodePoints_test( app ):
+  # The first ō is on one code point while the second is on two ("o" + combining
+  # macron character).
+  event_data = BuildRequest( contents = 'fōo\nfōo',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+
+  # query is 'fo'
+  completion_data = BuildRequest( contents = 'fōo\nfōo\nfo',
+                                  line_num = 3,
+                                  column_num = 3 )
+  response_data = app.post_json( '/completions', completion_data ).json
+
+  eq_( 1, response_data[ 'completion_start_column' ] )
+  assert_that(
+    response_data[ 'completions' ],
+    has_items( CompletionEntryMatcher( 'fōo', '[ID]' ),
+               CompletionEntryMatcher( 'fōo', '[ID]' ) )
+  )
+
+
 @SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
         return_value = [ 'foo', 'bar', 'qux' ] )

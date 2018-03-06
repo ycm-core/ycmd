@@ -22,6 +22,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from future.utils import PY2
 from hamcrest import ( assert_that, calling, contains, contains_inanyorder,
                        empty, equal_to, has_length, raises )
 from mock import patch
@@ -37,7 +38,7 @@ from ycmd.tests import PathToTestFile
 
 DIR_OF_THIRD_PARTY = os.path.abspath(
   os.path.join( os.path.dirname( __file__ ), '..', '..', 'third_party' ) )
-THIRD_PARTY_FOLDERS = (
+THIRD_PARTY_FOLDERS = [
   os.path.join( DIR_OF_THIRD_PARTY, 'bottle' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'godef' ),
@@ -49,7 +50,14 @@ THIRD_PARTY_FOLDERS = (
   os.path.join( DIR_OF_THIRD_PARTY, 'tern_runtime' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'waitress' ),
   os.path.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls' ),
-)
+]
+if PY2:
+  THIRD_PARTY_FOLDERS.append(
+    os.path.join( DIR_OF_THIRD_PARTY, 'regex', 'py2' ) )
+else:
+  THIRD_PARTY_FOLDERS.append(
+    os.path.join( DIR_OF_THIRD_PARTY, 'regex', 'py3' ) )
+
 
 
 @patch( 'ycmd.server_utils._logger', autospec = True )

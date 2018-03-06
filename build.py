@@ -85,6 +85,8 @@ JDTLS_SHA256 = (
   '4fe3ca50d2b7011f7323863bdf77a16979e5d3a2a534d69e1ef32742cc443061'
 )
 
+REGEX_MODULE_VERSION = '2018.02.21'
+
 
 def OnMac():
   return platform.system() == 'Darwin'
@@ -155,10 +157,8 @@ def NumCores():
 
 
 def CheckCall( args, **kwargs ):
-  quiet = kwargs.get( 'quiet', False )
-  kwargs.pop( 'quiet', None )
-  status_message = kwargs.get( 'status_message', None )
-  kwargs.pop( 'status_message', None )
+  quiet = kwargs.pop( 'quiet', False )
+  status_message = kwargs.pop( 'status_message', None )
 
   if quiet:
     _CheckCallQuiet( args, status_message, **kwargs )
@@ -181,8 +181,7 @@ def _CheckCallQuiet( args, status_message, **kwargs ):
 
 
 def _CheckCall( args, **kwargs ):
-  exit_message = kwargs.get( 'exit_message', None )
-  kwargs.pop( 'exit_message', None )
+  exit_message = kwargs.pop( 'exit_message', None )
   stdout = kwargs.get( 'stdout', None )
 
   try:
@@ -531,6 +530,30 @@ def BuildYcmdLib( args ):
       rmtree( build_dir, ignore_errors = OnCiService() )
 
 
+def InstallRegexModule( args ):
+  regex_dir = p.join( DIR_OF_THIRD_PARTY, 'regex', 'py{}'.format( PY_MAJOR ) )
+  pip_command = [ sys.executable, '-m', 'pip', 'install', '--upgrade',
+                  'regex=={}'.format( REGEX_MODULE_VERSION ), '-t', regex_dir ]
+  # We need to add the --system option on Debian-like distributions. See
+  # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830892
+  try:
+    pip_help_output = subprocess.check_output( pip_command + [ '--help' ],
+                                               stderr = subprocess.STDOUT )
+    if '--system' in pip_help_output.decode( 'utf8' ):
+      pip_command.append( '--system' )
+  except subprocess.CalledProcessError:
+    pass
+
+  # Do not exit if installing the regex module fails; ycmd is still usable
+  # without this module.
+  try:
+    CheckCall( pip_command,
+               quiet = args.quiet,
+               status_message = 'Installing regex module' )
+  except SystemExit:
+    pass
+
+
 def EnableCsCompleter( args ):
   build_command = PathToFirstExistingExecutable(
     [ 'msbuild', 'msbuild.exe', 'xbuild' ] )
@@ -679,6 +702,7 @@ def Main():
   if not args.skip_build:
     ExitIfYcmdLibInUseOnWindows()
     BuildYcmdLib( args )
+    InstallRegexModule( args )
     WritePythonUsedDuringBuild()
   if args.cs_completer or args.omnisharp_completer or args.all_completers:
     EnableCsCompleter( args )

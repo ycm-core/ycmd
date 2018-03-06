@@ -31,6 +31,8 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
   # sys.path the path is.
   if folder == 'python-future':
     continue
+  if folder == 'regex':
+    folder = p.join( folder, 'py{}'.format( sys.version_info[ 0 ] ) )
   python_path.append( p.abspath( p.join( DIR_OF_THIRD_PARTY, folder ) ) )
 if os.environ.get( 'PYTHONPATH' ) is not None:
   python_path.append( os.environ['PYTHONPATH'] )

@@ -27,14 +27,13 @@ from collections import defaultdict
 from future.utils import iteritems
 import logging
 import os.path
-import re
 import textwrap
 import xml.etree.ElementTree
 from xml.etree.ElementTree import ParseError as XmlParseError
 
 import ycm_core
 from ycmd import responses
-from ycmd.utils import ToCppStringCompatible, ToUnicode, ToBytes
+from ycmd.utils import re, ToBytes, ToCppStringCompatible, ToUnicode
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.flags import ( Flags, PrepareFlagsForClang,
                                         NoCompilationDatabase,

@@ -26,14 +26,13 @@ from collections import defaultdict
 from future.utils import itervalues
 import logging
 import os
-import re
 import requests
 import threading
 
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.cs import solutiondetection
-from ycmd.utils import CodepointOffsetToByteOffset, urljoin
+from ycmd.utils import CodepointOffsetToByteOffset, re, urljoin
 from ycmd import responses
 from ycmd import utils
 

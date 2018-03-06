@@ -24,12 +24,12 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import re
 from collections import defaultdict
 from future.utils import iteritems
 from nose.tools import eq_, ok_
 
 from ycmd.completers import completer_utils as cu
+from ycmd.utils import re
 
 
 def _ExtractPatternsFromFiletypeTriggerDict( triggerDict ):
@@ -78,7 +78,7 @@ def FiletypeDictUnion_Works_test():
 
 def PrepareTrigger_UnicodeTrigger_Test():
   regex = cu._PrepareTrigger( 'æ' )
-  eq_( regex.pattern, u'\\æ' )
+  eq_( regex.pattern, re.escape( u'æ' ) )
 
 
 def MatchesSemanticTrigger_Basic_test():

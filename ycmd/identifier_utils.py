@@ -24,8 +24,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import re
-from ycmd.utils import SplitLines
+from ycmd.utils import re, SplitLines
 
 C_STYLE_COMMENT = "/\*(?:\n|.)*?\*/"
 CPP_STYLE_COMMENT = "//.*?$"

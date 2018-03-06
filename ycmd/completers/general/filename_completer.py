@@ -25,12 +25,11 @@ from builtins import *  # noqa
 
 import logging
 import os
-import re
 from collections import defaultdict
 
 from ycmd.completers.completer import Completer
 from ycmd.utils import ( ExpandVariablesInPath, GetCurrentDirectory, OnWindows,
-                         ToUnicode )
+                         re, ToUnicode )
 from ycmd import responses
 
 EXTRA_INFO_MAP = { 1 : '[File]', 2 : '[Dir]', 3 : '[File&Dir]' }
