@@ -44,7 +44,8 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
-                                    LocationMatcher )
+                                    LocationMatcher,
+                                    WithRetry )
 from mock import patch
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd import handlers
@@ -54,6 +55,8 @@ from ycmd.completers.language_server.language_server_completer import (
 )
 
 
+
+@WithRetry
 @SharedYcmd
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'java' )
@@ -80,6 +83,7 @@ def Subcommands_ServerNotReady_test():
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
+  @WithRetry
   @SharedYcmd
   @patch.object( completer, 'ServerIsReady', return_value = False )
   def Test( app, cmd, arguments, *args ):
@@ -133,25 +137,35 @@ def RunTest( app, test, contents = None ):
 
   # We also ignore errors here, but then we check the response code
   # ourself. This is to allow testing of requests returning errors.
-  response = app.post_json(
-    '/run_completer_command',
-    CombineRequest( test[ 'request' ], {
-      'completer_target': 'filetype_default',
-      'contents': contents,
-      'filetype': 'java',
-      'command_arguments': ( [ test[ 'request' ][ 'command' ] ]
-                             + test[ 'request' ].get( 'arguments', [] ) )
-    } ),
-    expect_errors = True
-  )
+  expiry = time.time() + 10
+  while True:
+    try:
+      response = app.post_json(
+        '/run_completer_command',
+        CombineRequest( test[ 'request' ], {
+          'completer_target': 'filetype_default',
+          'contents': contents,
+          'filetype': 'java',
+          'command_arguments': ( [ test[ 'request' ][ 'command' ] ]
+                                 + test[ 'request' ].get( 'arguments', [] ) )
+        } ),
+        expect_errors = True
+      )
 
-  print( 'completer response: {0}'.format( pformat( response.json ) ) )
+      print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+      assert_that( response.json, test[ 'expect' ][ 'data' ] )
+      break
+    except AssertionError:
+      if time.time() > expiry:
+        raise
+
+      time.sleep( 0.25 )
 
 
+@WithRetry
 @IsolatedYcmd
 def Subcommands_GetDoc_NoDoc_test( app ):
   StartJavaCompleterServerInDirectory( app,
@@ -181,6 +195,7 @@ def Subcommands_GetDoc_NoDoc_test( app ):
                ErrorMatcher( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetDoc_Method_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -206,6 +221,7 @@ def Subcommands_GetDoc_Method_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetDoc_Class_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -261,6 +277,7 @@ def Subcommands_GetType_NoKnownType_test( app ):
                ErrorMatcher( RuntimeError, 'Unknown type' ) )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_Class_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -281,10 +298,11 @@ def Subcommands_GetType_Class_test( app ):
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-         'message': 'com.test.TestWidgetImpl'
+    'message': 'com.test.TestWidgetImpl'
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_Constructor_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -305,10 +323,11 @@ def Subcommands_GetType_Constructor_test( app ):
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-         'message': 'com.test.TestWidgetImpl.TestWidgetImpl(String info)'
+    'message': 'com.test.TestWidgetImpl.TestWidgetImpl(String info)'
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_ClassMemberVariable_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -329,10 +348,11 @@ def Subcommands_GetType_ClassMemberVariable_test( app ):
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-         'message': 'String info'
+      'message': 'String info'
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_MethodArgument_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -358,6 +378,7 @@ def Subcommands_GetType_MethodArgument_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_MethodVariable_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -378,11 +399,12 @@ def Subcommands_GetType_MethodVariable_test( app ):
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-         'message': 'int a - '
+    'message': 'int a - '
                     'com.test.TestWidgetImpl.TestWidgetImpl(String)'
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_Method_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -403,10 +425,11 @@ def Subcommands_GetType_Method_test( app ):
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-         'message': 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()'
+    'message': 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()'
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_Unicode_test( app ):
   filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
@@ -433,10 +456,11 @@ def Subcommands_GetType_Unicode_test( app ):
   response = app.post_json( '/run_completer_command', event_data ).json
 
   eq_( response, {
-         'message': 'String whåtawîdgé - com.youcompleteme.Test.doUnicødeTes()'
+    'message': 'String whåtawîdgé - com.youcompleteme.Test.doUnicødeTes()'
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_LiteralValue_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -523,6 +547,7 @@ def Subcommands_GoToReferences_NoReferences_test( app ):
                              'Cannot jump to location' ) )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GoToReferences_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -565,6 +590,7 @@ def Subcommands_GoToReferences_test( app ):
          } ] )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_Simple_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -600,6 +626,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_MultipleFiles_test( app ):
   AbstractTestWidget = PathToTestFile( 'simple_eclipse_project',
@@ -661,6 +688,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_Missing_New_Name_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -685,6 +713,7 @@ def Subcommands_RefactorRename_Missing_New_Name_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_Unicode_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -724,6 +753,7 @@ def Subcommands_RefactorRename_Unicode_test( app ):
 
 
 
+@WithRetry
 @SharedYcmd
 def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   RunTest( app, {
@@ -913,7 +943,7 @@ def Subcommands_FixIt_MultipleDiags_test():
                              'TestFactory.java' )
 
   fixits = has_entries( {
-    'fixits': contains(
+    'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
         'chunks': contains(
@@ -1024,6 +1054,7 @@ def Subcommands_FixIt_Unicode_test():
           filepath, 13, 1, fixits )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_FixIt_InvalidURI_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1081,6 +1112,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
     } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_Spaces_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1171,6 +1203,7 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_Tabs_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1261,6 +1294,7 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_Format_Range_Spaces_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1319,6 +1353,7 @@ def Subcommands_Format_Range_Spaces_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_Format_Range_Tabs_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1377,6 +1412,7 @@ def Subcommands_Format_Range_Tabs_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def RunGoToTest( app, description, filepath, line, col, cmd, goto_response ):
   RunTest( app, {
@@ -1462,6 +1498,7 @@ def Subcommands_GoTo_test():
               has_entries( test[ 'response' ] ) )
 
 
+@WithRetry
 @SharedYcmd
 @patch( 'ycmd.completers.language_server.language_server_completer.'
         'REQUEST_TIMEOUT_COMMAND',
@@ -1491,6 +1528,7 @@ def Subcommands_RequestTimeout_test( app ):
     } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_RequestFailed_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1527,6 +1565,7 @@ def Subcommands_RequestFailed_test( app ):
     } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_IndexOutOfRange_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1550,6 +1589,7 @@ def Subcommands_IndexOutOfRange_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_DifferentFileTypesUpdate_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',

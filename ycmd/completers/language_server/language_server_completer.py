@@ -1215,14 +1215,25 @@ class LanguageServerCompleter( Completer ):
       self._server_capabilities = response[ 'result' ][ 'capabilities' ]
       self._resolve_completion_items = self._ShouldResolveCompletionItems()
 
-      if 'textDocumentSync' in response[ 'result' ][ 'capabilities' ]:
+      if 'textDocumentSync' in self._server_capabilities:
+        sync = self._server_capabilities[ 'textDocumentSync' ]
         SYNC_TYPE = [
           'None',
           'Full',
           'Incremental'
         ]
-        self._sync_type = SYNC_TYPE[
-          response[ 'result' ][ 'capabilities' ][ 'textDocumentSync' ] ]
+
+        # The sync type can either be a number or an object. Because it's
+        # important to make things difficult.
+        if isinstance( sync, dict ):
+          # FIXME: We should really actually check all of the other things that
+          # could exist in this structure.
+          if 'change' in sync:
+            sync = sync[ 'change' ]
+          else:
+            sync = 1
+
+        self._sync_type = SYNC_TYPE[ sync ]
         _logger.info( 'Language server requires sync type of {0}'.format(
           self._sync_type ) )
 
