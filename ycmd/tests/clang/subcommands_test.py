@@ -25,7 +25,7 @@ from __future__ import division
 from builtins import *  # noqa
 
 from hamcrest import ( assert_that, calling, contains, contains_string,
-                       equal_to, has_entries, raises )
+                       empty, equal_to, has_entries, raises )
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
@@ -37,6 +37,7 @@ from ycmd.tests.clang import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ErrorMatcher,
                                     ChunkMatcher,
+                                    LocationMatcher,
                                     LineColMatcher )
 from ycmd.utils import ReadFile
 
@@ -85,6 +86,7 @@ def RunGoToTest_all( app, filename, command, test ):
   contents = ReadFile( PathToTestFile( filename ) )
   common_request = {
     'completer_target' : 'filetype_default',
+    'filepath'         : PathToTestFile( filename ),
     'command_arguments': command,
     'compilation_flags': ['-x',
                           'c++'],
@@ -94,19 +96,28 @@ def RunGoToTest_all( app, filename, command, test ):
     'filetype'         : 'cpp'
   }
   common_response = {
-    'filepath': os.path.abspath( '/foo' ),
+    'filepath': os.path.abspath( PathToTestFile( filename ) ),
   }
+
+  if 'extra_conf' in test:
+    common_request.pop( 'compilation_flags' )
+    app.post_json( '/load_extra_conf_file', {
+      'filepath': PathToTestFile( *test[ 'extra_conf' ] ) } )
 
   request = common_request
   request.update( {
-      'line_num'  : test['request'][0],
-      'column_num': test['request'][1],
+      'line_num'  : test[ 'request' ][ 0 ],
+      'column_num': test[ 'request' ][ 1 ],
   })
   response = common_response
   response.update({
-      'line_num'  : test['response'][0],
-      'column_num': test['response'][1],
+      'line_num'  : test[ 'response' ][ 0 ],
+      'column_num': test[ 'response' ][ 1 ],
   })
+  if len( test[ 'response' ] ) > 2:
+    response.update( {
+      'filepath': PathToTestFile( test[ 'response' ][ 2 ] )
+    } )
 
   goto_data = BuildRequest( **request )
 
@@ -300,6 +311,19 @@ def Subcommands_GoToInclude_Fail_test():
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
 
+def Subcommands_GoTo_Unity_test():
+  yield RunGoToTest_all, 'unitya.cc', [ 'GoToDeclaration' ], {
+    'request': [ 8, 21 ],
+    'response': [ 1, 8, 'unity.cc' ],
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+  }
+  yield RunGoToTest_all, 'unitya.cc', [ 'GoToInclude' ], {
+    'request': [ 1, 14 ],
+    'response': [ 1, 1, 'unity.h' ],
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+  }
+
+
 @SharedYcmd
 def RunGetSemanticTest( app, filename, test, command):
   contents = ReadFile( PathToTestFile( filename ) )
@@ -318,12 +342,19 @@ def RunGetSemanticTest( app, filename, test, command):
                            '-fno-delayed-template-parsing' ],
     'line_num'         : 10,
     'column_num'       : 3,
+    'filepath'         : PathToTestFile( filename ),
     'contents'         : contents,
     'filetype'         : 'cpp'
   }
 
   args = test[ 0 ]
   expected = test[ 1 ]
+
+  if 'extra_conf' in args:
+    common_args.pop( 'compilation_flags' )
+    app.post_json( '/load_extra_conf_file', {
+      'filepath': PathToTestFile( *args[ 'extra_conf' ] ) } )
+    args.pop( 'extra_conf' )
 
   request = common_args
   request.update( args )
@@ -424,11 +455,23 @@ def Subcommands_GetType_test():
             [ 'GetTypeImprecise' ] )
 
 
+def SubCommands_GetType_Unity_test():
+  test = [
+    {
+      'line_num': 10,
+      'column_num': 25,
+      'extra_conf': [ '.ycm_extra_conf.py' ]
+    },
+    'int'
+  ]
+  yield RunGetSemanticTest, 'unitya.cc', test, [ 'GetType' ]
+
+
 def Subcommands_GetParent_test():
   tests = [
     [{'line_num':  1,  'column_num':  1}, 'Internal error: cursor not valid'],
-    # Would be file name if we had one:
-    [{'line_num':  2,  'column_num':  8}, '/foo'],
+    [{'line_num':  2,  'column_num':  8},
+     PathToTestFile( 'GetParent_Clang_test.cc' ) ],
 
     # The reported scope does not include parents
     [{'line_num':  3,  'column_num': 11}, 'A'],
@@ -489,6 +532,7 @@ def RunFixItTest( app, line, column, lang, file_name, check ):
   args = {
     'completer_target' : 'filetype_default',
     'contents'         : contents,
+    'filepath'         : PathToTestFile( file_name ),
     'command_arguments': [ 'FixIt' ],
     'line_num'         : line,
     'column_num'       : column,
@@ -827,6 +871,70 @@ def Subcommands_FixIt_all_test():
 
   for test in tests:
     yield RunFixItTest, test[0], test[1], test[2], test[3], test[4]
+
+
+@SharedYcmd
+def Subcommands_FixIt_Unity_test( app ):
+  file_path = PathToTestFile( 'unitya.cc' )
+  args = {
+    'filetype'         : 'cpp',
+    'completer_target' : 'filetype_default',
+    'contents'         : ReadFile( file_path ),
+    'filepath'         : file_path,
+    'command_arguments': [ 'FixIt' ],
+    'line_num'         : 11,
+    'column_num'       : 17,
+  }
+  app.post_json( '/load_extra_conf_file', {
+    'filepath': PathToTestFile( '.ycm_extra_conf.py' ),
+  } )
+
+  # Get the diagnostics for the file.
+  event_data = BuildRequest( **args )
+
+  results = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( results )
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+      'text': contains_string( "expected ';' after expression" ),
+      'chunks': contains(
+        ChunkMatcher( ';',
+                      LocationMatcher( file_path, 11, 18 ),
+                      LocationMatcher( file_path, 11, 18 ) ),
+      ),
+      'location': LocationMatcher( file_path, 11, 18 ),
+    } ) )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_FixIt_UnityDifferentFile_test( app ):
+  # This checks that we only return FixIt for the requested file, not a fixit on
+  # the same line in a different file
+  file_path = PathToTestFile( 'unity.cc' )
+  args = {
+    'filetype'         : 'cpp',
+    'completer_target' : 'filetype_default',
+    'contents'         : ReadFile( file_path ),
+    'filepath'         : file_path,
+    'command_arguments': [ 'FixIt' ],
+    'line_num'         : 11,
+    'column_num'       : 17,
+  }
+  app.post_json( '/load_extra_conf_file', {
+    'filepath': PathToTestFile( '.ycm_extra_conf.py' ),
+  } )
+
+  # Get the diagnostics for the file.
+  event_data = BuildRequest( **args )
+
+  results = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( results )
+  assert_that( results, has_entries( {
+    'fixits': empty()
+  } ) )
 
 
 @SharedYcmd

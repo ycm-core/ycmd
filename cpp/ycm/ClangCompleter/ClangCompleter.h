@@ -47,11 +47,12 @@ public:
   bool UpdatingTranslationUnit( const std::string &filename );
 
   YCM_EXPORT std::vector< Diagnostic > UpdateTranslationUnit(
-    const std::string &filename,
+    const std::string &translation_unit,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags );
 
   YCM_EXPORT std::vector< CompletionData > CandidatesForLocationInFile(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,
@@ -59,6 +60,7 @@ public:
     const std::vector< std::string > &flags );
 
   YCM_EXPORT Location GetDeclarationLocation(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,
@@ -67,6 +69,7 @@ public:
     bool reparse = true );
 
   YCM_EXPORT Location GetDefinitionLocation(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,
@@ -75,6 +78,7 @@ public:
     bool reparse = true );
 
   YCM_EXPORT std::string GetTypeAtLocation(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,
@@ -83,6 +87,7 @@ public:
     bool reparse = true );
 
   YCM_EXPORT std::string GetEnclosingFunctionAtLocation(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,
@@ -91,6 +96,7 @@ public:
     bool reparse = true );
 
   YCM_EXPORT std::vector< FixIt > GetFixItsForLocationInFile(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,
@@ -99,6 +105,7 @@ public:
     bool reparse = true );
 
   YCM_EXPORT DocumentationData GetDocsForLocationInFile(
+    const std::string &translation_unit,
     const std::string &filename,
     int line,
     int column,

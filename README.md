@@ -229,6 +229,11 @@ The return value must be one of the following:
     include paths in the list of flags are relative. Defaults to ycmd working
     directory.
 
+  - `override_filename`: (optional) a string indicating the name of the file to
+    parse as the translation unit for the supplied file name. This fairly
+    advanced feature allows for projects that use a 'unity'-style build, or
+    for header files which depend on other includes in other files.
+
   - `do_cache`: (optional) a boolean indicating whether or not the result of
     this call (i.e. the list of flags) should be cached for this file name.
     Defaults to `True`. If unsure, the default is almost always correct.

@@ -66,12 +66,14 @@ TEST_F( TranslationUnitTest, ExceptionThrownOnParseFailure ) {
 }
 
 TEST_F( TranslationUnitTest, GoToDefinitionWorks ) {
-  TranslationUnit unit( PathToTestFile( "goto.cpp" ).string(),
+  auto test_file = PathToTestFile( "goto.cpp" ).string();
+  TranslationUnit unit( test_file,
                         std::vector< UnsavedFile >(),
                         std::vector< std::string >(),
                         clang_index_ );
 
   Location location = unit.GetDefinitionLocation(
+                        test_file,
                         17,
                         3,
                         std::vector< UnsavedFile >() );
@@ -82,12 +84,14 @@ TEST_F( TranslationUnitTest, GoToDefinitionWorks ) {
 }
 
 TEST_F( TranslationUnitTest, GoToDefinitionFails ) {
-  TranslationUnit unit( PathToTestFile( "goto.cpp" ).string(),
+  auto test_file = PathToTestFile( "goto.cpp" ).string();
+  TranslationUnit unit( test_file,
                         std::vector< UnsavedFile >(),
                         std::vector< std::string >(),
                         clang_index_ );
 
   Location location = unit.GetDefinitionLocation(
+                        test_file,
                         19,
                         3,
                         std::vector< UnsavedFile >() );
@@ -96,12 +100,14 @@ TEST_F( TranslationUnitTest, GoToDefinitionFails ) {
 }
 
 TEST_F( TranslationUnitTest, GoToDeclarationWorks ) {
-  TranslationUnit unit( PathToTestFile( "goto.cpp" ).string(),
+  auto test_file = PathToTestFile( "goto.cpp" ).string();
+  TranslationUnit unit( test_file,
                         std::vector< UnsavedFile >(),
                         std::vector< std::string >(),
                         clang_index_ );
 
   Location location = unit.GetDeclarationLocation(
+                        test_file,
                         19,
                         3,
                         std::vector< UnsavedFile >() );
@@ -112,12 +118,14 @@ TEST_F( TranslationUnitTest, GoToDeclarationWorks ) {
 }
 
 TEST_F( TranslationUnitTest, GoToDeclarationWorksOnDefinition ) {
-  TranslationUnit unit( PathToTestFile( "goto.cpp" ).string(),
+  auto test_file = PathToTestFile( "goto.cpp" ).string();
+  TranslationUnit unit( test_file,
                         std::vector< UnsavedFile >(),
                         std::vector< std::string >(),
                         clang_index_ );
 
   Location location = unit.GetDeclarationLocation(
+                        test_file,
                         16,
                         6,
                         std::vector< UnsavedFile >() );
@@ -155,32 +163,42 @@ TEST_F( TranslationUnitTest, InvalidTranslationUnit ) {
   EXPECT_TRUE( unit.IsCurrentlyUpdating() );
 
   EXPECT_EQ( std::vector< CompletionData >(),
-             unit.CandidatesForLocation( 1, 1, std::vector< UnsavedFile >() ) );
+             unit.CandidatesForLocation( "",
+                                         1,
+                                         1,
+                                         std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( Location(),
-             unit.GetDeclarationLocation( 1,
+             unit.GetDeclarationLocation( "",
+                                          1,
                                           1,
                                           std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( Location(),
-             unit.GetDefinitionLocation( 1,
+             unit.GetDefinitionLocation( "",
+                                         1,
                                          1,
                                          std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( std::string( "Internal error: no translation unit" ),
-             unit.GetTypeAtLocation( 1, 1, std::vector< UnsavedFile >() ) );
+             unit.GetTypeAtLocation( "",
+                                     1,
+                                     1,
+                                     std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( std::string( "Internal error: no translation unit" ),
-             unit.GetEnclosingFunctionAtLocation( 1,
-                                                  1,
-                                                  std::vector< UnsavedFile >()
-                                                ) );
+             unit.GetEnclosingFunctionAtLocation(
+               "",
+               1,
+               1,
+               std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( DocumentationData(),
-             unit.GetDocsForLocationInFile( 1,
-                                            1,
-                                            std::vector< UnsavedFile >(), false
-                                          ) );
+             unit.GetDocsForLocationInFile(
+               "",
+               1,
+               1,
+               std::vector< UnsavedFile >(), false ) );
 }
 
 } // namespace YouCompleteMe

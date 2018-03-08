@@ -35,12 +35,14 @@ TEST( ClangCompleterTest, CandidatesForLocationInFile ) {
   std::vector< CompletionData > completions_class =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "basic.cpp" ).string(),
+      PathToTestFile( "basic.cpp" ).string(),
       29,
       7,
       std::vector< UnsavedFile >(),
       std::vector< std::string >() );
   std::vector< CompletionData > completions_struct =
     completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
       PathToTestFile( "basic.cpp" ).string(),
       30,
       7,
@@ -56,6 +58,7 @@ TEST( ClangCompleterTest, BufferTextNoParens ) {
   ClangCompleter completer;
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
       PathToTestFile( "basic.cpp" ).string(),
       29,
       7,
@@ -74,6 +77,7 @@ TEST( ClangCompleterTest, MemberFunctionWithDefaults ) {
   ClangCompleter completer;
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
       PathToTestFile( "basic.cpp" ).string(),
       30,
       7,
@@ -98,6 +102,7 @@ TEST( ClangCompleterTest, CandidatesObjCForLocationInFile ) {
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
       PathToTestFile( "SWObject.m" ).string(),
+      PathToTestFile( "SWObject.m" ).string(),
       6,
       16,
       std::vector< UnsavedFile >(),
@@ -115,6 +120,7 @@ TEST( ClangCompleterTest, CandidatesObjCFuncForLocationInFile ) {
   flags.push_back( "objective-c" );
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
+      PathToTestFile( "SWObject.m" ).string(),
       PathToTestFile( "SWObject.m" ).string(),
       9,
       3,
@@ -138,6 +144,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_struct =
     completer.GetDefinitionLocation(
       filename,
+      filename,
       26,
       3,
       std::vector< UnsavedFile >(),
@@ -145,6 +152,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
 
   Location actual_location_class_method =
     completer.GetDefinitionLocation(
+      filename,
       filename,
       29,
       7,
@@ -154,6 +162,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_class =
     completer.GetDefinitionLocation(
       filename,
+      filename,
       27,
       3,
       std::vector< UnsavedFile >(),
@@ -162,6 +171,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
   Location actual_location_enum_value =
     completer.GetDefinitionLocation(
       filename,
+      filename,
       31,
       25,
       std::vector< UnsavedFile >(),
@@ -169,6 +179,7 @@ TEST( ClangCompleterTest, GetDefinitionLocation ) {
 
   Location actual_location_enum =
     completer.GetDefinitionLocation(
+      filename,
       filename,
       31,
       3,
@@ -188,6 +199,7 @@ TEST( ClangCompleterTest, GetDocString ) {
 
   std::vector< CompletionData > completions =
     completer.CandidatesForLocationInFile(
+      PathToTestFile( "basic.cpp" ).string(),
       PathToTestFile( "basic.cpp" ).string(),
       30,
       7,

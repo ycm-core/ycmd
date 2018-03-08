@@ -20,6 +20,8 @@
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
 
+#include <boost/filesystem.hpp>
+
 #include <cstdlib>
 #include <algorithm>
 #include <memory>
@@ -68,8 +70,7 @@ using CodeCompleteResultsWrap =
   shared_ptr< remove_pointer< CXCodeCompleteResults >::type >;
 
 TranslationUnit::TranslationUnit()
-  : filename_( "" ),
-    clang_translation_unit_( nullptr ) {
+  : clang_translation_unit_( nullptr ) {
 }
 
 TranslationUnit::TranslationUnit(
@@ -77,8 +78,7 @@ TranslationUnit::TranslationUnit(
   const std::vector< UnsavedFile > &unsaved_files,
   const std::vector< std::string > &flags,
   CXIndex clang_index )
-  : filename_( filename ),
-    clang_translation_unit_( nullptr ) {
+  : clang_translation_unit_( nullptr ) {
   std::vector< const char * > pointer_flags;
   pointer_flags.reserve( flags.size() );
 
@@ -148,6 +148,7 @@ std::vector< Diagnostic > TranslationUnit::Reparse(
 
 
 std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files ) {
@@ -174,7 +175,7 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
 
   CodeCompleteResultsWrap results(
     clang_codeCompleteAt( clang_translation_unit_,
-                          filename_.c_str(),
+                          filename.c_str(),
                           line,
                           column,
                           const_cast<CXUnsavedFile *>( unsaved ),
@@ -188,6 +189,7 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
 }
 
 Location TranslationUnit::GetDeclarationLocation(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -202,7 +204,7 @@ Location TranslationUnit::GetDeclarationLocation(
     return Location();
   }
 
-  CXCursor cursor = GetCursor( line, column );
+  CXCursor cursor = GetCursor( filename, line, column );
 
   if ( !CursorIsValid( cursor ) ) {
     return Location();
@@ -224,6 +226,7 @@ Location TranslationUnit::GetDeclarationLocation(
 }
 
 Location TranslationUnit::GetDefinitionLocation(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -238,7 +241,7 @@ Location TranslationUnit::GetDefinitionLocation(
     return Location();
   }
 
-  CXCursor cursor = GetCursor( line, column );
+  CXCursor cursor = GetCursor( filename, line, column );
 
   if ( !CursorIsValid( cursor ) ) {
     return Location();
@@ -254,6 +257,7 @@ Location TranslationUnit::GetDefinitionLocation(
 }
 
 std::string TranslationUnit::GetTypeAtLocation(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -269,7 +273,7 @@ std::string TranslationUnit::GetTypeAtLocation(
     return "Internal error: no translation unit";
   }
 
-  CXCursor cursor = GetCursor( line, column );
+  CXCursor cursor = GetCursor( filename, line, column );
 
   if ( !CursorIsValid( cursor ) ) {
     return "Internal error: cursor not valid";
@@ -321,6 +325,7 @@ std::string TranslationUnit::GetTypeAtLocation(
 }
 
 std::string TranslationUnit::GetEnclosingFunctionAtLocation(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -336,7 +341,7 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
     return "Internal error: no translation unit";
   }
 
-  CXCursor cursor = GetCursor( line, column );
+  CXCursor cursor = GetCursor( filename, line, column );
 
   if ( !CursorIsValid( cursor ) ) {
     return "Internal error: cursor not valid";
@@ -442,6 +447,7 @@ private:
 }
 
 std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -453,16 +459,28 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
 
   std::vector< FixIt > fixits;
 
+  auto canonical_filename = boost::filesystem::canonical( filename );
+
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
     for ( const Diagnostic& diagnostic : latest_diagnostics_ ) {
-      // Find all diagnostics for the supplied line which have FixIts attached
-      if ( diagnostic.location_.line_number_ == static_cast< size_t >( line ) ) {
-        fixits.insert( fixits.end(),
-                       diagnostic.fixits_.begin(),
-                       diagnostic.fixits_.end() );
+      auto this_filename = boost::filesystem::canonical(
+        diagnostic.location_.filename_ );
+
+      if ( canonical_filename != this_filename ) {
+        continue;
       }
+
+      // Find all diagnostics for the supplied line which have FixIts attached
+      if ( diagnostic.location_.line_number_ !=
+             static_cast< size_t >( line ) ) {
+        continue;
+      }
+
+      fixits.insert( fixits.end(),
+                     diagnostic.fixits_.begin(),
+                     diagnostic.fixits_.end() );
     }
   }
 
@@ -475,6 +493,7 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
 }
 
 DocumentationData TranslationUnit::GetDocsForLocationInFile(
+  const std::string &filename,
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files,
@@ -490,7 +509,7 @@ DocumentationData TranslationUnit::GetDocsForLocationInFile(
     return DocumentationData();
   }
 
-  CXCursor cursor = GetCursor( line, column );
+  CXCursor cursor = GetCursor( filename, line, column );
 
   if ( !CursorIsValid( cursor ) ) {
     return DocumentationData();
@@ -514,13 +533,15 @@ DocumentationData TranslationUnit::GetDocsForLocationInFile(
   return DocumentationData( canonical_cursor );
 }
 
-CXCursor TranslationUnit::GetCursor( int line, int column ) {
+CXCursor TranslationUnit::GetCursor( const std::string &filename,
+                                     int line,
+                                     int column ) {
   // ASSUMES A LOCK IS ALREADY HELD ON clang_access_mutex_!
   if ( !clang_translation_unit_ ) {
     return clang_getNullCursor();
   }
 
-  CXFile file = clang_getFile( clang_translation_unit_, filename_.c_str() );
+  CXFile file = clang_getFile( clang_translation_unit_, filename.c_str() );
   CXSourceLocation source_location = clang_getLocation(
                                        clang_translation_unit_,
                                        file,
