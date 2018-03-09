@@ -81,6 +81,32 @@ MATCHER( CharactersAreNotEqualWhenCaseIsIgnored, "" ) {
 }
 
 
+MATCHER( BaseCharactersAreEqual, "" ) {
+  for ( size_t i = 0; i < arg.size() - 1; ++i ) {
+    for ( size_t j = i + 1; j < arg.size(); ++j ) {
+      if ( !( arg[ i ]->EqualsBase( *arg[ j ] ) ) ||
+           !( arg[ j ]->EqualsBase( *arg[ i ] ) ) ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+
+MATCHER( BaseCharactersAreNotEqual, "" ) {
+  for ( size_t i = 0; i < arg.size() - 1; ++i ) {
+    for ( size_t j = i + 1; j < arg.size(); ++j ) {
+      if ( arg[ i ]->EqualsBase( *arg[ j ] ) ||
+           arg[ j ]->EqualsBase( *arg[ i ] ) ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+
 struct TextCharacterPair {
   const char* text;
   CharacterTuple character_tuple;
@@ -146,58 +172,66 @@ TEST_P( CharacterTest, PropertiesAreCorrect ) {
 
 const std::array< TextCharacterPair, 13 > tests = { {
   // Musical symbol eighth note (three code points)
-  { "𝅘𝅥𝅮", { "𝅘𝅥𝅮", "𝅘𝅥𝅮", "𝅘𝅥𝅮", false, false, false } },
+  { "𝅘𝅥𝅮", { "𝅘𝅥𝅮", "𝅘", "𝅘𝅥𝅮", "𝅘𝅥𝅮", false, false, false, false } },
 
   // Punctuations
   // Fullwidth low line
-  { "＿", { "＿", "＿", "＿", false, true, false } },
+  { "＿", { "＿", "＿", "＿", "＿", true, false, true, false } },
   // Wavy dash
-  { "〰", { "〰", "〰", "〰", false, true, false } },
+  { "〰", { "〰", "〰", "〰", "〰", true, false, true, false } },
   // Left floor
-  { "⌊", { "⌊", "⌊", "⌊", false, true, false } },
+  { "⌊", { "⌊", "⌊", "⌊", "⌊", true, false, true, false } },
   // Fullwidth right square bracket
-  { "］", { "］", "］", "］", false, true, false } },
-  { "«", { "«", "«", "«", false, true, false } },
+  { "］", { "］", "］", "］", "］", true, false, true, false } },
+  { "«", { "«", "«", "«", "«", true, false, true, false } },
   // Right substitution bracket
-  { "⸃", { "⸃", "⸃", "⸃", false, true, false } },
+  { "⸃", { "⸃", "⸃", "⸃", "⸃", true, false, true, false } },
   // Large one dot over two dots punctuation
-  { "𐬽", { "𐬽", "𐬽", "𐬽", false, true, false } },
+  { "𐬽", { "𐬽", "𐬽", "𐬽", "𐬽", true, false, true, false } },
 
   // Letters
   // Latin capital letter S with dot below and dot above (three code points)
-  { "Ṩ", { "Ṩ", "ṩ", "ṩ", true, false, true } },
+  { "Ṩ", { "Ṩ", "s", "ṩ", "ṩ", false, true, false, true } },
   // Greek small letter alpha with psili and varia and ypogegrammeni (four code
   // points)
-  { "ᾂ", { "ᾂ", "ἂι", "ἊΙ", true, false, false } },
+  { "ᾂ", { "ᾂ", "α", "ἂι", "ἊΙ", false, true, false, false } },
   // Greek capital letter eta with dasia and perispomeni and prosgegrammeni
   // (four code points)
-  { "ᾟ", { "ᾟ", "ἧι", "ἧΙ", true, false, true } },
+  { "ᾟ", { "ᾟ", "η", "ἧι", "ἧΙ", false, true, false, true } },
   // Hiragana voiced iteration mark (two code points)
-  { "ゞ", { "ゞ", "ゞ", "ゞ", true, false, false } },
+  { "ゞ", { "ゞ", "ゝ", "ゞ", "ゞ", false, true, false, false } },
   // Hebrew letter shin with Dagesh and Shin dot (three code points)
-  { "שּׁ", { "שּׁ", "שּׁ", "שּׁ", true, false, false } }
+  { "שּׁ", { "שּׁ", "ש", "שּׁ", "שּׁ", false, true, false, false } }
 } };
 
 
 INSTANTIATE_TEST_CASE_P( UnicodeTest, CharacterTest, ValuesIn( tests ) );
 
 
-TEST( CharacterTest, CharacterMatching ) {
+TEST( CharacterTest, Equality ) {
   CharacterRepository &repo( CharacterRepository::Instance() );
 
   // The lowercase of the Latin capital letter e with acute "É" (which can be
   // represented as the Latin capital letter "E" plus the combining acute
   // character) is the Latin small letter e with acute "é".
-  EXPECT_THAT( repo.GetCharacters( { "é", "É" } ), CharactersAreNotEqual() );
+  EXPECT_THAT( repo.GetCharacters( { "e", "é", "E", "É" } ),
+               CharactersAreNotEqual() );
+  EXPECT_THAT( repo.GetCharacters( { "é", "é" } ), CharactersAreEqual() );
   EXPECT_THAT( repo.GetCharacters( { "É", "É" } ), CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { "e", "E" } ),
+               CharactersAreEqualWhenCaseIsIgnored() );
   EXPECT_THAT( repo.GetCharacters( { "é", "É", "É" } ),
                CharactersAreEqualWhenCaseIsIgnored() );
+  EXPECT_THAT( repo.GetCharacters( { "e", "é", "é", "E", "É", "É" } ),
+               BaseCharactersAreEqual() );
 
   // The Greek capital letter omega "Ω" is the same character as the ohm sign
   // "Ω". The lowercase of both characters is the Greek small letter omega "ω".
   EXPECT_THAT( repo.GetCharacters( { "Ω", "Ω" } ), CharactersAreEqual() );
   EXPECT_THAT( repo.GetCharacters( { "ω", "Ω", "Ω" } ),
                CharactersAreEqualWhenCaseIsIgnored() );
+  EXPECT_THAT( repo.GetCharacters( { "ω", "Ω", "Ω" } ),
+               BaseCharactersAreEqual() );
 
   // The Latin capital letter a with ring above "Å" (which can be represented as
   // the Latin capital letter "A" plus the combining ring above character) is
@@ -205,10 +239,14 @@ TEST( CharacterTest, CharacterMatching ) {
   // characters is the Latin small letter a with ring above "å" (which can also
   // be represented as the Latin small letter "a" plus the combining ring above
   // character).
+  EXPECT_THAT( repo.GetCharacters( { "a", "å", "A", "Å" } ),
+               CharactersAreNotEqual() );
   EXPECT_THAT( repo.GetCharacters( { "å", "å" } ), CharactersAreEqual() );
   EXPECT_THAT( repo.GetCharacters( { "Å", "Å", "Å" } ), CharactersAreEqual() );
   EXPECT_THAT( repo.GetCharacters( { "å", "å", "Å", "Å", "Å" } ),
                CharactersAreEqualWhenCaseIsIgnored() );
+  EXPECT_THAT( repo.GetCharacters( { "a", "å", "å", "A", "Å", "Å", "Å" } ),
+               BaseCharactersAreEqual() );
 
   // The uppercase of the Greek small letter sigma "σ" and Greek small letter
   // final sigma "ς" is the Greek capital letter sigma "Σ".
@@ -216,6 +254,8 @@ TEST( CharacterTest, CharacterMatching ) {
                CharactersAreNotEqual() );
   EXPECT_THAT( repo.GetCharacters( { "σ", "ς", "Σ" } ),
                CharactersAreEqualWhenCaseIsIgnored() );
+  EXPECT_THAT( repo.GetCharacters( { "σ", "ς", "Σ" } ),
+               BaseCharactersAreEqual() );
 
   // The lowercase of the Greek capital theta symbol "ϴ" and capital letter
   // theta "Θ" is the Greek small letter theta "θ". There is also the Greek
@@ -224,6 +264,8 @@ TEST( CharacterTest, CharacterMatching ) {
                CharactersAreNotEqual() );
   EXPECT_THAT( repo.GetCharacters( { "θ", "ϑ", "ϴ", "Θ" } ),
                CharactersAreEqualWhenCaseIsIgnored() );
+  EXPECT_THAT( repo.GetCharacters( { "θ", "ϑ", "ϴ", "Θ" } ),
+               BaseCharactersAreEqual() );
 
   // In the Latin alphabet, the uppercase of "i" (with a dot) is "I" (without a
   // dot). However, in the Turkish alphabet (a variant of the Latin alphabet),
@@ -245,6 +287,66 @@ TEST( CharacterTest, CharacterMatching ) {
                CharactersAreEqualWhenCaseIsIgnored() );
   EXPECT_THAT( repo.GetCharacters( { "ı", "ı̇", "I", "İ" } ),
                CharactersAreNotEqualWhenCaseIsIgnored() );
+  EXPECT_THAT( repo.GetCharacters( { "i", "ı" } ),
+               BaseCharactersAreNotEqual() );
+  EXPECT_THAT( repo.GetCharacters( { "i", "i̇", "I", "İ", "İ" } ),
+               BaseCharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { "ı", "ı̇" } ),
+               BaseCharactersAreEqual() );
+}
+
+
+TEST( CharacterTest, SmartMatching ) {
+  // The letter "é" and "É" appear twice in the tests as they can be represented
+  // on one code point or two ("e"/"E" plus the combining acute character).
+  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "É" ) ) );
+
+  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
+
+  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
+
+  EXPECT_FALSE( Character( "E" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_FALSE( Character( "E" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "E" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_TRUE ( Character( "E" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_TRUE ( Character( "E" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( "E" ).MatchesSmart( Character( "É" ) ) );
+
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
+
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
+
+  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "e" ) ) );
+  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "é" ) ) );
+  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "E" ) ) );
+  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "É" ) ) );
 }
 
 } // namespace YouCompleteMe

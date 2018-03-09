@@ -76,7 +76,8 @@ CodePointSequence CanonicalDecompose( const std::string &text ) {
 } // unnamed namespace
 
 Character::Character( const std::string &character )
-  : is_letter_( false ),
+  : is_base_( true ),
+    is_letter_( false ),
     is_punctuation_( false ),
     is_uppercase_( false ) {
   // Normalize the character through NFD (Normalization Form D). See
@@ -90,6 +91,19 @@ Character::Character( const std::string &character )
     is_letter_ |= code_point->IsLetter();
     is_punctuation_ |= code_point->IsPunctuation();
     is_uppercase_ |= code_point->IsUppercase();
+
+    switch ( code_point->GetBreakProperty() ) {
+      case BreakProperty::PREPEND:
+      case BreakProperty::EXTEND:
+      case BreakProperty::SPACINGMARK:
+      case BreakProperty::E_MODIFIER:
+      case BreakProperty::GLUE_AFTER_ZWJ:
+      case BreakProperty::E_BASE_GAZ:
+        is_base_ = false;
+        break;
+      default:
+        base_.append( code_point->FoldedCase() );
+    }
   }
 }
 

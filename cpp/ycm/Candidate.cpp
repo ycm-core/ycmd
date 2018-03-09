@@ -80,8 +80,8 @@ Result Candidate::QueryMatchResult( const Word &query ) const {
   // accordingly. This is done by simultaneously going through the characters of
   // the query and the candidate. If both characters match, we move to the next
   // character in the query and the candidate. Otherwise, we only move to the
-  // next character in the candidate. The matching is case-insensitive if the
-  // character of the query is lowercase. If there is no character left in the
+  // next character in the candidate. The matching is a combination of smart
+  // base matching and smart case matching. If there is no character left in the
   // query, the query is not a subsequence and we return an empty result. If
   // there is no character left in the candidate, the query is a subsequence and
   // we return a result with the query, the candidate, the sum of indexes of the
@@ -112,9 +112,7 @@ Result Candidate::QueryMatchResult( const Word &query ) const {
     const auto &candidate_character = *candidate_character_pos;
     const auto &query_character = *query_character_pos;
 
-    if ( ( !query_character->IsUppercase() &&
-           query_character->EqualsIgnoreCase( *candidate_character ) ) ||
-         *query_character == *candidate_character ) {
+    if ( query_character->MatchesSmart( *candidate_character ) ) {
       index_sum += candidate_index;
 
       ++query_character_pos;

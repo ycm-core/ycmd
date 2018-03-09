@@ -88,27 +88,33 @@ struct CodePointTuple {
 
 struct CharacterTuple {
   CharacterTuple()
-    : CharacterTuple( "", "", "", false, false, false ) {
+    : CharacterTuple( "", "", "", "", false, false, false, false ) {
   }
 
   CharacterTuple( const Character &character )
     : CharacterTuple( character.Normal(),
+                      character.Base(),
                       character.FoldedCase(),
                       character.SwappedCase(),
+                      character.IsBase(),
                       character.IsLetter(),
                       character.IsPunctuation(),
                       character.IsUppercase() ) {
   }
 
   CharacterTuple( const std::string &normal,
+                  const std::string &base,
                   const std::string &folded_case,
                   const std::string &swapped_case,
+                  bool is_base,
                   bool is_letter,
                   bool is_punctuation,
                   bool is_uppercase )
     : normal_( normal ),
+      base_( base ),
       folded_case_( folded_case ),
       swapped_case_( swapped_case ),
+      is_base_( is_base ),
       is_letter_( is_letter ),
       is_punctuation_( is_punctuation ),
       is_uppercase_( is_uppercase ) {
@@ -116,16 +122,20 @@ struct CharacterTuple {
 
   bool operator== ( const CharacterTuple &other ) const {
     return normal_ == other.normal_ &&
+           base_ == other.base_ &&
            folded_case_ == other.folded_case_ &&
            swapped_case_ == other.swapped_case_ &&
+           is_base_ == other.is_base_ &&
            is_letter_ == other.is_letter_ &&
            is_punctuation_ == other.is_punctuation_ &&
            is_uppercase_ == other.is_uppercase_;
   };
 
   std::string normal_;
+  std::string base_;
   std::string folded_case_;
   std::string swapped_case_;
+  bool is_base_;
   bool is_letter_;
   bool is_punctuation_;
   bool is_uppercase_;

@@ -46,8 +46,10 @@ std::ostream& operator<<( std::ostream& os, const CodePoint *code_point ) {
 
 std::ostream& operator<<( std::ostream& os, const CharacterTuple &character ) {
   os << "{ " << PrintToString( character.normal_ ) << ", "
+             << PrintToString( character.base_ ) << ", "
              << PrintToString( character.folded_case_ ) << ", "
              << PrintToString( character.swapped_case_ ) << ", "
+             << PrintToString( character.is_base_ ) << ", "
              << PrintToString( character.is_letter_ ) << ", "
              << PrintToString( character.is_punctuation_ ) << ", "
              << PrintToString( character.is_uppercase_ ) << " }";
