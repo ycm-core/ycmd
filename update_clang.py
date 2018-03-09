@@ -82,7 +82,7 @@ LLVM_DOWNLOAD_DATA = {
       os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
     ]
   },
-  'i386-unknown-freebsd10': {
+  'i386-unknown-freebsd-10': {
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
@@ -92,7 +92,7 @@ LLVM_DOWNLOAD_DATA = {
       os.path.join( 'lib', 'libclang.so.{llvm_version:.3}' )
     ]
   },
-  'amd64-unknown-freebsd10': {
+  'amd64-unknown-freebsd-10': {
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
