@@ -30,7 +30,7 @@ from hamcrest import ( assert_that, calling, equal_to, has_length, none, raises,
 from ycmd import extra_conf_store
 from ycmd.responses import UnknownExtraConf
 from ycmd.tests import IsolatedYcmd, PathToTestFile
-from ycmd.tests.test_utils import TemporarySymlink, UnixOnly
+from ycmd.tests.test_utils import TemporarySymlink, UnixOnly, WindowsOnly
 
 
 GLOBAL_EXTRA_CONF = PathToTestFile( 'extra_conf', 'global_extra_conf.py' )
@@ -71,6 +71,25 @@ def ExtraConfStore_ModuleForSourceFile_Blacklisted_test( app ):
   assert_that( extra_conf_store.ModuleForSourceFile( filename ), none() )
 
 
+@patch.dict( 'os.environ', { 'YCMD_TEST': PROJECT_EXTRA_CONF } )
+@IsolatedYcmd( { 'extra_conf_globlist': [ '$YCMD_TEST' ] } )
+def ExtraConfStore_ModuleForSourceFile_UnixVarEnv_test( app ):
+  filename = PathToTestFile( 'extra_conf', 'project', 'some_file' )
+  module = extra_conf_store.ModuleForSourceFile( filename )
+  assert_that( inspect.ismodule( module ) )
+  assert_that( inspect.getfile( module ), equal_to( PROJECT_EXTRA_CONF ) )
+
+
+@WindowsOnly
+@patch.dict( 'os.environ', { 'YCMD_TEST': PROJECT_EXTRA_CONF } )
+@IsolatedYcmd( { 'extra_conf_globlist': [ '%YCMD_TEST%' ] } )
+def ExtraConfStore_ModuleForSourceFile_WinVarEnv_test( app ):
+  filename = PathToTestFile( 'extra_conf', 'project', 'some_file' )
+  module = extra_conf_store.ModuleForSourceFile( filename )
+  assert_that( inspect.ismodule( module ) )
+  assert_that( inspect.getfile( module ), equal_to( PROJECT_EXTRA_CONF ) )
+
+
 @UnixOnly
 @IsolatedYcmd( { 'extra_conf_globlist': [
     PathToTestFile( 'extra_conf', 'symlink', '*' ) ] } )
@@ -85,6 +104,25 @@ def ExtraConfStore_ModuleForSourceFile_SupportSymlink_test( app ):
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
 def ExtraConfStore_ModuleForSourceFile_GlobalExtraConf_test( app ):
+  filename = PathToTestFile( 'extra_conf', 'some_file' )
+  module = extra_conf_store.ModuleForSourceFile( filename )
+  assert_that( inspect.ismodule( module ) )
+  assert_that( inspect.getfile( module ), equal_to( GLOBAL_EXTRA_CONF ) )
+
+
+@patch.dict( 'os.environ', { 'YCMD_TEST': GLOBAL_EXTRA_CONF } )
+@IsolatedYcmd( { 'global_ycm_extra_conf': '$YCMD_TEST' } )
+def ExtraConfStore_ModuleForSourceFile_GlobalExtraConf_UnixEnvVar_test( app ):
+  filename = PathToTestFile( 'extra_conf', 'some_file' )
+  module = extra_conf_store.ModuleForSourceFile( filename )
+  assert_that( inspect.ismodule( module ) )
+  assert_that( inspect.getfile( module ), equal_to( GLOBAL_EXTRA_CONF ) )
+
+
+@WindowsOnly
+@patch.dict( 'os.environ', { 'YCMD_TEST': GLOBAL_EXTRA_CONF } )
+@IsolatedYcmd( { 'global_ycm_extra_conf': '%YCMD_TEST%' } )
+def ExtraConfStore_ModuleForSourceFile_GlobalExtraConf_WinEnvVar_test( app ):
   filename = PathToTestFile( 'extra_conf', 'some_file' )
   module = extra_conf_store.ModuleForSourceFile( filename )
   assert_that( inspect.ismodule( module ) )
