@@ -282,6 +282,12 @@ def ExecutableName( executable ):
   return executable + ( '.exe' if OnWindows() else '' )
 
 
+def ExpandVariablesInPath( path ):
+  # Replace '~' with the home directory and expand environment variables in
+  # path.
+  return os.path.expanduser( os.path.expandvars( path ) )
+
+
 def OnWindows():
   return sys.platform == 'win32'
 

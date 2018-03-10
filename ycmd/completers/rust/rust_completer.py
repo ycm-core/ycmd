@@ -22,8 +22,8 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.utils import ( FindExecutable, ToUnicode, ToBytes, SetEnviron,
-                         ProcessIsRunning, urljoin )
+from ycmd.utils import ( ExpandVariablesInPath, FindExecutable, ToUnicode,
+                         ToBytes, SetEnviron, ProcessIsRunning, urljoin )
 from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
 
@@ -146,7 +146,7 @@ class RustCompleter( Completer ):
                       os.environ.get( 'RUST_SRC_PATH' ) )
 
     if rust_src_path:
-      return os.path.expanduser( os.path.expandvars( rust_src_path ) )
+      return ExpandVariablesInPath( rust_src_path )
 
     # Try to figure out the src path using rustup
     rustc_executable = FindExecutable( 'rustc' )
