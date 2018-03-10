@@ -441,7 +441,7 @@ class ClangCompleter( Completer ):
     flags_item = responses.DebugInfoItem(
       key = 'flags', value = '{0}'.format( list( flags ) ) )
     filename_item = responses.DebugInfoItem(
-      key = 'translation_unit', value = filename )
+      key = 'translation unit', value = filename )
 
     return responses.BuildDebugInfoResponse( name = 'C-family',
                                              items = [ database_item,

@@ -52,7 +52,7 @@ def DebugInfo_FlagsWhenExtraConfLoadedAndNoCompilationDatabase_test( app ):
           'value': matches_regexp( "\['-x', 'c\+\+', .*\]" )
         } ),
         has_entries( {
-          'key': 'translation_unit',
+          'key': 'translation unit',
           'value': PathToTestFile( 'basic.cpp' )
         } )
       )
@@ -79,7 +79,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndNoCompilationDatabase_test( app ):
           'value': '[]'
         } ),
         has_entries( {
-          'key': 'translation_unit',
+          'key': 'translation unit',
           'value': instance_of( str )
         } )
       )
@@ -101,7 +101,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndNoCompilationDatabase_test( app ):
           'value': '[]'
         } ),
         has_entries( {
-          'key': 'translation_unit',
+          'key': 'translation unit',
           'value': instance_of( str )
         } )
       )
@@ -130,7 +130,7 @@ def DebugInfo_FlagsWhenExtraConfNotLoadedAndNoCompilationDatabase_test(
           'value': '[]'
         } ),
         has_entries( {
-          'key': 'translation_unit',
+          'key': 'translation unit',
           'value': PathToTestFile( 'basic.cpp' )
         } )
       )
@@ -169,7 +169,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndCompilationDatabaseLoaded_test( app ):
                   "\['clang\+\+', '-x', 'c\+\+', .*, '-Wall', .*\]" )
             } ),
             has_entries( {
-              'key': 'translation_unit',
+              'key': 'translation unit',
               'value': os.path.join( tmp_dir, 'test.cc' ),
             } )
           )
@@ -201,7 +201,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndInvalidCompilationDatabase_test( app ):
               'value': '[]'
             } ),
             has_entries( {
-              'key': 'translation_unit',
+              'key': 'translation unit',
               'value': os.path.join( tmp_dir, 'test.cc' )
             } )
           )
@@ -233,7 +233,7 @@ def DebugInfo_Unity( app ):
             'value': matches_regexp( "\['-x', 'c\+\+', .*\]" )
           } ),
           has_entries( {
-            'key': 'translation_unit',
+            'key': 'translation unit',
             'value': PathToTestFile( 'unity.cpp' )
           } )
         )
