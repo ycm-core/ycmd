@@ -120,6 +120,8 @@ BOOST_PYTHON_MODULE(ycm_core)
   class_< ClangCompleter, boost::noncopyable >( "ClangCompleter" )
     .def( "GetDeclarationLocation", &ClangCompleter::GetDeclarationLocation )
     .def( "GetDefinitionLocation", &ClangCompleter::GetDefinitionLocation )
+    .def( "GetDefinitionOrDeclarationLocation",
+          &ClangCompleter::GetDefinitionOrDeclarationLocation )
     .def( "DeleteCachesForFile", &ClangCompleter::DeleteCachesForFile )
     .def( "UpdatingTranslationUnit", &ClangCompleter::UpdatingTranslationUnit )
     .def( "UpdateTranslationUnit", &ClangCompleter::UpdateTranslationUnit )

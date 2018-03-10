@@ -136,6 +136,35 @@ TEST_F( TranslationUnitTest, GoToDeclarationWorksOnDefinition ) {
 }
 
 
+TEST_F( TranslationUnitTest, GoToWorks ) {
+  auto test_file = PathToTestFile( "goto.cpp" ).string();
+  TranslationUnit unit( test_file,
+                        std::vector< UnsavedFile >(),
+                        std::vector< std::string >(),
+                        clang_index_ );
+
+  Location location = unit.GetDefinitionOrDeclarationLocation(
+                        test_file,
+                        16,
+                        8,
+                        std::vector< UnsavedFile >() );
+
+  EXPECT_EQ( 14, location.line_number_ );
+  EXPECT_EQ( 6, location.column_number_ );
+  EXPECT_TRUE( !location.filename_.empty() );
+
+  location = unit.GetDefinitionOrDeclarationLocation(
+               test_file,
+               14,
+               9,
+               std::vector< UnsavedFile >() );
+
+  EXPECT_EQ( 16, location.line_number_ );
+  EXPECT_EQ( 6, location.column_number_ );
+  EXPECT_TRUE( !location.filename_.empty() );
+}
+
+
 TEST_F( TranslationUnitTest, InvalidTranslationUnitStore ) {
   // libclang fails to parse a file with no extension and no language flag -x
   // given.
@@ -179,6 +208,13 @@ TEST_F( TranslationUnitTest, InvalidTranslationUnit ) {
                                          1,
                                          1,
                                          std::vector< UnsavedFile >() ) );
+
+  EXPECT_EQ( Location(),
+             unit.GetDefinitionOrDeclarationLocation(
+               "",
+               1,
+               1,
+               std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( std::string( "Internal error: no translation unit" ),
              unit.GetTypeAtLocation( "",
