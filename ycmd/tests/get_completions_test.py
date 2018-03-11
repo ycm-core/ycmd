@@ -511,15 +511,92 @@ def GetCompletions_CacheIsNotValid_DifferentStartColumn_test(
 @SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
         return_value = True )
-@patch( 'ycmd.tests.test_utils.DummyCompleter.CompletionType',
-        side_effect = [ 0, 0, 0, 0, 1, 1, 1, 1 ] )
 @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
         side_effect = [ [ 'attributeA' ], [ 'attributeB' ] ] )
-def GetCompletions_CacheIsNotValid_DifferentCompletionType_test(
+def GetCompletions_CacheIsNotValid_DifferentForceSemantic_test(
   app, candidates_list, *args ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     completion_data = BuildRequest( filetype = 'dummy_filetype',
                                     contents = 'objectA.attr',
+                                    line_num = 1,
+                                    column_num = 12,
+                                    force_semantic = True )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeA' ) )
+    )
+
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.attr',
+                                    line_num = 1,
+                                    column_num = 12 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeB' ) )
+    )
+
+    # We ask for candidates twice because of cache invalidation:
+    # semantic completion is forced for one of the request, not the other.
+    assert_that( candidates_list.call_count, equal_to( 2 ) )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
+        return_value = True )
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        side_effect = [ [ 'attributeA' ], [ 'attributeB' ] ] )
+def GetCompletions_CacheIsNotValid_DifferentContents_test(
+  app, candidates_list, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA = foo\n'
+                                               'objectA.attr',
+                                    line_num = 2,
+                                    column_num = 12 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeA' ) )
+    )
+
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA = bar\n'
+                                               'objectA.attr',
+                                    line_num = 2,
+                                    column_num = 12 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeB' ) )
+    )
+
+    # We ask for candidates twice because of cache invalidation:
+    # both requests have the same cursor position and current line but file
+    # contents are different.
+    assert_that( candidates_list.call_count, equal_to( 2 ) )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
+        return_value = True )
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        side_effect = [ [ 'attributeA' ], [ 'attributeB' ] ] )
+def GetCompletions_CacheIsNotValid_DifferentNumberOfLines_test(
+  app, candidates_list, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.attr\n'
+                                               'objectB.attr',
                                     line_num = 1,
                                     column_num = 12 )
 
@@ -543,7 +620,58 @@ def GetCompletions_CacheIsNotValid_DifferentCompletionType_test(
     )
 
     # We ask for candidates twice because of cache invalidation:
-    # completion types are different between requests.
+    # both requests have the same cursor position and current line but the
+    # number of lines in the current file is different.
+    assert_that( candidates_list.call_count, equal_to( 2 ) )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
+        return_value = True )
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        side_effect = [ [ 'attributeA' ], [ 'attributeB' ] ] )
+def GetCompletions_CacheIsNotValid_DifferentFileData_test(
+  app, candidates_list, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.attr',
+                                    line_num = 1,
+                                    column_num = 12,
+                                    file_data = {
+                                      '/bar': {
+                                        'contents': 'objectA = foo',
+                                        'filetypes': [ 'dummy_filetype' ]
+                                      }
+                                    } )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeA' ) )
+    )
+
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.attr',
+                                    line_num = 1,
+                                    column_num = 12,
+                                    file_data = {
+                                      '/bar': {
+                                        'contents': 'objectA = bar',
+                                        'filetypes': [ 'dummy_filetype' ]
+                                      }
+                                    } )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeB' ) )
+    )
+
+    # We ask for candidates twice because of cache invalidation:
+    # both requests have the same cursor position and contents for the current
+    # file but different contents for another file.
     assert_that( candidates_list.call_count, equal_to( 2 ) )
 
 
@@ -582,7 +710,6 @@ def GetCompletions_FilterThenReturnFromCache_test( app,
 
     # Finally, request the original (unfiltered) set again. Ensure that we get
     # proper results (not some bytes objects)
-    # First, fill the cache with an empty query
     completion_data = BuildRequest( filetype = 'dummy_filetype',
                                     contents = 'objectA.',
                                     line_num = 1,

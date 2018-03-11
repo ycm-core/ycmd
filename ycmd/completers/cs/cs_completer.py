@@ -1,6 +1,4 @@
-# Copyright (C) 2011-2012 Chiel ten Brinke <ctenbrinke@gmail.com>
-#                         Google Inc.
-#               2017      ycmd contributors
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -102,10 +100,6 @@ class CsharpCompleter( Completer ):
 
   def ShouldUseNowInner( self, request_data ):
     return True
-
-
-  def CompletionType( self, request_data ):
-    return request_data[ 'force_semantic' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -429,10 +423,6 @@ class CsharpSolutionCompleter( object ):
     """ Reloads the solutions in the OmniSharp server """
     self._logger.info( 'Reloading Solution in OmniSharp server' )
     return self._GetResponse( '/reloadsolution' )
-
-
-  def CompletionType( self, request_data ):
-    return request_data[ 'force_semantic' ]
 
 
   def _GetCompletions( self, request_data ):
