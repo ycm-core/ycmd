@@ -154,9 +154,10 @@ class RequestWrap( object ):
       self[ 'line_value' ],
       column_num )
 
-    # The same applies to the 'query' (the bit after the start column up to the
-    # cursor column). It's dependent on the 'start_codepoint' so we must reset
-    # it.
+    # The same applies to the 'prefix' (the bit before the start column) and the
+    # 'query' (the bit after the start column up to the cursor column). They are
+    # dependent on the 'start_codepoint' so we must reset them.
+    self._cached_computed.pop( 'prefix', None )
     self._cached_computed.pop( 'query', None )
 
 
@@ -177,9 +178,10 @@ class RequestWrap( object ):
       self[ 'line_value' ],
       codepoint_offset )
 
-    # The same applies to the 'query' (the bit after the start column up to the
-    # cursor column). It's dependent on the 'start_codepoint' so we must reset
-    # it.
+    # The same applies to the 'prefix' (the bit before the start column) and the
+    # 'query' (the bit after the start column up to the cursor column). They are
+    # dependent on the 'start_codepoint' so we must reset them.
+    self._cached_computed.pop( 'prefix', None )
     self._cached_computed.pop( 'query', None )
 
 
