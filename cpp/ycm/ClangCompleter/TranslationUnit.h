@@ -78,6 +78,13 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
+  YCM_EXPORT Location GetDefinitionOrDeclarationLocation(
+    const std::string &filename,
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    bool reparse = true );
+
   YCM_EXPORT std::string GetTypeAtLocation(
     const std::string &filename,
     int line,
@@ -115,6 +122,11 @@ private:
   void UpdateLatestDiagnostics();
 
   CXCursor GetCursor( const std::string& filename, int line, int column );
+
+  // These two methods must be called under the clang_access_mutex_ lock.
+  Location GetDeclarationLocationForCursor( CXCursor cursor );
+
+  Location GetDefinitionLocationForCursor( CXCursor cursor );
 
   /////////////////////////////
   // PRIVATE MEMBER VARIABLES

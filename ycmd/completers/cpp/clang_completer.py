@@ -243,9 +243,8 @@ class ClangCompleter( Completer ):
     if include_response:
       return include_response
 
-    location = self._LocationForGoTo( 'GetDefinitionLocation', request_data )
-    if not location or not location.IsValid():
-      location = self._LocationForGoTo( 'GetDeclarationLocation', request_data )
+    location = self._LocationForGoTo( 'GetDefinitionOrDeclarationLocation',
+                                      request_data )
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )
@@ -256,13 +255,9 @@ class ClangCompleter( Completer ):
     if include_response:
       return include_response
 
-    location = self._LocationForGoTo( 'GetDefinitionLocation',
+    location = self._LocationForGoTo( 'GetDefinitionOrDeclarationLocation',
                                       request_data,
                                       reparse = False )
-    if not location or not location.IsValid():
-      location = self._LocationForGoTo( 'GetDeclarationLocation',
-                                        request_data,
-                                        reparse = False )
     if not location or not location.IsValid():
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
     return _ResponseForLocation( location )

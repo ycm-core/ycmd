@@ -159,6 +159,27 @@ Location ClangCompleter::GetDefinitionLocation(
                                       reparse );
 }
 
+Location ClangCompleter::GetDefinitionOrDeclarationLocation(
+  const std::string &translation_unit,
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  const std::vector< std::string > &flags,
+  bool reparse ) {
+  ReleaseGil unlock;
+  shared_ptr< TranslationUnit > unit =
+    translation_unit_store_.GetOrCreate( translation_unit,
+                                         unsaved_files,
+                                         flags );
+
+  return unit->GetDefinitionOrDeclarationLocation( filename,
+                                                   line,
+                                                   column,
+                                                   unsaved_files,
+                                                   reparse );
+}
+
 std::string ClangCompleter::GetTypeAtLocation(
   const std::string &translation_unit,
   const std::string &filename,

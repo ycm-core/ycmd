@@ -129,21 +129,23 @@ def RunGoToTest_all( app, filename, command, test ):
 def Subcommands_GoTo_all_test():
   # GoToDeclaration
   tests = [
-    # Local::x -> declaration of x
-    { 'request': [ 23, 21 ],  'response': [ 4,  9 ] },
-    # Local::in_line -> declaration of Local::in_line
-    { 'request': [ 24, 26 ],  'response': [ 6, 10 ] },
-    # Local -> declaration of Local
-    { 'request': [ 24, 16 ],  'response': [ 2, 11 ] },
+    # Local::x -> definition/declaration of x
+    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    # Local::in_line -> definition/declaration of Local::in_line
+    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    # Local -> definition/declaration of Local
+    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
     # Local::out_of_line -> declaration of Local::out_of_line
-    { 'request': [ 25, 27 ],  'response': [ 11, 10 ] },
+    { 'request': [ 25, 27 ], 'response': [ 11, 10 ] },
     # GoToDeclaration on definition of out_of_line moves to declaration
-    { 'request': [ 14, 13 ],  'response': [ 11, 10] },
+    { 'request': [ 14, 13 ], 'response': [ 11, 10 ] },
     # main -> declaration of main
-    { 'request': [ 21,  7 ],  'response': [ 19, 5] },
+    { 'request': [ 21,  7 ], 'response': [ 19,  5 ] },
+    # Unicøde
+    { 'request': [ 34,  8 ], 'response': [ 32, 26 ] },
     # Another_Unicøde
-    { 'request': [ 36,  25 ], 'response': [ 32, 54] },
-    { 'request': [ 38,  3 ],  'response': [ 36, 28] },
+    { 'request': [ 36, 25 ], 'response': [ 32, 54 ] },
+    { 'request': [ 38,  3 ], 'response': [ 36, 28 ] },
   ]
 
   for test in tests:
@@ -152,26 +154,22 @@ def Subcommands_GoTo_all_test():
             [ 'GoToDeclaration' ],
             test )
 
-  # GoToDefinition - identical to GoToDeclaration
-  #
-  # The semantics of this seem the wrong way round to me. GoToDefinition should
-  # go to where a method is implemented, not where it is declared.
-  #
+  # GoToDefinition
   tests = [
-    # Local::x -> declaration of x
-    { 'request': [ 23, 21 ], 'response': [ 4,  9] },
-    # Local::in_line -> declaration of Local::in_line
-    { 'request': [ 24, 26 ], 'response': [ 6, 10 ] },
-    # Local -> declaration of Local
+    # Local::x -> declaration/definition of x
+    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    # Local::in_line -> declaration/definition of Local::in_line
+    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    # Local -> declaration/definition of Local
     { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
-    # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [ 25, 27 ], 'response': [ 14, 13 ] }, # sic
-    # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [ 14, 13 ], 'response': [ 14, 13 ] }, # sic
+    # Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
+    # GoToDefinition on definition of out_of_line moves to itself
+    { 'request': [ 14, 13 ], 'response': [ 14, 13 ] },
     # main -> definition of main (not declaration)
-    { 'request': [ 21,  7 ], 'response': [ 21, 5]  }, # sic
+    { 'request': [ 21,  7 ], 'response': [ 21,  5 ]  },
     # Unicøde
-    { 'request': [ 34, 8  ], 'response': [ 32, 26 ] },
+    { 'request': [ 34,  8 ], 'response': [ 32, 26 ] },
   ]
 
   for test in tests:
@@ -180,26 +178,27 @@ def Subcommands_GoTo_all_test():
             [ 'GoToDefinition' ],
             test )
 
-  # GoTo - identical to GoToDeclaration
-  #
-  # The semantics of this seem the wrong way round to me. GoToDefinition should
-  # go to where a method is implemented, not where it is declared.
-  #
+  # GoTo
   tests = [
-    # Local::x -> declaration of x
-    { 'request': [23, 21], 'response': [ 4,  9] },
-    # Local::in_line -> declaration of Local::in_line
-    { 'request': [24, 26], 'response': [ 6, 10] },
-    # Local -> declaration of Local
-    { 'request': [24, 16], 'response': [ 2, 11] },
-    # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [25, 27], 'response': [14, 13] }, # sic
-    # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [14, 13], 'response': [14, 13] }, # sic
-    # main -> definition of main (not declaration)
-    { 'request': [21,  7], 'response': [21, 5] }, # sic
+    # Local::x -> declaration/definition of x
+    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    # Local::in_line -> declaration/definition of Local::in_line
+    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    # Local -> declaration/definition of Local
+    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
+    # Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
+    # GoTo on definition of out_of_line moves to declaration
+    { 'request': [ 14, 13 ], 'response': [ 11, 10 ] },
+    # GoTo on declaration of out_of_line moves to definition
+    { 'request': [ 11, 17 ], 'response': [ 14, 13 ] },
+    # main -> definition of main
+    { 'request': [ 21,  7 ], 'response': [ 19,  5 ] },
+    # Unicøde
+    { 'request': [ 34,  8 ], 'response': [ 32, 26 ] },
     # Another_Unicøde
-    { 'request': [ 36,  25 ], 'response': [ 32, 54] },
+    { 'request': [ 36, 25 ], 'response': [ 32, 54 ] },
+    { 'request': [ 38,  3 ], 'response': [ 36, 28 ] },
   ]
 
   for test in tests:
@@ -208,24 +207,27 @@ def Subcommands_GoTo_all_test():
             [ 'GoTo' ],
             test )
 
-  # GoToImprecise - identical to GoToDeclaration
-  #
-  # The semantics of this seem the wrong way round to me. GoToDefinition should
-  # go to where a method is implemented, not where it is declared.
-  #
+  # GoToImprecise - identical to GoTo
   tests = [
-    # Local::x -> declaration of x
-    { 'request': [23, 21], 'response': [ 4,  9] },
-    # Local::in_line -> declaration of Local::in_line
-    { 'request': [24, 26], 'response': [ 6, 10] },
-    # Local -> declaration of Local
-    { 'request': [24, 16], 'response': [ 2, 11] },
-    # sic: Local::out_of_line -> definition of Local::out_of_line
-    { 'request': [25, 27], 'response': [14, 13] }, # sic
-    # sic: GoToDeclaration on definition of out_of_line moves to itself
-    { 'request': [14, 13], 'response': [14, 13] }, # sic
-    # main -> definition of main (not declaration)
-    { 'request': [21,  7], 'response': [21, 5] }, # sic
+    # Local::x -> declaration/definition of x
+    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    # Local::in_line -> declaration/definition of Local::in_line
+    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    # Local -> declaration/definition of Local
+    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
+    # Local::out_of_line -> definition of Local::out_of_line
+    { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
+    # GoToImprecise on definition of out_of_line moves to declaration
+    { 'request': [ 14, 13 ], 'response': [ 11, 10 ] },
+    # GoToImprecise on declaration of out_of_line moves to definition
+    { 'request': [ 11, 17 ], 'response': [ 14, 13 ] },
+    # main -> definition of main
+    { 'request': [ 21,  7 ], 'response': [ 19,  5 ] },
+    # Unicøde
+    { 'request': [ 34,  8 ], 'response': [ 32, 26 ] },
+    # Another_Unicøde
+    { 'request': [ 36, 25 ], 'response': [ 32, 54 ] },
+    { 'request': [ 38,  3 ], 'response': [ 36, 28 ] },
   ]
 
   for test in tests:
@@ -233,6 +235,60 @@ def Subcommands_GoTo_all_test():
             'GoTo_all_Clang_test.cc',
             [ 'GoToImprecise' ],
             test )
+
+
+def Subcommands_GoTo_all_Fail_test():
+  cursor_on_nothing = { 'request': [ 13, 1 ], 'response': [ 1, 1 ] }
+  cursor_on_another_unicode = { 'request': [ 36, 17 ], 'response': [ 1, 1 ] }
+  cursor_on_keyword = { 'request': [ 16, 6 ], 'response': [ 1, 1 ] }
+
+  # GoToDeclaration
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoToDeclaration' ],
+                                          cursor_on_nothing ),
+    raises( AppError, r'Can\\\'t jump to declaration.' ) )
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoToDeclaration' ],
+                                          cursor_on_keyword ),
+    raises( AppError, r'Can\\\'t jump to declaration.' ) )
+
+  # GoToDefinition
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoToDefinition' ],
+                                          cursor_on_nothing ),
+    raises( AppError, r'Can\\\'t jump to definition.' ) )
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoToDefinition' ],
+                                          cursor_on_another_unicode ),
+    raises( AppError, r'Can\\\'t jump to definition.' ) )
+
+  # GoTo
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoTo' ],
+                                          cursor_on_nothing ),
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoTo' ],
+                                          cursor_on_keyword ),
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
+
+  # GoToImprecise
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoToImprecise' ],
+                                          cursor_on_nothing ),
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
+  assert_that(
+    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+                                          [ 'GoToImprecise' ],
+                                          cursor_on_keyword ),
+    raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
 
 @SharedYcmd
