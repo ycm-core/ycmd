@@ -259,11 +259,13 @@ def StartColumn_Set_test():
   eq_( wrap[ 'start_column' ], 7 )
   eq_( wrap[ 'start_codepoint' ], 7 )
   eq_( wrap[ 'query' ], "test" )
+  eq_( wrap[ 'prefix' ], "this '" )
 
   wrap[ 'start_column' ] = 6
   eq_( wrap[ 'start_column' ], 6 )
   eq_( wrap[ 'start_codepoint' ], 6 )
   eq_( wrap[ 'query' ], "'test" )
+  eq_( wrap[ 'prefix' ], "this " )
 
 
 def StartColumn_SetUnicode_test():
@@ -273,11 +275,13 @@ def StartColumn_SetUnicode_test():
   eq_( 7,  wrap[ 'start_codepoint' ] )
   eq_( 12, wrap[ 'start_column' ] )
   eq_( wrap[ 'query' ], "te" )
+  eq_( wrap[ 'prefix' ], "†eß† \'" )
 
   wrap[ 'start_column' ] = 11
   eq_( wrap[ 'start_column' ], 11 )
   eq_( wrap[ 'start_codepoint' ], 6 )
   eq_( wrap[ 'query' ], "'te" )
+  eq_( wrap[ 'prefix' ], "†eß† " )
 
 
 def StartCodepoint_Set_test():
@@ -287,11 +291,13 @@ def StartCodepoint_Set_test():
   eq_( wrap[ 'start_column' ], 7 )
   eq_( wrap[ 'start_codepoint' ], 7 )
   eq_( wrap[ 'query' ], "test" )
+  eq_( wrap[ 'prefix' ], "this '" )
 
   wrap[ 'start_codepoint' ] = 6
   eq_( wrap[ 'start_column' ], 6 )
   eq_( wrap[ 'start_codepoint' ], 6 )
   eq_( wrap[ 'query' ], "'test" )
+  eq_( wrap[ 'prefix' ], "this " )
 
 
 def StartCodepoint_SetUnicode_test():
@@ -301,11 +307,13 @@ def StartCodepoint_SetUnicode_test():
   eq_( 7,  wrap[ 'start_codepoint' ] )
   eq_( 12, wrap[ 'start_column' ] )
   eq_( wrap[ 'query' ], "te" )
+  eq_( wrap[ 'prefix' ], "†eß† \'" )
 
   wrap[ 'start_codepoint' ] = 6
   eq_( wrap[ 'start_column' ], 11 )
   eq_( wrap[ 'start_codepoint' ], 6 )
   eq_( wrap[ 'query' ], "'te" )
+  eq_( wrap[ 'prefix' ], "†eß† " )
 
 
 def Calculated_SetMethod_test():
