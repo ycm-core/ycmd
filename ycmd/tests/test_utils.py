@@ -325,6 +325,9 @@ def WithRetry( test ):
   """Decorator to be applied to tests that retries the test over and over
   until it passes or |timeout| seconds have passed."""
 
+  if 'YCM_TEST_NO_RETRY' in os.environ:
+    return test
+
   @functools.wraps( test )
   def wrapper( *args, **kwargs ):
     expiry = time.time() + 30

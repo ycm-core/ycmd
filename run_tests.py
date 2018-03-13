@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+# Passing an environment variable containing unicode literals to a subprocess
+# on Windows and Python2 raises a TypeError. Since there is no unicode
+# string in this script, we don't import unicode_literals to avoid the issue.
 from __future__ import print_function
 from __future__ import division
-from __future__ import unicode_literals
 from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
@@ -130,6 +132,8 @@ def ParseArguments():
   parser.add_argument( '--dump-path', action = 'store_true',
                        help = 'Dump the PYTHONPATH required to run tests '
                               'manually, then exit.' )
+  parser.add_argument( '--no-retry', action = 'store_true',
+                       help = 'Disable retry of flaky tests' )
 
   parsed_args, nosetests_args = parser.parse_known_args()
 
@@ -220,7 +224,14 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   else:
     nosetests_args.append( p.join( DIR_OF_THIS_SCRIPT, 'ycmd' ) )
 
-  subprocess.check_call( [ sys.executable, '-m', 'nose' ] + nosetests_args )
+  env = os.environ.copy()
+
+  if parsed_args.no_retry:
+    # Useful for _writing_ tests
+    env[ 'YCM_TEST_NO_RETRY' ] = '1'
+
+  subprocess.check_call( [ sys.executable, '-m', 'nose' ] + nosetests_args,
+                         env=env )
 
 
 def Main():
