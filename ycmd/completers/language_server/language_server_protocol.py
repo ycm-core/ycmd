@@ -253,15 +253,14 @@ def DidCloseTextDocument( file_state ):
   } )
 
 
-def Completion( request_id, request_data ):
+def Completion( request_id, request_data, codepoint ):
   return BuildRequest( request_id, 'textDocument/completion', {
     'textDocument': {
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
-    'position': {
-      'line': request_data[ 'line_num' ] - 1,
-      'character': request_data[ 'start_codepoint' ] - 1,
-    }
+    'position': Position( request_data[ 'line_num' ],
+                          request_data[ 'line_value' ],
+                          codepoint ),
   } )
 
 

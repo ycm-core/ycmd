@@ -336,8 +336,7 @@ def PathsToAllParentFolders( path ):
 
 
 def ForceSemanticCompletion( request_data ):
-  return ( 'force_semantic' in request_data and
-           bool( request_data[ 'force_semantic' ] ) )
+  return bool( request_data[ 'force_semantic' ] )
 
 
 # A wrapper for subprocess.Popen that fixes quirks on Windows.

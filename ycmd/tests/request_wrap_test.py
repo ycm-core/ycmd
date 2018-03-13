@@ -27,12 +27,16 @@ from builtins import *  # noqa
 from hamcrest import assert_that, calling, equal_to, raises
 from nose.tools import eq_
 
-from ycmd.utils import ToBytes
+from ycmd.utils import ForceSemanticCompletion, ToBytes
 from ycmd.request_wrap import RequestWrap
 
 
-def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
-  return {
+def PrepareJson( contents = '',
+                 line_num = 1,
+                 column_num = 1,
+                 filetype = '',
+                 force_semantic = None ):
+  message = {
     'line_num': line_num,
     'column_num': column_num,
     'filepath': '/foo',
@@ -43,6 +47,10 @@ def PrepareJson( contents = '', line_num = 1, column_num = 1, filetype = '' ):
       }
     }
   }
+  if force_semantic is not None:
+    message[ 'force_semantic' ] = force_semantic
+
+  return message
 
 
 def Prefix_test():
@@ -347,3 +355,25 @@ def NonCalculated_Set_test():
                  equal_to( 'Key "column_num" is read-only' ) )
   else:
     raise AssertionError( 'Expected setting "column_num" to fail' )
+
+
+def ForceSemanticCompletion_test():
+  wrap = RequestWrap( PrepareJson() )
+  assert_that( wrap[ 'force_semantic' ], equal_to( False ) )
+  assert_that( ForceSemanticCompletion( wrap ), equal_to( False ) )
+
+  wrap = RequestWrap( PrepareJson( force_semantic = True ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( True ) )
+  assert_that( ForceSemanticCompletion( wrap ), equal_to( True ) )
+
+  wrap = RequestWrap( PrepareJson( force_semantic = 1 ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( 1 ) )
+  assert_that( ForceSemanticCompletion( wrap ), equal_to( True ) )
+
+  wrap = RequestWrap( PrepareJson( force_semantic = 0 ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( 0 ) )
+  assert_that( ForceSemanticCompletion( wrap ), equal_to( False ) )
+
+  wrap = RequestWrap( PrepareJson( force_semantic = 'No' ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( 'No' ) )
+  assert_that( ForceSemanticCompletion( wrap ), equal_to( True ) )
