@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -1468,6 +1468,20 @@ class LanguageServerCompleter( Completer ):
                           request_data[ 'column_num' ],
                           request_data[ 'filepath' ] ),
       chunks ) ] )
+
+
+  def GetCommandResponse( self, request_data, command, arguments ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    self._UpdateServerWithFileContents( request_data )
+
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.ExecuteCommand( request_id, command, arguments )
+    response = self.GetConnection().GetResponse( request_id,
+                                                 message,
+                                                 REQUEST_TIMEOUT_COMMAND )
+    return response[ 'result' ]
 
 
 def _CompletionItemToCompletionData( insertion_text, item, fixits ):

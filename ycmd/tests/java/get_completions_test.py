@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 # encoding: utf-8
 #
 # This file is part of ycmd.
@@ -223,7 +223,7 @@ def GetCompletions_Import_Class_test( app ):
     'request': {
       'filetype'  : 'java',
       'filepath'  : ProjectPath( 'TestLauncher.java' ),
-      'line_num'  : 4,
+      'line_num'  : 3,
       'column_num': 34,
     },
     'expect': {
@@ -250,7 +250,7 @@ def GetCompletions_Import_Classes_test( app ):
     'request': {
       'filetype'  : 'java',
       'filepath'  : filepath,
-      'line_num'  : 3,
+      'line_num'  : 4,
       'column_num': 52,
     },
     'expect': {
