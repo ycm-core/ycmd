@@ -597,6 +597,9 @@ class LanguageServerCompleter( Completer ):
   Completions
 
   - The implementation should not require any code to support completions
+  - (optional) Override GetCodepointForCompletionRequest if you wish to change
+    the completion position (e.g. if you want to pass the "query" to the
+    server)
 
   Diagnostics
 
@@ -733,6 +736,12 @@ class LanguageServerCompleter( Completer ):
                request_data ) )
 
 
+  def GetCodepointForCompletionRequest( self, request_data ):
+    """Returns the 1-based codepoint offset on the current line at which to make
+    the completion request"""
+    return request_data[ 'start_codepoint' ]
+
+
   def ComputeCandidatesInner( self, request_data ):
     if not self.ServerIsReady():
       return None
@@ -740,7 +749,11 @@ class LanguageServerCompleter( Completer ):
     self._UpdateServerWithFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
-    msg = lsp.Completion( request_id, request_data )
+
+    msg = lsp.Completion(
+      request_id,
+      request_data,
+      self.GetCodepointForCompletionRequest( request_data ) )
     response = self.GetConnection().GetResponse( request_id,
                                                  msg,
                                                  REQUEST_TIMEOUT_COMPLETION )

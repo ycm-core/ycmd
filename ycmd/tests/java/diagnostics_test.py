@@ -143,6 +143,26 @@ DIAG_MATCHERS_PER_FILE = {
       'ranges': contains( RangeMatch( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ) ),
       'fixit_available': False
     } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'ISR cannot be resolved to a variable',
+      'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
+      'location_extent': RangeMatch( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
+      'ranges': contains( RangeMatch( TestWidgetImpl,
+                                      ( 34, 12 ),
+                                      ( 34, 15 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'Syntax error, insert ";" to complete BlockStatements',
+      'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
+      'location_extent': RangeMatch( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
+      'ranges': contains( RangeMatch( TestWidgetImpl,
+                                      ( 34, 12 ),
+                                      ( 34, 15 ) ) ),
+      'fixit_available': False
+    } ),
   ),
   TestLauncher: contains_inanyorder (
     has_entries( {

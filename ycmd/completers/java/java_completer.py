@@ -426,6 +426,24 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._CleanUp()
 
 
+  def GetCodepointForCompletionRequest( self, request_data ):
+    """Returns the 1-based codepoint offset on the current line at which to make
+    the completion request"""
+    # When the user forces semantic completion, we pass the actual cursor
+    # position to jdt.ls.
+
+    # At the top level (i.e. without a semantic trigger), there are always way
+    # too many possible candidates for jdt.ls to return anything useful. This is
+    # because we don't send the currently typed characters to jdt.ls. The
+    # general idea is that we apply our own post-filter and sort. However, in
+    # practice we never get a full set of possibilities at the top-level. So, as
+    # a compromise, we allow the user to force us to send the "query" to the
+    # semantic engine, and thus get good completion results at the top level,
+    # even if this means the "filtering and sorting" is not 100% ycmd flavor.
+    return ( request_data[ 'column_codepoint' ]
+             if utils.ForceSemanticCompletion( request_data )
+             else request_data[ 'start_codepoint' ] )
+
 
   def HandleNotificationInPollThread( self, notification ):
     if notification[ 'method' ] == 'language/status':

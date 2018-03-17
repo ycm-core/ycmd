@@ -86,8 +86,10 @@ class RequestWrap( object ):
       'filetypes': ( self._Filetypes, None ),
 
       'first_filetype': ( self._FirstFiletype, None ),
+
+      'force_semantic': ( self._GetForceSemantic, None ),
     }
-    self._cached_computed = {}
+    self._cached_computed = dict()
 
 
   def __getitem__( self, key ):
@@ -205,6 +207,10 @@ class RequestWrap( object ):
   def _Filetypes( self ):
     path = self[ 'filepath' ]
     return self[ 'file_data' ][ path ][ 'filetypes' ]
+
+
+  def _GetForceSemantic( self ):
+    return self._request.get( 'force_semantic', False )
 
 
 def CompletionStartColumn( line_value, column_num, filetype ):

@@ -25,4 +25,12 @@ class TestWidgetImpl implements AbstractTestWidget {
   public String getWidgetInfo() {
     return this.info;
   }
+
+  public Class<?> TestTopLevel() {
+    return TestFactory.class;
+  }
+
+  public Class<?> testTopLevelImport() {
+    return ISR
+  }
 }

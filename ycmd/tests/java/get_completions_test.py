@@ -534,3 +534,131 @@ def GetCompletions_MoreThan100NoResolve_test( app ):
       } )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_MoreThan100ForceSemantic_test( app ):
+  RunTest( app, {
+    'description': 'When forcing we pass the query, which reduces candidates',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'TestLauncher.java' ),
+      'line_num'  : 4,
+      'column_num': 15,
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'com.youcompleteme.*;', None, {
+            'kind': 'Module',
+            'detailed_info': 'com.youcompleteme\n\n',
+          } ),
+          CompletionEntryMatcher( 'com.youcompleteme.testing.*;', None, {
+            'kind': 'Module',
+            'detailed_info': 'com.youcompleteme.testing\n\n',
+          } ),
+        ),
+        'completion_start_column': 8,
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_ForceAtTopLevel_NoImport_test( app ):
+  RunTest( app, {
+    'description': 'When forcing semantic completion, pass the query to server',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
+      'line_num'  : 30,
+      'column_num': 20,
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'TestFactory', None, {
+            'kind': 'Class',
+            'menu_text': 'TestFactory - com.test',
+          } ),
+        ),
+        'completion_start_column': 12,
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_NoForceAtTopLevel_NoImport_test( app ):
+  RunTest( app, {
+    'description': 'When not forcing semantic completion, use no context',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
+      'line_num'  : 30,
+      'column_num': 20,
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'TestFactory', '[ID]', {} ),
+        ),
+        'completion_start_column': 12,
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
+  filepath = ProjectPath( 'TestWidgetImpl.java' )
+  RunTest( app, {
+    'description': 'Top level completions have import FixIts',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : filepath,
+      'line_num'  : 34,
+      'column_num': 15,
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item(
+          CompletionEntryMatcher( 'InputStreamReader', None, {
+            'kind': 'Class',
+            'menu_text': 'InputStreamReader - java.io',
+            'extra_data': has_entries( {
+              'fixits': contains( has_entries( {
+                'chunks': contains(
+                  ChunkMatcher( '\n\n',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 1, 18 ) ),
+                  ChunkMatcher( 'import java.io.InputStreamReader;',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 1, 18 ) ),
+                  ChunkMatcher( '\n\n',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 1, 18 ) ),
+                  ChunkMatcher( '',
+                                LocationMatcher( filepath, 1, 18 ),
+                                LocationMatcher( filepath, 3, 1 ) ),
+                ),
+              } ) ),
+            } ),
+          } ),
+        ),
+        'completion_start_column': 12,
+        'errors': empty(),
+      } )
+    },
+  } )
