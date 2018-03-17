@@ -26,7 +26,7 @@ import os
 import threading
 import logging
 from future.utils import itervalues
-from ycmd.utils import ForceSemanticCompletion, LoadPythonSource
+from ycmd.utils import LoadPythonSource
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
 from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
@@ -122,7 +122,7 @@ class ServerState( object ):
     """
     filetypes = request_data[ 'filetypes' ]
     if self.FiletypeCompletionUsable( filetypes ):
-      if ForceSemanticCompletion( request_data ):
+      if request_data[ 'force_semantic' ]:
         # use semantic, and it was forced
         return ( True, True )
       else:

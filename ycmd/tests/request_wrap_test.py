@@ -27,7 +27,7 @@ from builtins import *  # noqa
 from hamcrest import assert_that, calling, equal_to, raises
 from nose.tools import eq_
 
-from ycmd.utils import ForceSemanticCompletion, ToBytes
+from ycmd.utils import ToBytes
 from ycmd.request_wrap import RequestWrap
 
 
@@ -360,20 +360,15 @@ def NonCalculated_Set_test():
 def ForceSemanticCompletion_test():
   wrap = RequestWrap( PrepareJson() )
   assert_that( wrap[ 'force_semantic' ], equal_to( False ) )
-  assert_that( ForceSemanticCompletion( wrap ), equal_to( False ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = True ) )
   assert_that( wrap[ 'force_semantic' ], equal_to( True ) )
-  assert_that( ForceSemanticCompletion( wrap ), equal_to( True ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = 1 ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( 1 ) )
-  assert_that( ForceSemanticCompletion( wrap ), equal_to( True ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( True ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = 0 ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( 0 ) )
-  assert_that( ForceSemanticCompletion( wrap ), equal_to( False ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( False ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = 'No' ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( 'No' ) )
-  assert_that( ForceSemanticCompletion( wrap ), equal_to( True ) )
+  assert_that( wrap[ 'force_semantic' ], equal_to( True ) )

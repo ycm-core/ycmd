@@ -210,7 +210,7 @@ class RequestWrap( object ):
 
 
   def _GetForceSemantic( self ):
-    return self._request.get( 'force_semantic', False )
+    return bool( self._request.get( 'force_semantic', False ) )
 
 
 def CompletionStartColumn( line_value, column_num, filetype ):

@@ -35,8 +35,7 @@ import threading
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents
 from ycmd.completers.cs import solutiondetection
-from ycmd.utils import ( ForceSemanticCompletion, CodepointOffsetToByteOffset,
-                         urljoin )
+from ycmd.utils import CodepointOffsetToByteOffset, urljoin
 from ycmd import responses
 from ycmd import utils
 
@@ -106,7 +105,7 @@ class CsharpCompleter( Completer ):
 
 
   def CompletionType( self, request_data ):
-    return ForceSemanticCompletion( request_data )
+    return request_data[ 'force_semantic' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -435,7 +434,7 @@ class CsharpSolutionCompleter( object ):
 
 
   def CompletionType( self, request_data ):
-    return ForceSemanticCompletion( request_data )
+    return request_data[ 'force_semantic' ]
 
 
   def _GetCompletions( self, request_data, completion_type ):
