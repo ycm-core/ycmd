@@ -24,7 +24,6 @@ from builtins import *  # noqa
 
 import abc
 import threading
-from ycmd.utils import ForceSemanticCompletion
 from ycmd.completers import completer_utils
 from ycmd.responses import NoDiagnosticSupport
 from future.utils import with_metaclass
@@ -229,7 +228,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   # It's highly likely you DON'T want to override this function but the *Inner
   # version of it.
   def ComputeCandidates( self, request_data ):
-    if ( not ForceSemanticCompletion( request_data ) and
+    if ( not request_data[ 'force_semantic' ] and
          not self.ShouldUseNow( request_data ) ):
       return []
 

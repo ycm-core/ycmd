@@ -25,8 +25,14 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, empty, equal_to, has_items,
-                       contains_string, contains_inanyorder )
+from hamcrest import ( assert_that,
+                       contains,
+                       empty,
+                       equal_to,
+                       has_entries,
+                       has_items,
+                       contains_string,
+                       contains_inanyorder )
 from mock import patch
 from nose.tools import eq_
 
@@ -189,6 +195,38 @@ def GetCompletions_ForceSemantic_Works_test( app, *args ):
     assert_that( results, has_items( CompletionEntryMatcher( 'foo' ),
                                      CompletionEntryMatcher( 'bar' ),
                                      CompletionEntryMatcher( 'qux' ) ) )
+
+
+@SharedYcmd
+def GetCompletions_ForceSemantic_NoSemanticCompleter_test( app, *args ):
+  event_data = BuildRequest( event_name = 'FileReadyToParse',
+                             filetype = 'dummy_filetype',
+                             contents = 'complete_this_word\ncom' )
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                  force_semantic = True,
+                                  contents = 'complete_this_word\ncom',
+                                  line_number = 2,
+                                  column_num = 4 )
+  results = app.post_json( '/completions', completion_data ).json
+  assert_that( results, has_entries( {
+    'completions': empty(),
+    'errors': empty(),
+  } ) )
+
+  # For proof, show that non-forced completion would return identifiers
+  completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                  contents = 'complete_this_word\ncom',
+                                  line_number = 2,
+                                  column_num = 4 )
+  results = app.post_json( '/completions', completion_data ).json
+  assert_that( results, has_entries( {
+    'completions': contains(
+      CompletionEntryMatcher( 'com' ),
+      CompletionEntryMatcher( 'complete_this_word' ) ),
+    'errors': empty(),
+  } ) )
 
 
 @SharedYcmd

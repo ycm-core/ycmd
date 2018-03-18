@@ -35,8 +35,7 @@ import threading
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents
 from ycmd.completers.cs import solutiondetection
-from ycmd.utils import ( ForceSemanticCompletion, CodepointOffsetToByteOffset,
-                         urljoin )
+from ycmd.utils import CodepointOffsetToByteOffset, urljoin
 from ycmd import responses
 from ycmd import utils
 
@@ -106,12 +105,11 @@ class CsharpCompleter( Completer ):
 
 
   def CompletionType( self, request_data ):
-    return ForceSemanticCompletion( request_data )
+    return request_data[ 'force_semantic' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
     solutioncompleter = self._GetSolutionCompleter( request_data )
-    completion_type = self.CompletionType( request_data )
     return [ responses.BuildCompletionData(
                 completion[ 'CompletionText' ],
                 completion[ 'DisplayText' ],
@@ -121,8 +119,7 @@ class CsharpCompleter( Completer ):
                 { "required_namespace_import" :
                    completion[ 'RequiredNamespaceImport' ] } )
              for completion
-             in solutioncompleter._GetCompletions( request_data,
-                                                   completion_type ) ]
+             in solutioncompleter._GetCompletions( request_data ) ]
 
 
   def FilterAndSortCandidates( self, candidates, query ):
@@ -435,14 +432,14 @@ class CsharpSolutionCompleter( object ):
 
 
   def CompletionType( self, request_data ):
-    return ForceSemanticCompletion( request_data )
+    return request_data[ 'force_semantic' ]
 
 
-  def _GetCompletions( self, request_data, completion_type ):
+  def _GetCompletions( self, request_data ):
     """ Ask server for completions """
     parameters = self._DefaultParameters( request_data )
-    parameters[ 'WantImportableTypes' ] = completion_type
-    parameters[ 'ForceSemanticCompletion' ] = completion_type
+    parameters[ 'WantImportableTypes' ] = request_data[ 'force_semantic' ]
+    parameters[ 'ForceSemanticCompletion' ] = request_data[ 'force_semantic' ]
     parameters[ 'WantDocumentationForEveryCompletionResult' ] = True
     completions = self._GetResponse( '/autocomplete', parameters )
     return completions if completions is not None else []

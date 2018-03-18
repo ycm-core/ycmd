@@ -26,7 +26,7 @@ import os
 import threading
 import logging
 from future.utils import itervalues
-from ycmd.utils import ForceSemanticCompletion, LoadPythonSource
+from ycmd.utils import LoadPythonSource
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
 from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
@@ -110,31 +110,20 @@ class ServerState( object ):
 
 
   def ShouldUseFiletypeCompleter( self, request_data ):
-    """
-    Determines whether or not the semantic completer should be called, and
-    returns an indication of the reason why. Specifically, returns a tuple:
-    ( should_use_completer_now, was_semantic_completion_forced ), where:
-     - should_use_completer_now: if True, the semantic engine should be used
-     - was_semantic_completion_forced: if True, the user requested "forced"
-                                       semantic completion
-    was_semantic_completion_forced is always False if should_use_completer_now
-    is False
-    """
+    """Determines whether or not the semantic completer should be called."""
     filetypes = request_data[ 'filetypes' ]
-    if self.FiletypeCompletionUsable( filetypes ):
-      if ForceSemanticCompletion( request_data ):
-        # use semantic, and it was forced
-        return ( True, True )
-      else:
-        # was not forced. check the conditions for triggering
-        return (
-          self.GetFiletypeCompleter( filetypes ).ShouldUseNow( request_data ),
-          False
-        )
+    if not self.FiletypeCompletionUsable( filetypes ):
+      # don't use semantic, ignore whether or not the user requested forced
+      # completion
+      return False
 
-    # don't use semantic, ignore whether or not the user requested forced
-    # completion
-    return ( False, False )
+    if request_data[ 'force_semantic' ]:
+      # use semantic, and it was forced
+      return True
+
+    # was not forced. check the conditions for triggering
+    return self.GetFiletypeCompleter( filetypes ).ShouldUseNow(
+      request_data )
 
 
   def GetGeneralCompleter( self ):
