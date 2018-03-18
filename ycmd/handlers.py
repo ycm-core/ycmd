@@ -89,8 +89,8 @@ def RunCompleterCommand():
 def GetCompletions():
   _logger.info( 'Received completion request' )
   request_data = RequestWrap( request.json )
-  ( do_filetype_completion, forced_filetype_completion ) = (
-                    _server_state.ShouldUseFiletypeCompleter( request_data ) )
+  do_filetype_completion = _server_state.ShouldUseFiletypeCompleter(
+    request_data )
   _logger.debug( 'Using filetype completion: %s', do_filetype_completion )
 
   errors = None
@@ -103,21 +103,21 @@ def GetCompletions():
                                  .ComputeCandidates( request_data ) )
 
     except Exception as exception:
-      if forced_filetype_completion:
+      if request_data[ 'force_semantic' ]:
         # user explicitly asked for semantic completion, so just pass the error
         # back
         raise
-      else:
-        # store the error to be returned with results from the identifier
-        # completer
-        stack = traceback.format_exc()
-        _logger.error( 'Exception from semantic completer (using general): ' +
-                        "".join( stack ) )
-        errors = [ BuildExceptionResponse( exception, stack ) ]
 
-  if not completions and not forced_filetype_completion:
-    completions = ( _server_state.GetGeneralCompleter()
-                                 .ComputeCandidates( request_data ) )
+      # store the error to be returned with results from the identifier
+      # completer
+      stack = traceback.format_exc()
+      _logger.error( 'Exception from semantic completer (using general): ' +
+                      "".join( stack ) )
+      errors = [ BuildExceptionResponse( exception, stack ) ]
+
+  if not completions and not request_data[ 'force_semantic' ]:
+    completions = _server_state.GetGeneralCompleter().ComputeCandidates(
+      request_data )
 
   return _JsonResponse(
       BuildCompletionResponse( completions if completions else [],
