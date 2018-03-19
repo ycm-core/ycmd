@@ -36,7 +36,7 @@ include_directories(
   ${PYTHON_INCLUDE_DIRS}
   )
 
-add_library( BoostParts ${SOURCES} )
+add_library( BoostParts STATIC ${SOURCES} )
 
 #############################################################################
 
