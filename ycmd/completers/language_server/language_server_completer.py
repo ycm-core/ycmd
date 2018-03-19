@@ -1106,6 +1106,10 @@ class LanguageServerCompleter( Completer ):
     return subcommands_map
 
 
+  def DefaultSettings( self, request_data ):
+    return {}
+
+
   def _GetSettings( self, module, client_data ):
     if hasattr( module, 'Settings' ):
       settings = module.Settings( language = self.Language(),
@@ -1119,10 +1123,12 @@ class LanguageServerCompleter( Completer ):
 
 
   def _GetSettingsFromExtraConf( self, request_data ):
+    self._settings = self.DefaultSettings( request_data )
+
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     if module:
       settings = self._GetSettings( module, request_data[ 'extra_conf_data' ] )
-      self._settings = settings.get( 'ls' ) or {}
+      self._settings.update( settings.get( 'ls', {} ) )
       # Only return the dir if it was found in the paths; we don't want to use
       # the path of the global extra conf as a project root dir.
       if not extra_conf_store.IsGlobalExtraConfModule( module ):
@@ -1844,7 +1850,8 @@ class LanguageServerCompleter( Completer ):
                                       self._project_directory ),
              responses.DebugInfoItem( 'Settings',
                                       json.dumps( self._settings,
-                                                  indent = 2 ) ) ]
+                                                  indent = 2,
+                                                  sort_keys = True ) ) ]
 
 
 def _CompletionItemToCompletionData( insertion_text, item, fixits ):
