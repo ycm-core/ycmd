@@ -313,6 +313,37 @@ def IsIdentifier_Perl6_test():
   ok_( not iu.IsIdentifier( '' , 'perl6' ) )
 
 
+def IsIdentifier_Scheme_test():
+  ok_( iu.IsIdentifier( 'λ'  , 'scheme') )
+  ok_( iu.IsIdentifier( '_'  , 'scheme' ) )
+  ok_( iu.IsIdentifier( '+'  , 'scheme' ) )
+  ok_( iu.IsIdentifier( '-'  , 'scheme' ) )
+  ok_( iu.IsIdentifier( '...', 'scheme' ) )
+  ok_( iu.IsIdentifier( r'\x01;'      , 'scheme' ) )
+  ok_( iu.IsIdentifier( r'h\x65;lle'  , 'scheme' ) )
+  ok_( iu.IsIdentifier( 'foo'         , 'scheme' ) )
+  ok_( iu.IsIdentifier( 'foo+-*/1-1'  , 'scheme' ) )
+  ok_( iu.IsIdentifier( 'call/cc'     , 'scheme' ) )
+
+  ok_( not iu.IsIdentifier( '.'  , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '..' , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '--' , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '++' , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '+1' , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-1' , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-abc'   , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-<abc'  , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '@'      , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '@a'     , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-@a'    , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-12a'   , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '12a'    , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '\\'     , 'scheme' ) )
+  ok_( not iu.IsIdentifier( r'\x'    , 'scheme' ) )
+  ok_( not iu.IsIdentifier( r'\x123' , 'scheme' ) )
+  ok_( not iu.IsIdentifier( r'aa\x123;cc\x'  , 'scheme' ) )
+
+
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'foo', 3 ) )
   eq_( 0, iu.StartOfLongestIdentifierEndingAtIndex( 'f12', 3 ) )

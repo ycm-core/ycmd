@@ -149,6 +149,12 @@ FILETYPE_TO_IDENTIFIER_REGEX = {
 
     # Spec: http://doc.perl6.org/language/syntax
     'perl6': re.compile( r"[_a-zA-Z](?:\w|[-'](?=[_a-zA-Z]))*", re.UNICODE ),
+
+    # https://www.scheme.com/tspl4/grammar.html#grammar:symbols
+    'scheme': re.compile(r"\+|\-|\.\.\.|"
+                         r"(?:->|(:?\\x[0-9A-Fa-f]+;|[!$%&*/:<=>?~^]|[^\W\d]))"
+                         r"(?:\\x[0-9A-Fa-f]+;|[-+.@!$%&*/:<=>?~^\w])*",
+                         re.UNICODE),
 }
 
 FILETYPE_TO_IDENTIFIER_REGEX[ 'typescript' ] = (
