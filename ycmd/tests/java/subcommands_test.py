@@ -79,7 +79,8 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'OpenProject',
                  'OrganizeImports',
                  'RefactorRename',
-                 'RestartServer' ] ),
+                 'RestartServer',
+                 'WipeWorkspace' ] ),
        app.post_json( '/defined_subcommands', subcommands_data ).json )
 
 
