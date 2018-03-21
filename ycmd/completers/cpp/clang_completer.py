@@ -211,6 +211,10 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise ValueError( PARSING_FILE_MESSAGE )
+
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
