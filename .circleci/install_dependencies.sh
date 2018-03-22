@@ -18,6 +18,7 @@ REQUIREMENTS="cmake
               node.js
               go
               mono
+              llvm
               readline
               autoconf
               pkg-config
