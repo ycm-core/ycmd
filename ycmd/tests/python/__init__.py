@@ -25,9 +25,10 @@ from builtins import *  # noqa
 import functools
 import os
 
-from ycmd.tests.test_utils import ( ClearCompletionsCache, IsolatedApp,
-                                    SetUpApp, StopCompleterServer,
-                                    WaitUntilCompleterServerReady )
+from ycmd.tests.test_utils import ( ClearCompletionsCache,
+                                    IsolatedApp,
+                                    SetUpApp,
+                                    YCMD_EXTRA_CONF )
 
 shared_app = None
 
@@ -45,15 +46,8 @@ def setUpPackage():
   global shared_app
 
   shared_app = SetUpApp()
-  WaitUntilCompleterServerReady( shared_app, 'python' )
-
-
-def tearDownPackage():
-  """Cleans up the tests using the SharedYcmd decorator in this package. It is
-  executed once after running all the tests in the package."""
-  global shared_app
-
-  StopCompleterServer( shared_app, 'python' )
+  shared_app.post_json( '/ignore_extra_conf_file',
+                        { 'filepath': YCMD_EXTRA_CONF } )
 
 
 def SharedYcmd( test ):
@@ -92,9 +86,8 @@ def IsolatedYcmd( custom_options = {} ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
       with IsolatedApp( custom_options ) as app:
-        try:
-          test( app, *args, **kwargs )
-        finally:
-          StopCompleterServer( app, 'python' )
+        app.post_json( '/ignore_extra_conf_file',
+                       { 'filepath': YCMD_EXTRA_CONF } )
+        test( app, *args, **kwargs )
     return Wrapper
   return Decorator

@@ -31,7 +31,12 @@
 from distutils.sysconfig import get_python_inc
 import platform
 import os
+import subprocess
 import ycm_core
+
+DIR_OF_THIS_SCRIPT = os.path.abspath( os.path.dirname( __file__ ) )
+DIR_OF_THIRD_PARTY = os.path.join( DIR_OF_THIS_SCRIPT, 'third_party' )
+SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 
 # These are the compilation flags that will be used in case there's no
 # compilation database set (by default, one is not set).
@@ -55,29 +60,29 @@ flags = [
 '-x',
 'c++',
 '-isystem',
-'../pybind11',
+'cpp/pybind11',
 '-isystem',
-'../BoostParts',
+'cpp/BoostParts',
 '-isystem',
 get_python_inc(),
 '-isystem',
-'../llvm/include',
+'cpp/llvm/include',
 '-isystem',
-'../llvm/tools/clang/include',
+'cpp/llvm/tools/clang/include',
 '-I',
-'.',
+'cpp/ycm',
 '-I',
-'./ClangCompleter',
+'cpp/ycm/ClangCompleter',
 '-isystem',
-'./tests/gmock/gtest',
+'cpp/ycm/tests/gmock/gtest',
 '-isystem',
-'./tests/gmock/gtest/include',
+'cpp/ycm/tests/gmock/gtest/include',
 '-isystem',
-'./tests/gmock',
+'cpp/ycm/tests/gmock',
 '-isystem',
-'./tests/gmock/include',
+'cpp/ycm/tests/gmock/include',
 '-isystem',
-'./benchmarks/benchmark/include',
+'cpp/ycm/benchmarks/benchmark/include',
 ]
 
 # Clang automatically sets the '-std=' flag to 'c++14' for MSVC 2015 or later,
@@ -103,11 +108,6 @@ if os.path.exists( compilation_database_folder ):
   database = ycm_core.CompilationDatabase( compilation_database_folder )
 else:
   database = None
-
-SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
-
-def DirectoryOfThisScript():
-  return os.path.dirname( os.path.abspath( __file__ ) )
 
 
 def IsHeaderFile( filename ):
@@ -137,7 +137,7 @@ def FlagsForFile( filename, **kwargs ):
   if not database:
     return {
       'flags': flags,
-      'include_paths_relative_to_dir': DirectoryOfThisScript(),
+      'include_paths_relative_to_dir': DIR_OF_THIS_SCRIPT,
       'override_filename': filename
     }
 
@@ -162,3 +162,32 @@ def FlagsForFile( filename, **kwargs ):
     'include_paths_relative_to_dir': compilation_info.compiler_working_dir_,
     'override_filename': filename
   }
+
+
+def GetStandardLibraryIndexInSysPath( sys_path ):
+  for path in sys_path:
+    if os.path.isfile( os.path.join( path, 'os.py' ) ):
+      return sys_path.index( path )
+  raise RuntimeError( 'Could not find standard library path in Python path.' )
+
+
+def PythonSysPath( **kwargs ):
+  sys_path = kwargs[ 'sys_path' ]
+  for folder in os.listdir( DIR_OF_THIRD_PARTY ):
+    if folder == 'python-future':
+      folder = os.path.join( folder, 'src' )
+      sys_path.insert( GetStandardLibraryIndexInSysPath( sys_path ) + 1,
+                       os.path.realpath( os.path.join( DIR_OF_THIRD_PARTY,
+                                                       folder ) ) )
+      continue
+
+    if folder == 'cregex':
+      interpreter_path = kwargs[ 'interpreter_path' ]
+      major_version = subprocess.check_output( [
+        interpreter_path, '-c', 'import sys; print( sys.version_info[ 0 ] )' ]
+      ).rstrip().decode( 'utf8' )
+      folder = os.path.join( folder, 'regex_{}'.format( major_version ) )
+
+    sys_path.insert( 0, os.path.realpath( os.path.join( DIR_OF_THIRD_PARTY,
+                                                        folder ) ) )
+  return sys_path

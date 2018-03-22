@@ -34,17 +34,14 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
 from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
 from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
 from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
-                                    ErrorMatcher, WindowsOnly )
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    CombineRequest,
+                                    CompletionEntryMatcher,
+                                    ErrorMatcher,
+                                    WindowsOnly )
 from ycmd.utils import ReadFile
 
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
-
-
-def CombineRequest( request, data ):
-  kw = request.copy()
-  kw.update( data )
-  return BuildRequest( **kw )
 
 
 def RunTest( app, test ):

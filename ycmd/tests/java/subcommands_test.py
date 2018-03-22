@@ -41,6 +41,7 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
+                                    CombineRequest,
                                     ErrorMatcher,
                                     LocationMatcher,
                                     WithRetry )
@@ -118,11 +119,6 @@ def Subcommands_ServerNotReady_test():
 def RunTest( app, test, contents = None ):
   if not contents:
     contents = ReadFile( test[ 'request' ][ 'filepath' ] )
-
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
 
   # Because we aren't testing this command, we *always* ignore errors. This
   # is mainly because we (may) want to test scenarios where the completer

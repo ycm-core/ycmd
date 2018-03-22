@@ -57,7 +57,6 @@ class Shutdown_test( Client_test ):
                   'go',
                   'java',
                   'javascript',
-                  'python',
                   'typescript',
                   'rust' ]
     for filetype in filetypes:
@@ -88,7 +87,6 @@ class Shutdown_test( Client_test ):
                   'go',
                   'java',
                   'javascript',
-                  'python',
                   'typescript',
                   'rust' ]
     for filetype in filetypes:

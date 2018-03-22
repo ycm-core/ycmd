@@ -34,6 +34,7 @@ import pprint
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
+                                    CombineRequest,
                                     ErrorMatcher,
                                     LocationMatcher,
                                     MessageMatcher,
@@ -44,11 +45,6 @@ from ycmd.utils import ReadFile
 
 def RunTest( app, test ):
   contents = ReadFile( test[ 'request' ][ 'filepath' ] )
-
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
 
   app.post_json(
     '/event_notification',

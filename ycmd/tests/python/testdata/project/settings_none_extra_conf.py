@@ -1,0 +1,2 @@
+def Settings( **kwargs ):
+  pass
