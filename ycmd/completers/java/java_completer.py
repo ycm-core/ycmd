@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -33,6 +33,7 @@ from subprocess import PIPE
 
 from ycmd import utils, responses
 from ycmd.completers.language_server import language_server_completer
+from ycmd.completers.language_server import language_server_protocol as lsp
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
 
@@ -223,6 +224,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       ),
       'GetType': (
         lambda self, request_data, args: self.GetType( request_data )
+      ),
+      'OrganizeImports': (
+        lambda self, request_data, args: self.OrganizeImports( request_data )
       ),
     }
 
@@ -544,6 +548,17 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       raise RuntimeError( NO_DOCUMENTATION_MESSAGE )
 
     return responses.BuildDetailedInfoResponse( documentation )
+
+
+  def OrganizeImports( self, request_data ):
+    workspace_edit = self.GetCommandResponse(
+      request_data,
+      'java.edit.organizeImports',
+      [ lsp.FilePathToUri( request_data[ 'filepath' ] ) ] )
+
+    fixit = language_server_completer.WorkspaceEditToFixIt( request_data,
+                                                            workspace_edit )
+    return responses.BuildFixItResponse( [ fixit ] )
 
 
   def HandleServerCommand( self, request_data, command ):

@@ -1,7 +1,7 @@
 package com.test;
 
-import com.youcompleteme.*; import com.test.wobble.*;
 import com.youcompleteme.testing.Tset;
+import com.youcompleteme.*; import com.test.wobble.*;
 
 class TestLauncher {
   private TestFactory factory = new TestFactory();

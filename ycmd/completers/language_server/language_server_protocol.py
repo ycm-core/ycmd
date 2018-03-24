@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -383,6 +383,13 @@ def Range( request_data ):
     'start': Position( start_line_num, start_line_value, start_codepoint ),
     'end': Position( end_line_num, end_line_value, end_codepoint )
   }
+
+
+def ExecuteCommand( request_id, command, arguments ):
+  return BuildRequest( request_id, 'workspace/executeCommand', {
+    'command': command,
+    'arguments': arguments
+  } )
 
 
 def FilePathToUri( file_name ):
