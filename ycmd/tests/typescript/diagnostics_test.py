@@ -23,84 +23,81 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that,
-                       contains_string,
-                       equal_to,
-                       has_entry,
-                       has_entries )
+from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries,
+                       has_entry )
 
 from ycmd.tests.typescript import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.test_utils import BuildRequest, LocationMatcher, RangeMatcher
 from ycmd.utils import ReadFile
 
 
 @SharedYcmd
 def Diagnostics_FileReadyToParse_test( app ):
-  main_filepath = PathToTestFile( 'test.ts' )
-  main_contents = ReadFile( main_filepath )
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
 
-  event_data = BuildRequest( filepath = main_filepath,
+  event_data = BuildRequest( filepath = filepath,
                              filetype = 'typescript',
-                             contents = main_contents,
+                             contents = contents,
                              event_name = 'BufferVisit' )
   app.post_json( '/event_notification', event_data )
 
-  event_data = BuildRequest( filepath = main_filepath,
+  event_data = BuildRequest( filepath = filepath,
                              filetype = 'typescript',
-                             contents = main_contents,
+                             contents = contents,
                              event_name = 'FileReadyToParse' )
-  results = app.post_json( '/event_notification', event_data ).json
 
-  expected_text = ( 'Property \'nonExistingMethod\' '
-                    'does not exist on type \'Bar\'.' )
-
-  assert_that( results[1],
-               has_entries( {
-                 'kind': equal_to( 'ERROR' ),
-                 'text': equal_to( expected_text ),
-                 'location': has_entries( {
-                   'column_num': 1,
-                   'filepath': main_filepath,
-                   'line_num': 35
-                 } ),
-                 'location_extent': has_entries( {
-                   'start': has_entries( {
-                     'column_num': 1,
-                     'filepath': main_filepath,
-                     'line_num': 35
-                   } ),
-                   'end': has_entries( {
-                     'column_num': 1,
-                     'line_num': 35,
-                     'filepath': main_filepath
-                   } ),
-                 } )
-               } ) )
+  assert_that(
+    app.post_json( '/event_notification', event_data ).json,
+    contains_inanyorder(
+      has_entries( {
+        'kind': 'ERROR',
+        'text': "Property 'm' does not exist on type 'Foo'.",
+        'location': LocationMatcher( filepath, 17, 5 ),
+        'location_extent': RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ) ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': 'ERROR',
+        'text': "Property 'nonExistingMethod' does not exist on type 'Bar'.",
+        'location': LocationMatcher( filepath, 35, 5 ),
+        'location_extent': RangeMatcher( filepath, ( 35, 5 ), ( 35, 22 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 35, 5 ), ( 35, 22 ) ) ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': 'ERROR',
+        'text': 'Expected 1-2 arguments, but got 0.',
+        'location': LocationMatcher( filepath, 37, 1 ),
+        'location_extent': RangeMatcher( filepath, ( 37, 1 ), ( 37, 12 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 37, 1 ), ( 37, 12 ) ) ),
+        'fixit_available': False
+      } ),
+    )
+  )
 
 
 @SharedYcmd
 def Diagnostics_DetailedDiagnostics_test( app ):
-  main_filepath = PathToTestFile( 'test.ts' )
-  main_contents = ReadFile( main_filepath )
+  filepath = PathToTestFile( 'test.ts' )
+  contents = ReadFile( filepath )
 
-  event_data = BuildRequest( filepath = main_filepath,
+  event_data = BuildRequest( filepath = filepath,
                              filetype = 'typescript',
-                             contents = main_contents,
+                             contents = contents,
                              event_name = 'BufferVisit' )
   app.post_json( '/event_notification', event_data )
 
-  event_data = BuildRequest( filepath = main_filepath,
-                             filetype = 'typescript',
-                             contents = main_contents,
-                             line_num = 35,
-                             column_num = 6 )
+  diagnostic_data = BuildRequest( filepath = filepath,
+                                  filetype = 'typescript',
+                                  contents = contents,
+                                  line_num = 35,
+                                  column_num = 6 )
 
-  results = app.post_json( '/detailed_diagnostic', event_data ).json
-
-  expected_message = ( 'Property \'nonExistingMethod\' '
-                       'does not exist on type \'Bar\'.' )
-
-  assert_that( results,
-               has_entry(
-                   'message',
-                   contains_string( expected_message ) ) )
+  assert_that(
+    app.post_json( '/detailed_diagnostic', diagnostic_data ).json,
+    has_entry(
+      'message', "Property 'nonExistingMethod' does not exist on type 'Bar'."
+    )
+  )

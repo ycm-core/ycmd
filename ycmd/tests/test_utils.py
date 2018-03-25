@@ -130,6 +130,13 @@ def LocationMatcher( filepath, line_num, column_num ):
   } )
 
 
+def RangeMatcher( filepath, start, end ):
+  return has_entries( {
+    'start': LocationMatcher( filepath, *start ),
+    'end': LocationMatcher( filepath, *end ),
+  } )
+
+
 def ChunkMatcher( replacement_text, start, end ):
   return has_entries( {
     'replacement_text': replacement_text,

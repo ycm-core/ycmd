@@ -111,26 +111,30 @@ def ShouldEnableTypeScriptCompleter():
   return True
 
 
-def TsDiagnosticToYcmdDiagnostic( filepath, line_value, ts_diagnostic ):
+def TsDiagnosticToYcmdDiagnostic( request_data, ts_diagnostic ):
+  filepath = request_data[ 'filepath' ]
+  contents = utils.SplitLines(
+    request_data[ 'file_data' ][ filepath ][ 'contents' ] )
+
   ts_start_location = ts_diagnostic[ 'startLocation' ]
+  ts_start_line = ts_start_location[ 'line' ]
+  start_offset = utils.CodepointOffsetToByteOffset(
+    contents[ ts_start_line - 1 ],
+    ts_start_location[ 'offset' ] )
+
   ts_end_location = ts_diagnostic[ 'endLocation' ]
+  ts_end_line = ts_end_location[ 'line' ]
+  end_offset = utils.CodepointOffsetToByteOffset(
+    contents[ ts_end_line - 1 ],
+    ts_end_location[ 'offset' ] )
 
-  start_offset = utils.CodepointOffsetToByteOffset( line_value,
-                                              ts_start_location[ 'offset' ] )
-  end_offset = utils.CodepointOffsetToByteOffset( line_value,
-                                            ts_end_location[ 'offset' ] )
+  location_start = responses.Location( ts_start_line, start_offset, filepath )
+  location_end = responses.Location( ts_end_line, end_offset, filepath )
 
-  location = responses.Location( ts_start_location[ 'line' ],
-                                 start_offset,
-                                 filepath )
-  location_end = responses.Location( ts_end_location[ 'line' ],
-                                     end_offset,
-                                     filepath )
-
-  location_extent = responses.Range( location, location_end )
+  location_extent = responses.Range( location_start, location_end )
 
   return responses.Diagnostic( [ location_extent ],
-                               location,
+                               location_start,
                                location_extent,
                                ts_diagnostic[ 'message' ],
                                'ERROR' )
@@ -464,40 +468,31 @@ class TypeScriptCompleter( Completer ):
     return [ responses.BuildDiagnosticData( x ) for x in diagnostics ]
 
 
-  def GetTsDiagnosticsForCurrentFile( self, filename, request_data ):
+  def GetTsDiagnosticsForCurrentFile( self, request_data ):
     # This returns the data the TypeScript server responded with.
     # Note that its "offset" values represent codepoint offsets,
     # not byte offsets, which are required by the ycmd API.
+    filepath = request_data[ 'filepath' ]
 
     ts_diagnostics = list( itertools.chain(
-      self._GetSemanticDiagnostics( filename ),
-      self._GetSyntacticDiagnostics( filename )
+      self._GetSemanticDiagnostics( filepath ),
+      self._GetSyntacticDiagnostics( filepath )
     ) )
 
     return ts_diagnostics
 
 
   def GetDiagnosticsForCurrentFile( self, request_data ):
-    filename = request_data[ 'filepath' ]
-    line_value = request_data[ 'line_value' ]
+    ts_diagnostics = self.GetTsDiagnosticsForCurrentFile( request_data )
 
-    ts_diagnostics = self.GetTsDiagnosticsForCurrentFile( filename,
-                                                          request_data )
-
-    return [ TsDiagnosticToYcmdDiagnostic( filename, line_value, x )
+    return [ TsDiagnosticToYcmdDiagnostic( request_data, x )
              for x in ts_diagnostics[ : self._max_diagnostics_to_display ] ]
 
 
   def GetDetailedDiagnostic( self, request_data ):
-    filename = request_data[ 'filepath' ]
-    line_value = request_data[ 'line_value' ]
-    current_line = request_data[ 'line_num' ]
-    current_byte_offset = request_data[ 'column_num' ]
-
-    ts_diagnostics = self.GetTsDiagnosticsForCurrentFile( filename,
-                                                          request_data )
+    ts_diagnostics = self.GetTsDiagnosticsForCurrentFile( request_data )
     ts_diagnostics_on_line = list( filter(
-      partial( IsLineInTsDiagnosticRange, current_line ),
+      partial( IsLineInTsDiagnosticRange, request_data[ 'line_num' ] ),
       ts_diagnostics
     ) )
 
@@ -506,6 +501,9 @@ class TypeScriptCompleter( Completer ):
 
     closest_ts_diagnostic = None
     distance_to_closest_ts_diagnostic = None
+
+    line_value = request_data[ 'line_value' ]
+    current_byte_offset = request_data[ 'column_num' ]
 
     for ts_diagnostic in ts_diagnostics_on_line:
       distance = GetByteOffsetDistanceFromTsDiagnosticRange(
@@ -518,11 +516,8 @@ class TypeScriptCompleter( Completer ):
         distance_to_closest_ts_diagnostic = distance
         closest_ts_diagnostic = ts_diagnostic
 
-    closest_diagnostic = TsDiagnosticToYcmdDiagnostic(
-      filename,
-      line_value,
-      closest_ts_diagnostic
-    )
+    closest_diagnostic = TsDiagnosticToYcmdDiagnostic( request_data,
+                                                       closest_ts_diagnostic )
 
     return responses.BuildDisplayMessageResponse( closest_diagnostic.text_ )
 

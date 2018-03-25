@@ -44,7 +44,8 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory )
 
-from ycmd.tests.test_utils import BuildRequest, LocationMatcher, WithRetry
+from ycmd.tests.test_utils import ( BuildRequest, LocationMatcher, RangeMatcher,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 from ycmd.completers import completer
 
@@ -53,13 +54,6 @@ from mock import patch
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd import handlers
 
-
-
-def RangeMatch( filepath, start, end ):
-  return has_entries( {
-    'start': LocationMatcher( filepath, *start ),
-    'end': LocationMatcher( filepath, *end ),
-  } )
 
 
 def ProjectPath( *args ):
@@ -87,40 +81,40 @@ DIAG_MATCHERS_PER_FILE = {
       'kind': 'WARNING',
       'text': 'The value of the field TestFactory.Bar.testString is not used',
       'location': LocationMatcher( TestFactory, 15, 19 ),
-      'location_extent': RangeMatch( TestFactory, ( 15, 19 ), ( 15, 29 ) ),
-      'ranges': contains( RangeMatch( TestFactory, ( 15, 19 ), ( 15, 29 ) ) ),
+      'location_extent': RangeMatcher( TestFactory, ( 15, 19 ), ( 15, 29 ) ),
+      'ranges': contains( RangeMatcher( TestFactory, ( 15, 19 ), ( 15, 29 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Wibble cannot be resolved to a type',
       'location': LocationMatcher( TestFactory, 18, 24 ),
-      'location_extent': RangeMatch( TestFactory, ( 18, 24 ), ( 18, 30 ) ),
-      'ranges': contains( RangeMatch( TestFactory, ( 18, 24 ), ( 18, 30 ) ) ),
+      'location_extent': RangeMatcher( TestFactory, ( 18, 24 ), ( 18, 30 ) ),
+      'ranges': contains( RangeMatcher( TestFactory, ( 18, 24 ), ( 18, 30 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Wibble cannot be resolved to a variable',
       'location': LocationMatcher( TestFactory, 19, 15 ),
-      'location_extent': RangeMatch( TestFactory, ( 19, 15 ), ( 19, 21 ) ),
-      'ranges': contains( RangeMatch( TestFactory, ( 19, 15 ), ( 19, 21 ) ) ),
+      'location_extent': RangeMatcher( TestFactory, ( 19, 15 ), ( 19, 21 ) ),
+      'ranges': contains( RangeMatcher( TestFactory, ( 19, 15 ), ( 19, 21 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Type mismatch: cannot convert from int to boolean',
       'location': LocationMatcher( TestFactory, 27, 10 ),
-      'location_extent': RangeMatch( TestFactory, ( 27, 10 ), ( 27, 16 ) ),
-      'ranges': contains( RangeMatch( TestFactory, ( 27, 10 ), ( 27, 16 ) ) ),
+      'location_extent': RangeMatcher( TestFactory, ( 27, 10 ), ( 27, 16 ) ),
+      'ranges': contains( RangeMatcher( TestFactory, ( 27, 10 ), ( 27, 16 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Type mismatch: cannot convert from int to boolean',
       'location': LocationMatcher( TestFactory, 30, 10 ),
-      'location_extent': RangeMatch( TestFactory, ( 30, 10 ), ( 30, 16 ) ),
-      'ranges': contains( RangeMatch( TestFactory, ( 30, 10 ), ( 30, 16 ) ) ),
+      'location_extent': RangeMatcher( TestFactory, ( 30, 10 ), ( 30, 16 ) ),
+      'ranges': contains( RangeMatcher( TestFactory, ( 30, 10 ), ( 30, 16 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -129,8 +123,8 @@ DIAG_MATCHERS_PER_FILE = {
               'AbstractTestWidget is not applicable for the arguments '
               '(TestFactory.Bar)',
       'location': LocationMatcher( TestFactory, 30, 23 ),
-      'location_extent': RangeMatch( TestFactory, ( 30, 23 ), ( 30, 47 ) ),
-      'ranges': contains( RangeMatch( TestFactory, ( 30, 23 ), ( 30, 47 ) ) ),
+      'location_extent': RangeMatcher( TestFactory, ( 30, 23 ), ( 30, 47 ) ),
+      'ranges': contains( RangeMatcher( TestFactory, ( 30, 23 ), ( 30, 47 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -139,28 +133,30 @@ DIAG_MATCHERS_PER_FILE = {
       'kind': 'WARNING',
       'text': 'The value of the local variable a is not used',
       'location': LocationMatcher( TestWidgetImpl, 15, 9 ),
-      'location_extent': RangeMatch( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ),
-      'ranges': contains( RangeMatch( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ) ),
+      'location_extent': RangeMatcher( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ),
+      'ranges': contains( RangeMatcher( TestWidgetImpl,
+                                        ( 15, 9 ),
+                                        ( 15, 10 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'ISR cannot be resolved to a variable',
       'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
-      'location_extent': RangeMatch( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
-      'ranges': contains( RangeMatch( TestWidgetImpl,
-                                      ( 34, 12 ),
-                                      ( 34, 15 ) ) ),
+      'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
+      'ranges': contains( RangeMatcher( TestWidgetImpl,
+                                        ( 34, 12 ),
+                                        ( 34, 15 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Syntax error, insert ";" to complete BlockStatements',
       'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
-      'location_extent': RangeMatch( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
-      'ranges': contains( RangeMatch( TestWidgetImpl,
-                                      ( 34, 12 ),
-                                      ( 34, 15 ) ) ),
+      'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
+      'ranges': contains( RangeMatcher( TestWidgetImpl,
+                                        ( 34, 12 ),
+                                        ( 34, 15 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -171,8 +167,10 @@ DIAG_MATCHERS_PER_FILE = {
               'inherited abstract method TestLauncher.Launchable.launch('
               'TestFactory)',
       'location': LocationMatcher( TestLauncher, 28, 16 ),
-      'location_extent': RangeMatch( TestLauncher, ( 28, 16 ), ( 28, 28 ) ),
-      'ranges': contains( RangeMatch( TestLauncher, ( 28, 16 ), ( 28, 28 ) ) ),
+      'location_extent': RangeMatcher( TestLauncher, ( 28, 16 ), ( 28, 28 ) ),
+      'ranges': contains( RangeMatcher( TestLauncher,
+                                        ( 28, 16 ),
+                                        ( 28, 28 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -180,16 +178,20 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'The method launch() of type new TestLauncher.Launchable(){} '
               'must override or implement a supertype method',
       'location': LocationMatcher( TestLauncher, 30, 19 ),
-      'location_extent': RangeMatch( TestLauncher, ( 30, 19 ), ( 30, 27 ) ),
-      'ranges': contains( RangeMatch( TestLauncher, ( 30, 19 ), ( 30, 27 ) ) ),
+      'location_extent': RangeMatcher( TestLauncher, ( 30, 19 ), ( 30, 27 ) ),
+      'ranges': contains( RangeMatcher( TestLauncher,
+                                        ( 30, 19 ),
+                                        ( 30, 27 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Cannot make a static reference to the non-static field factory',
       'location': LocationMatcher( TestLauncher, 31, 32 ),
-      'location_extent': RangeMatch( TestLauncher, ( 31, 32 ), ( 31, 39 ) ),
-      'ranges': contains( RangeMatch( TestLauncher, ( 31, 32 ), ( 31, 39 ) ) ),
+      'location_extent': RangeMatcher( TestLauncher, ( 31, 32 ), ( 31, 39 ) ),
+      'ranges': contains( RangeMatcher( TestLauncher,
+                                        ( 31, 32 ),
+                                        ( 31, 39 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -199,12 +201,12 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'The method doUnicødeTes() in the type Test is not applicable '
               'for the arguments (String)',
       'location': LocationMatcher( youcompleteme_Test, 13, 10 ),
-      'location_extent': RangeMatch( youcompleteme_Test,
-                                     ( 13, 10 ),
-                                     ( 13, 23 ) ),
-      'ranges': contains( RangeMatch( youcompleteme_Test,
-                                      ( 13, 10 ),
-                                      ( 13, 23 ) ) ),
+      'location_extent': RangeMatcher( youcompleteme_Test,
+                                       ( 13, 10 ),
+                                       ( 13, 23 ) ),
+      'ranges': contains( RangeMatcher( youcompleteme_Test,
+                                        ( 13, 10 ),
+                                        ( 13, 23 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -302,8 +304,8 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
     'kind': 'ERROR',
     'text': 'Syntax error, insert ";" to complete ClassBodyDeclarations',
     'location': LocationMatcher( filepath, 4, 21 ),
-    'location_extent': RangeMatch( filepath, ( 4, 21 ), ( 4, 25 ) ),
-    'ranges': contains( RangeMatch( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
+    'location_extent': RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ),
+    'ranges': contains( RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
     'fixit_available': False
   } ) )
 
@@ -426,24 +428,24 @@ public class Test {
               'kind': 'ERROR',
               'text': 'Duplicate field Test.test',
               'location': LocationMatcher( youcompleteme_Test, 4, 17 ),
-              'location_extent': RangeMatch( youcompleteme_Test,
-                                             ( 4, 17 ),
-                                             ( 4, 21 ) ),
-              'ranges': contains( RangeMatch( youcompleteme_Test,
-                                              ( 4, 17 ),
-                                              ( 4, 21 ) ) ),
+              'location_extent': RangeMatcher( youcompleteme_Test,
+                                               ( 4, 17 ),
+                                               ( 4, 21 ) ),
+              'ranges': contains( RangeMatcher( youcompleteme_Test,
+                                                ( 4, 17 ),
+                                                ( 4, 21 ) ) ),
               'fixit_available': False
             } ),
             has_entries( {
               'kind': 'ERROR',
               'text': 'Duplicate field Test.test',
               'location': LocationMatcher( youcompleteme_Test, 5, 17 ),
-              'location_extent': RangeMatch( youcompleteme_Test,
-                                             ( 5, 17 ),
-                                             ( 5, 21 ) ),
-              'ranges': contains( RangeMatch( youcompleteme_Test,
-                                              ( 5, 17 ),
-                                              ( 5, 21 ) ) ),
+              'location_extent': RangeMatcher( youcompleteme_Test,
+                                               ( 5, 17 ),
+                                               ( 5, 21 ) ),
+              'ranges': contains( RangeMatcher( youcompleteme_Test,
+                                                ( 5, 17 ),
+                                                ( 5, 21 ) ) ),
               'fixit_available': False
             } )
           )
@@ -484,8 +486,8 @@ def FileReadyToParse_Diagnostics_InvalidURI_test( app, uri_to_filepath, *args ):
           'text': 'The value of the field TestFactory.Bar.testString is not '
                   'used',
           'location': LocationMatcher( '', 15, 19 ),
-          'location_extent': RangeMatch( '', ( 15, 19 ), ( 15, 29 ) ),
-          'ranges': contains( RangeMatch( '', ( 15, 19 ), ( 15, 29 ) ) ),
+          'location_extent': RangeMatcher( '', ( 15, 19 ), ( 15, 29 ) ),
+          'ranges': contains( RangeMatcher( '', ( 15, 19 ), ( 15, 29 ) ) ),
           'fixit_available': False
         } ),
       ) )
