@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -25,8 +25,7 @@ from builtins import *  # noqa
 from hamcrest import assert_that, contains, has_entries
 
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile
-from ycmd.tests.test_utils import ( BuildRequest, ClearCompletionsCache,
-                                    CompletionEntryMatcher )
+from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 
@@ -51,8 +50,6 @@ def EventNotification_OnBufferUnload_CloseFile_test( app ):
   response = app.post_json( '/completions', completion_data )
   assert_that( response.json, has_entries( {
     'completions': contains( CompletionEntryMatcher( 'method' ) ) } ) )
-  # FIXME: we should not have to clear the cache.
-  ClearCompletionsCache()
 
   # Open imported.ts file in another buffer.
   imported_filepath = PathToTestFile( 'buffer_unload', 'imported.ts' )
@@ -94,8 +91,6 @@ def EventNotification_OnBufferUnload_CloseFile_test( app ):
   assert_that( response.json, has_entries( {
     'completions': contains( CompletionEntryMatcher( 'modified_method' ) ) } )
   )
-  # FIXME: we should not have to clear the cache.
-  ClearCompletionsCache()
 
   # Unload imported.ts buffer.
   event_data = BuildRequest( filepath = imported_filepath,

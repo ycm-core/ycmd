@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012, 2013 Google Inc.
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -178,10 +178,6 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     self._max_candidates = user_options[ 'max_num_candidates' ]
 
 
-  def CompletionType( self, request_data ):
-    return 0
-
-
   # It's highly likely you DON'T want to override this function but the *Inner
   # version of it.
   def ShouldUseNow( self, request_data ):
@@ -193,9 +189,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     # call because we have to ensure a different thread doesn't change the cache
     # data.
     cache_completions = self._completions_cache.GetCompletionsIfCacheValid(
-        request_data[ 'line_num' ],
-        request_data[ 'start_column' ],
-        self.CompletionType( request_data ) )
+      request_data )
 
     # If None, then the cache isn't valid and we know we should return true
     if cache_completions is None:
@@ -238,20 +232,14 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
   def _GetCandidatesFromSubclass( self, request_data ):
     cache_completions = self._completions_cache.GetCompletionsIfCacheValid(
-          request_data[ 'line_num' ],
-          request_data[ 'start_column' ],
-          self.CompletionType( request_data ) )
+      request_data )
 
     if cache_completions:
       return cache_completions
-    else:
-      raw_completions = self.ComputeCandidatesInner( request_data )
-      self._completions_cache.Update(
-          request_data[ 'line_num' ],
-          request_data[ 'start_column' ],
-          self.CompletionType( request_data ),
-          raw_completions )
-      return raw_completions
+
+    raw_completions = self.ComputeCandidatesInner( request_data )
+    self._completions_cache.Update( request_data, raw_completions )
+    return raw_completions
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -408,8 +396,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
 
 class CompletionsCache( object ):
-  """Completions for a particular request. Importantly, columns are byte
-  offsets, not unicode codepoints."""
+  """Cache of computed completions for a particular request."""
 
   def __init__( self ):
     self._access_lock = threading.Lock()
@@ -418,33 +405,18 @@ class CompletionsCache( object ):
 
   def Invalidate( self ):
     with self._access_lock:
-      self._line_num = None
-      self._start_column = None
-      self._completion_type = None
+      self._request_data = None
       self._completions = None
 
 
-  # start_column is a byte offset.
-  def Update( self, line_num, start_column, completion_type, completions ):
+  def Update( self, request_data, completions ):
     with self._access_lock:
-      self._line_num = line_num
-      self._start_column = start_column
-      self._completion_type = completion_type
+      self._request_data = request_data
       self._completions = completions
 
 
-  # start_column is a byte offset.
-  def GetCompletionsIfCacheValid( self, line_num, start_column,
-                                  completion_type ):
+  def GetCompletionsIfCacheValid( self, request_data ):
     with self._access_lock:
-      if not self._CacheValidNoLock( line_num, start_column,
-                                     completion_type ):
-        return None
-      return self._completions
-
-
-  # start_column is a byte offset.
-  def _CacheValidNoLock( self, line_num, start_column, completion_type ):
-    return ( line_num == self._line_num and
-             start_column == self._start_column and
-             completion_type == self._completion_type )
+      if self._request_data and self._request_data == request_data:
+        return self._completions
+      return None
