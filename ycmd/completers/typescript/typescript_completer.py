@@ -436,7 +436,11 @@ class TypeScriptCompleter( Completer ):
                            self._RestartServer( request_data ) ),
       'StopServer'     : ( lambda self, request_data, args:
                            self._StopServer() ),
+      'GoTo'           : ( lambda self, request_data, args:
+                           self._GoToDefinition( request_data ) ),
       'GoToDefinition' : ( lambda self, request_data, args:
+                           self._GoToDefinition( request_data ) ),
+      'GoToDeclaration': ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
