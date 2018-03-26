@@ -1117,7 +1117,7 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
                              'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on the whole file '
-                   'with tabs composed of 4 spaces by default',
+                   'with tabs composed of 4 spaces',
     'request': {
       'command': 'Format',
       'filepath': filepath,
@@ -1299,7 +1299,7 @@ def Subcommands_Format_Range_Spaces_test( app ):
                              'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on some part of the file '
-                   'with tabs composed of 4 spaces by default',
+                   'with tabs composed of 4 spaces',
     'request': {
       'command': 'Format',
       'filepath': filepath,
