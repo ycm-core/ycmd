@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,10 +24,8 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( all_of, any_of, assert_that, calling,
-                       contains_inanyorder, has_entries, has_item, is_not,
-                       raises )
-from mock import patch
+from hamcrest import ( assert_that, calling, contains_inanyorder, has_entries,
+                       has_item, raises )
 from nose.tools import eq_
 from webtest import AppError
 import pprint
@@ -120,9 +118,6 @@ def GetCompletions_Basic_test( app ):
 
 
 @SharedYcmd
-@patch( 'ycmd.completers.typescript.'
-          'typescript_completer.MAX_DETAILED_COMPLETIONS',
-        1000 )
 def GetCompletions_Keyword_test( app ):
   RunTest( app, {
     'description': 'No extra and detailed info when completion is a keyword',
@@ -138,52 +133,6 @@ def GetCompletions_Keyword_test( app ):
           'insertion_text': 'class',
           'kind':           'keyword',
         } )
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-@patch( 'ycmd.completers.typescript.'
-          'typescript_completer.MAX_DETAILED_COMPLETIONS',
-        2 )
-def GetCompletions_MaxDetailedCompletion_test( app ):
-  RunTest( app, {
-    'request': {
-      'line_num': 17,
-      'column_num': 6,
-      'filepath': PathToTestFile( 'test.ts' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': all_of(
-          contains_inanyorder(
-            CompletionEntryMatcher( 'methodA' ),
-            CompletionEntryMatcher( 'methodB' ),
-            CompletionEntryMatcher( 'methodC' ),
-          ),
-          is_not( any_of(
-            has_item(
-              CompletionEntryMatcher(
-                'methodA',
-                '(method) Foo.methodA(): void'
-              )
-            ),
-            has_item(
-              CompletionEntryMatcher(
-                'methodB',
-                '(method) Foo.methodB(): void'
-              )
-            ),
-            has_item(
-              CompletionEntryMatcher(
-                'methodC',
-                '(method) Foo.methodC(a: { foo: string; bar: number; }): void'
-              )
-            )
-          ) )
-        )
       } )
     }
   } )

@@ -42,7 +42,6 @@ from ycmd.completers.completer_utils import GetFileLines
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 
-MAX_DETAILED_COMPLETIONS = 100
 RESPONSE_TIMEOUT_SECONDS = 10
 
 # On Debian-based distributions, node is by default installed as nodejs.
@@ -381,11 +380,6 @@ class TypeScriptCompleter( Completer ):
       'line':   request_data[ 'line_num' ],
       'offset': request_data[ 'start_codepoint' ]
     } )
-
-    # A less detailed version of the completion data is returned
-    # if there are too many entries. This improves responsiveness.
-    if len( entries ) > MAX_DETAILED_COMPLETIONS:
-      return [ _ConvertCompletionData(e) for e in entries ]
 
     detailed_entries = self._SendRequest( 'completionEntryDetails', {
       'file':       request_data[ 'filepath' ],
@@ -842,13 +836,6 @@ class TypeScriptCompleter( Completer ):
 
 def _LogLevel():
   return 'verbose' if _logger.isEnabledFor( logging.DEBUG ) else 'normal'
-
-
-def _ConvertCompletionData( completion_data ):
-  return responses.BuildCompletionData(
-    insertion_text = completion_data[ 'name' ],
-    kind           = completion_data[ 'kind' ],
-  )
 
 
 def _ConvertDetailedCompletionData( completion_data ):
