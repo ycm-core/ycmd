@@ -378,20 +378,29 @@ class TypeScriptCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data ):
+    def FormatEntry( entry ):
+      if 'source' in entry:
+        return {
+          'name': entry[ 'name' ],
+          'source': entry[ 'source' ]
+        }
+      return entry[ 'name' ]
+
     self._Reload( request_data )
     entries = self._SendRequest( 'completions', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'start_codepoint' ]
+      'file':                         request_data[ 'filepath' ],
+      'line':                         request_data[ 'line_num' ],
+      'offset':                       request_data[ 'start_codepoint' ],
+      'includeExternalModuleExports': True
     } )
 
     detailed_entries = self._SendRequest( 'completionEntryDetails', {
       'file':       request_data[ 'filepath' ],
       'line':       request_data[ 'line_num' ],
       'offset':     request_data[ 'start_codepoint' ],
-      'entryNames': [ entry[ 'name' ] for entry in entries ]
+      'entryNames': [ FormatEntry( entry ) for entry in entries ]
     } )
-    return [ _ConvertDetailedCompletionData( entry )
+    return [ _ConvertDetailedCompletionData( request_data, entry )
              for entry in detailed_entries ]
 
 
@@ -845,7 +854,7 @@ def _LogLevel():
   return 'verbose' if _logger.isEnabledFor( logging.DEBUG ) else 'normal'
 
 
-def _ConvertDetailedCompletionData( completion_data ):
+def _ConvertDetailedCompletionData( request_data, completion_data ):
   name = completion_data[ 'name' ]
   display_parts = completion_data[ 'displayParts' ]
   signature = ''.join( [ part[ 'text' ] for part in display_parts ] )
@@ -862,11 +871,25 @@ def _ConvertDetailedCompletionData( completion_data ):
   detailed_info += [ doc[ 'text' ].strip() for doc in docs if doc ]
   detailed_info = '\n\n'.join( detailed_info )
 
+  fixits = None
+  if 'codeActions' in completion_data:
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   request_data[ 'filepath' ] )
+    fixits = responses.BuildFixItResponse( [
+      responses.FixIt( location,
+                       _BuildFixItForChanges( request_data,
+                                              action[ 'changes' ] ),
+                       action[ 'description' ] )
+      for action in completion_data[ 'codeActions' ]
+    ] )
+
   return responses.BuildCompletionData(
     insertion_text  = name,
     extra_menu_info = extra_menu_info,
     detailed_info   = detailed_info,
-    kind            = completion_data[ 'kind' ]
+    kind            = completion_data[ 'kind' ],
+    extra_data      = fixits
   )
 
 

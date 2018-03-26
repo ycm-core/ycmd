@@ -35,3 +35,5 @@ bar.testMethod();
 bar.nonExistingMethod();
 
 Bar.apply()
+
+Bår
