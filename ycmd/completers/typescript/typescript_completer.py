@@ -419,6 +419,8 @@ class TypeScriptCompleter( Completer ):
                            self._GetDoc( request_data ) ),
       'FixIt'          : ( lambda self, request_data, args:
                            self._FixIt( request_data, args ) ),
+      'OrganizeImports': ( lambda self, request_data, args:
+                           self._OrganizeImports( request_data ) ),
       'RefactorRename' : ( lambda self, request_data, args:
                            self._RefactorRename( request_data, args ) ),
     }
@@ -661,6 +663,28 @@ class TypeScriptCompleter( Completer ):
         fixits.extend( diagnostic.fixits_ )
 
     return responses.BuildFixItResponse( fixits )
+
+
+  def _OrganizeImports( self, request_data ):
+    self._Reload( request_data )
+
+    filepath = request_data[ 'filepath' ]
+    changes = self._SendRequest( 'organizeImports', {
+      'scope': {
+        'type': 'file',
+        'args': {
+          'file': filepath
+        }
+      }
+    } )
+
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   filepath )
+    return responses.BuildFixItResponse( [
+      responses.FixIt( location,
+                       _BuildFixItForChanges( request_data, changes ) )
+    ] )
 
 
   def _RefactorRename( self, request_data, args ):

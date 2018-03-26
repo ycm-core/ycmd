@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -100,6 +100,7 @@ def Subcommands_DefinedSubcommands_test( app ):
       'GetType',
       'GoToReferences',
       'FixIt',
+      'OrganizeImports',
       'RefactorRename',
       'RestartServer'
     )
@@ -422,6 +423,42 @@ def Subcommands_FixIt_test( app ):
             'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
           } )
         )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_OrganizeImports_test( app ):
+  filepath = PathToTestFile( 'imports.ts' )
+  RunTest( app, {
+    'description': 'OrganizeImports removes unused imports, '
+                   'coalesces imports from the same module, and sorts them',
+    'request': {
+      'command': 'OrganizeImports',
+      'filepath': filepath,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher(
+              matches_regexp(
+                'import \* as lib from "library";\r?\n'
+                'import func, { func1, func2 } from "library";\r?\n' ),
+              LocationMatcher( filepath,  1, 1 ),
+              LocationMatcher( filepath,  2, 1 ) ),
+            ChunkMatcher(
+              '',
+              LocationMatcher( filepath,  5, 1 ),
+              LocationMatcher( filepath,  6, 1 ) ),
+            ChunkMatcher(
+              '',
+              LocationMatcher( filepath,  9, 1 ),
+              LocationMatcher( filepath, 10, 1 ) ),
+          )
+        } ) )
       } )
     }
   } )
