@@ -31,7 +31,7 @@ import threading
 from subprocess import PIPE
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import GetFileContents
+from ycmd.completers.completer_utils import GetFileLines
 
 _logger = logging.getLogger( __name__ )
 
@@ -548,7 +548,7 @@ class TernCompleter( Completer ):
     filepath = self._ServerPathToAbsolute( response[ 'file' ] )
     return responses.BuildGoToResponseFromLocation(
       _BuildLocation(
-        utils.SplitLines( GetFileContents( request_data, filepath ) ),
+        GetFileLines( request_data, filepath ),
         filepath,
         response[ 'start' ][ 'line' ],
         response[ 'start' ][ 'ch' ] ) )
@@ -566,8 +566,7 @@ class TernCompleter( Completer ):
     def BuildRefResponse( ref ):
       filepath = self._ServerPathToAbsolute( ref[ 'file' ] )
       return responses.BuildGoToResponseFromLocation(
-        _BuildLocation(
-          utils.SplitLines( GetFileContents( request_data, filepath ) ),
+        _BuildLocation( GetFileLines( request_data, filepath ),
           filepath,
           ref[ 'start' ][ 'line' ],
           ref[ 'start' ][ 'ch' ] ) )
@@ -650,8 +649,7 @@ class TernCompleter( Completer ):
 
     def BuildFixItChunk( change ):
       filepath = self._ServerPathToAbsolute( change[ 'file' ] )
-      file_contents = utils.SplitLines(
-        GetFileContents( request_data, filepath ) )
+      file_contents = GetFileLines( request_data, filepath )
       return responses.FixItChunk(
         change[ 'text' ],
         BuildRange( file_contents,

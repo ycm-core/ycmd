@@ -28,7 +28,6 @@ import hashlib
 
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          pathname2url,
-                         SplitLines,
                          ToBytes,
                          ToUnicode,
                          url2pathname,
@@ -357,8 +356,7 @@ def FormattingOptions( request_data ):
 
 
 def Range( request_data ):
-  filepath = request_data[ 'filepath' ]
-  lines = SplitLines( request_data[ 'file_data' ][ filepath ][ 'contents' ] )
+  lines = request_data[ 'lines' ]
 
   start = request_data[ 'range' ][ 'start' ]
   start_line_num = start[ 'line_num' ]
