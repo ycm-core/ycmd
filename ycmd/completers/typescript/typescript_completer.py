@@ -176,9 +176,7 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_is_running = threading.Event()
 
     # Start a thread to read response from TSServer.
-    self._thread = threading.Thread( target = self._ReaderLoop, args = () )
-    self._thread.daemon = True
-    self._thread.start()
+    utils.StartThread( self._ReaderLoop )
 
     # Used to map sequence id's to their corresponding DeferredResponse
     # objects. The reader loop uses this to hand out responses.
@@ -200,13 +198,8 @@ class TypeScriptCompleter( Completer ):
 
 
   def _SetServerVersion( self ):
-    def SetServerVersionInThread():
-      with self._tsserver_version_lock:
-        self._tsserver_version = self._SendRequest( 'status' )[ 'version' ]
-
-    self._thread = threading.Thread( target = SetServerVersionInThread )
-    self._thread.daemon = True
-    self._thread.start()
+    with self._tsserver_version_lock:
+      self._tsserver_version = self._SendRequest( 'status' )[ 'version' ]
 
 
   def _StartServer( self ):
@@ -236,7 +229,7 @@ class TypeScriptCompleter( Completer ):
 
       self._tsserver_is_running.set()
 
-      self._SetServerVersion()
+      utils.StartThread( self._SetServerVersion )
 
 
   def _ReaderLoop( self ):

@@ -27,7 +27,6 @@ import functools
 import os
 import psutil
 import time
-import threading
 
 from mock import patch
 from hamcrest import ( assert_that,
@@ -324,8 +323,7 @@ def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
   # shutdown code as a successful shutdown. We need to do the shutdown and
   # terminate in parallel as the post_json is a blocking call.
   with patch.object( completer.GetConnection(), 'WriteData' ):
-    stop_server_task = threading.Thread( target=StopServerInAnotherThread )
-    stop_server_task.start()
+    stop_server_task = utils.StartThread( StopServerInAnotherThread )
     process.terminate()
     stop_server_task.join()
 

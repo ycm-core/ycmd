@@ -25,7 +25,6 @@ from builtins import *  # noqa
 
 import time
 import json
-import threading
 from future.utils import iterkeys
 from hamcrest import ( assert_that,
                        contains,
@@ -46,7 +45,7 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
 
 from ycmd.tests.test_utils import ( BuildRequest, LocationMatcher, RangeMatcher,
                                     WithRetry )
-from ycmd.utils import ReadFile
+from ycmd.utils import ReadFile, StartThread
 from ycmd.completers import completer
 
 from pprint import pformat
@@ -398,10 +397,7 @@ public class Test {
       if 'filepath' in message and message[ 'filepath' ] == filepath:
         messages_for_filepath.append( message )
 
-  poll_task = threading.Thread( target = PollForMessagesInAnotherThread,
-                                args = ( filepath, old_contents ) )
-  poll_task.daemon = True
-  poll_task.start()
+  StartThread( PollForMessagesInAnotherThread, filepath, old_contents )
 
   new_contents = """package com.youcompleteme;
 
@@ -765,8 +761,7 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
 
     raise AssertionError( 'The poll request was not aborted in 5 tries' )
 
-  message_poll_task = threading.Thread( target=AwaitMessages )
-  message_poll_task.start()
+  message_poll_task = StartThread( AwaitMessages )
 
   app.post_json(
     '/run_completer_command',

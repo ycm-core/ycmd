@@ -31,7 +31,6 @@ import sys
 import time
 import traceback
 from bottle import request
-from threading import Thread
 
 import ycm_core
 from ycmd import extra_conf_store, hmac_plugin, server_state, user_options_store
@@ -40,6 +39,7 @@ from ycmd.responses import ( BuildExceptionResponse, BuildCompletionResponse,
 from ycmd.request_wrap import RequestWrap
 from ycmd.bottle_utils import SetResponseHeader
 from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap
+from ycmd.utils import StartThread
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -311,9 +311,7 @@ def ServerShutdown():
 
   # Use a separate thread to let the server send the response before shutting
   # down.
-  terminator = Thread( target = Terminator )
-  terminator.daemon = True
-  terminator.start()
+  StartThread( Terminator )
 
 
 def ServerCleanup():
@@ -349,7 +347,4 @@ def KeepSubserversAlive( check_interval_seconds ):
       for completer in loaded_completers:
         completer.ServerIsHealthy()
 
-  keepalive = Thread( target = Keepalive,
-                      args = ( check_interval_seconds, ) )
-  keepalive.daemon = True
-  keepalive.start()
+  StartThread( Keepalive, check_interval_seconds )
