@@ -156,6 +156,8 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_binary_path = FindTsserverBinary()
 
     self._tsserver_handle = None
+    self._tsserver_version_lock = threading.Lock()
+    self._tsserver_version = None
 
     # Used to prevent threads from concurrently writing to
     # the tsserver process' stdin
@@ -178,8 +180,6 @@ class TypeScriptCompleter( Completer ):
     self._thread.daemon = True
     self._thread.start()
 
-    self._StartServer()
-
     # Used to map sequence id's to their corresponding DeferredResponse
     # objects. The reader loop uses this to hand out responses.
     self._pending = {}
@@ -188,6 +188,8 @@ class TypeScriptCompleter( Completer ):
     # the pending response dictionary
     self._pending_lock = threading.Lock()
 
+    self._StartServer()
+
     self._max_diagnostics_to_display = user_options[
       'max_diagnostics_to_display' ]
 
@@ -195,6 +197,16 @@ class TypeScriptCompleter( Completer ):
     self._latest_diagnostics_for_file = defaultdict( list )
 
     _logger.info( 'Enabling typescript completion' )
+
+
+  def _SetServerVersion( self ):
+    def SetServerVersionInThread():
+      with self._tsserver_version_lock:
+        self._tsserver_version = self._SendRequest( 'status' )[ 'version' ]
+
+    self._thread = threading.Thread( target = SetServerVersionInThread )
+    self._thread.daemon = True
+    self._thread.start()
 
 
   def _StartServer( self ):
@@ -223,6 +235,8 @@ class TypeScriptCompleter( Completer ):
                                                env = environ )
 
       self._tsserver_is_running.set()
+
+      self._SetServerVersion()
 
 
   def _ReaderLoop( self ):
@@ -830,11 +844,15 @@ class TypeScriptCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     with self._server_lock:
+      with self._tsserver_version_lock:
+        item_version = responses.DebugInfoItem( 'version',
+                                                self._tsserver_version )
       tsserver = responses.DebugInfoServer(
           name = 'TSServer',
           handle = self._tsserver_handle,
           executable = self._tsserver_binary_path,
-          logfiles = [ self._logfile ] )
+          logfiles = [ self._logfile ],
+          extras = [ item_version ] )
 
       return responses.BuildDebugInfoResponse( name = 'TypeScript',
                                                servers = [ tsserver ] )
