@@ -296,12 +296,12 @@ def CustomPythonCmakeArgs( args ):
 
 
 def GetGenerator( args ):
+  if args.ninja:
+    return 'Ninja'
   if OnWindows():
     return 'Visual Studio {version}{arch}'.format(
         version = args.msvc,
         arch = ' Win64' if platform.architecture()[ 0 ] == '64bit' else '' )
-  if PathToFirstExistingExecutable( ['ninja'] ):
-    return 'Ninja'
   return 'Unix Makefiles'
 
 
@@ -328,6 +328,8 @@ def ParseArguments():
   parser.add_argument( '--msvc', type = int, choices = [ 12, 14, 15 ],
                        default = 15, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
+  parser.add_argument( '--ninja', action = 'store_true',
+                       help = 'Use Ninja build system.' )
   parser.add_argument( '--all',
                        action = 'store_true',
                        help   = 'Enable all supported completers',
@@ -362,7 +364,7 @@ def ParseArguments():
   parser.add_argument( '--racer-completer', action = 'store_true',
                        help = argparse.SUPPRESS )
   parser.add_argument( '--tern-completer', action = 'store_true',
-                       help = argparse.SUPPRESS ),
+                       help = argparse.SUPPRESS )
 
   args = parser.parse_args()
 
