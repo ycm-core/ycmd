@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Copyright (C) 2015 ycmd contributors
 #
 # This file is part of ycmd.
@@ -26,7 +28,10 @@ from hamcrest import ( all_of, any_of, assert_that, calling,
                        contains_inanyorder, has_entries, has_item, is_not,
                        raises )
 from mock import patch
+from nose.tools import eq_
 from webtest import AppError
+import pprint
+import requests
 
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
@@ -35,24 +40,34 @@ from ycmd.utils import ReadFile
 
 
 def RunTest( app, test ):
-  filepath = PathToTestFile( 'test.ts' )
-  contents = ReadFile( filepath )
+  contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'typescript',
-                             contents = contents,
-                             event_name = 'BufferVisit' )
+  def CombineRequest( request, data ):
+    kw = request
+    request.update( data )
+    return BuildRequest( **kw )
 
-  app.post_json( '/event_notification', event_data )
+  app.post_json(
+    '/event_notification',
+    CombineRequest( test[ 'request' ], {
+      'contents': contents,
+      'filetype': 'typescript',
+      'event_name': 'BufferVisit'
+    } )
+  )
 
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'typescript',
-                                  contents = contents,
-                                  force_semantic = True,
-                                  line_num = 17,
-                                  column_num = 6 )
+  response = app.post_json(
+    '/completions',
+    CombineRequest( test[ 'request' ], {
+      'contents': contents,
+      'filetype': 'typescript',
+      'force_semantic': True
+    } )
+  )
 
-  response = app.post_json( '/completions', completion_data )
+  print( 'completer response: {0}'.format( pprint.pformat( response.json ) ) )
+
+  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
@@ -60,17 +75,69 @@ def RunTest( app, test ):
 @SharedYcmd
 def GetCompletions_Basic_test( app ):
   RunTest( app, {
+    'description': 'Extra and detailed info when completions are methods',
+    'request': {
+      'line_num': 17,
+      'column_num': 6,
+      'filepath': PathToTestFile( 'test.ts' )
+    },
     'expect': {
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'methodA', extra_params = {
-            'menu_text': 'methodA (method) Foo.methodA(): void' } ),
-          CompletionEntryMatcher( 'methodB', extra_params = {
-            'menu_text': 'methodB (method) Foo.methodB(): void' } ),
-          CompletionEntryMatcher( 'methodC', extra_params = {
-            'menu_text': ( 'methodC (method) Foo.methodC(a: '
-                           '{ foo: string; bar: number; }): void' ) } ),
+          CompletionEntryMatcher(
+            'methodA',
+            '(method) Foo.methodA(): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodA(): void\n\n'
+                               'Unicode string: 说话'
+            }
+          ),
+          CompletionEntryMatcher(
+            'methodB',
+            '(method) Foo.methodB(): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodB(): void'
+            }
+          ),
+          CompletionEntryMatcher(
+            'methodC',
+            '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodC(a: {\n'
+                               '    foo: string;\n'
+                               '    bar: number;\n'
+                               '}): void'
+            }
+          )
         )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+@patch( 'ycmd.completers.typescript.'
+          'typescript_completer.MAX_DETAILED_COMPLETIONS',
+        1000 )
+def GetCompletions_Keyword_test( app ):
+  RunTest( app, {
+    'description': 'No extra and detailed info when completion is a keyword',
+    'request': {
+      'line_num': 2,
+      'column_num': 5,
+      'filepath': PathToTestFile( 'test.ts' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item( {
+          'insertion_text': 'class',
+          'kind':           'keyword',
+        } )
       } )
     }
   } )
@@ -82,7 +149,13 @@ def GetCompletions_Basic_test( app ):
         2 )
 def GetCompletions_MaxDetailedCompletion_test( app ):
   RunTest( app, {
+    'request': {
+      'line_num': 17,
+      'column_num': 6,
+      'filepath': PathToTestFile( 'test.ts' ),
+    },
     'expect': {
+      'response': requests.codes.ok,
       'data': has_entries( {
         'completions': all_of(
           contains_inanyorder(
@@ -92,15 +165,23 @@ def GetCompletions_MaxDetailedCompletion_test( app ):
           ),
           is_not( any_of(
             has_item(
-              CompletionEntryMatcher( 'methodA', extra_params = {
-                'menu_text': 'methodA (method) Foo.methodA(): void' } ) ),
+              CompletionEntryMatcher(
+                'methodA',
+                '(method) Foo.methodA(): void'
+              )
+            ),
             has_item(
-              CompletionEntryMatcher( 'methodB', extra_params = {
-                'menu_text': 'methodB (method) Foo.methodB(): void' } ) ),
+              CompletionEntryMatcher(
+                'methodB',
+                '(method) Foo.methodB(): void'
+              )
+            ),
             has_item(
-              CompletionEntryMatcher( 'methodC', extra_params = {
-                'menu_text': ( 'methodC (method) Foo.methodC(a: '
-                               '{ foo: string; bar: number; }): void' ) } ) )
+              CompletionEntryMatcher(
+                'methodC',
+                '(method) Foo.methodC(a: { foo: string; bar: number; }): void'
+              )
+            )
           ) )
         )
       } )
@@ -125,18 +206,37 @@ def GetCompletions_AfterRestart_test( app ):
                                   line_num = 17,
                                   column_num = 6 )
 
-  response = app.post_json( '/completions', completion_data )
-  assert_that( response.json, has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'methodA', extra_params = {
-            'menu_text': 'methodA (method) Foo.methodA(): void' } ),
-          CompletionEntryMatcher( 'methodB', extra_params = {
-            'menu_text': 'methodB (method) Foo.methodB(): void' } ),
-          CompletionEntryMatcher( 'methodC', extra_params = {
-            'menu_text': ( 'methodC (method) Foo.methodC(a: '
-                           '{ foo: string; bar: number; }): void' ) } ),
+  assert_that(
+    app.post_json( '/completions', completion_data ).json,
+    has_entries( {
+      'completions': contains_inanyorder(
+        CompletionEntryMatcher(
+          'methodA',
+          '(method) Foo.methodA(): void',
+          extra_params = { 'kind': 'method' }
+        ),
+        CompletionEntryMatcher(
+          'methodB',
+          '(method) Foo.methodB(): void',
+          extra_params = {
+            'kind': 'method',
+            'detailed_info': '(method) Foo.methodB(): void'
+          }
+        ),
+        CompletionEntryMatcher(
+          'methodC',
+          '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
+          extra_params = {
+            'kind': 'method',
+            'detailed_info': '(method) Foo.methodC(a: {\n'
+                             '    foo: string;\n'
+                             '    bar: number;\n'
+                             '}): void'
+          }
         )
-      } ) )
+      )
+    } )
+  )
 
 
 @IsolatedYcmd

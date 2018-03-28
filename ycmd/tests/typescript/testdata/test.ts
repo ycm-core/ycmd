@@ -1,6 +1,6 @@
 
 class Foo {
-  // Unicode string: 说话
+  /** Unicode string: 说话 */
   methodA() {}
   methodB() {}
   methodC(

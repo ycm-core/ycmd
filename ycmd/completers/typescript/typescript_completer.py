@@ -412,21 +412,14 @@ class TypeScriptCompleter( Completer ):
     if len( entries ) > MAX_DETAILED_COMPLETIONS:
       return [ _ConvertCompletionData(e) for e in entries ]
 
-    names = []
-    namelength = 0
-    for e in entries:
-      name = e[ 'name' ]
-      namelength = max( namelength, len( name ) )
-      names.append( name )
-
     detailed_entries = self._SendRequest( 'completionEntryDetails', {
       'file':       request_data[ 'filepath' ],
       'line':       request_data[ 'line_num' ],
       'offset':     request_data[ 'start_codepoint' ],
-      'entryNames': names
+      'entryNames': [ entry[ 'name' ] for entry in entries ]
     } )
-    return [ _ConvertDetailedCompletionData( e, namelength )
-             for e in detailed_entries ]
+    return [ _ConvertDetailedCompletionData( entry )
+             for entry in detailed_entries ]
 
 
   def GetSubcommandsMap( self ):
@@ -740,24 +733,32 @@ def _LogLevel():
 def _ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data[ 'name' ],
-    menu_text      = completion_data[ 'name' ],
     kind           = completion_data[ 'kind' ],
-    extra_data     = completion_data[ 'kind' ]
   )
 
 
-def _ConvertDetailedCompletionData( completion_data, padding = 0 ):
+def _ConvertDetailedCompletionData( completion_data ):
   name = completion_data[ 'name' ]
   display_parts = completion_data[ 'displayParts' ]
-  signature = ''.join( [ p[ 'text' ] for p in display_parts ] )
+  signature = ''.join( [ part[ 'text' ] for part in display_parts ] )
+  if name == signature:
+    extra_menu_info = None
+    detailed_info = []
+  else:
+    # Strip new lines and indentation from the signature to display it on one
+    # line.
+    extra_menu_info = re.sub( '\s+', ' ', signature )
+    detailed_info = [ signature ]
 
-  # needed to strip new lines and indentation from the signature
-  signature = re.sub( '\s+', ' ', signature )
-  menu_text = '{0} {1}'.format( name.ljust( padding ), signature )
+  docs = completion_data.get( 'documentation', [] )
+  detailed_info += [ doc[ 'text' ].strip() for doc in docs if doc ]
+  detailed_info = '\n\n'.join( detailed_info )
+
   return responses.BuildCompletionData(
-    insertion_text = name,
-    menu_text      = menu_text,
-    kind           = completion_data[ 'kind' ]
+    insertion_text  = name,
+    extra_menu_info = extra_menu_info,
+    detailed_info   = detailed_info,
+    kind            = completion_data[ 'kind' ]
   )
 
 
