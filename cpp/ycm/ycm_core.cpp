@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -24,6 +24,7 @@
  * before anything python related.
  */
 #include <iostream>
+#include "CodePoint.h"
 #include "IdentifierCompleter.h"
 #include "PythonSupport.h"
 #include "versioning.h"
@@ -68,6 +69,8 @@ BOOST_PYTHON_MODULE(ycm_core)
 {
   // Necessary because of usage of the ReleaseGil class
   PyEval_InitThreads();
+
+  PythonException< UnicodeDecodeError >( "UnicodeDecodeError" );
 
   def( "HasClangSupport", HasClangSupport );
 

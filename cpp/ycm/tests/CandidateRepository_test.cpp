@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -60,7 +60,7 @@ TEST_F( CandidateRepositoryTest, TooLongCandidateSkipped ) {
 }
 
 
-TEST_F( CandidateRepositoryTest, EmptyCandidatesForUnicode ) {
+TEST_F( CandidateRepositoryTest, UnicodeCandidates ) {
   std::vector< std::string > inputs;
   inputs.push_back( "fooδιακριτικός" );
   inputs.push_back( "fooδιακός" );
@@ -68,19 +68,19 @@ TEST_F( CandidateRepositoryTest, EmptyCandidatesForUnicode ) {
   std::vector< const Candidate * > candidates =
     repo_.GetCandidatesForStrings( inputs );
 
-  EXPECT_EQ( "", candidates[ 0 ]->Text() );
-  EXPECT_EQ( "", candidates[ 1 ]->Text() );
+  EXPECT_EQ( "fooδιακριτικός", candidates[ 0 ]->Text() );
+  EXPECT_EQ( "fooδιακός", candidates[ 1 ]->Text() );
 }
 
 
-TEST_F( CandidateRepositoryTest, EmptyCandidatesForNonPrintable ) {
+TEST_F( CandidateRepositoryTest, NonPrintableCandidates ) {
   std::vector< std::string > inputs;
   inputs.push_back( "\x01\x05\x0a\x15" );
 
   std::vector< const Candidate * > candidates =
     repo_.GetCandidatesForStrings( inputs );
 
-  EXPECT_EQ( "", candidates[ 0 ]->Text() );
+  EXPECT_EQ( "\x01\x05\x0a\x15", candidates[ 0 ]->Text() );
 }
 
 
