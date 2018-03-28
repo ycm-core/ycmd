@@ -31,7 +31,7 @@ import requests
 import threading
 
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import GetFileContents
+from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.cs import solutiondetection
 from ycmd.utils import CodepointOffsetToByteOffset, urljoin
 from ycmd import responses
@@ -671,7 +671,7 @@ def _BuildLocation( request_data, filename, line_num, column_num ):
   # column is 1 in that case.
   if column_num <= 0:
     column_num = 1
-  contents = utils.SplitLines( GetFileContents( request_data, filename ) )
+  contents = GetFileLines( request_data, filename )
   line_value = contents[ line_num - 1 ]
   return responses.Location(
       line_num,

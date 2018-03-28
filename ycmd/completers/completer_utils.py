@@ -29,7 +29,7 @@ import os
 import re
 from collections import defaultdict
 from future.utils import iteritems
-from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile
+from ycmd.utils import ToCppStringCompatible, ToUnicode, ReadFile, SplitLines
 
 _logger = logging.getLogger( __name__ )
 
@@ -230,3 +230,11 @@ def GetFileContents( request_data, filename ):
   except IOError:
     _logger.exception( 'Error reading file {}'.format( filename ) )
     return ''
+
+
+def GetFileLines( request_data, filename ):
+  """Like GetFileContents but return the contents as a list of lines. Avoid
+  splitting the lines if they have already been split for the current file."""
+  if filename == request_data[ 'filepath' ]:
+    return request_data[ 'lines' ]
+  return SplitLines( GetFileContents( request_data, filename ) )

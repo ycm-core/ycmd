@@ -31,7 +31,7 @@ import queue
 import threading
 
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import GetFileContents
+from ycmd.completers.completer_utils import GetFileContents, GetFileLines
 from ycmd import utils
 from ycmd import responses
 
@@ -911,7 +911,7 @@ class LanguageServerCompleter( Completer ):
     # polling mechanism.
     filepath = request_data[ 'filepath' ]
     uri = lsp.FilePathToUri( filepath )
-    contents = utils.SplitLines( GetFileContents( request_data, filepath ) )
+    contents = GetFileLines( request_data, filepath )
     with self._server_info_mutex:
       if uri in self._latest_diagnostics:
         return [ _BuildDiagnostic( contents, uri, diag )
@@ -1038,10 +1038,10 @@ class LanguageServerCompleter( Completer ):
 
       with self._server_info_mutex:
         if filepath in self._server_file_state:
-          contents = self._server_file_state[ filepath ].contents
+          contents = utils.SplitLines(
+            self._server_file_state[ filepath ].contents )
         else:
-          contents = GetFileContents( request_data, filepath )
-      contents = utils.SplitLines( contents )
+          contents = GetFileLines( request_data, filepath )
       return {
         'diagnostics': [ _BuildDiagnostic( contents, uri, x )
                          for x in params[ 'diagnostics' ] ],
@@ -1456,7 +1456,7 @@ class LanguageServerCompleter( Completer ):
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
     filepath = request_data[ 'filepath' ]
-    contents = utils.SplitLines( GetFileContents( request_data, filepath ) )
+    contents = GetFileLines( request_data, filepath )
     chunks = [ responses.FixItChunk( text_edit[ 'newText' ],
                                      _BuildRange( contents,
                                                   filepath,
@@ -1596,7 +1596,7 @@ def _InsertionTextForItem( request_data, item ):
 
   if additional_text_edits:
     filepath = request_data[ 'filepath' ]
-    contents = utils.SplitLines( GetFileContents( request_data, filepath ) )
+    contents = GetFileLines( request_data, filepath )
     chunks = [ responses.FixItChunk( e[ 'newText' ],
                                      _BuildRange( contents,
                                                   filepath,
@@ -1698,8 +1698,7 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
       "The TextEdit '{0}' spans multiple lines".format(
         text_edit[ 'newText' ] ) )
 
-  file_contents = utils.SplitLines(
-    GetFileContents( request_data, request_data[ 'filepath' ] ) )
+  file_contents = GetFileLines( request_data, request_data[ 'filepath' ] )
   line_value = file_contents[ edit_range[ 'start' ][ 'line' ] ]
 
   start_codepoint = lsp.UTF16CodeUnitsToCodepoints(
@@ -1740,8 +1739,7 @@ def _PositionToLocationAndDescription( request_data, position ):
   """Convert a LSP position to a ycmd location."""
   try:
     filename = lsp.UriToFilePath( position[ 'uri' ] )
-    file_contents = utils.SplitLines( GetFileContents( request_data,
-                                                       filename ) )
+    file_contents = GetFileLines( request_data, filename )
   except lsp.InvalidUriException:
     _logger.debug( "Invalid URI, file contents not available in GoTo" )
     filename = ''
@@ -1819,7 +1817,7 @@ def TextEditToChunks( request_data, uri, text_edit ):
     _logger.debug( 'Invalid filepath received in TextEdit' )
     filepath = ''
 
-  contents = utils.SplitLines( GetFileContents( request_data, filepath ) )
+  contents = GetFileLines( request_data, filepath )
   return [
     responses.FixItChunk( change[ 'newText' ],
                           _BuildRange( contents,
