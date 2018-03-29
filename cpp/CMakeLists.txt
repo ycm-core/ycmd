@@ -65,6 +65,8 @@ if ( EXISTS /etc/redhat-release )
     set( DISTRIBUTION "Red Hat" )
   elseif ( CONTENTS MATCHES "CentOS" )
     set( DISTRIBUTION "CentOS" )
+  elseif ( CONTENTS MATCHES "Fedora" )
+    set( DISTRIBUTION "Fedora" )
   endif()
 # Gentoo detection. Needed because Gentoo is a special snowflake that puts
 # llvm in weird places.
