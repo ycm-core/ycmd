@@ -1,5 +1,4 @@
-# Copyright (C) 2015-2016 Google Inc.
-#               2016-2017 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -30,6 +29,7 @@ import re
 import subprocess
 import itertools
 import threading
+from collections import defaultdict
 from functools import partial
 
 from tempfile import NamedTemporaryFile
@@ -111,34 +111,6 @@ def ShouldEnableTypeScriptCompleter():
   return True
 
 
-def TsDiagnosticToYcmdDiagnostic( request_data, ts_diagnostic ):
-  filepath = request_data[ 'filepath' ]
-  contents = request_data[ 'lines' ]
-
-  ts_start_location = ts_diagnostic[ 'startLocation' ]
-  ts_start_line = ts_start_location[ 'line' ]
-  start_offset = utils.CodepointOffsetToByteOffset(
-    contents[ ts_start_line - 1 ],
-    ts_start_location[ 'offset' ] )
-
-  ts_end_location = ts_diagnostic[ 'endLocation' ]
-  ts_end_line = ts_end_location[ 'line' ]
-  end_offset = utils.CodepointOffsetToByteOffset(
-    contents[ ts_end_line - 1 ],
-    ts_end_location[ 'offset' ] )
-
-  location_start = responses.Location( ts_start_line, start_offset, filepath )
-  location_end = responses.Location( ts_end_line, end_offset, filepath )
-
-  location_extent = responses.Range( location_start, location_end )
-
-  return responses.Diagnostic( [ location_extent ],
-                               location_start,
-                               location_extent,
-                               ts_diagnostic[ 'message' ],
-                               'ERROR' )
-
-
 def IsLineInTsDiagnosticRange( line, ts_diagnostic ):
   ts_start_line = ts_diagnostic[ 'startLocation' ][ 'line' ]
   ts_end_line = ts_diagnostic[ 'endLocation' ][ 'line' ]
@@ -218,6 +190,9 @@ class TypeScriptCompleter( Completer ):
 
     self._max_diagnostics_to_display = user_options[
       'max_diagnostics_to_display' ]
+
+    self._latest_diagnostics_for_file_lock = threading.Lock()
+    self._latest_diagnostics_for_file = defaultdict( list )
 
     _logger.info( 'Enabling typescript completion' )
 
@@ -442,6 +417,8 @@ class TypeScriptCompleter( Completer ):
                            self._GetType( request_data ) ),
       'GetDoc'         : ( lambda self, request_data, args:
                            self._GetDoc( request_data ) ),
+      'FixIt'          : ( lambda self, request_data, args:
+                           self._FixIt( request_data, args ) ),
       'RefactorRename' : ( lambda self, request_data, args:
                            self._RefactorRename( request_data, args ) ),
     }
@@ -461,6 +438,9 @@ class TypeScriptCompleter( Completer ):
     self._Reload( request_data )
 
     diagnostics = self.GetDiagnosticsForCurrentFile( request_data )
+    filepath = request_data[ 'filepath' ]
+    with self._latest_diagnostics_for_file_lock:
+      self._latest_diagnostics_for_file[ filepath ] = diagnostics
     return [ responses.BuildDiagnosticData( x ) for x in diagnostics ]
 
 
@@ -478,10 +458,58 @@ class TypeScriptCompleter( Completer ):
     return ts_diagnostics
 
 
+  def _TsDiagnosticToYcmdDiagnostic( self, request_data, ts_diagnostic ):
+    filepath = request_data[ 'filepath' ]
+
+    ts_fixes = self._SendRequest( 'getCodeFixes', {
+      'file':        filepath,
+      'startLine':   ts_diagnostic[ 'startLocation' ][ 'line' ],
+      'startOffset': ts_diagnostic[ 'startLocation' ][ 'offset' ],
+      'endLine':     ts_diagnostic[ 'endLocation' ][ 'line' ],
+      'endOffset':   ts_diagnostic[ 'endLocation' ][ 'offset' ],
+      'errorCodes':  [ ts_diagnostic[ 'code' ] ]
+    } )
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   filepath )
+
+    fixits = [ responses.FixIt( location,
+                                _BuildFixItForChanges( request_data,
+                                                       fix[ 'changes' ] ),
+                                fix[ 'description' ] )
+               for fix in ts_fixes ]
+
+    contents = GetFileLines( request_data, filepath )
+
+    ts_start_location = ts_diagnostic[ 'startLocation' ]
+    ts_start_line = ts_start_location[ 'line' ]
+    start_offset = utils.CodepointOffsetToByteOffset(
+      contents[ ts_start_line - 1 ],
+      ts_start_location[ 'offset' ] )
+
+    ts_end_location = ts_diagnostic[ 'endLocation' ]
+    ts_end_line = ts_end_location[ 'line' ]
+    end_offset = utils.CodepointOffsetToByteOffset(
+      contents[ ts_end_line - 1 ],
+      ts_end_location[ 'offset' ] )
+
+    location_start = responses.Location( ts_start_line, start_offset, filepath )
+    location_end = responses.Location( ts_end_line, end_offset, filepath )
+
+    location_extent = responses.Range( location_start, location_end )
+
+    return responses.Diagnostic( [ location_extent ],
+                                 location_start,
+                                 location_extent,
+                                 ts_diagnostic[ 'message' ],
+                                 'ERROR',
+                                 fixits = fixits )
+
+
   def GetDiagnosticsForCurrentFile( self, request_data ):
     ts_diagnostics = self.GetTsDiagnosticsForCurrentFile( request_data )
 
-    return [ TsDiagnosticToYcmdDiagnostic( request_data, x )
+    return [ self._TsDiagnosticToYcmdDiagnostic( request_data, x )
              for x in ts_diagnostics[ : self._max_diagnostics_to_display ] ]
 
 
@@ -512,8 +540,9 @@ class TypeScriptCompleter( Completer ):
         distance_to_closest_ts_diagnostic = distance
         closest_ts_diagnostic = ts_diagnostic
 
-    closest_diagnostic = TsDiagnosticToYcmdDiagnostic( request_data,
-                                                       closest_ts_diagnostic )
+    closest_diagnostic = self._TsDiagnosticToYcmdDiagnostic(
+      request_data,
+      closest_ts_diagnostic )
 
     return responses.BuildDisplayMessageResponse( closest_diagnostic.text_ )
 
@@ -617,6 +646,23 @@ class TypeScriptCompleter( Completer ):
     return responses.BuildDetailedInfoResponse( message )
 
 
+  def _FixIt( self, request_data, args ):
+    self._Reload( request_data )
+
+    filepath = request_data[ 'filepath' ]
+    line_num = request_data[ 'line_num' ]
+
+    fixits = []
+    with self._latest_diagnostics_for_file_lock:
+      for diagnostic in self._latest_diagnostics_for_file[ filepath ]:
+        if diagnostic.location_.line_number_ != line_num:
+          continue
+
+        fixits.extend( diagnostic.fixits_ )
+
+    return responses.BuildFixItResponse( fixits )
+
+
   def _RefactorRename( self, request_data, args ):
     if len( args ) != 1:
       raise ValueError( 'Please specify a new name to rename it to.\n'
@@ -709,6 +755,7 @@ class TypeScriptCompleter( Completer ):
   def _CleanUp( self ):
     utils.CloseStandardStreams( self._tsserver_handle )
     self._tsserver_handle = None
+    self._latest_diagnostics_for_file = defaultdict( list )
     if not self.user_options[ 'server_keep_logfiles' ] and self._logfile:
       utils.RemoveIfExists( self._logfile )
       self._logfile = None
@@ -770,7 +817,7 @@ def _BuildFixItChunkForRange( new_name,
                               file_contents,
                               file_name,
                               source_range ):
-  """ returns list FixItChunk for a tsserver source range """
+  """Returns list FixItChunk for a tsserver source range."""
   return responses.FixItChunk(
       new_name,
       responses.Range(
@@ -785,10 +832,9 @@ def _BuildFixItChunkForRange( new_name,
 
 
 def _BuildFixItChunksForFile( request_data, new_name, file_replacement ):
-  """ returns a list of FixItChunk for each replacement range for the
-  supplied file"""
-
-  # On windows, tsserver annoyingly returns file path as C:/blah/blah,
+  """Returns a list of FixItChunk for each replacement range for the supplied
+  file."""
+  # On Windows, TSServer annoyingly returns file path as C:/blah/blah,
   # whereas all other paths in Python are of the C:\\blah\\blah form. We use
   # normpath to have python do the conversion for us.
   file_path = os.path.normpath( file_replacement[ 'file' ] )
@@ -797,11 +843,29 @@ def _BuildFixItChunksForFile( request_data, new_name, file_replacement ):
            for r in file_replacement[ 'locs' ] ]
 
 
+def _BuildFixItForChanges( request_data, changes ):
+  """Returns a list of FixItChunk given a list of TSServer changes."""
+  chunks = []
+  for change in changes:
+    # On Windows, TSServer annoyingly returns file path as C:/blah/blah,
+    # whereas all other paths in Python are of the C:\\blah\\blah form. We use
+    # normpath to have python do the conversion for us.
+    file_path = os.path.normpath( change[ 'fileName' ] )
+    file_contents = GetFileLines( request_data, file_path )
+    for text_change in change[ 'textChanges' ]:
+      chunks.append( _BuildFixItChunkForRange(
+        text_change[ 'newText' ],
+        file_contents,
+        file_path,
+        text_change ) )
+  return chunks
+
+
 def _BuildLocation( file_contents, filename, line, offset ):
   return responses.Location(
     line = line,
-    # tsserver returns codepoint offsets, but we need byte offsets, so we must
-    # convert
+    # TSServer returns codepoint offsets, but we need byte offsets, so we must
+    # convert.
     column = utils.CodepointOffsetToByteOffset( file_contents[ line - 1 ],
                                                 offset ),
     filename = filename )

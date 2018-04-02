@@ -24,7 +24,8 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains, contains_inanyorder, has_entries
+from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries,
+                       matches_regexp )
 from nose.tools import eq_
 import requests
 import pprint
@@ -52,6 +53,15 @@ def RunTest( app, test ):
       'contents': contents,
       'filetype': 'typescript',
       'event_name': 'BufferVisit'
+    } )
+  )
+
+  app.post_json(
+    '/event_notification',
+    CombineRequest( test[ 'request' ], {
+      'contents': contents,
+      'filetype': 'typescript',
+      'event_name': 'FileReadyToParse'
     } )
   )
 
@@ -89,6 +99,7 @@ def Subcommands_DefinedSubcommands_test( app ):
       'GetDoc',
       'GetType',
       'GoToReferences',
+      'FixIt',
       'RefactorRename',
       'RestartServer'
     )
@@ -358,6 +369,60 @@ def Subcommands_GoToType_Fail_test( app ):
     'expect': {
       'response': requests.codes.internal_server_error,
       'data': ErrorMatcher( RuntimeError, 'Could not find type definition.' )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_FixIt_test( app ):
+  RunTest( app, {
+    'description': 'FixIt works on a non-existing method',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 35,
+      'column_num': 12,
+      'filepath': PathToTestFile( 'test.ts' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_inanyorder(
+          has_entries( {
+            'text': "Declare method 'nonExistingMethod'",
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp(
+                  '^    nonExistingMethod\(\): any {\r?\n'
+                  '        throw new Error\("Method not implemented."\);\r?\n'
+                  '    }\r?\n$',
+                ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ) )
+            ),
+            'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
+          } ),
+          has_entries( {
+            'text': "Declare property 'nonExistingMethod'",
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp( '^    nonExistingMethod: any;\r?\n$' ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ) )
+            ),
+            'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
+          } ),
+          has_entries( {
+            'text': "Add index signature for property 'nonExistingMethod'",
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp( '^    \[x: string\]: any;\r?\n$' ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ) )
+            ),
+            'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
+          } )
+        )
+      } )
     }
   } )
 

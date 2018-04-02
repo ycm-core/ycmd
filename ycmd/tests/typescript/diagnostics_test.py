@@ -56,7 +56,7 @@ def Diagnostics_FileReadyToParse_test( app ):
         'location': LocationMatcher( filepath, 17, 5 ),
         'location_extent': RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ) ),
-        'fixit_available': False
+        'fixit_available': True
       } ),
       has_entries( {
         'kind': 'ERROR',
@@ -64,7 +64,7 @@ def Diagnostics_FileReadyToParse_test( app ):
         'location': LocationMatcher( filepath, 35, 5 ),
         'location_extent': RangeMatcher( filepath, ( 35, 5 ), ( 35, 22 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 35, 5 ), ( 35, 22 ) ) ),
-        'fixit_available': False
+        'fixit_available': True
       } ),
       has_entries( {
         'kind': 'ERROR',
