@@ -421,6 +421,8 @@ class TypeScriptCompleter( Completer ):
                            self._FixIt( request_data, args ) ),
       'RefactorRename' : ( lambda self, request_data, args:
                            self._RefactorRename( request_data, args ) ),
+      'Format'         : ( lambda self, request_data, args:
+                           self._Format( request_data ) ),
     }
 
 
@@ -723,6 +725,43 @@ class TypeScriptCompleter( Completer ):
     ] )
 
 
+  def _Format( self, request_data ):
+    filepath = request_data[ 'filepath' ]
+
+    self._Reload( request_data )
+
+    # TODO: support all formatting options. See
+    # https://github.com/Microsoft/TypeScript/blob/72e92a055823f1ade97d03d7526dbab8be405dde/lib/protocol.d.ts#L2060-L2077
+    # for the list of options. While not standard, a way to support these
+    # options, which is already adopted by a number of clients, would be to read
+    # the "formatOptions" field in the tsconfig.json file.
+    options = request_data[ 'options' ]
+    self._SendRequest( 'configure', {
+      'file': filepath,
+      'formatOptions': {
+        'tabSize': options[ 'tab_size' ],
+        'indentSize': options[ 'tab_size' ],
+        'convertTabsToSpaces': options[ 'insert_spaces' ],
+      }
+    } )
+
+    response = self._SendRequest( 'format',
+                                  _BuildTsFormatRange( request_data ) )
+
+    contents = GetFileLines( request_data, filepath )
+    chunks = [ _BuildFixItChunkForRange( text_edit[ 'newText' ],
+                                         contents,
+                                         filepath,
+                                         text_edit ) for text_edit in response ]
+
+    location = responses.Location( request_data[ 'line_num' ],
+                                   request_data[ 'column_num' ],
+                                   filepath )
+    return responses.BuildFixItResponse( [
+      responses.FixIt( location, chunks )
+    ] )
+
+
   def _RestartServer( self, request_data ):
     with self._server_lock:
       self._StopServer()
@@ -869,3 +908,37 @@ def _BuildLocation( file_contents, filename, line, offset ):
     column = utils.CodepointOffsetToByteOffset( file_contents[ line - 1 ],
                                                 offset ),
     filename = filename )
+
+
+def _BuildTsFormatRange( request_data ):
+  filepath = request_data[ 'filepath' ]
+  lines = GetFileLines( request_data, filepath )
+
+  if 'range' not in request_data:
+    return {
+      'file': filepath,
+      'line': 1,
+      'offset': 1,
+      'endLine': len( lines ),
+      'endOffset': len( lines[ - 1 ] ) + 1
+    }
+
+  start = request_data[ 'range' ][ 'start' ]
+  start_line_num = start[ 'line_num' ]
+  start_line_value = lines[ start_line_num - 1 ]
+  start_codepoint = utils.ByteOffsetToCodepointOffset( start_line_value,
+                                                       start[ 'column_num' ] )
+
+  end = request_data[ 'range' ][ 'end' ]
+  end_line_num = end[ 'line_num' ]
+  end_line_value = lines[ end_line_num - 1 ]
+  end_codepoint = utils.ByteOffsetToCodepointOffset( end_line_value,
+                                                     end[ 'column_num' ] )
+
+  return {
+    'file': filepath,
+    'line': start_line_num,
+    'offset': start_codepoint,
+    'endLine': end_line_num,
+    'endOffset': end_codepoint
+  }
