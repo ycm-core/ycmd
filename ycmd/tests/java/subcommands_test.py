@@ -67,6 +67,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GetDoc',
                  'GetType',
                  'GoToReferences',
+                 'OpenProject',
                  'OrganizeImports',
                  'RefactorRename',
                  'RestartServer' ] ),
