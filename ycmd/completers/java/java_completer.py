@@ -219,6 +219,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       'StopServer': (
         lambda self, request_data, args: self._StopServer()
       ),
+      'OpenProject': (
+        lambda self, request_data, args: self._OpenProject( request_data, args )
+      ),
       'GetDoc': (
         lambda self, request_data, args: self.GetDoc( request_data )
       ),
@@ -301,6 +304,27 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._StartServer( request_data )
 
 
+  def _OpenProject( self, request_data, args ):
+    if len( args ) != 1:
+      raise ValueError( "Usage: OpenProject <project directory>" )
+
+    project_directory = args[ 0 ]
+
+    # If the dir is not absolute, calculate it relative to the working dir of
+    # the client (if supplied).
+    if not os.path.isabs( project_directory ):
+      if 'working_dir' not in request_data:
+        raise ValueError( "Project directory must be absolute" )
+
+      project_directory = os.path.normpath( os.path.join(
+        request_data[ 'working_dir' ],
+        project_directory ) )
+
+    with self._server_state_mutex:
+      self._StopServer()
+      self._StartServer( request_data, project_directory=project_directory )
+
+
   def _CleanUp( self ):
     if not self._server_keep_logfiles:
       if self._server_stderr:
@@ -328,7 +352,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self.ServerReset()
 
 
-  def _StartServer( self, request_data ):
+  def _StartServer( self, request_data, project_directory=None ):
     with self._server_state_mutex:
       if self._server_started:
         return
@@ -337,8 +361,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       _logger.info( 'Starting jdt.ls Language Server...' )
 
-      self._project_dir = _FindProjectDir(
-        os.path.dirname( request_data[ 'filepath' ] ) )
+      if project_directory:
+        self._project_dir = project_directory
+      else:
+        self._project_dir = _FindProjectDir(
+          os.path.dirname( request_data[ 'filepath' ] ) )
+
       self._workspace_path = _WorkspaceDirForProject(
         self._project_dir,
         self._use_clean_workspace )
