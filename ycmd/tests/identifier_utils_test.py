@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-# Copyright (C) 2013 Google Inc.
+# Copyright (C) 2013-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -192,10 +192,10 @@ def IsIdentifier_Css_test():
 
   ok_( not iu.IsIdentifier( '-3b', 'css' ) )
   ok_( not iu.IsIdentifier( '-3' , 'css' ) )
-  ok_( not iu.IsIdentifier( '--', 'css' ) )
+  ok_( not iu.IsIdentifier( '--' , 'css' ) )
   ok_( not iu.IsIdentifier( '3'  , 'css' ) )
-  ok_( not iu.IsIdentifier( '' , 'css' ) )
-  ok_( not iu.IsIdentifier( '€', 'css' ) )
+  ok_( not iu.IsIdentifier( ''   , 'css' ) )
+  ok_( not iu.IsIdentifier( '€'  , 'css' ) )
 
 
 def IsIdentifier_R_test():
@@ -217,7 +217,7 @@ def IsIdentifier_R_test():
   ok_( not iu.IsIdentifier( '123', 'r' ) )
   ok_( not iu.IsIdentifier( '_1a', 'r' ) )
   ok_( not iu.IsIdentifier( '_a' , 'r' ) )
-  ok_( not iu.IsIdentifier( '' , 'r' ) )
+  ok_( not iu.IsIdentifier( ''   , 'r' ) )
 
 
 def IsIdentifier_Clojure_test():
@@ -243,7 +243,7 @@ def IsIdentifier_Clojure_test():
   ok_( not iu.IsIdentifier( '9'    , 'clojure' ) )
   ok_( not iu.IsIdentifier( 'a/b/c', 'clojure' ) )
   ok_( not iu.IsIdentifier( '(a)'  , 'clojure' ) )
-  ok_( not iu.IsIdentifier( '' , 'clojure' ) )
+  ok_( not iu.IsIdentifier( ''     , 'clojure' ) )
 
 
 def IsIdentifier_Elisp_test():
@@ -257,7 +257,7 @@ def IsIdentifier_Elisp_test():
   ok_( not iu.IsIdentifier( '9'    , 'elisp' ) )
   ok_( not iu.IsIdentifier( 'a/b/c', 'elisp' ) )
   ok_( not iu.IsIdentifier( '(a)'  , 'elisp' ) )
-  ok_( not iu.IsIdentifier( '' , 'elisp' ) )
+  ok_( not iu.IsIdentifier( ''     , 'elisp' ) )
 
 
 def IsIdentifier_Haskell_test():
@@ -271,19 +271,22 @@ def IsIdentifier_Haskell_test():
   ok_( not iu.IsIdentifier( "'x", 'haskell' ) )
   ok_( not iu.IsIdentifier( "9x", 'haskell' ) )
   ok_( not iu.IsIdentifier( "9" , 'haskell' ) )
-  ok_( not iu.IsIdentifier( '' , 'haskell' ) )
+  ok_( not iu.IsIdentifier( ''  , 'haskell' ) )
 
 
 def IsIdentifier_Tex_test():
-  ok_( iu.IsIdentifier( 'foo', 'tex' ) )
-  ok_( iu.IsIdentifier( 'fig:foo', 'tex' ) )
+  ok_( iu.IsIdentifier( 'foo'        , 'tex' ) )
+  ok_( iu.IsIdentifier( 'fig:foo'    , 'tex' ) )
   ok_( iu.IsIdentifier( 'fig:foo-bar', 'tex' ) )
   ok_( iu.IsIdentifier( 'sec:summary', 'tex' ) )
-  ok_( iu.IsIdentifier( 'eq:bar_foo', 'tex' ) )
+  ok_( iu.IsIdentifier( 'eq:bar_foo' , 'tex' ) )
+  ok_( iu.IsIdentifier( 'fōo'        , 'tex' ) )
+  ok_( iu.IsIdentifier( 'some8'      , 'tex' ) )
 
   ok_( not iu.IsIdentifier( '\section', 'tex' ) )
-  ok_( not iu.IsIdentifier( 'some8', 'tex' ) )
-  ok_( not iu.IsIdentifier( '' , 'tex' ) )
+  ok_( not iu.IsIdentifier( 'foo:'    , 'tex' ) )
+  ok_( not iu.IsIdentifier( '-bar'    , 'tex' ) )
+  ok_( not iu.IsIdentifier( ''        , 'tex' ) )
 
 
 def IsIdentifier_Perl6_test():
@@ -310,38 +313,38 @@ def IsIdentifier_Perl6_test():
   ok_( not iu.IsIdentifier( "x+"  , 'perl6' ) )
   ok_( not iu.IsIdentifier( "9x"  , 'perl6' ) )
   ok_( not iu.IsIdentifier( "9"   , 'perl6' ) )
-  ok_( not iu.IsIdentifier( '' , 'perl6' ) )
+  ok_( not iu.IsIdentifier( ''    , 'perl6' ) )
 
 
 def IsIdentifier_Scheme_test():
-  ok_( iu.IsIdentifier( 'λ'  , 'scheme') )
-  ok_( iu.IsIdentifier( '_'  , 'scheme' ) )
-  ok_( iu.IsIdentifier( '+'  , 'scheme' ) )
-  ok_( iu.IsIdentifier( '-'  , 'scheme' ) )
-  ok_( iu.IsIdentifier( '...', 'scheme' ) )
-  ok_( iu.IsIdentifier( r'\x01;'      , 'scheme' ) )
-  ok_( iu.IsIdentifier( r'h\x65;lle'  , 'scheme' ) )
-  ok_( iu.IsIdentifier( 'foo'         , 'scheme' ) )
-  ok_( iu.IsIdentifier( 'foo+-*/1-1'  , 'scheme' ) )
-  ok_( iu.IsIdentifier( 'call/cc'     , 'scheme' ) )
+  ok_( iu.IsIdentifier( 'λ'         , 'scheme') )
+  ok_( iu.IsIdentifier( '_'         , 'scheme' ) )
+  ok_( iu.IsIdentifier( '+'         , 'scheme' ) )
+  ok_( iu.IsIdentifier( '-'         , 'scheme' ) )
+  ok_( iu.IsIdentifier( '...'       , 'scheme' ) )
+  ok_( iu.IsIdentifier( r'\x01;'    , 'scheme' ) )
+  ok_( iu.IsIdentifier( r'h\x65;lle', 'scheme' ) )
+  ok_( iu.IsIdentifier( 'foo'       , 'scheme' ) )
+  ok_( iu.IsIdentifier( 'foo+-*/1-1', 'scheme' ) )
+  ok_( iu.IsIdentifier( 'call/cc'   , 'scheme' ) )
 
-  ok_( not iu.IsIdentifier( '.'  , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '..' , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '--' , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '++' , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '+1' , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '-1' , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '-abc'   , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '-<abc'  , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '@'      , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '@a'     , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '-@a'    , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '-12a'   , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '12a'    , 'scheme' ) )
-  ok_( not iu.IsIdentifier( '\\'     , 'scheme' ) )
-  ok_( not iu.IsIdentifier( r'\x'    , 'scheme' ) )
-  ok_( not iu.IsIdentifier( r'\x123' , 'scheme' ) )
-  ok_( not iu.IsIdentifier( r'aa\x123;cc\x'  , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '.'            , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '..'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '--'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '++'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '+1'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-1'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-abc'         , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-<abc'        , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '@'            , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '@a'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-@a'          , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '-12a'         , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '12a'          , 'scheme' ) )
+  ok_( not iu.IsIdentifier( '\\'           , 'scheme' ) )
+  ok_( not iu.IsIdentifier( r'\x'          , 'scheme' ) )
+  ok_( not iu.IsIdentifier( r'\x123'       , 'scheme' ) )
+  ok_( not iu.IsIdentifier( r'aa\x123;cc\x', 'scheme' ) )
 
 
 def StartOfLongestIdentifierEndingAtIndex_Simple_test():
