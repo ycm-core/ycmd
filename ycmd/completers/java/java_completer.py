@@ -86,6 +86,7 @@ WORKSPACE_ROOT_PATH = os.path.abspath( os.path.join(
 #    ycmd instance
 #  - An option is available to re-use workspaces
 CLEAN_WORKSPACE_OPTION = 'java_jdtls_use_clean_workspace'
+ENABLE_GRADLE_IMPORT  = 'java_jdlts_enable_gradle_import'
 
 
 def ShouldEnableJavaCompleter():
@@ -170,6 +171,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._use_clean_workspace = user_options[ CLEAN_WORKSPACE_OPTION ]
+    self.settings = {
+            "java.import.gradle.enabled":
+                True if user_options[ ENABLE_GRADLE_IMPORT ] else False
+    }
 
     # Used to ensure that starting/stopping of the server is synchronized
     self._server_state_mutex = threading.RLock()
@@ -412,8 +417,15 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     _logger.info( 'jdt.ls Language Server started' )
 
-    self.SendInitialize( request_data )
+    self._OnInitializeComplete(
+            lambda self:
+                self.GetConnection().SendNotification(
+                    lsp.DidChangeConfiguration( self.settings ) )
+    )
 
+    self.SendInitialize( request_data, {
+        "settings": self.settings
+    } )
 
   def _StopServer( self ):
     with self._server_state_mutex:

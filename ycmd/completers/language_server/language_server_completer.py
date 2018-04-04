@@ -1195,7 +1195,7 @@ class LanguageServerCompleter( Completer ):
     return os.path.dirname( request_data[ 'filepath' ] )
 
 
-  def SendInitialize( self, request_data ):
+  def SendInitialize( self, request_data, initializationOptions = {} ):
     """Sends the initialize request asynchronously.
     This must be called immediately after establishing the connection with the
     language server. Implementations must not issue further requests to the
@@ -1207,7 +1207,8 @@ class LanguageServerCompleter( Completer ):
 
       request_id = self.GetConnection().NextRequestId()
       msg = lsp.Initialize( request_id,
-                            self._GetProjectDirectory( request_data  ) )
+                            self._GetProjectDirectory( request_data  ),
+                            initializationOptions )
 
       def response_handler( response, message ):
         if message is None:
@@ -1260,7 +1261,9 @@ class LanguageServerCompleter( Completer ):
       # initialized notification, so we do the same. In future, we might
       # support getting this config from ycm_extra_conf or the client, but for
       # now, we send an empty object.
-      self.GetConnection().SendNotification( lsp.DidChangeConfiguration( {} ) )
+      # We should leave this behavior up to specific language server
+      # implementations.
+      # self.GetConnection().SendNotification(lsp.DidChangeConfiguration({}))
 
       # Notify the other threads that we have completed the initialize exchange.
       self._initialize_response = None

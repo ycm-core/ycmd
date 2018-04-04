@@ -45,5 +45,6 @@
   "rust_src_path": "",
   "racerd_binary_path": "",
   "python_binary_path": "",
-  "java_jdtls_use_clean_workspace": 1
+  "java_jdtls_use_clean_workspace": 1,
+  "java_jdlts_enable_gradle_import": 1
 }
