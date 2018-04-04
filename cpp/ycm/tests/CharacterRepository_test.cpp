@@ -47,9 +47,9 @@ TEST_F( CharacterRepositoryTest, GetCharacters ) {
   EXPECT_THAT( repo_.NumStoredCharacters(), 2 );
   EXPECT_THAT( character_objects, UnorderedElementsAre(
     Pointee( IsCharacterWithProperties< CharacterTuple >(
-      { "α", "α", "Α", true, false, false } ) ),
+      { "α", "α", "α", "Α", true, true, false, false } ) ),
     Pointee( IsCharacterWithProperties< CharacterTuple >(
-      { "ω", "ω", "Ω", true, false, false } ) )
+      { "ω", "ω", "ω", "Ω", true, true, false, false } ) )
   ) );
 }
 

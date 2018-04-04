@@ -158,35 +158,45 @@ MATCHER_P( IsSubsequence,
 }
 
 TEST( CandidateTest, QueryMatchResultIsSubsequence ) {
-  EXPECT_THAT( "F𐍈oβaＡAr", IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "FβＡA",     IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "F",         IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "ＡA",       IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "A",         IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "β",         IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "f𐍈oβaａar", IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "f𐍈oβaＡAr", IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "fβＡA",     IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "fβaa",      IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "β",         IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "f",         IsSubsequence( "F𐍈oβaＡAr" ) );
-  EXPECT_THAT( "fβａr",     IsSubsequence( "F𐍈oβaＡAr" ) );
+  EXPECT_THAT( "F𐍈oβaÅAr", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "FβÅA",     IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "F",        IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "ÅA",       IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "A",        IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "β",        IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f𐍈oβaåar", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f𐍈oβaåAr", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f𐍈oβaÅar", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f𐍈oβaÅAr", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "F𐍈oβaÅAr", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f𐍈oβaaar", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f𐍈oβaAar", IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "fβÅA",     IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "fβaa",     IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "β",        IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "f",        IsSubsequence( "F𐍈oβaÅAr" ) );
+  EXPECT_THAT( "fβår",     IsSubsequence( "F𐍈oβaÅAr" ) );
 }
 
 TEST( CandidateTest, QueryMatchResultIsNotSubsequence ) {
-  EXPECT_THAT( "g𐍈o",        Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "R",          Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "O",          Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "𐍈O",         Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "OβA",        Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "FβAR",       Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "FβＡAR",     Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "Oar",        Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "F𐍈oβaＡＡr", Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "F𐍈OβaＡAr",  Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "F𐍈Oβaａar",  Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "f𐍈Oβaａar",  Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
-  EXPECT_THAT( "f𐍈oβaａaR",  Not( IsSubsequence( "F𐍈oβaＡAr" ) ) );
+  EXPECT_THAT( "g𐍈o",      Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "R",        Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "O",        Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "𐍈O",       Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "OβA",      Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "FβAR",     Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "FβÅAR",    Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "Oar",      Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈oβaÅår", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈oβaåår", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈oβaÅÅr", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈oβaåÅr", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "f𐍈oβaÅÅr", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈oβaaÅr", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈OβaÅAr", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "F𐍈Oβaåar", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "f𐍈Oβaåar", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
+  EXPECT_THAT( "f𐍈oβaåaR", Not( IsSubsequence( "F𐍈oβaÅAr" ) ) );
 }
 
 } // namespace YouCompleteMe
