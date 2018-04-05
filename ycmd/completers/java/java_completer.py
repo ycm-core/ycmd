@@ -136,16 +136,39 @@ def _LauncherConfiguration():
 
 def _MakeProjectFilesForPath( path ):
   for tail in PROJECT_FILE_TAILS:
-    yield os.path.join( path, tail )
+    yield os.path.join( path, tail ), tail
 
 
 def _FindProjectDir( starting_dir ):
-  for path in utils.PathsToAllParentFolders( starting_dir ):
-    for project_file in _MakeProjectFilesForPath( path ):
-      if os.path.isfile( project_file ):
-        return path
+  project_path = starting_dir
+  project_type = None
 
-  return starting_dir
+  for folder in utils.PathsToAllParentFolders( starting_dir ):
+    for project_file, tail in _MakeProjectFilesForPath( folder ):
+      if os.path.isfile( project_file ):
+        project_path = folder
+        project_type = tail
+        break
+    if project_type:
+      break
+
+  if project_type:
+    # We've found a project marker file (like build.gradle). Search parent
+    # directories for that same project type file and find the topmost one as
+    # the project root.
+    _logger.debug( 'Found {0} style project in {1}. Searching for '
+                   'project root:'.format( project_type, project_path ) )
+
+    for folder in utils.PathsToAllParentFolders( os.path.join( project_path,
+                                                               '..') ):
+      if os.path.isfile( os.path.join( folder, project_type ) ):
+        _logger.debug( '  {0} is a parent project dir'.format( folder ) )
+        project_path = folder
+      else:
+        break
+    _logger.debug( '  Project root is {0}'.format( project_path ) )
+
+  return project_path
 
 
 def _WorkspaceDirForProject( project_dir, use_clean_workspace ):
