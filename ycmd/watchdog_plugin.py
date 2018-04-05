@@ -25,8 +25,9 @@ from builtins import *  # noqa
 import time
 import copy
 import logging
-from threading import Thread, Lock
+from threading import Lock
 from ycmd.handlers import ServerShutdown
+from ycmd.utils import StartThread
 
 _logger = logging.getLogger( __name__ )
 
@@ -59,9 +60,7 @@ class WatchdogPlugin( object ):
     self._last_request_time_lock = Lock()
     if idle_suicide_seconds <= 0:
       return
-    self._watchdog_thread = Thread( target = self._WatchdogMain )
-    self._watchdog_thread.daemon = True
-    self._watchdog_thread.start()
+    StartThread( self._WatchdogMain )
 
 
   def _GetLastRequestTime( self ):

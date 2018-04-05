@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import threading
 
 
 # Idiom to import pathname2url, url2pathname, urljoin, and urlparse on Python 2
@@ -477,3 +478,10 @@ def GetCurrentDirectory():
   # OSError.
   except OSError:
     return tempfile.gettempdir()
+
+
+def StartThread( func, *args ):
+  thread = threading.Thread( target = func, args = args )
+  thread.daemon = True
+  thread.start()
+  return thread
