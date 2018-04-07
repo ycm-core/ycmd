@@ -147,28 +147,19 @@ struct WordTuple {
     : WordTuple( "", {} ) {
   }
 
-  WordTuple( const Word &word ) {
-    std::vector< std::string > strings;
-    for ( auto character : word.Characters() ) {
-      strings.push_back( character->Normal().c_str() );
-    }
-    WordTuple( word.Text(), strings );
-  }
-
-  WordTuple( const std::string &text,
-             const std::vector< std::string > &characters )
+  WordTuple( const char* text,
+             const std::vector< const char* > &characters )
     : text_( text ),
       characters_( characters ) {
   }
-
 
   bool operator== ( const WordTuple &other ) const {
     return text_ == other.text_ &&
            characters_ == other.characters_;
   };
 
-  std::string text_;
-  std::vector< std::string > characters_;
+  const char* text_;
+  std::vector< const char* > characters_;
 };
 
 
@@ -180,7 +171,6 @@ std::ostream& operator<<( std::ostream& os, const CharacterTuple &character );
 std::ostream& operator<<( std::ostream& os, const Character &character );
 std::ostream& operator<<( std::ostream& os, const Character *character );
 std::ostream& operator<<( std::ostream& os, const WordTuple &word );
-std::ostream& operator<<( std::ostream& os, const Word &word );
 
 
 // These matchers are used to remove the "is equal to" output from gtest.
