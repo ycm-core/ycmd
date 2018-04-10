@@ -55,9 +55,9 @@ const RawCodePoint FindCodePoint( const char *text ) {
   auto first = code_points.begin();
   size_t count = code_points.size();
 
-  for ( auto it = first; count > 0; ) {
+  while ( count > 0 ) {
     size_t step = count / 2;
-    it = first + step;
+    auto it = first + step;
     int cmp = std::strcmp( it->original, text );
     if ( cmp == 0 )
       return *it;
