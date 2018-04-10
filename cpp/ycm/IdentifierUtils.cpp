@@ -18,9 +18,9 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
-#include <unordered_map>
-#include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
+#include <unordered_map>
 
 namespace YouCompleteMe {
 

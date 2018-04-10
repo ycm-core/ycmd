@@ -16,10 +16,11 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Utils.h"
-#include <cmath>
-#include <limits>
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <cmath>
+#include <limits>
 
 namespace fs = boost::filesystem;
 

@@ -28,7 +28,7 @@ bool CXCommentValid( const CXComment &comment ) {
   return clang_Comment_getKind( comment ) != CXComment_Null;
 }
 
-}
+} // unnamed namespace
 
 DocumentationData::DocumentationData( const CXCursor &cursor )
   : raw_comment( CXStringToString(
