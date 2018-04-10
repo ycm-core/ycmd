@@ -39,7 +39,7 @@ std::vector< CompletionData > ToCompletionDataVector(
 std::vector< CXUnsavedFile > ToCXUnsavedFiles(
   const std::vector< UnsavedFile > &unsaved_files );
 
-Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
+Diagnostic BuildDiagnostic( const DiagnosticWrap &diagnostic_wrap,
                             CXTranslationUnit translation_unit );
 
 } // namespace YouCompleteMe
