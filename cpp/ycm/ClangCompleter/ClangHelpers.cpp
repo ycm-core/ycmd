@@ -150,8 +150,7 @@ std::vector< Range > GetRanges( const DiagnosticWrap &diagnostic_wrap ) {
   ranges.reserve( num_ranges );
 
   for ( size_t i = 0; i < num_ranges; ++i ) {
-    ranges.push_back(
-      Range( clang_getDiagnosticRange( diagnostic_wrap.get(), i ) ) );
+    ranges.emplace_back( clang_getDiagnosticRange( diagnostic_wrap.get(), i ) );
   }
 
   return ranges;

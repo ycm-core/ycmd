@@ -59,13 +59,15 @@ const RawCodePoint FindCodePoint( const char *text ) {
     size_t step = count / 2;
     it = first + step;
     int cmp = std::strcmp( it->original, text );
-    if ( cmp == 0 )
+    if ( cmp == 0 ) {
       return *it;
+    }
     if ( cmp < 0 ) {
       first = ++it;
       count -= step + 1;
-    } else
+    } else {
       count = step;
+    }
   }
 
   return { text, text, text, text, false, false, false, 0, 0 };
@@ -100,7 +102,7 @@ CodePointSequence BreakIntoCodePoints( const std::string &text ) {
     if ( text.end() - iter < length ) {
       throw UnicodeDecodeError( "Invalid code point length." );
     }
-    code_points.push_back( std::string( iter, iter + length ) );
+    code_points.emplace_back( iter, iter + length );
     iter += length;
   }
 

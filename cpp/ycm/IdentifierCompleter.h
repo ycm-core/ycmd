@@ -35,7 +35,7 @@ public:
   IdentifierCompleter( const IdentifierCompleter& ) = delete;
   IdentifierCompleter& operator=( const IdentifierCompleter ) = delete;
 
-  YCM_EXPORT IdentifierCompleter();
+  YCM_EXPORT IdentifierCompleter() = default;
   YCM_EXPORT IdentifierCompleter(
     const std::vector< std::string > &candidates );
   YCM_EXPORT IdentifierCompleter(
