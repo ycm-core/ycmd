@@ -102,8 +102,9 @@ bool Result::operator< ( const Result &other ) const {
     //  - it appears before the other result in lexicographic order.
 
     if ( first_char_same_in_query_and_text_ !=
-         other.first_char_same_in_query_and_text_ )
+         other.first_char_same_in_query_and_text_ ) {
       return first_char_same_in_query_and_text_;
+    }
 
     if ( num_wb_matches_ == query_->Length() ||
          other.num_wb_matches_ == query_->Length() ) {
