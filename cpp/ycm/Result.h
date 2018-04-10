@@ -32,7 +32,7 @@ public:
   Result( const Candidate *candidate,
           const Word *query,
           size_t char_match_index_sum,
-          bool query_is_candidate_prefix_ );
+          bool query_is_candidate_prefix );
 
   bool operator< ( const Result &other ) const;
 

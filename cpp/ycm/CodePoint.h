@@ -130,7 +130,7 @@ public:
   };
 
 private:
-  CodePoint( const RawCodePoint &character );
+  CodePoint( const RawCodePoint &code_point );
 
   std::string normal_;
   std::string folded_case_;

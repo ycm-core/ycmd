@@ -37,8 +37,9 @@ std::vector< std::string > BreakCodePointsIntoCharacters(
   // automatically satisfied.
 
   auto code_point_pos = code_points.begin();
-  if ( code_point_pos == code_points.end() )
+  if ( code_point_pos == code_points.end() ) {
     return characters;
+  }
 
   std::string character;
   character.append( ( *code_point_pos )->Normal() );

@@ -89,8 +89,8 @@ TranslationUnit::TranslationUnit(
 
   std::vector< CXUnsavedFile > cxunsaved_files =
     ToCXUnsavedFiles( unsaved_files );
-  const CXUnsavedFile *unsaved = cxunsaved_files.size() > 0
-                                 ? &cxunsaved_files[ 0 ] : nullptr;
+  const CXUnsavedFile *unsaved = cxunsaved_files.empty()
+                                 ? nullptr : &cxunsaved_files[ 0 ];
 
   // Actually parse the translation unit.
   CXErrorCode failure = clang_parseTranslationUnit2FullArgv(
@@ -159,8 +159,8 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
 
   std::vector< CXUnsavedFile > cxunsaved_files =
     ToCXUnsavedFiles( unsaved_files );
-  const CXUnsavedFile *unsaved = cxunsaved_files.size() > 0
-                                 ? &cxunsaved_files[ 0 ] : nullptr;
+  const CXUnsavedFile *unsaved = cxunsaved_files.empty()
+                                 ? nullptr : &cxunsaved_files[ 0 ];
 
   // codeCompleteAt reparses the TU if the underlying source file has changed on
   // disk since the last time the TU was updated and there are no unsaved files.
@@ -433,8 +433,8 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
       return;
     }
 
-    CXUnsavedFile *unsaved = unsaved_files.size() > 0
-                             ? &unsaved_files[ 0 ] : nullptr;
+    CXUnsavedFile *unsaved = unsaved_files.empty()
+                             ? nullptr : &unsaved_files[ 0 ];
 
     // This function should technically return a CXErrorCode enum but return an
     // int instead.

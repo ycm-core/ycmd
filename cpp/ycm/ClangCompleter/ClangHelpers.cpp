@@ -95,7 +95,7 @@ void BuildFullDiagnosticDataFromChildren(
 
   // Populate any fixit attached to this diagnostic.
   FixIt fixit = BuildFixIt( diag_text, diagnostic );
-  if ( fixit.chunks.size() > 0 ) {
+  if ( !fixit.chunks.empty() ) {
     fixits.push_back( fixit );
   }
 
