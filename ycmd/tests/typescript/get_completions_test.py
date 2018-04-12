@@ -24,15 +24,22 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, calling, contains_inanyorder, has_entries,
-                       has_item, raises )
+from hamcrest import ( assert_that,
+                       calling,
+                       contains,
+                       contains_inanyorder,
+                       has_entries,
+                       has_item,
+                       matches_regexp,
+                       raises )
 from nose.tools import eq_
 from webtest import AppError
 import pprint
 import requests
 
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
+from ycmd.tests.test_utils import ( BuildRequest, ChunkMatcher,
+                                    CompletionEntryMatcher, LocationMatcher,
                                     StopCompleterServer )
 from ycmd.utils import ReadFile
 
@@ -218,3 +225,43 @@ def GetCompletions_ServerIsNotRunning_test( app ):
   assert_that(
     calling( app.post_json ).with_args( '/completions', completion_data ),
     raises( AppError, 'TSServer is not running.' ) )
+
+
+@SharedYcmd
+def GetCompletions_AutoImport_test( app ):
+  filepath = PathToTestFile( 'test.ts' )
+  RunTest( app, {
+    'description': 'Symbol from external module can be completed and '
+                   'its completion contains fixits to automatically import it',
+    'request': {
+      'line_num': 39,
+      'column_num': 5,
+      'filepath': filepath,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item( has_entries( {
+          'insertion_text':  'Bår',
+          'extra_menu_info': 'class Bår',
+          'detailed_info':   'class Bår',
+          'kind':            'class',
+          'extra_data': has_entries( {
+            'fixits': contains_inanyorder(
+              has_entries( {
+                'text': 'Import \'Bår\' from module "./unicode"',
+                'chunks': contains(
+                  ChunkMatcher(
+                    matches_regexp( '^import { Bår } from "./unicode";\r?\n' ),
+                    LocationMatcher( filepath, 1, 1 ),
+                    LocationMatcher( filepath, 1, 1 )
+                  )
+                ),
+                'location': LocationMatcher( filepath, 39, 5 )
+              } )
+            )
+          } )
+        } ) )
+      } )
+    }
+  } )

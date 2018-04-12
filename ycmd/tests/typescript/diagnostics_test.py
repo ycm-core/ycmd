@@ -1,4 +1,6 @@
-# Copyright (C) 2017 ycmd contributors
+# encoding: utf-8
+#
+# Copyright (C) 2017-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -73,6 +75,14 @@ def Diagnostics_FileReadyToParse_test( app ):
         'location_extent': RangeMatcher( filepath, ( 37, 1 ), ( 37, 12 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 37, 1 ), ( 37, 12 ) ) ),
         'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': 'ERROR',
+        'text': "Cannot find name 'Bår'.",
+        'location': LocationMatcher( filepath, 39, 1 ),
+        'location_extent': RangeMatcher( filepath, ( 39, 1 ), ( 39, 5 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 39, 1 ), ( 39, 5 ) ) ),
+        'fixit_available': True
       } ),
     )
   )

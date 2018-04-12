@@ -1,5 +1,5 @@
 
-class Bår {
+export class Bår {
   methodA(
     a: {
       foo: string;
