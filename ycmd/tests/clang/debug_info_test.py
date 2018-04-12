@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 ycmd contributors
+# Copyright (C) 2016-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -210,7 +210,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndInvalidCompilationDatabase_test( app ):
 
 
 @SharedYcmd
-def DebugInfo_Unity( app ):
+def DebugInfo_Unity_test( app ):
   # Main TU
   app.post_json( '/load_extra_conf_file',
                  { 'filepath': PathToTestFile( '.ycm_extra_conf.py' ) } )
@@ -234,7 +234,7 @@ def DebugInfo_Unity( app ):
           } ),
           has_entries( {
             'key': 'translation unit',
-            'value': PathToTestFile( 'unity.cpp' )
+            'value': PathToTestFile( 'unity.cc' )
           } )
         )
       } ) )
