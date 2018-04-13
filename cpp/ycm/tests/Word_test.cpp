@@ -60,8 +60,8 @@ TEST_P( WordTest, BreakIntoCharacters ) {
 
 
 // Tests generated from
-// ftp://ftp.unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakTest.txt
-const std::array< WordTuple, 878 > tests = { {
+// https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakTest.txt
+const WordTuple tests[] = {
   { "  ", { " ", " " } },
   { " ̈ ", { " ̈", " " } },
   { " \r", { " ", "\r" } },
@@ -884,7 +884,7 @@ const std::array< WordTuple, 878 > tests = { {
   { "‍♀", { "‍♀" } },
   { "‍👦", { "‍👦" } },
   { "👦👦", { "👦", "👦" } },
-} };
+};
 
 
 INSTANTIATE_TEST_CASE_P( UnicodeTest, WordTest, ValuesIn( tests ) );
