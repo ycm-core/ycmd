@@ -47,35 +47,35 @@ COMPILE_COMMANDS_WORKING_DIR = 'C:\\dir' if OnWindows() else '/dir'
 
 
 def GetUtf8String_Str_test():
-  eq_( 'foø', ycm_core.GetUtf8String( 'foø' ) )
+  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( 'foø' ) )
 
 
 # unicode literals are identical to regular string literals on Python 3.
 @Py2Only
 def GetUtf8String_Unicode_test():
-  eq_( 'foø', ycm_core.GetUtf8String( u'foø' ) )
+  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( u'foø' ) )
 
 
 # newstr is an emulation of Python 3 str on Python 2.
 @Py2Only
 def GetUtf8String_NewStr_test():
-  eq_( 'foø', ycm_core.GetUtf8String( newstr( 'foø', 'utf8' ) ) )
+  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( newstr( 'foø', 'utf8' ) ) )
 
 
 # newbytes is an emulation of Python 3 bytes on Python 2.
 @Py2Only
 def GetUtf8String_NewBytes_test():
-  eq_( 'foø', ycm_core.GetUtf8String( newbytes( 'foø' ) ) )
+  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( newbytes( 'foø' ) ) )
 
 
 # bytes is identical to str on Python 2.
 @Py3Only
 def GetUtf8String_Bytes_test():
-  eq_( 'foø', ycm_core.GetUtf8String( bytes( 'foø', 'utf8' ) ) )
+  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( bytes( 'foø', 'utf8' ) ) )
 
 
 def GetUtf8String_Int_test():
-  eq_( '123', ycm_core.GetUtf8String( 123 ) )
+  eq_( b'123', ycm_core.GetUtf8String( 123 ) )
 
 
 @ClangOnly

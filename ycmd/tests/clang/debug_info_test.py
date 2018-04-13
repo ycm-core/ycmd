@@ -49,7 +49,7 @@ def DebugInfo_FlagsWhenExtraConfLoadedAndNoCompilationDatabase_test( app ):
         } ),
         has_entries( {
           'key': 'flags',
-          'value': matches_regexp( "\['-x', 'c\+\+', .*\]" )
+          'value': matches_regexp( "\[u?'-x', u?'c\+\+', .*\]" )
         } ),
         has_entries( {
           'key': 'translation unit',
@@ -166,7 +166,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndCompilationDatabaseLoaded_test( app ):
             has_entries( {
               'key': 'flags',
               'value': matches_regexp(
-                  "\['clang\+\+', '-x', 'c\+\+', .*, '-Wall', .*\]" )
+                  "\[u?'clang\+\+', u?'-x', u?'c\+\+', .*, u?'-Wall', .*\]" )
             } ),
             has_entries( {
               'key': 'translation unit',
@@ -230,7 +230,7 @@ def DebugInfo_Unity_test( app ):
           } ),
           has_entries( {
             'key': 'flags',
-            'value': matches_regexp( "\['-x', 'c\+\+', .*\]" )
+            'value': matches_regexp( "\[u?'-x', u?'c\+\+', .*\]" )
           } ),
           has_entries( {
             'key': 'translation unit',

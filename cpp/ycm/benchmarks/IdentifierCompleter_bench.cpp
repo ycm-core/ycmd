@@ -15,12 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "benchmark/benchmark_api.h"
 #include "BenchUtils.h"
 #include "CandidateRepository.h"
 #include "CharacterRepository.h"
 #include "CodePointRepository.h"
 #include "IdentifierCompleter.h"
+
+#include <benchmark/benchmark_api.h>
 
 namespace YouCompleteMe {
 

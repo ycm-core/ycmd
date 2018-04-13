@@ -169,7 +169,7 @@ elseif( COMPILER_IS_CLANG )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
   endif()
 elseif( MSVC )
-  if ( NOT MSVC_VERSION LESS 1800 )
+  if ( NOT MSVC_VERSION LESS 1900 )
     set( CPP11_AVAILABLE true )
   endif()
 endif()
@@ -183,12 +183,6 @@ if ( MSVC )
   add_definitions( /DUNICODE /D_UNICODE /Zc:wchar_t- )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj" )
 endif()
-
-# Solves the conflict in names of hypot in python sources and boost::python
-if ( MINGW )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include cmath")
-endif()
-
 
 if( MSVC OR CYGWIN OR MSYS)
   # BOOST_ALL_NO_LIB turns off MSVC library autolinking

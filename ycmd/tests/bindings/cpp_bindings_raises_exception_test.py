@@ -27,7 +27,6 @@ from hamcrest import assert_that, calling, raises
 import ycm_core
 
 READONLY_MESSAGE = 'can\'t set attribute'
-NO_INIT_MESSAGE = 'This class cannot be instantiated from Python'
 
 
 @ClangOnly
@@ -126,4 +125,5 @@ def CppBindings_ReadOnly_test():
 @ClangOnly
 def CppBindings_CompilationInfo_NoInit_test():
   assert_that( calling( ycm_core.CompilationInfoForFile ),
-               raises( RuntimeError, NO_INIT_MESSAGE ) )
+      raises( TypeError, 'ycm_core.CompilationInfoForFile:'
+                         ' No constructor defined!' ) )

@@ -18,7 +18,7 @@
 #include "CharacterRepository.h"
 #include "CodePoint.h"
 #include "Word.h"
-#include <iostream>
+
 #include <string>
 
 namespace YouCompleteMe {
