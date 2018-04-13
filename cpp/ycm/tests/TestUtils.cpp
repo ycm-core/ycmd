@@ -70,14 +70,17 @@ std::ostream& operator<<( std::ostream& os, const Character *character ) {
 
 
 std::ostream& operator<<( std::ostream& os, const WordTuple &word ) {
-  os << "{ " << PrintToString( word.text_ ) << ", "
-             << PrintToString( word.characters_ ) << " }";
-  return os;
-}
-
-
-std::ostream& operator<<( std::ostream& os, const Word &word ) {
-  os << WordTuple( word );
+  os << "{ " << PrintToString( word.text_ ) << ", { ";
+  const std::vector< const char* > &characters( word.characters_ );
+  auto character_pos = characters.begin();
+  if ( character_pos != characters.end() ) {
+    os << PrintToString( *character_pos );
+    ++character_pos;
+    for ( ; character_pos != characters.end() ; ++character_pos ) {
+      os << ", " << PrintToString( *character_pos );
+    }
+    os << " }";
+  }
   return os;
 }
 
