@@ -66,6 +66,7 @@ def BuildRequest( **kwargs ):
   filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
   contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''
   filetype = kwargs[ 'filetype' ] if 'filetype' in kwargs else 'foo'
+  filetypes = kwargs[ 'filetypes' ] if 'filetypes' in kwargs else [ filetype ]
 
   request = {
     'line_num': 1,
@@ -74,7 +75,7 @@ def BuildRequest( **kwargs ):
     'file_data': {
       filepath: {
         'contents': contents,
-        'filetypes': [ filetype ]
+        'filetypes': filetypes
       }
     }
   }
