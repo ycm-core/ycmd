@@ -25,10 +25,9 @@ from builtins import *  # noqa
 import ycm_core
 import os
 import inspect
-import re
 from future.utils import PY2, native
 from ycmd import extra_conf_store
-from ycmd.utils import ( ToCppStringCompatible, OnMac, OnWindows, ToUnicode,
+from ycmd.utils import ( re, ToCppStringCompatible, OnMac, OnWindows, ToUnicode,
                          ToBytes, PathsToAllParentFolders )
 from ycmd.responses import NoExtraConfDetected
 

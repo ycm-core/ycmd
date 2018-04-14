@@ -48,6 +48,17 @@ else:
   from urllib.request import pathname2url, url2pathname  # noqa
 
 
+# We replace the re module with regex as it has better support for characters on
+# multiple code points. However, this module has a compiled component so we
+# can't import it in YCM if it is built for a different version of Python (e.g.
+# if YCM is running on Python 2 while ycmd on Python 3). We fall back to the re
+# module in that case.
+try:
+  import regex as re
+except ImportError: # pragma: no cover
+  import re # noqa
+
+
 # Creation flag to disable creating a console window on Windows. See
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx
 CREATE_NO_WINDOW = 0x08000000

@@ -188,5 +188,9 @@ def AddNearestThirdPartyFoldersToSysPath( filepath ):
                        os.path.realpath( os.path.join( path_to_third_party,
                                                        folder ) ) )
       continue
+
+    if folder == 'regex':
+      folder = os.path.join( folder, 'py{}'.format( sys.version_info[ 0 ] ) )
+
     sys.path.insert( 0, os.path.realpath( os.path.join( path_to_third_party,
                                                         folder ) ) )
