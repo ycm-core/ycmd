@@ -189,14 +189,10 @@ if( MSVC OR CYGWIN OR MSYS)
   add_definitions( -DBOOST_ALL_NO_LIB )
 endif()
 
-if( WIN32 OR CYGWIN OR MSYS)
-  # BOOST_PYTHON_SOURCE makes boost use the correct __declspec
-  add_definitions( -DBOOST_PYTHON_SOURCE -DBOOST_THREAD_USE_LIB )
-  if ( NOT MSVC AND 64_BIT_PLATFORM )
-      # Enables Python compilation for 64-bit Windows. Already defined by Python
-      # headers when compiling with MSVC.
-    add_definitions( -DMS_WIN64 )
-  endif()
+# Enables Python compilation for 64-bit Windows. Already defined by Python
+# headers when compiling with MSVC.
+if( WIN32 OR CYGWIN OR MSYS AND NOT MSVC AND 64_BIT_PLATFORM )
+  add_definitions( -DMS_WIN64 )
 endif()
 
 #############################################################################
