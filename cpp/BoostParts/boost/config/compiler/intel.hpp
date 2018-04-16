@@ -45,6 +45,7 @@
 
 #undef BOOST_GCC_VERSION
 #undef BOOST_GCC_CXX11
+#undef BOOST_GCC
 
 // Broken in all versions up to 17 (newer versions not tested)
 #if (__INTEL_COMPILER <= 1700) && !defined(BOOST_NO_CXX14_CONSTEXPR)

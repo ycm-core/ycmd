@@ -34,6 +34,17 @@
 #endif
 
 #include <boost/config.hpp>
+//
+// For the following code we get several warnings along the lines of:
+//
+// boost/cstdint.hpp:428:35: error: use of C99 long long integer constant
+//
+// So we declare this a system header to suppress these warnings.
+// See also https://github.com/boostorg/config/issues/190
+//
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+#pragma GCC system_header
+#endif
 
 //
 // Note that GLIBC is a bit inconsistent about whether int64_t is defined or not
@@ -60,7 +71,7 @@
 #   include <stdint.h>
 
 // There is a bug in Cygwin two _C macros
-#   if defined(__STDC_CONSTANT_MACROS) && defined(__CYGWIN__)
+#   if defined(INTMAX_C) && defined(__CYGWIN__)
 #     undef INTMAX_C
 #     undef UINTMAX_C
 #     define INTMAX_C(c) c##LL
@@ -407,16 +418,6 @@ INT#_C macros if they're not already defined (John Maddock).
 
 #if !defined(BOOST__STDC_CONSTANT_MACROS_DEFINED) && \
    (!defined(INT8_C) || !defined(INT16_C) || !defined(INT32_C) || !defined(INT64_C))
-//
-// For the following code we get several warnings along the lines of:
-//
-// boost/cstdint.hpp:428:35: error: use of C99 long long integer constant
-//
-// So we declare this a system header to suppress these warnings.
-//
-#if defined(__GNUC__) && (__GNUC__ >= 4)
-#pragma GCC system_header
-#endif
 //
 // Undef the macros as a precaution, since we may get here if <stdint.h> has failed
 // to define them all, see https://svn.boost.org/trac/boost/ticket/12786

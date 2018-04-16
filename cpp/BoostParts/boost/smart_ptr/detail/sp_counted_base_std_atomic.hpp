@@ -64,8 +64,8 @@ private:
     sp_counted_base( sp_counted_base const & );
     sp_counted_base & operator= ( sp_counted_base const & );
 
-    std::atomic_int_least32_t use_count_;	// #shared
-    std::atomic_int_least32_t weak_count_;	// #weak + (#shared != 0)
+    std::atomic_int_least32_t use_count_;   // #shared
+    std::atomic_int_least32_t weak_count_;  // #weak + (#shared != 0)
 
 public:
 

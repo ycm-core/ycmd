@@ -1080,7 +1080,7 @@ template<class T> shared_ptr<T> atomic_load( shared_ptr<T> const * p ) BOOST_SP_
     return *p;
 }
 
-template<class T> inline shared_ptr<T> atomic_load_explicit( shared_ptr<T> const * p, /*memory_order mo*/ int ) BOOST_SP_NOEXCEPT
+template<class T, class M> inline shared_ptr<T> atomic_load_explicit( shared_ptr<T> const * p, /*memory_order mo*/ M ) BOOST_SP_NOEXCEPT
 {
     return atomic_load( p );
 }
@@ -1091,7 +1091,7 @@ template<class T> void atomic_store( shared_ptr<T> * p, shared_ptr<T> r ) BOOST_
     p->swap( r );
 }
 
-template<class T> inline void atomic_store_explicit( shared_ptr<T> * p, shared_ptr<T> r, /*memory_order mo*/ int ) BOOST_SP_NOEXCEPT
+template<class T, class M> inline void atomic_store_explicit( shared_ptr<T> * p, shared_ptr<T> r, /*memory_order mo*/ M ) BOOST_SP_NOEXCEPT
 {
     atomic_store( p, r ); // std::move( r )
 }
@@ -1107,7 +1107,7 @@ template<class T> shared_ptr<T> atomic_exchange( shared_ptr<T> * p, shared_ptr<T
     return r; // return std::move( r )
 }
 
-template<class T> shared_ptr<T> inline atomic_exchange_explicit( shared_ptr<T> * p, shared_ptr<T> r, /*memory_order mo*/ int ) BOOST_SP_NOEXCEPT
+template<class T, class M> shared_ptr<T> inline atomic_exchange_explicit( shared_ptr<T> * p, shared_ptr<T> r, /*memory_order mo*/ M ) BOOST_SP_NOEXCEPT
 {
     return atomic_exchange( p, r ); // std::move( r )
 }
@@ -1137,7 +1137,7 @@ template<class T> bool atomic_compare_exchange( shared_ptr<T> * p, shared_ptr<T>
     }
 }
 
-template<class T> inline bool atomic_compare_exchange_explicit( shared_ptr<T> * p, shared_ptr<T> * v, shared_ptr<T> w, /*memory_order success*/ int, /*memory_order failure*/ int ) BOOST_SP_NOEXCEPT
+template<class T, class M> inline bool atomic_compare_exchange_explicit( shared_ptr<T> * p, shared_ptr<T> * v, shared_ptr<T> w, /*memory_order success*/ M, /*memory_order failure*/ M ) BOOST_SP_NOEXCEPT
 {
     return atomic_compare_exchange( p, v, w ); // std::move( w )
 }

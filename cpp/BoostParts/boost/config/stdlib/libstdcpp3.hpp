@@ -78,6 +78,7 @@
 #  include <unistd.h>
 #endif
 
+#ifndef __VXWORKS__ // VxWorks uses Dinkum, not GNU STL with GCC 
 #if defined(__GLIBCXX__) || (defined(__GLIBCPP__) && __GLIBCPP__>=20020514) // GCC >= 3.1.0
 #  define BOOST_STD_EXTENSION_NAMESPACE __gnu_cxx
 #  define BOOST_HAS_SLIST
@@ -90,6 +91,7 @@
 #   define BOOST_HASH_SET_HEADER <backward/hash_set>
 #   define BOOST_HASH_MAP_HEADER <backward/hash_map>
 # endif
+#endif
 #endif
 
 //

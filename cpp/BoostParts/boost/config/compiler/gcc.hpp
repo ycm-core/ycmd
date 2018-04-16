@@ -99,10 +99,10 @@
 // Dynamic shared object (DSO) and dynamic-link library (DLL) support
 //
 #if __GNUC__ >= 4
-#  if (defined(_WIN32) || defined(__WIN32__) || defined(WIN32)) && !defined(__CYGWIN__)
+#  if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
      // All Win32 development environments, including 64-bit Windows and MinGW, define
      // _WIN32 or one of its variant spellings. Note that Cygwin is a POSIX environment,
-     // so does not define _WIN32 or its variants.
+     // so does not define _WIN32 or its variants, but still supports dllexport/dllimport.
 #    define BOOST_HAS_DECLSPEC
 #    define BOOST_SYMBOL_EXPORT __attribute__((__dllexport__))
 #    define BOOST_SYMBOL_IMPORT __attribute__((__dllimport__))
@@ -233,6 +233,7 @@
 //
 #if (BOOST_GCC_VERSION < 40600) || !defined(BOOST_GCC_CXX11)
 #define BOOST_NO_CXX11_CONSTEXPR
+#define BOOST_NO_CXX11_DEFAULTED_MOVES
 #define BOOST_NO_CXX11_NOEXCEPT
 #define BOOST_NO_CXX11_NULLPTR
 #define BOOST_NO_CXX11_RANGE_BASED_FOR
@@ -284,7 +285,7 @@
 #if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304)
 #  define BOOST_NO_CXX14_CONSTEXPR
 #endif
-#if !defined(__cpp_variable_templates) || (__cpp_variable_templates < 201304)
+#if (BOOST_GCC_VERSION < 50200) || !defined(__cpp_variable_templates) || (__cpp_variable_templates < 201304)
 #  define BOOST_NO_CXX14_VARIABLE_TEMPLATES
 #endif
 

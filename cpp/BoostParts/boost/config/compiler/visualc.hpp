@@ -167,6 +167,7 @@
 //
 #if (_MSC_FULL_VER < 190023026)
 #  define BOOST_NO_CXX11_NOEXCEPT
+#  define BOOST_NO_CXX11_DEFAULTED_MOVES
 #  define BOOST_NO_CXX11_REF_QUALIFIERS
 #  define BOOST_NO_CXX11_USER_DEFINED_LITERALS
 #  define BOOST_NO_CXX11_ALIGNAS
@@ -217,17 +218,29 @@
 // https://connect.microsoft.com/VisualStudio/feedback/details/1582233/c-subobjects-still-not-value-initialized-correctly
 // See also: http://www.boost.org/libs/utility/value_init.htm#compiler_issues
 // (Niels Dekker, LKEB, May 2010)
+// Still present in VC15.5, Dec 2017.
 #define BOOST_NO_COMPLETE_VALUE_INITIALIZATION
 //
 // C++ 11:
 //
-#define BOOST_NO_TWO_PHASE_NAME_LOOKUP
+// This is supported with /permissive- for 15.5 onwards, unfortunately we appear to have no way to tell
+// if this is in effect or not, in any case nothing in Boost is currently using this, so we'll just go
+// on defining it for now:
+//
+#  define BOOST_NO_TWO_PHASE_NAME_LOOKUP
+
+#if (_MSC_VER < 1912) || (_MSVC_LANG < 201402)
+// Supported from msvc-15.5 onwards:
 #define BOOST_NO_CXX11_SFINAE_EXPR
+#endif
 // C++ 14:
+// Still gives internal compiler error for msvc-15.5:
 #  define BOOST_NO_CXX14_CONSTEXPR
 // C++ 17:
+#if (_MSC_VER < 1912) || (_MSVC_LANG < 201703)
 #define BOOST_NO_CXX17_INLINE_VARIABLES
 #define BOOST_NO_CXX17_FOLD_EXPRESSIONS
+#endif
 
 //
 // Things that don't work in clr mode:
@@ -325,12 +338,17 @@
 #  define BOOST_COMPILER "Microsoft Visual C++ version " BOOST_STRINGIZE(BOOST_COMPILER_VERSION)
 #endif
 
+#include <boost/config/pragma_message.hpp>
+
 //
-// last known and checked version is 19.11.25547 (VC++ 2017.4):
-#if (_MSC_VER > 1911)
+// last known and checked version is 19.12.25830.2 (VC++ 2017.3):
+#if (_MSC_VER > 1912)
 #  if defined(BOOST_ASSERT_CONFIG)
 #     error "Boost.Config is older than your current compiler version."
 #  elif !defined(BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE)
-#     pragma message("Info: Boost.Config is older than your compiler version - probably nothing bad will happen - but you may wish to look for an update Boost version.  Define BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE to suppress this message.")
+      //
+      // Disabled as of March 2018 - the pace of VS releases is hard to keep up with
+      // and in any case, we have relatively few defect macros defined now.
+      // BOOST_PRAGMA_MESSAGE("Info: Boost.Config is older than your compiler version - probably nothing bad will happen - but you may wish to look for an updated Boost version. Define BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE to suppress this message.")
 #  endif
 #endif

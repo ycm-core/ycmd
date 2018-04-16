@@ -5,7 +5,7 @@
 
 //  Based on Peter Dimov's proposal
 //  http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2005/n1756.pdf
-//  issue 6.18. 
+//  issue 6.18.
 
 // This implements the extensions to the standard.
 // It's undocumented, so you shouldn't use it....
@@ -18,12 +18,11 @@
 #pragma once
 #endif
 
-#include <boost/functional/hash/hash.hpp>
+#include <boost/container_hash/hash.hpp>
 #include <boost/detail/container_fwd.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/preprocessor/repetition/repeat_from_to.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <vector>
 
 #if !defined(BOOST_NO_CXX11_HDR_ARRAY)
 #   include <array>
@@ -70,6 +69,56 @@ namespace boost
         boost::hash_combine(seed, v.first);
         boost::hash_combine(seed, v.second);
         return seed;
+    }
+
+    inline std::size_t hash_range(
+        std::vector<bool>::iterator first,
+        std::vector<bool>::iterator last)
+    {
+        std::size_t seed = 0;
+
+        for(; first != last; ++first)
+        {
+            hash_combine<bool>(seed, *first);
+        }
+
+        return seed;
+    }
+
+    inline std::size_t hash_range(
+        std::vector<bool>::const_iterator first,
+        std::vector<bool>::const_iterator last)
+    {
+        std::size_t seed = 0;
+
+        for(; first != last; ++first)
+        {
+            hash_combine<bool>(seed, *first);
+        }
+
+        return seed;
+    }
+
+    inline void hash_range(
+        std::size_t& seed,
+        std::vector<bool>::iterator first,
+        std::vector<bool>::iterator last)
+    {
+        for(; first != last; ++first)
+        {
+            hash_combine<bool>(seed, *first);
+        }
+    }
+
+    inline void hash_range(
+        std::size_t& seed,
+        std::vector<bool>::const_iterator first,
+        std::vector<bool>::const_iterator last)
+    {
+        for(; first != last; ++first)
+        {
+            hash_combine<bool>(seed, *first);
+        }
     }
 
     template <class T, class A>
@@ -171,19 +220,66 @@ namespace boost
         return boost::hash_detail::hash_tuple(v);
     }
 
-#   define BOOST_HASH_TUPLE_F(z, n, _)                                      \
-    template<                                                               \
-        BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)                            \
-    >                                                                       \
-    inline std::size_t hash_value(std::tuple<                               \
-        BOOST_PP_ENUM_PARAMS_Z(z, n, A)                                     \
-    > const& v)                                                             \
-    {                                                                       \
-        return boost::hash_detail::hash_tuple(v);                           \
+    template<typename A0>
+    inline std::size_t hash_value(std::tuple<A0> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
     }
 
-    BOOST_PP_REPEAT_FROM_TO(1, 11, BOOST_HASH_TUPLE_F, _)
-#   undef BOOST_HASH_TUPLE_F
+    template<typename A0, typename A1>
+    inline std::size_t hash_value(std::tuple<A0, A1> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3, typename A4>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3, A4> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3, A4, A5> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3, A4, A5, A6> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3, A4, A5, A6, A7> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3, A4, A5, A6, A7, A8> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
+    template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9>
+    inline std::size_t hash_value(std::tuple<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9> const& v)
+    {
+        return boost::hash_detail::hash_tuple(v);
+    }
+
 #endif
 
 #endif

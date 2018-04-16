@@ -38,7 +38,7 @@ namespace boost
     namespace system
     {
 
-namespace
+namespace detail
 {
 
   //  standard error categories  -------------------------------------------------------//
@@ -60,14 +60,20 @@ namespace
     error_condition     default_error_condition( int ev ) const BOOST_SYSTEM_NOEXCEPT;
   };
 
+#ifdef BOOST_ERROR_CODE_HEADER_ONLY
+# define BOOST_SYSTEM_INLINE inline
+#else
+# define BOOST_SYSTEM_INLINE
+#endif
+
   //  generic_error_category implementation  ---------------------------------//
 
-  const char * generic_error_category::name() const BOOST_SYSTEM_NOEXCEPT
+  BOOST_SYSTEM_INLINE const char * generic_error_category::name() const BOOST_SYSTEM_NOEXCEPT
   {
     return "generic";
   }
 
-  std::string generic_error_category::message( int ev ) const
+  BOOST_SYSTEM_INLINE std::string generic_error_category::message( int ev ) const
   {
     using namespace boost::system::errc;
 #if defined(__PGI)
@@ -160,12 +166,12 @@ namespace
   }
   //  system_error_category implementation  --------------------------------------------//
 
-  const char * system_error_category::name() const BOOST_SYSTEM_NOEXCEPT
+  BOOST_SYSTEM_INLINE const char * system_error_category::name() const BOOST_SYSTEM_NOEXCEPT
   {
     return "system";
   }
 
-  error_condition system_error_category::default_error_condition( int ev ) const
+  BOOST_SYSTEM_INLINE error_condition system_error_category::default_error_condition( int ev ) const
     BOOST_SYSTEM_NOEXCEPT
   {
     using namespace boost::system::errc;
@@ -370,13 +376,13 @@ namespace
 
 # if !defined( BOOST_WINDOWS_API )
 
-  std::string system_error_category::message( int ev ) const
+  BOOST_SYSTEM_INLINE std::string system_error_category::message( int ev ) const
   {
     return generic_category().message( ev );
   }
 # else
 
-  std::string system_error_category::message( int ev ) const
+  BOOST_SYSTEM_INLINE std::string system_error_category::message( int ev ) const
   {
 #if defined(UNDER_CE) || BOOST_PLAT_WINDOWS_RUNTIME || defined(BOOST_NO_ANSI_APIS)
     std::wstring buf(128, wchar_t());
@@ -410,7 +416,7 @@ namespace
         }
     }
     
-    int num_chars = (buf.size() + 1) * 2;
+    int num_chars = static_cast<int>(buf.size() + 1) * 2;
 
     boost::winapi::LPSTR_ narrow_buffer =
 #if defined(__GNUC__)
@@ -455,7 +461,9 @@ namespace
   }
 # endif
 
-} // unnamed namespace
+#undef BOOST_SYSTEM_INLINE
+
+} // namespace detail
 
 
 # ifdef BOOST_SYSTEM_ENABLE_DEPRECATED
@@ -474,13 +482,13 @@ namespace
 
     BOOST_SYSTEM_LINKAGE const error_category & system_category() BOOST_SYSTEM_NOEXCEPT
     {
-      static const system_error_category  system_category_const;
+      static const detail::system_error_category  system_category_const;
       return system_category_const;
     }
 
     BOOST_SYSTEM_LINKAGE const error_category & generic_category() BOOST_SYSTEM_NOEXCEPT
     {
-      static const generic_error_category generic_category_const;
+      static const detail::generic_error_category generic_category_const;
       return generic_category_const;
     }
 

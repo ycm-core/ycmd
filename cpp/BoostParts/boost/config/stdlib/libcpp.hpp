@@ -113,6 +113,13 @@
 #  define BOOST_NO_CXX11_THREAD_LOCAL
 #endif
 
+#if defined(__linux__) && !defined(BOOST_NO_CXX11_THREAD_LOCAL)
+// After libc++-dev is installed on Trusty, clang++-libc++ almost works,
+// except uses of `thread_local` fail with undefined reference to
+// `__cxa_thread_atexit`.
+#  define BOOST_NO_CXX11_THREAD_LOCAL
+#endif
+
 #if defined(__has_include)
 #if !__has_include(<shared_mutex>)
 #  define BOOST_NO_CXX14_HDR_SHARED_MUTEX
