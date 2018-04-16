@@ -29,9 +29,10 @@ import subprocess
 import tempfile
 import ycm_core
 from future.utils import native
-from hamcrest import assert_that, equal_to, has_property, instance_of
+from hamcrest import ( assert_that, calling, equal_to, has_property,
+                       instance_of, raises )
 from mock import patch, call
-from nose.tools import eq_, ok_, raises
+from nose.tools import eq_, ok_
 from types import ModuleType
 from ycmd import utils
 from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly, UnixOnly,
@@ -207,9 +208,11 @@ def JoinLinesAsUnicode_EmptyList_test():
   ok_( isinstance( value, str ) )
 
 
-@raises( ValueError )
 def JoinLinesAsUnicode_BadInput_test():
-  utils.JoinLinesAsUnicode( [ 42 ] )
+  assert_that(
+    calling( utils.JoinLinesAsUnicode ).with_args( [ 42 ] ),
+    raises( ValueError, 'lines must contain either strings or bytes' )
+  )
 
 
 @Py2Only
@@ -547,6 +550,16 @@ def FindExecutable_CurrentDirectory_test():
 def FindExecutable_AdditionalPathExt_test():
   with TemporaryExecutable( extension = '.xyz' ) as executable:
     eq_( executable, utils.FindExecutable( executable ) )
+
+
+@patch( 'ycmd.utils.ProcessIsRunning', return_value = True )
+def WaitUntilProcessIsTerminated_TimedOut_test( *args ):
+  assert_that(
+    calling( utils.WaitUntilProcessIsTerminated ).with_args( None,
+                                                             timeout = 0 ),
+    raises( RuntimeError,
+            'Waited process to terminate for 0 seconds, aborting.' )
+  )
 
 
 def LoadPythonSource_UnicodePath_test():
