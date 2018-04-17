@@ -15,15 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "TranslationUnit.h"
-#include "CompletionData.h"
 #include "ClangUtils.h"
 #include "ClangHelpers.h"
+#include "CompletionData.h"
+#include "TranslationUnit.h"
 
-#include <boost/filesystem.hpp>
-
-#include <cstdlib>
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <cstdlib>
 #include <memory>
 
 using std::unique_lock;
@@ -476,6 +475,7 @@ void TranslationUnit::UpdateLatestDiagnostics() {
 }
 
 namespace {
+
 /// Sort a FixIt container by its location's distance from a given column
 /// (such as the cursor location).
 ///
@@ -493,7 +493,8 @@ struct sort_by_location {
 private:
   int column_;
 };
-}
+
+} // unnamed namespace
 
 std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   const std::string &filename,

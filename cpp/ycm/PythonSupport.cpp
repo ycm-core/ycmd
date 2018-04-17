@@ -16,13 +16,13 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "PythonSupport.h"
-#include "Result.h"
 #include "Candidate.h"
 #include "CandidateRepository.h"
+#include "Result.h"
 #include "Utils.h"
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 using pybind11::len;
 using pybind11::str;

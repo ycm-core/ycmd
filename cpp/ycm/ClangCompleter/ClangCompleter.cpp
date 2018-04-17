@@ -16,13 +16,13 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ClangCompleter.h"
-#include "Result.h"
 #include "Candidate.h"
-#include "TranslationUnit.h"
 #include "CandidateRepository.h"
-#include "CompletionData.h"
-#include "Utils.h"
 #include "ClangUtils.h"
+#include "CompletionData.h"
+#include "Result.h"
+#include "TranslationUnit.h"
+#include "Utils.h"
 
 #include <clang-c/Index.h>
 #include <memory>
