@@ -2,6 +2,7 @@
 
 //  Copyright Beman Dawes 2006, 2007
 //  Copyright Christoper Kohlhoff 2007
+//  Copyright Peter Dimov 2017, 2018
 
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -387,6 +388,15 @@ namespace boost
       const error_category &  category() const BOOST_SYSTEM_NOEXCEPT { return *m_cat; }
       std::string             message() const  { return m_cat->message(value()); }
 
+#if !defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
+
+      explicit operator bool() const BOOST_SYSTEM_NOEXCEPT  // true if error
+      {
+        return m_val != 0;
+      }
+
+#else
+
       typedef void (*unspecified_bool_type)();
       static void unspecified_bool_true() {}
 
@@ -399,6 +409,8 @@ namespace boost
       {
         return m_val == 0;
       }
+
+#endif
 
       // relationals:
       //  the more symmetrical non-member syntax allows enum
@@ -486,6 +498,15 @@ namespace boost
         { return m_cat->default_error_condition(value()); }
       std::string             message() const  { return m_cat->message(value()); }
 
+#if !defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
+
+      explicit operator bool() const BOOST_SYSTEM_NOEXCEPT  // true if error
+      {
+        return m_val != 0;
+      }
+
+#else
+
       typedef void (*unspecified_bool_type)();
       static void unspecified_bool_true() {}
 
@@ -498,6 +519,8 @@ namespace boost
       {
         return m_val == 0;
       }
+
+#endif
 
       // relationals:
       inline friend bool operator==( const error_code & lhs,
@@ -555,10 +578,14 @@ namespace boost
     inline system::error_code* throws()
     {
       // See github.com/boostorg/system/pull/12 by visigoth for why the return
-      // is poisoned with (1) rather than (0). A test, test_throws_usage(), has
-      // been added to error_code_test.cpp, and as visigoth mentioned it fails
-      // on clang for release builds with a return of 0 but works fine with (1).
-      return reinterpret_cast<system::error_code*>(1);
+      // is poisoned with nonzero rather than (0). A test, test_throws_usage(),
+      // has been added to error_code_test.cpp, and as visigoth mentioned it
+      // fails on clang for release builds with a return of 0 but works fine
+      // with (1).
+      // Since the undefined behavior sanitizer (-fsanitize=undefined) does not
+      // allow a reference to be formed to the unaligned address of (1), we use
+      // (8) instead.
+      return reinterpret_cast<system::error_code*>(8);
     }
   }
 

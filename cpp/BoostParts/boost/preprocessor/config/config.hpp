@@ -71,8 +71,10 @@
 # define BOOST_PP_VARIADICS_MSVC 0
 # if !defined BOOST_PP_VARIADICS
 #    /* variadic support explicitly disabled for all untested compilers */
-#    if defined __GCCXML__ || defined __CUDACC__ || defined __PATHSCALE__ || defined __DMC__ || defined __CODEGEARC__ || defined __BORLANDC__ || defined __MWERKS__ || ( defined __SUNPRO_CC && __SUNPRO_CC < 0x5120 ) || defined __HP_aCC && !defined __EDG__ || defined __MRC__ || defined __SC__ || defined __IBMCPP__ || defined __PGI
+#    if defined __GCCXML__ || defined __PATHSCALE__ || defined __DMC__ || defined __CODEGEARC__ || defined __BORLANDC__ || defined __MWERKS__ || ( defined __SUNPRO_CC && __SUNPRO_CC < 0x5120 ) || defined __HP_aCC && !defined __EDG__ || defined __MRC__ || defined __SC__ || defined __PGI
 #        define BOOST_PP_VARIADICS 0
+#    elif defined(__CUDACC__)
+#        define BOOST_PP_VARIADICS 1
 #    elif defined(_MSC_VER) && defined(__clang__)
 #        define BOOST_PP_VARIADICS 1
 #    /* VC++ (C/C++) and Intel C++ Compiler >= 17.0 with MSVC */

@@ -5,7 +5,7 @@
 
 //  Based on Peter Dimov's proposal
 //  http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2005/n1756.pdf
-//  issue 6.18. 
+//  issue 6.18.
 //
 //  This also contains public domain code from MurmurHash. From the
 //  MurmurHash header:
@@ -16,14 +16,14 @@
 #if !defined(BOOST_FUNCTIONAL_HASH_HASH_HPP)
 #define BOOST_FUNCTIONAL_HASH_HASH_HPP
 
-#include <boost/functional/hash/hash_fwd.hpp>
+#include <boost/container_hash/hash_fwd.hpp>
 #include <functional>
-#include <boost/functional/hash/detail/hash_float.hpp>
+#include <boost/container_hash/detail/hash_float.hpp>
 #include <string>
 #include <boost/limits.hpp>
 #include <boost/type_traits/is_enum.hpp>
 #include <boost/type_traits/is_integral.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/cstdint.hpp>
 
 #if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
@@ -32,6 +32,10 @@
 
 #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
 #include <typeindex>
+#endif
+
+#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR)
+#include <system_error>
 #endif
 
 #if defined(BOOST_MSVC)
@@ -56,6 +60,58 @@
 #   define BOOST_FUNCTIONAL_HASH_ROTL32(x, r) _rotl(x,r)
 #else
 #   define BOOST_FUNCTIONAL_HASH_ROTL32(x, r) (x << r) | (x >> (32 - r))
+#endif
+
+// Detect whether standard library has C++17 headers
+
+#if !defined(BOOST_HASH_CXX17)
+#   if defined(BOOST_MSVC)
+#       if defined(_HAS_CXX17) && _HAS_CXX17
+#           define BOOST_HASH_CXX17 1
+#       endif
+#   elif defined(__cplusplus) && __cplusplus >= 201703
+#       define BOOST_HASH_CXX17 1
+#   endif
+#endif
+
+#if !defined(BOOST_HASH_CXX17)
+#   define BOOST_HASH_CXX17 0
+#endif
+
+#if BOOST_HASH_CXX17 && defined(__has_include)
+#   if !defined(BOOST_HASH_HAS_STRING_VIEW) && __has_include(<string_view>)
+#       define BOOST_HASH_HAS_STRING_VIEW 1
+#   endif
+#   if !defined(BOOST_HASH_HAS_OPTIONAL) && __has_include(<optional>)
+#       define BOOST_HASH_HAS_OPTIONAL 1
+#   endif
+#   if !defined(BOOST_HASH_HAS_VARIANT) && __has_include(<variant>)
+#       define BOOST_HASH_HAS_VARIANT 1
+#   endif
+#endif
+
+#if !defined(BOOST_HASH_HAS_STRING_VIEW)
+#   define BOOST_HASH_HAS_STRING_VIEW 0
+#endif
+
+#if !defined(BOOST_HASH_HAS_OPTIONAL)
+#   define BOOST_HASH_HAS_OPTIONAL 0
+#endif
+
+#if !defined(BOOST_HASH_HAS_VARIANT)
+#   define BOOST_HASH_HAS_VARIANT 0
+#endif
+
+#if BOOST_HASH_HAS_STRING_VIEW
+#   include <string_view>
+#endif
+
+#if BOOST_HASH_HAS_OPTIONAL
+#   include <optional>
+#endif
+
+#if BOOST_HASH_HAS_VARIANT
+#   include <variant>
 #endif
 
 namespace boost
@@ -176,11 +232,33 @@ namespace boost
     std::size_t hash_value(
         std::basic_string<Ch, std::BOOST_HASH_CHAR_TRAITS<Ch>, A> const&);
 
+#if BOOST_HASH_HAS_STRING_VIEW
+    template <class Ch>
+    std::size_t hash_value(
+        std::basic_string_view<Ch, std::BOOST_HASH_CHAR_TRAITS<Ch> > const&);
+#endif
+
     template <typename T>
     typename boost::hash_detail::float_numbers<T>::type hash_value(T);
 
+#if BOOST_HASH_HAS_OPTIONAL
+    template <typename T>
+    std::size_t hash_value(std::optional<T> const&);
+#endif
+
+#if BOOST_HASH_HAS_VARIANT
+    std::size_t hash_value(std::monostate);
+    template <typename... Types>
+    std::size_t hash_value(std::variant<Types...> const&);
+#endif
+
 #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
     std::size_t hash_value(std::type_index);
+#endif
+
+#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR)
+    std::size_t hash_value(std::error_code const&);
+    std::size_t hash_value(std::error_condition const&);
 #endif
 
     // Implementation
@@ -410,11 +488,48 @@ namespace boost
         return hash_range(v.begin(), v.end());
     }
 
+#if BOOST_HASH_HAS_STRING_VIEW
+    template <class Ch>
+    inline std::size_t hash_value(
+        std::basic_string_view<Ch, std::BOOST_HASH_CHAR_TRAITS<Ch> > const& v)
+    {
+        return hash_range(v.begin(), v.end());
+    }
+#endif
+
     template <typename T>
     typename boost::hash_detail::float_numbers<T>::type hash_value(T v)
     {
         return boost::hash_detail::float_hash_value(v);
     }
+
+#if BOOST_HASH_HAS_OPTIONAL
+    template <typename T>
+    inline std::size_t hash_value(std::optional<T> const& v) {
+        if (!v) {
+            // Arbitray value for empty optional.
+            return 0x12345678;
+        } else {
+            boost::hash<T> hf;
+            return hf(*v);
+        }
+    }
+#endif
+
+#if BOOST_HASH_HAS_VARIANT
+    inline std::size_t hash_value(std::monostate) {
+        return 0x87654321;
+    }
+
+    template <typename... Types>
+    inline std::size_t hash_value(std::variant<Types...> const& v) {
+        std::size_t seed = 0;
+        hash_combine(seed, v.index());
+        std::visit([&seed](auto&& x) { hash_combine(seed, x); }, v);
+        return seed;
+    }
+#endif
+
 
 #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
     inline std::size_t hash_value(std::type_index v)
@@ -423,14 +538,30 @@ namespace boost
     }
 #endif
 
+#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR)
+    inline std::size_t hash_value(std::error_code const& v) {
+        std::size_t seed = 0;
+        hash_combine(seed, v.value());
+        hash_combine(seed, &v.category());
+        return seed;
+    }
+
+    inline std::size_t hash_value(std::error_condition const& v) {
+        std::size_t seed = 0;
+        hash_combine(seed, v.value());
+        hash_combine(seed, &v.category());
+        return seed;
+    }
+#endif
+
     //
     // boost::hash
     //
-    
+
     // Define the specializations required by the standard. The general purpose
     // boost::hash is defined later in extensions.hpp if
     // BOOST_HASH_NO_EXTENSIONS is not defined.
-    
+
     // BOOST_HASH_SPECIALIZE - define a specialization for a type which is
     // passed by copy.
     //
@@ -451,6 +582,16 @@ namespace boost
 
 #define BOOST_HASH_SPECIALIZE_REF(type) \
     template <> struct hash<type> \
+         : public boost::hash_detail::hash_base<type> \
+    { \
+        std::size_t operator()(type const& v) const \
+        { \
+            return boost::hash_value(v); \
+        } \
+    };
+
+#define BOOST_HASH_SPECIALIZE_TEMPLATE_REF(type) \
+    struct hash<type> \
          : public boost::hash_detail::hash_base<type> \
     { \
         std::size_t operator()(type const& v) const \
@@ -494,6 +635,19 @@ namespace boost
     BOOST_HASH_SPECIALIZE_REF(std::basic_string<char32_t>)
 #endif
 
+#if BOOST_HASH_HAS_STRING_VIEW
+    BOOST_HASH_SPECIALIZE_REF(std::string_view)
+#   if !defined(BOOST_NO_STD_WSTRING) && !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+    BOOST_HASH_SPECIALIZE_REF(std::wstring_view)
+#   endif
+#   if !defined(BOOST_NO_CXX11_CHAR16_T)
+    BOOST_HASH_SPECIALIZE_REF(std::basic_string_view<char16_t>)
+#   endif
+#   if !defined(BOOST_NO_CXX11_CHAR32_T)
+    BOOST_HASH_SPECIALIZE_REF(std::basic_string_view<char32_t>)
+#   endif
+#endif
+
 #if !defined(BOOST_NO_LONG_LONG)
     BOOST_HASH_SPECIALIZE(boost::long_long_type)
     BOOST_HASH_SPECIALIZE(boost::ulong_long_type)
@@ -504,12 +658,24 @@ namespace boost
     BOOST_HASH_SPECIALIZE(boost::uint128_type)
 #endif
 
+#if BOOST_HASH_HAS_OPTIONAL
+    template <typename T>
+    BOOST_HASH_SPECIALIZE_TEMPLATE_REF(std::optional<T>)
+#endif
+
+#if !defined(BOOST_HASH_HAS_VARIANT)
+    template <typename... T>
+    BOOST_HASH_SPECIALIZE_TEMPLATE_REF(std::variant<T...>)
+    BOOST_HASH_SPECIALIZE(std::monostate)
+#endif
+
 #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
     BOOST_HASH_SPECIALIZE(std::type_index)
 #endif
 
 #undef BOOST_HASH_SPECIALIZE
 #undef BOOST_HASH_SPECIALIZE_REF
+#undef BOOST_HASH_SPECIALIZE_TEMPLATE_REF
 
 // Specializing boost::hash for pointers.
 
@@ -591,5 +757,5 @@ namespace boost
 
 #if !defined(BOOST_HASH_NO_EXTENSIONS) \
     && !defined(BOOST_FUNCTIONAL_HASH_EXTENSIONS_HPP)
-#include <boost/functional/hash/extensions.hpp>
+#include <boost/container_hash/extensions.hpp>
 #endif
