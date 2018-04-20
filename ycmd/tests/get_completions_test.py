@@ -293,7 +293,7 @@ def GetCompletions_IdentifierCompleter_JustFinishedIdentifier_test( app ):
                has_items( CompletionEntryMatcher( 'foo' ) ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_IdentifierCompleter_IgnoreFinishedIdentifierInString_test(
   app ):
 
@@ -323,7 +323,7 @@ def GetCompletions_IdentifierCompleter_IdentifierUnderCursor_test( app ):
                has_items( CompletionEntryMatcher( 'foo' ) ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_IdentifierCompleter_IgnoreCursorIdentifierInString_test(
   app ):
 
