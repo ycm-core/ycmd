@@ -103,7 +103,7 @@ class GoCompleter( Completer ):
   """Completer for Go using the Gocode daemon for completions:
   https://github.com/nsf/gocode
   and the Godef binary for jumping to definitions:
-  https://github.com/Manishearth/godef"""
+  https://github.com/rogpeppe/godef"""
 
   def __init__( self, user_options ):
     super( GoCompleter, self ).__init__( user_options )
