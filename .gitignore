@@ -25,6 +25,7 @@ install_manifest.txt
 
 # Python
 *.py[cod]
+.ropeproject
 
 # Installer logs
 pip-log.txt
