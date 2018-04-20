@@ -576,6 +576,13 @@ def EnableGoCompleter( args ):
              quiet = args.quiet,
              status_message = 'Building gocode for go completion' )
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
+  CheckCall( [ go, 'get', 'github.com/tools/godep' ],
+             quiet = args.quiet,
+             status_message = 'Installing godep for godef' )
+  godep = FindExecutableOrDie( 'godep', 'godep is required to build gocode.' )
+  CheckCall( [ godep, 'get' ],
+             quiet = args.quiet,
+             status_message = 'Installing dependencies for godef' )
   CheckCall( [ go, 'build', 'godef.go' ],
              quiet = args.quiet,
              status_message = 'Building godef for go definition' )
