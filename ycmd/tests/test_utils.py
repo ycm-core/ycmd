@@ -203,11 +203,13 @@ def SetUpApp( custom_options = {} ):
 def IsolatedApp( custom_options = {} ):
   old_server_state = handlers._server_state
   old_extra_conf_store_state = extra_conf_store.Get()
+  old_options = user_options_store.GetAll()
   try:
     yield SetUpApp( custom_options )
   finally:
     handlers._server_state = old_server_state
     extra_conf_store.Set( old_extra_conf_store_state )
+    user_options_store.SetAll( old_options )
 
 
 def StartCompleterServer( app, filetype, filepath = '/foo' ):
