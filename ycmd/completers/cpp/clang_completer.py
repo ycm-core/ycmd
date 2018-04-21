@@ -447,7 +447,7 @@ class ClangCompleter( Completer ):
                                      filename ),
                filename )
 
-    client_data = request_data.get( 'extra_conf_data', None )
+    client_data = request_data[ 'extra_conf_data' ]
     return self._flags.FlagsForFile( filename, client_data = client_data )
 
 

@@ -25,6 +25,8 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from future.utils import PY2, native
+import collections
+import json
 import os
 import socket
 import subprocess
@@ -496,3 +498,35 @@ def StartThread( func, *args ):
   thread.daemon = True
   thread.start()
   return thread
+
+
+class HashableDict( collections.Mapping ):
+  """A dictionary that can be used in dictionary's keys. The dictionary must be
+  JSON-encodable; in particular, all keys must be strings."""
+
+  def __init__( self, *args, **kwargs ):
+    self._dict = dict( *args, **kwargs )
+
+
+  def __getitem__( self, key ):
+    return self._dict[ key ]
+
+
+  def __iter__( self ):
+    return iter( self._dict )
+
+
+  def __len__( self ):
+    return len( self._dict )
+
+
+  def __repr__( self ):
+    return '<HashableDict %s>' % repr( self._dict )
+
+
+  def __hash__( self ):
+    try:
+      return self._hash
+    except AttributeError:
+      self._hash = json.dumps( self._dict, sort_keys = True ).__hash__()
+      return self._hash

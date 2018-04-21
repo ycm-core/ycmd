@@ -696,6 +696,44 @@ def GetCompletions_CacheIsNotValid_DifferentFileData_test(
 @patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
         return_value = True )
 @patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
+        side_effect = [ [ 'attributeA' ], [ 'attributeB' ] ] )
+def GetCompletions_CacheIsNotValid_DifferentExtraConfData_test(
+  app, candidates_list, *args ):
+  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.attr',
+                                    line_num = 1,
+                                    column_num = 12 )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeA' ) )
+    )
+
+    completion_data = BuildRequest( filetype = 'dummy_filetype',
+                                    contents = 'objectA.attr',
+                                    line_num = 1,
+                                    column_num = 12,
+                                    extra_conf_data = { 'key': 'value' } )
+
+    results = app.post_json( '/completions',
+                             completion_data ).json[ 'completions' ]
+    assert_that(
+      results,
+      has_items( CompletionEntryMatcher( 'attributeB' ) )
+    )
+
+    # We ask for candidates twice because of cache invalidation:
+    # both requests are identical except the extra conf data.
+    assert_that( candidates_list.call_count, equal_to( 2 ) )
+
+
+@SharedYcmd
+@patch( 'ycmd.tests.test_utils.DummyCompleter.ShouldUseNowInner',
+        return_value = True )
+@patch( 'ycmd.tests.test_utils.DummyCompleter.CandidatesList',
         return_value = [ 'aba', 'cbc' ] )
 def GetCompletions_FilterThenReturnFromCache_test( app,
                                                    candidates_list,

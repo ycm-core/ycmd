@@ -41,6 +41,12 @@ from ycmd.utils import ReadFile
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
 
 
+def CombineRequest( request, data ):
+  kw = request.copy()
+  kw.update( data )
+  return BuildRequest( **kw )
+
+
 def RunTest( app, test ):
   """
   Method to run a simple completion test and verify the result
@@ -72,11 +78,6 @@ def RunTest( app, test ):
   request = test[ 'request' ]
   contents = ( request[ 'contents' ] if 'contents' in request else
                ReadFile( request[ 'filepath' ] ) )
-
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
 
   # Because we aren't testing this command, we *always* ignore errors. This
   # is mainly because we (may) want to test scenarios where the completer
@@ -485,7 +486,7 @@ def GetCompletions_ClientDataGivenToExtraConf_test( app ):
 
 
 @IsolatedYcmd( { 'max_num_candidates': 0 } )
-def GetCompletions_Include_ClientDataGivenToExtraConf_test( app ):
+def GetCompletions_ClientDataGivenToExtraConf_Include_test( app ):
   app.post_json(
     '/load_extra_conf_file',
     { 'filepath': PathToTestFile( 'client_data',
@@ -507,6 +508,74 @@ def GetCompletions_Include_ClientDataGivenToExtraConf_test( app ):
     results,
     has_item( CompletionEntryMatcher( 'include.hpp',
               extra_menu_info = '[File]' ) )
+  )
+
+
+@IsolatedYcmd()
+def GetCompletions_ClientDataGivenToExtraConf_Cache_test( app ):
+  app.post_json(
+    '/load_extra_conf_file',
+    { 'filepath': PathToTestFile( 'client_data', '.ycm_extra_conf.py' ) } )
+
+  filepath = PathToTestFile( 'client_data', 'macro.cpp' )
+  contents = ReadFile( filepath )
+  request = {
+    'filetype'  : 'cpp',
+    'filepath'  : filepath,
+    'contents'  : contents,
+    'line_num'  : 11,
+    'column_num': 8
+  }
+
+  # Complete with flags from the client.
+  completion_request = CombineRequest( request, {
+    'extra_conf_data': {
+      'flags': [ '-DSOME_MACRO' ]
+    }
+  } )
+
+  assert_that(
+    app.post_json( '/completions', completion_request ).json,
+    has_entries( {
+      'completions': has_item(
+        CompletionEntryMatcher( 'macro_defined' )
+      ),
+      'errors': empty()
+    } )
+  )
+
+  # Complete at the same position but for a different set of flags from the
+  # client.
+  completion_request = CombineRequest( request, {
+    'extra_conf_data': {
+      'flags': [ '-Wall' ]
+    }
+  } )
+
+  assert_that(
+    app.post_json( '/completions', completion_request ).json,
+    has_entries( {
+      'completions': has_item(
+        CompletionEntryMatcher( 'macro_not_defined' )
+      ),
+      'errors': empty()
+    } )
+  )
+
+  # Finally, complete once again at the same position but no flags are given by
+  # the client. An empty list of flags is returned by the extra conf file in
+  # that case.
+  completion_request = CombineRequest( request, {} )
+
+  assert_that(
+    app.post_json( '/completions', completion_request ).json,
+    has_entries( {
+      'completions': empty(),
+      'errors': contains(
+        ErrorMatcher( RuntimeError,
+                      'Still no compile flags, no completions yet.' )
+      )
+    } )
   )
 
 

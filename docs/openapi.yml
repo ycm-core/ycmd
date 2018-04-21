@@ -148,6 +148,13 @@ definitions:
       Absolute path to the filesystem working directory of the client. This is
       used by completer engines to determine things like the project root
       for the file being modified, amongst other things.
+  ExtraConfData:
+    type: object
+    description: |-
+      A dictionary passed to the `FlagsForFile` function of the
+      `.ycm_extra_conf.py` file as the `client_data` parameter. This optional
+      field should be used to give users a way to customize the
+      `.ycm_extra_conf.py` file with their own set of options.
   FileData:
     type: object
     description: |-
@@ -184,8 +191,8 @@ definitions:
       $ref: "#/definitions/FileData"
 
   # Due to the way the API combines keys at the top level, we are not able to
-  # compose this item per-request. So this definition is actually not used, but
-  # is kept here as a source of copypasta.
+  # compose this item per-request. So this definition must be copy-pasted for
+  # some requests.
   SimpleRequest:
     type: object
     required:
@@ -206,6 +213,8 @@ definitions:
         $ref: "#/definitions/CompleterTarget"
       working_dir:
         $ref: "#/definitions/WorkingDirectory"
+      extra_conf_data:
+        $ref: "#/definitions/ExtraConfData"
 
   Exception:
     type: object
@@ -637,6 +646,8 @@ paths:
                 $ref: "#/definitions/CompleterTarget"
               working_dir:
                 $ref: "#/definitions/WorkingDirectory"
+              extra_conf_data:
+                $ref: "#/definitions/ExtraConfData"
               event_name:
                 type: string
                 enum:
@@ -756,6 +767,8 @@ paths:
                 $ref: "#/definitions/CompleterTarget"
               working_dir:
                 $ref: "#/definitions/WorkingDirectory"
+              extra_conf_data:
+                $ref: "#/definitions/ExtraConfData"
               command_arguments:
                 type: array
                 description: |-
@@ -881,25 +894,7 @@ paths:
             of dirty buffers.
           required: true
           schema:
-            type: object
-            required:
-              - line_num
-              - column_num
-              - filepath
-              - file_data
-            properties:
-              line_num:
-                $ref: "#/definitions/LineNumber"
-              column_num:
-                $ref: "#/definitions/ColumnNumber"
-              filepath:
-                $ref: "#/definitions/FilePath"
-              file_data:
-                $ref: "#/definitions/FileDataMap"
-              completer_target:
-                $ref: "#/definitions/CompleterTarget"
-              working_dir:
-                $ref: "#/definitions/WorkingDirectory"
+            $ref: "#/definitions/SimpleRequest"
       responses:
         200:
           description: The list of completion suggestions.

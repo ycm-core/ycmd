@@ -91,7 +91,7 @@ class Flags( object ):
   'modules') that contain a method FlagsForFile( filename )."""
 
   def __init__( self ):
-    # It's caches all the way down...
+    # We cache the flags by a tuple of filename and client data.
     self.flags_for_file = {}
     self.extra_clang_flags = _ExtraClangFlags()
     self.no_extra_conf_file_warning_posted = False
@@ -128,7 +128,7 @@ class Flags( object ):
     # may be called from multiple threads, and python gives us
     # 1-python-statement synchronisation for "free" (via the GIL)
     try:
-      return self.flags_for_file[ filename ]
+      return self.flags_for_file[ filename, client_data ]
     except KeyError:
       pass
 
@@ -148,13 +148,15 @@ class Flags( object ):
 
     return self._ParseFlagsFromExtraConfOrDatabase( filename,
                                                     results,
-                                                    add_extra_clang_flags )
+                                                    add_extra_clang_flags,
+                                                    client_data )
 
 
   def _ParseFlagsFromExtraConfOrDatabase( self,
                                           filename,
                                           results,
-                                          add_extra_clang_flags ):
+                                          add_extra_clang_flags,
+                                          client_data ):
     if 'override_filename' in results:
       filename = results[ 'override_filename' ] or filename
 
@@ -172,7 +174,7 @@ class Flags( object ):
                                             _ShouldAllowWinStyleFlags( flags ) )
 
     if results.get( 'do_cache', True ):
-      self.flags_for_file[ filename ] = sanitized_flags, filename
+      self.flags_for_file[ filename, client_data ] = sanitized_flags, filename
 
     return sanitized_flags, filename
 

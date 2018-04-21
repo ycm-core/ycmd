@@ -28,6 +28,7 @@ from future.utils import iteritems
 
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          CodepointOffsetToByteOffset,
+                         HashableDict,
                          ToUnicode,
                          ToBytes,
                          SplitLines )
@@ -91,7 +92,9 @@ class RequestWrap( object ):
 
       'force_semantic': ( self._GetForceSemantic, None ),
 
-      'lines': ( self._CurrentLines, None )
+      'lines': ( self._CurrentLines, None ),
+
+      'extra_conf_data': ( self._GetExtraConfData, None )
     }
     self._cached_computed = dict()
 
@@ -128,6 +131,7 @@ class RequestWrap( object ):
          self[ 'start_column' ]     != other[ 'start_column' ] or
          self[ 'prefix' ]           != other[ 'prefix' ] or
          self[ 'force_semantic' ]   != other[ 'force_semantic' ] or
+         self[ 'extra_conf_data' ]  != other[ 'extra_conf_data' ] or
          len( self[ 'file_data' ] ) != len( other[ 'file_data' ] ) ):
       return False
 
@@ -247,6 +251,10 @@ class RequestWrap( object ):
 
   def _GetForceSemantic( self ):
     return bool( self._request.get( 'force_semantic', False ) )
+
+
+  def _GetExtraConfData( self ):
+    return HashableDict( self._request.get( 'extra_conf_data', {} ) )
 
 
 def CompletionStartColumn( line_value, column_num, filetype ):
