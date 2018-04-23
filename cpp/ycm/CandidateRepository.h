@@ -59,7 +59,8 @@ private:
   CandidateRepository() = default;
   ~CandidateRepository() = default;
 
-  const std::string &ValidatedCandidateText( const std::string &text );
+  const std::string &ValidatedCandidateText(
+      const std::string &candidate_text );
 
   static CandidateRepository *instance_;
   static std::mutex instance_mutex_;

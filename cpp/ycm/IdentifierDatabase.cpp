@@ -91,9 +91,8 @@ void IdentifierDatabase::ResultsForQueryAndType(
       for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) ) {
           continue;
-        } else {
-          seen_candidates.insert( candidate );
         }
+        seen_candidates.insert( candidate );
 
         if ( candidate->IsEmpty() ||
              !candidate->ContainsBytes( query_object ) ) {
