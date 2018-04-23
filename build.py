@@ -168,9 +168,9 @@ def CheckCall( args, **kwargs ):
 
 def _CheckCallQuiet( args, status_message, **kwargs ):
   if not status_message:
-    status_message = 'Running {0}'.format( args[ 0 ] )
+    status_message = 'Running {}'.format( args[ 0 ] )
 
-  # __future_ not appear to support flush= on print_function
+  # __future__ not appear to support flush= on print_function
   sys.stdout.write( status_message + '...' )
   sys.stdout.flush()
 
@@ -531,27 +531,47 @@ def BuildYcmdLib( args ):
 
 
 def InstallRegexModule( args ):
+  # We don't exit the script if the regex module cannot be installed; ycmd is
+  # still usable without this module.
+  if args.quiet:
+    sys.stdout.write( 'Installing regex module...' )
+    sys.stdout.flush()
+
   regex_dir = p.join( DIR_OF_THIRD_PARTY, 'regex', 'py{}'.format( PY_MAJOR ) )
   pip_command = [ sys.executable, '-m', 'pip', 'install', '--upgrade',
                   'regex=={}'.format( REGEX_MODULE_VERSION ), '-t', regex_dir ]
+
   # We need to add the --system option on Debian-like distributions. See
   # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830892
   try:
-    pip_help_output = subprocess.check_output( pip_command + [ '--help' ],
-                                               stderr = subprocess.STDOUT )
-    if '--system' in pip_help_output.decode( 'utf8' ):
-      pip_command.append( '--system' )
-  except subprocess.CalledProcessError:
-    pass
+    output = subprocess.check_output(
+      pip_command + [ '--help' ], stderr = subprocess.STDOUT ).decode( 'utf8' )
+  except subprocess.CalledProcessError as error:
+    output = error.output.decode( 'utf8' )
 
-  # Do not exit if installing the regex module fails; ycmd is still usable
-  # without this module.
+  # Return early if pip is not available.
+  if 'No module named pip' in output:
+    message = 'SKIP\n' if args.quiet else output
+    message += ( 'WARNING: pip is required to install the regex module.\n'
+                 'Unicode will not be fully supported without this module.' )
+    print( message )
+    return
+
+  if '--system' in output:
+    pip_command.append( '--system' )
+
   try:
-    CheckCall( pip_command,
-               quiet = args.quiet,
-               status_message = 'Installing regex module' )
-  except SystemExit:
-    pass
+    if args.quiet:
+      subprocess.check_call( pip_command, stdout = subprocess.PIPE,
+                                          stderr = subprocess.PIPE )
+      print( 'OK' )
+    else:
+      subprocess.check_call( pip_command )
+  except subprocess.CalledProcessError:
+    if args.quiet:
+      print( 'SKIP' )
+    print( 'WARNING: cannot install the regex module. '
+           'Unicode will not be fully supported.' )
 
 
 def EnableCsCompleter( args ):
