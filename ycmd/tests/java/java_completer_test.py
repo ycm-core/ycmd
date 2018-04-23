@@ -29,9 +29,7 @@ from mock import patch
 
 from ycmd import handlers
 from ycmd.tests.test_utils import BuildRequest
-from ycmd.tests.java import ( PathToTestFile,
-                              SharedYcmd,
-                              StartJavaCompleterServerInDirectory )
+from ycmd.tests.java import SharedYcmd
 from ycmd.completers.java import java_completer, hook
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
 
@@ -77,7 +75,6 @@ def WorkspaceDirForProject_UniqueDir_test():
 
 @SharedYcmd
 def JavaCompleter_GetType_test( app ):
-  StartJavaCompleterServerInDirectory( app, PathToTestFile() )
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
   # The LSP defines the hover response as either:
@@ -145,7 +142,6 @@ def JavaCompleter_GetType_test( app ):
 
 @SharedYcmd
 def JavaCompleter_GetDoc_test( app ):
-  StartJavaCompleterServerInDirectory( app, PathToTestFile() )
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
   # The LSP defines the hover response as either:
@@ -213,7 +209,6 @@ def JavaCompleter_GetDoc_test( app ):
 
 @SharedYcmd
 def JavaCompleter_UnknownCommand_test( app ):
-  StartJavaCompleterServerInDirectory( app, PathToTestFile() )
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
   notification = {
@@ -225,7 +220,7 @@ def JavaCompleter_UnknownCommand_test( app ):
 
 
 
-@patch( 'ycmd.completers.java.java_completer.ShouldEnableJavaCompleter',
+@patch( 'ycmd.completers.java.hook.ShouldEnableJavaCompleter',
         return_value = False )
-def JavaHook_JavaNotEnabled():
-  assert_that( hook.GetCompleter(), equal_to( None ) )
+def JavaHook_JavaNotEnabled_test( *args ):
+  assert_that( hook.GetCompleter( {} ), equal_to( None ) )
