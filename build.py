@@ -402,6 +402,9 @@ def GetCmakeArgs( parsed_args ):
   use_python2 = 'ON' if PY_MAJOR == 2 else 'OFF'
   cmake_args.append( '-DUSE_PYTHON2=' + use_python2 )
 
+  if platform.system() == 'FreeBSD':
+    cmake_args.append( '-DBOOST_PYTHON_SUFFIX:STRING={major}{minor}'.format( major = PY_MAJOR, minor = PY_MINOR ) )
+
   extra_cmake_args = os.environ.get( 'EXTRA_CMAKE_ARGS', '' )
   # We use shlex split to properly parse quoted CMake arguments.
   cmake_args.extend( shlex.split( extra_cmake_args ) )
