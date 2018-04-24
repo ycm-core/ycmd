@@ -320,7 +320,6 @@ class JediCompleter( Completer ):
       return self._GoToDefinition( request_data )
     except Exception as e:
       self._logger.exception( e )
-      pass
 
     try:
       return self._GoToDeclaration( request_data )

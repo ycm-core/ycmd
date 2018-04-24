@@ -418,7 +418,6 @@ def _RemoveUnusedFlags( flags, filename, enable_windows_style_flags ):
     flags = flags[ 1: ]
 
   skip_next = False
-  previous_flag = flags[ 0 ]
   current_flag = flags[ 0 ]
 
   filename = os.path.realpath( filename )

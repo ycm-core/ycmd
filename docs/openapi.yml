@@ -127,8 +127,8 @@ definitions:
     type: string
     description: |-
       Absolute path to the file in the filesystem. If the file does
-      not yet exist (for example, a new file), then the value may be the empty
-      string.
+      not yet exist (for example, a new file), then the value should be an
+      arbitrary unique string.
   CompleterTarget:
     type: string
     description: |-
