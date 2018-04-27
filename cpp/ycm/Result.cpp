@@ -58,6 +58,7 @@ Result::Result()
     first_char_same_in_query_and_text_( false ),
     query_is_candidate_prefix_( false ),
     char_match_index_sum_( 0 ),
+    num_wb_matches_( 0 ),
     candidate_( nullptr ),
     query_( nullptr ) {
 }
@@ -71,6 +72,7 @@ Result::Result( const Candidate *candidate,
     first_char_same_in_query_and_text_( false ),
     query_is_candidate_prefix_( query_is_candidate_prefix ),
     char_match_index_sum_( char_match_index_sum ),
+    num_wb_matches_( 0 ),
     candidate_( candidate ),
     query_( query ) {
   SetResultFeaturesFromQuery();

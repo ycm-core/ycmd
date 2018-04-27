@@ -102,7 +102,7 @@ CodePointSequence BreakIntoCodePoints( const std::string &text ) {
     if ( text.end() - iter < length ) {
       throw UnicodeDecodeError( "Invalid code point length." );
     }
-    code_points.push_back( std::string( iter, iter + length ) );
+    code_points.emplace_back( iter, iter + length );
     iter += length;
   }
 

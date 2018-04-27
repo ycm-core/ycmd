@@ -27,9 +27,6 @@
 namespace YouCompleteMe {
 
 
-IdentifierCompleter::IdentifierCompleter() {}
-
-
 IdentifierCompleter::IdentifierCompleter(
   const std::vector< std::string > &candidates ) {
   identifier_database_.AddIdentifiers( candidates, "", "" );

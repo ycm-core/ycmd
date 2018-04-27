@@ -52,7 +52,7 @@ using FiletypeIdentifierMap = std::map< std::string, FilepathToIdentifiers >;
 // This class is thread-safe.
 class IdentifierDatabase {
 public:
-  IdentifierDatabase();
+  YCM_EXPORT IdentifierDatabase();
   IdentifierDatabase( const IdentifierDatabase& ) = delete;
   IdentifierDatabase& operator=( const IdentifierDatabase& ) = delete;
 
