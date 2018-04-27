@@ -45,7 +45,7 @@
     <p>The full list of command line options can be obtained by passing <code>--help</code>
     to ycmd (e.g. <code>python -m ycmd --help</code>). However, the following
     options warrant further discussion:</p>
-    <h3 id="-options_file-"><code>--options_file</code></h3>
+    <h3 id="-options_file"><code>--options_file</code></h3>
     <p>This mandatory option supplies the name of a file containing user options
     data. This option (and thus the file) are mandatory, as they are required
     to set the shared HMAC secret.</p>
@@ -2991,8 +2991,8 @@
                     <div class="panel-body">
                                 <section class="json-schema-description">
                                     <p>Absolute path to the file in the filesystem. If the file does
-                            not yet exist (for example, a new file), then the value may be the empty
-                            string.</p>
+                            not yet exist (for example, a new file), then the value should be an
+                            arbitrary unique string.</p>
                             
                                 </section>
                             

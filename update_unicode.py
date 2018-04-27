@@ -103,13 +103,13 @@ def UnicodeToBinaryUtf8( code_point ):
   binary_length = len( binary )
   if binary_length <= 7:
     return binary.zfill( 8 )
-  if binary_length > 7 and binary_length <= 11:
+  if binary_length <= 11:
     binary = binary.zfill( 11 )
     return '110' + binary[ :5 ] + '10' + binary[ 5: ]
-  if binary_length > 11 and binary_length <= 16:
+  if binary_length <= 16:
     binary = binary.zfill( 16 )
     return '1110' + binary[ :4 ] + '10' + binary[ 4:10 ] + '10' + binary[ 10: ]
-  if binary_length > 16 and binary_length <= 21:
+  if binary_length <= 21:
     binary = binary.zfill( 21 )
     return ( '11110' + binary[ :3 ] + '10' + binary[ 3:9 ] +
              '10' + binary[ 9:15 ] + '10' + binary[ 15: ] )

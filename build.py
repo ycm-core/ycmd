@@ -673,7 +673,6 @@ def EnableJavaCompleter( switches ):
       jdtls_build_stamp = JDTLS_BUILD_STAMP )
   url = JDTLS_SERVER_URL_FORMAT.format(
       jdtls_milestone = JDTLS_MILESTONE,
-      jdtls_build_stamp = JDTLS_BUILD_STAMP,
       jdtls_package_name = package_name )
   file_name = p.join( CACHE, package_name )
 

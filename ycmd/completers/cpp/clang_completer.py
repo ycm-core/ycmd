@@ -46,7 +46,6 @@ from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
 NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags, no completions yet.'
-INVALID_FILE_MESSAGE = 'File is invalid.'
 NO_COMPLETIONS_MESSAGE = 'No completions found; errors in the file?'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PRAGMA_DIAG_TEXT_TO_IGNORE = '#pragma once in main file'
@@ -445,8 +444,6 @@ class ClangCompleter( Completer ):
 
   def _FlagsForRequest( self, request_data ):
     filename = request_data[ 'filepath' ]
-    if not filename:
-      raise INVALID_FILE_MESSAGE
 
     if 'compilation_flags' in request_data:
       # Not supporting specifying the translation unit using this method as it
