@@ -178,10 +178,10 @@ endif()
 
 # For MSVC enable UNICODE and compilation on multiple processors. Increase the
 # number of sections that an object file can hold. This is needed for storing
-# the Unicode table.
+# the Unicode table. Also, force MSVC to treat source files as UTF-8 encoded.
 if ( MSVC )
   add_definitions( /DUNICODE /D_UNICODE /Zc:wchar_t- )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj" )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj /utf-8" )
 endif()
 
 if( MSVC OR CYGWIN OR MSYS)
