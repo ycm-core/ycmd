@@ -7,21 +7,21 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
-from distutils import sysconfig
 from shutil import rmtree
 from tempfile import mkdtemp
 import errno
+import hashlib
 import multiprocessing
 import os
 import os.path as p
 import platform
 import re
 import shlex
+import shutil
 import subprocess
 import sys
+import sysconfig
 import tarfile
-import shutil
-import hashlib
 import tempfile
 
 PY_MAJOR, PY_MINOR, PY_PATCH = sys.version_info[ 0 : 3 ]
@@ -224,7 +224,7 @@ def GetPossiblePythonLibraryDirectories():
 
 
 def FindPythonLibraries():
-  include_dir = sysconfig.get_python_inc()
+  include_dir = sysconfig.get_config_var( 'INCLUDEPY' )
   library_dirs = GetPossiblePythonLibraryDirectories()
 
   # Since ycmd is compiled as a dynamic library, we can't link it to a Python
