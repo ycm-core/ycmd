@@ -70,6 +70,3 @@ docs/package-lock.json
 
 # jdt.ls
 third_party/eclipse.jdt.ls
-
-# regex module
-third_party/regex/py*

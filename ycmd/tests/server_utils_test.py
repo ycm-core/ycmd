@@ -53,10 +53,10 @@ THIRD_PARTY_FOLDERS = [
 ]
 if PY2:
   THIRD_PARTY_FOLDERS.append(
-    os.path.join( DIR_OF_THIRD_PARTY, 'regex', 'py2' ) )
+    os.path.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_2' ) )
 else:
   THIRD_PARTY_FOLDERS.append(
-    os.path.join( DIR_OF_THIRD_PARTY, 'regex', 'py3' ) )
+    os.path.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_3' ) )
 
 
 

@@ -85,7 +85,14 @@ JDTLS_SHA256 = (
   '4fe3ca50d2b7011f7323863bdf77a16979e5d3a2a534d69e1ef32742cc443061'
 )
 
-REGEX_MODULE_VERSION = '2018.02.21'
+BUILD_ERROR_MESSAGE = (
+  'ERROR: the build failed.\n\n'
+  'NOTE: it is *highly* unlikely that this is a bug but rather\n'
+  'that this is a problem with the configuration of your system\n'
+  'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
+  'and if you\'re sure that it is a bug, please raise an issue on the\n'
+  'issue tracker, including the entire output of this script\n'
+  'and the invocation line used to run it.' )
 
 
 def OnMac():
@@ -353,6 +360,9 @@ def ParseArguments():
   parser.add_argument( '--skip-build',
                        action = 'store_true',
                        help = "Don't build ycm_core lib, just install deps" )
+  parser.add_argument( '--no-regex',
+                       action = 'store_true',
+                       help = "Don't build the regex module" )
 
 
   # These options are deprecated.
@@ -378,6 +388,16 @@ def ParseArguments():
     sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
               '--clang-completer or --all as well.' )
   return args
+
+
+def FindCmake():
+  return FindExecutableOrDie( 'cmake', 'CMake is required to build ycmd' )
+
+
+def GetCmakeCommonArgs( args ):
+  cmake_args = [ '-G', GetGenerator( args ) ]
+  cmake_args.extend( CustomPythonCmakeArgs( args ) )
+  return cmake_args
 
 
 def GetCmakeArgs( parsed_args ):
@@ -464,36 +484,32 @@ def ExitIfYcmdLibInUseOnWindows():
                 'Stop all ycmd instances before compilation.' )
 
 
-def BuildYcmdLib( args ):
-  cmake = FindExecutableOrDie( 'cmake', 'cmake is required to build ycmd' )
+def GetCMakeBuildConfiguration( args ):
+  if OnWindows():
+    if args.enable_debug:
+      return [ '--config', 'Debug' ]
+    return [ '--config', 'Release' ]
+  return [ '--', '-j', str( NumCores() ) ]
 
-  if args.build_dir:
-    build_dir = os.path.abspath( args.build_dir )
+
+def BuildYcmdLib( cmake, cmake_common_args, script_args ):
+  if script_args.build_dir:
+    build_dir = os.path.abspath( script_args.build_dir )
     if not os.path.exists( build_dir ):
       os.makedirs( build_dir )
   else:
     build_dir = mkdtemp( prefix = 'ycm_build_' )
 
   try:
-    full_cmake_args = [ '-G', GetGenerator( args ) ]
-    full_cmake_args.extend( CustomPythonCmakeArgs( args ) )
-    full_cmake_args.extend( GetCmakeArgs( args ) )
-    full_cmake_args.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
-
     os.chdir( build_dir )
 
-    exit_message = (
-      'ERROR: the build failed.\n\n'
-      'NOTE: it is *highly* unlikely that this is a bug but rather\n'
-      'that this is a problem with the configuration of your system\n'
-      'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
-      'and if you\'re sure that it is a bug, please raise an issue on the\n'
-      'issue tracker, including the entire output of this script\n'
-      'and the invocation line used to run it.' )
+    configure_command = ( [ cmake ] + cmake_common_args +
+                          GetCmakeArgs( script_args ) )
+    configure_command.append( p.join( DIR_OF_THIS_SCRIPT, 'cpp' ) )
 
-    CheckCall( [ cmake ] + full_cmake_args,
-               exit_message = exit_message,
-               quiet = args.quiet,
+    CheckCall( configure_command,
+               exit_message = BUILD_ERROR_MESSAGE,
+               quiet = script_args.quiet,
                status_message = 'Generating ycmd build configuration' )
 
     build_targets = [ 'ycm_core' ]
@@ -502,76 +518,56 @@ def BuildYcmdLib( args ):
     if 'YCM_BENCHMARK' in os.environ:
       build_targets.append( 'ycm_core_benchmarks' )
 
-    if OnWindows():
-      config = 'Debug' if args.enable_debug else 'Release'
-      build_config = [ '--config', config ]
-    else:
-      build_config = [ '--', '-j', str( NumCores() ) ]
+    build_config = GetCMakeBuildConfiguration( script_args )
 
     for target in build_targets:
-      build_command = ( [ 'cmake', '--build', '.', '--target', target ] +
+      build_command = ( [ cmake, '--build', '.', '--target', target ] +
                         build_config )
       CheckCall( build_command,
-                 exit_message = exit_message,
-                 quiet = args.quiet,
+                 exit_message = BUILD_ERROR_MESSAGE,
+                 quiet = script_args.quiet,
                  status_message = 'Compiling ycmd target: {0}'.format(
                    target ) )
 
     if 'YCM_TESTRUN' in os.environ:
-      RunYcmdTests( args, build_dir )
+      RunYcmdTests( script_args, build_dir )
     if 'YCM_BENCHMARK' in os.environ:
       RunYcmdBenchmarks( build_dir )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
 
-    if args.build_dir:
+    if script_args.build_dir:
       print( 'The build files are in: ' + build_dir )
     else:
       rmtree( build_dir, ignore_errors = OnCiService() )
 
 
-def InstallRegexModule( args ):
-  # We don't exit the script if the regex module cannot be installed; ycmd is
-  # still usable without this module.
-  if args.quiet:
-    sys.stdout.write( 'Installing regex module...' )
-    sys.stdout.flush()
-
-  regex_dir = p.join( DIR_OF_THIRD_PARTY, 'regex', 'py{}'.format( PY_MAJOR ) )
-  pip_command = [ sys.executable, '-m', 'pip', 'install', '--upgrade',
-                  'regex=={}'.format( REGEX_MODULE_VERSION ), '-t', regex_dir ]
-
-  # We need to add the --system option on Debian-like distributions. See
-  # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830892
-  try:
-    output = subprocess.check_output(
-      pip_command + [ '--help' ], stderr = subprocess.STDOUT ).decode( 'utf8' )
-  except subprocess.CalledProcessError as error:
-    output = error.output.decode( 'utf8' )
-
-  # Return early if pip is not available.
-  if 'No module named pip' in output:
-    message = 'SKIP\n' if args.quiet else output
-    message += ( 'WARNING: pip is required to install the regex module.\n'
-                 'Unicode will not be fully supported without this module.' )
-    print( message )
-    return
-
-  if '--system' in output:
-    pip_command.append( '--system' )
+def BuildRegexModule( cmake, cmake_common_args, script_args ):
+  build_dir = mkdtemp( prefix = 'regex_build_' )
 
   try:
-    if args.quiet:
-      subprocess.check_call( pip_command, stdout = subprocess.PIPE,
-                                          stderr = subprocess.PIPE )
-      print( 'OK' )
-    else:
-      subprocess.check_call( pip_command )
-  except subprocess.CalledProcessError:
-    if args.quiet:
-      print( 'SKIP' )
-    print( 'WARNING: cannot install the regex module. '
-           'Unicode will not be fully supported.' )
+    os.chdir( build_dir )
+
+    configure_command = [ cmake ] + cmake_common_args
+    configure_command.append( p.join( DIR_OF_THIS_SCRIPT,
+                                      'third_party', 'cregex' ) )
+
+    CheckCall( configure_command,
+               exit_message = BUILD_ERROR_MESSAGE,
+               quiet = script_args.quiet,
+               status_message = 'Generating regex build configuration' )
+
+    build_config = GetCMakeBuildConfiguration( script_args )
+
+    build_command = ( [ cmake, '--build', '.', '--target', '_regex' ] +
+                      build_config )
+    CheckCall( build_command,
+               exit_message = BUILD_ERROR_MESSAGE,
+               quiet = script_args.quiet,
+               status_message = 'Compiling regex module' )
+  finally:
+    os.chdir( DIR_OF_THIS_SCRIPT )
+    rmtree( build_dir, ignore_errors = OnCiService() )
 
 
 def EnableCsCompleter( args ):
@@ -718,11 +714,14 @@ def WritePythonUsedDuringBuild():
 
 def Main():
   args = ParseArguments()
+  cmake = FindCmake()
+  cmake_common_args = GetCmakeCommonArgs( args )
   if not args.skip_build:
     ExitIfYcmdLibInUseOnWindows()
-    BuildYcmdLib( args )
-    InstallRegexModule( args )
+    BuildYcmdLib( cmake, cmake_common_args, args )
     WritePythonUsedDuringBuild()
+  if not args.no_regex:
+    BuildRegexModule( cmake, cmake_common_args, args )
   if args.cs_completer or args.omnisharp_completer or args.all_completers:
     EnableCsCompleter( args )
   if args.go_completer or args.gocode_completer or args.all_completers:
