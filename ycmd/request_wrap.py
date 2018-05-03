@@ -93,7 +93,7 @@ class RequestWrap( object ):
 
       'lines': ( self._CurrentLines, None )
     }
-    self._cached_computed = dict()
+    self._cached_computed = {}
 
 
   def __getitem__( self, key ):

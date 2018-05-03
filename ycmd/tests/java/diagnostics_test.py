@@ -340,7 +340,7 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
 
   # Poll until we receive _all_ the diags asynchronously
   to_see = sorted( iterkeys( DIAG_MATCHERS_PER_FILE ) )
-  seen = dict()
+  seen = {}
 
   try:
     for message in PollForMessages( app,

@@ -222,7 +222,7 @@ class CsharpCompleter( Completer ):
     if not location_end:
       location_end = location
     location_extent = responses.Range( location, location_end )
-    return responses.Diagnostic( list(),
+    return responses.Diagnostic( [],
                                  location,
                                  location_extent,
                                  quick_fix[ 'Text' ],
