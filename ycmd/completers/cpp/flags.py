@@ -42,21 +42,21 @@ PATH_FLAGS =  [ '--sysroot=' ] + INCLUDE_FLAGS
 
 # We need to remove --fcolor-diagnostics because it will cause shell escape
 # sequences to show up in editors, which is bad. See Valloric/YouCompleteMe#1421
-STATE_FLAGS_TO_SKIP = set( [ '-c',
-                             '-MP',
-                             '-MD',
-                             '-MMD',
-                             '--fcolor-diagnostics' ] )
+STATE_FLAGS_TO_SKIP = { '-c',
+                        '-MP',
+                        '-MD',
+                        '-MMD',
+                        '--fcolor-diagnostics' }
 
-STATE_FLAGS_TO_SKIP_WIN_STYLE = set( [ '/c' ] )
+STATE_FLAGS_TO_SKIP_WIN_STYLE = { '/c' }
 
 # The -M* flags spec:
 #   https://gcc.gnu.org/onlinedocs/gcc-4.9.0/gcc/Preprocessor-Options.html
-FILE_FLAGS_TO_SKIP = set( [ '-MF',
-                            '-MT',
-                            '-MQ',
-                            '-o',
-                            '--serialize-diagnostics' ] )
+FILE_FLAGS_TO_SKIP = { '-MF',
+                       '-MT',
+                       '-MQ',
+                       '-o',
+                       '--serialize-diagnostics' }
 
 # Use a regex to correctly detect c++/c language for both versioned and
 # non-versioned compiler executable names suffixes
@@ -100,7 +100,7 @@ class Flags( object ):
     # Keys are directory names and values are ycm_core.CompilationDatabase
     # instances or None. Value is None when it is known there is no compilation
     # database to be found for the directory.
-    self.compilation_database_dir_map = dict()
+    self.compilation_database_dir_map = {}
 
     # Sometimes we don't actually know what the flags to use are. Rather than
     # returning no flags, if we've previously found flags for a file in a
@@ -109,7 +109,7 @@ class Flags( object ):
     # compilation database) to receive at least some flags.
     # Keys are directory names and values are ycm_core.CompilationInfo
     # instances. Values may not be None.
-    self.file_directory_heuristic_map = dict()
+    self.file_directory_heuristic_map = {}
 
 
   def FlagsForFile( self,

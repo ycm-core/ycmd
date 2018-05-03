@@ -42,7 +42,7 @@ from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 from ycmd.completers.cpp.include_cache import IncludeCache, IncludeList
 from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
-CLANG_FILETYPES = set( [ 'c', 'cpp', 'objc', 'objcpp' ] )
+CLANG_FILETYPES = { 'c', 'cpp', 'objc', 'objcpp' }
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
 NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags, no completions yet.'
 NO_COMPLETIONS_MESSAGE = 'No completions found; errors in the file?'
@@ -471,7 +471,7 @@ def DiagnosticsToDiagStructure( diagnostics ):
 
 
 def ClangAvailableForFiletypes( filetypes ):
-  return any( [ filetype in CLANG_FILETYPES for filetype in filetypes ] )
+  return any( filetype in CLANG_FILETYPES for filetype in filetypes )
 
 
 def _FilterDiagnostics( diagnostics ):

@@ -667,7 +667,7 @@ class LanguageServerCompleter( Completer ):
       self._sync_type = 'Full'
       self._initialize_response = None
       self._initialize_event = threading.Event()
-      self._on_initialize_complete_handlers = list()
+      self._on_initialize_complete_handlers = []
       self._server_capabilities = None
       self._resolve_completion_items = False
 
@@ -834,9 +834,9 @@ class LanguageServerCompleter( Completer ):
     # Significant completions, such as imports, do not work without it in
     # jdt.ls.
     #
-    completions = list()
-    start_codepoints = list()
-    unique_start_codepoints = list()
+    completions = []
+    start_codepoints = []
+    unique_start_codepoints = []
     min_start_codepoint = request_data[ 'start_codepoint' ]
 
     # Resolving takes some time, so only do it if there are fewer than 100
@@ -932,7 +932,7 @@ class LanguageServerCompleter( Completer ):
     """Convert any pending notifications to messages and return them in a list.
     If there are no messages pending, returns an empty list. Returns False if an
     error occurred and no further polling should be attempted."""
-    messages = list()
+    messages = []
 
     if not self._initialize_event.is_set():
       # The request came before we started up, there cannot be any messages
@@ -1112,7 +1112,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def _UpdateSavedFilesUnderLock( self, request_data ):
-    files_to_purge = list()
+    files_to_purge = []
     for file_name, file_state in iteritems( self._server_file_state ):
       if file_name in request_data[ 'file_data' ]:
         continue
@@ -1272,7 +1272,7 @@ class LanguageServerCompleter( Completer ):
     for handler in self._on_initialize_complete_handlers:
       handler( self )
 
-    self._on_initialize_complete_handlers = list()
+    self._on_initialize_complete_handlers = []
 
 
   def _OnInitializeComplete( self, handler ):
@@ -1834,7 +1834,7 @@ def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
   if 'changes' not in workspace_edit:
     return None
 
-  chunks = list()
+  chunks = []
   # We sort the filenames to make the response stable. Edits are applied in
   # strict sequence within a file, but apply to files in arbitrary order.
   # However, it's important for the response to be stable for the tests.

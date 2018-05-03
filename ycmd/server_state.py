@@ -37,7 +37,7 @@ _logger = logging.getLogger( __name__ )
 class ServerState( object ):
   def __init__( self, user_options ):
     self._user_options = user_options
-    self._filetype_completers = dict()
+    self._filetype_completers = {}
     self._filetype_completers_lock = threading.Lock()
     self._gencomp = GeneralCompleterStore( self._user_options )
 
@@ -65,7 +65,7 @@ class ServerState( object ):
 
       module_path = PathToFiletypeCompleterPluginLoader( filetype )
       completer = None
-      supported_filetypes = set( [ filetype ] )
+      supported_filetypes = { filetype }
       if os.path.exists( module_path ):
         module = LoadPythonSource( filetype, module_path )
         completer = module.GetCompleter( self._user_options )
@@ -91,8 +91,8 @@ class ServerState( object ):
 
   def GetLoadedFiletypeCompleters( self ):
     with self._filetype_completers_lock:
-      return set( [ completer for completer in
-                    itervalues( self._filetype_completers ) if completer ] )
+      return { completer for completer in
+               itervalues( self._filetype_completers ) if completer }
 
 
   def FiletypeCompletionAvailable( self, filetypes ):
@@ -136,4 +136,4 @@ class ServerState( object ):
     if '*' in filetype_to_disable:
       return False
     else:
-      return not all([ x in filetype_to_disable for x in current_filetypes ])
+      return not all( x in filetype_to_disable for x in current_filetypes )
