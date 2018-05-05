@@ -913,6 +913,28 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_QuotedInclude_Invalid_test( app ):
+  RunTest( app, {
+    'description': 'completion of an invalid include statement',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 11,
+      'column_num': 12,
+      'compilation_flags': [ '-x', 'cpp' ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 12,
+        'completions': empty(),
+        'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
 def GetCompletions_BracketInclude_AtStart_test( app ):
   RunTest( app, {
     'description': 'completion of #include <',
