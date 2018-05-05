@@ -387,6 +387,15 @@ def ParseArguments():
        not args.all_completers ):
     sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
               '--clang-completer or --all as well.' )
+
+  if ( 'Anaconda' in sys.version and
+     args.clang_completer and
+     not args.system_libclang ):
+    sys.exit( 'ERROR: Anaconda\'s libraries are too'
+              ' old to support libclang.\n'
+              '       If you want to build ycm_core.so with Anaconda, '
+              'specify --system-libclang.\n'
+              '       Alternatively, build ycm_core.so without Anaconda.')
   return args
 
 
