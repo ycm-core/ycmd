@@ -50,7 +50,6 @@ from ycmd.completers import completer
 
 from pprint import pformat
 from mock import patch
-from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd import handlers
 
 
@@ -456,46 +455,6 @@ public class Test {
 
 
 @IsolatedYcmd
-@patch(
-  'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
-  side_effect = lsp.InvalidUriException )
-def FileReadyToParse_Diagnostics_InvalidURI_test( app, uri_to_filepath, *args ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
-
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-
-  # It can take a while for the diagnostics to be ready
-  expiration = time.time() + 10
-  while True:
-    try:
-      results = _WaitForDiagnosticsToBeReady( app, filepath, contents )
-      print( 'Completer response: {0}'.format(
-        json.dumps( results, indent=2 ) ) )
-
-      uri_to_filepath.assert_called()
-
-      assert_that( results, has_item(
-        has_entries( {
-          'kind': 'WARNING',
-          'text': 'The value of the field TestFactory.Bar.testString is not '
-                  'used',
-          'location': LocationMatcher( '', 15, 19 ),
-          'location_extent': RangeMatcher( '', ( 15, 19 ), ( 15, 29 ) ),
-          'ranges': contains( RangeMatcher( '', ( 15, 19 ), ( 15, 29 ) ) ),
-          'fixit_available': False
-        } ),
-      ) )
-
-      return
-    except AssertionError:
-      if time.time() > expiration:
-        raise
-      time.sleep( 0.25 )
-
-
-@IsolatedYcmd
 def FileReadyToParse_ServerNotReady_test( app ):
   filepath = TestFactory
   contents = ReadFile( filepath )
@@ -680,38 +639,6 @@ def OnBufferUnload_ServerNotRunning_test( app ):
                                filetype = 'java' )
     result = app.post_json( '/event_notification', event_data ).json
     assert_that( result, equal_to( {} ) )
-
-
-@IsolatedYcmd
-def PollForMessages_InvalidUri_test( app, *args ):
-  StartJavaCompleterServerInDirectory(
-    app,
-    PathToTestFile( 'simple_eclipse_project' ) )
-
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-
-  with patch(
-    'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
-    side_effect = lsp.InvalidUriException ):
-
-    for tries in range( 0, 5 ):
-      response = app.post_json( '/receive_messages',
-                                BuildRequest(
-                                  filetype = 'java',
-                                  filepath = filepath,
-                                  contents = contents ) ).json
-      if response is True:
-        break
-      elif response is False:
-        raise AssertionError( 'Message poll was aborted unexpectedly' )
-      elif 'diagnostics' in response:
-        raise AssertionError( 'Did not expect diagnostics when file paths '
-                              'are invalid' )
-
-      time.sleep( 0.5 )
-
-  assert_that( response, equal_to( True ) )
 
 
 @IsolatedYcmd

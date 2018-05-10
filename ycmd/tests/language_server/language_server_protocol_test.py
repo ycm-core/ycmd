@@ -25,7 +25,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from ycmd.completers.language_server import language_server_protocol as lsp
-from hamcrest import assert_that, equal_to, calling, is_not, raises
+from hamcrest import assert_that, equal_to, is_not
 from ycmd.tests.test_utils import UnixOnly, WindowsOnly
 
 
@@ -152,9 +152,8 @@ def ServerFileStateStore_RetrieveDelete_test():
 
 @UnixOnly
 def UriToFilePath_Unix_test():
-  assert_that( calling( lsp.UriToFilePath ).with_args( 'test' ),
-               raises( lsp.InvalidUriException ) )
-
+  assert_that( lsp.UriToFilePath( 'jdt://usr/local/test/test.test' ),
+               equal_to( 'jdt://usr/local/test/test.test' ) )
   assert_that( lsp.UriToFilePath( 'file:/usr/local/test/test.test' ),
                equal_to( '/usr/local/test/test.test' ) )
   assert_that( lsp.UriToFilePath( 'file:///usr/local/test/test.test' ),
@@ -163,9 +162,6 @@ def UriToFilePath_Unix_test():
 
 @WindowsOnly
 def UriToFilePath_Windows_test():
-  assert_that( calling( lsp.UriToFilePath ).with_args( 'test' ),
-               raises( lsp.InvalidUriException ) )
-
   assert_that( lsp.UriToFilePath( 'file:c:/usr/local/test/test.test' ),
                equal_to( 'C:\\usr\\local\\test\\test.test' ) )
   assert_that( lsp.UriToFilePath( 'file://c:/usr/local/test/test.test' ),

@@ -35,6 +35,7 @@ from pprint import pformat
 import requests
 
 from ycmd.utils import ReadFile
+from ycmd.responses import IsJdtContentUri
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               PathToTestFile,
@@ -45,7 +46,6 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
                                     WithRetry )
 from mock import patch
-from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd import handlers
 from ycmd.completers.language_server.language_server_completer import (
   ResponseTimeoutException,
@@ -192,6 +192,45 @@ def Subcommands_GetDoc_NoDoc_test( app ):
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+@WithRetry
+@SharedYcmd
+def Subcommands_ClassFileContents_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'testing',
+                             'Tset.java' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'java',
+                             line_num = 3,
+                             column_num = 18,
+                             contents = contents,
+                             command_arguments = [ 'GoToDefinition' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.ok )
+  eq_( IsJdtContentUri( response.json[ 'filepath' ] ), True)
+
+  jdtUri = response.json[ 'filepath' ]
+  event_data = BuildRequest( filepath = jdtUri,
+                             filetype = 'java',
+                             command_arguments = [ 'ClassFileContents' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.ok )
 
 
 @WithRetry
@@ -1048,64 +1087,6 @@ def Subcommands_FixIt_Unicode_test():
 
   yield ( RunFixItTest, 'FixIts and diagnostics work with unicode strings',
           filepath, 13, 1, fixits )
-
-
-@WithRetry
-@SharedYcmd
-def Subcommands_FixIt_InvalidURI_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestFactory.java' )
-
-  fixits = has_entries( {
-    'fixits': contains(
-      has_entries( {
-        'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
-          # For some reason, eclipse returns modifies as deletes + adds,
-          # although overlapping ranges aren't allowed.
-          ChunkMatcher( 'boolean',
-                        LocationMatcher( '', 14, 12 ),
-                        LocationMatcher( '', 14, 12 ) ),
-          ChunkMatcher( '',
-                        LocationMatcher( '', 14, 12 ),
-                        LocationMatcher( '', 14, 15 ) ),
-        ),
-      } ),
-    )
-  } )
-
-  contents = ReadFile( filepath )
-  # Wait for jdt.ls to have parsed the file and returned some diagnostics
-  for tries in range( 0, 60 ):
-    results = app.post_json( '/event_notification',
-                             BuildRequest( filepath = filepath,
-                                           filetype = 'java',
-                                           contents = contents,
-                                           event_name = 'FileReadyToParse' ) )
-    if results.json:
-      break
-
-    time.sleep( .25 )
-
-  with patch(
-    'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
-    side_effect = lsp.InvalidUriException ):
-    RunTest( app, {
-      'description': 'Invalid URIs do not make us crash',
-      'request': {
-        'command': 'FixIt',
-        'line_num': 27,
-        'column_num': 12,
-        'filepath': filepath,
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': fixits,
-      }
-    } )
 
 
 @WithRetry

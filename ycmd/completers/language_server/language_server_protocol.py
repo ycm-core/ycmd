@@ -33,6 +33,8 @@ from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          url2pathname,
                          urljoin )
 
+from ycmd.responses import IsJdtContentUri
+
 
 INSERT_TEXT_FORMAT = [
   None, # 1-based
@@ -69,12 +71,6 @@ SEVERITY = [
   'Information',
   'Hint',
 ]
-
-
-class InvalidUriException( Exception ):
-  """Raised when trying to convert a server URI to a file path but the scheme
-  was not supported. Only the file: scheme is supported"""
-  pass
 
 
 class ServerFileStateStore( dict ):
@@ -193,6 +189,7 @@ def Initialize( request_id, project_directory ):
     'rootPath': project_directory,
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': {
+      'classFileContentsSupport': True
       # We don't currently support any server-specific options.
     },
     'capabilities': {
@@ -277,6 +274,12 @@ def Definition( request_id, request_data ):
   return BuildRequest( request_id,
                        'textDocument/definition',
                        BuildTextDocumentPositionParams( request_data ) )
+
+
+def ClassFileContents( request_id, request_data ):
+  return BuildRequest( request_id, 'java/classFileContents', {
+    'uri': request_data[ 'filepath' ]
+  } )
 
 
 def CodeAction( request_id, request_data, best_match_range, diagnostics ):
@@ -391,12 +394,14 @@ def ExecuteCommand( request_id, command, arguments ):
 
 
 def FilePathToUri( file_name ):
+  if IsJdtContentUri( file_name ):
+    return file_name
   return urljoin( 'file:', pathname2url( file_name ) )
 
 
 def UriToFilePath( uri ):
-  if uri[ : 5 ] != "file:":
-    raise InvalidUriException( uri )
+  if IsJdtContentUri( uri ):
+    return uri
 
   return os.path.abspath( url2pathname( uri[ 5 : ] ) )
 
