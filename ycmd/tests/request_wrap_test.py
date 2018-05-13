@@ -24,8 +24,8 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, calling, empty, equal_to, has_entry,
-                       has_string, matches_regexp, raises )
+from hamcrest import ( assert_that, calling, contains, empty, equal_to,
+                       has_entry, has_string, matches_regexp, raises )
 from nose.tools import eq_
 
 from ycmd.utils import ToBytes
@@ -382,13 +382,18 @@ def ExtraConfData_test():
   wrap = RequestWrap( PrepareJson() )
   assert_that( wrap[ 'extra_conf_data' ], empty() )
 
-  wrap = RequestWrap( PrepareJson( extra_conf_data = { 'key': 'value' } ) )
+  wrap = RequestWrap( PrepareJson( extra_conf_data = { 'key': [ 'value' ] } ) )
   extra_conf_data = wrap[ 'extra_conf_data' ]
-  assert_that( extra_conf_data, has_entry( 'key', 'value' ) )
+  assert_that( extra_conf_data, has_entry( 'key', contains( 'value' ) ) )
   assert_that(
     extra_conf_data,
-    has_string( matches_regexp( "^<HashableDict {u?'key': u?'value'}>$" ) )
+    has_string( matches_regexp( "^<HashableDict {u?'key': \[u?'value'\]}>$" ) )
   )
+
   # Check that extra_conf_data can be used as a dictionary's key.
   assert_that( { extra_conf_data: 'extra conf data' },
                has_entry( extra_conf_data, 'extra conf data' ) )
+
+  # Check that extra_conf_data's values are immutable.
+  extra_conf_data[ 'key' ].append( 'another_value' )
+  assert_that( extra_conf_data, has_entry( 'key', contains( 'value' ) ) )
