@@ -582,3 +582,14 @@ def GetCurrentDirectory_Py2NoCurrentDirectory_test():
 def GetCurrentDirectory_Py3NoCurrentDirectory_test():
   with patch( 'os.getcwd', side_effect = FileNotFoundError ): # noqa
     eq_( utils.GetCurrentDirectory(), tempfile.gettempdir() )
+
+
+def HashableDict_Equality_test():
+  dict1 = { 'key': 'value' }
+  dict2 = { 'key': 'another_value' }
+  ok_(     utils.HashableDict( dict1 ) == utils.HashableDict( dict1 ) )
+  ok_( not utils.HashableDict( dict1 ) != utils.HashableDict( dict1 ) )
+  ok_( not utils.HashableDict( dict1 ) == dict1 )
+  ok_(     utils.HashableDict( dict1 ) != dict1 )
+  ok_( not utils.HashableDict( dict1 ) == utils.HashableDict( dict2 ) )
+  ok_(     utils.HashableDict( dict1 ) != utils.HashableDict( dict2 ) )

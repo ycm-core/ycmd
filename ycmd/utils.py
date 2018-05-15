@@ -26,6 +26,7 @@ from builtins import *  # noqa
 
 from future.utils import PY2, native
 import collections
+import copy
 import json
 import os
 import socket
@@ -501,15 +502,15 @@ def StartThread( func, *args ):
 
 
 class HashableDict( collections.Mapping ):
-  """A dictionary that can be used in dictionary's keys. The dictionary must be
-  JSON-encodable; in particular, all keys must be strings."""
+  """An immutable dictionary that can be used in dictionary's keys. The
+  dictionary must be JSON-encodable; in particular, all keys must be strings."""
 
   def __init__( self, *args, **kwargs ):
     self._dict = dict( *args, **kwargs )
 
 
   def __getitem__( self, key ):
-    return self._dict[ key ]
+    return copy.deepcopy( self._dict[ key ] )
 
 
   def __iter__( self ):
@@ -530,3 +531,11 @@ class HashableDict( collections.Mapping ):
     except AttributeError:
       self._hash = json.dumps( self._dict, sort_keys = True ).__hash__()
       return self._hash
+
+
+  def __eq__( self, other ):
+    return isinstance( other, HashableDict ) and self._dict == other._dict
+
+
+  def __ne__( self, other ):
+    return not self == other
