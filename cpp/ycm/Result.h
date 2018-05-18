@@ -94,6 +94,7 @@ private:
 
 template< class T >
 struct ResultAnd {
+  ResultAnd() = default;
   ResultAnd( const Result &result, T extra_object )
     : extra_object_( extra_object ),
       result_( result ) {
@@ -109,6 +110,7 @@ struct ResultAnd {
 
 template< class T >
 struct ResultAnd<T * > {
+  ResultAnd() = default;
   ResultAnd( const Result &result, const T *extra_object )
     : extra_object_( extra_object ),
       result_( result ) {
