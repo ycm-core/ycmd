@@ -70,11 +70,11 @@ CL_COMPILER_REGEX = re.compile( r'(?:cl|clang-cl)(.exe)?$', re.IGNORECASE )
 # List of file extensions to be considered "header" files and thus not present
 # in the compilation database. The logic will try and find an associated
 # "source" file (see SOURCE_EXTENSIONS below) and use the flags for that.
-HEADER_EXTENSIONS = [ '.h', '.hxx', '.hpp', '.hh' ]
+HEADER_EXTENSIONS = [ '.h', '.hxx', '.hpp', '.hh', '.cuh' ]
 
 # List of file extensions which are considered "source" files for the purposes
 # of heuristically locating the flags for a header file.
-SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
+SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.cu', '.m', '.mm' ]
 
 EMPTY_FLAGS = {
   'flags': [],
@@ -369,9 +369,10 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   first flag starting with a dash is usually the path to the compiler that
   should be invoked. Since LibClang does not deduce the language from the
   compiler name, we explicitely set the language to C++ if the compiler is a C++
-  one (g++, clang++, etc.). Otherwise, we let LibClang guess the language from
-  the file extension. This handles the case where the .h extension is used for
-  C++ headers."""
+  one (g++, clang++, etc.). We also set the language to CUDA if any of the
+  source files has a .cu or .cuh extension. Otherwise, we let LibClang guess the
+  language from the file extension. This handles the case where the .h extension
+  is used for C++ headers."""
 
   flags = _RemoveFlagsPrecedingCompiler( flags, enable_windows_style_flags )
 
@@ -379,14 +380,22 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   # a flag starting with a forward slash if enable_windows_style_flags is True.
   first_flag = flags[ 0 ]
 
-  # NOTE: This is intentionally NOT checking for enable_windows_style_flags.
-  #
   # Because of _RemoveFlagsPrecedingCompiler called above, irrelevant of
   # enable_windows_style_flags. the first flag is either the compiler
   # (path or executable), a Windows style flag or starts with a dash.
+  if first_flag.startswith( '-' ):
+    return flags
+
+  # Explicitly set the language to CUDA to avoid setting it to C++ when
+  # compiling CUDA source files with a C++ compiler
+  if any( fl.endswith( '.cu' ) or fl.endswith( '.cuh' )
+          for fl in reversed( flags ) ):
+    return [ first_flag, '-x', 'cuda' ] + flags[ 1: ]
+
+  # NOTE: This is intentionally NOT checking for enable_windows_style_flags.
   #
-  # If it doesn't start with a dash, it is either an absolute path,
-  # a Windows style flag or a C++ compiler executable from $PATH.
+  # The first flag is now either an absolute path, a Windows style flag or a
+  # C++ compiler executable from $PATH.
   #   If it starts with a forward slash the flag can either be an absolute
   #   flag or a Windows style flag.
   #     If it matches the regex, it is safe to assume the flag is a compiler
@@ -396,9 +405,9 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   #     and cleaned properly.
   #   If the flag starts with anything else (i.e. not a '-' or a '/'), the flag
   #   is a stray file path and shall be gotten rid of in _RemoveUnusedFlags().
-  if ( not first_flag.startswith( '-' ) and
-       CPP_COMPILER_REGEX.search( first_flag ) ):
+  if CPP_COMPILER_REGEX.search( first_flag ):
     return [ first_flag, '-x', 'c++' ] + flags[ 1: ]
+
   return flags
 
 

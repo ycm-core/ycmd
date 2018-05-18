@@ -436,3 +436,115 @@ def Diagnostics_Unity_test( app ):
         'fixit_available': True
       } ),
     ) )
+
+
+@SharedYcmd
+def Diagnostics_CUDA_Kernel_test( app ):
+  filepath = PathToTestFile( 'cuda', 'kernel_call.cu' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             contents = contents,
+                             event_name = 'FileReadyToParse',
+                             filetype = 'cuda',
+                             compilation_flags = [ '-x', 'cuda', '-nocudainc',
+                                                   '-nocudalib' ] )
+
+  response = app.post_json( '/event_notification', event_data ).json
+
+  pprint( response )
+
+  assert_that( response, contains_inanyorder(
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( { 'line_num': 59, 'column_num': 5 } ),
+      'location_extent': has_entries( {
+          'start': has_entries( { 'line_num': 59, 'column_num': 5 } ),
+          'end': has_entries( { 'line_num': 59, 'column_num': 6 } ),
+      } ),
+      'ranges': contains( has_entries( {
+          'start': has_entries( { 'line_num': 59, 'column_num': 3 } ),
+          'end': has_entries( { 'line_num': 59, 'column_num': 5 } ),
+      } ) ),
+      'text': equal_to( 'call to global function g1 not configured' ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( { 'line_num': 60, 'column_num': 9 } ),
+      'location_extent': has_entries( {
+          'start': has_entries( { 'line_num': 60, 'column_num': 9 } ),
+          'end': has_entries( { 'line_num': 60, 'column_num': 12 } ),
+      } ),
+      'ranges': contains( has_entries( {
+          'start': has_entries( { 'line_num': 60, 'column_num': 5 } ),
+          'end': has_entries( { 'line_num': 60, 'column_num': 8 } ),
+      } ) ),
+      'text': equal_to(
+          'too few execution configuration arguments to kernel function call,' +
+            ' expected at least 2, have 1'
+      ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( { 'line_num': 61, 'column_num': 20 } ),
+      'location_extent': has_entries( {
+          'start': has_entries( { 'line_num': 61, 'column_num': 20 } ),
+          'end': has_entries( { 'line_num': 61, 'column_num': 21 } ),
+      } ),
+      'ranges': contains(
+          has_entries( {
+            'start': has_entries( { 'line_num': 61, 'column_num': 5 } ),
+            'end': has_entries( { 'line_num': 61, 'column_num': 8 } ),
+          } ),
+          has_entries( {
+            'start': has_entries( { 'line_num': 61, 'column_num': 20 } ),
+            'end': has_entries( { 'line_num': 61, 'column_num': 21 } ),
+          } ),
+      ),
+      'text': equal_to( 'too many execution configuration arguments to kernel' +
+                          ' function call, expected at most 4, have 5' ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( { 'line_num': 65, 'column_num': 15 } ),
+      'location_extent': has_entries( {
+          'start': has_entries( { 'line_num': 65, 'column_num': 15 } ),
+          'end': has_entries( { 'line_num': 65, 'column_num': 16 } ),
+      } ),
+      'ranges': contains( has_entries( {
+          'start': has_entries( { 'line_num': 65, 'column_num': 3 } ),
+          'end': has_entries( { 'line_num': 65, 'column_num': 5 } ),
+      } ) ),
+      'text': equal_to( 'kernel call to non-global function h1' ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( { 'line_num': 68, 'column_num': 15 } ),
+      'location_extent': has_entries( {
+          'start': has_entries( { 'line_num': 68, 'column_num': 15 } ),
+          'end': has_entries( { 'line_num': 68, 'column_num': 16 } ),
+      } ),
+      'ranges': contains( has_entries( {
+          'start': has_entries( { 'line_num': 68, 'column_num': 3 } ),
+          'end': has_entries( { 'line_num': 68, 'column_num': 5 } ),
+      } ) ),
+      'text': equal_to( "kernel function type 'int (*)(int)' must have " +
+                          "void return type" ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'location': has_entries( { 'line_num': 70, 'column_num': 8 } ),
+      'location_extent': has_entries( {
+          'start': has_entries( { 'line_num': 70, 'column_num': 8 } ),
+          'end': has_entries( { 'line_num': 70, 'column_num': 18 } ),
+      } ),
+      'ranges': empty(),
+      'text': equal_to( "use of undeclared identifier 'undeclared'" ),
+      'fixit_available': False
+    } ),
+  ) )
