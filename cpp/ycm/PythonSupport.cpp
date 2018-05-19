@@ -102,7 +102,7 @@ pylist FilterAndSortCandidates(
 }
 
 
-std::string GetUtf8String( object value ) {
+std::string GetUtf8String( const object &value ) {
   // If already a unicode or string (or something derived from it)
   // pybind will already convert to utf8 when converting to std::string.
   // For `bytes` the contents are left untouched:

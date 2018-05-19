@@ -18,8 +18,8 @@
 #include "ClangHelpers.h"
 #include "ClangUtils.h"
 #include "Location.h"
-#include "Range.h"
 #include "PythonSupport.h"
+#include "Range.h"
 #include "UnsavedFile.h"
 #include "Utils.h"
 

@@ -37,7 +37,7 @@ YCM_EXPORT pybind11::list FilterAndSortCandidates(
 /// Given a Python object that's supposed to be "string-like", returns a UTF-8
 /// encoded std::string. Raises an exception if the object can't be converted to
 /// a string. Supports newstr and newbytes from python-future on Python 2.
-std::string GetUtf8String( pybind11::object value );
+std::string GetUtf8String( const pybind11::object &value );
 
 } // namespace YouCompleteMe
 

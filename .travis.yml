@@ -22,6 +22,7 @@ env:
     - YCMD_PYTHON_VERSION=3.4
     - YCMD_PYTHON_VERSION=3.4 YCM_COMPILER=clang
     - YCMD_PYTHON_VERSION=3.4 YCM_BENCHMARK=true COVERAGE=false
+    - YCMD_PYTHON_VERSION=3.4 YCM_CLANG_TIDY=true COVERAGE=false YCM_CORES=1
 addons:
   # If this doesn't make much sense to you, see the travis docs:
   #    https://docs.travis-ci.com/user/migrating-from-legacy/
@@ -39,6 +40,7 @@ addons:
      - g++-4.8
      # Install Clang 3.4 and its standard library.
      - clang
+     - clang-tidy-3.9
      - libc++-dev
      # Required to build the OmniSharp server.
      - mono-devel
