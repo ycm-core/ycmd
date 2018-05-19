@@ -1,5 +1,4 @@
-# Copyright (C) 2013 Google Inc.
-#               2015 ycmd contributors
+# Copyright (C) 2013-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -41,7 +40,8 @@ import shutil
 from ycmd import extra_conf_store, handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
-from ycmd.utils import GetCurrentDirectory, OnMac, OnWindows, ToUnicode
+from ycmd.utils import ( GetCurrentDirectory, OnMac, OnWindows, ToUnicode,
+                         WaitUntilProcessIsTerminated )
 import ycm_core
 
 try:
@@ -238,6 +238,12 @@ def WaitUntilCompleterServerReady( app, filetype, timeout = 30 ):
       return
 
     time.sleep( 0.1 )
+
+
+def MockProcessTerminationTimingOut( handle, timeout = 5 ):
+  WaitUntilProcessIsTerminated( handle, timeout )
+  raise RuntimeError( 'Waited process to terminate for {0} seconds, '
+                      'aborting.'.format( timeout ) )
 
 
 def ClearCompletionsCache():

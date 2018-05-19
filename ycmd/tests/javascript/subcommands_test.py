@@ -1,4 +1,4 @@
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 # encoding: utf-8
 #
 # This file is part of ycmd.
@@ -23,7 +23,12 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains, contains_inanyorder, has_entries
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_inanyorder,
+                       has_entry,
+                       has_entries )
+from mock import patch
 from nose.tools import eq_
 from pprint import pformat
 import requests
@@ -33,7 +38,8 @@ from ycmd.tests.javascript import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
-                                    LocationMatcher )
+                                    LocationMatcher,
+                                    MockProcessTerminationTimingOut )
 from ycmd.utils import ReadFile
 
 
@@ -511,3 +517,27 @@ def Subcommands_RefactorRename_Unicode_test( app ):
       } )
     }
   } )
+
+
+@IsolatedYcmd
+@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+        MockProcessTerminationTimingOut )
+def Subcommands_StopServer_Timeout_test( app ):
+  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filetype = 'javascript',
+      command_arguments = [ 'StopServer' ]
+    )
+  )
+
+  request_data = BuildRequest( filetype = 'javascript' )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )

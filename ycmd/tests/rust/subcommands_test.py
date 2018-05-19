@@ -1,4 +1,4 @@
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,10 +22,14 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from hamcrest import assert_that, contains, has_entry
+from mock import patch
 from nose.tools import eq_
 
-from ycmd.tests.rust import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.rust import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    MockProcessTerminationTimingOut,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
 
@@ -104,3 +108,27 @@ def Subcommands_GetDoc_Fail_Method_test( app ):
 
   eq_( response[ 'exception' ][ 'TYPE' ], 'RuntimeError' )
   eq_( response[ 'message' ], 'Can\'t lookup docs.' )
+
+
+@IsolatedYcmd()
+@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+        MockProcessTerminationTimingOut )
+def Subcommands_StopServer_Timeout_test( app ):
+  WaitUntilCompleterServerReady( app, 'rust' )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filetype = 'rust',
+      command_arguments = [ 'StopServer' ]
+    )
+  )
+
+  request_data = BuildRequest( filetype = 'rust' )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )
