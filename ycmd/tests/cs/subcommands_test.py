@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,10 +22,10 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-
+from hamcrest import assert_that, has_entry, has_entries, contains
+from mock import patch
 from nose.tools import eq_, ok_
 from webtest import AppError
-from hamcrest import assert_that, has_entries, contains
 import pprint
 import os.path
 
@@ -35,7 +35,7 @@ from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     LocationMatcher,
-                                    StopCompleterServer,
+                                    MockProcessTerminationTimingOut,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
@@ -501,8 +501,23 @@ def Subcommands_FixIt_Unicode_test( app ):
 @IsolatedYcmd()
 def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  StopCompleterServer( app, 'cs', filepath )
-  # Success = no raise
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filetype = 'cs',
+      filepath = filepath,
+      command_arguments = [ 'StopServer' ]
+    )
+  )
+
+  request_data = BuildRequest( filetype = 'cs', filepath = filepath )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )
 
 
 def StopServer_KeepLogFiles( app ):
@@ -529,7 +544,14 @@ def StopServer_KeepLogFiles( app ):
       ok_( os.path.exists( logfile ),
            'Logfile should exist at {0}'.format( logfile ) )
   finally:
-    StopCompleterServer( app, 'cs', filepath )
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filetype = 'cs',
+        filepath = filepath,
+        command_arguments = [ 'StopServer' ]
+      )
+    )
 
   if user_options_store.Value( 'server_keep_logfiles' ):
     for logfile in logfiles:
@@ -549,3 +571,36 @@ def Subcommands_StopServer_KeepLogFiles_test( app ):
 @IsolatedYcmd( { 'server_keep_logfiles': 0 } )
 def Subcommands_StopServer_DoNotKeepLogFiles_test( app ):
   StopServer_KeepLogFiles( app )
+
+
+@IsolatedYcmd()
+@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+        MockProcessTerminationTimingOut )
+def Subcommands_StopServer_Timeout_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  contents = ReadFile( filepath )
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilCompleterServerReady( app, 'cs' )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filetype = 'cs',
+      filepath = filepath,
+      command_arguments = [ 'StopServer' ]
+    )
+  )
+
+  request_data = BuildRequest( filetype = 'cs', filepath = filepath )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )

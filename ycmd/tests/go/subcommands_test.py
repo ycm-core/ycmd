@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,13 +22,17 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_entries
+from hamcrest import assert_that, contains, has_entries, has_entry
+from mock import patch
 from nose.tools import eq_
 from pprint import pformat
 import requests
 
-from ycmd.tests.go import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
+from ycmd.tests.go import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    ErrorMatcher,
+                                    MockProcessTerminationTimingOut,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
 
@@ -144,3 +148,27 @@ def Subcommands_GoTo_WindowsNewlines( app, goto_command ):
 def Subcommands_GoTo_WindowsNewlines_test():
   for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
     yield Subcommands_GoTo_WindowsNewlines, command
+
+
+@IsolatedYcmd
+@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+        MockProcessTerminationTimingOut )
+def Subcommands_StopServer_Timeout_test( app ):
+  WaitUntilCompleterServerReady( app, 'go' )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filetype = 'go',
+      command_arguments = [ 'StopServer' ]
+    )
+  )
+
+  request_data = BuildRequest( filetype = 'go' )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )

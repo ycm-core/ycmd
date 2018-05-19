@@ -25,17 +25,20 @@ from __future__ import division
 from builtins import *  # noqa
 
 from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries,
-                       matches_regexp )
+                       has_entry, matches_regexp )
+from mock import patch
 from nose.tools import eq_
 import requests
 import pprint
 
-from ycmd.tests.typescript import PathToTestFile, SharedYcmd
+from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     LocationMatcher,
-                                    MessageMatcher )
+                                    MessageMatcher,
+                                    MockProcessTerminationTimingOut,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
 
@@ -930,3 +933,27 @@ def Subcommands_RefactorRename_SimpleUnicode_test( app ):
       } )
     }
   } )
+
+
+@IsolatedYcmd
+@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+        MockProcessTerminationTimingOut )
+def Subcommands_StopServer_Timeout_test( app ):
+  WaitUntilCompleterServerReady( app, 'typescript' )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filetype = 'typescript',
+      command_arguments = [ 'StopServer' ]
+    )
+  )
+
+  request_data = BuildRequest( filetype = 'typescript' )
+  assert_that( app.post_json( '/debug_info', request_data ).json,
+               has_entry(
+                 'completer',
+                 has_entry( 'servers', contains(
+                   has_entry( 'is_running', False )
+                 ) )
+               ) )
