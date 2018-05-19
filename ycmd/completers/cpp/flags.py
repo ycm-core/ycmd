@@ -337,7 +337,7 @@ def _RemoveXclangFlags( flags ):
 
   sanitized_flags = []
   saw_xclang = False
-  for i, flag in enumerate( flags ):
+  for flag in flags:
     if flag == '-Xclang':
       saw_xclang = True
       continue
