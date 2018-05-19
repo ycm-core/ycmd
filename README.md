@@ -69,6 +69,7 @@ API notes
 ---------
 
 - All strings going into and out of the server are UTF-8 encoded.
+- All lines end with `\n`.
 - All line and column numbers are 1-based, not 0-based. They are also byte
   offsets, _not_ Unicode codepoint offsets.
 - All file paths are full, absolute paths.

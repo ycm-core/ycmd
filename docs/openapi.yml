@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors.
+# Copyright (C) 2017-2018 ycmd contributors.
 #
 # This file is part of ycmd.
 #
@@ -30,6 +30,7 @@ info:
     applied:
 
     - All strings going into and out of the server are UTF-8 encoded.
+    - All lines end with `\n`.
     - All line and column numbers are 1-based, not 0-based. They are also byte
       offsets, not Unicode codepoint offsets.
     - All file paths are full, absolute paths. If a file has not been written
@@ -104,7 +105,7 @@ info:
     YCM README.md for the list of filetypes recognized by ycmd for semantic
     completion.
 
-  version: 0.2.0
+  version: 0.3.0
 
 externalDocs:
   description: ycmd GitHub page

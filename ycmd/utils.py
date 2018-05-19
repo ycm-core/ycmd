@@ -438,46 +438,16 @@ def LoadPythonSource( name, pathname ):
 
 
 def SplitLines( contents ):
-  """Return a list of each of the lines in the unicode string |contents|.
-  Behaviour is equivalent to str.splitlines with the following exceptions:
-    - empty strings are returned as [ '' ]
-    - a trailing newline is not ignored (i.e. SplitLines( '\n' )
-      returns [ '', '' ], not [ '' ]"""
+  """Return a list of each of the lines in the unicode string |contents|."""
 
   # We often want to get a list representation of a buffer such that we can
   # index all of the 'lines' within it. Python provides str.splitlines for this
-  # purpose, but its documented behaviors for empty strings and strings ending
-  # with a newline character are not compatible with this. As a result, we write
-  # our own wrapper to provide a splitlines implementation which returns the
-  # actual list of indexable lines in a buffer, where a line may have 0
-  # characters.
-  #
-  # NOTE: str.split( '\n' ) actually gives this behaviour, except it does not
-  # work when running on a unix-like system and reading a file with Windows line
-  # endings.
-
-  # ''.splitlines() returns [], but we want [ '' ]
-  if contents == '':
-    return [ '' ]
-
-  lines = contents.splitlines()
-
-  # '\n'.splitlines() returns [ '' ]. We want [ '', '' ].
-  # '\n\n\n'.splitlines() returns [ '', '', '' ]. We want [ '', '', '', '' ].
-  #
-  # So we re-instate the empty entry at the end if the original string ends
-  # with a newline. Universal newlines recognise the following as
-  # line-terminators:
-  #   - '\n'
-  #   - '\r\n'
-  #   - '\r'
-  #
-  # Importantly, notice that \r\n also ends with \n
-  #
-  if contents.endswith( '\r' ) or contents.endswith( '\n' ):
-    lines.append( '' )
-
-  return lines
+  # purpose. However, this method not only splits on newline characters (\n,
+  # \r\n, and \r) but also on line boundaries like \v and \f. Since old
+  # Macintosh newlines (\r) are obsolete and Windows newlines (\r\n) end with a
+  # \n character, we can ignore carriage return characters (\r) and only split
+  # on \n.
+  return contents.split( '\n' )
 
 
 def GetCurrentDirectory():
