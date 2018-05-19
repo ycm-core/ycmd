@@ -47,10 +47,10 @@ std::vector< const Candidate * > CandidatesFromObjectList(
 
   for ( size_t i = 0; i < num_candidates; ++i ) {
     if ( candidate_property.empty() ) {
-      candidate_strings.push_back( GetUtf8String( candidates[ i ] ) );
+      candidate_strings.emplace_back( GetUtf8String( candidates[ i ] ) );
     } else {
-      candidate_strings.push_back( GetUtf8String(
-                                     candidates[ i ][ py_prop ] ) );
+      candidate_strings.emplace_back( GetUtf8String(
+                                        candidates[ i ][ py_prop ] ) );
     }
   }
 

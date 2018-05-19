@@ -31,22 +31,7 @@ namespace YouCompleteMe {
 namespace {
 
 std::size_t HashForFlags( const std::vector< std::string > &flags ) {
-  /*
-   * The way boost::hash implements hash< std::vector<T> > goes after the
-   * described way in "Library Extension Technical Report - Issue List"
-   * section 6.18. This function's body is taken straight (copy-pasted)
-   * from the TR to replicate boost's behaviour.
-   *
-   * When (if) it ends up in the STL this whole function could be
-   * replaced with:
-   *
-   * return std::hash< std::vector< std::string > >()( flags );
-   */
-  size_t seed = 0;
-  for ( auto flag : flags ) {
-    seed ^= std::hash< std::string >()( flag ) + ( seed<<6 ) + ( seed>>2 );
-  }
-  return seed;
+  return std::hash< std::vector< std::string > >()( flags );
 }
 
 }  // unnamed namespace

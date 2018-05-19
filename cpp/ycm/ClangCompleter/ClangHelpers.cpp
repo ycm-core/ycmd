@@ -250,7 +250,7 @@ std::vector< CompletionData > ToCompletionDataVector(
 }
 
 
-Diagnostic BuildDiagnostic( DiagnosticWrap diagnostic_wrap,
+Diagnostic BuildDiagnostic( const DiagnosticWrap &diagnostic_wrap,
                             CXTranslationUnit translation_unit ) {
   Diagnostic diagnostic;
 
