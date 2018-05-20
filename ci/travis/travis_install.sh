@@ -27,6 +27,9 @@ else
   ln -s /usr/bin/gcc-4.9 ${HOME}/bin/cc
 fi
 ln -s /usr/bin/gcov-4.9 ${HOME}/bin/gcov
+if [ -n "${YCM_CLANG_TIDY}" ]; then
+  ln -s /usr/bin/clang-tidy-3.9 ${HOME}/bin/clang-tidy
+fi
 
 export PATH=${HOME}/bin:${PATH}
 

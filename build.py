@@ -363,6 +363,9 @@ def ParseArguments():
   parser.add_argument( '--no-regex',
                        action = 'store_true',
                        help = "Don't build the regex module" )
+  parser.add_argument( '--clang-tidy',
+                       action = 'store_true',
+                       help = "Run clang-tidy static analysis" )
 
 
   # These options are deprecated.
@@ -381,6 +384,9 @@ def ParseArguments():
   if not OnWindows() and args.enable_coverage:
     # We always want a debug build when running with coverage enabled
     args.enable_debug = True
+
+  if not args.clang_tidy and os.environ.get( 'YCM_CLANG_TIDY' ):
+    args.clang_tidy = True
 
   if ( args.system_libclang and
        not args.clang_completer and
@@ -404,6 +410,9 @@ def GetCmakeArgs( parsed_args ):
   cmake_args = []
   if parsed_args.clang_completer or parsed_args.all_completers:
     cmake_args.append( '-DUSE_CLANG_COMPLETER=ON' )
+
+  if parsed_args.clang_tidy:
+    cmake_args.append( '-DUSE_CLANG_TIDY=ON' )
 
   if parsed_args.system_libclang:
     cmake_args.append( '-DUSE_SYSTEM_LIBCLANG=ON' )

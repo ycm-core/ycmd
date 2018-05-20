@@ -466,3 +466,27 @@ endif()
 if ( DEFINED ENV{YCM_BENCHMARK} )
   add_subdirectory( benchmarks )
 endif()
+
+###############################################################################
+
+if( USE_CLANG_TIDY )
+  if( NOT APPLE )
+    find_program( CLANG_TIDY NAMES clang-tidy )
+  else()
+    execute_process( COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_ROOT )
+    string( STRIP ${LLVM_ROOT} LLVM_ROOT )
+    message( STATUS "${LLVM_ROOT}/bin" )
+    find_program( CLANG_TIDY NAMES clang-tidy PATHS "${LLVM_ROOT}/bin" )
+  endif()
+
+  if ( CLANG_TIDY )
+    message( STATUS "clang-tidy executable found: ${CLANG_TIDY}" )
+    set( CLANG_TIDY_ARGS "${CLANG_TIDY}")
+    set_target_properties( ycm_core PROPERTIES
+                           CXX_CLANG_TIDY "${CLANG_TIDY_ARGS}" )
+  else()
+    message( STATUS "clang-tidy not found" )
+  endif()
+else()
+  message( STATUS "NOT using clang-tidy for static analysis." )
+endif()
