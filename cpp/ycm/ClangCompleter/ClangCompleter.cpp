@@ -265,12 +265,26 @@ DocumentationData ClangCompleter::GetDocsForLocationInFile(
                                          unsaved_files,
                                          flags );
 
-  return unit->GetDocsForLocationInFile( filename,
-                                         line,
-                                         column,
-                                         unsaved_files,
-                                         reparse );
+  Location location( unit->GetDeclarationLocation( filename,
+                                                   line,
+                                                   column,
+                                                   unsaved_files,
+                                                   reparse ) );
+  // By default, libclang ignores comments from system headers and, in
+  // particular, headers included with the -isystem flag. If the declaration is
+  // found in such header, get the documentation directly from the corresponding
+  // translation unit. Comments in the main file of a translation unit are not
+  // ignored.
+  if ( unit->LocationIsInSystemHeader( location ) ) {
+    unit = translation_unit_store_.GetOrCreate( location.filename_,
+                                                unsaved_files,
+                                                flags );
+    return unit->GetDocsForLocation( location, unsaved_files, reparse );
+  }
 
+  // This translation unit has already been parsed when getting the
+  // declaration's location.
+  return unit->GetDocsForLocation( location, unsaved_files, false );
 }
 
 void ClangCompleter::DeleteCachesForFile( const std::string &filename ) {

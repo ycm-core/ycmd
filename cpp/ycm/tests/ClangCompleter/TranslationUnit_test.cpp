@@ -228,11 +228,9 @@ TEST_F( TranslationUnitTest, InvalidTranslationUnit ) {
                std::vector< UnsavedFile >() ) );
 
   EXPECT_EQ( DocumentationData(),
-             unit.GetDocsForLocationInFile(
-               "",
-               1,
-               1,
-               std::vector< UnsavedFile >(), false ) );
+             unit.GetDocsForLocation( Location(),
+                                      std::vector< UnsavedFile >(),
+                                      false ) );
 }
 
 } // namespace YouCompleteMe

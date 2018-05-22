@@ -106,12 +106,12 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
 
-  YCM_EXPORT DocumentationData GetDocsForLocationInFile(
-    const std::string &filename,
-    int line,
-    int column,
+  YCM_EXPORT DocumentationData GetDocsForLocation(
+    const Location &location,
     const std::vector< UnsavedFile > &unsaved_files,
     bool reparse = true );
+
+  bool LocationIsInSystemHeader( const Location &location );
 
 private:
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
@@ -121,9 +121,13 @@ private:
 
   void UpdateLatestDiagnostics();
 
+  // These four methods must be called under the clang_access_mutex_ lock.
+  CXSourceLocation GetSourceLocation( const std::string& filename,
+                                      int line,
+                                      int column );
+
   CXCursor GetCursor( const std::string& filename, int line, int column );
 
-  // These two methods must be called under the clang_access_mutex_ lock.
   Location GetDeclarationLocationForCursor( CXCursor cursor );
 
   Location GetDefinitionLocationForCursor( CXCursor cursor );

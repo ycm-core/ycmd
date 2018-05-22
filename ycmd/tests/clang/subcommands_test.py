@@ -25,7 +25,7 @@ from __future__ import division
 from builtins import *  # noqa
 
 from hamcrest import ( assert_that, calling, contains, contains_string,
-                       empty, equal_to, has_entries, raises )
+                       empty, equal_to, has_entry, has_entries, raises )
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
@@ -1072,8 +1072,7 @@ def Subcommands_GetDoc_Variable_test( app ):
                              line_num = 70,
                              column_num = 24,
                              contents = contents,
-                             command_arguments = [ 'GetDoc' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1102,8 +1101,7 @@ def Subcommands_GetDoc_Method_test( app ):
                              line_num = 22,
                              column_num = 13,
                              contents = contents,
-                             command_arguments = [ 'GetDoc' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1136,8 +1134,7 @@ def Subcommands_GetDoc_Namespace_test( app ):
                              line_num = 65,
                              column_num = 14,
                              contents = contents,
-                             command_arguments = [ 'GetDoc' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1164,8 +1161,7 @@ def Subcommands_GetDoc_Undocumented_test( app ):
                              line_num = 81,
                              column_num = 17,
                              contents = contents,
-                             command_arguments = [ 'GetDoc' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command',
                             event_data,
@@ -1188,8 +1184,7 @@ def Subcommands_GetDoc_NoCursor_test( app ):
                              line_num = 1,
                              column_num = 1,
                              contents = contents,
-                             command_arguments = [ 'GetDoc' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command',
                             event_data,
@@ -1199,6 +1194,37 @@ def Subcommands_GetDoc_NoCursor_test( app ):
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_SystemHeaders_test( app ):
+  app.post_json( '/load_extra_conf_file', {
+    'filepath': PathToTestFile( 'get_doc', '.ycm_extra_conf.py' ) } )
+
+  filepath = PathToTestFile( 'get_doc', 'test.cpp' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             line_num = 4,
+                             column_num = 7,
+                             contents = contents,
+                             command_arguments = [ 'GetDoc' ] )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  assert_that( response,
+               has_entry( 'detailed_info', """\
+int test()
+This is a function.
+Type: int ()
+Name: test
+---
+
+\\brief This is a function.
+
+This function is defined in a system header.
+""" ) )
 
 
 # Following tests repeat the tests above, but without re-parsing the file
@@ -1220,8 +1246,7 @@ def Subcommands_GetDocImprecise_Variable_test( app ):
                              line_num = 70,
                              column_num = 24,
                              contents = contents,
-                             command_arguments = [ 'GetDocImprecise' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDocImprecise' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1259,8 +1284,7 @@ def Subcommands_GetDocImprecise_Method_test( app ):
                              line_num = 22,
                              column_num = 13,
                              contents = contents,
-                             command_arguments = [ 'GetDocImprecise' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDocImprecise' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1302,8 +1326,7 @@ def Subcommands_GetDocImprecise_Namespace_test( app ):
                              line_num = 65,
                              column_num = 14,
                              contents = contents,
-                             command_arguments = [ 'GetDocImprecise' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDocImprecise' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1339,8 +1362,7 @@ def Subcommands_GetDocImprecise_Undocumented_test( app ):
                              line_num = 81,
                              column_num = 17,
                              contents = contents,
-                             command_arguments = [ 'GetDocImprecise' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDocImprecise' ] )
 
   response = app.post_json( '/run_completer_command',
                             event_data,
@@ -1372,8 +1394,7 @@ def Subcommands_GetDocImprecise_NoCursor_test( app ):
                              line_num = 1,
                              column_num = 1,
                              contents = contents,
-                             command_arguments = [ 'GetDocImprecise' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDocImprecise' ] )
 
   response = app.post_json( '/run_completer_command',
                             event_data,
@@ -1396,8 +1417,7 @@ def Subcommands_GetDocImprecise_NoReadyToParse_test( app ):
                              line_num = 11,
                              column_num = 18,
                              contents = contents,
-                             command_arguments = [ 'GetDocImprecise' ],
-                             completer_target = 'filetype_default' )
+                             command_arguments = [ 'GetDocImprecise' ] )
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
@@ -1410,6 +1430,37 @@ Name: get_a_global_variable
 ---
 This is a method which is only pretend global
 @param test Set this to true. Do it.""" } )
+
+
+@SharedYcmd
+def Subcommands_GetDocImprecise_SystemHeaders_test( app ):
+  app.post_json( '/load_extra_conf_file', {
+    'filepath': PathToTestFile( 'get_doc', '.ycm_extra_conf.py' ) } )
+
+  filepath = PathToTestFile( 'get_doc', 'test.cpp' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cpp',
+                             line_num = 4,
+                             column_num = 7,
+                             contents = contents,
+                             command_arguments = [ 'GetDocImprecise' ] )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  assert_that( response,
+               has_entry( 'detailed_info', """\
+int test()
+This is a function.
+Type: int ()
+Name: test
+---
+
+\\brief This is a function.
+
+This function is defined in a system header.
+""" ) )
 
 
 @SharedYcmd
