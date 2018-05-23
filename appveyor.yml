@@ -3,7 +3,6 @@ environment:
   USE_CLANG_COMPLETER: true
   COVERAGE: true
   matrix:
-  # We dropped MSVC 12 support because it lacks features from C++11.
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     arch: 64
     python: 36

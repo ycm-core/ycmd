@@ -65,6 +65,13 @@ Then run `./build.py --all` or any of the specific completers listed by
 For more detailed instructions on building ycmd, see [YCM's
 instructions][ycm-install] (ignore the Vim-specific parts).
 
+Supported compilers
+-------------------
+
+- GCC 4.8 and later
+- Clang 3.3 and later
+- Microsoft Visual Studio 2015 Update 3 and later
+
 API notes
 ---------
 
