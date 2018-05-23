@@ -23,20 +23,9 @@
 
 namespace YouCompleteMe {
 
-CharacterRepository *CharacterRepository::instance_ = nullptr;
-std::mutex CharacterRepository::instance_mutex_;
-
 CharacterRepository &CharacterRepository::Instance() {
-  // This lock is required as magic statics are not thread-safe on MSVC 12.
-  // See https://msdn.microsoft.com/en-us/library/hh567368#concurrencytable
-  std::lock_guard< std::mutex > locker( instance_mutex_ );
-
-  if ( !instance_ ) {
-    static CharacterRepository repo;
-    instance_ = &repo;
-  }
-
-  return *instance_;
+  static CharacterRepository repo;
+  return repo;
 }
 
 

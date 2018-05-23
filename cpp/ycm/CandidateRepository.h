@@ -62,12 +62,7 @@ private:
   const std::string &ValidatedCandidateText(
       const std::string &candidate_text );
 
-  static CandidateRepository *instance_;
-  static std::mutex instance_mutex_;
-
-  // MSVC 12 complains that no appropriate default constructor is available if
-  // this property is not initialized.
-  const std::string empty_{};
+  const std::string empty_;
 
   // This data structure owns all the Candidate pointers
   CandidateHolder candidate_holder_;

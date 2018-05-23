@@ -23,20 +23,9 @@
 
 namespace YouCompleteMe {
 
-CodePointRepository *CodePointRepository::instance_ = nullptr;
-std::mutex CodePointRepository::instance_mutex_;
-
 CodePointRepository &CodePointRepository::Instance() {
-  // This lock is required as magic statics are not thread-safe on MSVC 12.
-  // See https://msdn.microsoft.com/en-us/library/hh567368#concurrencytable
-  std::lock_guard< std::mutex > locker( instance_mutex_ );
-
-  if ( !instance_ ) {
-    static CodePointRepository repo;
-    instance_ = &repo;
-  }
-
-  return *instance_;
+  static CodePointRepository repo;
+  return repo;
 }
 
 

@@ -36,20 +36,9 @@ const size_t MAX_CANDIDATE_SIZE = 80;
 }  // unnamed namespace
 
 
-CandidateRepository *CandidateRepository::instance_ = nullptr;
-std::mutex CandidateRepository::instance_mutex_;
-
 CandidateRepository &CandidateRepository::Instance() {
-  // This lock is required as magic statics are not thread-safe on MSVC 12.
-  // See https://msdn.microsoft.com/en-us/library/hh567368#concurrencytable
-  std::lock_guard< std::mutex > locker( instance_mutex_ );
-
-  if ( !instance_ ) {
-    static CandidateRepository repo;
-    instance_ = &repo;
-  }
-
-  return *instance_;
+  static CandidateRepository repo;
+  return repo;
 }
 
 

@@ -56,9 +56,6 @@ private:
   CodePointRepository() = default;
   ~CodePointRepository() = default;
 
-  static CodePointRepository *instance_;
-  static std::mutex instance_mutex_;
-
   // This data structure owns all the CodePoint pointers
   CodePointHolder code_point_holder_;
   std::mutex code_point_holder_mutex_;
