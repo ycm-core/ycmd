@@ -980,6 +980,28 @@ def CompilationDatabase_ExplicitHeaderFileEntry_test():
                   '-Wall' ) )
 
 
+def CompilationDatabase_CUDALanguageFlags_test():
+  with TemporaryTestDir() as tmp_dir:
+    compile_commands = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -Wall {}'.format( './test.cu' ),
+        'file': os.path.join( tmp_dir, 'test.cu' ),
+      },
+    ]
+
+    with TemporaryClangProject( tmp_dir, compile_commands ):
+      # If we ask for a header file, it returns the equivalent cu file
+      assert_that(
+        flags.Flags().FlagsForFile(
+          os.path.join( tmp_dir, 'test.h' ),
+          add_extra_clang_flags = False )[ 0 ],
+        contains( 'clang++',
+                  '-x',
+                  'cuda',
+                  '-Wall' ) )
+
+
 def _MakeRelativePathsInFlagsAbsoluteTest( test ):
   wd = test[ 'wd' ] if 'wd' in test else '/not_test'
   assert_that(

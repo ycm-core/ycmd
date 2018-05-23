@@ -93,7 +93,7 @@ FILETYPE_TO_COMMENT_AND_STRING_REGEX = {
                                   DOUBLE_QUOTE_STRING ] ), re.MULTILINE )
 }
 
-for filetype in [ 'c', 'objc', 'objcpp', 'javascript', 'typescript' ]:
+for filetype in [ 'c', 'cuda', 'objc', 'objcpp', 'javascript', 'typescript' ]:
   FILETYPE_TO_COMMENT_AND_STRING_REGEX[ filetype ] = (
     FILETYPE_TO_COMMENT_AND_STRING_REGEX[ 'cpp' ] )
 

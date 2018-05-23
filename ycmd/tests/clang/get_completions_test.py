@@ -1235,3 +1235,27 @@ def GetCompletions_UnityInclude_test( app ):
       } )
     }
   } )
+
+
+@SharedYcmd
+def GetCompletions_cuda_test( app ):
+  RunTest( app, {
+    'description': 'Completion of CUDA files',
+    'request': {
+      'filetype'  : 'cuda',
+      'filepath'  : PathToTestFile( 'cuda', 'completion_test.cu' ),
+      'line_num'  : 16,
+      'column_num': 29,
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 29,
+        'completions': contains(
+          CompletionEntryMatcher( 'do_something', 'void' ),
+        ),
+        'errors': empty(),
+      } )
+    }
+  } )
