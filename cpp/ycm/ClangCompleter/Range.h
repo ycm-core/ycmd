@@ -24,7 +24,7 @@ namespace YouCompleteMe {
 
 // Half-open, [start, end>
 struct Range {
-  Range() {}
+  Range() = default;
 
   Range( const Location &start_location, const Location &end_location )
     : start_( start_location ),

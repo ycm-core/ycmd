@@ -50,7 +50,7 @@ enum class CompletionKind {
 // The user can also enable a "preview" window that will show extra information
 // about a completion at the top of the buffer.
 struct CompletionData {
-  CompletionData() {}
+  CompletionData() = default;
   CompletionData( const CXCompletionResult &completion_result );
 
   // What should actually be inserted into the buffer. For a function like

@@ -28,7 +28,7 @@ namespace YouCompleteMe {
 /// for a given cursor
 struct DocumentationData {
   /// Construct an empty object
-  DocumentationData() {}
+  DocumentationData() = default;
 
   /// Construct and extract information from the supplied cursor. The cursor
   /// should be pointing to a canonical declaration, such as returned by
