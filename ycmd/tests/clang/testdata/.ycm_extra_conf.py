@@ -8,7 +8,8 @@ unity_files = [
 ]
 
 
-def FlagsForFile( filename ):
+def Settings( **kwargs ):
+  filename = kwargs[ 'filename' ]
   if os.path.basename( filename ) in unity_files:
     return {
       'flags': [ '-x', 'c++', '-I', '.' ],

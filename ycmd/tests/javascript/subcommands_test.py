@@ -65,8 +65,7 @@ def RunTest( app, test, contents = None ):
 
   # Because we aren't testing this command, we *always* ignore errors. This
   # is mainly because we (may) want to test scenarios where the completer
-  # throws an exception and the easiest way to do that is to throw from
-  # within the FlagsForFile function.
+  # throws an exception.
   app.post_json( '/event_notification',
                  CombineRequest( test[ 'request' ], {
                                  'event_name': 'FileReadyToParse',

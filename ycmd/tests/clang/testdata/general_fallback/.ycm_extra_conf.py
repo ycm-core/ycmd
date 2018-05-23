@@ -24,7 +24,7 @@ ftopts = {
   ],
 }
 
-def FlagsForFile(filename, **kwargs):
+def Settings(**kwargs):
   client_data = kwargs['client_data']
   ft = client_data['&filetype']
 
