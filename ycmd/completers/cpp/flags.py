@@ -390,7 +390,7 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   # compiling CUDA source files with a C++ compiler
   if any( fl.endswith( '.cu' ) or fl.endswith( '.cuh' )
           for fl in reversed( flags ) ):
-    return [ first_flag, '-x', 'cuda' ] + flags[ 1: ]
+    return [ first_flag, '-x', 'cuda', '-D__CUDACC__' ] + flags[ 1: ]
 
   # NOTE: This is intentionally NOT checking for enable_windows_style_flags.
   #

@@ -999,6 +999,7 @@ def CompilationDatabase_CUDALanguageFlags_test():
         contains( 'clang++',
                   '-x',
                   'cuda',
+                  '-D__CUDACC__',
                   '-Wall' ) )
 
 
