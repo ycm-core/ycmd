@@ -18,10 +18,10 @@
 #ifndef TRANSLATIONUNITSTORE_H_NGN0MCKB
 #define TRANSLATIONUNITSTORE_H_NGN0MCKB
 
+#include "Mutex.h"
 #include "TranslationUnit.h"
 #include "UnsavedFile.h"
 
-#include <mutex>
 #include <string>
 #include <vector>
 #include <memory>
@@ -80,7 +80,8 @@ public:
 private:
 
   // WARNING: This accesses filename_to_translation_unit_ without a lock!
-  std::shared_ptr< TranslationUnit > GetNoLock( const std::string &filename );
+  std::shared_ptr< TranslationUnit > GetNoLock( const std::string &filename )
+    REQUIRES( filename_to_translation_unit_and_flags_mutex_ );
 
 
   using TranslationUnitForFilename =
@@ -90,8 +91,11 @@ private:
 
   CXIndex clang_index_;
   TranslationUnitForFilename filename_to_translation_unit_;
-  FlagsHashForFilename filename_to_flags_hash_;
-  std::mutex filename_to_translation_unit_and_flags_mutex_;
+
+  FlagsHashForFilename filename_to_flags_hash_
+    GUARDED_BY( filename_to_translation_unit_and_flags_mutex_ );
+
+  Mutex filename_to_translation_unit_and_flags_mutex_;
 };
 
 } // namespace YouCompleteMe

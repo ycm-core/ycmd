@@ -18,8 +18,9 @@
 #ifndef COMPILATIONDATABASE_H_ZT7MQXPG
 #define COMPILATIONDATABASE_H_ZT7MQXPG
 
+#include "Mutex.h"
+
 #include <clang-c/CXCompilationDatabase.h>
-#include <mutex>
 #include <pybind11/pybind11.h>
 #include <string>
 #include <vector>
@@ -61,8 +62,11 @@ private:
 
   bool is_loaded_;
   std::string path_to_directory_;
-  CXCompilationDatabase compilation_database_;
-  std::mutex compilation_database_mutex_;
+
+  CXCompilationDatabase compilation_database_
+    GUARDED_BY( compilation_database_mutex_ );
+
+  Mutex compilation_database_mutex_;
 };
 
 } // namespace YouCompleteMe

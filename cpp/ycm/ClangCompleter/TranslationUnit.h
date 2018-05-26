@@ -20,12 +20,12 @@
 
 #include "UnsavedFile.h"
 #include "Diagnostic.h"
-#include "Location.h"
 #include "Documentation.h"
+#include "Location.h"
+#include "Mutex.h"
 
 #include <clang-c/Index.h>
 
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -53,7 +53,7 @@ public:
 
   void Destroy();
 
-  YCM_EXPORT bool IsCurrentlyUpdating() const;
+  YCM_EXPORT bool IsCurrentlyUpdating() const NO_THREAD_SAFETY_ANALYSIS;
 
   YCM_EXPORT std::vector< Diagnostic > Reparse(
     const std::vector< UnsavedFile > &unsaved_files );
@@ -114,29 +114,33 @@ public:
     bool reparse = true );
 
 private:
-  void Reparse( std::vector< CXUnsavedFile > &unsaved_files );
+  void Reparse( std::vector< CXUnsavedFile > &unsaved_files )
+    NO_THREAD_SAFETY_ANALYSIS;
 
   void Reparse( std::vector< CXUnsavedFile > &unsaved_files,
                 size_t parse_options );
 
   void UpdateLatestDiagnostics();
 
-  CXCursor GetCursor( const std::string& filename, int line, int column );
+  // These three methods must be called under the clang_access_mutex_ lock.
+  CXCursor GetCursor( const std::string& filename, int line, int column )
+    REQUIRES( clang_access_mutex_ );
 
-  // These two methods must be called under the clang_access_mutex_ lock.
-  Location GetDeclarationLocationForCursor( CXCursor cursor );
+  Location GetDeclarationLocationForCursor( CXCursor cursor )
+    REQUIRES( clang_access_mutex_ );
 
-  Location GetDefinitionLocationForCursor( CXCursor cursor );
+  Location GetDefinitionLocationForCursor( CXCursor cursor )
+    REQUIRES( clang_access_mutex_ );
 
   /////////////////////////////
   // PRIVATE MEMBER VARIABLES
   /////////////////////////////
 
-  std::mutex diagnostics_mutex_;
-  std::vector< Diagnostic > latest_diagnostics_;
+  Mutex diagnostics_mutex_;
+  std::vector< Diagnostic > latest_diagnostics_ GUARDED_BY( diagnostics_mutex_ );
 
-  mutable std::mutex clang_access_mutex_;
-  CXTranslationUnit clang_translation_unit_;
+  mutable Mutex clang_access_mutex_;
+  CXTranslationUnit clang_translation_unit_ GUARDED_BY( clang_access_mutex_ );
 };
 
 } // namespace YouCompleteMe

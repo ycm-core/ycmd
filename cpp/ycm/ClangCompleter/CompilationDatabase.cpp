@@ -23,7 +23,7 @@
 
 using std::lock_guard;
 using std::unique_lock;
-using std::try_to_lock_t;
+using std::try_to_lock;
 using std::remove_pointer;
 using std::shared_ptr;
 using std::mutex;
@@ -57,7 +57,8 @@ bool CompilationDatabase::DatabaseSuccessfullyLoaded() {
 
 
 bool CompilationDatabase::AlreadyGettingFlags() {
-  unique_lock< mutex > lock( compilation_database_mutex_, try_to_lock_t() );
+  LockWrapper< unique_lock< mutex > > lock( compilation_database_mutex_,
+                                            try_to_lock );
   return !lock.owns_lock();
 }
 
@@ -73,7 +74,7 @@ CompilationInfoForFile CompilationDatabase::GetCompilationInfoForFile(
   std::string path_to_file_string = GetUtf8String( path_to_file );
   pybind11::gil_scoped_release unlock;
 
-  lock_guard< mutex > lock( compilation_database_mutex_ );
+  LockWrapper< lock_guard< mutex > > lock( compilation_database_mutex_ );
 
   CompileCommandsWrap commands(
     clang_CompilationDatabase_getCompileCommands(

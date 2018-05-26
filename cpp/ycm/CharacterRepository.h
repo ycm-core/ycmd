@@ -19,9 +19,9 @@
 #define CHARACTER_REPOSITORY_H_36TXTS6C
 
 #include "Character.h"
+#include "Mutex.h"
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -50,18 +50,18 @@ public:
     const std::vector< std::string > &characters );
 
   // This should only be used to isolate tests and benchmarks.
-  YCM_EXPORT void ClearCharacters();
+  YCM_EXPORT void ClearCharacters() NO_THREAD_SAFETY_ANALYSIS;
 
 private:
   CharacterRepository() = default;
   ~CharacterRepository() = default;
 
-  static CharacterRepository *instance_;
-  static std::mutex instance_mutex_;
+  static CharacterRepository *instance_ GUARDED_BY( instance_mutex_ );
+  static Mutex instance_mutex_;
 
   // This data structure owns all the Character pointers
-  CharacterHolder character_holder_;
-  std::mutex character_holder_mutex_;
+  CharacterHolder character_holder_ GUARDED_BY( character_holder_mutex_ );
+  Mutex character_holder_mutex_;
 };
 
 } // namespace YouCompleteMe

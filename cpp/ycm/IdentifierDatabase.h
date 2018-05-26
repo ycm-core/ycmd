@@ -18,9 +18,10 @@
 #ifndef IDENTIFIERDATABASE_H_ZESX3CVR
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
+#include "Mutex.h"
+
 #include <unordered_map>
 #include <memory>
-#include <mutex>
 #include <vector>
 #include <string>
 #include <map>
@@ -74,12 +75,12 @@ public:
 private:
   std::set< const Candidate * > &GetCandidateSet(
     const std::string &filetype,
-    const std::string &filepath );
+    const std::string &filepath ) NO_THREAD_SAFETY_ANALYSIS;
 
   void AddIdentifiersNoLock(
     const std::vector< std::string > &new_candidates,
     const std::string &filetype,
-    const std::string &filepath );
+    const std::string &filepath ) REQUIRES( filetype_candidate_map_mutex_ );
 
 
   // filepath -> *( *candidate )
@@ -94,8 +95,9 @@ private:
 
   CandidateRepository &candidate_repository_;
 
-  FiletypeCandidateMap filetype_candidate_map_;
-  mutable std::mutex filetype_candidate_map_mutex_;
+  FiletypeCandidateMap filetype_candidate_map_
+    GUARDED_BY( filetype_candidate_map_mutex_ );
+  mutable Mutex filetype_candidate_map_mutex_;
 };
 
 } // namespace YouCompleteMe

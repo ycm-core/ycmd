@@ -19,9 +19,9 @@
 #define CODE_POINT_REPOSITORY_H_ENE9FWXL
 
 #include "CodePoint.h"
+#include "Mutex.h"
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -50,18 +50,18 @@ public:
     const std::vector< std::string > &code_points );
 
   // This should only be used to isolate tests and benchmarks.
-  YCM_EXPORT void ClearCodePoints();
+  YCM_EXPORT void ClearCodePoints() NO_THREAD_SAFETY_ANALYSIS;
 
 private:
   CodePointRepository() = default;
   ~CodePointRepository() = default;
 
-  static CodePointRepository *instance_;
-  static std::mutex instance_mutex_;
+  static CodePointRepository *instance_ GUARDED_BY( instance_mutex_ );
+  static Mutex instance_mutex_;
 
   // This data structure owns all the CodePoint pointers
-  CodePointHolder code_point_holder_;
-  std::mutex code_point_holder_mutex_;
+  CodePointHolder code_point_holder_ GUARDED_BY( code_point_holder_mutex_ );
+  Mutex code_point_holder_mutex_;
 };
 
 } // namespace YouCompleteMe
