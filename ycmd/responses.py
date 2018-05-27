@@ -237,6 +237,24 @@ def BuildDiagnosticData( diagnostic ):
   }
 
 
+def BuildDiagnosticResponse( diagnostics,
+                             filename,
+                             max_diagnostics_to_display ):
+  if ( max_diagnostics_to_display and
+       len( diagnostics ) > max_diagnostics_to_display ):
+    diagnostics = diagnostics[ : max_diagnostics_to_display ]
+    location = Location( 1, 1, filename )
+    location_extent = Range( location, location )
+    diagnostics.append( Diagnostic(
+      [ location_extent ],
+      location,
+      location_extent,
+      'Maximum number of diagnostics exceeded.',
+      'ERROR'
+    ) )
+  return [ BuildDiagnosticData( diagnostic ) for diagnostic in diagnostics ]
+
+
 def BuildFixItResponse( fixits ):
   """Build a response from a list of FixIt (aka Refactor) objects. This response
   can be used to apply arbitrary changes to arbitrary files and is suitable for

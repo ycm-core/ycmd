@@ -195,7 +195,7 @@ def GetCompletions_AfterRestart_test( app ):
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_ServerIsNotRunning_test( app ):
   StopCompleterServer( app, filetype = 'typescript' )
 

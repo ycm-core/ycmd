@@ -40,15 +40,18 @@ from ycmd.request_wrap import RequestWrap
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     DummyCompleter,
-                                    LocationMatcher )
+                                    LocationMatcher,
+                                    RangeMatcher )
 from ycmd import handlers, utils, responses
+import os
 
 
 class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
-  def __init__( self ):
+  def __init__( self, custom_options = {} ):
     self._connection = MockConnection()
-    super( MockCompleter, self ).__init__(
-      handlers._server_state._user_options )
+    user_options = handlers._server_state._user_options.copy()
+    user_options.update( custom_options )
+    super( MockCompleter, self ).__init__( user_options )
 
 
   def GetConnection( self ):
@@ -447,3 +450,151 @@ def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test():
             } )
           } )
         )
+
+
+def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test():
+  completer = MockCompleter( { 'max_diagnostics_to_display': 1 } )
+  filepath = os.path.realpath( '/foo' )
+  uri = lsp.FilePathToUri( filepath )
+  request_data = RequestWrap( BuildRequest( line_num = 1,
+                                            column_num = 1,
+                                            filepath = filepath,
+                                            contents = '' ) )
+  notification = {
+    'jsonrpc': '2.0',
+    'method': 'textDocument/publishDiagnostics',
+    'params': {
+      'uri': uri,
+      'diagnostics': [ {
+        'range': {
+          'start': { 'line': 3, 'character': 10 },
+          'end': { 'line': 3, 'character': 11 }
+        },
+        'severity': 1,
+        'message': 'First error'
+      }, {
+        'range': {
+          'start': { 'line': 4, 'character': 7 },
+          'end': { 'line': 4, 'character': 13 }
+        },
+        'severity': 1,
+        'message': 'Second error'
+      } ]
+    }
+  }
+  completer.GetConnection()._notifications.put( notification )
+  completer.HandleNotificationInPollThread( notification )
+
+  with patch.object( completer, 'ServerIsReady', return_value = True ):
+    completer.SendInitialize( request_data )
+    # Simulate recept of response and initialization complete
+    initialize_response = {
+      'result': {
+        'capabilities': {}
+      }
+    }
+    completer._HandleInitializeInPollThread( initialize_response )
+
+    diagnostics = contains(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 4, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
+        'ranges': contains(
+           RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
+        'text': equal_to( 'First error' ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 1, 1 ),
+        'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) ),
+        'text': equal_to( 'Maximum number of diagnostics exceeded.' ),
+        'fixit_available': False
+      } )
+    )
+
+    assert_that( completer.OnFileReadyToParse( request_data ), diagnostics )
+
+    assert_that(
+      completer.PollForMessages( request_data ),
+      contains( has_entries( {
+        'diagnostics': diagnostics,
+        'filepath': filepath
+      } ) )
+    )
+
+
+def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test():
+  completer = MockCompleter( { 'max_diagnostics_to_display': 0 } )
+  filepath = os.path.realpath( '/foo' )
+  uri = lsp.FilePathToUri( filepath )
+  request_data = RequestWrap( BuildRequest( line_num = 1,
+                                            column_num = 1,
+                                            filepath = filepath,
+                                            contents = '' ) )
+  notification = {
+    'jsonrpc': '2.0',
+    'method': 'textDocument/publishDiagnostics',
+    'params': {
+      'uri': uri,
+      'diagnostics': [ {
+        'range': {
+          'start': { 'line': 3, 'character': 10 },
+          'end': { 'line': 3, 'character': 11 }
+        },
+        'severity': 1,
+        'message': 'First error'
+      }, {
+        'range': {
+          'start': { 'line': 4, 'character': 7 },
+          'end': { 'line': 4, 'character': 13 }
+        },
+        'severity': 1,
+        'message': 'Second error'
+      } ]
+    }
+  }
+  completer.GetConnection()._notifications.put( notification )
+  completer.HandleNotificationInPollThread( notification )
+
+  with patch.object( completer, 'ServerIsReady', return_value = True ):
+    completer.SendInitialize( request_data )
+    # Simulate recept of response and initialization complete
+    initialize_response = {
+      'result': {
+        'capabilities': {}
+      }
+    }
+    completer._HandleInitializeInPollThread( initialize_response )
+
+    diagnostics = contains(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 4, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
+        'ranges': contains(
+           RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
+        'text': equal_to( 'First error' ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 5, 8 ),
+        'location_extent': RangeMatcher( filepath, ( 5, 8 ), ( 5, 14 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 5, 8 ), ( 5, 14 ) ) ),
+        'text': equal_to( 'Second error' ),
+        'fixit_available': False
+      } )
+    )
+
+    assert_that( completer.OnFileReadyToParse( request_data ), diagnostics )
+
+    assert_that(
+      completer.PollForMessages( request_data ),
+      contains( has_entries( {
+        'diagnostics': diagnostics,
+        'filepath': filepath
+      } ) )
+    )

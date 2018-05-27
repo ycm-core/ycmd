@@ -29,7 +29,7 @@ from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def EventNotification_OnBufferUnload_CloseFile_test( app ):
   # Open main.ts file in a buffer.
   main_filepath = PathToTestFile( 'buffer_unload', 'main.ts' )

@@ -938,7 +938,7 @@ def Subcommands_RefactorRename_SimpleUnicode_test( app ):
   } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
 def Subcommands_StopServer_Timeout_test( app ):

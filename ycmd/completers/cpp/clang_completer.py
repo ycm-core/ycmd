@@ -54,8 +54,6 @@ INCLUDE_REGEX = re.compile( '(\s*#\s*(?:include|import)\s*)(?:"[^"]*|<[^>]*)' )
 class ClangCompleter( Completer ):
   def __init__( self, user_options ):
     super( ClangCompleter, self ).__init__( user_options )
-    self._max_diagnostics_to_display = user_options[
-      'max_diagnostics_to_display' ]
     self._completer = ycm_core.ClangCompleter()
     self._flags = Flags()
     self._include_cache = IncludeCache()
@@ -357,8 +355,9 @@ class ClangCompleter( Completer ):
 
     diagnostics = _FilterDiagnostics( diagnostics )
     self._diagnostic_store = DiagnosticsToDiagStructure( diagnostics )
-    return [ responses.BuildDiagnosticData( x ) for x in
-             diagnostics[ : self._max_diagnostics_to_display ] ]
+    return responses.BuildDiagnosticResponse( diagnostics,
+                                              request_data[ 'filepath' ],
+                                              self.max_diagnostics_to_display )
 
 
   def OnBufferUnload( self, request_data ):
