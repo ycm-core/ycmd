@@ -63,7 +63,7 @@ struct CodePointTuple {
       is_letter_( is_letter ),
       is_punctuation_( is_punctuation ),
       is_uppercase_( is_uppercase ),
-      break_property_( break_property )	{
+      break_property_( break_property ) {
   }
 
   bool operator== ( const CodePointTuple &other ) const {

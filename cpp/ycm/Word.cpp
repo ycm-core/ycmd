@@ -150,50 +150,17 @@ std::vector< std::string > BreakCodePointsIntoCharacters(
             character.append( code_point );
         }
         break;
-      case BreakProperty::E_BASE:
-      case BreakProperty::E_BASE_GAZ:
-        switch( property ) {
-          // Rule GB9: do not break before extending characters.
-          case BreakProperty::EXTEND:
-            character.append( code_point );
-            within_emoji_modifier = true;
-            break;
-          // Rule GB9: do not break when using a zero-width joiner (ZWJ).
-          case BreakProperty::ZWJ:
-          // Rule GB9a: do not break before spacing marks.
-          case BreakProperty::SPACINGMARK:
-            character.append( code_point );
-            break;
-          // Rule GB10: do not break within emoji modifier sequences.
-          case BreakProperty::E_MODIFIER:
-            character.append( code_point );
-            break;
-          default:
-            characters.push_back( character );
-            character = code_point;
-        }
-        break;
       case BreakProperty::EXTEND:
         switch( property ) {
-          // Rule GB9: do not break before extending characters.
+          // Rule GB9: do not break before extending characters or when using a
+          // zero-width joiner (ZWJ).
           case BreakProperty::EXTEND:
+          case BreakProperty::ZWJ:
             character.append( code_point );
             break;
-          // Rule GB9: do not break when using a zero-width joiner (ZWJ).
-          case BreakProperty::ZWJ:
           // Rule GB9a: do not break before spacing marks.
           case BreakProperty::SPACINGMARK:
             character.append( code_point );
-            within_emoji_modifier = false;
-            break;
-          // Rule GB10: do not break within emoji modifier sequences.
-          case BreakProperty::E_MODIFIER:
-            if ( within_emoji_modifier ) {
-              character.append( code_point );
-            } else {
-              characters.push_back( character );
-              character = code_point;
-            }
             within_emoji_modifier = false;
             break;
           default:
@@ -210,11 +177,38 @@ std::vector< std::string > BreakCodePointsIntoCharacters(
           case BreakProperty::ZWJ:
           // Rule GB9a: do not break before spacing marks.
           case BreakProperty::SPACINGMARK:
-          // Rule GB11: do not break within emoji zero-width jointer (ZWJ)
-          // sequences.
-          case BreakProperty::GLUE_AFTER_ZWJ:
-          case BreakProperty::E_BASE_GAZ:
             character.append( code_point );
+            within_emoji_modifier = false;
+            break;
+          // Rule GB11: do not break within emoji modifier sequences of emoji
+          // zwj sequences.
+          case BreakProperty::EXTPICT:
+            if ( within_emoji_modifier ) {
+              character.append( code_point );
+              within_emoji_modifier = false;
+            } else {
+              characters.push_back( character );
+              character = code_point;
+            }
+            break;
+          default:
+            characters.push_back( character );
+            character = code_point;
+            within_emoji_modifier = false;
+        }
+        break;
+      case BreakProperty::EXTPICT:
+        switch( property ) {
+          // Rule GB9a: do not break before spacing marks.
+          case BreakProperty::SPACINGMARK:
+            character.append( code_point );
+            break;
+          // Rule GB11: do not break within emoji modifier sequences of emoji
+          // zwj sequences.
+          case BreakProperty::EXTEND:
+          case BreakProperty::ZWJ:
+            character.append( code_point );
+            within_emoji_modifier = true;
             break;
           default:
             characters.push_back( character );

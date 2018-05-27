@@ -96,9 +96,6 @@ Character::Character( const std::string &character )
       case BreakProperty::PREPEND:
       case BreakProperty::EXTEND:
       case BreakProperty::SPACINGMARK:
-      case BreakProperty::E_MODIFIER:
-      case BreakProperty::GLUE_AFTER_ZWJ:
-      case BreakProperty::E_BASE_GAZ:
         is_base_ = false;
         break;
       default:

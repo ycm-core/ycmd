@@ -43,10 +43,7 @@ enum class BreakProperty {
   T                  = 11,
   LV                 = 12,
   LVT                = 13,
-  E_BASE             = 14,
-  E_MODIFIER         = 15,
-  GLUE_AFTER_ZWJ     = 16,
-  E_BASE_GAZ         = 17
+  EXTPICT            = 18
 };
 
 
