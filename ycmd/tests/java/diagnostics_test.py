@@ -679,7 +679,7 @@ def OnBufferUnload_ServerNotRunning_test( app ):
                                filepath = filepath,
                                filetype = 'java' )
     result = app.post_json( '/event_notification', event_data ).json
-    assert_that( result, equal_to( {}  ) )
+    assert_that( result, equal_to( {} ) )
 
 
 @IsolatedYcmd

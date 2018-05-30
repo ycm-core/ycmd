@@ -240,7 +240,7 @@ class RequestWrap( object ):
   def _FirstFiletype( self ):
     try:
       return self[ 'filetypes' ][ 0 ]
-    except (KeyError, IndexError):
+    except ( KeyError, IndexError ):
       return None
 
 

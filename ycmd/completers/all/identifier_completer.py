@@ -60,9 +60,9 @@ class IdentifierCompleter( GeneralCompleter ):
       completions, self.user_options[ 'min_num_identifier_candidate_chars' ] )
 
     def ConvertCompletionData( x ):
-        return responses.BuildCompletionData(
-                insertion_text = x,
-                extra_menu_info='[ID]' )
+      return responses.BuildCompletionData(
+              insertion_text = x,
+              extra_menu_info='[ID]' )
 
     return [ ConvertCompletionData( x ) for x in completions ]
 

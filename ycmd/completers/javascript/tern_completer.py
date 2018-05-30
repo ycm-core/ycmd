@@ -251,9 +251,9 @@ class TernCompleter( Completer ):
       'GoToReferences': ( lambda self, request_data, args:
                                          self._GoToReferences( request_data ) ),
       'GetType':        ( lambda self, request_data, args:
-                                         self._GetType( request_data) ),
+                                         self._GetType( request_data ) ),
       'GetDoc':         ( lambda self, request_data, args:
-                                         self._GetDoc( request_data) ),
+                                         self._GetDoc( request_data ) ),
       'RefactorRename': ( lambda self, request_data, args:
                                          self._Rename( request_data, args ) ),
     }

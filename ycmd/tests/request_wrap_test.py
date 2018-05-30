@@ -121,19 +121,19 @@ def LineValue_EmptyContents_test():
 def StartColumn_RightAfterDot_test():
   eq_( 5,
        RequestWrap( PrepareJson( column_num = 5,
-                                 contents = 'foo.') )[ 'start_column' ] )
+                                 contents = 'foo.' ) )[ 'start_column' ] )
 
 
 def StartColumn_Dot_test():
   eq_( 5,
        RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo.bar') )[ 'start_column' ] )
+                                 contents = 'foo.bar' ) )[ 'start_column' ] )
 
 
 def StartColumn_DotWithUnicode_test():
   eq_( 7,
        RequestWrap( PrepareJson( column_num = 11,
-                                 contents = 'fäö.bär') )[ 'start_column' ] )
+                                 contents = 'fäö.bär' ) )[ 'start_column' ] )
 
 
 def StartColumn_UnicodeNotIdentifier_test():
@@ -188,68 +188,68 @@ def StartColumn_ThreeByteUnicode_test():
 def StartColumn_Paren_test():
   eq_( 5,
        RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo(bar') )[ 'start_column' ] )
+                                 contents = 'foo(bar' ) )[ 'start_column' ] )
 
 
 def StartColumn_AfterWholeWord_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 7,
-                                 contents = 'foobar') )[ 'start_column' ] )
+                                 contents = 'foobar' ) )[ 'start_column' ] )
 
 
 def StartColumn_AfterWholeWord_Html_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 7,
                                  filetype = 'html',
-                                 contents = 'fo-bar') )[ 'start_column' ] )
+                                 contents = 'fo-bar' ) )[ 'start_column' ] )
 
 
 def StartColumn_AfterWholeUnicodeWord_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 6,
-                                 contents = u'fäö') )[ 'start_column' ] )
+                                 contents = u'fäö' ) )[ 'start_column' ] )
 
 
 def StartColumn_InMiddleOfWholeWord_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 4,
-                                 contents = 'foobar') )[ 'start_column' ] )
+                                 contents = 'foobar' ) )[ 'start_column' ] )
 
 
 def StartColumn_ColumnOne_test():
   eq_( 1,
        RequestWrap( PrepareJson( column_num = 1,
-                                 contents = 'foobar') )[ 'start_column' ] )
+                                 contents = 'foobar' ) )[ 'start_column' ] )
 
 
 def Query_AtWordEnd_test():
   eq_( 'foo',
        RequestWrap( PrepareJson( column_num = 4,
-                                 contents = 'foo') )[ 'query' ] )
+                                 contents = 'foo' ) )[ 'query' ] )
 
 
 def Query_InWordMiddle_test():
   eq_( 'foo',
        RequestWrap( PrepareJson( column_num = 4,
-                                 contents = 'foobar') )[ 'query' ] )
+                                 contents = 'foobar' ) )[ 'query' ] )
 
 
 def Query_StartOfLine_test():
   eq_( '',
        RequestWrap( PrepareJson( column_num = 1,
-                                 contents = 'foobar') )[ 'query' ] )
+                                 contents = 'foobar' ) )[ 'query' ] )
 
 
 def Query_StopsAtParen_test():
   eq_( 'bar',
        RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo(bar') )[ 'query' ] )
+                                 contents = 'foo(bar' ) )[ 'query' ] )
 
 
 def Query_InWhiteSpace_test():
   eq_( '',
        RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo       ') )[ 'query' ] )
+                                 contents = 'foo       ' ) )[ 'query' ] )
 
 
 def Query_UnicodeSinglecharInclusive_test():
@@ -330,7 +330,7 @@ def StartCodepoint_SetUnicode_test():
 
 def Calculated_SetMethod_test():
   assert_that(
-    calling( RequestWrap( PrepareJson( ) ).__setitem__ ).with_args(
+    calling( RequestWrap( PrepareJson() ).__setitem__ ).with_args(
       'line_value', '' ),
     raises( ValueError, 'Key "line_value" is read-only' ) )
 

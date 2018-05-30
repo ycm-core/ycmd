@@ -113,7 +113,7 @@ class FilenameCompleter( Completer ):
         path_dir,
         self.user_options[ 'filepath_completion_use_working_dir' ],
         filepath,
-        working_dir) )
+        working_dir ) )
 
 
 def _GetAbsolutePathForCompletions( path_dir,

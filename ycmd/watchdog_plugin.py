@@ -93,8 +93,8 @@ class WatchdogPlugin( object ):
       # skipped a check, that means the machine probably went to sleep and the
       # client might still actually be up. In such cases, we give it one more
       # wait interval to contact us before we die.
-      if (self._TimeSinceLastRequest() > self._idle_suicide_seconds and
-          self._TimeSinceLastWakeup() < 2 * self._check_interval_seconds):
+      if ( self._TimeSinceLastRequest() > self._idle_suicide_seconds and
+           self._TimeSinceLastWakeup() < 2 * self._check_interval_seconds ):
         _logger.info( 'Shutting down server due to inactivity' )
         ServerShutdown()
 

@@ -123,9 +123,9 @@ def Subcommands_GoToImplementation_NoImplementation_test( app ):
 
     try:
       app.post_json( '/run_completer_command', goto_data ).json
-      raise Exception("Expected a 'No implementations found' error")
+      raise Exception( "Expected a 'No implementations found' error" )
     except AppError as e:
-      if 'No implementations found' in str(e):
+      if 'No implementations found' in str( e ):
         pass
       else:
         raise
@@ -151,7 +151,7 @@ def Subcommands_CsCompleter_InvalidLocation_test( app ):
       app.post_json( '/run_completer_command', goto_data ).json
       raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
     except AppError as e:
-      if 'Can\\\'t jump to implementation' in str(e):
+      if 'Can\\\'t jump to implementation' in str( e ):
         pass
       else:
         raise

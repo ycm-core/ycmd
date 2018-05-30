@@ -250,20 +250,20 @@ class JediCompleter( Completer ):
 
 
   def _GetExtraData( self, completion ):
-      location = {}
-      if completion[ 'module_path' ]:
-        location[ 'filepath' ] = completion[ 'module_path' ]
-      if completion[ 'line' ]:
-        location[ 'line_num' ] = completion[ 'line' ]
-      if completion[ 'column' ]:
-        location[ 'column_num' ] = completion[ 'column' ] + 1
+    location = {}
+    if completion[ 'module_path' ]:
+      location[ 'filepath' ] = completion[ 'module_path' ]
+    if completion[ 'line' ]:
+      location[ 'line_num' ] = completion[ 'line' ]
+    if completion[ 'column' ]:
+      location[ 'column_num' ] = completion[ 'column' ] + 1
 
-      if location:
-        extra_data = {}
-        extra_data[ 'location' ] = location
-        return extra_data
-      else:
-        return None
+    if location:
+      extra_data = {}
+      extra_data[ 'location' ] = location
+      return extra_data
+    else:
+      return None
 
 
   def ComputeCandidatesInner( self, request_data ):

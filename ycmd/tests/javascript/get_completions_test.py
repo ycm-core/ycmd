@@ -293,7 +293,7 @@ def GetCompletions_ReturnsDocsInCompletions_test( app ):
             'a_function',
             'fn(bar: ?) -> {a_value: string}', {
               'detailed_info': ( 'fn(bar: ?) -> {a_value: string}\n'
-                                 'This is a short documentation string'),
+                                 'This is a short documentation string' ),
             } ),
           CompletionEntryMatcher( 'options', 'options' ),
           CompletionEntryMatcher( 'toString', 'fn() -> string' ),

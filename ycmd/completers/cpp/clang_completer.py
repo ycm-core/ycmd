@@ -309,7 +309,7 @@ class ClangCompleter( Completer ):
         column,
         files,
         flags,
-        reparse)
+        reparse )
 
     if not message:
       message = "No semantic information available"

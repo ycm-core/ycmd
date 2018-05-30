@@ -133,7 +133,7 @@ def FilterAndSortCandidates():
   request_data = request.json
 
   return _JsonResponse( FilterAndSortCandidatesWrap(
-    request_data[ 'candidates'],
+    request_data[ 'candidates' ],
     request_data[ 'sort_property' ],
     request_data[ 'query' ],
     _server_state.user_options[ 'max_num_candidates' ] ) )

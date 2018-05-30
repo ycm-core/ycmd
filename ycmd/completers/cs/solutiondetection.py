@@ -34,18 +34,18 @@ __logger = logging.getLogger( __name__ )
 
 
 def FindSolutionPath( filepath ):
-    """Try to find suitable solution file given a source file path using all
-       available information sources"""
-    # try to load ycm_extra_conf
-    # if it needs to be verified, abort here and try again later
-    module = extra_conf_store.ModuleForSourceFile( filepath )
-    path_to_solutionfile = PollModule( module, filepath )
+  """Try to find suitable solution file given a source file path using all
+     available information sources"""
+  # try to load ycm_extra_conf
+  # if it needs to be verified, abort here and try again later
+  module = extra_conf_store.ModuleForSourceFile( filepath )
+  path_to_solutionfile = PollModule( module, filepath )
 
-    if not path_to_solutionfile:
-      # ycm_extra_conf not available or did not provide a solution file
-      path_to_solutionfile = GuessFile( filepath )
+  if not path_to_solutionfile:
+    # ycm_extra_conf not available or did not provide a solution file
+    path_to_solutionfile = GuessFile( filepath )
 
-    return path_to_solutionfile
+  return path_to_solutionfile
 
 
 def PollModule( module, filepath ):

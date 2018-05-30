@@ -133,7 +133,7 @@ def Subcommands_GoToDefinition_NotFound_test( app ):
 
   response = app.post_json( '/run_completer_command',
                             goto_data,
-                            expect_errors = True  ).json
+                            expect_errors = True ).json
   assert_that( response,
                ErrorMatcher( RuntimeError,
                              "Can\'t jump to definition." ) )

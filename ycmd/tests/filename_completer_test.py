@@ -108,7 +108,7 @@ class FilenameCompleter_test( object ):
     data = self._CompletionResultsForLine( 'const char* c = "./' )
     assert_that( data, contains_inanyorder(
       ( 'foo漢字.txt', '[File]' ),
-      ( 'include',     '[Dir]'  ),
+      ( 'include',     '[Dir]' ),
       ( 'test.cpp',    '[File]' ),
       ( 'test.hpp',    '[File]' )
     ) )
@@ -200,7 +200,7 @@ class FilenameCompleter_test( object ):
     os.environ.pop( 'YCM_TEST_filename_c0mpleter' )
     assert_that( data, contains_inanyorder(
       ( 'foo漢字.txt', '[File]' ),
-      ( 'include',     '[Dir]'  ),
+      ( 'include',     '[Dir]' ),
       ( 'test.cpp',    '[File]' ),
       ( 'test.hpp',    '[File]' )
     ) )
@@ -301,7 +301,7 @@ class FilenameCompleter_test( object ):
     assert_that( self._CompletionResultsForLine( contents,
                                                  column_num = column_num ),
                  contains_inanyorder( ( 'inner_dir', '[Dir]' ),
-                                      ( '∂†∫',       '[Dir]' )  ) )
+                                      ( '∂†∫',       '[Dir]' ) ) )
 
 
 @IsolatedYcmd( { 'filepath_completion_use_working_dir': 0 } )

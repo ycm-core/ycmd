@@ -925,7 +925,7 @@ def Subcommands_RefactorRename_SimpleUnicode_test( app ):
               LocationMatcher( PathToTestFile( 'unicode.ts' ), 23, 7 ) ),
             ChunkMatcher(
               'ø',
-              LocationMatcher( PathToTestFile( 'unicode.ts' ), 27, 17),
+              LocationMatcher( PathToTestFile( 'unicode.ts' ), 27, 17 ),
               LocationMatcher( PathToTestFile( 'unicode.ts' ), 27, 19 ) ),
           ),
           'location': LocationMatcher( PathToTestFile( 'unicode.ts' ), 14, 3 )

@@ -67,8 +67,8 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
     'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' ) )
 
   goto_data = BuildRequest( completer_target = 'filetype_default',
-                            command_arguments = ['GoToDefinition'],
-                            compilation_flags = ['-x', 'c++'],
+                            command_arguments = [ 'GoToDefinition' ],
+                            compilation_flags = [ '-x', 'c++' ],
                             line_num = 10,
                             column_num = 3,
                             contents = contents,
@@ -109,8 +109,8 @@ def RunGoToTest_all( app, filename, command, test ):
     'completer_target' : 'filetype_default',
     'filepath'         : PathToTestFile( filename ),
     'command_arguments': command,
-    'compilation_flags': ['-x',
-                          'c++'],
+    'compilation_flags': [ '-x',
+                           'c++' ],
     'line_num'         : 10,
     'column_num'       : 3,
     'contents'         : contents,
@@ -129,12 +129,12 @@ def RunGoToTest_all( app, filename, command, test ):
   request.update( {
       'line_num'  : test[ 'request' ][ 0 ],
       'column_num': test[ 'request' ][ 1 ],
-  })
+  } )
   response = common_response
-  response.update({
+  response.update( {
       'line_num'  : test[ 'response' ][ 0 ],
       'column_num': test[ 'response' ][ 1 ],
-  })
+  } )
   if len( test[ 'response' ] ) > 2:
     response.update( {
       'filepath': PathToTestFile( test[ 'response' ][ 2 ] )
@@ -151,11 +151,11 @@ def Subcommands_GoTo_all_test():
   # GoToDeclaration
   tests = [
     # Local::x -> definition/declaration of x
-    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    { 'request': [ 23, 21 ], 'response': [ 4,   9 ] },
     # Local::in_line -> definition/declaration of Local::in_line
-    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    { 'request': [ 24, 26 ], 'response': [ 6,  10 ] },
     # Local -> definition/declaration of Local
-    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
+    { 'request': [ 24, 16 ], 'response': [ 2,  11 ] },
     # Local::out_of_line -> declaration of Local::out_of_line
     { 'request': [ 25, 27 ], 'response': [ 11, 10 ] },
     # GoToDeclaration on definition of out_of_line moves to declaration
@@ -178,17 +178,17 @@ def Subcommands_GoTo_all_test():
   # GoToDefinition
   tests = [
     # Local::x -> declaration/definition of x
-    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    { 'request': [ 23, 21 ], 'response': [ 4,   9 ] },
     # Local::in_line -> declaration/definition of Local::in_line
-    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    { 'request': [ 24, 26 ], 'response': [ 6,  10 ] },
     # Local -> declaration/definition of Local
-    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
+    { 'request': [ 24, 16 ], 'response': [ 2,  11 ] },
     # Local::out_of_line -> definition of Local::out_of_line
     { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
     # GoToDefinition on definition of out_of_line moves to itself
     { 'request': [ 14, 13 ], 'response': [ 14, 13 ] },
     # main -> definition of main (not declaration)
-    { 'request': [ 21,  7 ], 'response': [ 21,  5 ]  },
+    { 'request': [ 21,  7 ], 'response': [ 21,  5 ] },
     # Unicøde
     { 'request': [ 34,  8 ], 'response': [ 32, 26 ] },
   ]
@@ -202,11 +202,11 @@ def Subcommands_GoTo_all_test():
   # GoTo
   tests = [
     # Local::x -> declaration/definition of x
-    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    { 'request': [ 23, 21 ], 'response': [ 4,   9 ] },
     # Local::in_line -> declaration/definition of Local::in_line
-    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    { 'request': [ 24, 26 ], 'response': [ 6,  10 ] },
     # Local -> declaration/definition of Local
-    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
+    { 'request': [ 24, 16 ], 'response': [ 2,  11 ] },
     # Local::out_of_line -> definition of Local::out_of_line
     { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
     # GoTo on definition of out_of_line moves to declaration
@@ -231,11 +231,11 @@ def Subcommands_GoTo_all_test():
   # GoToImprecise - identical to GoTo
   tests = [
     # Local::x -> declaration/definition of x
-    { 'request': [ 23, 21 ], 'response': [  4,  9 ] },
+    { 'request': [ 23, 21 ], 'response': [ 4,   9 ] },
     # Local::in_line -> declaration/definition of Local::in_line
-    { 'request': [ 24, 26 ], 'response': [  6, 10 ] },
+    { 'request': [ 24, 26 ], 'response': [ 6,  10 ] },
     # Local -> declaration/definition of Local
-    { 'request': [ 24, 16 ], 'response': [  2, 11 ] },
+    { 'request': [ 24, 16 ], 'response': [ 2,  11 ] },
     # Local::out_of_line -> definition of Local::out_of_line
     { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
     # GoToImprecise on definition of out_of_line moves to declaration
@@ -402,7 +402,7 @@ def Subcommands_GoTo_Unity_test():
 
 
 @SharedYcmd
-def RunGetSemanticTest( app, filepath, filetype, test, command):
+def RunGetSemanticTest( app, filepath, filetype, test, command ):
   contents = ReadFile( filepath )
   language = { 'cpp': 'c++', 'cuda': 'cuda' }
 
@@ -447,75 +447,76 @@ def RunGetSemanticTest( app, filepath, filetype, test, command):
 def Subcommands_GetType_test():
   tests = [
     # Basic pod types
-    [{'line_num': 20, 'column_num':  3}, 'Foo'],
-    [{'line_num':  1, 'column_num':  1}, 'Internal error: cursor not valid'],
-    [{'line_num': 12, 'column_num':  2}, 'Foo'],
-    [{'line_num': 12, 'column_num':  8}, 'Foo'],
-    [{'line_num': 12, 'column_num':  9}, 'Foo'],
-    [{'line_num': 12, 'column_num': 10}, 'Foo'],
-    [{'line_num': 13, 'column_num':  3}, 'int'],
-    [{'line_num': 13, 'column_num':  7}, 'int'],
-    [{'line_num': 15, 'column_num':  7}, 'char'],
+    [ { 'line_num': 20, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num':  1, 'column_num':  1 }, 'Internal error: '
+                                            'cursor not valid' ],
+    [ { 'line_num': 12, 'column_num':  2 }, 'Foo' ],
+    [ { 'line_num': 12, 'column_num':  8 }, 'Foo' ],
+    [ { 'line_num': 12, 'column_num':  9 }, 'Foo' ],
+    [ { 'line_num': 12, 'column_num': 10 }, 'Foo' ],
+    [ { 'line_num': 13, 'column_num':  3 }, 'int' ],
+    [ { 'line_num': 13, 'column_num':  7 }, 'int' ],
+    [ { 'line_num': 15, 'column_num':  7 }, 'char' ],
 
     # Function
-    [{'line_num': 18, 'column_num':  2}, 'int ()'],
-    [{'line_num': 18, 'column_num':  6}, 'int ()'],
+    [ { 'line_num': 18, 'column_num':  2 }, 'int ()' ],
+    [ { 'line_num': 18, 'column_num':  6 }, 'int ()' ],
 
     # Declared and canonical type
     # On Ns:: (Unknown)
-    [{'line_num': 21, 'column_num':  3}, 'Unknown type'], # sic
+    [ { 'line_num': 21, 'column_num':  3 }, 'Unknown type' ], # sic
     # On Type (Type)
-    [{'line_num': 21, 'column_num':  8}, 'Ns::Type => Ns::BasicType<char>'],
+    [ { 'line_num': 21, 'column_num':  8 }, 'Ns::Type => Ns::BasicType<char>' ],
     # On "a" (Ns::Type)
-    [{'line_num': 21, 'column_num': 15}, 'Ns::Type => Ns::BasicType<char>'],
-    [{'line_num': 22, 'column_num': 13}, 'Ns::Type => Ns::BasicType<char>'],
+    [ { 'line_num': 21, 'column_num': 15 }, 'Ns::Type => Ns::BasicType<char>' ],
+    [ { 'line_num': 22, 'column_num': 13 }, 'Ns::Type => Ns::BasicType<char>' ],
 
     # Cursor on decl for refs & pointers
-    [{'line_num': 35, 'column_num':  3}, 'Foo'],
-    [{'line_num': 35, 'column_num': 11}, 'Foo &'],
-    [{'line_num': 35, 'column_num': 15}, 'Foo'],
-    [{'line_num': 36, 'column_num':  3}, 'Foo'],
-    [{'line_num': 36, 'column_num': 11}, 'Foo *'],
-    [{'line_num': 36, 'column_num': 18}, 'Foo'],
-    [{'line_num': 38, 'column_num':  3}, 'const Foo &'],
-    [{'line_num': 38, 'column_num': 16}, 'const Foo &'],
-    [{'line_num': 39, 'column_num':  3}, 'const Foo *'],
-    [{'line_num': 39, 'column_num': 16}, 'const Foo *'],
+    [ { 'line_num': 35, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num': 35, 'column_num': 11 }, 'Foo &' ],
+    [ { 'line_num': 35, 'column_num': 15 }, 'Foo' ],
+    [ { 'line_num': 36, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num': 36, 'column_num': 11 }, 'Foo *' ],
+    [ { 'line_num': 36, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 38, 'column_num':  3 }, 'const Foo &' ],
+    [ { 'line_num': 38, 'column_num': 16 }, 'const Foo &' ],
+    [ { 'line_num': 39, 'column_num':  3 }, 'const Foo *' ],
+    [ { 'line_num': 39, 'column_num': 16 }, 'const Foo *' ],
 
     # Cursor on usage
-    [{'line_num': 41, 'column_num': 13}, 'const Foo'],
-    [{'line_num': 41, 'column_num': 19}, 'const int'],
-    [{'line_num': 42, 'column_num': 13}, 'const Foo *'],
-    [{'line_num': 42, 'column_num': 20}, 'const int'],
-    [{'line_num': 43, 'column_num': 12}, 'Foo'],
-    [{'line_num': 43, 'column_num': 17}, 'int'],
-    [{'line_num': 44, 'column_num': 12}, 'Foo *'],
-    [{'line_num': 44, 'column_num': 18}, 'int'],
+    [ { 'line_num': 41, 'column_num': 13 }, 'const Foo' ],
+    [ { 'line_num': 41, 'column_num': 19 }, 'const int' ],
+    [ { 'line_num': 42, 'column_num': 13 }, 'const Foo *' ],
+    [ { 'line_num': 42, 'column_num': 20 }, 'const int' ],
+    [ { 'line_num': 43, 'column_num': 12 }, 'Foo' ],
+    [ { 'line_num': 43, 'column_num': 17 }, 'int' ],
+    [ { 'line_num': 44, 'column_num': 12 }, 'Foo *' ],
+    [ { 'line_num': 44, 'column_num': 18 }, 'int' ],
 
     # Auto in declaration
-    [{'line_num': 24, 'column_num':  3}, 'Foo &'],
-    [{'line_num': 24, 'column_num': 11}, 'Foo &'],
-    [{'line_num': 24, 'column_num': 18}, 'Foo'],
-    [{'line_num': 25, 'column_num':  3}, 'Foo *'],
-    [{'line_num': 25, 'column_num': 11}, 'Foo *'],
-    [{'line_num': 25, 'column_num': 18}, 'Foo'],
-    [{'line_num': 27, 'column_num':  3}, 'const Foo &'],
-    [{'line_num': 27, 'column_num': 16}, 'const Foo &'],
-    [{'line_num': 28, 'column_num':  3}, 'const Foo *'],
-    [{'line_num': 28, 'column_num': 16}, 'const Foo *'],
+    [ { 'line_num': 24, 'column_num':  3 }, 'Foo &' ],
+    [ { 'line_num': 24, 'column_num': 11 }, 'Foo &' ],
+    [ { 'line_num': 24, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 25, 'column_num':  3 }, 'Foo *' ],
+    [ { 'line_num': 25, 'column_num': 11 }, 'Foo *' ],
+    [ { 'line_num': 25, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 27, 'column_num':  3 }, 'const Foo &' ],
+    [ { 'line_num': 27, 'column_num': 16 }, 'const Foo &' ],
+    [ { 'line_num': 28, 'column_num':  3 }, 'const Foo *' ],
+    [ { 'line_num': 28, 'column_num': 16 }, 'const Foo *' ],
 
     # Auto in usage
-    [{'line_num': 30, 'column_num': 14}, 'const Foo'],
-    [{'line_num': 30, 'column_num': 21}, 'const int'],
-    [{'line_num': 31, 'column_num': 14}, 'const Foo *'],
-    [{'line_num': 31, 'column_num': 22}, 'const int'],
-    [{'line_num': 32, 'column_num': 13}, 'Foo'],
-    [{'line_num': 32, 'column_num': 19}, 'int'],
-    [{'line_num': 33, 'column_num': 13}, 'Foo *'],
-    [{'line_num': 33, 'column_num': 20}, 'int'],
+    [ { 'line_num': 30, 'column_num': 14 }, 'const Foo' ],
+    [ { 'line_num': 30, 'column_num': 21 }, 'const int' ],
+    [ { 'line_num': 31, 'column_num': 14 }, 'const Foo *' ],
+    [ { 'line_num': 31, 'column_num': 22 }, 'const int' ],
+    [ { 'line_num': 32, 'column_num': 13 }, 'Foo' ],
+    [ { 'line_num': 32, 'column_num': 19 }, 'int' ],
+    [ { 'line_num': 33, 'column_num': 13 }, 'Foo *' ],
+    [ { 'line_num': 33, 'column_num': 20 }, 'int' ],
 
     # Unicode
-    [{'line_num': 47, 'column_num': 13}, 'Unicøde *'],
+    [ { 'line_num': 47, 'column_num': 13 }, 'Unicøde *' ],
   ]
 
   for test in tests:
@@ -562,32 +563,33 @@ def SubCommands_GetType_Unity_test():
 
 def Subcommands_GetParent_test():
   tests = [
-    [{'line_num':  1,  'column_num':  1}, 'Internal error: cursor not valid'],
-    [{'line_num':  2,  'column_num':  8},
-     PathToTestFile( 'GetParent_Clang_test.cc' ) ],
+    [ { 'line_num':  1,  'column_num':  1 }, 'Internal error: '
+                                            'cursor not valid' ],
+    [ { 'line_num':  2,  'column_num':  8 },
+      PathToTestFile( 'GetParent_Clang_test.cc' ) ],
 
     # The reported scope does not include parents
-    [{'line_num':  3,  'column_num': 11}, 'A'],
-    [{'line_num':  4,  'column_num': 13}, 'B'],
-    [{'line_num':  5,  'column_num': 13}, 'B'],
-    [{'line_num':  9,  'column_num': 17}, 'do_z_inline()'],
-    [{'line_num': 15,  'column_num': 22}, 'do_anything(T &)'],
-    [{'line_num': 19,  'column_num':  9}, 'A'],
-    [{'line_num': 20,  'column_num':  9}, 'A'],
-    [{'line_num': 22,  'column_num': 12}, 'A'],
-    [{'line_num': 23,  'column_num':  5}, 'do_Z_inline()'],
-    [{'line_num': 24,  'column_num': 12}, 'do_Z_inline()'],
-    [{'line_num': 28,  'column_num': 14}, 'A'],
+    [ { 'line_num':  3,  'column_num': 11 }, 'A' ],
+    [ { 'line_num':  4,  'column_num': 13 }, 'B' ],
+    [ { 'line_num':  5,  'column_num': 13 }, 'B' ],
+    [ { 'line_num':  9,  'column_num': 17 }, 'do_z_inline()' ],
+    [ { 'line_num': 15,  'column_num': 22 }, 'do_anything(T &)' ],
+    [ { 'line_num': 19,  'column_num':  9 }, 'A' ],
+    [ { 'line_num': 20,  'column_num':  9 }, 'A' ],
+    [ { 'line_num': 22,  'column_num': 12 }, 'A' ],
+    [ { 'line_num': 23,  'column_num':  5 }, 'do_Z_inline()' ],
+    [ { 'line_num': 24,  'column_num': 12 }, 'do_Z_inline()' ],
+    [ { 'line_num': 28,  'column_num': 14 }, 'A' ],
 
-    [{'line_num': 34,  'column_num':  1}, 'do_anything(T &)'],
-    [{'line_num': 39,  'column_num':  1}, 'do_x()'],
-    [{'line_num': 44,  'column_num':  1}, 'do_y()'],
-    [{'line_num': 49,  'column_num':  1}, 'main()'],
+    [ { 'line_num': 34,  'column_num':  1 }, 'do_anything(T &)' ],
+    [ { 'line_num': 39,  'column_num':  1 }, 'do_x()' ],
+    [ { 'line_num': 44,  'column_num':  1 }, 'do_y()' ],
+    [ { 'line_num': 49,  'column_num':  1 }, 'main()' ],
 
     # Lambdas report the name of the variable
-    [{'line_num': 49,  'column_num': 14}, 'l'],
-    [{'line_num': 50,  'column_num': 19}, 'l'],
-    [{'line_num': 51,  'column_num': 16}, 'main()'],
+    [ { 'line_num': 49,  'column_num': 14 }, 'l' ],
+    [ { 'line_num': 50,  'column_num': 19 }, 'l' ],
+    [ { 'line_num': 51,  'column_num': 16 }, 'main()' ],
   ]
 
   for test in tests:
@@ -658,14 +660,14 @@ def FixIt_Check_cpp11_Ins( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to('static_cast<int>('),
+          'replacement_text': equal_to( 'static_cast<int>(' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 16, 'column_num': 10 } ),
             'end'  : has_entries( { 'line_num': 16, 'column_num': 10 } ),
           } ),
         } ),
         has_entries( {
-          'replacement_text': equal_to(')'),
+          'replacement_text': equal_to( ')' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 16, 'column_num': 13 } ),
             'end'  : has_entries( { 'line_num': 16, 'column_num': 13 } ),
@@ -684,14 +686,14 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to('static_cast<int>('),
+          'replacement_text': equal_to( 'static_cast<int>(' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 26, 'column_num': 7 } ),
             'end'  : has_entries( { 'line_num': 26, 'column_num': 7 } ),
           } ),
         } ),
         has_entries( {
-          'replacement_text': equal_to(')'),
+          'replacement_text': equal_to( ')' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 28, 'column_num': 2 } ),
             'end'  : has_entries( { 'line_num': 28, 'column_num': 2 } ),
@@ -709,7 +711,7 @@ def FixIt_Check_cpp11_Del( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to(''),
+          'replacement_text': equal_to( '' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 35, 'column_num': 7 } ),
             'end'  : has_entries( { 'line_num': 35, 'column_num': 9 } ),
@@ -726,7 +728,7 @@ def FixIt_Check_cpp11_Repl( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to('foo'),
+          'replacement_text': equal_to( 'foo' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 40, 'column_num': 6 } ),
             'end'  : has_entries( { 'line_num': 40, 'column_num': 9 } ),
@@ -743,14 +745,14 @@ def FixIt_Check_cpp11_DelAdd( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to(''),
+          'replacement_text': equal_to( '' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 48, 'column_num': 3 } ),
             'end'  : has_entries( { 'line_num': 48, 'column_num': 4 } ),
           } ),
         } ),
         has_entries( {
-          'replacement_text': equal_to('~'),
+          'replacement_text': equal_to( '~' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 48, 'column_num': 9 } ),
             'end'  : has_entries( { 'line_num': 48, 'column_num': 9 } ),
@@ -767,7 +769,7 @@ def FixIt_Check_objc( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to('id'),
+          'replacement_text': equal_to( 'id' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 5, 'column_num': 3 } ),
             'end'  : has_entries( { 'line_num': 5, 'column_num': 3 } ),
@@ -791,7 +793,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
       has_entries( {
         'chunks': contains(
           has_entries( {
-            'replacement_text': equal_to('foo'),
+            'replacement_text': equal_to( 'foo' ),
             'range': has_entries( {
               'start': has_entries( { 'line_num': 54, 'column_num': 16 } ),
               'end'  : has_entries( { 'line_num': 54, 'column_num': 19 } ),
@@ -804,14 +806,14 @@ def FixIt_Check_cpp11_MultiFirst( results ):
       has_entries( {
         'chunks': contains(
           has_entries( {
-            'replacement_text': equal_to(''),
+            'replacement_text': equal_to( '' ),
             'range': has_entries( {
               'start': has_entries( { 'line_num': 54, 'column_num': 52 } ),
               'end'  : has_entries( { 'line_num': 54, 'column_num': 53 } ),
             } ),
           } ),
           has_entries( {
-            'replacement_text': equal_to('~'),
+            'replacement_text': equal_to( '~' ),
             'range': has_entries( {
               'start': has_entries( { 'line_num': 54, 'column_num': 58 } ),
               'end'  : has_entries( { 'line_num': 54, 'column_num': 58 } ),
@@ -831,14 +833,14 @@ def FixIt_Check_cpp11_MultiSecond( results ):
       has_entries( {
         'chunks': contains(
           has_entries( {
-            'replacement_text': equal_to(''),
+            'replacement_text': equal_to( '' ),
             'range': has_entries( {
               'start': has_entries( { 'line_num': 54, 'column_num': 52 } ),
               'end'  : has_entries( { 'line_num': 54, 'column_num': 53 } ),
             } ),
           } ),
           has_entries( {
-            'replacement_text': equal_to('~'),
+            'replacement_text': equal_to( '~' ),
             'range': has_entries( {
               'start': has_entries( { 'line_num': 54, 'column_num': 58 } ),
               'end'  : has_entries( { 'line_num': 54, 'column_num': 58 } ),
@@ -851,7 +853,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
       has_entries( {
         'chunks': contains(
           has_entries( {
-            'replacement_text': equal_to('foo'),
+            'replacement_text': equal_to( 'foo' ),
             'range': has_entries( {
               'start': has_entries( { 'line_num': 54, 'column_num': 16 } ),
               'end'  : has_entries( { 'line_num': 54, 'column_num': 19 } ),
@@ -869,7 +871,7 @@ def FixIt_Check_unicode_Ins( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to(';'),
+          'replacement_text': equal_to( ';' ),
           'range': has_entries( {
             'start': has_entries( { 'line_num': 21, 'column_num': 39 } ),
             'end'  : has_entries( { 'line_num': 21, 'column_num': 39 } ),
@@ -992,7 +994,7 @@ def Subcommands_FixIt_all_test():
   ]
 
   for test in tests:
-    yield RunFixItTest, test[0], test[1], test[2], test[3], test[4]
+    yield RunFixItTest, test[ 0 ], test[ 1 ], test[ 2 ], test[ 3 ], test[ 4 ]
 
 
 @SharedYcmd

@@ -357,7 +357,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       if filetype in supported:
         return filetype
 
-    return filetypes[0]
+    return filetypes[ 0 ]
 
 
   @abc.abstractmethod

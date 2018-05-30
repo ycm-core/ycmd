@@ -203,7 +203,7 @@ def JoinLinesAsUnicode_Str_test():
 
 
 def JoinLinesAsUnicode_EmptyList_test():
-  value = utils.JoinLinesAsUnicode( [ ] )
+  value = utils.JoinLinesAsUnicode( [] )
   eq_( value, u'' )
   ok_( isinstance( value, str ) )
 
@@ -588,9 +588,9 @@ def GetCurrentDirectory_Py3NoCurrentDirectory_test():
 def HashableDict_Equality_test():
   dict1 = { 'key': 'value' }
   dict2 = { 'key': 'another_value' }
-  ok_(     utils.HashableDict( dict1 ) == utils.HashableDict( dict1 ) )
+  ok_( utils.HashableDict( dict1 ) == utils.HashableDict( dict1 ) )
   ok_( not utils.HashableDict( dict1 ) != utils.HashableDict( dict1 ) )
   ok_( not utils.HashableDict( dict1 ) == dict1 )
-  ok_(     utils.HashableDict( dict1 ) != dict1 )
+  ok_( utils.HashableDict( dict1 ) != dict1 )
   ok_( not utils.HashableDict( dict1 ) == utils.HashableDict( dict2 ) )
-  ok_(     utils.HashableDict( dict1 ) != utils.HashableDict( dict2 ) )
+  ok_( utils.HashableDict( dict1 ) != utils.HashableDict( dict2 ) )

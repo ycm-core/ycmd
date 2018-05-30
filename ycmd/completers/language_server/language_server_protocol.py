@@ -408,7 +408,7 @@ def _BuildMessageData( message ):
   # JSON/YAML parser.
   data = ToBytes( json.dumps( message, sort_keys=True ) )
   packet = ToBytes( 'Content-Length: {0}\r\n'
-                    '\r\n'.format( len(data) ) ) + data
+                    '\r\n'.format( len( data ) ) ) + data
   return packet
 
 

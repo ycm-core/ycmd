@@ -152,7 +152,7 @@ def CppBindings_DefinitionOrDeclarationLocation_test():
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr(  '-xc++' ) )
+  flags.append( ToCppStr( '-xc++' ) )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -187,7 +187,7 @@ def CppBindings_DefinitionLocation_test():
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr(  '-xc++' ) )
+  flags.append( ToCppStr( '-xc++' ) )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
