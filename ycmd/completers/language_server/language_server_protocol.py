@@ -395,7 +395,7 @@ def FilePathToUri( file_name ):
 
 
 def UriToFilePath( uri ):
-  if uri [ : 5 ] != "file:":
+  if uri[ : 5 ] != "file:":
     raise InvalidUriException( uri )
 
   return os.path.abspath( url2pathname( uri[ 5 : ] ) )

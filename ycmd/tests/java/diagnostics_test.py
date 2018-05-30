@@ -159,7 +159,7 @@ DIAG_MATCHERS_PER_FILE = {
       'fixit_available': False
     } ),
   ),
-  TestLauncher: contains_inanyorder (
+  TestLauncher: contains_inanyorder(
     has_entries( {
       'kind': 'ERROR',
       'text': 'The type new TestLauncher.Launchable(){} must implement the '
