@@ -317,7 +317,7 @@ def IsIdentifier_Perl6_test():
 
 
 def IsIdentifier_Scheme_test():
-  ok_( iu.IsIdentifier( 'λ'         , 'scheme') )
+  ok_( iu.IsIdentifier( 'λ'         , 'scheme' ) )
   ok_( iu.IsIdentifier( '_'         , 'scheme' ) )
   ok_( iu.IsIdentifier( '+'         , 'scheme' ) )
   ok_( iu.IsIdentifier( '-'         , 'scheme' ) )

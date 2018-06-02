@@ -160,7 +160,7 @@ def _FindProjectDir( starting_dir ):
                    'project root:'.format( project_type, project_path ) )
 
     for folder in utils.PathsToAllParentFolders( os.path.join( project_path,
-                                                               '..') ):
+                                                               '..' ) ):
       if os.path.isfile( os.path.join( folder, project_type ) ):
         _logger.debug( '  {0} is a parent project dir'.format( folder ) )
         project_path = folder

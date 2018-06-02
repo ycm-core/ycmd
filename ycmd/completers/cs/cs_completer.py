@@ -577,10 +577,10 @@ class CsharpSolutionCompleter( object ):
 
   def _ChooseOmnisharpPort( self ):
     if not self._omnisharp_port:
-        if self._desired_omnisharp_port:
-            self._omnisharp_port = int( self._desired_omnisharp_port )
-        else:
-            self._omnisharp_port = utils.GetUnusedLocalhostPort()
+      if self._desired_omnisharp_port:
+        self._omnisharp_port = int( self._desired_omnisharp_port )
+      else:
+        self._omnisharp_port = utils.GetUnusedLocalhostPort()
     self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
 
 

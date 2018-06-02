@@ -48,7 +48,7 @@ void foo() {
 // Padding to 5 lines
 """
 
-  event_data = BuildRequest( compilation_flags = ['-x', 'c++'],
+  event_data = BuildRequest( compilation_flags = [ '-x', 'c++' ],
                              event_name = 'FileReadyToParse',
                              contents = contents,
                              filetype = 'cpp' )
@@ -96,7 +96,7 @@ void foo() {
 // Padding to 5 lines
 """
 
-  event_data = BuildRequest( compilation_flags = ['-x', 'c++'],
+  event_data = BuildRequest( compilation_flags = [ '-x', 'c++' ],
                              event_name = 'FileReadyToParse',
                              contents = contents,
                              filetype = 'cpp' )
@@ -131,7 +131,7 @@ struct Foo {
 };
 """
 
-  event_data = BuildRequest( compilation_flags = ['-x', 'c++'],
+  event_data = BuildRequest( compilation_flags = [ '-x', 'c++' ],
                              event_name = 'FileReadyToParse',
                              contents = contents,
                              filepath = '/foo.h',
@@ -152,7 +152,7 @@ struct Foo {
 };
 """
 
-  diag_data = BuildRequest( compilation_flags = ['-x', 'c++'],
+  diag_data = BuildRequest( compilation_flags = [ '-x', 'c++' ],
                             line_num = 3,
                             contents = contents,
                             filetype = 'cpp' )
@@ -217,7 +217,7 @@ def Diagnostics_FixIt_Available_test( app ):
     has_entries( {
       'location': has_entries( { 'line_num': 16, 'column_num': 3 } ),
       'text': equal_to( 'switch condition type \'A\' '
-                        'requires explicit conversion to \'int\''),
+                        'requires explicit conversion to \'int\'' ),
       'fixit_available': True
     } ),
     has_entries( {

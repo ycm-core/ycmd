@@ -123,9 +123,9 @@ def Subcommands_GoToImplementation_NoImplementation_test( app ):
 
     try:
       app.post_json( '/run_completer_command', goto_data ).json
-      raise Exception("Expected a 'No implementations found' error")
+      raise Exception( "Expected a 'No implementations found' error" )
     except AppError as e:
-      if 'No implementations found' in str(e):
+      if 'No implementations found' in str( e ):
         pass
       else:
         raise
@@ -151,7 +151,7 @@ def Subcommands_CsCompleter_InvalidLocation_test( app ):
       app.post_json( '/run_completer_command', goto_data ).json
       raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
     except AppError as e:
-      if 'Can\\\'t jump to implementation' in str(e):
+      if 'Can\\\'t jump to implementation' in str( e ):
         pass
       else:
         raise
@@ -437,7 +437,7 @@ def Subcommands_FixIt_RemoveSingleLine_test( app ):
 def Subcommands_FixIt_MultipleLines_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 19, 1, has_entries( {
-    'fixits': contains( has_entries ( {
+    'fixits': contains( has_entries( {
       'location': LocationMatcher( filepath, 19, 1 ),
       'chunks': contains( ChunkMatcher( 'return On',
                                         LocationMatcher( filepath, 20, 13 ),
@@ -450,7 +450,7 @@ def Subcommands_FixIt_MultipleLines_test( app ):
 def Subcommands_FixIt_SpanFileEdge_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 1, 1, has_entries( {
-    'fixits': contains( has_entries ( {
+    'fixits': contains( has_entries( {
       'location': LocationMatcher( filepath, 1, 1 ),
       'chunks': contains( ChunkMatcher( 'System',
                                         LocationMatcher( filepath, 1, 7 ),
@@ -463,7 +463,7 @@ def Subcommands_FixIt_SpanFileEdge_test( app ):
 def Subcommands_FixIt_AddTextInLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 9, 1, has_entries( {
-    'fixits': contains( has_entries ( {
+    'fixits': contains( has_entries( {
       'location': LocationMatcher( filepath, 9, 1 ),
       'chunks': contains( ChunkMatcher( ', StringComparison.Ordinal',
                                         LocationMatcher( filepath, 9, 29 ),
@@ -476,7 +476,7 @@ def Subcommands_FixIt_AddTextInLine_test( app ):
 def Subcommands_FixIt_ReplaceTextInLine_test( app ):
   filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
   RunFixItTest( app, 10, 1, has_entries( {
-    'fixits': contains( has_entries ( {
+    'fixits': contains( has_entries( {
       'location': LocationMatcher( filepath, 10, 1 ),
       'chunks': contains( ChunkMatcher( 'const int',
                                         LocationMatcher( filepath, 10, 13 ),
@@ -489,7 +489,7 @@ def Subcommands_FixIt_ReplaceTextInLine_test( app ):
 def Subcommands_FixIt_Unicode_test( app ):
   filepath = PathToTestFile( 'testy', 'Unicode.cs' )
   RunFixItTest( app, 30, 54, has_entries( {
-    'fixits': contains( has_entries ( {
+    'fixits': contains( has_entries( {
       'location': LocationMatcher( filepath, 30, 54 ),
       'chunks': contains( ChunkMatcher( ' readonly',
                                         LocationMatcher( filepath, 30, 44 ),

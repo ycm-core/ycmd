@@ -404,7 +404,7 @@ def GetShortPathName( path ):
   _GetShortPathNameW = windll.kernel32.GetShortPathNameW
   _GetShortPathNameW.argtypes = [ wintypes.LPCWSTR,
                                   wintypes.LPWSTR,
-                                  wintypes.DWORD]
+                                  wintypes.DWORD ]
   _GetShortPathNameW.restype = wintypes.DWORD
 
   output_buf_size = 0

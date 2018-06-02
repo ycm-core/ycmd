@@ -259,7 +259,7 @@ class LanguageServerConnection( threading.Thread ):
       self._connection_event.set()
 
       # Blocking loop which reads whole messages and calls _DispatchMessage
-      self._ReadMessages( )
+      self._ReadMessages()
     except LanguageServerConnectionStopped:
       # Abort any outstanding requests
       with self._response_mutex:
@@ -637,7 +637,7 @@ class LanguageServerCompleter( Completer ):
     pass # pragma: no cover
 
 
-  def __init__( self, user_options):
+  def __init__( self, user_options ):
     super( LanguageServerCompleter, self ).__init__( user_options )
 
     # _server_info_mutex synchronises access to the state of the
@@ -945,7 +945,7 @@ class LanguageServerCompleter( Completer ):
           # The server isn't running or something. Don't re-poll.
           return False
 
-        notification = self.GetConnection()._notifications.get_nowait( )
+        notification = self.GetConnection()._notifications.get_nowait()
         message = self.ConvertNotificationToMessage( request_data,
                                                      notification )
 
@@ -1207,7 +1207,7 @@ class LanguageServerCompleter( Completer ):
 
       request_id = self.GetConnection().NextRequestId()
       msg = lsp.Initialize( request_id,
-                            self._GetProjectDirectory( request_data  ) )
+                            self._GetProjectDirectory( request_data ) )
 
       def response_handler( response, message ):
         if message is None:

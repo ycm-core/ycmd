@@ -313,7 +313,7 @@ def SolutionSelectCheck( app, sourcefile, reference_solution,
                                         filetype = 'cs' ) ).json
 
   # Now that cleanup is done, verify solution file
-  eq_( reference_solution, result)
+  eq_( reference_solution, result )
 
 
 @SharedYcmd

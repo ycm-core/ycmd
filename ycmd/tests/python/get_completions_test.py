@@ -42,7 +42,7 @@ def GetCompletions_Basic_test( app ):
                                   filetype = 'python',
                                   contents = ReadFile( filepath ),
                                   line_num = 7,
-                                  column_num = 3)
+                                  column_num = 3 )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
@@ -65,7 +65,7 @@ def GetCompletions_UnicodeDescription_test( app ):
                                   contents = ReadFile( filepath ),
                                   force_semantic = True,
                                   line_num = 5,
-                                  column_num = 3)
+                                  column_num = 3 )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]

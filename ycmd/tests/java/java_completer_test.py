@@ -153,15 +153,15 @@ def JavaCompleter_GetDoc_test( app ):
 
   with patch.object( completer, 'GetHoverResponse', return_value = '' ):
     assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
-                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE) )
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
 
   with patch.object( completer, 'GetHoverResponse', return_value = 'string' ):
     assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
-                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE) )
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
 
   with patch.object( completer, 'GetHoverResponse', return_value = [] ):
     assert_that( calling( completer.GetDoc ).with_args( BuildRequest() ),
-                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE) )
+                 raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
 
   with patch.object( completer,
                      'GetHoverResponse',

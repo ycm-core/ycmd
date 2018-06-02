@@ -249,7 +249,7 @@ def GetCompletions_ForceSemantic_NoSemanticCompleter_test( app, *args ):
 @SharedYcmd
 def GetCompletions_IdentifierCompleter_SyntaxKeywordsAdded_test( app ):
   event_data = BuildRequest( event_name = 'FileReadyToParse',
-                             syntax_keywords = ['foo', 'bar', 'zoo'] )
+                             syntax_keywords = [ 'foo', 'bar', 'zoo' ] )
 
   app.post_json( '/event_notification', event_data )
 
@@ -355,8 +355,8 @@ def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   event_data = BuildRequest(
     event_name = 'BufferVisit',
     ultisnips_snippets = [
-        {'trigger': 'foo', 'description': 'bar'},
-        {'trigger': 'zoo', 'description': 'goo'},
+        { 'trigger': 'foo', 'description': 'bar' },
+        { 'trigger': 'zoo', 'description': 'goo' },
     ] )
 
   app.post_json( '/event_notification', event_data )
@@ -380,8 +380,8 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test( app ):
   event_data = BuildRequest(
     event_name = 'BufferVisit',
     ultisnips_snippets = [
-        {'trigger': 'foo', 'description': 'bar'},
-        {'trigger': 'zoo', 'description': 'goo'},
+        { 'trigger': 'foo', 'description': 'bar' },
+        { 'trigger': 'zoo', 'description': 'goo' },
     ] )
 
   app.post_json( '/event_notification', event_data )

@@ -31,74 +31,74 @@ import queue
 
 
 def LanguageServerConnection_ReadPartialMessage_test():
-   connection = MockConnection()
+  connection = MockConnection()
 
-   return_values = [
-     bytes( b'Content-Length: 10\n\n{"abc":' ),
-     bytes( b'""}' ),
-     lsc.LanguageServerConnectionStopped
-   ]
+  return_values = [
+    bytes( b'Content-Length: 10\n\n{"abc":' ),
+    bytes( b'""}' ),
+    lsc.LanguageServerConnectionStopped
+  ]
 
-   with patch.object( connection, 'ReadData', side_effect = return_values  ):
-     with patch.object( connection, '_DispatchMessage' ) as dispatch_message:
-       connection.run()
-       dispatch_message.assert_called_with( { 'abc': '' } )
+  with patch.object( connection, 'ReadData', side_effect = return_values ):
+    with patch.object( connection, '_DispatchMessage' ) as dispatch_message:
+      connection.run()
+      dispatch_message.assert_called_with( { 'abc': '' } )
 
 
 def LanguageServerConnection_MissingHeader_test():
-   connection = MockConnection()
+  connection = MockConnection()
 
-   return_values = [
-     bytes( b'Content-NOTLENGTH: 10\n\n{"abc":' ),
-     bytes( b'""}' ),
-     lsc.LanguageServerConnectionStopped
-   ]
+  return_values = [
+    bytes( b'Content-NOTLENGTH: 10\n\n{"abc":' ),
+    bytes( b'""}' ),
+    lsc.LanguageServerConnectionStopped
+  ]
 
-   with patch.object( connection, 'ReadData', side_effect = return_values  ):
-     assert_that( calling( connection._ReadMessages ), raises( ValueError ) )
+  with patch.object( connection, 'ReadData', side_effect = return_values ):
+    assert_that( calling( connection._ReadMessages ), raises( ValueError ) )
 
 
 def LanguageServerConnection_RequestAbortCallback_test():
-   connection = MockConnection()
+  connection = MockConnection()
 
-   return_values = [
-     lsc.LanguageServerConnectionStopped
-   ]
+  return_values = [
+    lsc.LanguageServerConnectionStopped
+  ]
 
-   with patch.object( connection, 'ReadData', side_effect = return_values  ):
-     callback = MagicMock()
-     response = connection.GetResponseAsync( 1,
-                                             bytes( b'{"test":"test"}' ),
-                                             response_callback = callback )
-     connection.run()
-     callback.assert_called_with( response, None )
+  with patch.object( connection, 'ReadData', side_effect = return_values ):
+    callback = MagicMock()
+    response = connection.GetResponseAsync( 1,
+                                            bytes( b'{"test":"test"}' ),
+                                            response_callback = callback )
+    connection.run()
+    callback.assert_called_with( response, None )
 
 
 def LanguageServerConnection_RequestAbortAwait_test():
-   connection = MockConnection()
+  connection = MockConnection()
 
-   return_values = [
-     lsc.LanguageServerConnectionStopped
-   ]
+  return_values = [
+    lsc.LanguageServerConnectionStopped
+  ]
 
-   with patch.object( connection, 'ReadData', side_effect = return_values  ):
-     response = connection.GetResponseAsync( 1,
-                                             bytes( b'{"test":"test"}' ) )
-     connection.run()
-     assert_that( calling( response.AwaitResponse ).with_args( 10 ),
-                  raises( lsc.ResponseAbortedException ) )
+  with patch.object( connection, 'ReadData', side_effect = return_values ):
+    response = connection.GetResponseAsync( 1,
+                                            bytes( b'{"test":"test"}' ) )
+    connection.run()
+    assert_that( calling( response.AwaitResponse ).with_args( 10 ),
+                 raises( lsc.ResponseAbortedException ) )
 
 
 def LanguageServerConnection_ServerConnectionDies_test():
-   connection = MockConnection()
+  connection = MockConnection()
 
-   return_values = [
-     IOError
-   ]
+  return_values = [
+    IOError
+  ]
 
-   with patch.object( connection, 'ReadData', side_effect = return_values  ):
-     # No exception is thrown
-     connection.run()
+  with patch.object( connection, 'ReadData', side_effect = return_values ):
+    # No exception is thrown
+    connection.run()
 
 
 @patch( 'ycmd.completers.language_server.language_server_completer.'

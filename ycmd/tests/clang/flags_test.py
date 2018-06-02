@@ -820,7 +820,7 @@ def CompilationDatabase_NoDatabase_test():
 
 
 def CompilationDatabase_FileNotInDatabase_test():
-  compile_commands = [ ]
+  compile_commands = []
   with TemporaryTestDir() as tmp_dir:
     with TemporaryClangProject( tmp_dir, compile_commands ):
       eq_(

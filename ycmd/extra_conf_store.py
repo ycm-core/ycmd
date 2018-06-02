@@ -140,8 +140,8 @@ def _ShouldLoad( module_file ):
 
   globlist = user_options_store.Value( 'extra_conf_globlist' )
   for glob in globlist:
-    is_blacklisted = glob[0] == '!'
-    if _MatchesGlobPattern( module_file, glob.lstrip('!') ):
+    is_blacklisted = glob[ 0 ] == '!'
+    if _MatchesGlobPattern( module_file, glob.lstrip( '!' ) ):
       return not is_blacklisted
 
   raise UnknownExtraConf( module_file )

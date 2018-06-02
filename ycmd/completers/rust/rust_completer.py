@@ -168,7 +168,7 @@ class RustCompleter( Completer ):
 
 
   def _GetResponse( self, handler, request_data = None,
-                    method = 'POST'):
+                    method = 'POST' ):
     """
     Query racerd via HTTP
 

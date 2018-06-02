@@ -324,7 +324,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries ( {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
               ChunkMatcher( 'test',
@@ -372,7 +372,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries ( {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
@@ -499,7 +499,7 @@ def Subcommands_RefactorRename_Unicode_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries ( {
+      'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
               ChunkMatcher( '†es†',

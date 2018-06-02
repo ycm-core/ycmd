@@ -311,10 +311,10 @@ int main()
                                   contents = contents,
                                   line_num = 11,
                                   column_num = 7,
-                                  compilation_flags = ['-x', 'c++'] )
+                                  compilation_flags = [ '-x', 'c++' ] )
 
   response_data = app.post_json( '/completions', completion_data ).json
-  assert_that( response_data[ 'completions'],
+  assert_that( response_data[ 'completions' ],
                has_items( CompletionEntryMatcher( 'c' ),
                           CompletionEntryMatcher( 'x' ),
                           CompletionEntryMatcher( 'y' ) ) )
@@ -345,7 +345,7 @@ int main()
                                   contents = contents,
                                   line_num = 11,
                                   column_num = 7,
-                                  compilation_flags = ['-x', 'c++'] )
+                                  compilation_flags = [ '-x', 'c++' ] )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
@@ -452,7 +452,7 @@ int main()
                                   contents = contents,
                                   line_num = 9,
                                   column_num = 8,
-                                  compilation_flags = ['-x', 'c++'] )
+                                  compilation_flags = [ '-x', 'c++' ] )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
@@ -477,7 +477,7 @@ def GetCompletions_ClientDataGivenToExtraConf_test( app ):
                                   line_num = 9,
                                   column_num = 7,
                                   extra_conf_data = {
-                                    'flags': ['-x', 'c++']
+                                    'flags': [ '-x', 'c++' ]
                                   } )
 
   results = app.post_json( '/completions',
@@ -499,7 +499,7 @@ def GetCompletions_ClientDataGivenToExtraConf_Include_test( app ):
                                   line_num = 1,
                                   column_num = 11,
                                   extra_conf_data = {
-                                    'flags': ['-x', 'c++']
+                                    'flags': [ '-x', 'c++' ]
                                   } )
 
   results = app.post_json( '/completions',
@@ -762,7 +762,7 @@ def GetCompletions_QuotedInclude_AtStart_test( app ):
         'completions': contains(
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
-          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
           CompletionEntryMatcher( 'quote',              '[Dir]' ),
           CompletionEntryMatcher( 'system',             '[Dir]' )
@@ -795,10 +795,10 @@ def GetCompletions_QuotedInclude_UserIncludeFlag_test( app ):
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
-          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
-          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
-          CompletionEntryMatcher( 'system',             '[Dir]'  )
+          CompletionEntryMatcher( 'quote',              '[Dir]' ),
+          CompletionEntryMatcher( 'system',             '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -828,10 +828,10 @@ def GetCompletions_QuotedInclude_SystemIncludeFlag_test( app ):
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
-          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
-          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
-          CompletionEntryMatcher( 'system',             '[Dir]'  )
+          CompletionEntryMatcher( 'quote',              '[Dir]' ),
+          CompletionEntryMatcher( 'system',             '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -861,10 +861,10 @@ def GetCompletions_QuotedInclude_QuoteIncludeFlag_test( app ):
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'b.hpp',              '[File]' ),
-          CompletionEntryMatcher( 'dir with spaces',    '[Dir]'  ),
+          CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
-          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
-          CompletionEntryMatcher( 'system',             '[Dir]'  )
+          CompletionEntryMatcher( 'quote',              '[Dir]' ),
+          CompletionEntryMatcher( 'system',             '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -900,8 +900,8 @@ def GetCompletions_QuotedInclude_MultipleIncludeFlags_test( app ):
           CompletionEntryMatcher( 'd.hpp',              '[File]' ),
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
-          CompletionEntryMatcher( 'quote',              '[Dir]'  ),
-          CompletionEntryMatcher( 'system',             '[Dir]'  )
+          CompletionEntryMatcher( 'quote',              '[Dir]' ),
+          CompletionEntryMatcher( 'system',             '[Dir]' )
         ),
         'errors': empty(),
       } )

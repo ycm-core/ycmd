@@ -805,7 +805,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create field 'Wibble'",
-        'chunks': contains (
+        'chunks': contains(
           ChunkMatcher( '\n\n',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
@@ -816,7 +816,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create constant 'Wibble'",
-        'chunks': contains (
+        'chunks': contains(
           ChunkMatcher( '\n\n',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
@@ -827,7 +827,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create parameter 'Wibble'",
-        'chunks': contains (
+        'chunks': contains(
           ChunkMatcher( ', ',
                         LocationMatcher( filepath, 18, 32 ),
                         LocationMatcher( filepath, 18, 32 ) ),
@@ -838,7 +838,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create local variable 'Wibble'",
-        'chunks': contains (
+        'chunks': contains(
           ChunkMatcher( 'Object Wibble;',
                         LocationMatcher( filepath, 19, 5 ),
                         LocationMatcher( filepath, 19, 5 ) ),
@@ -1577,8 +1577,8 @@ def Subcommands_RequestFailed_test( app ):
                          bytes( b'textDocument/codeFAILED' ) )
 
     with connection._stdin_lock:
-       connection._server_stdin.write( junk )
-       connection._server_stdin.flush()
+      connection._server_stdin.write( junk )
+      connection._server_stdin.flush()
 
 
   with patch.object( connection, 'WriteData', side_effect = WriteJunkToServer ):

@@ -64,7 +64,7 @@ class EphemeralValue( object ):
     return self._value
 
 
-  def __exit__( self, *unused_args):
+  def __exit__( self, *unused_args ):
     with self._parent_lock:
       self._parent_set.remove( self._value )
     return False
