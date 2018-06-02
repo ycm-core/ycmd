@@ -18,8 +18,6 @@
 #ifndef CODE_POINT_H_3W0LNCLY
 #define CODE_POINT_H_3W0LNCLY
 
-// This header is required on MSVC 12 for the uint8_t type.
-#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
