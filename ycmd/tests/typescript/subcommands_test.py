@@ -709,12 +709,13 @@ def Subcommands_FixIt_test( app ):
             'chunks': contains(
               ChunkMatcher(
                 matches_regexp(
-                  '^    nonExistingMethod\(\): any {\r?\n'
+                  '^\r?\n'
+                  '    nonExistingMethod\(\): any {\r?\n'
                   '        throw new Error\("Method not implemented."\);\r?\n'
-                  '    }\r?\n$',
+                  '    }$',
                 ),
-                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ),
-                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ) )
+                LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),
             'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
           } ),
@@ -722,9 +723,10 @@ def Subcommands_FixIt_test( app ):
             'text': "Declare property 'nonExistingMethod'",
             'chunks': contains(
               ChunkMatcher(
-                matches_regexp( '^    nonExistingMethod: any;\r?\n$' ),
-                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ),
-                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ) )
+                matches_regexp( '^\r?\n'
+                                '    nonExistingMethod: any;$' ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),
             'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
           } ),
@@ -732,9 +734,10 @@ def Subcommands_FixIt_test( app ):
             'text': "Add index signature for property 'nonExistingMethod'",
             'chunks': contains(
               ChunkMatcher(
-                matches_regexp( '^    \[x: string\]: any;\r?\n$' ),
-                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ),
-                LocationMatcher( PathToTestFile( 'test.ts' ), 27, 1 ) )
+                matches_regexp( '^\r?\n'
+                                '    \[x: string\]: any;$' ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
+                LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),
             'location': LocationMatcher( PathToTestFile( 'test.ts' ), 35, 12 )
           } )
