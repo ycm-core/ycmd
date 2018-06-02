@@ -21,15 +21,18 @@
 
 #include <mutex>
 
+using std::mutex;
+using std::lock_guard;
+
 namespace YouCompleteMe {
 
 CodePointRepository *CodePointRepository::instance_ = nullptr;
-std::mutex CodePointRepository::instance_mutex_;
+Mutex CodePointRepository::instance_mutex_;
 
 CodePointRepository &CodePointRepository::Instance() {
   // This lock is required as magic statics are not thread-safe on MSVC 12.
   // See https://msdn.microsoft.com/en-us/library/hh567368#concurrencytable
-  std::lock_guard< std::mutex > locker( instance_mutex_ );
+  LockWrapper< lock_guard< mutex > > locker( instance_mutex_ );
 
   if ( !instance_ ) {
     static CodePointRepository repo;
@@ -41,7 +44,7 @@ CodePointRepository &CodePointRepository::Instance() {
 
 
 size_t CodePointRepository::NumStoredCodePoints() {
-  std::lock_guard< std::mutex > locker( code_point_holder_mutex_ );
+  LockWrapper< lock_guard< mutex > > locker( code_point_holder_mutex_ );
   return code_point_holder_.size();
 }
 
@@ -52,7 +55,7 @@ CodePointSequence CodePointRepository::GetCodePoints(
   code_point_objects.reserve( code_points.size() );
 
   {
-    std::lock_guard< std::mutex > locker( code_point_holder_mutex_ );
+    LockWrapper< lock_guard< mutex > > locker( code_point_holder_mutex_ );
 
     for ( const std::string & code_point : code_points ) {
       std::unique_ptr< CodePoint > &code_point_object = GetValueElseInsert(

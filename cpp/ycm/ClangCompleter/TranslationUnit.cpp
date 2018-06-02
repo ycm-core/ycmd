@@ -27,7 +27,7 @@
 
 using std::unique_lock;
 using std::mutex;
-using std::try_to_lock_t;
+using std::try_to_lock;
 using std::shared_ptr;
 using std::remove_pointer;
 
@@ -113,7 +113,7 @@ TranslationUnit::~TranslationUnit() {
 }
 
 void TranslationUnit::Destroy() {
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( clang_translation_unit_ ) {
     clang_disposeTranslationUnit( clang_translation_unit_ );
@@ -129,7 +129,7 @@ bool TranslationUnit::IsCurrentlyUpdating() const {
     return true;
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_, try_to_lock_t() );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_, try_to_lock );
   return !lock.owns_lock();
 }
 
@@ -141,7 +141,7 @@ std::vector< Diagnostic > TranslationUnit::Reparse(
 
   Reparse( cxunsaved_files );
 
-  unique_lock< mutex > lock( diagnostics_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( diagnostics_mutex_ );
   return latest_diagnostics_;
 }
 
@@ -151,7 +151,7 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
   int line,
   int column,
   const std::vector< UnsavedFile > &unsaved_files ) {
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return std::vector< CompletionData >();
@@ -213,7 +213,7 @@ Location TranslationUnit::GetDeclarationLocation(
     Reparse( unsaved_files );
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return Location();
@@ -248,7 +248,7 @@ Location TranslationUnit::GetDefinitionLocation(
     Reparse( unsaved_files );
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return Location();
@@ -273,7 +273,7 @@ Location TranslationUnit::GetDefinitionOrDeclarationLocation(
     Reparse( unsaved_files );
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return Location();
@@ -315,7 +315,7 @@ std::string TranslationUnit::GetTypeAtLocation(
     Reparse( unsaved_files );
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return "Internal error: no translation unit";
@@ -383,7 +383,7 @@ std::string TranslationUnit::GetEnclosingFunctionAtLocation(
     Reparse( unsaved_files );
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return "Internal error: no translation unit";
@@ -427,7 +427,7 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
                                size_t parse_options ) {
   CXErrorCode failure;
   {
-    unique_lock< mutex > lock( clang_access_mutex_ );
+    LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
     if ( !clang_translation_unit_ ) {
       return;
@@ -454,8 +454,8 @@ void TranslationUnit::Reparse( std::vector< CXUnsavedFile > &unsaved_files,
 }
 
 void TranslationUnit::UpdateLatestDiagnostics() {
-  unique_lock< mutex > lock1( clang_access_mutex_ );
-  unique_lock< mutex > lock2( diagnostics_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock1( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock2( diagnostics_mutex_ );
 
   latest_diagnostics_.clear();
   size_t num_diagnostics = clang_getNumDiagnostics( clang_translation_unit_ );
@@ -512,7 +512,7 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
   auto canonical_filename = boost::filesystem::canonical( filename );
 
   {
-    unique_lock< mutex > lock( diagnostics_mutex_ );
+    LockWrapper< unique_lock< mutex > > lock( diagnostics_mutex_ );
 
     for ( const Diagnostic& diagnostic : latest_diagnostics_ ) {
       auto this_filename = boost::filesystem::canonical(
@@ -553,7 +553,7 @@ DocumentationData TranslationUnit::GetDocsForLocationInFile(
     Reparse( unsaved_files );
   }
 
-  unique_lock< mutex > lock( clang_access_mutex_ );
+  LockWrapper< unique_lock< mutex > > lock( clang_access_mutex_ );
 
   if ( !clang_translation_unit_ ) {
     return DocumentationData();

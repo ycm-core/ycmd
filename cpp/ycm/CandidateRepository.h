@@ -19,9 +19,9 @@
 #define CANDIDATEREPOSITORY_H_K9OVCMHG
 
 #include "Candidate.h"
+#include "Mutex.h"
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -53,7 +53,7 @@ public:
     const std::vector< std::string > &strings );
 
   // This should only be used to isolate tests and benchmarks.
-  YCM_EXPORT void ClearCandidates();
+  YCM_EXPORT void ClearCandidates() NO_THREAD_SAFETY_ANALYSIS;
 
 private:
   CandidateRepository() = default;
@@ -62,16 +62,16 @@ private:
   const std::string &ValidatedCandidateText(
       const std::string &candidate_text );
 
-  static CandidateRepository *instance_;
-  static std::mutex instance_mutex_;
+  static CandidateRepository *instance_ GUARDED_BY( instance_mutex_ );
+  static Mutex instance_mutex_;
 
   // MSVC 12 complains that no appropriate default constructor is available if
   // this property is not initialized.
   const std::string empty_{};
 
   // This data structure owns all the Candidate pointers
-  CandidateHolder candidate_holder_;
-  std::mutex candidate_holder_mutex_;
+  CandidateHolder candidate_holder_ GUARDED_BY( candidate_holder_mutex_ );
+  Mutex candidate_holder_mutex_;
 };
 
 } // namespace YouCompleteMe

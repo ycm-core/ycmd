@@ -18,8 +18,8 @@ unset -f cd popd pushd
 mkdir -p ${HOME}/bin
 
 if [ "${YCM_COMPILER}" == "clang" ]; then
-  ln -s /usr/bin/clang++ ${HOME}/bin/c++
-  ln -s /usr/bin/clang ${HOME}/bin/cc
+  ln -s /usr/bin/clang++-3.5 ${HOME}/bin/c++
+  ln -s /usr/bin/clang-3.5 ${HOME}/bin/cc
   # Tell CMake to compile with libc++ when using Clang.
   export EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS} -DHAS_LIBCXX11=ON"
 else

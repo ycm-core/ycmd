@@ -39,7 +39,7 @@ addons:
      # 4.8 is the first version of GCC with good enough C++11 support.
      - g++-4.8
      # Install Clang 3.4 and its standard library.
-     - clang
+     - clang-3.5
      - clang-tidy-3.9
      - libc++-dev
      # Required to build the OmniSharp server.

@@ -25,6 +25,9 @@
 
 #include <unordered_set>
 
+using std::mutex;
+using std::lock_guard;
+
 namespace YouCompleteMe {
 
 IdentifierDatabase::IdentifierDatabase()
@@ -34,7 +37,7 @@ IdentifierDatabase::IdentifierDatabase()
 
 void IdentifierDatabase::AddIdentifiers(
   const FiletypeIdentifierMap &filetype_identifier_map ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  LockWrapper< lock_guard< mutex > > locker( filetype_candidate_map_mutex_ );
 
   for ( const FiletypeIdentifierMap::value_type & filetype_and_map :
             filetype_identifier_map ) {
@@ -52,7 +55,7 @@ void IdentifierDatabase::AddIdentifiers(
   const std::vector< std::string > &new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  LockWrapper< lock_guard< mutex > > locker( filetype_candidate_map_mutex_ );
   AddIdentifiersNoLock( new_candidates, filetype, filepath );
 }
 
@@ -60,7 +63,7 @@ void IdentifierDatabase::AddIdentifiers(
 void IdentifierDatabase::ClearCandidatesStoredForFile(
   const std::string &filetype,
   const std::string &filepath ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  LockWrapper< lock_guard< mutex > > locker( filetype_candidate_map_mutex_ );
   GetCandidateSet( filetype, filepath ).clear();
 }
 
@@ -72,7 +75,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
   const size_t max_results ) const {
   FiletypeCandidateMap::const_iterator it;
   {
-    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    LockWrapper< lock_guard< mutex > > locker( filetype_candidate_map_mutex_ );
     it = filetype_candidate_map_.find( filetype );
 
     if ( it == filetype_candidate_map_.end() ) {
@@ -85,7 +88,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
 
   {
-    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    LockWrapper< lock_guard< mutex > > locker( filetype_candidate_map_mutex_ );
     for ( const FilepathToCandidates::value_type & path_and_candidates :
               *it->second ) {
       for ( const Candidate * candidate : *path_and_candidates.second ) {

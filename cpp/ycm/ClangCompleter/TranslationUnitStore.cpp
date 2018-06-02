@@ -63,7 +63,8 @@ shared_ptr< TranslationUnit > TranslationUnitStore::GetOrCreate(
   bool &translation_unit_created ) {
   translation_unit_created = false;
   {
-    lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
+    LockWrapper< lock_guard< mutex > > lock(
+      filename_to_translation_unit_and_flags_mutex_ );
     shared_ptr< TranslationUnit > current_unit = GetNoLock( filename );
 
     if ( current_unit &&
@@ -96,7 +97,8 @@ shared_ptr< TranslationUnit > TranslationUnitStore::GetOrCreate(
   }
 
   {
-    lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
+    LockWrapper< lock_guard< mutex > > lock(
+      filename_to_translation_unit_and_flags_mutex_ );
     filename_to_translation_unit_[ filename ] = unit;
     // Flags have already been stored.
   }
@@ -108,20 +110,23 @@ shared_ptr< TranslationUnit > TranslationUnitStore::GetOrCreate(
 
 shared_ptr< TranslationUnit > TranslationUnitStore::Get(
   const std::string &filename ) {
-  lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
+  LockWrapper< lock_guard< mutex > > lock(
+    filename_to_translation_unit_and_flags_mutex_ );
   return GetNoLock( filename );
 }
 
 
 bool TranslationUnitStore::Remove( const std::string &filename ) {
-  lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
+  LockWrapper< lock_guard< mutex > > lock(
+    filename_to_translation_unit_and_flags_mutex_ );
   Erase( filename_to_flags_hash_, filename );
   return Erase( filename_to_translation_unit_, filename );
 }
 
 
 void TranslationUnitStore::RemoveAll() {
-  lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
+  LockWrapper< lock_guard< mutex > > lock(
+    filename_to_translation_unit_and_flags_mutex_ );
   filename_to_translation_unit_.clear();
   filename_to_flags_hash_.clear();
 }
