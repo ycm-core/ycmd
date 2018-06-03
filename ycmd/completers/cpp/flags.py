@@ -143,7 +143,7 @@ class Flags( object ):
         raise NoExtraConfDetected
       return [], filename
 
-    if not results or not results.get( 'flags_ready', True ):
+    if not results.get( 'flags_ready', True ):
       return [], filename
 
     return self._ParseFlagsFromExtraConfOrDatabase( filename,
@@ -298,6 +298,9 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
     results = module.FlagsForFile( filename, client_data = client_data )
   else:
     results = module.FlagsForFile( filename )
+
+  if not isinstance( results, dict ) or 'flags' not in results:
+    return EMPTY_FLAGS
 
   results[ 'flags' ] = _MakeRelativePathsInFlagsAbsolute(
       results[ 'flags' ],

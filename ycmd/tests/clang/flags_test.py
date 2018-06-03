@@ -37,6 +37,7 @@ from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
 from hamcrest import ( assert_that,
                        calling,
                        contains,
+                       empty,
                        equal_to,
                        has_item,
                        not_,
@@ -50,6 +51,18 @@ def MockExtraConfModule( flags_for_file_function ):
   with patch( 'ycmd.extra_conf_store.ModuleForSourceFile',
               return_value = module ):
     yield
+
+
+def FlagsForFile_NothingReturned_test():
+  flags_object = flags.Flags()
+
+  def FlagsForFile( filename ):
+    pass
+
+  with MockExtraConfModule( FlagsForFile ):
+    flags_list, filename = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, empty() )
+    assert_that( filename, equal_to( '/foo' ) )
 
 
 def FlagsForFile_FlagsNotReady_test():
