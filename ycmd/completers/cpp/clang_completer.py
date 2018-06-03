@@ -35,7 +35,6 @@ from ycmd import responses
 from ycmd.utils import re, ToBytes, ToCppStringCompatible, ToUnicode
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.flags import ( Flags, PrepareFlagsForClang,
-                                        NoCompilationDatabase,
                                         UserIncludePaths )
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
 from ycmd.completers.cpp.include_cache import IncludeCache, IncludeList
@@ -416,11 +415,8 @@ class ClangCompleter( Completer ):
       flags = []
       filename = request_data[ 'filepath' ]
 
-    try:
-      database_directory = self._flags.FindCompilationDatabase(
-          os.path.dirname( filename ) ).database_directory
-    except NoCompilationDatabase:
-      database_directory = None
+    database = self._flags.FindCompilationDatabase( filename )
+    database_directory = database.database_directory if database else None
 
     database_item = responses.DebugInfoItem(
       key = 'compilation database path',

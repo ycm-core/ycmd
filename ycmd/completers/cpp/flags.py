@@ -81,10 +81,6 @@ EMPTY_FLAGS = {
 }
 
 
-class NoCompilationDatabase( Exception ):
-  pass
-
-
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
   The flags are loaded from user-created python files (hereafter referred to as
@@ -132,17 +128,7 @@ class Flags( object ):
     except KeyError:
       pass
 
-    module = extra_conf_store.ModuleForSourceFile( filename )
-    try:
-      results = self._GetFlagsFromExtraConfOrDatabase( module,
-                                                       filename,
-                                                       client_data )
-    except NoCompilationDatabase:
-      if not self.no_extra_conf_file_warning_posted:
-        self.no_extra_conf_file_warning_posted = True
-        raise NoExtraConfDetected
-      return [], filename
-
+    results = self._GetFlagsFromExtraConfOrDatabase( filename, client_data )
     if not results.get( 'flags_ready', True ):
       return [], filename
 
@@ -179,11 +165,28 @@ class Flags( object ):
     return sanitized_flags, filename
 
 
-  def _GetFlagsFromExtraConfOrDatabase( self, module, filename, client_data ):
-    if not module:
-      return self._GetFlagsFromCompilationDatabase( filename )
+  def _GetFlagsFromExtraConfOrDatabase( self, filename, client_data ):
+    # Load the flags from the extra conf file if one is found and is not global.
+    module = extra_conf_store.ModuleForSourceFile( filename )
+    if module and not module.is_global_ycm_extra_conf:
+      return _CallExtraConfFlagsForFile( module, filename, client_data )
 
-    return _CallExtraConfFlagsForFile( module, filename, client_data )
+    # Load the flags from the compilation database if any.
+    database = self.FindCompilationDatabase( filename )
+    if database:
+      return self._GetFlagsFromCompilationDatabase( database, filename )
+
+    # Load the flags from the global extra conf if set.
+    if module:
+      return _CallExtraConfFlagsForFile( module, filename, client_data )
+
+    # No compilation database and no extra conf found. Warn the user if not
+    # already warned.
+    if not self.no_extra_conf_file_warning_posted:
+      self.no_extra_conf_file_warning_posted = True
+      raise NoExtraConfDetected
+
+    return EMPTY_FLAGS
 
 
   def Clear( self ):
@@ -192,11 +195,10 @@ class Flags( object ):
     self.file_directory_heuristic_map.clear()
 
 
-  def _GetFlagsFromCompilationDatabase( self, file_name ):
+  def _GetFlagsFromCompilationDatabase( self, database, file_name ):
     file_dir = os.path.dirname( file_name )
-    file_root, file_extension = os.path.splitext( file_name )
+    _, file_extension = os.path.splitext( file_name )
 
-    database = self.FindCompilationDatabase( file_dir )
     compilation_info = _GetCompilationInfoForFile( database,
                                                    file_name,
                                                    file_extension )
@@ -229,8 +231,8 @@ class Flags( object ):
     }
 
 
-  # Return a compilation database object for the supplied path. Raises
-  # NoCompilationDatabase if no compilation database can be found.
+  # Return a compilation database object for the supplied path or None if no
+  # compilation database is found.
   def FindCompilationDatabase( self, file_dir ):
     # We search up the directory hierarchy, to first see if we have a
     # compilation database already for that path, or if a compile_commands.json
@@ -238,11 +240,7 @@ class Flags( object ):
     for folder in PathsToAllParentFolders( file_dir ):
       # Try/catch to syncronise access to cache
       try:
-        database = self.compilation_database_dir_map[ folder ]
-        if database:
-          return database
-
-        raise NoCompilationDatabase
+        return self.compilation_database_dir_map[ folder ]
       except KeyError:
         pass
 
@@ -258,7 +256,7 @@ class Flags( object ):
     # Note: we cache the fact that none was found for this folder to speed up
     # subsequent searches.
     self.compilation_database_dir_map[ file_dir ] = None
-    raise NoCompilationDatabase
+    return None
 
 
 def _ExtractFlagsList( flags_for_file_output ):

@@ -47,6 +47,7 @@ from hamcrest import ( assert_that,
 @contextlib.contextmanager
 def MockExtraConfModule( flags_for_file_function ):
   module = MagicMock( spec = ModuleType )
+  module.is_global_ycm_extra_conf = False
   module.FlagsForFile = flags_for_file_function
   with patch( 'ycmd.extra_conf_store.ModuleForSourceFile',
               return_value = module ):

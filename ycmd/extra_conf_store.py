@@ -129,13 +129,12 @@ def Disable( module_file ):
     _module_for_module_file[ module_file ] = None
 
 
-def _ShouldLoad( module_file ):
+def _ShouldLoad( module_file, is_global ):
   """Checks if a module is safe to be loaded. By default this will try to
   decide using a white-/blacklist and ask the user for confirmation as a
   fallback."""
 
-  if ( module_file == _GlobalYcmExtraConfFileLocation() or
-       not user_options_store.Value( 'confirm_extra_conf' ) ):
+  if is_global or not user_options_store.Value( 'confirm_extra_conf' ):
     return True
 
   globlist = user_options_store.Value( 'extra_conf_globlist' )
@@ -160,7 +159,8 @@ def Load( module_file, force = False ):
     if module_file in _module_for_module_file:
       return _module_for_module_file[ module_file ]
 
-  if not force and not _ShouldLoad( module_file ):
+  is_global = module_file == _GlobalYcmExtraConfFileLocation()
+  if not force and not _ShouldLoad( module_file, is_global ):
     Disable( module_file )
     return None
 
@@ -181,6 +181,7 @@ def Load( module_file, force = False ):
   sys.dont_write_bytecode = True
   try:
     module = LoadPythonSource( _RandomName(), module_file )
+    module.is_global_ycm_extra_conf = is_global
   finally:
     sys.dont_write_bytecode = old_dont_write_bytecode
 
