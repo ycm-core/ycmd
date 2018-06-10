@@ -27,7 +27,7 @@ import os
 import re
 import pprint
 import sys
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 
 
 DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
@@ -69,10 +69,9 @@ GRAPHEME_BREAK_PROPERTY_MAP = {
   'T'                  : 11,
   'LV'                 : 12,
   'LVT'                : 13,
-  'E_Base'             : 14,
-  'E_Modifier'         : 15,
-  'Glue_After_Zwj'     : 16,
-  'E_Base_GAZ'         : 17
+  # "ExtPict" is used in the GraphemeBreakTest.txt file for
+  # Extended_Pictographic.
+  'ExtPict'            : 18,
 }
 SPECIAL_FOLDING_REGEX = re.compile(
   r'^(?P<code>[A-F0-9]+); (?P<lower>.*); (?P<title>.*); (?P<upper>.*); '
@@ -80,6 +79,9 @@ SPECIAL_FOLDING_REGEX = re.compile(
 CASE_FOLDING_REGEX = re.compile(
   r'^(?P<code>[A-F0-9]+); (?P<status>[CFST]); (?P<mapping>[A-F0-9 ]+); # '
    '(?P<name>.*)$' )
+EMOJI_PROPERTY_REGEX = re.compile(
+  r'^(?P<code>[A-F0-9.]+)\s*; (?P<property>[\w_]+)\s*# .*$' )
+EMOJI_PROPERTY_TOTAL = re.compile( r'# Total elements: (?P<total>\d+)' )
 HANGUL_BASE = 0xAC00
 HANGUL_L_BASE = 0x1100
 HANGUL_V_BASE = 0x1161
@@ -257,8 +259,8 @@ def GetGraphemeBreakProperty():
 
 # See https://www.unicode.org/reports/tr44/tr44-20.html#SpecialCasing.txt
 def GetSpecialFolding():
-  data = Download( 'https://www.unicode.org/'
-    'Public/UCD/latest/ucd/SpecialCasing.txt' )
+  data = Download(
+    'https://www.unicode.org/Public/UCD/latest/ucd/SpecialCasing.txt' )
 
   folding_data = {}
   for line in data:
@@ -283,8 +285,8 @@ def GetSpecialFolding():
 
 # See https://www.unicode.org/reports/tr44/tr44-20.html#CaseFolding.txt
 def GetCaseFolding():
-  data = Download( 'https://www.unicode.org/'
-    'Public/UCD/latest/ucd/CaseFolding.txt' )
+  data = Download(
+    'https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt' )
 
   folding_data = {}
   for line in data:
@@ -301,6 +303,44 @@ def GetCaseFolding():
       folding_data[ code ] = mapping
 
   return folding_data
+
+
+def GetEmojiData():
+  data = Download( 'https://unicode.org/Public/emoji/latest/emoji-data.txt' )
+
+  nb_code_points = 0
+  emoji_data = defaultdict( list )
+  for line in data:
+    # Check if the number of code points collected for the property is the same
+    # as the number indicated in the document.
+    match = EMOJI_PROPERTY_TOTAL.search( line )
+    if match:
+      total = int( match.group( 'total' ) )
+      if nb_code_points != total:
+        raise RuntimeError(
+          'Expected {} code points. Got {}.'.format( total, nb_code_points ) )
+      nb_code_points = 0
+
+    match = EMOJI_PROPERTY_REGEX.search( line )
+    if not match:
+      continue
+
+    code = match.group( 'code' )
+    prop = match.group( 'property' )
+
+    if '..' not in code:
+      emoji_data[ code ].append( prop )
+      nb_code_points += 1
+      continue
+
+    range_start, range_end = code.split( '..' )
+    range_start = int( range_start, 16 )
+    range_end = int( range_end, 16 ) + 1
+    for value in range( range_start, range_end ):
+      emoji_data[ DecToHex( value ) ].append( prop )
+      nb_code_points += 1
+
+  return emoji_data
 
 
 # Decompose a hangul syllable using the algorithm described in
@@ -376,6 +416,7 @@ def GetCodePoints():
   break_data = GetGraphemeBreakProperty()
   special_folding = GetSpecialFolding()
   case_folding = GetCaseFolding()
+  emoji_data = GetEmojiData()
   for key, value in unicode_data.items():
     general_category = value[ 'general_category' ]
 
@@ -399,8 +440,15 @@ def GetCodePoints():
     swapped_code_point = lower_code_point if is_uppercase else upper_code_point
     is_letter = general_category.startswith( 'L' )
     is_punctuation = general_category.startswith( 'P' )
-    break_property = GRAPHEME_BREAK_PROPERTY_MAP[ break_data.get( key,
-                                                                  'Other' ) ]
+    break_property = break_data.get( key, 'Other' )
+    emoji_property = emoji_data.get( key, [] )
+    if 'Extended_Pictographic' in emoji_property:
+      if break_property == 'Other':
+        break_property = 'ExtPict'
+      else:
+        raise RuntimeError( 'Cannot handle Extended_Pictographic combined with '
+                            '{} property'.format( break_property ) )
+    break_property = GRAPHEME_BREAK_PROPERTY_MAP[ break_property ]
     combining_class = int( value[ 'ccc' ] )
     # See https://unicode.org/reports/tr44/#General_Category_Values for the
     # list of categories.

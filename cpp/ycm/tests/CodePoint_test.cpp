@@ -66,7 +66,7 @@ TEST_P( CodePointTest, PropertiesAreCorrect ) {
 
 // Tests mostly based on the table
 // http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Break_Property_Values
-const std::array< TextCodePointPair, 58 > tests = { {
+const TextCodePointPair tests[] = {
   { "\r", { "\r", "\r", "\r", false, false, false, BreakProperty::CR } },
 
   { "\n", { "\n", "\n", "\n", false, false, false, BreakProperty::LF } },
@@ -154,20 +154,8 @@ const std::array< TextCodePointPair, 58 > tests = { {
   // Hangul syllable Gan
   { "간", { "간", "간", "간", true, false, false, BreakProperty::LVT } },
 
-  // Thumbs up emoji
-  { "👍", { "👍", "👍", "👍", false, false, false, BreakProperty::E_BASE } },
-
-  // Emoji modifier Fitzpatrick type-1-2
-  { "🏻", { "🏻", "🏻", "🏻", false, false, false,
-            BreakProperty::E_MODIFIER } },
-
-  // Rocket emoji
-  { "🚀", { "🚀", "🚀", "🚀", false, false, false,
-            BreakProperty::GLUE_AFTER_ZWJ } },
-
-  // Woman emoji
-  { "👩", { "👩", "👩", "👩", false, false, false,
-            BreakProperty::E_BASE_GAZ } },
+  // Copyright sign
+  { "©", { "©", "©", "©", false, false, false, BreakProperty::EXTPICT } },
 
   // Characters with none of the above break properties.
 
@@ -183,7 +171,7 @@ const std::array< TextCodePointPair, 58 > tests = { {
   { "É", { "É", "é", "é", true,  false, true,  BreakProperty::OTHER } },
   { "ĸ", { "ĸ", "ĸ", "ĸ", true,  false, false, BreakProperty::OTHER } },
   { "»", { "»", "»", "»", false, true,  false, BreakProperty::OTHER } },
-  { "©", { "©", "©", "©", false, false, false, BreakProperty::OTHER } },
+  { "¥", { "¥", "¥", "¥", false, false, false, BreakProperty::OTHER } },
   // Three bytes characters
   { "ⱥ", { "ⱥ", "ⱥ", "Ⱥ", true,  false, false, BreakProperty::OTHER } },
   { "Ɐ", { "Ɐ", "ɐ", "ɐ", true,  false, true,  BreakProperty::OTHER } },
@@ -196,7 +184,7 @@ const std::array< TextCodePointPair, 58 > tests = { {
   { "𐰬", { "𐰬", "𐰬", "𐰬", true,  false, false, BreakProperty::OTHER } },
   { "𐬿", { "𐬿", "𐬿", "𐬿", false, true,  false, BreakProperty::OTHER } },
   { "𝛁", { "𝛁", "𝛁", "𝛁", false, false, false, BreakProperty::OTHER } },
-} };
+};
 
 
 INSTANTIATE_TEST_CASE_P( UnicodeTest, CodePointTest, ValuesIn( tests ) );
