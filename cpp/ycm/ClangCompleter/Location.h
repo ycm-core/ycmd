@@ -58,7 +58,7 @@ struct Location {
            filename_ == other.filename_;
   }
 
-  bool IsValid() {
+  bool IsValid() const {
     return !filename_.empty();
   }
 
