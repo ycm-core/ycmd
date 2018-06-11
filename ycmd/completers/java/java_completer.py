@@ -254,6 +254,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       'OrganizeImports': (
         lambda self, request_data, args: self.OrganizeImports( request_data )
       ),
+      'ClassFileContents': (
+        lambda self, request_data, args: self.ClassFileContents( request_data )
+      ),
     }
 
 

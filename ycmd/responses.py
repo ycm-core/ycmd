@@ -133,13 +133,21 @@ def BuildCompletionResponse( completion_datas,
   }
 
 
+def IsJdtContentUri( uri ):
+  return uri[ : 6 ] == "jdt://"
+
+
 # location.column_number_ is a byte offset
 def BuildLocationData( location ):
+  filename = ''
+  if location.filename_:
+    filename = location.filename_
+    if not IsJdtContentUri( filename ):
+      filename = os.path.normpath( filename )
   return {
     'line_num': location.line_number_,
     'column_num': location.column_number_,
-    'filepath': ( os.path.normpath( location.filename_ )
-                  if location.filename_ else '' ),
+    'filepath': filename,
   }
 
 
@@ -209,7 +217,10 @@ class Location( object ):
     self.line_number_ = line
     self.column_number_ = column
     if filename:
-      self.filename_ = os.path.realpath( filename )
+      if IsJdtContentUri( filename ):
+        self.filename_ = filename
+      else:
+        self.filename_ = os.path.realpath( filename )
     else:
       # When the filename passed (e.g. by a server) can't be recognized or
       # parsed, we send an empty filename. This at least allows the client to

@@ -178,23 +178,6 @@ def LanguageServerCompleter_GoToDeclaration_test():
     yield Test, response, checker, throws
 
 
-  with patch(
-    'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
-    side_effect = lsp.InvalidUriException ):
-    yield Test, {
-      'result': {
-        'uri': uri,
-        'range': {
-          'start': { 'line': 0, 'character': 0 },
-          'end': { 'line': 0, 'character': 0 },
-        }
-      }
-    }, has_entries( {
-      'filepath': '',
-      'column_num': 1,
-      'line_num': 1,
-    } ), False
-
   with patch( 'ycmd.completers.completer_utils.GetFileContents',
               side_effect = lsp.IOError ):
     yield Test, {

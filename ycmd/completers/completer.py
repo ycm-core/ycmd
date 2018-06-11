@@ -254,6 +254,10 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       # We don't want expose this subcommand because it is not really needed
       # for the user but it is useful in tests for tearing down the server
       subcommands.remove( 'StopServer' )
+      # Don't expose ClassFileContents, user need not run the command manually
+      # client of ycmd will call this command whenever a uri like
+      # jdt://contents/*/.class is opened
+      subcommands.remove( 'ClassFileContents' )
     except ValueError:
       pass
     return subcommands

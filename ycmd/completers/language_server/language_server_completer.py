@@ -1033,11 +1033,7 @@ class LanguageServerCompleter( Completer ):
       params = notification[ 'params' ]
       uri = params[ 'uri' ]
 
-      try:
-        filepath = lsp.UriToFilePath( uri )
-      except lsp.InvalidUriException:
-        _logger.exception( 'Ignoring diagnostics for unrecognized URI' )
-        return None
+      filepath = lsp.UriToFilePath( uri )
 
       with self._server_info_mutex:
         if filepath in self._server_file_state:
@@ -1332,6 +1328,19 @@ class LanguageServerCompleter( Completer ):
         raise RuntimeError( 'Cannot jump to location' )
     else:
       raise RuntimeError( 'Cannot jump to location' )
+
+
+  def ClassFileContents( self, request_data ):
+    """Issues the classFileContents request and returns the result as
+    response."""
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    request_id = self.GetConnection().NextRequestId()
+    return self.GetConnection().GetResponse(
+      request_id,
+      lsp.ClassFileContents( request_id, request_data ),
+      REQUEST_TIMEOUT_COMMAND )
 
 
   def GoToReferences( self, request_data ):
@@ -1743,12 +1752,12 @@ def _LocationListToGoTo( request_data, response ):
 def _PositionToLocationAndDescription( request_data, position ):
   """Convert a LSP position to a ycmd location."""
   try:
-    filename = lsp.UriToFilePath( position[ 'uri' ] )
-    file_contents = GetFileLines( request_data, filename )
-  except lsp.InvalidUriException:
-    _logger.debug( "Invalid URI, file contents not available in GoTo" )
-    filename = ''
-    file_contents = []
+    if responses.IsJdtContentUri( position[ 'uri' ] ):
+      filename = position[ 'uri' ]
+      file_contents = []
+    else:
+      filename = lsp.UriToFilePath( position[ 'uri' ] )
+      file_contents = GetFileLines( request_data, filename )
   except IOError:
     # It's possible to receive positions for files which no longer exist (due to
     # race condition). UriToFilePath doesn't throw IOError, so we can assume
@@ -1798,12 +1807,7 @@ def _BuildRange( contents, filename, r ):
 
 def _BuildDiagnostic( contents, uri, diag ):
   """Return a ycmd diagnostic from a LSP diagnostic."""
-  try:
-    filename = lsp.UriToFilePath( uri )
-  except lsp.InvalidUriException:
-    _logger.debug( 'Invalid URI received for diagnostic' )
-    filename = ''
-
+  filename = lsp.UriToFilePath( uri )
   r = _BuildRange( contents, filename, diag[ 'range' ] )
 
   return responses.Diagnostic(
@@ -1816,12 +1820,7 @@ def _BuildDiagnostic( contents, uri, diag ):
 
 def TextEditToChunks( request_data, uri, text_edit ):
   """Returns a list of FixItChunks from a LSP textEdit."""
-  try:
-    filepath = lsp.UriToFilePath( uri )
-  except lsp.InvalidUriException:
-    _logger.debug( 'Invalid filepath received in TextEdit' )
-    filepath = ''
-
+  filepath = lsp.UriToFilePath( uri )
   contents = GetFileLines( request_data, filepath )
   return [
     responses.FixItChunk( change[ 'newText' ],
