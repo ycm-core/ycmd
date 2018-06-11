@@ -183,9 +183,6 @@ class TypeScriptCompleter( Completer ):
 
     self._StartServer()
 
-    self._max_diagnostics_to_display = user_options[
-      'max_diagnostics_to_display' ]
-
     self._latest_diagnostics_for_file_lock = threading.Lock()
     self._latest_diagnostics_for_file = defaultdict( list )
 
@@ -452,7 +449,9 @@ class TypeScriptCompleter( Completer ):
     filepath = request_data[ 'filepath' ]
     with self._latest_diagnostics_for_file_lock:
       self._latest_diagnostics_for_file[ filepath ] = diagnostics
-    return [ responses.BuildDiagnosticData( x ) for x in diagnostics ]
+    return responses.BuildDiagnosticResponse( diagnostics,
+                                              filepath,
+                                              self.max_diagnostics_to_display )
 
 
   def GetTsDiagnosticsForCurrentFile( self, request_data ):
@@ -521,7 +520,7 @@ class TypeScriptCompleter( Completer ):
     ts_diagnostics = self.GetTsDiagnosticsForCurrentFile( request_data )
 
     return [ self._TsDiagnosticToYcmdDiagnostic( request_data, x )
-             for x in ts_diagnostics[ : self._max_diagnostics_to_display ] ]
+             for x in ts_diagnostics ]
 
 
   def GetDetailedDiagnostic( self, request_data ):

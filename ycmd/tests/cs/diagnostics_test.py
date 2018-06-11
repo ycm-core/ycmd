@@ -25,8 +25,12 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that, contains, contains_string, equal_to,
                        has_entries, has_entry )
 
-from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
-from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
+                            WrapOmniSharpServer )
+from ycmd.tests.test_utils import ( BuildRequest, LocationMatcher,
+                                    RangeMatcher,
+                                    WaitUntilCompleterServerReady,
+                                    StopCompleterServer )
 from ycmd.utils import ReadFile
 
 
@@ -70,27 +74,15 @@ def Diagnostics_ZeroBasedLineAndColumn_test( app ):
 
       results = app.post_json( '/event_notification', event_data ).json
 
-    assert_that( results,
-                 contains(
-                     has_entries( {
-                       'kind': equal_to( 'ERROR' ),
-                       'text': contains_string(
-                           "Unexpected symbol `}'', expecting identifier" ),
-                       'location': has_entries( {
-                         'line_num': 11,
-                         'column_num': 2
-                       } ),
-                       'location_extent': has_entries( {
-                         'start': has_entries( {
-                           'line_num': 11,
-                           'column_num': 2,
-                         } ),
-                         'end': has_entries( {
-                           'line_num': 11,
-                           'column_num': 2,
-                         } ),
-                       } )
-                     } ) ) )
+    assert_that( results, contains(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'text': contains_string(
+            "Unexpected symbol `}'', expecting identifier" ),
+        'location': LocationMatcher( filepath, 11, 2 ),
+        'location_extent': RangeMatcher( filepath, ( 11, 2 ), ( 11, 2 ) ),
+      } )
+    ) )
 
 
 @SharedYcmd
@@ -107,27 +99,14 @@ def Diagnostics_WithRange_test( app ):
 
       results = app.post_json( '/event_notification', event_data ).json
 
-    assert_that( results,
-                 contains(
-                     has_entries( {
-                       'kind': equal_to( 'WARNING' ),
-                       'text': contains_string(
-                           "Name should have prefix '_'" ),
-                       'location': has_entries( {
-                         'line_num': 3,
-                         'column_num': 16
-                       } ),
-                       'location_extent': has_entries( {
-                         'start': has_entries( {
-                           'line_num': 3,
-                           'column_num': 16,
-                         } ),
-                         'end': has_entries( {
-                           'line_num': 3,
-                           'column_num': 25,
-                         } ),
-                       } )
-                     } ) ) )
+    assert_that( results, contains(
+      has_entries( {
+        'kind': equal_to( 'WARNING' ),
+        'text': contains_string( "Name should have prefix '_'" ),
+        'location': LocationMatcher( filepath, 3, 16 ),
+        'location_extent': RangeMatcher( filepath, ( 3, 16 ), ( 3, 25 ) )
+      } )
+    ) )
 
 
 @SharedYcmd
@@ -149,27 +128,15 @@ def Diagnostics_MultipleSolution_test( app ):
 
         results = app.post_json( '/event_notification', event_data ).json
 
-      assert_that( results,
-                   contains(
-                       has_entries( {
-                           'kind': equal_to( 'ERROR' ),
-                           'text': contains_string( "Unexpected symbol `}'', "
-                                                    "expecting identifier" ),
-                           'location': has_entries( {
-                             'line_num': line,
-                             'column_num': 2
-                           } ),
-                           'location_extent': has_entries( {
-                             'start': has_entries( {
-                               'line_num': line,
-                               'column_num': 2,
-                             } ),
-                             'end': has_entries( {
-                               'line_num': line,
-                               'column_num': 2,
-                             } ),
-                           } )
-                       } ) ) )
+      assert_that( results, contains(
+        has_entries( {
+          'kind': equal_to( 'ERROR' ),
+          'text': contains_string( "Unexpected symbol `}'', "
+                                   "expecting identifier" ),
+          'location': LocationMatcher( filepath, line, 2 ),
+          'location_extent': RangeMatcher( filepath, ( line, 2 ), ( line, 2 ) )
+        } )
+      ) )
 
 
 @SharedYcmd
@@ -186,25 +153,52 @@ def Diagnostics_HandleZeroColumnDiagnostic_test( app ):
 
       results = app.post_json( '/event_notification', event_data ).json
 
-    assert_that( results,
-                 contains(
-                     has_entries( {
-                       'kind': equal_to( 'ERROR' ),
-                       'text': contains_string(
-                           "Unexpected symbol `}'', "
-                           "expecting `;'', `{'', or `where''" ),
-                       'location': has_entries( {
-                         'line_num': 3,
-                         'column_num': 1
-                       } ),
-                       'location_extent': has_entries( {
-                         'start': has_entries( {
-                           'line_num': 3,
-                           'column_num': 1,
-                         } ),
-                         'end': has_entries( {
-                           'line_num': 3,
-                           'column_num': 1,
-                         } ),
-                       } )
-                     } ) ) )
+    assert_that( results, contains(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'text': contains_string( "Unexpected symbol `}'', "
+                                 "expecting `;'', `{'', or `where''" ),
+        'location': LocationMatcher( filepath, 3, 1 ),
+        'location_extent': RangeMatcher( filepath, ( 3, 1 ), ( 3, 1 ) )
+      } )
+    ) )
+
+
+@IsolatedYcmd( { 'max_diagnostics_to_display': 1 } )
+def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
+  filepath = PathToTestFile( 'testy', 'MaxDiagnostics.cs' )
+  contents = ReadFile( filepath )
+
+  event_data = BuildRequest( filepath = filepath,
+                             event_name = 'FileReadyToParse',
+                             filetype = 'cs',
+                             contents = contents )
+
+  app.post_json( '/event_notification', event_data ).json
+  WaitUntilCompleterServerReady( app, 'cs' )
+
+  event_data = BuildRequest( filepath = filepath,
+                             event_name = 'FileReadyToParse',
+                             filetype = 'cs',
+                             contents = contents )
+
+  results = app.post_json( '/event_notification', event_data ).json
+
+  assert_that( results, contains(
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'text': contains_string( "The type `MaxDiagnostics'' already contains "
+                               "a definition for `test''" ),
+      'location': LocationMatcher( filepath, 4, 16 ),
+      'location_extent': RangeMatcher( filepath, ( 4, 16 ), ( 4, 16 ) )
+    } ),
+    has_entries( {
+      'kind': equal_to( 'ERROR' ),
+      'text': contains_string( 'Maximum number of diagnostics exceeded.' ),
+      'location': LocationMatcher( filepath, 1, 1 ),
+      'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ),
+      'ranges': contains( RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) )
+    } )
+  ) )
+
+  StopCompleterServer( app, 'cs', filepath )

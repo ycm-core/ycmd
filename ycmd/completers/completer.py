@@ -169,6 +169,8 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   def __init__( self, user_options ):
     self.user_options = user_options
     self.min_num_chars = user_options[ 'min_num_of_chars_for_completion' ]
+    self.max_diagnostics_to_display = user_options[
+        'max_diagnostics_to_display' ]
     self.prepared_triggers = (
         completer_utils.PreparedTriggers(
             user_trigger_map = user_options[ 'semantic_triggers' ],
