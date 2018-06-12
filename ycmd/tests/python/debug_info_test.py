@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 ycmd contributors
+# Copyright (C) 2016-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -35,19 +35,23 @@ def DebugInfo_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'Python',
-      'servers': contains( has_entries( {
-        'name': 'JediHTTP',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'address': instance_of( str ),
-        'port': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) )
-      } ) ),
-      'items': contains( has_entries( {
-        'key': 'Python interpreter',
-        'value': instance_of( str )
-      } ) )
+      'items': contains(
+        has_entries( {
+          'key': 'Python interpreter',
+          'value': instance_of( str )
+        } ),
+        has_entries( {
+          'key': 'Python version',
+          'value': instance_of( str )
+        } ),
+        has_entries( {
+          'key': 'Jedi version',
+          'value': instance_of( str )
+        } ),
+        has_entries( {
+          'key': 'Parso version',
+          'value': instance_of( str )
+        } )
+      )
     } ) )
   )

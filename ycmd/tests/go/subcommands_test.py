@@ -30,6 +30,7 @@ import requests
 
 from ycmd.tests.go import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
+                                    CombineRequest,
                                     ErrorMatcher,
                                     MockProcessTerminationTimingOut,
                                     WaitUntilCompleterServerReady )
@@ -49,11 +50,6 @@ def Subcommands_DefinedSubcommands_test( app ):
 
 def RunTest( app, test ):
   contents = ReadFile( test[ 'request' ][ 'filepath' ] )
-
-  def CombineRequest( request, data ):
-    kw = request
-    request.update( data )
-    return BuildRequest( **kw )
 
   # We ignore errors here and check the response code ourself.
   # This is to allow testing of requests returning errors.

@@ -210,16 +210,15 @@ Guide_][extra-conf-doc].
 
 ### `.ycm_extra_conf.py` specification
 
-The `.ycm_extra_conf.py` module must define the following methods:
+The `.ycm_extra_conf.py` module may define the following functions:
 
 #### `FlagsForFile( filename, **kwargs )`
 
-Required for c-family language support.
+Required for C-family language support.
 
-This method is called by the c-family completer to get the
-compiler flags to use when compiling the file with absolute path `filename`.
-The following additional arguments are optionally supplied depending on user
-configuration:
+This function is called by the C-family completer to get the compiler flags to
+use when compiling the file with absolute path `filename`. The following
+additional arguments are optionally supplied depending on user configuration:
 
 - `client_data`: any additional data supplied by the client application.
    See the [YouCompleteMe documentation][extra-conf-vim-data-doc] for an
@@ -257,6 +256,65 @@ def FlagsForFile( filename, **kwargs ):
     'flags': [ '-x', 'c++' ]
   }
 ```
+
+#### `Settings( **kwargs )`
+
+Optional for Python support.
+
+This function allows users to configure the Python completer on a per project
+basis or globally. The following arguments are supplied:
+
+- `language`: the current language `python`. Useful when working on a project
+  with other languages than Python.
+
+- `client_data`: any additional data supplied by the client application.
+  See the [YouCompleteMe documentation][extra-conf-vim-data-doc] for an
+  example.
+
+The return value is a dictionary containing the following items:
+
+- `interpreter_path`: (optional) path to the Python interpreter. `~` and
+  environment variables in the path are expanded. If not an absolute path, it
+  will be searched through the `PATH`.
+
+- `sys_path`: (optional) list of paths prepended to `sys.path`.
+
+Usage examples:
+
+On a pure Python project:
+```python
+def Settings( **kwargs ):
+  return {
+    'interpreter_path': '~/project/virtual_env/bin/python',
+    'sys_path': [ '~/project/third_party/module' ]
+  }
+```
+On a project with other languages than Python:
+```python
+def Settings( **kwargs ):
+  language = kwargs[ 'language' ]
+  if language == 'python':
+    return {
+      'interpreter_path': '~/project/virtual_env/bin/python',
+      'sys_path': [ '~/project/third_party/module' ]
+    }
+  return {}
+```
+
+#### `PythonSysPath( **kwargs )`
+
+Optional for Python support.
+
+This function allows further customization of the Python path `sys.path`. Its
+parameters are the possible items returned by the `Settings` function:
+
+- `interpreter_path`: path to the Python interpreter.
+
+- `sys_path`: list of Python paths from `sys.path`.
+
+The return value should be the modified list of Python paths.
+
+See [ycmd's own `.ycm_extra_conf.py`][ycmd-extra-conf] for an example.
 
 ### Global extra conf file specification
 
@@ -324,7 +382,7 @@ License
 -------
 
 This software is licensed under the [GPL v3 license][gpl].
-© 2015-2017 ycmd contributors
+© 2015-2018 ycmd contributors
 
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycm]: http://valloric.github.io/YouCompleteMe/
@@ -358,3 +416,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
 [jdtls]: https://github.com/eclipse/eclipse.jdt.ls
 [api-docs]: https://valloric.github.io/ycmd/
+[ycmd-extra-conf]: https://github.com/Valloric/ycmd/blob/master/.ycm_extra_conf.py

@@ -16,9 +16,12 @@
 [submodule "third_party/gocode"]
 	path = third_party/gocode
 	url = https://github.com/nsf/gocode.git
-[submodule "third_party/JediHTTP"]
-	path = third_party/JediHTTP
-	url = https://github.com/vheon/JediHTTP
+[submodule "third_party/jedi"]
+	path = third_party/jedi
+	url = https://github.com/davidhalter/jedi
+[submodule "third_party/parso"]
+	path = third_party/parso
+	url = https://github.com/davidhalter/parso
 [submodule "third_party/racerd"]
 	path = third_party/racerd
 	url = https://github.com/jwilm/racerd

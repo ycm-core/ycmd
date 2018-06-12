@@ -38,23 +38,13 @@ import requests
 
 from ycmd import handlers
 from ycmd.tests.java import DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( BuildRequest,
+from ycmd.tests.test_utils import ( CombineRequest,
                                     ChunkMatcher,
                                     CompletionEntryMatcher,
                                     LocationMatcher,
                                     WithRetry )
 from ycmd.utils import ReadFile
 from mock import patch
-
-
-def _CombineRequest( request, data ):
-  return BuildRequest( **_Merge( request, data ) )
-
-
-def _Merge( request, data ):
-  kw = dict( request )
-  kw.update( data )
-  return kw
 
 
 def ProjectPath( *args ):
@@ -81,17 +71,17 @@ def RunTest( app, test ):
   contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
   app.post_json( '/event_notification',
-                 _CombineRequest( test[ 'request' ], {
-                                  'event_name': 'FileReadyToParse',
-                                  'contents': contents,
-                                  } ),
+                 CombineRequest( test[ 'request' ], {
+                                   'event_name': 'FileReadyToParse',
+                                   'contents': contents,
+                                 } ),
                  expect_errors = True )
 
   # We ignore errors here and we check the response code ourself.
   # This is to allow testing of requests returning errors.
   response = app.post_json( '/completions',
-                            _CombineRequest( test[ 'request' ], {
-                               'contents': contents
+                            CombineRequest( test[ 'request' ], {
+                              'contents': contents
                             } ),
                             expect_errors = True )
 
