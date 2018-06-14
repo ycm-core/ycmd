@@ -23,8 +23,12 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from hamcrest import assert_that, equal_to
+from threading import Event
+import time
+import requests
 
 from ycmd.tests.client_test import Client_test
+from ycmd.utils import StartThread
 
 # Time to wait for all the servers to shutdown. Tweak for the CI environment.
 #
@@ -81,17 +85,33 @@ class Shutdown_test( Client_test ):
 
   @Client_test.CaptureLogfiles
   def FromWatchdogWithSubservers_test( self ):
-    self.Start( idle_suicide_seconds = 5, check_interval_seconds = 1 )
+    all_servers_are_running = Event()
 
-    filetypes = [ 'cs',
-                  'go',
-                  'java',
-                  'javascript',
-                  'typescript',
-                  'rust' ]
-    for filetype in filetypes:
-      self.StartSubserverForFiletype( filetype )
-    self.AssertServersAreRunning()
+    def KeepServerAliveInAnotherThread():
+      while not all_servers_are_running.is_set():
+        try:
+          self.GetRequest( 'ready' )
+        except requests.exceptions.ConnectionError:
+          pass
+        finally:
+          time.sleep( 0.1 )
+
+    self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
+
+    StartThread( KeepServerAliveInAnotherThread )
+
+    try:
+      filetypes = [ 'cs',
+                    'go',
+                    'java',
+                    'javascript',
+                    'typescript',
+                    'rust' ]
+      for filetype in filetypes:
+        self.StartSubserverForFiletype( filetype )
+      self.AssertServersAreRunning()
+    finally:
+      all_servers_are_running.set()
 
     self.AssertServersShutDown( timeout = SUBSERVER_SHUTDOWN_TIMEOUT + 10 )
     self.AssertLogfilesAreRemoved()
