@@ -24,6 +24,11 @@
 #include <vector>
 #include <boost/filesystem.hpp>
 
+#ifndef _WIN32
+#include <pstl/algorithm>
+#include <pstl/execution>
+#endif
+
 namespace fs = boost::filesystem;
 
 namespace YouCompleteMe {
@@ -109,7 +114,9 @@ void PartialSort( std::vector< Element > &elements,
 
   // When the number of elements to sort is more than 1024 and one sixty-fourth
   // of the total number of elements, switch to std::nth_element followed by
-  // std::sort. This heuristic is based on the observation that
+  // std::sort. If total number of candidates and the maximum numbeer of 
+  // elements to sort is greater than 2048, use Intel's Prallel STL.
+  // This heuristic is based on the observation that
   // std::partial_sort (heapsort) is the most efficient algorithm when the
   // number of elements to sort is small and that std::nth_element (introselect)
   // combined with std::sort (introsort) always perform better than std::sort
@@ -119,6 +126,14 @@ void PartialSort( std::vector< Element > &elements,
     std::partial_sort( elements.begin(),
                        elements.begin() + max_elements,
                        elements.end() );
+#ifndef _WIN32
+  } else if ( nb_elements >= 2048 && max_elements >= 2048 ) {
+    std::nth_element( std::execution::par,
+                      elements.begin(),
+                      elements.begin() + max_elements,
+                      elements.end() );
+    std::sort( std::execution::par, elements.begin(), elements.begin() + max_elements );
+#endif
   } else {
     std::nth_element( elements.begin(),
                       elements.begin() + max_elements,

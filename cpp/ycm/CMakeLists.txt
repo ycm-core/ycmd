@@ -202,6 +202,12 @@ endif()
 
 set( PYBIND11_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pybind11" )
 
+if ( NOT MSVC )
+  set( TBB_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/../third_party/tbb/include" )
+  set( PSTL_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/../third_party/parallelstl/include" )
+  include_directories( SYSTEM ${PSTL_INCLUDES_DIR} ${TBB_INCLUDES_DIR} )
+endif()
+
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
 # The test and benchmark sources are a part of a different target, so we remove
@@ -238,6 +244,7 @@ include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIR}
   ${PYBIND11_INCLUDES_DIR}
+  ${PSTL_INCLUDES_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
   )
@@ -320,8 +327,16 @@ if ( UNIX AND NOT ( APPLE OR SYSTEM_IS_OPENBSD OR HAIKU ) )
   set( EXTRA_LIBS rt )
 endif()
 
+set( EXTRA_LIBS "${EXTRA_LIBS}" )
+
 #############################################################################
 
+if ( NOT MSVC )
+  include( ${CMAKE_SOURCE_DIR}/../third_party/tbb/cmake/TBBBuild.cmake )
+  tbb_build( TBB_ROOT ${CMAKE_SOURCE_DIR}/../third_party/tbb
+             CONFIG_DIR TBB_DIR )
+  find_package( TBB REQUIRED tbb )
+endif()
 add_library( ${PROJECT_NAME} SHARED
              ${SERVER_SOURCES}
            )
@@ -337,6 +352,7 @@ target_link_libraries( ${PROJECT_NAME}
                        ${PYTHON_LIBRARIES}
                        ${LIBCLANG_TARGET}
                        ${EXTRA_LIBS}
+                       ${TBB_IMPORTED_TARGETS}
                      )
 
 if( LIBCLANG_TARGET )
@@ -447,6 +463,10 @@ if ( USE_DEV_FLAGS AND ( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG ) AND
      NOT CMAKE_GENERATOR_IS_XCODE )
   # We want all warnings, and warnings should be treated as errors
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror" )
+endif()
+
+if ( NOT MSVC )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp" )
 endif()
 
 #############################################################################

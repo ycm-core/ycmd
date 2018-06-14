@@ -42,6 +42,8 @@ addons:
      - clang
      - clang-tidy-3.9
      - libc++-dev
+     # Required by Intel TBB
+     - libomp-dev
      # Required to build the OmniSharp server.
      - mono-devel
      # Everything below is a Python build dep (though it depends on Python
