@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 ycmd contributors
+# Copyright (C) 2016-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,8 +22,8 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( any_of, assert_that, contains, empty, has_entries,
-                       has_entry, instance_of )
+from hamcrest import ( any_of, assert_that, contains, has_entries, has_entry,
+                       instance_of )
 
 from ycmd.tests.typescript import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
@@ -49,6 +49,11 @@ def DebugInfo_test( app ):
           'value': any_of( None, instance_of( str ) )
         } ) )
       } ) ),
-      'items': empty()
+      'items': contains(
+        has_entries( {
+          'key': 'Node executable',
+          'value': instance_of( str )
+        } )
+      )
     } ) )
   )

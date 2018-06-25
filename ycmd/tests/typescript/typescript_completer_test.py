@@ -1,4 +1,4 @@
-# Copyright (C) 2017 ycmd contributors
+# Copyright (C) 2017-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,7 +22,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from mock import patch, DEFAULT
+from mock import patch
 from nose.tools import ok_
 
 from ycmd.completers.typescript.typescript_completer import (
@@ -38,7 +38,7 @@ def ShouldEnableTypeScriptCompleter_NodeNotFound_test( *args ):
   ok_( not ShouldEnableTypeScriptCompleter() )
 
 
-@patch( 'ycmd.utils.FindExecutable',
-        lambda exe: None if exe == 'tsserver' else DEFAULT )
+@patch( 'ycmd.completers.typescript.typescript_completer.PATH_TO_TSSERVER',
+        None )
 def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
   ok_( not ShouldEnableTypeScriptCompleter() )
