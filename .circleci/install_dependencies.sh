@@ -7,23 +7,24 @@ set -e
 # Homebrew setup
 ################
 
-# There's a homebrew bug which causes brew update to fail the first time. Run
+# There's a Homebrew bug which causes brew update to fail the first time. Run
 # it twice to workaround. https://github.com/Homebrew/homebrew/issues/42553
 brew update || brew update
 
-# List of homebrew formulae to install in the order they appear.
-# We require CMake, Node, Go, and Mono for our build and tests, and all
-# the others are dependencies of pyenv.
+# List of Homebrew formulae to install in the order they appear.
+# We require CMake, Node, and Go for our build and tests, and all
+# the others are dependencies of pyenv. Mono is not installed through Homebrew
+# because the latest version (5.12.0.226_1) fails to build the OmniSharp server
+# with CS7027 signing errors.
 REQUIREMENTS="cmake
               node.js
               go
-              mono
               readline
               autoconf
               pkg-config
               openssl"
 
-# Install CMake, Node, Go, Mono, pyenv and dependencies.
+# Install CMake, Node, Go, pyenv and dependencies.
 for pkg in $REQUIREMENTS; do
   # Install package, or upgrade it if it is already installed.
   brew install $pkg || brew outdated $pkg || brew upgrade $pkg
@@ -84,6 +85,18 @@ pip install -r test_requirements.txt
 # http://coverage.readthedocs.io/en/latest/subprocess.html
 echo -e "import coverage\ncoverage.process_startup()" > \
   ${PYENV_ROOT}/versions/${PYENV_VERSION}/lib/python${YCMD_PYTHON_VERSION}/site-packages/sitecustomize.py
+
+##########
+# C# setup
+##########
+
+MONO_PATH="${HOME}/mono"
+if [ ! -f "${MONO_PATH}/mono-5.12.0.pkg" ]; then
+  mkdir -p ${MONO_PATH}
+  curl https://download.mono-project.com/archive/5.12.0/macos-10-universal/MonoFramework-MDK-5.12.0.226.macos10.xamarin.universal.pkg -o ${MONO_PATH}/mono-5.12.0.pkg
+fi
+sudo installer -pkg ${MONO_PATH}/mono-5.12.0.pkg -target /
+echo "export PATH=/Library/Frameworks/Mono.framework/Versions/Current/Commands:\$PATH" >> $BASH_ENV
 
 ############
 # Rust setup
