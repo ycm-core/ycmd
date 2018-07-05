@@ -212,66 +212,82 @@ Guide_][extra-conf-doc].
 
 The `.ycm_extra_conf.py` module may define the following functions:
 
-#### `FlagsForFile( filename, **kwargs )`
-
-Required for C-family language support.
-
-This function is called by the C-family completer to get the compiler flags to
-use when compiling the file with absolute path `filename`. The following
-additional arguments are optionally supplied depending on user configuration:
-
-- `client_data`: any additional data supplied by the client application.
-   See the [YouCompleteMe documentation][extra-conf-vim-data-doc] for an
-   example.
-
-The return value must be one of the following:
-
-- `None` meaning no flags are known for this file, or
-
-- a dictionary containing the following items:
-
-  - `flags`: (mandatory) a list of compiler flags.
-
-  - `include_paths_relative_to_dir`: (optional) the directory to which the
-    include paths in the list of flags are relative. Defaults to ycmd working
-    directory.
-
-  - `override_filename`: (optional) a string indicating the name of the file to
-    parse as the translation unit for the supplied file name. This fairly
-    advanced feature allows for projects that use a 'unity'-style build, or
-    for header files which depend on other includes in other files.
-
-  - `do_cache`: (optional) a boolean indicating whether or not the result of
-    this call (i.e. the list of flags) should be cached for this file name.
-    Defaults to `True`. If unsure, the default is almost always correct.
-
-  - `flags_ready`: (optional) a boolean indicating that the flags should be
-    used. Defaults to `True`. If unsure, the default is almost always correct.
-
-A minimal example which simply returns a list of flags is:
-
-```python
-def FlagsForFile( filename, **kwargs ):
-  return {
-    'flags': [ '-x', 'c++' ]
-  }
-```
-
 #### `Settings( **kwargs )`
 
-Optional for Python support.
+This function allows users to configure the language completers on a per project
+basis or globally. Currently, it is required by the C-family completer and
+optional for the Python completer. The following arguments can be retrieved from
+the `kwargs` dictionary and are common to all completers:
 
-This function allows users to configure the Python completer on a per project
-basis or globally. The following arguments are supplied:
+- `language`: an identifier of the completer that called the function. Its value
+  is `python` for the Python completer and `cfamily` for the C-family completer.
+  This argument is useful to configure several completers at once. For
+  instance:
 
-- `language`: the current language `python`. Useful when working on a project
-  with other languages than Python.
+  ```python
+  def Settings( **kwargs ):
+    language = kwargs[ 'language' ]
+    if language == 'cfamily':
+      return {
+        # Settings for the C-family completer.
+      }
+    if language == 'python':
+      return {
+        # Settings for the Python completer.
+      }
+    return {}
+  ```
 
 - `client_data`: any additional data supplied by the client application.
   See the [YouCompleteMe documentation][extra-conf-vim-data-doc] for an
   example.
 
-The return value is a dictionary containing the following items:
+The return value is a dictionary whose content depends on the completer.
+
+##### C-family settings
+
+The `Settings` function is called by the C-family completer to get the compiler
+flags to use when compiling the current file. The absolute path of this file is
+accessible under the `filename` key of the `kwargs` dictionary.
+
+The return value expected by the completer is a dictionary containing the
+following items:
+
+- `flags`: (mandatory) a list of compiler flags.
+
+- `include_paths_relative_to_dir`: (optional) the directory to which the
+  include paths in the list of flags are relative. Defaults to ycmd working
+  directory.
+
+- `override_filename`: (optional) a string indicating the name of the file to
+  parse as the translation unit for the supplied file name. This fairly
+  advanced feature allows for projects that use a 'unity'-style build, or
+  for header files which depend on other includes in other files.
+
+- `do_cache`: (optional) a boolean indicating whether or not the result of
+  this call (i.e. the list of flags) should be cached for this file name.
+  Defaults to `True`. If unsure, the default is almost always correct.
+
+- `flags_ready`: (optional) a boolean indicating that the flags should be
+  used. Defaults to `True`. If unsure, the default is almost always correct.
+
+A minimal example which simply returns a list of flags is:
+
+```python
+def Settings( **kwargs ):
+  return {
+    'flags': [ '-x', 'c++' ]
+  }
+```
+
+##### Python settings
+
+The `Settings` function allows users to specify the Python interpreter and
+the `sys.path` used by the completer to provide completion and code
+comprehension. No additional arguments are passed.
+
+The return value expected by the completer is a dictionary containing the
+following items:
 
 - `interpreter_path`: (optional) path to the Python interpreter. `~` and
   environment variables in the path are expanded. If not an absolute path, it
@@ -279,9 +295,8 @@ The return value is a dictionary containing the following items:
 
 - `sys_path`: (optional) list of paths prepended to `sys.path`.
 
-Usage examples:
+Usage example:
 
-On a pure Python project:
 ```python
 def Settings( **kwargs ):
   return {
@@ -289,24 +304,14 @@ def Settings( **kwargs ):
     'sys_path': [ '~/project/third_party/module' ]
   }
 ```
-On a project with other languages than Python:
-```python
-def Settings( **kwargs ):
-  language = kwargs[ 'language' ]
-  if language == 'python':
-    return {
-      'interpreter_path': '~/project/virtual_env/bin/python',
-      'sys_path': [ '~/project/third_party/module' ]
-    }
-  return {}
-```
 
 #### `PythonSysPath( **kwargs )`
 
 Optional for Python support.
 
 This function allows further customization of the Python path `sys.path`. Its
-parameters are the possible items returned by the `Settings` function:
+parameters are the possible items returned by the `Settings` function for the
+Python completer:
 
 - `interpreter_path`: path to the Python interpreter.
 

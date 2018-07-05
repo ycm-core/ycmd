@@ -84,7 +84,7 @@ EMPTY_FLAGS = {
 class Flags( object ):
   """Keeps track of the flags necessary to compile a file.
   The flags are loaded from user-created python files (hereafter referred to as
-  'modules') that contain a method FlagsForFile( filename )."""
+  'modules') that contain a method Settings( **kwargs )."""
 
   def __init__( self ):
     # We cache the flags by a tuple of filename and client data.
@@ -290,9 +290,13 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
   else:
     filename = native( ToUnicode( filename ) )
 
+  if hasattr( module, 'Settings' ):
+    results = module.Settings( language = 'cfamily',
+                               filename = filename,
+                               client_data = client_data )
   # For the sake of backwards compatibility, we need to first check whether the
   # FlagsForFile function in the extra conf module even allows keyword args.
-  if inspect.getargspec( module.FlagsForFile ).keywords:
+  elif inspect.getargspec( module.FlagsForFile ).keywords:
     results = module.FlagsForFile( filename, client_data = client_data )
   else:
     results = module.FlagsForFile( filename )

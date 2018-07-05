@@ -1,2 +1,2 @@
-def FlagsForFile( filename, **kwargs ):
+def Settings( **kwargs ):
   return { 'flags': kwargs[ 'client_data' ].get( 'flags', [] ) }

@@ -1,2 +1,2 @@
-def FlagsForFile( filename ):
+def Settings( **kwargs ):
   return { 'flags': [] }
