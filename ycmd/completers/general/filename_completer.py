@@ -79,7 +79,17 @@ class FilenameCompleter( Completer ):
       """ % { 'sep': '/\\\\' if OnWindows() else '/' }, re.X )
 
 
+  def CurrentFiletypeCompletionDisabled( self, request_data ):
+    disabled_filetypes = self.user_options[ 'filepath_blacklist' ]
+    filetypes = request_data[ 'filetypes' ]
+    return ( '*' in disabled_filetypes or
+             any( x in disabled_filetypes for x in filetypes ) )
+
+
   def ShouldUseNowInner( self, request_data ):
+    if self.CurrentFiletypeCompletionDisabled( request_data ):
+      return False
+
     current_line = request_data[ 'line_value' ]
     start_codepoint = request_data[ 'start_codepoint' ]
 

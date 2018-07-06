@@ -25,7 +25,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import os
-from hamcrest import assert_that, contains_inanyorder, empty
+from hamcrest import assert_that, contains_inanyorder, empty, is_not
 from nose.tools import eq_, ok_
 from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.request_wrap import RequestWrap
@@ -370,3 +370,43 @@ def WorkingDir_UseClientWorkingDirectory_test( app ):
     ( 'Qt',    '[Dir]' ),
     ( 'QtGui', '[Dir]' )
   ) )
+
+
+@IsolatedYcmd( { 'filepath_blacklist': {} } )
+def FilenameCompleter_NoFiletypeBlacklisted_test( app ):
+  completion_data = BuildRequest( filetypes = [ 'foo', 'bar' ],
+                                  contents = './',
+                                  column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, is_not( empty() ) )
+
+
+@IsolatedYcmd( { 'filepath_blacklist': { 'foo': 1 } } )
+def FilenameCompleter_FirstFiletypeBlacklisted_test( app ):
+  completion_data = BuildRequest( filetypes = [ 'foo', 'bar' ],
+                                  contents = './',
+                                  column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, empty() )
+
+
+@IsolatedYcmd( { 'filepath_blacklist': { 'bar': 1 } } )
+def FilenameCompleter_SecondFiletypeBlacklisted_test( app ):
+  completion_data = BuildRequest( filetypes = [ 'foo', 'bar' ],
+                                  contents = './',
+                                  column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, empty() )
+
+
+@IsolatedYcmd( { 'filepath_blacklist': { '*': 1 } } )
+def FilenameCompleter_AllFiletypesBlacklisted_test( app ):
+  completion_data = BuildRequest( filetypes = [ 'foo', 'bar' ],
+                                  contents = './',
+                                  column_num = 3 )
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, empty() )
