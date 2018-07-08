@@ -1,19 +1,16 @@
-
 class Foo {
   /** Unicode string: 说话 */
   methodA() {}
   methodB() {}
   methodC(
-    a: {
-      foo: string;
-      bar: number;
-    }
+    foo,
+    bar
   ) {}
 }
 
 var foo = new Foo();
 
-// line 17, column 6
+// line 14, column 6
 foo.m
 
 

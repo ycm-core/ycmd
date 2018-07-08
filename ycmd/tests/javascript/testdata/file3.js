@@ -1,4 +1,2 @@
-
-function method( xyz ) {
-    return global
-}
+var bar = new Bar();
+bar.testMethod();

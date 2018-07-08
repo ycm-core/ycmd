@@ -321,8 +321,6 @@ def ParseArguments():
                        help = 'Enable Go semantic completion engine.' )
   parser.add_argument( '--rust-completer', action = 'store_true',
                        help = 'Enable Rust semantic completion engine.' )
-  parser.add_argument( '--js-completer', action = 'store_true',
-                       help = 'Enable JavaScript semantic completion engine.' ),
   parser.add_argument( '--java-completer', action = 'store_true',
                        help = 'Enable Java semantic completion engine.' ),
   parser.add_argument( '--system-boost', action = 'store_true',
@@ -376,6 +374,8 @@ def ParseArguments():
   parser.add_argument( '--racer-completer', action = 'store_true',
                        help = argparse.SUPPRESS )
   parser.add_argument( '--tern-completer', action = 'store_true',
+                       help = argparse.SUPPRESS )
+  parser.add_argument( '--js-completer', action = 'store_true',
                        help = argparse.SUPPRESS )
 
   args = parser.parse_args()

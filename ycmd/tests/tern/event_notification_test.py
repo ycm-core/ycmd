@@ -1,4 +1,4 @@
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -30,7 +30,7 @@ import os
 import requests
 
 from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
-from ycmd.tests.javascript import IsolatedYcmd, PathToTestFile
+from ycmd.tests.tern import IsolatedYcmd, PathToTestFile
 from ycmd import utils
 
 

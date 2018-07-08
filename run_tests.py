@@ -63,7 +63,8 @@ COMPLETERS = {
   },
   'javascript': {
     'build': [ '--js-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/javascript' ],
+    'test': [ '--exclude-dir=ycmd/tests/javascript',
+              '--exclude-dir=ycmd/tests/tern' ],
     'aliases': [ 'js', 'tern' ]
   },
   'go': {

@@ -1,5 +1,6 @@
-# Copyright (C) 2015-2018 ycmd contributors
 # encoding: utf-8
+#
+# Copyright (C) 2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,70 +17,55 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
 from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that,
-                       contains,
-                       contains_inanyorder,
-                       has_entry,
-                       has_entries )
-from mock import patch
+from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries,
+                       matches_regexp )
 from nose.tools import eq_
-from pprint import pformat
 import requests
+import pprint
 
-from ycmd.tests.javascript import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
-                                    StartJavaScriptCompleterServerInDirectory )
+from ycmd.tests.javascript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
                                     ErrorMatcher,
                                     LocationMatcher,
-                                    MockProcessTerminationTimingOut )
+                                    MessageMatcher )
 from ycmd.utils import ReadFile
 
 
-@SharedYcmd
-def Subcommands_DefinedSubcommands_test( app ):
-  subcommands_data = BuildRequest( completer_target = 'javascript' )
+def RunTest( app, test ):
+  contents = ReadFile( test[ 'request' ][ 'filepath' ] )
 
-  eq_( sorted( [ 'GoToDefinition',
-                 'GoTo',
-                 'GetDoc',
-                 'GetType',
-                 'GoToReferences',
-                 'RefactorRename',
-                 'RestartServer' ] ),
-       app.post_json( '/defined_subcommands',
-                      subcommands_data ).json )
+  app.post_json(
+    '/event_notification',
+    CombineRequest( test[ 'request' ], {
+      'contents': contents,
+      'filetype': 'javascript',
+      'event_name': 'BufferVisit'
+    } )
+  )
 
+  app.post_json(
+    '/event_notification',
+    CombineRequest( test[ 'request' ], {
+      'contents': contents,
+      'filetype': 'javascript',
+      'event_name': 'FileReadyToParse'
+    } )
+  )
 
-def RunTest( app, test, contents = None ):
-  if not contents:
-    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
-
-  # Because we aren't testing this command, we *always* ignore errors. This
-  # is mainly because we (may) want to test scenarios where the completer
-  # throws an exception.
-  app.post_json( '/event_notification',
-                 CombineRequest( test[ 'request' ], {
-                                 'event_name': 'FileReadyToParse',
-                                 'contents': contents,
-                                 'filetype': 'javascript',
-                                 } ),
-                 expect_errors = True )
-
-  # We also ignore errors here, but then we check the response code
-  # ourself. This is to allow testing of requests returning errors.
+  # We ignore errors here and check the response code ourself.
+  # This is to allow testing of requests returning errors.
   response = app.post_json(
     '/run_completer_command',
     CombineRequest( test[ 'request' ], {
-      'completer_target': 'filetype_default',
       'contents': contents,
       'filetype': 'javascript',
       'command_arguments': ( [ test[ 'request' ][ 'command' ] ]
@@ -88,7 +74,7 @@ def RunTest( app, test, contents = None ):
     expect_errors = True
   )
 
-  print( 'completer response: {0}'.format( pformat( response.json ) ) )
+  print( 'completer response: {0}'.format( pprint.pformat( response.json ) ) )
 
   eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
@@ -96,112 +82,261 @@ def RunTest( app, test, contents = None ):
 
 
 @SharedYcmd
-def Subcommands_GoToDefinition_test( app ):
-  RunTest( app, {
-    'description': 'GoToDefinition works within file',
-    'request': {
-      'command': 'GoToDefinition',
-      'line_num': 13,
-      'column_num': 25,
-      'filepath': PathToTestFile( 'simple_test.js' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'filepath': PathToTestFile( 'simple_test.js' ),
-        'line_num': 1,
-        'column_num': 5,
-      } )
-    }
-  } )
+def Subcommands_DefinedSubcommands_test( app ):
+  subcommands_data = BuildRequest( completer_target = 'javascript' )
+
+  assert_that(
+    app.post_json( '/defined_subcommands', subcommands_data ).json,
+    contains_inanyorder(
+      'Format',
+      'GoTo',
+      'GoToDeclaration',
+      'GoToDefinition',
+      'GoToType',
+      'GetDoc',
+      'GetType',
+      'GoToReferences',
+      'FixIt',
+      'OrganizeImports',
+      'RefactorRename',
+      'RestartServer'
+    )
+  )
 
 
 @SharedYcmd
-def Subcommands_GoToDefinition_Unicode_test( app ):
+def Subcommands_Format_WholeFile_Spaces_test( app ):
+  filepath = PathToTestFile( 'test.js' )
   RunTest( app, {
-    'description': 'GoToDefinition works within file with unicode',
+    'description': 'Formatting is applied on the whole file '
+                   'with tabs composed of 4 spaces',
     'request': {
-      'command': 'GoToDefinition',
-      'line_num': 11,
-      'column_num': 12,
-      'filepath': PathToTestFile( 'unicode.js' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'filepath': PathToTestFile( 'unicode.js' ),
-        'line_num': 6,
-        'column_num': 26,
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_GoTo_test( app ):
-  RunTest( app, {
-    'description': 'GoTo works the same as GoToDefinition within file',
-    'request': {
-      'command': 'GoTo',
-      'line_num': 13,
-      'column_num': 25,
-      'filepath': PathToTestFile( 'simple_test.js' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'filepath': PathToTestFile( 'simple_test.js' ),
-        'line_num': 1,
-        'column_num': 5,
-      } )
-    }
-  } )
-
-
-@IsolatedYcmd
-def Subcommands_GoTo_RelativePath_test( app ):
-  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
-  RunTest(
-    app,
-    {
-      'description': 'GoTo works when the buffer differs from the file on disk',
-      'request': {
-        'command': 'GoTo',
-        'line_num': 43,
-        'column_num': 25,
-        'filepath': PathToTestFile( 'simple_test.js' ),
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'filepath': PathToTestFile( 'simple_test.js' ),
-          'line_num': 31,
-          'column_num': 5,
-        } )
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
       }
     },
-    contents = ReadFile( PathToTestFile( 'simple_test.modified.js' ) ) )
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  2,  1 ),
+                          LocationMatcher( filepath,  2,  3 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  3,  1 ),
+                          LocationMatcher( filepath,  3,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  3, 14 ),
+                          LocationMatcher( filepath,  3, 14 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  4,  1 ),
+                          LocationMatcher( filepath,  4,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  4, 14 ),
+                          LocationMatcher( filepath,  4, 14 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  5,  1 ),
+                          LocationMatcher( filepath,  5,  3 ) ),
+            ChunkMatcher( '        ',
+                          LocationMatcher( filepath,  6,  1 ),
+                          LocationMatcher( filepath,  6,  5 ) ),
+            ChunkMatcher( '        ',
+                          LocationMatcher( filepath,  7,  1 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  8,  1 ),
+                          LocationMatcher( filepath,  8,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  8,  6 ),
+                          LocationMatcher( filepath,  8,  6 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath, 24,  1 ),
+                          LocationMatcher( filepath, 24,  3 ) ),
+            ChunkMatcher( '     ',
+                          LocationMatcher( filepath, 25,  1 ),
+                          LocationMatcher( filepath, 25,  4 ) ),
+            ChunkMatcher( '     ',
+                          LocationMatcher( filepath, 26,  1 ),
+                          LocationMatcher( filepath, 26,  4 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath, 27,  1 ),
+                          LocationMatcher( filepath, 27,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath, 27, 17 ),
+                          LocationMatcher( filepath, 27, 17 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
 
 
 @SharedYcmd
-def Subcommands_GetDoc_test( app ):
+def Subcommands_Format_WholeFile_Tabs_test( app ):
+  filepath = PathToTestFile( 'test.js' )
   RunTest( app, {
-    'description': 'GetDoc works within file',
+    'description': 'Formatting is applied on the whole file '
+                   'with tabs composed of 2 spaces',
     'request': {
-      'command': 'GetDoc',
-      'line_num': 7,
-      'column_num': 16,
-      'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': False
+      }
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'detailed_info': (
-          'Name: mine_bitcoin\n'
-          'Type: fn(how_much: ?) -> number\n\n'
-          'This function takes a number and invests it in bitcoin. It '
-          'returns\nthe expected value (in notional currency) after 1 year.'
-        )
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  2,  1 ),
+                          LocationMatcher( filepath,  2,  3 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  3,  1 ),
+                          LocationMatcher( filepath,  3,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  3, 14 ),
+                          LocationMatcher( filepath,  3, 14 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  4,  1 ),
+                          LocationMatcher( filepath,  4,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  4, 14 ),
+                          LocationMatcher( filepath,  4, 14 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  5,  1 ),
+                          LocationMatcher( filepath,  5,  3 ) ),
+            ChunkMatcher( '\t\t',
+                          LocationMatcher( filepath,  6,  1 ),
+                          LocationMatcher( filepath,  6,  5 ) ),
+            ChunkMatcher( '\t\t',
+                          LocationMatcher( filepath,  7,  1 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  8,  1 ),
+                          LocationMatcher( filepath,  8,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  8,  6 ),
+                          LocationMatcher( filepath,  8,  6 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath, 24,  1 ),
+                          LocationMatcher( filepath, 24,  3 ) ),
+            ChunkMatcher( '\t ',
+                          LocationMatcher( filepath, 25,  1 ),
+                          LocationMatcher( filepath, 25,  4 ) ),
+            ChunkMatcher( '\t ',
+                          LocationMatcher( filepath, 26,  1 ),
+                          LocationMatcher( filepath, 26,  4 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath, 27,  1 ),
+                          LocationMatcher( filepath, 27,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath, 27, 17 ),
+                          LocationMatcher( filepath, 27, 17 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_Format_Range_Spaces_test( app ):
+  filepath = PathToTestFile( 'test.js' )
+  RunTest( app, {
+    'description': 'Formatting is applied on some part of the file '
+                   'with tabs composed of 4 spaces by default',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'range': {
+        'start': {
+          'line_num': 5,
+          'column_num': 3,
+        },
+        'end': {
+          'line_num': 8,
+          'column_num': 6
+        }
+      },
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  5,  1 ),
+                          LocationMatcher( filepath,  5,  3 ) ),
+            ChunkMatcher( '        ',
+                          LocationMatcher( filepath,  6,  1 ),
+                          LocationMatcher( filepath,  6,  5 ) ),
+            ChunkMatcher( '        ',
+                          LocationMatcher( filepath,  7,  1 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  8,  1 ),
+                          LocationMatcher( filepath,  8,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_Format_Range_Tabs_test( app ):
+  filepath = PathToTestFile( 'test.js' )
+  RunTest( app, {
+    'description': 'Formatting is applied on some part of the file '
+                   'with tabs instead of spaces',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'range': {
+        'start': {
+          'line_num': 6,
+          'column_num': 3,
+        },
+        'end': {
+          'line_num': 11,
+          'column_num': 6
+        }
+      },
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': False
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '\t\t',
+                          LocationMatcher( filepath,  6,  1 ),
+                          LocationMatcher( filepath,  6,  5 ) ),
+            ChunkMatcher( '\t\t',
+                          LocationMatcher( filepath,  7,  1 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  8,  1 ),
+                          LocationMatcher( filepath,  8,  3 ) ),
+            ChunkMatcher( ' ',
+                          LocationMatcher( filepath,  8,  6 ),
+                          LocationMatcher( filepath,  8,  6 ) ),
+          )
+        } ) )
       } )
     }
   } )
@@ -210,17 +345,56 @@ def Subcommands_GetDoc_test( app ):
 @SharedYcmd
 def Subcommands_GetType_test( app ):
   RunTest( app, {
-    'description': 'GetType works within file',
+    'description': 'GetType works',
     'request': {
       'command': 'GetType',
-      'line_num': 11,
-      'column_num': 14,
-      'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
+      'line_num': 14,
+      'column_num': 1,
+      'filepath': PathToTestFile( 'test.js' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': MessageMatcher( 'var foo: Foo' )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Method_test( app ):
+  RunTest( app, {
+    'description': 'GetDoc on a method returns its docstring',
+    'request': {
+      'command': 'GetDoc',
+      'line_num': 31,
+      'column_num': 5,
+      'filepath': PathToTestFile( 'test.js' ),
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'message': 'number'
+         'detailed_info': '(method) Bar.testMethod(): void\n\n'
+                          'Method documentation'
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Class_test( app ):
+  RunTest( app, {
+    'description': 'GetDoc on a class returns its docstring',
+    'request': {
+      'command': 'GetDoc',
+      'line_num': 34,
+      'column_num': 3,
+      'filepath': PathToTestFile( 'test.js' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+         'detailed_info': 'class Bar\n\n'
+                          'Class documentation\n\n'
+                          'Multi-line'
       } )
     }
   } )
@@ -229,121 +403,217 @@ def Subcommands_GetType_test( app ):
 @SharedYcmd
 def Subcommands_GoToReferences_test( app ):
   RunTest( app, {
-    'description': 'GoToReferences works within file',
+    'description': 'GoToReferences works',
     'request': {
       'command': 'GoToReferences',
-      'line_num': 17,
-      'column_num': 29,
-      'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': contains_inanyorder(
-        has_entries( {
-          'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
-          'line_num': 17,
-          'column_num': 29,
-        } ),
-        has_entries( {
-          'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
-          'line_num': 12,
-          'column_num': 9,
-        } )
-      )
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_GoToReferences_Unicode_test( app ):
-  RunTest( app, {
-    'description': 'GoToReferences works within file with unicode chars',
-    'request': {
-      'command': 'GoToReferences',
-      'line_num': 11,
+      'line_num': 30,
       'column_num': 5,
-      'filepath': PathToTestFile( 'unicode.js' ),
+      'filepath': PathToTestFile( 'test.js' ),
     },
     'expect': {
       'response': requests.codes.ok,
       'data': contains_inanyorder(
-        has_entries( {
-          'filepath': PathToTestFile( 'unicode.js' ),
-          'line_num': 5,
-          'column_num': 5,
-        } ),
-        has_entries( {
-          'filepath': PathToTestFile( 'unicode.js' ),
-          'line_num': 9,
-          'column_num': 1,
-        } ),
-        has_entries( {
-          'filepath': PathToTestFile( 'unicode.js' ),
-          'line_num': 11,
-          'column_num': 1,
-        } )
+        has_entries( { 'description': 'var bar = new Bar();',
+                       'line_num'   : 30,
+                       'column_num' : 5,
+                       'filepath'   : PathToTestFile( 'test.js' ) } ),
+        has_entries( { 'description': 'bar.testMethod();',
+                       'line_num'   : 31,
+                       'column_num' : 1,
+                       'filepath'   : PathToTestFile( 'test.js' ) } ),
+        has_entries( { 'description': 'bar.nonExistingMethod();',
+                       'line_num'   : 32,
+                       'column_num' : 1,
+                       'filepath'   : PathToTestFile( 'test.js' ) } ),
+        has_entries( { 'description': 'var bar = new Bar();',
+                       'line_num'   : 1,
+                       'column_num' : 5,
+                       'filepath'   : PathToTestFile( 'file3.js' ) } ),
+        has_entries( { 'description': 'bar.testMethod();',
+                       'line_num'   : 2,
+                       'column_num' : 1,
+                       'filepath'   : PathToTestFile( 'file3.js' ) } )
       )
     }
   } )
 
 
 @SharedYcmd
-def Subcommands_GetDocWithNoItendifier_test( app ):
+def Subcommands_GoTo( app, goto_command ):
   RunTest( app, {
-    'description': 'GetDoc works when no identifier',
+    'description': goto_command + ' works within file',
     'request': {
-      'command': 'GetDoc',
-      'filepath': PathToTestFile( 'simple_test.js' ),
-      'line_num': 12,
-      'column_num': 1,
+      'command': goto_command,
+      'line_num': 31,
+      'column_num': 13,
+      'filepath': PathToTestFile( 'test.js' ),
     },
     'expect': {
-      'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( RuntimeError, 'TernError: No type found '
-                                          'at the given position.' ),
+      'response': requests.codes.ok,
+      'data': LocationMatcher( PathToTestFile( 'test.js' ), 27, 3 )
+    }
+  } )
+
+
+def Subcommands_GoTo_test():
+  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
+    yield Subcommands_GoTo, command
+
+
+@SharedYcmd
+def Subcommands_GoToType_test( app ):
+  RunTest( app, {
+    'description': 'GoToType works',
+    'request': {
+      'command': 'GoToType',
+      'line_num': 11,
+      'column_num': 6,
+      'filepath': PathToTestFile( 'test.js' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': LocationMatcher( PathToTestFile( 'test.js' ), 1, 7 )
     }
   } )
 
 
 @SharedYcmd
-def Subcommands_RefactorRename_Simple_test( app ):
-  filepath = PathToTestFile( 'simple_test.js' )
+def Subcommands_FixIt_test( app ):
+  filepath = PathToTestFile( 'test.js' )
   RunTest( app, {
-    'description': 'RefactorRename works within a single scope/file',
+    'description': 'FixIt works on a non-existing method',
     'request': {
-      'command': 'RefactorRename',
-      'arguments': [ 'test' ],
+      'command': 'FixIt',
+      'line_num': 32,
+      'column_num': 19,
       'filepath': filepath,
-      'line_num': 15,
-      'column_num': 32,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_inanyorder(
+          has_entries( {
+            'text': "Declare method 'nonExistingMethod'",
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp(
+                  '^\r?\n'
+                  '    nonExistingMethod\(\) {\r?\n'
+                  '        throw new Error\("Method not implemented."\);\r?\n'
+                  '    }$',
+                ),
+                LocationMatcher( filepath, 22, 12 ),
+                LocationMatcher( filepath, 22, 12 ) )
+            ),
+            'location': LocationMatcher( filepath, 32, 19 )
+          } )
+        )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_OrganizeImports_test( app ):
+  filepath = PathToTestFile( 'imports.js' )
+  RunTest( app, {
+    'description': 'OrganizeImports removes unused imports, '
+                   'coalesces imports from the same module, and sorts them',
+    'request': {
+      'command': 'OrganizeImports',
+      'filepath': filepath,
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-              ChunkMatcher( 'test',
-                            LocationMatcher( filepath, 1, 5 ),
-                            LocationMatcher( filepath, 1, 22 ) ),
-              ChunkMatcher( 'test',
-                            LocationMatcher( filepath, 13, 25 ),
-                            LocationMatcher( filepath, 13, 42 ) ),
-              ChunkMatcher( 'test',
-                            LocationMatcher( filepath, 14, 24 ),
-                            LocationMatcher( filepath, 14, 41 ) ),
-              ChunkMatcher( 'test',
-                            LocationMatcher( filepath, 15, 24 ),
-                            LocationMatcher( filepath, 15, 41 ) ),
-              ChunkMatcher( 'test',
-                            LocationMatcher( filepath, 21, 7 ),
-                            LocationMatcher( filepath, 21, 24 ) ),
-              # On the same line, ensuring offsets are as expected (as
-              # unmodified source, similar to clang)
-              ChunkMatcher( 'test',
-                            LocationMatcher( filepath, 21, 28 ),
-                            LocationMatcher( filepath, 21, 45 ) ),
+            ChunkMatcher(
+              matches_regexp(
+                'import \* as lib from "library";\r?\n'
+                'import func, { func1, func2 } from "library";\r?\n' ),
+              LocationMatcher( filepath,  1, 1 ),
+              LocationMatcher( filepath,  2, 1 ) ),
+            ChunkMatcher(
+              '',
+              LocationMatcher( filepath,  5, 1 ),
+              LocationMatcher( filepath,  6, 1 ) ),
+            ChunkMatcher(
+              '',
+              LocationMatcher( filepath,  9, 1 ),
+              LocationMatcher( filepath, 10, 1 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Missing_test( app ):
+  RunTest( app, {
+    'description': 'RefactorRename requires a parameter',
+    'request': {
+      'command': 'RefactorRename',
+      'line_num': 27,
+      'column_num': 8,
+      'filepath': PathToTestFile( 'test.js' ),
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( ValueError,
+                            'Please specify a new name to rename it to.\n'
+                            'Usage: RefactorRename <new name>' )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_NotPossible_test( app ):
+  RunTest( app, {
+    'description': 'RefactorRename cannot rename a non-existing method',
+    'request': {
+      'command': 'RefactorRename',
+      'arguments': [ 'whatever' ],
+      'line_num': 35,
+      'column_num': 5,
+      'filepath': PathToTestFile( 'test.js' ),
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError,
+                            'Value cannot be renamed: '
+                            'You cannot rename this element.' )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Simple_test( app ):
+  RunTest( app, {
+    'description': 'RefactorRename works on a class name',
+    'request': {
+      'command': 'RefactorRename',
+      'arguments': [ 'test' ],
+      'line_num': 1,
+      'column_num': 7,
+      'filepath': PathToTestFile( 'test.js' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains_inanyorder(
+            ChunkMatcher(
+              'test',
+              LocationMatcher( PathToTestFile( 'test.js' ), 11, 15 ),
+              LocationMatcher( PathToTestFile( 'test.js' ), 11, 18 ) ),
+            ChunkMatcher(
+              'test',
+              LocationMatcher( PathToTestFile( 'test.js' ), 1, 7 ),
+              LocationMatcher( PathToTestFile( 'test.js' ), 1, 10 ) ),
           ),
-          'location': LocationMatcher( filepath, 15, 32 )
+          'location': LocationMatcher( PathToTestFile( 'test.js' ), 1, 7 )
         } ) )
       } )
     }
@@ -352,187 +622,43 @@ def Subcommands_RefactorRename_Simple_test( app ):
 
 @SharedYcmd
 def Subcommands_RefactorRename_MultipleFiles_test( app ):
-  file1 = PathToTestFile( 'file1.js' )
-  file2 = PathToTestFile( 'file2.js' )
-  file3 = PathToTestFile( 'file3.js' )
-
   RunTest( app, {
     'description': 'RefactorRename works across files',
     'request': {
       'command': 'RefactorRename',
-      'arguments': [ 'a-quite-long-string' ],
-      'filepath': file1,
-      'line_num': 3,
-      'column_num': 14,
+      'arguments': [ 'this-is-a-longer-string' ],
+      'line_num': 22,
+      'column_num': 8,
+      'filepath': PathToTestFile( 'test.js' ),
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
         'fixits': contains( has_entries( {
-          'chunks': contains(
+          'chunks': contains_inanyorder(
             ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file1, 1, 5 ),
-              LocationMatcher( file1, 1, 11 ) ),
+              'this-is-a-longer-string',
+              LocationMatcher( PathToTestFile( 'test.js' ), 22, 7 ),
+              LocationMatcher( PathToTestFile( 'test.js' ), 22, 10 ) ),
             ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file1, 3, 14 ),
-              LocationMatcher( file1, 3, 20 ) ),
+              'this-is-a-longer-string',
+              LocationMatcher( PathToTestFile( 'test.js' ), 30, 15 ),
+              LocationMatcher( PathToTestFile( 'test.js' ), 30, 18 ) ),
             ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file2, 2, 14 ),
-              LocationMatcher( file2, 2, 20 ) ),
+              'this-is-a-longer-string',
+              LocationMatcher( PathToTestFile( 'test.js' ), 34, 1 ),
+              LocationMatcher( PathToTestFile( 'test.js' ), 34, 4 ) ),
             ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file3, 3, 12 ),
-              LocationMatcher( file3, 3, 18 ) )
+              'this-is-a-longer-string',
+              LocationMatcher( PathToTestFile( 'file2.js' ), 1, 5 ),
+              LocationMatcher( PathToTestFile( 'file2.js' ), 1, 8 ) ),
+            ChunkMatcher(
+              'this-is-a-longer-string',
+              LocationMatcher( PathToTestFile( 'file3.js' ), 1, 15 ),
+              LocationMatcher( PathToTestFile( 'file3.js' ), 1, 18 ) ),
           ),
-          'location': LocationMatcher( file1, 3, 14 )
+          'location': LocationMatcher( PathToTestFile( 'test.js' ), 22, 8 )
         } ) )
       } )
     }
   } )
-
-
-# Needs to be isolated to prevent interfering with other tests (this test loads
-# an extra file into tern's project memory)
-@IsolatedYcmd
-def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
-  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
-
-  file1 = PathToTestFile( 'file1.js' )
-  file2 = PathToTestFile( 'file2.js' )
-  file3 = PathToTestFile( 'file3.js' )
-
-  # This test is roughly the same as the previous one, except here file4.js is
-  # pushed into the Tern engine via 'opening it in the editor' (i.e.
-  # FileReadyToParse event). The first 3 are loaded into the tern server
-  # because they are listed in the .tern-project file's loadEagerly option.
-  file4 = PathToTestFile( 'file4.js' )
-
-  app.post_json( '/event_notification',
-                 BuildRequest( **{
-                   'filetype': 'javascript',
-                   'event_name': 'FileReadyToParse',
-                   'contents': ReadFile( file4 ),
-                   'filepath': file4,
-                 } ),
-                 expect_errors = False )
-
-  RunTest( app, {
-    'description': 'FileReadyToParse loads files into tern server',
-    'request': {
-      'command': 'RefactorRename',
-      'arguments': [ 'a-quite-long-string' ],
-      'filepath': file1,
-      'line_num': 3,
-      'column_num': 14,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
-            ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file1, 1, 5 ),
-              LocationMatcher( file1, 1, 11 ) ),
-            ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file1, 3, 14 ),
-              LocationMatcher( file1, 3, 20 ) ),
-            ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file2, 2, 14 ),
-              LocationMatcher( file2, 2, 20 ) ),
-            ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file3, 3, 12 ),
-              LocationMatcher( file3, 3, 18 ) ),
-            ChunkMatcher(
-              'a-quite-long-string',
-              LocationMatcher( file4, 4, 22 ),
-              LocationMatcher( file4, 4, 28 ) )
-          ),
-          'location': LocationMatcher( file1, 3, 14 )
-        } ) )
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_RefactorRename_Missing_New_Name_test( app ):
-  RunTest( app, {
-    'description': 'RefactorRename raises an error without new name',
-    'request': {
-      'command': 'RefactorRename',
-      'line_num': 17,
-      'column_num': 29,
-      'filepath': PathToTestFile( 'coollib', 'cool_object.js' ),
-    },
-    'expect': {
-      'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( ValueError,
-                            'Please specify a new name to rename it to.\n'
-                            'Usage: RefactorRename <new name>' ),
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_RefactorRename_Unicode_test( app ):
-  filepath = PathToTestFile( 'unicode.js' )
-  RunTest( app, {
-    'description': 'RefactorRename works with unicode identifiers',
-    'request': {
-      'command': 'RefactorRename',
-      'arguments': [ '†es†' ],
-      'filepath': filepath,
-      'line_num': 11,
-      'column_num': 3,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
-              ChunkMatcher( '†es†',
-                            LocationMatcher( filepath, 5, 5 ),
-                            LocationMatcher( filepath, 5, 13 ) ),
-              ChunkMatcher( '†es†',
-                            LocationMatcher( filepath, 9, 1 ),
-                            LocationMatcher( filepath, 9, 9 ) ),
-              ChunkMatcher( '†es†',
-                            LocationMatcher( filepath, 11, 1 ),
-                            LocationMatcher( filepath, 11, 9 ) )
-          ),
-          'location': LocationMatcher( filepath, 11, 3 )
-        } ) )
-      } )
-    }
-  } )
-
-
-@IsolatedYcmd
-@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
-        MockProcessTerminationTimingOut )
-def Subcommands_StopServer_Timeout_test( app ):
-  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
-
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'javascript',
-      command_arguments = [ 'StopServer' ]
-    )
-  )
-
-  request_data = BuildRequest( filetype = 'javascript' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               has_entry(
-                 'completer',
-                 has_entry( 'servers', contains(
-                   has_entry( 'is_running', False )
-                 ) )
-               ) )

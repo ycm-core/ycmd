@@ -73,7 +73,8 @@ class ServerState( object ):
           supported_filetypes.update( completer.SupportedFiletypes() )
 
       for supported_filetype in supported_filetypes:
-        self._filetype_completers[ supported_filetype ] = completer
+        if supported_filetype not in self._filetype_completers:
+          self._filetype_completers[ supported_filetype ] = completer
       return completer
 
 
