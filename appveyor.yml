@@ -5,20 +5,20 @@ environment:
   matrix:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     arch: 64
-    python: 36
+    python: 37
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 32
-    python: 36
+    python: 37
   # We only test Python 2.7 with MSVC 15 on 64-bit.
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 64
     python: 27
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 64
-    python: 36
+    python: 37
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: 64
-    python: 36
+    python: 37
     YCM_BENCHMARK: true
     COVERAGE: false
 install:
