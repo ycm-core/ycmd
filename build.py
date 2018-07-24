@@ -38,9 +38,9 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
   abs_folder_path = p.join( DIR_OF_THIRD_PARTY, folder )
   if p.isdir( abs_folder_path ) and not os.listdir( abs_folder_path ):
     sys.exit(
-      'ERROR: some folders {0} in {1} are empty; you probably forgot to run:\n'
-      '\tgit submodule update --init --recursive\n'.format(abs_folder_path,
-        DIR_OF_THIRD_PARTY )
+      'ERROR: folder {} in {} is empty; you probably forgot to run:\n'
+      '\tgit submodule update --init --recursive\n'.format( folder,
+                                                            DIR_OF_THIRD_PARTY )
     )
 
 sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
