@@ -19,7 +19,6 @@
 #include "CodePointRepository.h"
 
 #include <array>
-#include <cstring>
 
 namespace YouCompleteMe {
 
@@ -47,20 +46,42 @@ int GetCodePointLength( uint8_t leading_byte ) {
 
 
 const RawCodePoint FindCodePoint( const char *text ) {
+// Helper struct used only for
+// the non-string part of the unicode table
+struct CodePointMisc {
+  bool is_letter;
+  bool is_punctuation;
+  bool is_uppercase;
+  uint8_t break_property;
+  uint8_t combining_class;
+};
+
 #include "UnicodeTable.inc"
 
   // Do a binary search on the array of code points to find the raw code point
   // corresponding to the text. If no code point is found, return the default
   // raw code point for that text.
-  auto first = code_points.begin();
-  size_t count = code_points.size();
+  auto first = std::begin( code_points_original );
+  auto begin = first;
+  size_t count = sizeof( code_points_original ) /
+                         sizeof( code_points_original[ 0 ] );
 
   while ( count > 0 ) {
     size_t step = count / 2;
     auto it = first + step;
-    int cmp = std::strcmp( it->original, text );
+    int cmp = std::strcmp( *it, text );
     if ( cmp == 0 ) {
-      return *it;
+      int index = std::distance( begin, it );
+      CodePointMisc code_points_misc_at_index = code_points_misc[ index ];
+      return { code_points_original[ index ],
+               code_points_normal[ index ],
+               code_points_folded_case[ index ],
+               code_points_swapped_case[ index ],
+               code_points_misc_at_index.is_letter,
+               code_points_misc_at_index.is_punctuation,
+               code_points_misc_at_index.is_uppercase,
+               code_points_misc_at_index.break_property,
+               code_points_misc_at_index.combining_class };
     }
     if ( cmp < 0 ) {
       first = ++it;

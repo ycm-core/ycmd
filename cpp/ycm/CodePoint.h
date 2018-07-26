@@ -18,6 +18,7 @@
 #ifndef CODE_POINT_H_3W0LNCLY
 #define CODE_POINT_H_3W0LNCLY
 
+#include <cstring>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -50,15 +51,34 @@ enum class BreakProperty : uint8_t {
 // This is the structure used to store the data in the Unicode table. See the
 // CodePoint class for a description of the members.
 struct RawCodePoint {
-  const char *original;
-  const char *normal;
-  const char *folded_case;
-  const char *swapped_case;
+  char original[ 5 ];
+  char normal[ 13 ];
+  char folded_case[ 13 ];
+  char swapped_case[ 13 ];
   bool is_letter;
   bool is_punctuation;
   bool is_uppercase;
   uint8_t break_property;
   uint8_t combining_class;
+  RawCodePoint( const char orig[ 5 ],
+                const char norm[ 13 ],
+                const char folded[ 13 ],
+                const char swapped[ 13 ],
+                bool letter,
+                bool punctuation,
+                bool uppercase,
+                uint8_t br_prop,
+                uint8_t combi_class )
+    : is_letter( letter ),
+      is_punctuation( punctuation ),
+      is_uppercase( uppercase ),
+      break_property( br_prop ),
+      combining_class( combi_class ) {
+    memcpy( original, orig, 5 );
+    memcpy( normal, norm, 13 );
+    memcpy( folded_case, folded, 13 );
+    memcpy( swapped_case, swapped, 13 );
+  }
 };
 
 
