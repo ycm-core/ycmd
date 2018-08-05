@@ -33,11 +33,6 @@ def ShouldEnableTypeScriptCompleter_NodeAndTsserverFound_test():
   ok_( ShouldEnableTypeScriptCompleter() )
 
 
-@patch( 'ycmd.completers.typescript.typescript_completer.PATH_TO_NODE', None )
-def ShouldEnableTypeScriptCompleter_NodeNotFound_test( *args ):
-  ok_( not ShouldEnableTypeScriptCompleter() )
-
-
 @patch( 'ycmd.completers.typescript.typescript_completer.PATH_TO_TSSERVER',
         None )
 def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
