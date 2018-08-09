@@ -167,6 +167,9 @@
 #if !defined(__cpp_fold_expressions) || (__cpp_fold_expressions < 201603)
 #  define BOOST_NO_CXX17_FOLD_EXPRESSIONS
 #endif
+#if !defined(__cpp_if_constexpr) || (__cpp_if_constexpr < 201606)
+#  define BOOST_NO_CXX17_IF_CONSTEXPR
+#endif
 
 #define BOOST_COMPILER "Metrowerks CodeWarrior C++ version " BOOST_STRINGIZE(BOOST_COMPILER_VERSION)
 

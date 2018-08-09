@@ -8,10 +8,10 @@
 #ifndef BOOST_SYSTEM_SYSTEM_ERROR_HPP
 #define BOOST_SYSTEM_SYSTEM_ERROR_HPP
 
+#include <boost/system/error_code.hpp>
 #include <string>
 #include <stdexcept>
 #include <cassert>
-#include <boost/system/error_code.hpp>
 
 namespace boost
 {
