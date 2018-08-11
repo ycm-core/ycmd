@@ -327,6 +327,13 @@ std::string TranslationUnit::GetTypeAtLocation(
     return "Internal error: cursor not valid";
   }
 
+  if (clang_getCursorKind(cursor) == CXCursor_MemberRefExpr) {
+    CXCursor ref = clang_getCursorReferenced(cursor);
+    if (clang_getCursorKind(ref) == CXCursor_CXXMethod) {
+      cursor = ref;
+    }
+  }
+
   CXType type = clang_getCursorType( cursor );
 
   std::string type_description =

@@ -447,7 +447,7 @@ def RunGetSemanticTest( app, filepath, filetype, test, command ):
 def Subcommands_GetType_test():
   tests = [
     # Basic pod types
-    [ { 'line_num': 20, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num': 24, 'column_num':  3 }, 'Foo' ],
     [ { 'line_num':  1, 'column_num':  1 }, 'Internal error: '
                                             'cursor not valid' ],
     [ { 'line_num': 12, 'column_num':  2 }, 'Foo' ],
@@ -459,64 +459,68 @@ def Subcommands_GetType_test():
     [ { 'line_num': 15, 'column_num':  7 }, 'char' ],
 
     # Function
-    [ { 'line_num': 18, 'column_num':  2 }, 'int ()' ],
-    [ { 'line_num': 18, 'column_num':  6 }, 'int ()' ],
+    [ { 'line_num': 22, 'column_num':  2 }, 'int ()' ],
+    [ { 'line_num': 22, 'column_num':  6 }, 'int ()' ],
 
     # Declared and canonical type
     # On Ns:: (Unknown)
-    [ { 'line_num': 21, 'column_num':  3 }, 'Unknown type' ], # sic
+    [ { 'line_num': 25, 'column_num':  3 }, 'Unknown type' ], # sic
     # On Type (Type)
-    [ { 'line_num': 21, 'column_num':  8 }, 'Ns::Type => Ns::BasicType<char>' ],
+    [ { 'line_num': 25, 'column_num':  8 }, 'Ns::Type => Ns::BasicType<char>' ],
     # On "a" (Ns::Type)
-    [ { 'line_num': 21, 'column_num': 15 }, 'Ns::Type => Ns::BasicType<char>' ],
-    [ { 'line_num': 22, 'column_num': 13 }, 'Ns::Type => Ns::BasicType<char>' ],
+    [ { 'line_num': 25, 'column_num': 15 }, 'Ns::Type => Ns::BasicType<char>' ],
+    [ { 'line_num': 26, 'column_num': 13 }, 'Ns::Type => Ns::BasicType<char>' ],
 
     # Cursor on decl for refs & pointers
-    [ { 'line_num': 35, 'column_num':  3 }, 'Foo' ],
-    [ { 'line_num': 35, 'column_num': 11 }, 'Foo &' ],
-    [ { 'line_num': 35, 'column_num': 15 }, 'Foo' ],
-    [ { 'line_num': 36, 'column_num':  3 }, 'Foo' ],
-    [ { 'line_num': 36, 'column_num': 11 }, 'Foo *' ],
-    [ { 'line_num': 36, 'column_num': 18 }, 'Foo' ],
-    [ { 'line_num': 38, 'column_num':  3 }, 'const Foo &' ],
-    [ { 'line_num': 38, 'column_num': 16 }, 'const Foo &' ],
-    [ { 'line_num': 39, 'column_num':  3 }, 'const Foo *' ],
-    [ { 'line_num': 39, 'column_num': 16 }, 'const Foo *' ],
+    [ { 'line_num': 39, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num': 39, 'column_num': 11 }, 'Foo &' ],
+    [ { 'line_num': 39, 'column_num': 15 }, 'Foo' ],
+    [ { 'line_num': 40, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num': 40, 'column_num': 11 }, 'Foo *' ],
+    [ { 'line_num': 40, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 42, 'column_num':  3 }, 'const Foo &' ],
+    [ { 'line_num': 42, 'column_num': 16 }, 'const Foo &' ],
+    [ { 'line_num': 43, 'column_num':  3 }, 'const Foo *' ],
+    [ { 'line_num': 43, 'column_num': 16 }, 'const Foo *' ],
 
     # Cursor on usage
-    [ { 'line_num': 41, 'column_num': 13 }, 'const Foo' ],
-    [ { 'line_num': 41, 'column_num': 19 }, 'const int' ],
-    [ { 'line_num': 42, 'column_num': 13 }, 'const Foo *' ],
-    [ { 'line_num': 42, 'column_num': 20 }, 'const int' ],
-    [ { 'line_num': 43, 'column_num': 12 }, 'Foo' ],
-    [ { 'line_num': 43, 'column_num': 17 }, 'int' ],
-    [ { 'line_num': 44, 'column_num': 12 }, 'Foo *' ],
-    [ { 'line_num': 44, 'column_num': 18 }, 'int' ],
+    [ { 'line_num': 45, 'column_num': 13 }, 'const Foo' ],
+    [ { 'line_num': 45, 'column_num': 19 }, 'const int' ],
+    [ { 'line_num': 46, 'column_num': 13 }, 'const Foo *' ],
+    [ { 'line_num': 46, 'column_num': 20 }, 'const int' ],
+    [ { 'line_num': 47, 'column_num': 12 }, 'Foo' ],
+    [ { 'line_num': 47, 'column_num': 17 }, 'int' ],
+    [ { 'line_num': 48, 'column_num': 12 }, 'Foo *' ],
+    [ { 'line_num': 48, 'column_num': 18 }, 'int' ],
 
     # Auto in declaration
-    [ { 'line_num': 24, 'column_num':  3 }, 'Foo &' ],
-    [ { 'line_num': 24, 'column_num': 11 }, 'Foo &' ],
-    [ { 'line_num': 24, 'column_num': 18 }, 'Foo' ],
-    [ { 'line_num': 25, 'column_num':  3 }, 'Foo *' ],
-    [ { 'line_num': 25, 'column_num': 11 }, 'Foo *' ],
-    [ { 'line_num': 25, 'column_num': 18 }, 'Foo' ],
-    [ { 'line_num': 27, 'column_num':  3 }, 'const Foo &' ],
-    [ { 'line_num': 27, 'column_num': 16 }, 'const Foo &' ],
-    [ { 'line_num': 28, 'column_num':  3 }, 'const Foo *' ],
-    [ { 'line_num': 28, 'column_num': 16 }, 'const Foo *' ],
+    [ { 'line_num': 28, 'column_num':  3 }, 'Foo &' ],
+    [ { 'line_num': 28, 'column_num': 11 }, 'Foo &' ],
+    [ { 'line_num': 28, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 29, 'column_num':  3 }, 'Foo *' ],
+    [ { 'line_num': 29, 'column_num': 11 }, 'Foo *' ],
+    [ { 'line_num': 29, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 31, 'column_num':  3 }, 'const Foo &' ],
+    [ { 'line_num': 31, 'column_num': 16 }, 'const Foo &' ],
+    [ { 'line_num': 32, 'column_num':  3 }, 'const Foo *' ],
+    [ { 'line_num': 32, 'column_num': 16 }, 'const Foo *' ],
 
     # Auto in usage
-    [ { 'line_num': 30, 'column_num': 14 }, 'const Foo' ],
-    [ { 'line_num': 30, 'column_num': 21 }, 'const int' ],
-    [ { 'line_num': 31, 'column_num': 14 }, 'const Foo *' ],
-    [ { 'line_num': 31, 'column_num': 22 }, 'const int' ],
-    [ { 'line_num': 32, 'column_num': 13 }, 'Foo' ],
-    [ { 'line_num': 32, 'column_num': 19 }, 'int' ],
-    [ { 'line_num': 33, 'column_num': 13 }, 'Foo *' ],
-    [ { 'line_num': 33, 'column_num': 20 }, 'int' ],
+    [ { 'line_num': 34, 'column_num': 14 }, 'const Foo' ],
+    [ { 'line_num': 34, 'column_num': 21 }, 'const int' ],
+    [ { 'line_num': 35, 'column_num': 14 }, 'const Foo *' ],
+    [ { 'line_num': 35, 'column_num': 22 }, 'const int' ],
+    [ { 'line_num': 36, 'column_num': 13 }, 'Foo' ],
+    [ { 'line_num': 36, 'column_num': 19 }, 'int' ],
+    [ { 'line_num': 37, 'column_num': 13 }, 'Foo *' ],
+    [ { 'line_num': 37, 'column_num': 20 }, 'int' ],
 
     # Unicode
-    [ { 'line_num': 47, 'column_num': 13 }, 'Unicøde *' ],
+    [ { 'line_num': 51, 'column_num': 13 }, 'Unicøde *' ],
+
+    # Bound methods
+    [ { 'line_num': 53, 'column_num': 15 }, 'int (int)' ],
+    [ { 'line_num': 54, 'column_num': 18 }, 'int (int)' ],
   ]
 
   for test in tests:
