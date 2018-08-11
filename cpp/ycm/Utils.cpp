@@ -41,4 +41,35 @@ std::string ReadUtf8File( const fs::path &filepath ) {
   return std::string();
 }
 
+
+// Cannot use boost::filesystem::weakly_canonical because it raises an exception
+// for non-existing paths in some cases.
+fs::path NormalizePath( const fs::path &filepath, const fs::path &base ) {
+  // Absolutize the path relative to |base|.
+  fs::path absolute_path( fs::absolute( filepath, base ) );
+  fs::path normalized_path( absolute_path );
+
+  // Canonicalize the existing part of the path.
+  fs::path::iterator component( absolute_path.end() );
+  while ( !exists( normalized_path ) && !normalized_path.empty() ) {
+    normalized_path.remove_filename();
+    --component;
+  }
+  if ( !normalized_path.empty() ) {
+    normalized_path = fs::canonical( normalized_path );
+  }
+
+  // Remove '.' and '..' in the remaining part.
+  for ( ; component != absolute_path.end(); ++component ) {
+    if ( *component == ".." ) {
+      normalized_path = normalized_path.parent_path();
+    } else if ( *component != "." ) {
+      normalized_path /= *component;
+    }
+  }
+
+  // Finally, convert slashes into backslashes on Windows.
+  return normalized_path.make_preferred();
+}
+
 } // namespace YouCompleteMe

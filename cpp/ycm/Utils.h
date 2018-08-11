@@ -56,6 +56,15 @@ YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
 // an exception is thrown.
 std::string ReadUtf8File( const fs::path &filepath );
 
+
+// Normalizes a path by making it absolute relative to |base|, resolving
+// symbolic links, removing '.' and '..' in the path, and converting slashes
+// into backslashes on Windows. Contrarily to boost::filesystem::canonical, this
+// works even if the file doesn't exist.
+YCM_EXPORT fs::path NormalizePath( const fs::path &filepath,
+                                   const fs::path &base = fs::current_path() );
+
+
 template <class Container, class Key>
 typename Container::mapped_type &
 GetValueElseInsert( Container &container,
