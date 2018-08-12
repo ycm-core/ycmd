@@ -57,11 +57,7 @@
 
    #include <boost/move/detail/type_traits.hpp>
 
-   #if defined(BOOST_MOVE_ADDRESS_SANITIZER_ON)
-      #define BOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) reinterpret_cast<RV_TYPE>(ARG)
-   #else
-      #define BOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) static_cast<RV_TYPE>(ARG)
-   #endif
+   #define BOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) reinterpret_cast<RV_TYPE>(ARG)
 
    //Move emulation rv breaks standard aliasing rules so add workarounds for some compilers
    #define BOOST_MOVE_ATTRIBUTE_MAY_ALIAS BOOST_MAY_ALIAS
