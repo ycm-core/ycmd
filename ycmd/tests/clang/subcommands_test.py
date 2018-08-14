@@ -26,7 +26,7 @@ from builtins import *  # noqa
 
 from hamcrest import ( assert_that, calling, contains, contains_string,
                        empty, equal_to, has_entry, has_entries, raises,
-                       is_, any_of )
+                       matches_regexp )
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
@@ -442,8 +442,7 @@ def RunGetSemanticTest( app, filepath, filetype, test, command ):
 
   response = app.post_json( '/run_completer_command', request_data ).json
   pprint( response )
-  assert_that( response, has_entry( 'message', is_(expected) ) )
-  eq_( list( response.keys() ), [ 'message' ] )
+  assert_that( response, has_entry( 'message', expected ) )
 
 
 def Subcommands_GetType_test():
@@ -524,12 +523,10 @@ def Subcommands_GetType_test():
     # On Win32, methods pick up an __attribute__((thiscall)) to annotate their
     # calling convention.  This shows up in the type, which isn't ideal, but
     # also prohibitively complex to try and strip out.
-    [ { 'line_num': 53, 'column_num': 15 }, any_of(
-        equal_to( 'int (int)' ),
-        equal_to( 'int (int) __attribute__((thiscall))' ) ) ],
-    [ { 'line_num': 54, 'column_num': 18 }, any_of(
-        equal_to( 'int (int)' ),
-        equal_to( 'int (int) __attribute__((thiscall))' ) ) ],
+    [ { 'line_num': 53, 'column_num': 15 },
+      matches_regexp( r'int \(int\)(?: __attribute__\(\(thiscall\)\))?' ) ],
+    [ { 'line_num': 54, 'column_num': 18 },
+      matches_regexp( r'int \(int\)(?: __attribute__\(\(thiscall\)\))?' ) ],
   ]
 
   for test in tests:
