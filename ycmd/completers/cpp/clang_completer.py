@@ -480,6 +480,16 @@ class ClangCompleter( Completer ):
     return self._flags.FlagsForFile( filename, client_data = client_data )
 
 
+def BuildExtraData( completion_data ):
+  extra_data = {}
+  fixit = completion_data.fixit_
+  if fixit.chunks:
+    extra_data.update( responses.BuildFixItResponse( [ fixit ] ) )
+  if completion_data.DocString():
+    extra_data[ 'doc_string' ] = completion_data.DocString()
+  return extra_data
+
+
 def ConvertCompletionData( completion_data ):
   return responses.BuildCompletionData(
     insertion_text = completion_data.TextToInsertInBuffer(),
@@ -487,8 +497,7 @@ def ConvertCompletionData( completion_data ):
     extra_menu_info = completion_data.ExtraMenuInfo(),
     kind = completion_data.kind_.name,
     detailed_info = completion_data.DetailedInfoForPreviewWindow(),
-    extra_data = ( { 'doc_string': completion_data.DocString() }
-                   if completion_data.DocString() else None ) )
+    extra_data = BuildExtraData( completion_data ) )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):

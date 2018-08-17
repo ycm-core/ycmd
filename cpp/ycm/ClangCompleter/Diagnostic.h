@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2011-2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -18,11 +18,7 @@
 #ifndef DIAGNOSTIC_H_BZH3BWIZ
 #define DIAGNOSTIC_H_BZH3BWIZ
 
-#include "Range.h"
-#include "Location.h"
-
-#include <string>
-#include <vector>
+#include "FixIt.h"
 
 namespace YouCompleteMe {
 
@@ -32,32 +28,6 @@ enum class DiagnosticKind {
   WARNING
 };
 
-/// Information about a replacement that can be made to the source to "fix" a
-/// diagnostic.
-struct FixItChunk {
-  /// The replacement string. This string should replace the source range
-  /// represented by 'range'.
-  std::string replacement_text;
-
-  /// The range within the file to replace with replacement_text.
-  Range range;
-
-};
-
-/// Collection of FixItChunks which, when applied together, fix a particular
-/// diagnostic. This structure forms the reply to the "FixIt" subcommand, and
-/// represents a lightweight view of a diagnostic. The location is included to
-/// aid clients in applying the most appropriate FixIt based on context.
-struct FixIt {
-  std::vector< FixItChunk > chunks;
-
-  Location location;
-
-  /// This is the text of the diagnostic. This is useful when there are
-  /// multiple diagnostics offering different fixit options. The text is
-  /// displayed to the user, allowing them choose which diagnostic to apply.
-  std::string text;
-};
 
 struct Diagnostic {
 

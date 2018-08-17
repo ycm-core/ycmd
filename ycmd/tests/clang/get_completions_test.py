@@ -42,9 +42,11 @@ from ycmd.tests.clang import ( IsolatedYcmd,
                                PathToTestFile,
                                SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
+                                    ChunkMatcher,
                                     CombineRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
+                                    LocationMatcher,
                                     WindowsOnly )
 from ycmd.utils import ReadFile
 
@@ -1473,3 +1475,45 @@ def GetCompletions_StillParsingError_test( app ):
         'data': ErrorMatcher( RuntimeError, PARSING_FILE_MESSAGE )
       },
     } )
+
+
+@SharedYcmd
+def GetCompletions_FixIt_test( app ):
+  filepath = PathToTestFile( 'completion_fixit.cc' )
+  RunTest( app, {
+    'description': 'member completion has a fixit that change "." into "->"',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype': 'cpp',
+      'filepath': filepath,
+      'line_num': 7,
+      'column_num': 8,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item( has_entries( {
+          'insertion_text':  'bar',
+          'extra_menu_info': 'int',
+          'menu_text':       'bar',
+          'detailed_info':   'int bar\n',
+          'kind':            'MEMBER',
+          'extra_data': has_entries( {
+            'fixits': contains_inanyorder(
+              has_entries( {
+                'text': '',
+                'chunks': contains(
+                  ChunkMatcher(
+                    '->',
+                    LocationMatcher( filepath, 7, 6 ),
+                    LocationMatcher( filepath, 7, 7 )
+                  )
+                ),
+                'location': LocationMatcher( '', 0, 0 )
+              } )
+            )
+          } )
+        } ) )
+      } )
+    }
+  } )
