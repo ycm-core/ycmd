@@ -13,6 +13,10 @@ struct Foo {
   int x;
   int y;
   char c;
+
+  int bar(int i) {
+    return i+1;
+  }
 };
 
 int main()
@@ -45,6 +49,9 @@ int main()
 
   struct Unicøde;
   Unicøde *ø;
+
+  int i = foo.bar(1);
+  int j = apFoo->bar(1);
 
   return 0;
 }

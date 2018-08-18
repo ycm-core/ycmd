@@ -327,6 +327,18 @@ std::string TranslationUnit::GetTypeAtLocation(
     return "Internal error: cursor not valid";
   }
 
+  // Cursors on member functions return a rather unhelpful type text of
+  // "bound member function type".  To get a meaningful type, we must examine
+  // the referenced cursor.  We must be careful though, as both member variables
+  // and member functions are of kind MemberRefExpr, and getting the referenced
+  // cursor of a cv-qualified type discards the cv-qualification.
+  if ( clang_getCursorKind( cursor ) == CXCursor_MemberRefExpr ) {
+    CXCursor ref = clang_getCursorReferenced( cursor );
+    if ( clang_getCursorKind( ref ) == CXCursor_CXXMethod ) {
+      cursor = ref;
+    }
+  }
+
   CXType type = clang_getCursorType( cursor );
 
   std::string type_description =
