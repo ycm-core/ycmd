@@ -31,7 +31,14 @@ namespace YouCompleteMe {
 namespace {
 
 std::size_t HashForFlags( const std::vector< std::string > &flags ) {
-  return std::hash< std::vector< std::string > >()( flags );
+  // The algorithm has been taken straight from a TR1:
+  // "Library Extension Technical Report - Issue List" section 6.18.
+  // This is also the way Boost implements it.
+  size_t seed = 0;
+  for ( const auto &flag : flags )  {
+    seed ^= std::hash< std::string >()( flag ) + ( seed << 6 ) + ( seed >> 2 );
+  }
+  return seed;
 }
 
 }  // unnamed namespace

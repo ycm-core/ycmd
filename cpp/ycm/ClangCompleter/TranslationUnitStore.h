@@ -29,22 +29,6 @@
 
 using CXIndex = void*;
 
-namespace std {
-
-template <> struct hash< vector< string > > {
-  // The algorithm has been taken straight from a TR1.
-  // This is also the way Boost implements it.
-  size_t operator()( const vector< string > &string_vector ) const {
-    size_t seed = 0;
-    for ( const auto &element : string_vector )  {
-       seed ^= hash< string >()( element ) + ( seed << 6 ) + ( seed >> 2 );
-    }
-    return seed;
-  }
-};
-
-} // std namespace
-
 namespace YouCompleteMe {
 
 class TranslationUnitStore {
