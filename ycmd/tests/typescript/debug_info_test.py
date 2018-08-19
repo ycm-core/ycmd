@@ -48,12 +48,6 @@ def DebugInfo_test( app ):
           'key': 'version',
           'value': any_of( None, instance_of( str ) )
         } ) )
-      } ) ),
-      'items': contains(
-        has_entries( {
-          'key': 'Node executable',
-          'value': instance_of( str )
-        } )
-      )
+      } ) )
     } ) )
   )

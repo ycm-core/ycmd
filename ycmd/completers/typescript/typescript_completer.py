@@ -44,8 +44,6 @@ NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 
 RESPONSE_TIMEOUT_SECONDS = 10
 
-# On Debian-based distributions, node is by default installed as nodejs.
-PATH_TO_NODE = utils.PathToFirstExistingExecutable( [ 'nodejs', 'node' ] )
 PATH_TO_TSSERVER = utils.FindExecutable( 'tsserver' )
 
 LOGFILE_FORMAT = 'tsserver_'
@@ -80,22 +78,7 @@ class DeferredResponse( object ):
       return self._message[ 'body' ]
 
 
-def TsserverCommand():
-  # Explicitly use node if the TSServer executable is supposed to be run through
-  # it. This handles the case where node is installed as nodejs.
-  with open( PATH_TO_TSSERVER ) as f:
-    first_line = f.readline()
-  if first_line.startswith( '#!/usr/bin/env node' ):
-    return [ PATH_TO_NODE, PATH_TO_TSSERVER ]
-  return [ PATH_TO_TSSERVER ]
-
-
 def ShouldEnableTypeScriptCompleter():
-  if not PATH_TO_NODE:
-    _logger.warning( 'Not using TypeScript completer: unable to find node' )
-    return False
-  _logger.info( 'Using node binary from {0}'.format( PATH_TO_NODE ) )
-
   if not PATH_TO_TSSERVER:
     _logger.error( 'Not using TypeScript completer: unable to find TSServer.'
                    'TypeScript 1.5 or higher is required.' )
@@ -148,7 +131,6 @@ class TypeScriptCompleter( Completer ):
     self._logfile = None
 
     self._tsserver_lock = threading.RLock()
-    self._tsserver_command = TsserverCommand()
     self._tsserver_handle = None
     self._tsserver_version = None
     # Used to read response only if TSServer is running.
@@ -208,7 +190,7 @@ class TypeScriptCompleter( Completer ):
       _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
 
       # We need to redirect the error stream to the output one on Windows.
-      self._tsserver_handle = utils.SafePopen( self._tsserver_command,
+      self._tsserver_handle = utils.SafePopen( PATH_TO_TSSERVER,
                                                stdin = subprocess.PIPE,
                                                stdout = subprocess.PIPE,
                                                stderr = subprocess.STDOUT,
@@ -848,12 +830,8 @@ class TypeScriptCompleter( Completer ):
           logfiles = [ self._logfile ],
           extras = [ item_version ] )
 
-      node_executable = responses.DebugInfoItem( key = 'Node executable',
-                                                 value = PATH_TO_NODE )
-
       return responses.BuildDebugInfoResponse( name = 'TypeScript',
-                                               servers = [ tsserver ],
-                                               items = [ node_executable ] )
+                                               servers = [ tsserver ] )
 
 
 def _LogLevel():

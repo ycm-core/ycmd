@@ -625,11 +625,8 @@ def EnableRustCompleter( args ):
 
 
 def EnableJavaScriptCompleter( args ):
-  # On Debian-based distributions, node is by default installed as nodejs.
-  node = PathToFirstExistingExecutable( [ 'nodejs', 'node' ] )
-  if not node:
-    sys.exit( 'ERROR: node is required to set up Tern.' )
-  npm = FindExecutableOrDie( 'npm', 'ERROR: npm is required to set up Tern.' )
+  node = FindExecutableOrDie( 'node', 'node is required to set up Tern.' )
+  npm = FindExecutableOrDie( 'npm', 'npm is required to set up Tern.' )
 
   # We install Tern into a runtime directory. This allows us to control
   # precisely the version (and/or git commit) that is used by ycmd.  We use a
