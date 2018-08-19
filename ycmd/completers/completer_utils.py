@@ -203,9 +203,19 @@ DEFAULT_FILETYPE_TRIGGERS = {
   'cpp,cuda,objcpp' : [ '->', '.', '::' ],
   'perl' : [ '->' ],
   'php' : [ '->', '::' ],
-  'cs,java,javascript,typescript,d,python,perl6,scala,vb,elixir,go,groovy' : [
-    '.'
-  ],
+  ( 'cs,'
+    'd,'
+    'elixir,'
+    'go,'
+    'groovy,'
+    'java,'
+    'javascript,'
+    'julia,'
+    'perl6,'
+    'python,'
+    'scala,'
+    'typescript,'
+    'vb' ) : [ '.' ],
   'ruby,rust' : [ '.', '::' ],
   'lua' : [ '.', ':' ],
   'erlang' : [ ':' ],
