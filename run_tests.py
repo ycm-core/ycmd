@@ -175,11 +175,10 @@ def BuildYcmdLibs( args ):
     else:
       os.environ[ 'EXTRA_CMAKE_ARGS' ] = '-DUSE_DEV_FLAGS=ON'
 
-    os.environ[ 'YCM_TESTRUN' ] = '1'
-
     build_cmd = [
       sys.executable,
       p.join( DIR_OF_THIS_SCRIPT, 'build.py' ),
+      '--core-tests',
       '--quiet',
     ]
 

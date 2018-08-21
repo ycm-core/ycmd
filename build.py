@@ -363,8 +363,9 @@ def ParseArguments():
                        help = "Don't build the regex module" )
   parser.add_argument( '--clang-tidy',
                        action = 'store_true',
-                       help = "Run clang-tidy static analysis" )
-
+                       help = 'Run clang-tidy static analysis' )
+  parser.add_argument( '--core-tests', nargs = '?', const = '*',
+                       help = 'Run core tests and optionally filter them.' )
 
   # These options are deprecated.
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
@@ -384,6 +385,11 @@ def ParseArguments():
   if not OnWindows() and args.enable_coverage:
     # We always want a debug build when running with coverage enabled
     args.enable_debug = True
+
+  if args.core_tests:
+    os.environ[ 'YCM_TESTRUN' ] = '1'
+  elif os.environ.get( 'YCM_TESTRUN' ):
+    args.core_tests = '*'
 
   if not args.clang_tidy and os.environ.get( 'YCM_CLANG_TIDY' ):
     args.clang_tidy = True
@@ -450,7 +456,10 @@ def RunYcmdTests( args, build_dir ):
   else:
     new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
 
-  CheckCall( p.join( tests_dir, 'ycm_core_tests' ),
+  tests_cmd = [ p.join( tests_dir, 'ycm_core_tests' ) ]
+  if args.core_tests != '*':
+    tests_cmd.append( '--gtest_filter={}'.format( args.core_tests ) )
+  CheckCall( tests_cmd,
              env = new_env,
              quiet = args.quiet,
              status_message = 'Running ycmd tests' )
@@ -522,7 +531,7 @@ def BuildYcmdLib( cmake, cmake_common_args, script_args ):
                status_message = 'Generating ycmd build configuration' )
 
     build_targets = [ 'ycm_core' ]
-    if 'YCM_TESTRUN' in os.environ:
+    if script_args.core_tests:
       build_targets.append( 'ycm_core_tests' )
     if 'YCM_BENCHMARK' in os.environ:
       build_targets.append( 'ycm_core_benchmarks' )
@@ -538,7 +547,7 @@ def BuildYcmdLib( cmake, cmake_common_args, script_args ):
                  status_message = 'Compiling ycmd target: {0}'.format(
                    target ) )
 
-    if 'YCM_TESTRUN' in os.environ:
+    if script_args.core_tests:
       RunYcmdTests( script_args, build_dir )
     if 'YCM_BENCHMARK' in os.environ:
       RunYcmdBenchmarks( build_dir )
