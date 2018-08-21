@@ -56,6 +56,7 @@ NO_DYNAMIC_PYTHON_ERROR = (
   '  export PYTHON_CONFIGURE_OPTS="{flag}"\n'
   'before installing a Python version.' )
 NO_PYTHON_LIBRARY_ERROR = 'ERROR: unable to find an appropriate Python library.'
+NO_PYTHON_HEADERS_ERROR = 'ERROR: Python headers are missing in {include_dir}.'
 
 # Regular expressions used to find static and dynamic Python libraries.
 # Notes:
@@ -232,6 +233,9 @@ def GetPossiblePythonLibraryDirectories():
 
 def FindPythonLibraries():
   include_dir = sysconfig.get_config_var( 'INCLUDEPY' )
+  if not p.isfile( p.join( include_dir, 'Python.h' ) ):
+    sys.exit( NO_PYTHON_HEADERS_ERROR.format( include_dir = include_dir ) )
+
   library_dirs = GetPossiblePythonLibraryDirectories()
 
   # Since ycmd is compiled as a dynamic library, we can't link it to a Python
