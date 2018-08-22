@@ -41,8 +41,8 @@ from ycmd.completers.cpp.include_cache import IncludeCache, IncludeList
 from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
 CLANG_FILETYPES = { 'c', 'cpp', 'cuda', 'objc', 'objcpp' }
-PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
-NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags, no completions yet.'
+PARSING_FILE_MESSAGE = 'Still parsing file.'
+NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags.'
 NO_COMPLETIONS_MESSAGE = 'No completions found; errors in the file?'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 PRAGMA_DIAG_TEXT_TO_IGNORE = '#pragma once in main file'
@@ -197,6 +197,10 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( PARSING_FILE_MESSAGE )
+
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
@@ -295,6 +299,10 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( PARSING_FILE_MESSAGE )
+
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
@@ -322,6 +330,10 @@ class ClangCompleter( Completer ):
     flags, filename = self._FlagsForRequest( request_data )
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
+
+    if self._completer.UpdatingTranslationUnit(
+        ToCppStringCompatible( filename ) ):
+      raise RuntimeError( PARSING_FILE_MESSAGE )
 
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
