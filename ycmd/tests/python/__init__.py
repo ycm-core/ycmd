@@ -26,9 +26,9 @@ import functools
 import os
 
 from ycmd.tests.test_utils import ( ClearCompletionsCache,
+                                    IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
-                                    SetUpApp,
-                                    YCMD_EXTRA_CONF )
+                                    SetUpApp )
 
 shared_app = None
 
@@ -46,8 +46,6 @@ def setUpPackage():
   global shared_app
 
   shared_app = SetUpApp()
-  shared_app.post_json( '/ignore_extra_conf_file',
-                        { 'filepath': YCMD_EXTRA_CONF } )
 
 
 def SharedYcmd( test ):
@@ -60,7 +58,8 @@ def SharedYcmd( test ):
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
     ClearCompletionsCache()
-    return test( shared_app, *args, **kwargs )
+    with IgnoreExtraConfOutsideTestsFolder():
+      return test( shared_app, *args, **kwargs )
   return Wrapper
 
 
@@ -86,8 +85,6 @@ def IsolatedYcmd( custom_options = {} ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
       with IsolatedApp( custom_options ) as app:
-        app.post_json( '/ignore_extra_conf_file',
-                       { 'filepath': YCMD_EXTRA_CONF } )
         test( app, *args, **kwargs )
     return Wrapper
   return Decorator

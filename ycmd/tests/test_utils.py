@@ -40,7 +40,10 @@ import shutil
 from ycmd import extra_conf_store, handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
-from ycmd.utils import ( GetCurrentDirectory, OnMac, OnWindows, ToUnicode,
+from ycmd.utils import ( GetCurrentDirectory,
+                         OnMac,
+                         OnWindows,
+                         ToUnicode,
                          WaitUntilProcessIsTerminated )
 import ycm_core
 
@@ -49,9 +52,7 @@ try:
 except ImportError:
   from unittest2 import skipIf
 
-DIR_OF_THIS_SCRIPT = os.path.abspath( os.path.dirname( __file__ ) )
-YCMD_EXTRA_CONF = os.path.normpath(
-    os.path.join( DIR_OF_THIS_SCRIPT, '..', '..', '.ycm_extra_conf.py' ) )
+TESTS_DIR = os.path.abspath( os.path.dirname( __file__ ) )
 
 Py2Only = skipIf( not PY2, 'Python 2 only' )
 Py3Only = skipIf( PY2, 'Python 3 only' )
@@ -211,12 +212,20 @@ def SetUpApp( custom_options = {} ):
 
 
 @contextlib.contextmanager
+def IgnoreExtraConfOutsideTestsFolder():
+  with patch( 'ycmd.utils.IsRootDirectory',
+              lambda path, parent: path in [ parent, TESTS_DIR ] ):
+    yield
+
+
+@contextlib.contextmanager
 def IsolatedApp( custom_options = {} ):
   old_server_state = handlers._server_state
   old_extra_conf_store_state = extra_conf_store.Get()
   old_options = user_options_store.GetAll()
   try:
-    yield SetUpApp( custom_options )
+    with IgnoreExtraConfOutsideTestsFolder():
+      yield SetUpApp( custom_options )
   finally:
     handlers._server_state = old_server_state
     extra_conf_store.Set( old_extra_conf_store_state )
