@@ -13,6 +13,9 @@
 *.la
 *.a
 
+# Executables
+ycm_fake_clang*
+
 # Clang archives
 clang_archives
 

@@ -538,22 +538,12 @@ def BuildYcmdLib( cmake, cmake_common_args, script_args ):
                quiet = script_args.quiet,
                status_message = 'Generating ycmd build configuration' )
 
-    build_targets = [ 'ycm_core' ]
-    if script_args.core_tests:
-      build_targets.append( 'ycm_core_tests' )
-    if 'YCM_BENCHMARK' in os.environ:
-      build_targets.append( 'ycm_core_benchmarks' )
-
     build_config = GetCMakeBuildConfiguration( script_args )
-
-    for target in build_targets:
-      build_command = ( [ cmake, '--build', '.', '--target', target ] +
-                        build_config )
-      CheckCall( build_command,
-                 exit_message = BUILD_ERROR_MESSAGE,
-                 quiet = script_args.quiet,
-                 status_message = 'Compiling ycmd target: {0}'.format(
-                   target ) )
+    build_command = [ cmake, '--build', '.' ] + build_config
+    CheckCall( build_command,
+               exit_message = BUILD_ERROR_MESSAGE,
+               quiet = script_args.quiet,
+               status_message = 'Compiling ycmd' )
 
     if script_args.core_tests:
       RunYcmdTests( script_args, build_dir )

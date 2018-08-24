@@ -22,20 +22,26 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import ycm_core
-import os
 import inspect
+import logging
+import os
+import subprocess
+import tempfile
+import ycm_core
 from future.utils import PY2, native
 from ycmd import extra_conf_store
-from ycmd.utils import ( ListDirectory,
-                         OnMac,
+from ycmd.utils import ( FindExecutable,
+                         GetExecutable,
                          OnWindows,
                          PathsToAllParentFolders,
                          re,
-                         ToCppStringCompatible,
+                         SafePopen,
                          ToBytes,
+                         ToCppStringCompatible,
                          ToUnicode )
 from ycmd.responses import NoExtraConfDetected
+
+_logger = logging.getLogger( __name__ )
 
 # -include-pch and --sysroot= must be listed before -include and --sysroot
 # respectively because the latter is a prefix of the former (and the algorithm
@@ -85,6 +91,22 @@ SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.cu', '.m', '.mm' ]
 EMPTY_FLAGS = {
   'flags': [],
 }
+
+PATH_TO_YCMD_DIR = os.path.abspath( os.path.dirname( ycm_core.__file__ ) )
+CLANG_RESOURCE_DIR = '-resource-dir=' + os.path.join( PATH_TO_YCMD_DIR,
+                                                      'clang_includes' )
+
+REAL_CLANG_EXECUTABLE = FindExecutable( 'clang' )
+FAKE_CLANG_EXECUTABLE = GetExecutable( os.path.join( PATH_TO_YCMD_DIR,
+                                                     'ycm_fake_clang' ) )
+
+# Regular expression to capture the list of system headers from the output of
+# clang -E -v.
+SYSTEM_HEADER_REGEX = re.compile(
+  "#include <\.\.\.> search starts here:\r?\n"
+  "((?: .*\r?\n)*)"
+  "End of search list.",
+  re.MULTILINE )
 
 
 class Flags( object ):
@@ -157,8 +179,8 @@ class Flags( object ):
       return [], filename
 
     if add_extra_clang_flags:
+      flags = _AddSystemHeaderPaths( flags, filename )
       flags += self.extra_clang_flags
-      flags = _AddMacIncludePaths( flags )
 
     sanitized_flags = PrepareFlagsForClang( flags,
                                             filename,
@@ -315,14 +337,6 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
       results.get( 'include_paths_relative_to_dir' ) )
 
   return results
-
-
-def _SysRootSpecifedIn( flags ):
-  for flag in flags:
-    if flag == '-isysroot' or flag.startswith( '--sysroot' ):
-      return True
-
-  return False
 
 
 def PrepareFlagsForClang( flags,
@@ -505,87 +519,8 @@ def _SkipStrayFilenameFlag( current_flag,
              ( not previous_flag_is_include and current_flag_may_be_path ) ) )
 
 
-# Return the path to the macOS toolchain root directory to use for system
-# includes. If no toolchain is found, returns None.
-def _SelectMacToolchain():
-  # There are 2 ways to get a development enviornment (as standard) on OS X:
-  #  - install XCode.app, or
-  #  - install the command-line tools (xcode-select --install)
-  #
-  # Most users have xcode installed, but in order to be as compatible as
-  # possible we consider both possible installation locations
-  MAC_CLANG_TOOLCHAIN_DIRS = [
-    '/Applications/Xcode.app/Contents/Developer/Toolchains/'
-      'XcodeDefault.xctoolchain',
-    '/Library/Developer/CommandLineTools'
-  ]
-
-  for toolchain in MAC_CLANG_TOOLCHAIN_DIRS:
-    if os.path.exists( toolchain ):
-      return toolchain
-
-  return None
-
-
-# Return the list of flags including any Clang headers found in the supplied
-# toolchain. These are required for the same reasons as described below, but
-# unfortunately, these are in versioned directories and there is no easy way to
-# find the "correct" version. We simply pick the highest version in the first
-# toolchain that we find, as this is the most likely to be correct.
-def _LatestMacClangIncludes( toolchain ):
-  # We use the first toolchain which actually contains any versions, rather than
-  # trying all of the toolchains and picking the highest. We favour Xcode over
-  # CommandLineTools as using Xcode is more common. It might be possible to
-  # extract this information from xcode-select, though xcode-select -p does not
-  # point at the toolchain directly.
-  candidates_dir = os.path.join( toolchain, 'usr', 'lib', 'clang' )
-  versions = ListDirectory( candidates_dir )
-
-  for version in reversed( sorted( versions ) ):
-    candidate_include = os.path.join( candidates_dir, version, 'include' )
-    if os.path.exists( candidate_include ):
-      return [ '-isystem', candidate_include ]
-
-  return []
-
-
-MAC_INCLUDE_PATHS = []
-
-if OnMac():
-  # These are the standard header search paths that clang will use on Mac BUT
-  # libclang won't, for unknown reasons. We add these paths when the user is on
-  # a Mac because if we don't, libclang would fail to find <vector> etc.  This
-  # should be fixed upstream in libclang, but until it does, we need to help
-  # users out.
-  # See the following for details:
-  #  - Valloric/YouCompleteMe#303
-  #  - Valloric/YouCompleteMe#2268
-  toolchain = _SelectMacToolchain()
-  if toolchain:
-    MAC_INCLUDE_PATHS = (
-      [ '-isystem', os.path.join( toolchain, 'usr/include/c++/v1' ),
-        '-isystem', '/usr/local/include' ] +
-      _LatestMacClangIncludes( toolchain ) +
-      [ '-isystem', os.path.join( toolchain, 'usr/include' ),
-        '-isystem', '/usr/include',
-        '-iframework', '/System/Library/Frameworks',
-        '-iframework', '/Library/Frameworks',
-        # We include the MacOS platform SDK because some meaningful parts of the
-        # standard library are located there. If users are compiling for (say)
-        # iPhone.platform, etc. they should appear earlier in the include path.
-        '-isystem', '/Applications/Xcode.app/Contents/Developer/Platforms'
-                    '/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include' ]
-    )
-
-
-def _AddMacIncludePaths( flags ):
-  if OnMac() and not _SysRootSpecifedIn( flags ):
-    flags.extend( MAC_INCLUDE_PATHS )
-  return flags
-
-
 def _ExtraClangFlags():
-  flags = _SpecialClangIncludes()
+  flags = [ CLANG_RESOURCE_DIR ]
   # On Windows, parsing of templates is delayed until instantiation time.
   # This makes GetType and GetParent commands fail to return the expected
   # result when the cursor is in a template.
@@ -616,12 +551,6 @@ def _EnableTypoCorrection( flags ):
 
   flags.append( '-fspell-checking' )
   return flags
-
-
-def _SpecialClangIncludes():
-  libclang_dir = os.path.dirname( ycm_core.__file__ )
-  path_to_includes = os.path.join( libclang_dir, 'clang_includes' )
-  return [ '-resource-dir=' + path_to_includes ]
 
 
 def _MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
@@ -728,3 +657,108 @@ def UserIncludePaths( user_flags, filename ):
       pass
 
   return quoted_include_paths, include_paths, framework_paths
+
+
+def _GetSystemFlags( flags ):
+  """Return the flags from |flags| that are relevant to the system header
+  directories returned by Clang:
+   - the --cuda-path flag which specifies the CUDA installation path;
+   - the -gcc-toolchain flag for using a particular GCC toolchain;
+   - the -nocudainc for not including the CUDA headers;
+   - the -nostdinc and -nostdinc++ flags for not including the system header
+     directories;
+   - the -stdlib flag for using the libc++ standard library;
+   - the --sysroot flag which specifies the headers and libraries root folder;
+   - the -target flag which specifies the target;
+   - the -x flag which determines the language used to parse the translation
+     unit.
+  Return also a boolean that is true if no -x flag is given."""
+  # Clang may return an error instead of printing the list of system header
+  # directories for CUDA if -nocudalib is not given. This flag is ignored for
+  # other languages so it's safe to always add it.
+  system_flags = [ '-nocudalib' ]
+  no_language_flag = True
+
+  try:
+    iter_flags = iter( flags )
+    for flag in iter_flags:
+      if flag == '-x':
+        system_flags.extend( [ flag, next( iter_flags ) ] )
+        no_language_flag = False
+        continue
+
+      if flag in [ '-gcc-toolchain', '--stdlib', '--sysroot', '-target' ]:
+        system_flags.extend( [ flag, next( iter_flags ) ] )
+        continue
+
+      if flag in [ '-nocudainc', '-nostdinc', '-nostdinc++' ]:
+        system_flags.append( flag )
+        continue
+
+      if flag.startswith( '-x' ):
+        system_flags.append( flag )
+        no_language_flag = False
+        continue
+
+      for start in [ '--cuda-path=',
+                     '--gcc-toolchain=',
+                     '-stdlib=', '--stdlib=',
+                     '--sysroot=',
+                     '--target=' ]:
+        if flag.startswith( start ):
+          system_flags.append( flag )
+          continue
+  except StopIteration:
+    pass
+
+  return system_flags, no_language_flag
+
+
+def _AddSystemHeaderPaths( flags, filename ):
+  """Add the system header directories to the list of flags given by the user.
+  This is needed to provide completion of these headers in include statements
+  as well as jumping to these headers."""
+
+  # Use Clang or the ycm_fake_clang executable to output the list of system
+  # header directories. If no executable is found, ycmd was not properly
+  # compiled so raise an error.
+  if REAL_CLANG_EXECUTABLE:
+    clang_command = [ REAL_CLANG_EXECUTABLE ]
+  elif FAKE_CLANG_EXECUTABLE:
+    clang_command = [ FAKE_CLANG_EXECUTABLE, CLANG_RESOURCE_DIR ]
+  else:
+    raise RuntimeError( 'No Clang executable found.' )
+
+  # Create a temporary file with the same file extension as the input one; Clang
+  # deduces the language from the extension when the -x flag is not given.
+  _, extension = os.path.splitext( filename )
+  system_flags, no_language_flag = _GetSystemFlags( flags )
+  # Clang cannot parse the file if it has no extension and no language flag -x
+  # is given. Force the language to C++ in that case as it's most likely a
+  # header from the STL.
+  if not extension and no_language_flag:
+    flags.extend( [ '-x', 'c++' ] )
+    system_flags.extend( [ '-x', 'c++' ] )
+  with tempfile.NamedTemporaryFile( suffix = extension ) as temp_file:
+    clang_command.extend( system_flags + [ '-E', '-v', temp_file.name ] )
+    _, stderr = SafePopen( clang_command,
+                           stdout = subprocess.PIPE,
+                           stderr = subprocess.PIPE ).communicate()
+
+  match = re.search( SYSTEM_HEADER_REGEX, ToUnicode( stderr ) )
+  if not match:
+    _logger.error( 'Unable to parse system header directories from output '
+                   '%s returned by the command %s', stderr, clang_command )
+    raise RuntimeError( 'Unable to parse system header directories '
+                        'from Clang output.' )
+
+  system_headers = []
+  for include_line in match.group( 1 ).splitlines():
+    include_line = include_line.strip()
+    if include_line.endswith( ' (framework directory)' ):
+      framework_path = include_line[ : -len( ' (framework directory)' ) ]
+      system_headers.extend( [ '-iframework',
+                               os.path.abspath( framework_path ) ] )
+    else:
+      system_headers.extend( [ '-isystem', os.path.abspath( include_line ) ] )
+  return flags + system_headers

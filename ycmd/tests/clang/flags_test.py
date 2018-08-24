@@ -24,24 +24,17 @@ from builtins import *  # noqa
 
 import contextlib
 import os
-
+from hamcrest import assert_that, calling, contains, empty, equal_to, raises
 from nose.tools import eq_, ok_
-from ycmd.completers.cpp import flags
 from mock import patch, MagicMock
 from types import ModuleType
-from ycmd.tests.test_utils import MacOnly, TemporaryTestDir, WindowsOnly
+
+from ycmd import utils
+from ycmd.completers.cpp import flags
+from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
 from ycmd.responses import NoExtraConfDetected
 from ycmd.tests.clang import TemporaryClangProject
-from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
-
-from hamcrest import ( assert_that,
-                       calling,
-                       contains,
-                       empty,
-                       equal_to,
-                       has_item,
-                       not_,
-                       raises )
+from ycmd.tests.test_utils import TemporaryTestDir, WindowsOnly
 
 
 @contextlib.contextmanager
@@ -191,56 +184,6 @@ def FlagsForFile_MakeRelativePathsAbsoluteIfOptionSpecified_test():
     assert_that( flags_list,
                  contains( '-x', 'c',
                            '-I', os.path.normpath( '/working_dir/header' ) ) )
-
-
-@MacOnly
-@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
-        [ 'sentinel_value_for_testing' ] )
-def FlagsForFile_AddMacIncludePathsWithoutSysroot_test():
-  flags_object = flags.Flags()
-
-  def Settings( **kwargs ):
-    return {
-      'flags': [ '-test', '--test1', '--test2=test' ]
-    }
-
-  with MockExtraConfModule( Settings ):
-    flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, has_item( 'sentinel_value_for_testing' ) )
-
-
-@MacOnly
-@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
-        [ 'sentinel_value_for_testing' ] )
-def FlagsForFile_DoNotAddMacIncludePathsWithSysroot_test():
-  flags_object = flags.Flags()
-
-  def Settings( **kwargs ):
-    return {
-      'flags': [ '-isysroot', 'test1', '--test2=test' ]
-    }
-
-  with MockExtraConfModule( Settings ):
-    flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
-
-  def Settings( **kwargs ):
-    return {
-      'flags': [ '-test', '--sysroot', 'test1' ]
-    }
-
-  with MockExtraConfModule( Settings ):
-    flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
-
-  def Settings( **kwargs ):
-    return {
-      'flags': [ '-test', 'test1', '--sysroot=test' ]
-    }
-
-  with MockExtraConfModule( Settings ):
-    flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
 
 
 def FlagsForFile_OverrideTranslationUnit_test():
@@ -809,41 +752,6 @@ def ExtraClangFlags_test():
   eq_( 1, num_found )
 
 
-@MacOnly
-@patch( 'os.listdir',
-        return_value = [ '1.0.0', '7.0.1', '7.0.2', '___garbage__' ] )
-@patch( 'os.path.exists', side_effect = [ False, True, True, True ] )
-def Mac_LatestMacClangIncludes_test( *args ):
-  eq_( flags._LatestMacClangIncludes( '/tmp' ),
-       [ '-isystem', '/tmp/usr/lib/clang/7.0.2/include' ] )
-
-
-@MacOnly
-@patch( 'os.listdir', side_effect = OSError )
-def Mac_LatestMacClangIncludes_NoSuchDirectory_test( *args ):
-  eq_( flags._LatestMacClangIncludes( '/tmp' ), [] )
-
-
-@MacOnly
-@patch( 'os.path.exists', side_effect = [ False, False ] )
-def Mac_SelectMacToolchain_None_test( *args ):
-  eq_( flags._SelectMacToolchain(), None )
-
-
-@MacOnly
-@patch( 'os.path.exists', side_effect = [ True, False ] )
-def Mac_SelectMacToolchain_XCode_test( *args ):
-  eq_( flags._SelectMacToolchain(),
-       '/Applications/Xcode.app/Contents/Developer/Toolchains/'
-       'XcodeDefault.xctoolchain' )
-
-
-@MacOnly
-@patch( 'os.path.exists', side_effect = [ False, True ] )
-def Mac_SelectMacToolchain_CommandLineTools_test( *args ):
-  eq_( flags._SelectMacToolchain(), '/Library/Developer/CommandLineTools' )
-
-
 def CompilationDatabase_NoDatabase_test():
   with TemporaryTestDir() as tmp_dir:
     assert_that(
@@ -1341,3 +1249,124 @@ def MakeRelativePathsInFlagsAbsolute_NoWorkingDir_test():
     'expect': [ 'list', 'of', 'flags', 'not', 'changed', '-Itest' ],
     'wd': ''
   }
+
+
+def GetSystemFlags( user_flags, expected_flags, expected_no_language_flag ):
+  assert_that( flags._GetSystemFlags( user_flags ),
+               contains( contains( *expected_flags ),
+                         expected_no_language_flag ) )
+
+
+def GetSystemFlags_test():
+  tests = [
+    ( [ '-x' ],                     [ '-nocudalib' ],                   True ),
+    ( [ '-foo', '-bar' ],           [ '-nocudalib' ],                   True ),
+    ( [ '-x', 'c++' ],              [ '-nocudalib', '-x', 'c++' ],      False ),
+    ( [ '-xc' ],                    [ '-nocudalib', '-xc' ],            False ),
+    ( [ '--cuda-path=/foo' ],
+      [ '-nocudalib', '--cuda-path=/foo' ],                             True ),
+    ( [ '-gcc-toolchain', '/foo' ],
+      [ '-nocudalib', '-gcc-toolchain', '/foo' ],                       True ),
+    ( [ '--gcc-toolchain=/foo' ],
+      [ '-nocudalib', '--gcc-toolchain=/foo' ],                         True ),
+    ( [ '-nocudainc' ],             [ '-nocudalib', '-nocudainc' ],     True ),
+    ( [ '-nostdinc' ],              [ '-nocudalib', '-nostdinc' ],      True ),
+    ( [ '-nostdinc++' ],            [ '-nocudalib', '-nostdinc++' ],    True ),
+    ( [ '--stdlib', 'libc++' ],
+      [ '-nocudalib', '--stdlib', 'libc++' ],                           True ),
+    ( [ '-stdlib=libc++' ],         [ '-nocudalib', '-stdlib=libc++' ], True ),
+    ( [ '--stdlib=libc++' ],
+      [ '-nocudalib', '--stdlib=libc++' ],                              True ),
+    ( [ '--sysroot', '/foo' ],
+      [ '-nocudalib', '--sysroot', '/foo' ],                            True ),
+    ( [ '--sysroot=/foo' ],         [ '-nocudalib', '--sysroot=/foo' ], True ),
+    ( [ '-target', 'foo' ],         [ '-nocudalib', '-target', 'foo' ], True ),
+    ( [ '--target=foo' ],           [ '-nocudalib', '--target=foo' ],   True ),
+    ( [ '-foo', '-x', 'c', '-bar', '--target=/foo', '-wyz' ],
+      [ '-nocudalib', '-x', 'c', '--target=/foo' ],                     False )
+  ]
+
+  for test in tests:
+    yield GetSystemFlags, test[ 0 ], test[ 1 ], test[ 2 ]
+
+
+FAKE_CLANG_STDERR = """
+#include "..." search starts here:
+#include <...> search starts here:
+ /path/to/include
+ /path/to/framework (framework directory)
+End of search list."""
+
+
+@patch( 'ycmd.completers.cpp.flags.REAL_CLANG_EXECUTABLE', '/usr/bin/clang' )
+def AddSystemHeaderPaths_ParseDirectoriesFromRealClang_test():
+  class SafePopen( object ):
+    def __init__( self, args, **kwargs ):
+      pass
+
+    def communicate( self ):
+      return '', FAKE_CLANG_STDERR
+
+  with patch( 'ycmd.completers.cpp.flags.SafePopen', SafePopen ):
+    assert_that(
+      flags._AddSystemHeaderPaths( [ '-x', 'c++' ], 'test.cpp' ),
+      contains( '-x', 'c++',
+                '-isystem', os.path.abspath( '/path/to/include' ),
+                '-iframework', os.path.abspath( '/path/to/framework' ) )
+    )
+
+
+@patch( 'ycmd.completers.cpp.flags.REAL_CLANG_EXECUTABLE', None )
+def AddSystemHeaderPaths_ParseDirectoriesFromFakeClang_test():
+  class SafePopen( object ):
+    def __init__( self, args, **kwargs ):
+      utils.SafePopen( args, **kwargs ).communicate()
+
+    def communicate( self ):
+      return '', FAKE_CLANG_STDERR
+
+  with patch( 'ycmd.completers.cpp.flags.SafePopen', SafePopen ):
+    assert_that(
+      flags._AddSystemHeaderPaths( [ '-x', 'c++' ], 'test.cpp' ),
+      contains( '-x', 'c++',
+                '-isystem', os.path.abspath( '/path/to/include' ),
+                '-iframework', os.path.abspath( '/path/to/framework' ) )
+    )
+
+
+@patch( 'ycmd.completers.cpp.flags.REAL_CLANG_EXECUTABLE', None )
+def AddSystemHeaderPaths_AssumeCppIfNoExtensionAndNoLanguageFlag_test():
+  class SafePopen( object ):
+    def __init__( self, args, **kwargs ):
+      utils.SafePopen( args, **kwargs ).communicate()
+
+    def communicate( self ):
+      return '', FAKE_CLANG_STDERR
+
+  with patch( 'ycmd.completers.cpp.flags.SafePopen', SafePopen ):
+    assert_that(
+      flags._AddSystemHeaderPaths( [], 'vector' ),
+      contains( '-x', 'c++',
+                '-isystem', os.path.abspath( '/path/to/include' ),
+                '-iframework', os.path.abspath( '/path/to/framework' ) )
+    )
+
+
+@patch( 'ycmd.completers.cpp.flags.REAL_CLANG_EXECUTABLE', None )
+@patch( 'ycmd.completers.cpp.flags.FAKE_CLANG_EXECUTABLE', None )
+def AddSystemHeaderPaths_NoClangExecutable_test():
+  assert_that(
+    calling( flags._AddSystemHeaderPaths ).with_args( [], 'test.cpp' ),
+    raises( RuntimeError, 'No Clang executable found.' )
+  )
+
+
+@patch( 'ycmd.completers.cpp.flags.REAL_CLANG_EXECUTABLE', None )
+def AddSystemHeaderPaths_RaiseErrorIfUnableToParseClang_test():
+  # Clang does not print the system headers if no language flag is given and the
+  # extension is unknown.
+  assert_that(
+    calling( flags._AddSystemHeaderPaths ).with_args( [], 'test.foo' ),
+    raises( RuntimeError,
+            'Unable to parse system header directories from Clang output.' )
+  )
