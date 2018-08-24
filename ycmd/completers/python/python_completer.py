@@ -290,6 +290,10 @@ class PythonCompleter( Completer ):
       key = 'Python interpreter',
       value = environment.executable )
 
+    python_path = responses.DebugInfoItem(
+      key = 'Python path',
+      value = str( self._SysPathForFile( request_data, environment ) ) )
+
     python_version = responses.DebugInfoItem(
       key = 'Python version',
       value = '.'.join( str( item ) for item in environment.version_info ) )
@@ -304,6 +308,7 @@ class PythonCompleter( Completer ):
 
     return responses.BuildDebugInfoResponse( name = 'Python',
                                              items = [ python_interpreter,
+                                                       python_path,
                                                        python_version,
                                                        jedi_version,
                                                        parso_version ] )
