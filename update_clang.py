@@ -7,6 +7,7 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
+import argparse
 import subprocess
 import contextlib
 import os
@@ -32,7 +33,6 @@ server_utils.SetUpPythonPath()
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 from future.utils import iteritems
-import argparse
 import requests
 from io import BytesIO
 
