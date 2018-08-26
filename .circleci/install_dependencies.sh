@@ -15,10 +15,11 @@ brew update || brew update
 # We require CMake, Node, and Go for our build and tests, and all
 # the others are dependencies of pyenv. Mono is not installed through Homebrew
 # because the latest version (5.12.0.226_1) fails to build the OmniSharp server
-# with CS7027 signing errors.
+# with CS7027 signing errors. Go 1.10 is installed since Gocode does not support
+# 1.11 and later.
 REQUIREMENTS="cmake
               node.js
-              go
+              go@1.10
               readline
               autoconf
               pkg-config
@@ -29,6 +30,10 @@ for pkg in $REQUIREMENTS; do
   # Install package, or upgrade it if it is already installed.
   brew install $pkg || brew outdated $pkg || brew upgrade $pkg
 done
+
+# See
+# https://circleci.com/docs/2.0/env-vars/#using-bash_env-to-set-environment-variables
+echo 'export PATH="/usr/local/opt/go@1.10/bin:$PATH"' >> $BASH_ENV
 
 ##############
 # Python setup
@@ -69,9 +74,7 @@ pyenv install --skip-existing ${PYENV_VERSION}
 pyenv rehash
 pyenv global ${PYENV_VERSION}
 
-# Initialize pyenv in other steps. See
-# https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables
-# and https://github.com/pyenv/pyenv/issues/264
+# Initialize pyenv in other steps. See https://github.com/pyenv/pyenv/issues/264
 echo "export PATH=${PYENV_ROOT}/bin:\$PATH" >> $BASH_ENV
 echo 'if [ -z "${PYENV_LOADING}" ]; then' >> $BASH_ENV
 echo '  export PYENV_LOADING=true' >> $BASH_ENV
