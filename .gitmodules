@@ -13,9 +13,6 @@
 [submodule "third_party/requests"]
 	path = third_party/requests
 	url = https://github.com/kennethreitz/requests
-[submodule "third_party/gocode"]
-	path = third_party/gocode
-	url = https://github.com/nsf/gocode.git
 [submodule "third_party/jedi"]
 	path = third_party/jedi
 	url = https://github.com/davidhalter/jedi
@@ -35,3 +32,6 @@
 [submodule "third_party/cregex"]
 	path = third_party/cregex
 	url = https://github.com/micbou/regex.git
+[submodule "third_party/gocode"]
+	path = third_party/gocode
+	url = https://github.com/mdempsky/gocode.git
