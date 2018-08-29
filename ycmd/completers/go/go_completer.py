@@ -48,14 +48,13 @@ GOCODE_NO_COMPLETIONS_MESSAGE = 'No completions found.'
 GOCODE_PANIC_MESSAGE = ( 'Gocode panicked trying to find completions, '
                          'you likely have a syntax error.' )
 
-DIR_OF_THIRD_PARTY = os.path.abspath(
-  os.path.join( os.path.dirname( __file__ ), '..', '..', '..', 'third_party' ) )
+GO_DIR = os.path.abspath(
+  os.path.join( os.path.dirname( __file__ ), '..', '..', '..', 'third_party',
+                'go', 'src', 'github.com' ) )
 GO_BINARIES = dict( {
-  'gocode': os.path.join( DIR_OF_THIRD_PARTY,
-                          'gocode',
+  'gocode': os.path.join( GO_DIR, 'mdempsky', 'gocode',
                           ExecutableName( 'gocode' ) ),
-  'godef': os.path.join( DIR_OF_THIRD_PARTY,
-                         'godef',
+  'godef': os.path.join( GO_DIR, 'rogpeppe', 'godef',
                          ExecutableName( 'godef' ) )
 } )
 
@@ -152,7 +151,7 @@ class GoCompleter( Completer ):
       _logger.error( GOCODE_PARSE_ERROR_MESSAGE )
       raise RuntimeError( GOCODE_PARSE_ERROR_MESSAGE )
 
-    if len( resultdata ) != 2:
+    if not isinstance( resultdata, list ) or len( resultdata ) != 2:
       _logger.error( GOCODE_NO_COMPLETIONS_MESSAGE )
       raise RuntimeError( GOCODE_NO_COMPLETIONS_MESSAGE )
     for result in resultdata[ 1 ]:
@@ -312,26 +311,8 @@ class GoCompleter( Completer ):
 
 
   def ServerIsHealthy( self ):
-    """Check if the Gocode server is healthy (up and serving)."""
-    if not self._ServerIsRunning():
-      return False
-
-    try:
-      self._ExecuteCommand( [ self._gocode_binary_path,
-                              '-sock', 'tcp',
-                              '-addr', self._gocode_host,
-                              'status' ] )
-      return True
-    # We catch this exception type and not a more specific one because we
-    # raise it in _ExecuteCommand when the command fails.
-    except RuntimeError as error:
-      _logger.exception( error )
-      return False
-
-
-  def ServerIsReady( self ):
-    """Check if the Gocode server is ready. Same as the healthy status."""
-    return self.ServerIsHealthy()
+    """Assume the Gocode server is healthy if it's running."""
+    return self._ServerIsRunning()
 
 
   def DebugInfo( self, request_data ):

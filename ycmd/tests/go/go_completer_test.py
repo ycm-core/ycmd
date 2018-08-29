@@ -167,7 +167,17 @@ def ComputeCandidatesInner_ParseFailure_test( completer, *args ):
 @SetUpGoCompleter
 @patch( 'ycmd.completers.go.go_completer.GoCompleter._ExecuteCommand',
         return_value = '[]' )
-def ComputeCandidatesInner_NoResultsFailure_test( completer, *args ):
+def ComputeCandidatesInner_NoResultsFailure_EmptyList_test( completer, *args ):
+  assert_that(
+    calling( completer.ComputeCandidatesInner ).with_args(
+      BuildRequest( 1, 1 ) ),
+    raises( RuntimeError, 'No completions found.' ) )
+
+
+@SetUpGoCompleter
+@patch( 'ycmd.completers.go.go_completer.GoCompleter._ExecuteCommand',
+        return_value = 'null\n' )
+def ComputeCandidatesInner_NoResultsFailure_Null_test( completer, *args ):
   assert_that(
     calling( completer.ComputeCandidatesInner ).with_args(
       BuildRequest( 1, 1 ) ),
