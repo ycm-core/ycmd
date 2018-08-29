@@ -31,7 +31,7 @@ import threading
 
 from ycmd import responses
 from ycmd import utils
-from ycmd.utils import ToBytes, ToUnicode, ExecutableName
+from ycmd.utils import ToBytes, ToUnicode, ExecutableName, FindExecutable
 from ycmd.completers.completer import Completer
 
 BINARY_NOT_FOUND_MESSAGE = ( '{0} binary not found. Did you build it? '
@@ -84,6 +84,8 @@ def FindBinary( binary, user_options ):
     return GO_BINARIES.get( binary )
 
   binary_path = _FindPath()
+  if not binary_path.startswith( '/' ):
+    return FindExecutable( binary_path )
   if os.path.isfile( binary_path ):
     return binary_path
   return None
