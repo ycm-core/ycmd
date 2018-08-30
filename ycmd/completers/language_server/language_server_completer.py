@@ -32,8 +32,7 @@ import threading
 
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents, GetFileLines
-from ycmd import utils
-from ycmd import responses
+from ycmd import extra_conf_store, responses, utils
 
 from ycmd.completers.language_server import language_server_protocol as lsp
 
@@ -584,6 +583,10 @@ class LanguageServerCompleter( Completer ):
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
       - GetSubcommandsMap
+      - StartServer
+        - NOTE: The server's StartServer must not do anything if the server has
+          already been started.
+      - Language : a string used to identify the language in user's extra conf
 
   Startup
 
@@ -672,6 +675,17 @@ class LanguageServerCompleter( Completer ):
       self._on_initialize_complete_handlers = []
       self._server_capabilities = None
       self._resolve_completion_items = False
+      self._settings = {}
+
+
+  @abc.abstractmethod
+  def Language( self ):
+    pass # pragma: no cover
+
+
+  @abc.abstractmethod
+  def StartServer( self, request_data, **kwargs ):
+    pass # pragma: no cover
 
 
   def ShutdownServer( self ):
@@ -886,7 +900,30 @@ class LanguageServerCompleter( Completer ):
     return completions
 
 
+  def _GetSettings( self, module, client_data ):
+    if hasattr( module, 'Settings' ):
+      settings = module.Settings( language = self.Language(),
+                                  client_data = client_data )
+      if settings is not None:
+        return settings
+
+    _logger.debug( 'No Settings function defined in %s', module.__file__ )
+
+    return {}
+
+
+  def _GetSettingsFromExtraConf( self, request_data ):
+    module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
+    if module:
+      settings = self._GetSettings( module, request_data[ 'extra_conf_data' ] )
+      self._settings = settings.get( 'ls', {} )
+
+
   def OnFileReadyToParse( self, request_data ):
+    self._GetSettingsFromExtraConf( request_data )
+
+    self.StartServer( request_data )
+
     if not self.ServerIsHealthy():
       return
 
@@ -1219,7 +1256,8 @@ class LanguageServerCompleter( Completer ):
 
       request_id = self.GetConnection().NextRequestId()
       msg = lsp.Initialize( request_id,
-                            self._GetProjectDirectory( request_data ) )
+                            self._GetProjectDirectory( request_data ),
+                            self._settings )
 
       def response_handler( response, message ):
         if message is None:
@@ -1269,10 +1307,9 @@ class LanguageServerCompleter( Completer ):
       # Some language servers require the use of didChangeConfiguration event,
       # even though it is not clear in the specification that it is mandatory,
       # nor when it should be sent.  VSCode sends it immediately after
-      # initialized notification, so we do the same. In future, we might
-      # support getting this config from ycm_extra_conf or the client, but for
-      # now, we send an empty object.
-      self.GetConnection().SendNotification( lsp.DidChangeConfiguration( {} ) )
+      # initialized notification, so we do the same.
+      self.GetConnection().SendNotification(
+          lsp.DidChangeConfiguration( self._settings ) )
 
       # Notify the other threads that we have completed the initialize exchange.
       self._initialize_response = None

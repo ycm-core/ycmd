@@ -194,16 +194,14 @@ def BuildNotification( method, parameters ):
   } )
 
 
-def Initialize( request_id, project_directory ):
+def Initialize( request_id, project_directory, settings ):
   """Build the Language Server initialize request"""
 
   return BuildRequest( request_id, 'initialize', {
     'processId': os.getpid(),
     'rootPath': project_directory,
     'rootUri': FilePathToUri( project_directory ),
-    'initializationOptions': {
-      # We don't currently support any server-specific options.
-    },
+    'initializationOptions': settings,
     'capabilities': {
       'textDocument': {
         'completion': {

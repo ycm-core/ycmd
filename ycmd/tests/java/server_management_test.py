@@ -84,7 +84,7 @@ def TidyJDTProjectFiles( dir_name ):
   return decorator
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_RestartServer_test( app ):
   StartJavaCompleterServerInDirectory(
     app, PathToTestFile( 'simple_eclipse_project' ) )
@@ -134,7 +134,7 @@ def ServerManagement_RestartServer_test( app ):
                _ProjectDirectoryMatcher( maven_project ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ProjectDetection_EclipseParent_test( app ):
   StartJavaCompleterServerInDirectory(
     app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
@@ -148,7 +148,7 @@ def ServerManagement_ProjectDetection_EclipseParent_test( app ):
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ProjectDetection_MavenParent_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( 'simple_maven_project',
@@ -169,7 +169,7 @@ def ServerManagement_ProjectDetection_MavenParent_test( app ):
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project',
                                       'simple_submodule' ) )
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ProjectDetection_MavenParent_Submodule_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( 'simple_maven_project',
@@ -189,7 +189,7 @@ def ServerManagement_ProjectDetection_MavenParent_Submodule_test( app ):
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ProjectDetection_GradleParent_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( 'simple_gradle_project',
@@ -209,7 +209,7 @@ def ServerManagement_ProjectDetection_GradleParent_test( app ):
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_OpenProject_AbsolutePath_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( 'simple_gradle_project',
@@ -247,7 +247,7 @@ def ServerManagement_OpenProject_AbsolutePath_test( app ):
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_OpenProject_RelativePath_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( 'simple_gradle_project',
@@ -330,7 +330,7 @@ def ServerManagement_OpenProject_RelativePathNoPath_test( app ):
 def ServerManagement_ProjectDetection_NoParent_test():
   with TemporaryTestDir() as tmp_dir:
 
-    @IsolatedYcmd
+    @IsolatedYcmd()
     def Test( app ):
       StartJavaCompleterServerInDirectory( app, tmp_dir )
 
@@ -342,7 +342,7 @@ def ServerManagement_ProjectDetection_NoParent_test():
     yield Test
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'shutil.rmtree', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
@@ -368,7 +368,7 @@ def ServerManagement_CloseServer_Unclean_test( app, *args ):
                ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_StopServerTwice_test( app ):
   StartJavaCompleterServerInDirectory(
     app, PathToTestFile( 'simple_eclipse_project' ) )
@@ -410,7 +410,7 @@ def ServerManagement_StopServerTwice_test( app ):
                ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ServerDies_test( app ):
   StartJavaCompleterServerInDirectory(
     app,
@@ -441,7 +441,7 @@ def ServerManagement_ServerDies_test( app ):
                ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
   StartJavaCompleterServerInDirectory(
     app,
@@ -487,7 +487,7 @@ def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
                ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_ConnectionRaisesWhileShuttingDown_test( app ):
   StartJavaCompleterServerInDirectory(
     app,

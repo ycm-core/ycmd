@@ -31,7 +31,7 @@ import tempfile
 import threading
 from subprocess import PIPE
 
-from ycmd import utils, responses
+from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
 
@@ -261,12 +261,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return self._connection
 
 
-  def OnFileReadyToParse( self, request_data ):
-    self._StartServer( request_data )
-
-    return super( JavaCompleter, self ).OnFileReadyToParse( request_data )
-
-
   def DebugInfo( self, request_data ):
     items = [
       responses.DebugInfoItem( 'Startup Status', self._server_init_status ),
@@ -324,7 +318,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def _RestartServer( self, request_data ):
     with self._server_state_mutex:
       self._StopServer()
-      self._StartServer( request_data )
+      self.StartServer( request_data )
 
 
   def _OpenProject( self, request_data, args ):
@@ -345,7 +339,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     with self._server_state_mutex:
       self._StopServer()
-      self._StartServer( request_data, project_directory=project_directory )
+      self.StartServer( request_data, project_directory = project_directory )
 
 
   def _CleanUp( self ):
@@ -375,7 +369,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self.ServerReset()
 
 
-  def _StartServer( self, request_data, project_directory=None ):
+  def Language( self ):
+    return 'java'
+
+
+  def StartServer( self, request_data, project_directory = None ):
     with self._server_state_mutex:
       if self._server_started:
         return
