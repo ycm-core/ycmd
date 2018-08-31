@@ -92,6 +92,10 @@ def JavaCompleter_GetType_test( app ):
     assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
                  raises( RuntimeError, 'Unknown type' ) )
 
+  with patch.object( completer, 'GetHoverResponse', return_value = 'value' ):
+    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
+                 raises( RuntimeError, 'Unknown type' ) )
+
   with patch.object( completer, 'GetHoverResponse', return_value = [] ):
     assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
                  raises( RuntimeError, 'Unknown type' ) )
@@ -105,8 +109,8 @@ def JavaCompleter_GetType_test( app ):
   with patch.object( completer,
                      'GetHoverResponse',
                      return_value = { 'language': 'java', 'value': 'test' } ):
-    assert_that( calling( completer.GetType ).with_args( BuildRequest() ),
-                 raises( RuntimeError, 'Unknown type' ) )
+    assert_that( completer.GetType( BuildRequest() ),
+                 has_entries( { 'message': 'test' } ) )
 
   with patch.object(
     completer,

@@ -63,6 +63,7 @@ def ProjectPath( *args ):
                          *args )
 
 
+ProjectRoot = PathToTestFile( DEFAULT_PROJECT_DIR )
 InternalNonProjectFile = PathToTestFile( DEFAULT_PROJECT_DIR, 'test.java' )
 TestFactory = ProjectPath( 'TestFactory.java' )
 TestLauncher = ProjectPath( 'TestLauncher.java' )
@@ -74,6 +75,7 @@ youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
+  ProjectRoot: [],
   InternalNonProjectFile: [],
   TestFactory: contains_inanyorder(
     has_entries( {
@@ -391,11 +393,14 @@ public class Test {
   messages_for_filepath = []
 
   def PollForMessagesInAnotherThread( filepath, contents ):
-    for message in PollForMessages( app,
-                                    { 'filepath': filepath,
-                                      'contents': contents } ):
-      if 'filepath' in message and message[ 'filepath' ] == filepath:
-        messages_for_filepath.append( message )
+    try:
+      for message in PollForMessages( app,
+                                      { 'filepath': filepath,
+                                        'contents': contents } ):
+        if 'filepath' in message and message[ 'filepath' ] == filepath:
+          messages_for_filepath.append( message )
+    except PollForMessagesTimeoutException:
+      pass
 
   StartThread( PollForMessagesInAnotherThread, filepath, old_contents )
 

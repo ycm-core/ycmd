@@ -542,9 +542,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     # throw any other time.
 
     # Strictly we seem to receive:
-    # - [""]
+    # - ""
     #   when there really is no documentation or type info available
-    # - [{language:java, value:<type info>}]
+    # - {language:java, value:<type info>}
     #   when there only the type information is available
     # - [{language:java, value:<type info>},
     #    'doc line 1',
@@ -552,12 +552,18 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     #    ...]
     #   when there is type and documentation information available.
 
-    try:
-      get_type_java = hover_response[ 0 ][ 'value' ]
-    except ( KeyError, TypeError, IndexError ):
+    if not hover_response:
       raise RuntimeError( 'Unknown type' )
 
-    return responses.BuildDisplayMessageResponse( get_type_java )
+    if isinstance( hover_response, list ):
+      hover_response = hover_response[ 0 ]
+
+    if ( not isinstance( hover_response, dict ) or
+         hover_response.get( 'language' ) != 'java' or
+         'value' not in hover_response ):
+      raise RuntimeError( 'Unknown type' )
+
+    return responses.BuildDisplayMessageResponse( hover_response[ 'value' ] )
 
 
   def GetDoc( self, request_data ):
@@ -577,9 +583,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     # and throw any other time.
 
     # Strictly we seem to receive:
-    # - [""]
+    # - ""
     #   when there really is no documentation or type info available
-    # - [{language:java, value:<type info>}]
+    # - {language:java, value:<type info>}
     #   when there only the type information is available
     # - [{language:java, value:<type info>},
     #    'doc line 1',
