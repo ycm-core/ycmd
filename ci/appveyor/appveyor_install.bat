@@ -15,6 +15,16 @@ if exist racerd_target (
 )
 
 ::
+:: Go configuration
+::
+
+:: Go 1.10 is used since Gocode does not support 1.11 and later.
+set GOROOT=C:\go110
+set PATH=%GOROOT%\bin;%PATH%
+go version
+go env
+
+::
 :: Python configuration
 ::
 
