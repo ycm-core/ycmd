@@ -351,6 +351,27 @@ def GetCompletions_FilenameCompleter_Works_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_FilenameCompleter_FallBackToIdentifierCompleter_test( app ):
+  filepath = PathToTestFile( 'filename_completer', 'test.foo' )
+  event_data = BuildRequest( filepath = filepath,
+                             contents = './nonexisting_dir',
+                             filetype = 'foo',
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  contents = './nonexisting_dir nd',
+                                  filetype = 'foo',
+                                  column_num = 21 )
+
+  assert_that(
+    app.post_json( '/completions', completion_data ).json[ 'completions' ],
+    has_items( CompletionEntryMatcher( 'nonexisting_dir', '[ID]' ) )
+  )
+
+
+@SharedYcmd
 def GetCompletions_UltiSnipsCompleter_Works_test( app ):
   event_data = BuildRequest(
     event_name = 'BufferVisit',

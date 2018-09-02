@@ -810,34 +810,28 @@ def ExtraClangFlags_test():
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags._GetMacClangVersionList',
+@patch( 'os.listdir',
         return_value = [ '1.0.0', '7.0.1', '7.0.2', '___garbage__' ] )
-@patch( 'ycmd.completers.cpp.flags._MacClangIncludeDirExists',
-        side_effect = [ False, True, True, True ] )
+@patch( 'os.path.exists', side_effect = [ False, True, True, True ] )
 def Mac_LatestMacClangIncludes_test( *args ):
   eq_( flags._LatestMacClangIncludes( '/tmp' ),
        [ '-isystem', '/tmp/usr/lib/clang/7.0.2/include' ] )
 
 
 @MacOnly
-def Mac_LatestMacClangIncludes_NoSuchDirectory_test():
-  def RaiseOSError( x ):
-    raise OSError( x )
-
-  with patch( 'os.listdir', side_effect = RaiseOSError ):
-    eq_( flags._LatestMacClangIncludes( '/tmp' ), [] )
+@patch( 'os.listdir', side_effect = OSError )
+def Mac_LatestMacClangIncludes_NoSuchDirectory_test( *args ):
+  eq_( flags._LatestMacClangIncludes( '/tmp' ), [] )
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags._MacClangIncludeDirExists',
-        side_effect = [ False, False ] )
+@patch( 'os.path.exists', side_effect = [ False, False ] )
 def Mac_SelectMacToolchain_None_test( *args ):
   eq_( flags._SelectMacToolchain(), None )
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags._MacClangIncludeDirExists',
-        side_effect = [ True, False ] )
+@patch( 'os.path.exists', side_effect = [ True, False ] )
 def Mac_SelectMacToolchain_XCode_test( *args ):
   eq_( flags._SelectMacToolchain(),
        '/Applications/Xcode.app/Contents/Developer/Toolchains/'
@@ -845,8 +839,7 @@ def Mac_SelectMacToolchain_XCode_test( *args ):
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags._MacClangIncludeDirExists',
-        side_effect = [ False, True ] )
+@patch( 'os.path.exists', side_effect = [ False, True ] )
 def Mac_SelectMacToolchain_CommandLineTools_test( *args ):
   eq_( flags._SelectMacToolchain(), '/Library/Developer/CommandLineTools' )
 
