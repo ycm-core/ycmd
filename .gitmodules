@@ -35,3 +35,6 @@
 [submodule "third_party/gocode"]
 	path = third_party/gocode
 	url = https://github.com/mdempsky/gocode.git
+[submodule "third_party/github.com/mdempsky/gocode"]
+	path = third_party/github.com/mdempsky/gocode
+	url = https://github.com/mdempsky/gocode
