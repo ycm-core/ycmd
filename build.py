@@ -605,7 +605,7 @@ def EnableCsCompleter( args ):
 def EnableGoCompleter( args ):
   go = FindExecutableOrDie( 'go', 'go is required to build gocode.' )
 
-  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
+  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'github.com', 'mdempsky', 'gocode' ) )
   CheckCall( [ go, 'build' ],
              quiet = args.quiet,
              status_message = 'Building gocode for go completion' )
