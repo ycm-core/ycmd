@@ -27,14 +27,19 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that, calling, contains, contains_string,
                        empty, equal_to, has_entry, has_entries, raises,
                        matches_regexp )
+from mock import patch
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
 import requests
 import os.path
 
-from ycmd.completers.cpp.clang_completer import NO_DOCUMENTATION_MESSAGE
-from ycmd.tests.clang import PathToTestFile, SharedYcmd
+from ycmd import handlers
+from ycmd.completers.cpp.clang_completer import ( NO_DOCUMENTATION_MESSAGE,
+                                                  PARSING_FILE_MESSAGE )
+from ycmd.tests.clang import ( MockCoreClangCompleter,
+                               PathToTestFile,
+                               SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ErrorMatcher,
                                     ChunkMatcher,
@@ -1529,3 +1534,42 @@ Type: void ()
 Name: kernel
 ---
 This is a test kernel""" } )
+
+
+@SharedYcmd
+def Subcommands_StillParsingError( app, command ):
+  filepath = PathToTestFile( 'test.cpp' )
+
+  data = BuildRequest( command_arguments = [ command ],
+                       compilation_flags = [ '-x', 'c++' ],
+                       line_num = 1,
+                       column_num = 1,
+                       filepath = filepath,
+                       contents = '',
+                       filetype = 'cpp' )
+
+  response = app.post_json( '/run_completer_command',
+                            data,
+                            expect_errors = True )
+
+  eq_( response.status_code, requests.codes.internal_server_error )
+
+  pprint( response.json )
+
+  assert_that( response.json, ErrorMatcher( RuntimeError,
+                                            PARSING_FILE_MESSAGE ) )
+
+
+def Subcommands_StillParsingError_test():
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
+  with patch.object( completer, '_completer', MockCoreClangCompleter() ):
+    yield Subcommands_StillParsingError, 'FixIt'
+    yield Subcommands_StillParsingError, 'GetDoc'
+    yield Subcommands_StillParsingError, 'GetDocImprecise'
+    yield Subcommands_StillParsingError, 'GetParent'
+    yield Subcommands_StillParsingError, 'GetType'
+    yield Subcommands_StillParsingError, 'GetTypeImprecise'
+    yield Subcommands_StillParsingError, 'GoTo'
+    yield Subcommands_StillParsingError, 'GoToDeclaration'
+    yield Subcommands_StillParsingError, 'GoToDefinition'
+    yield Subcommands_StillParsingError, 'GoToImprecise'

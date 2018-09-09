@@ -126,3 +126,31 @@ def TemporaryClangProject( tmp_dir, compile_commands ):
     yield
   finally:
     os.remove( path )
+
+
+# A mock of ycm_core.ClangCompleter with translation units still being parsed.
+class MockCoreClangCompleter( object ):
+
+  def GetDefinitionLocation( self, *args ):
+    pass
+
+  def GetDeclarationLocation( self, *args ):
+    pass
+
+  def GetDefinitionOrDeclarationLocation( self, *args ):
+    pass
+
+  def GetTypeAtLocation( self, *args ):
+    pass
+
+  def GetEnclosingFunctionAtLocation( self, *args ):
+    pass
+
+  def GetDocsForLocationInFile( self, *args ):
+    pass
+
+  def GetFixItsForLocationInFile( self, *args ):
+    pass
+
+  def UpdatingTranslationUnit( self, filename ):
+    return True

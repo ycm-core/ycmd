@@ -27,13 +27,20 @@ from builtins import *  # noqa
 import json
 import requests
 import ycm_core
+from mock import patch
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entry, has_entries )
 
-from ycmd.completers.cpp.clang_completer import NO_COMPLETIONS_MESSAGE
+from ycmd import handlers
+from ycmd.completers.cpp.clang_completer import ( NO_COMPLETIONS_MESSAGE,
+                                                  NO_COMPILE_FLAGS_MESSAGE,
+                                                  PARSING_FILE_MESSAGE )
 from ycmd.responses import UnknownExtraConf, NoExtraConfDetected
-from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.clang import ( IsolatedYcmd,
+                               MockCoreClangCompleter,
+                               PathToTestFile,
+                               SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
@@ -569,8 +576,7 @@ def GetCompletions_ClientDataGivenToExtraConf_Cache_test( app ):
     has_entries( {
       'completions': empty(),
       'errors': contains(
-        ErrorMatcher( RuntimeError,
-                      'Still no compile flags, no completions yet.' )
+        ErrorMatcher( RuntimeError, NO_COMPILE_FLAGS_MESSAGE )
       )
     } )
   )
@@ -1256,3 +1262,24 @@ def GetCompletions_cuda_test( app ):
       } )
     }
   } )
+
+
+@SharedYcmd
+def GetCompletions_StillParsingError_test( app ):
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
+  with patch.object( completer, '_completer', MockCoreClangCompleter() ):
+    RunTest( app, {
+      'description': 'raise an appropriate error if translation unit is still '
+                     'being parsed.',
+      'request': {
+        'filetype'         : 'cpp',
+        'filepath'         : PathToTestFile( 'test.cpp' ),
+        'contents'         : '',
+        'compilation_flags': [ '-x', 'c++' ],
+        'force_semantic'   : True
+      },
+      'expect': {
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( RuntimeError, PARSING_FILE_MESSAGE )
+      },
+    } )
