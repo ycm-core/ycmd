@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 from shutil import rmtree
 from tempfile import mkdtemp
+import argparse
 import errno
 import hashlib
 import multiprocessing
@@ -43,10 +44,8 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
                                                             DIR_OF_THIRD_PARTY )
     )
 
-sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
 sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'requests' ) ) )
 
-import argparse
 import requests
 
 NO_DYNAMIC_PYTHON_ERROR = (

@@ -5,17 +5,13 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+import argparse
 import os
 import os.path as p
 import subprocess
 import sys
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
-DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
-
-sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'argparse' ) ) )
-
-import argparse
 
 
 def ParseArguments():
