@@ -13,9 +13,14 @@
 [submodule "third_party/requests"]
 	path = third_party/requests
 	url = https://github.com/kennethreitz/requests
-[submodule "third_party/gocode"]
-	path = third_party/gocode
-	url = https://github.com/nsf/gocode.git
+[submodule "third_party/go/src/github.com/mdempsky/gocode"]
+	path = third_party/go/src/github.com/mdempsky/gocode
+	url = https://github.com/mdempsky/gocode
+	ignore = dirty
+[submodule "third_party/go/src/github.com/rogpeppe/godef"]
+	path = third_party/go/src/github.com/rogpeppe/godef
+	url = https://github.com/rogpeppe/godef
+	ignore = dirty
 [submodule "third_party/jedi"]
 	path = third_party/jedi
 	url = https://github.com/davidhalter/jedi
@@ -25,10 +30,6 @@
 [submodule "third_party/racerd"]
 	path = third_party/racerd
 	url = https://github.com/jwilm/racerd
-[submodule "third_party/godef"]
-	path = third_party/godef
-	url = https://github.com/Manishearth/godef.git
-	ignore = dirty
 [submodule "third_party/python-future"]
 	path = third_party/python-future
 	url = https://github.com/PythonCharmers/python-future

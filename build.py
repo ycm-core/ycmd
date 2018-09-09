@@ -605,12 +605,17 @@ def EnableCsCompleter( args ):
 def EnableGoCompleter( args ):
   go = FindExecutableOrDie( 'go', 'go is required to build gocode.' )
 
-  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'gocode' ) )
+  go_dir = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
+  os.chdir( p.join( go_dir, 'src', 'github.com', 'mdempsky', 'gocode' ) )
+  new_env = os.environ.copy()
+  new_env[ 'GOPATH' ] = go_dir
   CheckCall( [ go, 'build' ],
+             env = new_env,
              quiet = args.quiet,
              status_message = 'Building gocode for go completion' )
-  os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'godef' ) )
-  CheckCall( [ go, 'build', 'godef.go' ],
+  os.chdir( p.join( go_dir, 'src', 'github.com', 'rogpeppe', 'godef' ) )
+  CheckCall( [ go, 'build' ],
+             env = new_env,
              quiet = args.quiet,
              status_message = 'Building godef for go definition' )
 
