@@ -166,10 +166,10 @@ def IsVirtualEnvLibraryFolder( path ):
 
 
 def GetStandardLibraryIndexInSysPath():
-  for path in sys.path:
+  for index, path in enumerate( sys.path ):
     if ( IsStandardLibraryFolder( path ) and
          not IsVirtualEnvLibraryFolder( path ) ):
-      return sys.path.index( path )
+      return index
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
 

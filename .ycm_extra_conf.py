@@ -167,9 +167,9 @@ def Settings( **kwargs ):
 
 
 def GetStandardLibraryIndexInSysPath( sys_path ):
-  for path in sys_path:
+  for index, path in enumerate( sys_path ):
     if os.path.isfile( os.path.join( path, 'os.py' ) ):
-      return sys_path.index( path )
+      return index
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
 
