@@ -51,6 +51,12 @@ NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
 INCLUDE_REGEX = re.compile( '(\s*#\s*(?:include|import)\s*)(?:"[^"]*|<[^>]*)' )
 
 
+def _IsIncludeStatement( request_data ):
+  line = request_data[ 'line_value' ]
+  return ( re.search( '^\s*#\s*include\s*<.*>', line ) or
+           re.search( '^\s*#\s*include\s*".*"', line ) )
+
+
 class ClangCompleter( Completer ):
   def __init__( self, user_options ):
     super( ClangCompleter, self ).__init__( user_options )
@@ -229,9 +235,12 @@ class ClangCompleter( Completer ):
 
 
   def _GoTo( self, request_data ):
-    include_response = self._ResponseForInclude( request_data )
-    if include_response:
-      return include_response
+    if _IsIncludeStatement( request_data ):
+      location = self._LocationForGoTo( 'GetIncludedFileLocation', request_data )
+      if not ( location and location.IsValid() ):
+        raise RuntimeError( 'Include file not found' )
+      else:
+        return _ResponseForLocation( location )
 
     location = self._LocationForGoTo( 'GetDefinitionOrDeclarationLocation',
                                       request_data )
@@ -241,9 +250,14 @@ class ClangCompleter( Completer ):
 
 
   def _GoToImprecise( self, request_data ):
-    include_response = self._ResponseForInclude( request_data )
-    if include_response:
-      return include_response
+    if _IsIncludeStatement( request_data ):
+      location = self._LocationForGoTo( 'GetIncludedFileLocation',
+                                        request_data,
+                                        reparse = False )
+      if not ( location and location.IsValid() ):
+        raise RuntimeError( 'Include file not found.' )
+      else:
+        return _ResponseForLocation( location )
 
     location = self._LocationForGoTo( 'GetDefinitionOrDeclarationLocation',
                                       request_data,
@@ -253,40 +267,13 @@ class ClangCompleter( Completer ):
     return _ResponseForLocation( location )
 
 
-  def _ResponseForInclude( self, request_data ):
-    """Returns response for include file location if cursor is on the
-    include statement, None otherwise.
-    Throws RuntimeError if cursor is on include statement and corresponding
-    include file not found."""
-    current_line = request_data[ 'line_value' ]
-    include_file_name, quoted_include = GetFullIncludeValue( current_line )
-    if not include_file_name:
-      return None
-
-    flags, current_file_path = self._FlagsForRequest( request_data )
-    quoted_include_paths, include_paths = UserIncludePaths( flags,
-                                                            current_file_path )
-    if quoted_include:
-      include_file_path = _GetAbsolutePath( include_file_name,
-                                            quoted_include_paths )
-      if include_file_path:
-        return responses.BuildGoToResponse( include_file_path,
-                                            line_num = 1,
-                                            column_num = 1 )
-
-    include_file_path = _GetAbsolutePath( include_file_name, include_paths )
-    if include_file_path:
-      return responses.BuildGoToResponse( include_file_path,
-                                          line_num = 1,
-                                          column_num = 1 )
-    raise RuntimeError( 'Include file not found.' )
-
-
   def _GoToInclude( self, request_data ):
-    include_response = self._ResponseForInclude( request_data )
-    if not include_response:
+    if not _IsIncludeStatement( request_data ):
       raise RuntimeError( 'Not an include/import line.' )
-    return include_response
+    location = self._LocationForGoTo( 'GetIncludedFileLocation', request_data )
+    if not location or not location.IsValid():
+      raise RuntimeError( 'Include file not found.' )
+    return _ResponseForLocation( location )
 
 
   def _GetSemanticInfo(
