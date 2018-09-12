@@ -349,6 +349,8 @@ def Subcommands_GoToInclude_test():
     { 'request': [ 1, 1 ], 'response': 'a.hpp' },
     { 'request': [ 2, 1 ], 'response': os.path.join( 'system', 'a.hpp' ) },
     { 'request': [ 3, 1 ], 'response': os.path.join( 'quote',  'b.hpp' ) },
+    # Should be an error, but libclang finds the b.hpp in local directory
+    { 'request': [ 4, 1 ], 'response': os.path.join( 'quote',  'b.hpp' ) },
     { 'request': [ 5, 1 ], 'response': os.path.join( 'system', 'c.hpp' ) },
     { 'request': [ 6, 1 ], 'response': os.path.join( 'system', 'c.hpp' ) },
   ]
@@ -359,7 +361,7 @@ def Subcommands_GoToInclude_test():
 
 
 def Subcommands_GoToInclude_Fail_test():
-  test = { 'request': [ 4, 1 ], 'response': '' }
+  test = { 'request': [ 12, 1 ], 'response': '' }
   assert_that(
     calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
     raises( AppError, 'Include file not found.' ) )

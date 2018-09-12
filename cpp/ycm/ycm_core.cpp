@@ -111,6 +111,7 @@ PYBIND11_MODULE( ycm_core, mod )
     .def( "GetDefinitionLocation", &ClangCompleter::GetDefinitionLocation )
     .def( "GetDefinitionOrDeclarationLocation",
           &ClangCompleter::GetDefinitionOrDeclarationLocation )
+    .def( "GetIncludedFileLocation", &ClangCompleter::GetIncludedFileLocation )
     .def( "DeleteCachesForFile", &ClangCompleter::DeleteCachesForFile )
     .def( "UpdatingTranslationUnit", &ClangCompleter::UpdatingTranslationUnit )
     .def( "UpdateTranslationUnit", &ClangCompleter::UpdateTranslationUnit )

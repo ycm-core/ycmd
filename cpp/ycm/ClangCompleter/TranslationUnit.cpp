@@ -187,6 +187,34 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
   return candidates;
 }
 
+Location TranslationUnit::GetIncludedFileLocation(
+  const std::string &filename,
+  int line,
+  int column,
+  const std::vector< UnsavedFile > &unsaved_files,
+  bool reparse ) {
+  if ( reparse ) {
+    Reparse( unsaved_files );
+  }
+
+  unique_lock< mutex > lock( clang_access_mutex_ );
+
+  if ( !clang_translation_unit_ ) {
+    return Location();
+  }
+
+  CXCursor cursor = GetCursor( filename, line, column );
+
+  if ( !CursorIsValid( cursor ) ) {
+    return Location();
+  }
+
+  return Location( clang_getLocation( clang_translation_unit_,
+                                      clang_getIncludedFile( cursor ),
+                                      1,
+                                      1 ) );
+}
+
 Location TranslationUnit::GetDeclarationLocationForCursor( CXCursor cursor ) {
   CXCursor referenced_cursor = clang_getCursorReferenced( cursor );
 

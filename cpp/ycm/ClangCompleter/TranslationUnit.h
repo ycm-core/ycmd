@@ -64,6 +64,13 @@ public:
     int column,
     const std::vector< UnsavedFile > &unsaved_files );
 
+  YCM_EXPORT Location GetIncludedFileLocation(
+    const std::string &filename,
+    int line,
+    int column,
+    const std::vector< UnsavedFile > &unsaved_files,
+    bool reparse = true );
+
   YCM_EXPORT Location GetDeclarationLocation(
     const std::string &filename,
     int line,
