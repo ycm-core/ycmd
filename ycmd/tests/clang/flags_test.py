@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Google Inc.
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -816,7 +816,7 @@ def ExtraClangFlags_test():
         side_effect = [ False, True, True, True ] )
 def Mac_LatestMacClangIncludes_test( *args ):
   eq_( flags._LatestMacClangIncludes( '/tmp' ),
-       [ '/tmp/usr/lib/clang/7.0.2/include' ] )
+       [ '-isystem', '/tmp/usr/lib/clang/7.0.2/include' ] )
 
 
 @MacOnly

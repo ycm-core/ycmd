@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -351,6 +351,14 @@ def Subcommands_GoToInclude_test():
     { 'request': [ 3, 1 ], 'response': os.path.join( 'quote',  'b.hpp' ) },
     { 'request': [ 5, 1 ], 'response': os.path.join( 'system', 'c.hpp' ) },
     { 'request': [ 6, 1 ], 'response': os.path.join( 'system', 'c.hpp' ) },
+    { 'request': [ 7, 1 ], 'response': os.path.join( 'Frameworks',
+                                                     'OpenGL.framework',
+                                                     'Headers',
+                                                     'gl.h' ) },
+    { 'request': [ 8, 1 ], 'response': os.path.join( 'Frameworks',
+                                                     'OpenGL.framework',
+                                                     'Headers',
+                                                     'gl.h' ) },
   ]
   for test in tests:
     yield RunGoToIncludeTest, 'GoToInclude', test
@@ -370,7 +378,7 @@ def Subcommands_GoToInclude_Fail_test():
     calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
     raises( AppError, 'Include file not found.' ) )
 
-  test = { 'request': [ 7, 1 ], 'response': '' }
+  test = { 'request': [ 9, 1 ], 'response': '' }
   assert_that(
     calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
     raises( AppError, 'Not an include/import line.' ) )
@@ -382,7 +390,7 @@ def Subcommands_GoToInclude_Fail_test():
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
   # Unclosed #include statement.
-  test = { 'request': [ 10, 13 ], 'response': '' }
+  test = { 'request': [ 12, 13 ], 'response': '' }
   assert_that(
     calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
     raises( AppError, 'Not an include/import line.' ) )

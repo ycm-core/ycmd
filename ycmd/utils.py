@@ -350,6 +350,25 @@ def PathsToAllParentFolders( path ):
     yield folder
 
 
+def PathLeftSplit( path ):
+  """Split a path as (head, tail) where head is the part before the first path
+  separator and tail is everything after. If the path is absolute, head is the
+  root component, tail everything else. If there is no separator, head is the
+  whole path and tail the empty string."""
+  drive, path = os.path.splitdrive( path )
+  separators = '/\\' if OnWindows() else '/'
+  path_length = len( path )
+  offset = 0
+  while offset < path_length and path[ offset ] not in separators:
+    offset += 1
+  if offset == path_length:
+    return drive + path, ''
+  tail = path[ offset + 1 : ].rstrip( separators )
+  if offset == 0:
+    return drive + path[ 0 ], tail
+  return drive + path[ : offset ], tail
+
+
 # A wrapper for subprocess.Popen that fixes quirks on Windows.
 def SafePopen( args, **kwargs ):
   if OnWindows():

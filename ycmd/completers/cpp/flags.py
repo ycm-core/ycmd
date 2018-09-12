@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Google Inc.
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -535,24 +535,24 @@ def _MacClangIncludeDirExists( candidate_include ):
   return os.path.exists( candidate_include )
 
 
-# Add in any clang headers found in the supplied toolchain. These are
-# required for the same reasons as described below, but unfortuantely, these
-# are in versioned directories and there is no easy way to find the "correct"
-# version. We simply pick the highest version in the first toolchain that we
-# find, as this is the most likely to be correct.
+# Return the list of flags including any Clang headers found in the supplied
+# toolchain. These are required for the same reasons as described below, but
+# unfortunately, these are in versioned directories and there is no easy way to
+# find the "correct" version. We simply pick the highest version in the first
+# toolchain that we find, as this is the most likely to be correct.
 def _LatestMacClangIncludes( toolchain ):
-  # we use the first toolchain which actually contains any versions, rather
-  # than trying all of the toolchains and picking the highest. We
-  # favour Xcode over CommandLineTools as using Xcode is more common.
-  # It might be possible to extrace this information from xcode-select, though
-  # xcode-select -p does not point at the toolchain directly
+  # We use the first toolchain which actually contains any versions, rather than
+  # trying all of the toolchains and picking the highest. We favour Xcode over
+  # CommandLineTools as using Xcode is more common. It might be possible to
+  # extract this information from xcode-select, though xcode-select -p does not
+  # point at the toolchain directly.
   candidates_dir = os.path.join( toolchain, 'usr', 'lib', 'clang' )
   versions = _GetMacClangVersionList( candidates_dir )
 
   for version in reversed( sorted( versions ) ):
     candidate_include = os.path.join( candidates_dir, version, 'include' )
     if _MacClangIncludeDirExists( candidate_include ):
-      return [ candidate_include ]
+      return [ '-isystem', candidate_include ]
 
   return []
 
@@ -571,25 +571,24 @@ if OnMac():
   toolchain = _SelectMacToolchain()
   if toolchain:
     MAC_INCLUDE_PATHS = (
-      [ os.path.join( toolchain, 'usr/include/c++/v1' ),
-        '/usr/local/include',
-        os.path.join( toolchain, 'usr/include' ),
-        '/usr/include',
-        '/System/Library/Frameworks',
-        '/Library/Frameworks' ] +
+      [ '-isystem', os.path.join( toolchain, 'usr/include/c++/v1' ),
+        '-isystem', '/usr/local/include' ] +
       _LatestMacClangIncludes( toolchain ) +
-      # We include the MacOS platform SDK because some meaningful parts of the
-      # standard library are located there. If users are compiling for (say)
-      # iPhone.platform, etc. they should appear earlier in the include path.
-      [ '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/'
-        'Developer/SDKs/MacOSX.sdk/usr/include' ]
+      [ '-isystem', os.path.join( toolchain, 'usr/include' ),
+        '-isystem', '/usr/include',
+        '-iframework', '/System/Library/Frameworks',
+        '-iframework', '/Library/Frameworks',
+        # We include the MacOS platform SDK because some meaningful parts of the
+        # standard library are located there. If users are compiling for (say)
+        # iPhone.platform, etc. they should appear earlier in the include path.
+        '-isystem', '/Applications/Xcode.app/Contents/Developer/Platforms'
+                    '/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include' ]
     )
 
 
 def _AddMacIncludePaths( flags ):
   if OnMac() and not _SysRootSpecifedIn( flags ):
-    for path in MAC_INCLUDE_PATHS:
-      flags.extend( [ '-isystem', path ] )
+    flags.extend( MAC_INCLUDE_PATHS )
   return flags
 
 
@@ -709,11 +708,14 @@ def UserIncludePaths( user_flags, filename ):
   """
   quoted_include_paths = [ ToUnicode( os.path.dirname( filename ) ) ]
   include_paths = []
+  framework_paths = []
 
   if user_flags:
-    include_flags = { '-iquote':  quoted_include_paths,
-                      '-I':       include_paths,
-                      '-isystem': include_paths }
+    include_flags = { '-iquote':     quoted_include_paths,
+                      '-I':          include_paths,
+                      '-isystem':    include_paths,
+                      '-F':          framework_paths,
+                      '-iframework': framework_paths }
     if _ShouldAllowWinStyleFlags( user_flags ):
       include_flags[ '/I' ] = include_paths
 
@@ -733,4 +735,4 @@ def UserIncludePaths( user_flags, filename ):
     except StopIteration:
       pass
 
-  return quoted_include_paths, include_paths
+  return quoted_include_paths, include_paths, framework_paths
