@@ -754,7 +754,7 @@ def GetCompletions_QuotedInclude_AtStart_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [ '-x', 'cpp' ]
     },
@@ -768,7 +768,8 @@ def GetCompletions_QuotedInclude_AtStart_test( app ):
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
           CompletionEntryMatcher( 'quote',              '[Dir]' ),
-          CompletionEntryMatcher( 'system',             '[Dir]' )
+          CompletionEntryMatcher( 'system',             '[Dir]' ),
+          CompletionEntryMatcher( 'Frameworks',         '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -783,7 +784,7 @@ def GetCompletions_QuotedInclude_UserIncludeFlag_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -798,10 +799,12 @@ def GetCompletions_QuotedInclude_UserIncludeFlag_test( app ):
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'common',             '[Dir]' ),
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
           CompletionEntryMatcher( 'quote',              '[Dir]' ),
-          CompletionEntryMatcher( 'system',             '[Dir]' )
+          CompletionEntryMatcher( 'system',             '[Dir]' ),
+          CompletionEntryMatcher( 'Frameworks',         '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -816,7 +819,7 @@ def GetCompletions_QuotedInclude_SystemIncludeFlag_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -831,10 +834,12 @@ def GetCompletions_QuotedInclude_SystemIncludeFlag_test( app ):
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'common',             '[Dir]' ),
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
           CompletionEntryMatcher( 'quote',              '[Dir]' ),
-          CompletionEntryMatcher( 'system',             '[Dir]' )
+          CompletionEntryMatcher( 'system',             '[Dir]' ),
+          CompletionEntryMatcher( 'Frameworks',         '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -849,7 +854,7 @@ def GetCompletions_QuotedInclude_QuoteIncludeFlag_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -867,7 +872,8 @@ def GetCompletions_QuotedInclude_QuoteIncludeFlag_test( app ):
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
           CompletionEntryMatcher( 'quote',              '[Dir]' ),
-          CompletionEntryMatcher( 'system',             '[Dir]' )
+          CompletionEntryMatcher( 'system',             '[Dir]' ),
+          CompletionEntryMatcher( 'Frameworks',         '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -882,7 +888,7 @@ def GetCompletions_QuotedInclude_MultipleIncludeFlags_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -900,11 +906,13 @@ def GetCompletions_QuotedInclude_MultipleIncludeFlags_test( app ):
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'b.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
+          CompletionEntryMatcher( 'common',             '[Dir]' ),
           CompletionEntryMatcher( 'd.hpp',              '[File]' ),
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
           CompletionEntryMatcher( 'main.cpp',           '[File]' ),
           CompletionEntryMatcher( 'quote',              '[Dir]' ),
-          CompletionEntryMatcher( 'system',             '[Dir]' )
+          CompletionEntryMatcher( 'system',             '[Dir]' ),
+          CompletionEntryMatcher( 'Frameworks',         '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -919,7 +927,7 @@ def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 27,
       'compilation_flags': [ '-x', 'cpp' ]
     },
@@ -943,7 +951,7 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 28,
       'compilation_flags': [ '-x', 'cpp' ]
     },
@@ -967,7 +975,7 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 9,
+      'line_num'  : 11,
       'column_num': 20,
       'compilation_flags': [ '-x', 'cpp' ]
     },
@@ -991,7 +999,7 @@ def GetCompletions_QuotedInclude_Invalid_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 11,
+      'line_num'  : 13,
       'column_num': 12,
       'compilation_flags': [ '-x', 'cpp' ]
     },
@@ -1007,13 +1015,40 @@ def GetCompletions_QuotedInclude_Invalid_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_QuotedInclude_FrameworkHeader_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include "OpenGL/',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 14,
+      'column_num': 18,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iframework', PathToTestFile( 'test-include', 'Frameworks' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 18,
+        'completions': contains(
+          CompletionEntryMatcher( 'gl.h', '[File]' )
+        ),
+        'errors': empty()
+      } )
+    },
+  } )
+
+
+@SharedYcmd
 def GetCompletions_BracketInclude_AtStart_test( app ):
   RunTest( app, {
     'description': 'completion of #include <',
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 10,
+      'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [ '-x', 'cpp' ]
     },
@@ -1035,7 +1070,7 @@ def GetCompletions_BracketInclude_UserIncludeFlag_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 10,
+      'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -1047,8 +1082,9 @@ def GetCompletions_BracketInclude_UserIncludeFlag_test( app ):
       'data': has_entries( {
         'completion_start_column': 11,
         'completions': contains(
-          CompletionEntryMatcher( 'a.hpp', '[File]' ),
-          CompletionEntryMatcher( 'c.hpp', '[File]' )
+          CompletionEntryMatcher( 'a.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'common', '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -1063,7 +1099,7 @@ def GetCompletions_BracketInclude_SystemIncludeFlag_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 10,
+      'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -1075,8 +1111,9 @@ def GetCompletions_BracketInclude_SystemIncludeFlag_test( app ):
       'data': has_entries( {
         'completion_start_column': 11,
         'completions': contains(
-          CompletionEntryMatcher( 'a.hpp', '[File]' ),
-          CompletionEntryMatcher( 'c.hpp', '[File]' )
+          CompletionEntryMatcher( 'a.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'common', '[Dir]' )
         ),
         'errors': empty(),
       } )
@@ -1091,7 +1128,7 @@ def GetCompletions_BracketInclude_QuoteIncludeFlag_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 10,
+      'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -1116,7 +1153,7 @@ def GetCompletions_BracketInclude_MultipleIncludeFlags_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 10,
+      'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
         '-x', 'cpp',
@@ -1130,10 +1167,11 @@ def GetCompletions_BracketInclude_MultipleIncludeFlags_test( app ):
       'data': has_entries( {
         'completion_start_column': 11,
         'completions': contains(
-          CompletionEntryMatcher( 'a.hpp', '[File]' ),
-          CompletionEntryMatcher( 'b.hpp', '[File]' ),
-          CompletionEntryMatcher( 'c.hpp', '[File]' ),
-          CompletionEntryMatcher( 'd.hpp', '[File]' )
+          CompletionEntryMatcher( 'a.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'b.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'common', '[Dir]' ),
+          CompletionEntryMatcher( 'd.hpp',  '[File]' )
         ),
         'errors': empty(),
       } )
@@ -1148,7 +1186,7 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
     'request': {
       'filetype'  : 'cpp',
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
-      'line_num'  : 10,
+      'line_num'  : 12,
       'column_num': 18,
       'compilation_flags': [ '-x', 'cpp' ],
       # NOTE: when not forcing semantic, it falls back to the filename
@@ -1161,6 +1199,158 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
         'completion_start_column': 18,
         'completions': empty(),
         'errors': empty(),
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_FrameworkHeader_test( app ):
+  RunTest( app, {
+    'description': 'completion of #include <OpenGL/',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 15,
+      'column_num': 18,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iframework', PathToTestFile( 'test-include', 'Frameworks' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 18,
+        'completions': contains(
+          CompletionEntryMatcher( 'gl.h', '[File]' )
+        ),
+        'errors': empty()
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_FileAndDirectory_test( app ):
+  RunTest( app, {
+    'description': 'suggestion can simultaneously be a file '
+                   'and a directory',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 12,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-isystem', PathToTestFile( 'test-include', 'system' ),
+        '-isystem', PathToTestFile( 'test-include', 'system', 'common' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'a.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'common', '[File&Dir]' )
+        ),
+        'errors': empty()
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_FileAndFramework_test( app ):
+  RunTest( app, {
+    'description': 'suggestion can simultaneously be a file and a framework',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 12,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iframework', PathToTestFile( 'test-include', 'Frameworks' ),
+        '-isystem', PathToTestFile( 'test-include', 'system', 'common' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'common', '[File&Framework]' ),
+          CompletionEntryMatcher( 'OpenGL', '[Framework]' )
+        ),
+        'errors': empty()
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_DirectoryAndFramework_test( app ):
+  RunTest( app, {
+    'description': 'suggestion can simultaneously be a directory '
+                   'and a framework',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 12,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iframework', PathToTestFile( 'test-include', 'Frameworks' ),
+        '-isystem', PathToTestFile( 'test-include', 'system' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'a.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'common', '[Dir&Framework]' ),
+          CompletionEntryMatcher( 'OpenGL', '[Framework]' )
+        ),
+        'errors': empty()
+      } )
+    },
+  } )
+
+
+@SharedYcmd
+def GetCompletions_BracketInclude_FileAndDirectoryAndFramework_test( app ):
+  RunTest( app, {
+    'description': 'suggestion can simultaneously be a file, a directory, '
+                   'and a framework',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
+      'line_num'  : 12,
+      'column_num': 11,
+      'compilation_flags': [
+        '-x', 'cpp',
+        '-iframework', PathToTestFile( 'test-include', 'Frameworks' ),
+        '-isystem', PathToTestFile( 'test-include', 'system' ),
+        '-isystem', PathToTestFile( 'test-include', 'system', 'common' )
+      ]
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 11,
+        'completions': contains(
+          CompletionEntryMatcher( 'a.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'c.hpp',  '[File]' ),
+          CompletionEntryMatcher( 'common', '[File&Dir&Framework]' ),
+          CompletionEntryMatcher( 'OpenGL', '[Framework]' )
+        ),
+        'errors': empty()
       } )
     },
   } )
