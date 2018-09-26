@@ -29,9 +29,9 @@ from nose.tools import eq_, ok_
 from ycmd.completers.cpp import flags
 from mock import patch, MagicMock
 from types import ModuleType
-from ycmd.tests.test_utils import MacOnly, TemporaryTestDir, WindowsOnly
+from ycmd.tests.test_utils import ( MacOnly, TemporaryTestDir, WindowsOnly,
+                                    TemporaryClangProject )
 from ycmd.responses import NoExtraConfDetected
-from ycmd.tests.clang import TemporaryClangProject
 from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
 
 from hamcrest import ( assert_that,

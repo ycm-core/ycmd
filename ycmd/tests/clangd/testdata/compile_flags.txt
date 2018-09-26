@@ -1,0 +1,4 @@
+-xc++
+-std=c++11
+-iquotequote/
+-Isystem/

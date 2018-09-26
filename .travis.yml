@@ -66,3 +66,4 @@ cache:
     - $TRAVIS_BUILD_DIR/third_party/racerd/target  # Racerd compilation
       # jdt.ls download
     - $TRAVIS_BUILD_DIR/third_party/eclipse.jdt.ls/target/cache
+    - $TRAVIS_BUILD_DIR/third_party/clangd/cache

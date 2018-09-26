@@ -22,7 +22,7 @@ aliases:
   # Increase the version key to clear the cache.
   save-cache: &save-cache
     save_cache:
-      key: v5-ycmd-{{ .Environment.CIRCLE_JOB }}
+      key: v6-ycmd-{{ .Environment.CIRCLE_JOB }}
       paths:
         - ~/Library/Caches/Homebrew
         - ~/Library/Caches/pip
@@ -33,9 +33,10 @@ aliases:
         - clang_archives
         - third_party/racerd/target
         - third_party/eclipse.jdt.ls/target/cache
+        - third_party/clangd/cache
   restore-cache: &restore-cache
     restore_cache:
-      key: v5-ycmd-{{ .Environment.CIRCLE_JOB }}
+      key: v6-ycmd-{{ .Environment.CIRCLE_JOB }}
 jobs:
   python2:
     <<: *common
