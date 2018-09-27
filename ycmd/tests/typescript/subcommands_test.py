@@ -24,8 +24,13 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries,
-                       has_entry, matches_regexp )
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_inanyorder,
+                       contains_string,
+                       has_entries,
+                       has_entry,
+                       matches_regexp )
 from mock import patch
 from nose.tools import eq_
 import requests
@@ -36,6 +41,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
                                     ErrorMatcher,
+                                    ExpectedFailure,
                                     LocationMatcher,
                                     MessageMatcher,
                                     MockProcessTerminationTimingOut,
@@ -392,7 +398,7 @@ def Subcommands_GetType_HasNoType_test( app ):
     'description': 'GetType returns an error on a keyword',
     'request': {
       'command': 'GetType',
-      'line_num': 2,
+      'line_num': 32,
       'column_num': 1,
       'filepath': PathToTestFile( 'test.ts' ),
     },
@@ -748,6 +754,9 @@ def Subcommands_RefactorRename_Missing_test( app ):
   } )
 
 
+@ExpectedFailure( 'TSServer 3.1.1 regression',
+                  contains_string( "Cannot read property "
+                                   "'start' of undefined" ) )
 @SharedYcmd
 def Subcommands_RefactorRename_NotPossible_test( app ):
   RunTest( app, {
