@@ -41,6 +41,8 @@ _logger = logging.getLogger( __name__ )
 
 SERVER_LOG_PREFIX = 'Server reported: '
 
+NO_HOVER_INFORMATION = 'No hover information.'
+
 # All timeout values are in seconds
 REQUEST_TIMEOUT_COMPLETION = 5
 REQUEST_TIMEOUT_INITIALISE = 30
@@ -1304,7 +1306,10 @@ class LanguageServerCompleter( Completer ):
       lsp.Hover( request_id, request_data ),
       REQUEST_TIMEOUT_COMMAND )
 
-    return response[ 'result' ][ 'contents' ]
+    result = response[ 'result' ]
+    if result:
+      return result[ 'contents' ]
+    raise RuntimeError( NO_HOVER_INFORMATION )
 
 
   def GoToDeclaration( self, request_data ):

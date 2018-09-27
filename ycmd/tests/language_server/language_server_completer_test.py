@@ -32,8 +32,11 @@ from hamcrest import ( assert_that,
                        has_entry,
                        has_items,
                        raises )
+from nose.tools import eq_
 
 from ycmd.completers.language_server import language_server_completer as lsc
+from ycmd.completers.language_server.language_server_completer import (
+    NO_HOVER_INFORMATION )
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.tests.language_server import MockConnection
 from ycmd.request_wrap import RequestWrap
@@ -598,3 +601,23 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test():
         'filepath': filepath
       } ) )
     )
+
+
+def LanguageServerCompleter_GetHoverResponse_test():
+  completer = MockCompleter()
+  request_data = RequestWrap( BuildRequest( line_num = 1,
+                                            column_num = 1,
+                                            contents = '' ) )
+
+  with patch.object( completer, 'ServerIsReady', return_value = True ):
+    with patch.object( completer.GetConnection(),
+                       'GetResponse',
+                       side_effect = [ { 'result': None } ] ):
+      assert_that(
+        calling( completer.GetHoverResponse ).with_args( request_data ),
+        raises( RuntimeError, NO_HOVER_INFORMATION )
+      )
+    with patch.object( completer.GetConnection(),
+                       'GetResponse',
+                       side_effect = [ { 'result': { 'contents': 'test' } } ] ):
+      eq_( completer.GetHoverResponse( request_data ), 'test' )
