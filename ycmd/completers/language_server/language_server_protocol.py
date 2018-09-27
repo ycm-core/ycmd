@@ -60,6 +60,13 @@ ITEM_KIND = [
   'Color',
   'File',
   'Reference',
+  'Folder',
+  'EnumMember',
+  'Constant',
+  'Struct',
+  'Event',
+  'Operator',
+  'TypeParameter',
 ]
 
 SEVERITY = [
