@@ -23,7 +23,8 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from mock import patch
-from hamcrest import ( assert_that,
+from hamcrest import ( all_of,
+                       assert_that,
                        calling,
                        empty,
                        equal_to,
@@ -31,6 +32,8 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        has_items,
+                       has_key,
+                       is_not,
                        raises )
 from nose.tools import eq_
 
@@ -392,6 +395,27 @@ def LanguageServerCompleter_GetCompletions_List_test():
                                      resolve_responses ):
       assert_that( completer.ComputeCandidatesInner( request_data ),
                    has_items( has_entries( { 'insertion_text': 'test' } ) ) )
+
+
+def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test():
+  completer = MockCompleter()
+  request_data = RequestWrap( BuildRequest() )
+
+  completion_response = { 'result': [ { 'label': 'test',
+                                        'kind': len( lsp.ITEM_KIND ) + 1 } ] }
+
+  resolve_responses = [
+    { 'result': { 'label': 'test' } },
+  ]
+
+  with patch.object( completer, 'ServerIsReady', return_value = True ):
+    with patch.object( completer.GetConnection(),
+                       'GetResponse',
+                       side_effect = [ completion_response ] +
+                                     resolve_responses ):
+      assert_that( completer.ComputeCandidatesInner( request_data ),
+                   has_items( all_of( has_entry( 'insertion_text', 'test' ),
+                                      is_not( has_key( 'kind' ) ) ) ) )
 
 
 def FindOverlapLength_test():

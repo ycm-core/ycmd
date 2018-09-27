@@ -203,8 +203,14 @@ def Initialize( request_id, project_directory ):
       # We don't currently support any server-specific options.
     },
     'capabilities': {
-      # We don't currently support any of the client capabilities, so we don't
-      # include anything in here.
+      'textDocument': {
+        'completion': {
+          'completionItemKind': {
+            # ITEM_KIND list is 1-based.
+            'valueSet': list( range( 1, len( ITEM_KIND ) + 1 ) ),
+          }
+        }
+      }
     },
   } )
 
