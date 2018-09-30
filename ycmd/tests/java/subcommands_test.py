@@ -29,7 +29,8 @@ from hamcrest import ( assert_that,
                        contains_inanyorder,
                        empty,
                        has_entries,
-                       instance_of )
+                       instance_of,
+                       matches_regexp )
 from nose.tools import eq_
 from pprint import pformat
 import requests
@@ -43,6 +44,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
                                     ErrorMatcher,
+                                    ExpectedFailure,
                                     LocationMatcher,
                                     WithRetry )
 from mock import patch
@@ -617,6 +619,9 @@ def Subcommands_RefactorRename_Simple_test( app ):
   } )
 
 
+@ExpectedFailure( 'Renaming does not work on overridden methods '
+                  'since jdt.ls 0.21.0',
+                  matches_regexp( 'No item matched:.*TestWidgetImpl.java' ) )
 @WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_MultipleFiles_test( app ):
@@ -645,7 +650,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     'description': 'RefactorRename works across files',
     'request': {
       'command': 'RefactorRename',
-      'arguments': [ 'a-quite-long-string' ],
+      'arguments': [ 'a_quite_long_string' ],
       'filepath': TestLauncher,
       'line_num': 32,
       'column_num': 13,
@@ -656,19 +661,19 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
-              'a-quite-long-string',
+              'a_quite_long_string',
               LocationMatcher( AbstractTestWidget, 10, 15 ),
               LocationMatcher( AbstractTestWidget, 10, 39 ) ),
             ChunkMatcher(
-              'a-quite-long-string',
+              'a_quite_long_string',
               LocationMatcher( TestFactory, 28, 9 ),
               LocationMatcher( TestFactory, 28, 33 ) ),
             ChunkMatcher(
-              'a-quite-long-string',
+              'a_quite_long_string',
               LocationMatcher( TestLauncher, 32, 11 ),
               LocationMatcher( TestLauncher, 32, 35 ) ),
             ChunkMatcher(
-              'a-quite-long-string',
+              'a_quite_long_string',
               LocationMatcher( TestWidgetImpl, 20, 15 ),
               LocationMatcher( TestWidgetImpl, 20, 39 ) ),
           ),
