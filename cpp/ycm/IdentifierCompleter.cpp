@@ -22,8 +22,6 @@
 #include "Result.h"
 #include "Utils.h"
 
-#include <pybind11/pybind11.h>
-
 namespace YouCompleteMe {
 
 
@@ -45,7 +43,6 @@ void IdentifierCompleter::AddIdentifiersToDatabase(
   const std::vector< std::string > &new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  pybind11::gil_scoped_release unlock;
   identifier_database_.AddIdentifiers( new_candidates,
                                        filetype,
                                        filepath );
@@ -63,7 +60,6 @@ void IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase(
 
 void IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles(
   const std::vector< std::string > &absolute_paths_to_tag_files ) {
-  pybind11::gil_scoped_release unlock;
   for( const std::string & path : absolute_paths_to_tag_files ) {
     identifier_database_.AddIdentifiers(
       ExtractIdentifiersFromTagsFile( path ) );
@@ -82,7 +78,6 @@ std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
   const std::string &query,
   const std::string &filetype,
   const size_t max_candidates ) const {
-  pybind11::gil_scoped_release unlock;
 
   std::vector< Result > results;
   identifier_database_.ResultsForQueryAndType( query,
