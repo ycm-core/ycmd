@@ -1015,7 +1015,12 @@ class LanguageServerCompleter( Completer ):
       # diagnostics and return them in OnFileReadyToParse. We also need these
       # for correct FixIt handling, as they are part of the FixIt context.
       params = notification[ 'params' ]
-      uri = params[ 'uri' ]
+      # Since percent-encoded strings are not cannonical, they can choose to use
+      # upper case or lower case letters, also there are some characters that
+      # can be encoded or not. Therefore, we convert them back and forth
+      # according to our implementation to make sure they are in a cannonical
+      # form for access later on.
+      uri = lsp.FilePathToUri( lsp.UriToFilePath( params[ 'uri' ] ) )
       with self._server_info_mutex:
         self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
 

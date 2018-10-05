@@ -44,10 +44,10 @@ import threading
 #   from ycmd.utils import pathname2url, url2pathname, urljoin, urlparse
 #
 if PY2:
-  from urlparse import urljoin, urlparse
-  from urllib import pathname2url, url2pathname
+  from urlparse import urljoin, urlparse, unquote
+  from urllib import pathname2url, url2pathname, quote
 else:
-  from urllib.parse import urljoin, urlparse  # noqa
+  from urllib.parse import urljoin, urlparse, unquote, quote  # noqa
   from urllib.request import pathname2url, url2pathname  # noqa
 
 
