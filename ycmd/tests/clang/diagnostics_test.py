@@ -340,7 +340,7 @@ def Diagnostics_CUDA_Kernel_test( app ):
       'location': LocationMatcher( filepath, 59, 5 ),
       'location_extent': RangeMatcher( filepath, ( 59, 5 ), ( 59, 6 ) ),
       'ranges': contains( RangeMatcher( filepath, ( 59, 3 ), ( 59, 5 ) ) ),
-      'text': equal_to( 'call to global function g1 not configured' ),
+      'text': equal_to( "call to global function 'g1' not configured" ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -371,7 +371,7 @@ def Diagnostics_CUDA_Kernel_test( app ):
       'location': LocationMatcher( filepath, 65, 15 ),
       'location_extent': RangeMatcher( filepath, ( 65, 15 ), ( 65, 16 ) ),
       'ranges': contains( RangeMatcher( filepath, ( 65, 3 ), ( 65, 5 ) ) ),
-      'text': equal_to( 'kernel call to non-global function h1' ),
+      'text': equal_to( "kernel call to non-global function 'h1'" ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -379,8 +379,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
       'location': LocationMatcher( filepath, 68, 15 ),
       'location_extent': RangeMatcher( filepath, ( 68, 15 ), ( 68, 16 ) ),
       'ranges': contains( RangeMatcher( filepath, ( 68, 3 ), ( 68, 5 ) ) ),
-      'text': equal_to( "kernel function type 'int (*)(int)' must have " +
-                          "void return type" ),
+      'text': equal_to( "kernel function type 'int (*)(int)' must have "
+                        "void return type" ),
       'fixit_available': False
     } ),
     has_entries( {
