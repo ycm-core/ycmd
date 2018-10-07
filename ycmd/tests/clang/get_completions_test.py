@@ -29,8 +29,17 @@ import requests
 import ycm_core
 from mock import patch
 from nose.tools import eq_
-from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entry, has_entries )
+from hamcrest import ( all_of,
+                       assert_that,
+                       contains,
+                       contains_inanyorder,
+                       empty,
+                       has_item,
+                       has_items,
+                       has_entry,
+                       has_entries,
+                       is_not,
+                       matches_regexp )
 
 from ycmd import handlers
 from ycmd.completers.cpp.clang_completer import ( NO_COMPLETIONS_MESSAGE,
@@ -46,6 +55,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
+                                    ExpectedFailure,
                                     LocationMatcher,
                                     WindowsOnly )
 from ycmd.utils import ReadFile
@@ -467,6 +477,34 @@ int main()
     contains_inanyorder( CompletionEntryMatcher( 'foobar' ),
                          CompletionEntryMatcher( 'floozar' ) )
   )
+
+
+@ExpectedFailure(
+  'libclang wrongly marks protected members from base class in derived class '
+  'as inaccessible. See https://bugs.llvm.org/show_bug.cgi?id=24329',
+  all_of( matches_regexp( "was .*public_member" ),
+          is_not( matches_regexp( "was .*protected_member" ) ),
+          is_not( matches_regexp( "was .*private_member" ) ) ) )
+@SharedYcmd
+def GetCompletions_PublicAndProtectedMembersAvailableInDerivedClass_test( app ):
+  filepath = PathToTestFile( 'completion_availability.cc' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cpp',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 14,
+                                  column_num = 5,
+                                  compilation_flags = [ '-x', 'c++' ],
+                                  force_semantic = True )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that(
+    results,
+    all_of(
+      has_items( CompletionEntryMatcher( 'public_member' ),
+                 CompletionEntryMatcher( 'protected_member' ) ),
+      is_not( has_item( CompletionEntryMatcher( 'private_member' ) ) )
+    ) )
 
 
 @SharedYcmd
