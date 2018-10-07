@@ -479,6 +479,27 @@ int main()
   )
 
 
+@SharedYcmd
+def GetCompletions_DocStringsAreIncluded_test( app ):
+  filepath = PathToTestFile( 'completion_docstring.cc' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cpp',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 5,
+                                  column_num = 7,
+                                  compilation_flags = [ '-x', 'c++' ],
+                                  force_semantic = True )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_item(
+    has_entries( {
+      'insertion_text': 'func',
+      'extra_data': has_entry( 'doc_string', 'This is a docstring.' )
+    } )
+  ) )
+
+
 @ExpectedFailure(
   'libclang wrongly marks protected members from base class in derived class '
   'as inaccessible. See https://bugs.llvm.org/show_bug.cgi?id=24329',
