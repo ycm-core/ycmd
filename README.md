@@ -50,8 +50,7 @@ sudo apt install build-essential cmake python3-dev
 
 Next, install the language specific dependencies you need:
 - `sudo apt install golang-go` for Go.
-- `sudo apt install npm` and `sudo npm -g install typescript` for JavaScript and
-  TypeScript.
+- `sudo apt install npm` for JavaScript and TypeScript.
 - `sudo apt install mono-devel` for C#.
 - install Cargo and rustc with [rustup][] for Rust.
 - `sudo apt install openjdk-8-jre` for Java.

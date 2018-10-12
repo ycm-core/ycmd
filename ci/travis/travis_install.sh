@@ -97,18 +97,12 @@ rustup update
 rustc -Vv
 cargo -V
 
-##################
-# JavaScript setup
-##################
+#################################
+# JavaScript and TypeScript setup
+#################################
 
 # Pre-installed Node.js is too old. Install latest Node.js v4 LTS.
 nvm install 4
-
-##################
-# TypeScript setup
-##################
-
-npm install -g typescript
 
 ###############
 # Java 8 setup

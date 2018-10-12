@@ -60,8 +60,7 @@ COMPLETERS = {
   },
   'javascript': {
     'build': [ '--js-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/javascript',
-              '--exclude-dir=ycmd/tests/tern' ],
+    'test': [ '--exclude-dir=ycmd/tests/tern' ],
     'aliases': [ 'js', 'tern' ]
   },
   'go': {
@@ -75,9 +74,10 @@ COMPLETERS = {
     'aliases': [ 'racer', 'racerd', ]
   },
   'typescript': {
-    'build': [],
-    'test': [ '--exclude-dir=ycmd/tests/typescript' ],
-    'aliases': []
+    'build': [ '--ts-completer' ],
+    'test': [ '--exclude-dir=ycmd/tests/javascript',
+              '--exclude-dir=ycmd/tests/typescript' ],
+    'aliases': [ 'ts' ]
   },
   'python': {
     'build': [],
