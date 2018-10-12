@@ -98,7 +98,7 @@ def ShouldEnableTypeScriptCompleter():
     _logger.error( 'Not using TypeScript completer: TSServer not installed '
                    'in %s', TSSERVER_DIR )
     return False
-  _logger.info( 'Using TypeScript completer' )
+  _logger.info( 'Using TypeScript completer with %s', tsserver )
   return True
 
 
