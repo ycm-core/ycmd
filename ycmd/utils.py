@@ -338,13 +338,17 @@ def CloseStandardStreams( handle ):
       stream.close()
 
 
+def IsRootDirectory( path, parent ):
+  return path == parent
+
+
 def PathsToAllParentFolders( path ):
   folder = os.path.normpath( path )
   if os.path.isdir( folder ):
     yield folder
   while True:
     parent = os.path.dirname( folder )
-    if parent == folder:
+    if IsRootDirectory( folder, parent ):
       break
     folder = parent
     yield folder

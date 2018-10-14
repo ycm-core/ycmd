@@ -31,8 +31,7 @@ import json
 from ycmd.utils import ToUnicode
 from ycmd.tests.test_utils import ( ClearCompletionsCache,
                                     IsolatedApp,
-                                    SetUpApp,
-                                    YCMD_EXTRA_CONF )
+                                    SetUpApp )
 
 shared_app = None
 
@@ -88,8 +87,6 @@ def IsolatedYcmd( custom_options = {} ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
       with IsolatedApp( custom_options ) as app:
-        app.post_json( '/ignore_extra_conf_file',
-                       { 'filepath': YCMD_EXTRA_CONF } )
         test( app, *args, **kwargs )
     return Wrapper
   return Decorator
