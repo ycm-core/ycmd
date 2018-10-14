@@ -85,6 +85,8 @@ JDTLS_SHA256 = (
   '37c02deb37335668321643571e7316a231d94d07707325afdb83b16c953f2244'
 )
 
+TSSERVER_VERSION = '3.1.3'
+
 BUILD_ERROR_MESSAGE = (
   'ERROR: the build failed.\n\n'
   'NOTE: it is *highly* unlikely that this is a bug but rather\n'
@@ -326,6 +328,9 @@ def ParseArguments():
                        help = 'Enable Rust semantic completion engine.' )
   parser.add_argument( '--java-completer', action = 'store_true',
                        help = 'Enable Java semantic completion engine.' ),
+  parser.add_argument( '--ts-completer', action = 'store_true',
+                       help = 'Enable JavaScript and TypeScript semantic '
+                              'completion engine.' ),
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!' )
@@ -642,7 +647,6 @@ def EnableRustCompleter( args ):
 
 
 def EnableJavaScriptCompleter( args ):
-  node = FindExecutableOrDie( 'node', 'node is required to set up Tern.' )
   npm = FindExecutableOrDie( 'npm', 'npm is required to set up Tern.' )
 
   # We install Tern into a runtime directory. This allows us to control
@@ -729,6 +733,16 @@ def EnableJavaCompleter( switches ):
     print( 'OK' )
 
 
+def EnableTypeScriptCompleter( args ):
+  npm = FindExecutableOrDie( 'npm', 'npm is required to install TSServer.' )
+  tsserver_folder = p.join( DIR_OF_THIRD_PARTY, 'tsserver' )
+  CheckCall( [ npm, 'install', '-g', '--prefix', tsserver_folder,
+               'typescript@{version}'.format( version = TSSERVER_VERSION ) ],
+             quiet = args.quiet,
+             status_message = 'Installing TSServer for JavaScript '
+                              'and TypeScript completion' )
+
+
 def WritePythonUsedDuringBuild():
   path = p.join( DIR_OF_THIS_SCRIPT, 'PYTHON_USED_DURING_BUILDING' )
   with open( path, 'w' ) as f:
@@ -755,6 +769,8 @@ def Main():
     EnableRustCompleter( args )
   if args.java_completer or args.all_completers:
     EnableJavaCompleter( args )
+  if args.ts_completer or args.all_completers:
+    EnableTypeScriptCompleter( args )
 
 
 if __name__ == '__main__':

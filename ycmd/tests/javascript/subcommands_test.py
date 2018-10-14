@@ -27,7 +27,6 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
-                       contains_string,
                        has_entries,
                        matches_regexp )
 from nose.tools import eq_
@@ -39,7 +38,6 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
                                     ErrorMatcher,
-                                    ExpectedFailure,
                                     LocationMatcher,
                                     MessageMatcher )
 from ycmd.utils import ReadFile
@@ -573,9 +571,6 @@ def Subcommands_RefactorRename_Missing_test( app ):
   } )
 
 
-@ExpectedFailure( 'TSServer 3.1.1 regression',
-                  contains_string( "Cannot read property "
-                                   "'start' of undefined" ) )
 @SharedYcmd
 def Subcommands_RefactorRename_NotPossible_test( app ):
   RunTest( app, {

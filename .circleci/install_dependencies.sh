@@ -112,12 +112,6 @@ cargo -V
 
 echo "export PATH=${CARGO_PATH}:\$PATH" >> $BASH_ENV
 
-##################
-# TypeScript setup
-##################
-
-npm install -g typescript
-
 #################
 # Java 8 setup
 #################

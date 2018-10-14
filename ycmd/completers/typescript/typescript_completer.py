@@ -44,7 +44,9 @@ NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
 
 RESPONSE_TIMEOUT_SECONDS = 10
 
-PATH_TO_TSSERVER = utils.FindExecutable( 'tsserver' )
+TSSERVER_DIR = os.path.abspath(
+  os.path.join( os.path.dirname( __file__ ), '..', '..', '..', 'third_party',
+                'tsserver' ) )
 
 LOGFILE_FORMAT = 'tsserver_'
 
@@ -78,13 +80,25 @@ class DeferredResponse( object ):
       return self._message[ 'body' ]
 
 
-def ShouldEnableTypeScriptCompleter():
-  if not PATH_TO_TSSERVER:
-    _logger.error( 'Not using TypeScript completer: unable to find TSServer.'
-                   'TypeScript 1.5 or higher is required.' )
-    return False
-  _logger.info( 'Using TSServer from {0}'.format( PATH_TO_TSSERVER ) )
+def FindTSServer():
+  # The TSServer executable is installed at the root directory on Windows while
+  # it's installed in the bin folder on other platforms.
+  for executable in [ os.path.join( TSSERVER_DIR, 'bin', 'tsserver' ),
+                      os.path.join( TSSERVER_DIR, 'tsserver' ),
+                      'tsserver' ]:
+    tsserver = utils.FindExecutable( executable )
+    if tsserver:
+      return tsserver
+  return None
 
+
+def ShouldEnableTypeScriptCompleter():
+  tsserver = FindTSServer()
+  if not tsserver:
+    _logger.error( 'Not using TypeScript completer: TSServer not installed '
+                   'in %s', TSSERVER_DIR )
+    return False
+  _logger.info( 'Using TypeScript completer with %s', tsserver )
   return True
 
 
@@ -133,6 +147,7 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_lock = threading.RLock()
     self._tsserver_handle = None
     self._tsserver_version = None
+    self._tsserver_executable = FindTSServer()
     # Used to read response only if TSServer is running.
     self._tsserver_is_running = threading.Event()
 
@@ -190,7 +205,7 @@ class TypeScriptCompleter( Completer ):
       _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
 
       # We need to redirect the error stream to the output one on Windows.
-      self._tsserver_handle = utils.SafePopen( PATH_TO_TSSERVER,
+      self._tsserver_handle = utils.SafePopen( self._tsserver_executable,
                                                stdin = subprocess.PIPE,
                                                stdout = subprocess.PIPE,
                                                stderr = subprocess.STDOUT,
@@ -826,7 +841,7 @@ class TypeScriptCompleter( Completer ):
       tsserver = responses.DebugInfoServer(
           name = 'TSServer',
           handle = self._tsserver_handle,
-          executable = PATH_TO_TSSERVER,
+          executable = self._tsserver_executable,
           logfiles = [ self._logfile ],
           extras = [ item_version ] )
 
