@@ -52,7 +52,8 @@ unsigned ReparseOptions( CXTranslationUnit translationUnit ) {
 
 unsigned CompletionOptions() {
   return clang_defaultCodeCompleteOptions() |
-         CXCodeComplete_IncludeBriefComments;
+         CXCodeComplete_IncludeBriefComments |
+         CXCodeComplete_IncludeCompletionsWithFixIts;
 }
 
 void EnsureCompilerNamePresent( std::vector< const char * > &flags ) {

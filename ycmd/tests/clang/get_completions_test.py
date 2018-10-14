@@ -29,8 +29,17 @@ import requests
 import ycm_core
 from mock import patch
 from nose.tools import eq_
-from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entry, has_entries )
+from hamcrest import ( all_of,
+                       assert_that,
+                       contains,
+                       contains_inanyorder,
+                       empty,
+                       has_item,
+                       has_items,
+                       has_entry,
+                       has_entries,
+                       is_not,
+                       matches_regexp )
 
 from ycmd import handlers
 from ycmd.completers.cpp.clang_completer import ( NO_COMPLETIONS_MESSAGE,
@@ -42,9 +51,12 @@ from ycmd.tests.clang import ( IsolatedYcmd,
                                PathToTestFile,
                                SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
+                                    ChunkMatcher,
                                     CombineRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
+                                    ExpectedFailure,
+                                    LocationMatcher,
                                     WindowsOnly )
 from ycmd.utils import ReadFile
 
@@ -465,6 +477,55 @@ int main()
     contains_inanyorder( CompletionEntryMatcher( 'foobar' ),
                          CompletionEntryMatcher( 'floozar' ) )
   )
+
+
+@SharedYcmd
+def GetCompletions_DocStringsAreIncluded_test( app ):
+  filepath = PathToTestFile( 'completion_docstring.cc' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cpp',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 5,
+                                  column_num = 7,
+                                  compilation_flags = [ '-x', 'c++' ],
+                                  force_semantic = True )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_item(
+    has_entries( {
+      'insertion_text': 'func',
+      'extra_data': has_entry( 'doc_string', 'This is a docstring.' )
+    } )
+  ) )
+
+
+@ExpectedFailure(
+  'libclang wrongly marks protected members from base class in derived class '
+  'as inaccessible. See https://bugs.llvm.org/show_bug.cgi?id=24329',
+  all_of( matches_regexp( "was .*public_member" ),
+          is_not( matches_regexp( "was .*protected_member" ) ),
+          is_not( matches_regexp( "was .*private_member" ) ) ) )
+@SharedYcmd
+def GetCompletions_PublicAndProtectedMembersAvailableInDerivedClass_test( app ):
+  filepath = PathToTestFile( 'completion_availability.cc' )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cpp',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 14,
+                                  column_num = 5,
+                                  compilation_flags = [ '-x', 'c++' ],
+                                  force_semantic = True )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that(
+    results,
+    all_of(
+      has_items( CompletionEntryMatcher( 'public_member' ),
+                 CompletionEntryMatcher( 'protected_member' ) ),
+      is_not( has_item( CompletionEntryMatcher( 'private_member' ) ) )
+    ) )
 
 
 @SharedYcmd
@@ -1473,3 +1534,45 @@ def GetCompletions_StillParsingError_test( app ):
         'data': ErrorMatcher( RuntimeError, PARSING_FILE_MESSAGE )
       },
     } )
+
+
+@SharedYcmd
+def GetCompletions_FixIt_test( app ):
+  filepath = PathToTestFile( 'completion_fixit.cc' )
+  RunTest( app, {
+    'description': 'member completion has a fixit that change "." into "->"',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+    'request': {
+      'filetype': 'cpp',
+      'filepath': filepath,
+      'line_num': 7,
+      'column_num': 8,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item( has_entries( {
+          'insertion_text':  'bar',
+          'extra_menu_info': 'int',
+          'menu_text':       'bar',
+          'detailed_info':   'int bar\n',
+          'kind':            'MEMBER',
+          'extra_data': has_entries( {
+            'fixits': contains_inanyorder(
+              has_entries( {
+                'text': '',
+                'chunks': contains(
+                  ChunkMatcher(
+                    '->',
+                    LocationMatcher( filepath, 7, 6 ),
+                    LocationMatcher( filepath, 7, 7 )
+                  )
+                ),
+                'location': LocationMatcher( '', 0, 0 )
+              } )
+            )
+          } )
+        } ) )
+      } )
+    }
+  } )

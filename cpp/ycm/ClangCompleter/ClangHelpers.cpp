@@ -47,8 +47,7 @@ DiagnosticKind DiagnosticSeverityToType( CXDiagnosticSeverity severity ) {
   }
 }
 
-FixIt BuildFixIt( const std::string& text,
-                  CXDiagnostic diagnostic ) {
+FixIt BuildDiagnosticFixIt( const std::string& text, CXDiagnostic diagnostic ) {
   FixIt fixit;
 
   size_t num_chunks = clang_getDiagnosticNumFixIts( diagnostic );
@@ -62,13 +61,13 @@ FixIt BuildFixIt( const std::string& text,
 
   for ( size_t idx = 0; idx < num_chunks; ++idx ) {
     FixItChunk chunk;
-    CXSourceRange sourceRange;
+    CXSourceRange range;
     chunk.replacement_text = CXStringToString(
                                clang_getDiagnosticFixIt( diagnostic,
                                                          idx,
-                                                         &sourceRange ) );
+                                                         &range ) );
 
-    chunk.range = sourceRange;
+    chunk.range = range;
     fixit.chunks.push_back( chunk );
   }
 
@@ -94,7 +93,7 @@ void BuildFullDiagnosticDataFromChildren(
   full_diagnostic_text.append( diag_text );
 
   // Populate any fixit attached to this diagnostic.
-  FixIt fixit = BuildFixIt( diag_text, diagnostic );
+  FixIt fixit = BuildDiagnosticFixIt( diag_text, diagnostic );
   if ( !fixit.chunks.empty() ) {
     fixits.push_back( fixit );
   }
@@ -134,10 +133,6 @@ void BuildFullDiagnosticDataFromChildren(
 // unavailable completion strings refer to entities that are private/protected,
 // deprecated etc.
 bool CompletionStringAvailable( CXCompletionString completion_string ) {
-  if ( !completion_string ) {
-    return false;
-  }
-
   return clang_getCompletionAvailability( completion_string ) ==
          CXAvailability_Available;
 }
@@ -221,16 +216,18 @@ std::vector< CompletionData > ToCompletionDataVector(
   unordered_map< std::string, size_t > seen_data;
 
   for ( size_t i = 0; i < results->NumResults; ++i ) {
-    CXCompletionResult completion_result = results->Results[ i ];
+    CXCompletionResult result = results->Results[ i ];
+    CXCompletionString completion_string = result.CompletionString;
 
-    if ( !CompletionStringAvailable( completion_result.CompletionString ) ) {
+    if ( !completion_string ||
+         !CompletionStringAvailable( completion_string ) ) {
       continue;
     }
 
-    CompletionData data( completion_result );
+    CompletionData data( completion_string, result.CursorKind, results, i );
     size_t index = GetValueElseInsert( seen_data,
-                                     data.original_string_,
-                                     completions.size() );
+                                       data.original_string_,
+                                       completions.size() );
 
     if ( index == completions.size() ) {
       completions.push_back( std::move( data ) );

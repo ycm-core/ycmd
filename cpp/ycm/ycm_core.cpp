@@ -166,7 +166,8 @@ PYBIND11_MODULE( ycm_core, mod )
     .def( "DetailedInfoForPreviewWindow",
           &CompletionData::DetailedInfoForPreviewWindow )
     .def( "DocString", &CompletionData::DocString )
-    .def_readonly( "kind_", &CompletionData::kind_ );
+    .def_readonly( "kind_", &CompletionData::kind_ )
+    .def_readonly( "fixit_", &CompletionData::fixit_ );
 
   py::bind_vector< std::vector< CompletionData > >( mod,
                                                     "CompletionVector" );
