@@ -27,8 +27,14 @@ import os
 import inspect
 from future.utils import PY2, native
 from ycmd import extra_conf_store
-from ycmd.utils import ( re, ToCppStringCompatible, OnMac, OnWindows, ToUnicode,
-                         ToBytes, PathsToAllParentFolders )
+from ycmd.utils import ( ListDirectory,
+                         OnMac,
+                         OnWindows,
+                         PathsToAllParentFolders,
+                         re,
+                         ToCppStringCompatible,
+                         ToBytes,
+                         ToUnicode )
 from ycmd.responses import NoExtraConfDetected
 
 # -include-pch and --sysroot= must be listed before -include and --sysroot
@@ -515,24 +521,10 @@ def _SelectMacToolchain():
   ]
 
   for toolchain in MAC_CLANG_TOOLCHAIN_DIRS:
-    if _MacClangIncludeDirExists( toolchain ):
+    if os.path.exists( toolchain ):
       return toolchain
 
   return None
-
-
-# Ultimately, this method exists only for testability
-def _GetMacClangVersionList( candidates_dir ):
-  try:
-    return os.listdir( candidates_dir )
-  except OSError:
-    # Path might not exist, so just ignore
-    return []
-
-
-# Ultimately, this method exists only for testability
-def _MacClangIncludeDirExists( candidate_include ):
-  return os.path.exists( candidate_include )
 
 
 # Return the list of flags including any Clang headers found in the supplied
@@ -547,11 +539,11 @@ def _LatestMacClangIncludes( toolchain ):
   # extract this information from xcode-select, though xcode-select -p does not
   # point at the toolchain directly.
   candidates_dir = os.path.join( toolchain, 'usr', 'lib', 'clang' )
-  versions = _GetMacClangVersionList( candidates_dir )
+  versions = ListDirectory( candidates_dir )
 
   for version in reversed( sorted( versions ) ):
     candidate_include = os.path.join( candidates_dir, version, 'include' )
-    if _MacClangIncludeDirExists( candidate_include ):
+    if os.path.exists( candidate_include ):
       return [ '-isystem', candidate_include ]
 
   return []

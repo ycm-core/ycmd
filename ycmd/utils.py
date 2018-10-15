@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2011, 2012 Google Inc.
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -28,6 +28,7 @@ from future.utils import PY2, native
 import collections
 import copy
 import json
+import logging
 import os
 import socket
 import subprocess
@@ -36,6 +37,7 @@ import tempfile
 import time
 import threading
 
+_logger = logging.getLogger( __name__ )
 
 # Idiom to import pathname2url, url2pathname, urljoin, and urlparse on Python 2
 # and 3. By exposing these functions here, we can import them directly from this
@@ -532,3 +534,20 @@ class HashableDict( collections.Mapping ):
 
   def __ne__( self, other ):
     return not self == other
+
+
+def ListDirectory( path ):
+  try:
+    # Path must be a Unicode string to get Unicode strings out of listdir.
+    return os.listdir( ToUnicode( path ) )
+  except Exception:
+    _logger.exception( 'Error while listing %s folder.', path )
+    return []
+
+
+def GetModificationTime( path ):
+  try:
+    return os.path.getmtime( path )
+  except OSError:
+    _logger.exception( 'Cannot get modification time for path %s.', path )
+    return 0
