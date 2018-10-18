@@ -22,7 +22,11 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, contains, has_entries, has_entry
+from hamcrest import ( assert_that,
+                       contains,
+                       has_entries,
+                       has_entry,
+                       matches_regexp )
 import os.path
 
 from ycmd.utils import ReadFile
@@ -172,6 +176,58 @@ def Subcommands_GoToDeclaration_CannotJump_test( app ):
                             expect_errors = True ).json
   assert_that( response,
                ErrorMatcher( RuntimeError, "Can\'t jump to declaration." ) )
+
+
+@SharedYcmd
+def Subcommands_GetType( app, position, expected_message ):
+  filepath = PathToTestFile( 'GetType.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = position[ 0 ],
+                               column_num = position[ 1 ],
+                               contents = contents,
+                               command_arguments = [ 'GetType' ] )
+
+  assert_that(
+    app.post_json( '/run_completer_command', command_data ).json,
+    has_entry( 'message', expected_message )
+  )
+
+
+def Subcommands_GetType_test():
+  tests = (
+    ( ( 11,  7 ), 'instance int' ),
+    ( ( 11, 20 ), 'def some_function()' ),
+    ( ( 12, 15 ), 'class SomeClass(*args, **kwargs)' ),
+    ( ( 13,  8 ), 'instance SomeClass' ),
+    ( ( 13, 17 ), 'def SomeMethod(first_param, second_param)' ),
+    ( ( 19,  4 ), matches_regexp( '^(instance str, instance int|'
+                                  'instance int, instance str)$' ) )
+  )
+  for test in tests:
+    yield Subcommands_GetType, test[ 0 ], test[ 1 ]
+
+
+@SharedYcmd
+def Subcommands_GetType_NoTypeInformation_test( app ):
+  filepath = PathToTestFile( 'GetType.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 6,
+                               column_num = 3,
+                               contents = contents,
+                               command_arguments = [ 'GetType' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data,
+                            expect_errors = True ).json
+
+  assert_that( response,
+               ErrorMatcher( RuntimeError, 'No type information available.' ) )
 
 
 @SharedYcmd
