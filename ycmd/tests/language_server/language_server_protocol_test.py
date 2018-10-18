@@ -168,7 +168,15 @@ def UriToFilePath_Windows_test():
 
   assert_that( lsp.UriToFilePath( 'file:c:/usr/local/test/test.test' ),
                equal_to( 'C:\\usr\\local\\test\\test.test' ) )
-  assert_that( lsp.UriToFilePath( 'file://c:/usr/local/test/test.test' ),
+  assert_that( lsp.UriToFilePath( 'file:c%3a/usr/local/test/test.test' ),
+               equal_to( 'C:\\usr\\local\\test\\test.test' ) )
+  assert_that( lsp.UriToFilePath( 'file:c%3A/usr/local/test/test.test' ),
+               equal_to( 'C:\\usr\\local\\test\\test.test' ) )
+  assert_that( lsp.UriToFilePath( 'file:///c:/usr/local/test/test.test' ),
+               equal_to( 'C:\\usr\\local\\test\\test.test' ) )
+  assert_that( lsp.UriToFilePath( 'file:///c%3a/usr/local/test/test.test' ),
+               equal_to( 'C:\\usr\\local\\test\\test.test' ) )
+  assert_that( lsp.UriToFilePath( 'file:///c%3A/usr/local/test/test.test' ),
                equal_to( 'C:\\usr\\local\\test\\test.test' ) )
 
 

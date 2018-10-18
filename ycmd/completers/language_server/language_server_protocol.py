@@ -30,7 +30,9 @@ from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          pathname2url,
                          ToBytes,
                          ToUnicode,
+                         unquote,
                          url2pathname,
+                         urlparse,
                          urljoin )
 
 
@@ -408,10 +410,18 @@ def FilePathToUri( file_name ):
 
 
 def UriToFilePath( uri ):
-  if uri[ : 5 ] != "file:":
+  parsed_uri = urlparse( uri )
+  if parsed_uri.scheme != 'file':
     raise InvalidUriException( uri )
 
-  return os.path.abspath( url2pathname( uri[ 5 : ] ) )
+  # url2pathname doesn't work as expected when uri.path is percent-encoded and
+  # is a windows path for ex:
+  # url2pathname('/C%3a/') == 'C:\\C:'
+  # whereas
+  # url2pathname('/C:/') == 'C:\\'
+  # Therefore first unquote pathname.
+  pathname = unquote( parsed_uri.path )
+  return os.path.abspath( url2pathname( pathname ) )
 
 
 def _BuildMessageData( message ):
