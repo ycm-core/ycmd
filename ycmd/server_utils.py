@@ -24,7 +24,7 @@ from __future__ import absolute_import
 
 import io
 import logging
-import os
+import os.path as p
 import re
 import sys
 
@@ -70,14 +70,15 @@ CORE_OUTDATED_STATUS    = 7
 
 VERSION_FILENAME = 'CORE_VERSION'
 
-DIR_OF_CURRENT_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
+ROOT_DIR = p.normpath( p.join( p.dirname( __file__ ), '..' ) )
+DIR_OF_THIRD_PARTY = p.join( ROOT_DIR, 'third_party' )
 DIR_PACKAGES_REGEX = re.compile( '(site|dist)-packages$' )
 
 _logger = logging.getLogger( __name__ )
 
 
 def ExpectedCoreVersion():
-  filepath = os.path.join( DIR_OF_CURRENT_SCRIPT, '..', VERSION_FILENAME )
+  filepath = p.join( ROOT_DIR, VERSION_FILENAME )
   with io.open( filepath, encoding = 'utf8' ) as f:
     return int( f.read() )
 
@@ -121,48 +122,14 @@ def CompatibleWithCurrentCore():
   return CORE_COMPATIBLE_STATUS
 
 
-def SetUpPythonPath():
-  sys.path.insert( 0, os.path.join( DIR_OF_CURRENT_SCRIPT, '..' ) )
-
-  # We don't add this path in AddNearestThirdPartyFoldersToSysPath because
-  # loading the regex module in YCM may cause a segmentation fault if the module
-  # is compiled for a different version of Python than the one running YCM.
-  regex_folder = os.path.join( DIR_OF_CURRENT_SCRIPT,
-                               '..',
-                               'third_party',
-                               'cregex',
-                               'regex_{}'.format( sys.version_info[ 0 ] ) )
-  sys.path.insert( 0, regex_folder )
-
-  AddNearestThirdPartyFoldersToSysPath( __file__ )
-
-
-def AncestorFolders( path ):
-  folder = os.path.normpath( path )
-  while True:
-    parent = os.path.dirname( folder )
-    if parent == folder:
-      break
-    folder = parent
-    yield folder
-
-
-def PathToNearestThirdPartyFolder( path ):
-  for folder in AncestorFolders( path ):
-    path_to_third_party = os.path.join( folder, 'third_party' )
-    if os.path.isdir( path_to_third_party ):
-      return path_to_third_party
-  return None
-
-
 def IsStandardLibraryFolder( path ):
-  return ( ( os.path.isfile( path )
-             and PYTHON_STDLIB_ZIP_REGEX.match( os.path.basename( path ) ) )
-           or os.path.isfile( os.path.join( path, 'os.py' ) ) )
+  return ( ( p.isfile( path )
+             and PYTHON_STDLIB_ZIP_REGEX.match( p.basename( path ) ) )
+           or p.isfile( p.join( path, 'os.py' ) ) )
 
 
 def IsVirtualEnvLibraryFolder( path ):
-  return os.path.isfile( os.path.join( path, 'orig-prefix.txt' ) )
+  return p.isfile( p.join( path, 'orig-prefix.txt' ) )
 
 
 def GetStandardLibraryIndexInSysPath():
@@ -173,35 +140,25 @@ def GetStandardLibraryIndexInSysPath():
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
 
-def AddNearestThirdPartyFoldersToSysPath( filepath ):
-  path_to_third_party = PathToNearestThirdPartyFolder( filepath )
-  if not path_to_third_party:
-    raise RuntimeError(
-        'No third_party folder found for: {0}'.format( filepath ) )
-
-  # NOTE: Any hacks for loading modules that can't be imported without custom
-  # logic need to be reproduced in run_tests.py as well.
-  for folder in os.listdir( path_to_third_party ):
-    # python-future needs special handling. Not only does it store the modules
-    # under its 'src' folder, but SOME of its modules are only meant to be
-    # accessible under py2, not py3. This is because these modules (like
-    # `queue`) are implementations of modules present in the py3 standard
-    # library. Furthermore, we need to be sure that they are not overridden by
-    # already installed packages (for example, the 'builtins' module from
-    # 'pies2overrides' or a different version of 'python-future'). To work
-    # around these issues, we place the python-future just after the Python
-    # standard library so that its modules can be overridden by standard
-    # modules but not by installed packages.
-    if folder == 'python-future':
-      folder = os.path.join( folder, 'src' )
-      sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
-                       os.path.realpath( os.path.join( path_to_third_party,
-                                                       folder ) ) )
-      continue
-
-    # The regex module is already included in SetUpPythonPath.
-    if folder == 'cregex':
-      continue
-
-    sys.path.insert( 0, os.path.realpath( os.path.join( path_to_third_party,
-                                                        folder ) ) )
+def SetUpPythonPath():
+  # python-future needs special handling. Not only does it store the modules
+  # under its 'src' folder, but SOME of its modules are only meant to be
+  # accessible under py2, not py3. This is because these modules (like
+  # `queue`) are implementations of modules present in the py3 standard
+  # library. Furthermore, we need to be sure that they are not overridden by
+  # already installed packages (for example, the 'builtins' module from
+  # 'pies2overrides' or a different version of 'python-future'). To work
+  # around these issues, we place the python-future just after the Python
+  # standard library so that its modules can be overridden by standard
+  # modules but not by installed packages.
+  sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
+                   p.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ) )
+  sys.path[ 0:0 ] = [ p.join( ROOT_DIR ),
+                      p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'cregex',
+                              'regex_{}'.format( sys.version_info[ 0 ] ) ),
+                      p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'jedi' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'parso' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'waitress' ) ]

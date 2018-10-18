@@ -22,35 +22,12 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, calling, contains, contains_inanyorder,
-                       empty, equal_to, has_length, raises )
+from hamcrest import assert_that, calling, empty, equal_to, has_length, raises
 from mock import patch
-from nose.tools import ok_
-import os.path
-import sys
 
-from ycmd.server_utils import ( AddNearestThirdPartyFoldersToSysPath,
-                                CompatibleWithCurrentCore,
-                                GetStandardLibraryIndexInSysPath,
-                                PathToNearestThirdPartyFolder )
+from ycmd.server_utils import ( CompatibleWithCurrentCore,
+                                GetStandardLibraryIndexInSysPath )
 from ycmd.tests import PathToTestFile
-
-DIR_OF_THIRD_PARTY = os.path.abspath(
-  os.path.join( os.path.dirname( __file__ ), '..', '..', 'third_party' ) )
-THIRD_PARTY_FOLDERS = [
-  os.path.join( DIR_OF_THIRD_PARTY, 'bottle' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'go' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'jedi' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'OmniSharpServer' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'parso' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'racerd' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'requests' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'tern_runtime' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'tsserver' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'waitress' ),
-  os.path.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls' ),
-]
 
 
 @patch( 'ycmd.server_utils._logger', autospec = True )
@@ -153,70 +130,6 @@ def CompatibleWithCurrentCore_Outdated_NoVersionMatch_test( logger, *args ):
   logger.error.assert_called_with(
     'ycm_core library too old; PLEASE RECOMPILE by running the build.py '
     'script. See the documentation for more details.' )
-
-
-def PathToNearestThirdPartyFolder_Success_test():
-  ok_( PathToNearestThirdPartyFolder( os.path.abspath( __file__ ) ) )
-
-
-def PathToNearestThirdPartyFolder_Failure_test():
-  ok_( not PathToNearestThirdPartyFolder( os.path.expanduser( '~' ) ) )
-
-
-def AddNearestThirdPartyFoldersToSysPath_Failure_test():
-  assert_that(
-    calling( AddNearestThirdPartyFoldersToSysPath ).with_args(
-      os.path.expanduser( '~' ) ),
-    raises( RuntimeError, '.*third_party folder.*' ) )
-
-
-@patch( 'sys.path', [
-  PathToTestFile( 'python-future', 'some', 'path' ),
-  PathToTestFile( 'python-future', 'standard_library' ),
-  PathToTestFile( 'python-future', 'standard_library', 'site-packages' ),
-  PathToTestFile( 'python-future', 'another', 'path' ) ] )
-def AddNearestThirdPartyFoldersToSysPath_FutureAfterStandardLibrary_test(
-  *args ):
-  AddNearestThirdPartyFoldersToSysPath( __file__ )
-  assert_that( sys.path[ : len( THIRD_PARTY_FOLDERS ) ], contains_inanyorder(
-    *THIRD_PARTY_FOLDERS
-  ) )
-  assert_that( sys.path[ len( THIRD_PARTY_FOLDERS ) : ], contains(
-    PathToTestFile( 'python-future', 'some', 'path' ),
-    PathToTestFile( 'python-future', 'standard_library' ),
-    os.path.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ),
-    PathToTestFile( 'python-future', 'standard_library', 'site-packages' ),
-    PathToTestFile( 'python-future', 'another', 'path' )
-  ) )
-
-
-@patch( 'sys.path', [
-  PathToTestFile( 'python-future', 'some', 'path' ),
-  PathToTestFile( 'python-future', 'another', 'path' ) ] )
-def AddNearestThirdPartyFoldersToSysPath_ErrorIfNoStandardLibrary_test( *args ):
-  assert_that(
-    calling( AddNearestThirdPartyFoldersToSysPath ).with_args( __file__ ),
-    raises( RuntimeError,
-            'Could not find standard library path in Python path.' ) )
-
-
-@patch( 'sys.path', [
-  PathToTestFile( 'python-future', 'some', 'path' ),
-  PathToTestFile( 'python-future', 'virtualenv_library' ),
-  PathToTestFile( 'python-future', 'standard_library' ),
-  PathToTestFile( 'python-future', 'another', 'path' ) ] )
-def AddNearestThirdPartyFoldersToSysPath_IgnoreVirtualEnvLibrary_test( *args ):
-  AddNearestThirdPartyFoldersToSysPath( __file__ )
-  assert_that( sys.path[ : len( THIRD_PARTY_FOLDERS ) ], contains_inanyorder(
-    *THIRD_PARTY_FOLDERS
-  ) )
-  assert_that( sys.path[ len( THIRD_PARTY_FOLDERS ) : ], contains(
-    PathToTestFile( 'python-future', 'some', 'path' ),
-    PathToTestFile( 'python-future', 'virtualenv_library' ),
-    PathToTestFile( 'python-future', 'standard_library' ),
-    os.path.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ),
-    PathToTestFile( 'python-future', 'another', 'path' )
-  ) )
 
 
 @patch( 'sys.path', [
