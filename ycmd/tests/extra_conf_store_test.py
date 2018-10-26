@@ -45,7 +45,7 @@ def ExtraConfStore_ModuleForSourceFile_UnknownExtraConf_test( app ):
   filename = PathToTestFile( 'extra_conf', 'project', 'some_file' )
   assert_that(
     calling( extra_conf_store.ModuleForSourceFile ).with_args( filename ),
-    raises( UnknownExtraConf, 'Found .*\.ycm_extra_conf\.py\. Load?' )
+    raises( UnknownExtraConf, 'Found .*\\.ycm_extra_conf\\.py\\. Load?' )
   )
 
 

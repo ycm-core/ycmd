@@ -387,7 +387,9 @@ def ExtraConfData_test():
   assert_that( extra_conf_data, has_entry( 'key', contains( 'value' ) ) )
   assert_that(
     extra_conf_data,
-    has_string( matches_regexp( "^<HashableDict {u?'key': \[u?'value'\]}>$" ) )
+    has_string(
+      matches_regexp( "^<HashableDict {u?'key': \\[u?'value'\\]}>$" )
+    )
   )
 
   # Check that extra_conf_data can be used as a dictionary's key.

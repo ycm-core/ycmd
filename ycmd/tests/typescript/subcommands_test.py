@@ -660,8 +660,8 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '    nonExistingMethod\(\): any {\r?\n'
-                  '        throw new Error\("Method not implemented."\);\r?\n'
+                  '    nonExistingMethod\\(\\): any {\r?\n'
+                  '        throw new Error\\("Method not implemented."\\);\r?\n'
                   '    }$',
                 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
@@ -685,7 +685,7 @@ def Subcommands_FixIt_test( app ):
             'chunks': contains(
               ChunkMatcher(
                 matches_regexp( '^\r?\n'
-                                '    \[x: string\]: any;$' ),
+                                '    \\[x: string\\]: any;$' ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),
@@ -714,7 +714,7 @@ def Subcommands_OrganizeImports_test( app ):
           'chunks': contains(
             ChunkMatcher(
               matches_regexp(
-                'import \* as lib from "library";\r?\n'
+                'import \\* as lib from "library";\r?\n'
                 'import func, { func1, func2 } from "library";\r?\n' ),
               LocationMatcher( filepath,  1, 1 ),
               LocationMatcher( filepath,  2, 1 ) ),

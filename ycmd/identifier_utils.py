@@ -26,9 +26,9 @@ from builtins import *  # noqa
 
 from ycmd.utils import re, SplitLines
 
-C_STYLE_COMMENT = "/\*(?:\n|.)*?\*/"
-CPP_STYLE_COMMENT = "//.*?$"
-PYTHON_STYLE_COMMENT = "#.*?$"
+C_STYLE_COMMENT = '/\\*(?:\n|.)*?\\*/'
+CPP_STYLE_COMMENT = '//.*?$'
+PYTHON_STYLE_COMMENT = '#.*?$'
 # Anything inside single quotes, '...', but mind:
 #  1. that the starting single quote is not escaped
 #  2. the escaped slash (\\)
