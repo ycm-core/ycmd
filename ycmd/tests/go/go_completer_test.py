@@ -103,7 +103,7 @@ def ComputeCandidatesInner_BeforeUnicode_test( completer, execute_command ):
   # Col 8 corresponds to cursor at log.Pr^int("Line 7 ...
   completer.ComputeCandidatesInner( BuildRequest( 7, 8 ) )
   execute_command.assert_called_once_with(
-    [ DUMMY_BINARY, '-sock', 'tcp', '-addr', completer._gocode_host,
+    [ DUMMY_BINARY, '-sock', 'tcp', '-source', '-addr', completer._gocode_host,
       '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '119' ],
     contents = ToBytes( ReadFile( PATH_TO_TEST_FILE ) ) )
 
@@ -116,7 +116,7 @@ def ComputeCandidatesInner_AfterUnicode_test( completer, execute_command ):
   # Col 9 corresponds to cursor at log.Pri^nt("Line 7 ...
   completer.ComputeCandidatesInner( BuildRequest( 9, 9 ) )
   execute_command.assert_called_once_with(
-    [ DUMMY_BINARY, '-sock', 'tcp', '-addr', completer._gocode_host,
+    [ DUMMY_BINARY, '-sock', 'tcp', '-source', '-addr', completer._gocode_host,
       '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '212' ],
     contents = ToBytes( ReadFile( PATH_TO_TEST_FILE ) ) )
 
@@ -129,7 +129,7 @@ def ComputeCandidatesInner_test( completer, execute_command ):
   # Col 40 corresponds to cursor at ..., log.Prefi^x ...
   result = completer.ComputeCandidatesInner( BuildRequest( 10, 40 ) )
   execute_command.assert_called_once_with(
-    [ DUMMY_BINARY, '-sock', 'tcp', '-addr', completer._gocode_host,
+    [ DUMMY_BINARY, '-sock', 'tcp', '-source', '-addr', completer._gocode_host,
       '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '287' ],
     contents = ToBytes( ReadFile( PATH_TO_TEST_FILE ) ) )
   eq_( result, [ {
