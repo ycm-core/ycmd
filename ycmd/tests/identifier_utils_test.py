@@ -283,7 +283,7 @@ def IsIdentifier_Tex_test():
   ok_( iu.IsIdentifier( 'fōo'        , 'tex' ) )
   ok_( iu.IsIdentifier( 'some8'      , 'tex' ) )
 
-  ok_( not iu.IsIdentifier( '\section', 'tex' ) )
+  ok_( not iu.IsIdentifier( '\\section', 'tex' ) )
   ok_( not iu.IsIdentifier( 'foo:'    , 'tex' ) )
   ok_( not iu.IsIdentifier( '-bar'    , 'tex' ) )
   ok_( not iu.IsIdentifier( ''        , 'tex' ) )

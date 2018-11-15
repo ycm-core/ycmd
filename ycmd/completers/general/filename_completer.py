@@ -53,11 +53,11 @@ PATH_SEPARATORS_PATTERN = '([{seps}][^{seps}]*|[{seps}]$)'
 
 HEAD_PATH_PATTERN_UNIX = """
   # Current and previous directories
-  \.{1,2}|
+  \\.{1,2}|
   # Home directory
   ~|
   # UNIX environment variables
-  \$[^$]+
+  \\$[^$]+
 """
 HEAD_PATH_PATTERN_WINDOWS = HEAD_PATH_PATTERN_UNIX + """|
   # Drive letters

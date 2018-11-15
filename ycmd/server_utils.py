@@ -28,15 +28,15 @@ import os.path as p
 import re
 import sys
 
-PYTHON_STDLIB_ZIP_REGEX = re.compile( "python[23][0-9].zip" )
+PYTHON_STDLIB_ZIP_REGEX = re.compile( "python[23][0-9]\\.zip" )
 CORE_MISSING_ERROR_REGEX = re.compile( "No module named '?ycm_core'?" )
 CORE_PYTHON2_ERROR_REGEX = re.compile(
   'dynamic module does not define (?:init|module export) '
-  'function \(PyInit_ycm_core\)|'
-  'Module use of python2[0-9].dll conflicts with this version of Python\.$' )
+  'function \\(PyInit_ycm_core\\)|'
+  'Module use of python2[0-9]\\.dll conflicts with this version of Python\\.$' )
 CORE_PYTHON3_ERROR_REGEX = re.compile(
-  'dynamic module does not define init function \(initycm_core\)|'
-  'Module use of python3[0-9].dll conflicts with this version of Python\.$' )
+  'dynamic module does not define init function \\(initycm_core\\)|'
+  'Module use of python3[0-9]\\.dll conflicts with this version of Python\\.$' )
 
 CORE_MISSING_MESSAGE = (
   'ycm_core library not detected; you need to compile it by running the '
