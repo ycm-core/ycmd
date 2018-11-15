@@ -277,8 +277,8 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     find_library( TEMP
                   NAMES
                   clang
-                  libclang
                   libclang.so.1
+                  libclang
                   PATHS
                   ${ENV_LIB_PATHS}
                   ${LLVM_CONFIG_PATH}
