@@ -253,14 +253,12 @@ include_directories(
 
 if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
   if ( USE_SYSTEM_LIBCLANG )
-    set ( LIBCLANG_FILE libclang.so.1 )
     if ( APPLE )
       set( ENV_LIB_PATHS ENV DYLD_LIBRARY_PATH )
     elseif ( UNIX )
       set( ENV_LIB_PATHS ENV LD_LIBRARY_PATH )
     elseif ( WIN32 )
       set( ENV_LIB_PATHS ENV PATH )
-      set ( LIBCLANG_FILE libclang )
     else ()
       set( ENV_LIB_PATHS "" )
     endif()
@@ -279,7 +277,8 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     find_library( TEMP
                   NAMES
                   clang
-                  ${LIBCLANG_FILE}
+                  libclang
+                  libclang.so.1
                   PATHS
                   ${ENV_LIB_PATHS}
                   ${LLVM_CONFIG_PATH}
@@ -293,7 +292,8 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
     if ( WIN32 )
       # Set PATH_TO_LLVM_ROOT variable used in copy step later
       # /path/to/llvm/root/lib/libclang.so/../.. = /path/to/llvm/root/
-      get_filename_component( PATH_TO_LLVM_ROOT "${EXTERNAL_LIBCLANG_PATH}/../.."
+      get_filename_component( PATH_TO_LLVM_ROOT
+                              "${EXTERNAL_LIBCLANG_PATH}/../.."
                               ABSOLUTE )
     endif()
   else()
