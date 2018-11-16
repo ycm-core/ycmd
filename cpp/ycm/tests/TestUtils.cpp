@@ -17,9 +17,19 @@
 
 #include "TestUtils.h"
 
-namespace YouCompleteMe {
+namespace boost {
 
-namespace fs = boost::filesystem;
+namespace filesystem {
+
+void PrintTo( const fs::path &path, std::ostream *os ) {
+  *os << path;
+}
+
+} // namespace filesystem
+
+} // namespace boost
+
+namespace YouCompleteMe {
 
 std::ostream& operator<<( std::ostream& os, const CodePointTuple &code_point ) {
   os << "{ " << PrintToString( code_point.normal_ ) << ", "
@@ -85,7 +95,13 @@ std::ostream& operator<<( std::ostream& os, const WordTuple &word ) {
 }
 
 
-boost::filesystem::path PathToTestFile( const std::string &filepath ) {
+std::ostream& operator<<( std::ostream& os, const fs::path *path ) {
+  os << *path;
+  return os;
+}
+
+
+fs::path PathToTestFile( const std::string &filepath ) {
   fs::path path_to_testdata = fs::current_path() / fs::path( "testdata" );
   return path_to_testdata / fs::path( filepath );
 }

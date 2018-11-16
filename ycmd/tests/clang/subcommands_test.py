@@ -667,7 +667,7 @@ def RunFixItTest( app, line, column, lang, file_path, check ):
   }
   args.update( language_options[ lang ] )
 
-  # Get the diagnostics for the file.
+  # Get the fixes for the file.
   event_data = BuildRequest( **args )
 
   results = app.post_json( '/run_completer_command', event_data ).json
@@ -1036,7 +1036,7 @@ def Subcommands_FixIt_Unity_test( app ):
     'filepath': PathToTestFile( '.ycm_extra_conf.py' ),
   } )
 
-  # Get the diagnostics for the file.
+  # Get the fixes for the file.
   event_data = BuildRequest( **args )
 
   results = app.post_json( '/run_completer_command', event_data ).json
@@ -1073,7 +1073,7 @@ def Subcommands_FixIt_UnityDifferentFile_test( app ):
     'filepath': PathToTestFile( '.ycm_extra_conf.py' ),
   } )
 
-  # Get the diagnostics for the file.
+  # Get the fixes for the file.
   event_data = BuildRequest( **args )
 
   results = app.post_json( '/run_completer_command', event_data ).json
@@ -1081,6 +1081,44 @@ def Subcommands_FixIt_UnityDifferentFile_test( app ):
   pprint( results )
   assert_that( results, has_entries( {
     'fixits': empty()
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_FixIt_NonExistingFile_test( app ):
+  # This checks that FixIt is working for a non-existing file and that the path
+  # is properly normalized ('.' and '..' are removed from the path).
+  file_path = PathToTestFile( 'non_existing_dir', '..', '.', 'non_existing.cc' )
+  normal_file_path = PathToTestFile( 'non_existing.cc' )
+  args = {
+    'filetype'         : 'cpp',
+    'completer_target' : 'filetype_default',
+    'contents'         : 'int test',
+    'filepath'         : file_path,
+    'command_arguments': [ 'FixIt' ],
+    'line_num'         : 1,
+    'column_num'       : 1,
+  }
+  app.post_json( '/load_extra_conf_file', {
+    'filepath': PathToTestFile( '.ycm_extra_conf.py' ),
+  } )
+
+  # Get the fixes for the file.
+  event_data = BuildRequest( **args )
+
+  results = app.post_json( '/run_completer_command', event_data ).json
+
+  pprint( results )
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+      'text': contains_string( "expected ';' after top level declarator" ),
+      'chunks': contains(
+        ChunkMatcher( ';',
+                      LocationMatcher( normal_file_path, 1, 9 ),
+                      LocationMatcher( normal_file_path, 1, 9 ) ),
+      ),
+      'location': LocationMatcher( normal_file_path, 1, 9 ),
+    } ) )
   } ) )
 
 

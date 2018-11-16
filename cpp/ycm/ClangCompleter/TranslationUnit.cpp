@@ -19,6 +19,7 @@
 #include "ClangHelpers.h"
 #include "CompletionData.h"
 #include "TranslationUnit.h"
+#include "Utils.h"
 
 #include <algorithm>
 #include <boost/filesystem.hpp>
@@ -522,16 +523,15 @@ std::vector< FixIt > TranslationUnit::GetFixItsForLocationInFile(
 
   std::vector< FixIt > fixits;
 
-  auto canonical_filename = boost::filesystem::canonical( filename );
+  auto normal_filename = NormalizePath( filename );
 
   {
     unique_lock< mutex > lock( diagnostics_mutex_ );
 
     for ( const Diagnostic& diagnostic : latest_diagnostics_ ) {
-      auto this_filename = boost::filesystem::canonical(
-        diagnostic.location_.filename_ );
+      auto this_filename = NormalizePath( diagnostic.location_.filename_ );
 
-      if ( canonical_filename != this_filename ) {
+      if ( normal_filename != this_filename ) {
         continue;
       }
 

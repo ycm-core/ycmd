@@ -29,6 +29,20 @@
 
 using ::testing::PrintToString;
 
+namespace fs = boost::filesystem;
+
+// A segmentation fault occurs when gtest tries to print a
+// boost::filesystem::path. Teach gtest how to print it.
+namespace boost {
+
+namespace filesystem {
+
+void PrintTo( const fs::path &path, std::ostream *os );
+
+}
+
+}
+
 namespace YouCompleteMe {
 
 // Tuple-like structures to help writing tests for CodePoint, Character, and
@@ -210,7 +224,7 @@ MATCHER_P( ContainsPointees, expected, PrintToString( expected ) ) {
 }
 
 
-boost::filesystem::path PathToTestFile( const std::string &filepath );
+fs::path PathToTestFile( const std::string &filepath );
 
 } // namespace YouCompleteMe
 
