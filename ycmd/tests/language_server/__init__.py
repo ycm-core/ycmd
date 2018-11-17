@@ -22,7 +22,16 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import functools
+import os
+
 from ycmd.completers.language_server import language_server_completer as lsc
+from ycmd.tests.test_utils import IsolatedApp, StopCompleterServer
+
+
+def PathToTestFile( *args ):
+  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
+  return os.path.join( dir_of_current_script, 'testdata', *args )
 
 
 class MockConnection( lsc.LanguageServerConnection ):
@@ -41,3 +50,23 @@ class MockConnection( lsc.LanguageServerConnection ):
 
   def ReadData( self, size = -1 ):
     return bytes( b'' )
+
+
+def IsolatedYcmd( custom_options = {} ):
+  """Defines a decorator to be attached to tests of this package. This decorator
+  passes a unique ycmd application as a parameter. It should be used on tests
+  that change the server state in a irreversible way (ex: a semantic subserver
+  is stopped or restarted) or expect a clean state (ex: no semantic subserver
+  started, no .ycm_extra_conf.py loaded, etc).
+
+  Do NOT attach it to test generators but directly to the yielded tests."""
+  def Decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( *args, **kwargs ):
+      with IsolatedApp( custom_options ) as app:
+        try:
+          test( app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'foo' )
+    return Wrapper
+  return Decorator

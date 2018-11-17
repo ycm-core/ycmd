@@ -39,7 +39,8 @@ from ycmd.utils import ReadFile
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               PathToTestFile,
-                              SharedYcmd )
+                              SharedYcmd,
+                              IsolatedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
@@ -1667,5 +1668,34 @@ def Subcommands_DifferentFileTypesUpdate_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( { 'fixits': empty() } ),
+    }
+  } )
+
+
+@WithRetry
+@IsolatedYcmd( { 'extra_conf_globlist':
+                 PathToTestFile( 'extra_confs', '*' ) } )
+def Subcommands_ExtraConf_SettingsValid_test( app ):
+  filepath = PathToTestFile( 'extra_confs',
+                             'simple_extra_conf_project',
+                             'src',
+                             'ExtraConf.java' )
+  RunTest( app, {
+    'description': 'RefactorRename is disabled in extra conf.',
+    'request': {
+      'command': 'RefactorRename',
+      'arguments': [ 'renamed_l' ],
+      'filepath': filepath,
+      'line_num': 1,
+      'column_num': 7,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': empty(),
+          'location': LocationMatcher( filepath, 1, 7 )
+        } ) )
+      } )
     }
   } )
