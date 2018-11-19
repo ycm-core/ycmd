@@ -25,7 +25,7 @@
 	path = third_party/jedi
 	url = https://github.com/davidhalter/jedi
 [submodule "third_party/parso"]
-	path = third_party/parso
+	path = third_party/jedi_deps/parso
 	url = https://github.com/davidhalter/parso
 [submodule "third_party/racerd"]
 	path = third_party/racerd
@@ -36,3 +36,15 @@
 [submodule "third_party/cregex"]
 	path = third_party/cregex
 	url = https://github.com/micbou/regex.git
+[submodule "third_party/urllib3"]
+	path = third_party/requests_deps/urllib3
+	url = https://github.com/urllib3/urllib3
+[submodule "third_party/chardet"]
+	path = third_party/requests_deps/chardet
+	url = https://github.com/chardet/chardet
+[submodule "third_party/certifi"]
+	path = third_party/requests_deps/certifi
+	url = https://github.com/certifi/python-certifi
+[submodule "third_party/idna"]
+	path = third_party/requests_deps/idna
+	url = https://github.com/kjd/idna
