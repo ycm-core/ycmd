@@ -140,6 +140,7 @@ class GoCompleter( Completer ):
 
     stdoutdata = self._ExecuteCommand( [ self._gocode_binary_path,
                                          '-sock', 'tcp',
+                                         '-builtin', '-unimported-packages',
                                          '-addr', self._gocode_host,
                                          '-f=json', 'autocomplete',
                                          filename, str( offset ) ],
