@@ -23,13 +23,13 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
+#include <sparsehash/dense_hash_map>
 #include <vector>
 
 namespace YouCompleteMe {
 
-using CandidateHolder = std::unordered_map< std::string,
-                                            std::unique_ptr< Candidate > >;
+using CandidateHolder = google::dense_hash_map< std::string,
+                                                std::unique_ptr< Candidate > >;
 
 
 // This singleton stores already built Candidate objects for candidate strings
@@ -67,6 +67,7 @@ private:
   // This data structure owns all the Candidate pointers
   CandidateHolder candidate_holder_;
   std::mutex candidate_holder_mutex_;
+  bool empty_key_set_ = false;
 };
 
 } // namespace YouCompleteMe

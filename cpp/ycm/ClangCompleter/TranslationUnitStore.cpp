@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Google Inc.
+// Copyright (C) 2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -46,6 +46,10 @@ std::size_t HashForFlags( const std::vector< std::string > &flags ) {
 
 TranslationUnitStore::TranslationUnitStore( CXIndex clang_index )
   : clang_index_( clang_index ) {
+  filename_to_translation_unit_.set_empty_key( "   " );
+  filename_to_translation_unit_.set_deleted_key( "  " );
+  filename_to_flags_hash_.set_empty_key( "   " );
+  filename_to_flags_hash_.set_deleted_key( "  " );
 }
 
 
@@ -123,6 +127,7 @@ shared_ptr< TranslationUnit > TranslationUnitStore::Get(
 bool TranslationUnitStore::Remove( const std::string &filename ) {
   lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
   Erase( filename_to_flags_hash_, filename );
+  filename_to_flags_hash_.resize( 0 );
   return Erase( filename_to_translation_unit_, filename );
 }
 

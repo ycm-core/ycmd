@@ -38,6 +38,11 @@ const size_t MAX_CANDIDATE_SIZE = 80;
 
 CandidateRepository &CandidateRepository::Instance() {
   static CandidateRepository repo;
+  if ( !repo.empty_key_set_ ) {
+    repo.empty_key_set_ = true;
+    repo.candidate_holder_.set_empty_key( "   " );
+    repo.candidate_holder_.set_deleted_key( "  " );
+  }
   return repo;
 }
 

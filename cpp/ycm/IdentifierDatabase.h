@@ -18,13 +18,12 @@
 #ifndef IDENTIFIERDATABASE_H_ZESX3CVR
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
-#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <vector>
 #include <string>
-#include <map>
-#include <set>
+#include <sparsehash/dense_hash_map>
+#include <sparsehash/dense_hash_set>
 
 namespace YouCompleteMe {
 
@@ -32,13 +31,16 @@ class Candidate;
 class Result;
 class CandidateRepository;
 
+using google::dense_hash_map;
+using google::dense_hash_set;
 
 // filepath -> identifiers
-using FilepathToIdentifiers = std::map< std::string,
-                                        std::vector< std::string > >;
+using FilepathToIdentifiers =
+    dense_hash_map< std::string, std::vector< std::string > >;
 
 // filetype -> (filepath -> identifiers)
-using FiletypeIdentifierMap = std::map< std::string, FilepathToIdentifiers >;
+using FiletypeIdentifierMap =
+    dense_hash_map< std::string, FilepathToIdentifiers >;
 
 
 // This class stores the database of identifiers the identifier completer has
@@ -72,7 +74,7 @@ public:
                                const size_t max_results ) const;
 
 private:
-  std::set< const Candidate * > &GetCandidateSet(
+  dense_hash_set< const Candidate * > &GetCandidateSet(
     const std::string &filetype,
     const std::string &filepath );
 
@@ -84,12 +86,12 @@ private:
 
   // filepath -> *( *candidate )
   using FilepathToCandidates =
-    std::unordered_map < std::string,
-                         std::shared_ptr< std::set< const Candidate * > > >;
+      dense_hash_map< std::string,
+                      std::shared_ptr< dense_hash_set< const Candidate * > > >;
 
   // filetype -> *( filepath -> *( *candidate ) )
   using FiletypeCandidateMap =
-    std::unordered_map < std::string, std::shared_ptr< FilepathToCandidates > >;
+    dense_hash_map< std::string, std::shared_ptr< FilepathToCandidates > >;
 
 
   CandidateRepository &candidate_repository_;

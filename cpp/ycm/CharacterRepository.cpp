@@ -25,6 +25,11 @@ namespace YouCompleteMe {
 
 CharacterRepository &CharacterRepository::Instance() {
   static CharacterRepository repo;
+  if ( !repo.empty_key_set_ ) {
+    repo.empty_key_set_ = true;
+    repo.character_holder_.set_empty_key( "   " );
+    repo.character_holder_.set_deleted_key( "  " );
+  }
   return repo;
 }
 

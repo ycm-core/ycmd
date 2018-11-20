@@ -23,10 +23,8 @@
 #include "UnsavedFile.h"
 #include "Utils.h"
 
-#include <unordered_map>
+#include <sparsehash/dense_hash_map>
 #include <utility>
-
-using std::unordered_map;
 
 namespace YouCompleteMe {
 namespace {
@@ -213,7 +211,9 @@ std::vector< CompletionData > ToCompletionDataVector(
   }
 
   completions.reserve( results->NumResults );
-  unordered_map< std::string, size_t > seen_data;
+  google::dense_hash_map< std::string, std::size_t > seen_data;
+  seen_data.set_empty_key( "   " );
+  seen_data.set_deleted_key( "  " );
 
   for ( size_t i = 0; i < results->NumResults; ++i ) {
     CXCompletionResult result = results->Results[ i ];

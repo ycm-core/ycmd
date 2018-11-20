@@ -25,9 +25,10 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <unordered_map>
+#include <sparsehash/dense_hash_map>
 
 using CXIndex = void*;
+using google::dense_hash_map;
 
 namespace YouCompleteMe {
 
@@ -68,9 +69,9 @@ private:
 
 
   using TranslationUnitForFilename =
-    std::unordered_map< std::string, std::shared_ptr< TranslationUnit > >;
+    dense_hash_map< std::string, std::shared_ptr< TranslationUnit > >;
 
-  using FlagsHashForFilename = std::unordered_map< std::string, std::size_t >;
+  using FlagsHashForFilename = dense_hash_map< std::string, std::size_t >;
 
   CXIndex clang_index_;
   TranslationUnitForFilename filename_to_translation_unit_;

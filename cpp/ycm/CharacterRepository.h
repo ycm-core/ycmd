@@ -23,13 +23,13 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
+#include <sparsehash/dense_hash_map>
 #include <vector>
 
 namespace YouCompleteMe {
 
-using CharacterHolder = std::unordered_map< std::string,
-                                            std::unique_ptr< Character > >;
+using CharacterHolder = google::dense_hash_map< std::string,
+                                                std::unique_ptr< Character > >;
 
 
 // This singleton stores already built Character objects for character strings
@@ -59,6 +59,7 @@ private:
   // This data structure owns all the Character pointers
   CharacterHolder character_holder_;
   std::mutex character_holder_mutex_;
+  bool empty_key_set_ = false;
 };
 
 } // namespace YouCompleteMe

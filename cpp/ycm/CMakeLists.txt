@@ -201,6 +201,7 @@ else()
 endif()
 
 set( PYBIND11_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pybind11" )
+set( GOOGLE_HASHMAP_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/sparsehash" )
 
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
@@ -238,6 +239,7 @@ include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIR}
   ${PYBIND11_INCLUDES_DIR}
+  ${GOOGLE_HASHMAP_INCLUDES_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
   )

@@ -23,12 +23,12 @@
 #include "Result.h"
 #include "Utils.h"
 
-#include <unordered_set>
-
 namespace YouCompleteMe {
 
 IdentifierDatabase::IdentifierDatabase()
   : candidate_repository_( CandidateRepository::Instance() ) {
+  filetype_candidate_map_.set_empty_key( "   " );
+  filetype_candidate_map_.set_deleted_key( "  " );
 }
 
 
@@ -81,8 +81,9 @@ void IdentifierDatabase::ResultsForQueryAndType(
   }
   Word query_object( query );
 
-  std::unordered_set< const Candidate * > seen_candidates;
-  seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
+  dense_hash_set< const Candidate * >
+      seen_candidates( candidate_repository_.NumStoredCandidates() );
+  seen_candidates.set_empty_key( {} );
 
   {
     std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
@@ -114,7 +115,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
 
 // WARNING: You need to hold the filetype_candidate_map_mutex_ before calling
 // this function and while using the returned set.
-std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
+dense_hash_set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
   const std::string &filetype,
   const std::string &filepath ) {
   std::shared_ptr< FilepathToCandidates > &path_to_candidates =
@@ -122,13 +123,16 @@ std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
 
   if ( !path_to_candidates ) {
     path_to_candidates.reset( new FilepathToCandidates() );
+    path_to_candidates->set_empty_key( "   " );
+    path_to_candidates->set_deleted_key( "  " );
   }
 
-  std::shared_ptr< std::set< const Candidate * > > &candidates =
+  std::shared_ptr< dense_hash_set< const Candidate * > > &candidates =
     ( *path_to_candidates )[ filepath ];
 
   if ( !candidates ) {
-    candidates.reset( new std::set< const Candidate * >() );
+    candidates.reset( new dense_hash_set< const Candidate * >() );
+    candidates->set_empty_key( {} );
   }
 
   return *candidates;
@@ -141,7 +145,7 @@ void IdentifierDatabase::AddIdentifiersNoLock(
   const std::vector< std::string > &new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  std::set< const Candidate *> &candidates =
+  dense_hash_set< const Candidate *> &candidates =
     GetCandidateSet( filetype, filepath );
 
   std::vector< const Candidate * > repository_candidates =

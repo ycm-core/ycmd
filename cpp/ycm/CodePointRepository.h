@@ -23,13 +23,13 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
+#include <sparsehash/dense_hash_map>
 #include <vector>
 
 namespace YouCompleteMe {
 
-using CodePointHolder = std::unordered_map< std::string,
-                                            std::unique_ptr< CodePoint > >;
+using CodePointHolder = google::dense_hash_map< std::string,
+                                                std::unique_ptr< CodePoint > >;
 
 
 // This singleton stores already built CodePoint objects for code points that
@@ -59,6 +59,7 @@ private:
   // This data structure owns all the CodePoint pointers
   CodePointHolder code_point_holder_;
   std::mutex code_point_holder_mutex_;
+  bool empty_key_set_ = false;
 };
 
 } // namespace YouCompleteMe

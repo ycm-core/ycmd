@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -166,6 +166,8 @@ const std::unordered_map < const char *,
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const fs::path &path_to_tag_file ) {
   FiletypeIdentifierMap filetype_identifier_map;
+  filetype_identifier_map.set_empty_key( "   " );
+  filetype_identifier_map.set_deleted_key( "  " );
   std::string tags_file_contents;
 
   try {
@@ -193,7 +195,12 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     fs::path path( matches[ 2 ].str() );
     path = NormalizePath( path, path_to_tag_file.parent_path() );
 
-    filetype_identifier_map[ filetype ][ path.string() ].push_back( identifier );
+    auto& path_identifier_map = filetype_identifier_map[ filetype ];
+    if ( path_identifier_map.empty() ) {
+      path_identifier_map.set_empty_key( "   " );
+      path_identifier_map.set_deleted_key( "  " );
+    }
+    path_identifier_map[ path.string() ].push_back( identifier );
   }
 
   return filetype_identifier_map;

@@ -25,6 +25,11 @@ namespace YouCompleteMe {
 
 CodePointRepository &CodePointRepository::Instance() {
   static CodePointRepository repo;
+  if ( !repo.empty_key_set_ ) {
+    repo.code_point_holder_.set_empty_key( "   " );
+    repo.code_point_holder_.set_deleted_key( "  " );
+    repo.empty_key_set_ = true;
+  }
   return repo;
 }
 

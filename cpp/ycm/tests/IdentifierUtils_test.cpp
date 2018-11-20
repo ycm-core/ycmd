@@ -1,4 +1,4 @@
-// Copyright (C) 2011, 2012 Google Inc.
+// Copyright (C) 2018 ycmd contributors
 //
 // This file is part of ycmd.
 //
@@ -37,6 +37,19 @@ TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
   fs::path testfile_parent = testfile.parent_path();
 
   FiletypeIdentifierMap expected;
+  expected.set_empty_key( "   " );
+  expected.set_deleted_key( "  " );
+  expected[ "cpp" ].set_deleted_key( "  " );
+  expected[ "cpp" ].set_empty_key( "   " );
+  expected[ "c" ].set_deleted_key( "  " );
+  expected[ "c" ].set_empty_key( "   " );
+  expected[ "fakelang" ].set_deleted_key( "  " );
+  expected[ "fakelang" ].set_empty_key( "   " );
+  expected[ "cs" ].set_deleted_key( "  " );
+  expected[ "cs" ].set_empty_key( "   " );
+  expected[ "foobar" ].set_deleted_key( "  " );
+  expected[ "foobar" ].set_empty_key( "   " );
+
   expected[ "cpp" ][ ( testfile_parent / "foo" ).string() ]
   .push_back( "i1" );
   expected[ "cpp" ][ ( testfile_parent / "bar" ).string() ]

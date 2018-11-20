@@ -60,6 +60,8 @@ flags = [
 '-x',
 'c++',
 '-isystem',
+'cpp/sparsehash',
+'-isystem',
 'cpp/pybind11',
 '-isystem',
 'cpp/BoostParts',

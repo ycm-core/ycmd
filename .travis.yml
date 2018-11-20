@@ -36,8 +36,11 @@ addons:
     packages:
      - cmake-data
      - cmake
-     # 4.8 is the first version of GCC with good enough C++11 support.
-     - g++-4.8
+     # 5.0 is the first one that can compile
+     # dense_hash_map< string, dense_hash_map< string, vector< string > > > foo;
+     # auto& bar = foo[ str ];
+     # *on Travis*
+     - g++-5
      # Install Clang 3.4 and its standard library.
      - clang
      - clang-tidy-3.9

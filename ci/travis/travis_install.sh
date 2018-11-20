@@ -13,7 +13,7 @@ unset -f cd popd pushd
 ################
 
 # We can't use sudo, so we have to approximate the behaviour of the following:
-# $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
+# $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
 
 mkdir -p ${HOME}/bin
 
@@ -23,10 +23,10 @@ if [ "${YCM_COMPILER}" == "clang" ]; then
   # Tell CMake to compile with libc++ when using Clang.
   export EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS} -DHAS_LIBCXX11=ON"
 else
-  ln -s /usr/bin/g++-4.9 ${HOME}/bin/c++
-  ln -s /usr/bin/gcc-4.9 ${HOME}/bin/cc
+  ln -s /usr/bin/g++-5 ${HOME}/bin/c++
+  ln -s /usr/bin/gcc-5 ${HOME}/bin/cc
 fi
-ln -s /usr/bin/gcov-4.9 ${HOME}/bin/gcov
+ln -s /usr/bin/gcov-5 ${HOME}/bin/gcov
 if [ -n "${YCM_CLANG_TIDY}" ]; then
   ln -s /usr/bin/clang-tidy-3.9 ${HOME}/bin/clang-tidy
 fi
