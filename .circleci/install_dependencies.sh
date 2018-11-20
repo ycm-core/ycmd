@@ -18,7 +18,6 @@ brew update || brew update
 # with CS7027 signing errors.
 REQUIREMENTS="cmake
               node.js
-              go
               readline
               autoconf
               pkg-config
@@ -122,5 +121,23 @@ if [[ "$JAVA_VERSION" < "1.8" ]]; then
   echo "Java version $JAVA_VERSION is too old" 1>&2
   exit 1
 fi
+
+##############
+# Go 1.9 setup
+
+# gocode requires Go >= 1.9
+
+# https://golang.org/doc/install
+# Download binaries
+curl -o golang.tar.gz https://dl.google.com/go/go1.9.7.linux-amd64.tar.gz
+
+# Extract binaries
+tar -C /usr/local -xzf golang.tar.gz
+
+# Setup path
+echo "export PATH=/usr/local/go/bin:\$PATH" >> $BASH_ENV
+
+# End Go setup
+##############
 
 set +e
