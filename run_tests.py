@@ -12,6 +12,7 @@ from builtins import *  # noqa
 import argparse
 import platform
 import os
+import glob
 import subprocess
 import os.path as p
 import sys
@@ -36,15 +37,19 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
     folder = p.join( folder, 'regex_{}'.format( sys.version_info[ 0 ] ) )
   python_path.append( p.abspath( p.join( DIR_OF_THIRD_PARTY, folder ) ) )
 if os.environ.get( 'PYTHONPATH' ) is not None:
-  python_path.append( os.environ['PYTHONPATH'] )
+  python_path.append( os.environ[ 'PYTHONPATH' ] )
 os.environ[ 'PYTHONPATH' ] = os.pathsep.join( python_path )
 
 
 def RunFlake8():
   print( 'Running flake8' )
-  subprocess.check_call( [
-    sys.executable, '-m', 'flake8', p.join( DIR_OF_THIS_SCRIPT, 'ycmd' )
-  ] )
+  args = [ sys.executable,
+           '-m',
+           'flake8',
+           p.join( DIR_OF_THIS_SCRIPT, 'ycmd' ) ]
+  root_dir_scripts = glob.glob( p.join( DIR_OF_THIS_SCRIPT, '*.py' ) )
+  args.extend( root_dir_scripts )
+  subprocess.check_call( args )
 
 
 COMPLETERS = {
@@ -97,8 +102,8 @@ def CompleterType( value ):
   if value in COMPLETERS:
     return value
   else:
-    aliases_to_completer = dict( ( i, k ) for k, v in COMPLETERS.items()
-                                 for i in v[ 'aliases' ] )
+    aliases_to_completer = { i: k for k, v in COMPLETERS.items()
+                             for i in v[ 'aliases' ] }
     if value in aliases_to_completer:
       return aliases_to_completer[ value ]
     else:
@@ -115,11 +120,11 @@ def ParseArguments():
   group.add_argument( '--no-completers', nargs ='*', type = CompleterType,
                        help = 'Do not build or test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
-                        COMPLETERS.keys()) )
+                        COMPLETERS.keys() ) )
   group.add_argument( '--completers', nargs ='*', type = CompleterType,
                        help = 'Only build and test with listed semantic '
                        'completion engine(s). Valid values: {0}'.format(
-                        COMPLETERS.keys()) )
+                        COMPLETERS.keys() ) )
   parser.add_argument( '--skip-build', action = 'store_true',
                        help = 'Do not build ycmd before testing.' )
   parser.add_argument( '--msvc', type = int, choices = [ 14, 15 ],
@@ -202,7 +207,7 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   # By default, nose does not include files starting with a underscore in its
   # report but we want __main__.py to be included. Only ignore files starting
   # with a dot and setup.py.
-  nosetests_args = [ '-v', '--with-id', '--ignore-files=(^\.|^setup\.py$)' ]
+  nosetests_args = [ '-v', '--with-id', r'--ignore-files=(^\.|^setup\.py$)' ]
 
   for key in COMPLETERS:
     if key not in parsed_args.completers:

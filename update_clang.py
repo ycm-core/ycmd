@@ -22,7 +22,7 @@ from distutils.spawn import find_executable
 
 try:
   import lzma
-except:
+except ImportError:
   from backports import lzma
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
@@ -415,7 +415,7 @@ def Main():
   output_dir = args.output_dir if args.output_dir else tempfile.mkdtemp()
 
   try:
-    hashes = dict()
+    hashes = {}
     with TemporaryDirectory() as temp_dir:
       license_file_name = DownloadClangLicense( args.version, temp_dir )
       for os_name, download_data in iteritems( LLVM_DOWNLOAD_DATA ):

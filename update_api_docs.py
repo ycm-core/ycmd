@@ -31,13 +31,13 @@ def FindExecutable( executable ):
   if OnWindows() and extension.lower() not in WIN_EXECUTABLE_EXTS:
     extensions = WIN_EXECUTABLE_EXTS
   else:
-    extensions = ['']
+    extensions = [ '' ]
 
   for extension in extensions:
     executable_name = executable + extension
     if not os.path.isfile( executable_name ):
       for path in paths:
-        executable_path = os.path.join(path, executable_name )
+        executable_path = os.path.join( path, executable_name )
         if os.path.isfile( executable_path ):
           return executable_path
     else:
