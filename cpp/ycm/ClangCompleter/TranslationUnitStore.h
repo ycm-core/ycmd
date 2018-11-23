@@ -21,11 +21,11 @@
 #include "TranslationUnit.h"
 #include "UnsavedFile.h"
 
+#include <memory>
 #include <mutex>
 #include <string>
-#include <vector>
-#include <memory>
 #include <unordered_map>
+#include <vector>
 
 using CXIndex = void*;
 
@@ -33,7 +33,7 @@ namespace YouCompleteMe {
 
 class TranslationUnitStore {
 public:
-  YCM_EXPORT TranslationUnitStore( CXIndex clang_index );
+  YCM_EXPORT explicit TranslationUnitStore( CXIndex clang_index );
   YCM_EXPORT ~TranslationUnitStore();
   TranslationUnitStore( const TranslationUnitStore& ) = delete;
   TranslationUnitStore& operator=( const TranslationUnitStore& ) = delete;

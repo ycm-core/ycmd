@@ -36,7 +36,7 @@ struct CompilationInfoForFile {
 class CompilationDatabase {
 public:
   // |path_to_directory| should be a string-like object.
-  CompilationDatabase( const pybind11::object &path_to_directory );
+  explicit CompilationDatabase( const pybind11::object &path_to_directory );
   CompilationDatabase( const CompilationDatabase& ) = delete;
   CompilationDatabase& operator=( const CompilationDatabase& ) = delete;
   ~CompilationDatabase();

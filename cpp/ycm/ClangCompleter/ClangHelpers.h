@@ -18,13 +18,13 @@
 #ifndef CLANGHELPERS_H_T3ME71LG
 #define CLANGHELPERS_H_T3ME71LG
 
-#include "Diagnostic.h"
 #include "CompletionData.h"
+#include "Diagnostic.h"
 #include "UnsavedFile.h"
 
-#include <vector>
 #include <clang-c/Index.h>
 #include <memory>
+#include <vector>
 
 namespace YouCompleteMe {
 

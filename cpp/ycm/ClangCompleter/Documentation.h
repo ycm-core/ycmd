@@ -33,7 +33,7 @@ struct DocumentationData {
   /// Construct and extract information from the supplied cursor. The cursor
   /// should be pointing to a canonical declaration, such as returned by
   /// clang_getCanonicalCursor( clang_getCursorReferenced( cursor ) )
-  DocumentationData( const CXCursor &cursor );
+  explicit DocumentationData( const CXCursor &cursor );
 
   /// XML data as parsed by libclang. This provides full semantic parsing of
   /// doxygen-syntax comments.

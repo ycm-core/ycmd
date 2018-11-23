@@ -31,7 +31,7 @@ struct Range {
       end_( end_location ) {
   }
 
-  Range( const CXSourceRange &range );
+  explicit Range( const CXSourceRange &range );
 
   Location start_;
   Location end_;
