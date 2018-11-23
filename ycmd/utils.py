@@ -25,7 +25,6 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from future.utils import PY2, native
-import collections
 import copy
 import json
 import logging
@@ -46,9 +45,11 @@ _logger = logging.getLogger( __name__ )
 #   from ycmd.utils import pathname2url, url2pathname, urljoin, urlparse
 #
 if PY2:
+  from collections import Mapping
   from urlparse import urljoin, urlparse, unquote
   from urllib import pathname2url, url2pathname, quote
 else:
+  from collections.abc import Mapping  # noqa
   from urllib.parse import urljoin, urlparse, unquote, quote  # noqa
   from urllib.request import pathname2url, url2pathname  # noqa
 
@@ -496,7 +497,7 @@ def StartThread( func, *args ):
   return thread
 
 
-class HashableDict( collections.Mapping ):
+class HashableDict( Mapping ):
   """An immutable dictionary that can be used in dictionary's keys. The
   dictionary must be JSON-encodable; in particular, all keys must be strings."""
 
