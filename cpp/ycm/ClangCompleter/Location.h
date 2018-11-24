@@ -20,8 +20,8 @@
 
 #include "ClangUtils.h"
 
-#include <string>
 #include <clang-c/Index.h>
+#include <string>
 
 namespace YouCompleteMe {
 
@@ -41,7 +41,7 @@ struct Location {
       filename_( filename ) {
   }
 
-  Location( const CXSourceLocation &location ) {
+  explicit Location( const CXSourceLocation &location ) {
     CXFile file;
     unsigned int unused_offset;
     clang_getExpansionLocation( location,

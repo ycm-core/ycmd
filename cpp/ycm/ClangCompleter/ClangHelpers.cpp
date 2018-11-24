@@ -67,7 +67,7 @@ FixIt BuildDiagnosticFixIt( const std::string& text, CXDiagnostic diagnostic ) {
                                                          idx,
                                                          &range ) );
 
-    chunk.range = range;
+    chunk.range = Range( range );
     fixit.chunks.push_back( chunk );
   }
 

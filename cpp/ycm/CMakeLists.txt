@@ -465,7 +465,7 @@ if( USE_CLANG_TIDY )
 
   if ( CLANG_TIDY )
     message( STATUS "clang-tidy executable found: ${CLANG_TIDY}" )
-    set( CLANG_TIDY_ARGS "${CLANG_TIDY}")
+    set( CLANG_TIDY_ARGS "${CLANG_TIDY}" )
     set_target_properties( ycm_core PROPERTIES
                            CXX_CLANG_TIDY "${CLANG_TIDY_ARGS}" )
   else()

@@ -18,13 +18,13 @@
 #ifndef IDENTIFIERDATABASE_H_ZESX3CVR
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
-#include <unordered_map>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <vector>
-#include <string>
-#include <map>
 #include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace YouCompleteMe {
 

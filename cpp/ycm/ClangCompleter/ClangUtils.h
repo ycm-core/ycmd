@@ -44,8 +44,8 @@ const char *CXErrorCodeToString( CXErrorCode code );
  * Thrown when libclang fails to parse (or reparse) the translation unit.
  */
 struct YCM_EXPORT ClangParseError : std::runtime_error {
-  ClangParseError( const char *what_arg );
-  ClangParseError( CXErrorCode code );
+  explicit ClangParseError( const char *what_arg );
+  explicit ClangParseError( CXErrorCode code );
 };
 
 } // namespace YouCompleteMe

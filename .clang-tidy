@@ -1,7 +1,7 @@
 ---
 Checks:          'clang-diagnostic-*,clang-analyzer-*,llvm-include-order,llvm-namespace-comment,readability-braces-around-statements,readability-container-size-empty,readability-else-after-return,readability-redundant*,readability-inconsistent-declaration-parameter-name,hicpp-explicit-conversions,hicpp-use-emplace,hicpp-use-equals-default,hicpp-use-equals-delete,performance-*,-performance-move-constructor-init'
 WarningsAsErrors: '*'
-HeaderFilterRegex: ''
+HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     none
 User:            bstaletic

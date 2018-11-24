@@ -18,10 +18,10 @@
 #ifndef TRANSLATIONUNIT_H_XQ7I6SVA
 #define TRANSLATIONUNIT_H_XQ7I6SVA
 
-#include "UnsavedFile.h"
 #include "Diagnostic.h"
-#include "Location.h"
 #include "Documentation.h"
+#include "Location.h"
+#include "UnsavedFile.h"
 
 #include <clang-c/Index.h>
 

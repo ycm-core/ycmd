@@ -283,7 +283,7 @@ void CompletionData::BuildCompletionFixIt( CXCodeCompleteResults *results,
                                                          chunk_index,
                                                          &range ) );
 
-    chunk.range = range;
+    chunk.range = Range( range );
     fixit_.chunks.push_back( chunk );
   }
 }

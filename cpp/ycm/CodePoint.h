@@ -125,7 +125,7 @@ public:
   };
 
 private:
-  CodePoint( const RawCodePoint &code_point );
+  explicit CodePoint( const RawCodePoint &code_point );
 
   std::string normal_;
   std::string folded_case_;
@@ -147,7 +147,7 @@ YCM_EXPORT CodePointSequence BreakIntoCodePoints( const std::string &text );
 
 // Thrown when an error occurs while decoding a UTF-8 string.
 struct YCM_EXPORT UnicodeDecodeError : std::runtime_error {
-  UnicodeDecodeError( const char *what_arg )
+  explicit UnicodeDecodeError( const char *what_arg )
     : std::runtime_error( what_arg ) {
   }
 };
