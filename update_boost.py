@@ -26,7 +26,7 @@ import requests
 
 CHUNK_SIZE = 1024 * 1024 # 1 MB
 
-BOOST_VERSION_REGEX = re.compile( 'Version (\d+\.\d+\.\d+)' )
+BOOST_VERSION_REGEX = re.compile( r'Version (\d+\.\d+\.\d+)' )
 BOOST_URL = (
   'http://dl.bintray.com/boostorg/release/{version}/source/{archive}' )
 BOOST_NAME = 'boost_{version_}'
@@ -73,7 +73,7 @@ def OnWindows():
 def Download( url, dest ):
   print( 'Downloading {0}.'.format( os.path.basename( dest ) ) )
   r = requests.get( url, stream = True )
-  with open( dest, 'wb') as f:
+  with open( dest, 'wb' ) as f:
     for chunk in r.iter_content( chunk_size = CHUNK_SIZE ):
       if chunk:
         f.write( chunk )

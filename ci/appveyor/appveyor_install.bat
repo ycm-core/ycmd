@@ -33,6 +33,7 @@ pip install -r test_requirements.txt
 if %errorlevel% neq 0 exit /b %errorlevel%
 pip install codecov
 if %errorlevel% neq 0 exit /b %errorlevel%
+del get-pip.py
 
 :: Enable coverage for Python subprocesses. See:
 :: http://coverage.readthedocs.io/en/latest/subprocess.html

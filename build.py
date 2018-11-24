@@ -65,17 +65,17 @@ NO_PYTHON_HEADERS_ERROR = 'ERROR: Python headers are missing in {include_dir}.'
 #    exist so we look for the versioned names too;
 #  - on Windows, the .lib extension is used instead of the .dll one. See
 #    https://en.wikipedia.org/wiki/Dynamic-link_library#Import_libraries
-STATIC_PYTHON_LIBRARY_REGEX = '^libpython{major}\.{minor}m?\.a$'
+STATIC_PYTHON_LIBRARY_REGEX = '^libpython{major}\\.{minor}m?\\.a$'
 DYNAMIC_PYTHON_LIBRARY_REGEX = """
   ^(?:
   # Linux, BSD
-  libpython{major}\.{minor}m?\.so(\.\d+)*|
+  libpython{major}\\.{minor}m?\\.so(\\.\\d+)*|
   # OS X
-  libpython{major}\.{minor}m?\.dylib|
+  libpython{major}\\.{minor}m?\\.dylib|
   # Windows
-  python{major}{minor}\.lib|
+  python{major}{minor}\\.lib|
   # Cygwin
-  libpython{major}\.{minor}\.dll\.a
+  libpython{major}\\.{minor}\\.dll\\.a
   )$
 """
 
@@ -133,13 +133,13 @@ def FindExecutable( executable ):
   if OnWindows() and extension.lower() not in WIN_EXECUTABLE_EXTS:
     extensions = WIN_EXECUTABLE_EXTS
   else:
-    extensions = ['']
+    extensions = [ '' ]
 
   for extension in extensions:
     executable_name = executable + extension
     if not os.path.isfile( executable_name ):
       for path in paths:
-        executable_path = os.path.join(path, executable_name )
+        executable_path = os.path.join( path, executable_name )
         if os.path.isfile( executable_path ):
           return executable_path
     else:
