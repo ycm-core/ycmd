@@ -25,7 +25,6 @@ from builtins import *  # noqa
 # Must not import ycm_core here! Vim imports completer, which imports this file.
 # We don't want ycm_core inside Vim.
 import logging
-import os
 from collections import defaultdict
 from future.utils import iteritems
 from ycmd.utils import ( ToCppStringCompatible, ToUnicode, re, ReadFile,
@@ -155,19 +154,6 @@ def _PrepareTrigger( trigger ):
   if trigger.startswith( TRIGGER_REGEX_PREFIX ):
     return re.compile( trigger[ len( TRIGGER_REGEX_PREFIX ) : ], re.UNICODE )
   return re.compile( re.escape( trigger ), re.UNICODE )
-
-
-def _PathToCompletersFolder():
-  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
-  return os.path.join( dir_of_current_script )
-
-
-def PathToFiletypeCompleterPluginLoader( filetype ):
-  return os.path.join( _PathToCompletersFolder(), filetype, 'hook.py' )
-
-
-def FiletypeCompleterExistsForFiletype( filetype ):
-  return os.path.exists( PathToFiletypeCompleterPluginLoader( filetype ) )
 
 
 def FilterAndSortCandidatesWrap( candidates, sort_property, query,

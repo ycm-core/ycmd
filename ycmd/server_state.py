@@ -22,14 +22,12 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import os
 import threading
 import logging
 from future.utils import itervalues
-from ycmd.utils import LoadPythonSource
+from importlib import import_module
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
-from ycmd.completers.completer_utils import PathToFiletypeCompleterPluginLoader
 
 _logger = logging.getLogger( __name__ )
 
@@ -63,14 +61,15 @@ class ServerState( object ):
       except KeyError:
         pass
 
-      module_path = PathToFiletypeCompleterPluginLoader( filetype )
-      completer = None
-      supported_filetypes = { filetype }
-      if os.path.exists( module_path ):
-        module = LoadPythonSource( filetype, module_path )
+      try:
+        module = import_module( 'ycmd.completers.{}.hook'.format( filetype ) )
         completer = module.GetCompleter( self._user_options )
-        if completer:
-          supported_filetypes.update( completer.SupportedFiletypes() )
+      except ImportError:
+        completer = None
+
+      supported_filetypes = { filetype }
+      if completer:
+        supported_filetypes.update( completer.SupportedFiletypes() )
 
       for supported_filetype in supported_filetypes:
         if supported_filetype not in self._filetype_completers:
