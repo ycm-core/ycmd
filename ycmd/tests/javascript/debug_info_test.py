@@ -54,9 +54,9 @@ def DebugInfo_TypeScriptCompleter_test( app ):
   )
 
 
-@patch( 'ycmd.completers.typescript.typescript_completer.'
+@patch( 'ycmd.completers.javascript.hook.'
         'ShouldEnableTypeScriptCompleter', return_value = False )
-@patch( 'ycmd.completers.javascript.tern_completer.'
+@patch( 'ycmd.completers.javascript.hook.'
         'ShouldEnableTernCompleter', return_value = False )
 @IsolatedYcmd
 def DebugInfo_NoCompleter_test( app, *args ):
