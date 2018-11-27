@@ -66,18 +66,17 @@ if ( USE_CLANG_COMPLETER AND
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-armv7a-linux-gnueabihf" )
     set( LIBCLANG_SHA256
          "2b3fd40630e9edc20da868a1e12aedef18bf244fddda20b6ed04809adacd00ca" )
+  elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64)" )
+    set( LIBCLANG_DIRNAME
+         "libclang-${CLANG_VERSION}-x86_64-unknown-linux-gnu" )
+    set( LIBCLANG_SHA256
+         "54198c9f941cb32f5915698d3ce11effc5a2985fcfe58c3b42532233bc942a23" )
   else()
-    if ( 64_BIT_PLATFORM )
-      set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-x86_64-unknown-linux-gnu" )
-      set( LIBCLANG_SHA256
-           "54198c9f941cb32f5915698d3ce11effc5a2985fcfe58c3b42532233bc942a23" )
-    else()
-      message( FATAL_ERROR
-        "No prebuilt Clang ${CLANG_VERSION} binaries for 32-bit Linux. "
-        "You'll have to compile Clang ${CLANG_VERSION} from source. "
-        "See the YCM docs for details on how to use a user-compiled libclang." )
-    endif()
+    message( FATAL_ERROR
+      "No prebuilt Clang ${CLANG_VERSION} binaries for this system. "
+      "You'll have to compile Clang ${CLANG_VERSION} from source, "
+      "or use your system libclang."
+      "See the YCM docs for details on how to use a user-compiled libclang." )
   endif()
 
   set( LIBCLANG_FILENAME "${LIBCLANG_DIRNAME}.tar.bz2" )
