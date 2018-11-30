@@ -52,15 +52,26 @@ const RawCodePoint FindCodePoint( const char *text ) {
   // Do a binary search on the array of code points to find the raw code point
   // corresponding to the text. If no code point is found, return the default
   // raw code point for that text.
-  auto first = code_points.begin();
-  size_t count = code_points.size();
+  const auto& original = code_points.original;
+  auto first = original.begin();
+  const auto start = first;
+  size_t count = original.size();
 
   while ( count > 0 ) {
     size_t step = count / 2;
     auto it = first + step;
-    int cmp = std::strcmp( it->original, text );
+    int cmp = std::strcmp( *it, text );
     if ( cmp == 0 ) {
-      return *it;
+      size_t index = std::distance( start, it );
+      return { *it,
+               code_points.normal[ index ],
+               code_points.folded_case[ index ],
+               code_points.swapped_case[ index ],
+               code_points.is_letter[ index ],
+               code_points.is_punctuation[ index ],
+               code_points.is_uppercase[ index ],
+               code_points.break_property[ index ],
+               code_points.combining_class[ index ] };
     }
     if ( cmp < 0 ) {
       first = ++it;
