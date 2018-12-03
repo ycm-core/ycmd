@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2018 ycmd contributors
+# Copyright (C) 2013-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -42,7 +42,7 @@ import base64
 
 from ycmd import extra_conf_store, user_options_store, utils
 from ycmd.hmac_plugin import HmacPlugin
-from ycmd.utils import ( CompatibleWithCurrentCore,
+from ycmd.utils import ( ImportAndCheckCore,
                          OpenForStdHandle,
                          ReadFile,
                          ToBytes )
@@ -163,7 +163,7 @@ def Main():
   YcmCoreSanityCheck()
   extra_conf_store.CallGlobalExtraConfYcmCorePreloadIfExists()
 
-  code = CompatibleWithCurrentCore()
+  code = ImportAndCheckCore()
   if code:
     sys.exit( code )
 

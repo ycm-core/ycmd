@@ -407,7 +407,7 @@ def UpdateClangHeaders( args, temp_dir ):
 
   print( 'Updating Clang headers...' )
   includes_dir = os.path.join(
-    DIR_OF_THIS_SCRIPT, 'clang_includes', 'include' )
+    DIR_OF_THIRD_PARTY, 'clang', 'lib', 'clang', args.version, 'include' )
   Overwrite( os.path.join( src, 'lib', 'Headers' ), includes_dir )
   os.remove( os.path.join( includes_dir, 'CMakeLists.txt' ) )
 

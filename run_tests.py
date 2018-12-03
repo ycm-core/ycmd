@@ -19,6 +19,7 @@ import sys
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
+LIBCLANG_DIR = p.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 
 # We skip python-future because it needs to be inserted in sys.path AFTER the
 # standard library imports but we can't do that with PYTHONPATH because the std
@@ -47,6 +48,10 @@ python_path = [
 if os.environ.get( 'PYTHONPATH' ) is not None:
   python_path.append( os.environ[ 'PYTHONPATH' ] )
 os.environ[ 'PYTHONPATH' ] = os.pathsep.join( python_path )
+
+
+def OnWindows():
+  return platform.system() == 'Windows'
 
 
 def RunFlake8():
@@ -246,6 +251,13 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   if parsed_args.no_retry:
     # Useful for _writing_ tests
     env[ 'YCM_TEST_NO_RETRY' ] = '1'
+
+  if OnWindows():
+    # We prepend the Clang third-party directory to the PATH instead of
+    # overwriting it so that the executable is able to find the Python library.
+    env[ 'PATH' ] = LIBCLANG_DIR + ';' + env[ 'PATH' ]
+  else:
+    env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
 
   subprocess.check_call( [ sys.executable, '-m', 'nose' ] + nosetests_args,
                          env=env )

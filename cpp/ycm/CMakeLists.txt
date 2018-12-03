@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of YouCompleteMe.
 #
@@ -288,7 +288,6 @@ if ( EXTERNAL_LIBCLANG_PATH OR USE_SYSTEM_LIBCLANG )
                   /Library/Developer/CommandLineTools/usr/lib )
     set( EXTERNAL_LIBCLANG_PATH ${TEMP} )
   else()
-    # For Macs, we do things differently; look further in this file.
     if ( NOT APPLE AND NOT MSVC )
       # Setting this to true makes sure that libraries we build will have our
       # rpath set even without having to do "make install"
@@ -339,50 +338,26 @@ target_link_libraries( ${PROJECT_NAME}
                      )
 
 if( LIBCLANG_TARGET )
+  set( LIBCLANG_DIR "${CMAKE_SOURCE_DIR}/../third_party/clang/lib" )
+  # Remove all previous libclang libraries.
+  file( GLOB LIBCLANG_FILEPATHS "${LIBCLANG_DIR}/libclang*" )
+  foreach( FILEPATH ${LIBCLANG_FILEPATHS} )
+    file( REMOVE ${FILEPATH} )
+  endforeach()
   # When building with MSVC, we need to copy libclang.dll instead of libclang.lib
   if( MSVC )
     add_custom_command(
       TARGET ${PROJECT_NAME}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+      COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "${LIBCLANG_DIR}"
     )
   else()
     add_custom_command(
       TARGET ${PROJECT_NAME}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "${LIBCLANG_DIR}"
     )
   endif()
-endif()
-
-
-#############################################################################
-
-# Things are a bit different on Macs when using an external libclang.dylib; here
-# we want to make sure we use @loader_path/libclang.dylib instead of
-# @rpath/libclang.dylib in the final ycm_core.so. If we use the
-# @rpath version, then it may load the system libclang which the user
-# explicitely does not want (otherwise the user would specify
-# USE_SYSTEM_LIBCLANG). If we hardcode with `@loader_path/libclang.dylib`,
-# it guarantees to search `@loader_path` for libclang.dylib first and use it
-# only. So with `@loader_path`, we make sure that only the libclang.dylib
-# present in the same directory as our ycm_core.so is used.
-# And the extra `rpath` is helpful to find libclang.dylib's dependencies
-# if it is built with `--enable-shared` flag.
-if ( EXTERNAL_LIBCLANG_PATH AND APPLE AND NOT USE_SYSTEM_LIBCLANG)
-  get_filename_component(EXTRA_LIB_PATH ${EXTERNAL_LIBCLANG_PATH} DIRECTORY)
-
-  set_target_properties(${PROJECT_NAME}
-    PROPERTIES LINK_FLAGS "-Wl,-rpath,${EXTRA_LIB_PATH}")
-
-  add_custom_command( TARGET ${PROJECT_NAME}
-                      POST_BUILD
-                      COMMAND install_name_tool
-                      "-change"
-                      "@rpath/libclang.dylib"
-                      "@loader_path/libclang.dylib"
-                      "$<TARGET_FILE:${PROJECT_NAME}>"
-                    )
 endif()
 
 
