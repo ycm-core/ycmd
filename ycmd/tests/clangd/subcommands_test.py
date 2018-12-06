@@ -30,7 +30,8 @@ from webtest import AppError
 import requests
 import os.path
 
-from ycmd.tests.clangd import ( SharedYcmd,
+from ycmd.tests.clangd import ( IsolatedYcmd,
+                                SharedYcmd,
                                 PathToTestFile,
                                 RunAfterInitialized )
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -39,9 +40,11 @@ from ycmd.tests.test_utils import ( BuildRequest,
 from ycmd.utils import ReadFile
 
 
-@SharedYcmd
+# This test is isolated to trigger objcpp hooks, rather than fetching completer
+# from cache.
+@IsolatedYcmd()
 def Subcommands_DefinedSubcommands_test( app ):
-  subcommands_data = BuildRequest( completer_target = 'cpp' )
+  subcommands_data = BuildRequest( completer_target = 'objcpp' )
   eq_( sorted( [ 'FixIt',
                  'GetType',
                  'GetTypeImprecise',
