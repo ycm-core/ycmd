@@ -36,7 +36,9 @@ def GetStandardLibraryIndexInSysPath():
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
 
-sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'requests' ) ) )
+sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY,
+                                       'requests_deps',
+                                       'requests' ) ) )
 sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
                  p.abspath( p.join( DIR_OF_THIRD_PARTY, 'python-future',
                                     'src' ) ) )

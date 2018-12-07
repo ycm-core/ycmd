@@ -36,7 +36,7 @@ def GetStandardLibraryIndexInSysPath():
   raise RuntimeError( 'Could not find standard library path in Python path.' )
 
 
-sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
                     p.join( DIR_OF_THIRD_PARTY,
                             'requests_deps',
                             'urllib3',

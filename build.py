@@ -44,7 +44,7 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
                                                             DIR_OF_THIRD_PARTY )
     )
 
-sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
                     p.join( DIR_OF_THIRD_PARTY,
                             'requests_deps',
                             'urllib3',

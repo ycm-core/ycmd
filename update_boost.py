@@ -21,7 +21,7 @@ from os import path as p
 DIR_OF_THIS_SCRIPT = p.abspath( p.dirname( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
-sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
                     p.join( DIR_OF_THIRD_PARTY,
                             'requests_deps',
                             'urllib3',
