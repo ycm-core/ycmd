@@ -23,22 +23,28 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
-import os
 import re
 import pprint
 import sys
 from collections import defaultdict, OrderedDict
+from os import path as p
 
 
-DIR_OF_THIS_SCRIPT = os.path.dirname( os.path.abspath( __file__ ) )
-DIR_OF_THIRD_PARTY = os.path.join( DIR_OF_THIS_SCRIPT, 'third_party' )
+DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
+DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
-sys.path.insert( 1, os.path.abspath( os.path.join( DIR_OF_THIRD_PARTY,
-                                                   'requests' ) ) )
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+                    p.join( DIR_OF_THIRD_PARTY,
+                            'requests_deps',
+                            'urllib3',
+                            'src' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
 
 import requests
 
-DIR_OF_CPP_SOURCES = os.path.join( DIR_OF_THIS_SCRIPT, 'cpp', 'ycm' )
+DIR_OF_CPP_SOURCES = p.join( DIR_OF_THIS_SCRIPT, 'cpp', 'ycm' )
 UNICODE_TABLE_TEMPLATE = (
   """// This file was automatically generated with the update_unicode.py script
 // using version {unicode_version} of the Unicode Character Database.
@@ -509,7 +515,7 @@ def GenerateUnicodeTable( header_path, code_points ):
 
 def Main():
   code_points = GetCodePoints()
-  table_path = os.path.join( DIR_OF_CPP_SOURCES, 'UnicodeTable.inc' )
+  table_path = p.join( DIR_OF_CPP_SOURCES, 'UnicodeTable.inc' )
   GenerateUnicodeTable( table_path, code_points )
 
 

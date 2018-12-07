@@ -44,7 +44,14 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
                                                             DIR_OF_THIRD_PARTY )
     )
 
-sys.path.insert( 1, p.abspath( p.join( DIR_OF_THIRD_PARTY, 'requests' ) ) )
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+                    p.join( DIR_OF_THIRD_PARTY,
+                            'requests_deps',
+                            'urllib3',
+                            'src' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
 
 import requests
 

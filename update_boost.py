@@ -16,11 +16,19 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from distutils.dir_util import copy_tree
 from multiprocessing import cpu_count
+from os import path as p
 
-DIR_OF_THIS_SCRIPT = os.path.abspath( os.path.dirname( __file__ ) )
+DIR_OF_THIS_SCRIPT = p.abspath( p.dirname( __file__ ) )
+DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
-sys.path.insert( 1, os.path.join( DIR_OF_THIS_SCRIPT, 'third_party',
-                                  'requests' ) )
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests' ),
+                    p.join( DIR_OF_THIRD_PARTY,
+                            'requests_deps',
+                            'urllib3',
+                            'src' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
+                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
 
 import requests
 
@@ -71,7 +79,7 @@ def OnWindows():
 
 
 def Download( url, dest ):
-  print( 'Downloading {0}.'.format( os.path.basename( dest ) ) )
+  print( 'Downloading {0}.'.format( p.basename( dest ) ) )
   r = requests.get( url, stream = True )
   with open( dest, 'wb' ) as f:
     for chunk in r.iter_content( chunk_size = CHUNK_SIZE ):
@@ -81,7 +89,7 @@ def Download( url, dest ):
 
 
 def Extract( path, folder = os.curdir ):
-  print( 'Extracting {0}.'.format( os.path.basename( path ) ) )
+  print( 'Extracting {0}.'.format( p.basename( path ) ) )
   with tarfile.open( path ) as f:
     f.extractall( folder )
 
@@ -108,7 +116,7 @@ def GetBoostArchiveUrl( version ):
 
 
 def DownloadBoostLibrary( version, folder ):
-  archive_path = os.path.join( folder, GetBoostArchiveName( version ) )
+  archive_path = p.join( folder, GetBoostArchiveName( version ) )
   Download( GetBoostArchiveUrl( version ), archive_path )
 
 
@@ -116,11 +124,11 @@ def CleanBoostParts( boost_libs_dir ):
   for root, dirs, files in os.walk( boost_libs_dir ):
     for directory in dirs:
       if directory in BOOST_LIBS_FOLDERS_TO_REMOVE:
-        rmtree( os.path.join( root, directory ) )
+        rmtree( p.join( root, directory ) )
     for filename in files:
-      extension = os.path.splitext( filename )[ 1 ]
+      extension = p.splitext( filename )[ 1 ]
       if extension not in BOOST_LIBS_EXTENSIONS_TO_KEEP:
-        os.remove( os.path.join( root, filename ) )
+        os.remove( p.join( root, filename ) )
 
 
 def ExtractBoostParts( args ):
@@ -131,36 +139,36 @@ def ExtractBoostParts( args ):
     os.chdir( boost_dir )
 
     DownloadBoostLibrary( args.version, os.curdir )
-    Extract( os.path.join( os.curdir, GetBoostArchiveName( args.version ) ),
+    Extract( p.join( os.curdir, GetBoostArchiveName( args.version ) ),
              os.curdir )
 
-    os.chdir( os.path.join( os.curdir, GetBoostName( args.version ) ) )
+    os.chdir( p.join( os.curdir, GetBoostName( args.version ) ) )
 
-    bootstrap = os.path.join( os.curdir,
-                              'bootstrap' + ( '.bat' if OnWindows() else
-                                              '.sh' ) )
+    bootstrap = p.join( os.curdir,
+                        'bootstrap' + ( '.bat' if OnWindows() else
+                                        '.sh' ) )
     subprocess.call( [ bootstrap ] )
-    subprocess.call( [ os.path.join( os.curdir, 'b2' ),
+    subprocess.call( [ p.join( os.curdir, 'b2' ),
                        '-j' + str( cpu_count() ),
-                       os.path.join( 'tools', 'bcp' ) ] )
-    boost_parts_dir = os.path.join( os.curdir, 'boost_parts' )
+                       p.join( 'tools', 'bcp' ) ] )
+    boost_parts_dir = p.join( os.curdir, 'boost_parts' )
     os.mkdir( boost_parts_dir )
-    subprocess.call( [ os.path.join( os.curdir, 'dist', 'bin', 'bcp' ) ]
+    subprocess.call( [ p.join( os.curdir, 'dist', 'bin', 'bcp' ) ]
                      + BOOST_PARTS
                      + [ boost_parts_dir ] )
 
-    CleanBoostParts( os.path.join( boost_parts_dir, 'libs' ) )
+    CleanBoostParts( p.join( boost_parts_dir, 'libs' ) )
 
-    dest_libs_dir = os.path.join( DIR_OF_THIS_SCRIPT, 'cpp', 'BoostParts',
-                                  'libs' )
-    dest_boost_dir = os.path.join( DIR_OF_THIS_SCRIPT, 'cpp', 'BoostParts',
-                                   'boost' )
-    if os.path.exists( dest_libs_dir ):
+    dest_libs_dir = p.join( DIR_OF_THIS_SCRIPT, 'cpp', 'BoostParts',
+                            'libs' )
+    dest_boost_dir = p.join( DIR_OF_THIS_SCRIPT, 'cpp', 'BoostParts',
+                             'boost' )
+    if p.exists( dest_libs_dir ):
       rmtree( dest_libs_dir )
-    if os.path.exists( dest_boost_dir ):
+    if p.exists( dest_boost_dir ):
       rmtree( dest_boost_dir )
-    copy_tree( os.path.join( boost_parts_dir, 'libs' ), dest_libs_dir )
-    copy_tree( os.path.join( boost_parts_dir, 'boost' ), dest_boost_dir )
+    copy_tree( p.join( boost_parts_dir, 'libs' ), dest_libs_dir )
+    copy_tree( p.join( boost_parts_dir, 'boost' ), dest_boost_dir )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
     rmtree( boost_dir )
