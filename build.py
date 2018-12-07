@@ -358,7 +358,7 @@ def ParseArguments():
                               'through libclang.' )
   parser.add_argument( '--clangd-completer', action = 'store_true',
                        help = 'Enable C-family semantic completion engine '
-                              'through clangd lsp server.' )
+                              'through clangd lsp server.(EXPERIMENTAL)' )
   parser.add_argument( '--cs-completer', action = 'store_true',
                        help = 'Enable C# semantic completion engine.' )
   parser.add_argument( '--go-completer', action = 'store_true',

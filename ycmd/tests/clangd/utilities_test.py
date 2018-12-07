@@ -1,5 +1,5 @@
 # Copyright (C) 2011-2012 Google Inc.
-#               2017      ycmd contributors
+#               2018      ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
+from hamcrest import assert_that, calling, raises
 from nose.tools import eq_
 from ycmd.completers.cpp import clangd_completer
 from ycmd import handlers
@@ -90,7 +91,8 @@ def ClangdCompleter_GetClangdCommand_CustomBinary_test():
   with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
               return_value = True ):
     clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-    eq_( clangd_completer.GetClangdCommand( user_options )[ 0 ], CLANGD_PATH )
+    eq_( clangd_completer.GetClangdCommand( user_options, None )[ 0 ],
+         CLANGD_PATH )
 
   # Unsupported version.
   with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
@@ -126,7 +128,7 @@ def ClangdCompleter_ShouldEnableClangdCompleter_NoUseClangd_test():
     eq_( clangd_completer.ShouldEnableClangdCompleter( {} ), False )
 
     # Enabled.
-    user_options = { 'use_clangd': True }
+    user_options = { 'use_clangd': 'Always' }
     # Found supported binary.
     with patch( 'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
                 return_value = True ):
@@ -139,11 +141,11 @@ def ClangdCompleter_ShouldEnableClangdCompleter_NoUseClangd_test():
   with patch( 'ycmd.completers.cpp.clangd_completer.Get3rdPartyClangd',
               return_value = True ):
     # Disabled.
-    user_options = { 'use_clangd': False }
+    user_options = { 'use_clangd': 'Never' }
     eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), False )
 
-    # Enabled.
-    user_options = { 'use_clangd': True }
+    # Auto.
+    user_options = { 'use_clangd': 'Auto' }
     # Found supported binary.
     with patch( 'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
                 return_value = True ):
@@ -156,14 +158,14 @@ def ClangdCompleter_ShouldEnableClangdCompleter_NoUseClangd_test():
 def ClangdCompleter_ShouldEnableClangdCompleter_UseClangd_test():
   # Clangd turned on, assumes the clangd binary was found with a supported
   # version.
-  user_options = { 'use_clangd': True }
+  user_options = { 'use_clangd': 'Always' }
   with patch(
       'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
       return_value = [ 'clangd', 'arg1', 'arg2' ] ) as find_clangd_binary:
     eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), True )
 
   # Clangd turned on but no supported binary.
-  user_options = { 'use_clangd': True }
+  user_options = { 'use_clangd': 'Always' }
   with patch(
       'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
       return_value = None ) as find_clangd_binary:
@@ -205,6 +207,10 @@ def ClangdCompleter_Get3rdParty_test():
       eq_( clangd_completer.Get3rdPartyClangd(), CLANGD )
     with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
                 return_value = False ):
+      assert_that(
+          calling( clangd_completer.Get3rdPartyClangd ),
+        raises( RuntimeError, 'clangd binary at /third_party/clangd is '
+                              'out-of-date please update.' ) )
       eq_( clangd_completer.Get3rdPartyClangd(), None )
 
 

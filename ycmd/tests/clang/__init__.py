@@ -44,7 +44,7 @@ def setUpPackage():
   subserver, should be done here."""
   global shared_app
 
-  shared_app = SetUpApp( { 'use_clangd': False } )
+  shared_app = SetUpApp( { 'use_clangd': 'Never' } )
 
 
 def SharedYcmd( test ):
@@ -82,7 +82,7 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      custom_options.update( { 'use_clangd': False } )
+      custom_options.update( { 'use_clangd': 'Never' } )
       with IsolatedApp( custom_options ) as app:
         test( app, *args, **kwargs )
     return Wrapper

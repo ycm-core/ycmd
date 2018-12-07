@@ -98,12 +98,13 @@ provided previously and any tags files produced by ctags. This engine is
 non-semantic.
 
 There are also several semantic engines in YCM. There's a libclang-based
-completer that provides semantic completion for C-family languages.  There's
-also a Jedi-based completer for semantic completion for Python, an
-OmniSharp-based completer for C#, a [Gocode][gocode]-based completer for Go
-(using [Godef][godef] for jumping to definitions), a TSServer-based completer
-for JavaScript and TypeScript, and a [jdt.ls][jdtls]-based server for Java. More
-will be added with time.
+completer and [clangd][clangd]-based completer that provides semantic completion
+for C-family languages. [clangd][clangd]-based completer doesn't support extra
+conf, you must have a compilation database. There's also a Jedi-based completer
+for semantic completion for Python, an OmniSharp-based completer for C#, a
+[Gocode][gocode]-based completer for Go (using [Godef][godef] for jumping to
+definitions), a TSServer-based completer for JavaScript and TypeScript, and a
+[jdt.ls][jdtls]-based server for Java. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -424,3 +425,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [api-docs]: https://valloric.github.io/ycmd/
 [ycmd-extra-conf]: https://github.com/Valloric/ycmd/blob/master/.ycm_extra_conf.py
 [rustup]: https://www.rustup.rs/
+[clangd]: https://clang.llvm.org/extra/clangd.html

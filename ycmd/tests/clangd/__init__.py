@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -54,7 +54,7 @@ def setUpPackage():
   subserver, should be done here."""
   global shared_app
 
-  user_options_with_clangd = { 'use_clangd': True }
+  user_options_with_clangd = { 'use_clangd': 'Always' }
   shared_app = SetUpApp( user_options_with_clangd )
 
 
@@ -100,7 +100,7 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      custom_options.update( { 'use_clangd': True } )
+      custom_options.update( { 'use_clangd': 'Always' } )
       with IgnoreExtraConfOutsideTestsFolder():
         with IsolatedApp( custom_options ) as app:
           test( app, *args, **kwargs )
