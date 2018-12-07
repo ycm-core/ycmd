@@ -48,9 +48,21 @@ DIR_OF_CPP_SOURCES = p.join( DIR_OF_THIS_SCRIPT, 'cpp', 'ycm' )
 UNICODE_TABLE_TEMPLATE = (
   """// This file was automatically generated with the update_unicode.py script
 // using version {unicode_version} of the Unicode Character Database.
-static const std::array< const RawCodePoint, {size} > code_points = {{ {{
+#include <array>
+struct RawCodePointArray {{
+std::array< char[{original_size}], {size} > original;
+std::array< char[{normal_size}], {size} > normal;
+std::array< char[{folded_case_size}], {size} > folded_case;
+std::array< char[{swapped_case_size}], {size} > swapped_case;
+std::array< bool, {size} > is_letter;
+std::array< bool, {size} > is_punctuation;
+std::array< bool, {size} > is_uppercase;
+std::array< uint8_t, {size} > break_property;
+std::array< uint8_t, {size} > combining_class;
+}};
+static const RawCodePointArray code_points = {{
 {code_points}
-}} }};""" )
+}};""" )
 UNICODE_VERSION_REGEX = re.compile( r'Version (?P<version>\d+(?:\.\d+){2})' )
 GRAPHEME_BREAK_PROPERTY_REGEX = re.compile(
   r'^(?P<value>[A-F0-9.]+)\s+; (?P<property>\w+) # .*$' )
@@ -492,23 +504,61 @@ def CppBool( statement ):
   return '0'
 
 
+# If a codepoint is written in hex (\x61) instead of a literal (a)
+# then the backslash needs to be escaped in order for the correct
+# string end up in the generated C++ file.
+# To calculate the actual length for these, we can't count bytes.
+# Instead, we split on '\\x', leaving only the an array of hex values.
+# \\x61 would end up as [ '', '61' ]
+def CppLength( utf8_code_point ):
+  nb_utf8_hex = len( utf8_code_point.split( '\\x' )[ 1: ] )
+  if nb_utf8_hex > 0:
+    # +1 for NULL terminator
+    return nb_utf8_hex + 1
+  return len( bytearray( utf8_code_point, encoding = 'utf8' ) ) + 1
+
+
 def GenerateUnicodeTable( header_path, code_points ):
   unicode_version = GetUnicodeVersion()
   size = len( code_points )
-  code_points = '\n'.join( [
-    ( '{' + CppChar( code_point[ 'original' ] ) + ',' +
-            CppChar( code_point[ 'normal' ] ) + ',' +
-            CppChar( code_point[ 'folded_case' ] ) + ',' +
-            CppChar( code_point[ 'swapped_case' ] ) + ',' +
-            CppBool( code_point[ 'is_letter' ] ) + ',' +
-            CppBool( code_point[ 'is_punctuation' ] ) + ',' +
-            CppBool( code_point[ 'is_uppercase' ] ) + ',' +
-            str( code_point[ 'break_property' ] ) + ',' +
-            str( code_point[ 'combining_class' ] ) + '},' )
-    for code_point in code_points ] )
-  contents = UNICODE_TABLE_TEMPLATE.format( unicode_version = unicode_version,
-                                            size = size,
-                                            code_points = code_points )
+  table = {
+    'original': { 'output': '{{', 'size': 0, 'converter': CppChar },
+    'normal': { 'output': '{{', 'size': 0, 'converter': CppChar },
+    'folded_case': { 'output': '{{', 'size': 0, 'converter': CppChar },
+    'swapped_case': { 'output': '{{', 'size': 0, 'converter': CppChar },
+    'is_letter': { 'output': '{{', 'converter': CppBool },
+    'is_punctuation': { 'output': '{{', 'converter': CppBool },
+    'is_uppercase': { 'output': '{{', 'converter': CppBool },
+    'break_property': { 'output': '{{', 'converter': str },
+    'combining_class': { 'output': '{{', 'converter': str },
+  }
+  for code_point in code_points:
+    for t, d in table.items():
+      cp = code_point[ t ]
+      d[ 'output' ] += d[ 'converter' ]( cp ) + ','
+      if d[ 'converter' ] == CppChar:
+        d[ 'size' ] = max( CppLength( cp ), d[ 'size' ] )
+  for t, d in table.items():
+    d[ 'output' ] = d[ 'output' ].rstrip( ',' ) + '}},'
+    if t == 'combining_class':
+      d[ 'output' ] = d[ 'output' ].rstrip( ',' )
+  code_points = '\n'.join( [ table[ 'original' ][ 'output' ],
+                             table[ 'normal' ][ 'output' ],
+                             table[ 'folded_case' ][ 'output' ],
+                             table[ 'swapped_case' ][ 'output' ],
+                             table[ 'is_letter' ][ 'output' ],
+                             table[ 'is_punctuation' ][ 'output' ],
+                             table[ 'is_uppercase' ][ 'output' ],
+                             table[ 'break_property' ][ 'output' ],
+                             table[ 'combining_class' ][ 'output' ] ] )
+  contents = UNICODE_TABLE_TEMPLATE.format(
+    unicode_version = unicode_version,
+    size = size,
+    original_size = table[ 'original' ][ 'size' ],
+    normal_size = table[ 'normal' ][ 'size' ],
+    folded_case_size = table[ 'folded_case' ][ 'size' ],
+    swapped_case_size = table[ 'swapped_case' ][ 'size' ],
+    code_points = code_points )
   with open( header_path, 'w', newline = '\n', encoding='utf8' ) as header_file:
     header_file.write( contents )
 
