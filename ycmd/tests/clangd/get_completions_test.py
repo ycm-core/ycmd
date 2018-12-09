@@ -745,7 +745,33 @@ def GetCompletions_cuda_test( app ):
       'data': has_entries( {
         'completion_start_column': 29,
         'completions': contains(
-          CompletionEntryMatcher( 'do_something', 'void' ),
+          CompletionEntryMatcher( 'do_something', 'void',
+              { 'menu_text': 'do_something(float *a)' } ),
+        ),
+        'errors': empty(),
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'clangd_args': [ '-header-insertion-decorators=1' ] } )
+def GetCompletions_WithHeaderInsertionDecorators_test( app ):
+  RunTest( app, {
+    'description': 'Completion of CUDA files',
+    'request': {
+      'filetype'  : 'cuda',
+      'filepath'  : PathToTestFile( 'cuda', 'completion_test.cu' ),
+      'line_num'  : 16,
+      'column_num': 29,
+      'force_semantic': True,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 29,
+        'completions': contains(
+          CompletionEntryMatcher( 'do_something', 'void',
+              { 'menu_text': ' do_something(float *a)' } ),
         ),
         'errors': empty(),
       } )

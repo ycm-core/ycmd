@@ -98,10 +98,12 @@ provided previously and any tags files produced by ctags. This engine is
 non-semantic.
 
 There are also several semantic engines in YCM. There's a libclang-based
-completer and [clangd][clangd]-based completer that provides semantic completion
-for C-family languages. [clangd][clangd]-based completer doesn't support extra
-conf, you must have a compilation database. There's also a Jedi-based completer
-for semantic completion for Python, an OmniSharp-based completer for C#, a
+completer and [clangd][clangd]-based completer that both provide semantic
+completion for C-family languages. The [clangd][clangd]-based completer doesn't
+support extra conf; you must have a compilation database. [clangd][clangd]
+support is currently **experimental** and changes in the near future might break
+backwards compatibility. There's also a Jedi-based completer for semantic
+completion for Python, an OmniSharp-based completer for C#, a
 [Gocode][gocode]-based completer for Go (using [Godef][godef] for jumping to
 definitions), a TSServer-based completer for JavaScript and TypeScript, and a
 [jdt.ls][jdtls]-based server for Java. More will be added with time.
@@ -251,6 +253,10 @@ The return value is a dictionary whose content depends on the completer.
 The `Settings` function is called by the C-family completer to get the compiler
 flags to use when compiling the current file. The absolute path of this file is
 accessible under the `filename` key of the `kwargs` dictionary.
+[clangd][clangd]-based completer doesn't support extra conf files. If you are
+using [clangd][clangd]-based completer, you must have a compilation database in
+your project's root or in one of the parent directories to provide compiler
+flags.
 
 The return value expected by the completer is a dictionary containing the
 following items:

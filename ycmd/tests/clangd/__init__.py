@@ -38,6 +38,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     StopCompleterServer,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
+from ycmd.completers.cpp import clangd_completer
 
 shared_app = None
 
@@ -103,6 +104,7 @@ def IsolatedYcmd( custom_options = {} ):
       custom_options.update( { 'use_clangd': 'Always' } )
       with IgnoreExtraConfOutsideTestsFolder():
         with IsolatedApp( custom_options ) as app:
+          clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
           test( app, *args, **kwargs )
           app.post_json( '/run_completer_command',
                           BuildRequest( completer_target = 'cpp',
