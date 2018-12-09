@@ -37,3 +37,4 @@ cache:
   - '%APPVEYOR_BUILD_FOLDER%\third_party\racerd\target'  # Racerd compilation
      # jdt.ls download
   - '%APPVEYOR_BUILD_FOLDER%\third_party\eclipse.jdt.ls\target\cache'
+  - '%APPVEYOR_BUILD_FOLDER%\third_party\clangd\cache'

@@ -36,6 +36,7 @@ import tempfile
 import time
 import stat
 import shutil
+import json
 
 from ycmd import extra_conf_store, handlers, user_options_store
 from ycmd.completers.completer import Completer
@@ -376,3 +377,36 @@ def WithRetry( test ):
         print( 'Test failed, retrying: {0}'.format( str( test_exception ) ) )
         time.sleep( 0.25 )
   return wrapper
+
+
+@contextlib.contextmanager
+def TemporaryClangProject( tmp_dir, compile_commands ):
+  """Context manager to create a compilation database in a directory and delete
+  it when the test completes. |tmp_dir| is the directory in which to create the
+  database file (typically used in conjunction with |TemporaryTestDir|) and
+  |compile_commands| is a python object representing the compilation database.
+
+  e.g.:
+    with TemporaryTestDir() as tmp_dir:
+      database = [
+        {
+          'directory': os.path.join( tmp_dir, dir ),
+          'command': compiler_invocation,
+          'file': os.path.join( tmp_dir, dir, filename )
+        },
+        ...
+      ]
+      with TemporaryClangProject( tmp_dir, database ):
+        <test here>
+
+  The context manager does not yield anything.
+  """
+  path = os.path.join( tmp_dir, 'compile_commands.json' )
+
+  with open( path, 'w' ) as f:
+    f.write( ToUnicode( json.dumps( compile_commands, indent=2 ) ) )
+
+  try:
+    yield
+  finally:
+    os.remove( path )

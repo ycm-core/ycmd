@@ -148,7 +148,9 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
   } )
 
 
-@SharedYcmd
+# This test is isolated to make sure we trigger c hook for clangd, instead of
+# fetching completer from cache.
+@IsolatedYcmd()
 def GetCompletions_Fallback_NoSuggestions_test( app ):
   # TESTCASE1 (general_fallback/lang_c.c)
   RunTest( app, {
@@ -1491,10 +1493,13 @@ def GetCompletions_UnityInclude_test( app ):
   } )
 
 
-@SharedYcmd
+# This test is isolated to make sure we trigger c hook for clangd, instead of
+# fetching completer from cache.
+@IsolatedYcmd()
 def GetCompletions_cuda_test( app ):
   RunTest( app, {
     'description': 'Completion of CUDA files',
+    'extra_conf': [ '.ycm_extra_conf.py' ],
     'request': {
       'filetype'  : 'cuda',
       'filepath'  : PathToTestFile( 'cuda', 'completion_test.cu' ),

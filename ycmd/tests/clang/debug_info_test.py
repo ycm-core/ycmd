@@ -26,9 +26,9 @@ import os
 from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
                        instance_of, matches_regexp )
 
-from ycmd.tests.clang import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
-                               TemporaryClangProject )
-from ycmd.tests.test_utils import BuildRequest, TemporaryTestDir
+from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import ( BuildRequest, TemporaryTestDir,
+                                    TemporaryClangProject )
 
 
 @SharedYcmd

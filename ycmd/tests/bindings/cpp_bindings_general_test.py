@@ -26,8 +26,8 @@ from ycmd.utils import ToCppStringCompatible as ToCppStr
 from ycmd.completers.cpp.clang_completer import ConvertCompletionData
 from ycmd.responses import BuildDiagnosticData
 from ycmd.tests.bindings import PathToTestFile
-from ycmd.tests.test_utils import ClangOnly, TemporaryTestDir
-from ycmd.tests.clang import TemporaryClangProject
+from ycmd.tests.test_utils import ( ClangOnly, TemporaryTestDir,
+                                    TemporaryClangProject )
 
 from nose.tools import eq_
 from hamcrest import ( assert_that,

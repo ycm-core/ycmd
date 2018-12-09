@@ -25,6 +25,7 @@ import sysconfig
 import tarfile
 import tempfile
 
+IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR, PY_PATCH = sys.version_info[ 0 : 3 ]
 if not ( ( PY_MAJOR == 2 and PY_MINOR == 7 and PY_PATCH >= 1 ) or
          ( PY_MAJOR == 3 and PY_MINOR >= 4 ) or
@@ -104,12 +105,47 @@ BUILD_ERROR_MESSAGE = (
   'and the invocation line used to run it.' )
 
 
+def MakeCleanDirectory( directory_path ):
+  if p.exists( directory_path ):
+    shutil.rmtree( directory_path )
+  os.makedirs( directory_path )
+
+
+def CheckFileIntegrity( file_path, check_sum ):
+  with open( file_path, 'rb' ) as existing_file:
+    existing_sha256 = hashlib.sha256( existing_file.read() ).hexdigest()
+  return existing_sha256 == check_sum
+
+
+def DownloadFileTo( download_url, file_path ):
+  request = requests.get( download_url, stream = True )
+  with open( file_path, 'wb' ) as package_file:
+    package_file.write( request.content )
+  request.close()
+
+
 def OnMac():
   return platform.system() == 'Darwin'
 
 
 def OnWindows():
   return platform.system() == 'Windows'
+
+
+def OnFreeBSD():
+  return platform.system() == 'FreeBSD'
+
+
+def OnAArch64():
+  return platform.machine().lower().startswith( 'aarch64' )
+
+
+def OnArm():
+  return platform.machine().lower().startswith( 'arm' )
+
+
+def OnX86_64():
+  return platform.machine().lower().startswith( 'x86_64' )
 
 
 def OnCiService():
@@ -318,15 +354,18 @@ def GetGenerator( args ):
     return 'Ninja'
   if OnWindows():
     return 'Visual Studio {version}{arch}'.format(
-        version = args.msvc,
-        arch = ' Win64' if platform.architecture()[ 0 ] == '64bit' else '' )
+        version = args.msvc, arch = ' Win64' if IS_64BIT else '' )
   return 'Unix Makefiles'
 
 
 def ParseArguments():
   parser = argparse.ArgumentParser()
   parser.add_argument( '--clang-completer', action = 'store_true',
-                       help = 'Enable C-family semantic completion engine.' )
+                       help = 'Enable C-family semantic completion engine '
+                              'through libclang.' )
+  parser.add_argument( '--clangd-completer', action = 'store_true',
+                       help = 'Enable C-family semantic completion engine '
+                              'through clangd lsp server.(EXPERIMENTAL)' )
   parser.add_argument( '--cs-completer', action = 'store_true',
                        help = 'Enable C# semantic completion engine.' )
   parser.add_argument( '--go-completer', action = 'store_true',
@@ -706,29 +745,21 @@ def EnableJavaCompleter( switches ):
       jdtls_package_name = package_name )
   file_name = p.join( CACHE, package_name )
 
-  if p.exists( REPOSITORY ):
-    shutil.rmtree( REPOSITORY )
-
-  os.makedirs( REPOSITORY )
+  MakeCleanDirectory( REPOSITORY )
 
   if not p.exists( CACHE ):
     os.makedirs( CACHE )
-  elif p.exists( file_name ):
-    with open( file_name, 'rb' ) as existing_file:
-      existing_sha256 = hashlib.sha256( existing_file.read() ).hexdigest()
-    if existing_sha256 != JDTLS_SHA256:
-      Print( 'Cached tar file does not match checksum. Removing...' )
-      os.remove( file_name )
+  elif p.exists( file_name ) and not CheckFileIntegrity( file_name,
+                                                         JDTLS_SHA256 ):
+    Print( 'Cached tar file does not match checksum. Removing...' )
+    os.remove( file_name )
 
 
   if p.exists( file_name ):
     Print( 'Using cached jdt.ls: {0}'.format( file_name ) )
   else:
     Print( "Downloading jdt.ls from {0}...".format( url ) )
-    request = requests.get( url, stream = True )
-    with open( file_name, 'wb' ) as package_file:
-      package_file.write( request.content )
-    request.close()
+    DownloadFileTo( url, file_name )
 
   Print( "Extracting jdt.ls to {0}...".format( REPOSITORY ) )
   with tarfile.open( file_name ) as package_tar:
@@ -748,6 +779,89 @@ def EnableTypeScriptCompleter( args ):
              quiet = args.quiet,
              status_message = 'Installing TSServer for JavaScript '
                               'and TypeScript completion' )
+
+
+def DownloadClangd( printer ):
+  LLVM_RELEASE = '7.0.0'
+  CLANGD_DIR = p.join( DIR_OF_THIRD_PARTY, 'clangd', )
+  CLANGD_CACHE_DIR = p.join( CLANGD_DIR, 'cache' )
+  CLANGD_OUTPUT_DIR = p.join( CLANGD_DIR, 'output' )
+  if OnWindows():
+    target = [
+      ( 'clangd-{LLVM_RELEASE}-win64',
+        '2486670cb84c3ea9e9ab3409ebd940ed2c9ddee75adab4745d89df19d029fa54' ),
+      ( 'clangd-{LLVM_RELEASE}-win32',
+        '533359bb236df7de9f04d6efe3de74a3a6d56f2e1a9154733c076c252d657806' ) ]
+  elif OnMac():
+    target = [
+      ( 'clangd-{LLVM_RELEASE}-x86_64-apple-darwin',
+        '22431c42404a85c5d0a91b2e3683db08ab8f434c652ec9da2ceb4f168f711579' ) ]
+  elif OnFreeBSD():
+    target = [
+      ( 'clangd-{LLVM_RELEASE}-amd64-unknown-freebsd11',
+        '33d4d399605fce59c80f41bc53cf5fb0f552342c1698d9e6001c9b4edfbbd68c' ),
+      ( 'clangd-{LLVM_RELEASE}-i386-unknown-freebsd11',
+        '5593e66c6d3e374b0e41b426685d5fd1b50d44ad6301f0148612dc30aa12924a' ) ]
+  elif OnAArch64():
+    target = [
+      ( 'clangd-{LLVM_RELEASE}-aarch64-linux-gnu',
+        'a5a12adc8685754aa1a717fd57d5031805f66d853e1a6fabd5c7f235565cb33a' ) ]
+  elif OnArm():
+    target = [
+      ( 'clangd-{LLVM_RELEASE}-armv7a-linux-gnueabihf',
+        'c776f19f0fd60e5cda550fc862a1c17cc8b1d917d6732931044e72694a824dab' ) ]
+  elif OnX86_64():
+    target = [
+      ( 'clangd-{LLVM_RELEASE}-x86_64-unknown-linux-gnu',
+        '5db646bf789eb5b331ce41275d0575f6f4683921469e33bfaf35f84af72947a8' ) ]
+  else:
+    print( 'No binaries for your system, please compile it from source.' )
+    return False
+
+  target_name, check_sum = target[ not IS_64BIT ]
+  target_name = target_name.format( LLVM_RELEASE = LLVM_RELEASE )
+  file_name = '{TARGET_NAME}.tar.bz2'.format( TARGET_NAME = target_name )
+  download_url = 'https://dl.bintray.com/micbou/clangd/{FILE_NAME}'.format(
+      FILE_NAME = file_name )
+
+  file_name = p.join( CLANGD_CACHE_DIR, file_name )
+
+  MakeCleanDirectory( CLANGD_OUTPUT_DIR )
+
+  if not p.exists( CLANGD_CACHE_DIR ):
+    os.makedirs( CLANGD_CACHE_DIR )
+  elif p.exists( file_name ) and not CheckFileIntegrity( file_name, check_sum ):
+    printer( 'Cached clangd tar file does not match checksum. Removing...' )
+    os.remove( file_name )
+
+  if p.exists( file_name ):
+    printer( 'Using cached clangd: {0}'.format( file_name ) )
+  else:
+    printer( "Downloading clangd from {0}...".format( download_url ) )
+    DownloadFileTo( download_url, file_name )
+
+  printer( "Extracting clangd to {0}...".format( CLANGD_OUTPUT_DIR ) )
+  with tarfile.open( file_name ) as package_tar:
+    package_tar.extractall( CLANGD_OUTPUT_DIR )
+
+  printer( "Done installing clangd" )
+  return True
+
+
+def EnableClangdCompleter( Args ):
+  if Args.quiet:
+    sys.stdout.write( 'Setting up clangd completer...' )
+    sys.stdout.flush()
+
+  def Print( msg ):
+    if not Args.quiet:
+      print( msg )
+
+  if not DownloadClangd( Print ):
+    raise Exception( "FAIL: Couldn't download clangd." )
+
+  if Args.quiet:
+    print( 'OK' )
 
 
 def WritePythonUsedDuringBuild():
@@ -778,6 +892,8 @@ def Main():
     EnableJavaCompleter( args )
   if args.ts_completer or args.all_completers:
     EnableTypeScriptCompleter( args )
+  if args.clangd_completer or args.all_completers:
+    EnableClangdCompleter( args )
 
 
 if __name__ == '__main__':

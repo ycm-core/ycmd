@@ -58,6 +58,11 @@ COMPLETERS = {
     'test': [ '--exclude-dir=ycmd/tests/clang' ],
     'aliases': [ 'c', 'cpp', 'c++', 'objc', 'clang', ]
   },
+  'clangd': {
+    'build': [ '--clangd-completer' ],
+    'test': [ '--exclude-dir=ycmd/tests/clangd' ],
+    'aliases': []
+  },
   'cs': {
     'build': [ '--cs-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/cs' ],
