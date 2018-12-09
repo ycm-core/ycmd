@@ -37,7 +37,6 @@ _logger = logging.getLogger( __name__ )
 MIN_SUPPORTED_VERSION = '7.0.0'
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
-USES_YCMD_CACHING = 'clangd_uses_ycmd_caching'
 NOT_CACHED = 'NOT_CACHED'
 CLANGD_COMMAND = NOT_CACHED
 REPORTED_OUT_OF_DATE = False
@@ -125,7 +124,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
   CLANGD_COMMAND = None
 
   resource_dir = None
-  installed_clangd = user_options.get( 'clangd_binary_path', None )
+  installed_clangd = user_options[ 'clangd_binary_path' ]
   if not CheckClangdVersion( installed_clangd ):
     if installed_clangd:
       _logger.warning( 'Clangd at {} is out-of-date, trying to use pre-built '
@@ -143,7 +142,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
 
   # We have a clangd binary that is executable and up-to-date at this point.
   CLANGD_COMMAND = [ installed_clangd ]
-  clangd_args = user_options.get( 'clangd_args', [] )
+  clangd_args = user_options[ 'clangd_args' ]
   put_resource_dir = False
   put_limit_results = False
   put_header_insertion_decorators = False
@@ -157,7 +156,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
     CLANGD_COMMAND.append( '-header-insertion-decorators=0' )
   if resource_dir and not put_resource_dir:
     CLANGD_COMMAND.append( '-resource-dir=' + resource_dir )
-  if user_options.get( USES_YCMD_CACHING, True ) and not put_limit_results:
+  if user_options[ 'clangd_uses_ycmd_caching' ] and not put_limit_results:
     CLANGD_COMMAND.append( '-limit-results=500' )
 
   return CLANGD_COMMAND
@@ -166,12 +165,10 @@ def GetClangdCommand( user_options, third_party_clangd ):
 def ShouldEnableClangdCompleter( user_options ):
   third_party_clangd = Get3rdPartyClangd()
   # User disabled clangd explicitly.
-  if ( 'use_clangd' in user_options and
-       user_options[ 'use_clangd' ].lower() == 'never' ):
+  if user_options[ 'use_clangd' ].lower() == 'never':
     return False
   # User haven't downloaded clangd and use_clangd is in auto mode.
-  if not third_party_clangd and user_options.get( 'use_clangd',
-                                                  'Auto' ).lower() == 'auto':
+  if not third_party_clangd and user_options[ 'use_clangd' ].lower() == 'auto':
     return False
 
   clangd_command = GetClangdCommand( user_options, third_party_clangd )
@@ -202,7 +199,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
     self._Reset()
     self._auto_trigger = user_options[ 'auto_trigger' ]
-    self._use_ycmd_caching = user_options[ USES_YCMD_CACHING ]
+    self._use_ycmd_caching = user_options[ 'clangd_uses_ycmd_caching' ]
 
 
   def _Reset( self ):
