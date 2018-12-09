@@ -25,7 +25,6 @@ from __future__ import division
 from builtins import *  # noqa
 
 import json
-import sys
 import requests
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
@@ -96,8 +95,8 @@ def RunTest( app, test ):
 
   eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
-  print( 'Completer response: {0}'.format( json.dumps(
-    response.json, indent = 2 ) ), file=sys.stderr )
+  print( 'Completer response: {}'.format( json.dumps(
+    response.json, indent = 2 ) ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
