@@ -29,8 +29,7 @@ from hamcrest import assert_that
 from nose.tools import eq_
 
 
-from ycmd.tests.test_utils import ( BuildRequest,
-                                    ClearCompletionsCache,
+from ycmd.tests.test_utils import ( ClearCompletionsCache,
                                     CombineRequest,
                                     IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
@@ -62,7 +61,7 @@ def setUpPackage():
 def tearDownPackage():
   global shared_app
 
-  StopCompleterServer( shared_app, 'cpp', '' )
+  StopCompleterServer( shared_app, 'cpp' )
 
 
 def SharedYcmd( test ):
@@ -105,10 +104,10 @@ def IsolatedYcmd( custom_options = {} ):
       with IgnoreExtraConfOutsideTestsFolder():
         with IsolatedApp( custom_options ) as app:
           clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-          test( app, *args, **kwargs )
-          app.post_json( '/run_completer_command',
-                          BuildRequest( completer_target = 'cpp',
-                                        command_arguments = [ 'StopServer' ] ) )
+          try:
+            test( app, *args, **kwargs )
+          finally:
+            StopCompleterServer( app, 'cpp' )
     return Wrapper
   return Decorator
 
