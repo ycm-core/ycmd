@@ -73,3 +73,6 @@ third_party/eclipse.jdt.ls
 
 # TSServer
 third_party/tsserver
+
+# clangd local installation
+third_party/clangd
