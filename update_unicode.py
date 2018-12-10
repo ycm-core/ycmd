@@ -28,6 +28,7 @@ import pprint
 import sys
 from collections import defaultdict, OrderedDict
 from os import path as p
+from io import StringIO
 
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
@@ -522,26 +523,34 @@ def GenerateUnicodeTable( header_path, code_points ):
   unicode_version = GetUnicodeVersion()
   size = len( code_points )
   table = {
-    'original': { 'output': '{{', 'size': 0, 'converter': CppChar },
-    'normal': { 'output': '{{', 'size': 0, 'converter': CppChar },
-    'folded_case': { 'output': '{{', 'size': 0, 'converter': CppChar },
-    'swapped_case': { 'output': '{{', 'size': 0, 'converter': CppChar },
-    'is_letter': { 'output': '{{', 'converter': CppBool },
-    'is_punctuation': { 'output': '{{', 'converter': CppBool },
-    'is_uppercase': { 'output': '{{', 'converter': CppBool },
-    'break_property': { 'output': '{{', 'converter': str },
-    'combining_class': { 'output': '{{', 'converter': str },
+    'original': { 'output': StringIO(), 'size': 0, 'converter': CppChar },
+    'normal': { 'output': StringIO(), 'size': 0, 'converter': CppChar },
+    'folded_case': { 'output': StringIO(), 'size': 0, 'converter': CppChar },
+    'swapped_case': { 'output': StringIO(), 'size': 0, 'converter': CppChar },
+    'is_letter': { 'output': StringIO(), 'converter': CppBool },
+    'is_punctuation': { 'output': StringIO(), 'converter': CppBool },
+    'is_uppercase': { 'output': StringIO(), 'converter': CppBool },
+    'break_property': { 'output': StringIO(), 'converter': str },
+    'combining_class': { 'output': StringIO(), 'converter': str },
   }
+
+  for d in table.values():
+    d[ 'output' ].write( '{{' )
+
   for code_point in code_points:
     for t, d in table.items():
       cp = code_point[ t ]
-      d[ 'output' ] += d[ 'converter' ]( cp ) + ','
+      d[ 'output' ].write( d[ 'converter' ]( cp ) )
+      d[ 'output' ].write( ',' )
       if d[ 'converter' ] == CppChar:
         d[ 'size' ] = max( CppLength( cp ), d[ 'size' ] )
+
   for t, d in table.items():
-    d[ 'output' ] = d[ 'output' ].rstrip( ',' ) + '}},'
     if t == 'combining_class':
-      d[ 'output' ] = d[ 'output' ].rstrip( ',' )
+      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}}'
+    else:
+      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}},'
+
   code_points = '\n'.join( [ table[ 'original' ][ 'output' ],
                              table[ 'normal' ][ 'output' ],
                              table[ 'folded_case' ][ 'output' ],
@@ -551,6 +560,7 @@ def GenerateUnicodeTable( header_path, code_points ):
                              table[ 'is_uppercase' ][ 'output' ],
                              table[ 'break_property' ][ 'output' ],
                              table[ 'combining_class' ][ 'output' ] ] )
+
   contents = UNICODE_TABLE_TEMPLATE.format(
     unicode_version = unicode_version,
     size = size,
@@ -559,6 +569,7 @@ def GenerateUnicodeTable( header_path, code_points ):
     folded_case_size = table[ 'folded_case' ][ 'size' ],
     swapped_case_size = table[ 'swapped_case' ][ 'size' ],
     code_points = code_points )
+
   with open( header_path, 'w', newline = '\n', encoding='utf8' ) as header_file:
     header_file.write( contents )
 
