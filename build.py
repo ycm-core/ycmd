@@ -892,7 +892,7 @@ def Main():
     EnableJavaCompleter( args )
   if args.ts_completer or args.all_completers:
     EnableTypeScriptCompleter( args )
-  if args.clangd_completer or args.all_completers:
+  if args.clangd_completer:
     EnableClangdCompleter( args )
 
 
