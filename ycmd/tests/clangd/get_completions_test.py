@@ -40,17 +40,16 @@ from ycmd.tests.clangd import ( IsolatedYcmd,
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
+                                    skipIf,
                                     WaitUntilCompleterServerReady,
                                     WindowsOnly )
 from ycmd.utils import ReadFile
+from ycmd.user_options_store import DefaultOptions
 
-try:
-  from unittest import skipIf
-except ImportError:
-  from unittest2 import skipIf
-Clangd8Only = skipIf( GetVersion( GetClangdCommand( {},
-                          Get3rdPartyClangd() )[ 0 ] ) == '7.0.0',
-                      'Include completion is not implemented in LLVM 7.0.0' )
+Clangd8Only = skipIf(
+  GetVersion( GetClangdCommand( DefaultOptions(),
+                                Get3rdPartyClangd() )[ 0 ] ) == '7.0.0',
+  'Include completion is not implemented in LLVM 7.0.0' )
 
 
 def RunTest( app, test ):
