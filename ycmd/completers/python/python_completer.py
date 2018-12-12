@@ -176,6 +176,7 @@ class PythonCompleter( Completer ):
                         environment = environment )
 
 
+  # This method must be called under Jedi's lock.
   def _GetExtraData( self, completion ):
     if completion.module_path and completion.line and completion.column:
       return {
@@ -207,10 +208,12 @@ class PythonCompleter( Completer ):
                            self._GoToDeclaration( request_data ) ),
       'GoTo'           : ( lambda self, request_data, args:
                            self._GoTo( request_data ) ),
-      'GetDoc'         : ( lambda self, request_data, args:
-                           self._GetDoc( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
-                           self._GoToReferences( request_data ) )
+                           self._GoToReferences( request_data ) ),
+      'GetType'        : ( lambda self, request_data, args:
+                           self._GetType( request_data ) ),
+      'GetDoc'         : ( lambda self, request_data, args:
+                           self._GetDoc( request_data ) )
     }
 
 
@@ -243,13 +246,38 @@ class PythonCompleter( Completer ):
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
 
 
+  # This method must be called under Jedi's lock.
+  def _BuildTypeInfo( self, definition ):
+    type_info = definition.description
+    # Jedi doesn't return the signature in the description. Build the signature
+    # from the params field.
+    try:
+      # Remove the "param " prefix from the description.
+      type_info += '(' + ', '.join(
+        [ param.description[ 6: ] for param in definition.params ] ) + ')'
+    except AttributeError:
+      pass
+    return type_info
+
+
+  def _GetType( self, request_data ):
+    with self._jedi_lock:
+      definitions = self._GetJediScript( request_data ).goto_definitions()
+      type_info = [ self._BuildTypeInfo( definition )
+                    for definition in definitions ]
+    type_info = ', '.join( type_info )
+    if type_info:
+      return responses.BuildDisplayMessageResponse( type_info )
+    raise RuntimeError( 'No type information available.' )
+
+
   def _GetDoc( self, request_data ):
     with self._jedi_lock:
       definitions = self._GetJediScript( request_data ).goto_definitions()
       documentation = [ definition.docstring() for definition in definitions ]
-      documentation = '\n---\n'.join( documentation )
-      if documentation:
-        return responses.BuildDetailedInfoResponse( documentation )
+    documentation = '\n---\n'.join( documentation )
+    if documentation:
+      return responses.BuildDetailedInfoResponse( documentation )
     raise RuntimeError( 'No documentation available.' )
 
 
