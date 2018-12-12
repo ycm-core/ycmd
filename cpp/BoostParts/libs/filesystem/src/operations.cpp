@@ -408,7 +408,8 @@ namespace
   boost::uintmax_t remove_all_aux(const path& p, fs::file_type type,
     error_code* ec)
   {
-    boost::uintmax_t count = 1;
+    boost::uintmax_t count = 0;
+
     if (type == fs::directory_file)  // but not a directory symlink
     {
       fs::directory_iterator itr;
@@ -420,18 +421,28 @@ namespace
       }
       else
         itr = fs::directory_iterator(p);
-      for (; itr != end_dir_itr; ++itr)
+
+      while(itr != end_dir_itr)
       {
         fs::file_type tmp_type = query_file_type(itr->path(), ec);
         if (ec != 0 && *ec)
           return count;
+
         count += remove_all_aux(itr->path(), tmp_type, ec);
+        if (ec != 0 && *ec)
+          return count;
+
+        fs::detail::directory_iterator_increment(itr, ec);
         if (ec != 0 && *ec)
           return count;
       }
     }
+
     remove_file_or_directory(p, type, ec);
-    return count;
+    if (ec != 0 && *ec)
+      return count;
+
+    return ++count;
   }
 
 #ifdef BOOST_POSIX_API
@@ -915,20 +926,20 @@ namespace detail
   BOOST_FILESYSTEM_DECL
   void copy(const path& from, const path& to, system::error_code* ec)
   {
-    file_status s(symlink_status(from, *ec));
+    file_status s(detail::symlink_status(from, ec));
     if (ec != 0 && *ec) return;
 
     if(is_symlink(s))
     {
-      copy_symlink(from, to, *ec);
+      detail::copy_symlink(from, to, ec);
     }
     else if(is_directory(s))
     {
-      copy_directory(from, to, *ec);
+      detail::copy_directory(from, to, ec);
     }
     else if(is_regular_file(s))
     {
-      copy_file(from, to, fs::copy_option::fail_if_exists, *ec);
+      detail::copy_file(from, to, detail::fail_if_exists, ec);
     }
     else
     {
@@ -1482,7 +1493,8 @@ namespace detail
       && !(defined(__MAC_OS_X_VERSION_MIN_REQUIRED) \
            && __MAC_OS_X_VERSION_MIN_REQUIRED < 101000) \
       && !(defined(__IPHONE_OS_VERSION_MIN_REQUIRED) \
-           && __IPHONE_OS_VERSION_MIN_REQUIRED < 80000)
+           && __IPHONE_OS_VERSION_MIN_REQUIRED < 80000) \
+      && !(defined(__QNX__) && (_NTO_VERSION <= 700))
       if (::fchmodat(AT_FDCWD, p.c_str(), mode_cast(prms),
            !(prms & symlink_perms) ? 0 : AT_SYMLINK_NOFOLLOW))
 #   else  // fallback if fchmodat() not supported
@@ -2087,10 +2099,6 @@ namespace
     return ok;
   }
 
-#if defined(__PGI) && defined(__USE_FILE_OFFSET64)
-#define dirent dirent64
-#endif
-
   error_code dir_itr_first(void *& handle, void *& buffer,
     const char* dir, string& target,
     fs::file_status &, fs::file_status &)
@@ -2117,6 +2125,8 @@ namespace
     && defined(_POSIX_THREAD_SAFE_FUNCTIONS)\
     && defined(_SC_THREAD_SAFE_FUNCTIONS)\
     && (_POSIX_THREAD_SAFE_FUNCTIONS+0 >= 0)\
+    && !(defined(linux) || defined(__linux) || defined(__linux__))\
+    && !defined(__ANDROID__)\
     && (!defined(__hpux) || defined(_REENTRANT)) \
     && (!defined(_AIX) || defined(__THREAD_SAFE))
 
@@ -2341,7 +2351,7 @@ namespace detail
         && (filename.size()== 1
           || (filename[1] == dot
             && filename.size()== 2)))
-        {  it.increment(*ec); }
+        { detail::directory_iterator_increment(it, ec); }
     }
   }
 

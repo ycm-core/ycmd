@@ -149,6 +149,14 @@ endif()
 
 #############################################################################
 
+# MSVC has snprintf since version 14 which is newer than what we support.
+# *NOT* defining HAVE_SNPRINTF will break compiling the bundled boost libraries.
+if ( MSVC )
+  add_definitions( -DHAVE_SNPRINTF )
+endif()
+
+#############################################################################
+
 # Force release build by default, speed is of the essence
 if ( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE Release )
