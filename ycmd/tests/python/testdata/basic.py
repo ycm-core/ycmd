@@ -4,4 +4,4 @@ class Foo(object):
     self.b = 2
 
 f = Foo()
-f.
+f.a
