@@ -206,7 +206,7 @@ class PythonCompleter( Completer ):
           # This candidate is already detailed.
           continue
         completion = candidate[ 'extra_data' ]
-        candidate[ 'extra_menu_info' ] = completion.description
+        candidate[ 'extra_menu_info' ] = self._BuildTypeInfo( completion )
         candidate[ 'detailed_info' ] = completion.docstring()
         candidate[ 'kind' ] = completion.type
         candidate[ 'extra_data' ] = self._GetExtraData( completion )
