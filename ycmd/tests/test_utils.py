@@ -125,12 +125,6 @@ def CompletionEntryMatcher( insertion_text,
   return has_entries( match )
 
 
-def CompletionLocationMatcher( location_type, value ):
-  return has_entry( 'extra_data',
-                    has_entry( 'location',
-                               has_entry( location_type, value ) ) )
-
-
 def MessageMatcher( msg ):
   return has_entry( 'message', contains_string( msg ) )
 

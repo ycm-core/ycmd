@@ -25,8 +25,16 @@ from __future__ import division
 from builtins import *  # noqa
 
 from nose.tools import eq_
-from hamcrest import ( assert_that, has_item, has_items, has_entry,
-                       has_entries, contains, empty, contains_string )
+from hamcrest import ( all_of,
+                       assert_that,
+                       contains,
+                       contains_string,
+                       empty,
+                       has_item,
+                       has_items,
+                       has_entry,
+                       has_entries,
+                       is_not )
 import requests
 
 from ycmd.utils import ReadFile
@@ -34,7 +42,6 @@ from ycmd.tests.python import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
-                                    CompletionLocationMatcher,
                                     ErrorMatcher )
 
 
@@ -71,8 +78,6 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-
-
 @SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'basic.py' )
@@ -84,15 +89,56 @@ def GetCompletions_Basic_test( app ):
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
-
   assert_that( results,
                has_items(
-                 CompletionEntryMatcher( 'a' ),
-                 CompletionEntryMatcher( 'b' ),
-                 CompletionLocationMatcher( 'line_num', 3 ),
-                 CompletionLocationMatcher( 'line_num', 4 ),
-                 CompletionLocationMatcher( 'column_num', 10 ),
-                 CompletionLocationMatcher( 'filepath', filepath ) ) )
+                 CompletionEntryMatcher( 'a',
+                                         'self.a = 1',
+                                         {
+                                           'extra_data': has_entry(
+                                             'location', has_entries( {
+                                               'line_num': 3,
+                                               'column_num': 10,
+                                               'filepath': filepath
+                                             } )
+                                           )
+                                         } ),
+                 CompletionEntryMatcher( 'b',
+                                         'self.b = 2',
+                                         {
+                                           'extra_data': has_entry(
+                                             'location', has_entries( {
+                                               'line_num': 4,
+                                               'column_num': 10,
+                                               'filepath': filepath
+                                             } )
+                                           )
+                                         } )
+               ) )
+
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'python',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 7,
+                                  column_num = 4 )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               all_of(
+                 has_item(
+                   CompletionEntryMatcher( 'a',
+                                           'self.a = 1',
+                                           {
+                                             'extra_data': has_entry(
+                                               'location', has_entries( {
+                                                 'line_num': 3,
+                                                 'column_num': 10,
+                                                 'filepath': filepath
+                                               } )
+                                             )
+                                           } ) ),
+                 is_not( has_item( CompletionEntryMatcher( 'b' ) ) )
+               ) )
 
 
 @SharedYcmd

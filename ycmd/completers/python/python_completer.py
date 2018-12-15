@@ -186,18 +186,31 @@ class PythonCompleter( Completer ):
           'column_num': completion.column + 1
         }
       }
-    return None
+    return {}
 
 
   def ComputeCandidatesInner( self, request_data ):
     with self._jedi_lock:
       return [ responses.BuildCompletionData(
         insertion_text = completion.name,
-        extra_menu_info = completion.description,
-        detailed_info = completion.docstring(),
-        kind = completion.type,
-        extra_data = self._GetExtraData( completion )
+        # We store the Completion object returned by Jedi in the extra_data
+        # field to detail the candidates once the filtering is done.
+        extra_data = completion
       ) for completion in self._GetJediScript( request_data ).completions() ]
+
+
+  def DetailCandidates( self, candidates ):
+    with self._jedi_lock:
+      for candidate in candidates:
+        if isinstance( candidate[ 'extra_data' ], dict ):
+          # This candidate is already detailed.
+          continue
+        completion = candidate[ 'extra_data' ]
+        candidate[ 'extra_menu_info' ] = completion.description
+        candidate[ 'detailed_info' ] = completion.docstring()
+        candidate[ 'kind' ] = completion.type
+        candidate[ 'extra_data' ] = self._GetExtraData( completion )
+    return candidates
 
 
   def GetSubcommandsMap( self ):
