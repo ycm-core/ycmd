@@ -511,9 +511,10 @@ def Subcommands_ServerNotReady_test( app ):
 
 
 @SharedYcmd
-def GetCompletions_MoreThan100NoResolve_test( app ):
+def GetCompletions_MoreThan100FilteredResolve_test( app ):
   RunTest( app, {
-    'description': 'We guess the right start codepoint without resolving',
+    'description': 'More that 100 match, but filtered set is fewer as this '
+                   'depends on max_num_candidates',
     'request': {
       'filetype'  : 'java',
       'filepath'  : ProjectPath( 'TestLauncher.java' ),
@@ -524,8 +525,9 @@ def GetCompletions_MoreThan100NoResolve_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': has_item(
-          CompletionEntryMatcher( 'com.youcompleteme', None, {
-            'kind': 'Module'
+          CompletionEntryMatcher( 'com.youcompleteme.*;', None, {
+            'kind': 'Module',
+            'detailed_info': 'com.youcompleteme\n\n',
           } ),
         ),
         'completion_start_column': 8,

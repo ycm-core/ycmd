@@ -779,6 +779,23 @@ class LanguageServerCompleter( Completer ):
     else:
       items = response[ 'result' ][ 'items' ]
 
+    completions = []
+    for item in items:
+      try:
+        insertion_text, fixits, start_codepoint = (
+          _InsertionTextForItem( request_data, item ) )
+      except IncompatibleCompletionException:
+        _logger.exception( 'Ignoring incompatible completion suggestion '
+                           '{0}'.format( item ) )
+        continue
+      completions.append( responses.BuildCompletionData(
+        insertion_text = insertion_text,
+        extra_data = item ) )
+
+    return completions
+
+
+  def DetailCandidates( self, request_data, completions ):
     # The way language server protocol does completions expects us to "resolve"
     # items as the user selects them. We don't have any API for that so we
     # simply resolve each completion item we get. Should this be a performance
@@ -787,7 +804,9 @@ class LanguageServerCompleter( Completer ):
     # Note: _ResolveCompletionItems does a lot of work on the actual completion
     # text to ensure that the returned text and start_codepoint are applicable
     # to our model of a single start column.
-    return self._ResolveCompletionItems( items, request_data )
+    return self._ResolveCompletionItems(
+      [ completion[ 'extra_data' ] for completion in completions ],
+      request_data )
 
 
   def _ResolveCompletionItem( self, item ):
@@ -855,17 +874,14 @@ class LanguageServerCompleter( Completer ):
     unique_start_codepoints = []
     min_start_codepoint = request_data[ 'start_codepoint' ]
 
-    # Resolving takes some time, so only do it if there are fewer than 100
-    # candidates.
-    resolve_completion_items = ( len( items ) <= 100 and
-      self._resolve_completion_items )
-
     # First generate all of the completion items and store their
     # start_codepoints. Then, we fix-up the completion texts to use the
     # earliest start_codepoint by borrowing text from the original line.
     for item in items:
-      # First, resolve the completion.
-      if resolve_completion_items:
+      # Resolving may take some time, but as we only resolve filtered
+      # candidates, the maximum is throttled by
+      # user_options[ 'max_num_candidates' ]
+      if self._resolve_completion_items:
         item = self._ResolveCompletionItem( item )
 
       try:
