@@ -32,8 +32,6 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/range/mutable_iterator.hpp>
-#include <boost/range/const_iterator.hpp>
 #include <boost/assert.hpp>
 #include <string>
 #include <utility> // for pair
@@ -243,7 +241,11 @@ namespace boost
                             // nor remove_perms is given, replace the current bits with
                             // the given bits.
 
-    symlink_perms = 0x4000  // on POSIX, don't resolve symlinks; implied on Windows
+    symlink_perms = 0x4000, // on POSIX, don't resolve symlinks; implied on Windows
+
+    // BOOST_BITMASK op~ casts to int32_least_t, producing invalid enum values
+    _detail_extend_perms_32_1 = 0x7fffffff,
+    _detail_extend_perms_32_2 = -0x7fffffff-1
   };
 
   BOOST_BITMASK(perms)
@@ -968,16 +970,26 @@ namespace detail
   directory_iterator range_begin(const directory_iterator& iter) BOOST_NOEXCEPT
     {return iter;}
   inline
+  directory_iterator range_end(directory_iterator&) BOOST_NOEXCEPT
+    {return directory_iterator();}
+  inline
   directory_iterator range_end(const directory_iterator&) BOOST_NOEXCEPT
     {return directory_iterator();}
   }  // namespace filesystem
 
   //  namespace boost template specializations
+  template<typename C, typename Enabler>
+  struct range_mutable_iterator;
+
   template<>
-  struct range_mutable_iterator<boost::filesystem::directory_iterator>
+  struct range_mutable_iterator<boost::filesystem::directory_iterator, void>
     { typedef boost::filesystem::directory_iterator type; };
+
+  template<typename C, typename Enabler>
+  struct range_const_iterator;
+
   template<>
-  struct range_const_iterator <boost::filesystem::directory_iterator>
+  struct range_const_iterator<boost::filesystem::directory_iterator, void>
     { typedef boost::filesystem::directory_iterator type; };
 
 namespace filesystem
@@ -994,7 +1006,11 @@ namespace filesystem
     none,
     no_recurse = none,         // don't follow directory symlinks (default behavior)
     recurse,                   // follow directory symlinks
-    _detail_no_push = recurse << 1  // internal use only
+    _detail_no_push = recurse << 1, // internal use only
+
+    // BOOST_BITMASK op~ casts to int32_least_t, producing invalid enum values
+    _detail_extend_symlink_option_32_1 = 0x7fffffff,
+    _detail_extend_symlink_option_32_2 = -0x7fffffff-1
   };
   BOOST_SCOPED_ENUM_END
 
@@ -1320,16 +1336,19 @@ namespace filesystem
     range_begin(const recursive_directory_iterator& iter) BOOST_NOEXCEPT
                                                    {return iter;}
   inline
+  recursive_directory_iterator range_end(recursive_directory_iterator&) BOOST_NOEXCEPT
+                                                  {return recursive_directory_iterator();}
+  inline
   recursive_directory_iterator range_end(const recursive_directory_iterator&) BOOST_NOEXCEPT
                                                   {return recursive_directory_iterator();}
   }  // namespace filesystem
 
   //  namespace boost template specializations
   template<>
-  struct range_mutable_iterator<boost::filesystem::recursive_directory_iterator>
+  struct range_mutable_iterator<boost::filesystem::recursive_directory_iterator, void>
                         { typedef boost::filesystem::recursive_directory_iterator type; };
   template<>
-  struct range_const_iterator <boost::filesystem::recursive_directory_iterator>
+  struct range_const_iterator<boost::filesystem::recursive_directory_iterator, void>
                         { typedef boost::filesystem::recursive_directory_iterator type; };
 
 namespace filesystem

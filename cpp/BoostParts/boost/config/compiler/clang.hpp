@@ -104,9 +104,9 @@
 #  define BOOST_SYMBOL_IMPORT __attribute__((__dllimport__))
 #else
 #  define BOOST_SYMBOL_EXPORT __attribute__((__visibility__("default")))
+#  define BOOST_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #  define BOOST_SYMBOL_IMPORT
 #endif
-#define BOOST_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 
 //
 // The BOOST_FALLTHROUGH macro can be used to annotate implicit fall-through

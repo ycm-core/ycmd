@@ -39,7 +39,13 @@
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 
-#include <boost/container_hash/hash.hpp>
+#if (defined(_MSC_VER) && _MSC_VER > 1600) \
+    || (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__)) \
+    || (defined(__GNUC__) && __GNUC__ > 4 && __cplusplus >= 201103)
+#   define BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
+#else
+#   include <boost/container_hash/hash.hpp>
+#endif
 
 #if (defined(__EDG_VERSION__) && __EDG_VERSION__ < 245) \
         || (defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 744)
@@ -175,9 +181,7 @@ inline std::string stl_type_index::pretty_name() const {
 
 
 inline std::size_t stl_type_index::hash_code() const BOOST_NOEXCEPT {
-#if (defined(_MSC_VER) && _MSC_VER > 1600) \
-    || (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__)) \
-    || (defined(__GNUC__) && __GNUC__ > 4 && __cplusplus >= 201103)
+#ifdef BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
     return data_->hash_code();
 #else
     return boost::hash_range(raw_name(), raw_name() + std::strlen(raw_name()));
@@ -194,13 +198,13 @@ inline std::size_t stl_type_index::hash_code() const BOOST_NOEXCEPT {
     || (defined(__sgi) && defined(__host_mips)) \
     || (defined(__hpux) && defined(__HP_aCC)) \
     || (defined(linux) && defined(__INTEL_COMPILER) && defined(__ICC))
-#  define BOOST_CLASSINFO_COMPARE_BY_NAMES
+#  define BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
 # endif
 
 /// @endcond
 
 inline bool stl_type_index::equal(const stl_type_index& rhs) const BOOST_NOEXCEPT {
-#ifdef BOOST_CLASSINFO_COMPARE_BY_NAMES
+#ifdef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
     return raw_name() == rhs.raw_name() || !std::strcmp(raw_name(), rhs.raw_name());
 #else
     return !!(*data_ == *rhs.data_);
@@ -208,17 +212,14 @@ inline bool stl_type_index::equal(const stl_type_index& rhs) const BOOST_NOEXCEP
 }
 
 inline bool stl_type_index::before(const stl_type_index& rhs) const BOOST_NOEXCEPT {
-#ifdef BOOST_CLASSINFO_COMPARE_BY_NAMES
+#ifdef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
     return raw_name() != rhs.raw_name() && std::strcmp(raw_name(), rhs.raw_name()) < 0;
 #else
     return !!data_->before(*rhs.data_);
 #endif
 }
 
-#ifdef BOOST_CLASSINFO_COMPARE_BY_NAMES
-#undef BOOST_CLASSINFO_COMPARE_BY_NAMES
-#endif
-
+#undef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
 
 
 template <class T>
@@ -271,5 +272,7 @@ inline stl_type_index stl_type_index::type_id_runtime(const T& value) BOOST_NOEX
 }
 
 }} // namespace boost::typeindex
+
+#undef BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
 
 #endif // BOOST_TYPE_INDEX_STL_TYPE_INDEX_HPP

@@ -59,6 +59,7 @@ BOOST_LIBS_FOLDERS_TO_REMOVE = [
   'python',
   'serialization',
   'smart_ptr',
+  'system',
   'test',
   'thread',
   'timer',

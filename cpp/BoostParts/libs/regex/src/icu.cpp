@@ -481,7 +481,7 @@ icu_regex_traits::string_type icu_regex_traits::lookup_collatename(const char_ty
 bool icu_regex_traits::isctype(char_type c, char_class_type f) const
 {
    // check for standard catagories first:
-   char_class_type m = char_class_type(1u << u_charType(c));
+   char_class_type m = char_class_type(static_cast<char_class_type>(1) << u_charType(c));
    if((m & f) != 0) 
       return true;
    // now check for special cases:
