@@ -121,6 +121,31 @@ def GetCompletions_Basic_test( app ):
     }
   } )
 
+  RunTest( app, {
+    'description': 'Filtering works',
+    'request': {
+      'line_num': 17,
+      'column_num': 7,
+      'filepath': PathToTestFile( 'test.ts' )
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher(
+            'methodA',
+            '(method) Foo.methodA(): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodA(): void\n\n'
+                               'Unicode string: 说话'
+            }
+          )
+        )
+      } )
+    }
+  } )
+
 
 @SharedYcmd
 def GetCompletions_Keyword_test( app ):
@@ -137,6 +162,7 @@ def GetCompletions_Keyword_test( app ):
         'completions': has_item( {
           'insertion_text': 'class',
           'kind':           'keyword',
+          'extra_data':     {}
         } )
       } )
     }

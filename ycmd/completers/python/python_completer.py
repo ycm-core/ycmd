@@ -199,7 +199,7 @@ class PythonCompleter( Completer ):
       ) for completion in self._GetJediScript( request_data ).completions() ]
 
 
-  def DetailCandidates( self, candidates ):
+  def DetailCandidates( self, request_data, candidates ):
     with self._jedi_lock:
       for candidate in candidates:
         if isinstance( candidate[ 'extra_data' ], dict ):

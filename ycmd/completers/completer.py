@@ -235,7 +235,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     candidates = self._GetCandidatesFromSubclass( request_data )
     candidates = self.FilterAndSortCandidates( candidates,
                                                request_data[ 'query' ] )
-    return self.DetailCandidates( candidates )
+    return self.DetailCandidates( request_data, candidates )
 
 
   def _GetCandidatesFromSubclass( self, request_data ):
@@ -250,7 +250,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     return raw_completions
 
 
-  def DetailCandidates( self, candidates ):
+  def DetailCandidates( self, request_data, candidates ):
     return candidates
 
 

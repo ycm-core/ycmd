@@ -54,10 +54,10 @@ def Diagnostics_FileReadyToParse_test( app ):
     contains_inanyorder(
       has_entries( {
         'kind': 'ERROR',
-        'text': "Property 'm' does not exist on type 'Foo'.",
+        'text': "Property 'mA' does not exist on type 'Foo'.",
         'location': LocationMatcher( filepath, 17, 5 ),
-        'location_extent': RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ) ),
+        'location_extent': RangeMatcher( filepath, ( 17, 5 ), ( 17, 7 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 17, 5 ), ( 17, 7 ) ) ),
         'fixit_available': True
       } ),
       has_entries( {
@@ -134,10 +134,10 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
     contains_inanyorder(
       has_entries( {
         'kind': 'ERROR',
-        'text': "Property 'm' does not exist on type 'Foo'.",
+        'text': "Property 'mA' does not exist on type 'Foo'.",
         'location': LocationMatcher( filepath, 17, 5 ),
-        'location_extent': RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 17, 5 ), ( 17, 6 ) ) ),
+        'location_extent': RangeMatcher( filepath, ( 17, 5 ), ( 17, 7 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 17, 5 ), ( 17, 7 ) ) ),
         'fixit_available': True
       } ),
       has_entries( {
