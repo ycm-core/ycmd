@@ -32,7 +32,7 @@ using DiagnosticWrap =
   std::shared_ptr< std::remove_pointer< CXDiagnostic >::type >;
 
 std::vector< CompletionData > ToCompletionDataVector(
-  CXCodeCompleteResults *results );
+  const std::shared_ptr< CXCodeCompleteResults > &results );
 
 // NOTE: CXUnsavedFiles store pointers to data in UnsavedFiles, so UnsavedFiles
 // need to outlive CXUnsavedFiles!

@@ -205,7 +205,7 @@ std::vector< CXUnsavedFile > ToCXUnsavedFiles(
 
 
 std::vector< CompletionData > ToCompletionDataVector(
-  CXCodeCompleteResults *results ) {
+  const std::shared_ptr< CXCodeCompleteResults > &results ) {
   std::vector< CompletionData > completions;
 
   if ( !results || !results->Results ) {

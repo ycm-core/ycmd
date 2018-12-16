@@ -168,7 +168,23 @@ class ClangCompleter( Completer ):
     if not results:
       raise RuntimeError( NO_COMPLETIONS_MESSAGE )
 
-    return [ ConvertCompletionData( x ) for x in results ]
+    return [ responses.BuildCompletionData(
+               insertion_text = x.TextToInsertInBuffer(),
+               extra_data = x ) for x in results ]
+
+
+  def DetailCandidates( self, request_data, candidates ):
+    for candidate in candidates:
+      if 'extra_menu_info' in candidate:
+        # This candidate is already detailed.
+        continue
+      completion = candidate[ 'extra_data' ]
+      candidate[ 'menu_text' ] = completion.MainCompletionText()
+      candidate[ 'extra_menu_info' ] = completion.ExtraMenuInfo()
+      candidate[ 'kind' ] = completion.kind_.name
+      candidate[ 'detailed_info' ] = completion.DetailedInfoForPreviewWindow()
+      candidate[ 'extra_data' ] = BuildExtraData( completion )
+    return candidates
 
 
   def GetSubcommandsMap( self ):
@@ -483,22 +499,12 @@ class ClangCompleter( Completer ):
 
 def BuildExtraData( completion_data ):
   extra_data = {}
-  fixit = completion_data.fixit_
+  fixit = completion_data.CompletionFixIt()
   if fixit.chunks:
     extra_data.update( responses.BuildFixItResponse( [ fixit ] ) )
   if completion_data.DocString():
     extra_data[ 'doc_string' ] = completion_data.DocString()
   return extra_data
-
-
-def ConvertCompletionData( completion_data ):
-  return responses.BuildCompletionData(
-    insertion_text = completion_data.TextToInsertInBuffer(),
-    menu_text = completion_data.MainCompletionText(),
-    extra_menu_info = completion_data.ExtraMenuInfo(),
-    kind = completion_data.kind_.name,
-    detailed_info = completion_data.DetailedInfoForPreviewWindow(),
-    extra_data = BuildExtraData( completion_data ) )
 
 
 def DiagnosticsToDiagStructure( diagnostics ):

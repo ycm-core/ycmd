@@ -419,9 +419,18 @@ def GetCompletions_WorksWhenExtraConfExplicitlyAllowed_test( app ):
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
-  assert_that( results, has_items( CompletionEntryMatcher( 'c' ),
-                                   CompletionEntryMatcher( 'x' ),
-                                   CompletionEntryMatcher( 'y' ) ) )
+  assert_that( results, has_items( CompletionEntryMatcher( 'c', 'char' ),
+                                   CompletionEntryMatcher( 'x', 'int' ),
+                                   CompletionEntryMatcher( 'y', 'int' ) ) )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'cpp',
+                                  contents = ReadFile( filepath ),
+                                  line_num = 11,
+                                  column_num = 8 )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results, has_items( CompletionEntryMatcher( 'y', 'int' ) ) )
 
 
 @SharedYcmd

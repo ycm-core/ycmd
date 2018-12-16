@@ -18,6 +18,8 @@
 #include "CompletionData.h"
 #include "ClangUtils.h"
 
+#include <algorithm>
+#include <numeric>
 #include <utility>
 
 namespace YouCompleteMe {
@@ -176,116 +178,135 @@ std::string RemoveTrailingParens( std::string text ) {
 
 CompletionData::CompletionData( CXCompletionString completion_string,
                                 CXCursorKind kind,
-                                CXCodeCompleteResults *results,
-                                size_t index ) {
+                                std::shared_ptr< CXCodeCompleteResults > results,
+                                size_t index )
+        : completion_string_( completion_string ),
+          index_( index ),
+          results_( std::move( results ) ) {
   size_t num_chunks = clang_getNumCompletionChunks( completion_string );
-  bool saw_left_paren = false;
-  bool saw_function_params = false;
   bool saw_placeholder = false;
 
+  completion_chunk_kinds_.reserve( num_chunks );
   for ( size_t j = 0; j < num_chunks; ++j ) {
-    ExtractDataFromChunk( completion_string,
-                          j,
-                          saw_left_paren,
-                          saw_function_params,
-                          saw_placeholder );
+    CXCompletionChunkKind completion_chunk_kind = clang_getCompletionChunkKind(
+                                   completion_string, j );
+
+    completion_chunk_kinds_.push_back( completion_chunk_kind );
+    if ( completion_chunk_kind == CXCompletionChunk_Placeholder ) {
+          saw_placeholder = true;
+    }
+    if ( ( completion_chunk_kind == CXCompletionChunk_TypedText ||
+           completion_chunk_kind == CXCompletionChunk_Text ||
+           // need to add paren to insert string
+           // when implementing inherited methods or declared methods in objc.
+           completion_chunk_kind == CXCompletionChunk_LeftParen ||
+           completion_chunk_kind == CXCompletionChunk_RightParen ||
+           completion_chunk_kind == CXCompletionChunk_HorizontalSpace ) &&
+           !saw_placeholder ) {
+      original_string_ += ChunkToString( completion_string, j );
+    }
   }
 
   original_string_ = RemoveTrailingParens( std::move( original_string_ ) );
   kind_ = CursorKindToCompletionKind( kind );
 
-  detailed_info_.append( return_type_ )
-  .append( " " )
-  .append( everything_except_return_type_ )
-  .append( "\n" );
-
-  doc_string_ = CXStringToString(
-    clang_getCompletionBriefComment( completion_string ) );
-
-  BuildCompletionFixIt( results, index );
+  detailed_info_.append( "YCM_REPLACE\n" );
 }
 
 
-void CompletionData::ExtractDataFromChunk( CXCompletionString completion_string,
-                                           size_t chunk_num,
-                                           bool &saw_left_paren,
-                                           bool &saw_function_params,
-                                           bool &saw_placeholder ) {
-  CXCompletionChunkKind kind = clang_getCompletionChunkKind(
-                                 completion_string, chunk_num );
-
-  if ( IsMainCompletionTextInfo( kind ) ) {
-    if ( kind == CXCompletionChunk_LeftParen ) {
-      saw_left_paren = true;
-    } else if ( saw_left_paren &&
-                !saw_function_params &&
-                kind != CXCompletionChunk_RightParen &&
-                kind != CXCompletionChunk_Informative ) {
-      saw_function_params = true;
-      everything_except_return_type_.append( " " );
-    } else if ( saw_function_params && kind == CXCompletionChunk_RightParen ) {
-      everything_except_return_type_.append( " " );
+FixIt CompletionData::BuildCompletionFixIt() {
+  if ( fixit_.chunks.empty() ) {
+    CXCodeCompleteResults *results = results_.get();
+    size_t num_chunks = clang_getCompletionNumFixIts( results, index_ );
+    if ( !num_chunks ) {
+      return fixit_;
     }
 
-    if ( kind == CXCompletionChunk_Optional ) {
-      everything_except_return_type_.append(
-        OptionalChunkToString( completion_string, chunk_num ) );
-    } else {
-      everything_except_return_type_.append(
-        ChunkToString( completion_string, chunk_num ) );
+    fixit_.chunks.reserve( num_chunks );
+
+    for ( size_t chunk_index = 0; chunk_index < num_chunks; ++chunk_index ) {
+      FixItChunk chunk;
+      CXSourceRange range;
+      chunk.replacement_text = CXStringToString(
+                                 clang_getCompletionFixIt( results,
+                                                           index_,
+                                                           chunk_index,
+                                                           &range ) );
+
+      chunk.range = Range( range );
+      fixit_.chunks.push_back( chunk );
     }
   }
-
-  switch ( kind ) {
-    case CXCompletionChunk_ResultType:
-      return_type_ = ChunkToString( completion_string, chunk_num );
-      break;
-
-    case CXCompletionChunk_Placeholder:
-      saw_placeholder = true;
-      break;
-
-    case CXCompletionChunk_TypedText:
-    case CXCompletionChunk_Text:
-
-      // need to add paren to insert string
-      // when implementing inherited methods or declared methods in objc.
-    case CXCompletionChunk_LeftParen:
-    case CXCompletionChunk_RightParen:
-    case CXCompletionChunk_HorizontalSpace:
-      if ( !saw_placeholder ) {
-        original_string_ += ChunkToString( completion_string, chunk_num );
-      }
-
-      break;
-
-    default:
-      break;
-  }
+  return fixit_;
 }
 
 
-void CompletionData::BuildCompletionFixIt( CXCodeCompleteResults *results,
-                                           size_t index ) {
-  size_t num_chunks = clang_getCompletionNumFixIts( results, index );
-  if ( !num_chunks ) {
-    return;
+std::string CompletionData::DocString() {
+  if ( doc_string_.empty() ) {
+    doc_string_ = CXStringToString(
+      clang_getCompletionBriefComment( completion_string_ ) );
   }
+  return doc_string_;
+}
 
-  fixit_.chunks.reserve( num_chunks );
 
-  for ( size_t chunk_index = 0; chunk_index < num_chunks; ++chunk_index ) {
-    FixItChunk chunk;
-    CXSourceRange range;
-    chunk.replacement_text = CXStringToString(
-                               clang_getCompletionFixIt( results,
-                                                         index,
-                                                         chunk_index,
-                                                         &range ) );
-
-    chunk.range = Range( range );
-    fixit_.chunks.push_back( chunk );
+std::string CompletionData::ExtraMenuInfo() {
+  if ( return_type_.empty() ) {
+    auto ret = std::find( completion_chunk_kinds_.begin(),
+                          completion_chunk_kinds_.end(),
+                          CXCompletionChunk_ResultType );
+    size_t index = std::distance( completion_chunk_kinds_.begin(), ret );
+    return_type_ = ChunkToString( completion_string_, index );
   }
+  return return_type_;
+}
+
+
+std::string CompletionData::MainCompletionText() {
+  if ( everything_except_return_type_.empty() ) {
+    bool saw_left_paren = false;
+    bool saw_function_params = false;
+    everything_except_return_type_ = std::accumulate(
+      completion_chunk_kinds_.begin(),
+      completion_chunk_kinds_.end(),
+      std::string{},
+      [ & ]( std::string& current,
+             const CXCompletionChunkKind& kind ) {
+        std::string piece;
+        if ( IsMainCompletionTextInfo( kind ) ) {
+          if ( kind == CXCompletionChunk_LeftParen ) {
+            saw_left_paren = true;
+          } else if ( saw_left_paren &&
+                      !saw_function_params &&
+                      kind != CXCompletionChunk_RightParen &&
+                      kind != CXCompletionChunk_Informative ) {
+            saw_function_params = true;
+            piece.append( " " );
+          } else if ( saw_function_params &&
+                      kind == CXCompletionChunk_RightParen ) {
+            piece.append( " " );
+          }
+          size_t index = &kind - &*completion_chunk_kinds_.begin();
+          if ( kind == CXCompletionChunk_Optional ) {
+            piece.append( OptionalChunkToString( completion_string_, index ) );
+          } else {
+            piece.append( ChunkToString( completion_string_, index ) );
+          }
+        }
+        return std::move( current ) + piece;
+      } );
+  }
+  return everything_except_return_type_;
+}
+
+
+std::string CompletionData::DetailedInfoForPreviewWindow() {
+  if ( detailed_info_.compare( 0, 11, "YCM_REPLACE" ) == 0 ) {
+    detailed_info_.replace( 0,
+                            11,
+                            ExtraMenuInfo() + " " + MainCompletionText() );
+  }
+  return detailed_info_;
 }
 
 } // namespace YouCompleteMe

@@ -22,9 +22,11 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from ycmd.completers.cpp.clang_completer import ClangCompleter
+from ycmd.responses import BuildCompletionData, BuildDiagnosticData
+from ycmd.user_options_store import DefaultOptions
 from ycmd.utils import ToCppStringCompatible as ToCppStr
-from ycmd.completers.cpp.clang_completer import ConvertCompletionData
-from ycmd.responses import BuildDiagnosticData
+
 from ycmd.tests.bindings import PathToTestFile
 from ycmd.tests.test_utils import ClangOnly
 
@@ -357,7 +359,12 @@ def CppBindings_CompletionDataVector_test():
   del column
   del flags
   del unsaved_file_vector
-  candidates = [ ConvertCompletionData( x ) for x in candidates ]
+  candidates = [ BuildCompletionData(
+                   insertion_text = x.TextToInsertInBuffer(),
+                   # extra_data needs to be a dictionary
+                   extra_data = x ) for x in candidates ]
+  candidates = ClangCompleter( DefaultOptions() ).DetailCandidates( {},
+                                                                    candidates )
   assert_that( candidates, contains_inanyorder(
                              has_entries( {
                                'detailed_info': 'int a\n',

@@ -185,7 +185,7 @@ std::vector< CompletionData > TranslationUnit::CandidatesForLocation(
     clang_disposeCodeCompleteResults );
 
   std::vector< CompletionData > candidates = ToCompletionDataVector(
-                                               results.get() );
+                                               results );
   return candidates;
 }
 

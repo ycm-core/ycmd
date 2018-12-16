@@ -163,11 +163,11 @@ PYBIND11_MODULE( ycm_core, mod )
     .def( "TextToInsertInBuffer", &CompletionData::TextToInsertInBuffer )
     .def( "MainCompletionText", &CompletionData::MainCompletionText )
     .def( "ExtraMenuInfo", &CompletionData::ExtraMenuInfo )
+    .def( "CompletionFixIt", &CompletionData::BuildCompletionFixIt )
     .def( "DetailedInfoForPreviewWindow",
           &CompletionData::DetailedInfoForPreviewWindow )
     .def( "DocString", &CompletionData::DocString )
-    .def_readonly( "kind_", &CompletionData::kind_ )
-    .def_readonly( "fixit_", &CompletionData::fixit_ );
+    .def_readonly( "kind_", &CompletionData::kind_ );
 
   py::bind_vector< std::vector< CompletionData > >( mod,
                                                     "CompletionVector" );
