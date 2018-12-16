@@ -1,5 +1,4 @@
-# Copyright (C) 2013 Google Inc.
-#               2017 ycmd contributors
+# Copyright (C) 2013-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -25,7 +24,6 @@ from builtins import *  # noqa
 
 import bottle
 import json
-import logging
 import platform
 import sys
 import time
@@ -39,7 +37,7 @@ from ycmd.responses import ( BuildExceptionResponse, BuildCompletionResponse,
 from ycmd.request_wrap import RequestWrap
 from ycmd.bottle_utils import SetResponseHeader
 from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap
-from ycmd.utils import StartThread
+from ycmd.utils import LOGGER, StartThread
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -48,17 +46,16 @@ bottle.Request.MEMFILE_MAX = 10 * 1024 * 1024
 
 _server_state = None
 _hmac_secret = bytes()
-_logger = logging.getLogger( __name__ )
 app = bottle.Bottle()
 wsgi_server = None
 
 
 @app.post( '/event_notification' )
 def EventNotification():
-  _logger.info( 'Received event notification' )
+  LOGGER.info( 'Received event notification' )
   request_data = RequestWrap( request.json )
   event_name = request_data[ 'event_name' ]
-  _logger.debug( 'Event name: %s', event_name )
+  LOGGER.debug( 'Event name: %s', event_name )
 
   event_handler = 'On' + event_name
   getattr( _server_state.GetGeneralCompleter(), event_handler )( request_data )
@@ -76,7 +73,7 @@ def EventNotification():
 
 @app.post( '/run_completer_command' )
 def RunCompleterCommand():
-  _logger.info( 'Received command request' )
+  LOGGER.info( 'Received command request' )
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
@@ -87,11 +84,11 @@ def RunCompleterCommand():
 
 @app.post( '/completions' )
 def GetCompletions():
-  _logger.info( 'Received completion request' )
+  LOGGER.info( 'Received completion request' )
   request_data = RequestWrap( request.json )
   do_filetype_completion = _server_state.ShouldUseFiletypeCompleter(
     request_data )
-  _logger.debug( 'Using filetype completion: %s', do_filetype_completion )
+  LOGGER.debug( 'Using filetype completion: %s', do_filetype_completion )
 
   errors = None
   completions = None
@@ -110,9 +107,8 @@ def GetCompletions():
 
       # store the error to be returned with results from the identifier
       # completer
+      LOGGER.exception( 'Exception from semantic completer (using general)' )
       stack = traceback.format_exc()
-      _logger.error( 'Exception from semantic completer (using general): ' +
-                      "".join( stack ) )
       errors = [ BuildExceptionResponse( exception, stack ) ]
 
   if not completions and not request_data[ 'force_semantic' ]:
@@ -127,7 +123,7 @@ def GetCompletions():
 
 @app.post( '/filter_and_sort_candidates' )
 def FilterAndSortCandidates():
-  _logger.info( 'Received filter & sort request' )
+  LOGGER.info( 'Received filter & sort request' )
   # Not using RequestWrap because no need and the requests coming in aren't like
   # the usual requests we handle.
   request_data = request.json
@@ -141,7 +137,7 @@ def FilterAndSortCandidates():
 
 @app.get( '/healthy' )
 def GetHealthy():
-  _logger.info( 'Received health request' )
+  LOGGER.info( 'Received health request' )
   if request.query.subserver:
     filetype = request.query.subserver
     completer = _server_state.GetFiletypeCompleter( [ filetype ] )
@@ -151,7 +147,7 @@ def GetHealthy():
 
 @app.get( '/ready' )
 def GetReady():
-  _logger.info( 'Received ready request' )
+  LOGGER.info( 'Received ready request' )
   if request.query.subserver:
     filetype = request.query.subserver
     completer = _server_state.GetFiletypeCompleter( [ filetype ] )
@@ -161,14 +157,14 @@ def GetReady():
 
 @app.post( '/semantic_completion_available' )
 def FiletypeCompletionAvailable():
-  _logger.info( 'Received filetype completion available request' )
+  LOGGER.info( 'Received filetype completion available request' )
   return _JsonResponse( _server_state.FiletypeCompletionAvailable(
       RequestWrap( request.json )[ 'filetypes' ] ) )
 
 
 @app.post( '/defined_subcommands' )
 def DefinedSubcommands():
-  _logger.info( 'Received defined subcommands request' )
+  LOGGER.info( 'Received defined subcommands request' )
   completer = _GetCompleterForRequestData( RequestWrap( request.json ) )
 
   return _JsonResponse( completer.DefinedSubcommands() )
@@ -176,7 +172,7 @@ def DefinedSubcommands():
 
 @app.post( '/detailed_diagnostic' )
 def GetDetailedDiagnostic():
-  _logger.info( 'Received detailed diagnostic request' )
+  LOGGER.info( 'Received detailed diagnostic request' )
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
@@ -185,7 +181,7 @@ def GetDetailedDiagnostic():
 
 @app.post( '/load_extra_conf_file' )
 def LoadExtraConfFile():
-  _logger.info( 'Received extra conf load request' )
+  LOGGER.info( 'Received extra conf load request' )
   request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Load( request_data[ 'filepath' ], force = True )
 
@@ -194,7 +190,7 @@ def LoadExtraConfFile():
 
 @app.post( '/ignore_extra_conf_file' )
 def IgnoreExtraConfFile():
-  _logger.info( 'Received extra conf ignore request' )
+  LOGGER.info( 'Received extra conf ignore request' )
   request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Disable( request_data[ 'filepath' ] )
 
@@ -203,7 +199,7 @@ def IgnoreExtraConfFile():
 
 @app.post( '/debug_info' )
 def DebugInfo():
-  _logger.info( 'Received debug info request' )
+  LOGGER.info( 'Received debug info request' )
   request_data = RequestWrap( request.json )
 
   has_clang_support = ycm_core.HasClangSupport()
@@ -236,15 +232,15 @@ def DebugInfo():
   try:
     response[ 'completer' ] = _GetCompleterForRequestData(
         request_data ).DebugInfo( request_data )
-  except Exception as error:
-    _logger.exception( error )
+  except Exception:
+    LOGGER.exception( 'Error retrieving completer debug info' )
 
   return _JsonResponse( response )
 
 
 @app.post( '/shutdown' )
 def Shutdown():
-  _logger.info( 'Received shutdown request' )
+  LOGGER.info( 'Received shutdown request' )
   ServerShutdown()
 
   return _JsonResponse( True )
@@ -342,7 +338,7 @@ def KeepSubserversAlive( check_interval_seconds ):
     while True:
       time.sleep( check_interval_seconds )
 
-      _logger.debug( 'Keeping subservers alive' )
+      LOGGER.debug( 'Keeping subservers alive' )
       loaded_completers = _server_state.GetLoadedFiletypeCompleters()
       for completer in loaded_completers:
         completer.ServerIsHealthy()

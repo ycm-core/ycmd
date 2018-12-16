@@ -1,4 +1,4 @@
-# Copyright (C) 2014 Google Inc.
+# Copyright (C) 2014-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,12 +22,11 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import logging
 import requests
 from base64 import b64decode, b64encode
 from bottle import request, abort
 from ycmd import hmac_utils
-from ycmd.utils import ToBytes, urlparse
+from ycmd.utils import LOGGER, ToBytes, urlparse
 from ycmd.bottle_utils import SetResponseHeader
 
 _HMAC_HEADER = 'x-ycm-hmac'
@@ -50,13 +49,12 @@ class HmacPlugin( object ):
 
   def __init__( self, hmac_secret ):
     self._hmac_secret = hmac_secret
-    self._logger = logging.getLogger( __name__ )
 
 
   def __call__( self, callback ):
     def wrapper( *args, **kwargs ):
       if not HostHeaderCorrect( request ):
-        self._logger.info( 'Dropping request with bad Host header.' )
+        LOGGER.info( 'Dropping request with bad Host header' )
         abort( requests.codes.unauthorized,
                'Unauthorized, received bad Host header.' )
         return
@@ -64,7 +62,7 @@ class HmacPlugin( object ):
       body = ToBytes( request.body.read() )
       if not RequestAuthenticated( request.method, request.path, body,
                                    self._hmac_secret ):
-        self._logger.info( 'Dropping request with bad HMAC.' )
+        LOGGER.info( 'Dropping request with bad HMAC' )
         abort( requests.codes.unauthorized, 'Unauthorized, received bad HMAC.' )
         return
       body = callback( *args, **kwargs )

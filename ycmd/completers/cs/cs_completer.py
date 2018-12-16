@@ -24,7 +24,6 @@ from builtins import *  # noqa
 
 from collections import defaultdict
 from future.utils import itervalues
-import logging
 import os
 import requests
 import threading
@@ -32,7 +31,7 @@ import threading
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.cs import solutiondetection
-from ycmd.utils import CodepointOffsetToByteOffset, re, urljoin
+from ycmd.utils import CodepointOffsetToByteOffset, LOGGER, re, urljoin
 from ycmd import responses
 from ycmd import utils
 
@@ -55,7 +54,6 @@ class CsharpCompleter( Completer ):
 
   def __init__( self, user_options ):
     super( CsharpCompleter, self ).__init__( user_options )
-    self._logger = logging.getLogger( __name__ )
     self._solution_for_file = {}
     self._completer_per_solution = {}
     self._diagnostic_store = None
@@ -316,7 +314,6 @@ class CsharpCompleter( Completer ):
 
 class CsharpSolutionCompleter( object ):
   def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
-    self._logger = logging.getLogger( __name__ )
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
     self._filename_stderr = None
@@ -343,11 +340,10 @@ class CsharpSolutionCompleter( object ):
       if self._ServerIsRunning():
         return
 
-      self._logger.info( 'Starting OmniSharp server' )
+      LOGGER.info( 'Starting OmniSharp server' )
 
       path_to_solutionfile = self._solution_path
-      self._logger.info(
-          u'Loading solution file {0}'.format( path_to_solutionfile ) )
+      LOGGER.info( 'Loading solution file %s', path_to_solutionfile )
 
       self._ChooseOmnisharpPort()
 
@@ -385,15 +381,15 @@ class CsharpSolutionCompleter( object ):
     """ Stop the OmniSharp server using a lock. """
     with self._server_state_lock:
       if self._ServerIsRunning():
-        self._logger.info( 'Stopping OmniSharp server with PID {0}'.format(
-                               self._omnisharp_phandle.pid ) )
+        LOGGER.info( 'Stopping OmniSharp server with PID %s',
+                     self._omnisharp_phandle.pid )
         try:
           self._GetResponse( '/stopserver' )
           utils.WaitUntilProcessIsTerminated( self._omnisharp_phandle,
                                               timeout = 5 )
-          self._logger.info( 'OmniSharp server stopped' )
+          LOGGER.info( 'OmniSharp server stopped' )
         except Exception:
-          self._logger.exception( 'Error while stopping OmniSharp server' )
+          LOGGER.exception( 'Error while stopping OmniSharp server' )
 
       self._CleanUp()
 
@@ -419,7 +415,7 @@ class CsharpSolutionCompleter( object ):
 
   def _ReloadSolution( self ):
     """ Reloads the solutions in the OmniSharp server """
-    self._logger.info( 'Reloading Solution in OmniSharp server' )
+    LOGGER.info( 'Reloading Solution in OmniSharp server' )
     return self._GetResponse( '/reloadsolution' )
 
 
@@ -580,7 +576,7 @@ class CsharpSolutionCompleter( object ):
         self._omnisharp_port = int( self._desired_omnisharp_port )
       else:
         self._omnisharp_port = utils.GetUnusedLocalhostPort()
-    self._logger.info( u'using port {0}'.format( self._omnisharp_port ) )
+    LOGGER.info( 'using port %s', self._omnisharp_port )
 
 
 def _CompleteIsFromImport( candidate ):

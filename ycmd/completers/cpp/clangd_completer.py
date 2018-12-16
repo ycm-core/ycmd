@@ -23,7 +23,6 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import subprocess
-import logging
 import os
 import threading
 import re
@@ -32,8 +31,8 @@ from ycmd import responses, utils
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
+from ycmd.utils import LOGGER
 
-_logger = logging.getLogger( __name__ )
 MIN_SUPPORTED_VERSION = '7.0.0'
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
@@ -105,7 +104,7 @@ def Get3rdPartyClangd():
     if not REPORTED_OUT_OF_DATE:
       REPORTED_OUT_OF_DATE = True
       raise RuntimeError( error )
-    _logger.error( error )
+    LOGGER.error( error )
     return None
   return pre_built_clangd
 
@@ -119,7 +118,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
   # None stands for we tried to fetch command and failed, therefore it is not
   # the default.
   if CLANGD_COMMAND != NOT_CACHED:
-    _logger.info( 'Returning cached clangd: {}'.format( CLANGD_COMMAND ) )
+    LOGGER.info( 'Returning cached clangd: %s', CLANGD_COMMAND )
     return CLANGD_COMMAND
   CLANGD_COMMAND = None
 
@@ -127,8 +126,8 @@ def GetClangdCommand( user_options, third_party_clangd ):
   installed_clangd = user_options[ 'clangd_binary_path' ]
   if not CheckClangdVersion( installed_clangd ):
     if installed_clangd:
-      _logger.warning( 'Clangd at {} is out-of-date, trying to use pre-built '
-                       'version.'.format( installed_clangd ) )
+      LOGGER.warning( 'Clangd at %s is out-of-date, trying to use pre-built '
+                      'version', installed_clangd )
     # Try looking for the pre-built binary.
     if not third_party_clangd:
       return None
@@ -173,9 +172,9 @@ def ShouldEnableClangdCompleter( user_options ):
 
   clangd_command = GetClangdCommand( user_options, third_party_clangd )
   if not clangd_command:
-    _logger.warning( 'Not using clangd: unable to find clangd binary' )
+    LOGGER.warning( 'Not using clangd: unable to find clangd binary' )
     return False
-  _logger.info( 'Using clangd from {}'.format( clangd_command ) )
+  LOGGER.info( 'Using clangd from %s', clangd_command )
   return True
 
 
@@ -347,7 +346,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       # Ensure we cleanup all states.
       self._Reset()
 
-      _logger.info( 'Starting clangd: {}'.format( self._clangd_command ) )
+      LOGGER.info( 'Starting clangd: %s', self._clangd_command )
       self._stderr_file = utils.CreateLogfile( 'clangd_stderr' )
       with utils.OpenForStdHandle( self._stderr_file ) as stderr:
         self._server_handle = utils.SafePopen( self._clangd_command,
@@ -367,31 +366,30 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       try:
         self._connection.AwaitServerConnection()
       except language_server_completer.LanguageServerConnectionTimeout:
-        _logger.error( 'clangd failed to start, or did not connect '
-                       'successfully' )
+        LOGGER.error( 'clangd failed to start, or did not connect '
+                      'successfully' )
         self.Shutdown()
         return
 
-    _logger.info( 'clangd started' )
+    LOGGER.info( 'clangd started' )
 
     self.SendInitialize( request_data )
 
 
   def Shutdown( self ):
     with self._server_state_mutex:
-      _logger.info( 'Shutting down clangd...' )
+      LOGGER.info( 'Shutting down clangd...' )
 
       # Tell the connection to expect the server to disconnect
       if self._connection:
         self._connection.Stop()
 
       if not self.ServerIsHealthy():
-        _logger.info( 'clangd is not running' )
+        LOGGER.info( 'clangd is not running' )
         self._Reset()
         return
 
-      _logger.info( 'Stopping clangd with PID {}'.format(
-                        self._server_handle.pid ) )
+      LOGGER.info( 'Stopping clangd with PID %s', self._server_handle.pid )
 
       try:
         self.ShutdownServer()
@@ -409,9 +407,9 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
         utils.WaitUntilProcessIsTerminated( self._server_handle,
                                             timeout = 15 )
 
-        _logger.info( 'clangd stopped' )
+        LOGGER.info( 'clangd stopped' )
       except Exception:
-        _logger.exception( 'Error while stopping clangd server' )
+        LOGGER.exception( 'Error while stopping clangd server' )
         # We leave the process running. Hopefully it will eventually die of its
         # own accord.
 

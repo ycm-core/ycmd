@@ -29,13 +29,12 @@ from future.utils import iteritems
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          CodepointOffsetToByteOffset,
                          HashableDict,
+                         LOGGER,
                          ToUnicode,
                          ToBytes,
                          SplitLines )
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
-import logging
-_logger = logging.getLogger( __name__ )
 
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
@@ -171,10 +170,10 @@ class RequestWrap( object ):
     try:
       return self[ 'lines' ][ self[ 'line_num' ] - 1 ]
     except IndexError:
-      _logger.exception( 'Client returned invalid line number {0} '
-                         'for file {1}. Assuming empty.'.format(
-                           self[ 'line_num' ],
-                           self[ 'filepath' ] ) )
+      LOGGER.exception( 'Client returned invalid line number %s '
+                        'for file %s. Assuming empty',
+                        self[ 'line_num' ],
+                        self[ 'filepath' ] )
       return ''
 
 

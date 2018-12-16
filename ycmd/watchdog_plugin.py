@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Google Inc.
+# Copyright (C) 2013-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,12 +24,9 @@ from builtins import *  # noqa
 
 import time
 import copy
-import logging
 from threading import Lock
 from ycmd.handlers import ServerShutdown
-from ycmd.utils import StartThread
-
-_logger = logging.getLogger( __name__ )
+from ycmd.utils import LOGGER, StartThread
 
 
 # This class implements the Bottle plugin API:
@@ -95,7 +92,7 @@ class WatchdogPlugin( object ):
       # wait interval to contact us before we die.
       if ( self._TimeSinceLastRequest() > self._idle_suicide_seconds and
            self._TimeSinceLastWakeup() < 2 * self._check_interval_seconds ):
-        _logger.info( 'Shutting down server due to inactivity' )
+        LOGGER.info( 'Shutting down server due to inactivity' )
         ServerShutdown()
 
       self._UpdateLastWakeupTime()

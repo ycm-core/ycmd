@@ -30,15 +30,12 @@ import os
 import queue
 import threading
 
+from ycmd import extra_conf_store, responses, utils
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileContents, GetFileLines
-from ycmd import extra_conf_store, responses, utils
+from ycmd.utils import LOGGER
 
 from ycmd.completers.language_server import language_server_protocol as lsp
-
-_logger = logging.getLogger( __name__ )
-
-SERVER_LOG_PREFIX = 'Server reported: '
 
 NO_HOVER_INFORMATION = 'No hover information.'
 
@@ -268,11 +265,11 @@ class LanguageServerConnection( threading.Thread ):
           response.Abort()
         self._responses.clear()
 
-      _logger.debug( 'Connection was closed cleanly' )
+      LOGGER.debug( 'Connection was closed cleanly' )
     except Exception:
-      _logger.exception( 'The language server communication channel closed '
-                         'unexpectedly. Issue a RestartServer command to '
-                         'recover.' )
+      LOGGER.exception( 'The language server communication channel closed '
+                        'unexpectedly. Issue a RestartServer command to '
+                        'recover.' )
 
       # Abort any outstanding requests
       with self._response_mutex:
@@ -299,7 +296,7 @@ class LanguageServerConnection( threading.Thread ):
     try:
       self.join()
     except RuntimeError:
-      _logger.exception( "Shutting down dispatch thread while it isn't active" )
+      LOGGER.exception( "Shutting down dispatch thread while it isn't active" )
       # This actually isn't a problem in practice.
 
 
@@ -325,7 +322,7 @@ class LanguageServerConnection( threading.Thread ):
       assert request_id not in self._responses
       self._responses[ request_id ] = response
 
-    _logger.debug( 'TX: Sending message: %r', message )
+    LOGGER.debug( 'TX: Sending message: %r', message )
 
     self.WriteData( message )
     return response
@@ -341,7 +338,7 @@ class LanguageServerConnection( threading.Thread ):
   def SendNotification( self, message ):
     """Issue a notification to the server. A notification is "fire and forget";
     no response will be received and nothing is returned."""
-    _logger.debug( 'TX: Sending notification: %r', message )
+    LOGGER.debug( 'TX: Sending notification: %r', message )
 
     self.WriteData( message )
 
@@ -404,7 +401,7 @@ class LanguageServerConnection( threading.Thread ):
         content_read += len( content )
         read_bytes = content_to_read
 
-      _logger.debug( 'RX: Received message: %r', content )
+      LOGGER.debug( 'RX: Received message: %r', content )
 
       # lsp will convert content to Unicode
       self._DispatchMessage( lsp.Parse( content ) )
@@ -712,7 +709,7 @@ class LanguageServerCompleter( Completer ):
       except Exception:
         # Ignore other exceptions from the server and send the exit request
         # anyway
-        _logger.exception( 'Shutdown request failed. Ignoring.' )
+        LOGGER.exception( 'Shutdown request failed. Ignoring' )
 
     if self.ServerIsHealthy():
       self.GetConnection().SendNotification( lsp.Exit() )
@@ -800,8 +797,8 @@ class LanguageServerCompleter( Completer ):
         REQUEST_TIMEOUT_COMPLETION )
       item = response[ 'result' ]
     except ResponseFailedException:
-      _logger.exception( 'A completion item could not be resolved. Using '
-                         'basic data.' )
+      LOGGER.exception( 'A completion item could not be resolved. Using '
+                        'basic data' )
 
     return item
 
@@ -872,8 +869,8 @@ class LanguageServerCompleter( Completer ):
         insertion_text, fixits, start_codepoint = (
           _InsertionTextForItem( request_data, item ) )
       except IncompatibleCompletionException:
-        _logger.exception( 'Ignoring incompatible completion suggestion '
-                           '{0}'.format( item ) )
+        LOGGER.exception( 'Ignoring incompatible completion suggestion %s',
+                          item )
         continue
 
       min_start_codepoint = min( min_start_codepoint, start_codepoint )
@@ -907,7 +904,7 @@ class LanguageServerCompleter( Completer ):
       if settings is not None:
         return settings
 
-    _logger.debug( 'No Settings function defined in %s', module.__file__ )
+    LOGGER.debug( 'No Settings function defined in %s', module.__file__ )
 
     return {}
 
@@ -1080,7 +1077,7 @@ class LanguageServerCompleter( Completer ):
       try:
         filepath = lsp.UriToFilePath( uri )
       except lsp.InvalidUriException:
-        _logger.exception( 'Ignoring diagnostics for unrecognized URI' )
+        LOGGER.exception( 'Ignoring diagnostics for unrecognized URI' )
         return None
 
       with self._server_info_mutex:
@@ -1107,8 +1104,9 @@ class LanguageServerCompleter( Completer ):
       ]
 
       params = notification[ 'params' ]
-      _logger.log( log_level[ int( params[ 'type' ] ) ],
-                   SERVER_LOG_PREFIX + params[ 'message' ] )
+      LOGGER.log( log_level[ int( params[ 'type' ] ) ],
+                  'Server reported: %s',
+                  params[ 'message' ] )
 
     return None
 
@@ -1140,8 +1138,10 @@ class LanguageServerCompleter( Completer ):
       file_state = self._server_file_state[ file_name ]
       action = file_state.GetDirtyFileAction( file_data[ 'contents' ] )
 
-      _logger.debug( 'Refreshing file {0}: State is {1}/action {2}'.format(
-        file_name, file_state.state, action ) )
+      LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
+                    file_name,
+                    file_state.state,
+                    action )
 
       if action == lsp.ServerFileState.OPEN_FILE:
         msg = lsp.DidOpenTextDocument( file_state,
@@ -1181,8 +1181,8 @@ class LanguageServerCompleter( Completer ):
       try:
         contents = GetFileContents( request_data, file_name )
       except IOError:
-        _logger.exception( 'Error getting contents for open file: {0}'.format(
-          file_name ) )
+        LOGGER.exception( 'Error getting contents for open file: %s',
+                          file_name )
 
         # The file no longer exists (it might have been a temporary file name)
         # or it is no longer accessible, so we should state that it is closed.
@@ -1297,8 +1297,8 @@ class LanguageServerCompleter( Completer ):
             sync = 1
 
         self._sync_type = SYNC_TYPE[ sync ]
-        _logger.info( 'Language server requires sync type of {0}'.format(
-          self._sync_type ) )
+        LOGGER.info( 'Language server requires sync type of %s',
+                     self._sync_type )
 
       # We must notify the server that we received the initialize response (for
       # no apparent reason, other than that's what the protocol says).
@@ -1799,15 +1799,15 @@ def _PositionToLocationAndDescription( request_data, position ):
     filename = lsp.UriToFilePath( position[ 'uri' ] )
     file_contents = GetFileLines( request_data, filename )
   except lsp.InvalidUriException:
-    _logger.debug( "Invalid URI, file contents not available in GoTo" )
+    LOGGER.debug( 'Invalid URI, file contents not available in GoTo' )
     filename = ''
     file_contents = []
   except IOError:
     # It's possible to receive positions for files which no longer exist (due to
     # race condition). UriToFilePath doesn't throw IOError, so we can assume
     # that filename is already set.
-    _logger.exception( "A file could not be found when determining a "
-                       "GoTo location" )
+    LOGGER.exception( 'A file could not be found when determining a '
+                      'GoTo location' )
     file_contents = []
 
   return _BuildLocationAndDescription( filename,
@@ -1854,7 +1854,7 @@ def _BuildDiagnostic( contents, uri, diag ):
   try:
     filename = lsp.UriToFilePath( uri )
   except lsp.InvalidUriException:
-    _logger.debug( 'Invalid URI received for diagnostic' )
+    LOGGER.debug( 'Invalid URI received for diagnostic' )
     filename = ''
 
   r = _BuildRange( contents, filename, diag[ 'range' ] )
@@ -1872,7 +1872,7 @@ def TextEditToChunks( request_data, uri, text_edit ):
   try:
     filepath = lsp.UriToFilePath( uri )
   except lsp.InvalidUriException:
-    _logger.debug( 'Invalid filepath received in TextEdit' )
+    LOGGER.debug( 'Invalid filepath received in TextEdit' )
     filepath = ''
 
   contents = GetFileLines( request_data, filepath )

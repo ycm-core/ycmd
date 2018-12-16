@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2016-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -146,55 +146,60 @@ def ExtraConfStore_ModuleForSourceFile_GlobalExtraConf_WinEnvVar_test( app ):
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': NO_EXTRA_CONF } )
-@patch( 'ycmd.extra_conf_store._logger', autospec = True )
+@patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
 def ExtraConfStore_CallGlobalExtraConfMethod_NoGlobalExtraConf_test( app,
                                                                      logger ):
   extra_conf_store._CallGlobalExtraConfMethod( 'SomeMethod' )
   assert_that( logger.method_calls, has_length( 1 ) )
-  logger.debug.assert_called_with( 'No global extra conf, not calling method '
-                                   'SomeMethod' )
+  logger.debug.assert_called_with(
+    'No global extra conf, not calling method %s',
+    'SomeMethod' )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
-@patch( 'ycmd.extra_conf_store._logger', autospec = True )
+@patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
 def CallGlobalExtraConfMethod_NoMethodInGlobalExtraConf_test( app, logger ):
   extra_conf_store._CallGlobalExtraConfMethod( 'MissingMethod' )
   assert_that( logger.method_calls, has_length( 1 ) )
-  logger.debug.assert_called_with( 'Global extra conf not loaded or '
-                                   'no function MissingMethod' )
+  logger.debug.assert_called_with(
+    'Global extra conf not loaded or no function %s',
+    'MissingMethod' )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
-@patch( 'ycmd.extra_conf_store._logger', autospec = True )
+@patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
 def CallGlobalExtraConfMethod_NoExceptionFromMethod_test( app, logger ):
   extra_conf_store._CallGlobalExtraConfMethod( 'NoException' )
   assert_that( logger.method_calls, has_length( 1 ) )
-  logger.info.assert_called_with( 'Calling global extra conf method '
-                                  'NoException on conf file '
-                                  '{0}'.format( GLOBAL_EXTRA_CONF ) )
+  logger.info.assert_called_with(
+    'Calling global extra conf method %s on conf file %s',
+    'NoException',
+    GLOBAL_EXTRA_CONF )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
-@patch( 'ycmd.extra_conf_store._logger', autospec = True )
+@patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
 def CallGlobalExtraConfMethod_CatchExceptionFromMethod_test( app, logger ):
   extra_conf_store._CallGlobalExtraConfMethod( 'RaiseException' )
   assert_that( logger.method_calls, has_length( 2 ) )
-  logger.info.assert_called_with( 'Calling global extra conf method '
-                                  'RaiseException on conf file '
-                                  '{0}'.format( GLOBAL_EXTRA_CONF ) )
+  logger.info.assert_called_with(
+    'Calling global extra conf method %s on conf file %s',
+    'RaiseException',
+    GLOBAL_EXTRA_CONF )
   logger.exception.assert_called_with(
-    'Error occurred while calling global extra conf method RaiseException '
-    'on conf file {0}'.format( GLOBAL_EXTRA_CONF ) )
+    'Error occurred while calling global extra conf method %s on conf file %s',
+    'RaiseException',
+    GLOBAL_EXTRA_CONF )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': ERRONEOUS_EXTRA_CONF } )
-@patch( 'ycmd.extra_conf_store._logger', autospec = True )
+@patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
 def CallGlobalExtraConfMethod_CatchExceptionFromExtraConf_test( app, logger ):
   extra_conf_store._CallGlobalExtraConfMethod( 'NoException' )
   assert_that( logger.method_calls, has_length( 1 ) )
-  logger.exception.assert_called_with( 'Error occurred while '
-                                       'loading global extra conf '
-                                       '{0}'.format( ERRONEOUS_EXTRA_CONF ) )
+  logger.exception.assert_called_with(
+    'Error occurred while loading global extra conf %s',
+    ERRONEOUS_EXTRA_CONF )
 
 
 @IsolatedYcmd()
