@@ -14,7 +14,7 @@ class Foo {
 var foo = new Foo();
 
 // line 17, column 6
-foo.m
+foo.mA
 
 
 /**

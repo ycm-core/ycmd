@@ -132,6 +132,7 @@ def GetCompletions_Keyword_test( app ):
         'completions': has_item( {
           'insertion_text': 'class',
           'kind':           'keyword',
+          'extra_data':     {}
         } )
       } )
     }
