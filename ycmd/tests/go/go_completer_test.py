@@ -127,7 +127,8 @@ def ComputeCandidatesInner_AfterUnicode_test( completer, execute_command ):
         return_value = ReadFile( PATH_TO_POS292_RES ) )
 def ComputeCandidatesInner_test( completer, execute_command ):
   # Col 40 corresponds to cursor at ..., log.Prefi^x ...
-  result = completer.ComputeCandidatesInner( BuildRequest( 10, 40 ) )
+  candidates = completer.ComputeCandidatesInner( BuildRequest( 10, 40 ) )
+  result = completer.DetailCandidates( {}, candidates )
   execute_command.assert_called_once_with(
     [ DUMMY_BINARY, '-sock', 'tcp', '-addr', completer._gocode_host,
       '-f=json', 'autocomplete', PATH_TO_TEST_FILE, '287' ],

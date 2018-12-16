@@ -24,7 +24,7 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_item, has_items
+from hamcrest import all_of, assert_that, has_item, has_items
 
 from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
@@ -39,12 +39,28 @@ def GetCompletions_Basic_test( app ):
                                   contents = ReadFile( filepath ),
                                   force_semantic = True,
                                   line_num = 9,
+                                  column_num = 9 )
+
+  results = app.post_json( '/completions',
+                           completion_data ).json[ 'completions' ]
+  assert_that( results,
+               all_of(
+                 has_items(
+                   CompletionEntryMatcher( 'Llongfile', 'untyped int' ),
+                   CompletionEntryMatcher( 'Logger', 'struct' ) ) ) )
+  completion_data = BuildRequest( filepath = filepath,
+                                  filetype = 'go',
+                                  contents = ReadFile( filepath ),
+                                  force_semantic = True,
+                                  line_num = 9,
                                   column_num = 11 )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
   assert_that( results,
-               has_item( CompletionEntryMatcher( u'Logger' ) ) )
+               all_of(
+                 has_item(
+                   CompletionEntryMatcher( 'Logger', 'struct' ) ) ) )
 
 
 @SharedYcmd
