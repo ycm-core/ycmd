@@ -779,23 +779,16 @@ class LanguageServerCompleter( Completer ):
     else:
       items = response[ 'result' ][ 'items' ]
 
-    completions = []
-    for item in items:
-      try:
-        insertion_text, fixits, start_codepoint = (
-          _InsertionTextForItem( request_data, item ) )
-      except IncompatibleCompletionException:
-        _logger.exception( 'Ignoring incompatible completion suggestion '
-                           '{0}'.format( item ) )
-        continue
-      completions.append( responses.BuildCompletionData(
-        insertion_text = insertion_text,
-        extra_data = item ) )
-
-    return completions
+    return self._ResolveCompletionItems( items,
+                                         False, # don't do resolve
+                                         request_data )
 
 
   def DetailCandidates( self, request_data, completions ):
+    if not self._resolve_completion_items:
+      # We already did all of the work.
+      return completions
+
     # The way language server protocol does completions expects us to "resolve"
     # items as the user selects them. We don't have any API for that so we
     # simply resolve each completion item we get. Should this be a performance
@@ -806,6 +799,7 @@ class LanguageServerCompleter( Completer ):
     # to our model of a single start column.
     return self._ResolveCompletionItems(
       [ completion[ 'extra_data' ] for completion in completions ],
+      True, # Do a full resolve
       request_data )
 
 
@@ -835,7 +829,7 @@ class LanguageServerCompleter( Completer ):
                False ) )
 
 
-  def _ResolveCompletionItems( self, items, request_data ):
+  def _ResolveCompletionItems( self, items, resolve, request_data ):
     """Issue the resolve request for each completion item in |items|, then fix
     up the items such that a single start codepoint is used."""
 
@@ -878,14 +872,15 @@ class LanguageServerCompleter( Completer ):
     # start_codepoints. Then, we fix-up the completion texts to use the
     # earliest start_codepoint by borrowing text from the original line.
     for item in items:
-      # Resolving may take some time, but as we only resolve filtered
-      # candidates, the maximum is throttled by
-      # user_options[ 'max_num_candidates' ]
-      if self._resolve_completion_items:
+      if resolve:
         item = self._ResolveCompletionItem( item )
 
+      extra_data = None
+      start_codepoint = None
+      insertion_text = None
+
       try:
-        insertion_text, fixits, start_codepoint = (
+        insertion_text, extra_data, start_codepoint = (
           _InsertionTextForItem( request_data, item ) )
       except IncompatibleCompletionException:
         _logger.exception( 'Ignoring incompatible completion suggestion '
@@ -894,11 +889,17 @@ class LanguageServerCompleter( Completer ):
 
       min_start_codepoint = min( min_start_codepoint, start_codepoint )
 
+      if not resolve and self._resolve_completion_items:
+        # We need to store the full item because we will get called again in a
+        # while to resolve the items
+        extra_data = item
+
       # Build a ycmd-compatible completion for the text as we received it. Later
       # we might modify insertion_text should we see a lower start codepoint.
-      completions.append( _CompletionItemToCompletionData( insertion_text,
-                                                           item,
-                                                           fixits ) )
+      completions.append( _CompletionItemToCompletionData(
+        insertion_text,
+        item,
+        extra_data ) )
       start_codepoints.append( start_codepoint )
       if start_codepoint not in unique_start_codepoints:
         unique_start_codepoints.append( start_codepoint )
