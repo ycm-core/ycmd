@@ -798,7 +798,7 @@ class LanguageServerCompleter( Completer ):
     # text to ensure that the returned text and start_codepoint are applicable
     # to our model of a single start column.
     return self._ResolveCompletionItems(
-      [ completion[ 'extra_data' ] for completion in completions ],
+      [ c[ 'extra_data' ][ 'item' ] for c in completions ],
       True, # Do a full resolve
       request_data )
 
@@ -811,7 +811,8 @@ class LanguageServerCompleter( Completer ):
         resolve_id,
         resolve,
         REQUEST_TIMEOUT_COMPLETION )
-      item = response[ 'result' ]
+      item.clear()
+      item.update( response[ 'result' ] )
     except ResponseFailedException:
       _logger.exception( 'A completion item could not be resolved. Using '
                          'basic data.' )
@@ -872,12 +873,9 @@ class LanguageServerCompleter( Completer ):
     # start_codepoints. Then, we fix-up the completion texts to use the
     # earliest start_codepoint by borrowing text from the original line.
     for item in items:
-      if resolve:
-        item = self._ResolveCompletionItem( item )
-
-      extra_data = None
-      start_codepoint = None
-      insertion_text = None
+      if resolve and not item.get( '_resolved', False ):
+        self._ResolveCompletionItem( item )
+        item[ '_resolved' ] = True
 
       try:
         insertion_text, extra_data, start_codepoint = (
@@ -887,12 +885,13 @@ class LanguageServerCompleter( Completer ):
                            '{0}'.format( item ) )
         continue
 
-      min_start_codepoint = min( min_start_codepoint, start_codepoint )
-
       if not resolve and self._resolve_completion_items:
-        # We need to store the full item because we will get called again in a
-        # while to resolve the items
-        extra_data = item
+        # Store the actual item in the extra_data area of the completion item.
+        # We'll use this later to do the full resolve.
+        extra_data = {} if extra_data is None else extra_data
+        extra_data[ 'item' ] = item
+
+      min_start_codepoint = min( min_start_codepoint, start_codepoint )
 
       # Build a ycmd-compatible completion for the text as we received it. Later
       # we might modify insertion_text should we see a lower start codepoint.

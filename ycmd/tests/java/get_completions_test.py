@@ -183,6 +183,35 @@ def GetCompletions_WithQuery_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_DetailFromCache_test( app ):
+  for i in range( 0, 2 ):
+    RunTest( app, {
+      'description': 'completion works when the elements come from the cache',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestLauncher.java' ),
+        'line_num'  : 32,
+        'column_num': 12,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 11,
+          'completions': has_item(
+            CompletionEntryMatcher( 'doSomethingVaguelyUseful',
+                                    'AbstractTestWidget', {
+                                      'kind': 'Function',
+                                      'menu_text':
+                                        'doSomethingVaguelyUseful() : void',
+                                    } )
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+@SharedYcmd
 def GetCompletions_Package_test( app ):
   RunTest( app, {
     'description': 'completion works for package statements',
