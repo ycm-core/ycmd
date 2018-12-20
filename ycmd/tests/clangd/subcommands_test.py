@@ -59,7 +59,8 @@ def Subcommands_DefinedSubcommands_test( app ):
       },
       'expect': {
         'response': requests.codes.ok,
-        'data': contains( *sorted( [ 'FixIt',
+        'data': contains( *sorted( [ 'ExecuteCommand',
+                                     'FixIt',
                                      'Format',
                                      'GetType',
                                      'GetTypeImprecise',

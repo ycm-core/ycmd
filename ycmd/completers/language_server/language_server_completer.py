@@ -62,6 +62,10 @@ PROVIDERS_MAP = {
                                                 [ 'Definition',
                                                   'Declaration' ] )
   ),
+  'executeCommandProvider': (
+    lambda self, request_data, args: self.ExecuteCommand( request_data,
+                                                          args )
+  ),
   'typeDefinitionProvider': (
     lambda self, request_data, args: self.GoTo( request_data,
                                                 [ 'TypeDefinition' ] )
@@ -89,6 +93,7 @@ PROVIDERS_MAP = {
 # like GoTo where it's convenient to jump to the declaration if already on the
 # definition and vice versa.
 DEFAULT_SUBCOMMANDS_MAP = {
+  'ExecuteCommand':     [ 'executeCommandProvider' ],
   'GoToDefinition':     [ 'definitionProvider' ],
   'GoToDeclaration':    [ 'declarationProvider', 'definitionProvider' ],
   'GoTo':               [ ( 'definitionProvider', 'declarationProvider' ),
@@ -97,7 +102,7 @@ DEFAULT_SUBCOMMANDS_MAP = {
   'GoToImplementation': [ 'implementationProvider' ],
   'GoToReferences':     [ 'referencesProvider' ],
   'RefactorRename':     [ 'renameProvider' ],
-  'Format':             [ 'documentFormattingProvider' ]
+  'Format':             [ 'documentFormattingProvider' ],
 }
 
 
@@ -647,6 +652,8 @@ class LanguageServerCompleter( Completer ):
       - Set its notification handler to self.GetDefaultNotificationHandler()
       - See below for Startup/Shutdown instructions
     - Implement any server-specific Commands in HandleServerCommand
+    - Optionally handle server-specific command responses in
+      HandleServerCommandResponse
     - Optionally override GetCustomSubcommands to return subcommand handlers
       that cannot be detected from the capabilities response.
     - Implement the following Completer abstract methods:
@@ -714,6 +721,10 @@ class LanguageServerCompleter( Completer ):
 
   @abc.abstractmethod
   def HandleServerCommand( self, request_data, command ):
+    pass # pragma: no cover
+
+
+  def HandleServerCommandResponse( self, request_data, response ):
     pass # pragma: no cover
 
 
@@ -1818,6 +1829,26 @@ class LanguageServerCompleter( Completer ):
                           request_data[ 'column_num' ],
                           request_data[ 'filepath' ] ),
       chunks ) ] )
+
+
+  def ExecuteCommand( self, request_data, args ):
+    if not args:
+      raise ValueError( 'Must specify a command to execute' )
+
+    # We don't have any actual knowledge of the responses here. Unfortunately,
+    # the LSP "comamnds" require client/server specific understanding of the
+    # commands.
+    command_response = self.GetCommandResponse( request_data,
+                                                args[ 0 ],
+                                                args[ 1: ] )
+
+    response = self.HandleServerCommandResponse( request_data,
+                                                 command_response )
+    if response is not None:
+      return response
+
+    return responses.BuildDetailedInfoResponse( json.dumps( command_response,
+                                                            indent = 2 ) )
 
 
   def GetCommandResponse( self, request_data, command, arguments ):

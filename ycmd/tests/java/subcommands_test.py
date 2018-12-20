@@ -67,6 +67,7 @@ def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'java' )
 
   eq_( sorted( [ 'FixIt',
+                 'ExecuteCommand',
                  'Format',
                  'GoToDeclaration',
                  'GoToDefinition',
@@ -1818,5 +1819,54 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
           'chunks': is_not( empty() ),
         } ) )
       } )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_ExecuteCommand_NoArguments_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  RunTest( app, {
+    'description': 'Running a command without args fails',
+    'request': {
+      'command': 'ExecuteCommand',
+      'line_num': 1,
+      'column_num': 1,
+      'filepath': filepath,
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( ValueError,
+                            'Must specify a command to execute' ),
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_ExecuteCommand_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+
+  RunTest( app, {
+    'description': 'Running a command does what it says it does',
+    'request': {
+      'command': 'ExecuteCommand',
+      'arguments': [ 'java.edit.organizeImports' ],
+      'line_num': 1,
+      'column_num': 1,
+      'filepath': filepath,
+    },
+    'expect': {
+      # We dont specify the path for import organize, and jdt.ls returns shrug
+      'response': requests.codes.ok,
+      'data': ''
     }
   } )
