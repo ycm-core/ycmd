@@ -183,6 +183,35 @@ def GetCompletions_WithQuery_test( app ):
 
 
 @SharedYcmd
+def GetCompletions_DetailFromCache_test( app ):
+  for i in range( 0, 2 ):
+    RunTest( app, {
+      'description': 'completion works when the elements come from the cache',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestLauncher.java' ),
+        'line_num'  : 32,
+        'column_num': 12,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 11,
+          'completions': has_item(
+            CompletionEntryMatcher( 'doSomethingVaguelyUseful',
+                                    'AbstractTestWidget', {
+                                      'kind': 'Function',
+                                      'menu_text':
+                                        'doSomethingVaguelyUseful() : void',
+                                    } )
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+@SharedYcmd
 def GetCompletions_Package_test( app ):
   RunTest( app, {
     'description': 'completion works for package statements',
@@ -511,9 +540,10 @@ def Subcommands_ServerNotReady_test( app ):
 
 
 @SharedYcmd
-def GetCompletions_MoreThan100NoResolve_test( app ):
+def GetCompletions_MoreThan100FilteredResolve_test( app ):
   RunTest( app, {
-    'description': 'We guess the right start codepoint without resolving',
+    'description': 'More that 100 match, but filtered set is fewer as this '
+                   'depends on max_num_candidates',
     'request': {
       'filetype'  : 'java',
       'filepath'  : ProjectPath( 'TestLauncher.java' ),
@@ -524,8 +554,9 @@ def GetCompletions_MoreThan100NoResolve_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': has_item(
-          CompletionEntryMatcher( 'com.youcompleteme', None, {
-            'kind': 'Module'
+          CompletionEntryMatcher( 'com.youcompleteme.*;', None, {
+            'kind': 'Module',
+            'detailed_info': 'com.youcompleteme\n\n',
           } ),
         ),
         'completion_start_column': 8,

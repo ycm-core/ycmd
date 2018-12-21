@@ -779,6 +779,16 @@ class LanguageServerCompleter( Completer ):
     else:
       items = response[ 'result' ][ 'items' ]
 
+    return self._ResolveCompletionItems( items,
+                                         False, # don't do resolve
+                                         request_data )
+
+
+  def DetailCandidates( self, request_data, completions ):
+    if not self._resolve_completion_items:
+      # We already did all of the work.
+      return completions
+
     # The way language server protocol does completions expects us to "resolve"
     # items as the user selects them. We don't have any API for that so we
     # simply resolve each completion item we get. Should this be a performance
@@ -787,7 +797,10 @@ class LanguageServerCompleter( Completer ):
     # Note: _ResolveCompletionItems does a lot of work on the actual completion
     # text to ensure that the returned text and start_codepoint are applicable
     # to our model of a single start column.
-    return self._ResolveCompletionItems( items, request_data )
+    return self._ResolveCompletionItems(
+      [ c[ 'extra_data' ][ 'item' ] for c in completions ],
+      True, # Do a full resolve
+      request_data )
 
 
   def _ResolveCompletionItem( self, item ):
@@ -798,7 +811,8 @@ class LanguageServerCompleter( Completer ):
         resolve_id,
         resolve,
         REQUEST_TIMEOUT_COMPLETION )
-      item = response[ 'result' ]
+      item.clear()
+      item.update( response[ 'result' ] )
     except ResponseFailedException:
       _logger.exception( 'A completion item could not be resolved. Using '
                          'basic data.' )
@@ -816,7 +830,7 @@ class LanguageServerCompleter( Completer ):
                False ) )
 
 
-  def _ResolveCompletionItems( self, items, request_data ):
+  def _ResolveCompletionItems( self, items, resolve, request_data ):
     """Issue the resolve request for each completion item in |items|, then fix
     up the items such that a single start codepoint is used."""
 
@@ -855,34 +869,36 @@ class LanguageServerCompleter( Completer ):
     unique_start_codepoints = []
     min_start_codepoint = request_data[ 'start_codepoint' ]
 
-    # Resolving takes some time, so only do it if there are fewer than 100
-    # candidates.
-    resolve_completion_items = ( len( items ) <= 100 and
-      self._resolve_completion_items )
-
     # First generate all of the completion items and store their
     # start_codepoints. Then, we fix-up the completion texts to use the
     # earliest start_codepoint by borrowing text from the original line.
     for item in items:
-      # First, resolve the completion.
-      if resolve_completion_items:
-        item = self._ResolveCompletionItem( item )
+      if resolve and not item.get( '_resolved', False ):
+        self._ResolveCompletionItem( item )
+        item[ '_resolved' ] = True
 
       try:
-        insertion_text, fixits, start_codepoint = (
+        insertion_text, extra_data, start_codepoint = (
           _InsertionTextForItem( request_data, item ) )
       except IncompatibleCompletionException:
         _logger.exception( 'Ignoring incompatible completion suggestion '
                            '{0}'.format( item ) )
         continue
 
+      if not resolve and self._resolve_completion_items:
+        # Store the actual item in the extra_data area of the completion item.
+        # We'll use this later to do the full resolve.
+        extra_data = {} if extra_data is None else extra_data
+        extra_data[ 'item' ] = item
+
       min_start_codepoint = min( min_start_codepoint, start_codepoint )
 
       # Build a ycmd-compatible completion for the text as we received it. Later
       # we might modify insertion_text should we see a lower start codepoint.
-      completions.append( _CompletionItemToCompletionData( insertion_text,
-                                                           item,
-                                                           fixits ) )
+      completions.append( _CompletionItemToCompletionData(
+        insertion_text,
+        item,
+        extra_data ) )
       start_codepoints.append( start_codepoint )
       if start_codepoint not in unique_start_codepoints:
         unique_start_codepoints.append( start_codepoint )
