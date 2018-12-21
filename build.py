@@ -872,8 +872,9 @@ def WritePythonUsedDuringBuild():
 
 def Main():
   args = ParseArguments()
-  cmake = FindCmake()
-  cmake_common_args = GetCmakeCommonArgs( args )
+  if not args.skip_build or not args.no_regex:
+      cmake = FindCmake()
+      cmake_common_args = GetCmakeCommonArgs( args )
   if not args.skip_build:
     ExitIfYcmdLibInUseOnWindows()
     BuildYcmdLib( cmake, cmake_common_args, args )
