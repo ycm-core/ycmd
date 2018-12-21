@@ -870,16 +870,24 @@ def WritePythonUsedDuringBuild():
     f.write( sys.executable )
 
 
-def Main():
-  args = ParseArguments()
+def DoCmakeBuilds( args ):
   cmake = FindCmake()
   cmake_common_args = GetCmakeCommonArgs( args )
+
   if not args.skip_build:
     ExitIfYcmdLibInUseOnWindows()
     BuildYcmdLib( cmake, cmake_common_args, args )
     WritePythonUsedDuringBuild()
+
   if not args.no_regex:
     BuildRegexModule( cmake, cmake_common_args, args )
+
+
+def Main():
+  args = ParseArguments()
+
+  if not args.skip_build or not args.no_regex:
+    DoCmakeBuilds( args )
   if args.cs_completer or args.omnisharp_completer or args.all_completers:
     EnableCsCompleter( args )
   if args.go_completer or args.gocode_completer or args.all_completers:
