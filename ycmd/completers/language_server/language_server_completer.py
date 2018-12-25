@@ -779,9 +779,18 @@ class LanguageServerCompleter( Completer ):
     else:
       items = response[ 'result' ][ 'items' ]
 
-    return self._ResolveCompletionItems( items,
-                                         False, # don't do resolve
-                                         request_data )
+    # Note: _CandidatesFromCompletionItems does a lot of work on the actual
+    # completion text to ensure that the returned text and start_codepoint are
+    # applicable to our model of a single start column.
+    #
+    # Unfortunately (perhaps) we have to do this both here and in
+    # DetailCandidates when resolve is required. This is because the filtering
+    # should be based on ycmd's version of the insertion_text. Fortunately it's
+    # likely much quicker to do the simple calculations inline rather than a
+    # series of potentially many blocking server round trips.
+    return self._CandidatesFromCompletionItems( items,
+                                                False, # don't do resolve
+                                                request_data )
 
 
   def DetailCandidates( self, request_data, completions ):
@@ -789,15 +798,15 @@ class LanguageServerCompleter( Completer ):
       # We already did all of the work.
       return completions
 
-    # The way language server protocol does completions expects us to "resolve"
-    # items as the user selects them. We don't have any API for that so we
-    # simply resolve each completion item we get. Should this be a performance
-    # issue, we could restrict it in future.
+    # Note: _CandidatesFromCompletionItems does a lot of work on the actual
+    # completion text to ensure that the returned text and start_codepoint are
+    # applicable to our model of a single start column.
     #
-    # Note: _ResolveCompletionItems does a lot of work on the actual completion
-    # text to ensure that the returned text and start_codepoint are applicable
-    # to our model of a single start column.
-    return self._ResolveCompletionItems(
+    # While we did this before, this time round we will have much better data to
+    # do it on, and the new calculated value is dependent on the set of filtered
+    # data, possibly leading to significantly smaller overlap with existing
+    # text. See the fixup algorithm for more details on that.
+    return self._CandidatesFromCompletionItems(
       [ c[ 'extra_data' ][ 'item' ] for c in completions ],
       True, # Do a full resolve
       request_data )
@@ -830,7 +839,7 @@ class LanguageServerCompleter( Completer ):
                False ) )
 
 
-  def _ResolveCompletionItems( self, items, resolve, request_data ):
+  def _CandidatesFromCompletionItems( self, items, resolve, request_data ):
     """Issue the resolve request for each completion item in |items|, then fix
     up the items such that a single start codepoint is used."""
 
