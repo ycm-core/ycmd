@@ -158,7 +158,9 @@ class GoCompleter( Completer ):
       if result.get( 'class' ) == 'PANIC':
         raise RuntimeError( GOCODE_PANIC_MESSAGE )
 
-    return [ _ConvertCompletionData( x ) for x in resultdata[ 1 ] ]
+    return [ responses.BuildCompletionData(
+      insertion_text = x[ 'name' ],
+      extra_data = x ) for x in resultdata[ 1 ] ]
 
 
   def GetSubcommandsMap( self ):
@@ -333,6 +335,23 @@ class GoCompleter( Completer ):
                                                items = [ godef_item ] )
 
 
+  def DetailCandidates( self, request_data, candidates ):
+    for candidate in candidates:
+      if 'kind' in candidate:
+        # This candidate is already detailed
+        continue
+      completion = candidate[ 'extra_data' ]
+      candidate[ 'menu_text' ] = completion[ 'name' ]
+      candidate[ 'extra_menu_info' ] = completion[ 'type' ]
+      candidate[ 'kind' ] = completion[ 'class' ]
+      candidate[ 'detailed_info' ] = ' '.join( [
+        completion[ 'name' ],
+        completion[ 'type' ],
+        completion[ 'class' ] ] )
+      candidate.pop( 'extra_data' )
+    return candidates
+
+
 def _ComputeOffset( contents, line, column ):
   """Compute the byte offset in the file given the line and column."""
   contents = ToBytes( contents )
@@ -350,15 +369,3 @@ def _ComputeOffset( contents, line, column ):
                                                  column = column )
   _logger.error( message )
   raise RuntimeError( message )
-
-
-def _ConvertCompletionData( completion_data ):
-  return responses.BuildCompletionData(
-    insertion_text = completion_data[ 'name' ],
-    menu_text = completion_data[ 'name' ],
-    extra_menu_info = completion_data[ 'type' ],
-    kind = completion_data[ 'class' ],
-    detailed_info = ' '.join( [
-        completion_data[ 'name' ],
-        completion_data[ 'type' ],
-        completion_data[ 'class' ] ] ) )
