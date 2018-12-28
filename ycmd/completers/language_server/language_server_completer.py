@@ -392,6 +392,14 @@ class LanguageServerConnection( threading.Thread ):
     self.WriteData( message )
 
 
+  def SendResponse( self, message ):
+    """Send a response message. This is a message which is not a notification,
+    but still requires no further response from the server."""
+    LOGGER.debug( 'TX: Sending response: %r', message )
+
+    self.WriteData( message )
+
+
   def AwaitServerConnection( self ):
     """Language server completer implementations should call this after starting
     the server and the message pump (Start()) to await successful connection to
@@ -514,12 +522,20 @@ class LanguageServerConnection( threading.Thread ):
     them in a Queue which is polled by the long-polling mechanism in
     LanguageServerCompleter."""
     if 'id' in message:
-      with self._response_mutex:
-        message_id = str( message[ 'id' ] )
-        assert message_id in self._responses
-        self._responses[ message_id ].ResponseReceived( message )
-        del self._responses[ message_id ]
+      if 'method' in message:
+        # This is a server->client request, which requires a response.
+        # We don't support any such messages right now.
+        message = lsp.Reject( message, lsp.Errors.MethodNotFound )
+        self.SendResponse( message )
+      else:
+        # This is a response to the message with id message[ 'id' ]
+        with self._response_mutex:
+          message_id = str( message[ 'id' ] )
+          assert message_id in self._responses
+          self._responses[ message_id ].ResponseReceived( message )
+          del self._responses[ message_id ]
     else:
+      # This is a notification
       self._AddNotificationToQueue( message )
 
       # If there is an immediate (in-message-pump-thread) handler configured,
