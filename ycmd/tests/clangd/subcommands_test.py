@@ -44,17 +44,30 @@ from ycmd.utils import ReadFile
 # from cache.
 @IsolatedYcmd()
 def Subcommands_DefinedSubcommands_test( app ):
-  subcommands_data = BuildRequest( completer_target = 'objcpp' )
-  eq_( sorted( [ 'FixIt',
-                 'GetType',
-                 'GetTypeImprecise',
-                 'GoTo',
-                 'GoToDeclaration',
-                 'GoToDefinition',
-                 'GoToImprecise',
-                 'GoToInclude' ] ),
-       app.post_json( '/defined_subcommands',
-                      subcommands_data ).json )
+  file_path = PathToTestFile( 'GoTo_Clang_ZeroBasedLineAndColumn_test.cc' )
+  RunAfterInitialized( app, {
+      'request': {
+        'completer_target': 'filetype_default',
+        'line_num': 10,
+        'column_num': 3,
+        'filetype': 'objcpp',
+        'filepath': file_path
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': contains( *sorted( [ 'FixIt',
+                                     'Format',
+                                     'GetType',
+                                     'GetTypeImprecise',
+                                     'GoTo',
+                                     'GoToDeclaration',
+                                     'GoToDefinition',
+                                     'GoToImprecise',
+                                     'GoToInclude',
+                                     'RefactorRename' ] ) )
+      },
+      'route': '/defined_subcommands',
+  } )
 
 
 @SharedYcmd
@@ -721,3 +734,46 @@ def Subcommands_FixIt_all_test():
 
   for test in tests:
     yield RunFixItTest, test[ 0 ], test[ 1 ], test[ 2 ], test[ 3 ], test[ 4 ]
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_test( app ):
+  test = {
+    'request': {
+      'filetype': 'cpp',
+      'completer_target': 'filetype_default',
+      'contents': ReadFile( PathToTestFile( 'basic.cpp' ) ),
+      'filepath': PathToTestFile( 'basic.cpp' ),
+      'command_arguments': [ 'RefactorRename', 'Bar' ],
+      'line_num': 17,
+      'column_num': 4,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( 'Bar',
+                          LineColMatcher( 1, 8 ),
+                          LineColMatcher( 1, 11 ) ),
+            ChunkMatcher( 'Bar',
+                          LineColMatcher( 9, 3 ),
+                          LineColMatcher( 9, 6 ) ),
+            # NOTE: Bug in clangd. It returns the same chunk twice which is a
+            # strict protocol violation.
+            ChunkMatcher( 'Bar',
+                          LineColMatcher( 15, 8 ),
+                          LineColMatcher( 15, 11 ) ),
+            ChunkMatcher( 'Bar',
+                          LineColMatcher( 15, 8 ),
+                          LineColMatcher( 15, 11 ) ),
+            ChunkMatcher( 'Bar',
+                          LineColMatcher( 17, 3 ),
+                          LineColMatcher( 17, 6 ) )
+          )
+        } ) )
+      } )
+    },
+    'route': '/run_completer_command'
+  }
+  RunAfterInitialized( app, test )

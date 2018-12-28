@@ -48,6 +48,55 @@ CONNECTION_TIMEOUT         = 5
 # Size of the notification ring buffer
 MAX_QUEUED_MESSAGES = 250
 
+DEFAULT_SUBCOMMANDS_MAP = {
+  'GoToDefinition': {
+    'checker': lambda caps: caps.get( 'definitionProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.GoToDeclaration( request_data )
+    ),
+  },
+  'GoToDeclaration': {
+    'checker': lambda caps: caps.get( 'definitionProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.GoToDeclaration( request_data )
+    ),
+  },
+  'GoTo': {
+    'checker': lambda caps: caps.get( 'definitionProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.GoToDeclaration( request_data )
+    ),
+  },
+  'GoToImprecise': {
+    'checker': lambda caps: caps.get( 'definitionProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.GoToDeclaration( request_data )
+    ),
+  },
+  'GoToReferences': {
+    'checker': lambda caps: caps.get( 'referencesProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.GoToReferences( request_data )
+    ),
+  },
+  'RefactorRename': {
+    # This can be boolean | RenameOptions. But either way a simple if
+    # works (i.e. if RenameOptions is supplied and nonempty, then boom we have
+    # truthiness).
+    'checker': lambda caps: caps.get( 'renameProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.RefactorRename( request_data,
+                                                            args )
+    ),
+  },
+  'Format': {
+    'checker': lambda caps: caps.get( 'documentFormattingProvider', False ),
+    'handler': (
+      lambda self, request_data, args: self.Format( request_data )
+    ),
+  }
+}
+
 
 class ResponseTimeoutException( Exception ):
   """Raised by LanguageServerConnection if a request exceeds the supplied
@@ -574,12 +623,13 @@ class LanguageServerCompleter( Completer ):
       - Set its notification handler to self.GetDefaultNotificationHandler()
       - See below for Startup/Shutdown instructions
     - Implement any server-specific Commands in HandleServerCommand
+    - Optionally override GetCustomSubcommands to return subcommand handlers
+      that cannot be detected from the capabilities response.
     - Implement the following Completer abstract methods:
       - SupportedFiletypes
       - DebugInfo
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
-      - GetSubcommandsMap
       - StartServer
         - NOTE: The server's StartServer must not do anything if the server has
           already been started.
@@ -611,20 +661,18 @@ class LanguageServerCompleter( Completer ):
 
   - The sub-commands map is bespoke to the implementation, but generally, this
     class attempts to provide all of the pieces where it can generically.
-  - The following commands typically don't require any special handling, just
-    call the base implementation as below:
-      Sub-command     -> Handler
-    - GoToDeclaration -> GoToDeclaration
-    - GoTo            -> GoToDeclaration
-    - GoToReferences  -> GoToReferences
-    - RefactorRename  -> RefactorRename
-  - GetType/GetDoc are bespoke to the downstream server, though this class
-    provides GetHoverResponse which is useful in this context.
-  - FixIt requests are handled by GetCodeActions, but the responses are passed
-    to HandleServerCommand, which must return a FixIt. See WorkspaceEditToFixIt
-    and TextEditToChunks for some helpers. If the server returns other types of
-    command that aren't FixIt, either throw an exception or update the ycmd
-    protocol to handle it :)
+  - By default, the subcommands are detected from the server's capabilities.
+    The logic for this is in DEFAULT_SUBCOMMANDS_MAP (and implemented by
+    _DiscoverSubcommandSupport).
+  - Other commands not covered by DEFAULT_SUBCOMMANDS_MAP are bespoke to the
+    completer and should be returned by GetCustomSubcommands:
+    - GetType/GetDoc are bespoke to the downstream server, though this class
+      provides GetHoverResponse which is useful in this context.
+    - FixIt requests are handled by GetCodeActions, but the responses are passed
+      to HandleServerCommand, which must return a FixIt. See
+      WorkspaceEditToFixIt and TextEditToChunks for some helpers. If the server
+      returns other types of command that aren't FixIt, either throw an
+      exception or update the ycmd protocol to handle it :)
   """
   @abc.abstractmethod
   def GetConnection( sefl ):
@@ -831,10 +879,9 @@ class LanguageServerCompleter( Completer ):
     # We might not actually need to issue the resolve request if the server
     # claims that it doesn't support it. However, we still might need to fix up
     # the completion items.
-    return ( 'completionProvider' in self._server_capabilities and
-             self._server_capabilities[ 'completionProvider' ].get(
-               'resolveProvider',
-               False ) )
+    return self._server_capabilities.get( 'completionProvider', {} ).get(
+      'resolveProvider',
+      False )
 
 
   def _CandidatesFromCompletionItems( self, items, resolve, request_data ):
@@ -921,6 +968,59 @@ class LanguageServerCompleter( Completer ):
 
     request_data[ 'start_codepoint' ] = min_start_codepoint
     return completions
+
+
+  def GetCustomSubcommands( self ):
+    """Return a list of subcommand definitions to be used in conjunction with
+    the subcommands detected by _DiscoverSubcommandSupport. The return is a dict
+    whose keys are the subcommand and whose values are either:
+       - a callable, as compatible with GetSubcommandsMap, or
+       - a dict, compatible with DEFAULT_SUBCOMMANDS_MAP including a checker and
+         a callable.
+    If there are no custom subcommands, an empty dict should be returned."""
+    return {}
+
+
+  def GetSubcommandsMap( self ):
+    commands = {}
+    commands.update( DEFAULT_SUBCOMMANDS_MAP )
+    commands.update( {
+      'StopServer': (
+        lambda self, request_data, args: self.Shutdown()
+      ),
+    } )
+    commands.update( self.GetCustomSubcommands() )
+
+    return self._DiscoverSubcommandSupport( commands )
+
+
+  def _DiscoverSubcommandSupport( self, commands ):
+    if not self._server_capabilities:
+      LOGGER.warning( "Can't determine subcommands: not initialized yet" )
+      capabilities = {}
+    else:
+      capabilities = self._server_capabilities
+
+    subcommands_map = {}
+    for command, handler in iteritems( commands ):
+      if isinstance( handler, dict ):
+        if handler[ 'checker' ]( capabilities ):
+          LOGGER.info( 'Found support for command %s in %s',
+                        command,
+                        self.Language() )
+
+          subcommands_map[ command ] = handler[ 'handler' ]
+        else:
+          LOGGER.info( 'No support for %s command in server for %s',
+                        command,
+                        self.Language() )
+      else:
+        LOGGER.info( 'Always supporting %s for %s',
+                      command,
+                      self.Language() )
+        subcommands_map[ command ] = handler
+
+    return subcommands_map
 
 
   def _GetSettings( self, module, client_data ):

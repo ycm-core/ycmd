@@ -11,3 +11,14 @@ int main()
   foo.
 }
 
+
+static Foo test_function_that_has_no_errors()
+{
+  Foo foo = { 1,2,'c'};
+  if (foo.c ) {
+    foo.x = 1;
+    foo.y = 2;
+  }
+
+  return foo;
+}
