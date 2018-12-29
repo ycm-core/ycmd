@@ -634,6 +634,12 @@ class LanguageServerCompleter( Completer ):
         - NOTE: The server's StartServer must not do anything if the server has
           already been started.
       - Language : a string used to identify the language in user's extra conf
+    - Optionally override methods to customise behavior:
+      - _GetProjectDirectory
+      - _GetTriggerCharacters
+      - GetDefaultNotificationHandler
+      - HandleNotificationInPollThread
+      - ConvertNotificationToMessage
 
   Startup
 
@@ -1423,6 +1429,17 @@ class LanguageServerCompleter( Completer ):
         response_handler )
 
 
+  def _GetTriggerCharacters( self, server_trigger_characters ):
+    """Given the server trigger characters supplied in the initialize response,
+    returns the trigger characters to merge with the ycmd-defined ones. By
+    default, all server trigger characters are merged in. Note this might not be
+    appropriate in all cases as ycmd's own triggering mechanism is more
+    sophisticated (regex based) than LSP's (single character). If the
+    server-supplied single-character triggers are not useful, override this
+    method to return an empty list or None."""
+    return server_trigger_characters
+
+
   def _HandleInitializeInPollThread( self, response ):
     """Called within the context of the LanguageServerConnection's message pump
     when the initialize request receives a response."""
@@ -1451,6 +1468,27 @@ class LanguageServerCompleter( Completer ):
         self._sync_type = SYNC_TYPE[ sync ]
         LOGGER.info( 'Language server requires sync type of %s',
                      self._sync_type )
+
+      # Update our semantic triggers if they are supplied by the server
+      if self.prepared_triggers is not None:
+        server_trigger_characters = (
+          ( self._server_capabilities.get( 'completionProvider' ) or {} )
+                                     .get( 'triggerCharacters' ) or []
+        )
+        LOGGER.debug( '%s: Server declares trigger characters: %s',
+                      self.Language(),
+                      server_trigger_characters )
+
+        trigger_characters = self._GetTriggerCharacters(
+          server_trigger_characters )
+
+        if trigger_characters:
+          LOGGER.info( '%s: Using trigger characters for semantic triggers: %s',
+                       self.Language(),
+                       ','.join( trigger_characters ) )
+
+          self.prepared_triggers.SetServerSemanticTriggers(
+            trigger_characters )
 
       # We must notify the server that we received the initialize response (for
       # no apparent reason, other than that's what the protocol says).

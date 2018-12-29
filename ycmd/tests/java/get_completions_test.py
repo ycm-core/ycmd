@@ -692,3 +692,31 @@ def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
       } )
     },
   } )
+
+
+@SharedYcmd
+def GetCompletions_UseServerTriggers_test( app ):
+  filepath = ProjectPath( 'TestWidgetImpl.java' )
+
+  RunTest( app, {
+    'description': 'We use the semantic triggers from the server (@ here)',
+    'request': {
+      'filetype'  : 'java',
+      'filepath'  : filepath,
+      'line_num'  : 24,
+      'column_num': 7,
+      'force_semantic': False,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 4,
+        'completions': has_item(
+          CompletionEntryMatcher( 'Override', None, {
+            'kind': 'Class',
+            'menu_text': 'Override - java.lang',
+          } )
+        )
+      } )
+    }
+  } )

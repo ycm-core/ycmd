@@ -32,16 +32,38 @@ from ycmd.utils import ( LOGGER, ToCppStringCompatible, ToUnicode, re, ReadFile,
 
 class PreparedTriggers( object ):
   def __init__( self, user_trigger_map = None, filetype_set = None ):
+    self._user_trigger_map = user_trigger_map
+    self._server_trigger_map = None
+    self._filetype_set = filetype_set
+
+    self._CombineTriggers()
+
+
+  def _CombineTriggers( self ):
     user_prepared_triggers = ( _FiletypeTriggerDictFromSpec(
-        dict( user_trigger_map ) ) if user_trigger_map else
-        defaultdict( set ) )
+      dict( self._user_trigger_map ) ) if self._user_trigger_map else
+      defaultdict( set ) )
+    server_prepared_triggers = ( _FiletypeTriggerDictFromSpec(
+      dict( self._server_trigger_map ) ) if self._server_trigger_map else
+      defaultdict( set ) )
+
+    # Combine all of the defaults, server-supplied and user-supplied triggers
     final_triggers = _FiletypeDictUnion( PREPARED_DEFAULT_FILETYPE_TRIGGERS,
+                                         server_prepared_triggers,
                                          user_prepared_triggers )
-    if filetype_set:
+
+    if self._filetype_set:
       final_triggers = { k: v for k, v in iteritems( final_triggers )
-                         if k in filetype_set }
+                         if k in self._filetype_set }
 
     self._filetype_to_prepared_triggers = final_triggers
+
+
+  def SetServerSemanticTriggers( self, server_trigger_characters ):
+    self._server_trigger_map = {
+      ','.join( self._filetype_set ): server_trigger_characters
+    }
+    self._CombineTriggers()
 
 
   def MatchingTriggerForFiletype( self,
@@ -83,7 +105,7 @@ def _FiletypeTriggerDictFromSpec( trigger_dict_spec ):
   return triggers_for_filetype
 
 
-def _FiletypeDictUnion( dict_one, dict_two ):
+def _FiletypeDictUnion( *args ):
   """Returns a new filetype dict that's a union of the provided two dicts.
   Dict params are supposed to be type defaultdict(set)."""
   def UpdateDict( first, second ):
@@ -91,8 +113,8 @@ def _FiletypeDictUnion( dict_one, dict_two ):
       first[ key ].update( value )
 
   final_dict = defaultdict( set )
-  UpdateDict( final_dict, dict_one )
-  UpdateDict( final_dict, dict_two )
+  for d in args:
+    UpdateDict( final_dict, d )
   return final_dict
 
 

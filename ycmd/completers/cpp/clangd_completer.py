@@ -240,6 +240,13 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     return self.GetHoverResponse( request_data )[ 'value' ]
 
 
+  def _GetTriggerCharacters( self, server_trigger_characters ):
+    # The trigger characters supplied by clangd are worse than ycmd's own
+    # semantic triggers which are more sophisticated (regex-based). So we
+    # ignore them.
+    return []
+
+
   def GetCustomSubcommands( self ):
     return {
       'FixIt': (
