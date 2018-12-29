@@ -745,3 +745,17 @@ def GetClangResourceDir_NotFound_test( *args ):
     calling( utils.GetClangResourceDir ),
     raises( RuntimeError, 'Cannot find Clang resource directory' )
   )
+
+
+def MakeSafeFileNameString_test():
+  tests = (
+    ( 'this is a test 0123 -x', 'this_is_a_test_0123__x' ),
+    ( 'This Is A Test 0123 -x', 'this_is_a_test_0123__x' ),
+    ( 'T˙^ß ^ß å †´ß† 0123 -x', 't______________0123__x' ),
+    ( 'contains/slashes',       'contains_slashes' ),
+    ( 'contains/newline/\n',    'contains_newline__' ),
+    ( '',                       '' ),
+  )
+  for t in tests:
+    assert_that( utils.MakeSafeFileNameString( t[ 0 ] ),
+                 equal_to( t[ 1 ] ) )
