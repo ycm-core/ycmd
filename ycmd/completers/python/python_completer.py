@@ -22,13 +22,12 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.completers.completer import Completer
-from ycmd.utils import ExpandVariablesInPath, FindExecutable
 from ycmd import extra_conf_store, responses
+from ycmd.completers.completer import Completer
+from ycmd.utils import ExpandVariablesInPath, FindExecutable, LOGGER
 
 import os
 import jedi
-import logging
 import parso
 from threading import Lock
 
@@ -42,7 +41,6 @@ class PythonCompleter( Completer ):
   def __init__( self, user_options ):
     super( PythonCompleter, self ).__init__( user_options )
     self._jedi_lock = Lock()
-    self._logger = logging.getLogger( __name__ )
     self._settings_for_file = {}
     self._environment_for_file = {}
     self._environment_for_interpreter_path = {}
@@ -82,8 +80,7 @@ class PythonCompleter( Completer ):
                                     client_data = client_data )
         if settings is not None:
           return settings
-      self._logger.debug( 'No Settings function defined in %s',
-                          module.__file__ )
+      LOGGER.debug( 'No Settings function defined in %s', module.__file__ )
     return {
       # NOTE: this option is only kept for backward compatibility. Setting the
       # Python interpreter path through the extra conf file is preferred.
@@ -141,8 +138,7 @@ class PythonCompleter( Completer ):
     if module:
       if hasattr( module, 'PythonSysPath' ):
         return module.PythonSysPath( **settings )
-      self._logger.debug( 'No PythonSysPath function defined in %s',
-                          module.__file__ )
+      LOGGER.debug( 'No PythonSysPath function defined in %s', module.__file__ )
     return settings[ 'sys_path' ]
 
 
@@ -250,12 +246,12 @@ class PythonCompleter( Completer ):
     try:
       return self._GoToDefinition( request_data )
     except Exception:
-      self._logger.exception( 'Can\'t jump to definition.' )
+      LOGGER.exception( 'Failed to jump to definition' )
 
     try:
       return self._GoToDeclaration( request_data )
     except Exception:
-      self._logger.exception( 'Can\'t jump to declaration.' )
+      LOGGER.exception( 'Failed to jump to declaration' )
       raise RuntimeError( 'Can\'t jump to definition or declaration.' )
 
 

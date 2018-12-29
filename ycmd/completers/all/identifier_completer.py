@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Google Inc.
+# Copyright (C) 2011-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -23,12 +23,11 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import os
-import logging
 import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import identifier_utils
-from ycmd.utils import ToCppStringCompatible, SplitLines
+from ycmd.utils import LOGGER, ToCppStringCompatible, SplitLines
 from ycmd import responses
 
 SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
@@ -39,7 +38,6 @@ class IdentifierCompleter( GeneralCompleter ):
     super( IdentifierCompleter, self ).__init__( user_options )
     self._completer = ycm_core.IdentifierCompleter()
     self._tags_file_last_mtime = defaultdict( int )
-    self._logger = logging.getLogger( __name__ )
     self._max_candidates = user_options[ 'max_num_identifier_candidates' ]
 
 
@@ -76,7 +74,7 @@ class IdentifierCompleter( GeneralCompleter ):
 
     vector = ycm_core.StringVector()
     vector.append( ToCppStringCompatible( identifier ) )
-    self._logger.info( 'Adding ONE buffer identifier for file: %s', filepath )
+    LOGGER.info( 'Adding ONE buffer identifier for file: %s', filepath )
     self._completer.AddIdentifiersToDatabase(
       vector,
       ToCppStringCompatible( filetype ),
@@ -110,7 +108,7 @@ class IdentifierCompleter( GeneralCompleter ):
     collect_from_comments_and_strings = bool( self.user_options[
       'collect_identifiers_from_comments_and_strings' ] )
     text = request_data[ 'file_data' ][ filepath ][ 'contents' ]
-    self._logger.info( 'Adding buffer identifiers for file: %s', filepath )
+    LOGGER.info( 'Adding buffer identifiers for file: %s', filepath )
     self._completer.ClearForFileAndAddIdentifiersToDatabase(
         _IdentifiersFromBuffer( text,
                                 filetype,
@@ -124,8 +122,8 @@ class IdentifierCompleter( GeneralCompleter ):
       try:
         current_mtime = os.path.getmtime( tag_file )
       except Exception:
-        self._logger.exception(
-            'Error while getting %s last modification time.', tag_file )
+        LOGGER.exception( 'Error while getting %s last modification time',
+                          tag_file )
         continue
       last_mtime = self._tags_file_last_mtime[ tag_file ]
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 ycmd contributors
+# Copyright (C) 2015-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,13 +22,18 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.utils import ( ExpandVariablesInPath, FindExecutable, ToUnicode,
-                         ToBytes, SetEnviron, ProcessIsRunning, urljoin )
-from ycmd.completers.completer import Completer
 from ycmd import responses, utils, hmac_utils
+from ycmd.completers.completer import Completer
+from ycmd.utils import ( ExpandVariablesInPath,
+                         FindExecutable,
+                         LOGGER,
+                         ProcessIsRunning,
+                         ToUnicode,
+                         ToBytes,
+                         SetEnviron,
+                         urljoin )
 
 from future.utils import iteritems, native
-import logging
 import requests
 import json
 import tempfile
@@ -39,8 +44,6 @@ import os
 import subprocess
 
 from os import path as p
-
-_logger = logging.getLogger( __name__ )
 
 DIR_OF_THIRD_PARTY = p.abspath(
   p.join( p.dirname( __file__ ), '..', '..', '..', 'third_party' ) )
@@ -91,7 +94,7 @@ def FindRacerdBinary( user_options ):
     # The user has explicitly specified a path.
     if os.path.isfile( racerd_user_binary ):
       return racerd_user_binary
-    _logger.warning( 'User-provided racerd_binary_path does not exist.' )
+    LOGGER.warning( 'User-provided racerd_binary_path does not exist' )
 
   if os.path.isfile( RACERD_BINARY_RELEASE ):
     return RACERD_BINARY_RELEASE
@@ -99,7 +102,7 @@ def FindRacerdBinary( user_options ):
   # We want to support using the debug binary for the sake of debugging; also,
   # building the release version on Travis takes too long.
   if os.path.isfile( RACERD_BINARY_DEBUG ):
-    _logger.warning( 'Using racerd DEBUG binary; performance will suffer!' )
+    LOGGER.warning( 'Using racerd DEBUG binary; performance will suffer!' )
     return RACERD_BINARY_DEBUG
 
   return utils.PathToFirstExistingExecutable( [ 'racerd' ] )
@@ -122,14 +125,14 @@ class RustCompleter( Completer ):
     self._rust_source_path = self._GetRustSrcPath()
 
     if not self._rust_source_path:
-      _logger.warning( 'No path provided for the rustc source. Please set the '
-                       'rust_src_path option' )
+      LOGGER.warning( 'No path provided for the rustc source. Please set the '
+                      'rust_src_path option' )
     elif not p.isdir( self._rust_source_path ):
-      _logger.error( NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
+      LOGGER.error( NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
       raise RuntimeError( NON_EXISTING_RUST_SOURCES_PATH_MESSAGE )
 
     if not self._racerd_binary:
-      _logger.error( BINARY_NOT_FOUND_MESSAGE )
+      LOGGER.error( BINARY_NOT_FOUND_MESSAGE )
       raise RuntimeError( BINARY_NOT_FOUND_MESSAGE )
 
     self._StartServer()
@@ -176,7 +179,6 @@ class RustCompleter( Completer ):
     when no errors were encountered but no completions, definitions, or errors
     were found.
     """
-    _logger.info( 'RustCompleter._GetResponse' )
     handler = ToBytes( handler )
     method = ToBytes( method )
     url = urljoin( ToBytes( self._racerd_host ), handler )
@@ -184,8 +186,11 @@ class RustCompleter( Completer ):
     body = ToBytes( json.dumps( parameters ) ) if parameters else bytes()
     extra_headers = self._ExtraHeaders( method, handler, body )
 
-    _logger.debug( 'Making racerd request: %s %s %s %s', method, url,
-                   extra_headers, body )
+    LOGGER.debug( 'Making racerd request: %s %s %s %s',
+                  method,
+                  url,
+                  extra_headers,
+                  body )
 
     # Failing to wrap the method & url bytes objects in `native()` causes HMAC
     # failures (403 Forbidden from racerd) for unknown reasons. Similar for
@@ -317,7 +322,7 @@ class RustCompleter( Completer ):
       self._racerd_host = 'http://127.0.0.1:{0}'.format( self._racerd_port )
       if not self._ServerIsRunning():
         raise RuntimeError( 'Failed to start racerd!' )
-      _logger.info( 'Racerd started on: ' + self._racerd_host )
+      LOGGER.info( 'Racerd started on: %s', self._racerd_host )
 
 
   def _ServerIsRunning( self ):
@@ -335,7 +340,7 @@ class RustCompleter( Completer ):
     Check if racerd is alive AND ready to serve requests.
     """
     if not self._ServerIsRunning():
-      _logger.debug( 'Racerd not running.' )
+      LOGGER.debug( 'Racerd not running' )
       return False
     try:
       self._GetResponse( '/ping', method = 'GET' )
@@ -343,23 +348,22 @@ class RustCompleter( Completer ):
     # Do NOT make this except clause more generic! If you need to catch more
     # exception types, list them all out. Having `Exception` here caused FORTY
     # HOURS OF DEBUGGING.
-    except requests.exceptions.ConnectionError as e:
-      _logger.exception( e )
+    except requests.exceptions.ConnectionError:
+      LOGGER.exception( 'Failed to connect to racerd' )
       return False
 
 
   def _StopServer( self ):
     with self._server_state_lock:
       if self._racerd_phandle:
-        _logger.info( 'Stopping Racerd with PID {0}'.format(
-                          self._racerd_phandle.pid ) )
+        LOGGER.info( 'Stopping Racerd with PID %s', self._racerd_phandle.pid )
         self._racerd_phandle.terminate()
         try:
           utils.WaitUntilProcessIsTerminated( self._racerd_phandle,
                                               timeout = 5 )
-          _logger.info( 'Racerd stopped' )
+          LOGGER.info( 'Racerd stopped' )
         except RuntimeError:
-          _logger.exception( 'Error while stopping Racerd' )
+          LOGGER.exception( 'Error while stopping Racerd' )
 
       self._CleanUp()
 
@@ -378,14 +382,14 @@ class RustCompleter( Completer ):
 
 
   def _RestartServer( self ):
-    _logger.debug( 'RustCompleter restarting racerd' )
+    LOGGER.debug( 'Restarting racerd' )
 
     with self._server_state_lock:
       if self._ServerIsRunning():
         self._StopServer()
       self._StartServer()
 
-    _logger.debug( 'RustCompleter has restarted racerd' )
+    LOGGER.debug( 'Racerd restarted' )
 
 
   def GetSubcommandsMap( self ):
@@ -412,8 +416,8 @@ class RustCompleter( Completer ):
       return responses.BuildGoToResponse( definition[ 'file_path' ],
                                           definition[ 'line' ],
                                           definition[ 'column' ] + 1 )
-    except Exception as e:
-      _logger.exception( e )
+    except Exception:
+      LOGGER.exception( 'Failed to find definition' )
       raise RuntimeError( 'Can\'t jump to definition.' )
 
 
@@ -424,8 +428,8 @@ class RustCompleter( Completer ):
 
       docs = [ definition[ 'context' ], definition[ 'docs' ] ]
       return responses.BuildDetailedInfoResponse( '\n---\n'.join( docs ) )
-    except Exception as e:
-      _logger.exception( e )
+    except Exception:
+      LOGGER.exception( 'Failed to find definition' )
       raise RuntimeError( 'Can\'t lookup docs.' )
 
   def Shutdown( self ):

@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Google Inc.
+# Copyright (C) 2013-2018 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -23,13 +23,11 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import threading
-import logging
 from future.utils import itervalues
 from importlib import import_module
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
-
-_logger = logging.getLogger( __name__ )
+from ycmd.utils import LOGGER
 
 
 class ServerState( object ):
@@ -99,8 +97,8 @@ class ServerState( object ):
     try:
       self.GetFiletypeCompleter( filetypes )
       return True
-    except Exception as e:
-      _logger.exception( e )
+    except Exception:
+      LOGGER.exception( 'Semantic completion not available for %s', filetypes )
       return False
 
 

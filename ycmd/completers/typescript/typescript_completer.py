@@ -37,7 +37,7 @@ from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
-from ycmd.utils import re
+from ycmd.utils import LOGGER, re
 
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
@@ -49,8 +49,6 @@ TSSERVER_DIR = os.path.abspath(
                 'tsserver' ) )
 
 LOGFILE_FORMAT = 'tsserver_'
-
-_logger = logging.getLogger( __name__ )
 
 
 class DeferredResponse( object ):
@@ -95,10 +93,10 @@ def FindTSServer():
 def ShouldEnableTypeScriptCompleter():
   tsserver = FindTSServer()
   if not tsserver:
-    _logger.error( 'Not using TypeScript completer: TSServer not installed '
-                   'in %s', TSSERVER_DIR )
+    LOGGER.error( 'Not using TypeScript completer: TSServer not installed '
+                  'in %s', TSSERVER_DIR )
     return False
-  _logger.info( 'Using TypeScript completer with %s', tsserver )
+  LOGGER.info( 'Using TypeScript completer with %s', tsserver )
   return True
 
 
@@ -178,7 +176,7 @@ class TypeScriptCompleter( Completer ):
     self._latest_diagnostics_for_file_lock = threading.Lock()
     self._latest_diagnostics_for_file = defaultdict( list )
 
-    _logger.info( 'Enabling typescript completion' )
+    LOGGER.info( 'Enabling TypeScript completion' )
 
 
   def _SetServerVersion( self ):
@@ -202,7 +200,7 @@ class TypeScriptCompleter( Completer ):
       environ = os.environ.copy()
       utils.SetEnviron( environ, 'TSS_LOG', tsserver_log )
 
-      _logger.info( 'TSServer log file: {0}'.format( self._logfile ) )
+      LOGGER.info( 'TSServer log file: %s', self._logfile )
 
       # We need to redirect the error stream to the output one on Windows.
       self._tsserver_handle = utils.SafePopen( self._tsserver_executable,
@@ -228,7 +226,7 @@ class TypeScriptCompleter( Completer ):
       try:
         message = self._ReadMessage()
       except ( RuntimeError, ValueError ):
-        _logger.exception( 'Error while reading message from server' )
+        LOGGER.exception( 'Error while reading message from server' )
         if not self._ServerIsRunning():
           self._tsserver_is_running.clear()
         continue
@@ -237,10 +235,10 @@ class TypeScriptCompleter( Completer ):
       msgtype = message[ 'type' ]
       if msgtype == 'event':
         eventname = message[ 'event' ]
-        _logger.info( 'Received {0} event from tsserver'.format( eventname ) )
+        LOGGER.info( 'Received %s event from TSServer',  eventname )
         continue
       if msgtype != 'response':
-        _logger.error( 'Unsupported message type {0}'.format( msgtype ) )
+        LOGGER.error( 'Unsupported message type', msgtype )
         continue
 
       seq = message[ 'request_seq' ]
@@ -304,7 +302,7 @@ class TypeScriptCompleter( Completer ):
         self._tsserver_handle.stdin.flush()
       # IOError is an alias of OSError in Python 3.
       except ( AttributeError, IOError ):
-        _logger.exception( SERVER_NOT_RUNNING_MESSAGE )
+        LOGGER.exception( SERVER_NOT_RUNNING_MESSAGE )
         raise RuntimeError( SERVER_NOT_RUNNING_MESSAGE )
 
 
@@ -831,15 +829,15 @@ class TypeScriptCompleter( Completer ):
   def _StopServer( self ):
     with self._tsserver_lock:
       if self._ServerIsRunning():
-        _logger.info( 'Stopping TSServer with PID {0}'.format(
-                          self._tsserver_handle.pid ) )
+        LOGGER.info( 'Stopping TSServer with PID %s',
+                     self._tsserver_handle.pid )
         try:
           self._SendCommand( 'exit' )
           utils.WaitUntilProcessIsTerminated( self._tsserver_handle,
                                               timeout = 5 )
-          _logger.info( 'TSServer stopped' )
+          LOGGER.info( 'TSServer stopped' )
         except Exception:
-          _logger.exception( 'Error while stopping TSServer' )
+          LOGGER.exception( 'Error while stopping TSServer' )
 
       self._CleanUp()
 
@@ -873,7 +871,7 @@ class TypeScriptCompleter( Completer ):
 
 
 def _LogLevel():
-  return 'verbose' if _logger.isEnabledFor( logging.DEBUG ) else 'normal'
+  return 'verbose' if LOGGER.isEnabledFor( logging.DEBUG ) else 'normal'
 
 
 def _BuildCompletionExtraMenuAndDetailedInfo( request_data, entry ):
