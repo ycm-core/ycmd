@@ -104,15 +104,21 @@ def LanguageServerCompleter_ExtraConf_FileEmpty_test( app ):
                                  'settings_none_extra_conf.py' ) } )
 def LanguageServerCompleter_ExtraConf_SettingsReturnsNone_test( app ):
   filepath = PathToTestFile( 'extra_confs', 'foo' )
-  app.post_json( '/event_notification',
-                 BuildRequest( filepath = filepath,
-                               filetype = 'foo',
-                               contents = '',
-                               event_name = 'FileReadyToParse' ) )
 
   completer = MockCompleter()
-  request_data = RequestWrap( BuildRequest() )
-  completer.OnFileReadyToParse( request_data )
+  request_data = RequestWrap( BuildRequest( filepath = filepath,
+                                            filetype = 'ycmtest',
+                                            contents = '' ) )
+  completer.SendInitialize( request_data )
+  eq_( {}, completer._settings )
+
+  # Simulate receipt of response and initialization complete
+  initialize_response = {
+    'result': {
+      'capabilities': {}
+    }
+  }
+  completer._HandleInitializeInPollThread( initialize_response )
   eq_( {}, completer._settings )
 
 
@@ -120,30 +126,46 @@ def LanguageServerCompleter_ExtraConf_SettingsReturnsNone_test( app ):
                  PathToTestFile( 'extra_confs', 'settings_extra_conf.py' ) } )
 def LanguageServerCompleter_ExtraConf_SettingValid_test( app ):
   filepath = PathToTestFile( 'extra_confs', 'foo' )
-  app.post_json( '/event_notification',
-                 BuildRequest( filepath = filepath,
-                               filetype = 'foo',
-                               contents = '',
-                               event_name = 'FileReadyToParse' ) )
 
   completer = MockCompleter()
-  request_data = RequestWrap( BuildRequest() )
-  completer.OnFileReadyToParse( request_data )
+  request_data = RequestWrap( BuildRequest( filepath = filepath,
+                                            filetype = 'ycmtest',
+                                            contents = '' ) )
+
+  eq_( {}, completer._settings )
+  completer.SendInitialize( request_data )
+  eq_( { 'java.rename.enabled' : False }, completer._settings )
+
+  # Simulate receipt of response and initialization complete
+  initialize_response = {
+    'result': {
+      'capabilities': {}
+    }
+  }
+  completer._HandleInitializeInPollThread( initialize_response )
   eq_( { 'java.rename.enabled' : False }, completer._settings )
 
 
 @IsolatedYcmd( { 'extra_conf_globlist': [ '!*' ] } )
 def LanguageServerCompleter_ExtraConf_NoExtraConf_test( app ):
   filepath = PathToTestFile( 'extra_confs', 'foo' )
-  app.post_json( '/event_notification',
-                 BuildRequest( filepath = filepath,
-                               filetype = 'foo',
-                               contents = '',
-                               event_name = 'FileReadyToParse' ) )
 
   completer = MockCompleter()
-  request_data = RequestWrap( BuildRequest() )
-  completer.OnFileReadyToParse( request_data )
+  request_data = RequestWrap( BuildRequest( filepath = filepath,
+                                            filetype = 'ycmtest',
+                                            contents = '' ) )
+
+  eq_( {}, completer._settings )
+  completer.SendInitialize( request_data )
+  eq_( {}, completer._settings )
+
+  # Simulate receipt of response and initialization complete
+  initialize_response = {
+    'result': {
+      'capabilities': {}
+    }
+  }
+  completer._HandleInitializeInPollThread( initialize_response )
   eq_( {}, completer._settings )
 
 
@@ -427,7 +449,7 @@ def LanguageServerCompleter_DelayedInitialization_test( app ):
       update.assert_not_called()
       purge.assert_not_called()
 
-      # Simulate recept of response and initialization complete
+      # Simulate receipt of response and initialization complete
       initialize_response = {
         'result': {
           'capabilities': {}
@@ -589,7 +611,7 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test():
 
   with patch.object( completer, 'ServerIsReady', return_value = True ):
     completer.SendInitialize( request_data )
-    # Simulate recept of response and initialization complete
+    # Simulate receipt of response and initialization complete
     initialize_response = {
       'result': {
         'capabilities': {}
@@ -663,7 +685,7 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test():
 
   with patch.object( completer, 'ServerIsReady', return_value = True ):
     completer.SendInitialize( request_data )
-    # Simulate recept of response and initialization complete
+    # Simulate receipt of response and initialization complete
     initialize_response = {
       'result': {
         'capabilities': {}
@@ -751,7 +773,7 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test():
 
   with patch.object( completer, 'ServerIsReady', return_value = True ):
     completer.SendInitialize( request_data )
-    # Simulate recept of response and initialization complete
+    # Simulate receipt of response and initialization complete
     initialize_response = {
       'result': {
         'capabilities': {}
@@ -810,7 +832,7 @@ def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test():
 
   with patch.object( completer, 'ServerIsReady', return_value = True ):
     completer.SendInitialize( request_data )
-    # Simulate recept of response and initialization complete
+    # Simulate receipt of response and initialization complete
     initialize_response = {
       'result': {
         'capabilities': {}

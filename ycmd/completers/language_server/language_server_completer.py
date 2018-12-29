@@ -942,8 +942,6 @@ class LanguageServerCompleter( Completer ):
 
 
   def OnFileReadyToParse( self, request_data ):
-    self._GetSettingsFromExtraConf( request_data )
-
     self.StartServer( request_data )
 
     if not self.ServerIsHealthy():
@@ -1280,6 +1278,8 @@ class LanguageServerCompleter( Completer ):
       assert not self._initialize_response
 
       request_id = self.GetConnection().NextRequestId()
+
+      self._GetSettingsFromExtraConf( request_data )
       msg = lsp.Initialize( request_id,
                             self._GetProjectDirectory( request_data ),
                             self._settings )
