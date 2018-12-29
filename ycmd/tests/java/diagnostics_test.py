@@ -714,17 +714,24 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
   filepath = TestFactory
   contents = ReadFile( filepath )
 
+  state = {
+    'aborted': False
+  }
+
   def AwaitMessages():
-    for tries in range( 0, 5 ):
+    max_tries = 20
+    for tries in range( 0, max_tries ):
       response = app.post_json( '/receive_messages',
                                 BuildRequest(
                                   filetype = 'java',
                                   filepath = filepath,
                                   contents = contents ) ).json
       if response is False:
+        state[ 'aborted' ] = True
         return
 
-    raise AssertionError( 'The poll request was not aborted in 5 tries' )
+    raise AssertionError( 'The poll request was not aborted in {} tries'.format(
+      max_tries ) )
 
   message_poll_task = StartThread( AwaitMessages )
 
@@ -737,3 +744,4 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
   )
 
   message_poll_task.join()
+  eq_( state[ 'aborted' ], True )
