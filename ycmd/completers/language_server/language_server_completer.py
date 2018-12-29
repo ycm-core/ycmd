@@ -1040,7 +1040,12 @@ class LanguageServerCompleter( Completer ):
     if module:
       settings = self._GetSettings( module, request_data[ 'extra_conf_data' ] )
       self._settings = settings.get( 'ls', {} )
+      # Only return the dir if it was found in the paths; we don't want to use
+      # the path of the global extra conf as a project root dir.
+      if not extra_conf_store.IsGlobalExtraConfModule( module ):
+        return os.path.dirname( module.__file__ )
 
+    return None
 
   def OnFileReadyToParse( self, request_data ):
     self.StartServer( request_data )
@@ -1359,27 +1364,49 @@ class LanguageServerCompleter( Completer ):
     del self._server_file_state[ file_state.filename ]
 
 
-  def _GetProjectDirectory( self, request_data ):
+  def _GetProjectDirectory( self, request_data, extra_conf_dir ):
     """Return the directory in which the server should operate. Language server
-    protocol and most servers have a concept of a 'project directory'. By
-    default this is the filepath directory of the initial request, but
-    implementations may override this for example if there is a language- or
-    server-specific notion of a project that can be detected."""
+    protocol and most servers have a concept of a 'project directory'. Where a
+    concrete completer can detect this better, it should override this method,
+    but otherwise, we default as follows:
+      - if there's an extra_conf file, use that directory
+      - otherwise if we know the client's cwd, use that
+      - otherwise use the diretory of the file that we just opened
+    Note: None of these are ideal. Ycmd doesn't really have a notion of project
+    directory and therefore neither do any of our clients."""
+
+    if extra_conf_dir:
+      return extra_conf_dir
+
+    if 'working_dir' in request_data:
+      return request_data[ 'working_dir' ]
+
     return os.path.dirname( request_data[ 'filepath' ] )
 
 
-  def SendInitialize( self, request_data ):
+  def SendInitialize( self, request_data, extra_conf_dir ):
     """Sends the initialize request asynchronously.
     This must be called immediately after establishing the connection with the
     language server. Implementations must not issue further requests to the
     server until the initialize exchange has completed. This can be detected by
-    calling this class's implementation of ServerIsReady."""
+    calling this class's implementation of ServerIsReady.
+    The extra_conf_dir parameter is the value returned from
+    _GetSettingsFromExtraConf, which must be called by concrete completers
+    manually before calling this method. It should normally be called before
+    starting the server."""
 
     with self._server_info_mutex:
       assert not self._initialize_response
 
-      self._project_directory = self._GetProjectDirectory( request_data )
+      self._project_directory = self._GetProjectDirectory( request_data,
+                                                           extra_conf_dir )
       request_id = self.GetConnection().NextRequestId()
+
+      # FIXME: According to the discussion on
+      # https://github.com/Microsoft/language-server-protocol/issues/567
+      # the settings on the Initialize request are somehow subtly different from
+      # the settings supplied in didChangeConfiguration, though it's not exactly
+      # clear how/where that is specified.
       msg = lsp.Initialize( request_id,
                             self._project_directory,
                             self._settings )
@@ -1433,6 +1460,11 @@ class LanguageServerCompleter( Completer ):
       # even though it is not clear in the specification that it is mandatory,
       # nor when it should be sent.  VSCode sends it immediately after
       # initialized notification, so we do the same.
+
+      # FIXME: According to
+      # https://github.com/Microsoft/language-server-protocol/issues/567 the
+      # configuration should be send in response to a workspace/configuration
+      # request?
       self.GetConnection().SendNotification(
           lsp.DidChangeConfiguration( self._settings ) )
 

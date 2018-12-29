@@ -174,7 +174,7 @@ class Flags( object ):
   def _GetFlagsFromExtraConfOrDatabase( self, filename, client_data ):
     # Load the flags from the extra conf file if one is found and is not global.
     module = extra_conf_store.ModuleForSourceFile( filename )
-    if module and not module.is_global_ycm_extra_conf:
+    if module and not extra_conf_store.IsGlobalExtraConfModule( module ):
       return _CallExtraConfFlagsForFile( module, filename, client_data )
 
     # Load the flags from the compilation database if any.

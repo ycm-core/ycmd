@@ -26,7 +26,9 @@ import functools
 import os
 
 from ycmd.completers.language_server import language_server_completer as lsc
-from ycmd.tests.test_utils import IsolatedApp, StopCompleterServer
+from ycmd.tests.test_utils import ( IgnoreExtraConfOutsideTestsFolder,
+                                    IsolatedApp,
+                                    StopCompleterServer )
 
 
 def PathToTestFile( *args ):
@@ -63,10 +65,11 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      with IsolatedApp( custom_options ) as app:
-        try:
-          test( app, *args, **kwargs )
-        finally:
-          StopCompleterServer( app, 'foo' )
+      with IgnoreExtraConfOutsideTestsFolder():
+        with IsolatedApp( custom_options ) as app:
+          try:
+            test( app, *args, **kwargs )
+          finally:
+            StopCompleterServer( app, 'foo' )
     return Wrapper
   return Decorator
