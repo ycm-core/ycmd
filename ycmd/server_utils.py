@@ -28,7 +28,6 @@ import sys
 
 ROOT_DIR = p.normpath( p.join( p.dirname( __file__ ), '..' ) )
 DIR_OF_THIRD_PARTY = p.join( ROOT_DIR, 'third_party' )
-DIR_PACKAGES_REGEX = re.compile( '(site|dist)-packages$' )
 PYTHON_STDLIB_ZIP_REGEX = re.compile( 'python[23][0-9]\\.zip' )
 
 
