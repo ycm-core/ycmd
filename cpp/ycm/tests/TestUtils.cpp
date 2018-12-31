@@ -17,6 +17,8 @@
 
 #include "TestUtils.h"
 
+#include <whereami.c>
+
 namespace boost {
 
 namespace filesystem {
@@ -102,7 +104,12 @@ std::ostream& operator<<( std::ostream& os, const fs::path *path ) {
 
 
 fs::path PathToTestFile( const std::string &filepath ) {
-  fs::path path_to_testdata = fs::current_path() / fs::path( "testdata" );
+  int dirname_length;
+  int exec_length = wai_getExecutablePath( NULL, 0, NULL );
+  std::unique_ptr< char[] > executable( new char [ exec_length ] );
+  wai_getExecutablePath( executable.get(), exec_length, &dirname_length );
+  executable[ dirname_length ] = '\0';
+  fs::path path_to_testdata = fs::path( executable.get() ) / "testdata";
   return path_to_testdata / fs::path( filepath );
 }
 

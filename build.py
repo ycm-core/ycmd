@@ -499,7 +499,6 @@ def GetCmakeArgs( parsed_args ):
 
 def RunYcmdTests( args, build_dir ):
   tests_dir = p.join( build_dir, 'ycm', 'tests' )
-  os.chdir( tests_dir )
   new_env = os.environ.copy()
 
   if OnWindows():

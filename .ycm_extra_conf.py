@@ -62,6 +62,8 @@ flags = [
 '-isystem',
 'cpp/pybind11',
 '-isystem',
+'cpp/whereami',
+'-isystem',
 'cpp/BoostParts',
 '-isystem',
 get_python_inc(),
