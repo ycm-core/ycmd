@@ -363,6 +363,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     self._server_handle = None
     self._connection = None
+    self._started_message_sent = False
 
     self.ServerReset()
 
@@ -502,9 +503,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       if message_type == 'Started':
         LOGGER.info( 'jdt.ls initialized successfully' )
+        self._server_init_status = notification[ 'params' ][ 'message' ]
         self._received_ready_message.set()
-
-      self._server_init_status = notification[ 'params' ][ 'message' ]
+      elif not self._received_ready_message.is_set():
+        self._server_init_status = notification[ 'params' ][ 'message' ]
 
     super( JavaCompleter, self ).HandleNotificationInPollThread( notification )
 
@@ -512,8 +514,14 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def ConvertNotificationToMessage( self, request_data, notification ):
     if notification[ 'method' ] == 'language/status':
       message = notification[ 'params' ][ 'message' ]
-      return responses.BuildDisplayMessageResponse(
-        'Initializing Java completer: {0}'.format( message ) )
+      if notification[ 'params' ][ 'type' ] == 'Started':
+        self._started_message_sent = True
+        return responses.BuildDisplayMessageResponse(
+          'Initializing Java completer: {}'.format( message ) )
+
+      if not self._started_message_sent:
+        return responses.BuildDisplayMessageResponse(
+          'Initializing Java completer: {}'.format( message ) )
 
     return super( JavaCompleter, self ).ConvertNotificationToMessage(
       request_data,
