@@ -31,6 +31,6 @@ class TestWidgetImpl implements AbstractTestWidget {
   }
 
   public Class<?> testTopLevelImport() {
-    return ISR
+    return ISR;
   }
 }
