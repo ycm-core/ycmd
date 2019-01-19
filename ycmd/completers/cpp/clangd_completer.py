@@ -218,12 +218,12 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
   def DebugInfo( self, request_data ):
     with self._server_state_mutex:
-      clangd = responses.DebugInfoServer(
-        name = 'clangd',
-        handle = self._server_handle,
-        executable = self._clangd_command,
-        logfiles = [ self._stderr_file ]
-      )
+      clangd = responses.DebugInfoServer( name = 'clangd',
+                                          handle = self._server_handle,
+                                          executable = self._clangd_command,
+                                          logfiles = [ self._stderr_file ],
+                                          extras = self.CommonDebugItems() )
+
       return responses.BuildDebugInfoResponse( name = 'clangd',
                                                servers = [ clangd ] )
 

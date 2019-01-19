@@ -672,6 +672,7 @@ class LanguageServerCompleter( Completer ):
       self._on_initialize_complete_handlers = []
       self._server_capabilities = None
       self._resolve_completion_items = False
+      self._project_directory = None
       self._settings = {}
 
 
@@ -1280,8 +1281,9 @@ class LanguageServerCompleter( Completer ):
       request_id = self.GetConnection().NextRequestId()
 
       self._GetSettingsFromExtraConf( request_data )
+      self._project_directory = self._GetProjectDirectory( request_data )
       msg = lsp.Initialize( request_id,
-                            self._GetProjectDirectory( request_data ),
+                            self._project_directory,
                             self._settings )
 
       def response_handler( response, message ):
@@ -1559,6 +1561,22 @@ class LanguageServerCompleter( Completer ):
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
     return response[ 'result' ]
+
+
+  def CommonDebugItems( self ):
+    def ServerStateDescription():
+      if not self.ServerIsHealthy():
+        return 'Dead'
+
+      if not self.ServerIsReady():
+        return 'Starting...'
+
+      return 'Initialized'
+
+    return [ responses.DebugInfoItem( 'Server State',
+                                      ServerStateDescription() ),
+             responses.DebugInfoItem( 'Project Directory',
+                                      self._project_directory ) ]
 
 
 def _CompletionItemToCompletionData( insertion_text, item, fixits ):
