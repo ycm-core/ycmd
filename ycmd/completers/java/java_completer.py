@@ -266,13 +266,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       responses.DebugInfoItem( 'Launcher Config.', self._launcher_config ),
     ]
 
-    if self._project_dir:
-      items.append( responses.DebugInfoItem( 'Project Directory',
-                                             self._project_dir ) )
-
     if self._workspace_path:
       items.append( responses.DebugInfoItem( 'Workspace Path',
                                              self._workspace_path ) )
+
+    items.extend( self.CommonDebugItems() )
 
     return responses.BuildDebugInfoResponse(
       name = "Java",
@@ -306,7 +304,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def _GetProjectDirectory( self, request_data ):
-    return self._project_dir
+    return self._java_project_dir
 
 
   def _ServerIsRunning( self ):
@@ -356,7 +354,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._launcher_path = _PathToLauncherJar()
     self._launcher_config = _LauncherConfiguration()
     self._workspace_path = None
-    self._project_dir = None
+    self._java_project_dir = None
     self._received_ready_message = threading.Event()
     self._server_init_status = 'Not started'
     self._server_started = False
@@ -382,13 +380,13 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       LOGGER.info( 'Starting jdt.ls Language Server...' )
 
       if project_directory:
-        self._project_dir = project_directory
+        self._java_project_dir = project_directory
       else:
-        self._project_dir = _FindProjectDir(
+        self._java_project_dir = _FindProjectDir(
           os.path.dirname( request_data[ 'filepath' ] ) )
 
       self._workspace_path = _WorkspaceDirForProject(
-        self._project_dir,
+        self._java_project_dir,
         self._use_clean_workspace )
 
       command = [

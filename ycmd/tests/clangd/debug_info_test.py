@@ -39,11 +39,21 @@ def DebugInfo_NotInitialized_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'clangd',
       'servers': contains( has_entries( {
-          'name': 'clangd',
-          'pid': None,
-          'is_running': False
+        'name': 'clangd',
+        'pid': None,
+        'is_running': False,
+        'extras': contains(
+          has_entries( {
+            'key': 'Server State',
+            'value': 'Dead',
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': None,
+          } ),
+        ),
       } ) ),
-      'items': empty()
+      'items': empty(),
     } ) )
   )
 
@@ -59,8 +69,18 @@ def DebugInfo_Initialized_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'clangd',
       'servers': contains( has_entries( {
-          'name': 'clangd',
-          'is_running': True
+        'name': 'clangd',
+        'is_running': True,
+        'extras': contains(
+          has_entries( {
+            'key': 'Server State',
+            'value': 'Initialized',
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile(),
+          } ),
+        ),
       } ) ),
       'items': empty()
     } ) )
