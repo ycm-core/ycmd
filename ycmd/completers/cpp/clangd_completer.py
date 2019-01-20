@@ -330,6 +330,10 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       if self.ServerIsHealthy():
         return
 
+      # We have to get the settings before starting the server, as this call
+      # might throw UnknownExtraConf.
+      self._GetSettingsFromExtraConf( request_data )
+
       # Ensure we cleanup all states.
       self._Reset()
 

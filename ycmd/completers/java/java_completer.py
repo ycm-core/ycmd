@@ -375,6 +375,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       if self._server_started:
         return
 
+      # We have to get the settings before starting the server, as this call
+      # might throw UnknownExtraConf.
+      self._GetSettingsFromExtraConf( request_data )
+
       self._server_started = True
 
       LOGGER.info( 'Starting jdt.ls Language Server...' )
