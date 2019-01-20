@@ -49,6 +49,7 @@ endif()
 
 include_directories(
   ${ycm_core_SOURCE_DIR}
+  ${ycm_core_SOURCE_DIR}/../whereami
   )
 
 include_directories(
@@ -114,9 +115,9 @@ target_link_libraries( ${PROJECT_NAME}
                        ${GMOCK_LIBRARIES} )
 
 if ( NOT CMAKE_GENERATOR_IS_XCODE )
-  # The test executable expects a "testdata" dir in its working directory. Why?
-  # Because there's NO reliable, cross-platform way of getting the directory in
-  # which the executable is located.
+  # There is no portable way of discovering the absolute path of the executable,
+  # but whereami library supports all OS's on which we run tests regularly plus
+  # some *BSD flavours on top of that.
   add_custom_target( copy_testdata
                      COMMAND cmake -E copy_directory
                      ${CMAKE_CURRENT_SOURCE_DIR}/testdata

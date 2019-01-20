@@ -205,20 +205,12 @@ endif()
 
 #############################################################################
 
-# When used with Clang, adding the -std=c++11 flag to CMAKE_CXX_FLAGS will cause
-# the compiler to output a warning during linking:
-#  clang: warning: argument unused during compilation: '-std=c++11'
-# This is caused by cmake passing this flag to the linking stage which it
-# shouldn't do. It's ignored so it does no harm, but the warning is annoying.
-#
-# Putting the flag in add_definitions() works around the issue, even though it
-# shouldn't in theory go there.
 if ( CPP11_AVAILABLE )
   # Cygwin needs its hand held a bit; see issue #473
   if ( CYGWIN AND CMAKE_COMPILER_IS_GNUCXX )
-    add_definitions( -std=gnu++11 )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11" )
   elseif( NOT MSVC )
-    add_definitions( -std=c++11 )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
   endif()
 else()
   # Platform-specific advice goes here. In particular, we have plenty of users
