@@ -23,6 +23,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import functools
+import json
 import os
 
 from hamcrest import assert_that
@@ -158,6 +159,8 @@ def RunAfterInitialized( app, test ):
                               expect_errors = expect_errors )
 
   if 'expect' in test:
+    print( "Completer response: {}".format( json.dumps( response.json,
+                                                        indent = 2 ) ) )
     eq_( response.status_code, test[ 'expect' ][ 'response' ] )
     assert_that( response.json, test[ 'expect' ][ 'data' ] )
   return response.json

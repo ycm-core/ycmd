@@ -240,26 +240,11 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     return self.GetHoverResponse( request_data )[ 'value' ]
 
 
-  def GetSubcommandsMap( self ):
+  def GetCustomSubcommands( self ):
     return {
-      # Handled by base class.
-      'GoToDefinition': (
-        lambda self, request_data, args: self.GoToDeclaration( request_data )
-      ),
       'FixIt': (
         lambda self, request_data, args: self.GetCodeActions( request_data,
                                                               args )
-      ),
-      'GoTo': (
-        lambda self, request_data, args: self.GoToDeclaration( request_data )
-      ),
-      # This is actually GoToDefinition, LSP does not support GoToDeclaration
-      # and clangd currently does not have extensions for that.
-      'GoToDeclaration': (
-        lambda self, request_data, args: self.GoToDeclaration( request_data )
-      ),
-      'GoToImprecise': (
-        lambda self, request_data, args: self.GoToDeclaration( request_data )
       ),
       'GetType': (
         # In addition to type information we show declaration.
@@ -291,6 +276,8 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
         request_data,
         command[ 'arguments' ][ 0 ],
         text = command[ 'title' ] )
+
+    return None
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
