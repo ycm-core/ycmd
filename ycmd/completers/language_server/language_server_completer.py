@@ -1378,10 +1378,8 @@ class LanguageServerCompleter( Completer ):
     with self._server_info_mutex:
       assert not self._initialize_response
 
-      request_id = self.GetConnection().NextRequestId()
-
-      self._GetSettingsFromExtraConf( request_data )
       self._project_directory = self._GetProjectDirectory( request_data )
+      request_id = self.GetConnection().NextRequestId()
       msg = lsp.Initialize( request_id,
                             self._project_directory,
                             self._settings )

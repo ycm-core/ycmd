@@ -109,16 +109,7 @@ def LanguageServerCompleter_ExtraConf_SettingsReturnsNone_test( app ):
   request_data = RequestWrap( BuildRequest( filepath = filepath,
                                             filetype = 'ycmtest',
                                             contents = '' ) )
-  completer.SendInitialize( request_data )
-  eq_( {}, completer._settings )
-
-  # Simulate receipt of response and initialization complete
-  initialize_response = {
-    'result': {
-      'capabilities': {}
-    }
-  }
-  completer._HandleInitializeInPollThread( initialize_response )
+  completer._GetSettingsFromExtraConf( request_data )
   eq_( {}, completer._settings )
 
 
@@ -133,16 +124,7 @@ def LanguageServerCompleter_ExtraConf_SettingValid_test( app ):
                                             contents = '' ) )
 
   eq_( {}, completer._settings )
-  completer.SendInitialize( request_data )
-  eq_( { 'java.rename.enabled' : False }, completer._settings )
-
-  # Simulate receipt of response and initialization complete
-  initialize_response = {
-    'result': {
-      'capabilities': {}
-    }
-  }
-  completer._HandleInitializeInPollThread( initialize_response )
+  completer._GetSettingsFromExtraConf( request_data )
   eq_( { 'java.rename.enabled' : False }, completer._settings )
 
 
@@ -156,7 +138,7 @@ def LanguageServerCompleter_ExtraConf_NoExtraConf_test( app ):
                                             contents = '' ) )
 
   eq_( {}, completer._settings )
-  completer.SendInitialize( request_data )
+  completer._GetSettingsFromExtraConf( request_data )
   eq_( {}, completer._settings )
 
   # Simulate receipt of response and initialization complete
@@ -443,6 +425,7 @@ def LanguageServerCompleter_DelayedInitialization_test( app ):
 
   with patch.object( completer, '_UpdateServerWithFileContents' ) as update:
     with patch.object( completer, '_PurgeFileFromServer' ) as purge:
+      completer._GetSettingsFromExtraConf( request_data )
       completer.SendInitialize( request_data )
       completer.OnFileReadyToParse( request_data )
       completer.OnBufferUnload( request_data )
