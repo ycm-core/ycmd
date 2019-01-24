@@ -152,9 +152,9 @@ definitions:
   ExtraConfData:
     type: object
     description: |-
-      A dictionary passed to the `FlagsForFile` function of the
-      `.ycm_extra_conf.py` file as the `client_data` parameter. This optional
-      field should be used to give users a way to customize the
+      A dictionary passed to the `Settings( **kwargs )` function of the
+      `.ycm_extra_conf.py` file under the `client_data` key of `kwargs`. This
+      optional field should be used to give users a way to customize the
       `.ycm_extra_conf.py` file with their own set of options.
   FileData:
     type: object
