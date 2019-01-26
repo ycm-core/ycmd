@@ -327,13 +327,6 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
   def StartServer( self, request_data ):
     with self._server_state_mutex:
-      if self.ServerIsHealthy():
-        return
-
-      # We have to get the settings before starting the server, as this call
-      # might throw UnknownExtraConf.
-      extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
-
       # Ensure we cleanup all states.
       self._Reset()
 
@@ -360,11 +353,11 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
         LOGGER.error( 'clangd failed to start, or did not connect '
                       'successfully' )
         self.Shutdown()
-        return
+        return False
 
     LOGGER.info( 'clangd started' )
 
-    self.SendInitialize( request_data, extra_conf_dir = extra_conf_dir )
+    return True
 
 
   def Shutdown( self ):
