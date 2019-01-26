@@ -303,7 +303,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
              super( JavaCompleter, self ).ServerIsReady() )
 
 
-  def _GetProjectDirectory( self, request_data ):
+  def _GetProjectDirectory( self, *args, **kwargs ):
     return self._java_project_dir
 
 
@@ -377,7 +377,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
       # We have to get the settings before starting the server, as this call
       # might throw UnknownExtraConf.
-      self._GetSettingsFromExtraConf( request_data )
+      extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
       self._server_started = True
 
@@ -434,7 +434,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     LOGGER.info( 'jdt.ls Language Server started' )
 
-    self.SendInitialize( request_data )
+    self.SendInitialize( request_data, extra_conf_dir = extra_conf_dir )
 
 
   def _StopServer( self ):

@@ -332,7 +332,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
       # We have to get the settings before starting the server, as this call
       # might throw UnknownExtraConf.
-      self._GetSettingsFromExtraConf( request_data )
+      extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
       # Ensure we cleanup all states.
       self._Reset()
@@ -364,7 +364,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
     LOGGER.info( 'clangd started' )
 
-    self.SendInitialize( request_data )
+    self.SendInitialize( request_data, extra_conf_dir = extra_conf_dir )
 
 
   def Shutdown( self ):
