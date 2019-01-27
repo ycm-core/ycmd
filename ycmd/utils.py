@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -37,6 +37,10 @@ import time
 import threading
 
 LOGGER = logging.getLogger( 'ycmd' )
+ROOT_DIR = os.path.normpath( os.path.join( os.path.dirname( __file__ ), '..' ) )
+DIR_OF_THIRD_PARTY = os.path.join( ROOT_DIR, 'third_party' )
+LIBCLANG_DIR = os.path.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
+
 
 # Idiom to import pathname2url, url2pathname, urljoin, and urlparse on Python 2
 # and 3. By exposing these functions here, we can import them directly from this
@@ -594,9 +598,17 @@ def GetModificationTime( path ):
 
 
 def ExpectedCoreVersion():
-  core_version = os.path.normpath( os.path.join( os.path.dirname( __file__ ),
-                                                 '..', 'CORE_VERSION' ) )
-  return int( ReadFile( core_version ) )
+  return int( ReadFile( os.path.join( ROOT_DIR, 'CORE_VERSION' ) ) )
+
+
+def LoadYcmCoreDependencies():
+  for name in ListDirectory( LIBCLANG_DIR ):
+    if name.startswith( 'libclang' ):
+      libclang_path = os.path.join( LIBCLANG_DIR, name )
+      if os.path.isfile( libclang_path ):
+        import ctypes
+        ctypes.cdll.LoadLibrary( libclang_path )
+        return
 
 
 def ImportCore():
@@ -606,10 +618,11 @@ def ImportCore():
   return ycm_core
 
 
-def CompatibleWithCurrentCore():
+def ImportAndCheckCore():
   """Checks if ycm_core library is compatible and returns with an exit
   status."""
   try:
+    LoadYcmCoreDependencies()
     ycm_core = ImportCore()
   except ImportError as error:
     message = str( error )
@@ -636,3 +649,14 @@ def CompatibleWithCurrentCore():
     return CORE_OUTDATED_STATUS
 
   return CORE_COMPATIBLE_STATUS
+
+
+def GetClangResourceDir():
+  resource_dir = os.path.join( LIBCLANG_DIR, 'clang' )
+  for version in ListDirectory( resource_dir ):
+    return os.path.join( resource_dir, version )
+
+  raise RuntimeError( 'Cannot find Clang resource directory.' )
+
+
+CLANG_RESOURCE_DIR = GetClangResourceDir()

@@ -35,6 +35,7 @@ if not ( ( PY_MAJOR == 2 and PY_MINOR == 7 and PY_PATCH >= 1 ) or
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
+LIBCLANG_DIR = p.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 
 for folder in os.listdir( DIR_OF_THIRD_PARTY ):
   abs_folder_path = p.join( DIR_OF_THIRD_PARTY, folder )
@@ -502,12 +503,14 @@ def RunYcmdTests( args, build_dir ):
   new_env = os.environ.copy()
 
   if OnWindows():
-    # We prepend the folder of the ycm_core_tests executable to the PATH
+    # We prepend the ycm_core and Clang third-party directories to the PATH
     # instead of overwriting it so that the executable is able to find the
     # Python library.
-    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT + ';' + new_env[ 'PATH' ]
+    new_env[ 'PATH' ] = ( DIR_OF_THIS_SCRIPT + ';' +
+                          LIBCLANG_DIR + ';' +
+                          new_env[ 'PATH' ] )
   else:
-    new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
+    new_env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
 
   tests_cmd = [ p.join( tests_dir, 'ycm_core_tests' ) ]
   if args.core_tests != '*':
@@ -523,12 +526,14 @@ def RunYcmdBenchmarks( build_dir ):
   new_env = os.environ.copy()
 
   if OnWindows():
-    # We prepend the folder of the ycm_core_tests executable to the PATH
+    # We prepend the ycm_core and Clang third-party directories to the PATH
     # instead of overwriting it so that the executable is able to find the
     # Python library.
-    new_env[ 'PATH' ] = DIR_OF_THIS_SCRIPT + ';' + new_env[ 'PATH' ]
+    new_env[ 'PATH' ] = ( DIR_OF_THIS_SCRIPT + ';' +
+                          LIBCLANG_DIR + ';' +
+                          new_env[ 'PATH' ] )
   else:
-    new_env[ 'LD_LIBRARY_PATH' ] = DIR_OF_THIS_SCRIPT
+    new_env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
 
   # Note we don't pass the quiet flag here because the output of the benchmark
   # is the only useful info.

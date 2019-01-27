@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2016-2018 ycmd contributors.
+# Copyright (C) 2016-2019 ycmd contributors.
 #
 # This file is part of ycmd.
 #
@@ -45,7 +45,7 @@ from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly, UnixOnly,
                                     CurrentWorkingDirectory,
                                     TemporaryExecutable )
 from ycmd.tests import PathToTestFile
-from ycmd.utils import CompatibleWithCurrentCore
+from ycmd.utils import ImportAndCheckCore
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
 # changing things here, read the comments in utils.ToBytes.
@@ -639,31 +639,30 @@ def HashableDict_Equality_test():
 
 
 @patch( 'ycmd.utils.LOGGER', autospec = True )
-def RunCompatibleWithCurrentCoreImportException( test, logger ):
+def RunImportAndCheckCoreException( test, logger ):
   with patch( 'ycmd.utils.ImportCore',
               side_effect = ImportError( test[ 'exception_message' ] ) ):
-    assert_that( CompatibleWithCurrentCore(),
-                 equal_to( test[ 'exit_status' ] ) )
+    assert_that( ImportAndCheckCore(), equal_to( test[ 'exit_status' ] ) )
 
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.exception.assert_called_with( test[ 'logged_message' ] )
 
 
 @patch( 'ycmd.utils.LOGGER', autospec = True )
-def CompatibleWithCurrentCore_Compatible_test( logger ):
-  assert_that( CompatibleWithCurrentCore(), equal_to( 0 ) )
+def ImportAndCheckCore_Compatible_test( logger ):
+  assert_that( ImportAndCheckCore(), equal_to( 0 ) )
   assert_that( logger.method_calls, empty() )
 
 
-def CompatibleWithCurrentCore_Unexpected_test():
-  RunCompatibleWithCurrentCoreImportException( {
+def ImportAndCheckCore_Unexpected_test():
+  RunImportAndCheckCoreException( {
     'exception_message': 'unexpected import exception',
     'exit_status': 3,
     'logged_message': 'unexpected import exception'
   } )
 
 
-def CompatibleWithCurrentCore_Missing_test():
+def ImportAndCheckCore_Missing_test():
   import_errors = [
     # Raised by Python 2.
     'No module named ycm_core',
@@ -672,7 +671,7 @@ def CompatibleWithCurrentCore_Missing_test():
   ]
 
   for error in import_errors:
-    yield RunCompatibleWithCurrentCoreImportException, {
+    yield RunImportAndCheckCoreException, {
       'exception_message': error,
       'exit_status': 4,
       'logged_message': 'ycm_core library not detected; you need to compile it '
@@ -681,7 +680,7 @@ def CompatibleWithCurrentCore_Missing_test():
     }
 
 
-def CompatibleWithCurrentCore_Python2_test():
+def ImportAndCheckCore_Python2_test():
   import_exception_messages = [
     # Raised on Linux and OS X with Python 3.4.
     'dynamic module does not define init function (PyInit_ycm_core).',
@@ -692,7 +691,7 @@ def CompatibleWithCurrentCore_Python2_test():
   ]
 
   for message in import_exception_messages:
-    yield RunCompatibleWithCurrentCoreImportException, {
+    yield RunImportAndCheckCoreException, {
       'exception_message': message,
       'exit_status': 5,
       'logged_message': 'ycm_core library compiled for Python 2 '
@@ -700,7 +699,7 @@ def CompatibleWithCurrentCore_Python2_test():
     }
 
 
-def CompatibleWithCurrentCore_Python3_test():
+def ImportAndCheckCore_Python3_test():
   import_exception_messages = [
     # Raised on Linux and OS X.
     'dynamic module does not define init function (initycm_core).',
@@ -710,7 +709,7 @@ def CompatibleWithCurrentCore_Python3_test():
   ]
 
   for message in import_exception_messages:
-    yield RunCompatibleWithCurrentCoreImportException, {
+    yield RunImportAndCheckCoreException, {
       'exception_message': message,
       'exit_status': 6,
       'logged_message': 'ycm_core library compiled for Python 3 '
@@ -720,9 +719,9 @@ def CompatibleWithCurrentCore_Python3_test():
 
 @patch( 'ycm_core.YcmCoreVersion', side_effect = AttributeError() )
 @patch( 'ycmd.utils.LOGGER', autospec = True )
-def CompatibleWithCurrentCore_Outdated_NoYcmCoreVersionMethod_test( logger,
+def ImportAndCheckCore_Outdated_NoYcmCoreVersionMethod_test( logger,
                                                                     *args ):
-  assert_that( CompatibleWithCurrentCore(), equal_to( 7 ) )
+  assert_that( ImportAndCheckCore(), equal_to( 7 ) )
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.exception.assert_called_with(
     'ycm_core library too old; PLEASE RECOMPILE by running the build.py '
@@ -732,9 +731,17 @@ def CompatibleWithCurrentCore_Outdated_NoYcmCoreVersionMethod_test( logger,
 @patch( 'ycm_core.YcmCoreVersion', return_value = 10 )
 @patch( 'ycmd.utils.ExpectedCoreVersion', return_value = 11 )
 @patch( 'ycmd.utils.LOGGER', autospec = True )
-def CompatibleWithCurrentCore_Outdated_NoVersionMatch_test( logger, *args ):
-  assert_that( CompatibleWithCurrentCore(), equal_to( 7 ) )
+def ImportAndCheckCore_Outdated_NoVersionMatch_test( logger, *args ):
+  assert_that( ImportAndCheckCore(), equal_to( 7 ) )
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.error.assert_called_with(
     'ycm_core library too old; PLEASE RECOMPILE by running the build.py '
     'script. See the documentation for more details.' )
+
+
+@patch( 'ycmd.utils.ListDirectory', return_value = [] )
+def GetClangResourceDir_NotFound_test( *args ):
+  assert_that(
+    calling( utils.GetClangResourceDir ),
+    raises( RuntimeError, 'Cannot find Clang resource directory' )
+  )

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 ycmd contributors
+# Copyright (C) 2018-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -31,7 +31,7 @@ from ycmd import responses, utils
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
-from ycmd.utils import LOGGER
+from ycmd.utils import LOGGER, CLANG_RESOURCE_DIR
 
 MIN_SUPPORTED_VERSION = '7.0.0'
 INCLUDE_REGEX = re.compile(
@@ -132,12 +132,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
     if not third_party_clangd:
       return None
     installed_clangd = third_party_clangd
-    resource_dir = os.path.abspath( os.path.join(
-      os.path.dirname( __file__ ),
-      '..',
-      '..',
-      '..',
-      'clang_includes' ) )
+    resource_dir = CLANG_RESOURCE_DIR
 
   # We have a clangd binary that is executable and up-to-date at this point.
   CLANGD_COMMAND = [ installed_clangd ]

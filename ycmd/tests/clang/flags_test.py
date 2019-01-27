@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,24 +24,22 @@ from builtins import *  # noqa
 
 import contextlib
 import os
-
-from nose.tools import eq_, ok_
-from ycmd.completers.cpp import flags
-from mock import patch, MagicMock
-from types import ModuleType
-from ycmd.tests.test_utils import ( MacOnly, TemporaryTestDir, WindowsOnly,
-                                    TemporaryClangProject )
-from ycmd.responses import NoExtraConfDetected
-from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
-
 from hamcrest import ( assert_that,
                        calling,
                        contains,
                        empty,
                        equal_to,
-                       has_item,
-                       not_,
                        raises )
+from mock import patch, MagicMock
+from nose.tools import eq_
+from types import ModuleType
+
+from ycmd.completers.cpp import flags
+from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
+from ycmd.tests.test_utils import ( MacOnly, TemporaryTestDir, WindowsOnly,
+                                    TemporaryClangProject )
+from ycmd.utils import CLANG_RESOURCE_DIR
+from ycmd.responses import NoExtraConfDetected
 
 
 @contextlib.contextmanager
@@ -194,53 +192,331 @@ def FlagsForFile_MakeRelativePathsAbsoluteIfOptionSpecified_test():
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
-        [ 'sentinel_value_for_testing' ] )
-def FlagsForFile_AddMacIncludePathsWithoutSysroot_test():
+@patch( 'os.path.exists', lambda path:
+  path == '/System/Library/Frameworks/Foundation.framework/Headers' )
+def FlagsForFile_AddMacIncludePaths_SysRoot_Default_test():
   flags_object = flags.Flags()
 
   def Settings( **kwargs ):
     return {
-      'flags': [ '-test', '--test1', '--test2=test' ]
+      'flags': [ '-Wall' ]
     }
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, has_item( 'sentinel_value_for_testing' ) )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/include/c++/v1',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
 
 
 @MacOnly
-@patch( 'ycmd.completers.cpp.flags.MAC_INCLUDE_PATHS',
-        [ 'sentinel_value_for_testing' ] )
-def FlagsForFile_DoNotAddMacIncludePathsWithSysroot_test():
+@patch( 'os.path.exists', lambda path:
+  path == '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform'
+          '/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks'
+          '/Foundation.framework/Headers' )
+def FlagsForFile_AddMacIncludePaths_SysRoot_Xcode_test():
   flags_object = flags.Flags()
 
   def Settings( **kwargs ):
     return {
-      'flags': [ '-isysroot', 'test1', '--test2=test' ]
+      'flags': [ '-Wall' ]
     }
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/Applications/Xcode.app/Contents/Developer/Platforms'
+                     '/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
+                     '/usr/include/c++/v1',
+      '-isystem',    '/Applications/Xcode.app/Contents/Developer/Platforms'
+                     '/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
+                     '/usr/local/include',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/Applications/Xcode.app/Contents/Developer/Platforms'
+                     '/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include',
+      '-iframework', '/Applications/Xcode.app/Contents/Developer/Platforms'
+                     '/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
+                     '/System/Library/Frameworks',
+      '-iframework', '/Applications/Xcode.app/Contents/Developer/Platforms'
+                     '/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
+                     '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path:
+  path == '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+          '/System/Library/Frameworks/Foundation.framework/Headers' )
+def FlagsForFile_AddMacIncludePaths_SysRoot_CommandLine_test():
+  flags_object = flags.Flags()
 
   def Settings( **kwargs ):
     return {
-      'flags': [ '-test', '--sysroot', 'test1' ]
+      'flags': [ '-Wall' ]
     }
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+                     '/usr/include/c++/v1',
+      '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+                     '/usr/local/include',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+                     '/usr/include',
+      '-iframework', '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+                     '/System/Library/Frameworks',
+      '-iframework', '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+                     '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_Sysroot_Custom_test():
+  flags_object = flags.Flags()
 
   def Settings( **kwargs ):
     return {
-      'flags': [ '-test', 'test1', '--sysroot=test' ]
+      'flags': [ '-Wall',
+                 '-isysroot/path/to/first/sys/root',
+                 '-isysroot', '/path/to/second/sys/root/',
+                 '--sysroot=/path/to/third/sys/root',
+                 '--sysroot', '/path/to/fourth/sys/root' ]
     }
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, not_( has_item( 'sentinel_value_for_testing' ) ) )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-isysroot/path/to/first/sys/root',
+      '-isysroot', '/path/to/second/sys/root/',
+      '--sysroot=/path/to/third/sys/root',
+      '--sysroot', '/path/to/fourth/sys/root',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/path/to/second/sys/root/usr/include/c++/v1',
+      '-isystem',    '/path/to/second/sys/root/usr/local/include',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/path/to/second/sys/root/usr/include',
+      '-iframework', '/path/to/second/sys/root/System/Library/Frameworks',
+      '-iframework', '/path/to/second/sys/root/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path:
+  path == '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+          'XcodeDefault.xctoolchain' )
+def FlagsForFile_AddMacIncludePaths_Toolchain_Xcode_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/Applications/Xcode.app/Contents/Developer/Toolchains'
+                     '/XcodeDefault.xctoolchain/usr/include/c++/v1',
+      '-isystem',    '/usr/include/c++/v1',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/Applications/Xcode.app/Contents/Developer/Toolchains'
+                     '/XcodeDefault.xctoolchain/usr/include',
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path:
+  path == '/Library/Developer/CommandLineTools' )
+def FlagsForFile_AddMacIncludePaths_Toolchain_CommandLine_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/Library/Developer/CommandLineTools/usr/include/c++/v1',
+      '-isystem',    '/usr/include/c++/v1',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/Library/Developer/CommandLineTools/usr/include',
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_CppLanguage_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-x', 'c', '-xc++' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-x', 'c',
+      '-xc++',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/include/c++/v1',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_CLanguage_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-xc++', '-xc' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-xc++',
+      '-xc',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_NoLibCpp_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-stdlib=libc++', '-stdlib=libstdc++' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-stdlib=libc++',
+      '-stdlib=libstdc++',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_NoStandardCppIncludes_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-nostdinc++' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-nostdinc++',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_NoStandardSystemIncludes_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-nostdinc' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-nostdinc',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem', os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_NoBuiltinIncludes_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-nobuiltininc' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-nobuiltininc',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/include/c++/v1',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
 
 
 def FlagsForFile_OverrideTranslationUnit_test():
@@ -796,52 +1072,6 @@ def AddLanguageFlagWhenAppropriate_CppCompiler_test():
 
   for compiler in compilers:
     yield _AddLanguageFlagWhenAppropriateTester, compiler, [ '-x', 'c++' ]
-
-
-def ExtraClangFlags_test():
-  flags_object = flags.Flags()
-  num_found = 0
-  for flag in flags_object.extra_clang_flags:
-    if flag.startswith( '-resource-dir=' ):
-      ok_( flag.endswith( 'clang_includes' ) )
-      num_found += 1
-
-  eq_( 1, num_found )
-
-
-@MacOnly
-@patch( 'os.listdir',
-        return_value = [ '1.0.0', '7.0.1', '7.0.2', '___garbage__' ] )
-@patch( 'os.path.exists', side_effect = [ False, True, True, True ] )
-def Mac_LatestMacClangIncludes_test( *args ):
-  eq_( flags._LatestMacClangIncludes( '/tmp' ),
-       [ '-isystem', '/tmp/usr/lib/clang/7.0.2/include' ] )
-
-
-@MacOnly
-@patch( 'os.listdir', side_effect = OSError )
-def Mac_LatestMacClangIncludes_NoSuchDirectory_test( *args ):
-  eq_( flags._LatestMacClangIncludes( '/tmp' ), [] )
-
-
-@MacOnly
-@patch( 'os.path.exists', side_effect = [ False, False ] )
-def Mac_SelectMacToolchain_None_test( *args ):
-  eq_( flags._SelectMacToolchain(), None )
-
-
-@MacOnly
-@patch( 'os.path.exists', side_effect = [ True, False ] )
-def Mac_SelectMacToolchain_XCode_test( *args ):
-  eq_( flags._SelectMacToolchain(),
-       '/Applications/Xcode.app/Contents/Developer/Toolchains/'
-       'XcodeDefault.xctoolchain' )
-
-
-@MacOnly
-@patch( 'os.path.exists', side_effect = [ False, True ] )
-def Mac_SelectMacToolchain_CommandLineTools_test( *args ):
-  eq_( flags._SelectMacToolchain(), '/Library/Developer/CommandLineTools' )
 
 
 def CompilationDatabase_NoDatabase_test():
