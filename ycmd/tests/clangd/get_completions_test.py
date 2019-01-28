@@ -775,3 +775,24 @@ def GetCompletions_WithHeaderInsertionDecorators_test( app ):
       } )
     }
   } )
+
+
+@SharedYcmd
+def GetCompletions_ServerTriggers_Ignored_test( app ):
+  RunTest( app, {
+    'description': "We don't trigger completion on things like map< int >|",
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'template.cc' ),
+      'line_num'  : 1,
+      'column_num': 25
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 25,
+        'completions': empty(),
+        'errors': empty(),
+      } )
+    }
+  } )
