@@ -373,7 +373,7 @@ def GetCompletions_IncludeMultiFileType_test( app ):
     'filepath': PathToTestFile( 'trivial2.js' ),
     # We must force the use of semantic engine because the previous test would
     # have entered 'empty' results into the completion cache.
-    'force_semantic': True,
+    'force' = 'sematic',
   } ) ).json
 
   print( 'completer response: {0}'.format( pformat( response, indent=2 ) ) )
@@ -483,7 +483,7 @@ def GetCompletions_ChangeStartColumn_test( app ):
       'filepath'      : PathToTestFile( 'node', 'node_test.js' ),
       'line_num'      : 1,
       'column_num'    : 17,
-      'force_semantic': True,
+      'force' = 'sematic',
     },
     'expect': {
       'response': requests.codes.ok,

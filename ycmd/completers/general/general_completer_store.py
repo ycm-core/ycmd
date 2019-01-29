@@ -59,7 +59,7 @@ class GeneralCompleterStore( Completer ):
 
   def ComputeCandidates( self, request_data ):
     candidates = self._filename_completer.ComputeCandidates( request_data )
-    if candidates:
+    if candidates or request_data[ 'force' ] == 'filepath':
       return candidates
     for completer in self._non_filename_completers:
       candidates += completer.ComputeCandidates( request_data )

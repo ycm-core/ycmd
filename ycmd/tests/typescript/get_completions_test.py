@@ -64,7 +64,7 @@ def RunTest( app, test ):
     CombineRequest( test[ 'request' ], {
       'contents': contents,
       'filetype': 'typescript',
-      'force_semantic': True
+      'force': 'sematic'
     } )
   )
 
@@ -182,7 +182,7 @@ def GetCompletions_AfterRestart_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'typescript',
                                   contents = ReadFile( filepath ),
-                                  force_semantic = True,
+                                  force = 'sematic',
                                   line_num = 17,
                                   column_num = 6 )
 
@@ -242,7 +242,7 @@ def GetCompletions_ServerIsNotRunning_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'typescript',
                                   contents = contents,
-                                  force_semantic = True,
+                                  force = 'sematic',
                                   line_num = 17,
                                   column_num = 6 )
 

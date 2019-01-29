@@ -35,6 +35,7 @@ from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          SplitLines )
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
+from ycmd.utils import LOGGER
 
 
 # TODO: Change the custom computed (and other) keys to be actual properties on
@@ -89,7 +90,7 @@ class RequestWrap( object ):
 
       'first_filetype': ( self._FirstFiletype, None ),
 
-      'force_semantic': ( self._GetForceSemantic, None ),
+      'force': ( self._GetForce, None ),
 
       'lines': ( self._CurrentLines, None ),
 
@@ -129,7 +130,7 @@ class RequestWrap( object ):
          self[ 'line_num' ]         != other[ 'line_num' ] or
          self[ 'start_column' ]     != other[ 'start_column' ] or
          self[ 'prefix' ]           != other[ 'prefix' ] or
-         self[ 'force_semantic' ]   != other[ 'force_semantic' ] or
+         self[ 'force' ]            != other[ 'force' ] or
          self[ 'extra_conf_data' ]  != other[ 'extra_conf_data' ] or
          len( self[ 'file_data' ] ) != len( other[ 'file_data' ] ) ):
       return False
@@ -248,8 +249,18 @@ class RequestWrap( object ):
     return self[ 'file_data' ][ path ][ 'filetypes' ]
 
 
-  def _GetForceSemantic( self ):
-    return bool( self._request.get( 'force_semantic', False ) )
+  def _GetForceFilepath( self ):
+    return bool( self._request.get( 'force_filepath', False ) )
+
+
+  # Be a jedi
+  def _GetForce( self ):
+    force = self._request.get( 'force', '' )
+    if not force and bool( self._request.get( 'force_semantic', False ) ):
+      LOGGER.warning( 'request_data[ "force_semantic"  ] has been deprecated,'
+                      ' use request_data[ "force"  ] = "semantic" instead.'  )
+      force = 'semantic'
+    return force if force == 'semantic' or force == 'filepath' else ''
 
 
   def _GetExtraConfData( self ):

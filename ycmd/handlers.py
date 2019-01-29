@@ -100,7 +100,7 @@ def GetCompletions():
                                  .ComputeCandidates( request_data ) )
 
     except Exception as exception:
-      if request_data[ 'force_semantic' ]:
+      if request_data[ 'force' ] == 'semantic':
         # user explicitly asked for semantic completion, so just pass the error
         # back
         raise
@@ -111,7 +111,7 @@ def GetCompletions():
       stack = traceback.format_exc()
       errors = [ BuildExceptionResponse( exception, stack ) ]
 
-  if not completions and not request_data[ 'force_semantic' ]:
+  if not completions and not request_data[ 'force' ] == 'semantic':
     completions = _server_state.GetGeneralCompleter().ComputeCandidates(
       request_data )
 

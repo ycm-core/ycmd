@@ -147,7 +147,7 @@ def GetCompletions_UnicodeDescription_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'python',
                                   contents = ReadFile( filepath ),
-                                  force_semantic = True,
+                                  force = 'sematic',
                                   line_num = 5,
                                   column_num = 3 )
 
@@ -171,7 +171,7 @@ def GetCompletions_NoSuggestions_Fallback_test( app ):
                                     'lang_python.py' ),
       'line_num'  : 28,
       'column_num': 20,
-      'force_semantic': False,
+      'force': '',
     },
     'expect': {
       'response': requests.codes.ok,

@@ -36,6 +36,7 @@ def PrepareJson( contents = '',
                  line_num = 1,
                  column_num = 1,
                  filetype = '',
+                 force = None,
                  force_semantic = None,
                  extra_conf_data = None ):
   message = {
@@ -49,8 +50,10 @@ def PrepareJson( contents = '',
       }
     }
   }
-  if force_semantic is not None:
-    message[ 'force_semantic' ] = force_semantic
+  if force not None:
+    message[ 'force' ] = force
+  elif force_semantic in not None:
+    message[ 'force' ] = force_semantic
   if extra_conf_data is not None:
     message[ 'extra_conf_data' ] = extra_conf_data
 
@@ -361,21 +364,33 @@ def NonCalculated_Set_test():
     raise AssertionError( 'Expected setting "column_num" to fail' )
 
 
-def ForceSemanticCompletion_test():
+def ForceCompletion_test():
   wrap = RequestWrap( PrepareJson() )
-  assert_that( wrap[ 'force_semantic' ], equal_to( False ) )
+  assert_that( wrap[ 'force' ], equal_to( '' ) )
 
-  wrap = RequestWrap( PrepareJson( force_semantic = True ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( True ) )
+  wrap = RequestWrap( PrepareJson( force_semantic = 'semantic' ) )
+  assert_that( wrap[ 'force' ], equal_to( 'semantic' ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = 1 ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( True ) )
+  assert_that( wrap[ 'force' ], equal_to( 'semantic' ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = 0 ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( False ) )
+  assert_that( wrap[ 'force' ], equal_to( '' ) )
 
   wrap = RequestWrap( PrepareJson( force_semantic = 'No' ) )
-  assert_that( wrap[ 'force_semantic' ], equal_to( True ) )
+  assert_that( wrap[ 'force' ], equal_to( 'semantic' ) )
+
+  wrap = RequestWrap( PrepareJson( force = 'semantic' ) )
+  assert_that( wrap[ 'force' ], equal_to( 'semantic' ) )
+
+  wrap = RequestWrap( PrepareJson( force = 'filepath' ) )
+  assert_that( wrap[ 'force' ], equal_to( 'filepath' ) )
+
+  wrap = RequestWrap( PrepareJson( force = 0 ) )
+  assert_that( wrap[ 'force' ], equal_to( '' ) )
+
+  wrap = RequestWrap( PrepareJson( force = 'No' ) )
+  assert_that( wrap[ 'force' ], equal_to( '' ) )
 
 
 def ExtraConfData_test():

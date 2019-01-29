@@ -205,7 +205,7 @@ def GetCompletions_IdentifierCompleter_Unicode_MultipleCodePoints_test( app ):
 def GetCompletions_ForceSemantic_Works_test( app, *args ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     completion_data = BuildRequest( filetype = 'dummy_filetype',
-                                    force_semantic = True )
+                                    force = 'sematic' )
 
     results = app.post_json( '/completions',
                              completion_data ).json[ 'completions' ]
@@ -222,7 +222,7 @@ def GetCompletions_ForceSemantic_NoSemanticCompleter_test( app, *args ):
   app.post_json( '/event_notification', event_data )
 
   completion_data = BuildRequest( filetype = 'dummy_filetype',
-                                  force_semantic = True,
+                                  force = 'sematic',
                                   contents = 'complete_this_word\ncom',
                                   line_number = 2,
                                   column_num = 4 )
@@ -558,7 +558,7 @@ def GetCompletions_CacheIsNotValid_DifferentForceSemantic_test(
                                     contents = 'objectA.attr',
                                     line_num = 1,
                                     column_num = 12,
-                                    force_semantic = True )
+                                    force = 'sematic' )
 
     results = app.post_json( '/completions',
                              completion_data ).json[ 'completions' ]

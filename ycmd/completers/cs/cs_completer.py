@@ -422,8 +422,9 @@ class CsharpSolutionCompleter( object ):
   def _GetCompletions( self, request_data ):
     """ Ask server for completions """
     parameters = self._DefaultParameters( request_data )
-    parameters[ 'WantImportableTypes' ] = request_data[ 'force_semantic' ]
-    parameters[ 'ForceSemanticCompletion' ] = request_data[ 'force_semantic' ]
+    parameters[ 'WantImportableTypes' ] = request_data[ 'force' ] == 'semantic'
+    parameters[ 'ForceSemanticCompletion' ] = (
+        request_data[ 'force' ] == 'semantic' )
     parameters[ 'WantDocumentationForEveryCompletionResult' ] = True
     completions = self._GetResponse( '/autocomplete', parameters )
     return completions if completions is not None else []

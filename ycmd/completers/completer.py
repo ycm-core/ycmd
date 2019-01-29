@@ -228,7 +228,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
   # It's highly likely you DON'T want to override this function but the *Inner
   # version of it.
   def ComputeCandidates( self, request_data ):
-    if ( not request_data[ 'force_semantic' ] and
+    if ( not request_data[ 'force' ] == 'semantic' and
          not self.ShouldUseNow( request_data ) ):
       return []
 

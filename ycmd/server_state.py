@@ -115,9 +115,13 @@ class ServerState( object ):
       # completion
       return False
 
-    if request_data[ 'force_semantic' ]:
+    if request_data[ 'force' ] == 'semantic':
       # use semantic, and it was forced
       return True
+
+    if reqest_data[ 'force' ] == 'filepath':
+      # Filepath completion requested instead
+      return False
 
     # was not forced. check the conditions for triggering
     return self.GetFiletypeCompleter( filetypes ).ShouldUseNow(

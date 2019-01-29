@@ -37,7 +37,7 @@ def GetCompletions_Basic_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'go',
                                   contents = ReadFile( filepath ),
-                                  force_semantic = True,
+                                  force = 'sematic',
                                   line_num = 9,
                                   column_num = 9 )
 
@@ -51,7 +51,7 @@ def GetCompletions_Basic_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'go',
                                   contents = ReadFile( filepath ),
-                                  force_semantic = True,
+                                  force = 'sematic',
                                   line_num = 9,
                                   column_num = 11 )
 
