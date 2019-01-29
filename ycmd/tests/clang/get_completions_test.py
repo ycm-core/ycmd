@@ -133,7 +133,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
       'line_num'  : 54,
       'column_num': 8,
       'extra_conf_data': { '&filetype': 'cpp' },
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -260,7 +260,7 @@ def GetCompletions_Forced_NoFallback_test( app ):
       'line_num'  : 41,
       'column_num': 30,
       'extra_conf_data': { '&filetype': 'c' },
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.internal_server_error,
@@ -378,7 +378,7 @@ def GetCompletions_UnknownExtraConfException_test( app ):
                                   contents = ReadFile( filepath ),
                                   line_num = 11,
                                   column_num = 7,
-                                  force = 'sematic' )
+                                  force = 'semantic' )
 
   response = app.post_json( '/completions',
                             completion_data,
@@ -438,7 +438,7 @@ def GetCompletions_ExceptionWhenNoFlagsFromExtraConf_test( app ):
                                   contents = ReadFile( filepath ),
                                   line_num = 11,
                                   column_num = 7,
-                                  force = 'sematic' )
+                                  force = 'semantic' )
 
   response = app.post_json( '/completions',
                             completion_data,
@@ -466,7 +466,7 @@ int main()
 
   completion_data = BuildRequest( filepath = '/foo.cpp',
                                   filetype = 'cpp',
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   contents = contents,
                                   line_num = 9,
                                   column_num = 8,
@@ -490,7 +490,7 @@ def GetCompletions_DocStringsAreIncluded_test( app ):
                                   line_num = 5,
                                   column_num = 7,
                                   compilation_flags = [ '-x', 'c++' ],
-                                  force = 'sematic' )
+                                  force = 'semantic' )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
@@ -517,7 +517,7 @@ def GetCompletions_PublicAndProtectedMembersAvailableInDerivedClass_test( app ):
                                   line_num = 14,
                                   column_num = 5,
                                   compilation_flags = [ '-x', 'c++' ],
-                                  force = 'sematic' )
+                                  force = 'semantic' )
 
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
@@ -658,7 +658,7 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
                                   'driver_mode_cl.cpp' ),
       'line_num': 8,
       'column_num': 18,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -687,7 +687,7 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
                                   'driver_mode_cl.cpp' ),
       'line_num': 8,
       'column_num': 18,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1254,7 +1254,7 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
       'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ],
       # NOTE: when not forcing semantic, it falls back to the filename
       # completer and returns the root folder entries.
-      'force': 'sematic'
+      'force': 'semantic'
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1430,7 +1430,7 @@ def GetCompletions_TranslateClangExceptionToPython_test( app ):
       # libclang fails to parse a file that doesn't exist.
       'filepath'  : PathToTestFile( 'non_existing_file' ),
       'contents'  : '',
-      'force': 'sematic'
+      'force': 'semantic'
     },
     'expect': {
       'response': requests.codes.internal_server_error,
@@ -1451,7 +1451,7 @@ def GetCompletions_Unity_test( app ):
       'filepath'  : PathToTestFile( 'unitya.cc' ),
       'line_num'  : 10,
       'column_num': 24,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1476,7 +1476,7 @@ def GetCompletions_UnityInclude_test( app ):
       'filepath'  : PathToTestFile( 'unitya.cc' ),
       'line_num'  : 1,
       'column_num': 17,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1505,7 +1505,7 @@ def GetCompletions_cuda_test( app ):
       'filepath'  : PathToTestFile( 'cuda', 'completion_test.cu' ),
       'line_num'  : 16,
       'column_num': 29,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,

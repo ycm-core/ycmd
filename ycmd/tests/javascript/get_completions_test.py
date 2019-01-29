@@ -62,7 +62,7 @@ def RunTest( app, test ):
     CombineRequest( test[ 'request' ], {
       'contents': contents,
       'filetype': 'javascript',
-      'force': 'sematic'
+      'force': 'semantic'
     } )
   )
 

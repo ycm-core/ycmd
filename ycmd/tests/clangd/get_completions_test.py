@@ -110,7 +110,7 @@ def GetCompletions_ForcedWithNoTrigger_NoYcmdCaching_test( app ):
                                     'lang_cpp.cc' ),
       'line_num'  : 54,
       'column_num': 8,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -163,7 +163,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
                                     'lang_cpp.cc' ),
       'line_num'  : 54,
       'column_num': 8,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -285,7 +285,7 @@ def GetCompletions_Forced_NoFallback_test( app ):
       'filepath'  : PathToTestFile( 'general_fallback', 'lang_c.c' ),
       'line_num'  : 41,
       'column_num': 30,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -386,7 +386,7 @@ int main()
   RunAfterInitialized( app, test )
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'cpp',
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   contents = contents,
                                   line_num = 9,
                                   column_num = 8 )
@@ -408,7 +408,7 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
                                   'driver_mode_cl.cpp' ),
       'line_num': 8,
       'column_num': 18,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -436,7 +436,7 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
                                   'driver_mode_cl.cpp' ),
       'line_num': 8,
       'column_num': 18,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -714,7 +714,7 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
       'compilation_flags': [ '-x', 'cpp' ],
       # NOTE: when not forcing semantic, it falls back to the filename
       # completer and returns the root folder entries.
-      'force': 'sematic'
+      'force': 'semantic'
     },
     'expect': {
       'response': requests.codes.ok,
@@ -736,7 +736,7 @@ def GetCompletions_cuda_test( app ):
       'filepath'  : PathToTestFile( 'cuda', 'completion_test.cu' ),
       'line_num'  : 16,
       'column_num': 29,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -761,7 +761,7 @@ def GetCompletions_WithHeaderInsertionDecorators_test( app ):
       'filepath'  : PathToTestFile( 'cuda', 'completion_test.cu' ),
       'line_num'  : 16,
       'column_num': 29,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,

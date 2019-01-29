@@ -128,7 +128,7 @@ def GetCompletions_HasBothImportsAndNonImport_test( app ):
                                     contents = contents,
                                     line_num = 9,
                                     column_num = 12,
-                                    force = 'sematic',
+                                    force = 'semantic',
                                     query = 'Date' )
     response_data = app.post_json( '/completions', completion_data ).json
 
@@ -150,7 +150,7 @@ def GetCompletions_ImportsOrderedAfter_test( app ):
                                     contents = contents,
                                     line_num = 9,
                                     column_num = 12,
-                                    force = 'sematic',
+                                    force = 'semantic',
                                     query = 'Date' )
     response_data = app.post_json( '/completions', completion_data ).json
 
@@ -180,7 +180,7 @@ def GetCompletions_ForcedReturnsResults_test( app ):
                                     contents = contents,
                                     line_num = 9,
                                     column_num = 21,
-                                    force = 'sematic',
+                                    force = 'semantic',
                                     query = 'Date' )
     response_data = app.post_json( '/completions', completion_data ).json
 
@@ -238,7 +238,7 @@ def GetCompletions_ForcedDividesCache_test( app ):
                                     contents = contents,
                                     line_num = 9,
                                     column_num = 21,
-                                    force = 'sematic',
+                                    force = 'semantic',
                                     query = 'Date' )
     results = app.post_json( '/completions', completion_data ).json
 

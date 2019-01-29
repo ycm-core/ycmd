@@ -42,7 +42,7 @@ def GetCompletions_Basic_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'rust',
                                   contents = contents,
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   line_num = 9,
                                   column_num = 11 )
 
@@ -66,7 +66,7 @@ def GetCompletions_WhenStandardLibraryCompletionFails_MentionRustSrcPath_test(
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'rust',
                                   contents = contents,
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   line_num = 5,
                                   column_num = 11 )
 
@@ -88,7 +88,7 @@ def GetCompletions_WhenNoCompletionsFound_MentionRustSrcPath_test( app, *args ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'rust',
                                   contents = contents,
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   line_num = 4,
                                   column_num = 1 )
 
@@ -111,7 +111,7 @@ def GetCompletions_NoCompletionsFound_ExistingRustSrcPath_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'rust',
                                   contents = contents,
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   line_num = 1,
                                   column_num = 2 )
 
@@ -151,7 +151,7 @@ def GetCompletions_WhenRustcNotFound_MentionRustSrcPath_test( app, *args ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'rust',
                                   contents = contents,
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   line_num = 1,
                                   column_num = 1 )
 

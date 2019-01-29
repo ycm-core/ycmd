@@ -400,7 +400,7 @@ def GetCompletions_RejectMultiLineInsertion_test( app ):
       'filepath'      : filepath,
       'line_num'      : 28,
       'column_num'    : 16,
-      'force': 'sematic'
+      'force': 'semantic'
     },
     'expect': {
       'response': requests.codes.ok,
@@ -435,7 +435,7 @@ def GetCompletions_UnicodeIdentifier_test( app ):
       'filepath'      : filepath,
       'line_num'      : 16,
       'column_num'    : 35,
-      'force': 'sematic'
+      'force': 'semantic'
     },
     'expect': {
       'response': requests.codes.ok,
@@ -483,7 +483,7 @@ def GetCompletions_ResolveFailed_test( app ):
         'filepath'      : filepath,
         'line_num'      : 16,
         'column_num'    : 35,
-        'force': 'sematic'
+        'force': 'semantic'
       },
       'expect': {
         'response': requests.codes.ok,
@@ -526,7 +526,7 @@ def Subcommands_ServerNotReady_test( app ):
         'filepath'      : filepath,
         'line_num'      : 16,
         'column_num'    : 35,
-        'force': 'sematic'
+        'force': 'semantic'
       },
       'expect': {
         'response': requests.codes.ok,
@@ -575,7 +575,7 @@ def GetCompletions_MoreThan100ForceSemantic_test( app ):
       'filepath'  : ProjectPath( 'TestLauncher.java' ),
       'line_num'  : 4,
       'column_num': 15,
-      'force': 'sematic'
+      'force': 'semantic'
     },
     'expect': {
       'response': requests.codes.ok,
@@ -606,7 +606,7 @@ def GetCompletions_ForceAtTopLevel_NoImport_test( app ):
       'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
       'line_num'  : 30,
       'column_num': 20,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,
@@ -658,7 +658,7 @@ def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
       'filepath'  : filepath,
       'line_num'  : 34,
       'column_num': 15,
-      'force': 'sematic',
+      'force': 'semantic',
     },
     'expect': {
       'response': requests.codes.ok,

@@ -147,7 +147,7 @@ def GetCompletions_UnicodeDescription_test( app ):
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'python',
                                   contents = ReadFile( filepath ),
-                                  force = 'sematic',
+                                  force = 'semantic',
                                   line_num = 5,
                                   column_num = 3 )
 
