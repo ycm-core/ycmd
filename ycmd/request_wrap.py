@@ -257,7 +257,7 @@ class RequestWrap( object ):
     force = self._request.get( 'force', '' )
     if not force and bool( self._request.get( 'force_semantic', False ) ):
       LOGGER.warning( 'request_data[ "force_semantic"  ] has been deprecated,'
-                      ' use request_data[ "force"  ] = "semantic" instead.'  )
+                      ' use request_data[ "force"  ] = "semantic" instead.' )
       force = 'semantic'
     return force if force == 'semantic' or force == 'filepath' else ''
 
