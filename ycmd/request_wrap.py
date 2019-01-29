@@ -35,7 +35,6 @@ from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          SplitLines )
 from ycmd.identifier_utils import StartOfLongestIdentifierEndingAtIndex
 from ycmd.request_validation import EnsureRequestValid
-from ycmd.utils import LOGGER
 
 
 # TODO: Change the custom computed (and other) keys to be actual properties on

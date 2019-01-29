@@ -119,7 +119,7 @@ class ServerState( object ):
       # use semantic, and it was forced
       return True
 
-    if reqest_data[ 'force' ] == 'filepath':
+    if request_data[ 'force' ] == 'filepath':
       # Filepath completion requested instead
       return False
 
