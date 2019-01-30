@@ -53,7 +53,7 @@ def PrepareJson( contents = '',
   if force is not None:
     message[ 'force' ] = force
   elif force_semantic is not None:
-    message[ 'force' ] = force_semantic
+    message[ 'force_semantic' ] = force_semantic
   if extra_conf_data is not None:
     message[ 'extra_conf_data' ] = extra_conf_data
 

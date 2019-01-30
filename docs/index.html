@@ -262,14 +262,18 @@
             position. Typically, the server determines whether or not to use
             semantic completion or general (i.e. identifier-based) completion
             based on the language (filetype) and the context. Clients can force
-            the use of semantic completion by setting the <code>force_semantic</code>
-            property to <code>true</code>.</p>
-            <p>Note that if <code>force_semantic</code> is not set to <code>true</code> and the completion
-            engine returns an error, the server still tries to fall back to
+            the use of semantic completion by setting the <code>force</code> property to
+            <code>&#39;semantic&#39;</code>.</p>
+            <p>The other special value for the <code>force</code> property is <code>&#39;filepath&#39;</code> which
+            forces the server to only consider filepath completions. This allows
+            clients to provide a a way for users to trigger filepath completion
+            without any special filepath completer triggers ( <code>.</code>, <code>..</code> and <code>/</code> ).</p>
+            <p>Note that if <code>force</code> is set to <code>&#39;&#39;</code> and the completion engine returns
+            an error, the server still tries to fall back to
             general completion, so this endpoint will typically always return
             successfully. Any semantic completer error raised is included in the
             response to be dealt with by the client.</p>
-            <p>When <code>force_semantic</code> is <code>true</code>, any error returned by the semantic
+            <p>When <code>force</code> is <code>&#39;semantic&#39;</code>, any error returned by the semantic
             engine is returned via a 500 response.</p>
             
                     </section>
