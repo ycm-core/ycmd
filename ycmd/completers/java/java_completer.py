@@ -314,7 +314,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def _RestartServer( self, request_data ):
     with self._server_state_mutex:
       self._StopServer()
-      self.StartServer( request_data )
+      self._StartAndInitializeServer( request_data )
 
 
   def _OpenProject( self, request_data, args ):
@@ -335,7 +335,8 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     with self._server_state_mutex:
       self._StopServer()
-      self.StartServer( request_data, project_directory = project_directory )
+      self._StartAndInitializeServer( request_data,
+                                      project_directory = project_directory )
 
 
   def _CleanUp( self ):
@@ -357,7 +358,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._java_project_dir = None
     self._received_ready_message = threading.Event()
     self._server_init_status = 'Not started'
-    self._server_started = False
 
     self._server_handle = None
     self._connection = None
@@ -372,15 +372,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def StartServer( self, request_data, project_directory = None ):
     with self._server_state_mutex:
-      if self._server_started:
-        return
-
-      # We have to get the settings before starting the server, as this call
-      # might throw UnknownExtraConf.
-      extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
-
-      self._server_started = True
-
       LOGGER.info( 'Starting jdt.ls Language Server...' )
 
       if project_directory:
@@ -430,11 +421,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         LOGGER.error( 'jdt.ls failed to start, or did not connect '
                       'successfully' )
         self._StopServer()
-        return
+        return False
 
     LOGGER.info( 'jdt.ls Language Server started' )
 
-    self.SendInitialize( request_data, extra_conf_dir = extra_conf_dir )
+    return True
 
 
   def _StopServer( self ):

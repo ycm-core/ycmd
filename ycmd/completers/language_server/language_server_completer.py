@@ -630,9 +630,7 @@ class LanguageServerCompleter( Completer ):
       - DebugInfo
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
-      - StartServer
-        - NOTE: The server's StartServer must not do anything if the server has
-          already been started.
+      - StartServer : Return True if the server was started.
       - Language : a string used to identify the language in user's extra conf
     - Optionally override methods to customise behavior:
       - _GetProjectDirectory
@@ -643,7 +641,8 @@ class LanguageServerCompleter( Completer ):
 
   Startup
 
-  - After starting and connecting to the server, call SendInitialize
+  - Startup is initiated for you in OnFileReadyToParse
+  - The StartServer method is only called once (reset with ServerReset)
   - See also LanguageServerConnection requirements
 
   Shutdown
@@ -728,7 +727,7 @@ class LanguageServerCompleter( Completer ):
       self._resolve_completion_items = False
       self._project_directory = None
       self._settings = {}
-
+      self._server_started = False
 
   @abc.abstractmethod
   def Language( self ):
@@ -1049,12 +1048,34 @@ class LanguageServerCompleter( Completer ):
       # Only return the dir if it was found in the paths; we don't want to use
       # the path of the global extra conf as a project root dir.
       if not extra_conf_store.IsGlobalExtraConfModule( module ):
+        LOGGER.debug( 'Using path %s for extra_conf_dir',
+                      os.path.dirname( module.__file__ ) )
         return os.path.dirname( module.__file__ )
 
     return None
 
+
+  def _StartAndInitializeServer( self, request_data, *args, **kwargs ):
+    """Starts the server and sends the initialize request, assuming the start is
+    successful. |args| and |kwargs| are passed through to the underlying call to
+    StartServer. In general, completers don't need to call this as it is called
+    automatically in OnFileReadyToParse, but this may be used in completer
+    subcommands that require restarting the underlying server."""
+    extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
+
+    # Only attempt to start the server once. Set this after above call as it may
+    # throw an exception
+    self._server_started = True
+
+    if self.StartServer( request_data, *args, **kwargs ):
+      self._SendInitialize( request_data, extra_conf_dir )
+
+
   def OnFileReadyToParse( self, request_data ):
-    self.StartServer( request_data )
+    if not self.ServerIsHealthy() and not self._server_started:
+      # We have to get the settings before starting the server, as this call
+      # might throw UnknownExtraConf.
+      self._StartAndInitializeServer( request_data )
 
     if not self.ServerIsHealthy():
       return
@@ -1089,7 +1110,6 @@ class LanguageServerCompleter( Completer ):
                         for diag in self._latest_diagnostics[ uri ] ]
         return responses.BuildDiagnosticResponse(
           diagnostics, filepath, self.max_diagnostics_to_display )
-
 
 
   def PollForMessagesInner( self, request_data, timeout ):
@@ -1390,16 +1410,15 @@ class LanguageServerCompleter( Completer ):
     return os.path.dirname( request_data[ 'filepath' ] )
 
 
-  def SendInitialize( self, request_data, extra_conf_dir ):
+  def _SendInitialize( self, request_data, extra_conf_dir ):
     """Sends the initialize request asynchronously.
     This must be called immediately after establishing the connection with the
     language server. Implementations must not issue further requests to the
     server until the initialize exchange has completed. This can be detected by
     calling this class's implementation of ServerIsReady.
     The extra_conf_dir parameter is the value returned from
-    _GetSettingsFromExtraConf, which must be called by concrete completers
-    manually before calling this method. It should normally be called before
-    starting the server."""
+    _GetSettingsFromExtraConf, which must be called before calling this method.
+    It is called before starting the server in OnFileReadyToParse."""
 
     with self._server_info_mutex:
       assert not self._initialize_response
