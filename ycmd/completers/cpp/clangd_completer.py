@@ -31,14 +31,26 @@ from ycmd import responses, utils
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
-from ycmd.utils import LOGGER, CLANG_RESOURCE_DIR
+from ycmd.utils import ( GetExecutable,
+                         ExpandVariablesInPath,
+                         LOGGER,
+                         CLANG_RESOURCE_DIR )
 
 MIN_SUPPORTED_VERSION = '7.0.0'
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
 NOT_CACHED = 'NOT_CACHED'
 CLANGD_COMMAND = NOT_CACHED
-REPORTED_OUT_OF_DATE = False
+PRE_BUILT_CLANGD_DIR = os.path.abspath( os.path.join(
+  os.path.dirname( __file__ ),
+  '..',
+  '..',
+  '..',
+  'third_party',
+  'clangd',
+  'output',
+  'bin' ) )
+PRE_BUILT_CLANDG_PATH = os.path.join( PRE_BUILT_CLANGD_DIR, 'clangd' )
 
 
 def DistanceOfPointToRange( point, range ):
@@ -77,64 +89,73 @@ def GetVersion( clangd_path ):
 
 
 def CheckClangdVersion( clangd_path ):
-  if not clangd_path:
-    return False
   version = GetVersion( clangd_path )
   if version and version < MIN_SUPPORTED_VERSION:
     return False
   return True
 
 
-def Get3rdPartyClangd():
-  pre_built_clangd = os.path.abspath( os.path.join(
-    os.path.dirname( __file__ ),
-    '..',
-    '..',
-    '..',
-    'third_party',
-    'clangd',
-    'output',
-    'bin',
-    'clangd' ) )
-  pre_built_clangd = utils.GetExecutable( pre_built_clangd )
-  if not CheckClangdVersion( pre_built_clangd ):
-    error = 'clangd binary at {} is out-of-date please update.'.format(
-               pre_built_clangd )
-    global REPORTED_OUT_OF_DATE
-    if not REPORTED_OUT_OF_DATE:
-      REPORTED_OUT_OF_DATE = True
-      raise RuntimeError( error )
-    LOGGER.error( error )
+def GetThirdPartyClangd():
+  pre_built_clangd = GetExecutable( PRE_BUILT_CLANDG_PATH )
+  if not pre_built_clangd:
+    LOGGER.info( 'No Clangd executable found in %s', PRE_BUILT_CLANGD_DIR )
     return None
+  if not CheckClangdVersion( pre_built_clangd ):
+    LOGGER.error( 'Clangd executable at %s is out-of-date', pre_built_clangd )
+    return None
+  LOGGER.info( 'Clangd executable found at %s and up to date',
+               PRE_BUILT_CLANGD_DIR )
   return pre_built_clangd
 
 
-def GetClangdCommand( user_options, third_party_clangd ):
-  """Get commands to run clangd.
+def GetClangdExecutableAndResourceDir( user_options, third_party_clangd ):
+  """Return the Clangd binary from the path specified in the
+  'clangd_binary_path' option. Let the binary find its resource directory in
+  that case. If no binary is found or if it's out-of-date, return nothing. If
+  'clangd_binary_path' is empty, return the third-party Clangd and its resource
+  directory if the user downloaded it and if it's up to date. Otherwise, return
+  nothing."""
+  clangd = user_options[ 'clangd_binary_path' ]
+  resource_dir = None
 
-  Look through binaries reachable through PATH or pre-built ones.
-  Return None if no binary exists or it is out of date. """
+  if clangd:
+    clangd = GetExecutable( ExpandVariablesInPath( clangd ) )
+
+    if not clangd:
+      LOGGER.error( 'No Clangd executable found at %s',
+                    user_options[ 'clangd_binary_path' ] )
+      return None, None
+
+    if not CheckClangdVersion( clangd ):
+      LOGGER.error( 'Clangd at %s is out-of-date', clangd )
+      return None, None
+
+  # Try looking for the pre-built binary.
+  elif not third_party_clangd:
+    return None, None
+
+  else:
+    clangd = third_party_clangd
+    resource_dir = CLANG_RESOURCE_DIR
+
+  LOGGER.info( 'Using Clangd from %s', clangd )
+  return clangd, resource_dir
+
+
+def GetClangdCommand( user_options, third_party_clangd ):
   global CLANGD_COMMAND
   # None stands for we tried to fetch command and failed, therefore it is not
   # the default.
   if CLANGD_COMMAND != NOT_CACHED:
-    LOGGER.info( 'Returning cached clangd: %s', CLANGD_COMMAND )
+    LOGGER.info( 'Returning cached Clangd command: %s', CLANGD_COMMAND )
     return CLANGD_COMMAND
   CLANGD_COMMAND = None
 
-  resource_dir = None
-  installed_clangd = user_options[ 'clangd_binary_path' ]
-  if not CheckClangdVersion( installed_clangd ):
-    if installed_clangd:
-      LOGGER.warning( 'Clangd at %s is out-of-date, trying to use pre-built '
-                      'version', installed_clangd )
-    # Try looking for the pre-built binary.
-    if not third_party_clangd:
-      return None
-    installed_clangd = third_party_clangd
-    resource_dir = CLANG_RESOURCE_DIR
+  installed_clangd, resource_dir = GetClangdExecutableAndResourceDir(
+    user_options, third_party_clangd )
+  if not installed_clangd:
+    return None
 
-  # We have a clangd binary that is executable and up-to-date at this point.
   CLANGD_COMMAND = [ installed_clangd ]
   clangd_args = user_options[ 'clangd_args' ]
   put_resource_dir = False
@@ -157,7 +178,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
 
 
 def ShouldEnableClangdCompleter( user_options ):
-  third_party_clangd = Get3rdPartyClangd()
+  third_party_clangd = GetThirdPartyClangd()
   # User disabled clangd explicitly.
   if user_options[ 'use_clangd' ].lower() == 'never':
     return False
@@ -167,14 +188,13 @@ def ShouldEnableClangdCompleter( user_options ):
 
   clangd_command = GetClangdCommand( user_options, third_party_clangd )
   if not clangd_command:
-    LOGGER.warning( 'Not using clangd: unable to find clangd binary' )
     return False
-  LOGGER.info( 'Using clangd from %s', clangd_command )
+  LOGGER.info( 'Computed Clangd command: %s', clangd_command )
   return True
 
 
 class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
-  """A LSP-based completer for C-family languages, powered by clangd.
+  """A LSP-based completer for C-family languages, powered by Clangd.
 
   Supported features:
     * Code completion
@@ -188,7 +208,8 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     # Used to ensure that starting/stopping of the server is synchronized.
     # Guards _connection and _server_handle.
     self._server_state_mutex = threading.RLock()
-    self._clangd_command = GetClangdCommand( user_options, Get3rdPartyClangd() )
+    self._clangd_command = GetClangdCommand( user_options,
+                                             GetThirdPartyClangd() )
     self._stderr_file = None
 
     self._Reset()
@@ -296,7 +317,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   # TODO: Turn on coverage detection when updating to LLVM8 release. It is
-  # currently turned off because clangd doesn't support it in LLVM7 release.
+  # currently turned off because Clangd doesn't support it in LLVM7 release.
   def ShouldCompleteIncludeStatement( self, request_data ): # pragma: no cover
     column_codepoint = request_data[ 'column_codepoint' ] - 1
     current_line = request_data[ 'line_value' ]
@@ -352,12 +373,12 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       try:
         self._connection.AwaitServerConnection()
       except language_server_completer.LanguageServerConnectionTimeout:
-        LOGGER.error( 'clangd failed to start, or did not connect '
+        LOGGER.error( 'Clangd failed to start, or did not connect '
                       'successfully' )
         self.Shutdown()
         return False
 
-    LOGGER.info( 'clangd started' )
+    LOGGER.info( 'Clangd started' )
 
     return True
 
@@ -371,11 +392,11 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
         self._connection.Stop()
 
       if not self.ServerIsHealthy():
-        LOGGER.info( 'clangd is not running' )
+        LOGGER.info( 'Clangd is not running' )
         self._Reset()
         return
 
-      LOGGER.info( 'Stopping clangd with PID %s', self._server_handle.pid )
+      LOGGER.info( 'Stopping Clangd with PID %s', self._server_handle.pid )
 
       try:
         self.ShutdownServer()
@@ -393,9 +414,9 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
         utils.WaitUntilProcessIsTerminated( self._server_handle,
                                             timeout = 15 )
 
-        LOGGER.info( 'clangd stopped' )
+        LOGGER.info( 'Clangd stopped' )
       except Exception:
-        LOGGER.exception( 'Error while stopping clangd server' )
+        LOGGER.exception( 'Error while stopping Clangd server' )
         # We leave the process running. Hopefully it will eventually die of its
         # own accord.
 
