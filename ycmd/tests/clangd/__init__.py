@@ -55,8 +55,7 @@ def setUpPackage():
   subserver, should be done here."""
   global shared_app
 
-  user_options_with_clangd = { 'use_clangd': 'Always' }
-  shared_app = SetUpApp( user_options_with_clangd )
+  shared_app = SetUpApp()
 
 
 def tearDownPackage():
@@ -101,7 +100,6 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      custom_options.update( { 'use_clangd': 'Always' } )
       with IgnoreExtraConfOutsideTestsFolder():
         with IsolatedApp( custom_options ) as app:
           clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED

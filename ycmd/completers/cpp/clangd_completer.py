@@ -108,7 +108,7 @@ def GetThirdPartyClangd():
   return pre_built_clangd
 
 
-def GetClangdExecutableAndResourceDir( user_options, third_party_clangd ):
+def GetClangdExecutableAndResourceDir( user_options ):
   """Return the Clangd binary from the path specified in the
   'clangd_binary_path' option. Let the binary find its resource directory in
   that case. If no binary is found or if it's out-of-date, return nothing. If
@@ -131,10 +131,10 @@ def GetClangdExecutableAndResourceDir( user_options, third_party_clangd ):
       return None, None
 
   # Try looking for the pre-built binary.
-  elif not third_party_clangd:
-    return None, None
-
   else:
+    third_party_clangd = GetThirdPartyClangd()
+    if not third_party_clangd:
+      return None, None
     clangd = third_party_clangd
     resource_dir = CLANG_RESOURCE_DIR
 
@@ -142,7 +142,7 @@ def GetClangdExecutableAndResourceDir( user_options, third_party_clangd ):
   return clangd, resource_dir
 
 
-def GetClangdCommand( user_options, third_party_clangd ):
+def GetClangdCommand( user_options ):
   global CLANGD_COMMAND
   # None stands for we tried to fetch command and failed, therefore it is not
   # the default.
@@ -152,7 +152,7 @@ def GetClangdCommand( user_options, third_party_clangd ):
   CLANGD_COMMAND = None
 
   installed_clangd, resource_dir = GetClangdExecutableAndResourceDir(
-    user_options, third_party_clangd )
+      user_options )
   if not installed_clangd:
     return None
 
@@ -178,15 +178,16 @@ def GetClangdCommand( user_options, third_party_clangd ):
 
 
 def ShouldEnableClangdCompleter( user_options ):
-  third_party_clangd = GetThirdPartyClangd()
+  """Checks whether clangd should be enabled or not.
+
+  - Returns True iff an up-to-date binary exists either in `clangd_binary_path`
+    or in third party folder and `use_clangd` is not set to `0`.
+  """
   # User disabled clangd explicitly.
-  if user_options[ 'use_clangd' ].lower() == 'never':
-    return False
-  # User haven't downloaded clangd and use_clangd is in auto mode.
-  if not third_party_clangd and user_options[ 'use_clangd' ].lower() == 'auto':
+  if not user_options[ 'use_clangd' ]:
     return False
 
-  clangd_command = GetClangdCommand( user_options, third_party_clangd )
+  clangd_command = GetClangdCommand( user_options )
   if not clangd_command:
     return False
   LOGGER.info( 'Computed Clangd command: %s', clangd_command )
@@ -208,8 +209,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     # Used to ensure that starting/stopping of the server is synchronized.
     # Guards _connection and _server_handle.
     self._server_state_mutex = threading.RLock()
-    self._clangd_command = GetClangdCommand( user_options,
-                                             GetThirdPartyClangd() )
+    self._clangd_command = GetClangdCommand( user_options )
     self._stderr_file = None
 
     self._Reset()

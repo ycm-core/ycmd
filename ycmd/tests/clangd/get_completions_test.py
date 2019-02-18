@@ -31,8 +31,7 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entries )
 
 from ycmd.completers.cpp.clangd_completer import ( GetVersion,
-                                                   GetClangdCommand,
-                                                   GetThirdPartyClangd )
+                                                   GetClangdCommand )
 from ycmd.tests.clangd import ( IsolatedYcmd,
                                 PathToTestFile,
                                 RunAfterInitialized,
@@ -47,8 +46,7 @@ from ycmd.utils import ReadFile
 from ycmd.user_options_store import DefaultOptions
 
 Clangd8Only = skipIf(
-  GetVersion( GetClangdCommand( DefaultOptions(),
-                                GetThirdPartyClangd() )[ 0 ] ) == '7.0.0',
+  GetVersion( GetClangdCommand( DefaultOptions() )[ 0 ] ) == '7.0.0',
   'Include completion is not implemented in LLVM 7.0.0' )
 
 

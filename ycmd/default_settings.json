@@ -31,7 +31,7 @@
   "racerd_binary_path": "",
   "python_binary_path": "",
   "java_jdtls_use_clean_workspace": 1,
-  "use_clangd": "Auto",
+  "use_clangd": 1,
   "clangd_binary_path": "",
   "clangd_args": [],
   "clangd_uses_ycmd_caching": 1
