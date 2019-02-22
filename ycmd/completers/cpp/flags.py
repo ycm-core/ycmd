@@ -532,7 +532,7 @@ def _GetMacSysRoot():
 
 
 def _ExtractInfoForMacIncludePaths( flags ):
-  language_is_cpp = True
+  language = 'c++'
   use_libcpp = True
   sysroot = _GetMacSysRoot()
   isysroot = None
@@ -540,9 +540,9 @@ def _ExtractInfoForMacIncludePaths( flags ):
   previous_flag = None
   for current_flag in flags:
     if previous_flag == '-x':
-      language_is_cpp = current_flag == 'c++'
+      language = current_flag
     if current_flag.startswith( '-x' ):
-      language_is_cpp = current_flag[ 2: ] == 'c++'
+      language = current_flag[ 2: ]
     if current_flag.startswith( '-stdlib=' ):
       use_libcpp = current_flag[ 8: ] == 'libc++'
     if previous_flag == '--sysroot':
@@ -558,6 +558,8 @@ def _ExtractInfoForMacIncludePaths( flags ):
   # -isysroot takes precedence over --sysroot.
   if isysroot:
     sysroot = isysroot
+
+  language_is_cpp = language in { 'c++', 'objective-c++' }
 
   return language_is_cpp, use_libcpp, sysroot
 
