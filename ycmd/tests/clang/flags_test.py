@@ -377,6 +377,32 @@ def FlagsForFile_AddMacIncludePaths_Toolchain_CommandLine_test():
 
 @MacOnly
 @patch( 'os.path.exists', lambda path: False )
+def FlagsForFile_AddMacIncludePaths_ObjCppLanguage_test():
+  flags_object = flags.Flags()
+
+  def Settings( **kwargs ):
+    return {
+      'flags': [ '-Wall', '-x', 'c', '-xobjective-c++' ]
+    }
+
+  with MockExtraConfModule( Settings ):
+    flags_list, _ = flags_object.FlagsForFile( '/foo' )
+    assert_that( flags_list, contains(
+      '-Wall',
+      '-x', 'c',
+      '-xobjective-c++',
+      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-isystem',    '/usr/include/c++/v1',
+      '-isystem',    '/usr/local/include',
+      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    '/usr/include',
+      '-iframework', '/System/Library/Frameworks',
+      '-iframework', '/Library/Frameworks',
+      '-fspell-checking' ) )
+
+
+@MacOnly
+@patch( 'os.path.exists', lambda path: False )
 def FlagsForFile_AddMacIncludePaths_CppLanguage_test():
   flags_object = flags.Flags()
 
