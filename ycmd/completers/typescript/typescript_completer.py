@@ -371,12 +371,14 @@ class TypeScriptCompleter( Completer ):
       'offset':                       request_data[ 'start_codepoint' ],
       'includeExternalModuleExports': True
     } )
+    # Ignore entries with the "warning" kind. They are identifiers from the
+    # current file that TSServer returns sometimes in JavaScript.
     return [ responses.BuildCompletionData(
       insertion_text = entry[ 'name' ],
       # We store the entries returned by TSServer in the extra_data field to
       # detail the candidates once the filtering is done.
       extra_data = entry
-    ) for entry in entries ]
+    ) for entry in entries if entry[ 'kind' ] != 'warning' ]
 
 
   def DetailCandidates( self, request_data, candidates ):
