@@ -35,7 +35,7 @@ from nose.tools import eq_
 from types import ModuleType
 
 from ycmd.completers.cpp import flags
-from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags
+from ycmd.completers.cpp.flags import _ShouldAllowWinStyleFlags, INCLUDE_FLAGS
 from ycmd.tests.test_utils import ( MacOnly, TemporaryTestDir, WindowsOnly,
                                     TemporaryClangProject )
 from ycmd.utils import CLANG_RESOURCE_DIR
@@ -1019,13 +1019,10 @@ def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
                                      expected + to_remove + expected[ 1: ]
                                    ) ) )
 
-  include_flags = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
-                    '-gcc-toolchain', '-include', '-include-pch',
-                    '-iframework', '-F', '-imacros', '-idirafter' ]
   to_remove = [ '/moo/boo' ]
   filename = 'file'
 
-  for flag in include_flags:
+  for flag in INCLUDE_FLAGS:
     yield tester, flag
 
 
