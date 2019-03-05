@@ -81,9 +81,11 @@ def IsolatedYcmd( test ):
   Do NOT attach it to test generators but directly to the yielded tests."""
   @functools.wraps( test )
   def Wrapper( *args, **kwargs ):
-    with IsolatedApp() as app:
-      try:
-        test( app, *args, **kwargs )
-      finally:
-        StopCompleterServer( app, 'javascript' )
+    with patch( 'ycmd.completers.javascript.hook.'
+                'ShouldEnableTernCompleter', return_value = False ):
+      with IsolatedApp() as app:
+        try:
+          test( app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'javascript' )
   return Wrapper
