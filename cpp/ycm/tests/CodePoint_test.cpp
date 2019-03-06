@@ -78,9 +78,6 @@ const TextCodePointPair tests[] = {
   // Paragraph separator
   { "\xe2\x80\xa9", { "\xe2\x80\xa9", "\xe2\x80\xa9", "\xe2\x80\xa9",
                       false, false, false, BreakProperty::CONTROL } },
-  // Surrogate character
-  { "\xed\xa8\x92", { "\xed\xa8\x92", "\xed\xa8\x92", "\xed\xa8\x92",
-                      false, false, false, BreakProperty::CONTROL } },
   // Zero-width space
   { "​", { "​", "​", "​", false, false, false,
                 BreakProperty::CONTROL } },
