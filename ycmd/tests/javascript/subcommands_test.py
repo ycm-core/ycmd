@@ -308,11 +308,11 @@ def Subcommands_Format_Range_Tabs_test( app ):
       'filepath': filepath,
       'range': {
         'start': {
-          'line_num': 6,
+          'line_num': 5,
           'column_num': 3,
         },
         'end': {
-          'line_num': 11,
+          'line_num': 8,
           'column_num': 6
         }
       },
@@ -326,6 +326,9 @@ def Subcommands_Format_Range_Tabs_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath,  5,  1 ),
+                          LocationMatcher( filepath,  5,  3 ) ),
             ChunkMatcher( '\t\t',
                           LocationMatcher( filepath,  6,  1 ),
                           LocationMatcher( filepath,  6,  5 ) ),
@@ -335,9 +338,6 @@ def Subcommands_Format_Range_Tabs_test( app ):
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  8,  1 ),
                           LocationMatcher( filepath,  8,  3 ) ),
-            ChunkMatcher( ' ',
-                          LocationMatcher( filepath,  8,  6 ),
-                          LocationMatcher( filepath,  8,  6 ) ),
           )
         } ) )
       } )
