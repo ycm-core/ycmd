@@ -42,7 +42,7 @@ from ycmd.responses import NoExtraConfDetected
 # checks prefixes).
 INCLUDE_FLAGS = [ '-isystem', '-I', '-iquote', '-isysroot', '--sysroot',
                   '-gcc-toolchain', '-include-pch', '-include', '-iframework',
-                  '-F', '-imacros', '-idirafter' ]
+                  '-F', '-imacros', '-idirafter', '-B' ]
 INCLUDE_FLAGS_WIN_STYLE = [ '/I' ]
 PATH_FLAGS =  [ '--sysroot=' ] + INCLUDE_FLAGS
 
