@@ -1,5 +1,4 @@
-# Copyright (C) 2011-2012 Google Inc.
-#               2018      ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -25,15 +24,22 @@ from builtins import *  # noqa
 
 from mock import patch
 import psutil
-import time
 
-from hamcrest import assert_that, contains, empty, has_entries, has_entry
+from hamcrest import ( assert_that,
+                       contains,
+                       empty,
+                       has_entries,
+                       has_entry,
+                       has_item )
 
 from ycmd import handlers, utils
 from ycmd.tests.clangd import ( IsolatedYcmd, PathToTestFile,
                                 RunAfterInitialized )
-from ycmd.tests.test_utils import ( BuildRequest, StopCompleterServer,
-                                    MockProcessTerminationTimingOut )
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    CompleterProjectDirectoryMatcher,
+                                    MockProcessTerminationTimingOut,
+                                    StopCompleterServer,
+                                    WaitUntilCompleterServerReady )
 
 
 def GetDebugInfo( app ):
@@ -41,8 +47,12 @@ def GetDebugInfo( app ):
   return app.post_json( '/debug_info', request_data ).json
 
 
-def StartClangd( app ):
-  request_data = BuildRequest( filepath = PathToTestFile( 'basic.cpp' ),
+def GetPid( app ):
+  return GetDebugInfo( app )[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
+
+
+def StartClangd( app, filepath = PathToTestFile( 'basic.cpp' ) ):
+  request_data = BuildRequest( filepath = filepath,
                                filetype = 'cpp' )
   test = { 'request': request_data }
   RunAfterInitialized( app, test )
@@ -54,9 +64,9 @@ def CheckStopped( app ):
     has_entry( 'completer', has_entries( {
       'name': 'clangd',
       'servers': contains( has_entries( {
-          'name': 'clangd',
-          'pid': None,
-          'is_running': False
+        'name': 'clangd',
+        'pid': None,
+        'is_running': False
       } ) ),
       'items': empty()
     } ) )
@@ -64,7 +74,7 @@ def CheckStopped( app ):
 
 
 @IsolatedYcmd()
-def Shutdown_Clean_test( app ):
+def ServerManagement_StopServer_Clean_test( app ):
   StartClangd( app )
   StopCompleterServer( app, 'cpp', '' )
   CheckStopped( app )
@@ -74,14 +84,14 @@ def Shutdown_Clean_test( app ):
 @patch( 'os.remove', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
-def Shutdown_Unclean_test( app, *args ):
+def ServerManagement_StopServer_Unclean_test( app, *args ):
   StartClangd( app )
   StopCompleterServer( app, 'cpp', '' )
   CheckStopped( app )
 
 
 @IsolatedYcmd()
-def Shutdown_Twice_test( app ):
+def ServerManagement_StopServer_Twice_test( app ):
   StartClangd( app )
   StopCompleterServer( app, 'cpp', '' )
   CheckStopped( app )
@@ -90,25 +100,19 @@ def Shutdown_Twice_test( app ):
 
 
 @IsolatedYcmd()
-def Shutdown_ServerKilled_test( app ):
+def ServerManagement_StopServer_Killed_test( app ):
   StartClangd( app )
-  debug_info = GetDebugInfo( app )
-  pid = debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
-  process = psutil.Process( pid )
+  process = psutil.Process( GetPid( app ) )
   process.terminate()
-  for _ in range( 10 ):
-    if not GetDebugInfo( app )[ 'completer' ][ 'servers' ][ 0 ][ 'is_running' ]:
-      break
-    time.sleep( .5 )
+  process.wait( timeout = 5 )
+  StopCompleterServer( app, 'cpp', '' )
   CheckStopped( app )
 
 
 @IsolatedYcmd()
-def Shutdown_ServerDiesDuringShutdown_test( app ):
+def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
   StartClangd( app )
-  debug_info = GetDebugInfo( app )
-  pid = debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
-  process = psutil.Process( pid )
+  process = psutil.Process( GetPid( app ) )
   completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
 
   # We issue a shutdown but make sure it never reaches server by mocking
@@ -123,11 +127,9 @@ def Shutdown_ServerDiesDuringShutdown_test( app ):
 
 
 @IsolatedYcmd()
-def Shutdown_ConnectionRaiesDuringShutdown_test( app ):
+def ServerManagement_ConnectionRaisesWhileShuttingDown_test( app ):
   StartClangd( app )
-  debug_info = GetDebugInfo( app )
-  pid = debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
-  process = psutil.Process( pid )
+  process = psutil.Process( GetPid( app ) )
   completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
 
   # We issue a shutdown but make sure it never reaches server by mocking
@@ -141,3 +143,38 @@ def Shutdown_ConnectionRaiesDuringShutdown_test( app ):
   if process.is_running():
     process.terminate()
     raise AssertionError( 'Termination failed' )
+
+
+@IsolatedYcmd()
+def ServerManagement_RestartServer_test( app ):
+  StartClangd( app, PathToTestFile( 'basic.cpp' ) )
+
+  assert_that(
+    GetDebugInfo( app ),
+    CompleterProjectDirectoryMatcher( PathToTestFile() ) )
+
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filepath = PathToTestFile( 'test-include', 'main.cpp' ),
+      filetype = 'cpp',
+      command_arguments = [ 'RestartServer' ],
+    ),
+  )
+
+  WaitUntilCompleterServerReady( app, 'cpp' )
+
+  assert_that(
+    GetDebugInfo( app ),
+    has_entry( 'completer', has_entries( {
+      'name': 'clangd',
+      'servers': contains( has_entries( {
+        'name': 'clangd',
+        'is_running': True,
+        'extras': has_item( has_entries( {
+          'key': 'Project Directory',
+          'value': PathToTestFile( 'test-include' ),
+        } ) )
+      } ) )
+    } ) )
+  )

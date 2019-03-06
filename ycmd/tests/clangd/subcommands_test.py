@@ -64,7 +64,8 @@ def Subcommands_DefinedSubcommands_test( app ):
                                      'GoToDefinition',
                                      'GoToImprecise',
                                      'GoToInclude',
-                                     'RefactorRename' ] ) )
+                                     'RefactorRename',
+                                     'RestartServer' ] ) )
       },
       'route': '/defined_subcommands',
   } )
