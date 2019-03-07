@@ -28,8 +28,14 @@ from hamcrest import ( assert_that,
                        has_entries,
                        instance_of )
 
-from ycmd.tests.java import SharedYcmd, PathToTestFile, DEFAULT_PROJECT_DIR
+from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
+                              IsolatedYcmd,
+                              PathToTestFile,
+                              SharedYcmd,
+                              StartJavaCompleterServerInDirectory )
 from ycmd.tests.test_utils import BuildRequest
+
+import json
 
 
 @SharedYcmd
@@ -58,7 +64,57 @@ def DebugInfo_test( app ):
           has_entries( { 'key': 'Server State',
                          'value': 'Initialized' } ),
           has_entries( { 'key': 'Project Directory',
-                         'value': PathToTestFile( DEFAULT_PROJECT_DIR ) } )
+                         'value': PathToTestFile( DEFAULT_PROJECT_DIR ) } ),
+          has_entries( { 'key': 'Settings', 'value': '{}' } ),
+        )
+      } ) )
+    } ) )
+  )
+
+
+@IsolatedYcmd( { 'extra_conf_globlist': PathToTestFile( 'extra_confs', '*' ) } )
+def Subcommands_ExtraConf_SettingsValid_test( app ):
+  StartJavaCompleterServerInDirectory(
+    app,
+    PathToTestFile( 'extra_confs', 'simple_extra_conf_project' ) )
+
+  filepath = PathToTestFile( 'extra_confs',
+                             'simple_extra_conf_project',
+                             'src',
+                             'ExtraConf.java' )
+
+  request_data = BuildRequest( filepath = filepath,
+                               filetype = 'java' )
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entry( 'completer', has_entries( {
+      'name': 'Java',
+      'servers': contains( has_entries( {
+        'name': 'jdt.ls Java Language Server',
+        'is_running': instance_of( bool ),
+        'executable': instance_of( str ),
+        'pid': instance_of( int ),
+        'logfiles': contains( instance_of( str ),
+                              instance_of( str ) ),
+        'extras': contains(
+          has_entries( { 'key': 'Startup Status',
+                         'value': 'Ready' } ),
+          has_entries( { 'key': 'Java Path',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Launcher Config.',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Workspace Path',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Server State',
+                         'value': 'Initialized' } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'extra_confs',
+                                     'simple_extra_conf_project' )
+          } ),
+          has_entries( { 'key': 'Settings',
+                         'value': json.dumps( { 'java.rename.enabled': False },
+                                              indent=2 ) } ),
         )
       } ) )
     } ) )

@@ -51,6 +51,10 @@ def DebugInfo_NotInitialized_test( app ):
             'key': 'Project Directory',
             'value': None,
           } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}',
+          } ),
         ),
       } ) ),
       'items': empty(),
@@ -79,6 +83,10 @@ def DebugInfo_Initialized_test( app ):
           has_entries( {
             'key': 'Project Directory',
             'value': PathToTestFile(),
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}',
           } ),
         ),
       } ) ),

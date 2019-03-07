@@ -25,6 +25,7 @@ from builtins import *  # noqa
 from future.utils import iteritems, iterkeys
 import abc
 import collections
+import json
 import logging
 import os
 import queue
@@ -1805,7 +1806,10 @@ class LanguageServerCompleter( Completer ):
     return [ responses.DebugInfoItem( 'Server State',
                                       ServerStateDescription() ),
              responses.DebugInfoItem( 'Project Directory',
-                                      self._project_directory ) ]
+                                      self._project_directory ),
+             responses.DebugInfoItem( 'Settings',
+                                      json.dumps( self._settings,
+                                                  indent = 2 ) ) ]
 
 
 def _CompletionItemToCompletionData( insertion_text, item, fixits ):
