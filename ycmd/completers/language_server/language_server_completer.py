@@ -188,8 +188,8 @@ class Response( object ):
     if 'error' in self._message:
       error = self._message[ 'error' ]
       raise ResponseFailedException( 'Request failed: {0}: {1}'.format(
-        error.get( 'code', 0 ),
-        error.get( 'message', 'No message' ) ) )
+        error.get( 'code' ) or 0,
+        error.get( 'message' ) or 'No message' ) )
 
     return self._message
 
@@ -900,9 +900,8 @@ class LanguageServerCompleter( Completer ):
     # We might not actually need to issue the resolve request if the server
     # claims that it doesn't support it. However, we still might need to fix up
     # the completion items.
-    return self._server_capabilities.get( 'completionProvider', {} ).get(
-      'resolveProvider',
-      False )
+    return ( self._server_capabilities.get( 'completionProvider' ) or {} ).get(
+      'resolveProvider', False )
 
 
   def _CandidatesFromCompletionItems( self, items, resolve, request_data ):
@@ -1060,7 +1059,7 @@ class LanguageServerCompleter( Completer ):
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     if module:
       settings = self._GetSettings( module, request_data[ 'extra_conf_data' ] )
-      self._settings = settings.get( 'ls', {} )
+      self._settings = settings.get( 'ls' ) or {}
       # Only return the dir if it was found in the paths; we don't want to use
       # the path of the global extra conf as a project root dir.
       if not extra_conf_store.IsGlobalExtraConfModule( module ):
@@ -1493,8 +1492,6 @@ class LanguageServerCompleter( Completer ):
         # The sync type can either be a number or an object. Because it's
         # important to make things difficult.
         if isinstance( sync, dict ):
-          # FIXME: We should really actually check all of the other things that
-          # could exist in this structure.
           if 'change' in sync:
             sync = sync[ 'change' ]
           else:
@@ -1786,15 +1783,15 @@ def _CompletionItemToCompletionData( insertion_text, item, fixits ):
   # Since we send completionItemKind capabilities, we guarantee to handle
   # values outside our value set and fall back to a default.
   try:
-    kind = lsp.ITEM_KIND[ item.get( 'kind', 0 ) ]
+    kind = lsp.ITEM_KIND[ item.get( 'kind' ) or 0 ]
   except IndexError:
     kind = lsp.ITEM_KIND[ 0 ] # Fallback to None for unsupported kinds.
   return responses.BuildCompletionData(
     insertion_text,
-    extra_menu_info = item.get( 'detail', None ),
+    extra_menu_info = item.get( 'detail' ),
     detailed_info = ( item[ 'label' ] +
                       '\n\n' +
-                      item.get( 'documentation', '' ) ),
+                      ( item.get( 'documentation' ) or '' ) ),
     menu_text = item[ 'label' ],
     kind = kind,
     extra_data = fixits )
@@ -1843,7 +1840,7 @@ def _InsertionTextForItem( request_data, item ):
   # don't say it is a "capability" in the initialize request.
   # Abort this request if the server is buggy and ignores us.
   assert lsp.INSERT_TEXT_FORMAT[
-    item.get( 'insertTextFormat', 1 ) ] == 'PlainText'
+    item.get( 'insertTextFormat' ) or 1 ] == 'PlainText'
 
   fixits = None
 
@@ -1896,7 +1893,7 @@ def _InsertionTextForItem( request_data, item ):
     start_codepoint -= FindOverlapLength( request_data[ 'prefix' ],
                                           insertion_text )
 
-  additional_text_edits.extend( item.get( 'additionalTextEdits', [] ) )
+  additional_text_edits.extend( item.get( 'additionalTextEdits' ) or [] )
 
   if additional_text_edits:
     filepath = request_data[ 'filepath' ]
