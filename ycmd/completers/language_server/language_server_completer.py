@@ -31,7 +31,7 @@ import queue
 import threading
 
 from ycmd import extra_conf_store, responses, utils
-from ycmd.completers.completer import Completer
+from ycmd.completers.completer import Completer, CompletionsCache
 from ycmd.completers.completer_utils import GetFileContents, GetFileLines
 from ycmd.utils import LOGGER
 
@@ -727,6 +727,17 @@ class LanguageServerCompleter( Completer ):
     self._server_info_mutex = threading.Lock()
     self.ServerReset()
 
+    # LSP allows servers to return an incomplete list of completions. The cache
+    # cannot be used in that case and the current column must be sent to the
+    # language server for the subsequent completion requests; otherwise, the
+    # server will return the same incomplete list. When that list is complete,
+    # two cases are considered:
+    #  - the starting column was sent to the server: cache is valid for the
+    #    whole completion;
+    #  - the current column was sent to the server: cache stays valid while the
+    #    cached query is a prefix of the subsequent queries.
+    self._completions_cache = LanguageServerCompletionsCache()
+
 
   def ServerReset( self ):
     """Clean up internal state related to the running server instance.
@@ -822,29 +833,30 @@ class LanguageServerCompleter( Completer ):
   def GetCodepointForCompletionRequest( self, request_data ):
     """Returns the 1-based codepoint offset on the current line at which to make
     the completion request"""
-    return request_data[ 'start_codepoint' ]
+    return self._completions_cache.GetCodepointForCompletionRequest(
+      request_data )
 
 
-  def ComputeCandidatesInner( self, request_data ):
+  def ComputeCandidatesInner( self, request_data, codepoint ):
     if not self.ServerIsReady():
-      return None
+      return None, False
 
     self._UpdateServerWithFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
 
-    msg = lsp.Completion(
-      request_id,
-      request_data,
-      self.GetCodepointForCompletionRequest( request_data ) )
+    msg = lsp.Completion( request_id, request_data, codepoint )
     response = self.GetConnection().GetResponse( request_id,
                                                  msg,
                                                  REQUEST_TIMEOUT_COMPLETION )
+    result = response[ 'result' ]
 
-    if isinstance( response[ 'result' ], list ):
-      items = response[ 'result' ]
+    if isinstance( result, list ):
+      items = result
+      is_incomplete = False
     else:
-      items = response[ 'result' ][ 'items' ]
+      items = result[ 'items' ]
+      is_incomplete = result[ 'isIncomplete' ]
 
     # Note: _CandidatesFromCompletionItems does a lot of work on the actual
     # completion text to ensure that the returned text and start_codepoint are
@@ -855,9 +867,26 @@ class LanguageServerCompleter( Completer ):
     # should be based on ycmd's version of the insertion_text. Fortunately it's
     # likely much quicker to do the simple calculations inline rather than a
     # series of potentially many blocking server round trips.
-    return self._CandidatesFromCompletionItems( items,
-                                                False, # don't do resolve
-                                                request_data )
+    return ( self._CandidatesFromCompletionItems( items,
+                                                  False, # don't do resolve
+                                                  request_data ),
+             is_incomplete )
+
+
+  def _GetCandidatesFromSubclass( self, request_data ):
+    cache_completions = self._completions_cache.GetCompletionsIfCacheValid(
+      request_data )
+
+    if cache_completions:
+      return cache_completions
+
+    codepoint = self.GetCodepointForCompletionRequest( request_data )
+    raw_completions, is_incomplete = self.ComputeCandidatesInner( request_data,
+                                                                  codepoint )
+    self._completions_cache.Update( request_data,
+                                    raw_completions,
+                                    is_incomplete )
+    return raw_completions
 
 
   def DetailCandidates( self, request_data, completions ):
@@ -2150,3 +2179,43 @@ def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
                         request_data[ 'filepath' ] ),
     chunks,
     text )
+
+
+class LanguageServerCompletionsCache( CompletionsCache ):
+  """Cache of computed LSP completions for a particular request."""
+
+  def Invalidate( self ):
+    with self._access_lock:
+      super( LanguageServerCompletionsCache, self ).Invalidate()
+      self._is_incomplete = False
+      self._use_start_column = True
+
+
+  def Update( self, request_data, completions, is_incomplete ):
+    with self._access_lock:
+      super( LanguageServerCompletionsCache, self ).Update( request_data,
+                                                            completions )
+      self._is_incomplete = is_incomplete
+      if is_incomplete:
+        self._use_start_column = False
+
+
+  def GetCodepointForCompletionRequest( self, request_data ):
+    with self._access_lock:
+      if self._use_start_column:
+        return request_data[ 'start_codepoint' ]
+      return request_data[ 'column_codepoint' ]
+
+
+  # Must be called under the lock.
+  def _IsQueryPrefix( self, request_data ):
+    return request_data[ 'query' ].startswith( self._request_data[ 'query' ] )
+
+
+  def GetCompletionsIfCacheValid( self, request_data ):
+    with self._access_lock:
+      if ( not self._is_incomplete and
+           ( self._use_start_column or self._IsQueryPrefix( request_data ) ) ):
+        return super( LanguageServerCompletionsCache,
+                      self ).GetCompletionsIfCacheValid( request_data )
+      return None

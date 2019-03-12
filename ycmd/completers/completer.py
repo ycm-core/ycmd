@@ -411,7 +411,7 @@ class CompletionsCache( object ):
   """Cache of computed completions for a particular request."""
 
   def __init__( self ):
-    self._access_lock = threading.Lock()
+    self._access_lock = threading.RLock()
     self.Invalidate()
 
 
