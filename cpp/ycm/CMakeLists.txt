@@ -200,6 +200,7 @@ else()
 endif()
 
 set( PYBIND11_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pybind11" )
+set( PSTL_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pstl/include" )
 
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
@@ -237,6 +238,7 @@ include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIR}
   ${PYBIND11_INCLUDES_DIR}
+  ${PSTL_INCLUDES_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
   )
@@ -330,8 +332,15 @@ if ( USE_CLANG_COMPLETER AND NOT LIBCLANG_TARGET )
                           "your configuration" )
 endif()
 
+if ( USE_SYSTEM_TBB )
+  set( TBB_LIBRARY "tbb" )
+else()
+  set( TBB_LIBRARY "tbb_static" )
+endif()
+
 target_link_libraries( ${PROJECT_NAME}
                        ${Boost_LIBRARIES}
+                       ${TBB_LIBRARY}
                        ${PYTHON_LIBRARIES}
                        ${LIBCLANG_TARGET}
                        ${EXTRA_LIBS}

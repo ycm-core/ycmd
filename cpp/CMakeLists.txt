@@ -265,4 +265,11 @@ if (NOT USE_SYSTEM_BOOST)
   add_subdirectory( BoostParts )
 endif()
 
+# This adds -fPIC to everything
+set( CMAKE_POSITION_INDEPENDENT_CODE TRUE )
+
+option( USE_SYSTEM_TBB "Unsupported: link against system tbb" OFF )
+if ( NOT USE_SYSTEM_TBB )
+  add_subdirectory( tbb )
+endif()
 add_subdirectory( ycm )

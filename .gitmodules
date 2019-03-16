@@ -48,3 +48,6 @@
 [submodule "third_party/idna"]
 	path = third_party/requests_deps/idna
 	url = https://github.com/kjd/idna
+[submodule "cpp/tbb"]
+	path = cpp/tbb
+	url = https://github.com/bstaletic/tbb

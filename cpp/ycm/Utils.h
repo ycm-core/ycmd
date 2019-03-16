@@ -18,6 +18,9 @@
 #ifndef UTILS_H_KEPMRPBH
 #define UTILS_H_KEPMRPBH
 
+#include <algorithm>
+#include <pstl/algorithm>
+#include <pstl/execution>
 #include <boost/filesystem.hpp>
 #include <cmath>
 #include <limits>
@@ -111,6 +114,12 @@ template <typename Element>
 void PartialSort( std::vector< Element > &elements,
                   const size_t num_sorted_elements ) {
 
+#if __PSTL_CPP17_EXECUTION_POLICIES_PRESENT
+  using __pstl::execution::par;
+#else
+  using std::execution::par;
+#endif
+
   size_t nb_elements = elements.size();
   size_t max_elements = num_sorted_elements > 0 &&
                         nb_elements >= num_sorted_elements ?
@@ -128,6 +137,12 @@ void PartialSort( std::vector< Element > &elements,
     std::partial_sort( elements.begin(),
                        elements.begin() + max_elements,
                        elements.end() );
+  } else if ( 256 <= std::min( nb_elements, max_elements ) ) {
+    std::nth_element( par,
+                      elements.begin(),
+                      elements.begin() + max_elements,
+                      elements.end() );
+    std::sort( par, elements.begin(), elements.begin() + max_elements );
   } else {
     std::nth_element( elements.begin(),
                       elements.begin() + max_elements,

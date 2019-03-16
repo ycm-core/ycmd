@@ -23,6 +23,7 @@ coverage:
   - .*/benchmarks/.*
   - .*/BoostParts/.*
   - .*/pybind11/.*
+  - .*/pstl/.*
   - .*/whereami/.*
 
 comment:
