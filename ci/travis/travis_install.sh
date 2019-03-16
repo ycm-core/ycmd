@@ -58,7 +58,7 @@ if [ "${YCMD_PYTHON_VERSION}" == "2.7" ]; then
   # 2.7.1.
   PYENV_VERSION="2.7.2"
 else
-  PYENV_VERSION="3.4.0"
+  PYENV_VERSION="3.5.1"
 fi
 
 # In order to work with ycmd, python *must* be built as a shared library. This

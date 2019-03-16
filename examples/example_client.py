@@ -17,7 +17,7 @@
 import sys
 import platform
 if sys.version_info[ 0 ] < 3:
-  sys.exit( 'example_client.py requires Python 3.4+; detected Python ' +
+  sys.exit( 'example_client.py requires Python 3.5+; detected Python ' +
             platform.python_version() )
 
 from base64 import b64encode, b64decode
