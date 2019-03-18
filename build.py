@@ -686,7 +686,7 @@ def EnableRustCompleter( args ):
                                'cargo is required for the Rust completer.' )
 
   os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
-  command_line = [ cargo, 'build' ]
+  command_line = [ cargo, '+nightly' , 'build' ]
   # We don't use the --release flag on CI services because it makes building
   # racerd 2.5x slower and we don't care about the speed of the produced racerd.
   if not OnCiService():
