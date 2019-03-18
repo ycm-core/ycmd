@@ -91,7 +91,7 @@ def ClangdCompleter_GetClangdCommand_NoCustomBinary_test():
   clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
 
 
-@patch( 'ycmd.completers.cpp.clangd_completer.GetExecutable', lambda exe: exe )
+@patch( 'ycmd.completers.cpp.clangd_completer.FindExecutable', lambda exe: exe )
 def ClangdCompleter_GetClangdCommand_CustomBinary_test():
   CLANGD_PATH = '/test/clangd'
   user_options = DefaultOptions()
@@ -104,7 +104,7 @@ def ClangdCompleter_GetClangdCommand_CustomBinary_test():
          CLANGD_PATH )
 
     # No Clangd binary in the given path.
-    with patch( 'ycmd.completers.cpp.clangd_completer.GetExecutable',
+    with patch( 'ycmd.completers.cpp.clangd_completer.FindExecutable',
                 return_value = None ):
       clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
       eq_( clangd_completer.GetClangdCommand( user_options ), None )
