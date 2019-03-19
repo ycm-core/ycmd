@@ -47,6 +47,7 @@ appveyor DownloadFile https://static.rust-lang.org/rustup/dist/i686-pc-windows-g
 rustup-init.exe -y
 
 set PATH=%USERPROFILE%\.cargo\bin;%PATH%
+rustup toolchain add nightly
 rustup update
 rustc -Vv
 cargo -V

@@ -106,6 +106,7 @@ curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 CARGO_PATH="${HOME}/.cargo/bin"
 PATH="${CARGO_PATH}:${PATH}"
+rustup toolchain add nightly
 rustup update
 rustc -Vv
 cargo -V

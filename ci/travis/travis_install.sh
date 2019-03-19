@@ -90,6 +90,7 @@ echo -e "import coverage\ncoverage.process_startup()" > \
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 export PATH="${HOME}/.cargo/bin:${PATH}"
+rustup toolchain add nightly
 rustup update
 rustc -Vv
 cargo -V
