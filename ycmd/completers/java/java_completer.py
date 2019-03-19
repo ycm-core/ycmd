@@ -340,10 +340,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def _CleanUp( self ):
-    if not self._server_keep_logfiles:
-      if self._server_stderr:
-        utils.RemoveIfExists( self._server_stderr )
-        self._server_stderr = None
+    if not self._server_keep_logfiles and self._server_stderr:
+      utils.RemoveIfExists( self._server_stderr )
+      self._server_stderr = None
 
     if self._workspace_path and self._use_clean_workspace:
       try:
