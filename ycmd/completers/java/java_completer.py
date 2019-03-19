@@ -485,9 +485,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     # a compromise, we allow the user to force us to send the "query" to the
     # semantic engine, and thus get good completion results at the top level,
     # even if this means the "filtering and sorting" is not 100% ycmd flavor.
-    return ( request_data[ 'column_codepoint' ]
-             if request_data[ 'force_semantic' ]
-             else request_data[ 'start_codepoint' ] )
+    if request_data[ 'force_semantic' ]:
+      return request_data[ 'column_codepoint' ]
+    return super( JavaCompleter, self ).GetCodepointForCompletionRequest(
+      request_data )
 
 
   def HandleNotificationInPollThread( self, notification ):

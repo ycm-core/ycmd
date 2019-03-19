@@ -32,10 +32,7 @@ from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
 
 from ycmd.completers.cpp.clangd_completer import ( GetVersion,
                                                    GetClangdCommand )
-from ycmd.tests.clangd import ( IsolatedYcmd,
-                                PathToTestFile,
-                                RunAfterInitialized,
-                                SharedYcmd )
+from ycmd.tests.clangd import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
@@ -98,7 +95,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@IsolatedYcmd( { 'clangd_uses_ycmd_caching': False } )
+@IsolatedYcmd( { 'clangd_uses_ycmd_caching': 0 } )
 def GetCompletions_ForcedWithNoTrigger_NoYcmdCaching_test( app ):
   RunTest( app, {
     'description': 'semantic completion with force query=DO_SO',
@@ -124,7 +121,7 @@ def GetCompletions_ForcedWithNoTrigger_NoYcmdCaching_test( app ):
   } )
 
 
-@IsolatedYcmd( { 'clangd_uses_ycmd_caching': False } )
+@IsolatedYcmd( { 'clangd_uses_ycmd_caching': 0 } )
 def GetCompletions_NotForced_NoYcmdCaching_test( app ):
   RunTest( app, {
     'description': 'semantic completion with force query=DO_SO',
@@ -329,7 +326,12 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
 
 @IsolatedYcmd( { 'auto_trigger': 0 } )
 def GetCompletions_NoCompletionsWhenAutoTriggerOff_test( app ):
-  contents = """
+  RunTest( app, {
+    'description': 'no completions on . when auto trigger is off',
+    'request': {
+      'filetype': 'cpp',
+      'filepath': PathToTestFile( 'foo.cc' ),
+      'contents': """
 struct Foo {
   int x;
   int y;
@@ -341,29 +343,28 @@ int main()
   Foo foo;
   foo.
 }
-"""
-
-  filepath = PathToTestFile( 'foo.cc' )
-  request = { 'contents': contents,
-              'filepath': filepath,
-              'filetype': 'cpp' }
-
-  test = { 'request': request }
-  results = RunAfterInitialized( app, test )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'cpp',
-                                  contents = contents,
-                                  line_num = 11,
-                                  column_num = 7 )
-
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results, empty() )
+""",
+      'line_num': 11,
+      'column_num': 7
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': empty(),
+        'errors': empty()
+      } )
+    },
+  } )
 
 
 @SharedYcmd
-def GetCompletions_ForceSemantic_OnlyFilteredCompletions_test( app ):
-  contents = """
+def GetCompletions_ForceSemantic_YcmdCache_test( app ):
+  RunTest( app, {
+    'description': 'completions are returned when using ycmd filtering',
+    'request': {
+      'filetype': 'cpp',
+      'filepath': PathToTestFile( 'foo.cc' ),
+      'contents': """
 int main()
 {
   int foobar;
@@ -373,25 +374,52 @@ int main()
 
   fooar
 }
-"""
+""",
+      'line_num': 9,
+      'column_num': 8,
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains( CompletionEntryMatcher( 'foobar' ),
+                                 CompletionEntryMatcher( 'floozar' ) ),
+        'errors': empty()
+      } )
+    },
+  } )
 
-  filepath = PathToTestFile( 'foo.cc' )
-  request = { 'contents': contents,
-              'filepath': filepath,
-              'filetype': 'cpp' }
 
-  test = { 'request': request }
-  RunAfterInitialized( app, test )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'cpp',
-                                  force_semantic = True,
-                                  contents = contents,
-                                  line_num = 9,
-                                  column_num = 8 )
+@IsolatedYcmd( { 'clangd_uses_ycmd_caching': 0 } )
+def GetCompletions_ForceSemantic_NoYcmdCache_test( app ):
+  RunTest( app, {
+    'description': 'no completions are returned when using Clangd filtering',
+    'request': {
+      'filetype': 'cpp',
+      'filepath': PathToTestFile( 'foo.cc' ),
+      'contents': """
+int main()
+{
+  int foobar;
+  int floozar;
+  int gooboo;
+  int bleble;
 
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results, empty() )
+  fooar
+}
+""",
+      'line_num': 9,
+      'column_num': 8,
+      'force_semantic': True
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': empty(),
+        'errors': empty()
+      } )
+    },
+  } )
 
 
 @SharedYcmd
