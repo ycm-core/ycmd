@@ -52,7 +52,7 @@ Next, install the language specific dependencies you need:
 - `sudo apt install golang-go` for Go.
 - `sudo apt install npm` for JavaScript and TypeScript.
 - `sudo apt install mono-devel` for C#.
-- install Cargo and rustc with [rustup][] for Rust.
+- install Cargo, rustc and nightly rust with [rustup][] for Rust.
 - `sudo apt install openjdk-8-jre` for Java.
 
 When you first clone the repository you'll need to update the submodules:
