@@ -24,7 +24,12 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from future.utils import iteritems, PY2
-from hamcrest import contains_string, has_entry, has_entries, assert_that
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_string,
+                       has_entries,
+                       has_entry,
+                       has_item )
 from mock import patch
 from webtest import TestApp
 import bottle
@@ -159,6 +164,20 @@ def LineColMatcher( line, col ):
     'line_num': line,
     'column_num': col
   } )
+
+
+def CompleterProjectDirectoryMatcher( project_directory ):
+  return has_entry(
+    'completer',
+    has_entry( 'servers', contains(
+      has_entry( 'extras', has_item(
+        has_entries( {
+          'key': 'Project Directory',
+          'value': project_directory,
+        } )
+      ) )
+    ) )
+  )
 
 
 @contextlib.contextmanager

@@ -30,36 +30,18 @@ import requests
 import time
 
 from mock import patch
-from hamcrest import ( assert_that,
-                       contains,
-                       equal_to,
-                       has_entries,
-                       has_entry,
-                       has_item )
+from hamcrest import assert_that, contains, equal_to, has_entry
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmd,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
+                                    CompleterProjectDirectoryMatcher,
                                     ErrorMatcher,
                                     MockProcessTerminationTimingOut,
                                     TemporaryTestDir,
                                     WaitUntilCompleterServerReady )
 from ycmd import utils, handlers
-
-
-def _ProjectDirectoryMatcher( project_directory ):
-  return has_entry(
-    'completer',
-    has_entry( 'servers', contains(
-      has_entry( 'extras', has_item(
-        has_entries( {
-          'key': 'Project Directory',
-          'value': project_directory,
-        } )
-      ) )
-    ) )
-  )
 
 
 def TidyJDTProjectFiles( dir_name ):
@@ -95,7 +77,7 @@ def ServerManagement_RestartServer_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( eclipse_project ) )
+               CompleterProjectDirectoryMatcher( eclipse_project ) )
 
   # Restart the server with a different client working directory
   filepath = PathToTestFile( 'simple_maven_project',
@@ -131,7 +113,7 @@ def ServerManagement_RestartServer_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( maven_project ) )
+               CompleterProjectDirectoryMatcher( maven_project ) )
 
 
 @IsolatedYcmd()
@@ -144,7 +126,7 @@ def ServerManagement_ProjectDetection_EclipseParent_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( project ) )
+               CompleterProjectDirectoryMatcher( project ) )
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
@@ -163,7 +145,7 @@ def ServerManagement_ProjectDetection_MavenParent_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( project ) )
+               CompleterProjectDirectoryMatcher( project ) )
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project',
@@ -185,7 +167,7 @@ def ServerManagement_ProjectDetection_MavenParent_Submodule_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( project ) )
+               CompleterProjectDirectoryMatcher( project ) )
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
@@ -204,7 +186,7 @@ def ServerManagement_ProjectDetection_GradleParent_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( project ) )
+               CompleterProjectDirectoryMatcher( project ) )
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
@@ -226,7 +208,7 @@ def ServerManagement_OpenProject_AbsolutePath_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( gradle_project ) )
+               CompleterProjectDirectoryMatcher( gradle_project ) )
 
 
   # We then force it to reload the maven project
@@ -242,7 +224,7 @@ def ServerManagement_OpenProject_AbsolutePath_test( app ):
   # changing anything else
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( maven_project ) )
+               CompleterProjectDirectoryMatcher( maven_project ) )
 
 
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
@@ -264,7 +246,7 @@ def ServerManagement_OpenProject_RelativePath_test( app ):
   # Run the debug info to check that we have the correct project dir
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( gradle_project ) )
+               CompleterProjectDirectoryMatcher( gradle_project ) )
 
 
   # We then force it to reload the maven project
@@ -284,7 +266,7 @@ def ServerManagement_OpenProject_RelativePath_test( app ):
   # changing anything else
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
-               _ProjectDirectoryMatcher( maven_project ) )
+               CompleterProjectDirectoryMatcher( maven_project ) )
 
 
 
@@ -337,7 +319,7 @@ def ServerManagement_ProjectDetection_NoParent_test():
       # Run the debug info to check that we have the correct project dir (cwd)
       request_data = BuildRequest( filetype = 'java' )
       assert_that( app.post_json( '/debug_info', request_data ).json,
-                   _ProjectDirectoryMatcher( tmp_dir ) )
+                   CompleterProjectDirectoryMatcher( tmp_dir ) )
 
     yield Test
 

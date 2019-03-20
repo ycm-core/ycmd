@@ -238,7 +238,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         lambda self, request_data, args: self._RestartServer( request_data )
       ),
       'StopServer': (
-        lambda self, request_data, args: self._StopServer()
+        lambda self, request_data, args: self.Shutdown()
       ),
       'OpenProject': (
         lambda self, request_data, args: self._OpenProject( request_data, args )
@@ -289,10 +289,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       ] )
 
 
-  def Shutdown( self ):
-    self._StopServer()
-
-
   def ServerIsHealthy( self ):
     return self._ServerIsRunning()
 
@@ -313,7 +309,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def _RestartServer( self, request_data ):
     with self._server_state_mutex:
-      self._StopServer()
+      self.Shutdown()
       self._StartAndInitializeServer( request_data )
 
 
@@ -334,7 +330,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         project_directory ) )
 
     with self._server_state_mutex:
-      self._StopServer()
+      self.Shutdown()
       self._StartAndInitializeServer( request_data,
                                       project_directory = project_directory )
 
@@ -420,7 +416,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       except language_server_completer.LanguageServerConnectionTimeout:
         LOGGER.error( 'jdt.ls failed to start, or did not connect '
                       'successfully' )
-        self._StopServer()
+        self.Shutdown()
         return False
 
     LOGGER.info( 'jdt.ls Language Server started' )
@@ -428,7 +424,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return True
 
 
-  def _StopServer( self ):
+  def Shutdown( self ):
     with self._server_state_mutex:
       LOGGER.info( 'Shutting down jdt.ls...' )
 
