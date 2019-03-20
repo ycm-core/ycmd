@@ -22,11 +22,13 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 
-from hamcrest import ( assert_that, calling, contains, contains_string,
-                       equal_to, has_entries, raises, matches_regexp )
-from nose.tools import eq_
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_string,
+                       equal_to,
+                       has_entries,
+                       matches_regexp )
 from pprint import pprint
-from webtest import AppError
 import requests
 import os.path
 
@@ -36,7 +38,9 @@ from ycmd.tests.clangd import ( IsolatedYcmd,
                                 RunAfterInitialized )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
-                                    LineColMatcher )
+                                    LineColMatcher,
+                                    LocationMatcher,
+                                    ErrorMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -64,6 +68,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                                      'GoToDefinition',
                                      'GoToImprecise',
                                      'GoToInclude',
+                                     'GoToReferences',
                                      'RefactorRename',
                                      'RestartServer' ] ) )
       },
@@ -97,142 +102,128 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
 
 
 @SharedYcmd
-def RunGoToTest_all( app, filename, command, test ):
-  contents = ReadFile( PathToTestFile( filename ) )
+def RunGoToTest_all( app, folder, command, test ):
+  filepath = PathToTestFile( folder, test[ 'req' ][ 0 ] )
   common_request = {
     'completer_target' : 'filetype_default',
-    'filepath'         : PathToTestFile( filename ),
-    'command_arguments': command,
-    'line_num'         : 10,
-    'column_num'       : 3,
-    'contents'         : contents,
+    'filepath'         : filepath,
+    'command_arguments': [ command ],
+    'contents'         : ReadFile( filepath ),
     'filetype'         : 'cpp'
-  }
-  common_response = {
-    'filepath': os.path.abspath( PathToTestFile( filename ) ),
   }
 
   request = common_request
   request.update( {
-      'line_num'  : test[ 'request' ][ 0 ],
-      'column_num': test[ 'request' ][ 1 ],
+    'line_num'  : test[ 'req' ][ 1 ],
+    'column_num': test[ 'req' ][ 2 ],
   } )
-  response = common_response
-  response.update( {
-      'line_num'  : test[ 'response' ][ 0 ],
-      'column_num': test[ 'response' ][ 1 ],
+
+  response = test[ 'res' ]
+
+  if isinstance( response, list ):
+    expect = {
+      'response': requests.codes.ok,
+      'data': contains( *[
+        LocationMatcher(
+          PathToTestFile( folder, os.path.normpath( location[ 0 ] ) ),
+          location[ 1 ],
+          location[ 2 ]
+        ) for location in response
+      ] )
+    }
+  elif isinstance( response, tuple ):
+    expect = {
+      'response': requests.codes.ok,
+      'data': LocationMatcher(
+        PathToTestFile( folder, os.path.normpath( response[ 0 ] ) ),
+        response[ 1 ],
+        response[ 2 ]
+      )
+    }
+  else:
+    expect = {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError, test[ 'res' ] )
+    }
+
+  RunAfterInitialized( app, {
+    'request': request,
+    'route'  : '/run_completer_command',
+    'expect' : expect
   } )
-  if len( test[ 'response' ] ) > 2:
-    response.update( {
-      'filepath': PathToTestFile( test[ 'response' ][ 2 ] )
-    } )
-
-  test = { 'request': request, 'route': '/run_completer_command' }
-  actual_response = RunAfterInitialized( app, test )
-
-  pprint( actual_response )
-  pprint( response )
-  assert_that( actual_response, has_entries( response ) )
 
 
 def Subcommands_GoTo_all_test():
   tests = [
     # Local::x -> definition/declaration of x
-    { 'request': [ 23, 21 ], 'response': [ 4,   9 ] },
+    { 'req': ( 'goto.cc', 23, 21 ), 'res': ( 'goto.cc', 4, 9 ) },
     # Local::in_line -> definition/declaration of Local::in_line
-    { 'request': [ 24, 26 ], 'response': [ 6,  10 ] },
+    { 'req': ( 'goto.cc', 24, 26 ), 'res': ( 'goto.cc', 6, 10 ) },
     # Local -> definition/declaration of Local
-    { 'request': [ 24, 16 ], 'response': [ 2,  11 ] },
+    { 'req': ( 'goto.cc', 24, 16 ), 'res': ( 'goto.cc', 2, 11 ) },
     # Local::out_of_line -> declaration of Local::out_of_line
-    { 'request': [ 25, 27 ], 'response': [ 14, 13 ] },
+    { 'req': ( 'goto.cc', 25, 27 ), 'res': [ ( 'goto.cc', 14, 13 ),
+                                             ( 'goto.cc', 11, 10 ) ] },
     # GoToDeclaration on definition of out_of_line moves to declaration
-    { 'request': [ 14, 13 ], 'response': [ 14, 13 ] },
-    # main -> declaration of main
-    { 'request': [ 21,  7 ], 'response': [ 21,  5 ] },
+    { 'req': ( 'goto.cc', 14, 13 ), 'res': [ ( 'goto.cc', 14, 13 ),
+                                             ( 'goto.cc', 11, 10 ) ] },
+    # test -> definition and declaration of test
+    { 'req': ( 'goto.cc', 21,  7 ), 'res': [ ( 'goto.cc', 21, 5 ),
+                                             ( 'goto.cc', 19, 5 ) ] },
     # Unicøde
-    # { 'request': [ 34,  9 ], 'response': [ 32, 26 ] },
+    { 'req': ( 'goto.cc', 34,  9 ), 'res': ( 'goto.cc', 32, 26 ) },
     # Another_Unicøde
-    # { 'request': [ 36, 25 ], 'response': [ 32, 54 ] },
-    { 'request': [ 38,  3 ], 'response': [ 36, 28 ] },
+    { 'req': ( 'goto.cc', 36, 17 ), 'res': ( 'goto.cc', 32, 54 ) },
+    { 'req': ( 'goto.cc', 36, 25 ), 'res': ( 'goto.cc', 32, 54 ) },
+    { 'req': ( 'goto.cc', 38,  3 ), 'res': ( 'goto.cc', 36, 28 ) },
+    # Expected failures
+    { 'req': ( 'goto.cc', 13,  1 ), 'res': 'Cannot jump to location' },
+    { 'req': ( 'goto.cc', 16,  6 ), 'res': 'Cannot jump to location' },
   ]
 
   for test in tests:
     for cmd in [ 'GoToDeclaration', 'GoToDefinition', 'GoTo', 'GoToImprecise' ]:
-      yield ( RunGoToTest_all,
-              'GoTo_all_Clang_test.cc',
-              [ cmd ],
-              test )
-
-
-def Subcommands_GoTo_all_Fail_test():
-  cursors = [ { 'request': [ 13, 1 ], 'response': [ 1, 1 ] },
-              { 'request': [ 36, 17 ], 'response': [ 1, 1 ] },
-              { 'request': [ 16, 6 ], 'response': [ 1, 1 ] } ]
-
-  for cmd in [ 'GoToDeclaration', 'GoToDefinition', 'GoTo', 'GoToImprecise' ]:
-    for cursor in cursors:
-      assert_that(
-        calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
-                                              [ cmd ],
-                                              cursor ),
-        raises( AppError, r'Cannot jump to location.' ) )
-
-
-@SharedYcmd
-def RunGoToIncludeTest( app, command, test ):
-  filepath = PathToTestFile( 'test-include', 'main.cpp' )
-  contents = ReadFile( filepath )
-  request = {
-    'completer_target' : 'filetype_default',
-    'filepath'         : filepath,
-    'command_arguments': [ command ],
-    'line_num'         : test[ 'request' ][ 0 ],
-    'column_num'       : test[ 'request' ][ 1 ],
-    'contents'         : contents,
-    'filetype'         : 'cpp'
-  }
-
-  response = {
-    'filepath'   : PathToTestFile( 'test-include', test[ 'response' ] ),
-    'line_num'   : 1,
-    'column_num' : 1,
-  }
-
-  test = { 'request': request, 'route': '/run_completer_command' }
-  actual_response = RunAfterInitialized( app, test )
-
-  pprint( actual_response )
-  eq_( response, actual_response )
+      yield RunGoToTest_all, '', cmd, test
 
 
 def Subcommands_GoToInclude_test():
   tests = [
-    { 'request': [ 1, 11 ], 'response': 'a.hpp' },
-    { 'request': [ 2, 11 ], 'response': os.path.join( 'system', 'a.hpp' ) },
-    { 'request': [ 3, 11 ], 'response': os.path.join( 'quote',  'b.hpp' ) },
-    { 'request': [ 5, 11 ], 'response': os.path.join( 'system', 'c.hpp' ) },
-    { 'request': [ 6, 11 ], 'response': os.path.join( 'system', 'c.hpp' ) },
+    { 'req': ( 'main.cpp',  1,  6 ), 'res': ( 'a.hpp',        1, 1 ) },
+    { 'req': ( 'main.cpp',  2, 14 ), 'res': ( 'system/a.hpp', 1, 1 ) },
+    { 'req': ( 'main.cpp',  3,  1 ), 'res': ( 'quote/b.hpp',  1, 1 ) },
+    # FIXME: should fail since b.hpp is included with angled brackets but its
+    # folder is added with -iquote.
+    { 'req': ( 'main.cpp',  4, 10 ), 'res': ( 'quote/b.hpp',  1, 1 ) },
+    { 'req': ( 'main.cpp',  5, 11 ), 'res': ( 'system/c.hpp', 1, 1 ) },
+    { 'req': ( 'main.cpp',  6, 11 ), 'res': ( 'system/c.hpp', 1, 1 ) },
+    # Expected failures
+    { 'req': ( 'main.cpp',  7,  1 ), 'res': 'Cannot jump to location' },
+    { 'req': ( 'main.cpp', 10, 13 ), 'res': 'Cannot jump to location' },
   ]
+
   for test in tests:
-    yield RunGoToIncludeTest, 'GoToInclude', test
-    yield RunGoToIncludeTest, 'GoTo', test
-    yield RunGoToIncludeTest, 'GoToImprecise', test
+    for cmd in [ 'GoToInclude', 'GoTo', 'GoToImprecise' ]:
+      yield RunGoToTest_all, 'test-include', cmd, test
 
 
-def Subcommands_GoToInclude_Fail_test():
-  tests = [ # { 'request': [ 4, 1 ], 'response': '' },
-            { 'request': [ 7, 1 ], 'response': '' },
-            { 'request': [ 10, 13 ], 'response': '' } ]
+def Subcommands_GoToReferences_test():
+  tests = [
+    # Function
+    { 'req': ( 'goto.cc', 14, 21 ), 'res': [ ( 'goto.cc', 11, 10 ),
+                                             ( 'goto.cc', 14, 13 ),
+                                             ( 'goto.cc', 25, 22 ) ] },
+    # Namespace
+    { 'req': ( 'goto.cc', 24, 17 ), 'res': [ ( 'goto.cc',  2, 11 ),
+                                             ( 'goto.cc', 14,  6 ),
+                                             ( 'goto.cc', 23, 14 ),
+                                             ( 'goto.cc', 24, 15 ),
+                                             ( 'goto.cc', 25, 15 ) ] },
+    # Expected failure
+    { 'req': ( 'goto.cc', 27,  8 ), 'res': 'Cannot jump to location' },
+  ]
+
   for test in tests:
-    assert_that(
-      calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
-      raises( AppError, 'Cannot jump to location.' ) )
-    assert_that(
-      calling( RunGoToIncludeTest ).with_args( 'GoTo', test ),
-      raises( AppError, 'Cannot jump to location.' ) )
-    assert_that(
-      calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
-      raises( AppError, 'Cannot jump to location.' ) )
+    yield RunGoToTest_all, '', 'GoToReferences', test
 
 
 @SharedYcmd

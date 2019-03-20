@@ -177,8 +177,7 @@ def ExtractLZMA( compressed_data, destination ):
     tar_file.extractall( destination )
 
   # Determine the directory name
-  return os.path.join( destination,
-                       a_member.name.split( os.path.sep )[ 0 ] )
+  return os.path.join( destination, a_member.name.split( '/' )[ 0 ] )
 
 
 def Extract7Z( llvm_package, archive, destination ):
@@ -256,8 +255,8 @@ def UploadBundleToBintray( user_name,
       headers = {
         'X-Bintray-Package': 'clangd',
         'X-Bintray-Version': version,
-        'X-Bintray-Publish': 1,
-        'X-Bintray-Override': 1,
+        'X-Bintray-Publish': '1',
+        'X-Bintray-Override': '1',
       } )
     request.raise_for_status()
 

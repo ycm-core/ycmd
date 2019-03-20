@@ -30,21 +30,13 @@ from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entries )
 
-from ycmd.completers.cpp.clangd_completer import ( GetVersion,
-                                                   GetClangdCommand )
 from ycmd.tests.clangd import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
-                                    skipIf,
                                     WaitUntilCompleterServerReady,
                                     WindowsOnly )
 from ycmd.utils import ReadFile
-from ycmd.user_options_store import DefaultOptions
-
-Clangd8Only = skipIf(
-  GetVersion( GetClangdCommand( DefaultOptions() )[ 0 ] ) == '7.0.0',
-  'Include completion is not implemented in LLVM 7.0.0' )
 
 
 def RunTest( app, test ):
@@ -480,7 +472,6 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
 
 @SharedYcmd
 @WindowsOnly
-@Clangd8Only
 def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
   RunTest( app, {
     'description': 'Completion inside include statement with CL driver',
@@ -497,7 +488,7 @@ def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
       'data': has_entries( {
         'completion_start_column': 11,
         'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'driver_mode_cl_include.h' ),
+          CompletionEntryMatcher( 'driver_mode_cl_include.h\"' ),
         ),
         'errors': empty(),
       } )
@@ -507,7 +498,6 @@ def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
 
 @SharedYcmd
 @WindowsOnly
-@Clangd8Only
 def GetCompletions_ClangCLDriverExec_IncludeStatementCandidate_test( app ):
   RunTest( app, {
     'description': 'Completion inside include statement with CL driver',
@@ -524,7 +514,7 @@ def GetCompletions_ClangCLDriverExec_IncludeStatementCandidate_test( app ):
       'data': has_entries( {
         'completion_start_column': 11,
         'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'driver_mode_cl_include.h' ),
+          CompletionEntryMatcher( 'driver_mode_cl_include.h\"' ),
         ),
         'errors': empty(),
       } )
@@ -579,7 +569,6 @@ def GetCompletions_UnicodeInLineFilter_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_QuotedInclude_test( app ):
   RunTest( app, {
     'description': 'completion of #include "',
@@ -608,7 +597,6 @@ def GetCompletions_QuotedInclude_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
   RunTest( app, {
     'description': 'completion of #include "quote/',
@@ -632,7 +620,6 @@ def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_QuotedInclude_AfterDot_test( app ):
   RunTest( app, {
     'description': 'completion of #include "quote/b.',
@@ -657,7 +644,6 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_QuotedInclude_AfterSpace_test( app ):
   RunTest( app, {
     'description': 'completion of #include "dir with ',
@@ -681,7 +667,6 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_QuotedInclude_Invalid_test( app ):
   RunTest( app, {
     'description': 'completion of an invalid include statement',
@@ -703,7 +688,6 @@ def GetCompletions_QuotedInclude_Invalid_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_BracketInclude_test( app ):
   RunTest( app, {
     'description': 'completion of #include <',
@@ -728,7 +712,6 @@ def GetCompletions_BracketInclude_test( app ):
 
 
 @SharedYcmd
-@Clangd8Only
 def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
   RunTest( app, {
     'description': 'completion of #include <system/',

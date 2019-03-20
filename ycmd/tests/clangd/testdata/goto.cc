@@ -16,9 +16,9 @@ char Local::out_of_line()
     return 'x';
 }
 
-int main();
+int test();
 
-int main()
+int test()
 {
     int ix = Local::x;
     char cy = Local::in_line();
