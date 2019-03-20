@@ -249,7 +249,7 @@ def Initialize( request_id, project_directory, settings ):
         'completion': {
           'completionItemKind': {
             # ITEM_KIND list is 1-based.
-            'valueSet': list( range( 1, len( ITEM_KIND ) + 1 ) ),
+            'valueSet': list( range( 1, len( ITEM_KIND ) ) ),
           }
         }
       }
