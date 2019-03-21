@@ -95,7 +95,6 @@ rustup toolchain add nightly
 rustup update
 rustc -Vv
 cargo -V
-export RUST_SRC_PATH=$(rustc --print sysroot)/lib/rustlib/src/rust/src
 
 #################################
 # JavaScript and TypeScript setup

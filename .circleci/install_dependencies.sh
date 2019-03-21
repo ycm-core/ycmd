@@ -111,7 +111,6 @@ rustup update
 rustc -Vv
 cargo -V
 
-echo "export RUST_SRC_PATH=$(rustc --print sysroot)/lib/rustlib/src/rust/src" >> $BASH_ENV
 echo "export PATH=${CARGO_PATH}:\$PATH" >> $BASH_ENV
 
 #################
