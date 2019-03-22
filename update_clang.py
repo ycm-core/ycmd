@@ -264,8 +264,8 @@ def UploadBundleToBintray( user_name,
       headers = {
         'X-Bintray-Package': 'libclang',
         'X-Bintray-Version': version,
-        'X-Bintray-Publish': 1,
-        'X-Bintray-Override': 1,
+        'X-Bintray-Publish': '1',
+        'X-Bintray-Override': '1',
       } )
     request.raise_for_status()
 

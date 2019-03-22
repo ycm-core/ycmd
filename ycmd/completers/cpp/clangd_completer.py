@@ -303,12 +303,17 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     return None
 
 
-  # TODO: Turn on coverage detection when updating to LLVM8 release. It is
-  # currently turned off because Clangd doesn't support it in LLVM7 release.
-  def ShouldCompleteIncludeStatement( self, request_data ): # pragma: no cover
+  def ShouldCompleteIncludeStatement( self, request_data ):
     column_codepoint = request_data[ 'column_codepoint' ] - 1
     current_line = request_data[ 'line_value' ]
-    return INCLUDE_REGEX.match( current_line[ : column_codepoint ] )
+    return bool( INCLUDE_REGEX.match( current_line[ : column_codepoint ] ) )
+
+
+  def ShouldUseNowInner( self, request_data ):
+    return ( self.ServerIsReady() and
+             ( super( language_server_completer.LanguageServerCompleter,
+                      self ).ShouldUseNowInner( request_data ) or
+               self.ShouldCompleteIncludeStatement( request_data ) ) )
 
 
   def ShouldUseNow( self, request_data ):
@@ -316,7 +321,6 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     disabled."""
     # Clangd should be able to provide completions in any context.
     # FIXME: Empty queries provide spammy results, fix this in Clangd.
-    # FIXME: Add triggers for include completion with release of LLVM8.
     if self._use_ycmd_caching:
       return super( ClangdCompleter, self ).ShouldUseNow( request_data )
     return ( request_data[ 'query' ] != '' or

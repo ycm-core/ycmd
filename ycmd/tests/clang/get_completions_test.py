@@ -38,8 +38,7 @@ from hamcrest import ( all_of,
                        has_items,
                        has_entry,
                        has_entries,
-                       is_not,
-                       matches_regexp )
+                       is_not )
 
 from ycmd import handlers
 from ycmd.completers.cpp.clang_completer import ( NO_COMPLETIONS_MESSAGE,
@@ -55,7 +54,6 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
-                                    ExpectedFailure,
                                     LocationMatcher,
                                     WindowsOnly )
 from ycmd.utils import ReadFile
@@ -128,8 +126,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
     'description': 'semantic completion with force query=DO_SO',
     'request': {
       'filetype'  : 'cpp',
-      'filepath'  : PathToTestFile( 'general_fallback',
-                                    'lang_cpp.cc' ),
+      'filepath'  : PathToTestFile( 'general_fallback', 'lang_cpp.cc' ),
       'line_num'  : 54,
       'column_num': 8,
       'extra_conf_data': { '&filetype': 'cpp' },
@@ -152,7 +149,6 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
 # fetching completer from cache.
 @IsolatedYcmd()
 def GetCompletions_Fallback_NoSuggestions_test( app ):
-  # TESTCASE1 (general_fallback/lang_c.c)
   RunTest( app, {
     'description': 'Triggered, fallback but no query so no completions',
     'request': {
@@ -174,18 +170,16 @@ def GetCompletions_Fallback_NoSuggestions_test( app ):
 
 
 @SharedYcmd
-def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
-  # TESTCASE1 (general_fallback/lang_cpp.cc)
+def GetCompletions_Fallback_NoSuggestions_MinimumCharacters_test( app ):
   RunTest( app, {
     'description': 'fallback general completion obeys min chars setting '
                    ' (query="a")',
     'request': {
       'filetype'  : 'cpp',
-      'filepath'  : PathToTestFile( 'general_fallback',
-                                    'lang_cpp.cc' ),
-      'line_num'  : 21,
+      'filepath'  : PathToTestFile( 'general_fallback', 'lang_c.c' ),
+      'line_num'  : 29,
       'column_num': 22,
-      'extra_conf_data': { '&filetype': 'cpp' },
+      'extra_conf_data': { '&filetype': 'c' },
       'force_semantic': False,
     },
     'expect': {
@@ -200,7 +194,6 @@ def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
 
 @SharedYcmd
 def GetCompletions_Fallback_Suggestions_test( app ):
-  # TESTCASE1 (general_fallback/lang_c.c)
   RunTest( app, {
     'description': '. after macro with some query text (.a_)',
     'request': {
@@ -224,7 +217,6 @@ def GetCompletions_Fallback_Suggestions_test( app ):
 
 @SharedYcmd
 def GetCompletions_Fallback_Exception_test( app ):
-  # TESTCASE4 (general_fallback/lang_c.c)
   # extra conf throws exception
   RunTest( app, {
     'description': '. on struct returns identifier because of error',
@@ -251,7 +243,6 @@ def GetCompletions_Fallback_Exception_test( app ):
 
 @SharedYcmd
 def GetCompletions_Forced_NoFallback_test( app ):
-  # TESTCASE2 (general_fallback/lang_c.c)
   RunTest( app, {
     'description': '-> after macro with forced semantic',
     'request': {
@@ -275,8 +266,6 @@ def GetCompletions_FilteredNoResults_Fallback_test( app ):
   # were filtered out by the query, so this is considered working OK
   # (whereas no completions from the semantic engine is considered an
   # error)
-
-  # TESTCASE5 (general_fallback/lang_cpp.cc)
   RunTest( app, {
     'description': '. on struct returns IDs after query=do_',
     'request': {
@@ -502,12 +491,6 @@ def GetCompletions_DocStringsAreIncluded_test( app ):
   ) )
 
 
-@ExpectedFailure(
-  'libclang wrongly marks protected members from base class in derived class '
-  'as inaccessible. See https://bugs.llvm.org/show_bug.cgi?id=24329',
-  all_of( matches_regexp( "was .*public_member" ),
-          is_not( matches_regexp( "was .*protected_member" ) ),
-          is_not( matches_regexp( "was .*private_member" ) ) ) )
 @SharedYcmd
 def GetCompletions_PublicAndProtectedMembersAvailableInDerivedClass_test( app ):
   filepath = PathToTestFile( 'completion_availability.cc' )
@@ -1511,7 +1494,9 @@ def GetCompletions_cuda_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 29,
-        'completions': contains(
+        # NOTE: libclang also returns strange completions like 'cudaStream::',
+        # 'dim3::', 'and Kernels::'.
+        'completions': has_item(
           CompletionEntryMatcher( 'do_something', 'void' ),
         ),
         'errors': empty(),
