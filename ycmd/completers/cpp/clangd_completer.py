@@ -34,6 +34,7 @@ from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          GetExecutable,
                          ExpandVariablesInPath,
+                         FindExecutable,
                          LOGGER,
                          re )
 
@@ -120,7 +121,7 @@ def GetClangdExecutableAndResourceDir( user_options ):
   resource_dir = None
 
   if clangd:
-    clangd = GetExecutable( ExpandVariablesInPath( clangd ) )
+    clangd = FindExecutable( ExpandVariablesInPath( clangd ) )
 
     if not clangd:
       LOGGER.error( 'No Clangd executable found at %s',
