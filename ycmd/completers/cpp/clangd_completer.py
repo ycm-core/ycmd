@@ -22,19 +22,20 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import subprocess
+import logging
 import os
+import subprocess
 import threading
-import re
 
 from ycmd import responses, utils
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
-from ycmd.utils import ( GetExecutable,
+from ycmd.utils import ( CLANG_RESOURCE_DIR,
+                         GetExecutable,
                          ExpandVariablesInPath,
                          LOGGER,
-                         CLANG_RESOURCE_DIR )
+                         re )
 
 MIN_SUPPORTED_VERSION = '7.0.0'
 INCLUDE_REGEX = re.compile(
@@ -161,18 +162,22 @@ def GetClangdCommand( user_options ):
   put_resource_dir = False
   put_limit_results = False
   put_header_insertion_decorators = False
+  put_log = False
   for arg in clangd_args:
     CLANGD_COMMAND.append( arg )
     put_resource_dir = put_resource_dir or arg.startswith( '-resource-dir' )
     put_limit_results = put_limit_results or arg.startswith( '-limit-results' )
     put_header_insertion_decorators = ( put_header_insertion_decorators or
                         arg.startswith( '-header-insertion-decorators' ) )
+    put_log = put_log or arg.startswith( '-log' )
   if not put_header_insertion_decorators:
     CLANGD_COMMAND.append( '-header-insertion-decorators=0' )
   if resource_dir and not put_resource_dir:
     CLANGD_COMMAND.append( '-resource-dir=' + resource_dir )
   if user_options[ 'clangd_uses_ycmd_caching' ] and not put_limit_results:
     CLANGD_COMMAND.append( '-limit-results=500' )
+  if LOGGER.isEnabledFor( logging.DEBUG ) and not put_log:
+    CLANGD_COMMAND.append( '-log=verbose' )
 
   return CLANGD_COMMAND
 
@@ -210,6 +215,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     # Guards _connection and _server_handle.
     self._server_state_mutex = threading.RLock()
     self._clangd_command = GetClangdCommand( user_options )
+    self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._stderr_file = None
 
     self._Reset()
@@ -222,7 +228,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       self.ServerReset() # Cleanup subclass internal states.
       self._connection = None
       self._server_handle = None
-      if self._stderr_file is not None:
+      if not self._server_keep_logfiles and self._stderr_file:
         utils.RemoveIfExists( self._stderr_file )
         self._stderr_file = None
 
