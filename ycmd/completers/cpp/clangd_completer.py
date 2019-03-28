@@ -352,10 +352,8 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
   def StartServer( self, request_data ):
     with self._server_state_mutex:
-      # Ensure we cleanup all states.
-      self._Reset()
-
       LOGGER.info( 'Starting clangd: %s', self._clangd_command )
+
       self._stderr_file = utils.CreateLogfile( 'clangd_stderr' )
       with utils.OpenForStdHandle( self._stderr_file ) as stderr:
         self._server_handle = utils.SafePopen( self._clangd_command,
