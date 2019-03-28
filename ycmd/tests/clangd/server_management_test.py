@@ -62,7 +62,7 @@ def CheckStopped( app ):
   assert_that(
     GetDebugInfo( app ),
     has_entry( 'completer', has_entries( {
-      'name': 'Clangd',
+      'name': 'C-family',
       'servers': contains( has_entries( {
         'name': 'Clangd',
         'pid': None,
@@ -167,7 +167,7 @@ def ServerManagement_RestartServer_test( app ):
   assert_that(
     GetDebugInfo( app ),
     has_entry( 'completer', has_entries( {
-      'name': 'Clangd',
+      'name': 'C-family',
       'servers': contains( has_entries( {
         'name': 'Clangd',
         'is_running': True,

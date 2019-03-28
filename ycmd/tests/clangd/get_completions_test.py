@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2015-2018 ycmd contributors
+# Copyright (C) 2015-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -824,6 +824,64 @@ def GetCompletions_ServerTriggers_Ignored_test( app ):
       'data': has_entries( {
         'completion_start_column': 25,
         'completions': empty(),
+        'errors': empty(),
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'extra_conf_globlist': [
+  PathToTestFile( 'extra_conf', '.ycm_extra_conf.py' ) ] } )
+def GetCompletions_SupportExtraConf_test( app ):
+  RunTest( app, {
+    'description': 'Flags for foo.cpp from extra conf file are used',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'extra_conf', 'foo.cpp' ),
+      'line_num'  : 5,
+      'column_num': 15
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 15,
+        'completions': contains( CompletionEntryMatcher( 'member_foo' ) ),
+        'errors': empty(),
+      } )
+    }
+  } )
+
+  RunTest( app, {
+    'description': 'Same flags are used again for foo.cpp',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'extra_conf', 'foo.cpp' ),
+      'line_num'  : 5,
+      'column_num': 15
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 15,
+        'completions': contains( CompletionEntryMatcher( 'member_foo' ) ),
+        'errors': empty(),
+      } )
+    }
+  } )
+
+  RunTest( app, {
+    'description': 'Flags for bar.cpp from extra conf file are used',
+    'request': {
+      'filetype'  : 'cpp',
+      'filepath'  : PathToTestFile( 'extra_conf', 'bar.cpp' ),
+      'line_num'  : 5,
+      'column_num': 15
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completion_start_column': 15,
+        'completions': contains( CompletionEntryMatcher( 'member_bar' ) ),
         'errors': empty(),
       } )
     }
