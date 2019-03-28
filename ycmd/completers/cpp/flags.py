@@ -161,7 +161,7 @@ class Flags( object ):
     sanitized_flags = PrepareFlagsForClang( flags,
                                             filename,
                                             add_extra_clang_flags,
-                                            _ShouldAllowWinStyleFlags( flags ) )
+                                            ShouldAllowWinStyleFlags( flags ) )
 
     if results.get( 'do_cache', True ):
       self.flags_for_file[ filename, client_data ] = sanitized_flags, filename
@@ -248,7 +248,7 @@ def _ExtractFlagsList( flags_for_file_output ):
   return [ ToUnicode( x ) for x in flags_for_file_output[ 'flags' ] ]
 
 
-def _ShouldAllowWinStyleFlags( flags ):
+def ShouldAllowWinStyleFlags( flags ):
   if OnWindows():
     # Iterate in reverse because we only care
     # about the last occurrence of --driver-mode flag.
@@ -302,7 +302,7 @@ def PrepareFlagsForClang( flags,
                           enable_windows_style_flags = False ):
   flags = _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags )
   flags = _RemoveXclangFlags( flags )
-  flags = _RemoveUnusedFlags( flags, filename, enable_windows_style_flags )
+  flags = RemoveUnusedFlags( flags, filename, enable_windows_style_flags )
   if add_extra_clang_flags:
     # This flag tells libclang where to find the builtin includes.
     flags.append( '-resource-dir=' + CLANG_RESOURCE_DIR )
@@ -407,7 +407,7 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   return flags
 
 
-def _RemoveUnusedFlags( flags, filename, enable_windows_style_flags ):
+def RemoveUnusedFlags( flags, filename, enable_windows_style_flags ):
   """Given an iterable object that produces strings (flags for Clang), removes
   the '-c' and '-o' options that Clang does not like to see when it's producing
   completions for a file. Same for '-MD' etc.
@@ -622,7 +622,7 @@ def _MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
   new_flags = []
   make_next_absolute = False
   path_flags = ( PATH_FLAGS + INCLUDE_FLAGS_WIN_STYLE
-                 if _ShouldAllowWinStyleFlags( flags )
+                 if ShouldAllowWinStyleFlags( flags )
                  else PATH_FLAGS )
   for flag in flags:
     new_flag = flag
@@ -685,7 +685,7 @@ def UserIncludePaths( user_flags, filename ):
                       '-isystem':    include_paths,
                       '-F':          framework_paths,
                       '-iframework': framework_paths }
-    if _ShouldAllowWinStyleFlags( user_flags ):
+    if ShouldAllowWinStyleFlags( user_flags ):
       include_flags[ '/I' ] = include_paths
 
     try:

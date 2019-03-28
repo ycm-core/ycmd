@@ -26,8 +26,10 @@ import logging
 import os
 import subprocess
 
-from ycmd import responses
+from ycmd import extra_conf_store, responses
 from ycmd.completers.completer_utils import GetFileLines
+from ycmd.completers.cpp.flags import ( RemoveUnusedFlags,
+                                        ShouldAllowWinStyleFlags )
 from ycmd.completers.language_server import simple_language_server_completer
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
@@ -200,6 +202,27 @@ def ShouldEnableClangdCompleter( user_options ):
   return True
 
 
+def PrependCompilerToFlags( flags, enable_windows_style_flags ):
+  """Removes everything before the first flag and returns the remaining flags
+  prepended with clangd."""
+  for index, flag in enumerate( flags ):
+    if ( flag.startswith( '-' ) or
+         ( enable_windows_style_flags and
+           flag.startswith( '/' ) and
+           not os.path.exists( flag ) ) ):
+      flags = flags[ index: ]
+      break
+  return [ 'clang-tool' ] + flags
+
+
+def BuildCompilationCommand( flags, filepath ):
+  """Returns a compilation command from a list of flags and a file."""
+  enable_windows_style_flags = ShouldAllowWinStyleFlags( flags )
+  flags = PrependCompilerToFlags( flags, enable_windows_style_flags )
+  flags = RemoveUnusedFlags( flags, filepath, enable_windows_style_flags )
+  return flags + [ filepath ]
+
+
 class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   """A LSP-based completer for C-family languages, powered by Clangd.
 
@@ -214,6 +237,21 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
     self._clangd_command = GetClangdCommand( user_options )
     self._use_ycmd_caching = user_options[ 'clangd_uses_ycmd_caching' ]
+    self._flags_for_file = {}
+
+    self.RegisterOnFileReadyToParse(
+      lambda self, request_data: self._SendFlagsFromExtraConf( request_data )
+    )
+
+
+  def _Reset( self ):
+    with self._server_state_mutex:
+      super( ClangdCompleter, self )._Reset()
+      self._flags_for_file = {}
+
+
+  def GetCompleterName( self ):
+    return 'C-family'
 
 
   def GetServerName( self ):
@@ -222,6 +260,10 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
   def GetCommandLine( self ):
     return self._clangd_command
+
+
+  def Language( self ):
+    return 'cfamily'
 
 
   def SupportedFiletypes( self ):
@@ -361,3 +403,45 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         minimum_distance = distance
 
     return responses.BuildDisplayMessageResponse( message )
+
+
+  def _SendFlagsFromExtraConf( self, request_data ):
+    """Reads the flags from the extra conf of the given request and sends them
+    to Clangd as an entry of a compilation database using the
+    'compilationDatabaseChanges' configuration."""
+    filepath = request_data[ 'filepath' ]
+
+    with self._server_info_mutex:
+      module = extra_conf_store.ModuleForSourceFile( filepath )
+      if not module:
+        return
+
+      settings = self.GetSettings( module, request_data )
+
+      if 'flags' not in settings:
+        # No flags returned. Let Clangd find the flags.
+        return
+
+      if settings.get( 'do_cache', True ) and filepath in self._flags_for_file:
+        # Flags for this file have already been sent to Clangd.
+        return
+
+      flags = settings[ 'flags' ]
+
+      self.GetConnection().SendNotification( lsp.DidChangeConfiguration( {
+        'compilationDatabaseChanges': {
+          filepath: {
+            'compilationCommand': BuildCompilationCommand( flags, filepath ),
+            'workingDirectory': settings.get( 'include_paths_relative_to_dir',
+                                              self._project_directory )
+          }
+        }
+      } ) )
+
+      self._flags_for_file[ filepath ] = flags
+
+
+  def ExtraDebugItems( self, request_data ):
+    return [ responses.DebugInfoItem(
+      'Extra Configuration Flags',
+      self._flags_for_file.get( request_data[ 'filepath' ], False ) ) ]

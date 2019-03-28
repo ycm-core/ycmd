@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,6 +22,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+from functools import partial
 from future.utils import iteritems, iterkeys
 import abc
 import collections
@@ -741,6 +742,12 @@ class LanguageServerCompleter( Completer ):
     #    cached query is a prefix of the subsequent queries.
     self._completions_cache = LanguageServerCompletionsCache()
 
+    self._on_file_ready_to_parse_handlers = []
+    self.RegisterOnFileReadyToParse(
+      lambda self, request_data:
+        self._UpdateServerWithFileContents( request_data )
+    )
+
 
   def ServerReset( self ):
     """Clean up internal state related to the running server instance.
@@ -1087,10 +1094,12 @@ class LanguageServerCompleter( Completer ):
     return subcommands_map
 
 
-  def _GetSettings( self, module, client_data ):
+  def GetSettings( self, module, request_data ):
     if hasattr( module, 'Settings' ):
-      settings = module.Settings( language = self.Language(),
-                                  client_data = client_data )
+      settings = module.Settings(
+        language = self.Language(),
+        filename = request_data[ 'filepath' ],
+        client_data = request_data[ 'extra_conf_data' ] )
       if settings is not None:
         return settings
 
@@ -1102,7 +1111,7 @@ class LanguageServerCompleter( Completer ):
   def _GetSettingsFromExtraConf( self, request_data ):
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     if module:
-      settings = self._GetSettings( module, request_data[ 'extra_conf_data' ] )
+      settings = self.GetSettings( module, request_data )
       self._settings = settings.get( 'ls' ) or {}
       # Only return the dir if it was found in the paths; we don't want to use
       # the path of the global extra conf as a project root dir.
@@ -1139,17 +1148,20 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsHealthy():
       return
 
-    # If we haven't finished initializing yet, we need to queue up a call to
-    # _UpdateServerWithFileContents. This ensures that the server is up to date
-    # as soon as we are able to send more messages. This is important because
-    # server start up can be quite slow and we must not block the user, while we
-    # must keep the server synchronized.
+    # If we haven't finished initializing yet, we need to queue up all functions
+    # registered on the FileReadyToParse event and in particular
+    # _UpdateServerWithFileContents in reverse order of registration. This
+    # ensures that the server is up to date as soon as we are able to send more
+    # messages. This is important because server start up can be quite slow and
+    # we must not block the user, while we must keep the server synchronized.
     if not self._initialize_event.is_set():
-      self._OnInitializeComplete(
-        lambda self: self._UpdateServerWithFileContents( request_data ) )
+      for handler in reversed( self._on_file_ready_to_parse_handlers ):
+        self._OnInitializeComplete( partial( handler,
+                                             request_data = request_data ) )
       return
 
-    self._UpdateServerWithFileContents( request_data )
+    for handler in reversed( self._on_file_ready_to_parse_handlers ):
+      handler( self, request_data )
 
     # Return the latest diagnostics that we have received.
     #
@@ -1607,6 +1619,10 @@ class LanguageServerCompleter( Completer ):
     passed to this method.
     If the server is shut down or reset, the callback is not called."""
     self._on_initialize_complete_handlers.append( handler )
+
+
+  def RegisterOnFileReadyToParse( self, handler ):
+    self._on_file_ready_to_parse_handlers.append( handler )
 
 
   def GetHoverResponse( self, request_data ):

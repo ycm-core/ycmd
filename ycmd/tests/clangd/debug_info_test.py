@@ -1,5 +1,4 @@
-# Copyright (C) 2011-2012 Google Inc.
-#               2018      ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -37,7 +36,7 @@ def DebugInfo_NotInitialized_test( app ):
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
-      'name': 'clangd',
+      'name': 'C-family',
       'servers': contains( has_entries( {
         'name': 'clangd',
         'pid': None,
@@ -55,6 +54,10 @@ def DebugInfo_NotInitialized_test( app ):
             'key': 'Settings',
             'value': '{}',
           } ),
+          has_entries( {
+            'key': 'Extra Configuration Flags',
+            'value': False,
+          } ),
         ),
       } ) ),
       'items': empty(),
@@ -71,7 +74,7 @@ def DebugInfo_Initialized_test( app ):
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
-      'name': 'clangd',
+      'name': 'C-family',
       'servers': contains( has_entries( {
         'name': 'clangd',
         'is_running': True,
@@ -87,6 +90,89 @@ def DebugInfo_Initialized_test( app ):
           has_entries( {
             'key': 'Settings',
             'value': '{}',
+          } ),
+          has_entries( {
+            'key': 'Extra Configuration Flags',
+            'value': False,
+          } ),
+        ),
+      } ) ),
+      'items': empty()
+    } ) )
+  )
+
+
+@IsolatedYcmd( { 'extra_conf_globlist': [
+  PathToTestFile( 'extra_conf', '.ycm_extra_conf.py' ) ] } )
+def DebugInfo_ExtraConf_ReturningFlags_test( app ):
+  request_data = BuildRequest( filepath = PathToTestFile( 'extra_conf',
+                                                          'foo.cpp' ),
+                               filetype = 'cpp' )
+  test = { 'request': request_data }
+  RunAfterInitialized( app, test )
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entry( 'completer', has_entries( {
+      'name': 'C-family',
+      'servers': contains( has_entries( {
+        'name': 'clangd',
+        'is_running': True,
+        'extras': contains(
+          has_entries( {
+            'key': 'Server State',
+            'value': 'Initialized',
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'extra_conf' ),
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}',
+          } ),
+          has_entries( {
+            'key': 'Extra Configuration Flags',
+            'value': contains( '-I', 'include', '-DFOO' ),
+          } ),
+        ),
+      } ) ),
+      'items': empty()
+    } ) )
+  )
+
+
+@IsolatedYcmd( { 'extra_conf_globlist': [
+  PathToTestFile( 'extra_conf', '.ycm_extra_conf.py' ) ] } )
+def DebugInfo_ExtraConf_NotReturningFlags_test( app ):
+  request_data = BuildRequest( filepath = PathToTestFile( 'extra_conf',
+                                                          'xyz.cpp' ),
+                               filetype = 'cpp' )
+  request_data[ 'contents' ] = ''
+  test = { 'request': request_data }
+  RunAfterInitialized( app, test )
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entry( 'completer', has_entries( {
+      'name': 'C-family',
+      'servers': contains( has_entries( {
+        'name': 'clangd',
+        'is_running': True,
+        'extras': contains(
+          has_entries( {
+            'key': 'Server State',
+            'value': 'Initialized',
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'extra_conf' ),
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}',
+          } ),
+          has_entries( {
+            'key': 'Extra Configuration Flags',
+            'value': False
           } ),
         ),
       } ) ),

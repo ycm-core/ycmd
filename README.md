@@ -97,14 +97,13 @@ non-semantic.
 
 There are also several semantic engines in YCM. There's a libclang-based
 completer and [clangd][clangd]-based completer that both provide semantic
-completion for C-family languages. The [clangd][clangd]-based completer doesn't
-support extra conf; you must have a compilation database. [clangd][clangd]
-support is currently **experimental** and changes in the near future might break
-backwards compatibility. There's also a Jedi-based completer for semantic
-completion for Python, an OmniSharp-based completer for C#, a
-[Gocode][gocode]-based completer for Go (using [Godef][godef] for jumping to
-definitions), a TSServer-based completer for JavaScript and TypeScript, and a
-[jdt.ls][jdtls]-based server for Java. More will be added with time.
+completion for C-family languages. [clangd][clangd] support is currently
+**experimental** and changes in the near future might break backwards
+compatibility. There's also a Jedi-based completer for semantic completion for
+Python, an OmniSharp-based completer for C#, a [Gocode][gocode]-based completer
+for Go (using [Godef][godef] for jumping to definitions), a TSServer-based
+completer for JavaScript and TypeScript, and a [jdt.ls][jdtls]-based server for
+Java. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -217,8 +216,8 @@ The `.ycm_extra_conf.py` module may define the following functions:
 #### `Settings( **kwargs )`
 
 This function allows users to configure the language completers on a per project
-basis or globally. Currently, it is required by the C-family completer and
-optional for the Python completer. The following arguments can be retrieved from
+basis or globally. Currently, it is required by the libclang-based completer and
+optional for other completers. The following arguments can be retrieved from
 the `kwargs` dictionary and are common to all completers:
 
 - `language`: an identifier of the completer that called the function. Its value
@@ -231,7 +230,7 @@ the `kwargs` dictionary and are common to all completers:
     language = kwargs[ 'language' ]
     if language == 'cfamily':
       return {
-        # Settings for the C-family completer.
+        # Settings for the libclang and clangd-based completer.
       }
     if language == 'python':
       return {
@@ -239,6 +238,8 @@ the `kwargs` dictionary and are common to all completers:
       }
     return {}
   ```
+
+- `filename`: absolute path of the file currently edited.
 
 - `client_data`: any additional data supplied by the client application.
   See the [YouCompleteMe documentation][extra-conf-vim-data-doc] for an
@@ -248,31 +249,31 @@ The return value is a dictionary whose content depends on the completer.
 
 ##### C-family settings
 
-The `Settings` function is called by the C-family completer to get the compiler
-flags to use when compiling the current file. The absolute path of this file is
-accessible under the `filename` key of the `kwargs` dictionary.
-[clangd][clangd]-based completer doesn't support extra conf files. If you are
-using [clangd][clangd]-based completer, you must have a compilation database in
-your project's root or in one of the parent directories to provide compiler
-flags.
+The `Settings` function is called by the libclang and clangd-based completers to
+get the compiler flags to use when compiling the current file. The absolute path
+of this file is accessible under the `filename` key of the `kwargs` dictionary.
 
-The return value expected by the completer is a dictionary containing the
+The return value expected by both completers is a dictionary containing the
 following items:
 
-- `flags`: (mandatory) a list of compiler flags.
+- `flags`: (mandatory for libclang, optional for clangd) a list of compiler
+  flags.
 
-- `include_paths_relative_to_dir`: (optional) the directory to which the
-  include paths in the list of flags are relative. Defaults to ycmd working
-  directory.
-
-- `override_filename`: (optional) a string indicating the name of the file to
-  parse as the translation unit for the supplied file name. This fairly
-  advanced feature allows for projects that use a 'unity'-style build, or
-  for header files which depend on other includes in other files.
+- `include_paths_relative_to_dir`: (optional) the directory to which the include
+  paths in the list of flags are relative. Defaults to ycmd working directory
+  for the libclang completer and `.ycm_extra_conf.py`'s directory for the
+  clangd completer.
 
 - `do_cache`: (optional) a boolean indicating whether or not the result of
   this call (i.e. the list of flags) should be cached for this file name.
   Defaults to `True`. If unsure, the default is almost always correct.
+
+The libclang-based completer also supports the following items:
+
+- `override_filename`: (optional) a string indicating the name of the file to
+  parse as the translation unit for the supplied file name. This fairly advanced
+  feature allows for projects that use a 'unity'-style build, or for header
+  files which depend on other includes in other files.
 
 - `flags_ready`: (optional) a boolean indicating that the flags should be
   used. Defaults to `True`. If unsure, the default is almost always correct.
@@ -393,7 +394,7 @@ License
 -------
 
 This software is licensed under the [GPL v3 license][gpl].
-© 2015-2018 ycmd contributors
+© 2015-2019 ycmd contributors
 
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycm]: http://valloric.github.io/YouCompleteMe/

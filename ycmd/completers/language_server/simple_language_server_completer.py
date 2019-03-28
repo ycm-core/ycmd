@@ -34,13 +34,18 @@ import subprocess
 
 class SimpleLSPCompleter( lsc.LanguageServerCompleter ):
   @abc.abstractmethod
+  def GetCompleterName( self ):
+    pass # pragma: no cover
+
+
+  @abc.abstractmethod
   def GetServerName( self ):
-    pass
+    pass # pragma: no cover
 
 
   @abc.abstractmethod
   def GetCommandLine( self ):
-    pass
+    pass # pragma: no cover
 
 
   def GetCustomSubcommands( self ):
@@ -72,20 +77,21 @@ class SimpleLSPCompleter( lsc.LanguageServerCompleter ):
       return self._connection
 
 
+  def ExtraDebugItems( self, request_data ):
+    return []
+
+
   def DebugInfo( self, request_data ):
     with self._server_state_mutex:
+      extras = self.CommonDebugItems() + self.ExtraDebugItems( request_data )
       server = responses.DebugInfoServer( name = self.GetServerName(),
                                           handle = self._server_handle,
                                           executable = self.GetCommandLine(),
                                           logfiles = [ self._stderr_file ],
-                                          extras = self.CommonDebugItems() )
+                                          extras = extras )
 
-    return responses.BuildDebugInfoResponse( name = self.Language(),
+    return responses.BuildDebugInfoResponse( name = self.GetCompleterName(),
                                              servers = [ server ] )
-
-
-  def Language( self ):
-    return self.GetServerName()
 
 
   def ServerIsHealthy( self ):
