@@ -347,6 +347,25 @@ def Definition( request_id, request_data ):
                        BuildTextDocumentPositionParams( request_data ) )
 
 
+def Declaration( request_id, request_data ):
+  return BuildRequest( request_id,
+                       'textDocument/declaration',
+                       BuildTextDocumentPositionParams( request_data ) )
+
+
+def TypeDefinition( request_id, request_data ):
+  return BuildRequest( request_id,
+                       'textDocument/typeDefinition',
+                       BuildTextDocumentPositionParams( request_data ) )
+
+
+
+def Implementation( request_id, request_data ):
+  return BuildRequest( request_id,
+                       'textDocument/implementation',
+                       BuildTextDocumentPositionParams( request_data ) )
+
+
 def CodeAction( request_id, request_data, best_match_range, diagnostics ):
   return BuildRequest( request_id, 'textDocument/codeAction', {
     'textDocument': {

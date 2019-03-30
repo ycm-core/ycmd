@@ -48,53 +48,55 @@ CONNECTION_TIMEOUT         = 5
 # Size of the notification ring buffer
 MAX_QUEUED_MESSAGES = 250
 
+PROVIDERS_MAP = {
+  'definitionProvider': (
+    lambda self, request_data, args: self.GoTo( request_data, [ 'Definition' ] )
+  ),
+  'declarationProvider': (
+    lambda self, request_data, args: self.GoTo( request_data,
+                                                [ 'Declaration' ] )
+  ),
+  ( 'definitionProvider', 'declarationProvider' ): (
+    lambda self, request_data, args: self.GoTo( request_data,
+                                                [ 'Definition',
+                                                  'Declaration' ] )
+  ),
+  'typeDefinitionProvider': (
+    lambda self, request_data, args: self.GoTo( request_data,
+                                                [ 'TypeDefinition' ] )
+  ),
+  'implementationProvider': (
+    lambda self, request_data, args: self.GoTo( request_data,
+                                                [ 'Implementation' ] )
+  ),
+  'referencesProvider': (
+    lambda self, request_data, args: self.GoTo( request_data,
+                                                [ 'References' ] )
+  ),
+  'renameProvider': (
+    lambda self, request_data, args: self.RefactorRename( request_data, args )
+  ),
+  'documentFormattingProvider': (
+    lambda self, request_data, args: self.Format( request_data )
+  )
+}
+
+# Each command is mapped to a list of providers. This allows a command to use
+# another provider if the LSP server doesn't support the main one. For instance,
+# GoToDeclaration is mapped to the same provider as GoToDefinition if there is
+# no declaration provider. A tuple of providers is also allowed for commands
+# like GoTo where it's convenient to jump to the declaration if already on the
+# definition and vice versa.
 DEFAULT_SUBCOMMANDS_MAP = {
-  'GoToDefinition': {
-    'checker': lambda caps: caps.get( 'definitionProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.GoToDeclaration( request_data )
-    ),
-  },
-  'GoToDeclaration': {
-    'checker': lambda caps: caps.get( 'definitionProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.GoToDeclaration( request_data )
-    ),
-  },
-  'GoTo': {
-    'checker': lambda caps: caps.get( 'definitionProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.GoToDeclaration( request_data )
-    ),
-  },
-  'GoToImprecise': {
-    'checker': lambda caps: caps.get( 'definitionProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.GoToDeclaration( request_data )
-    ),
-  },
-  'GoToReferences': {
-    'checker': lambda caps: caps.get( 'referencesProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.GoToReferences( request_data )
-    ),
-  },
-  'RefactorRename': {
-    # This can be boolean | RenameOptions. But either way a simple if
-    # works (i.e. if RenameOptions is supplied and nonempty, then boom we have
-    # truthiness).
-    'checker': lambda caps: caps.get( 'renameProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.RefactorRename( request_data,
-                                                            args )
-    ),
-  },
-  'Format': {
-    'checker': lambda caps: caps.get( 'documentFormattingProvider', False ),
-    'handler': (
-      lambda self, request_data, args: self.Format( request_data )
-    ),
-  }
+  'GoToDefinition':     [ 'definitionProvider' ],
+  'GoToDeclaration':    [ 'declarationProvider', 'definitionProvider' ],
+  'GoTo':               [ ( 'definitionProvider', 'declarationProvider' ),
+                          'definitionProvider' ],
+  'GoToType':           [ 'typeDefinitionProvider' ],
+  'GoToImplementation': [ 'implementationProvider' ],
+  'GoToReferences':     [ 'referencesProvider' ],
+  'RefactorRename':     [ 'renameProvider' ],
+  'Format':             [ 'documentFormattingProvider' ]
 }
 
 
@@ -1043,22 +1045,34 @@ class LanguageServerCompleter( Completer ):
     return self._DiscoverSubcommandSupport( commands )
 
 
-  def _DiscoverSubcommandSupport( self, commands ):
+  def _GetSubcommandProvider( self, provider_list ):
     if not self._server_capabilities:
       LOGGER.warning( "Can't determine subcommands: not initialized yet" )
       capabilities = {}
     else:
       capabilities = self._server_capabilities
 
+    for providers in provider_list:
+      if isinstance( providers, tuple ):
+        if all( capabilities.get( provider ) for provider in providers ):
+          return providers
+      if capabilities.get( providers ):
+        return providers
+    return None
+
+
+  def _DiscoverSubcommandSupport( self, commands ):
     subcommands_map = {}
     for command, handler in iteritems( commands ):
-      if isinstance( handler, dict ):
-        if handler[ 'checker' ]( capabilities ):
-          LOGGER.info( 'Found support for command %s in %s',
+      if isinstance( handler, list ):
+        provider = self._GetSubcommandProvider( handler )
+        if provider:
+          LOGGER.info( 'Found %s support for command %s in %s',
+                        provider,
                         command,
                         self.Language() )
 
-          subcommands_map[ command ] = handler[ 'handler' ]
+          subcommands_map[ command ] = PROVIDERS_MAP[ provider ]
         else:
           LOGGER.info( 'No support for %s command in server for %s',
                         command,
@@ -1615,48 +1629,39 @@ class LanguageServerCompleter( Completer ):
     raise RuntimeError( NO_HOVER_INFORMATION )
 
 
-  def GoToDeclaration( self, request_data ):
-    """Issues the definition request and returns the result as a GoTo
-    response."""
-    if not self.ServerIsReady():
-      raise RuntimeError( 'Server is initializing. Please wait.' )
-
-    self._UpdateServerWithFileContents( request_data )
-
+  def _GoToRequest( self, request_data, handler ):
     request_id = self.GetConnection().NextRequestId()
-    response = self.GetConnection().GetResponse(
+    result = self.GetConnection().GetResponse(
       request_id,
-      lsp.Definition( request_id, request_data ),
-      REQUEST_TIMEOUT_COMMAND )
-
-    if isinstance( response[ 'result' ], list ):
-      return _LocationListToGoTo( request_data, response )
-    elif response[ 'result' ]:
-      position = response[ 'result' ]
-      try:
-        return responses.BuildGoToResponseFromLocation(
-          *_PositionToLocationAndDescription( request_data, position ) )
-      except KeyError:
-        raise RuntimeError( 'Cannot jump to location' )
-    else:
+      getattr( lsp, handler )( request_id, request_data ),
+      REQUEST_TIMEOUT_COMMAND )[ 'result' ]
+    if not result:
       raise RuntimeError( 'Cannot jump to location' )
+    if not isinstance( result, list ):
+      return [ result ]
+    return result
 
 
-  def GoToReferences( self, request_data ):
-    """Issues the references request and returns the result as a GoTo
-    response."""
+  def GoTo( self, request_data, handlers ):
+    """Issues a GoTo request for each handler in |handlers| until it returns
+    multiple locations or a location the cursor does not belong since the user
+    wants to jump somewhere else. If that's the last handler, the location is
+    returned anyway."""
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
 
-    request_id = self.GetConnection().NextRequestId()
-    response = self.GetConnection().GetResponse(
-      request_id,
-      lsp.References( request_id, request_data ),
-      REQUEST_TIMEOUT_COMMAND )
+    if len( handlers ) == 1:
+      result = self._GoToRequest( request_data, handlers[ 0 ] )
+    else:
+      for handler in handlers:
+        result = self._GoToRequest( request_data, handler )
+        if len( result ) > 1 or not _CursorInsideLocation( request_data,
+                                                           result[ 0 ] ):
+          break
 
-    return _LocationListToGoTo( request_data, response )
+    return _LocationListToGoTo( request_data, result )
 
 
   def GetCodeActions( self, request_data, args ):
@@ -2048,24 +2053,17 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
   return start_codepoint
 
 
-def _LocationListToGoTo( request_data, response ):
+def _LocationListToGoTo( request_data, positions ):
   """Convert a LSP list of locations to a ycmd GoTo response."""
-  if not response:
-    raise RuntimeError( 'Cannot jump to location' )
-
   try:
-    if len( response[ 'result' ] ) > 1:
-      positions = response[ 'result' ]
+    if len( positions ) > 1:
       return [
         responses.BuildGoToResponseFromLocation(
-          *_PositionToLocationAndDescription( request_data,
-                                              position ) )
+          *_PositionToLocationAndDescription( request_data, position ) )
         for position in positions
       ]
-    else:
-      position = response[ 'result' ][ 0 ]
-      return responses.BuildGoToResponseFromLocation(
-        *_PositionToLocationAndDescription( request_data, position ) )
+    return responses.BuildGoToResponseFromLocation(
+      *_PositionToLocationAndDescription( request_data, positions[ 0 ] ) )
   except ( IndexError, KeyError ):
     raise RuntimeError( 'Cannot jump to location' )
 
@@ -2092,28 +2090,63 @@ def _PositionToLocationAndDescription( request_data, position ):
                                        position[ 'range' ][ 'start' ] )
 
 
-def _BuildLocationAndDescription( filename, file_contents, loc ):
+def _LspToYcmdLocation( file_contents, location ):
+  """Converts a LSP location to a ycmd one. Returns a tuple of (
+     - the contents of the line of |location|
+     - the line number of |location|
+     - the byte offset converted from the UTF-16 offset of |location|
+  )"""
+  line_num = location[ 'line' ] + 1
+  try:
+    line_value = file_contents[ location[ 'line' ] ]
+    return line_value, line_num, utils.CodepointOffsetToByteOffset(
+      line_value,
+      lsp.UTF16CodeUnitsToCodepoints( line_value,
+                                      location[ 'character' ] + 1 ) )
+  except IndexError:
+    # This can happen when there are stale diagnostics in OnFileReadyToParse,
+    # just return the value as-is.
+    return '', line_num, location[ 'character' ] + 1
+
+
+def _CursorInsideLocation( request_data, location ):
+  try:
+    filepath = lsp.UriToFilePath( location[ 'uri' ] )
+  except lsp.InvalidUriException:
+    LOGGER.debug( 'Invalid URI, assume cursor is not inside the location' )
+    return False
+
+  if request_data[ 'filepath' ] != filepath:
+    return False
+
+  line = request_data[ 'line_num' ]
+  column = request_data[ 'column_num' ]
+  file_contents = GetFileLines( request_data, filepath )
+  lsp_range = location[ 'range' ]
+
+  _, start_line, start_column = _LspToYcmdLocation( file_contents,
+                                                    lsp_range[ 'start' ] )
+  if ( line < start_line or
+       ( line == start_line and column < start_column ) ):
+    return False
+
+  _, end_line, end_column = _LspToYcmdLocation( file_contents,
+                                                lsp_range[ 'end' ] )
+  if ( line > end_line or
+       ( line == end_line and column > end_column ) ):
+    return False
+
+  return True
+
+
+def _BuildLocationAndDescription( filename, file_contents, location ):
   """Returns a tuple of (
     - ycmd Location for the supplied filename and LSP location
     - contents of the line at that location
   )
   Importantly, converts from LSP Unicode offset to ycmd byte offset."""
-
-  try:
-    line_value = file_contents[ loc[ 'line' ] ]
-    column = utils.CodepointOffsetToByteOffset(
-      line_value,
-      lsp.UTF16CodeUnitsToCodepoints( line_value, loc[ 'character' ] + 1 ) )
-  except IndexError:
-    # This can happen when there are stale diagnostics in OnFileReadyToParse,
-    # just return the value as-is.
-    line_value = ""
-    column = loc[ 'character' ] + 1
-
-  return ( responses.Location( loc[ 'line' ] + 1,
-                               column,
-                               filename = filename ),
-           line_value )
+  line_value, line, column = _LspToYcmdLocation( file_contents, location )
+  return responses.Location( line, column, filename = filename ), line_value
 
 
 def _BuildRange( contents, filename, r ):

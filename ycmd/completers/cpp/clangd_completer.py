@@ -252,8 +252,15 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       'GetTypeImprecise': (
         lambda self, request_data, args: self.GetType( request_data )
       ),
+      # NOTE: these two commands are only kept for backward compatibility with
+      # the libclang completer.
+      'GoToImprecise': (
+        lambda self, request_data, args: self.GoTo( request_data,
+                                                    [ 'Definition' ] )
+      ),
       'GoToInclude': (
-        lambda self, request_data, args: self.GoToDeclaration( request_data )
+        lambda self, request_data, args: self.GoTo( request_data,
+                                                    [ 'Definition' ] )
       ),
       'RestartServer': (
         lambda self, request_data, args: self._RestartServer( request_data )

@@ -73,7 +73,9 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GoTo',
                  'GetDoc',
                  'GetType',
+                 'GoToImplementation',
                  'GoToReferences',
+                 'GoToType',
                  'OpenProject',
                  'OrganizeImports',
                  'RefactorRename',
@@ -1447,11 +1449,11 @@ def Subcommands_GoTo_test():
     # Member function local variable
     { 'request': { 'line': 28, 'col': 5, 'filepath': filepath },
       'response': { 'line_num': 27, 'column_num': 18, 'filepath': filepath },
-      'description': 'GoTo works for memeber local variable' },
+      'description': 'GoTo works for member local variable' },
     # Member variable
     { 'request': { 'line': 22, 'col': 7, 'filepath': filepath },
       'response': { 'line_num': 8, 'column_num': 16, 'filepath': filepath },
-      'description': 'GoTo works for memeber variable' },
+      'description': 'GoTo works for member variable' },
     # Method
     { 'request': { 'line': 28, 'col': 7, 'filepath': filepath },
       'response': { 'line_num': 21, 'column_num': 16, 'filepath': filepath },
@@ -1496,6 +1498,70 @@ def Subcommands_GoTo_test():
               test[ 'request' ][ 'col' ],
               command,
               has_entries( test[ 'response' ] ) )
+
+
+def Subcommands_GoToType_test():
+  launcher_file = PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'TestLauncher.java' )
+  tset_file = PathToTestFile( 'simple_eclipse_project',
+                              'src',
+                              'com',
+                              'youcompleteme',
+                              'testing',
+                              'Tset.java' )
+
+  tests = [
+    # Member function local variable
+    { 'request': { 'line': 28, 'col': 5, 'filepath': launcher_file },
+      'response': { 'line_num': 6, 'column_num': 7, 'filepath': launcher_file },
+      'description': 'GoToType works for member local variable' },
+    # Member variable
+    { 'request': { 'line': 22, 'col': 7, 'filepath': launcher_file },
+      'response': { 'line_num': 6, 'column_num': 14, 'filepath': tset_file },
+      'description': 'GoToType works for member variable' },
+  ]
+
+  for test in tests:
+    yield ( RunGoToTest,
+            test[ 'description' ],
+            test[ 'request' ][ 'filepath' ],
+            test[ 'request' ][ 'line' ],
+            test[ 'request' ][ 'col' ],
+            'GoToType',
+            has_entries( test[ 'response' ] ) )
+
+
+def Subcommands_GoToImplementation_test():
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestLauncher.java' )
+
+  tests = [
+    # Interface
+    { 'request': { 'line': 17, 'col': 25, 'filepath': filepath },
+      'response': { 'line_num': 28, 'column_num': 16, 'filepath': filepath },
+      'description': 'GoToImplementation on interface '
+                     'jumps to its implementation' },
+    # Interface reference
+    { 'request': { 'line': 21, 'col': 30, 'filepath': filepath },
+      'response': { 'line_num': 28, 'column_num': 16, 'filepath': filepath },
+      'description': 'GoToImplementation on interface reference '
+                     'jumpts to its implementation' },
+  ]
+
+  for test in tests:
+    yield ( RunGoToTest,
+            test[ 'description' ],
+            test[ 'request' ][ 'filepath' ],
+            test[ 'request' ][ 'line' ],
+            test[ 'request' ][ 'col' ],
+            'GoToImplementation',
+            has_entries( test[ 'response' ] ) )
 
 
 @WithRetry
