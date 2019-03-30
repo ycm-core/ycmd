@@ -1332,6 +1332,11 @@ class LanguageServerCompleter( Completer ):
   def _UpdateDirtyFilesUnderLock( self, request_data ):
     for file_name, file_data in iteritems( request_data[ 'file_data' ] ):
       if not self._AnySupportedFileType( file_data[ 'filetypes' ] ):
+        LOGGER.debug( 'Not updating file %s, it is not a supported filetype: '
+                       '%s not in %s',
+                       file_name,
+                       file_data[ 'filetypes' ],
+                       self.SupportedFiletypes() )
         continue
 
       file_state = self._server_file_state[ file_name ]

@@ -65,16 +65,23 @@ def RunFlake8():
   subprocess.check_call( args )
 
 
+# Newer completers follow a standard convention of:
+#  - build: --<completer>-completer
+#  - test directory: ycmd/tests/<completer>
+#  - no aliases.
+SIMPLE_COMPLETERS = [
+  'clangd',
+]
+
+# More complex or legacy cases can specify all of:
+#  - build: flags to add to build.py to include this completer
+#  - test: flags to add to run_tests.py when _not_ testing this completer
+#  - aliases?: list of completer aliases for the --completers option
 COMPLETERS = {
   'cfamily': {
     'build': [ '--clang-completer' ],
     'test': [ '--exclude-dir=ycmd/tests/clang' ],
     'aliases': [ 'c', 'cpp', 'c++', 'objc', 'clang', ]
-  },
-  'clangd': {
-    'build': [ '--clangd-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/clangd' ],
-    'aliases': []
   },
   'cs': {
     'build': [ '--cs-completer' ],
@@ -113,6 +120,13 @@ COMPLETERS = {
     'aliases': [ 'jdt' ],
   },
 }
+
+# Add in the simple completers
+for completer in SIMPLE_COMPLETERS:
+  COMPLETERS[ completer ] = {
+    'build': [ '--{}-completer'.format( completer ) ],
+    'test': [ '--exclude-dir=ycmd/tests/{}'.format( completer ) ],
+  }
 
 
 def CompleterType( value ):

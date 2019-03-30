@@ -138,6 +138,17 @@ def OpenForStdHandle( filepath ):
   return open( filepath, mode = 'w', buffering = 1 )
 
 
+def MakeSafeFileNameString( s ):
+  """Return a representation of |s| that is safe for use in a file name.
+  Explicitly, returns s converted to lowercase with all non alphanumeric
+  characters replaced with '_'."""
+  def is_ascii( c ):
+    return ord( c ) < 128
+
+  return "".join( c if c.isalnum() and is_ascii( c ) else '_'
+                  for c in ToUnicode( s ).lower() )
+
+
 def CreateLogfile( prefix = '' ):
   with tempfile.NamedTemporaryFile( prefix = prefix,
                                     suffix = '.log',
