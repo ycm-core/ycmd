@@ -24,7 +24,7 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import all_of, assert_that, has_item, has_items
+from hamcrest import all_of, assert_that, has_items
 
 from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
@@ -33,7 +33,7 @@ from ycmd.utils import ReadFile
 
 @SharedYcmd
 def GetCompletions_Basic_test( app ):
-  filepath = PathToTestFile( 'test.go' )
+  filepath = PathToTestFile( 'td', 'test.go' )
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'go',
                                   contents = ReadFile( filepath ),
@@ -46,50 +46,21 @@ def GetCompletions_Basic_test( app ):
   assert_that( results,
                all_of(
                  has_items(
-                   CompletionEntryMatcher( 'Llongfile', 'untyped int' ),
-                   CompletionEntryMatcher( 'Logger', 'struct' ) ) ) )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'go',
-                                  contents = ReadFile( filepath ),
-                                  force_semantic = True,
-                                  line_num = 9,
-                                  column_num = 11 )
-
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results,
-               all_of(
-                 has_item(
-                   CompletionEntryMatcher( 'Logger', 'struct' ) ) ) )
-
-
-@SharedYcmd
-def GetCompletions_Unicode_InLine_test( app ):
-  filepath = PathToTestFile( 'unicode.go' )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'go',
-                                  contents = ReadFile( filepath ),
-                                  line_num = 7,
-                                  column_num = 37 )
-
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results,
-               has_items( CompletionEntryMatcher( u'Printf' ),
-                          CompletionEntryMatcher( u'Fprintf' ),
-                          CompletionEntryMatcher( u'Sprintf' ) ) )
-
-
-@SharedYcmd
-def GetCompletions_Unicode_Identifier_test( app ):
-  filepath = PathToTestFile( 'unicode.go' )
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'go',
-                                  contents = ReadFile( filepath ),
-                                  line_num = 13,
-                                  column_num = 13 )
-
-  results = app.post_json( '/completions',
-                           completion_data ).json[ 'completions' ]
-  assert_that( results,
-               has_items( CompletionEntryMatcher( u'Unicøde' ) ) )
+                   CompletionEntryMatcher(
+                     'Llongfile',
+                     'int',
+                     {
+                       'detailed_info': 'Llongfile = 8\n\n',
+                       'menu_text': 'Llongfile = 8',
+                       'kind': 'Constant',
+                     }
+                   ),
+                   CompletionEntryMatcher(
+                     'Logger',
+                     'struct{...}',
+                     {
+                       'detailed_info': 'Logger\n\n',
+                       'menu_text': 'Logger',
+                       'kind': 'Struct',
+                     }
+                   ) ) ) )
