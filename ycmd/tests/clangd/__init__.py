@@ -1,4 +1,4 @@
-# Copyright (C) 2018 ycmd contributors
+# Copyright (C) 2018-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -100,13 +100,12 @@ def IsolatedYcmd( custom_options = {} ):
   def Decorator( test ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
-      with IgnoreExtraConfOutsideTestsFolder():
-        with IsolatedApp( custom_options ) as app:
-          clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-          try:
-            test( app, *args, **kwargs )
-          finally:
-            StopCompleterServer( app, 'cpp' )
+      with IsolatedApp( custom_options ) as app:
+        clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
+        try:
+          test( app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'cpp' )
     return Wrapper
   return Decorator
 
