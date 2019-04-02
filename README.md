@@ -246,6 +246,52 @@ the `kwargs` dictionary and are common to all completers:
 
 The return value is a dictionary whose content depends on the completer.
 
+#### LSP based completers
+
+LSP servers often support user configuration via the initialise request. These
+are usually presented as options in the UI. Ycmd supports this using the
+`.ycm_extra_conf.py` by allowing the user to specify the exact dictionary of
+settings that are passed in the server initialise message. These options are
+returned from `Settings` under the `ls` key. The python dictionary is converted
+to json and included verbatim in the LSP initialize request. In order to
+determine the set of options for a server, consult the server's documentation or
+`package.json` file.
+
+Example of LSP configuration:
+```python
+def Settings( **kwargs ):
+  if kwargs[ 'language' ] == 'java':
+    return { 'ls': { 'java.rename.enabled' : False } }
+```
+
+In addition, ycmd can use any language server, given a file type and a command
+line. A user option `language_server` can be used to plug in a LSP server ycmd
+wouldn't usually know about. The value is a list of dictionaries containing:
+
+- `name`: the string representing the name of the server
+- `cmdline`: the list representing the command line to execute the server
+- `filetypes`: list of supported filetypes.
+
+```json
+{
+  "language_server": [ {
+    "name": "gopls",
+    "cmdline": [ "/path/to/gopls", "-rpc.trace" ],
+    "filetypes": [ "go" ]
+  } ]
+}
+```
+
+When plugging in a completer in this way, the `kwargs[ 'language' ]` will be set
+to the value of the `name` key, i.e. `gopls` in the above example.
+
+LSP completers currecntly supported without `language_server`:
+
+- Java
+- Rust
+- Go
+- C-family
+
 ##### C-family settings
 
 The `Settings` function is called by the C-family completer to get the compiler

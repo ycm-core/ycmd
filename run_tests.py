@@ -275,7 +275,55 @@ def NoseTests( parsed_args, extra_nosetests_args ):
                          env=env )
 
 
+# On Windows, distutils.spawn.find_executable only works for .exe files
+# but .bat and .cmd files are also executables, so we use our own
+# implementation.
+def FindExecutable( executable ):
+  # Executable extensions used on Windows
+  WIN_EXECUTABLE_EXTS = [ '.exe', '.bat', '.cmd' ]
+
+  paths = os.environ[ 'PATH' ].split( os.pathsep )
+  base, extension = os.path.splitext( executable )
+
+  if OnWindows() and extension.lower() not in WIN_EXECUTABLE_EXTS:
+    extensions = WIN_EXECUTABLE_EXTS
+  else:
+    extensions = [ '' ]
+
+  for extension in extensions:
+    executable_name = executable + extension
+    if not os.path.isfile( executable_name ):
+      for path in paths:
+        executable_path = os.path.join( path, executable_name )
+        if os.path.isfile( executable_path ):
+          return executable_path
+    else:
+      return executable_name
+  return None
+
+
+def FindExecutableOrDie( executable, message ):
+  path = FindExecutable( executable )
+
+  if not path:
+    sys.exit( "ERROR: Unable to find executable '{0}'. {1}".format(
+      executable,
+      message ) )
+
+  return path
+
+
+def SetUpGenericLSPCompleter():
+  old_cwd = os.getcwd()
+  os.chdir( os.path.join( DIR_OF_THIRD_PARTY, 'generic_server' ) )
+  npm = FindExecutableOrDie( 'npm', 'npm is required to'
+                                    'run GenericLSPCompleter tests.' )
+  subprocess.check_call( [ npm, 'install' ] )
+  os.chdir( old_cwd )
+
+
 def Main():
+  SetUpGenericLSPCompleter()
   parsed_args, nosetests_args = ParseArguments()
   if parsed_args.dump_path:
     print( os.environ[ 'PYTHONPATH' ] )

@@ -27,7 +27,17 @@ from future.utils import itervalues
 from importlib import import_module
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
+from ycmd.completers.language_server import generic_lsp_completer
 from ycmd.utils import LOGGER
+
+
+def _GetGenericLSPCompleter( user_options, filetype ):
+  custom_lsp = user_options[ 'language_server' ]
+  for server_settings in custom_lsp:
+    if filetype in server_settings[ 'filetypes' ]:
+      return generic_lsp_completer.GenericLSPCompleter(
+          user_options, server_settings )
+  return None
 
 
 class ServerState( object ):
@@ -64,6 +74,9 @@ class ServerState( object ):
         completer = module.GetCompleter( self._user_options )
       except ImportError:
         completer = None
+
+      if completer is None:
+        completer = _GetGenericLSPCompleter( self._user_options, filetype )
 
       supported_filetypes = { filetype }
       if completer:

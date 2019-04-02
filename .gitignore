@@ -81,3 +81,7 @@ third_party/clangd
 third_party/rls
 ycmd/tests/rust/testdata/common/target
 ycmd/tests/rust/testdata/formatting/target
+
+# generic LSP
+third_party/generic_server/node_modules
+third_party/generic_server/package-lock.json
