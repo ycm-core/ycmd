@@ -682,9 +682,7 @@ def ImportAndCheckCore_Missing_test():
 
 def ImportAndCheckCore_Python2_test():
   import_exception_messages = [
-    # Raised on Linux and OS X with Python 3.4.
-    'dynamic module does not define init function (PyInit_ycm_core).',
-    # Raised on Linux and OS X with Python 3.5.
+    # Raised on Linux and OS X.
     'dynamic module does not define module export function (PyInit_ycm_core).',
     # Raised on Windows.
     'Module use of python27.dll conflicts with this version of Python.'
@@ -704,7 +702,6 @@ def ImportAndCheckCore_Python3_test():
     # Raised on Linux and OS X.
     'dynamic module does not define init function (initycm_core).',
     # Raised on Windows.
-    'Module use of python34.dll conflicts with this version of Python.',
     'Module use of python35.dll conflicts with this version of Python.'
   ]
 
