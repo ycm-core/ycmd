@@ -74,7 +74,7 @@ def StartJavaCompleterServerInDirectory( app, directory ):
                    filepath = os.path.join( directory, 'test.java' ),
                    event_name = 'FileReadyToParse',
                    filetype = 'java' ) )
-  WaitUntilCompleterServerReady( shared_app, 'java', SERVER_STARTUP_TIMEOUT )
+  WaitUntilCompleterServerReady( app, 'java', SERVER_STARTUP_TIMEOUT )
 
 
 def SharedYcmd( test ):
