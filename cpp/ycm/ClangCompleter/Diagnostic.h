@@ -22,6 +22,10 @@
 
 namespace YouCompleteMe {
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 enum class DiagnosticKind {
   INFORMATION = 0,
   ERROR,

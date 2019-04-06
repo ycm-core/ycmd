@@ -18,12 +18,10 @@
 #ifndef IDENTIFIERDATABASE_H_ZESX3CVR
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
-#include <map>
+#include <absl/container/flat_hash_map.h>
 #include <memory>
 #include <mutex>
-#include <set>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace YouCompleteMe {
@@ -34,11 +32,11 @@ class CandidateRepository;
 
 
 // filepath -> identifiers
-using FilepathToIdentifiers = std::map< std::string,
+using FilepathToIdentifiers = absl::flat_hash_map< std::string,
                                         std::vector< std::string > >;
 
 // filetype -> (filepath -> identifiers)
-using FiletypeIdentifierMap = std::map< std::string, FilepathToIdentifiers >;
+using FiletypeIdentifierMap = absl::flat_hash_map< std::string, FilepathToIdentifiers >;
 
 
 // This class stores the database of identifiers the identifier completer has
@@ -84,12 +82,12 @@ private:
 
   // filepath -> *( *candidate )
   using FilepathToCandidates =
-    std::unordered_map < std::string,
-                         std::shared_ptr< std::set< const Candidate * > > >;
+    absl::flat_hash_map < std::string,
+                          std::unique_ptr< std::set< const Candidate * > > >;
 
   // filetype -> *( filepath -> *( *candidate ) )
   using FiletypeCandidateMap =
-    std::unordered_map < std::string, std::shared_ptr< FilepathToCandidates > >;
+    absl::flat_hash_map < std::string, FilepathToCandidates >;
 
 
   CandidateRepository &candidate_repository_;

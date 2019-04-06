@@ -51,3 +51,6 @@
 [submodule "third_party/idna"]
 	path = third_party/requests_deps/idna
 	url = https://github.com/kjd/idna
+[submodule "cpp/abseil"]
+	path = cpp/abseil
+	url = https://github.com/abseil/abseil-cpp

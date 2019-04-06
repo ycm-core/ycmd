@@ -29,6 +29,10 @@ project( YouCompleteMe )
 file( STRINGS "../CORE_VERSION" YCMD_CORE_VERSION )
 add_definitions( -DYCMD_CORE_VERSION=${YCMD_CORE_VERSION} )
 
+if ( MSVC )
+  add_definitions( -DNOMINMAX )
+endif()
+
 option( UNIVERSAL "Build universal mac binary" OFF )
 
 if ( CMAKE_GENERATOR STREQUAL Xcode )
@@ -188,7 +192,7 @@ endif()
 # number of sections that an object file can hold. This is needed for storing
 # the Unicode table. Also, force MSVC to treat source files as UTF-8 encoded.
 if ( MSVC )
-  add_definitions( /DUNICODE /D_UNICODE /Zc:wchar_t- )
+  add_definitions( /DUNICODE /D_UNICODE )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj /utf-8" )
 endif()
 
@@ -265,4 +269,8 @@ if (NOT USE_SYSTEM_BOOST)
   add_subdirectory( BoostParts )
 endif()
 
+# This adds -fPIC to everything
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+
+add_subdirectory( abseil )
 add_subdirectory( ycm )

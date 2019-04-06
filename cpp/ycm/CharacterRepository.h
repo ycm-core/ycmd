@@ -20,16 +20,16 @@
 
 #include "Character.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace YouCompleteMe {
 
-using CharacterHolder = std::unordered_map< std::string,
-                                            std::unique_ptr< Character > >;
+using CharacterHolder = absl::flat_hash_map< std::string,
+                                             std::unique_ptr< Character > >;
 
 
 // This singleton stores already built Character objects for character strings

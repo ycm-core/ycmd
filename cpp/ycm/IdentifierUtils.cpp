@@ -18,8 +18,8 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <boost/regex.hpp>
-#include <unordered_map>
 
 namespace YouCompleteMe {
 
@@ -58,9 +58,9 @@ struct StringEqualityComparer :
 //   :e $VIMRUNTIME/filetype.vim
 // This is a map of const char* and not std::string to prevent issues with
 // static initialization.
-const std::unordered_map < const char *,
+const absl::flat_hash_map < const char *,
       const char *,
-      std::hash< std::string >,
+      absl::Hash< std::string >,
       StringEqualityComparer > LANG_TO_FILETYPE = {
         { "Ada"                 , "ada"                 },
         { "AnsiblePlaybook"     , "ansibleplaybook"     },

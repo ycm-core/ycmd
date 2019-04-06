@@ -23,7 +23,7 @@
 #include "Result.h"
 #include "Utils.h"
 
-#include <unordered_set>
+#include <absl/container/flat_hash_set.h>
 
 namespace YouCompleteMe {
 
@@ -79,12 +79,12 @@ void IdentifierDatabase::ResultsForQueryAndType(
   }
   Word query_object( std::move( query ) );
 
-  std::unordered_set< const Candidate * > seen_candidates;
+  absl::flat_hash_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
 
   {
     std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
-    for ( const auto& path_and_candidates : *it->second ) {
+    for ( const auto& path_and_candidates : it->second ) {
       for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) ) {
           continue;
@@ -114,20 +114,25 @@ void IdentifierDatabase::ResultsForQueryAndType(
 std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
   const std::string &filetype,
   const std::string &filepath ) {
-  std::shared_ptr< FilepathToCandidates > &path_to_candidates =
-    filetype_candidate_map_[ filetype ];
+  auto it = filetype_candidate_map_.find( filetype );
+  if ( it == filetype_candidate_map_.end() ) {
+    it = filetype_candidate_map_.emplace( filetype, FilepathToCandidates{} ).first;
+  }
+  auto& path_to_candidates = it->second;
 
-  if ( !path_to_candidates ) {
-    path_to_candidates.reset( new FilepathToCandidates() );
+  if ( path_to_candidates.empty() ) {
+    auto ptc_it = path_to_candidates.emplace( filepath, new std::set< const Candidate * >{} ).first;
+    return *ptc_it->second;
   }
 
-  std::shared_ptr< std::set< const Candidate * > > &candidates =
-    ( *path_to_candidates )[ filepath ];
+  std::unique_ptr< std::set< const Candidate * > > &candidates =
+    path_to_candidates[ filepath ];
 
   if ( !candidates ) {
     candidates.reset( new std::set< const Candidate * >() );
   }
 
+  it->second = std::move( path_to_candidates );
   return *candidates;
 }
 

@@ -200,6 +200,7 @@ else()
 endif()
 
 set( PYBIND11_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pybind11" )
+set( ABSEIL_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/abseil" )
 
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
@@ -237,6 +238,7 @@ include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIR}
   ${PYBIND11_INCLUDES_DIR}
+  ${ABSEIL_INCLUDES_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
   )
@@ -332,6 +334,9 @@ endif()
 
 target_link_libraries( ${PROJECT_NAME}
                        ${Boost_LIBRARIES}
+                       absl::hash
+                       absl::flat_hash_map
+                       absl::flat_hash_set
                        ${PYTHON_LIBRARIES}
                        ${LIBCLANG_TARGET}
                        ${EXTRA_LIBS}

@@ -60,6 +60,8 @@ flags = [
 '-x',
 'c++',
 '-isystem',
+'cpp/abseil',
+'-isystem',
 'cpp/pybind11',
 '-isystem',
 'cpp/whereami',

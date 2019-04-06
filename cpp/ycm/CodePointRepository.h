@@ -20,16 +20,16 @@
 
 #include "CodePoint.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace YouCompleteMe {
 
-using CodePointHolder = std::unordered_map< std::string,
-                                            std::unique_ptr< CodePoint > >;
+using CodePointHolder = absl::flat_hash_map< std::string,
+                                             std::unique_ptr< CodePoint > >;
 
 
 // This singleton stores already built CodePoint objects for code points that
