@@ -62,7 +62,7 @@ def StartJavaScriptCompleterServerInDirectory( app, directory ):
                    filepath = os.path.join( directory, 'test.js' ),
                    event_name = 'FileReadyToParse',
                    filetype = 'javascript' ) )
-  WaitUntilCompleterServerReady( shared_app, 'javascript' )
+  WaitUntilCompleterServerReady( app, 'javascript' )
 
 
 def SharedYcmd( test ):
