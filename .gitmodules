@@ -24,6 +24,9 @@
 [submodule "third_party/jedi"]
 	path = third_party/jedi_deps/jedi
 	url = https://github.com/davidhalter/jedi
+[submodule "third_party/jedi_deps/numpydoc"]
+	path = third_party/jedi_deps/numpydoc
+	url = https://github.com/numpy/numpydoc
 [submodule "third_party/parso"]
 	path = third_party/jedi_deps/parso
 	url = https://github.com/davidhalter/parso
