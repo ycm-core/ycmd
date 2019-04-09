@@ -67,8 +67,8 @@ void Candidate::ComputeTextIsLowercase() {
 }
 
 
-Candidate::Candidate( const std::string &text )
-  : Word( text ) {
+Candidate::Candidate( std::string&& text )
+  : Word( std::move( text ) ) {
   ComputeCaseSwappedText();
   ComputeWordBoundaryChars();
   ComputeTextIsLowercase();

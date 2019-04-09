@@ -41,7 +41,7 @@ TEST_F( CandidateRepositoryTest, Basic ) {
   inputs.push_back( "foobar" );
 
   std::vector< const Candidate * > candidates =
-    repo_.GetCandidatesForStrings( inputs );
+    repo_.GetCandidatesForStrings( std::move( inputs ) );
 
   EXPECT_EQ( "foobar", candidates[ 0 ]->Text() );
 }
@@ -53,7 +53,7 @@ TEST_F( CandidateRepositoryTest, TooLongCandidateSkipped ) {
   inputs.push_back( std::string( 80, 'b' ) );  // this one is *just* right
 
   std::vector< const Candidate * > candidates =
-    repo_.GetCandidatesForStrings( inputs );
+    repo_.GetCandidatesForStrings( std::move( inputs ) );
 
   EXPECT_EQ( "", candidates[ 0 ]->Text() );
   EXPECT_EQ( 'b', candidates[ 1 ]->Text()[ 0 ] );
@@ -66,7 +66,7 @@ TEST_F( CandidateRepositoryTest, UnicodeCandidates ) {
   inputs.push_back( "fooδιακός" );
 
   std::vector< const Candidate * > candidates =
-    repo_.GetCandidatesForStrings( inputs );
+    repo_.GetCandidatesForStrings( std::move( inputs ) );
 
   EXPECT_EQ( "fooδιακριτικός", candidates[ 0 ]->Text() );
   EXPECT_EQ( "fooδιακός", candidates[ 1 ]->Text() );
@@ -78,7 +78,7 @@ TEST_F( CandidateRepositoryTest, NonPrintableCandidates ) {
   inputs.push_back( "\x01\x05\x0a\x15" );
 
   std::vector< const Candidate * > candidates =
-    repo_.GetCandidatesForStrings( inputs );
+    repo_.GetCandidatesForStrings( std::move( inputs ) );
 
   EXPECT_EQ( "\x01\x05\x0a\x15", candidates[ 0 ]->Text() );
 }

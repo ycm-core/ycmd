@@ -277,7 +277,6 @@ TEST( IdentifierCompleterTest, LotOfCandidates ) {
     }
     candidates.insert( candidates.begin(), candidate );
   }
-
   IdentifierCompleter completer( candidates );
 
   std::reverse( candidates.begin(), candidates.end() );

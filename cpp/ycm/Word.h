@@ -36,10 +36,12 @@ using Bitset = std::bitset< NUM_BYTES >;
 // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
 class Word {
 public:
-  YCM_EXPORT explicit Word( const std::string &text );
+  YCM_EXPORT explicit Word( std::string&& text );
   // Make class noncopyable
   Word( const Word& ) = delete;
   Word& operator=( const Word& ) = delete;
+  Word( Word&& ) = default;
+  Word& operator=( Word&& ) = default;
   ~Word() = default;
 
   inline const CharacterSequence &Characters() const {

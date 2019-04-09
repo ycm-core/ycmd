@@ -30,10 +30,12 @@ class Result;
 class Candidate : public Word {
 public:
 
-  YCM_EXPORT explicit Candidate( const std::string &text );
+  YCM_EXPORT explicit Candidate( std::string&& text );
   // Make class noncopyable
   Candidate( const Candidate& ) = delete;
   Candidate& operator=( const Candidate& ) = delete;
+  Candidate( Candidate&& ) = default;
+  Candidate& operator=( Candidate&& ) = default;
   ~Candidate() = default;
 
   inline const std::string &CaseSwappedText() const {

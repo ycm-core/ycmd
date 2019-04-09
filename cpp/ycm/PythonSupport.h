@@ -31,7 +31,7 @@ namespace YouCompleteMe {
 YCM_EXPORT pybind11::list FilterAndSortCandidates(
   const pybind11::list &candidates,
   const std::string &candidate_property,
-  const std::string &query,
+  std::string query,
   const size_t max_candidates = 0 );
 
 /// Given a Python object that's supposed to be "string-like", returns a UTF-8

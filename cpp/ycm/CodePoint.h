@@ -87,6 +87,8 @@ public:
   // Make class noncopyable
   CodePoint( const CodePoint& ) = delete;
   CodePoint& operator=( const CodePoint& ) = delete;
+  CodePoint( CodePoint&& ) = default;
+  CodePoint& operator=( CodePoint&& ) = default;
 
   inline std::string Normal() const {
     return normal_;
@@ -125,7 +127,7 @@ public:
   };
 
 private:
-  explicit CodePoint( const RawCodePoint &code_point );
+  explicit CodePoint( RawCodePoint&& code_point );
 
   std::string normal_;
   std::string folded_case_;

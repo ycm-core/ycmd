@@ -58,7 +58,8 @@ TEST_P( WordTest, BreakIntoCharacters ) {
     characters.push_back( character );
   }
   EXPECT_THAT( Word( word_.text_ ).Characters(),
-               ContainsPointees( repo_.GetCharacters( characters ) ) );
+               ContainsPointees( repo_.GetCharacters(
+                                 std::move( characters ) ) ) );
 }
 
 

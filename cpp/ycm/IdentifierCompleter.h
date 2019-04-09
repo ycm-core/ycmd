@@ -37,21 +37,21 @@ public:
 
   YCM_EXPORT IdentifierCompleter() = default;
   YCM_EXPORT explicit IdentifierCompleter(
-    const std::vector< std::string > &candidates );
+    std::vector< std::string > candidates );
   YCM_EXPORT IdentifierCompleter(
-                       const std::vector< std::string > &candidates,
+                       std::vector< std::string >&& candidates,
                        const std::string &filetype,
                        const std::string &filepath );
 
   void AddIdentifiersToDatabase(
-    const std::vector< std::string > &new_candidates,
+    std::vector< std::string > new_candidates,
     const std::string &filetype,
     const std::string &filepath );
 
   // Same as above, but clears all identifiers stored for the file before adding
   // new identifiers.
   void ClearForFileAndAddIdentifiersToDatabase(
-    const std::vector< std::string > &new_candidates,
+    std::vector< std::string > new_candidates,
     const std::string &filetype,
     const std::string &filepath );
 
@@ -66,11 +66,11 @@ public:
 
   // Only provided for tests!
   YCM_EXPORT std::vector< std::string > CandidatesForQuery(
-    const std::string &query,
+    std::string&& query,
     const size_t max_candidates = 0 ) const;
 
   YCM_EXPORT std::vector< std::string > CandidatesForQueryAndType(
-    const std::string &query,
+    std::string query,
     const std::string &filetype,
     const size_t max_candidates = 0 ) const;
 
