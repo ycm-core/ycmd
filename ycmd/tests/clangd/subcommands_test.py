@@ -247,7 +247,7 @@ def RunGetSemanticTest( app, filepath, filetype, test, command,
   request.update( args )
 
   test = { 'request': request, 'route': '/run_completer_command' }
-  response = RunAfterInitialized( app, test )
+  response = RunAfterInitialized( app, test )[ 'message' ]
 
   pprint( response )
   if matches_regexp:
