@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-# Copyright (C) 2015-2018 ycmd contributors
+# Copyright (C) 2015-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -387,3 +387,26 @@ def GetCompletions_PythonInterpreter_ExtraConfData_test( app ):
       'errors': empty()
     } )
   )
+
+
+@SharedYcmd
+def GetCompletions_NumpyDoc_test( app ):
+  RunTest( app, {
+    'description': 'Type hinting is working with docstrings '
+                   'in the Numpy format',
+    'request': {
+      'filetype'  : 'python',
+      'filepath'  : PathToTestFile( 'numpy_docstring.py' ),
+      'line_num'  : 11,
+      'column_num': 18
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains(
+          CompletionEntryMatcher( 'SomeMethod', 'def SomeMethod()' ),
+        ),
+        'errors': empty()
+      } )
+    }
+  } )
