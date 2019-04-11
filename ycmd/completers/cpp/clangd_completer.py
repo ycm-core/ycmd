@@ -229,7 +229,8 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def GetType( self, request_data ):
-    return self.GetHoverResponse( request_data )[ 'value' ]
+    hover_response = self.GetHoverResponse( request_data )
+    return responses.BuildDisplayMessageResponse( hover_response[ 'value' ] )
 
 
   def _GetTriggerCharacters( self, server_trigger_characters ):
