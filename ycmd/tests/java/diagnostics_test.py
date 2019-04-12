@@ -23,9 +23,9 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import time
 import json
 from future.utils import iterkeys
+import time
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
@@ -142,22 +142,22 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'ERROR',
-      'text': 'ISR cannot be resolved to a variable',
+      'text': 'ISRD cannot be resolved to a variable',
       'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
-      'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
+      'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 16 ) ),
       'ranges': contains( RangeMatcher( TestWidgetImpl,
                                         ( 34, 12 ),
-                                        ( 34, 15 ) ) ),
+                                        ( 34, 16 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'ERROR',
       'text': 'Syntax error, insert ";" to complete BlockStatements',
       'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
-      'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
+      'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 16 ) ),
       'ranges': contains( RangeMatcher( TestWidgetImpl,
                                         ( 34, 12 ),
-                                        ( 34, 15 ) ) ),
+                                        ( 34, 16 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -367,7 +367,8 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
           json.dumps( sorted( iterkeys( seen ) ), indent=2 ),
           json.dumps( [ x for x in to_see if x not in seen ], indent=2 ) ) )
 
-      # Eventually PollForMessages will throw a timeout exception and we'll fail
+      # Eventually PollForMessages will throw
+      # a timeout exception and we'll fail
       # if we don't see all of the expected diags
   except PollForMessagesTimeoutException as e:
     raise AssertionError(

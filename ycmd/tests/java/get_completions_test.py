@@ -360,23 +360,8 @@ def GetCompletions_WithFixIt_test( app ):
                   ChunkMatcher( 'Wibble',
                                 LocationMatcher( filepath, 19, 15 ),
                                 LocationMatcher( filepath, 19, 21 ) ),
-                  # When doing an import, eclipse likes to add two newlines
-                  # after the package. I suppose this is config in real eclipse,
-                  # but there's no mechanism to configure this in jdtl afaik.
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
                   # OK, so it inserts the import
-                  ChunkMatcher( 'import com.test.wobble.Wibble;',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  # More newlines. Who doesn't like newlines?!
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  # For reasons known only to the eclipse JDT developers, it
-                  # seems to want to delete the lines after the package first.
-                  ChunkMatcher( '',
+                  ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                                 LocationMatcher( filepath, 1, 18 ),
                                 LocationMatcher( filepath, 3, 1 ) ),
                 ),
@@ -657,29 +642,22 @@ def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
       'filetype'  : 'java',
       'filepath'  : filepath,
       'line_num'  : 34,
-      'column_num': 15,
+      'column_num': 16,
       'force_semantic': True,
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': has_item(
-          CompletionEntryMatcher( 'InputStreamReader', None, {
+          CompletionEntryMatcher( 'InitialServerRequestDispatcher', None, {
             'kind': 'Class',
-            'menu_text': 'InputStreamReader - java.io',
+            'menu_text': 'InitialServerRequestDispatcher '
+                         '- com.sun.corba.se.spi.protocol',
             'extra_data': has_entries( {
               'fixits': contains( has_entries( {
                 'chunks': contains(
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  ChunkMatcher( 'import java.io.InputStreamReader;',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  ChunkMatcher( '',
+                  ChunkMatcher( '\n\nimport com.sun.corba.se.spi.protocol'
+                                '.InitialServerRequestDispatcher;\n\n',
                                 LocationMatcher( filepath, 1, 18 ),
                                 LocationMatcher( filepath, 3, 1 ) ),
                 ),
