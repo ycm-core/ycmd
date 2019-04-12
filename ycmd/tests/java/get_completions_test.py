@@ -93,23 +93,23 @@ def RunTest( app, test ):
 
 
 PUBLIC_OBJECT_METHODS = [
-  CompletionEntryMatcher( 'equals', 'Object', { 'kind': 'Function' } ),
-  CompletionEntryMatcher( 'getClass', 'Object', { 'kind': 'Function' } ),
-  CompletionEntryMatcher( 'hashCode', 'Object', { 'kind': 'Function' } ),
-  CompletionEntryMatcher( 'notify', 'Object', { 'kind': 'Function' } ),
-  CompletionEntryMatcher( 'notifyAll', 'Object', { 'kind': 'Function' } ),
-  CompletionEntryMatcher( 'toString', 'Object', { 'kind': 'Function' } ),
+  CompletionEntryMatcher( 'equals', 'Object', { 'kind': 'Method' } ),
+  CompletionEntryMatcher( 'getClass', 'Object', { 'kind': 'Method' } ),
+  CompletionEntryMatcher( 'hashCode', 'Object', { 'kind': 'Method' } ),
+  CompletionEntryMatcher( 'notify', 'Object', { 'kind': 'Method' } ),
+  CompletionEntryMatcher( 'notifyAll', 'Object', { 'kind': 'Method' } ),
+  CompletionEntryMatcher( 'toString', 'Object', { 'kind': 'Method' } ),
   CompletionEntryMatcher( 'wait', 'Object', {
     'menu_text': matches_regexp( 'wait\\(long .*, int .*\\) : void' ),
-    'kind': 'Function',
+    'kind': 'Method',
   } ),
   CompletionEntryMatcher( 'wait', 'Object', {
     'menu_text': matches_regexp( 'wait\\(long .*\\) : void' ),
-    'kind': 'Function',
+    'kind': 'Method',
   } ),
   CompletionEntryMatcher( 'wait', 'Object', {
     'menu_text': 'wait() : void',
-    'kind': 'Function',
+    'kind': 'Method',
   } ),
 ]
 
@@ -191,7 +191,7 @@ def GetCompletions_DetailFromCache_test( app ):
         'filetype'  : 'java',
         'filepath'  : ProjectPath( 'TestLauncher.java' ),
         'line_num'  : 32,
-        'column_num': 12,
+        'column_num': 15,
       },
       'expect': {
         'response': requests.codes.ok,
@@ -200,7 +200,7 @@ def GetCompletions_DetailFromCache_test( app ):
           'completions': has_item(
             CompletionEntryMatcher( 'doSomethingVaguelyUseful',
                                     'AbstractTestWidget', {
-                                      'kind': 'Function',
+                                      'kind': 'Method',
                                       'menu_text':
                                         'doSomethingVaguelyUseful() : void',
                                     } )
@@ -288,11 +288,11 @@ def GetCompletions_Import_Classes_test( app ):
           } ),
           CompletionEntryMatcher( 'Waggle;', None, {
             'menu_text': 'Waggle - com.test.wobble',
-            'kind': 'Class',
+            'kind': 'Interface',
           } ),
           CompletionEntryMatcher( 'Wibble;', None, {
             'menu_text': 'Wibble - com.test.wobble',
-            'kind': 'Class',
+            'kind': 'Enum',
           } ),
         ),
         'errors': empty(),
@@ -350,33 +350,15 @@ def GetCompletions_WithFixIt_test( app ):
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'CUTHBERT', 'com.test.wobble.Wibble',
           {
-            'kind': 'Field',
+            'kind': 'EnumMember',
             'extra_data': has_entries( {
               'fixits': contains( has_entries( {
                 'chunks': contains(
-                  # For some reason, jdtls feels it's OK to replace the text
-                  # before the cursor. Perhaps it does this to canonicalise the
-                  # path ?
                   ChunkMatcher( 'Wibble',
                                 LocationMatcher( filepath, 19, 15 ),
                                 LocationMatcher( filepath, 19, 21 ) ),
-                  # When doing an import, eclipse likes to add two newlines
-                  # after the package. I suppose this is config in real eclipse,
-                  # but there's no mechanism to configure this in jdtl afaik.
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
                   # OK, so it inserts the import
-                  ChunkMatcher( 'import com.test.wobble.Wibble;',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  # More newlines. Who doesn't like newlines?!
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  # For reasons known only to the eclipse JDT developers, it
-                  # seems to want to delete the lines after the package first.
-                  ChunkMatcher( '',
+                  ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                                 LocationMatcher( filepath, 1, 18 ),
                                 LocationMatcher( filepath, 3, 1 ) ),
                 ),
@@ -657,29 +639,22 @@ def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
       'filetype'  : 'java',
       'filepath'  : filepath,
       'line_num'  : 34,
-      'column_num': 15,
+      'column_num': 16,
       'force_semantic': True,
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': has_item(
-          CompletionEntryMatcher( 'InputStreamReader', None, {
-            'kind': 'Class',
-            'menu_text': 'InputStreamReader - java.io',
+          CompletionEntryMatcher( 'InitialServerRequestDispatcher', None, {
+            'kind': 'Interface',
+            'menu_text': 'InitialServerRequestDispatcher '
+                         '- com.sun.corba.se.spi.protocol',
             'extra_data': has_entries( {
               'fixits': contains( has_entries( {
                 'chunks': contains(
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  ChunkMatcher( 'import java.io.InputStreamReader;',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  ChunkMatcher( '\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 1, 18 ) ),
-                  ChunkMatcher( '',
+                  ChunkMatcher( '\n\nimport com.sun.corba.se.spi.protocol'
+                                '.InitialServerRequestDispatcher;\n\n',
                                 LocationMatcher( filepath, 1, 18 ),
                                 LocationMatcher( filepath, 3, 1 ) ),
                 ),
@@ -713,7 +688,7 @@ def GetCompletions_UseServerTriggers_test( app ):
         'completion_start_column': 4,
         'completions': has_item(
           CompletionEntryMatcher( 'Override', None, {
-            'kind': 'Class',
+            'kind': 'Interface',
             'menu_text': 'Override - java.lang',
           } )
         )
