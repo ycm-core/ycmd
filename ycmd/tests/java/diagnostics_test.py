@@ -23,9 +23,9 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-import time
 import json
 from future.utils import iterkeys
+import time
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
@@ -66,7 +66,6 @@ def ProjectPath( *args ):
                          *args )
 
 
-ProjectRoot = PathToTestFile( DEFAULT_PROJECT_DIR )
 InternalNonProjectFile = PathToTestFile( DEFAULT_PROJECT_DIR, 'test.java' )
 TestFactory = ProjectPath( 'TestFactory.java' )
 TestLauncher = ProjectPath( 'TestLauncher.java' )
@@ -78,7 +77,6 @@ youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
-  ProjectRoot: [],
   InternalNonProjectFile: [],
   TestFactory: contains_inanyorder(
     has_entries( {
@@ -354,7 +352,8 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
           json.dumps( sorted( iterkeys( seen ) ), indent=2 ),
           json.dumps( [ x for x in to_see if x not in seen ], indent=2 ) ) )
 
-      # Eventually PollForMessages will throw a timeout exception and we'll fail
+      # Eventually PollForMessages will throw
+      # a timeout exception and we'll fail
       # if we don't see all of the expected diags
   except PollForMessagesTimeoutException as e:
     raise AssertionError(

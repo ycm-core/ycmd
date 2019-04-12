@@ -24,18 +24,59 @@ from builtins import *  # noqa
 
 from hamcrest import ( assert_that,
                        contains,
+                       equal_to,
                        has_entry,
                        has_entries,
                        instance_of )
 
+from mock import patch
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
                               PathToTestFile,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory )
-from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.test_utils import BuildRequest, WaitUntilCompleterServerReady
+from ycmd.completers.language_server import language_server_completer as lsc
 
 import json
+import threading
+
+
+@IsolatedYcmd()
+def DebugInfo_HandleNotificationInPollThread_Throw_test( app ):
+  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
+  StartJavaCompleterServerInDirectory( app, filepath )
+
+  # This mock will be called in the message pump thread, so syncronize the
+  # result (thrown) using an Event
+  thrown = threading.Event()
+
+  def ThrowOnLogMessage( msg ):
+    thrown.set()
+    raise RuntimeError( "ThrowOnLogMessage" )
+
+  with patch.object( lsc.LanguageServerCompleter,
+                     'HandleNotificationInPollThread',
+                     side_effect = ThrowOnLogMessage ):
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filepath = filepath,
+        filetype = 'java',
+        command_arguments = [ 'RestartServer' ],
+      ),
+    )
+
+    # Ensure that we still process and handle messages even though a
+    # message-pump-thread-handler raised an error.
+    WaitUntilCompleterServerReady( app, 'java' )
+
+  # Prove that the exception was thrown.
+  assert_that( thrown.is_set(), equal_to( True ) )
 
 
 @SharedYcmd

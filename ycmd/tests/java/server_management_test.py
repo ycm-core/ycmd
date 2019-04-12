@@ -39,6 +39,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
                                     ErrorMatcher,
                                     MockProcessTerminationTimingOut,
+                                    NoWinPy2,
                                     TemporaryTestDir,
                                     WaitUntilCompleterServerReady )
 from ycmd import utils, handlers
@@ -245,6 +246,7 @@ def ServerManagement_ProjectDetection_MavenParent_Submodule_test( app ):
                CompleterProjectDirectoryMatcher( project ) )
 
 
+@NoWinPy2
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
 @IsolatedYcmd()
 def ServerManagement_ProjectDetection_GradleParent_test( app ):
@@ -264,6 +266,7 @@ def ServerManagement_ProjectDetection_GradleParent_test( app ):
                CompleterProjectDirectoryMatcher( project ) )
 
 
+@NoWinPy2
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
 @IsolatedYcmd()
@@ -302,6 +305,7 @@ def ServerManagement_OpenProject_AbsolutePath_test( app ):
                CompleterProjectDirectoryMatcher( maven_project ) )
 
 
+@NoWinPy2
 @TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
 @TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
 @IsolatedYcmd()

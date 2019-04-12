@@ -68,6 +68,7 @@ ClangOnly = skipIf( not ycm_core.HasClangSupport(),
                     'Only when Clang support available' )
 MacOnly = skipIf( not OnMac(), 'Mac only' )
 UnixOnly = skipIf( OnWindows(), 'Unix only' )
+NoWinPy2 = skipIf( OnWindows() and PY2, 'Disabled on Windows with Python 2' )
 
 
 def BuildRequest( **kwargs ):
@@ -449,7 +450,7 @@ class PollForMessagesTimeoutException( Exception ):
   pass
 
 
-def PollForMessages( app, request_data, timeout = 30 ):
+def PollForMessages( app, request_data, timeout = 60 ):
   expiration = time.time() + timeout
   while True:
     if time.time() > expiration:
