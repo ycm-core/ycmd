@@ -7,13 +7,13 @@
 
 //  Library home page: http://www.boost.org/libs/filesystem
 
-//--------------------------------------------------------------------------------------// 
+//--------------------------------------------------------------------------------------//
 
 // define BOOST_FILESYSTEM_SOURCE so that <boost/filesystem/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE 
+#define BOOST_FILESYSTEM_SOURCE
 
-#ifndef BOOST_SYSTEM_NO_DEPRECATED 
+#ifndef BOOST_SYSTEM_NO_DEPRECATED
 # define BOOST_SYSTEM_NO_DEPRECATED
 #endif
 

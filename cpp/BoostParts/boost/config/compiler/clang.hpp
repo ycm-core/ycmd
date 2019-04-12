@@ -57,6 +57,14 @@
 #  define BOOST_HAS_STDINT_H
 #endif
 
+#if (defined(linux) || defined(__linux) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__)) && !defined(_CRAYC)
+#if (__clang_major__ >= 4) && defined(__has_include)
+#if __has_include(<quadmath.h>)
+#  define BOOST_HAS_FLOAT128
+#endif
+#endif
+#endif
+
 
 #define BOOST_HAS_NRVO
 

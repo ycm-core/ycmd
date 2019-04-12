@@ -81,43 +81,59 @@ inline char const * system_category_message_win32( int ev, char * buffer, std::s
         return buffer;
     }
 
-#if defined(__GNUC__)
-# define BOOST_SYSTEM_ALLOCA __builtin_alloca
-#else
-# define BOOST_SYSTEM_ALLOCA _alloca
+    boost::winapi::UINT_ const code_page = message_cp_win32();
+
+    int r = 0;
+
+#if !defined(BOOST_NO_ANSI_APIS)
+
+    if( code_page == boost::winapi::CP_ACP_ )
+    {
+        using namespace boost::winapi;
+
+        DWORD_ retval = boost::winapi::FormatMessageA(
+            FORMAT_MESSAGE_FROM_SYSTEM_ | FORMAT_MESSAGE_IGNORE_INSERTS_,
+            NULL,
+            ev,
+            MAKELANGID_( LANG_NEUTRAL_, SUBLANG_DEFAULT_ ), // Default language
+            buffer,
+            static_cast<DWORD_>( len ),
+            NULL
+        );
+
+        r = static_cast<int>( retval );
+    }
+    else
+
 #endif
 
-    wchar_t * wbuffer = static_cast<wchar_t*>( BOOST_SYSTEM_ALLOCA( len * sizeof( wchar_t ) ) );
-
-#undef BOOST_SYSTEM_ALLOCA
-
-    using namespace boost::winapi;
-
-    DWORD_ retval = boost::winapi::FormatMessageW(
-        FORMAT_MESSAGE_FROM_SYSTEM_ | FORMAT_MESSAGE_IGNORE_INSERTS_,
-        NULL,
-        ev,
-        MAKELANGID_( LANG_NEUTRAL_, SUBLANG_DEFAULT_ ), // Default language
-        wbuffer,
-        static_cast<DWORD_>( len ),
-        NULL
-    );
-
-    if( retval == 0 )
     {
-        return unknown_message_win32( ev, buffer, len );
+        using namespace boost::winapi;
+
+        wchar_t * lpMsgBuf = 0;
+
+        DWORD_ retval = boost::winapi::FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER_ | FORMAT_MESSAGE_FROM_SYSTEM_ | FORMAT_MESSAGE_IGNORE_INSERTS_,
+            NULL,
+            ev,
+            MAKELANGID_( LANG_NEUTRAL_, SUBLANG_DEFAULT_ ), // Default language
+            (LPWSTR_) &lpMsgBuf,
+            0,
+            NULL
+        );
+
+        if( retval != 0 )
+        {
+            r = boost::winapi::WideCharToMultiByte( code_page, 0, lpMsgBuf, -1, buffer, static_cast<int>( len ), NULL, NULL );
+            boost::winapi::LocalFree( lpMsgBuf );
+            if ( r != 0 ) --r; // exclude null terminator
+        }
     }
-
-    UINT_ const code_page = message_cp_win32();
-
-    int r = boost::winapi::WideCharToMultiByte( code_page, 0, wbuffer, -1, buffer, static_cast<int>( len ), NULL, NULL );
 
     if( r == 0 )
     {
         return unknown_message_win32( ev, buffer, len );
     }
-
-    --r; // exclude null terminator
 
     while( r > 0 && ( buffer[ r-1 ] == '\n' || buffer[ r-1 ] == '\r' ) )
     {

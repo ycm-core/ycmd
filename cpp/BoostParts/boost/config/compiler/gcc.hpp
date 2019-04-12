@@ -232,7 +232,6 @@
 // C++0x features in 4.6.n and later
 //
 #if (BOOST_GCC_VERSION < 40600) || !defined(BOOST_GCC_CXX11)
-#define BOOST_NO_CXX11_CONSTEXPR
 #define BOOST_NO_CXX11_DEFAULTED_MOVES
 #define BOOST_NO_CXX11_NOEXCEPT
 #define BOOST_NO_CXX11_NULLPTR
@@ -243,6 +242,9 @@
 // C++0x features in 4.7.n and later
 //
 #if (BOOST_GCC_VERSION < 40700) || !defined(BOOST_GCC_CXX11)
+// Note that while constexpr is partly supported in gcc-4.6 it's a 
+// pre-std version with several bugs:
+#  define BOOST_NO_CXX11_CONSTEXPR
 #  define BOOST_NO_CXX11_FINAL
 #  define BOOST_NO_CXX11_TEMPLATE_ALIASES
 #  define BOOST_NO_CXX11_USER_DEFINED_LITERALS

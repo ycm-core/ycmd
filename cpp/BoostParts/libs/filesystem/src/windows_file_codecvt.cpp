@@ -7,13 +7,13 @@
 
 //  Library home page: http://www.boost.org/libs/filesystem
 
-//--------------------------------------------------------------------------------------// 
+//--------------------------------------------------------------------------------------//
 
 // define BOOST_FILESYSTEM_SOURCE so that <boost/system/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE 
+#define BOOST_FILESYSTEM_SOURCE
 
-#ifndef BOOST_SYSTEM_NO_DEPRECATED 
+#ifndef BOOST_SYSTEM_NO_DEPRECATED
 # define BOOST_SYSTEM_NO_DEPRECATED
 #endif
 
@@ -32,7 +32,7 @@
 #include <windows.h>
 
   std::codecvt_base::result windows_file_codecvt::do_in(
-    std::mbstate_t &, 
+    std::mbstate_t &,
     const char* from, const char* from_end, const char*& from_next,
     wchar_t* to, wchar_t* to_end, wchar_t*& to_next) const
   {
@@ -40,7 +40,7 @@
 
     int count;
     if ((count = ::MultiByteToWideChar(codepage, MB_PRECOMPOSED, from,
-      static_cast<int>(from_end - from), to, static_cast<int>(to_end - to))) == 0) 
+      static_cast<int>(from_end - from), to, static_cast<int>(to_end - to))) == 0)
     {
       return error;  // conversion failed
     }
