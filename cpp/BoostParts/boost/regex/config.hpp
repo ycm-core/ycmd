@@ -120,6 +120,10 @@
 #ifdef __clang__
 #  define BOOST_REGEX_NO_EXTERNAL_TEMPLATES
 #endif
+#ifdef __CYGWIN__
+/* We get multiply defined symbols without this: */
+#  define BOOST_REGEX_NO_EXTERNAL_TEMPLATES
+#endif
 
 /*
  * If there isn't good enough wide character support then there will

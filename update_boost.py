@@ -40,7 +40,6 @@ BOOST_URL = (
 BOOST_NAME = 'boost_{version_}'
 BOOST_ARCHIVE = BOOST_NAME + '.tar.bz2'
 BOOST_PARTS = [
-  'boost/algorithm/string/regex.hpp',
   'boost/filesystem.hpp',
   'boost/regex.hpp'
 ]

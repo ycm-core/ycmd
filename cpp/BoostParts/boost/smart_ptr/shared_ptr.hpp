@@ -797,7 +797,7 @@ public:
         return px == r.px && pn == r.pn;
     }
 
-    boost::detail::shared_count _internal_count() const BOOST_NOEXCEPT
+    boost::detail::shared_count _internal_count() const BOOST_SP_NOEXCEPT
     {
         return pn;
     }
@@ -1022,7 +1022,7 @@ private:
 
 public:
 
-    esft2_deleter_wrapper()
+    esft2_deleter_wrapper() BOOST_SP_NOEXCEPT
     {
     }
 

@@ -101,13 +101,13 @@ private:
 
 public:
 
-    explicit local_counted_impl( shared_count const& pn ): pn_( pn )
+    explicit local_counted_impl( shared_count const& pn ) BOOST_SP_NOEXCEPT: pn_( pn )
     {
     }
 
 #if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
 
-    explicit local_counted_impl( shared_count && pn ): pn_( std::move(pn) )
+    explicit local_counted_impl( shared_count && pn ) BOOST_SP_NOEXCEPT: pn_( std::move(pn) )
     {
     }
 

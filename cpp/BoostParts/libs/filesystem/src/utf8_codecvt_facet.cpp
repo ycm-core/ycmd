@@ -7,7 +7,7 @@
 // not casts. See ticket 5048
 #define _INCLUDE_STDCSOURCE_199901
 
-#ifndef BOOST_SYSTEM_NO_DEPRECATED 
+#ifndef BOOST_SYSTEM_NO_DEPRECATED
 # define BOOST_SYSTEM_NO_DEPRECATED
 #endif
 

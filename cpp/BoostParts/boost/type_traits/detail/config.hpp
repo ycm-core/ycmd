@@ -81,11 +81,18 @@
 //
 // Can we implement accurate is_function/is_member_function_pointer (post C++03)?
 //
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !BOOST_WORKAROUND(BOOST_GCC, < 40900)\
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !BOOST_WORKAROUND(BOOST_GCC, < 40805)\
       && !BOOST_WORKAROUND(BOOST_MSVC, < 1900) && !BOOST_WORKAROUND(__clang_major__, <= 4)
 #  define BOOST_TT_HAS_ASCCURATE_IS_FUNCTION
 #endif
 
+#if defined(_MSVC_LANG) && (_MSVC_LANG >= 201703) 
+#  define BOOST_TT_NO_DEDUCED_NOEXCEPT_PARAM
+#endif
+#if defined(__APPLE_CC__) && defined(__clang_major__) && (__clang_major__ == 9) && (__clang_minor__ == 0)
+#  define BOOST_TT_NO_DEDUCED_NOEXCEPT_PARAM
+#  define BOOST_TT_NO_NOEXCEPT_SEPARATE_TYPE
+#endif
 
 #endif // BOOST_TT_CONFIG_HPP_INCLUDED
 

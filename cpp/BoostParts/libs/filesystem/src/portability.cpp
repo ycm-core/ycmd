@@ -7,13 +7,13 @@
 
 //  See library home page at http://www.boost.org/libs/filesystem
 
-//--------------------------------------------------------------------------------------// 
+//--------------------------------------------------------------------------------------//
 
 // define BOOST_FILESYSTEM_SOURCE so that <boost/filesystem/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE 
+#define BOOST_FILESYSTEM_SOURCE
 
-#ifndef BOOST_SYSTEM_NO_DEPRECATED 
+#ifndef BOOST_SYSTEM_NO_DEPRECATED
 # define BOOST_SYSTEM_NO_DEPRECATED
 #endif
 
@@ -37,7 +37,7 @@ namespace
     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F"
     "<>:\"/\\|";
   // note that the terminating '\0' is part of the string - thus the size below
-  // is sizeof(invalid_chars) rather than sizeof(invalid_chars)-1.  I 
+  // is sizeof(invalid_chars) rather than sizeof(invalid_chars)-1.  I
   const std::string windows_invalid_chars(invalid_chars, sizeof(invalid_chars));
 
   const std::string valid_posix(
@@ -69,7 +69,7 @@ namespace boost
     BOOST_FILESYSTEM_DECL bool portable_posix_name(const std::string & name)
     {
       return name.size() != 0
-        && name.find_first_not_of(valid_posix) == std::string::npos;     
+        && name.find_first_not_of(valid_posix) == std::string::npos;
     }
 
     BOOST_FILESYSTEM_DECL bool windows_name(const std::string & name)

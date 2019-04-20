@@ -22,7 +22,6 @@
 #include "Utils.h"
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <memory>
 
