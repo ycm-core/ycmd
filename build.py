@@ -360,6 +360,10 @@ def GetGenerator( args ):
   if args.ninja:
     return 'Ninja'
   if OnWindows():
+    # The architecture must be specified through the -A option for the Visual
+    # Studio 16 generator.
+    if args.msvc == 16:
+      return 'Visual Studio 16'
     return 'Visual Studio {version}{arch}'.format(
         version = args.msvc, arch = ' Win64' if IS_64BIT else '' )
   return 'Unix Makefiles'
@@ -390,8 +394,8 @@ def ParseArguments():
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
-  parser.add_argument( '--msvc', type = int, choices = [ 14, 15 ],
-                       default = 15, help = 'Choose the Microsoft Visual '
+  parser.add_argument( '--msvc', type = int, choices = [ 14, 15, 16 ],
+                       default = 16, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--ninja', action = 'store_true',
                        help = 'Use Ninja build system.' )
@@ -469,7 +473,14 @@ def FindCmake():
 
 def GetCmakeCommonArgs( args ):
   cmake_args = [ '-G', GetGenerator( args ) ]
+
+  # Set the architecture for the Visual Studio 16 generator.
+  if OnWindows() and args.msvc == 16:
+    arch = 'x64' if IS_64BIT else 'Win32'
+    cmake_args.extend( [ '-A', arch ] )
+
   cmake_args.extend( CustomPythonCmakeArgs( args ) )
+
   return cmake_args
 
 
