@@ -26,35 +26,37 @@ namespace YouCompleteMe {
 
 
 IdentifierCompleter::IdentifierCompleter(
-  const std::vector< std::string > &candidates ) {
-  identifier_database_.AddIdentifiers( candidates, "", "" );
+  std::vector< std::string > candidates ) {
+  identifier_database_.AddIdentifiers( std::move( candidates ), "", "" );
 }
 
 
 IdentifierCompleter::IdentifierCompleter(
-  const std::vector< std::string > &candidates,
+  std::vector< std::string >&& candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  identifier_database_.AddIdentifiers( candidates, filetype, filepath );
+  identifier_database_.AddIdentifiers( std::move( candidates ),
+                                       filetype,
+                                       filepath );
 }
 
 
 void IdentifierCompleter::AddIdentifiersToDatabase(
-  const std::vector< std::string > &new_candidates,
+  std::vector< std::string > new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
-  identifier_database_.AddIdentifiers( new_candidates,
+  identifier_database_.AddIdentifiers( std::move( new_candidates ),
                                        filetype,
                                        filepath );
 }
 
 
 void IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase(
-  const std::vector< std::string > &new_candidates,
+  std::vector< std::string > new_candidates,
   const std::string &filetype,
   const std::string &filepath ) {
   identifier_database_.ClearCandidatesStoredForFile( filetype, filepath );
-  AddIdentifiersToDatabase( new_candidates, filetype, filepath );
+  AddIdentifiersToDatabase( std::move( new_candidates ), filetype, filepath );
 }
 
 
@@ -68,19 +70,19 @@ void IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles(
 
 
 std::vector< std::string > IdentifierCompleter::CandidatesForQuery(
-  const std::string &query,
+  std::string&& query,
   const size_t max_candidates ) const {
-  return CandidatesForQueryAndType( query, "", max_candidates );
+  return CandidatesForQueryAndType( std::move( query ), "", max_candidates );
 }
 
 
 std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
-  const std::string &query,
+  std::string query,
   const std::string &filetype,
   const size_t max_candidates ) const {
 
   std::vector< Result > results;
-  identifier_database_.ResultsForQueryAndType( query,
+  identifier_database_.ResultsForQueryAndType( std::move( query ),
                                                filetype,
                                                results,
                                                max_candidates );

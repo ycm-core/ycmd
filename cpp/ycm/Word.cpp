@@ -286,8 +286,8 @@ void Word::ComputeBytesPresent() {
 }
 
 
-Word::Word( const std::string &text )
-  : text_( text ) {
+Word::Word( std::string&& text )
+  : text_( std::move( text ) ) {
   BreakIntoCharacters();
   ComputeBytesPresent();
 }

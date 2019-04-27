@@ -50,7 +50,7 @@ public:
   size_t NumStoredCandidates();
 
   YCM_EXPORT std::vector< const Candidate * > GetCandidatesForStrings(
-    const std::vector< std::string > &strings );
+    std::vector< std::string >&& strings );
 
   // This should only be used to isolate tests and benchmarks.
   YCM_EXPORT void ClearCandidates();
@@ -61,8 +61,6 @@ private:
 
   const std::string &ValidatedCandidateText(
       const std::string &candidate_text );
-
-  const std::string empty_;
 
   // This data structure owns all the Candidate pointers
   CandidateHolder candidate_holder_;
