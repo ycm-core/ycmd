@@ -1,0 +1,157 @@
+jobs:
+- job: linux
+  displayName: 'Linux'
+  pool:
+    # List of available software on this image:
+    # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/linux/Ubuntu1604-README.md
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    matrix:
+      # Tests are failing on Python 2.7.0 with the exception
+      # "TypeError: argument can't be <type 'unicode'>"
+      'Python 2.7 without libclang completer':
+        YCM_PYTHON_VERSION: '2.7.1'
+        USE_CLANG_COMPLETER: false
+      'Python 2.7':
+        YCM_PYTHON_VERSION: '2.7.1'
+      'Python 3.5':
+        YCM_PYTHON_VERSION: '3.5.1'
+      'Python 3.5 using Clang compiler':
+        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_COMPILER: 'clang'
+      'C++ benchmark':
+        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_BENCHMARK: true
+        COVERAGE: false
+      'C++ linting':
+        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_CLANG_TIDY: true
+        COVERAGE: false
+    maxParallel: 6
+  variables:
+    COVERAGE: true
+  steps:
+  - checkout: self
+    submodules: recursive
+  - script: ./azure/linux/install_dependencies.sh
+    displayName: Install dependencies
+  - script: ./azure/run_tests.sh
+    displayName: Run tests
+    condition: and(succeeded(), and(ne(variables['YCM_BENCHMARK'], 'true'), ne(variables['YCM_CLANG_TIDY'], 'true')))
+  - script: ./azure/benchmark.sh
+    displayName: Benchmark
+    condition: and(succeeded(), eq(variables['YCM_BENCHMARK'], 'true'))
+  - script: ./azure/lint.sh
+    displayName: Lint
+    condition: and(succeeded(), eq(variables['YCM_CLANG_TIDY'], 'true'))
+  - script: ./azure/send_coverage.sh
+    displayName: Send coverage
+    condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN)
+      CODECOV_JOB_NAME: '$(Agent.JobName)'
+- job: macos
+  displayName: 'macOS'
+  pool:
+    # List of available software on this image:
+    # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/macos/macos-10.13-Readme.md
+    vmImage: 'macOS-10.13'
+  strategy:
+    matrix:
+      'Python 2.7':
+        # Prior versions fail to compile with error "ld: library not found for
+        # -lSystemStubs"
+        YCM_PYTHON_VERSION: '2.7.2'
+      'Python 3.5':
+        YCM_PYTHON_VERSION: '3.5.1'
+      'C++ benchmark':
+        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_BENCHMARK: true
+    maxParallel: 3
+  variables:
+    COVERAGE: true
+  steps:
+  - checkout: self
+    submodules: recursive
+  - script: ./azure/macos/install_dependencies.sh
+    displayName: Install dependencies
+  - script: ./azure/run_tests.sh
+    displayName: Run tests
+    condition: and(succeeded(), ne(variables['YCM_BENCHMARK'], 'true'))
+  - script: ./azure/benchmark.sh
+    displayName: Benchmark
+    condition: and(succeeded(), eq(variables['YCM_BENCHMARK'], 'true'))
+  - script: ./azure/send_coverage.sh
+    displayName: Send coverage
+    condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN)
+      CODECOV_JOB_NAME: '$(Agent.JobName)'
+- job: windows_msvc14
+  displayName: 'Windows Visual Studio 2015'
+  pool:
+    # List of available software on this image:
+    # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/win/Vs2015-Server2012R2-Readme.md
+    vmImage: 'vs2015-win2012r2'
+  strategy:
+    matrix:
+      'Python 3.7 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+  variables:
+    MSVC: 14
+    MSBUILD_PATH: 'C:\Program Files (x86)\MSBuild\14.0\Bin'
+    COVERAGE: true
+  steps:
+  - checkout: self
+    submodules: recursive
+  - script: azure\windows\install_dependencies.bat
+    displayName: Install dependencies
+  - script: azure\windows\run_tests.bat
+    displayName: Run tests
+    condition: and(succeeded(), ne(variables['YCM_BENCHMARK'], 'true'))
+  - script: azure\windows\send_coverage.bat
+    displayName: Send coverage
+    condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN)
+      CODECOV_JOB_NAME: '$(Agent.JobName)'
+- job: windows_msvc15
+  displayName: 'Windows Visual Studio 2017'
+  pool:
+    # List of available software on this image:
+    # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/win/Vs2017-Server2016-Readme.md
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      'Python 2.7 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/2.7.16/python-2.7.16.amd64.msi'
+      'Python 3.7 32-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3.exe'
+      'Python 3.7 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+      'C++ benchmark':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+        YCM_BENCHMARK: true
+        COVERAGE: false
+    maxParallel: 4
+  variables:
+    MSVC: 15
+    MSBUILD_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin'
+    COVERAGE: true
+  steps:
+  - checkout: self
+    submodules: recursive
+  - script: azure\windows\install_dependencies.bat
+    displayName: Install dependencies
+  - script: azure\windows\run_tests.bat
+    displayName: Run tests
+    condition: and(succeeded(), ne(variables['YCM_BENCHMARK'], 'true'))
+  - script: azure\windows\benchmark.bat
+    displayName: Benchmark
+    condition: and(succeeded(), eq(variables['YCM_BENCHMARK'], 'true'))
+  - script: azure\windows\send_coverage.bat
+    displayName: Send coverage
+    condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN)
+      CODECOV_JOB_NAME: '$(Agent.JobName)'
