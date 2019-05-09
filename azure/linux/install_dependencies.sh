@@ -6,8 +6,13 @@ set -e
 #
 
 if [ "${YCM_COMPILER}" == "clang" ]; then
-  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
-  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
+  sudo apt-get install clang-3.5
+  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-3.5 100
+  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-3.5 100
+else
+  sudo apt-get install gcc-4.8 g++-4.8
+  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-4.8 100
+  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-4.8 100
 fi
 
 if [ "${YCM_CLANG_TIDY}" ]; then
