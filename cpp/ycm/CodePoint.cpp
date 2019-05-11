@@ -92,15 +92,15 @@ CodePoint::CodePoint( const std::string &code_point )
 
 
 CodePoint::CodePoint( RawCodePoint&& code_point )
-  : normal_( std::move( code_point.normal ) ),
-    folded_case_( std::move( code_point.folded_case ) ),
-    swapped_case_( std::move( code_point.swapped_case ) ),
-    is_letter_( std::move( code_point.is_letter ) ),
-    is_punctuation_( std::move( code_point.is_punctuation ) ),
-    is_uppercase_( std::move( code_point.is_uppercase ) ),
-    break_property_( std::move(
-      static_cast< BreakProperty >( code_point.break_property ) ) ),
-    combining_class_( std::move( code_point.combining_class ) ) {
+  : normal_( code_point.normal ),
+    folded_case_( code_point.folded_case ),
+    swapped_case_( code_point.swapped_case ),
+    is_letter_( code_point.is_letter ),
+    is_punctuation_( code_point.is_punctuation ),
+    is_uppercase_( code_point.is_uppercase ),
+    break_property_(
+      static_cast< BreakProperty >( code_point.break_property ) ),
+    combining_class_( code_point.combining_class ) {
 }
 
 
