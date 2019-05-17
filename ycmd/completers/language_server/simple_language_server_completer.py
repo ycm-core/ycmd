@@ -178,7 +178,3 @@ class SimpleLSPCompleter( lsc.LanguageServerCompleter ):
     with self._server_state_mutex:
       self.Shutdown()
       self._StartAndInitializeServer( request_data )
-
-
-  def HandleServerCommand( self, request_data, command ):
-    return None

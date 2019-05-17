@@ -242,10 +242,6 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
   def GetCustomSubcommands( self ):
     return {
-      'FixIt': (
-        lambda self, request_data, args: self.GetCodeActions( request_data,
-                                                              args )
-      ),
       'GetType': (
         # In addition to type information we show declaration.
         lambda self, request_data, args: self.GetType( request_data )

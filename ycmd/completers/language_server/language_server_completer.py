@@ -74,6 +74,9 @@ PROVIDERS_MAP = {
     lambda self, request_data, args: self.GoTo( request_data,
                                                 [ 'References' ] )
   ),
+  'codeActionProvider': (
+    lambda self, request_data, args: self.GetCodeActions( request_data, args )
+  ),
   'renameProvider': (
     lambda self, request_data, args: self.RefactorRename( request_data, args )
   ),
@@ -97,6 +100,7 @@ DEFAULT_SUBCOMMANDS_MAP = {
   'GoToImplementation': [ 'implementationProvider' ],
   'GoToReferences':     [ 'referencesProvider' ],
   'RefactorRename':     [ 'renameProvider' ],
+  'FixIt':              [ 'codeActionProvider' ],
   'Format':             [ 'documentFormattingProvider' ]
 }
 
@@ -706,9 +710,9 @@ class LanguageServerCompleter( Completer ):
     pass # pragma: no cover
 
 
-  @abc.abstractmethod
   def HandleServerCommand( self, request_data, command ):
-    pass # pragma: no cover
+    raise RuntimeError( 'HandleServerCommand not '
+                        'implemented for the current filetype' )
 
 
   def __init__( self, user_options ):

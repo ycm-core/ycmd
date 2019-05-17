@@ -1252,3 +1252,27 @@ def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test():
                     uri_to_filepath:
       assert_that( completer.OnFileReadyToParse( request_data ), diagnostics )
       uri_to_filepath.assert_called()
+
+
+def LanguageServerCompleter_FixIt_NoHandleServerCommandImplemented_test():
+  completer = MockCompleter()
+
+  completer._server_capabilities = {
+    'codeActionProvider':     True
+  }
+
+  request_data = RequestWrap( BuildRequest() )
+
+  @patch.object( completer, 'ServerIsReady', return_value = True )
+  def Test( exception, message, *args ):
+    with patch.object( completer.GetConnection(),
+                       'GetResponse',
+                       side_effect = [ { 'result': [ 'whatever' ] } ] ):
+      assert_that(
+        calling( completer.OnUserCommand ).with_args( [ 'FixIt' ],
+                                                      request_data ),
+        raises( exception, message )
+      )
+
+  yield Test, RuntimeError, ( 'HandleServerCommand not '
+                              'implemented for the current filetype' )
