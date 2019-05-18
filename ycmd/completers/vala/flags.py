@@ -24,11 +24,8 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 import os
-import inspect
-import re
 from ycmd import extra_conf_store
 from ycmd.utils import ToUnicode
-from ycmd.responses import NoExtraConfDetected
 
 
 PATH_LONGFLAGS = [
@@ -40,7 +37,7 @@ PATH_LONGFLAGS = [
 ]
 
 EMPTY_FLAGS = {
-  'vala_flags': [],
+  'flags': [],
 }
 
 
@@ -88,15 +85,17 @@ class Flags( object ):
 
 
   def _GetFlagsFromExtraConf( self, module, filename, client_data ):
-    if module == None:
+    if module is None:
       return {
-        'vala_flags': []
+        'flags': []
       }
 
-    results = module.FlagsForFile( ToUnicode( filename ), client_data = client_data )
+    results = module.Settings( language = 'vala',
+                               filename = filename,
+                               client_data = client_data )
 
-    results[ 'vala_flags' ] = self._MakeRelativePathsInFlagsAbsolute(
-        results.get( 'vala_flags', [] ),
+    results[ 'flags' ] = self._MakeRelativePathsInFlagsAbsolute(
+        results.get( 'flags', [] ),
         results.get( 'include_paths_relative_to_dir' ) )
 
     return results
@@ -133,12 +132,9 @@ class Flags( object ):
 
           # Joined argument, e.g. --vapidir=/usr/share/vala/vapi
           if flag.startswith( path_flag + '=' ):
-            path = flag[ len( path_flag ) + 1: ]
-            if not os.path.isabs( path ):
-              path = os.path.join( working_directory, path )
-            path = os.path.normpath( path )
-
-            new_flag = '{0}={1}'.format( path_flag, path )
+            new_flag = self._MakeRelativeFlag( flag,
+                                               working_directory,
+                                               path_flag )
             break
 
       if new_flag:
@@ -146,8 +142,16 @@ class Flags( object ):
     return new_flags
 
 
+  def _MakeRelativeFlag( self, flag, working_directory, path_flag ):
+    path = flag[ len( path_flag ) + 1: ]
+    if not os.path.isabs( path ):
+      path = os.path.join( working_directory, path )
+    path = os.path.normpath( path )
+
+    return '{0}={1}'.format( path_flag, path )
+
   def _ExtractFlagsList( self, flags_for_file_output ):
-    if 'vala_flags' in flags_for_file_output:
-      return [ ToUnicode( x ) for x in flags_for_file_output[ 'vala_flags' ] ]
+    if 'flags' in flags_for_file_output:
+      return [ ToUnicode( x ) for x in flags_for_file_output[ 'flags' ] ]
     else:
       return []

@@ -45,7 +45,7 @@ def Check():
 
 def HasValaSupport():
   global has_support
-  if has_support == None:
+  if has_support is None:
     Check()
   return has_support
 
@@ -53,6 +53,6 @@ def HasValaSupport():
 def ValaVersion():
   global has_support
   global vala_version
-  if has_support == None:
+  if has_support is None:
     Check()
   return vala_version

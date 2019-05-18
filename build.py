@@ -375,8 +375,8 @@ def CheckValaDeps():
   if not PathToFirstExistingExecutable( [ 'valac' ] ):
     sys.exit( 'ERROR: please install Vala compiler and retry.' )
   try:
-    import gi
-  except:
+    import gi # noqa: F401
+  except ImportError:
     sys.exit( 'ERROR: please install PyGObject and retry.' )
 
 
@@ -408,7 +408,8 @@ def ParseArguments():
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
   parser.add_argument( '--libvala-api-version', type = str, default = '0.46',
-                       help = 'Choose another API version for libVala (default: %(default)s)' )
+                       help = 'Choose another API version for libVala '
+                       '(default: %(default)s)' )
   parser.add_argument( '--msvc', type = int, choices = [ 14, 15 ],
                        default = 15, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
@@ -536,7 +537,8 @@ def GetCmakeArgs( parsed_args ):
 def GetMesonArgs( parsed_args ):
   meson_args = []
   if parsed_args.libvala_api_version:
-    meson_args.append( '-Dlibvala_api_version=' + parsed_args.libvala_api_version )
+    meson_args.append( '-Dlibvala_api_version='
+                       + parsed_args.libvala_api_version )
 
   extra_meson_args = os.environ.get( 'EXTRA_MESON_ARGS', '' )
   meson_args += shlex.split( extra_meson_args )
@@ -952,13 +954,10 @@ def BuildValaLib( args ):
     if 'YCM_BENCHMARK' in os.environ:
       build_targets.append( 'benchmark' )
 
-    CheckCall( [ 'ninja', '-j' + str( NumCores() ) ] + build_targets, exit_message = exit_message )
-    CheckCall( [ 'ninja', '-j' + str( NumCores() ), 'src/Ycmvala-0.typelib' ], exit_message = exit_message )
-
-    if 'YCM_TESTRUN' in os.environ:
-      RunValaTests( build_dir )
-    if 'YCM_BENCHMARK' in os.environ:
-      RunValaBenchmarks( build_dir )
+    CheckCall( [ 'ninja', '-j' + str( NumCores() ) ] + build_targets,
+               exit_message = exit_message )
+    CheckCall( [ 'ninja', '-j' + str( NumCores() ), 'src/Ycmvala-0.typelib' ],
+               exit_message = exit_message )
 
     lib_prefix = 'lib'
     lib_ext = '.so.0'
@@ -969,9 +968,11 @@ def BuildValaLib( args ):
       lib_ext = '.0.dylib'
 
     shutil.copyfile( p.join( 'src', lib_prefix + 'ycmvala' + lib_ext ),
-                     p.join( DIR_OF_THIS_SCRIPT, lib_prefix + 'ycmvala' + lib_ext ) )
+                     p.join( DIR_OF_THIS_SCRIPT, lib_prefix + 'ycmvala'
+                             + lib_ext ) )
     shutil.copystat( p.join( 'src', lib_prefix + 'ycmvala' + lib_ext ),
-                     p.join( DIR_OF_THIS_SCRIPT, lib_prefix + 'ycmvala' + lib_ext ) )
+                     p.join( DIR_OF_THIS_SCRIPT, lib_prefix + 'ycmvala'
+                             + lib_ext ) )
     shutil.copyfile( p.join( 'src', 'Ycmvala-0.typelib' ),
                      p.join( DIR_OF_THIS_SCRIPT, 'Ycmvala-0.typelib' ) )
     shutil.copystat( p.join( 'src', 'Ycmvala-0.typelib' ),
@@ -982,7 +983,7 @@ def BuildValaLib( args ):
     if args.build_dir:
       print( 'The Vala build files are in: ' + build_dir )
     else:
-      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+      rmtree( build_dir, ignore_errors = OnCiService() )
 
 
 def WritePythonUsedDuringBuild():

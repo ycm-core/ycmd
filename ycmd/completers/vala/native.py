@@ -50,12 +50,14 @@ except ValueError as exc:
   raise ValaUnsupportedError( exc )
 
 try:
-  from gi.repository import GLib, GObject, GIRepository
+  from gi.repository import GLib, GObject, GIRepository # noqa: F401
 except ImportError as exc:
   raise ValaUnsupportedError( exc )
 
-GIRepository.Repository.prepend_library_path( n_dirname( 4, p.realpath( __file__ ) ) )
-GIRepository.Repository.prepend_search_path( n_dirname( 4, p.realpath( __file__ ) ) )
+GIRepository.Repository.prepend_library_path(
+  n_dirname( 4, p.realpath( __file__ ) ) )
+GIRepository.Repository.prepend_search_path(
+  n_dirname( 4, p.realpath( __file__ ) ) )
 
 try:
   gi.require_version( 'Ycmvala', '0' )
@@ -63,6 +65,6 @@ except ValueError as exc:
   raise ValaUnsupportedError( exc )
 
 try:
-  from gi.repository import Ycmvala
+  from gi.repository import Ycmvala # noqa: F401
 except ImportError as exc:
   raise ValaUnsupportedError( exc )

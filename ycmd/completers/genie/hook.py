@@ -22,4 +22,8 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.completers.vala.hook import GetCompleter
+import ycmd.completers.vala.hook as vala_hook
+
+
+def GetCompleter( user_options ):
+  return vala_hook.GetCompleter( user_options )

@@ -24,23 +24,17 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from collections import defaultdict
 from future.utils import iteritems
 import logging
-import os.path
-import re
-import textwrap
 
 from ycmd import responses
 from ycmd.utils import ToBytes, ToUnicode
 from ycmd.completers.completer import Completer
 from ycmd.completers.vala.flags import Flags
 from ycmd.completers.cpp.ephemeral_values_set import EphemeralValuesSet
-from ycmd.completers.general.filename_completer import (
-    GenerateCandidatesForPaths )
 from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
-from ycmd.completers.vala.native import GLib, GObject, GIRepository, Ycmvala
+from ycmd.completers.vala.native import GLib, Ycmvala
 
 VALA_FILETYPES = set( [ 'genie', 'vala' ] )
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
@@ -54,7 +48,8 @@ NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
 class ValaCompleter( Completer ):
   def __init__( self, user_options ):
     super( ValaCompleter, self ).__init__( user_options )
-    self._max_diagnostics_to_display = user_options[ 'max_diagnostics_to_display' ]
+    self._max_diagnostics_to_display \
+      = user_options[ 'max_diagnostics_to_display' ]
     self._completer = Ycmvala.Completer()
     self._flags = Flags()
     self._files_being_compiled = EphemeralValuesSet()
@@ -125,9 +120,9 @@ class ValaCompleter( Completer ):
 
 
   def BuildFixItResponse( self, fixits ):
-    """Build a response from a list of FixIt (aka Refactor) objects. This response
-    can be used to apply arbitrary changes to arbitrary files and is suitable for
-    both quick fix and refactor operations"""
+    """Build a response from a list of FixIt (aka Refactor) objects. This
+    response can be used to apply arbitrary changes to arbitrary files and is
+    suitable for both quick fix and refactor operations"""
 
     return {
       'fixits' : [ self.BuildFixItData( x ) for x in fixits ]
@@ -139,7 +134,9 @@ class ValaCompleter( Completer ):
 
 
   def GetTranslationUnit( self, filename, files, flags ):
-    result, created = self._completer.get_translation_unit( filename, files, flags )
+    result, created = self._completer.get_translation_unit( filename,
+                                                            files,
+                                                            flags )
 
     if created:
       # If in the future there is a need to do something once, do it right here
@@ -156,7 +153,7 @@ class ValaCompleter( Completer ):
     files = self.GetUnsavedFiles( request_data )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     tu = self.GetTranslationUnit( filename,
@@ -223,7 +220,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -251,7 +248,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -279,7 +276,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -307,7 +304,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -338,7 +335,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -360,7 +357,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -385,7 +382,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -411,7 +408,7 @@ class ValaCompleter( Completer ):
       raise ValueError( INVALID_FILE_MESSAGE )
 
     flags = self._FlagsForRequest( request_data )
-    if flags == None:
+    if flags is None:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
     files = self.GetUnsavedFiles( request_data )
@@ -424,7 +421,8 @@ class ValaCompleter( Completer ):
     with self._files_being_compiled.GetExclusive( filename ):
       tu.reparse( self.GetUnsavedFiles( request_data ) )
 
-    return [ self.BuildDiagnosticData( x ) for x in tu.get_diagnostics( self._max_diagnostics_to_display ) ]
+    return [ self.BuildDiagnosticData( x )
+      for x in tu.get_diagnostics( self._max_diagnostics_to_display ) ]
 
 
   def OnBufferUnload( self, request_data ):
@@ -471,8 +469,7 @@ class ValaCompleter( Completer ):
   def _FlagsForRequest( self, request_data ):
     filename = request_data[ 'filepath' ]
     if 'compilation_flags' in request_data:
-      return PrepareFlagsForVala( request_data[ 'compilation_flags' ],
-                                   filename )
+      return request_data[ 'compilation_flags' ]
     client_data = request_data.get( 'extra_conf_data', None )
     return self._flags.FlagsForFile( filename, client_data = client_data )
 
@@ -491,7 +488,7 @@ class ValaCompleter( Completer ):
         ToUnicode( documentation.get_type_name() ),
         ToUnicode( documentation.get_display_name() ),
         ToUnicode( documentation.get_long_description() )
-    ) )
+      ) )
 
 
   def ConvertCompletionData( self, candidate ):
@@ -502,7 +499,8 @@ class ValaCompleter( Completer ):
       extra_menu_info = candidate.get_extra_menu_information(),
       kind = Ycmvala.candidate_kind_to_string( candidate.get_candidate_kind() ),
       detailed_info = candidate.get_detailed_information(),
-      extra_data = ( { 'doc_string': doc.get_brief_description() } if doc else None ) )
+      extra_data = ( { 'doc_string': doc.get_brief_description() }
+        if doc else None ) )
 
 
   def ValaAvailableForFiletypes( self, filetypes ):
