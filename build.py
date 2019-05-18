@@ -926,7 +926,7 @@ def BuildValaLib( args ):
 
   source_dir = p.join( DIR_OF_THIS_SCRIPT, 'vala' )
 
-  reconfiguring = p.exists( build_dir )
+  reconfiguring = p.exists( p.join( build_dir, 'build.ninja' ) )
 
   try:
     full_meson_args = [ 'meson', 'configure' if reconfiguring else 'setup' ]
