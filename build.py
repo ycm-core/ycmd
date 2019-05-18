@@ -482,14 +482,6 @@ def ParseArguments():
     sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
               '--clang-completer or --all as well.' )
 
-  try:
-    if ( args.libvala_api_version and
-         not args.vala_completer and
-         not args.all_completers ):
-      sys.exit( 'ERROR: you can\'t pass --libvala-api-version without also '
-                'passing --vala-completer or --all as well.' )
-  except AttributeError:
-    pass
   return args
 
 
