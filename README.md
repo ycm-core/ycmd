@@ -103,8 +103,9 @@ support is currently **experimental** and changes in the near future might break
 backwards compatibility. There's also a Jedi-based completer for semantic
 completion for Python, an OmniSharp-based completer for C#, a
 [Gocode][gocode]-based completer for Go (using [Godef][godef] for jumping to
-definitions), a TSServer-based completer for JavaScript and TypeScript, and a
-[jdt.ls][jdtls]-based server for Java. More will be added with time.
+definitions), a TSServer-based completer for JavaScript and TypeScript, a
+[jdt.ls][jdtls]-based server for Java and a libVala-based completer for
+[Vala][vala] and Genie. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -222,9 +223,9 @@ optional for the Python completer. The following arguments can be retrieved from
 the `kwargs` dictionary and are common to all completers:
 
 - `language`: an identifier of the completer that called the function. Its value
-  is `python` for the Python completer and `cfamily` for the C-family completer.
-  This argument is useful to configure several completers at once. For
-  instance:
+  is `python` for the Python completer, `cfamily` for the C-family completer and
+  `vala` for the Vala completer. This argument is useful to configure several
+  completers at once. For instance:
 
   ```python
   def Settings( **kwargs ):
@@ -236,6 +237,10 @@ the `kwargs` dictionary and are common to all completers:
     if language == 'python':
       return {
         # Settings for the Python completer.
+      }
+    if language == 'vala':
+      return {
+        # Settings for the Vala completer.
       }
     return {}
   ```
@@ -311,6 +316,38 @@ def Settings( **kwargs ):
   }
 ```
 
+##### Vala settings
+
+The `Settings` function is called by the Vala completer to get the compiler
+flags to use when compiling the current file. The absolute path of this file is
+accessible under the `filename` key of the `kwargs` dictionary.
+
+The return value expected by the completer is a dictionary containing the
+following items:
+
+- `flags`: (recommended) a list of compiler flags and source files.
+  Defaults to no extra flags and all matching files in current directory.
+
+- `include_paths_relative_to_dir`: (optional) the directory to which the
+  include paths in the list of flags are relative. Defaults to ycmd working
+  directory.
+
+- `do_cache`: (optional) a boolean indicating whether or not the result of
+  this call (i.e. the list of flags) should be cached for this file name.
+  Defaults to `True`. If unsure, the default is almost always correct.
+
+- `flags_ready`: (optional) a boolean indicating that the flags should be
+  used. Defaults to `True`. If unsure, the default is almost always correct.
+
+A minimal example which simply returns a list of flags and source files is:
+
+```python
+def Settings( **kwargs ):
+  return {
+    'flags': [ '--pkg=gio-2.0', 'sourcefile1.vala', 'sourcefile2.vala' ]
+  }
+```
+
 #### `PythonSysPath( **kwargs )`
 
 Optional for Python support.
@@ -358,7 +395,7 @@ current API might unintentionally be Vim-specific. We don't want that.
 
 Note that ycmd's internal API's (i.e. anything other than HTTP+JSON) are **NOT**
 covered by SemVer and _will_ randomly change underneath you. **DON'T** interact
-with the Python/C++/etc code directly!
+with the Python/C++/Vala/etc code directly!
 
 FAQ
 ---
@@ -430,3 +467,4 @@ This software is licensed under the [GPL v3 license][gpl].
 [ycmd-extra-conf]: https://github.com/Valloric/ycmd/blob/master/.ycm_extra_conf.py
 [rustup]: https://www.rustup.rs/
 [clangd]: https://clang.llvm.org/extra/clangd.html
+[vala]: https://wiki.gnome.org/Projects/Vala

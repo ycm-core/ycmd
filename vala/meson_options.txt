@@ -1,0 +1,4 @@
+option( 'libvala_api_version',
+        description : 'API version of libVala to use',
+        type        : 'string',
+        value       : '0.46' )

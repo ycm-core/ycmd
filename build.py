@@ -365,6 +365,21 @@ def GetGenerator( args ):
   return 'Unix Makefiles'
 
 
+def CheckValaDeps():
+  if not PathToFirstExistingExecutable( [ 'meson' ] ):
+    sys.exit( 'ERROR: please install Meson and retry.' )
+  if not PathToFirstExistingExecutable( [ 'ninja' ] ):
+    sys.exit( 'ERROR: please install Ninja and retry.' )
+  if not PathToFirstExistingExecutable( [ 'g-ir-compiler' ] ):
+    sys.exit( 'ERROR: please install GObject Introspection and retry.' )
+  if not PathToFirstExistingExecutable( [ 'valac' ] ):
+    sys.exit( 'ERROR: please install Vala compiler and retry.' )
+  try:
+    import gi
+  except:
+    sys.exit( 'ERROR: please install PyGObject and retry.' )
+
+
 def ParseArguments():
   parser = argparse.ArgumentParser()
   parser.add_argument( '--clang-completer', action = 'store_true',
@@ -384,12 +399,16 @@ def ParseArguments():
   parser.add_argument( '--ts-completer', action = 'store_true',
                        help = 'Enable JavaScript and TypeScript semantic '
                               'completion engine.' ),
+  parser.add_argument( '--vala-completer', action = 'store_true',
+                       help = 'Enable Vala semantic completion engine.' ),
   parser.add_argument( '--system-boost', action = 'store_true',
                        help = 'Use the system boost instead of bundled one. '
                        'NOT RECOMMENDED OR SUPPORTED!' )
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
+  parser.add_argument( '--libvala-api-version', type = str, default = '0.46',
+                       help = 'Choose another API version for libVala (default: %(default)s)' )
   parser.add_argument( '--msvc', type = int, choices = [ 14, 15 ],
                        default = 15, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
@@ -461,6 +480,15 @@ def ParseArguments():
        not args.all_completers ):
     sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
               '--clang-completer or --all as well.' )
+
+  try:
+    if ( args.libvala_api_version and
+         not args.vala_completer and
+         not args.all_completers ):
+      sys.exit( 'ERROR: you can\'t pass --libvala-api-version without also '
+                'passing --vala-completer or --all as well.' )
+  except AttributeError:
+    pass
   return args
 
 
@@ -503,6 +531,16 @@ def GetCmakeArgs( parsed_args ):
   # We use shlex split to properly parse quoted CMake arguments.
   cmake_args.extend( shlex.split( extra_cmake_args ) )
   return cmake_args
+
+
+def GetMesonArgs( parsed_args ):
+  meson_args = []
+  if parsed_args.libvala_api_version:
+    meson_args.append( '-Dlibvala_api_version=' + parsed_args.libvala_api_version )
+
+  extra_meson_args = os.environ.get( 'EXTRA_MESON_ARGS', '' )
+  meson_args += shlex.split( extra_meson_args )
+  return meson_args
 
 
 def RunYcmdTests( args, build_dir ):
@@ -577,7 +615,7 @@ def GetCMakeBuildConfiguration( args ):
 
 def BuildYcmdLib( cmake, cmake_common_args, script_args ):
   if script_args.build_dir:
-    build_dir = os.path.abspath( script_args.build_dir )
+    build_dir = os.path.join( os.path.abspath( script_args.build_dir ), 'cpp' )
     if not os.path.exists( build_dir ):
       os.makedirs( build_dir )
   else:
@@ -876,6 +914,77 @@ def EnableClangdCompleter( Args ):
     print( 'OK' )
 
 
+def BuildValaLib( args ):
+  if args.build_dir:
+    build_dir = p.join( p.abspath( args.build_dir ), 'vala' )
+    if not p.exists( build_dir ):
+      os.makedirs( build_dir )
+  else:
+    build_dir = mkdtemp( prefix = 'ycm_vala_build_' )
+
+  source_dir = p.join( DIR_OF_THIS_SCRIPT, 'vala' )
+
+  reconfiguring = p.exists( build_dir )
+
+  try:
+    full_meson_args = [ 'meson', 'configure' if reconfiguring else 'setup' ]
+    full_meson_args.extend( GetMesonArgs( args ) )
+    if not reconfiguring:
+      full_meson_args.append( source_dir )
+    full_meson_args.append( build_dir )
+
+    exit_message = (
+      'ERROR: the Vala build failed.\n\n'
+      'NOTE: it is *highly* unlikely that this is a bug but rather\n'
+      'that this is a problem with the configuration of your system\n'
+      'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
+      'and if you\'re sure that it is a bug, please raise an issue on the\n'
+      'issue tracker, including the entire output of this script\n'
+      'and the invocation line used to run it.' )
+
+    CheckCall( full_meson_args, exit_message = exit_message )
+
+    os.chdir( build_dir )
+
+    build_targets = [ 'all' ]
+    if 'YCM_TESTRUN' in os.environ:
+      build_targets.append( 'test' )
+    if 'YCM_BENCHMARK' in os.environ:
+      build_targets.append( 'benchmark' )
+
+    CheckCall( [ 'ninja', '-j' + str( NumCores() ) ] + build_targets, exit_message = exit_message )
+    CheckCall( [ 'ninja', '-j' + str( NumCores() ), 'src/Ycmvala-0.typelib' ], exit_message = exit_message )
+
+    if 'YCM_TESTRUN' in os.environ:
+      RunValaTests( build_dir )
+    if 'YCM_BENCHMARK' in os.environ:
+      RunValaBenchmarks( build_dir )
+
+    lib_prefix = 'lib'
+    lib_ext = '.so.0'
+    if OnWindows():
+      lib_prefix = ''
+      lib_ext = '-0.dll'
+    elif OnMac():
+      lib_ext = '.0.dylib'
+
+    shutil.copyfile( p.join( 'src', lib_prefix + 'ycmvala' + lib_ext ),
+                     p.join( DIR_OF_THIS_SCRIPT, lib_prefix + 'ycmvala' + lib_ext ) )
+    shutil.copystat( p.join( 'src', lib_prefix + 'ycmvala' + lib_ext ),
+                     p.join( DIR_OF_THIS_SCRIPT, lib_prefix + 'ycmvala' + lib_ext ) )
+    shutil.copyfile( p.join( 'src', 'Ycmvala-0.typelib' ),
+                     p.join( DIR_OF_THIS_SCRIPT, 'Ycmvala-0.typelib' ) )
+    shutil.copystat( p.join( 'src', 'Ycmvala-0.typelib' ),
+                     p.join( DIR_OF_THIS_SCRIPT, 'Ycmvala-0.typelib' ) )
+  finally:
+    os.chdir( DIR_OF_THIS_SCRIPT )
+
+    if args.build_dir:
+      print( 'The Vala build files are in: ' + build_dir )
+    else:
+      rmtree( build_dir, ignore_errors = OnTravisOrAppVeyor() )
+
+
 def WritePythonUsedDuringBuild():
   path = p.join( DIR_OF_THIS_SCRIPT, 'PYTHON_USED_DURING_BUILDING' )
   with open( path, 'w' ) as f:
@@ -900,6 +1009,8 @@ def Main():
 
   if not args.skip_build or not args.no_regex:
     DoCmakeBuilds( args )
+  if args.vala_completer or args.all_completers:
+    BuildValaLib( args )
   if args.cs_completer or args.omnisharp_completer or args.all_completers:
     EnableCsCompleter( args )
   if args.go_completer or args.gocode_completer or args.all_completers:

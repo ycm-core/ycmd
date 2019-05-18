@@ -38,6 +38,7 @@ from ycmd.request_wrap import RequestWrap
 from ycmd.bottle_utils import SetResponseHeader
 from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap
 from ycmd.utils import LOGGER, StartThread
+import ycmd.completers.vala.utils as vala_utils
 
 
 # num bytes for the request body buffer; request.json only works if the request
@@ -221,6 +222,10 @@ def DebugInfo():
     'clang': {
       'has_support': has_clang_support,
       'version': clang_version
+    },
+    'vala': {
+      'has_support': vala_utils.HasValaSupport(),
+      'version': vala_utils.ValaVersion()
     },
     'extra_conf': {
       'path': extra_conf_path,

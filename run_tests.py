@@ -120,6 +120,11 @@ COMPLETERS = {
     'test': [ '--exclude-dir=ycmd/tests/java' ],
     'aliases': [ 'jdt' ],
   },
+  'vala': {
+    'build': [ '--vala-completer' ],
+    'test': [ '--exclude-dir=ycmd/tests/vala' ],
+    'aliases': []
+  }
 }
 
 # Add in the simple completers
