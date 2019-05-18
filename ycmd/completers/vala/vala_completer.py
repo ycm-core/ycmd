@@ -36,7 +36,7 @@ from ycmd.responses import NoExtraConfDetected, UnknownExtraConf
 
 from ycmd.completers.vala.native import GLib, Ycmvala
 
-VALA_FILETYPES = set( [ 'genie', 'vala' ] )
+VALA_FILETYPES = { 'genie', 'vala' }
 PARSING_FILE_MESSAGE = 'Still parsing file, no completions yet.'
 NO_COMPILE_FLAGS_MESSAGE = 'Still no compile flags, no completions yet.'
 INVALID_FILE_MESSAGE = 'File is invalid.'
@@ -70,7 +70,7 @@ class ValaCompleter( Completer ):
       if not contents or not filename:
         continue
 
-      files[filename] = GLib.Bytes.new( ToBytes( contents ) )
+      files[ filename ] = GLib.Bytes.new( ToBytes( contents ) )
 
     return files
 
@@ -504,7 +504,7 @@ class ValaCompleter( Completer ):
 
 
   def ValaAvailableForFiletypes( self, filetypes ):
-    return any( [ filetype in VALA_FILETYPES for filetype in filetypes ] )
+    return any( filetype in VALA_FILETYPES for filetype in filetypes )
 
 
   def _ResponseGoTo( self, location ):
