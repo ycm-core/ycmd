@@ -172,6 +172,9 @@ def ParseArguments():
                               'manually, then exit.' )
   parser.add_argument( '--no-retry', action = 'store_true',
                        help = 'Disable retry of flaky tests' )
+  parser.add_argument( '--quiet', action = 'store_true',
+                       help = 'Quiet installation mode. Just print overall '
+                              'progress and errors' )
 
   parsed_args, nosetests_args = parser.parse_known_args()
 
@@ -213,8 +216,7 @@ def BuildYcmdLibs( args ):
     build_cmd = [
       sys.executable,
       p.join( DIR_OF_THIS_SCRIPT, 'build.py' ),
-      '--core-tests',
-      '--quiet',
+      '--core-tests'
     ]
 
     for key in COMPLETERS:
@@ -230,6 +232,9 @@ def BuildYcmdLibs( args ):
       # output in a known directory, which is then used by the CI infrastructure
       # to generate the c++ coverage information.
       build_cmd.extend( [ '--enable-coverage', '--build-dir', '.build' ] )
+
+    if args.quiet:
+      build_cmd.append( '--quiet' )
 
     subprocess.check_call( build_cmd )
 
