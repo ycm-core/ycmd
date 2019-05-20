@@ -52,6 +52,8 @@ CheckOptions:
     value:           '1'
   - key:             performance-type-promotion-in-math-fn.IncludeStyle
     value:           llvm
+  - key:             performance-unnecessary-value-param.AllowedTypes
+    value:           '^object$'
   - key:             performance-unnecessary-value-param.IncludeStyle
     value:           llvm
   - key:             readability-braces-around-statements.ShortStatementLines

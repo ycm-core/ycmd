@@ -14,6 +14,6 @@ python_version=$(python -c 'import sys; print( "{}.{}.{}".format( *sys.version_i
 echo "Checking python version (actual ${python_version} vs expected ${YCM_PYTHON_VERSION})"
 test ${python_version} == ${YCM_PYTHON_VERSION}
 
-python build.py --clang-completer --clang-tidy --quiet --no-regex
+python build.py --clang-completer --clang-tidy --no-regex
 
 set +e
