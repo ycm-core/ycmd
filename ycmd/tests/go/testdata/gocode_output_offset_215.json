@@ -1,1 +1,0 @@
-[3, [{"class": "func", "name": "Print", "type": "func(v ...interface{})"}, {"class": "func", "name": "Printf", "type": "func(format string, v ...interface{})"}, {"class": "func", "name": "Println", "type": "func(v ...interface{})"}]]

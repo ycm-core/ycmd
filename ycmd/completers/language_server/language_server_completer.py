@@ -1740,8 +1740,11 @@ class LanguageServerCompleter( Completer ):
           [] ),
         REQUEST_TIMEOUT_COMMAND )
 
-    response = [ self.HandleServerCommand( request_data, c )
-                 for c in code_actions[ 'result' ] ]
+    result = code_actions[ 'result' ]
+    if result is None:
+      result = []
+
+    response = [ self.HandleServerCommand( request_data, c ) for c in result ]
 
     # Show a list of actions to the user to select which one to apply.
     # This is (probably) a more common workflow for "code action".
