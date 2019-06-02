@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 ycmd contributors
+# Copyright (C) 2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,11 +22,17 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from ycmd.completers.rust.rust_completer import ( ShouldEnableRustCompleter,
-                                                  RustCompleter )
+from mock import patch
+from nose.tools import ok_
+
+from ycmd import user_options_store
+from ycmd.completers.rust.hook import GetCompleter
 
 
-def GetCompleter( user_options ):
-  if not ShouldEnableRustCompleter():
-    return None
-  return RustCompleter( user_options )
+def GetCompleter_RlsFound_test():
+  ok_( GetCompleter( user_options_store.GetAll() ) )
+
+
+@patch( 'ycmd.completers.rust.rust_completer.RLS_EXECUTABLE', None )
+def GetCompleter_RlsNotFound_test( *args ):
+  ok_( not GetCompleter( user_options_store.GetAll() ) )

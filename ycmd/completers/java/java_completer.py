@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -274,7 +274,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
              super( JavaCompleter, self ).ServerIsReady() )
 
 
-  def _GetProjectDirectory( self, *args, **kwargs ):
+  def GetProjectDirectory( self, *args, **kwargs ):
     return self._java_project_dir
 
 
@@ -334,10 +334,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._started_message_sent = False
 
     self.ServerReset()
-
-
-  def Language( self ):
-    return 'java'
 
 
   def StartServer( self, request_data, project_directory = None ):
