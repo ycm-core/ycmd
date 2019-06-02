@@ -100,7 +100,6 @@ jobs:
   variables:
     MSVC: 14
     MSBUILD_PATH: 'C:\Program Files (x86)\MSBuild\14.0\Bin'
-    COVERAGE: true
   steps:
   - checkout: self
     submodules: recursive
@@ -108,10 +107,8 @@ jobs:
     displayName: Install dependencies
   - script: azure\windows\run_tests.bat
     displayName: Run tests
-    condition: and(succeeded(), ne(variables['YCM_BENCHMARK'], 'true'))
   - script: azure\windows\send_coverage.bat
     displayName: Send coverage
-    condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
     env:
       CODECOV_TOKEN: $(CODECOV_TOKEN)
       CODECOV_JOB_NAME: '$(Agent.JobName)'
@@ -121,6 +118,31 @@ jobs:
     # List of available software on this image:
     # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/win/Vs2017-Server2016-Readme.md
     vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      'Python 3.7 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+  variables:
+    MSVC: 15
+    MSBUILD_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin'
+  steps:
+  - checkout: self
+    submodules: recursive
+  - script: azure\windows\install_dependencies.bat
+    displayName: Install dependencies
+  - script: azure\windows\run_tests.bat
+    displayName: Run tests
+  - script: azure\windows\send_coverage.bat
+    displayName: Send coverage
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN)
+      CODECOV_JOB_NAME: '$(Agent.JobName)'
+- job: windows_msvc17
+  displayName: 'Windows Visual Studio 2019'
+  pool:
+    # List of available software on this image:
+    # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/win/Vs2019-Server2019-Readme.md
+    vmImage: 'windows-2019'
   strategy:
     matrix:
       'Python 2.7 64-bit':
@@ -135,8 +157,8 @@ jobs:
         COVERAGE: false
     maxParallel: 4
   variables:
-    MSVC: 15
-    MSBUILD_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin'
+    MSVC: 16
+    MSBUILD_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin'
     COVERAGE: true
   steps:
   - checkout: self
