@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -509,7 +509,7 @@ def GetCompletions_ResolveFailed_test( app ):
 
 
 @SharedYcmd
-def Subcommands_ServerNotReady_test( app ):
+def GetCompletions_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -518,7 +518,7 @@ def Subcommands_ServerNotReady_test( app ):
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
-  with patch.object( completer, 'ServerIsReady', return_value = False ):
+  with patch.object( completer, '_ServerIsInitialized', return_value = False ):
     RunTest( app, {
       'description': 'Completion works for unicode identifier',
       'request': {

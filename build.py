@@ -7,7 +7,6 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
-from shutil import rmtree
 from tempfile import mkdtemp
 import argparse
 import errno
@@ -27,8 +26,8 @@ import tempfile
 
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
-version = sys.version_info[ 0 : 3 ]
-if version < ( 2, 7, 1 ) or ( 3, 0, 0 ) <= version < ( 3, 5, 1 ):
+PY_VERSION = sys.version_info[ 0 : 3 ]
+if PY_VERSION < ( 2, 7, 1 ) or ( 3, 0, 0 ) <= PY_VERSION < ( 3, 5, 1 ):
   sys.exit( 'ycmd requires Python >= 2.7.1 or >= 3.5.1; '
             'your version of Python is ' + sys.version )
 
@@ -95,6 +94,9 @@ JDTLS_SHA256 = (
 
 TSSERVER_VERSION = '3.3.3333'
 
+RUST_TOOLCHAIN = 'nightly-2019-05-12'
+RLS_DIR = p.join( DIR_OF_THIRD_PARTY, 'rls' )
+
 BUILD_ERROR_MESSAGE = (
   'ERROR: the build failed.\n\n'
   'NOTE: it is *highly* unlikely that this is a bug but rather\n'
@@ -112,9 +114,23 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'See the YCM docs for details on how to use a custom Clangd.' )
 
 
+def RemoveDirectory( directory ):
+  try_number = 0
+  max_tries = 10
+  while try_number < max_tries:
+    try:
+      shutil.rmtree( directory )
+      return
+    except OSError:
+      try_number += 1
+  raise RuntimeError(
+    'Cannot remove directory {} after {} tries.'.format( directory,
+                                                         max_tries ) )
+
+
 def MakeCleanDirectory( directory_path ):
   if p.exists( directory_path ):
-    shutil.rmtree( directory_path )
+    RemoveDirectory( directory_path )
   os.makedirs( directory_path )
 
 
@@ -155,15 +171,11 @@ def OnX86_64():
   return platform.machine().lower().startswith( 'x86_64' )
 
 
-def OnCiService():
-  return 'CI' in os.environ
-
-
 def FindExecutableOrDie( executable, message ):
   path = FindExecutable( executable )
 
   if not path:
-    sys.exit( "ERROR: Unable to find executable '{0}'. {1}".format(
+    sys.exit( "ERROR: Unable to find executable '{}'. {}".format(
       executable,
       message ) )
 
@@ -226,17 +238,16 @@ def CheckCall( args, **kwargs ):
 
 
 def _CheckCallQuiet( args, status_message, **kwargs ):
-  if not status_message:
-    status_message = 'Running {}'.format( args[ 0 ] )
-
-  # __future__ not appear to support flush= on print_function
-  sys.stdout.write( status_message + '...' )
-  sys.stdout.flush()
+  if status_message:
+    # __future__ not appear to support flush= on print_function
+    sys.stdout.write( status_message + '...' )
+    sys.stdout.flush()
 
   with tempfile.NamedTemporaryFile() as temp_file:
     _CheckCall( args, stdout=temp_file, stderr=subprocess.STDOUT, **kwargs )
 
-  print( "OK" )
+  if status_message:
+    print( "OK" )
 
 
 def _CheckCall( args, **kwargs ):
@@ -633,7 +644,7 @@ def BuildYcmdLib( cmake, cmake_common_args, script_args ):
     if script_args.build_dir:
       print( 'The build files are in: ' + build_dir )
     else:
-      rmtree( build_dir, ignore_errors = OnCiService() )
+      RemoveDirectory( build_dir )
 
 
 def BuildRegexModule( cmake, cmake_common_args, script_args ):
@@ -661,7 +672,7 @@ def BuildRegexModule( cmake, cmake_common_args, script_args ):
                status_message = 'Compiling regex module' )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
-    rmtree( build_dir, ignore_errors = OnCiService() )
+    RemoveDirectory( build_dir )
 
 
 def EnableCsCompleter( args ):
@@ -696,22 +707,92 @@ def EnableGoCompleter( args ):
              status_message = 'Building godef for go definition' )
 
 
-def EnableRustCompleter( args ):
-  """
-  Build racerd. This requires a reasonably new version of rustc/cargo.
-  """
-  cargo = FindExecutableOrDie( 'cargo',
-                               'cargo is required for the Rust completer.' )
+def WriteToolchainVersion( version ):
+  path = p.join( RLS_DIR, 'TOOLCHAIN_VERSION' )
+  with open( path, 'w' ) as f:
+    f.write( version )
 
-  os.chdir( p.join( DIR_OF_THIRD_PARTY, 'racerd' ) )
-  command_line = [ cargo, 'build' ]
-  # We don't use the --release flag on CI services because it makes building
-  # racerd 2.5x slower and we don't care about the speed of the produced racerd.
-  if not OnCiService():
-    command_line.append( '--release' )
-  CheckCall( command_line,
-             quiet = args.quiet,
-             status_message = 'Building racerd for Rust completion' )
+
+def ReadToolchainVersion():
+  try:
+    filepath = p.join( RLS_DIR, 'TOOLCHAIN_VERSION' )
+    with open( filepath ) as f:
+      return f.read().strip()
+  # We need to check for IOError for Python 2 and OSError for Python 3.
+  except ( IOError, OSError ):
+    return None
+
+
+def EnableRustCompleter( switches ):
+  if switches.quiet:
+    sys.stdout.write( 'Installing RLS for Rust support...' )
+    sys.stdout.flush()
+
+  toolchain_version = ReadToolchainVersion()
+  if toolchain_version != RUST_TOOLCHAIN:
+    install_dir = mkdtemp( prefix = 'rust_install_' )
+
+    new_env = os.environ.copy()
+    new_env[ 'RUSTUP_HOME' ] = install_dir
+
+    # Python versions older than 2.7.9 lack SNI support which is required to
+    # download rustup from the official website.
+    if PY_VERSION < ( 2, 7, 9 ):
+      rustup = FindExecutableOrDie( 'rustup',
+                                    'rustup is required to install RLS '
+                                    'on Python < 2.7.9.' )
+    else:
+      rustup_init = os.path.join( install_dir, 'rustup-init' )
+
+      if OnWindows():
+        rustup_cmd = [ rustup_init ]
+        rustup_url = 'https://win.rustup.rs/{}'.format(
+          'x86_64' if IS_64BIT else 'i686' )
+      else:
+        rustup_cmd = [ 'sh', rustup_init ]
+        rustup_url = 'https://sh.rustup.rs'
+
+      DownloadFileTo( rustup_url, rustup_init )
+
+      new_env[ 'CARGO_HOME' ] = install_dir
+
+      CheckCall( rustup_cmd + [ '-y',
+                                '--default-toolchain', 'none',
+                                '--no-modify-path' ],
+                 env = new_env,
+                 quiet = switches.quiet )
+
+      rustup = os.path.join( install_dir, 'bin', 'rustup' )
+
+    try:
+      CheckCall( [ rustup, 'toolchain', 'install', RUST_TOOLCHAIN ],
+                 env = new_env,
+                 quiet = switches.quiet )
+
+      for component in [ 'rls', 'rust-analysis', 'rust-src' ]:
+        CheckCall( [ rustup, 'component', 'add', component,
+                     '--toolchain', RUST_TOOLCHAIN ],
+                   env = new_env,
+                   quiet = switches.quiet )
+
+      toolchain_dir = subprocess.check_output(
+        [ rustup, 'run', RUST_TOOLCHAIN, 'rustc', '--print', 'sysroot' ],
+        env = new_env
+      ).rstrip().decode( 'utf8' )
+
+      if p.exists( RLS_DIR ):
+        RemoveDirectory( RLS_DIR )
+      os.makedirs( RLS_DIR )
+
+      for folder in os.listdir( toolchain_dir ):
+        shutil.move( p.join( toolchain_dir, folder ), RLS_DIR )
+
+      WriteToolchainVersion( RUST_TOOLCHAIN )
+    finally:
+      RemoveDirectory( install_dir )
+
+  if switches.quiet:
+    print( 'OK' )
 
 
 def EnableJavaScriptCompleter( args ):

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2019 ycmd contributors
 # encoding: utf-8
 #
 # This file is part of ycmd.
@@ -38,12 +38,15 @@ from nose.tools import eq_
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
                               PathToTestFile,
-                              PollForMessages,
-                              PollForMessagesTimeoutException,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory )
 
-from ycmd.tests.test_utils import ( BuildRequest, LocationMatcher, RangeMatcher,
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    LocationMatcher,
+                                    PollForMessages,
+                                    PollForMessagesTimeoutException,
+                                    RangeMatcher,
+                                    WaitForDiagnosticsToBeReady,
                                     WithRetry )
 from ycmd.utils import ReadFile, StartThread
 from ycmd.completers import completer
@@ -224,7 +227,8 @@ def _WaitForDiagnosticsForFile( app,
   try:
     for message in PollForMessages( app,
                                     { 'filepath': filepath,
-                                      'contents': contents },
+                                      'contents': contents,
+                                      'filetype': 'java' },
                                     **kwargs ):
       if ( 'diagnostics' in message and
            message[ 'filepath' ] == diags_filepath ):
@@ -245,25 +249,6 @@ def _WaitForDiagnosticsForFile( app,
   return diags
 
 
-def _WaitForDiagnosticsToBeReady( app, filepath, contents, **kwargs ):
-  results = None
-  for tries in range( 0, 60 ):
-    event_data = BuildRequest( event_name = 'FileReadyToParse',
-                               contents = contents,
-                               filepath = filepath,
-                               filetype = 'java',
-                               **kwargs )
-
-    results = app.post_json( '/event_notification', event_data ).json
-
-    if results:
-      break
-
-    time.sleep( 0.5 )
-
-  return results
-
-
 @WithRetry
 @SharedYcmd
 def FileReadyToParse_Diagnostics_Simple_test( app ):
@@ -271,7 +256,7 @@ def FileReadyToParse_Diagnostics_Simple_test( app ):
   contents = ReadFile( filepath )
 
   # It can take a while for the diagnostics to be ready
-  results = _WaitForDiagnosticsToBeReady( app, filepath, contents )
+  results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
   print( 'completer response: {0}'.format( pformat( results ) ) )
 
   assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
@@ -313,7 +298,8 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
   # Poll until we receive the diags
   for message in PollForMessages( app,
                                   { 'filepath': filepath,
-                                    'contents': contents } ):
+                                    'contents': contents,
+                                    'filetype': 'java' } ):
     if 'diagnostics' in message and message[ 'filepath' ] == filepath:
       print( 'Message {0}'.format( pformat( message ) ) )
       assert_that( message, has_entries( {
@@ -347,7 +333,8 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
   try:
     for message in PollForMessages( app,
                                     { 'filepath': filepath,
-                                      'contents': contents } ):
+                                      'contents': contents,
+                                      'filetype': 'java' } ):
       print( 'Message {0}'.format( pformat( message ) ) )
       if 'diagnostics' in message:
         seen[ message[ 'filepath' ] ] = True
@@ -396,7 +383,8 @@ public class Test {
     try:
       for message in PollForMessages( app,
                                       { 'filepath': filepath,
-                                        'contents': contents } ):
+                                        'contents': contents,
+                                        'filetype': 'java' } ):
         if 'filepath' in message and message[ 'filepath' ] == filepath:
           messages_for_filepath.append( message )
     except PollForMessagesTimeoutException:
@@ -536,7 +524,8 @@ def FileReadyToParse_ChangeFileContents_test( app ):
   try:
     for message in PollForMessages( app,
                                     { 'filepath': filepath,
-                                      'contents': contents } ):
+                                      'contents': contents,
+                                      'filetype': 'java' } ):
       print( 'Message {0}'.format( pformat( message ) ) )
       if 'diagnostics' in message and message[ 'filepath' ]  == filepath:
         diags = message[ 'diagnostics' ]
@@ -584,9 +573,7 @@ def FileReadyToParse_ChangeFileContentsFileData_test( app ):
   StartJavaCompleterServerInDirectory( app, ProjectPath() )
 
   # It can take a while for the diagnostics to be ready
-  results = _WaitForDiagnosticsToBeReady( app,
-                                          filepath,
-                                          contents )
+  results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
   assert results
 
   # Check that we have diagnostics for the saved file

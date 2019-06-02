@@ -1,5 +1,4 @@
-# Copyright (C) 2011-2012 Google Inc.
-#               2018      ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -37,9 +36,9 @@ def DebugInfo_NotInitialized_test( app ):
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
-      'name': 'clangd',
+      'name': 'Clangd',
       'servers': contains( has_entries( {
-        'name': 'clangd',
+        'name': 'Clangd',
         'pid': None,
         'is_running': False,
         'extras': contains(
@@ -71,9 +70,9 @@ def DebugInfo_Initialized_test( app ):
   assert_that(
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
-      'name': 'clangd',
+      'name': 'Clangd',
       'servers': contains( has_entries( {
-        'name': 'clangd',
+        'name': 'Clangd',
         'is_running': True,
         'extras': contains(
           has_entries( {
