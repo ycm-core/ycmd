@@ -209,10 +209,6 @@ def Subcommands_Format_WholeFile_test( app ):
                   matches_regexp( '\nExpected: <200>\n     but: was <500>\n' ) )
 @SharedYcmd
 def Subcommands_Format_Range_test( app ):
-  # RLS can't execute textDocument/formatting if any file
-  # under the project root has errors, so we need to use
-  # a different project just for formatting.
-  # For further details check https://github.com/go-lang/rls/issues/1397
   project_dir = PathToTestFile()
   StartGoCompleterServerInDirectory( app, project_dir )
 
