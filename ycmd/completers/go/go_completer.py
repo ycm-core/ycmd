@@ -63,7 +63,7 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     return 'gopls'
 
 
-  def _GetProjectDirectory( self, request_data, extra_conf_dir ):
+  def GetProjectDirectory( self, request_data, extra_conf_dir ):
     # Without LSP workspaces support, GOPLS relies on the rootUri to detect a
     # project.
     # TODO: add support for LSP workspaces to allow users to change project
@@ -71,8 +71,8 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     for folder in utils.PathsToAllParentFolders( request_data[ 'filepath' ] ):
       if os.path.isfile( os.path.join( folder, 'go.mod' ) ):
         return folder
-    return super( GoCompleter, self )._GetProjectDirectory( request_data,
-                                                            extra_conf_dir )
+    return super( GoCompleter, self ).GetProjectDirectory( request_data,
+                                                           extra_conf_dir )
 
 
   def GetCommandLine( self ):
