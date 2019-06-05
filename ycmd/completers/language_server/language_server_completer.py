@@ -1772,7 +1772,7 @@ class LanguageServerCompleter( Completer ):
 
     fixit = WorkspaceEditToFixIt( request_data, response[ 'result' ] )
     if not fixit:
-      raise RuntimeError( 'Cannot rename under cursor.' )
+      raise RuntimeError( 'Cannot rename the symbol under cursor.' )
 
     return responses.BuildFixItResponse( [ fixit ] )
 

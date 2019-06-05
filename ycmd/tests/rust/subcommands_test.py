@@ -43,7 +43,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     ExpectedFailure,
-                                    LocationMatcher )
+                                    LocationMatcher,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 
 
@@ -172,13 +173,13 @@ def Subcommands_Format_WholeFile_test( app ):
           'chunks': contains(
             ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
                           '  return param;\n'
-                          '}',
-                          LocationMatcher( filepath, 1,  1 ),
-                          LocationMatcher( filepath, 2, 19 ) ),
+                          '}\n',
+                          LocationMatcher( filepath, 1, 1 ),
+                          LocationMatcher( filepath, 3, 1 ) ),
             ChunkMatcher( 'fn main() {\n'
-                          '  unformatted_function(false);',
-                          LocationMatcher( filepath, 4,  1 ),
-                          LocationMatcher( filepath, 7, 39 ) ),
+                          '  unformatted_function(false);\n',
+                          LocationMatcher( filepath, 4, 1 ),
+                          LocationMatcher( filepath, 8, 1 ) ),
           )
         } ) )
       } )
@@ -224,9 +225,9 @@ def Subcommands_Format_Range_test( app ):
           'chunks': contains(
             ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
                           '\treturn param;\n'
-                          '}',
-                          LocationMatcher( filepath, 1,  1 ),
-                          LocationMatcher( filepath, 2, 19 ) ),
+                          '}\n',
+                          LocationMatcher( filepath, 1, 1 ),
+                          LocationMatcher( filepath, 3, 1 ) ),
           )
         } ) )
       } )
@@ -305,6 +306,7 @@ def Subcommands_GetType_Function_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def RunGoToTest( app, command, test ):
   folder = PathToTestFile( 'common', 'src' )
@@ -383,6 +385,7 @@ def Subcommands_GoToImplementation_test():
     yield RunGoToTest, 'GoToImplementation', test
 
 
+@WithRetry
 @ExpectedFailure( 'RLS returns an internal error "An unknown error occurred" '
                   'when unable to jump to implementations',
                   matches_regexp( 'ResponseFailedException' ) )
@@ -413,6 +416,7 @@ def Subcommands_GoToReferences_test():
     yield RunGoToTest, 'GoToReferences', test
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_Works_test( app ):
   main_filepath = PathToTestFile( 'common', 'src', 'main.rs' )
@@ -459,6 +463,7 @@ def Subcommands_RefactorRename_Invalid_test( app ):
     },
     'expect': {
       'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( RuntimeError, 'Cannot rename under cursor.' )
+      'data': ErrorMatcher( RuntimeError,
+                            'Cannot rename the symbol under cursor.' )
     }
   } )
