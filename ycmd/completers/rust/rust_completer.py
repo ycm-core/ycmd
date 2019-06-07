@@ -75,10 +75,6 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       self._server_progress = {}
 
 
-  def Language( self ):
-    return 'rust'
-
-
   def GetServerName( self ):
     return 'Rust Language Server'
 
