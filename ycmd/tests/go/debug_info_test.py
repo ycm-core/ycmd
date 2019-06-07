@@ -28,7 +28,10 @@ from hamcrest import ( assert_that,
                        has_entry,
                        instance_of )
 
-from ycmd.tests.go import SharedYcmd
+from ycmd.tests.go import ( IsolatedYcmd,
+                            PathToTestFile,
+                            SharedYcmd,
+                            StartGoCompleterServerInDirectory )
 from ycmd.tests.test_utils import BuildRequest
 
 
@@ -57,7 +60,45 @@ def DebugInfo_test( app ):
           } ),
           has_entries( {
             'key': 'Project Directory',
+            'value': PathToTestFile(),
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}'
+          } ),
+        )
+      } ) ),
+    } ) )
+  )
+
+
+@IsolatedYcmd
+def DebugInfo_ProjectDirectory_test( app ):
+  project_dir = PathToTestFile( 'td' )
+  StartGoCompleterServerInDirectory( app, project_dir )
+  assert_that(
+    app.post_json( '/debug_info', BuildRequest( filetype = 'go' ) ).json,
+    has_entry( 'completer', has_entries( {
+      'name': 'Go',
+      'servers': contains( has_entries( {
+        'name': 'gopls',
+        'is_running': instance_of( bool ),
+        'executable': contains( instance_of( str ),
+                                instance_of( str ),
+                                instance_of( str ),
+                                instance_of( str ) ),
+        'address': None,
+        'port': None,
+        'pid': instance_of( int ),
+        'logfiles': contains( instance_of( str ) ),
+        'extras': contains(
+          has_entries( {
+            'key': 'Server State',
             'value': instance_of( str ),
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile(),
           } ),
           has_entries( {
             'key': 'Settings',
