@@ -46,6 +46,7 @@ class PythonCompleter( Completer ):
     self._environment_for_file = {}
     self._environment_for_interpreter_path = {}
     self._sys_path_for_file = {}
+    self.signature_triggers.SetServerSemanticTriggers( [ '(', ',' ] )
 
 
   def SupportedFiletypes( self ):
@@ -204,12 +205,44 @@ class PythonCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     with self._jedi_lock:
+      completions = self._GetJediScript( request_data ).completions()
       return [ responses.BuildCompletionData(
         insertion_text = completion.name,
         # We store the Completion object returned by Jedi in the extra_data
         # field to detail the candidates once the filtering is done.
         extra_data = completion
-      ) for completion in self._GetJediScript( request_data ).completions() ]
+      ) for completion in completions ]
+
+
+  def ComputeSignaturesInner( self, request_data ):
+    with self._jedi_lock:
+      signatures = self._GetJediScript( request_data ).call_signatures()
+      # Sorting bu the number or arguments makes the order stable for the tests
+      # and isn't harmful. The order returned by jedi seems to be arbitrary.
+      signatures = sorted( signatures, key=lambda s: len( s.params ) )
+
+      active_signature = 0
+      active_parameter = 0
+      for index, signature in enumerate( signatures ):
+        if signature.index is not None:
+          active_signature = index
+          active_parameter = signature.index
+          break
+
+      return {
+        'activeSignature': active_signature,
+        'activeParameter': active_parameter,
+        'signatures': [
+          {
+            # We remove 'param ' from the start of each parameter (hence the 6:)
+            'label': s.description + '( ' + ', '.join(
+              [ p.description[ 6: ] for p in s.params ] ) + ' )',
+            'parameters': [
+              { 'label': p.description[ 6: ] } for p in s.params
+            ],
+          } for s in signatures
+        ]
+      }
 
 
   def DetailCandidates( self, request_data, candidates ):

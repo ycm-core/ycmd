@@ -1615,7 +1615,7 @@ class LanguageServerCompleter( Completer ):
     return server_trigger_characters
 
 
-  def _GetSignatureTriggerCharacters( self, server_trigger_characters ):
+  def GetSignatureTriggerCharacters( self, server_trigger_characters ):
     """Same as _GetTriggerCharacters but for signature help."""
     return server_trigger_characters
 
@@ -1677,7 +1677,7 @@ class LanguageServerCompleter( Completer ):
                       self.Language(),
                       server_trigger_characters )
 
-        trigger_characters = self._GetSignatureTriggerCharacters(
+        trigger_characters = self.GetSignatureTriggerCharacters(
           server_trigger_characters )
 
         if trigger_characters:
