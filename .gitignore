@@ -53,6 +53,9 @@ doc/tags
 third_party/tern_runtime/node_modules
 third_party/tern_runtime/package-lock.json
 
+# Exclude RoslynOmnisharp installation area
+third_party/omnisharp-roslyn
+
 # Exclude vagrant directory
 .vagrant/
 

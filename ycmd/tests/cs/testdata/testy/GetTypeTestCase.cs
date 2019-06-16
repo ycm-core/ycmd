@@ -1,3 +1,4 @@
+using System;
 namespace testy {
 	public class GetTypeTestCase {
 		public GetTypeTestCase() {

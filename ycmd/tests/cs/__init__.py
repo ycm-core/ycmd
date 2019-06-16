@@ -25,17 +25,21 @@ from builtins import *  # noqa
 from contextlib import contextmanager
 import functools
 import os
+import sys
+import time
 
-from ycmd.tests.test_utils import ( ClearCompletionsCache,
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    ClearCompletionsCache,
                                     IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
                                     SetUpApp,
-                                    StartCompleterServer,
+                                    # StartCompleterServer,
                                     StopCompleterServer,
                                     WaitUntilCompleterServerReady )
 
 shared_app = None
 shared_filepaths = []
+shared_log_indexes = {}
 
 
 def PathToTestFile( *args ):
@@ -62,15 +66,80 @@ def tearDownPackage():
     StopCompleterServer( shared_app, 'cs', filepath )
 
 
+def GetDebugInfo( app, filepath ):
+  """ TODO: refactor here and in clangd test to common util """
+  request_data = BuildRequest( filetype = 'cs', filepath = filepath )
+  return app.post_json( '/debug_info', request_data ).json
+
+
+def GetDiagnostics( app, filepath ):
+  contents, _ = ReadFile( filepath, 0 )
+
+  event_data = BuildRequest( filepath = filepath,
+                             event_name = 'FileReadyToParse',
+                             filetype = 'cs',
+                             contents = contents )
+
+  return app.post_json( '/event_notification', event_data ).json
+
+
+def ReadFile( filepath, fileposition ):
+  with open( filepath, encoding = 'utf8' ) as f:
+    if fileposition:
+      f.seek( fileposition )
+    return f.read(), f.tell()
+
+
+def WaitUntilCsCompleterIsReady( app, filepath ):
+  WaitUntilCompleterServerReady( app, 'cs' )
+  # Omnisharp isn't ready when it says it is, so wait until Omnisharp returns
+  # at least one diagnostic multiple times.
+  success_count = 0
+  for reraise_error in [ False ] * 39 + [ True ]:
+    try:
+      if len( GetDiagnostics( app, filepath ) ) == 0:
+        raise RuntimeError( "No diagnostic" )
+      success_count += 1
+      if success_count > 2:
+        break
+    except Exception:
+      success_count = 0
+      if reraise_error:
+        raise
+
+    time.sleep( .5 )
+  else:
+    raise RuntimeError( "Never was ready" )
+
+
 @contextmanager
 def WrapOmniSharpServer( app, filepath ):
   global shared_filepaths
+  global shared_log_indexes
 
   if filepath not in shared_filepaths:
-    StartCompleterServer( app, 'cs', filepath )
+    # StartCompleterServer( app, 'cs', filepath )
+    GetDiagnostics( app, filepath )
     shared_filepaths.append( filepath )
-  WaitUntilCompleterServerReady( app, 'cs' )
-  yield
+    WaitUntilCsCompleterIsReady( app, filepath )
+
+  logfiles = []
+  response = GetDebugInfo( app, filepath )
+  for server in response[ 'completer' ][ 'servers' ]:
+    logfiles.extend( server[ 'logfiles' ] )
+
+  try:
+    yield
+  finally:
+    for logfile in logfiles:
+      if os.path.isfile( logfile ):
+        log_content, log_end_position = ReadFile(
+            logfile, shared_log_indexes.get( logfile, 0 ) )
+        shared_log_indexes[ logfile ] = log_end_position
+        sys.stdout.write( 'Logfile {0}:\n\n'.format( logfile ) )
+        sys.stdout.write( log_content )
+        sys.stdout.write( '\n' )
+
 
 
 def SharedYcmd( test ):
