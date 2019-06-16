@@ -505,8 +505,13 @@ class LanguageServerConnection( threading.Thread ):
             read_bytes += 1
             break
           else:
-            key, value = utils.ToUnicode( line ).split( ':', 1 )
-            headers[ key.strip() ] = value.strip()
+            try:
+              key, value = utils.ToUnicode( line ).split( ':', 1 )
+              headers[ key.strip() ] = value.strip()
+            except Exception:
+              LOGGER.exception( 'Received invalid protocol data from server: '
+                                 + str( line ) )
+              raise
 
         read_bytes += 1
 
