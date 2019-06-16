@@ -35,7 +35,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     CompletionEntryMatcher,
                                     WaitUntilCompleterServerReady,
-                                    WindowsOnly )
+                                    WindowsOnly,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 
 
@@ -416,6 +417,7 @@ int main()
 
 @SharedYcmd
 @WindowsOnly
+@WithRetry
 def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
   RunTest( app, {
     'description': 'basic completion with --driver-mode=cl',
@@ -444,6 +446,7 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
 
 @SharedYcmd
 @WindowsOnly
+@WithRetry
 def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
   RunTest( app, {
     'description': 'basic completion with --driver-mode=cl',
@@ -472,6 +475,7 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
 
 @SharedYcmd
 @WindowsOnly
+@WithRetry
 def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
   RunTest( app, {
     'description': 'Completion inside include statement with CL driver',
@@ -498,6 +502,7 @@ def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
 
 @SharedYcmd
 @WindowsOnly
+@WithRetry
 def GetCompletions_ClangCLDriverExec_IncludeStatementCandidate_test( app ):
   RunTest( app, {
     'description': 'Completion inside include statement with CL driver',
@@ -568,6 +573,7 @@ def GetCompletions_UnicodeInLineFilter_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_QuotedInclude_test( app ):
   RunTest( app, {
