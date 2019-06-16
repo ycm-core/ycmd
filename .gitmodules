@@ -1,6 +1,3 @@
-[submodule "third_party/OmniSharpServer"]
-	path = third_party/OmniSharpServer
-	url = https://github.com/nosami/OmniSharpServer
 [submodule "third_party/bottle"]
 	path = third_party/bottle
 	url = https://github.com/defnull/bottle

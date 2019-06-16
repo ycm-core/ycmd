@@ -205,11 +205,10 @@ DEFAULT_FILETYPE_TRIGGERS = {
     r're!\[.*\]\s',             # method composition
   ],
   'ocaml' : [ '.', '#' ],
-  'cpp,cuda,objcpp' : [ '->', '.', '::' ],
+  'cpp,cuda,objcpp,cs' : [ '->', '.', '::' ],
   'perl' : [ '->' ],
   'php' : [ '->', '::' ],
-  ( 'cs,'
-    'd,'
+  ( 'd,'
     'elixir,'
     'go,'
     'groovy,'
