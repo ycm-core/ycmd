@@ -660,7 +660,7 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '    nonExistingMethod\\(\\): any {\r?\n'
+                  '    nonExistingMethod\\(\\) {\r?\n'
                   '        throw new Error\\("Method not implemented."\\);\r?\n'
                   '    }$',
                 ),
