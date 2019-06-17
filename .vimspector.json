@@ -1,0 +1,33 @@
+{
+  "configurations": {
+    "python - launch nosetests": {
+      "adapter": "vscode-python",
+      "configuration": {
+        "name": "Python nosetests",
+        "type": "vscode-python",
+        "request": "launch",
+
+        "cwd": "${workspaceRoot}",
+        "stopOnEntry": true,
+        "console": "integratedTerminal",
+        "justMyCode": false,
+
+        "debugOptions": [],
+
+        "program": "$VIRTUAL_ENV/bin/nosetests",
+        "pythonPath": "${VIRTUAL_ENV}/bin/python",
+        "args": [
+          "-v",
+          "--with-id",
+          "--ignore-files=(^\\.|^setup\\.py$$)",
+          "${Test}"
+        ],
+        "env": {
+          "PYTHONPATH": "${workspaceRoot}/third_party/bottle:${workspaceRoot}/third_party/cregex/regex_${python_version}:${workspaceRoot}/third_party/frozendict:${workspaceRoot}/third_party/jedi_deps/jedi:${workspaceRoot}/third_party/jedi_deps/numpydoc:${workspaceRoot}/third_party/jedi_deps/parso:${workspaceRoot}/third_party/requests_deps/certifi:${workspaceRoot}/third_party/requests_deps/chardet:${workspaceRoot}/third_party/requests_deps/idna:${workspaceRoot}/third_party/requests_deps/requests:${workspaceRoot}/third_party/requests_deps/urllib3/src:${workspaceRoot}/third_party/waitress",
+          "LD_LIBRARY_PATH": "${workspaceRoot}/third_party/clang/lib",
+          "YCM_TEST_NO_RETRY": "1"
+        }
+      }
+    }
+  }
+}

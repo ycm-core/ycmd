@@ -60,15 +60,22 @@ def ShouldEnableJavaCompleter_NoLauncherJar_test( glob ):
 
 def WorkspaceDirForProject_HashProjectDir_test():
   assert_that(
-    java_completer._WorkspaceDirForProject( os.getcwd(), False ),
-    equal_to( java_completer._WorkspaceDirForProject( os.getcwd(), False ) )
+    java_completer._WorkspaceDirForProject( os.getcwd(),
+                                            os.getcwd(),
+                                            False ),
+    equal_to( java_completer._WorkspaceDirForProject( os.getcwd(),
+                                                      os.getcwd(),
+                                                      False ) )
   )
 
 
 def WorkspaceDirForProject_UniqueDir_test():
   assert_that(
-    java_completer._WorkspaceDirForProject( os.getcwd(), True ),
+    java_completer._WorkspaceDirForProject( os.getcwd(),
+                                            os.getcwd(),
+                                            True ),
     is_not( equal_to( java_completer._WorkspaceDirForProject( os.getcwd(),
+                                                              os.getcwd(),
                                                               True ) ) )
   )
 
