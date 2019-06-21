@@ -28,6 +28,7 @@
   "gocode_binary_path": "",
   "godef_binary_path": "",
   "python_binary_path": "",
+  "language_server": [],
   "java_jdtls_use_clean_workspace": 1,
   "java_jdtls_workspace_root_path": "",
   "java_jdtls_extension_path": [],
