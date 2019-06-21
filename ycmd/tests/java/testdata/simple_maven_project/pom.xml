@@ -15,7 +15,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <modules>
-    <module>simple_submodule</module>
-  </modules>
 </project>

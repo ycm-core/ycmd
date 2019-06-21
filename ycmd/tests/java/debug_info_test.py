@@ -61,11 +61,18 @@ def DebugInfo_test( app ):
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Workspace Path',
                          'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Extension Path',
+                         'value': contains( instance_of( str ) ) } ),
           has_entries( { 'key': 'Server State',
                          'value': 'Initialized' } ),
           has_entries( { 'key': 'Project Directory',
                          'value': PathToTestFile( DEFAULT_PROJECT_DIR ) } ),
-          has_entries( { 'key': 'Settings', 'value': '{}' } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': json.dumps( { 'bundles': [] },
+                                 indent = 2,
+                                 sort_keys = True )
+          } )
         )
       } ) )
     } ) )
@@ -105,6 +112,8 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Workspace Path',
                          'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Extension Path',
+                         'value': contains( instance_of( str ) ) } ),
           has_entries( { 'key': 'Server State',
                          'value': 'Initialized' } ),
           has_entries( {
@@ -112,9 +121,13 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
             'value': PathToTestFile( 'extra_confs',
                                      'simple_extra_conf_project' )
           } ),
-          has_entries( { 'key': 'Settings',
-                         'value': json.dumps( { 'java.rename.enabled': False },
-                                              indent=2 ) } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': json.dumps(
+              { 'java.rename.enabled': False, 'bundles': [] },
+              indent = 2,
+              sort_keys = True )
+          } ),
         )
       } ) )
     } ) )
