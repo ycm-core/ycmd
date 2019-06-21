@@ -98,7 +98,8 @@ def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'rust' )
 
   assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-               contains_inanyorder( 'Format',
+               contains_inanyorder( 'ExecuteCommand',
+                                    'Format',
                                     'GetDoc',
                                     'GetType',
                                     'GoTo',

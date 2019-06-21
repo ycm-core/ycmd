@@ -29,9 +29,10 @@
   "godef_binary_path": "",
   "python_binary_path": "",
   "java_jdtls_use_clean_workspace": 1,
+  "java_jdtls_workspace_root_path": "",
+  "java_jdtls_extension_path": [],
   "use_clangd": 1,
   "clangd_binary_path": "",
   "clangd_args": [],
-  "clangd_uses_ycmd_caching": 1,
-  "java_jdtls_workspace_root_path": ""
+  "clangd_uses_ycmd_caching": 1
 }

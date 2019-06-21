@@ -24,6 +24,7 @@ from builtins import *  # noqa
 
 import glob
 import hashlib
+import json
 import os
 import shutil
 import tempfile
@@ -64,6 +65,16 @@ DEFAULT_WORKSPACE_ROOT_PATH = os.path.abspath( os.path.join(
   'eclipse.jdt.ls',
   'workspace' ) )
 
+DEFAULT_EXTENSION_PATH = os.path.abspath( os.path.join(
+  os.path.dirname( __file__ ),
+  '..',
+  '..',
+  '..',
+  'third_party',
+  'eclipse.jdt.ls',
+  'extensions' ) )
+
+
 # The authors of jdt.ls say that we should re-use workspaces. They also say that
 # occasionally, the workspace becomes corrupt, and has to be deleted. This is
 # frustrating.
@@ -91,6 +102,12 @@ CLEAN_WORKSPACE_OPTION = 'java_jdtls_use_clean_workspace'
 # expose another (hidden) option which moves the workspace root dirdectory
 # somewhere else, such as the user's home directory.
 WORKSPACE_ROOT_PATH_OPTION = 'java_jdtls_workspace_root_path'
+
+# jdt.ls supports extensions that are loaded on startup bu passing a list of jar
+# files to load. The following list option is a list of paths to scan for
+# directories containing extensions in the same format as expected by the
+# vscode-java extension.
+EXTENSION_PATH_OPTION = 'java_jdtls_extension_path'
 
 
 def ShouldEnableJavaCompleter():
@@ -126,6 +143,48 @@ def _PathToLauncherJar():
     return None
 
   return launcher_jars[ 0 ]
+
+
+def _CollectExtensionBundles( extension_path ):
+  extension_bundles = []
+
+  for extension_dir in extension_path:
+    if not os.path.isdir( extension_dir ):
+      LOGGER.info( 'extension directory does not exist: {0}'.format(
+        extension_dir ) )
+      continue
+
+    for path in os.listdir( extension_dir ):
+      path = os.path.join( extension_dir, path )
+      manifest_file = os.path.join( path, 'package.json' )
+
+      if not os.path.isdir( path ) or not os.path.isfile( manifest_file ):
+        LOGGER.debug( '{0} is not an extension directory'.format( path ) )
+        continue
+
+      manifest_json = utils.ReadFile( manifest_file )
+      try:
+        manifest = json.loads( manifest_json )
+      except ValueError:
+        LOGGER.exception( 'Could not load bundle {0}'.format( manifest_file ) )
+        continue
+
+      if ( 'contributes' not in manifest or
+           'javaExtensions' not in manifest[ 'contributes' ] or
+           not isinstance( manifest[ 'contributes' ][ 'javaExtensions' ],
+                           list ) ):
+        LOGGER.info( 'Bundle {0} is not a java extension'.format(
+          manifest_file ) )
+        continue
+
+      LOGGER.info( 'Found bundle: {0}'.format( manifest_file ) )
+
+      extension_bundles.extend( [
+        os.path.join( path, p )
+        for p in manifest[ 'contributes' ][ 'javaExtensions' ]
+      ] )
+
+  return extension_bundles
 
 
 def _LauncherConfiguration( workspace_root, wipe_config ):
@@ -235,9 +294,22 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._use_clean_workspace = user_options[ CLEAN_WORKSPACE_OPTION ]
     self._workspace_root_path = user_options[ WORKSPACE_ROOT_PATH_OPTION ]
+    self._extension_path = user_options[ EXTENSION_PATH_OPTION ]
 
     if not self._workspace_root_path:
       self._workspace_root_path = DEFAULT_WORKSPACE_ROOT_PATH
+
+    if not isinstance( self._extension_path, list ):
+      raise ValueError( '{0} option must be a list'.format(
+        EXTENSION_PATH_OPTION ) )
+
+    if not self._extension_path:
+      self._extension_path = [ DEFAULT_EXTENSION_PATH ]
+    else:
+      self._extension_path.append( DEFAULT_EXTENSION_PATH )
+
+    self._bundles = ( _CollectExtensionBundles( self._extension_path )
+                      if self._extension_path else [] )
 
     # Used to ensure that starting/stopping of the server is synchronized
     self._server_state_mutex = threading.RLock()
@@ -247,6 +319,12 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._server_stderr = None
     self._workspace_path = None
     self._CleanUp()
+
+
+  def DefaultSettings( self, request_data ):
+    return {
+      'bundles': self._bundles
+    }
 
 
   def SupportedFiletypes( self ):
@@ -299,7 +377,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       items.append( responses.DebugInfoItem( 'Workspace Path',
                                              self._workspace_path ) )
 
+    items.append( responses.DebugInfoItem( 'Extension Path',
+                                           self._extension_path ) )
+
     items.extend( self.CommonDebugItems() )
+
 
     return responses.BuildDebugInfoResponse(
       name = "Java",
