@@ -141,6 +141,7 @@ def GetCompletions_NotForced_NoYcmdCaching_test( app ):
 
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_ForcedWithNoTrigger_test( app ):
   RunTest( app, {
@@ -190,6 +191,7 @@ def GetCompletions_Fallback_NoSuggestions_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
   # TESTCASE1 (general_fallback/lang_cpp.cc)
@@ -214,6 +216,7 @@ def GetCompletions_Fallback_NoSuggestions_MinimumCharaceters_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Fallback_Suggestions_test( app ):
   # TESTCASE1 (general_fallback/lang_c.c)
@@ -237,6 +240,7 @@ def GetCompletions_Fallback_Suggestions_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Fallback_Exception_test( app ):
   # TESTCASE4 (general_fallback/lang_c.c)
@@ -263,6 +267,7 @@ def GetCompletions_Fallback_Exception_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Forced_NoFallback_test( app ):
   # TESTCASE2 (general_fallback/lang_c.c)
@@ -282,6 +287,7 @@ def GetCompletions_Forced_NoFallback_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_FilteredNoResults_Fallback_test( app ):
   # no errors because the semantic completer returned results, but they
@@ -350,6 +356,7 @@ int main()
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_ForceSemantic_YcmdCache_test( app ):
   RunTest( app, {
@@ -415,9 +422,9 @@ int main()
   } )
 
 
-@SharedYcmd
 @WindowsOnly
 @WithRetry
+@SharedYcmd
 def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
   RunTest( app, {
     'description': 'basic completion with --driver-mode=cl',
@@ -444,9 +451,9 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
   } )
 
 
-@SharedYcmd
 @WindowsOnly
 @WithRetry
+@SharedYcmd
 def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
   RunTest( app, {
     'description': 'basic completion with --driver-mode=cl',
@@ -473,9 +480,9 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
   } )
 
 
-@SharedYcmd
 @WindowsOnly
 @WithRetry
+@SharedYcmd
 def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
   RunTest( app, {
     'description': 'Completion inside include statement with CL driver',
@@ -500,9 +507,9 @@ def GetCompletions_ClangCLDriverFlag_IncludeStatementCandidate_test( app ):
   } )
 
 
-@SharedYcmd
 @WindowsOnly
 @WithRetry
+@SharedYcmd
 def GetCompletions_ClangCLDriverExec_IncludeStatementCandidate_test( app ):
   RunTest( app, {
     'description': 'Completion inside include statement with CL driver',
@@ -527,6 +534,7 @@ def GetCompletions_ClangCLDriverExec_IncludeStatementCandidate_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_UnicodeInLine_test( app ):
   RunTest( app, {
@@ -550,6 +558,7 @@ def GetCompletions_UnicodeInLine_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_UnicodeInLineFilter_test( app ):
   RunTest( app, {
@@ -602,6 +611,7 @@ def GetCompletions_QuotedInclude_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
   RunTest( app, {
@@ -625,6 +635,7 @@ def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_QuotedInclude_AfterDot_test( app ):
   RunTest( app, {
@@ -649,6 +660,7 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_QuotedInclude_AfterSpace_test( app ):
   RunTest( app, {
@@ -672,6 +684,7 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_QuotedInclude_Invalid_test( app ):
   RunTest( app, {
@@ -693,6 +706,7 @@ def GetCompletions_QuotedInclude_Invalid_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_BracketInclude_test( app ):
   RunTest( app, {
@@ -717,6 +731,7 @@ def GetCompletions_BracketInclude_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
   RunTest( app, {
@@ -742,7 +757,8 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
   } )
 
 
-@SharedYcmd
+@WithRetry
+@IsolatedYcmd()
 def GetCompletions_cuda_test( app ):
   RunTest( app, {
     'description': 'Completion of CUDA files',
@@ -792,6 +808,7 @@ def GetCompletions_WithHeaderInsertionDecorators_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_ServerTriggers_Ignored_test( app ):
   RunTest( app, {
