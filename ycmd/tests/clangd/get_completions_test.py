@@ -758,7 +758,7 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
 
 
 @WithRetry
-@SharedYcmd
+@IsolatedYcmd()
 def GetCompletions_cuda_test( app ):
   RunTest( app, {
     'description': 'Completion of CUDA files',
@@ -775,7 +775,7 @@ def GetCompletions_cuda_test( app ):
         'completion_start_column': 29,
         'completions': contains(
           CompletionEntryMatcher( 'do_something', 'void',
-              { 'menu_text': ' do_something(float *a)' } ),
+              { 'menu_text': 'do_something(float *a)' } ),
         ),
         'errors': empty(),
       } )
