@@ -146,7 +146,7 @@ jobs:
   strategy:
     matrix:
       'Python 2.7 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/2.7.16/python-2.7.16.amd64.msi'
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/2.7.15/python-2.7.15.amd64.msi'
       'Python 3.7 32-bit':
         YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3.exe'
       'Python 3.7 64-bit':
