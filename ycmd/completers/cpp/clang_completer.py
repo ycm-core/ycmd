@@ -448,7 +448,7 @@ class ClangCompleter( Completer ):
       flags = []
       filename = request_data[ 'filepath' ]
 
-    database = self._flags.FindCompilationDatabase( filename )
+    database = self._flags.LoadCompilationDatabase( filename )
     database_directory = database.database_directory if database else None
 
     database_item = responses.DebugInfoItem(

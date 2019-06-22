@@ -176,7 +176,7 @@ class Flags( object ):
       return _CallExtraConfFlagsForFile( module, filename, client_data )
 
     # Load the flags from the compilation database if any.
-    database = self.FindCompilationDatabase( filename )
+    database = self.LoadCompilationDatabase( filename )
     if database:
       return self._GetFlagsFromCompilationDatabase( database, filename )
 
@@ -218,7 +218,7 @@ class Flags( object ):
 
   # Return a compilation database object for the supplied path or None if no
   # compilation database is found.
-  def FindCompilationDatabase( self, file_dir ):
+  def LoadCompilationDatabase( self, file_dir ):
     # We search up the directory hierarchy, to first see if we have a
     # compilation database already for that path, or if a compile_commands.json
     # file exists in that directory.
