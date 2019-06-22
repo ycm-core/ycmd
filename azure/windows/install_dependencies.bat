@@ -12,7 +12,7 @@ if "%python_installer_extension%" == "exe" (
   msiexec /i C:\python-installer.msi TARGETDIR=C:\Python /qn
 )
 
-C:\Python\Scripts\pip install -r test_requirements.txt --disable-pip-version-check --no-warn-script-location
+C:\Python\Scripts\pip install -r test_requirements.txt
 
 :: Enable coverage for Python subprocesses. See:
 :: http://coverage.readthedocs.io/en/latest/subprocess.html
