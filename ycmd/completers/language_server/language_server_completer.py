@@ -554,7 +554,11 @@ class LanguageServerConnection( threading.Thread ):
       # If there is an immediate (in-message-pump-thread) handler configured,
       # call it.
       if self._notification_handler:
-        self._notification_handler( self, message )
+        try:
+          self._notification_handler( self, message )
+        except Exception:
+          LOGGER.exception( 'Handling message in poll thread failed: %s',
+                            message )
 
 
   def _AddNotificationToQueue( self, message ):
@@ -1304,7 +1308,12 @@ class LanguageServerCompleter( Completer ):
       # can be encoded or not. Therefore, we convert them back and forth
       # according to our implementation to make sure they are in a cannonical
       # form for access later on.
-      uri = lsp.FilePathToUri( lsp.UriToFilePath( params[ 'uri' ] ) )
+      try:
+        uri = lsp.FilePathToUri( lsp.UriToFilePath( params[ 'uri' ] ) )
+      except lsp.InvalidUriException:
+        # Ignore diagnostics for URIs we don't recognise
+        LOGGER.exception( 'Ignoring diagnostics for unrecognized URI' )
+        return
       with self._server_info_mutex:
         self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
 
