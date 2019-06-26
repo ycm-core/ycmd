@@ -318,9 +318,11 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
   assert_that( results, diag_matcher )
 
 
-@WithRetry
-@SharedYcmd
+@IsolatedYcmd()
 def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
+  StartJavaCompleterServerInDirectory( app,
+                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
+
   filepath = TestLauncher
   contents = ReadFile( filepath )
 
@@ -364,7 +366,7 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
         json.dumps( sorted( iterkeys( seen ) ), indent=2 ) ) )
 
 
-@IsolatedYcmd()
+@IsolatedYcmd() # noqa
 def Poll_Diagnostics_ChangeFileContents_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( DEFAULT_PROJECT_DIR ) )
@@ -377,6 +379,7 @@ public class Test {
 }"""
 
   messages_for_filepath = []
+  test_complete = False
 
   def PollForMessagesInAnotherThread( filepath, contents ):
     try:
@@ -384,12 +387,15 @@ public class Test {
                                       { 'filepath': filepath,
                                         'contents': contents,
                                         'filetype': 'java' } ):
+        if test_complete:
+          return
+
         if 'filepath' in message and message[ 'filepath' ] == filepath:
           messages_for_filepath.append( message )
     except PollForMessagesTimeoutException:
       pass
 
-  StartThread( PollForMessagesInAnotherThread, filepath, old_contents )
+  poller = StartThread( PollForMessagesInAnotherThread, filepath, old_contents )
 
   new_contents = """package com.youcompleteme;
 
@@ -445,6 +451,10 @@ public class Test {
         raise
 
       time.sleep( 0.25 )
+
+  test_complete = True
+  poller.join( 30 )
+  assert not poller.is_alive()
 
 
 @IsolatedYcmd()
