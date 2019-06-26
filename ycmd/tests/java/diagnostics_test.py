@@ -319,6 +319,7 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
   assert_that( results, diag_matcher )
 
 
+@WithRetry
 @IsolatedYcmd()
 def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
   StartJavaCompleterServerInDirectory( app,

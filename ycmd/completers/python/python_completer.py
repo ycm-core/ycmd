@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2019 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -67,16 +67,17 @@ class PythonCompleter( Completer ):
       pass
 
     module = extra_conf_store.ModuleForSourceFile( filepath )
-    settings = self._GetSettings( module, client_data )
+    settings = self._GetSettings( module, filepath, client_data )
     self._settings_for_file[ filepath, client_data ] = settings
     return settings
 
 
-  def _GetSettings( self, module, client_data ):
+  def _GetSettings( self, module, filepath, client_data ):
     # We don't warn the user if no extra conf file is found.
     if module:
       if hasattr( module, 'Settings' ):
         settings = module.Settings( language = 'python',
+                                    filename = filepath,
                                     client_data = client_data )
         if settings is not None:
           return settings
