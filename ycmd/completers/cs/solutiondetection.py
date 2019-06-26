@@ -99,15 +99,15 @@ def _SolutionTestCheckHeuristics( candidates, tokens, i ):
   # there is more than one file, try some hints to decide
   # 1. is there a solution named just like the subdirectory with the source?
   if ( not selection and i < len( tokens ) - 1 and
-       u'{0}.sln'.format( tokens[ i + 1 ] ) in candidates ):
-    selection = os.path.join( path, u'{0}.sln'.format( tokens[ i + 1 ] ) )
+       '{0}.sln'.format( tokens[ i + 1 ] ) in candidates ):
+    selection = os.path.join( path, '{0}.sln'.format( tokens[ i + 1 ] ) )
     LOGGER.info( 'Selected solution file %s as it matches source subfolder',
                  selection )
 
   # 2. is there a solution named just like the directory containing the
   # solution?
-  if not selection and u'{0}.sln'.format( tokens[ i ] ) in candidates :
-    selection = os.path.join( path, u'{0}.sln'.format( tokens[ i ] ) )
+  if not selection and '{0}.sln'.format( tokens[ i ] ) in candidates :
+    selection = os.path.join( path, '{0}.sln'.format( tokens[ i ] ) )
     LOGGER.info( 'Selected solution file %s as it matches containing folder',
                  selection )
 
