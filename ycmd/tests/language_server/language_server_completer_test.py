@@ -997,7 +997,7 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test():
           'end': { 'line': 4, 'character': 13 }
         },
         'severity': 1,
-        'message': 'Second error'
+        'message': 'Second error [8]'
       } ]
     }
   }
@@ -1137,6 +1137,100 @@ def LanguageServerCompleter_GetHoverResponse_test():
                        'GetResponse',
                        side_effect = [ { 'result': { 'contents': 'test' } } ] ):
       eq_( completer.GetHoverResponse( request_data ), 'test' )
+
+
+def LanguageServerCompleter_Diagnostics_Code_test():
+  completer = MockCompleter()
+  filepath = os.path.realpath( '/foo.cpp' )
+  uri = lsp.FilePathToUri( filepath )
+  request_data = RequestWrap( BuildRequest( line_num = 1,
+                                            column_num = 1,
+                                            filepath = filepath,
+                                            contents = '' ) )
+  notification = {
+    'jsonrpc': '2.0',
+    'method': 'textDocument/publishDiagnostics',
+    'params': {
+      'uri': uri,
+      'diagnostics': [ {
+        'range': {
+          'start': { 'line': 3, 'character': 10 },
+          'end': { 'line': 3, 'character': 11 }
+        },
+        'severity': 1,
+        'message': 'First error',
+        'code': 'random_error'
+      }, {
+        'range': {
+          'start': { 'line': 3, 'character': 10 },
+          'end': { 'line': 3, 'character': 11 }
+        },
+        'severity': 1,
+        'message': 'Second error',
+        'code': 8
+      }, {
+        'range': {
+          'start': { 'line': 3, 'character': 10 },
+          'end': { 'line': 3, 'character': 11 }
+        },
+        'severity': 1,
+        'message': 'Third error',
+        'code': '8'
+      } ]
+    }
+  }
+  completer.GetConnection()._notifications.put( notification )
+  completer.HandleNotificationInPollThread( notification )
+
+  with patch.object( completer, 'ServerIsReady', return_value = True ):
+    completer.OnFileReadyToParse( request_data )
+    # Simulate receipt of response and initialization complete
+    initialize_response = {
+      'result': {
+        'capabilities': {}
+      }
+    }
+    completer._HandleInitializeInPollThread( initialize_response )
+
+    diagnostics = contains(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 4, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
+        'ranges': contains(
+           RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
+        'text': equal_to( 'First error [random_error]' ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 4, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
+        'ranges': contains(
+           RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
+        'text': equal_to( 'Second error [8]' ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 4, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
+        'ranges': contains(
+           RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
+        'text': equal_to( 'Third error [8]' ),
+        'fixit_available': False
+      } )
+    )
+
+    assert_that( completer.OnFileReadyToParse( request_data ), diagnostics )
+
+    assert_that(
+      completer.PollForMessages( request_data ),
+      contains( has_entries( {
+        'diagnostics': diagnostics,
+        'filepath': filepath
+      } ) )
+    )
 
 
 def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test():

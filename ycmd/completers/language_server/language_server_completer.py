@@ -2263,12 +2263,19 @@ def _BuildDiagnostic( contents, uri, diag ):
     filename = ''
 
   r = _BuildRange( contents, filename, diag[ 'range' ] )
+  diag_text = diag[ 'message' ]
+  try:
+    code = diag[ 'code' ]
+    diag_text += " [" + str( code ) + "]"
+  except KeyError:
+    # code field doesn't exist.
+    pass
 
   return responses.Diagnostic(
     ranges = [ r ],
     location = r.start_,
     location_extent = r,
-    text = diag[ 'message' ],
+    text = diag_text,
     kind = lsp.SEVERITY[ diag[ 'severity' ] ].upper() )
 
 

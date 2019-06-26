@@ -41,7 +41,8 @@ DIAG_MATCHERS_PER_FILE = {
   MAIN_FILEPATH: contains_inanyorder(
     has_entries( {
       'kind': 'ERROR',
-      'text': 'no field `build_` on type `test::Builder`\n\nunknown field',
+      'text':
+          'no field `build_` on type `test::Builder`\n\nunknown field [E0609]',
       'location': LocationMatcher( MAIN_FILEPATH, 14, 13 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 14, 13 ), ( 14, 19 ) ),
       'ranges': contains( RangeMatcher( MAIN_FILEPATH,
