@@ -23,6 +23,7 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import contextlib
 import json
 from future.utils import iterkeys
 import time
@@ -366,7 +367,39 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
         json.dumps( sorted( iterkeys( seen ) ), indent=2 ) ) )
 
 
-@IsolatedYcmd() # noqa
+@contextlib.contextmanager
+def PollingThread( app,
+                   messages_for_filepath,
+                   filepath,
+                   contents ):
+
+  done = False
+
+  def PollForMessagesInAnotherThread():
+    try:
+      for message in PollForMessages( app,
+                                      { 'filepath': filepath,
+                                        'contents': contents,
+                                        'filetype': 'java' } ):
+        if done:
+          return
+
+        if 'filepath' in message and message[ 'filepath' ] == filepath:
+          messages_for_filepath.append( message )
+    except PollForMessagesTimeoutException:
+      pass
+
+  try:
+    poller = StartThread( PollForMessagesInAnotherThread )
+    yield
+  finally:
+    done = True
+    poller.join( 120 )
+    assert not poller.is_alive()
+
+
+@WithRetry
+@IsolatedYcmd()
 def Poll_Diagnostics_ChangeFileContents_test( app ):
   StartJavaCompleterServerInDirectory( app,
                                        PathToTestFile( DEFAULT_PROJECT_DIR ) )
@@ -379,82 +412,65 @@ public class Test {
 }"""
 
   messages_for_filepath = []
-  test_complete = False
 
-  def PollForMessagesInAnotherThread( filepath, contents ):
-    try:
-      for message in PollForMessages( app,
-                                      { 'filepath': filepath,
-                                        'contents': contents,
-                                        'filetype': 'java' } ):
-        if test_complete:
-          return
+  with PollingThread( app,
+                      messages_for_filepath,
+                      filepath,
+                      old_contents ):
 
-        if 'filepath' in message and message[ 'filepath' ] == filepath:
-          messages_for_filepath.append( message )
-    except PollForMessagesTimeoutException:
-      pass
-
-  poller = StartThread( PollForMessagesInAnotherThread, filepath, old_contents )
-
-  new_contents = """package com.youcompleteme;
+    new_contents = """package com.youcompleteme;
 
 public class Test {
   public String test;
   public String test;
 }"""
 
-  event_data = BuildRequest( event_name = 'FileReadyToParse',
-                             contents = new_contents,
-                             filepath = filepath,
-                             filetype = 'java' )
-  app.post_json( '/event_notification', event_data ).json
+    event_data = BuildRequest( event_name = 'FileReadyToParse',
+                               contents = new_contents,
+                               filepath = filepath,
+                               filetype = 'java' )
+    app.post_json( '/event_notification', event_data ).json
 
-  expiration = time.time() + 10
-  while True:
-    try:
-      assert_that(
-        messages_for_filepath,
-        has_item( has_entries( {
-          'filepath': filepath,
-          'diagnostics': contains(
-            has_entries( {
-              'kind': 'ERROR',
-              'text': 'Duplicate field Test.test',
-              'location': LocationMatcher( youcompleteme_Test, 4, 17 ),
-              'location_extent': RangeMatcher( youcompleteme_Test,
-                                               ( 4, 17 ),
-                                               ( 4, 21 ) ),
-              'ranges': contains( RangeMatcher( youcompleteme_Test,
-                                                ( 4, 17 ),
-                                                ( 4, 21 ) ) ),
-              'fixit_available': False
-            } ),
-            has_entries( {
-              'kind': 'ERROR',
-              'text': 'Duplicate field Test.test',
-              'location': LocationMatcher( youcompleteme_Test, 5, 17 ),
-              'location_extent': RangeMatcher( youcompleteme_Test,
-                                               ( 5, 17 ),
-                                               ( 5, 21 ) ),
-              'ranges': contains( RangeMatcher( youcompleteme_Test,
-                                                ( 5, 17 ),
-                                                ( 5, 21 ) ) ),
-              'fixit_available': False
-            } )
-          )
-        } ) )
-      )
-      break
-    except AssertionError:
-      if time.time() > expiration:
-        raise
-
-      time.sleep( 0.25 )
-
-  test_complete = True
-  poller.join( 30 )
-  assert not poller.is_alive()
+    expiration = time.time() + 10
+    while True:
+      try:
+        assert_that(
+          messages_for_filepath,
+          has_item( has_entries( {
+            'filepath': filepath,
+            'diagnostics': contains(
+              has_entries( {
+                'kind': 'ERROR',
+                'text': 'Duplicate field Test.test',
+                'location': LocationMatcher( youcompleteme_Test, 4, 17 ),
+                'location_extent': RangeMatcher( youcompleteme_Test,
+                                                 ( 4, 17 ),
+                                                 ( 4, 21 ) ),
+                'ranges': contains( RangeMatcher( youcompleteme_Test,
+                                                  ( 4, 17 ),
+                                                  ( 4, 21 ) ) ),
+                'fixit_available': False
+              } ),
+              has_entries( {
+                'kind': 'ERROR',
+                'text': 'Duplicate field Test.test',
+                'location': LocationMatcher( youcompleteme_Test, 5, 17 ),
+                'location_extent': RangeMatcher( youcompleteme_Test,
+                                                 ( 5, 17 ),
+                                                 ( 5, 21 ) ),
+                'ranges': contains( RangeMatcher( youcompleteme_Test,
+                                                  ( 5, 17 ),
+                                                  ( 5, 21 ) ) ),
+                'fixit_available': False
+              } )
+            )
+          } ) )
+        )
+        break
+      except AssertionError:
+        if time.time() > expiration:
+          raise
+        time.sleep( 0.25 )
 
 
 @IsolatedYcmd()
