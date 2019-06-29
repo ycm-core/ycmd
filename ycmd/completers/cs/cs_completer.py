@@ -136,10 +136,6 @@ class CsharpCompleter( Completer ):
       #    self._SolutionSubcommand( request_data,
       #                              method = '_ReloadSolution',
       #                              no_request_data = True ) ),
-      'SolutionFile'                     : ( lambda self, request_data, args:
-         self._SolutionSubcommand( request_data,
-                                   method = '_SolutionFile',
-                                   no_request_data = True ) ),
       'GoToDefinition'                   : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToDefinition' ) ),
@@ -599,11 +595,6 @@ class CsharpSolutionCompleter( object ):
       return self._GetResponse( '/checkreadystatus', timeout = .2 )
     except Exception:
       return False
-
-
-  def _SolutionFile( self ):
-    """ Find out which solution file server was started with """
-    return self._solution_path
 
 
   def _ServerLocation( self ):
