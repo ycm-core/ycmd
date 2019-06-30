@@ -1,4 +1,4 @@
-// Package td is dummy data for gocode completion test.
+// Package td is dummy data for gopls completion test.
 package td
 
 import (
