@@ -671,6 +671,7 @@ class LanguageServerCompleter( Completer ):
       - ConvertNotificationToMessage
       - GetCompleterName
       - GetProjectDirectory
+      - GetProjectRootFiles
       - GetTriggerCharacters
       - GetDefaultNotificationHandler
       - HandleNotificationInPollThread
@@ -1511,16 +1512,31 @@ class LanguageServerCompleter( Completer ):
     del self._server_file_state[ file_state.filename ]
 
 
+  def GetProjectRootFiles( self ):
+    """Returns a list of files that indicate the root of the project.
+    It should be easier to override just this method than the whole
+    GetProjectDirectory."""
+    return []
+
   def GetProjectDirectory( self, request_data, extra_conf_dir ):
     """Return the directory in which the server should operate. Language server
     protocol and most servers have a concept of a 'project directory'. Where a
     concrete completer can detect this better, it should override this method,
     but otherwise, we default as follows:
+      - try to find files from GetProjectRootFiles and use the
+        first directory from there
       - if there's an extra_conf file, use that directory
       - otherwise if we know the client's cwd, use that
       - otherwise use the diretory of the file that we just opened
     Note: None of these are ideal. Ycmd doesn't really have a notion of project
     directory and therefore neither do any of our clients."""
+
+    project_root_files = self.GetProjectRootFiles()
+    if project_root_files:
+      for folder in utils.PathsToAllParentFolders( request_data[ 'filepath' ] ):
+        for root_file in project_root_files:
+          if os.path.isfile( os.path.join( folder, root_file ) ):
+            return folder
 
     if extra_conf_dir:
       return extra_conf_dir
