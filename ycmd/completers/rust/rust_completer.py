@@ -94,16 +94,12 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     return env
 
 
-  def GetProjectDirectory( self, request_data, extra_conf_dir ):
+  def GetProjectRootFiles( self ):
     # Without LSP workspaces support, RLS relies on the rootUri to detect a
     # project.
     # TODO: add support for LSP workspaces to allow users to change project
     # without having to restart RLS.
-    for folder in utils.PathsToAllParentFolders( request_data[ 'filepath' ] ):
-      if os.path.isfile( os.path.join( folder, 'Cargo.toml' ) ):
-        return folder
-    return super( RustCompleter, self ).GetProjectDirectory( request_data,
-                                                             extra_conf_dir )
+    return [ 'Cargo.toml' ]
 
 
 

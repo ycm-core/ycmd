@@ -271,13 +271,15 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `name`: the string representing the name of the server
 - `cmdline`: the list representing the command line to execute the server
 - `filetypes`: list of supported filetypes.
+- `project_root_files`: Tells ycmd which files indicate project root.
 
 ```json
 {
   "language_server": [ {
     "name": "gopls",
     "cmdline": [ "/path/to/gopls", "-rpc.trace" ],
-    "filetypes": [ "go" ]
+    "filetypes": [ "go" ],
+    "project_root_files": [ "go.mod" ]
   } ]
 }
 ```
