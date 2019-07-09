@@ -2,7 +2,7 @@ ycmd: a code-completion & comprehension server
 ==============================================
 
 [![Build status](https://dev.azure.com/YouCompleteMe/YCM/_apis/build/status/Valloric.ycmd?branchName=master)](https://dev.azure.com/YouCompleteMe/YCM/_build/latest?definitionId=2&branchName=master)
-[![Coverage status](https://img.shields.io/codecov/c/github/Valloric/ycmd/master.svg)](https://codecov.io/gh/Valloric/ycmd)
+[![Coverage status](https://img.shields.io/codecov/c/github/ycm-core/ycmd/master.svg)](https://codecov.io/gh/ycm-core/ycmd)
 
 ycmd is a server that provides APIs for code-completion and other
 code-comprehension use-cases like semantic GoTo commands (and others). For
@@ -271,13 +271,15 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `name`: the string representing the name of the server
 - `cmdline`: the list representing the command line to execute the server
 - `filetypes`: list of supported filetypes.
+- `project_root_files`: Tells ycmd which files indicate project root.
 
 ```json
 {
   "language_server": [ {
     "name": "gopls",
     "cmdline": [ "/path/to/gopls", "-rpc.trace" ],
-    "filetypes": [ "go" ]
+    "filetypes": [ "go" ],
+    "project_root_files": [ "go.mod" ]
   } ]
 }
 ```

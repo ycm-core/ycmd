@@ -87,3 +87,102 @@ def DebugInfo_ServerIsNotRunning_NoSolution_test( app ):
       'items': empty()
     } ) )
   )
+
+
+def SolutionSelectCheck( app, sourcefile, reference_solution,
+                         extra_conf_store = None ):
+  # reusable test: verify that the correct solution (reference_solution) is
+  #   detected for a given source file (and optionally a given extra_conf)
+  if extra_conf_store:
+    app.post_json( '/load_extra_conf_file',
+                   { 'filepath': extra_conf_store } )
+
+  result = app.post_json( '/debug_info',
+                          BuildRequest( completer_target = 'filetype_default',
+                                        filepath = sourcefile,
+                                        filetype = 'cs' ) ).json
+
+  assert_that(
+    result,
+    has_entry( 'completer', has_entries( {
+      'name': 'C#',
+      'servers': contains( has_entries( {
+        'extras': contains( has_entries( {
+          'key': 'solution',
+          'value': reference_solution
+        } ) )
+      } ) )
+    } ) )
+  )
+
+
+@SharedYcmd
+def DebugInfo_UsesSubfolderHint_test( app ):
+  SolutionSelectCheck( app,
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-named-like-folder',
+                                       'testy', 'Program.cs' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-named-like-folder',
+                                       'testy.sln' ) )
+
+
+@SharedYcmd
+def DebugInfo_UsesSuperfolderHint_test( app ):
+  SolutionSelectCheck( app,
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-named-like-folder',
+                                       'not-testy', 'Program.cs' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-named-like-folder',
+                                       'solution-named-like-folder.sln' ) )
+
+
+@SharedYcmd
+def DebugInfo_ExtraConfStoreAbsolute_test( app ):
+  SolutionSelectCheck( app,
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-abs',
+                                       'testy', 'Program.cs' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'testy2.sln' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-abs',
+                                       '.ycm_extra_conf.py' ) )
+
+
+@SharedYcmd
+def DebugInfo_ExtraConfStoreRelative_test( app ):
+  SolutionSelectCheck( app,
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-rel',
+                                       'testy', 'Program.cs' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-rel',
+                                       'testy2.sln' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-rel',
+                                       '.ycm_extra_conf.py' ) )
+
+
+@SharedYcmd
+def DebugInfo_ExtraConfStoreNonexisting_test( app ):
+  SolutionSelectCheck( app,
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-bad',
+                                       'testy', 'Program.cs' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-bad',
+                                       'testy2.sln' ),
+                       PathToTestFile( 'testy-multiple-solutions',
+                                       'solution-not-named-like-folder',
+                                       'extra-conf-bad',
+                                       'testy', '.ycm_extra_conf.py' ) )

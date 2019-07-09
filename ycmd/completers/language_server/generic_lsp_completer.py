@@ -31,9 +31,14 @@ class GenericLSPCompleter( SimpleLSPCompleter ):
   def __init__( self, user_options, server_settings ):
     self._name = server_settings[ 'name' ]
     self._supported_filetypes = server_settings[ 'filetypes' ]
+    self._project_root_files = server_settings.get( 'project_root_files', [] )
     super( GenericLSPCompleter, self ).__init__( user_options )
     self._command_line = server_settings[ 'cmdline' ]
     self._command_line[ 0 ] = utils.FindExecutable( self._command_line[ 0 ] )
+
+
+  def GetProjectRootFiles( self ):
+    return self._project_root_files
 
 
   def Language( self ):

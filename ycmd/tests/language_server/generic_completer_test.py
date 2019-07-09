@@ -30,7 +30,9 @@ from hamcrest import ( assert_that,
                        contains,
                        equal_to,
                        has_entries,
-                       has_items )
+                       has_entry,
+                       has_items,
+                       instance_of )
 from mock import patch
 from nose.tools import eq_
 from os import path as p
@@ -163,3 +165,55 @@ def GenericLSPCompleter_Hover_HasResponse_test( app, *args ):
   eq_( response, {
     'message': 'asd'
   } )
+
+
+@IsolatedYcmd( { 'language_server':
+  [ { 'name': 'foo',
+      'filetypes': [ 'foo' ],
+      'project_root_files': [ 'proj_root' ],
+      'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
+def GenericLSPCompleter_DebugInfo_CustomRoot_test( app, *args ):
+  test_file = PathToTestFile(
+      'generic_server', 'foo', 'bar', 'baz', 'test_file' )
+  request = BuildRequest( filepath = test_file,
+                          filetype = 'foo',
+                          line_num = 1,
+                          column_num = 1,
+                          contents = '',
+                          event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', request )
+  WaitUntilCompleterServerReady( app, 'foo' )
+  request.pop( 'event_name' )
+  response = app.post_json( '/debug_info', request ).json
+  assert_that(
+    response,
+    has_entry( 'completer', has_entries( {
+      'name': 'GenericLSP',
+      'servers': contains( has_entries( {
+        'name': 'fooCompleter',
+        'is_running': instance_of( bool ),
+        'executable': contains( instance_of( str ),
+                                instance_of( str ),
+                                instance_of( str ) ),
+        'address': None,
+        'port': None,
+        'pid': instance_of( int ),
+        'logfiles': contains( instance_of( str ) ),
+        'extras': contains(
+          has_entries( {
+            'key': 'Server State',
+            'value': instance_of( str ),
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'generic_server', 'foo' ),
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}'
+          } ),
+        )
+      } ) ),
+    } ) )
+  )

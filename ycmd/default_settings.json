@@ -25,8 +25,6 @@
   "csharp_server_port": 0,
   "hmac_secret": "",
   "server_keep_logfiles": 0,
-  "gocode_binary_path": "",
-  "godef_binary_path": "",
   "python_binary_path": "",
   "language_server": [],
   "java_jdtls_use_clean_workspace": 1,

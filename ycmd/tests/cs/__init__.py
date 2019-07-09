@@ -179,6 +179,14 @@ def IsolatedYcmd( custom_options = {} ):
     @functools.wraps( test )
     def Wrapper( *args, **kwargs ):
       with IsolatedApp( custom_options ) as app:
+        # We are not wrapping test() in a try/finally block and calling
+        # StopCompleterServer() needs the correct filename to stop the
+        # specific server corresponding to the solution file.
+        #
+        # Leaving the file unspecified in StopCompleterServer() starts
+        # a new server only to shut it down right afterwards.
+        # Instead, we leave the server running and let tearDownPackage()
+        # stop all the running servers by running through all shared_filepaths.
         test( app, *args, **kwargs )
     return Wrapper
   return Decorator
