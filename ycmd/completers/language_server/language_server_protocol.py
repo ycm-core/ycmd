@@ -228,10 +228,7 @@ def BuildNotification( method, parameters ):
 def BuildResponse( request, parameters ):
   """Builds a JSON RPC response message to respond to the supplied |request|
   message. |parameters| should contain either 'error' or 'result'"""
-  message = {
-    'id': request[ 'id' ],
-    'method': request[ 'method' ],
-  }
+  message = { 'id': request[ 'id' ] }
   message.update( parameters )
   return _BuildMessageData( message )
 
@@ -273,7 +270,7 @@ def Reject( request, request_error, data = None ):
   msg = {
     'error': {
       'code': request_error.code,
-      'reason': request_error.reason,
+      'message': request_error.reason,
     }
   }
   if data is not None:
