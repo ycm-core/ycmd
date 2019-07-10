@@ -99,10 +99,10 @@ completer and [clangd][clangd]-based completer that both provide semantic
 completion for C-family languages. [clangd][clangd] support is currently
 **experimental** and changes in the near future might break backwards
 compatibility. There's also a Jedi-based completer for semantic completion for
-Python, an OmniSharp-based completer for C#, a [Gocode][gocode]-based completer
-for Go (using [Godef][godef] for jumping to definitions), a TSServer-based
-completer for JavaScript and TypeScript, a [jdt.ls][jdtls]-based server for
-Java, and a [RLS][]-based completer for Rust.  More will be added with time.
+Python, an OmniSharp-based completer for C#, a [gopls]-based completer for Go,
+a TSServer-based completer for JavaScript and TypeScript, a [jdt.ls][jdtls]-based
+server for Java, and a [RLS][]-based completer for Rust.
+More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).

@@ -48,7 +48,7 @@ PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
 
 def ShouldEnableGoCompleter( user_options ):
   server_exists = os.path.isfile( PATH_TO_GOPLS )
-  if server_exists:
+  if server_exists or 'gopls_binary_path' in user_options:
     return True
   utils.LOGGER.info( 'No gopls executable at %s.', PATH_TO_GOPLS )
   return False
@@ -56,6 +56,10 @@ def ShouldEnableGoCompleter( user_options ):
 
 class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def __init__( self, user_options ):
+    if 'gopls_binary_path' in user_options:
+      self._gopls_binary_path = user_options['gopls_binary_path']
+    else:
+      self._gopls_binary_path = PATH_TO_GOPLS
     super( GoCompleter, self ).__init__( user_options )
 
 
@@ -72,7 +76,7 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def GetCommandLine( self ):
-    cmdline = [ PATH_TO_GOPLS, '-logfile', self._stderr_file ]
+    cmdline = [ self._gopls_binary_path, '-logfile', self._stderr_file ]
     if utils.LOGGER.isEnabledFor( logging.DEBUG ):
       cmdline.append( '-rpc.trace' )
     return cmdline
