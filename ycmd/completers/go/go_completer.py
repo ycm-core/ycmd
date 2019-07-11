@@ -57,7 +57,7 @@ def ShouldEnableGoCompleter( user_options ):
 class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def __init__( self, user_options ):
     if 'gopls_binary_path' in user_options:
-      self._gopls_binary_path = user_options['gopls_binary_path']
+      self._gopls_binary_path = user_options[ 'gopls_binary_path' ]
     else:
       self._gopls_binary_path = PATH_TO_GOPLS
     super( GoCompleter, self ).__init__( user_options )
