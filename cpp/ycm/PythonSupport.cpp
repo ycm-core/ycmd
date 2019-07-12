@@ -36,7 +36,7 @@ namespace YouCompleteMe {
 namespace {
 
 std::vector< const Candidate * > CandidatesFromObjectList(
-  const pylist &candidates,
+  pylist candidates,
   const std::string &candidate_property ) {
   size_t num_candidates = len( candidates );
   std::vector< std::string > candidate_strings;
@@ -62,7 +62,7 @@ std::vector< const Candidate * > CandidatesFromObjectList(
 
 
 pylist FilterAndSortCandidates(
-  const pylist &candidates,
+  pylist candidates,
   const std::string &candidate_property,
   std::string query,
   const size_t max_candidates ) {
