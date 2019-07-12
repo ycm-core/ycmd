@@ -5,4 +5,5 @@ fn
 main()
                                 {
         unformatted_function( false );
+        let x = 1;
 }
