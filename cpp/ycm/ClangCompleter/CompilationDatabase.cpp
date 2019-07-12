@@ -35,7 +35,7 @@ using CompileCommandsWrap =
 
 
 CompilationDatabase::CompilationDatabase(
-  const pybind11::object &path_to_directory )
+  pybind11::object path_to_directory )
   : is_loaded_( false ),
     path_to_directory_( GetUtf8String( path_to_directory ) ) {
   CXCompilationDatabase_Error status;
@@ -63,7 +63,7 @@ bool CompilationDatabase::AlreadyGettingFlags() {
 
 
 CompilationInfoForFile CompilationDatabase::GetCompilationInfoForFile(
-  const pybind11::object &path_to_file ) {
+  pybind11::object path_to_file ) {
   CompilationInfoForFile info;
 
   if ( !is_loaded_ ) {

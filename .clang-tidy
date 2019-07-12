@@ -53,7 +53,7 @@ CheckOptions:
   - key:             performance-type-promotion-in-math-fn.IncludeStyle
     value:           llvm
   - key:             performance-unnecessary-value-param.AllowedTypes
-    value:           '^object$'
+    value:           '^object|list$'
   - key:             performance-unnecessary-value-param.IncludeStyle
     value:           llvm
   - key:             readability-braces-around-statements.ShortStatementLines
