@@ -29,7 +29,7 @@ namespace YouCompleteMe {
 /// |max_candidates|. If |max_candidates| is omitted or 0, all candidates are
 /// sorted.
 YCM_EXPORT pybind11::list FilterAndSortCandidates(
-  const pybind11::list &candidates,
+  pybind11::list candidates,
   const std::string &candidate_property,
   std::string query,
   const size_t max_candidates = 0 );
