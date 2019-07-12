@@ -59,5 +59,12 @@ class GenericLSPCompleter( SimpleLSPCompleter ):
         self.GetHoverResponse( request_data ) ) }
 
 
+  def GetCodepointForCompletionRequest( self, request_data ):
+    if request_data[ 'force_semantic' ]:
+      return request_data[ 'column_codepoint' ]
+    return super( GenericLSPCompleter, self ).GetCodepointForCompletionRequest(
+      request_data )
+
+
   def SupportedFiletypes( self ):
     return self._supported_filetypes
