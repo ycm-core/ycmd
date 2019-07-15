@@ -365,7 +365,7 @@ class LanguageServerConnection( threading.Thread ):
   def NextRequestId( self ):
     with self._response_mutex:
       self._last_id += 1
-      return str( self._last_id )
+      return self._last_id
 
 
   def GetResponseAsync( self, request_id, message, response_callback=None ):
@@ -544,7 +544,7 @@ class LanguageServerConnection( threading.Thread ):
       else:
         # This is a response to the message with id message[ 'id' ]
         with self._response_mutex:
-          message_id = str( message[ 'id' ] )
+          message_id = message[ 'id' ]
           assert message_id in self._responses
           self._responses[ message_id ].ResponseReceived( message )
           del self._responses[ message_id ]
