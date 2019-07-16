@@ -36,6 +36,7 @@ import subprocess
 
 DIR_OF_THIS_SCRIPT = p.abspath( p.dirname( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
+DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
 SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 
 database = None
@@ -214,6 +215,8 @@ def PythonSysPath( **kwargs ):
                                                   'certifi' ),
                       p.join( DIR_OF_THIRD_PARTY, 'requests_deps',
                                                   'idna' ),
+                      p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ),
+                      p.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
                       p.join( DIR_OF_THIRD_PARTY, 'waitress' ) ]
 
   sys_path.append( p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )

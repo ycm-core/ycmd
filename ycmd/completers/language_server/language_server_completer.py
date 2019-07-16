@@ -25,6 +25,8 @@ import os
 import queue
 import subprocess
 import threading
+from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
 
 from ycmd import extra_conf_store, responses, utils
 from ycmd.completers.completer import Completer, CompletionsCache
@@ -282,9 +284,14 @@ class LanguageServerConnection( threading.Thread ):
     pass # pragma: no cover
 
 
-  @abc.abstractmethod
+  def _CancelWatchdogThreads( self ):
+    for observer in self._observers:
+      observer.stop()
+      observer.join()
+
+
   def Shutdown( self ):
-    pass # pragma: no cover
+    self._CancelWatchdogThreads()
 
 
   @abc.abstractmethod
@@ -297,9 +304,14 @@ class LanguageServerConnection( threading.Thread ):
     pass # pragma: no cover
 
 
-  def __init__( self, notification_handler = None ):
+  def __init__( self,
+                project_directory,
+                watchdog_factory,
+                notification_handler = None ):
     super().__init__()
 
+    self._watchdog_factory = watchdog_factory
+    self._project_directory = project_directory
     self._last_id = 0
     self._responses = {}
     self._response_mutex = threading.Lock()
@@ -310,10 +322,11 @@ class LanguageServerConnection( threading.Thread ):
     self._notification_handler = notification_handler
 
     self._collector = RejectCollector()
+    self._observers = []
 
 
   @contextlib.contextmanager
-  def HandleServerToClientRequests( self, collector ):
+  def CollectApplyEdits( self, collector ):
     old_collector = self._collector
     self._collector = collector
     try:
@@ -545,6 +558,38 @@ class LanguageServerConnection( threading.Thread ):
     return data, read_bytes, headers
 
 
+  def _ServerToClientRequest( self, request ):
+    method = request[ 'method' ]
+    if method == 'workspace/applyEdit':
+      self._collector.CollectApplyEdit( request, self )
+    elif method == 'client/registerCapability':
+      for reg in request[ 'params' ][ 'registrations' ]:
+        if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
+          globs = []
+          for watcher in reg[ 'registerOptions' ][ 'watchers' ]:
+            # TODO: Take care of watcher kinds. Not everything needs
+            # to be watched for create, modify *and* delete actions.
+            pattern = os.path.join( self._project_directory,
+                                    watcher[ 'globPattern' ] )
+            if os.path.isdir( pattern ):
+              pattern = os.path.join( pattern, '**' )
+            globs.append( pattern )
+          observer = Observer()
+          observer.schedule( self._watchdog_factory( globs ),
+                             self._project_directory,
+                             recursive = True )
+          observer.start()
+          self._observers.append( observer )
+      self.SendResponse( lsp.Void( request ) )
+    elif method == 'client/unregisterCapability':
+      for reg in request[ 'params' ][ 'unregisterations' ]:
+        if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
+          self._CancelWatchdogThreads()
+      self.SendResponse( lsp.Void( request ) )
+    else:
+      # Reject the request
+      self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
+
   def _DispatchMessage( self, message ):
     """Called in the message pump thread context when a complete message was
     read. For responses, calls the Response object's ResponseReceived method, or
@@ -554,7 +599,7 @@ class LanguageServerConnection( threading.Thread ):
     if 'id' in message:
       if 'method' in message:
         # This is a server->client request, which requires a response.
-        self._collector.HandleServerToClientRequest( message, self )
+        self._ServerToClientRequest( message )
       else:
         # This is a response to the message with id message[ 'id' ]
         with self._response_mutex:
@@ -602,10 +647,14 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
   the server. This should be the default choice for concrete completers."""
 
   def __init__( self,
+                project_directory,
+                watchdog_factory,
                 server_stdin,
                 server_stdout,
                 notification_handler = None ):
-    super().__init__( notification_handler )
+    super().__init__( project_directory,
+                      watchdog_factory,
+                      notification_handler )
 
     self._server_stdin = server_stdin
     self._server_stdout = server_stdout
@@ -626,6 +675,7 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
 
 
   def Shutdown( self ):
+    super().Shutdown()
     with self._stdin_lock:
       if not self._server_stdin.closed:
         self._server_stdin.close()
@@ -868,8 +918,11 @@ class LanguageServerCompleter( Completer ):
         stderr = stderr,
         env = self.GetServerEnvironment() )
 
+    self._project_directory = self.GetProjectDirectory( request_data )
     self._connection = (
       StandardIOLanguageServerConnection(
+        self._project_directory,
+        lambda globs: WatchdogHandler( self, globs ),
         self._server_handle.stdin,
         self._server_handle.stdout,
         self.GetDefaultNotificationHandler() )
@@ -1868,11 +1921,9 @@ class LanguageServerCompleter( Completer ):
     _GetSettingsFromExtraConf must be called before calling this method, as this
     method release on self._extra_conf_dir.
     It is called before starting the server in OnFileReadyToParse."""
-
     with self._server_info_mutex:
       assert not self._initialize_response
 
-      self._project_directory = self.GetProjectDirectory( request_data )
       request_id = self.GetConnection().NextRequestId()
 
       # FIXME: According to the discussion on
@@ -2292,7 +2343,7 @@ class LanguageServerCompleter( Completer ):
 
     unresolved_fixit = fixit[ 'command' ]
     collector = EditCollector()
-    with self.GetConnection().HandleServerToClientRequests( collector ):
+    with self.GetConnection().CollectApplyEdits( collector ):
       self.GetCommandResponse(
         request_data,
         unresolved_fixit[ 'command' ],
@@ -2320,7 +2371,7 @@ class LanguageServerCompleter( Completer ):
     # the LSP "comamnds" require client/server specific understanding of the
     # commands.
     collector = EditCollector()
-    with self.GetConnection().HandleServerToClientRequests( collector ):
+    with self.GetConnection().CollectApplyEdits( collector ):
       command_response = self.GetCommandResponse( request_data,
                                                   args[ 0 ],
                                                   args[ 1: ] )
@@ -2856,9 +2907,8 @@ class LanguageServerCompletionsCache( CompletionsCache ):
 
 
 class RejectCollector:
-  def HandleServerToClientRequest( self, request, connection ):
-    message = lsp.Reject( request, lsp.Errors.MethodNotFound )
-    connection.SendResponse( message )
+  def CollectApplyEdit( self, request, connection ):
+    connection.SendResponse( lsp.ApplyEditResponse( request, False ) )
 
 
 class EditCollector:
@@ -2866,7 +2916,33 @@ class EditCollector:
     self.requests = []
 
 
-  def HandleServerToClientRequest( self, request, connection ):
-    assert request[ 'method' ] == 'workspace/applyEdit'
+  def CollectApplyEdit( self, request, connection ):
     self.requests.append( request[ 'params' ] )
-    connection.SendResponse( lsp.ApplyEditResponse( request ) )
+    connection.SendResponse( lsp.ApplyEditResponse( request, True ) )
+
+
+class WatchdogHandler( PatternMatchingEventHandler ):
+  def __init__( self, server, patterns ):
+    super().__init__( patterns )
+    self._server = server
+
+
+  def on_created( self, event ):
+    if self._server.ServerIsReady():
+      with self._server._server_info_mutex:
+        msg = lsp.DidChangeWatchedFiles( event.src_path, 'create' )
+        self._server.GetConnection().SendNotification( msg )
+
+
+  def on_modified( self, event ):
+    if self._server.ServerIsReady():
+      with self._server._server_info_mutex:
+        msg = lsp.DidChangeWatchedFiles( event.src_path, 'modify' )
+        self._server.GetConnection().SendNotification( msg )
+
+
+  def on_deleted( self, event ):
+    if self._server.ServerIsReady():
+      with self._server._server_info_mutex:
+        msg = lsp.DidChangeWatchedFiles( event.src_path, 'delete' )
+        self._server.GetConnection().SendNotification( msg )

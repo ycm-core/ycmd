@@ -63,6 +63,7 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
 
   def StartServer( self, request_data, **kwargs ):
     self._started = True
+    self._project_directory = self.GetProjectDirectory( request_data )
     return True
 
 

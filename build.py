@@ -123,9 +123,14 @@ def RemoveDirectory( directory ):
                                                          max_tries ) )
 
 
-def MakeCleanDirectory( directory_path ):
+
+def RemoveDirectoryIfExists( directory_path ):
   if p.exists( directory_path ):
     RemoveDirectory( directory_path )
+
+
+def MakeCleanDirectory( directory_path ):
+  RemoveDirectoryIfExists( directory_path )
   os.makedirs( directory_path )
 
 
@@ -427,9 +432,6 @@ def ParseArguments():
   parser.add_argument( '--skip-build',
                        action = 'store_true',
                        help = "Don't build ycm_core lib, just install deps" )
-  parser.add_argument( '--no-regex',
-                       action = 'store_true',
-                       help = "Don't build the regex module" )
   parser.add_argument( '--valgrind',
                        action = 'store_true',
                        help = 'For developers: '
@@ -1113,23 +1115,45 @@ def WritePythonUsedDuringBuild():
     f.write( sys.executable )
 
 
+def CompileWatchdog( script_args ):
+  try:
+    DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
+    os.chdir( p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog' ) )
+    build_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', '3' )
+    lib_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' )
+
+    RemoveDirectoryIfExists( build_dir )
+    RemoveDirectoryIfExists( lib_dir )
+
+    CheckCall( [ sys.executable,
+                 'setup.py',
+                 'build',
+                 '--build-base=' + build_dir,
+                 '--build-lib=' + lib_dir ],
+               exit_message = 'Failed to build watchdog module.',
+               quiet = script_args.quiet,
+               status_message = 'Building watchdog module' )
+  finally:
+    os.chdir( DIR_OF_THIS_SCRIPT )
+
+
 def DoCmakeBuilds( args ):
   cmake = FindCmake( args )
   cmake_common_args = GetCmakeCommonArgs( args )
 
-  if not args.skip_build:
-    ExitIfYcmdLibInUseOnWindows()
-    BuildYcmdLib( cmake, cmake_common_args, args )
-    WritePythonUsedDuringBuild()
+  ExitIfYcmdLibInUseOnWindows()
+  BuildYcmdLib( cmake, cmake_common_args, args )
+  WritePythonUsedDuringBuild()
 
-  if not args.no_regex:
-    BuildRegexModule( cmake, cmake_common_args, args )
+  BuildRegexModule( cmake, cmake_common_args, args )
+
+  CompileWatchdog( args )
 
 
 def Main():
   args = ParseArguments()
 
-  if not args.skip_build or not args.no_regex:
+  if not args.skip_build:
     DoCmakeBuilds( args )
   if args.cs_completer or args.omnisharp_completer or args.all_completers:
     EnableCsCompleter( args )

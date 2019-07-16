@@ -10,6 +10,7 @@ import sys
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
+DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
 LIBCLANG_DIR = p.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 
 python_path = [
@@ -23,6 +24,8 @@ python_path = [
   p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ),
   p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
   p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'urllib3', 'src' ),
+  p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ),
+  p.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
   p.join( DIR_OF_THIRD_PARTY, 'waitress' ),
 ]
 if os.environ.get( 'PYTHONPATH' ) is not None:
