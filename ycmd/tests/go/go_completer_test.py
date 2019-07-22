@@ -23,7 +23,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from mock import patch
-from nose.tools import ok_
+from nose.tools import ok_, eq_
 
 from ycmd import user_options_store
 from ycmd.completers.go.hook import GetCompleter
@@ -36,3 +36,10 @@ def GetCompleter_GoplsFound_test():
 @patch( 'ycmd.completers.go.go_completer.PATH_TO_GOPLS', 'path_does_not_exist' )
 def GetCompleter_GoplsNotFound_test( *args ):
   ok_( not GetCompleter( user_options_store.GetAll() ) )
+
+
+@patch( 'ycmd.utils.FindExecutable',
+        wraps = lambda x: x if x == 'gopls' else None )
+def GetCompleter_GoplsFromUserOption_test( *args ):
+  user_options = user_options_store.GetAll().copy( gopls_binary_path = 'gopls' )
+  eq_( 'gopls', GetCompleter( user_options )._gopls_binary_path )

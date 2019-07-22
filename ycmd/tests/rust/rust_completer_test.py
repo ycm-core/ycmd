@@ -23,7 +23,7 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from mock import patch
-from nose.tools import ok_
+from nose.tools import ok_, eq_
 
 from ycmd import user_options_store
 from ycmd.completers.rust.hook import GetCompleter
@@ -36,3 +36,18 @@ def GetCompleter_RlsFound_test():
 @patch( 'ycmd.completers.rust.rust_completer.RLS_EXECUTABLE', None )
 def GetCompleter_RlsNotFound_test( *args ):
   ok_( not GetCompleter( user_options_store.GetAll() ) )
+
+
+@patch( 'ycmd.utils.FindExecutable',
+        wraps = lambda x: x if x == 'rls' else None )
+def GetCompleter_RlsFromUserOption_test( *args ):
+  user_options = user_options_store.GetAll().copy( rls_binary_path = 'rls' )
+  user_options = user_options.copy( rustc_binary_path = 'rustc' )
+  eq_( 'rls', GetCompleter( user_options )._rls_binary_path )
+  eq_( 'rustc', GetCompleter( user_options )._rustc_binary_path )
+
+
+@patch( 'ycmd.completers.rust.rust_completer.RLS_EXECUTABLE', None )
+def GetCompleter_RustcNotDefine_test( *args ):
+  user_options = user_options_store.GetAll().copy( rls_binary_path = 'rls' )
+  ok_( not GetCompleter( user_options ) )

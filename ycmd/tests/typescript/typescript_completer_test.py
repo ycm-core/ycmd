@@ -23,16 +23,23 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from mock import patch
-from nose.tools import ok_
+from nose.tools import ok_, eq_
 
 from ycmd.completers.typescript.typescript_completer import (
-    ShouldEnableTypeScriptCompleter )
+    ShouldEnableTypeScriptCompleter, FindTSServer )
 
 
 def ShouldEnableTypeScriptCompleter_NodeAndTsserverFound_test():
-  ok_( ShouldEnableTypeScriptCompleter() )
+  ok_( ShouldEnableTypeScriptCompleter( {} ) )
 
 
 @patch( 'ycmd.utils.FindExecutable', return_value = None )
 def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
-  ok_( not ShouldEnableTypeScriptCompleter() )
+  ok_( not ShouldEnableTypeScriptCompleter( {} ) )
+
+
+@patch( 'ycmd.utils.FindExecutable',
+        wraps = lambda x: x if x == 'tsserver' else None )
+def FindTSServer_CustomTsserverPath_test( *args ):
+  user_options = { 'tsserver_binary_path': 'tsserver' }
+  eq_( 'tsserver', FindTSServer( user_options ) )
