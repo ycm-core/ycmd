@@ -27,7 +27,7 @@ from ycmd.completers.typescript.typescript_completer import (
 
 
 def GetCompleter( user_options ):
-  if not ShouldEnableTypeScriptCompleter():
+  if not ShouldEnableTypeScriptCompleter( user_options ):
     return None
 
   return TypeScriptCompleter( user_options )

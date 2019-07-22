@@ -29,6 +29,7 @@ from ycmd import responses
 from ycmd import utils
 from ycmd.completers.language_server import ( simple_language_server_completer,
                                               language_server_completer )
+from ycmd.utils import GetExecutableOption
 
 
 PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
@@ -47,8 +48,10 @@ PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
 
 
 def ShouldEnableGoCompleter( user_options ):
+  if GetExecutableOption( 'gopls_binary_path', user_options ):
+    return True
   server_exists = os.path.isfile( PATH_TO_GOPLS )
-  if server_exists or 'gopls_binary_path' in user_options:
+  if server_exists:
     return True
   utils.LOGGER.info( 'No gopls executable at %s.', PATH_TO_GOPLS )
   return False
@@ -56,8 +59,9 @@ def ShouldEnableGoCompleter( user_options ):
 
 class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def __init__( self, user_options ):
-    if 'gopls_binary_path' in user_options:
-      self._gopls_binary_path = user_options[ 'gopls_binary_path' ]
+    gopls_binary_path = GetExecutableOption( 'gopls_binary_path', user_options )
+    if gopls_binary_path:
+      self._gopls_binary_path = gopls_binary_path
     else:
       self._gopls_binary_path = PATH_TO_GOPLS
     super( GoCompleter, self ).__init__( user_options )

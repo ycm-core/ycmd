@@ -756,3 +756,9 @@ def MakeSafeFileNameString_test():
   for t in tests:
     assert_that( utils.MakeSafeFileNameString( t[ 0 ] ),
                  equal_to( t[ 1 ] ) )
+
+
+def GetExecutableOption_UserOption_test():
+  with TemporaryExecutable() as executable:
+    user_options = { 'test': executable }
+    eq_( executable, utils.GetExecutableOption( 'test', user_options ) )

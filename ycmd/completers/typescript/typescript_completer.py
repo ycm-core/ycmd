@@ -37,7 +37,7 @@ from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
-from ycmd.utils import LOGGER, re
+from ycmd.utils import LOGGER, re, GetExecutableOption
 
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
@@ -78,7 +78,11 @@ class DeferredResponse( object ):
       return self._message[ 'body' ]
 
 
-def FindTSServer():
+def FindTSServer( user_options ):
+  tsserver_binary_path = GetExecutableOption( 'tsserver_binary_path',
+                                              user_options )
+  if tsserver_binary_path:
+    return tsserver_binary_path
   # The TSServer executable is installed at the root directory on Windows while
   # it's installed in the bin folder on other platforms.
   for executable in [ os.path.join( TSSERVER_DIR, 'bin', 'tsserver' ),
@@ -90,8 +94,8 @@ def FindTSServer():
   return None
 
 
-def ShouldEnableTypeScriptCompleter():
-  tsserver = FindTSServer()
+def ShouldEnableTypeScriptCompleter( user_options ):
+  tsserver = FindTSServer( user_options )
   if not tsserver:
     LOGGER.error( 'Not using TypeScript completer: TSServer not installed '
                   'in %s', TSSERVER_DIR )
@@ -145,7 +149,7 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_lock = threading.RLock()
     self._tsserver_handle = None
     self._tsserver_version = None
-    self._tsserver_executable = FindTSServer()
+    self._tsserver_executable = FindTSServer( user_options )
     # Used to read response only if TSServer is running.
     self._tsserver_is_running = threading.Event()
 

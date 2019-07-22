@@ -463,7 +463,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
-[gocode]: https://github.com/nsf/gocode
+[gopls]: https://github.com/golang/go/wiki/gopls
 [godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
 [ccoc]: https://github.com/Valloric/ycmd/blob/master/CODE_OF_CONDUCT.md

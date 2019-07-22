@@ -27,6 +27,6 @@ from ycmd.completers.rust.rust_completer import ( ShouldEnableRustCompleter,
 
 
 def GetCompleter( user_options ):
-  if not ShouldEnableRustCompleter():
+  if not ShouldEnableRustCompleter( user_options ):
     return None
   return RustCompleter( user_options )

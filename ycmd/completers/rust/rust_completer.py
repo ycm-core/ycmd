@@ -29,7 +29,7 @@ from subprocess import PIPE
 
 from ycmd import responses, utils
 from ycmd.completers.language_server import simple_language_server_completer
-from ycmd.utils import LOGGER, re
+from ycmd.utils import LOGGER, re, GetExecutableOption
 
 
 LOGFILE_FORMAT = 'rls_'
@@ -58,7 +58,12 @@ def _GetRlsVersion():
   return match.group( 'version' )
 
 
-def ShouldEnableRustCompleter():
+def ShouldEnableRustCompleter( user_options ):
+  if GetExecutableOption( 'rls_binary_path', user_options ):
+    if GetExecutableOption( 'rustc_binary_path', user_options ):
+      return True
+    else:
+      LOGGER.error( 'Cannot found rustc_binary_path, rls_binary_path ignored' )
   if not RLS_EXECUTABLE:
     LOGGER.error( 'Not using Rust completer: no RLS executable found at %s',
                   RLS_EXECUTABLE )
@@ -68,6 +73,17 @@ def ShouldEnableRustCompleter():
 
 
 class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+
+  def __init__( self, user_options ):
+    rls_binary_path = GetExecutableOption( 'rls_binary_path', user_options )
+    if rls_binary_path:
+      self._rls_binary_path = rls_binary_path
+      self._rustc_binary_path = user_options[ 'rustc_binary_path' ]
+    else:
+      self._rls_binary_path = RLS_EXECUTABLE
+      self._rustc_binary_path = RUSTC_EXECUTABLE
+    super( RustCompleter, self ).__init__( user_options )
+
 
   def _Reset( self ):
     with self._server_state_mutex:
@@ -80,14 +96,12 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def GetCommandLine( self ):
-    return RLS_EXECUTABLE
+    return self._rls_binary_path
 
 
   def GetServerEnvironment( self ):
     env = os.environ.copy()
-    # Force RLS to use the rustc from the toolchain in third_party/rls.
-    # TODO: allow users to pick a custom toolchain.
-    utils.SetEnviron( env, 'RUSTC', RUSTC_EXECUTABLE )
+    utils.SetEnviron( env, 'RUSTC', self._rustc_binary_path )
     if LOGGER.isEnabledFor( logging.DEBUG ):
       utils.SetEnviron( env, 'RUST_LOG', 'rls=trace' )
       utils.SetEnviron( env, 'RUST_BACKTRACE', '1' )
