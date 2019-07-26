@@ -24,7 +24,7 @@
 	url = https://github.com/PythonCharmers/python-future
 [submodule "third_party/cregex"]
 	path = third_party/cregex
-	url = https://github.com/micbou/regex.git
+	url = https://github.com/ycm-core/regex.git
 [submodule "third_party/urllib3"]
 	path = third_party/requests_deps/urllib3
 	url = https://github.com/urllib3/urllib3
