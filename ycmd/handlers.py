@@ -277,7 +277,9 @@ app.default_error_handler = ErrorHandler
 
 def _JsonResponse( data ):
   SetResponseHeader( 'Content-Type', 'application/json' )
-  return json.dumps( data, default = _UniversalSerialize )
+  return json.dumps( data,
+                     separators = ( ',', ':' ),
+                     default = _UniversalSerialize )
 
 
 def _UniversalSerialize( obj ):

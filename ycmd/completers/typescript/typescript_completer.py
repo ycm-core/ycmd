@@ -295,7 +295,8 @@ class TypeScriptCompleter( Completer ):
   def _WriteRequest( self, request ):
     """Write a request to TSServer stdin."""
 
-    serialized_request = utils.ToBytes( json.dumps( request ) + '\n' )
+    serialized_request = utils.ToBytes(
+        json.dumps( request, separators = ( ',', ':' ) ) + '\n' )
     with self._write_lock:
       try:
         self._tsserver_handle.stdin.write( serialized_request )

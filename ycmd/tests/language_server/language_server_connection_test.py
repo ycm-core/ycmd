@@ -169,13 +169,13 @@ def LanguageServerConnection_RejectUnsupportedRequest_test():
     lsc.LanguageServerConnectionStopped
   ]
 
-  expected_response = bytes( b'Content-Length: 87\r\n\r\n'
-                             b'{"error": {'
-                               b'"code": -32601, '
-                               b'"message": "Method not found"'
-                             b'}, '
-                             b'"id": "1", '
-                             b'"jsonrpc": "2.0"}' )
+  expected_response = bytes( b'Content-Length: 79\r\n\r\n'
+                             b'{"error":{'
+                               b'"code":-32601,'
+                               b'"message":"Method not found"'
+                             b'},'
+                             b'"id":"1",'
+                             b'"jsonrpc":"2.0"}' )
 
   with patch.object( connection, 'ReadData', side_effect = return_values ):
     with patch.object( connection, 'WriteData' ) as write_data:
