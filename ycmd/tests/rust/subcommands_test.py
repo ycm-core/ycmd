@@ -25,6 +25,7 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
+                       empty,
                        equal_to,
                        has_entries,
                        has_entry,
@@ -99,6 +100,7 @@ def Subcommands_DefinedSubcommands_test( app ):
 
   assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
                contains_inanyorder( 'ExecuteCommand',
+                                    'FixIt',
                                     'Format',
                                     'GetDoc',
                                     'GetType',
@@ -136,6 +138,7 @@ def Subcommands_ServerNotInitialized_test():
     } )
 
   yield Test, 'Format', []
+  yield Test, 'FixIt', []
   yield Test, 'GetType', []
   yield Test, 'GetDoc', []
   yield Test, 'GoTo', []
@@ -178,9 +181,10 @@ def Subcommands_Format_WholeFile_test( app ):
                           LocationMatcher( filepath, 1, 1 ),
                           LocationMatcher( filepath, 3, 1 ) ),
             ChunkMatcher( 'fn main() {\n'
-                          '  unformatted_function(false);\n',
+                          '  unformatted_function(false);\n'
+                          '  let x = 1;\n',
                           LocationMatcher( filepath, 4, 1 ),
-                          LocationMatcher( filepath, 8, 1 ) ),
+                          LocationMatcher( filepath, 9, 1 ) ),
           )
         } ) )
       } )
@@ -466,5 +470,88 @@ def Subcommands_RefactorRename_Invalid_test( app ):
       'response': requests.codes.internal_server_error,
       'data': ErrorMatcher( RuntimeError,
                             'Cannot rename the symbol under cursor.' )
+    }
+  } )
+
+
+@IsolatedYcmd
+def Subcommands_FixIt_EmptyResponse_test( app ):
+  project_dir = PathToTestFile( 'formatting' )
+  StartRustCompleterServerInDirectory( app, project_dir )
+
+  filepath = os.path.join( project_dir, 'src', 'main.rs' )
+
+  RunTest( app, {
+    'description': 'FixIt on a line with no codeAction returns empty response',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 1,
+      'column_num': 1,
+      'filepath': filepath
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entry( 'fixits', empty() )
+    }
+  } )
+
+
+@IsolatedYcmd
+def Subcommands_FixIt_ApplySuggestion_test( app ):
+  # Similarly to textDocument/formatting, if a file has errors
+  # RLS won't respond with `rls.applySuggestions` command.
+
+  project_dir = PathToTestFile( 'formatting' )
+  StartRustCompleterServerInDirectory( app, project_dir )
+
+  filepath = os.path.join( project_dir, 'src', 'main.rs' )
+
+  RunTest( app, {
+    'description': 'Simple FixIt test',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 8,
+      'column_num': 13,
+      'filepath': filepath
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '_x',
+                          LocationMatcher( filepath, 8, 13 ),
+                          LocationMatcher( filepath, 8, 14 ) )
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd
+def Subcommands_FixIt_DeglobImport_test( app ):
+  project_dir = PathToTestFile( 'common' )
+  StartRustCompleterServerInDirectory( app, project_dir )
+  filepath = os.path.join( project_dir, 'src', 'main.rs' )
+  RunTest( app, {
+    'description': 'Simple FixIt test',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 3,
+      'column_num': 1,
+      'filepath': filepath
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '{create_universe, Builder}',
+                          LocationMatcher( filepath, 3, 11 ),
+                          LocationMatcher( filepath, 3, 12 ) )
+          )
+        } ) )
+      } )
     }
   } )
