@@ -2,6 +2,25 @@
   "configurations": {
     "python - launch nosetests": {
       "adapter": "vscode-python",
+      "variables": [
+        {
+          "python": {
+            "shell": "/bin/bash -c 'if [ -z \"${dollar}VIRTUAL_ENV\" ]; then echo $$(which python); else echo \"${dollar}VIRTUAL_ENV/bin/python\"; fi'"
+          },
+          "nosetests": {
+            "shell": "/bin/bash -c 'if [ -z \"${dollar}VIRTUAL_ENV\" ]; then echo $$(which nosetests); else echo \"${dollar}VIRTUAL_ENV/bin/nosetests\"; fi'"
+          }
+        },
+        {
+          "python_path": {
+            "shell": [
+              "${python}",
+              "${workspaceRoot}/run_tests.py",
+              "--dump-path"
+            ]
+          }
+        }
+      ],
       "configuration": {
         "name": "Python nosetests",
         "type": "vscode-python",
@@ -14,8 +33,8 @@
 
         "debugOptions": [],
 
-        "program": "$VIRTUAL_ENV/bin/nosetests",
-        "pythonPath": "${VIRTUAL_ENV}/bin/python",
+        "program": "${nosetests}",
+        "pythonPath": "${python}",
         "args": [
           "-v",
           "--with-id",
@@ -23,7 +42,7 @@
           "${Test}"
         ],
         "env": {
-          "PYTHONPATH": "${workspaceRoot}/third_party/bottle:${workspaceRoot}/third_party/cregex/regex_${python_version}:${workspaceRoot}/third_party/frozendict:${workspaceRoot}/third_party/jedi_deps/jedi:${workspaceRoot}/third_party/jedi_deps/numpydoc:${workspaceRoot}/third_party/jedi_deps/parso:${workspaceRoot}/third_party/requests_deps/certifi:${workspaceRoot}/third_party/requests_deps/chardet:${workspaceRoot}/third_party/requests_deps/idna:${workspaceRoot}/third_party/requests_deps/requests:${workspaceRoot}/third_party/requests_deps/urllib3/src:${workspaceRoot}/third_party/waitress",
+          "PYTHONPATH": "${python_path}",
           "LD_LIBRARY_PATH": "${workspaceRoot}/third_party/clang/lib",
           "YCM_TEST_NO_RETRY": "1"
         }
