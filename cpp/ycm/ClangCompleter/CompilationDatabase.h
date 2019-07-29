@@ -36,7 +36,7 @@ struct CompilationInfoForFile {
 class CompilationDatabase {
 public:
   // |path_to_directory| should be a string-like object.
-  explicit CompilationDatabase( const pybind11::object &path_to_directory );
+  explicit CompilationDatabase( pybind11::object path_to_directory );
   CompilationDatabase( const CompilationDatabase& ) = delete;
   CompilationDatabase& operator=( const CompilationDatabase& ) = delete;
   ~CompilationDatabase();
@@ -51,7 +51,7 @@ public:
   // serialized since Clang internals are not thread-safe.
   // |path_to_file| should be a string-like object.
   CompilationInfoForFile GetCompilationInfoForFile(
-    const pybind11::object &path_to_file );
+    pybind11::object path_to_file );
 
   std::string GetDatabaseDirectory() {
     return path_to_directory_;
