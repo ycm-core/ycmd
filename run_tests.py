@@ -323,12 +323,13 @@ def SetUpGenericLSPCompleter():
 
 
 def Main():
-  SetUpGenericLSPCompleter()
   parsed_args, nosetests_args = ParseArguments()
   if parsed_args.dump_path:
     print( os.environ[ 'PYTHONPATH' ] )
     sys.exit()
+
   print( 'Running tests on Python', platform.python_version() )
+  SetUpGenericLSPCompleter()
   if not parsed_args.no_flake8:
     RunFlake8()
   BuildYcmdLibs( parsed_args )
