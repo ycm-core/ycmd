@@ -38,7 +38,7 @@ def GetCompleter_RlsNotFound_test( *args ):
   ok_( not GetCompleter( user_options_store.GetAll() ) )
 
 
-@patch( 'ycmd.utils.FindExecutable',
+@patch( 'ycmd.utils.GetExecutable',
         wraps = lambda x: x if x == 'rls' else None )
 def GetCompleter_RlsFromUserOption_test( *args ):
   user_options = user_options_store.GetAll().copy( rls_binary_path = 'rls' )
