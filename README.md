@@ -464,7 +464,6 @@ This software is licensed under the [GPL v3 license][gpl].
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gopls]: https://github.com/golang/go/wiki/gopls
-[godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
 [ccoc]: https://github.com/Valloric/ycmd/blob/master/CODE_OF_CONDUCT.md
 [dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md

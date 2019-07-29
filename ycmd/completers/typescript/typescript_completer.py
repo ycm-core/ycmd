@@ -37,7 +37,7 @@ from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
-from ycmd.utils import LOGGER, re, GetExecutableOption
+from ycmd.utils import LOGGER, re, GetExecutable
 
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
 NO_DIAGNOSTIC_MESSAGE = 'No diagnostic for current line!'
@@ -79,8 +79,7 @@ class DeferredResponse( object ):
 
 
 def FindTSServer( user_options ):
-  tsserver_binary_path = GetExecutableOption( 'tsserver_binary_path',
-                                              user_options )
+  tsserver_binary_path = GetExecutable( user_options[ 'tsserver_binary_path' ] )
   if tsserver_binary_path:
     return tsserver_binary_path
   # The TSServer executable is installed at the root directory on Windows while

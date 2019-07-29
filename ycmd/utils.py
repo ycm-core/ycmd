@@ -670,11 +670,4 @@ def GetClangResourceDir():
   raise RuntimeError( 'Cannot find Clang resource directory.' )
 
 
-def GetExecutableOption( option_name, user_options ):
-  """ Check option_name in user_options and executable. """
-  if option_name not in user_options:
-    return None
-  return FindExecutable( user_options[ option_name ] )
-
-
 CLANG_RESOURCE_DIR = GetClangResourceDir()

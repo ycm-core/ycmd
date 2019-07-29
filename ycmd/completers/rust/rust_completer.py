@@ -29,8 +29,7 @@ from subprocess import PIPE
 
 from ycmd import responses, utils
 from ycmd.completers.language_server import simple_language_server_completer
-from ycmd.utils import LOGGER, re, GetExecutableOption
-
+from ycmd.utils import LOGGER, re, GetExecutable
 
 LOGFILE_FORMAT = 'rls_'
 RLS_BIN_DIR = os.path.abspath(
@@ -59,11 +58,11 @@ def _GetRlsVersion():
 
 
 def ShouldEnableRustCompleter( user_options ):
-  if GetExecutableOption( 'rls_binary_path', user_options ):
-    if GetExecutableOption( 'rustc_binary_path', user_options ):
+  if GetExecutable( user_options[ 'rls_binary_path' ] ):
+    if GetExecutable( user_options[ 'rustc_binary_path' ] ):
       return True
     else:
-      LOGGER.error( 'Cannot found rustc_binary_path, rls_binary_path ignored' )
+      LOGGER.error( 'rustc_binary_path not specified, rls_binary_path ignored' )
   if not RLS_EXECUTABLE:
     LOGGER.error( 'Not using Rust completer: no RLS executable found at %s',
                   RLS_EXECUTABLE )
@@ -75,7 +74,7 @@ def ShouldEnableRustCompleter( user_options ):
 class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
   def __init__( self, user_options ):
-    rls_binary_path = GetExecutableOption( 'rls_binary_path', user_options )
+    rls_binary_path = GetExecutable( user_options[ 'rls_binary_path' ] )
     if rls_binary_path:
       self._rls_binary_path = rls_binary_path
       self._rustc_binary_path = user_options[ 'rustc_binary_path' ]
