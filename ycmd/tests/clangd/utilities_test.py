@@ -121,11 +121,17 @@ def ClangdCompleter_GetClangdCommand_CustomBinary_test():
 
 @patch( 'ycmd.completers.cpp.clangd_completer.GetVersion',
         side_effect = [ None,
-                        '5.0.0',
-                        clangd_completer.MIN_SUPPORTED_VERSION ] )
+                        ( 5, 0, 0 ),
+                        clangd_completer.MIN_SUPPORTED_VERSION,
+                        ( 10, 0, 0 ),
+                        ( 10, 10, 10 ),
+                        ( 100, 100, 100 ) ] )
 def ClangdCompleter_CheckClangdVersion_test( *args ):
   eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
   eq_( clangd_completer.CheckClangdVersion( 'clangd' ), False )
+  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
+  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
+  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
   eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
 
 
@@ -190,6 +196,20 @@ class MockPopen:
 def ClangdCompleter_GetVersion_test( mock_popen ):
   eq_( clangd_completer.GetVersion( '' ), None )
   mock_popen.assert_called()
+
+
+def ClangdCompleter_ParseClangdVersion_test():
+  cases = [
+    ( 'clangd version 10.0.0 (https://github.com/llvm/llvm-project.git '
+      '45be5e477e9216363191a8ac9123bea4585cf14f)', ( 10, 0, 0 ) ),
+    ( 'clangd version 8.0.0-3 (tags/RELEASE_800/final)', ( 8, 0, 0 ) ),
+    ( 'LLVM (http://llvm.org/):\nLLVM version 6.0.0\n'
+      'Optimized build.\nDefault target: x86_64-unknown-linux-gnu\n'
+      'Host CPU: haswell', ( 6, 0, 0 ) ),
+  ]
+
+  for version_str, expected in cases:
+    eq_( clangd_completer.ParseClangdVersion( version_str ), expected )
 
 
 @IsolatedYcmd()

@@ -43,7 +43,7 @@ from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          PathsToAllParentFolders,
                          re )
 
-MIN_SUPPORTED_VERSION = '7.0.0'
+MIN_SUPPORTED_VERSION = ( 7, 0, 0 )
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
 NOT_CACHED = 'NOT_CACHED'
@@ -82,17 +82,21 @@ def DistanceOfPointToRange( point, range ):
   return 0
 
 
-def GetVersion( clangd_path ):
-  args = [ clangd_path, '--version' ]
-  stdout, _ = subprocess.Popen( args, stdout=subprocess.PIPE ).communicate()
-  version_regexp = r'(\d\.\d\.\d)'
-  m = re.search( version_regexp, stdout.decode() )
+def ParseClangdVersion( version_str ):
+  version_regexp = r'(\d+)\.(\d+)\.(\d+)'
+  m = re.search( version_regexp, version_str )
   try:
-    version = m.group( 1 )
+    version = tuple( int( x ) for x in m.groups() )
   except AttributeError:
     # Custom builds might have different versioning info.
     version = None
   return version
+
+
+def GetVersion( clangd_path ):
+  args = [ clangd_path, '--version' ]
+  stdout, _ = subprocess.Popen( args, stdout=subprocess.PIPE ).communicate()
+  return ParseClangdVersion( stdout.decode() )
 
 
 def CheckClangdVersion( clangd_path ):
