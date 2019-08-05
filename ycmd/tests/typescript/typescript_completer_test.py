@@ -39,7 +39,7 @@ def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
   ok_( not ShouldEnableTypeScriptCompleter( user_options_store.GetAll() ) )
 
 
-@patch( 'ycmd.utils.GetExecutable',
+@patch( 'ycmd.completers.typescript.typescript_completer.GetExecutable',
         wraps = lambda x: x if x == 'tsserver' else None )
 def FindTSServer_CustomTsserverPath_test( *args ):
   default_options = user_options_store.GetAll()

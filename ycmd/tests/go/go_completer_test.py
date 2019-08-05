@@ -38,7 +38,7 @@ def GetCompleter_GoplsNotFound_test( *args ):
   ok_( not GetCompleter( user_options_store.GetAll() ) )
 
 
-@patch( 'ycmd.utils.GetExecutable',
+@patch( 'ycmd.completers.go.go_completer.GetExecutable',
         wraps = lambda x: x if x == 'gopls' else None )
 def GetCompleter_GoplsFromUserOption_test( *args ):
   user_options = user_options_store.GetAll().copy( gopls_binary_path = 'gopls' )
