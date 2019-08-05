@@ -68,6 +68,10 @@ def DebugInfo_RlsVersion_test( app ):
           has_entries( {
             'key': 'Version',
             'value': instance_of( str )
+          } ),
+          has_entries( {
+            'key': 'RUSTC',
+            'value': instance_of( str )
           } )
         )
       } ) )
@@ -114,6 +118,10 @@ def DebugInfo_NoRlsVersion_test( app, *args ):
           has_entries( {
             'key': 'Version',
             'value': none()
+          } ),
+          has_entries( {
+            'key': 'RUSTC',
+            'value': instance_of( str )
           } )
         )
       } ) )

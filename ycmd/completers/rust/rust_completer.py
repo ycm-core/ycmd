@@ -177,7 +177,8 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       set( itervalues( self._server_progress ) ) ).capitalize()
     return super( RustCompleter, self ).CommonDebugItems() + [
       responses.DebugInfoItem( 'Project State', project_state ),
-      responses.DebugInfoItem( 'Version', _GetRlsVersion() )
+      responses.DebugInfoItem( 'Version', _GetRlsVersion() ),
+      responses.DebugInfoItem( 'RUSTC', self._rustc_binary_path )
     ]
 
 

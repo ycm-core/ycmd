@@ -66,10 +66,13 @@ class CsharpCompleter( Completer ):
     self._completer_per_solution = {}
     self._diagnostic_store = None
     self._solution_state_lock = threading.Lock()
-
-    if not os.path.isfile( PATH_TO_ROSLYN_OMNISHARP_BINARY ):
+    self._roslyn_omnisharp_binary_path = utils.GetExecutable(
+      user_options[ 'roslyn_omnisharp_binary_path' ] )
+    if not self._roslyn_omnisharp_binary_path:
+      self._roslyn_omnisharp_binary_path = PATH_TO_ROSLYN_OMNISHARP_BINARY
+    if not os.path.isfile( self._roslyn_omnisharp_binary_path ):
       raise RuntimeError(
-           SERVER_NOT_FOUND_MSG.format( PATH_TO_ROSLYN_OMNISHARP_BINARY ) )
+        SERVER_NOT_FOUND_MSG.format( PATH_TO_ROSLYN_OMNISHARP_BINARY ) )
 
 
   def Shutdown( self ):
@@ -93,9 +96,11 @@ class CsharpCompleter( Completer ):
       if solution not in self._completer_per_solution:
         keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
         desired_omnisharp_port = self.user_options.get( 'csharp_server_port' )
+        roslyn_omnisharp_binary_path = self._roslyn_omnisharp_binary_path
         completer = CsharpSolutionCompleter( solution,
                                              keep_logfiles,
-                                             desired_omnisharp_port )
+                                             desired_omnisharp_port,
+                                             roslyn_omnisharp_binary_path )
         self._completer_per_solution[ solution ] = completer
 
     return self._completer_per_solution[ solution ]
@@ -314,7 +319,8 @@ class CsharpCompleter( Completer ):
 
 
 class CsharpSolutionCompleter( object ):
-  def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
+  def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port,
+                roslyn_omnisharp_binary_path ):
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
     self._filename_stderr = None
@@ -323,6 +329,7 @@ class CsharpSolutionCompleter( object ):
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
     self._server_state_lock = threading.RLock()
+    self._roslyn_omnisharp_binary_path = roslyn_omnisharp_binary_path
 
 
   def CodeCheck( self, request_data ):
@@ -350,7 +357,7 @@ class CsharpSolutionCompleter( object ):
       # Shell isn't preferred, but I don't see any other way to resolve
       shell_required = PY2 and utils.OnWindows()
 
-      command = [ PATH_TO_ROSLYN_OMNISHARP_BINARY,
+      command = [ self._roslyn_omnisharp_binary_path,
                   '-p',
                   str( self._omnisharp_port ),
                   '-s',

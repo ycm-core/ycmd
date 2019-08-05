@@ -37,5 +37,6 @@
   "gopls_binary_path": "",
   "rls_binary_path": "",
   "rustc_binary_path": "",
-  "tsserver_binary_path": ""
+  "tsserver_binary_path": "",
+  "roslyn_omnisharp_binary_path": ""
 }
