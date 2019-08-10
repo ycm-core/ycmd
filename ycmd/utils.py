@@ -579,7 +579,9 @@ class HashableDict( Mapping ):
     try:
       return self._hash
     except AttributeError:
-      self._hash = json.dumps( self._dict, sort_keys = True ).__hash__()
+      self._hash = json.dumps( self._dict,
+                               separators = ( ',', ':' ),
+                               sort_keys = True ).__hash__()
       return self._hash
 
 

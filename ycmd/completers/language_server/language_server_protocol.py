@@ -498,7 +498,9 @@ def _BuildMessageData( message ):
   # NOTE: sort_keys=True is needed to workaround a 'limitation' of clangd where
   # it requires keys to be in a specific order, due to a somewhat naive
   # JSON/YAML parser.
-  data = ToBytes( json.dumps( message, sort_keys=True ) )
+  data = ToBytes( json.dumps( message,
+                              separators = ( ',', ':' ),
+                              sort_keys=True ) )
   packet = ToBytes( 'Content-Length: {0}\r\n'
                     '\r\n'.format( len( data ) ) ) + data
   return packet
