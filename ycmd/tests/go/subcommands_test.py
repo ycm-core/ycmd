@@ -119,9 +119,11 @@ def Subcommands_DefinedSubcommands_test( app ):
   assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
                contains_inanyorder( 'Format',
                                     'GetType',
+                                    'RefactorRename',
                                     'GoTo',
                                     'GoToDeclaration',
                                     'GoToDefinition',
+                                    'GoToReferences',
                                     'GoToType',
                                     'FixIt',
                                     'RestartServer' ) )
@@ -306,6 +308,7 @@ def RunGoToTest( app, command, test ):
   response = test[ 'res' ]
 
   if isinstance( response, list ):
+
     expect = {
       'response': requests.codes.ok,
       'data': contains( *[
@@ -367,7 +370,8 @@ def Subcommands_GoToType_test():
 def Subcommands_FixIt_NullResponse_test():
   filepath = PathToTestFile( 'td', 'test.go' )
   yield ( RunFixItTest, 'Gopls returned NULL for response[ \'result\' ]',
-      filepath, 1, 1, has_entry( 'fixits', empty() ) )
+      filepath, 1, 1, has_entry( 'fixits', contains(
+        has_entries( { 'text': "Organize Imports", 'chunks': empty() } ) ) ) )
 
 
 @SharedYcmd
@@ -413,3 +417,41 @@ def Subcommands_FixIt_Simple_test():
   } )
   yield ( RunFixItTest, 'Only one fixit returned',
           filepath, 1, 1, fixit )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_test( app ):
+  filepath = PathToTestFile( 'unicode', 'unicode.go' )
+  RunTest( app, {
+    'description': 'RefactorRename on a function renames all its occurences',
+    'request': {
+      'command': 'RefactorRename',
+      'arguments': [ 'xxx' ],
+      'line_num': 10,
+      'column_num': 17,
+      'filepath': filepath
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'text': '',
+          'chunks': contains(
+            ChunkMatcher( 'xxx',
+                          LocationMatcher( filepath, 3, 6 ),
+                          LocationMatcher( filepath, 3, 10 ) ),
+            ChunkMatcher( 'xxx',
+                          LocationMatcher( filepath, 10, 16 ),
+                          LocationMatcher( filepath, 10, 20 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+def Subcommands_GoToReferences_test():
+  filepath = os.path.join( 'unicode', 'unicode.go' )
+  test = { 'req': ( filepath, 10, 5 ), 'res': [ ( filepath, 10, 5 ),
+                                                ( filepath, 13, 5 ) ] }
+  yield RunGoToTest, 'GoToReferences', test
