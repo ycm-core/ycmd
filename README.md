@@ -444,7 +444,7 @@ This software is licensed under the [GPL v3 license][gpl].
 © 2015-2019 ycmd contributors
 
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
-[ycm]: http://valloric.github.io/YouCompleteMe/
+[ycm]: http://ycm-core.github.io/YouCompleteMe/
 [atom-you-complete-me]: https://atom.io/packages/you-complete-me
 [sublime-ycmd-completion]: https://packagecontrol.io/packages/YcmdCompletion
 [sublime-ycmd]: https://packagecontrol.io/packages/YouCompleteMe
@@ -474,7 +474,7 @@ This software is licensed under the [GPL v3 license][gpl].
 [gycm]: https://github.com/jakeanq/gycm
 [nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
 [jdtls]: https://github.com/eclipse/eclipse.jdt.ls
-[api-docs]: https://valloric.github.io/ycmd/
+[api-docs]: https://ycm-core.github.io/ycmd/
 [ycmd-extra-conf]: https://github.com/Valloric/ycmd/blob/master/.ycm_extra_conf.py
 [clangd]: https://clang.llvm.org/extra/clangd.html
 [RLS]: https://github.com/rust-lang-nursery/rls
