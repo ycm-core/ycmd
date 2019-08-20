@@ -297,6 +297,8 @@ template<class T> T * get_pointer(intrusive_ptr<T> const & p) BOOST_SP_NOEXCEPT
     return p.get();
 }
 
+// pointer casts
+
 template<class T, class U> intrusive_ptr<T> static_pointer_cast(intrusive_ptr<U> const & p)
 {
     return static_cast<T *>(p.get());
@@ -311,6 +313,31 @@ template<class T, class U> intrusive_ptr<T> dynamic_pointer_cast(intrusive_ptr<U
 {
     return dynamic_cast<T *>(p.get());
 }
+
+#if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+
+template<class T, class U> intrusive_ptr<T> static_pointer_cast( intrusive_ptr<U> && p ) BOOST_SP_NOEXCEPT
+{
+    return intrusive_ptr<T>( static_cast<T*>( p.detach() ), false );
+}
+
+template<class T, class U> intrusive_ptr<T> const_pointer_cast( intrusive_ptr<U> && p ) BOOST_SP_NOEXCEPT
+{
+    return intrusive_ptr<T>( const_cast<T*>( p.detach() ), false );
+}
+
+template<class T, class U> intrusive_ptr<T> dynamic_pointer_cast( intrusive_ptr<U> && p ) BOOST_SP_NOEXCEPT
+{
+    T * p2 = dynamic_cast<T*>( p.get() );
+
+    intrusive_ptr<T> r( p2, false );
+
+    if( p2 ) p.detach();
+
+    return r;
+}
+
+#endif // defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
 
 // operator<<
 

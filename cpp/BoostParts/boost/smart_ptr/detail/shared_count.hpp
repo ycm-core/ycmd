@@ -499,12 +499,12 @@ public:
         return std::less<sp_counted_base *>()( a.pi_, b.pi_ );
     }
 
-    void * get_deleter( sp_typeinfo const & ti ) const BOOST_SP_NOEXCEPT
+    void * get_deleter( sp_typeinfo_ const & ti ) const BOOST_SP_NOEXCEPT
     {
         return pi_? pi_->get_deleter( ti ): 0;
     }
 
-    void * get_local_deleter( sp_typeinfo const & ti ) const BOOST_SP_NOEXCEPT
+    void * get_local_deleter( sp_typeinfo_ const & ti ) const BOOST_SP_NOEXCEPT
     {
         return pi_? pi_->get_local_deleter( ti ): 0;
     }

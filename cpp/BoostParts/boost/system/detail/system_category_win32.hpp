@@ -264,6 +264,7 @@ inline error_condition system_category_default_error_condition_win32( int ev ) B
     case ERROR_CANTOPEN_: return make_error_condition( io_error );
     case ERROR_CANTREAD_: return make_error_condition( io_error );
     case ERROR_CANTWRITE_: return make_error_condition( io_error );
+    case ERROR_CONNECTION_ABORTED_: return make_error_condition( connection_aborted );
     case ERROR_CURRENT_DIRECTORY_: return make_error_condition( permission_denied );
     case ERROR_DEV_NOT_EXIST_: return make_error_condition( no_such_device );
     case ERROR_DEVICE_IN_USE_: return make_error_condition( device_or_resource_busy );

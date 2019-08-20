@@ -1203,6 +1203,9 @@ namespace detail
 
     return cur;
 
+#   elif defined(UNDER_CE)
+    // Windows CE has no current directory, so everything's relative to the root of the directory tree
+    return L"\\";
 #   else
     DWORD sz;
     if ((sz = ::GetCurrentDirectoryW(0, NULL)) == 0)sz = 1;
@@ -1217,8 +1220,13 @@ namespace detail
   BOOST_FILESYSTEM_DECL
   void current_path(const path& p, system::error_code* ec)
   {
+#   ifdef UNDER_CE
+    error(BOOST_ERROR_NOT_SUPPORTED, p, ec,
+      "boost::filesystem::current_path");
+#   else
     error(!BOOST_SET_CURRENT_DIRECTORY(p.c_str()) ? BOOST_ERRNO : 0,
       p, ec, "boost::filesystem::current_path");
+#   endif
   }
 
   BOOST_FILESYSTEM_DECL
@@ -2234,14 +2242,12 @@ namespace
     BOOST_ASSERT(buffer != 0);
     dirent * entry(static_cast<dirent *>(buffer));
     dirent * result;
-    int return_code;
-    if ((return_code = readdir_r_simulator(static_cast<DIR*>(handle), entry, &result))!= 0)
-    {
-      const int err = errno;
+    int err;
+    if ((err = readdir_r_simulator(static_cast<DIR*>(handle), entry, &result)) != 0)
       return error_code(err, system_category());
-    }
     if (result == 0)
       return fs::detail::dir_itr_close(handle, buffer);
+
     target = entry->d_name;
 #   ifdef BOOST_FILESYSTEM_STATUS_CACHE
     if (entry->d_type == DT_UNKNOWN) // filesystem does not supply d_type value

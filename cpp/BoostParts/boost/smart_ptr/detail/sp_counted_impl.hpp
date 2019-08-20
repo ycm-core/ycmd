@@ -93,12 +93,12 @@ public:
         boost::checked_delete( px_ );
     }
 
-    virtual void * get_deleter( sp_typeinfo const & ) BOOST_SP_NOEXCEPT
+    virtual void * get_deleter( sp_typeinfo_ const & ) BOOST_SP_NOEXCEPT
     {
         return 0;
     }
 
-    virtual void * get_local_deleter( sp_typeinfo const & ) BOOST_SP_NOEXCEPT
+    virtual void * get_local_deleter( sp_typeinfo_ const & ) BOOST_SP_NOEXCEPT
     {
         return 0;
     }
@@ -173,14 +173,14 @@ public:
         del( ptr );
     }
 
-    virtual void * get_deleter( sp_typeinfo const & ti ) BOOST_SP_NOEXCEPT
+    virtual void * get_deleter( sp_typeinfo_ const & ti ) BOOST_SP_NOEXCEPT
     {
-        return ti == BOOST_SP_TYPEID(D)? &reinterpret_cast<char&>( del ): 0;
+        return ti == BOOST_SP_TYPEID_(D)? &reinterpret_cast<char&>( del ): 0;
     }
 
-    virtual void * get_local_deleter( sp_typeinfo const & ti ) BOOST_SP_NOEXCEPT
+    virtual void * get_local_deleter( sp_typeinfo_ const & ti ) BOOST_SP_NOEXCEPT
     {
-        return ti == BOOST_SP_TYPEID(D)? boost::detail::get_local_deleter( boost::addressof( del ) ): 0;
+        return ti == BOOST_SP_TYPEID_(D)? boost::detail::get_local_deleter( boost::addressof( del ) ): 0;
     }
 
     virtual void * get_untyped_deleter() BOOST_SP_NOEXCEPT
@@ -266,14 +266,14 @@ public:
         a2.deallocate( this, 1 );
     }
 
-    virtual void * get_deleter( sp_typeinfo const & ti ) BOOST_SP_NOEXCEPT
+    virtual void * get_deleter( sp_typeinfo_ const & ti ) BOOST_SP_NOEXCEPT
     {
-        return ti == BOOST_SP_TYPEID( D )? &reinterpret_cast<char&>( d_ ): 0;
+        return ti == BOOST_SP_TYPEID_( D )? &reinterpret_cast<char&>( d_ ): 0;
     }
 
-    virtual void * get_local_deleter( sp_typeinfo const & ti ) BOOST_SP_NOEXCEPT
+    virtual void * get_local_deleter( sp_typeinfo_ const & ti ) BOOST_SP_NOEXCEPT
     {
-        return ti == BOOST_SP_TYPEID(D)? boost::detail::get_local_deleter( boost::addressof( d_ ) ): 0;
+        return ti == BOOST_SP_TYPEID_( D )? boost::detail::get_local_deleter( boost::addressof( d_ ) ): 0;
     }
 
     virtual void * get_untyped_deleter() BOOST_SP_NOEXCEPT

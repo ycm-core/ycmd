@@ -309,8 +309,8 @@
 #  define BOOST_FALLTHROUGH __attribute__((fallthrough))
 #endif
 
-#ifdef __MINGW32__
-// Currently (June 2017) thread_local is broken on mingw for all current compiler releases, see
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+// Currently (March 2019) thread_local is broken on mingw for all current 32bit compiler releases, see
 // https://sourceforge.net/p/mingw-w64/bugs/527/
 // Not setting this causes program termination on thread exit.
 #define BOOST_NO_CXX11_THREAD_LOCAL
@@ -327,7 +327,7 @@
 
 //
 // __builtin_unreachable:
-#if BOOST_GCC_VERSION >= 40800
+#if BOOST_GCC_VERSION >= 40500
 #define BOOST_UNREACHABLE_RETURN(x) __builtin_unreachable();
 #endif
 

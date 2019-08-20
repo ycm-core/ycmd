@@ -376,7 +376,7 @@ namespace boost {
    template <class Ret, class ...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret(Args..., ...)const volatile && BOOST_TT_NOEXCEPT_DECL> : public true_type {};
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(_M_ARM) && !defined(_M_ARM64)
 #ifdef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __clrcall(Args...)BOOST_TT_NOEXCEPT_DECL> : public true_type {};
@@ -384,8 +384,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -399,8 +401,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)const BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)const BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -414,8 +418,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)volatile BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)volatile BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -429,8 +435,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)const volatile BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)const volatile BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -445,8 +453,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -460,8 +470,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)const &BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)const &BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -475,8 +487,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)volatile &BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)volatile &BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -490,8 +504,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)const volatile &BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)const volatile &BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -506,8 +522,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...) && BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...) && BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -521,8 +539,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)const &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)const &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -536,8 +556,10 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)volatile &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)volatile &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
@@ -551,15 +573,17 @@ namespace boost {
 #ifndef _M_AMD64
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __stdcall(Args...)const volatile &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#ifndef __CLR_VER
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __fastcall(Args...)const volatile &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
+#endif
 #endif
 #if !defined(__CLR_VER) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2) || defined(_M_X64))
    template <class Ret, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_function<Ret __vectorcall(Args...)const volatile &&BOOST_TT_NOEXCEPT_DECL> : public true_type {};
 #endif
 
-#endif // _MSC_VER
+#endif // defined(_MSC_VER) && !defined(_M_ARM) && !defined(_M_ARM64)
 
 #endif
 

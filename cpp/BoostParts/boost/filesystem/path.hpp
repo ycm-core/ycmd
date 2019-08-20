@@ -536,7 +536,8 @@ namespace path_detail // intentionally don't use filesystem::detail to not bring
     bool is_relative() const         { return !is_absolute(); }
     bool is_absolute() const
     {
-#     ifdef BOOST_WINDOWS_API
+      // Windows CE has no root name (aka drive letters)
+#     if defined(BOOST_WINDOWS_API) && !defined(UNDER_CE)
       return has_root_name() && has_root_directory();
 #     else
       return has_root_directory();
@@ -783,7 +784,7 @@ namespace path_detail // intentionally don't use filesystem::detail to not bring
   inline bool operator> (const path& lhs, const path& rhs) {return rhs < lhs;}
   inline bool operator>=(const path& lhs, const path& rhs) {return !(lhs < rhs);}
 
-  inline std::size_t hash_value(const path& x)
+  inline std::size_t hash_value(const path& x) BOOST_NOEXCEPT
   {
 # ifdef BOOST_WINDOWS_API
     std::size_t seed = 0;
@@ -797,9 +798,18 @@ namespace path_detail // intentionally don't use filesystem::detail to not bring
 
   inline void swap(path& lhs, path& rhs) BOOST_NOEXCEPT { lhs.swap(rhs); }
 
-  inline path operator/(const path& lhs, const path& rhs) { return path(lhs) /= rhs; }
+  inline path operator/(const path& lhs, const path& rhs)
+  {
+    path p = lhs;
+    p /= rhs;
+    return p;
+  }
 # if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-  inline path&& operator/(path&& lhs, const path& rhs) { lhs /= rhs; return std::move(lhs); }
+  inline path operator/(path&& lhs, const path& rhs)
+  {
+    lhs /= rhs;
+    return std::move(lhs);
+  }
 # endif
 
   //  inserters and extractors
