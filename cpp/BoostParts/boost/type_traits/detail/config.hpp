@@ -93,6 +93,20 @@
 #  define BOOST_TT_NO_DEDUCED_NOEXCEPT_PARAM
 #  define BOOST_TT_NO_NOEXCEPT_SEPARATE_TYPE
 #endif
+//
+// If we have the SD6 macros (check for C++11's __cpp_rvalue_references), and we don't have __cpp_noexcept_function_type
+// set, then don't treat noexcept functions as seperate types.  This is a fix for msvc with the /Zc:noexceptTypes- flag set.
+//
+#if defined(__cpp_rvalue_references) && !defined(__cpp_noexcept_function_type) && !defined(BOOST_TT_NO_NOEXCEPT_SEPARATE_TYPE)
+#  define BOOST_TT_NO_NOEXCEPT_SEPARATE_TYPE
+#endif
+//
+// Check MSVC specific macro on older msvc compilers that don't support the SD6 macros, we don't rely on this
+// if the SD6 macros *are* available as it appears to be undocumented.
+//
+#if defined(BOOST_MSVC) && !defined(__cpp_rvalue_references) && !defined(BOOST_TT_NO_NOEXCEPT_SEPARATE_TYPE) && !defined(_NOEXCEPT_TYPES_SUPPORTED)
+#  define BOOST_TT_NO_NOEXCEPT_SEPARATE_TYPE
+#endif
 
 #endif // BOOST_TT_CONFIG_HPP_INCLUDED
 

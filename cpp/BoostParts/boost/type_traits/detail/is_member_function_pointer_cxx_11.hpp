@@ -419,7 +419,7 @@ namespace boost {
    template <class Ret, class C, class ...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_member_function_pointer<Ret(C::*)(Args..., ...)const volatile && BOOST_TT_NOEXCEPT_DECL> : public true_type {};
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(_M_ARM) && !defined(_M_ARM64)
 #ifdef __CLR_VER
    template <class Ret, class C, class...Args BOOST_TT_NOEXCEPT_PARAM>
    struct is_member_function_pointer<Ret(__clrcall C::*)(Args...)BOOST_TT_NOEXCEPT_DECL> : public true_type {};

@@ -99,7 +99,8 @@ BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
 #if defined(BOOST_MSVC) \
     || defined(__BORLANDC__) \
     || (defined(__MWERKS__) && defined(_WIN32) && (__MWERKS__ >= 0x3000)) \
-    || (defined(__ICL) && defined(_MSC_EXTENSIONS) && (_MSC_VER >= 1200))
+    || (defined(__ICL) && defined(_MSC_EXTENSIONS) && (_MSC_VER >= 1200)) \
+    || (defined(BOOST_CLANG) && defined(BOOST_WINDOWS) && defined(_MSC_VER) && (__clang_major__ >= 4))
 
 #ifndef BOOST_VERSION_HPP
 #  include <boost/version.hpp>
@@ -202,6 +203,11 @@ BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
 
      // Metrowerks CodeWarrior 9.x
 #    define BOOST_LIB_TOOLSET "cw9"
+
+#  elif defined(BOOST_CLANG) && defined(BOOST_WINDOWS) && defined(_MSC_VER) && (__clang_major__ >= 4)
+
+     // Clang on Windows
+#    define BOOST_LIB_TOOLSET "clangw" BOOST_STRINGIZE(__clang_major__)
 
 #  endif
 #endif // BOOST_LIB_TOOLSET

@@ -992,6 +992,23 @@ namespace std{ using ::type_info; }
 #ifndef BOOST_ATTRIBUTE_UNUSED
 #  define BOOST_ATTRIBUTE_UNUSED
 #endif
+//
+// [[nodiscard]]:
+//
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(nodiscard)
+# define BOOST_ATTRIBUTE_NODISCARD [[nodiscard]]
+#endif
+#if __has_cpp_attribute(no_unique_address) && !(defined(__GNUC__) && (__cplusplus < 201100))
+# define BOOST_ATTRIBUTE_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif
+#endif
+#ifndef BOOST_ATTRIBUTE_NODISCARD
+# define BOOST_ATTRIBUTE_NODISCARD
+#endif
+#ifndef BOOST_ATTRIBUTE_NO_UNIQUE_ADDRESS
+# define BOOST_ATTRIBUTE_NO_UNIQUE_ADDRESS
+#endif
 
 #define BOOST_STATIC_CONSTEXPR  static BOOST_CONSTEXPR_OR_CONST
 
@@ -1027,12 +1044,16 @@ namespace std{ using ::type_info; }
 #if !defined(__has_include)
 #  define BOOST_NO_CXX17_HDR_OPTIONAL
 #  define BOOST_NO_CXX17_HDR_STRING_VIEW
+#  define BOOST_NO_CXX17_HDR_VARIANT
 #else
 #if !__has_include(<optional>)
 #  define BOOST_NO_CXX17_HDR_OPTIONAL
 #endif
 #if !__has_include(<string_view>)
 #  define BOOST_NO_CXX17_HDR_STRING_VIEW
+#endif
+#if !__has_include(<variant>)
+#  define BOOST_NO_CXX17_HDR_VARIANT
 #endif
 #endif
 

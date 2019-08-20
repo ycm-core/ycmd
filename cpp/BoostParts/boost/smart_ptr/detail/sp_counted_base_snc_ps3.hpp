@@ -19,7 +19,7 @@
 //
 //  Thanks to Michael van der Westhuizen
 
-#include <boost/detail/sp_typeinfo.hpp>
+#include <boost/smart_ptr/detail/sp_typeinfo_.hpp>
 #include <boost/config.hpp>
 #include <inttypes.h> // uint32_t
 
@@ -115,8 +115,8 @@ public:
         delete this;
     }
 
-    virtual void * get_deleter( sp_typeinfo const & ti ) = 0;
-    virtual void * get_local_deleter( sp_typeinfo const & ti ) = 0;
+    virtual void * get_deleter( sp_typeinfo_ const & ti ) = 0;
+    virtual void * get_local_deleter( sp_typeinfo_ const & ti ) = 0;
     virtual void * get_untyped_deleter() = 0;
 
     void add_ref_copy()
