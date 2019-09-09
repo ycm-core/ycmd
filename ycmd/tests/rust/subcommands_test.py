@@ -28,14 +28,16 @@ from hamcrest import ( assert_that,
                        empty,
                        equal_to,
                        has_entries,
-                       has_entry,
-                       matches_regexp )
+                       has_entry )
 from mock import patch
 from pprint import pformat
 import os
 import requests
 
 from ycmd import handlers
+from ycmd.completers.language_server.language_server_completer import (
+    ResponseFailedException
+)
 from ycmd.tests.rust import ( IsolatedYcmd,
                               PathToTestFile,
                               SharedYcmd,
@@ -43,7 +45,6 @@ from ycmd.tests.rust import ( IsolatedYcmd,
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
-                                    ExpectedFailure,
                                     LocationMatcher,
                                     WithRetry )
 from ycmd.utils import ReadFile
@@ -149,13 +150,9 @@ def Subcommands_ServerNotInitialized_test():
   yield Test, 'RefactorRename', [ 'test' ]
 
 
-@IsolatedYcmd
+@SharedYcmd
 def Subcommands_Format_WholeFile_test( app ):
-  # RLS can't execute textDocument/formatting if any file
-  # under the project root has errors, so we need to use
-  # a different project just for formatting.
-  # For further details check https://github.com/rust-lang/rls/issues/1397
-  project_dir = PathToTestFile( 'formatting' )
+  project_dir = PathToTestFile( 'common' )
   StartRustCompleterServerInDirectory( app, project_dir )
 
   filepath = os.path.join( project_dir, 'src', 'main.rs' )
@@ -175,16 +172,15 @@ def Subcommands_Format_WholeFile_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-            ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
-                          '  return param;\n'
-                          '}\n',
-                          LocationMatcher( filepath, 1, 1 ),
-                          LocationMatcher( filepath, 3, 1 ) ),
-            ChunkMatcher( 'fn main() {\n'
-                          '  unformatted_function(false);\n'
-                          '  let x = 1;\n',
-                          LocationMatcher( filepath, 4, 1 ),
-                          LocationMatcher( filepath, 9, 1 ) ),
+            ChunkMatcher( '  create_universe();\n'
+                          '  let builder = Builder {};\n'
+                          '  builder.build_\n',
+                          LocationMatcher( filepath, 12, 1 ),
+                          LocationMatcher( filepath, 15, 1 ) ),
+            ChunkMatcher( 'fn format_test() {\n'
+                          '  let a: i32 = 5;\n',
+                          LocationMatcher( filepath, 17, 1 ),
+                          LocationMatcher( filepath, 22, 1 ) ),
           )
         } ) )
       } )
@@ -192,13 +188,9 @@ def Subcommands_Format_WholeFile_test( app ):
   } )
 
 
-@IsolatedYcmd
+@SharedYcmd
 def Subcommands_Format_Range_test( app ):
-  # RLS can't execute textDocument/formatting if any file
-  # under the project root has errors, so we need to use
-  # a different project just for formatting.
-  # For further details check https://github.com/rust-lang/rls/issues/1397
-  project_dir = PathToTestFile( 'formatting' )
+  project_dir = PathToTestFile( 'common' )
   StartRustCompleterServerInDirectory( app, project_dir )
 
   filepath = os.path.join( project_dir, 'src', 'main.rs' )
@@ -210,12 +202,12 @@ def Subcommands_Format_Range_test( app ):
       'filepath': filepath,
       'range': {
         'start': {
-          'line_num': 1,
+          'line_num': 17,
           'column_num': 1,
         },
         'end': {
-          'line_num': 2,
-          'column_num': 18
+          'line_num': 22,
+          'column_num': 2
         }
       },
       'options': {
@@ -228,11 +220,10 @@ def Subcommands_Format_Range_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-            ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
-                          '\treturn param;\n'
-                          '}\n',
-                          LocationMatcher( filepath, 1, 1 ),
-                          LocationMatcher( filepath, 3, 1 ) ),
+            ChunkMatcher( 'fn format_test() {\n'
+                          '\tlet a: i32 = 5;\n',
+                          LocationMatcher( filepath, 17, 1 ),
+                          LocationMatcher( filepath, 22, 1 ) ),
           )
         } ) )
       } )
@@ -346,9 +337,10 @@ def RunGoToTest( app, command, test ):
       )
     }
   else:
+    error_type = test.get( 'exc', RuntimeError )
     expect = {
       'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( RuntimeError, test[ 'res' ] )
+      'data': ErrorMatcher( error_type, test[ 'res' ] )
     }
 
   RunTest( app, {
@@ -391,13 +383,12 @@ def Subcommands_GoToImplementation_test():
 
 
 @WithRetry
-@ExpectedFailure( 'RLS returns an internal error "An unknown error occurred" '
-                  'when unable to jump to implementations',
-                  matches_regexp( 'ResponseFailedException' ) )
 def Subcommands_GoToImplementation_Failure_test():
   RunGoToTest(
     'GoToImplementation',
-    { 'req': ( 'main.rs', 11,  2 ), 'res': 'Cannot jump to location' }
+    { 'req': ( 'main.rs', 11,  2 ),
+      'res': 'Request failed: -32603: An unknown error occurred',
+      'exc': ResponseFailedException }
   )
 
 
