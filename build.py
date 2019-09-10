@@ -773,42 +773,42 @@ def GetCsCompleterDataForPlatform():
   DATA = {
     'win32': {
       'file_name': 'omnisharp.http-win-x86.zip',
-      'version': 'v1.32.19',
+      'version': 'v1.34.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.32.19/omnisharp.http-win-x86.zip' ),
+                        'ses/download/v1.34.2/omnisharp.http-win-x86.zip' ),
       'check_sum': ( '502fc39472137c86aaa0010abc91c46d0c35e685d56ebdc1b90bb67'
                      '3172c86ec' ),
     },
     'win64': {
       'file_name': 'omnisharp.http-win-x64.zip',
-      'version': 'v1.32.19',
+      'version': 'v1.34.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.32.19/omnisharp.http-win-x64.zip' ),
+                        'ses/download/v1.34.2/omnisharp.http-win-x64.zip' ),
       'check_sum': ( '86806a3ac552da12c843eb29e92f9ec4bdf4606b80794edb88ef483'
                      'd3387dfae' ),
     },
     'macos': {
       'file_name': 'omnisharp.http-osx.tar.gz',
-      'version': 'v1.32.19',
+      'version': 'v1.34.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.32.19/omnisharp.http-osx.tar.gz' ),
+                        'ses/download/v1.34.2/omnisharp.http-osx.tar.gz' ),
       'check_sum': ( 'c5eff2f196df794e8f4f4ab2894f5e6e550bd7635b9569b1e1a2581'
                      '382aa2cbe' ),
     },
     'linux64': {
       'file_name': 'omnisharp.http-linux-x64.tar.gz',
-      'version': 'v1.32.19',
+      'version': 'v1.34.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.32.19/omnisharp.http-linux-x64.tar.g'
+                        'ses/download/v1.34.2/omnisharp.http-linux-x64.tar.g'
                         'z' ),
       'check_sum': ( 'c78b5830b8d6e3c06d9f1a9aae929311907f3de4c4267823730b565'
                      '2e2947588' ),
     },
     'linux32': {
       'file_name': 'omnisharp.http-linux-x86.tar.gz',
-      'version': 'v1.32.19',
+      'version': 'v1.34.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.32.19/omnisharp.http-linux-x86.tar.g'
+                        'ses/download/v1.34.2/omnisharp.http-linux-x86.tar.g'
                         'z' ),
       'check_sum': ( 'd893d5bdf8621c7a3070fbeda20162b7bcf390b2c1add73c58d3851'
                      'b3ec605b4' ),
