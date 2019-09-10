@@ -205,6 +205,69 @@ def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
 
 
 @SharedYcmd
+def Subcommands_GoToReferences_InvalidLocation_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToReferences' ],
+      line_num = 3,
+      column_num = 1,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    response = app.post_json( '/run_completer_command',
+                              goto_data,
+                              expect_errors = True ).json
+    assert_that( response, ErrorMatcher( RuntimeError, 'No references found' ) )
+
+
+@SharedYcmd
+def Subcommands_GoToReferences_MultipleReferences_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToReferences' ],
+      line_num = 18,
+      column_num = 4,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, contains( LocationMatcher( filepath, 17, 54 ),
+                                     LocationMatcher( filepath, 18, 4 ) ) )
+
+
+@SharedYcmd
+def Subcommands_GoToReferences_Basic_test( app ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    goto_data = BuildRequest(
+      completer_target = 'filetype_default',
+      command_arguments = [ 'GoToReferences' ],
+      line_num = 21,
+      column_num = 29,
+      contents = contents,
+      filetype = 'cs',
+      filepath = filepath
+    )
+
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, LocationMatcher( filepath, 21, 15 ) )
+
+
+@SharedYcmd
 def Subcommands_GetToImplementation_Unicode_test( app ):
   filepath = PathToTestFile( 'testy', 'Unicode.cs' )
   with WrapOmniSharpServer( app, filepath ):
