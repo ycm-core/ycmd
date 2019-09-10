@@ -24,7 +24,12 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, calling, has_items, raises )
+from hamcrest import ( assert_that,
+                       calling,
+                       empty,
+                       has_entries,
+                       has_items,
+                       raises )
 from nose import SkipTest
 from nose.tools import eq_
 from webtest import AppError
@@ -46,10 +51,21 @@ def GetCompletions_Basic_test( app ):
                                     line_num = 10,
                                     column_num = 12 )
     response_data = app.post_json( '/completions', completion_data ).json
-    assert_that( response_data[ 'completions' ],
-                 has_items( CompletionEntryMatcher( 'CursorLeft' ),
-                            CompletionEntryMatcher( 'CursorSize' ) ) )
-    eq_( 12, response_data[ 'completion_start_column' ] )
+    print( 'Response: ', response_data )
+    assert_that(
+      response_data,
+      has_entries( {
+        'completion_start_column': 12,
+        'completions': has_items(
+          CompletionEntryMatcher( 'CursorLeft',
+                                  'CursorLeft',
+                                  { 'kind': 'Property' } ),
+          CompletionEntryMatcher( 'CursorSize',
+                                  'CursorSize',
+                                  { 'kind': 'Property' } ),
+        ),
+        'errors': empty(),
+      } ) )
 
 
 @SharedYcmd
@@ -64,15 +80,17 @@ def GetCompletions_Unicode_test( app ):
                                     line_num = 43,
                                     column_num = 26 )
     response_data = app.post_json( '/completions', completion_data ).json
-
-    assert_that( response_data[ 'completions' ],
-                 has_items(
-                   CompletionEntryMatcher( 'DoATest' ),
-                   CompletionEntryMatcher( 'an_int' ),
-                   CompletionEntryMatcher( 'a_unicøde' ),
-                   CompletionEntryMatcher( 'øøø' ) ) )
-
-    eq_( 26, response_data[ 'completion_start_column' ] )
+    assert_that( response_data,
+                 has_entries( {
+                    'completion_start_column': 26,
+                    'completions': has_items(
+                      CompletionEntryMatcher( 'DoATest' ),
+                      CompletionEntryMatcher( 'an_int' ),
+                      CompletionEntryMatcher( 'a_unicøde' ),
+                      CompletionEntryMatcher( 'øøø' ),
+                    ),
+                    'errors': empty(),
+                  } ) )
 
 
 @SharedYcmd
@@ -94,10 +112,21 @@ def GetCompletions_MultipleSolution_test( app ):
       response_data = app.post_json( '/completions',
                                      completion_data ).json
 
-      assert_that( response_data[ 'completions' ],
-                   has_items( CompletionEntryMatcher( 'CursorLeft' ),
-                              CompletionEntryMatcher( 'CursorSize' ) ) )
-      eq_( 12, response_data[ 'completion_start_column' ] )
+      print( 'Response: ', response_data )
+      assert_that(
+        response_data,
+        has_entries( {
+          'completion_start_column': 12,
+          'completions': has_items(
+            CompletionEntryMatcher( 'CursorLeft',
+                                    'CursorLeft',
+                                    { 'kind': 'Property' } ),
+            CompletionEntryMatcher( 'CursorSize',
+                                    'CursorSize',
+                                    { 'kind': 'Property' } ),
+          ),
+          'errors': empty(),
+        } ) )
 
 
 @SharedYcmd
@@ -112,10 +141,21 @@ def GetCompletions_PathWithSpace_test( app ):
                                     line_num = 9,
                                     column_num = 12 )
     response_data = app.post_json( '/completions', completion_data ).json
-    assert_that( response_data[ 'completions' ],
-                 has_items( CompletionEntryMatcher( 'CursorLeft' ),
-                            CompletionEntryMatcher( 'CursorSize' ) ) )
-    eq_( 12, response_data[ 'completion_start_column' ] )
+    print( 'Response: ', response_data )
+    assert_that(
+      response_data,
+      has_entries( {
+        'completion_start_column': 12,
+        'completions': has_items(
+          CompletionEntryMatcher( 'CursorLeft',
+                                  'CursorLeft',
+                                  { 'kind': 'Property' } ),
+          CompletionEntryMatcher( 'CursorSize',
+                                  'CursorSize',
+                                  { 'kind': 'Property' } ),
+        ),
+        'errors': empty(),
+      } ) )
 
 
 @SharedYcmd

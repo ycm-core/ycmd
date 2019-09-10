@@ -22,19 +22,16 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_entry, has_entries, contains
+from hamcrest import assert_that, has_entry, contains
 from mock import patch
-from nose import SkipTest
-from nose.tools import eq_, ok_
-from webtest import AppError
-import pprint
+from nose.tools import ok_
 import os.path
 
 from ycmd import user_options_store
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
                             WrapOmniSharpServer )
 from ycmd.tests.test_utils import ( BuildRequest,
-                                    ChunkMatcher,
+                                    ErrorMatcher,
                                     LocationMatcher,
                                     MockProcessTerminationTimingOut,
                                     WaitUntilCompleterServerReady )
@@ -44,6 +41,7 @@ from ycmd.utils import ReadFile
 @SharedYcmd
 def Subcommands_GoTo_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  destination = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
@@ -55,11 +53,8 @@ def Subcommands_GoTo_Basic_test( app ):
                               filetype = 'cs',
                               filepath = filepath )
 
-    eq_( {
-      'filepath': PathToTestFile( 'testy', 'Program.cs' ),
-      'line_num': 7,
-      'column_num': 22
-    }, app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, LocationMatcher( destination, 7, 22 ) )
 
 
 @SharedYcmd
@@ -76,11 +71,8 @@ def Subcommands_GoTo_Unicode_test( app ):
                               filetype = 'cs',
                               filepath = filepath )
 
-    eq_( {
-      'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
-      'line_num': 30,
-      'column_num': 54
-    }, app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, LocationMatcher( filepath, 30, 54 ) )
 
 
 @SharedYcmd
@@ -99,11 +91,8 @@ def Subcommands_GoToImplementation_Basic_test( app ):
       filepath = filepath
     )
 
-    eq_( {
-      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 31,
-      'column_num': 15
-    }, app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, LocationMatcher( filepath, 31, 15 ) )
 
 
 @SharedYcmd
@@ -122,14 +111,11 @@ def Subcommands_GoToImplementation_NoImplementation_test( app ):
       filepath = filepath
     )
 
-    try:
-      app.post_json( '/run_completer_command', goto_data ).json
-      raise Exception( "Expected a 'No implementations found' error" )
-    except AppError as e:
-      if 'No implementations found' in str( e ):
-        pass
-      else:
-        raise
+    response =  app.post_json( '/run_completer_command',
+                               goto_data,
+                               expect_errors = True ).json
+    assert_that( response, ErrorMatcher( RuntimeError,
+                                         'No implementations found' ) )
 
 
 @SharedYcmd
@@ -148,14 +134,11 @@ def Subcommands_CsCompleter_InvalidLocation_test( app ):
       filepath = filepath
     )
 
-    try:
-      app.post_json( '/run_completer_command', goto_data ).json
-      raise Exception( 'Expected a "Can\\\'t jump to implementation" error' )
-    except AppError as e:
-      if 'Can\\\'t jump to implementation' in str( e ):
-        pass
-      else:
-        raise
+    response =  app.post_json( '/run_completer_command',
+                               goto_data,
+                               expect_errors = True ).json
+    assert_that( response, ErrorMatcher( RuntimeError,
+                                         "Can't jump to implementation" ) )
 
 
 @SharedYcmd
@@ -174,11 +157,8 @@ def Subcommands_GoToImplementationElseDeclaration_NoImplementation_test( app ):
       filepath = filepath
     )
 
-    eq_( {
-      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 36,
-      'column_num': 8
-    }, app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, LocationMatcher( filepath, 36, 8 ) )
 
 
 @SharedYcmd
@@ -198,11 +178,8 @@ def Subcommands_GoToImplementationElseDeclaration_SingleImplementation_test(
       filepath = filepath
     )
 
-    eq_( {
-      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 31,
-      'column_num': 15
-    }, app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, LocationMatcher( filepath, 31, 15 ) )
 
 
 @SharedYcmd
@@ -222,15 +199,9 @@ def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
       filepath = filepath
     )
 
-    eq_( [ {
-      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 44,
-      'column_num': 15
-    }, {
-      'filepath': PathToTestFile( 'testy', 'GotoTestCase.cs' ),
-      'line_num': 49,
-      'column_num': 15
-    } ], app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, contains( LocationMatcher( filepath, 44, 15 ),
+                                     LocationMatcher( filepath, 49, 15 ) ) )
 
 
 @SharedYcmd
@@ -249,15 +220,9 @@ def Subcommands_GetToImplementation_Unicode_test( app ):
       filepath = filepath
     )
 
-    eq_( [ {
-      'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
-      'line_num': 49,
-      'column_num': 66
-    }, {
-      'filepath': PathToTestFile( 'testy', 'Unicode.cs' ),
-      'line_num': 50,
-      'column_num': 62
-    } ], app.post_json( '/run_completer_command', goto_data ).json )
+    response = app.post_json( '/run_completer_command', goto_data ).json
+    assert_that( response, contains( LocationMatcher( filepath, 49, 66 ),
+                                     LocationMatcher( filepath, 50, 62 ) ) )
 
 
 @SharedYcmd
@@ -274,9 +239,8 @@ def Subcommands_GetType_EmptyMessage_test( app ):
                                  filetype = 'cs',
                                  filepath = filepath )
 
-    eq_( {
-      'message': None
-    }, app.post_json( '/run_completer_command', gettype_data ).json )
+    response = app.post_json( '/run_completer_command', gettype_data ).json
+    assert_that( response, has_entry( 'message', None ) )
 
 
 @SharedYcmd
@@ -293,9 +257,8 @@ def Subcommands_GetType_VariableDeclaration_test( app ):
                                  filetype = 'cs',
                                  filepath = filepath )
 
-    eq_( {
-      'message': 'System.String'
-    }, app.post_json( '/run_completer_command', gettype_data ).json )
+    response = app.post_json( '/run_completer_command', gettype_data ).json
+    assert_that( response, has_entry( 'message', 'System.String' ) )
 
 
 @SharedYcmd
@@ -312,9 +275,8 @@ def Subcommands_GetType_VariableUsage_test( app ):
                                  filetype = 'cs',
                                  filepath = filepath )
 
-    eq_( {
-      'message': 'string str'
-    }, app.post_json( '/run_completer_command', gettype_data ).json )
+    response = app.post_json( '/run_completer_command', gettype_data ).json
+    assert_that( response, has_entry( 'message', 'string str' ) )
 
 
 @SharedYcmd
@@ -331,9 +293,9 @@ def Subcommands_GetType_DocsIgnored_test( app ):
                                  filetype = 'cs',
                                  filepath = filepath )
 
-    eq_( {
-      'message': 'int GetTypeTestCase.an_int_with_docs',
-    }, app.post_json( '/run_completer_command', gettype_data ).json )
+    response = app.post_json( '/run_completer_command', gettype_data ).json
+    assert_that( response, has_entry(
+      'message', 'int GetTypeTestCase.an_int_with_docs' ) )
 
 
 @SharedYcmd
@@ -350,10 +312,11 @@ def Subcommands_GetDoc_Variable_test( app ):
                                 filetype = 'cs',
                                 filepath = filepath )
 
-    eq_( {
-      'detailed_info': 'int GetDocTestCase.an_int\n'
-                       'an integer, or something',
-    }, app.post_json( '/run_completer_command', getdoc_data ).json )
+    response = app.post_json( '/run_completer_command', getdoc_data ).json
+    assert_that( response,
+                 has_entry( 'detailed_info',
+                            'int GetDocTestCase.an_int\n'
+                            'an integer, or something' ) )
 
 
 @SharedYcmd
@@ -370,114 +333,11 @@ def Subcommands_GetDoc_Function_test( app ):
                                 filetype = 'cs',
                                 filepath = filepath )
 
-    eq_( {
-      'detailed_info': 'int GetDocTestCase.DoATest()\n'
-                       'Very important method.\n\nWith multiple lines of '
-                       'commentary\nAnd Format-\n-ting',
-    }, app.post_json( '/run_completer_command', getdoc_data ).json )
-
-
-def RunFixItTest( app,
-                  line,
-                  column,
-                  result_matcher,
-                  filepath = [ 'testy', 'FixItTestCase.cs' ] ):
-  raise SkipTest( "No support for fixit in rosyln" )
-  filepath = PathToTestFile( *filepath )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
-
-    fixit_data = BuildRequest( completer_target = 'filetype_default',
-                               command_arguments = [ 'FixIt' ],
-                               line_num = line,
-                               column_num = column,
-                               contents = contents,
-                               filetype = 'c3',
-                               filepath = filepath )
-
-    response = app.post_json( '/run_completer_command', fixit_data ).json
-
-    pprint.pprint( response )
-
-    assert_that( response, result_matcher )
-
-
-@SharedYcmd
-def Subcommands_FixIt_RemoveSingleLine_test( app ):
-  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 11, 1, has_entries( {
-    'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 11, 1 ),
-      'chunks': contains( ChunkMatcher( '',
-                                        LocationMatcher( filepath, 10, 20 ),
-                                        LocationMatcher( filepath, 11, 30 ) ) )
-    } ) )
-  } ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_MultipleLines_test( app ):
-  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 19, 1, has_entries( {
-    'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 19, 1 ),
-      'chunks': contains( ChunkMatcher( 'return On',
-                                        LocationMatcher( filepath, 20, 13 ),
-                                        LocationMatcher( filepath, 21, 35 ) ) )
-    } ) )
-  } ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_SpanFileEdge_test( app ):
-  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 1, 1, has_entries( {
-    'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 1, 1 ),
-      'chunks': contains( ChunkMatcher( 'System',
-                                        LocationMatcher( filepath, 1, 7 ),
-                                        LocationMatcher( filepath, 3, 18 ) ) )
-    } ) )
-  } ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_AddTextInLine_test( app ):
-  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 9, 1, has_entries( {
-    'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 9, 1 ),
-      'chunks': contains( ChunkMatcher( ', StringComparison.Ordinal',
-                                        LocationMatcher( filepath, 9, 29 ),
-                                        LocationMatcher( filepath, 9, 29 ) ) )
-    } ) )
-  } ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_ReplaceTextInLine_test( app ):
-  filepath = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  RunFixItTest( app, 10, 1, has_entries( {
-    'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 10, 1 ),
-      'chunks': contains( ChunkMatcher( 'const int',
-                                        LocationMatcher( filepath, 10, 13 ),
-                                        LocationMatcher( filepath, 10, 16 ) ) )
-    } ) )
-  } ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_Unicode_test( app ):
-  filepath = PathToTestFile( 'testy', 'Unicode.cs' )
-  RunFixItTest( app, 30, 54, has_entries( {
-    'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 30, 54 ),
-      'chunks': contains( ChunkMatcher( ' readonly',
-                                        LocationMatcher( filepath, 30, 44 ),
-                                        LocationMatcher( filepath, 30, 44 ) ) )
-    } ) )
-  } ), filepath = [ 'testy', 'Unicode.cs' ] )
+    response = app.post_json( '/run_completer_command', getdoc_data ).json
+    assert_that( response, has_entry( 'detailed_info',
+      'int GetDocTestCase.DoATest()\n'
+      'Very important method.\n\nWith multiple lines of '
+      'commentary\nAnd Format-\n-ting' ) )
 
 
 @IsolatedYcmd()
