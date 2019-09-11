@@ -50,7 +50,7 @@ public:
     return text_is_lowercase_;
   }
 
-  YCM_EXPORT Result QueryMatchResult( const Word &query ) const;
+  YCM_EXPORT Result QueryMatchResult( const Word &query, bool smart_case ) const;
 
 private:
   void ComputeCaseSwappedText();

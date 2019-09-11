@@ -75,7 +75,7 @@ Candidate::Candidate( std::string&& text )
 }
 
 
-Result Candidate::QueryMatchResult( const Word &query ) const {
+Result Candidate::QueryMatchResult( const Word &query, bool smart_case ) const {
   // Check if the query is a subsequence of the candidate and return a result
   // accordingly. This is done by simultaneously going through the characters of
   // the query and the candidate. If both characters match, we move to the next
@@ -112,7 +112,7 @@ Result Candidate::QueryMatchResult( const Word &query ) const {
     const auto &candidate_character = *candidate_character_pos;
     const auto &query_character = *query_character_pos;
 
-    if ( query_character->MatchesSmart( *candidate_character ) ) {
+    if ( query_character->Matches( *candidate_character, smart_case ) ) {
       index_sum += candidate_index;
 
       ++query_character_pos;

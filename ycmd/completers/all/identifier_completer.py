@@ -52,7 +52,8 @@ class IdentifierCompleter( GeneralCompleter ):
     completions = self._completer.CandidatesForQueryAndType(
       ToCppStringCompatible( _SanitizeQuery( request_data[ 'query' ] ) ),
       ToCppStringCompatible( request_data[ 'first_filetype' ] ),
-      self._max_candidates )
+      self._max_candidates,
+      self.user_options[ 'smart_case' ] )
 
     completions = _RemoveSmallCandidates(
       completions, self.user_options[ 'min_num_identifier_candidate_chars' ] )

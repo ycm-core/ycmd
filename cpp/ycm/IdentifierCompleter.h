@@ -72,7 +72,8 @@ public:
   YCM_EXPORT std::vector< std::string > CandidatesForQueryAndType(
     std::string query,
     const std::string &filetype,
-    const size_t max_candidates = 0 ) const;
+    const size_t max_candidates = 0,
+    bool smart_case = true ) const;
 
 private:
 

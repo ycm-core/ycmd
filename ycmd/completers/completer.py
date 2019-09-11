@@ -172,6 +172,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
   def __init__( self, user_options ):
     self.user_options = user_options
+    self.smart_case = user_options.get( 'smart_case', True )
     self.min_num_chars = user_options[ 'min_num_of_chars_for_completion' ]
     self.max_diagnostics_to_display = user_options[
         'max_diagnostics_to_display' ]
@@ -317,7 +318,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
   def FilterAndSortCandidatesInner( self, candidates, sort_property, query ):
     return completer_utils.FilterAndSortCandidatesWrap(
-      candidates, sort_property, query, self._max_candidates )
+      candidates, sort_property, query, self._max_candidates, self.smart_case )
 
 
   def OnFileReadyToParse( self, request_data ):

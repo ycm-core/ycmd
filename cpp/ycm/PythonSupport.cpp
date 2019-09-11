@@ -65,7 +65,8 @@ pylist FilterAndSortCandidates(
   pylist candidates,
   const std::string &candidate_property,
   std::string query,
-  const size_t max_candidates ) {
+  const size_t max_candidates,
+  bool smart_case ) {
   pylist filtered_candidates;
 
   size_t num_candidates = len( candidates );
@@ -84,7 +85,7 @@ pylist FilterAndSortCandidates(
         continue;
       }
 
-      Result result = candidate->QueryMatchResult( query_object );
+      Result result = candidate->QueryMatchResult( query_object, smart_case );
 
       if ( result.IsSubsequence() ) {
         result_and_objects.emplace_back( result, i );

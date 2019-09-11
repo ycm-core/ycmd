@@ -69,7 +69,8 @@ public:
   void ResultsForQueryAndType( std::string&& query,
                                const std::string &filetype,
                                std::vector< Result >& results,
-                               const size_t max_results ) const;
+                               const size_t max_results,
+                               bool smart_case ) const;
 
 private:
   std::set< const Candidate * > &GetCandidateSet(

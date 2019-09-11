@@ -64,7 +64,8 @@ PYBIND11_MODULE( ycm_core, mod )
            py::arg("candidates"),
            py::arg("candidate_property"),
            py::arg("query"),
-           py::arg("max_candidates") = 0 );
+           py::arg("max_candidates") = 0,
+           py::arg("smart_case") = true);
 
   mod.def( "YcmCoreVersion", &YcmCoreVersion );
 
@@ -88,7 +89,8 @@ PYBIND11_MODULE( ycm_core, mod )
           py::call_guard< py::gil_scoped_release >(),
           py::arg( "query" ),
           py::arg( "filetype" ),
-          py::arg( "max_candidates" ) = 0 );
+          py::arg( "max_candidates" ) = 0,
+          py::arg( "smart_case" ) = true);
 
   py::bind_vector< std::vector< std::string > >( mod, "StringVector" );
 

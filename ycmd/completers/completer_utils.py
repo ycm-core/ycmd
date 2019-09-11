@@ -176,7 +176,7 @@ def _PrepareTrigger( trigger ):
 
 
 def FilterAndSortCandidatesWrap( candidates, sort_property, query,
-                                 max_candidates ):
+                                 max_candidates, smart_case ):
   from ycm_core import FilterAndSortCandidates
 
   # The c++ interface we use only understands the (*native*) 'str' type (i.e.
@@ -190,7 +190,7 @@ def FilterAndSortCandidatesWrap( candidates, sort_property, query,
   return FilterAndSortCandidates( candidates,
                                   ToCppStringCompatible( sort_property ),
                                   ToCppStringCompatible( query ),
-                                  max_candidates )
+                                  max_candidates, smart_case )
 
 
 TRIGGER_REGEX_PREFIX = 're!'

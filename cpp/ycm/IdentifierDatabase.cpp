@@ -67,7 +67,8 @@ void IdentifierDatabase::ResultsForQueryAndType(
   std::string&& query,
   const std::string &filetype,
   std::vector< Result > &results,
-  const size_t max_results ) const {
+  const size_t max_results,
+  bool smart_case ) const {
   FiletypeCandidateMap::const_iterator it;
   {
     std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
@@ -96,7 +97,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
           continue;
         }
 
-        Result result = candidate->QueryMatchResult( query_object );
+        Result result = candidate->QueryMatchResult( query_object, smart_case );
 
         if ( result.IsSubsequence() ) {
           results.push_back( result );

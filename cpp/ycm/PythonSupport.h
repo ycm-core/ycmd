@@ -32,7 +32,8 @@ YCM_EXPORT pybind11::list FilterAndSortCandidates(
   pybind11::list candidates,
   const std::string &candidate_property,
   std::string query,
-  const size_t max_candidates = 0 );
+  const size_t max_candidates = 0,
+  bool smart_case = true);
 
 /// Given a Python object that's supposed to be "string-like", returns a UTF-8
 /// encoded std::string. Raises an exception if the object can't be converted to

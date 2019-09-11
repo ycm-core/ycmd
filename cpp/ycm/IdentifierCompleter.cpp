@@ -79,13 +79,15 @@ std::vector< std::string > IdentifierCompleter::CandidatesForQuery(
 std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
   std::string query,
   const std::string &filetype,
-  const size_t max_candidates ) const {
+  const size_t max_candidates,
+  bool smart_case ) const {
 
   std::vector< Result > results;
   identifier_database_.ResultsForQueryAndType( std::move( query ),
                                                filetype,
                                                results,
-                                               max_candidates );
+                                               max_candidates,
+                                               smart_case );
 
   std::vector< std::string > candidates;
   candidates.reserve( results.size() );

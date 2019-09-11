@@ -83,6 +83,9 @@ public:
     return folded_case_ == other.folded_case_;
   };
 
+  inline bool Matches( const Character &other, bool smart_case ) const {
+    return smart_case ? MatchesSmart(other) : (normal_ == other.normal_);
+  };
   // Smart base matching on top of smart case matching, e.g.:
   //  - e matches e, é, E, É;
   //  - E matches E, É but not e, é;

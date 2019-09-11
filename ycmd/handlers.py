@@ -132,7 +132,8 @@ def FilterAndSortCandidates():
     request_data[ 'candidates' ],
     request_data[ 'sort_property' ],
     request_data[ 'query' ],
-    _server_state.user_options[ 'max_num_candidates' ] ) )
+    _server_state.user_options[ 'max_num_candidates' ],
+    _server_state.user_options[ 'smart_case' ] ) )
 
 
 @app.get( '/healthy' )
