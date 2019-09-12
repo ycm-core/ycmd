@@ -1,6 +1,7 @@
 # Exit immediately if a command returns a non-zero status.
 set -e
 
+
 #
 # Compiler setup
 #
@@ -46,11 +47,27 @@ brew install pyenv
 
 eval "$(pyenv init -)"
 
+echo '*******************************************'
+echo '*******************************************'
+echo '*******************************************'
+ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1
+echo '*******************************************'
+ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1/include
+echo '*******************************************'
+ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib
+echo '*******************************************'
+ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib/pkgconfig
+echo '*******************************************'
+echo '*******************************************'
+echo '*******************************************'
 # In order to work with ycmd, Python *must* be built as a shared library. This
 # is set via the PYTHON_CONFIGURE_OPTS option.
 PYTHON_CONFIGURE_OPTS="--enable-shared" \
-CFLAGS="-I$(brew --prefix openssl)/include" \
-LDFLAGS="-L$(brew --prefix openssl)/lib" \
+PKG_CONFIG_PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib/pkgconfig" \
+CFLAGS="-I/home/linuxbrew/.linuxbrew/opt/openssl@1.1/include" \
+CPPFLAGS="-I/home/linuxbrew/.linuxbrew/opt/openssl@1.1/include" \
+CXXFLAGS="-I/home/linuxbrew/.linuxbrew/opt/openssl@1.1/include" \
+LDFLAGS="-L/home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib" \
 pyenv install ${YCM_PYTHON_VERSION}
 pyenv global ${YCM_PYTHON_VERSION}
 
