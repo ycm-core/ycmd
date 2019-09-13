@@ -54,6 +54,8 @@ eval "$(pyenv init -)"
 # In order to work with ycmd, Python *must* be built as a shared library. This
 # is set via the PYTHON_CONFIGURE_OPTS option.
 PYTHON_CONFIGURE_OPTS="--enable-shared" \
+CFLAGS="-I/usr/include/openssl" \
+LDFLAGS="-L/usr/lib" \
 pyenv install ${YCM_PYTHON_VERSION}
 pyenv global ${YCM_PYTHON_VERSION}
 
