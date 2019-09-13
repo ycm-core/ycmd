@@ -44,6 +44,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/i
 eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 
 brew install pyenv
+brew install openssl
 
 eval "$(pyenv init -)"
 
