@@ -39,36 +39,21 @@ mkdir ${HOME}/.cache
 # Python setup
 #
 
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+# python build dependencies
+# See 
+sudo apt-get install make build-essential libssl-dev zlib1g-dev libbz2-dev \
+libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
+xz-utils tk-dev libffi-dev liblzma-dev python-openssl git
 
-eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-
-brew install pyenv
-brew install openssl
-
+# Clone and enable pyenv
+git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-echo '*******************************************'
-echo '*******************************************'
-echo '*******************************************'
-ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1
-echo '*******************************************'
-ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1/include
-echo '*******************************************'
-ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib
-echo '*******************************************'
-ls -l /home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib/pkgconfig
-echo '*******************************************'
-echo '*******************************************'
-echo '*******************************************'
 # In order to work with ycmd, Python *must* be built as a shared library. This
 # is set via the PYTHON_CONFIGURE_OPTS option.
 PYTHON_CONFIGURE_OPTS="--enable-shared" \
-PKG_CONFIG_PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib/pkgconfig" \
-CFLAGS="-I/home/linuxbrew/.linuxbrew/opt/openssl@1.1/include" \
-CPPFLAGS="-I/home/linuxbrew/.linuxbrew/opt/openssl@1.1/include" \
-CXXFLAGS="-I/home/linuxbrew/.linuxbrew/opt/openssl@1.1/include" \
-LDFLAGS="-L/home/linuxbrew/.linuxbrew/opt/openssl@1.1/lib" \
 pyenv install ${YCM_PYTHON_VERSION}
 pyenv global ${YCM_PYTHON_VERSION}
 
