@@ -50,8 +50,8 @@ def GetCompletions_Basic_test( app ):
                      'Llongfile',
                      'int',
                      {
-                       'detailed_info': 'Llongfile = 8\n\n',
-                       'menu_text': 'Llongfile = 8',
+                       'detailed_info': 'Llongfile\n\n',
+                       'menu_text': 'Llongfile',
                        'kind': 'Constant',
                      }
                    ),
@@ -59,7 +59,10 @@ def GetCompletions_Basic_test( app ):
                      'Logger',
                      'struct{...}',
                      {
-                       'detailed_info': 'Logger\n\n',
+                       'detailed_info': 'Logger\n\n'
+                                        'A Logger represents an active logging'
+                                        ' object that generates lines of output'
+                                        ' to an io.Writer.',
                        'menu_text': 'Logger',
                        'kind': 'Struct',
                      }

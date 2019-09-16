@@ -86,8 +86,10 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     try:
       result = self.GetHoverResponse( request_data )[ 'value' ]
       return responses.BuildDisplayMessageResponse( result )
-    except language_server_completer.ResponseFailedException:
-      raise RuntimeError( 'Unknown type.' )
+    except RuntimeError as e:
+      if e.args[ 0 ] == 'No hover information.':
+        raise RuntimeError( 'Unknown type.' )
+      raise
 
 
   def GetCustomSubcommands( self ):
