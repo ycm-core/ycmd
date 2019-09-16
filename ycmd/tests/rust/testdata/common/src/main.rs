@@ -13,3 +13,10 @@ fn main() {
     let builder = Builder {};
     builder.build_
 }
+
+fn             format_test() {
+
+    let
+        a : 
+i32 = 5;
+}
