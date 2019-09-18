@@ -773,6 +773,8 @@ class LanguageServerCompleter( Completer ):
         self._UpdateServerWithFileContents( request_data )
     )
 
+    self._signature_help_disabled = user_options[ 'disable_signature_help' ]
+
 
   def ServerReset( self ):
     """Clean up internal state related to the running server instance.
@@ -1062,6 +1064,49 @@ class LanguageServerCompleter( Completer ):
 
     request_data[ 'start_codepoint' ] = min_start_codepoint
     return completions
+
+
+  def SignatureHelpAvailable( self ):
+    if self._signature_help_disabled:
+      return responses.SignatureHelpAvailalability.NOT_AVAILABLE
+
+    if not self.ServerIsReady():
+      return responses.SignatureHelpAvailalability.PENDING
+
+    if bool( self._server_capabilities.get( 'signatureHelpProvider' ) ):
+      return responses.SignatureHelpAvailalability.AVAILABLE
+    else:
+      return responses.SignatureHelpAvailalability.NOT_AVAILABLE
+
+  def ComputeSignaturesInner( self, request_data ):
+    if not self.ServerIsReady():
+      return {}
+
+    if not self._server_capabilities.get( 'signatureHelpProvider' ):
+      return {}
+
+    self._UpdateServerWithFileContents( request_data )
+
+    request_id = self.GetConnection().NextRequestId()
+    msg = lsp.SignatureHelp( request_id, request_data )
+
+    response = self.GetConnection().GetResponse( request_id,
+                                                 msg,
+                                                 REQUEST_TIMEOUT_COMPLETION )
+
+    result = response[ 'result' ]
+    for sig in result[ 'signatures' ]:
+      sig_label = sig[ 'label' ]
+      end = 0
+      for arg in sig[ 'parameters' ]:
+        arg_label = arg[ 'label' ]
+        assert not isinstance( arg_label, list )
+        begin = sig[ 'label' ].find( arg_label, end )
+        end = begin + len( arg_label )
+        arg[ 'label' ] = [
+          utils.CodepointOffsetToByteOffset( sig_label, begin ),
+          utils.CodepointOffsetToByteOffset( sig_label, end ) ]
+    return result
 
 
   def GetCustomSubcommands( self ):
@@ -1596,6 +1641,11 @@ class LanguageServerCompleter( Completer ):
     return server_trigger_characters
 
 
+  def _GetSignatureTriggerCharacters( self, server_trigger_characters ):
+    """Same as _GetTriggerCharacters but for signature help."""
+    return server_trigger_characters
+
+
   def _HandleInitializeInPollThread( self, response ):
     """Called within the context of the LanguageServerConnection's message pump
     when the initialize request receives a response."""
@@ -1642,6 +1692,26 @@ class LanguageServerCompleter( Completer ):
                        ','.join( trigger_characters ) )
 
           self.completion_triggers.SetServerSemanticTriggers(
+            trigger_characters )
+
+      if self.signature_triggers is not None:
+        server_trigger_characters = (
+          ( self._server_capabilities.get( 'signatureHelpProvider' ) or {} )
+                                     .get( 'triggerCharacters' ) or []
+        )
+        LOGGER.debug( '%s: Server declares signature trigger characters: %s',
+                      self.Language(),
+                      server_trigger_characters )
+
+        trigger_characters = self._GetSignatureTriggerCharacters(
+          server_trigger_characters )
+
+        if trigger_characters:
+          LOGGER.info( '%s: Using characters for signature triggers: %s',
+                       self.Language(),
+                       ','.join( trigger_characters ) )
+
+          self.signature_triggers.SetServerSemanticTriggers(
             trigger_characters )
 
       # We must notify the server that we received the initialize response (for

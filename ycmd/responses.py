@@ -38,6 +38,18 @@ NO_EXTRA_CONF_FILENAME_MESSAGE = ( 'No {0} file detected, so no compile flags '
 NO_DIAGNOSTIC_SUPPORT_MESSAGE = ( 'YCM has no diagnostics support for this '
   'filetype; refer to Syntastic docs if using Syntastic.' )
 
+EMPTY_SIGNATURE_INFO = {
+  'activeSignature': 0,
+  'activeParameter': 0,
+  'signatures': [],
+}
+
+
+class SignatureHelpAvailalability:
+  AVAILABLE = 'YES'
+  NOT_AVAILABLE = 'NO'
+  PENDING = 'PENDING'
+
 
 class ServerError( Exception ):
   def __init__( self, message ):
@@ -123,12 +135,20 @@ def BuildCompletionData( insertion_text,
 
 
 # start_column is a byte offset
-def BuildCompletionResponse( completion_datas,
+def BuildCompletionResponse( completions,
                              start_column,
                              errors=None ):
   return {
-    'completions': completion_datas,
+    'completions': completions,
     'completion_start_column': start_column,
+    'errors': errors if errors else [],
+  }
+
+
+def BuildSignatureHelpResponse( signature_info, errors = None ):
+  return {
+    'signature_help':
+      signature_info if signature_info else EMPTY_SIGNATURE_INFO,
     'errors': errors if errors else [],
   }
 
@@ -360,3 +380,7 @@ def BuildDebugInfoResponse( name, servers = [], items = [] ):
     'servers': [ BuildServerData( server ) for server in servers ],
     'items': [ BuildItemData( item ) for item in items ]
   }
+
+
+def BuildSignatureHelpAvailableResponse( value ):
+  return { 'available': value }
