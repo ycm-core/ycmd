@@ -71,9 +71,9 @@ def Diagnostics_FileReadyToParse_test( app ):
       has_entries( {
         'kind': 'ERROR',
         'text': 'Expected 1-2 arguments, but got 0.',
-        'location': LocationMatcher( filepath, 37, 1 ),
-        'location_extent': RangeMatcher( filepath, ( 37, 1 ), ( 37, 12 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 37, 1 ), ( 37, 12 ) ) ),
+        'location': LocationMatcher( filepath, 37, 5 ),
+        'location_extent': RangeMatcher( filepath, ( 37, 5 ), ( 37, 12 ) ),
+        'ranges': contains( RangeMatcher( filepath, ( 37, 5 ), ( 37, 12 ) ) ),
         'fixit_available': False
       } ),
       has_entries( {
