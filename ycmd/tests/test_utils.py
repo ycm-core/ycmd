@@ -27,6 +27,8 @@ from future.utils import iteritems, PY2
 from hamcrest import ( assert_that,
                        contains,
                        contains_string,
+                       empty,
+                       equal_to,
                        has_entries,
                        has_entry,
                        has_item )
@@ -69,6 +71,13 @@ ClangOnly = skipIf( not ycm_core.HasClangSupport(),
 MacOnly = skipIf( not OnMac(), 'Mac only' )
 UnixOnly = skipIf( OnWindows(), 'Unix only' )
 NoWinPy2 = skipIf( OnWindows() and PY2, 'Disabled on Windows with Python 2' )
+
+
+EMPTY_SIGNATURE_HELP = has_entries( {
+  'activeParameter': 0,
+  'activeSignature': 0,
+  'signatures': empty(),
+} )
 
 
 def BuildRequest( **kwargs ):
@@ -180,6 +189,19 @@ def CompleterProjectDirectoryMatcher( project_directory ):
       ) )
     ) )
   )
+
+
+def SignatureMatcher( label, parameters ):
+  return has_entries( {
+    'label': equal_to( label ),
+    'parameters': contains( *parameters )
+  } )
+
+
+def ParameterMatcher( label ):
+  return has_entries( {
+    'label': equal_to( label )
+  } )
 
 
 @contextlib.contextmanager

@@ -106,35 +106,43 @@ class ServerState( object ):
                itervalues( self._filetype_completers ) if completer }
 
 
-  def FiletypeCompletionAvailable( self, filetypes ):
+  def FiletypeCompletionAvailable( self, filetypes, silent = False ):
+    """Returns True if there is a ycmd semantic completer defined for any
+    filetype in the list |filetypes|. Otherwise, returns False and prints an
+    error to the log file, unless silent = True."""
     try:
       self.GetFiletypeCompleter( filetypes )
       return True
     except Exception:
-      LOGGER.exception( 'Semantic completion not available for %s', filetypes )
+      if not silent:
+        LOGGER.exception( 'Semantic completion not available for %s',
+                          filetypes )
       return False
 
 
-  def FiletypeCompletionUsable( self, filetypes ):
+  def FiletypeCompletionUsable( self, filetypes, silent = False ):
+    """Return True if ycmd supports semantic compltion for any filetype in the
+    list |filetypes| and those filetypes are not disabled by user options."""
     return ( self.CurrentFiletypeCompletionEnabled( filetypes ) and
-             self.FiletypeCompletionAvailable( filetypes ) )
+             self.FiletypeCompletionAvailable( filetypes, silent ) )
 
 
   def ShouldUseFiletypeCompleter( self, request_data ):
-    """Determines whether or not the semantic completer should be called."""
+    """Determines whether or not the semantic completion should be called for
+    completion request."""
     filetypes = request_data[ 'filetypes' ]
     if not self.FiletypeCompletionUsable( filetypes ):
       # don't use semantic, ignore whether or not the user requested forced
-      # completion
+      # completion as that's not relevant to signatures.
       return False
 
     if request_data[ 'force_semantic' ]:
       # use semantic, and it was forced
       return True
 
+    filetype_completer = self.GetFiletypeCompleter( filetypes )
     # was not forced. check the conditions for triggering
-    return self.GetFiletypeCompleter( filetypes ).ShouldUseNow(
-      request_data )
+    return filetype_completer.ShouldUseNow( request_data )
 
 
   def GetGeneralCompleter( self ):
@@ -142,6 +150,8 @@ class ServerState( object ):
 
 
   def CurrentFiletypeCompletionEnabled( self, current_filetypes ):
+    """Return False if all filetypes in the list |current_filetypes| are
+    disabled by the user option 'filetype_specific_completion_to_disable'."""
     filetype_to_disable = self._user_options[
         'filetype_specific_completion_to_disable' ]
     if '*' in filetype_to_disable:

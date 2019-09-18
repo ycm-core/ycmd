@@ -1064,6 +1064,25 @@ class LanguageServerCompleter( Completer ):
     return completions
 
 
+  def ComputeSignaturesInner( self, request_data ):
+    if not self.ServerIsReady():
+      return {}
+
+    if not self._server_capabilities.get( 'signatureHelpProvider' ):
+      return {}
+
+    self._UpdateServerWithFileContents( request_data )
+
+    request_id = self.GetConnection().NextRequestId()
+    msg = lsp.SignatureHelp( request_id, request_data )
+
+    response = self.GetConnection().GetResponse( request_id,
+                                                 msg,
+                                                 REQUEST_TIMEOUT_COMPLETION )
+
+    return response[ 'result' ]
+
+
   def GetCustomSubcommands( self ):
     """Return a list of subcommand definitions to be used in conjunction with
     the subcommands detected by _DiscoverSubcommandSupport. The return is a dict
@@ -1596,6 +1615,11 @@ class LanguageServerCompleter( Completer ):
     return server_trigger_characters
 
 
+  def _GetSignatureTriggerCharacters( self, server_trigger_characters ):
+    """Same as _GetTriggerCharacters but for signature help."""
+    return server_trigger_characters
+
+
   def _HandleInitializeInPollThread( self, response ):
     """Called within the context of the LanguageServerConnection's message pump
     when the initialize request receives a response."""
@@ -1642,6 +1666,26 @@ class LanguageServerCompleter( Completer ):
                        ','.join( trigger_characters ) )
 
           self.completion_triggers.SetServerSemanticTriggers(
+            trigger_characters )
+
+      if self.signature_triggers is not None:
+        server_trigger_characters = (
+          ( self._server_capabilities.get( 'signatureHelpProvider' ) or {} )
+                                     .get( 'triggerCharacters' ) or []
+        )
+        LOGGER.debug( '%s: Server declares signature trigger characters: %s',
+                      self.Language(),
+                      server_trigger_characters )
+
+        trigger_characters = self._GetSignatureTriggerCharacters(
+          server_trigger_characters )
+
+        if trigger_characters:
+          LOGGER.info( '%s: Using characters for signature triggers: %s',
+                       self.Language(),
+                       ','.join( trigger_characters ) )
+
+          self.signature_triggers.SetServerSemanticTriggers(
             trigger_characters )
 
       # We must notify the server that we received the initialize response (for

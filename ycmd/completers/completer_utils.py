@@ -31,10 +31,17 @@ from ycmd.utils import ( LOGGER, ToCppStringCompatible, ToUnicode, re, ReadFile,
 
 
 class PreparedTriggers( object ):
-  def __init__( self, user_trigger_map = None, filetype_set = None ):
+  def __init__( self,
+                user_trigger_map = None,
+                filetype_set = None,
+                default_triggers = None ):
     self._user_trigger_map = user_trigger_map
     self._server_trigger_map = None
     self._filetype_set = filetype_set
+    self._default_triggers = (
+      default_triggers if default_triggers is not None
+                       else PREPARED_DEFAULT_FILETYPE_TRIGGERS
+    )
 
     self._CombineTriggers()
 
@@ -48,7 +55,7 @@ class PreparedTriggers( object ):
       defaultdict( set ) )
 
     # Combine all of the defaults, server-supplied and user-supplied triggers
-    final_triggers = _FiletypeDictUnion( PREPARED_DEFAULT_FILETYPE_TRIGGERS,
+    final_triggers = _FiletypeDictUnion( self._default_triggers,
                                          server_prepared_triggers,
                                          user_prepared_triggers )
 

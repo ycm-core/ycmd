@@ -33,5 +33,6 @@
   "use_clangd": 1,
   "clangd_binary_path": "",
   "clangd_args": [],
-  "clangd_uses_ycmd_caching": 1
+  "clangd_uses_ycmd_caching": 1,
+  "disable_signature_help": 0
 }
