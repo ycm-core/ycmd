@@ -242,6 +242,18 @@
         
                         </td>
                     </tr>
+                    <tr>
+                            <td class="swagger--summary-path" rowspan="1">
+                                <a href="#path--signature_help">/signature_help</a>
+                            </td>
+                        <td>
+                            <a href="#operation--signature_help-post">POST</a>
+                        </td>
+                        <td>
+                            <p>Get signature help (argument hints) for current file context.</p>
+        
+                        </td>
+                    </tr>
             </tbody>
         </table>
     
@@ -1546,7 +1558,7 @@
                             </section>        
                     
                         <section class="sw-responses">
-                                <p>
+                                <p><span class="label label-default">application/json</span> 
                     </p>
                     
                             <dl>
@@ -2105,6 +2117,367 @@
                                             <div class="row">
                                                 <div class="col-md-12">
                                                     <p>An error occurred</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                                <a class="json-schema-ref" href="#/definitions/ExceptionResponse">ExceptionResponse</a>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                            </dl>
+                        </section>
+                </div>
+            </div>
+        
+        <span id="path--signature_help"></span>
+            <div id="operation--signature_help-post" class="swagger--panel-operation-post panel">
+                <div class="panel-heading">
+                    <div class="operation-summary">Get signature help (argument hints) for current file context.</div>
+                    <h3 class="panel-title"><span class="operation-name">POST</span> <strong>/signature_help</strong></h3>
+                </div>
+                <div class="panel-body">
+                    <section class="sw-operation-description">
+                        <p>Returns a list of method signatures relevant to the current cursor
+            position, along with an indication of which signature and argument
+            are &#39;active&#39;.</p>
+            <p>Only returned by semantic engines.</p>
+            <p>Signatures are actually queried immediately after a trigger character.
+            The result of this is that the client and server collude on remembering
+            the current &quot;trigger&quot; state for signature help. This trades off
+            some complexity in clients for significant performance benefits in the
+            general case.</p>
+            <p>The client is responsible for maintaining the state of any displayed
+            signature help popup, and is responsible for hiding it when this request
+            returns an empty set of signatures.</p>
+            <p>That is, when this request returns a non-empty list of signatures,
+            signature help is considered &quot;triggered&#39; and the client must record this
+            and return it in the &#39;signature_help_state&#39; request field
+            (value <code>ACTIVE</code>). The client continues to request signature help on
+            new input and should update its state to <code>INACTIVE</code> whenever this
+            request returns an empty list of signatures.</p>
+            <p>If any errors are reported by the semantic engine, they are reported in
+            the <code>errors</code> key in the response.</p>
+            <p>The first signature and the first argument are both 0.</p>
+            <p>Identifying the position of an argument in the <code>label</code> for a signature
+            required matching the position of the text supplied in the <code>label</code> for
+            the active parameter of the active signature.</p>
+            
+                    </section>
+            
+                        
+                            <section class="sw-request-body">
+                                
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><p>The context data, including the current cursor position, and details
+                        of dirty buffers.</p>
+                        </p>
+                                            </div>
+                                            <div class="col-md-6 sw-request-model">
+                            <div  class="panel panel-definition">
+                                <div class="panel-body">
+                                        
+                                                <section class="json-schema-properties">
+                                                    <dl>
+                                                            <dt data-property-name="line_num">
+                                                                <span class="json-property-name">line_num:</span>
+                                                                
+                                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/LineNumber">LineNumber</a>
+                                                                </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                                    <span class="json-property-required"></span>
+                                                            </dt>
+                                                            <dd>
+                                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                            <dt data-property-name="column_num">
+                                                                <span class="json-property-name">column_num:</span>
+                                                                
+                                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/ColumnNumber">ColumnNumber</a>
+                                                                </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                                    <span class="json-property-required"></span>
+                                                            </dt>
+                                                            <dd>
+                                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                            <dt data-property-name="filepath">
+                                                                <span class="json-property-name">filepath:</span>
+                                                                
+                                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/FilePath">FilePath</a>
+                                                                </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                                    <span class="json-property-required"></span>
+                                                            </dt>
+                                                            <dd>
+                                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                            <dt data-property-name="file_data">
+                                                                <span class="json-property-name">file_data:</span>
+                                                                
+                                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/FileDataMap">FileDataMap</a>
+                                                                </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                                    <span class="json-property-required"></span>
+                                                            </dt>
+                                                            <dd>
+                                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                            <dt data-property-name="completer_target">
+                                                                <span class="json-property-name">completer_target:</span>
+                                                                
+                                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/CompleterTarget">CompleterTarget</a>
+                                                                </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                            </dt>
+                                                            <dd>
+                                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                            <dt data-property-name="extra_conf_data">
+                                                                <span class="json-property-name">extra_conf_data:</span>
+                                                                
+                                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/ExtraConfData">ExtraConfData</a>
+                                                                </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                            </dt>
+                                                            <dd>
+                                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                            <dt data-property-name="signature_help_state">
+                                                                <span class="json-property-name">signature_help_state:</span>
+                                                                
+                                                                <span class="json-property-type">string</span>    <span class="json-property-enum" title="Possible values">, x &isin; {
+                                                                                <span class="json-property-enum-item">ACTIVE</span>
+                                                                            ,
+                                                                                <span class="json-property-enum-item">INACTIVE</span>
+                                                                            
+                                                                        }
+                                                                        </span>
+                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                
+                                                            </dt>
+                                                            <dd>
+                                                                <p>The current state of the signature help triggering. After
+                                                signatures are returned for the first time (triggered), the
+                                                client sends further requests with <code>signature_help_state</code> set
+                                                to <code>ACTIVE</code> until the request returns no signatures.</p>
+                                                
+                                                                <div class="json-inner-schema">
+                                                                    
+                                                                </div>
+                                                            </dd>
+                                                    </dl>
+                                                </section>
+                                </div>
+                            </div></div>
+                                        </div>
+                            </section>        
+                    
+                        <section class="sw-responses">
+                                <p><span class="label label-default">application/json</span> 
+                    </p>
+                    
+                            <dl>
+                                    <dt class="sw-response-200">
+                                        200 OK
+                                    
+                                    </dt>
+                                    <dd class="sw-response-200">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>Signature info.</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                            
+                                                                    <section class="json-schema-properties">
+                                                                        <dl>
+                                                                                <dt data-property-name="errors">
+                                                                                    <span class="json-property-name">errors:</span>
+                                                                                    
+                                                                                    <span class="json-property-type">object[]</span>
+                                                                                    <span class="json-property-range" title="Value limits"></span>
+                                                                                    
+                                                                                        <span class="json-property-required"></span>
+                                                                                </dt>
+                                                                                <dd>
+                                                                                    <p>errors reported by the semantic completion engine.</p>
+                                                                    
+                                                                                    <div class="json-inner-schema">
+                                                                                        
+                                                                                                        <section class="json-schema-array-items">
+                                                                                                            
+                                                                                                            <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/ExceptionResponse">ExceptionResponse</a>
+                                                                                                            </span>
+                                                                                                            <span class="json-property-range" title="Value limits"></span>
+                                                                                                            
+                                                                                                            <div class="json-inner-schema">
+                                                                                                                
+                                                                                                            </div>
+                                                                                                        </section>                </div>
+                                                                                </dd>
+                                                                                <dt data-property-name="signature_help">
+                                                                                    <span class="json-property-name">signature_help:</span>
+                                                                                    
+                                                                                    <span class="json-property-type">object</span>
+                                                                                    <span class="json-property-range" title="Value limits"></span>
+                                                                                    
+                                                                                        <span class="json-property-required"></span>
+                                                                                </dt>
+                                                                                <dd>
+                                                                                    
+                                                                                    <div class="json-inner-schema">
+                                                                                        
+                                                                                                <section class="json-schema-properties">
+                                                                                                    <dl>
+                                                                                                            <dt data-property-name="activeSignature">
+                                                                                                                <span class="json-property-name">activeSignature:</span>
+                                                                                                                
+                                                                                                                <span class="json-property-type">number</span>
+                                                                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                                                                
+                                                                                                                    <span class="json-property-required"></span>
+                                                                                                            </dt>
+                                                                                                            <dd>
+                                                                                                                <p>The active signature. The first is 0.</p>
+                                                                                                
+                                                                                                                <div class="json-inner-schema">
+                                                                                                                    
+                                                                                                                </div>
+                                                                                                            </dd>
+                                                                                                            <dt data-property-name="activeParameter">
+                                                                                                                <span class="json-property-name">activeParameter:</span>
+                                                                                                                
+                                                                                                                <span class="json-property-type">number</span>
+                                                                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                                                                
+                                                                                                                    <span class="json-property-required"></span>
+                                                                                                            </dt>
+                                                                                                            <dd>
+                                                                                                                <p>The active parameter. The first is 0.</p>
+                                                                                                
+                                                                                                                <div class="json-inner-schema">
+                                                                                                                    
+                                                                                                                </div>
+                                                                                                            </dd>
+                                                                                                            <dt data-property-name="signatures">
+                                                                                                                <span class="json-property-name">signatures:</span>
+                                                                                                                
+                                                                                                                <span class="json-property-type">object[]</span>
+                                                                                                                <span class="json-property-range" title="Value limits"></span>
+                                                                                                                
+                                                                                                                    <span class="json-property-required"></span>
+                                                                                                            </dt>
+                                                                                                            <dd>
+                                                                                                                <p>The list of signatures</p>
+                                                                                                
+                                                                                                                <div class="json-inner-schema">
+                                                                                                                    
+                                                                                                                                    <section class="json-schema-array-items">
+                                                                                                                                        
+                                                                                                                                        <span class="json-property-type">object</span>
+                                                                                                                                        <span class="json-property-range" title="Value limits"></span>
+                                                                                                                                        
+                                                                                                                                        <div class="json-inner-schema">
+                                                                                                                                            
+                                                                                                                                                    <section class="json-schema-properties">
+                                                                                                                                                        <dl>
+                                                                                                                                                                <dt data-property-name="label">
+                                                                                                                                                                    <span class="json-property-name">label:</span>
+                                                                                                                                                                    
+                                                                                                                                                                    <span class="json-property-type">string</span>
+                                                                                                                                                                    <span class="json-property-range" title="Value limits"></span>
+                                                                                                                                                                    
+                                                                                                                                                                        <span class="json-property-required"></span>
+                                                                                                                                                                </dt>
+                                                                                                                                                                <dd>
+                                                                                                                                                                    <p>The full signature text, including parameters</p>
+                                                                                                                                                    
+                                                                                                                                                                    <div class="json-inner-schema">
+                                                                                                                                                                        
+                                                                                                                                                                    </div>
+                                                                                                                                                                </dd>
+                                                                                                                                                                <dt data-property-name="parameters">
+                                                                                                                                                                    <span class="json-property-name">parameters:</span>
+                                                                                                                                                                    
+                                                                                                                                                                    <span class="json-property-type">string[]</span>
+                                                                                                                                                                    <span class="json-property-range" title="Value limits"></span>
+                                                                                                                                                                    
+                                                                                                                                                                        <span class="json-property-required"></span>
+                                                                                                                                                                </dt>
+                                                                                                                                                                <dd>
+                                                                                                                                                                    <p>List of parameters</p>
+                                                                                                                                                    
+                                                                                                                                                                    <div class="json-inner-schema">
+                                                                                                                                                                        
+                                                                                                                                                                                        <section class="json-schema-array-items">
+                                                                                                                                                                                            
+                                                                                                                                                                                            <span class="json-property-type">string</span>
+                                                                                                                                                                                            <span class="json-property-range" title="Value limits"></span>
+                                                                                                                                                                                            
+                                                                                                                                                                                            <div class="json-inner-schema">
+                                                                                                                                                                                                
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                        </section>                </div>
+                                                                                                                                                                </dd>
+                                                                                                                                                        </dl>
+                                                                                                                                                    </section>
+                                                                                                                                        </div>
+                                                                                                                                    </section>                </div>
+                                                                                                            </dd>
+                                                                                                    </dl>
+                                                                                                </section>
+                                                                                    </div>
+                                                                                </dd>
+                                                                        </dl>
+                                                                    </section>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                                    <dt class="sw-response-500">
+                                        500 Internal Server Error
+                                    
+                                    </dt>
+                                    <dd class="sw-response-500">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>An error occurred.</p>
                                             
                                                 </div>
                                             </div>

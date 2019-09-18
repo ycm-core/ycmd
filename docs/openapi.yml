@@ -906,6 +906,131 @@ paths:
           schema:
             $ref: "#/definitions/ExceptionResponse"
 
+  /signature_help:
+    post:
+      summary: Get signature help (argument hints) for current file context.
+      description: |-
+        Returns a list of method signatures relevant to the current cursor
+        position, along with an indication of which signature and argument
+        are 'active'.
+
+        Only returned by semantic engines.
+
+        Signatures are actually queried immediately after a trigger character.
+        The result of this is that the client and server collude on remembering
+        the current "trigger" state for signature help. This trades off
+        some complexity in clients for significant performance benefits in the
+        general case.
+
+        The client is responsible for maintaining the state of any displayed
+        signature help popup, and is responsible for hiding it when this request
+        returns an empty set of signatures.
+
+        That is, when this request returns a non-empty list of signatures,
+        signature help is considered "triggered' and the client must record this
+        and return it in the 'signature_help_state' request field
+        (value `ACTIVE`). The client continues to request signature help on
+        new input and should update its state to `INACTIVE` whenever this
+        request returns an empty list of signatures.
+
+        If any errors are reported by the semantic engine, they are reported in
+        the `errors` key in the response.
+
+        The first signature and the first argument are both 0.
+
+        Identifying the position of an argument in the `label` for a signature
+        required matching the position of the text supplied in the `label` for
+        the active parameter of the active signature.
+      produces:
+        - application/json
+      parameters:
+        - name: request_data
+          in: body
+          description: |-
+            The context data, including the current cursor position, and details
+            of dirty buffers.
+          required: true
+          schema:
+            type: object
+            required:
+              - line_num
+              - column_num
+              - filepath
+              - file_data
+            properties:
+              line_num:
+                $ref: "#/definitions/LineNumber"
+              column_num:
+                $ref: "#/definitions/ColumnNumber"
+              filepath:
+                $ref: "#/definitions/FilePath"
+              file_data:
+                $ref: "#/definitions/FileDataMap"
+              completer_target:
+                $ref: "#/definitions/CompleterTarget"
+              extra_conf_data:
+                $ref: "#/definitions/ExtraConfData"
+              signature_help_state:
+                type: string
+                enum:
+                  - ACTIVE
+                  - INACTIVE
+                description: |-
+                  The current state of the signature help triggering. After
+                  signatures are returned for the first time (triggered), the
+                  client sends further requests with `signature_help_state` set
+                  to `ACTIVE` until the request returns no signatures.
+      responses:
+        200:
+          description: Signature info.
+          schema:
+            type: object
+            required:
+              - signature_help
+              - errors
+            properties:
+              errors:
+                type: array
+                description: errors reported by the semantic completion engine.
+                items:
+                  $ref: "#/definitions/ExceptionResponse"
+              signature_help:
+                type: object
+                required:
+                  - activeSignature
+                  - activeParameter
+                  - signatures
+                properties:
+                  activeSignature:
+                    type: number
+                    description: The active signature. The first is 0.
+                  activeParameter:
+                    type: number
+                    description: The active parameter. The first is 0.
+                  signatures:
+                    type: array
+                    description: The list of signatures
+                    items:
+                      type: object
+                      properties:
+                        label:
+                          description: |
+                            The full signature text, including parameters
+                          type: string
+                        parameters:
+                          description: List of parameters
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - label
+                        - parameters
+
+        500:
+          description: An error occurred.
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
+
   /filter_and_sort_candidates:
     post:
       summary: Filter and sort a set of candidates using ycmd's fuzzy matching.
@@ -1273,7 +1398,7 @@ paths:
         method, but it is strongly recommended for certain languages to offer
         the best user experience.
       produces:
-        application/json
+        - application/json
       parameters:
         - name: request_data
           in: body
