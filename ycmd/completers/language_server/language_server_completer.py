@@ -1624,7 +1624,7 @@ class LanguageServerCompleter( Completer ):
                      self._sync_type )
 
       # Update our semantic triggers if they are supplied by the server
-      if self.prepared_triggers is not None:
+      if self.completion_triggers is not None:
         server_trigger_characters = (
           ( self._server_capabilities.get( 'completionProvider' ) or {} )
                                      .get( 'triggerCharacters' ) or []
@@ -1641,7 +1641,7 @@ class LanguageServerCompleter( Completer ):
                        self.Language(),
                        ','.join( trigger_characters ) )
 
-          self.prepared_triggers.SetServerSemanticTriggers(
+          self.completion_triggers.SetServerSemanticTriggers(
             trigger_characters )
 
       # We must notify the server that we received the initialize response (for

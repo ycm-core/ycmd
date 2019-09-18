@@ -613,11 +613,9 @@ def Subcommands_RefactorRename_Simple_test( app ):
       'data': has_entries( {
         'fixits': contains( has_entries( {
           'chunks': contains(
-              ChunkMatcher( 'renamed_l',
+              ChunkMatcher( 'renamed_l = new TestLauncher( 10 );'
+                            '\n    renamed_l',
                             LocationMatcher( filepath, 27, 18 ),
-                            LocationMatcher( filepath, 27, 19 ) ),
-              ChunkMatcher( 'renamed_l',
-                            LocationMatcher( filepath, 28, 5 ),
                             LocationMatcher( filepath, 28, 6 ) ),
           ),
           'location': LocationMatcher( filepath, 28, 5 )
@@ -740,13 +738,8 @@ def Subcommands_RefactorRename_Unicode_test( app ):
         'fixits': contains( has_entries( {
           'chunks': contains(
             ChunkMatcher(
-              'shorter',
+              'shorter = "Test";\n    return shorter',
               LocationMatcher( filepath, 7, 12 ),
-              LocationMatcher( filepath, 7, 25 )
-            ),
-            ChunkMatcher(
-              'shorter',
-              LocationMatcher( filepath, 8, 12 ),
               LocationMatcher( filepath, 8, 25 )
             ),
           ),
@@ -776,6 +769,13 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
 
 
 def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
+  import os
+  wibble_path = PathToTestFile( 'simple_eclipse_project',
+                                'src',
+                                'com',
+                                'test',
+                                'Wibble.java' )
+  wibble_text = 'package com.test;{0}{0}public {1} Wibble {{{0}{0}}}{0}'
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -802,6 +802,30 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
           ChunkMatcher( '\n\nprivate static final String Wibble = null;',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create class 'Wibble'",
+        'chunks': contains(
+          ChunkMatcher( wibble_text.format( os.linesep, 'class' ),
+                        LocationMatcher( wibble_path, 1, 1 ),
+                        LocationMatcher( wibble_path, 1, 1 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create interface 'Wibble'",
+        'chunks': contains(
+          ChunkMatcher( wibble_text.format( os.linesep, 'interface' ),
+                        LocationMatcher( wibble_path, 1, 1 ),
+                        LocationMatcher( wibble_path, 1, 1 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': "Create enum 'Wibble'",
+        'chunks': contains(
+          ChunkMatcher( wibble_text.format( os.linesep, 'enum' ),
+                        LocationMatcher( wibble_path, 1, 1 ),
+                        LocationMatcher( wibble_path, 1, 1 ) ),
         ),
       } ),
       has_entries( {
