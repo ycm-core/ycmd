@@ -149,6 +149,9 @@ class CsharpCompleter( Completer ):
       'GoToDefinitionElseDeclaration'    : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToDefinition' ) ),
+      'GoToReferences'                   : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_GoToReferences' ) ),
       'GoToImplementation'               : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GoToImplementation',
@@ -514,6 +517,35 @@ class CsharpSolutionCompleter( object ):
         raise RuntimeError( 'Can\'t jump to implementation' )
       else:
         raise RuntimeError( 'No implementations found' )
+
+
+  def _GoToReferences( self, request_data ):
+    """ Jump to references of identifier under cursor """
+    # _GetResponse can throw. Original code by @mispencer
+    # wrapped it in a try/except and set `reference` to `{ 'QuickFixes': None }`
+    # After being unable to hit that case with tests,
+    # that code path was thrown away.
+    reference = self._GetResponse(
+       '/findusages',
+       self._DefaultParameters( request_data ) )
+
+    if reference[ 'QuickFixes' ]:
+      if len( reference[ 'QuickFixes' ] ) == 1:
+        return responses.BuildGoToResponseFromLocation(
+          _BuildLocation(
+            request_data,
+            reference[ 'QuickFixes' ][ 0 ][ 'FileName' ],
+            reference[ 'QuickFixes' ][ 0 ][ 'Line' ],
+            reference[ 'QuickFixes' ][ 0 ][ 'Column' ] ) )
+      else:
+        return [ responses.BuildGoToResponseFromLocation(
+                   _BuildLocation( request_data,
+                                   ref[ 'FileName' ],
+                                   ref[ 'Line' ],
+                                   ref[ 'Column' ] ) )
+                 for ref in reference[ 'QuickFixes' ] ]
+    else:
+      raise RuntimeError( 'No references found' )
 
 
   def _GetType( self, request_data ):
