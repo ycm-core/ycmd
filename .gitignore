@@ -88,3 +88,6 @@ ycmd/tests/rust/testdata/formatting/target
 # generic LSP
 third_party/generic_server/node_modules
 third_party/generic_server/package-lock.json
+
+# clangd index data
+.clangd/
