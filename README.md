@@ -1,7 +1,7 @@
 ycmd: a code-completion & comprehension server
 ==============================================
 
-[![Build status](https://dev.azure.com/YouCompleteMe/YCM/_apis/build/status/Valloric.ycmd?branchName=master)](https://dev.azure.com/YouCompleteMe/YCM/_build/latest?definitionId=2&branchName=master)
+[![Build status](https://dev.azure.com/YouCompleteMe/YCM/_apis/build/status/ycm-core.ycmd?branchName=master)](https://dev.azure.com/YouCompleteMe/YCM/_build/latest?definitionId=4&branchName=master)
 [![Coverage status](https://img.shields.io/codecov/c/github/ycm-core/ycmd/master.svg)](https://codecov.io/gh/ycm-core/ycmd)
 
 ycmd is a server that provides APIs for code-completion and other
@@ -84,6 +84,7 @@ API notes
   server will also include the HMAC in its responses; you _must_ verify it
   before using the response. See [`example_client.py`][example-client] to see
   how it's done.
+- API is documented in swagger and published on [the website][api-docs].
 
 How ycmd works
 --------------
@@ -102,7 +103,7 @@ compatibility. There's also a Jedi-based completer for semantic completion for
 Python, an OmniSharp-based completer for C#, a [Gocode][gocode]-based completer
 for Go (using [Godef][godef] for jumping to definitions), a TSServer-based
 completer for JavaScript and TypeScript, a [jdt.ls][jdtls]-based server for
-Java, and a [RLS][]-based completer for Rust.  More will be added with time.
+Java, and a [RLS][]-based completer for Rust. More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -451,30 +452,30 @@ This software is licensed under the [GPL v3 license][gpl].
 [semver]: http://semver.org/
 [hmac]: http://en.wikipedia.org/wiki/Hash-based_message_authentication_code
 [exploit]: https://groups.google.com/d/topic/ycm-users/NZAPrvaYgxo/discussion
-[example-client]: https://github.com/Valloric/ycmd/blob/master/examples/example_client.py
-[example-readme]: https://github.com/Valloric/ycmd/blob/master/examples/README.md
-[trigger-defaults]: https://github.com/Valloric/ycmd/blob/master/ycmd/completers/completer_utils.py#L143
+[example-client]: https://github.com/ycm-core/ycmd/blob/master/examples/example_client.py
+[example-readme]: https://github.com/ycm-core/ycmd/blob/master/examples/README.md
+[trigger-defaults]: https://github.com/ycm-core/ycmd/blob/master/ycmd/completers/completer_utils.py#L143
 [subsequence]: http://en.wikipedia.org/wiki/Subsequence
-[ycm-install]: https://github.com/Valloric/YouCompleteMe/blob/master/README.md#mac-os-x
-[def-settings]: https://github.com/Valloric/ycmd/blob/master/ycmd/default_settings.json
+[ycm-install]: https://github.com/ycm-core/YouCompleteMe/blob/master/README.md#mac-os-x
+[def-settings]: https://github.com/ycm-core/ycmd/blob/master/ycmd/default_settings.json
 [base64]: http://en.wikipedia.org/wiki/Base64
 [mkstemp]: http://man7.org/linux/man-pages/man3/mkstemp.3.html
-[options]: https://github.com/Valloric/YouCompleteMe#options
-[extra-conf-doc]: https://github.com/Valloric/YouCompleteMe#c-family-semantic-completion
+[options]: https://github.com/ycm-core/YouCompleteMe#options
+[extra-conf-doc]: https://github.com/ycm-core/YouCompleteMe#c-family-semantic-completion
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
 [gocode]: https://github.com/nsf/gocode
 [godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
-[ccoc]: https://github.com/Valloric/ycmd/blob/master/CODE_OF_CONDUCT.md
-[dev-setup]: https://github.com/Valloric/ycmd/blob/master/DEV_SETUP.md
-[test-setup]: https://github.com/Valloric/ycmd/blob/master/TESTS.md
-[extra-conf-vim-data-doc]: https://github.com/Valloric/YouCompleteMe#the-gycm_extra_conf_vim_data-option
+[ccoc]: https://github.com/ycm-core/ycmd/blob/master/CODE_OF_CONDUCT.md
+[dev-setup]: https://github.com/ycm-core/ycmd/blob/master/DEV_SETUP.md
+[test-setup]: https://github.com/ycm-core/ycmd/blob/master/TESTS.md
+[extra-conf-vim-data-doc]: https://github.com/ycm-core/YouCompleteMe#the-gycm_extra_conf_vim_data-option
 [vscode-you-complete-me]: https://marketplace.visualstudio.com/items?itemName=RichardHe.you-complete-me
 [gycm]: https://github.com/jakeanq/gycm
 [nano-ycmd]: https://github.com/orsonteodoro/nano-ycmd
 [jdtls]: https://github.com/eclipse/eclipse.jdt.ls
 [api-docs]: https://ycm-core.github.io/ycmd/
-[ycmd-extra-conf]: https://github.com/Valloric/ycmd/blob/master/.ycm_extra_conf.py
+[ycmd-extra-conf]: https://github.com/ycm-core/ycmd/blob/master/.ycm_extra_conf.py
 [clangd]: https://clang.llvm.org/extra/clangd.html
 [RLS]: https://github.com/rust-lang-nursery/rls
