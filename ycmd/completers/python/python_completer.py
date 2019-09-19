@@ -248,22 +248,16 @@ class PythonCompleter( Completer ):
   def _BuildGoToResponse( self, definitions ):
     if len( definitions ) == 1:
       definition = definitions[ 0 ]
-      if definition.in_builtin_module():
-        raise RuntimeError( 'Can\'t jump to builtin module.' )
       return responses.BuildGoToResponse( definition.module_path,
                                           definition.line,
                                           definition.column + 1 )
 
     gotos = []
     for definition in definitions:
-      if definition.in_builtin_module():
-        gotos.append( responses.BuildDescriptionOnlyGoToResponse(
-          'Builtin {}'.format( definition.description ) ) )
-      else:
-        gotos.append( responses.BuildGoToResponse( definition.module_path,
-                                                   definition.line,
-                                                   definition.column + 1,
-                                                   definition.description ) )
+      gotos.append( responses.BuildGoToResponse( definition.module_path,
+                                                 definition.line,
+                                                 definition.column + 1,
+                                                 definition.description ) )
     return gotos
 
 

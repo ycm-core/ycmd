@@ -24,9 +24,11 @@ from builtins import *  # noqa
 
 from hamcrest import ( assert_that,
                        contains,
+                       has_item,
                        has_entries,
                        has_entry,
                        matches_regexp )
+from hamcrest.library.text.stringmatches import StringMatchesPattern
 from nose.tools import eq_
 from pprint import pformat
 import requests
@@ -65,13 +67,21 @@ def RunTest( app, test ):
 @SharedYcmd
 def Subcommands_GoTo( app, test, command ):
   if isinstance( test[ 'response' ], tuple ):
-    expect = {
-      'response': requests.codes.ok,
-      'data': LocationMatcher( PathToTestFile( 'goto',
-                                               test[ 'response' ][ 0 ] ),
-                               test[ 'response' ][ 1 ],
-                               test[ 'response' ][ 2 ] )
-    }
+    if not isinstance( test[ 'response' ][ 0 ], StringMatchesPattern ):
+      expect = {
+        'response': requests.codes.ok,
+        'data': LocationMatcher( PathToTestFile( 'goto',
+                                                 test[ 'response' ][ 0 ] ),
+                                 test[ 'response' ][ 1 ],
+                                 test[ 'response' ][ 2 ] )
+      }
+    else:
+      expect = {
+        'response': requests.codes.ok,
+        'data': LocationMatcher( test[ 'response' ][ 0 ],
+                                 test[ 'response' ][ 1 ],
+                                 test[ 'response' ][ 2 ] )
+      }
   else:
     expect = {
       'response': requests.codes.internal_server_error,
@@ -92,6 +102,7 @@ def Subcommands_GoTo( app, test, command ):
 
 
 def Subcommands_GoTo_test():
+  builtins_pyi = matches_regexp( 'typeshed' )
   tests = [
     # Nothing
     { 'request': ( 'basic.py', 3,  5 ), 'response': 'Can\'t jump to '
@@ -101,8 +112,7 @@ def Subcommands_GoTo_test():
                                                     'definition.' },
     # Builtin
     { 'request': ( 'basic.py', 1,  4 ), 'response': ( 'basic.py', 1, 1 ) },
-    { 'request': ( 'basic.py', 1, 12 ), 'response': 'Can\'t jump to '
-                                                    'builtin module.' },
+    { 'request': ( 'basic.py', 1, 12 ), 'response': ( builtins_pyi, 927, 7 ) },
     { 'request': ( 'basic.py', 2,  2 ), 'response': ( 'basic.py', 1, 1 ) },
     # Class
     { 'request': ( 'basic.py', 4,  7 ), 'response': ( 'basic.py', 4, 7 ) },
@@ -141,6 +151,7 @@ def Subcommands_GoTo_test():
 
 
 def Subcommands_GoToType_test():
+  builtins_pyi = matches_regexp( 'typeshed' )
   tests = [
     # Nothing
     { 'request': ( 'basic.py', 3,  5 ), 'response': 'Can\'t jump to '
@@ -149,12 +160,9 @@ def Subcommands_GoToType_test():
     { 'request': ( 'basic.py', 4,  3 ), 'response': 'Can\'t jump to '
                                                     'type definition.' },
     # Builtin
-    { 'request': ( 'basic.py', 1,  4 ), 'response': 'Can\'t jump to '
-                                                    'builtin module.' },
-    { 'request': ( 'basic.py', 1, 12 ), 'response': 'Can\'t jump to '
-                                                    'builtin module.' },
-    { 'request': ( 'basic.py', 2,  2 ), 'response': 'Can\'t jump to '
-                                                    'builtin module.' },
+    { 'request': ( 'basic.py', 1,  4 ), 'response': ( builtins_pyi, 927, 7 ) },
+    { 'request': ( 'basic.py', 1, 12 ), 'response': ( builtins_pyi, 927, 7 ) },
+    { 'request': ( 'basic.py', 2,  2 ), 'response': ( builtins_pyi, 927, 7 ) },
     # Class
     { 'request': ( 'basic.py', 4,  7 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 4, 11 ), 'response': ( 'basic.py', 4, 7 ) },
@@ -168,10 +176,10 @@ def Subcommands_GoToType_test():
     { 'request': ( 'basic.py', 8,  5 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 9, 12 ), 'response': ( 'basic.py', 4, 7 ) },
     # Builtin from different file
-    { 'request':  ( 'multifile1.py', 2, 30 ), 'response': 'Can\'t jump to '
-                                                          'builtin module.' },
-    { 'request':  ( 'multifile1.py', 4,  5 ), 'response': 'Can\'t jump to '
-                                                          'builtin module.' },
+    { 'request':  ( 'multifile1.py', 2, 30 ),
+      'response': ( builtins_pyi, 130, 7 ) },
+    { 'request':  ( 'multifile1.py', 4,  5 ),
+      'response': ( builtins_pyi, 130, 7 ) },
     # Function from different file
     { 'request':  ( 'multifile1.py', 1, 24 ),
       'response': ( 'multifile3.py', 3,  5 ) },
@@ -357,10 +365,7 @@ def Subcommands_GoToReferences_Builtin_test( app ):
 
   assert_that(
     app.post_json( '/run_completer_command', command_data ).json,
-    contains(
-      has_entries( {
-        'description': 'Builtin class str',
-      } ),
+    has_item(
       has_entries( {
         'filepath': filepath,
         'line_num': 8,
