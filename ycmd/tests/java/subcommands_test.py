@@ -1030,6 +1030,99 @@ def Subcommands_FixIt_MultipleDiags_test():
           filepath, 30, 55, fixits )
 
 
+@SharedYcmd
+def Subcommands_FixIt_Range_test( app ):
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestLauncher.java' )
+  RunTest( app, {
+    'description': 'Formatting is applied on some part of the file '
+                   'with tabs composed of 4 spaces',
+    'request': {
+      'command': 'FixIt',
+      'filepath': filepath,
+      'range': {
+        'start': {
+          'line_num': 34,
+          'column_num': 28,
+        },
+        'end': {
+          'line_num': 34,
+          'column_num': 73
+        }
+      },
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_inanyorder(
+          has_entries( {
+            'text': 'Extract to field',
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp(
+                  'private String \\w+;\n'
+                  '\n'
+                  '\t@Override\n'
+                  '      public void launch\\(\\) {\n'
+                  '        AbstractTestWidget w = '
+                  'factory.getWidget\\( "Test" \\);\n'
+                  '        '
+                  'w.doSomethingVaguelyUseful\\(\\);\n'
+                  '\n'
+                  '        \\w+ = "Did something '
+                  'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                  '\t\tSystem.out.println\\( \\w+' ),
+                LocationMatcher( filepath, 29, 7 ),
+                LocationMatcher( filepath, 34, 73 ) ),
+            ),
+          } ),
+          has_entries( {
+            'text': 'Extract to method',
+            'chunks': contains(
+              # This one is a wall of text that rewrites 35 lines
+              ChunkMatcher( instance_of( str ),
+                            LocationMatcher( filepath, 1, 1 ),
+                            LocationMatcher( filepath, 35, 8 ) ),
+            ),
+          } ),
+          has_entries( {
+            'text': 'Extract to local variable (replace all occurrences)',
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp(
+                  'String \\w+ = "Did something '
+                  'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                  '\t\tSystem.out.println\\( \\w+' ),
+                LocationMatcher( filepath, 34, 9 ),
+                LocationMatcher( filepath, 34, 73 ) ),
+            ),
+          } ),
+          has_entries( {
+            'text': 'Extract to local variable',
+            'chunks': contains(
+              ChunkMatcher(
+                matches_regexp(
+                  'String \\w+ = "Did something '
+                  'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                  '\t\tSystem.out.println\\( \\w+' ),
+                LocationMatcher( filepath, 34, 9 ),
+                LocationMatcher( filepath, 34, 73 ) ),
+            ),
+          } ),
+          has_entries( {
+            'text': 'Organize imports',
+            'chunks': instance_of( list ),
+          } ),
+        )
+      } )
+    }
+  } )
+
+
+
 def Subcommands_FixIt_NoDiagnostics_test():
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',

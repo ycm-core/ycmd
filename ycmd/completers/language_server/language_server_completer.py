@@ -1751,57 +1751,68 @@ class LanguageServerCompleter( Completer ):
     self._UpdateServerWithFileContents( request_data )
 
     line_num_ls = request_data[ 'line_num' ] - 1
-
-    def WithinRange( diag ):
-      start = diag[ 'range' ][ 'start' ]
-      end = diag[ 'range' ][ 'end' ]
-
-      if line_num_ls < start[ 'line' ] or line_num_ls > end[ 'line' ]:
-        return False
-
-      return True
-
-    with self._server_info_mutex:
-      file_diagnostics = list( self._latest_diagnostics[
-          lsp.FilePathToUri( request_data[ 'filepath' ] ) ] )
-
-    matched_diagnostics = [
-      d for d in file_diagnostics if WithinRange( d )
-    ]
-
     request_id = self.GetConnection().NextRequestId()
-    if matched_diagnostics:
+    if 'range' in request_data:
+      LOGGER.debug( 'Lines1 = %s', request_data[ 'lines' ] )
+      LOGGER.debug( 'CAR = %s', request_data[ 'range' ] )
       code_actions = self.GetConnection().GetResponse(
         request_id,
         lsp.CodeAction( request_id,
                         request_data,
-                        matched_diagnostics[ 0 ][ 'range' ],
-                        matched_diagnostics ),
+                        lsp.Range( request_data ),
+                        [] ),
         REQUEST_TIMEOUT_COMMAND )
-
     else:
-      line_value = request_data[ 'line_value' ]
 
-      code_actions = self.GetConnection().GetResponse(
-        request_id,
-        lsp.CodeAction(
+      def WithinRange( diag ):
+        start = diag[ 'range' ][ 'start' ]
+        end = diag[ 'range' ][ 'end' ]
+
+        if line_num_ls < start[ 'line' ] or line_num_ls > end[ 'line' ]:
+          return False
+
+        return True
+
+      with self._server_info_mutex:
+        file_diagnostics = list( self._latest_diagnostics[
+            lsp.FilePathToUri( request_data[ 'filepath' ] ) ] )
+
+      matched_diagnostics = [
+        d for d in file_diagnostics if WithinRange( d )
+      ]
+
+      if matched_diagnostics:
+        code_actions = self.GetConnection().GetResponse(
           request_id,
-          request_data,
-          # Use the whole line
-          {
-            'start': {
-              'line': line_num_ls,
-              'character': 0,
+          lsp.CodeAction( request_id,
+                          request_data,
+                          matched_diagnostics[ 0 ][ 'range' ],
+                          matched_diagnostics ),
+          REQUEST_TIMEOUT_COMMAND )
+
+      else:
+        line_value = request_data[ 'line_value' ]
+
+        code_actions = self.GetConnection().GetResponse(
+          request_id,
+          lsp.CodeAction(
+            request_id,
+            request_data,
+            # Use the whole line
+            {
+              'start': {
+                'line': line_num_ls,
+                'character': 0,
+              },
+              'end': {
+                'line': line_num_ls,
+                'character': lsp.CodepointsToUTF16CodeUnits(
+                  line_value,
+                  len( line_value ) + 1 ) - 1,
+              }
             },
-            'end': {
-              'line': line_num_ls,
-              'character': lsp.CodepointsToUTF16CodeUnits(
-                line_value,
-                len( line_value ) + 1 ) - 1,
-            }
-          },
-          [] ),
-        REQUEST_TIMEOUT_COMMAND )
+            [] ),
+          REQUEST_TIMEOUT_COMMAND )
 
     result = code_actions[ 'result' ]
     if result is None:
