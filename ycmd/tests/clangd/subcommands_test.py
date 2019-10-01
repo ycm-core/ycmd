@@ -22,11 +22,13 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 
+from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest import ( assert_that,
                        contains,
                        contains_string,
                        equal_to,
                        has_entries,
+                       has_entry,
                        matches_regexp )
 from pprint import pprint
 import requests
@@ -62,6 +64,8 @@ def Subcommands_DefinedSubcommands_test( app ):
         'data': contains( *sorted( [ 'ExecuteCommand',
                                      'FixIt',
                                      'Format',
+                                     'GetDoc',
+                                     'GetDocImprecise',
                                      'GetType',
                                      'GetTypeImprecise',
                                      'GoTo',
@@ -258,8 +262,12 @@ def Subcommands_GoToReferences_test():
 
 
 @SharedYcmd
-def RunGetSemanticTest( app, filepath, filetype, test, command,
-                        matches_regexp = False ):
+def RunGetSemanticTest( app,
+                        filepath,
+                        filetype,
+                        test,
+                        command,
+                        response = requests.codes.ok ):
   contents = ReadFile( filepath )
   common_args = {
     'completer_target' : 'filetype_default',
@@ -272,19 +280,21 @@ def RunGetSemanticTest( app, filepath, filetype, test, command,
   }
 
   args = test[ 0 ]
-  expected = test[ 1 ]
+  if response == requests.codes.ok:
+    if not isinstance( test[ 1 ], BaseMatcher ):
+      expected = has_entry( 'message', contains_string( test[ 1 ] ) )
+    else:
+      expected = has_entry( 'message', test[ 1 ] )
+  else:
+    expected = test[ 1 ]
 
   request = common_args
   request.update( args )
-
-  test = { 'request': request, 'route': '/run_completer_command' }
-  response = RunAfterInitialized( app, test )[ 'message' ]
-
-  pprint( response )
-  if matches_regexp:
-    assert_that( response, expected )
-  else:
-    assert_that( response, contains_string( expected ) )
+  test = { 'request': request,
+           'route': '/run_completer_command',
+           'expect': { 'response': response,
+                       'data': expected } }
+  RunAfterInitialized( app, test )
 
 
 def Subcommands_GetType_test():
@@ -368,19 +378,42 @@ def Subcommands_GetType_test():
     # also prohibitively complex to try and strip out.
     [ { 'line_num': 53, 'column_num': 15 },
       matches_regexp(
-          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ), True ],
+          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ],
     [ { 'line_num': 54, 'column_num': 18 },
       matches_regexp(
-          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ), True ],
+          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ],
   ]
 
-  for test in tests:
-    yield ( RunGetSemanticTest,
-            PathToTestFile( 'GetType_Clang_test.cc' ),
-            'cpp',
-            test,
-            [ 'GetType' ],
-            len( test ) > 2 )
+  for subcommand in [ 'GetType', 'GetTypeImprecise' ]:
+    for test in tests:
+      yield ( RunGetSemanticTest,
+              PathToTestFile( 'GetType_Clang_test.cc' ),
+              'cpp',
+              test,
+              [ subcommand ] )
+
+
+def Subcommands_GetDoc_test():
+  tests = [
+    # from local file
+    [ { 'line_num': 5, 'column_num': 10 }, 'docstring', requests.codes.ok ],
+    # from header
+    [ { 'line_num': 6, 'column_num': 10 }, 'docstring', requests.codes.ok ],
+    # no docstring
+    [ { 'line_num': 7, 'column_num': 7 }, 'int x = 3', requests.codes.ok ],
+    # no hover
+    [ { 'line_num': 8, 'column_num': 1 },
+      ErrorMatcher( RuntimeError, 'No hover information.' ),
+      requests.codes.server_error ]
+  ]
+  for subcommand in [ 'GetDoc', 'GetDocImprecise' ]:
+    for test in tests:
+      yield ( RunGetSemanticTest,
+              PathToTestFile( 'GetDoc_Clang_test.cc' ),
+              'cpp',
+              test,
+              [ subcommand ],
+              test[ 2 ] )
 
 
 @SharedYcmd
