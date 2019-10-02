@@ -8,12 +8,13 @@ from __future__ import division
 from __future__ import absolute_import
 
 import argparse
-import subprocess
 import contextlib
+import gzip
 import os
 import os.path as p
 import platform
 import shutil
+import subprocess
 import sys
 import tempfile
 import tarfile
@@ -78,17 +79,17 @@ LLVM_DOWNLOAD_DATA = {
     ]
   },
   'x86_64-apple-darwin': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
-    'format': 'lzma',
-    'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
+    'url': 'https://homebrew.bintray.com/bottles/{llvm_package}',
+    'format': 'gzip',
+    'llvm_package': 'llvm-{llvm_version}.sierra.bottle.tar.gz',
     'ycmd_package': 'clangd-{llvm_version}-{os_name}.tar.bz2',
     'files_to_copy': [
-      os.path.join( 'bin', 'clangd' ),
+      os.path.join( '{llvm_version}', 'bin', 'clangd' ),
     ]
   },
   'x86_64-unknown-linux-gnu': {
-    'url': ( 'https://github.com/micbou/llvm/releases/download/{llvm_version}/'
-             '{llvm_package}' ),
+    'url': ( 'https://github.com/ycm-core/llvm/'
+             'releases/download/{llvm_version}/{llvm_package}' ),
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'ycmd_package': 'clangd-{llvm_version}-{os_name}.tar.bz2',
@@ -161,12 +162,22 @@ def DownloadClangLicense( version, destination ):
 
 
 def Download( url ):
-  print( 'Downloading {}'.format( url.rsplit( '/', 1 )[ -1 ] ) )
   request = requests.get( url, stream=True )
   request.raise_for_status()
   content = request.content
   request.close()
   return content
+
+
+def ExtractGZIP( compressed_data, destination ):
+  uncompressed_data = BytesIO( gzip.decompress( compressed_data ) )
+
+  with tarfile.TarFile( fileobj=uncompressed_data, mode='r' ) as tar_file:
+    a_member = tar_file.getmembers()[ 0 ]
+    tar_file.extractall( destination )
+
+  # Determine the directory name
+  return os.path.join( destination, a_member.name.split( '/' )[ 0 ] )
 
 
 def ExtractLZMA( compressed_data, destination ):
@@ -246,8 +257,7 @@ def UploadBundleToBintray( user_name,
   print( 'Uploading to bintray...' )
   with open( bundle_file_name, 'rb' ) as bundle:
     request = requests.put(
-      'https://api.bintray.com/content/{subject}/{repo}/{file_path}'.format(
-        subject = user_name,
+      'https://api.bintray.com/content/ycm-core/{repo}/{file_path}'.format(
         repo = 'clangd',
         file_path = os.path.basename( bundle_file_name ) ),
       data = bundle,
@@ -299,6 +309,25 @@ def ParseArguments():
   return args
 
 
+def PrepareBundleGZIP( cache_dir, llvm_package, download_url, temp_dir ):
+  package_dir = None
+  if cache_dir:
+    archive = os.path.join( cache_dir, llvm_package )
+    print( 'Extracting cached {}'.format( llvm_package ) )
+    try:
+      with open( archive, 'rb' ) as f:
+        package_dir = ExtractGZIP( f.read(), temp_dir )
+    except IOError as e:
+      pass
+
+  if not package_dir:
+    compressed_data = Download( download_url )
+    print( 'Extracting {}'.format( llvm_package ) )
+    package_dir = ExtractGZIP( compressed_data, temp_dir )
+
+  return package_dir
+
+
 def PrepareBundleLZMA( cache_dir, llvm_package, download_url, temp_dir ):
   package_dir = None
   if cache_dir:
@@ -334,9 +363,13 @@ def PrepareBundleNSIS( cache_dir, llvm_package, download_url, temp_dir ):
 
 def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
                      license_file_name, hashes ):
-  llvm_package = download_data[ 'llvm_package' ].format(
-    os_name = os_name,
-    llvm_version = args.version )
+  if os_name != 'x86_64-apple-darwin':
+    llvm_package = download_data[ 'llvm_package' ].format(
+      os_name = os_name,
+      llvm_version = args.version )
+  else:
+    llvm_package = download_data[ 'llvm_package' ].format(
+      llvm_version = args.version )
   ycmd_package = download_data[ 'ycmd_package' ].format(
     os_name = os_name,
     llvm_version = args.version )
@@ -353,6 +386,11 @@ def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
                                        temp_dir )
     elif download_data[ 'format' ] == 'nsis':
       package_dir = PrepareBundleNSIS( args.from_cache,
+                                       llvm_package,
+                                       download_url,
+                                       temp_dir )
+    elif download_data[ 'format' ] == 'gzip':
+      package_dir = PrepareBundleGZIP( args.from_cache,
                                        llvm_package,
                                        download_url,
                                        temp_dir )
