@@ -1020,7 +1020,7 @@ def GetClangdTarget():
   if OnMac():
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        'cbef8030d296efbb86eb27f04beb385d41667ff9e7b55d9bb8cbe0b5bcfc239d' ) ]
+        'c89609cd7dcdf60df62e0d28841266ebe7514b2b68739bd6f0399bf74928a165' ) ]
   if OnFreeBSD():
     return [
       ( 'clangd-{version}-amd64-unknown-freebsd11',

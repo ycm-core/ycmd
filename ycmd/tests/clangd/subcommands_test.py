@@ -162,15 +162,14 @@ def Subcommands_GoTo_all_test():
     { 'req': ( 'goto.cc', 24, 26 ), 'res': ( 'goto.cc', 6, 10 ) },
     # Local -> definition/declaration of Local
     { 'req': ( 'goto.cc', 24, 16 ), 'res': ( 'goto.cc', 2, 11 ) },
-    # Local::out_of_line -> declaration of Local::out_of_line
-    { 'req': ( 'goto.cc', 25, 27 ), 'res': [ ( 'goto.cc', 14, 13 ),
-                                             ( 'goto.cc', 11, 10 ) ] },
-    # GoToDeclaration on definition of out_of_line moves to declaration
-    { 'req': ( 'goto.cc', 14, 13 ), 'res': [ ( 'goto.cc', 14, 13 ),
-                                             ( 'goto.cc', 11, 10 ) ] },
+    # Local::out_of_line -> definition of Local::out_of_line
+    { 'req': ( 'goto.cc', 25, 27 ), 'res': ( 'goto.cc', 14, 13 ) },
+    # GoToDeclaration alternates between definition and declaration
+    { 'req': ( 'goto.cc', 14, 13 ), 'res': ( 'goto.cc', 11, 10 ) },
+    { 'req': ( 'goto.cc', 11, 10 ), 'res': ( 'goto.cc', 14, 13 ) },
     # test -> definition and declaration of test
-    { 'req': ( 'goto.cc', 21,  7 ), 'res': [ ( 'goto.cc', 21, 5 ),
-                                             ( 'goto.cc', 19, 5 ) ] },
+    { 'req': ( 'goto.cc', 21,  5 ), 'res': ( 'goto.cc', 19, 5 ) },
+    { 'req': ( 'goto.cc', 19,  5 ), 'res': ( 'goto.cc', 21, 5 ) },
     # Unicøde
     { 'req': ( 'goto.cc', 34,  9 ), 'res': ( 'goto.cc', 32, 26 ) },
     # Another_Unicøde
@@ -183,8 +182,39 @@ def Subcommands_GoTo_all_test():
   ]
 
   for test in tests:
-    for cmd in [ 'GoToDeclaration', 'GoToDefinition', 'GoTo', 'GoToImprecise' ]:
+    for cmd in [ 'GoToDefinition', 'GoTo', 'GoToImprecise' ]:
       yield RunGoToTest_all, '', cmd, test
+
+
+def Subcommands_GoToDeclaration_all_test():
+  tests = [
+    # Local::x -> definition/declaration of x
+    { 'req': ( 'goto.cc', 23, 21 ), 'res': ( 'goto.cc', 4, 9 ) },
+    # Local::in_line -> definition/declaration of Local::in_line
+    { 'req': ( 'goto.cc', 24, 26 ), 'res': ( 'goto.cc', 6, 10 ) },
+    # Local -> definition/declaration of Local
+    { 'req': ( 'goto.cc', 24, 16 ), 'res': ( 'goto.cc', 2, 11 ) },
+    # Local::out_of_line -> declaration of Local::out_of_line
+    { 'req': ( 'goto.cc', 25, 27 ), 'res': ( 'goto.cc', 11, 10 ) },
+    # GoToDeclaration alternates between definition and declaration
+    { 'req': ( 'goto.cc', 14, 13 ), 'res': ( 'goto.cc', 11, 10 ) },
+    { 'req': ( 'goto.cc', 11, 10 ), 'res': ( 'goto.cc', 14, 13 ) },
+    # test -> definition and declaration of test
+    { 'req': ( 'goto.cc', 21,  5 ), 'res': ( 'goto.cc', 19, 5 ) },
+    { 'req': ( 'goto.cc', 19,  5 ), 'res': ( 'goto.cc', 21, 5 ) },
+    # Unicøde
+    { 'req': ( 'goto.cc', 34,  9 ), 'res': ( 'goto.cc', 32, 26 ) },
+    # Another_Unicøde
+    { 'req': ( 'goto.cc', 36, 17 ), 'res': ( 'goto.cc', 32, 54 ) },
+    { 'req': ( 'goto.cc', 36, 25 ), 'res': ( 'goto.cc', 32, 54 ) },
+    { 'req': ( 'goto.cc', 38,  3 ), 'res': ( 'goto.cc', 36, 28 ) },
+    # Expected failures
+    { 'req': ( 'goto.cc', 13,  1 ), 'res': 'Cannot jump to location' },
+    { 'req': ( 'goto.cc', 16,  6 ), 'res': 'Cannot jump to location' },
+  ]
+
+  for test in tests:
+    yield RunGoToTest_all, '', 'GoToDeclaration', test
 
 
 def Subcommands_GoToInclude_test():
@@ -482,25 +512,39 @@ def FixIt_Check_cpp11_Repl( results ):
 
 def FixIt_Check_cpp11_DelAdd( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
-        has_entries( {
-          'replacement_text': equal_to( '' ),
-          'range': has_entries( {
-            'start': has_entries( { 'line_num': 48, 'column_num': 3 } ),
-            'end'  : has_entries( { 'line_num': 48, 'column_num': 4 } ),
+    'fixits': contains(
+      has_entries( {
+        'chunks': contains(
+          has_entries( {
+            'replacement_text': equal_to( '' ),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 48, 'column_num': 3 } ),
+              'end'  : has_entries( { 'line_num': 48, 'column_num': 4 } ),
+            } ),
           } ),
-        } ),
-        has_entries( {
-          'replacement_text': equal_to( '~' ),
-          'range': has_entries( {
-            'start': has_entries( { 'line_num': 48, 'column_num': 9 } ),
-            'end'  : has_entries( { 'line_num': 48, 'column_num': 9 } ),
+          has_entries( {
+            'replacement_text': equal_to( '~' ),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 48, 'column_num': 9 } ),
+              'end'  : has_entries( { 'line_num': 48, 'column_num': 9 } ),
+            } ),
           } ),
-        } ),
-      ),
-      'location': has_entries( { 'line_num': 48, 'column_num': 3 } )
-    } ) )
+        ),
+        'location': has_entries( { 'line_num': 48, 'column_num': 3 } )
+      } ),
+      has_entries( {
+        'chunks': contains(
+          has_entries( {
+            'replacement_text': equal_to( '= default;' ),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 48, 'column_num': 15 } ),
+              'end'  : has_entries( { 'line_num': 48, 'column_num': 17 } ),
+            } ),
+          } ),
+        ),
+        'location': has_entries( { 'line_num': 48, 'column_num': 3 } )
+      } ),
+    )
   } ) )
 
 
@@ -561,7 +605,19 @@ def FixIt_Check_cpp11_MultiFirst( results ):
           } ),
         ),
         'location': has_entries( { 'line_num': 54, 'column_num': 15 } )
-      } )
+      } ),
+      has_entries( {
+        'chunks': contains(
+          has_entries( {
+            'replacement_text': equal_to( '= default;' ),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 64 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 67 } ),
+            } ),
+          } )
+        ),
+        'location': has_entries( { 'line_num': 54, 'column_num': 15 } )
+      } ),
     )
   } ) )
 
@@ -601,7 +657,19 @@ def FixIt_Check_cpp11_MultiSecond( results ):
           } ),
         ),
         'location': has_entries( { 'line_num': 54, 'column_num': 51 } )
-      } )
+      } ),
+      has_entries( {
+        'chunks': contains(
+          has_entries( {
+            'replacement_text': equal_to( '= default;' ),
+            'range': has_entries( {
+              'start': has_entries( { 'line_num': 54, 'column_num': 64 } ),
+              'end'  : has_entries( { 'line_num': 54, 'column_num': 67 } ),
+            } ),
+          } )
+        ),
+        'location': has_entries( { 'line_num': 54, 'column_num': 51 } )
+      } ),
     )
   } ) )
 
@@ -611,10 +679,10 @@ def FixIt_Check_unicode_Ins( results ):
     'fixits': contains( has_entries( {
       'chunks': contains(
         has_entries( {
-          'replacement_text': equal_to( ';' ),
+          'replacement_text': equal_to( '=' ),
           'range': has_entries( {
-            'start': has_entries( { 'line_num': 21, 'column_num': 39 } ),
-            'end'  : has_entries( { 'line_num': 21, 'column_num': 39 } ),
+            'start': has_entries( { 'line_num': 21, 'column_num': 9 } ),
+            'end'  : has_entries( { 'line_num': 21, 'column_num': 11 } ),
           } ),
         } )
       ),
@@ -752,17 +820,27 @@ def Subcommands_RefactorRename_test( app ):
             ChunkMatcher( 'Bar',
                           LineColMatcher( 9, 3 ),
                           LineColMatcher( 9, 6 ) ),
-            # NOTE: Bug in clangd. It returns the same chunk twice which is a
-            # strict protocol violation.
+            ChunkMatcher( '\n\n',
+                          LineColMatcher( 12, 2 ),
+                          LineColMatcher( 15, 1 ) ),
             ChunkMatcher( 'Bar',
-                          LineColMatcher( 15, 8 ),
+                          LineColMatcher( 15,  8 ),
                           LineColMatcher( 15, 11 ) ),
-            ChunkMatcher( 'Bar',
-                          LineColMatcher( 15, 8 ),
-                          LineColMatcher( 15, 11 ) ),
+            ChunkMatcher( ' ',
+                          LineColMatcher( 15,  46 ),
+                          LineColMatcher( 16,  1 ) ),
             ChunkMatcher( 'Bar',
                           LineColMatcher( 17, 3 ),
-                          LineColMatcher( 17, 6 ) )
+                          LineColMatcher( 17, 6 ) ),
+            ChunkMatcher( '',
+                          LineColMatcher( 17, 14 ),
+                          LineColMatcher( 17, 15 ) ),
+            ChunkMatcher( ' ',
+                          LineColMatcher( 17, 17 ),
+                          LineColMatcher( 17, 17 ) ),
+            ChunkMatcher( ' ',
+                          LineColMatcher( 17, 19 ),
+                          LineColMatcher( 17, 19 ) ),
           )
         } ) )
       } )

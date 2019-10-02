@@ -317,7 +317,7 @@ def PrepareBundleGZIP( cache_dir, llvm_package, download_url, temp_dir ):
     try:
       with open( archive, 'rb' ) as f:
         package_dir = ExtractGZIP( f.read(), temp_dir )
-    except IOError as e:
+    except IOError:
       pass
 
   if not package_dir:

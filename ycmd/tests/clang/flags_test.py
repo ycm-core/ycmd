@@ -1140,6 +1140,7 @@ def CompilationDatabase_UseFlagsFromDatabase_test():
         contains( 'clang++',
                   '-x',
                   'c++',
+                  '--driver-mode=g++',
                   '-x',
                   'c++',
                   '-I' + os.path.normpath( tmp_dir ),
@@ -1170,6 +1171,7 @@ def CompilationDatabase_UseFlagsFromSameDir_test():
           contains( 'clang++',
                     '-x',
                     'c++',
+                    '--driver-mode=g++',
                     '-Wall' ),
           os.path.join( tmp_dir, 'test1.cc' )
         )
@@ -1185,6 +1187,7 @@ def CompilationDatabase_UseFlagsFromSameDir_test():
           contains( 'clang++',
                     '-x',
                     'c++',
+                    '--driver-mode=g++',
                     '-Wall' ),
           os.path.join( tmp_dir, 'some_dir', 'test1.cc' )
         )
@@ -1212,6 +1215,7 @@ def CompilationDatabase_HeaderFile_SameNameAsSourceFile_test():
         contains( 'clang++',
                   '-x',
                   'c++',
+                  '--driver-mode=g++',
                   '-Wall',
                   '-x',
                   'c++-header' ) )
@@ -1238,6 +1242,7 @@ def CompilationDatabase_HeaderFile_DifferentNameFromSourceFile_test():
         contains( 'clang++',
                   '-x',
                   'c++',
+                  '--driver-mode=g++',
                   '-Wall',
                   '-x',
                   'c++-header' ) )
@@ -1267,6 +1272,7 @@ def CompilationDatabase_ExplicitHeaderFileEntry_test():
         contains( 'clang++',
                   '-x',
                   'c++',
+                  '--driver-mode=g++',
                   '-I' + os.path.normpath( '/absolute/path' ),
                   '-Wall' ) )
 
@@ -1290,6 +1296,7 @@ def CompilationDatabase_CUDALanguageFlags_test():
         contains( 'clang++',
                   '-x',
                   'cuda',
+                  '--driver-mode=g++',
                   '-Wall' ) )
 
 

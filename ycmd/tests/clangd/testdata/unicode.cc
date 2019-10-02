@@ -18,5 +18,5 @@ int another_main()
     int member_with_å_unicøde;
   } myå;
 
-  int a = myå.member_with_å_unicøde
+  int a == myå.member_with_å_unicøde;
 }
