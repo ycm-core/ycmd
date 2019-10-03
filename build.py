@@ -87,10 +87,10 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   )$
 """
 
-JDTLS_MILESTONE = '0.42.0'
-JDTLS_BUILD_STAMP = '201909021828'
+JDTLS_MILESTONE = '0.45.0'
+JDTLS_BUILD_STAMP = '201910031256'
 JDTLS_SHA256 = (
-  '4a1a9880a3e414e8100de8417b87c5e6fd1fa0e6c978b94d11ce1b581ac05e7a'
+  '06c499bf151d78027c2480bcbcca313f70ae0e8e07fc07cea6319359aea848f4'
 )
 
 TSSERVER_VERSION = '3.6.3'
@@ -961,8 +961,8 @@ def EnableJavaCompleter( switches ):
   REPOSITORY = p.join( TARGET, 'repository' )
   CACHE = p.join( TARGET, 'cache' )
 
-  JDTLS_SERVER_URL_FORMAT = ( 'http://download.eclipse.org/jdtls/milestones/'
-                              '{jdtls_milestone}/{jdtls_package_name}' )
+  JDTLS_SERVER_URL_FORMAT = ( 'http://download.eclipse.org/jdtls/snapshots/'
+                              '{jdtls_package_name}' )
   JDTLS_PACKAGE_NAME_FORMAT = ( 'jdt-language-server-{jdtls_milestone}-'
                                 '{jdtls_build_stamp}.tar.gz' )
 
