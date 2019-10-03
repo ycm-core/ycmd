@@ -69,92 +69,179 @@ LLVM_DOWNLOAD_DATA = {
     'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
     'format': 'nsis',
     'llvm_package': 'LLVM-{llvm_version}-{os_name}.exe',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'bin', 'libclang.dll' ),
-      os.path.join( 'lib', 'libclang.lib' ),
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd.exe' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'libclang.dll' ),
+        os.path.join( 'lib', 'libclang.lib' ),
+      ]
+    }
   },
   'win64': {
     'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
     'format': 'nsis',
     'llvm_package': 'LLVM-{llvm_version}-{os_name}.exe',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'bin', 'libclang.dll' ),
-      os.path.join( 'lib', 'libclang.lib' ),
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd.exe' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'libclang.dll' ),
+        os.path.join( 'lib', 'libclang.lib' ),
+      ]
+    }
   },
   'x86_64-apple-darwin': {
     'url': 'https://homebrew.bintray.com/bottles/{llvm_package}',
     'format': 'gzip',
     'llvm_package': 'llvm-{llvm_version}.sierra.bottle.tar.gz',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( '{llvm_version}', 'lib', 'libclang.dylib' )
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        {
+          'from': os.path.join( '{llvm_version}', 'lib', 'libclang.dylib' ),
+          'to': os.path.join( 'lib', 'libclang.dylib' ),
+        }
+      ],
+      'run_after_extract':
+        lambda temporary_dir, llvm_version : _SetMacOSLibraryID(
+          os.path.join( temporary_dir,
+                        llvm_version,
+                        'lib',
+                        'libclang.dylib' ),
+          '@rpath/libclang.dylib' )
+    }
   },
   'x86_64-unknown-linux-gnu': {
     'url': ( 'https://github.com/ycm-core/llvm/'
              'releases/download/{llvm_version}/{llvm_package}' ),
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'lib', 'libclang.so' ),
-      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'lib', 'libclang.so' ),
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+      ]
+    }
   },
   'i386-unknown-freebsd11': {
     'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'lib', 'libclang.so' ),
-      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'lib', 'libclang.so' ),
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+      ]
+    }
   },
   'amd64-unknown-freebsd11': {
     'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'lib', 'libclang.so' ),
-      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'lib', 'libclang.so' ),
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+      ]
+    }
   },
   'aarch64-linux-gnu': {
     'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'lib', 'libclang.so' ),
-      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'lib', 'libclang.so' ),
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+      ]
+    }
   },
   'armv7a-linux-gnueabihf': {
     'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
-    'ycmd_package': 'libclang-{llvm_version}-{os_name}.tar.bz2',
-    'files_to_copy': [
-      os.path.join( 'lib', 'libclang.so' ),
-      os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
-    ]
+    'clangd_package': {
+      'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'bin', 'clangd' ),
+      ]
+    },
+    'libclang_package': {
+      'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
+      'files_to_copy': [
+        os.path.join( 'lib', 'libclang.so' ),
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+      ]
+    }
   },
 }
 
 
+def _SetMacOSLibraryID( lib_path, new_id ):
+  current_mode = os.stat( lib_path ).st_mode
+  try:
+    import stat
+    os.chmod( lib_path, current_mode | stat.S_IWUSR )
+    subprocess.check_call( [ 'install_name_tool', '-id', new_id, lib_path ] )
+  finally:
+    os.chmod( lib_path, current_mode )
+
+
 @contextlib.contextmanager
-def TemporaryDirectory():
+def TemporaryDirectory( keep_temp ):
   temp_dir = tempfile.mkdtemp()
   try:
     yield temp_dir
   finally:
-    shutil.rmtree( temp_dir )
+    if keep_temp:
+      print( "*** Please delete temp dir: {}".format( temp_dir ) )
+    else:
+      shutil.rmtree( temp_dir )
 
 
 def DownloadClangLicense( version, destination ):
@@ -182,9 +269,7 @@ def Download( url ):
   return content
 
 
-def ExtractGZIP( compressed_data, destination ):
-  uncompressed_data = BytesIO( gzip.decompress( compressed_data ) )
-
+def ExtractTar( uncompressed_data, destination ):
   with tarfile.TarFile( fileobj=uncompressed_data, mode='r' ) as tar_file:
     a_member = tar_file.getmembers()[ 0 ]
     tar_file.extractall( destination )
@@ -195,13 +280,12 @@ def ExtractGZIP( compressed_data, destination ):
 
 def ExtractLZMA( compressed_data, destination ):
   uncompressed_data = BytesIO( lzma.decompress( compressed_data ) )
+  return ExtractTar( uncompressed_data, destination )
 
-  with tarfile.TarFile( fileobj=uncompressed_data, mode='r' ) as tar_file:
-    a_member = tar_file.getmembers()[ 0 ]
-    tar_file.extractall( destination )
 
-  # Determine the directory name
-  return os.path.join( destination, a_member.name.split( '/' )[ 0 ] )
+def ExtractGZIP( compressed_data, destination ):
+  uncompressed_data = BytesIO( gzip.decompress( compressed_data ) )
+  return ExtractTar( uncompressed_data, destination )
 
 
 def Extract7Z( llvm_package, archive, destination ):
@@ -217,7 +301,8 @@ def Extract7Z( llvm_package, archive, destination ):
       executable = os.path.join( winreg.QueryValueEx( key, "Path" )[ 0 ],
                                 '7z.exe' )
   elif OnMac():
-    executable = '/Applications/Keka.app/Contents/Resources/keka7z'
+    # p7zip is available from homebrew (brew install p7zip)
+    executable = find_executable( '7z' )
   else:
     # On Linux, p7zip 16.02 is required.
     executable = find_executable( '7z' )
@@ -246,12 +331,18 @@ def MakeBundle( files_to_copy,
   print( 'Bundling files to {}'.format( archive_name ) )
   with tarfile.open( name=bundle_file_name, mode='w:bz2' ) as tar_file:
     tar_file.add( license_file_name, arcname='LICENSE.TXT' )
-    for file_name in files_to_copy:
-      arcname = file_name.format( llvm_version = version )
-      name = os.path.join( source_dir, arcname )
+    for item in files_to_copy:
+      if isinstance( item, dict ):
+        source_file_name = item[ 'from' ].format( llvm_version = version )
+        target_file_name = item[ 'to' ].format( llvm_version = version )
+      else:
+        source_file_name = item.format( llvm_version = version )
+        target_file_name = source_file_name
+
+      name = os.path.join( source_dir, source_file_name )
       if not os.path.exists( name ):
         raise RuntimeError( 'File {} does not exist.'.format( name ) )
-      tar_file.add( name = name, arcname = arcname )
+      tar_file.add( name = name, arcname = target_file_name )
 
   sys.stdout.write( 'Calculating checksum: ' )
   with open( bundle_file_name, 'rb' ) as f:
@@ -261,19 +352,22 @@ def MakeBundle( files_to_copy,
 
 def UploadBundleToBintray( user_name,
                            api_token,
+                           subject,
                            os_name,
                            version,
                            bundle_file_name ):
   print( 'Uploading to bintray...' )
+  repo = bundle_file_name[ : bundle_file_name.find( '-' ) ]
   with open( bundle_file_name, 'rb' ) as bundle:
     request = requests.put(
-      'https://api.bintray.com/content/ycm-core/{repo}/{file_path}'.format(
-        repo = 'libclang',
+      'https://api.bintray.com/content/{subject}/{repo}/{file_path}'.format(
+        subject = subject,
+        repo = repo,
         file_path = os.path.basename( bundle_file_name ) ),
       data = bundle,
       auth = ( user_name, api_token ),
       headers = {
-        'X-Bintray-Package': 'libclang',
+        'X-Bintray-Package': repo,
         'X-Bintray-Version': version,
         'X-Bintray-Publish': '1',
         'X-Bintray-Override': '1',
@@ -290,6 +384,9 @@ def ParseArguments():
   parser.add_argument( '--bt-user', action='store',
                        help = 'Bintray user name. Defaults to environment '
                               'variable: YCMD_BINTRAY_USERNAME' )
+  parser.add_argument( '--bt-subject', action='store',
+                       help = 'Bintray subject. Defaults to bt-user. For prod, '
+                              'use "ycm-core"' )
   parser.add_argument( '--bt-token', action='store',
                        help = 'Bintray api token. Defaults to environment '
                               'variable: YCMD_BINTRAY_API_TOKEN.' )
@@ -301,6 +398,8 @@ def ParseArguments():
   parser.add_argument( '--no-upload', action='store_true',
                        help = "For testing, just build the bundles; don't "
                               "upload to bintray. Useful with --output-dir." )
+  parser.add_argument( '--keep-temp', action='store_true',
+                       help = "For testing, don't delete the temp dir" )
 
   args = parser.parse_args()
 
@@ -316,54 +415,73 @@ def ParseArguments():
                           'YCMD_BINTRAY_API_TOKEN in environment' )
     args.bt_token = os.environ[ 'YCMD_BINTRAY_API_TOKEN' ]
 
+  if not args.bt_subject:
+    args.bt_subject = args.bt_user
+
   return args
 
 
-def PrepareBundleGZIP( cache_dir, llvm_package, download_url, temp_dir ):
+def PrepareBundleBuiltIn( extract_fun,
+                          cache_dir,
+                          llvm_package,
+                          download_url,
+                          temp_dir ):
   package_dir = None
   if cache_dir:
     archive = os.path.join( cache_dir, llvm_package )
     print( 'Extracting cached {}'.format( llvm_package ) )
     try:
       with open( archive, 'rb' ) as f:
-        package_dir = ExtractGZIP( f.read(), temp_dir )
+        package_dir = extract_fun( f.read(), temp_dir )
     except IOError:
       pass
 
   if not package_dir:
     compressed_data = Download( download_url )
+    if cache_dir:
+      try:
+        archive = os.path.join( cache_dir, llvm_package )
+        with open( archive, 'wb' ) as f:
+          f.write( compressed_data )
+      except IOError as e:
+        print( "Unable to write cache file: {}".format( e.message ) )
+        pass
+
     print( 'Extracting {}'.format( llvm_package ) )
-    package_dir = ExtractGZIP( compressed_data, temp_dir )
+    package_dir = extract_fun( compressed_data, temp_dir )
 
   return package_dir
 
 
 def PrepareBundleLZMA( cache_dir, llvm_package, download_url, temp_dir ):
-  package_dir = None
-  if cache_dir:
-    archive = os.path.join( cache_dir, llvm_package )
-    print( 'Extracting cached {}'.format( llvm_package ) )
-    try:
-      with open( archive, 'rb' ) as f:
-        package_dir = ExtractLZMA( f.read(), temp_dir )
-    except IOError:
-      pass
+  return PrepareBundleBuiltIn( ExtractLZMA,
+                               cache_dir,
+                               llvm_package,
+                               download_url,
+                               temp_dir )
 
-  if not package_dir:
-    compressed_data = Download( download_url )
-    print( 'Extracting {}'.format( llvm_package ) )
-    package_dir = ExtractLZMA( compressed_data, temp_dir )
 
-  return package_dir
+def PrepareBundleGZIP( cache_dir, llvm_package, download_url, temp_dir ):
+  return PrepareBundleBuiltIn( ExtractGZIP,
+                               cache_dir,
+                               llvm_package,
+                               download_url,
+                               temp_dir )
 
 
 def PrepareBundleNSIS( cache_dir, llvm_package, download_url, temp_dir ):
+  archive = None
   if cache_dir:
     archive = os.path.join( cache_dir, llvm_package )
-    print( 'Extracting cached {}'.format( llvm_package ) )
-  else:
+    if os.path.exists( archive ):
+      print( 'Extracting cached {}'.format( llvm_package ) )
+    else:
+      archive = None
+
+  if not archive:
     compressed_data = Download( download_url )
-    archive = os.path.join( temp_dir, llvm_package )
+    dest_dir = cache_dir if cache_dir else temp_dir
+    archive = os.path.join( dest_dir, llvm_package )
     with open( archive, 'wb' ) as f:
       f.write( compressed_data )
     print( 'Extracting {}'.format( llvm_package ) )
@@ -373,20 +491,14 @@ def PrepareBundleNSIS( cache_dir, llvm_package, download_url, temp_dir ):
 
 def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
                      license_file_name, hashes ):
-  if os_name != 'x86_64-apple-darwin':
-    llvm_package = download_data[ 'llvm_package' ].format(
-      os_name = os_name,
-      llvm_version = args.version )
-  else:
-    llvm_package = download_data[ 'llvm_package' ].format(
-      llvm_version = args.version )
-  ycmd_package = download_data[ 'ycmd_package' ].format(
+  llvm_package = download_data[ 'llvm_package' ].format(
     os_name = os_name,
     llvm_version = args.version )
   download_url = download_data[ 'url' ].format( llvm_version = args.version,
                                                 llvm_package = llvm_package )
 
-  ycmd_package_file = os.path.join( output_dir, ycmd_package )
+  temp_dir = os.path.join( temp_dir, os_name )
+  os.makedirs( temp_dir )
 
   try:
     if download_data[ 'format' ] == 'lzma':
@@ -413,19 +525,31 @@ def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
     print( 'Cannot download {}'.format( llvm_package ) )
     return
 
-  MakeBundle( download_data[ 'files_to_copy' ],
-              license_file_name,
-              package_dir,
-              ycmd_package_file,
-              hashes,
-              args.version )
+  for binary in [ 'libclang', 'clangd' ]:
+    package_name = binary + '_package'
+    archive_name = download_data[ package_name ][ 'name' ].format(
+      os_name = os_name,
+      llvm_version = args.version )
+    archive_path = os.path.join( output_dir, archive_name )
 
-  if not args.no_upload:
-    UploadBundleToBintray( args.bt_user,
-                           args.bt_token,
-                           os_name,
-                           args.version,
-                           ycmd_package_file )
+    if 'run_after_extract' in download_data[ package_name ]:
+      extra_cmd = download_data[ package_name ][ 'run_after_extract' ]
+      extra_cmd( package_dir, args.version )
+
+    MakeBundle( download_data[ package_name ][ 'files_to_copy' ],
+                license_file_name,
+                package_dir,
+                archive_path,
+                hashes,
+                args.version )
+
+    if not args.no_upload:
+      UploadBundleToBintray( args.bt_user,
+                             args.bt_token,
+                             args.bt_subject,
+                             os_name,
+                             args.version,
+                             archive_path )
 
 
 def Overwrite( src, dest ):
@@ -462,7 +586,7 @@ def Main():
 
   try:
     hashes = {}
-    with TemporaryDirectory() as temp_dir:
+    with TemporaryDirectory( args.keep_temp ) as temp_dir:
       license_file_name = DownloadClangLicense( args.version, temp_dir )
       for os_name, download_data in iteritems( LLVM_DOWNLOAD_DATA ):
         BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
