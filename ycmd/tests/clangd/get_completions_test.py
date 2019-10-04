@@ -23,13 +23,14 @@ from __future__ import print_function
 from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
-
+from time import sleep
 import json
 import requests
 from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
                        has_item, has_items, has_entries )
 
+from ycmd import handlers
 from ycmd.tests.clangd import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
@@ -75,17 +76,28 @@ def RunTest( app, test ):
                  expect_errors = True )
   WaitUntilCompleterServerReady( app, filetype )
 
-  # We also ignore errors here, but then we check the response code ourself.
-  # This is to allow testing of requests returning errors.
-  response = app.post_json( '/completions', BuildRequest( **request ),
-                            expect_errors = True )
+  for i in range( 10 ):
+    try:
+      # We also ignore errors here, but then we check the response code ourself.
+      # This is to allow testing of requests returning errors.
+      response = app.post_json( '/completions', BuildRequest( **request ),
+                                expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
 
-  print( 'Completer response: {}'.format( json.dumps(
-    response.json, indent = 2 ) ) )
+      print( 'Completer response: {}'.format( json.dumps(
+        response.json, indent = 2 ) ) )
 
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+      assert_that( response.json, test[ 'expect' ][ 'data' ] )
+      break
+    except Exception:
+      if i == 9:
+        raise
+      else:
+        completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
+        completer._completions_cache.Invalidate()
+        sleep( 0.1 )
+        pass
 
 
 @IsolatedYcmd( { 'clangd_uses_ycmd_caching': 0 } )
@@ -442,8 +454,10 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
       'data': has_entries( {
         'completion_start_column': 3,
         'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'driver_mode_cl_include_func', 'void' ),
-          CompletionEntryMatcher( 'driver_mode_cl_include_int', 'int' ),
+          CompletionEntryMatcher( 'driver_mode_cl_include_func',
+                                  'void\n"driver_mode_cl_include.h"' ),
+          CompletionEntryMatcher( 'driver_mode_cl_include_int',
+                                  'int\n"driver_mode_cl_include.h"' ),
         ),
         'errors': empty(),
       } )
@@ -471,8 +485,10 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
       'data': has_entries( {
         'completion_start_column': 3,
         'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'driver_mode_cl_include_func', 'void' ),
-          CompletionEntryMatcher( 'driver_mode_cl_include_int', 'int' ),
+          CompletionEntryMatcher( 'driver_mode_cl_include_func',
+                                  'void\n"driver_mode_cl_include.h"' ),
+          CompletionEntryMatcher( 'driver_mode_cl_include_int',
+                                  'int\n"driver_mode_cl_include.h"' ),
         ),
         'errors': empty(),
       } )

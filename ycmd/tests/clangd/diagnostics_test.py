@@ -217,7 +217,8 @@ def Diagnostics_MultipleMissingIncludes_test( app ):
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 1, 10 ),
-        'text': equal_to( "'first_missing_include' file not found" ),
+        'text': equal_to( "'first_missing_include' file not found"
+                          " [pp_file_not_found]" ),
         'fixit_available': False
       } )
     ) } )
@@ -244,7 +245,8 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
         'location': LocationMatcher( filepath, 2, 9 ),
         'location_extent': RangeMatcher( filepath, ( 2, 9 ), ( 2, 9 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 2, 9 ), ( 2, 9 ) ) ),
-        'text': equal_to( "Expected ';' at end of declaration list" ),
+        'text': equal_to( "Expected ';' at end of declaration list (fix "
+                          "available) [expected_semi_decl_list]" ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -252,7 +254,8 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
         'location': LocationMatcher( filepath, 5, 1 ),
         'location_extent': RangeMatcher( filepath, ( 5, 1 ), ( 6, 11 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 5, 1 ), ( 6, 11 ) ) ),
-        'text': equal_to( "Unknown type name 'multiline_identifier'" ),
+        'text': equal_to( "Unknown type name 'multiline_identifier'"
+                          " [unknown_typename]" ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -260,7 +263,8 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
         'location': LocationMatcher( filepath, 8, 7 ),
         'location_extent': RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) ) ),
-        'text': equal_to( 'Constructor cannot have a return type' ),
+        'text': equal_to( 'Constructor cannot have a return type'
+                          ' [constructor_return_type]' ),
         'fixit_available': False
       } )
     ) } )
@@ -287,7 +291,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'location': LocationMatcher( filepath, 59, 5 ),
         'location_extent': RangeMatcher( filepath, ( 59, 5 ), ( 59, 6 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 59, 5 ), ( 59, 6 ) ) ),
-        'text': equal_to( 'Call to global function \'g1\' not configured' ),
+        'text': equal_to( 'Call to global function \'g1\' not configured'
+                          ' [global_call_not_config]' ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -296,7 +301,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'location_extent': RangeMatcher( filepath, ( 60, 9 ), ( 60, 12 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 60, 9 ), ( 60, 12 ) ) ),
         'text': equal_to( 'Too few execution configuration arguments to kernel '
-                          'function call, expected at least 2, have 1' ),
+                          'function call, expected at least 2, have 1'
+                          ' [typecheck_call_too_few_args_at_least]' ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -307,7 +313,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
           RangeMatcher( filepath, ( 61, 20 ), ( 61, 21 ) )
         ),
         'text': equal_to( 'Too many execution configuration arguments to '
-                          'kernel function call, expected at most 4, have 5' ),
+                          'kernel function call, expected at most 4, have 5'
+                          ' [typecheck_call_too_many_args_at_most]' ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -315,7 +322,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'location': LocationMatcher( filepath, 65, 15 ),
         'location_extent': RangeMatcher( filepath, ( 65, 15 ), ( 65, 16 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 65, 15 ), ( 65, 16 ) ) ),
-        'text': equal_to( 'Kernel call to non-global function \'h1\'' ),
+        'text': equal_to( 'Kernel call to non-global function \'h1\''
+                          ' [kern_call_not_global_function]' ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -324,7 +332,7 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'location_extent': RangeMatcher( filepath, ( 68, 15 ), ( 68, 16 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 68, 15 ), ( 68, 16 ) ) ),
         'text': equal_to( "Kernel function type 'int (*)(int)' must have "
-                          "void return type" ),
+                          "void return type [kern_type_not_void_return]" ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -332,7 +340,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'location': LocationMatcher( filepath, 70, 8 ),
         'location_extent': RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ),
         'ranges': contains( RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ) ),
-        'text': equal_to( "Use of undeclared identifier 'undeclared'" ),
+        'text': equal_to( "Use of undeclared identifier 'undeclared'"
+                           ' [undeclared_var_use]' ),
         'fixit_available': False
       } ),
     ) } )

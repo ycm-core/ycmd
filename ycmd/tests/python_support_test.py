@@ -91,7 +91,8 @@ def CompilationDatabase_Py2Str_test():
 
   eq_( str( info.compiler_working_dir_ ), COMPILE_COMMANDS_WORKING_DIR )
   eq_( str( info.compiler_flags_[ 0 ] ), '/usr/bin/clang++' )
-  eq_( str( info.compiler_flags_[ 1 ] ), 'example.cc' )
+  eq_( str( info.compiler_flags_[ 1 ] ), '--driver-mode=g++' )
+  eq_( str( info.compiler_flags_[ 2 ] ), 'example.cc' )
 
 
 @ClangOnly
@@ -107,7 +108,8 @@ def CompilationDatabase_Py2Unicode_test():
 
   eq_( str( info.compiler_working_dir_ ), COMPILE_COMMANDS_WORKING_DIR )
   eq_( str( info.compiler_flags_[ 0 ] ), '/usr/bin/clang++' )
-  eq_( str( info.compiler_flags_[ 1 ] ), 'example.cc' )
+  eq_( str( info.compiler_flags_[ 1 ] ), '--driver-mode=g++' )
+  eq_( str( info.compiler_flags_[ 2 ] ), 'example.cc' )
 
 
 @ClangOnly
@@ -123,7 +125,8 @@ def CompilationDatabase_Py3Bytes_test():
 
   eq_( str( info.compiler_working_dir_ ), COMPILE_COMMANDS_WORKING_DIR )
   eq_( str( info.compiler_flags_[ 0 ] ), '/usr/bin/clang++' )
-  eq_( str( info.compiler_flags_[ 1 ] ), 'example.cc' )
+  eq_( str( info.compiler_flags_[ 1 ] ), '--driver-mode=g++' )
+  eq_( str( info.compiler_flags_[ 2 ] ), 'example.cc' )
 
 
 @ClangOnly
@@ -137,4 +140,5 @@ def CompilationDatabase_NativeString_test():
 
   eq_( str( info.compiler_working_dir_ ), COMPILE_COMMANDS_WORKING_DIR )
   eq_( str( info.compiler_flags_[ 0 ] ), '/usr/bin/clang++' )
-  eq_( str( info.compiler_flags_[ 1 ] ), 'example.cc' )
+  eq_( str( info.compiler_flags_[ 1 ] ), '--driver-mode=g++' )
+  eq_( str( info.compiler_flags_[ 2 ] ), 'example.cc' )

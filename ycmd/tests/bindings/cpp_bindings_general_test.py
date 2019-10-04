@@ -490,6 +490,7 @@ def CppBindings_CompilationDatabase_test():
                    has_properties( {
                      'compiler_working_dir_': tmp_dir,
                      'compiler_flags_': contains( 'clang++',
+                                                  '--driver-mode=g++',
                                                   '-x',
                                                   'c++',
                                                   '-I.',
