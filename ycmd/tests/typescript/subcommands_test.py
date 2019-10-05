@@ -840,6 +840,10 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
               'this-is-a-longer-string',
               LocationMatcher( PathToTestFile( 'file3.ts' ), 1, 15 ),
               LocationMatcher( PathToTestFile( 'file3.ts' ), 1, 18 ) ),
+            ChunkMatcher(
+              'this-is-a-longer-string',
+              LocationMatcher( PathToTestFile( 'test.tsx' ), 10, 8 ),
+              LocationMatcher( PathToTestFile( 'test.tsx' ), 10, 11 ) ),
           ),
           'location': LocationMatcher( PathToTestFile( 'test.ts' ), 25, 9 )
         } ) )
