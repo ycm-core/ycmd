@@ -175,6 +175,9 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
     - something which calls self._signature_triggers.SetServerTriggerCharacters
     - ComputeSignaturesInner
   See the language_server_completer or Python completers for examples.
+
+  If your server returns lists of "code actions" that need to be resolved,
+  instead of returning FixIts right away, you should override ResolveFixit.
   """
 
   def __init__( self, user_options ):
@@ -338,6 +341,10 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
              empty.
     """
     return {}
+
+
+  def ResolveFixit( self, request_data ):
+    return { 'fixits': [ request_data[ 'fixit' ] ] }
 
 
   def UserCommandsHelpMessage( self ):

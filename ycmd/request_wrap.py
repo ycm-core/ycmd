@@ -93,7 +93,7 @@ class RequestWrap( object ):
 
       'lines': ( self._CurrentLines, None ),
 
-      'extra_conf_data': ( self._GetExtraConfData, None )
+      'extra_conf_data': ( self._GetExtraConfData, None ),
     }
     self._cached_computed = {}
 

@@ -40,9 +40,12 @@ from ycmd.tests.clangd import ( IsolatedYcmd,
                                 RunAfterInitialized )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
+                                    CombineRequest,
                                     LineColMatcher,
                                     LocationMatcher,
-                                    ErrorMatcher )
+                                    ErrorMatcher,
+                                    WithRetry,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
 
@@ -750,6 +753,12 @@ def FixIt_Check_cpp11_Note( results ):
                         LineColMatcher( 60, 9 ) )
         ),
         'location': LineColMatcher( 60, 1 ),
+      } ),
+      # Unresolved, requires /resolve_fixit request
+      has_entries( {
+        'text': 'Extract subexpression to variable',
+        'resolve': True,
+        'command': has_entries( { 'command': 'clangd.applyTweak' } )
       } )
     )
   } ) )
@@ -785,6 +794,61 @@ def FixIt_Check_cuda( results ):
         ),
         'location': LineColMatcher( 3, 12 ),
       } ) )
+  } ) )
+
+
+def FixIt_Check_SubexprExtract_Resolved( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+        'text': 'Extract subexpression to variable',
+        'chunks': contains(
+          ChunkMatcher( 'auto dummy = foo(i + 3);\n  ',
+                        LineColMatcher( 84, 3 ),
+                        LineColMatcher( 84, 3 ) ),
+          ChunkMatcher( 'dummy',
+                        LineColMatcher( 84, 10 ),
+                        LineColMatcher( 84, 22 ) ),
+        )
+    } ) )
+  } ) )
+
+
+def FixIt_Check_RawStringReplace_Resolved( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+        'text': 'Convert to raw string',
+        'chunks': contains(
+          ChunkMatcher( 'R"(\\\\r\\asd\n\\v)"',
+                        LineColMatcher( 80, 19 ),
+                        LineColMatcher( 80, 36 ) ),
+        )
+    } ) )
+  } ) )
+
+
+def FixIt_Check_MacroExpand_Resolved( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+        'text': "Expand macro 'DECLARE_INT'",
+        'chunks': contains(
+          ChunkMatcher( 'int i',
+                        LineColMatcher( 83,  3 ),
+                        LineColMatcher( 83, 17 ) ),
+        )
+    } ) )
+  } ) )
+
+
+def FixIt_Check_AutoExpand_Resolved( results ):
+  assert_that( results, has_entries( {
+    'fixits': contains( has_entries( {
+        'text': "Expand auto type",
+        'chunks': contains(
+          ChunkMatcher( 'const char *',
+                        LineColMatcher( 80, 1 ),
+                        LineColMatcher( 80, 6 ) ),
+        )
+    } ) )
   } ) )
 
 
@@ -828,6 +892,92 @@ def Subcommands_FixIt_all_test():
 
   for test in tests:
     yield RunFixItTest, test[ 0 ], test[ 1 ], test[ 2 ], test[ 3 ], test[ 4 ]
+
+
+@WithRetry
+@SharedYcmd
+def RunRangedFixItTest( app, rng, expected ):
+  contents = ReadFile( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
+  args = {
+    'completer_target' : 'filetype_default',
+    'contents'         : contents,
+    'filepath'         : PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+    'command_arguments': [ 'FixIt' ],
+    'range'            : rng,
+    'filetype'         : 'cpp'
+  }
+  app.post_json( '/event_notification',
+                 CombineRequest( args, {
+                   'event_name': 'FileReadyToParse',
+                 } ),
+                 expect_errors = True )
+  WaitUntilCompleterServerReady( app, 'cpp' )
+  response = app.post_json( '/run_completer_command',
+                            BuildRequest( **args ) ).json
+  args[ 'fixit' ] = response[ 'fixits' ][ 0 ]
+  response = app.post_json( '/resolve_fixit',
+                            BuildRequest( **args ) ).json
+  print( 'Resolved fixit response = ' )
+  print( response )
+  expected( response )
+
+
+def Subcommands_FixIt_Ranged_test():
+  expand_auto_range = {
+    'start': { 'line_num': 80, 'column_num': 1 },
+    'end': { 'line_num': 80, 'column_num': 4 },
+  }
+  subexpression_extract_range = {
+    'start': { 'line_num': 84, 'column_num': 14 },
+    'end': { 'line_num': 84, 'column_num': 20 },
+  }
+  macro_expand_range = {
+    'start': { 'line_num': 83, 'column_num': 3 },
+    'end': { 'line_num': 83, 'column_num': 13 },
+  }
+  raw_string_range = {
+    'start': { 'line_num': 80, 'column_num': 19 },
+    'end': { 'line_num': 80, 'column_num': 35 },
+  }
+  tests = [
+    [ expand_auto_range, FixIt_Check_AutoExpand_Resolved ],
+    [ macro_expand_range, FixIt_Check_MacroExpand_Resolved ],
+    [ subexpression_extract_range, FixIt_Check_SubexprExtract_Resolved ],
+    [ raw_string_range, FixIt_Check_RawStringReplace_Resolved ],
+  ]
+  for test in tests:
+    yield RunRangedFixItTest, test[ 0 ], test[ 1 ]
+
+
+@WithRetry
+@SharedYcmd
+def Subcommands_FixIt_AlreadyResolved_test( app ):
+  filename = PathToTestFile( 'FixIt_Clang_cpp11.cpp' )
+  request = {
+    'completer_target' : 'filetype_default',
+    'contents'         : ReadFile( filename ),
+    'filepath'         : filename,
+    'command_arguments': [ 'FixIt' ],
+    'line_num'         : 16,
+    'column_num'       : 1,
+    'filetype'         : 'cpp'
+  }
+  app.post_json( '/event_notification',
+                 CombineRequest( request, {
+                   'event_name': 'FileReadyToParse',
+                 } ),
+                 expect_errors = True )
+  WaitUntilCompleterServerReady( app, 'cpp' )
+  expected = app.post_json( '/run_completer_command',
+                            BuildRequest( **request ) ).json
+  print( 'expected = ' )
+  print( expected )
+  request[ 'fixit' ] = expected[ 'fixits' ][ 0 ]
+  actual = app.post_json( '/resolve_fixit',
+                          BuildRequest( **request ) ).json
+  print( 'actual = ' )
+  print( actual )
+  assert_that( actual, equal_to( expected ) )
 
 
 @SharedYcmd

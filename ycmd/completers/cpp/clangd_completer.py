@@ -351,6 +351,9 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         command[ 'arguments' ][ 0 ],
         text = command[ 'title' ] )
 
+    if command[ 'command' ] == 'clangd.applyTweak':
+      return responses.UnresolvedFixIt( command, command[ 'title' ] )
+
     return None
 
 

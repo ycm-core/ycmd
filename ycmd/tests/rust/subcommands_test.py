@@ -94,6 +94,14 @@ def RunTest( app, test, contents = None ):
                equal_to( test[ 'expect' ][ 'response' ] ) )
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
+  if test.get( 'run_resolve_fixit_test', False ):
+    fixit = response.json[ 'fixits' ][ 0 ]
+    response = app.post_json(
+      '/resolve_fixit',
+      CombineRequest( test[ 'request' ], { 'fixit': fixit } ) ).json
+    assert_that( response, has_entries( {
+      'fixits': contains( fixit ) } ) )
+
 
 @SharedYcmd
 def Subcommands_DefinedSubcommands_test( app ):
@@ -516,7 +524,8 @@ def Subcommands_FixIt_ApplySuggestion_test( app ):
           )
         } ) )
       } )
-    }
+    },
+    'run_resolve_fixit_test': True
   } )
 
 

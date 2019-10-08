@@ -102,6 +102,15 @@ def RunCompleterCommand():
       request_data ) )
 
 
+@app.post( '/resolve_fixit' )
+def ResolveFixit():
+  LOGGER.info( 'Received resolve_fixit request' )
+  request_data = RequestWrap( request.json )
+  completer = _GetCompleterForRequestData( request_data )
+
+  return _JsonResponse( completer.ResolveFixit( request_data ) )
+
+
 @app.post( '/completions' )
 def GetCompletions():
   LOGGER.info( 'Received completion request' )

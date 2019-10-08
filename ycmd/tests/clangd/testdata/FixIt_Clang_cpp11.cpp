@@ -71,3 +71,15 @@ namespace Typo {
 void typo() {
   Typo::SpellingIsNotMyStringPiont *p;
 }
+
+
+int foo(int);
+
+#define DECLARE_INT(name) int name
+
+auto to_raw_str = "\\\\r\\asd\n\\v";
+
+int bar() {
+  DECLARE_INT(i) = 4;
+  return foo( i + 3 );
+}
