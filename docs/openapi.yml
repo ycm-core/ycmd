@@ -335,10 +335,58 @@ definitions:
     items:
       $ref: "#/definitions/DiagnosticData"
 
+  SubcommandResponse:
+    type: object
+    properties:
+      fixits:
+        type: array
+        description: |-
+          If present, this is a *FixIt* or *Refactor* response and the
+          value of this property is a list of potential changes to
+          buffers to apply the quick fix or refactoring operation.
+
+          An empty `fixits` list means that no FixIt or refactoring
+          was available. If multiple entries are supplied, the user is
+          prompted to select which one to apply.
+        items:
+          $ref: "#/definitions/FixIt"
+        minItems: 0
+      message:
+        type: string
+        description: |-
+          If present, this is a *simple display message* and the value
+          of this property is the message to display.
+      detailed_info:
+        type: string
+        description: |-
+          If present, this is a *detailed information* response and
+          the value of this property is the multi-line information
+          to display as unformatted plain text.
+      filepath:
+        type: string
+        description: |-
+          If present, this is a single *GoTo response* and this value
+          contains the absolute path of the buffer containing the
+          target location (identified in `line_num` and `column_num`).
+      line_num:
+        $ref: "#/definitions/LineNumber"
+      column_num:
+        $ref: "#/definitions/ColumnNumber"
+
+  UnresolvedFixIt:
+    type: object
+    required:
+      - resolve
+    properties:
+      resolve:
+        type: boolean
+        description: |-
+          Indicates wether the fixit requires additional processing.
   FixIt:
     type: object
     required:
       - location
+      - resolve
       - chunks
     properties:
       text:
@@ -349,6 +397,10 @@ definitions:
           available FixIts.
       location:
         $ref: "#/definitions/Location"
+      resolve:
+        type: boolean
+        description: |-
+          Indicates wether the fixit requires additional processing.
       chunks:
         type: array
         description: |-
@@ -824,43 +876,7 @@ paths:
                     items in the list are of type `GoToLocations`
                     (see definitions).
           schema:
-            type: object
-            properties:
-              fixits:
-                type: array
-                description: |-
-                  If present, this is a *FixIt* or *Refactor* response and the
-                  value of this property is a list of potential changes to
-                  buffers to apply the quick fix or refactoring operation.
-
-                  An empty `fixits` list means that no FixIt or refactoring
-                  was available. If multiple entries are supplied, the user is
-                  prompted to select which one to apply.
-                items:
-                  $ref: "#/definitions/FixIt"
-                maxItems: 1
-                minItems: 0
-              message:
-                type: string
-                description: |-
-                  If present, this is a *simple display message* and the value
-                  of this property is the message to display.
-              detailed_info:
-                type: string
-                description: |-
-                  If present, this is a *detailed information* response and
-                  the value of this property is the multi-line information
-                  to display as unformatted plain text.
-              filepath:
-                type: string
-                description: |-
-                  If present, this is a single *GoTo response* and this value
-                  contains the absolute path of the buffer containing the
-                  target location (identified in `line_num` and `column_num`).
-              line_num:
-                $ref: "#/definitions/LineNumber"
-              column_num:
-                $ref: "#/definitions/ColumnNumber"
+            $ref: "#/definitions/SubcommandResponse"
         500:
           description: An error occurred.
           schema:
@@ -1497,5 +1513,58 @@ paths:
                     fixit_available: true
         500:
           description: An error occurred.
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
+  /resolve_fixit:
+    post:
+      summary: Resolve an incomplete FixIt.
+      description: |-
+        Resolves an incomplete fixit, indicated by `'resolve'` fixit property.
+        Some completers return incomplete fixits in order to avoid blocking on
+        expensive fixit calculations.
+
+        When a client wishes to resolve a fixit, the entire `FixIt` object
+        should be sent in the `fixit` property.
+
+        If a client tries to resolve an already resolved fixit, the same fixit
+        is returned in a SubcommandResponse.
+      produces:
+        application/json
+      parameters:
+        - name: request_data
+          in: body
+          description: |-
+            The context data, including the current cursor position, and details
+            of dirty buffers.
+          required: true
+          schema:
+            type: object
+            required:
+              - filepath
+              - file_data
+              - fixit
+            properties:
+              filepath:
+                $ref: "#/definitions/FilePath"
+              file_data:
+                $ref: "#/definitions/FileDataMap"
+              fixit:
+                $ref: "#/definitions/FixIt"
+            example:
+              filepath: "/home/test/dev/test.c"
+              file_data:
+                "/home/test/dev/test.c":
+                  filetypes: [ 'c' ]
+                  contents: "<file contents>"
+              fixit:
+                $ref: "#/definitions/UnresolvedFixIt"
+      responses:
+        200:
+          description: |-
+            The fixit has been resolved and a FixIt response is returned.
+          schema:
+            $ref: "#/definitions/SubcommandResponse"
+        500:
+          description: An error occured
           schema:
             $ref: "#/definitions/ExceptionResponse"
