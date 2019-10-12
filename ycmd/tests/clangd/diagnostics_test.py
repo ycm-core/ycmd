@@ -22,21 +22,28 @@ from __future__ import division
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import os
+from pprint import pformat
 from hamcrest import ( assert_that,
                        contains,
                        contains_string,
+                       empty,
+                       equal_to,
                        has_entries,
                        has_entry,
-                       has_items,
-                       empty,
-                       equal_to )
+                       has_items )
 from mock import patch
 from pprint import pprint
 
 from ycmd.tests.clangd import ( IsolatedYcmd,
                                 PathToTestFile,
                                 RunAfterInitialized )
-from ycmd.tests.test_utils import BuildRequest, LocationMatcher, RangeMatcher
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    LocationMatcher,
+                                    RangeMatcher,
+                                    PollForMessages,
+                                    TemporaryTestDir,
+                                    UnixOnly )
 from ycmd.utils import ReadFile
 from ycmd import handlers
 
@@ -446,3 +453,87 @@ struct Foo {
     results = app.post_json( '/detailed_diagnostic', diag_data ).json
     assert_that( results,
                has_entry( 'message', contains_string( "are not ready yet" ) ) )
+
+
+@UnixOnly
+@IsolatedYcmd()
+def Diagnostics_UpdatedOnBufferVisit_test( app ):
+  with TemporaryTestDir() as tmp_dir:
+    source_file = os.path.join( tmp_dir, 'source.cpp' )
+    source_contents = """#include "header.h"
+int main() {return S::h();}
+"""
+    with open( source_file, 'w' ) as sf:
+      sf.write( source_contents )
+
+    header_file = os.path.join( tmp_dir, 'header.h' )
+    old_header_content = """#pragma once
+struct S{static int h();};
+"""
+    with open( header_file, 'w' ) as hf:
+      hf.write( old_header_content )
+
+    flags_file = os.path.join( tmp_dir, 'compile_flags.txt' )
+    flags_content = """-xc++"""
+    with open( flags_file, 'w' ) as ff:
+      ff.write( flags_content )
+
+    messages_request = { 'contents': source_contents,
+                         'filepath': source_file,
+                         'filetype': 'cpp' }
+
+    test = { 'request': messages_request, 'route': '/receive_messages' }
+    response = RunAfterInitialized( app, test )
+    assert_that( response, contains(
+      has_entries( { 'diagnostics': empty() } ) ) )
+
+    # Overwrite header.cpp
+    new_header_content = """#pragma once
+  static int h();
+  """
+    with open( header_file, 'w' ) as f:
+      f.write( new_header_content )
+
+    # Send BufferVisit notification
+    buffer_visit_request = { "event_name": "BufferVisit",
+                             "filepath": source_file,
+                             "filetype": 'cpp' }
+    app.post_json( '/event_notification',
+                   BuildRequest( **buffer_visit_request ) )
+    # Assert diagnostics
+    for message in PollForMessages( app, messages_request ):
+      if 'diagnostics' in message:
+        assert_that( message,
+          has_entries( { 'diagnostics': contains(
+            has_entries( {
+              'kind': equal_to( 'ERROR' ),
+              'text': "Use of undeclared identifier 'S' [undeclared_var_use]",
+              'ranges': contains( RangeMatcher(
+                contains_string( source_file ), ( 2, 20 ), ( 2, 21 ) ) ),
+              'location': LocationMatcher(
+                contains_string( source_file ), 2, 20 ),
+              'location_extent': RangeMatcher(
+                contains_string( source_file ), ( 2, 20 ), ( 2, 21 ) )
+            } )
+          ) } ) )
+        break
+
+    # Restore original content
+    with open( header_file, 'w' ) as f:
+      f.write( old_header_content )
+
+    # Send BufferVisit notification
+    app.post_json( '/event_notification',
+                   BuildRequest( **buffer_visit_request ) )
+
+    # Assert no diagnostics
+    for message in PollForMessages( app, messages_request ):
+      print( 'Message {}'.format( pformat( message ) ) )
+      if 'diagnostics' in message:
+        assert_that( message,
+          has_entries( { 'diagnostics': empty() } ) )
+        break
+
+    # Assert no dirty files
+    with open( header_file, 'r' ) as f:
+      assert_that( f.read(), equal_to( old_header_content ) )
