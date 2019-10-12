@@ -449,10 +449,12 @@ def RangeFormatting( request_id, request_data ):
 
 def FormattingOptions( request_data ):
   options = request_data[ 'options' ]
-  return {
-    'tabSize': options[ 'tab_size' ],
-    'insertSpaces': options[ 'insert_spaces' ]
+  format_options = {
+    'tabSize': options.pop( 'tab_size' ),
+    'insertSpaces': options.pop( 'insert_spaces' )
   }
+  format_options.update( options )
+  return format_options
 
 
 def Range( request_data ):

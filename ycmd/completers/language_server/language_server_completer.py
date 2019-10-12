@@ -1851,6 +1851,15 @@ class LanguageServerCompleter( Completer ):
     return responses.BuildFixItResponse( [ fixit ] )
 
 
+  def AdditionalFormattingOptions( self, request_data ):
+    module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
+    try:
+      settings = self.GetSettings( module, request_data )
+      return settings.get( 'formatting_options', {} )
+    except AttributeError:
+      return {}
+
+
   def Format( self, request_data ):
     """Issues the formatting or rangeFormatting request (depending on the
     presence of a range) and returns the result as a FixIt response."""
@@ -1859,6 +1868,8 @@ class LanguageServerCompleter( Completer ):
 
     self._UpdateServerWithFileContents( request_data )
 
+    request_data[ 'options' ].update(
+      self.AdditionalFormattingOptions( request_data ) )
     request_id = self.GetConnection().NextRequestId()
     if 'range' in request_data:
       message = lsp.RangeFormatting( request_id, request_data )

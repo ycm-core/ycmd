@@ -1908,6 +1908,85 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
 
 
 @WithRetry
+@IsolatedYcmd( { 'extra_conf_globlist':
+                 PathToTestFile( 'extra_confs', '*' ) } )
+def Subcommands_AdditionalFormatterOptions_test( app ):
+  filepath = PathToTestFile( 'extra_confs',
+                             'simple_extra_conf_project',
+                             'src',
+                             'ExtraConf.java' )
+  RunTest( app, {
+    'description': 'Format respects settings from extra conf.',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains( has_entries( {
+          'chunks': contains(
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath,  1, 18 ),
+                          LocationMatcher( filepath,  2,  3 ) ),
+            ChunkMatcher( '\n            ',
+                          LocationMatcher( filepath,  2, 20 ),
+                          LocationMatcher( filepath,  2, 21 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath,  2, 29 ),
+                          LocationMatcher( filepath,  2, 30 ) ),
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath,  2, 33 ),
+                          LocationMatcher( filepath,  2, 33 ) ),
+            ChunkMatcher( '\n\n    ',
+                          LocationMatcher( filepath,  2, 34 ),
+                          LocationMatcher( filepath,  4,  3 ) ),
+            ChunkMatcher( '\n            ',
+                          LocationMatcher( filepath,  4, 27 ),
+                          LocationMatcher( filepath,  4, 28 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath,  4, 41 ),
+                          LocationMatcher( filepath,  4, 42 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath,  4, 45 ),
+                          LocationMatcher( filepath,  5,  5 ) ),
+            ChunkMatcher( '\n                ',
+                          LocationMatcher( filepath,  5, 33 ),
+                          LocationMatcher( filepath,  5, 34 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath,  5, 36 ),
+                          LocationMatcher( filepath,  5, 37 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath,  5, 39 ),
+                          LocationMatcher( filepath,  6,  5 ) ),
+            ChunkMatcher( '\n                ',
+                          LocationMatcher( filepath,  6, 33 ),
+                          LocationMatcher( filepath,  6, 34 ) ),
+            ChunkMatcher( '',
+                          LocationMatcher( filepath,  6, 35 ),
+                          LocationMatcher( filepath,  6, 36 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath,  6, 38 ),
+                          LocationMatcher( filepath,  7,  5 ) ),
+            ChunkMatcher( '\n        ',
+                          LocationMatcher( filepath,  7, 11 ),
+                          LocationMatcher( filepath,  8,  5 ) ),
+            ChunkMatcher( '\n    ',
+                          LocationMatcher( filepath,  8, 11 ),
+                          LocationMatcher( filepath,  9,  3 ) ),
+          ),
+          'location': LocationMatcher( filepath, 1, 1 )
+        } ) )
+      } )
+    }
+  } )
+
+
+@WithRetry
 @IsolatedYcmd()
 def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
   filepath = PathToTestFile( 'extra_confs',
