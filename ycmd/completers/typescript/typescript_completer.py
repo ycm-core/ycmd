@@ -361,7 +361,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def SupportedFiletypes( self ):
-    return [ 'javascript', 'typescript' ]
+    return [ 'javascript', 'typescript', 'typescriptreact' ]
 
 
   def ComputeCandidatesInner( self, request_data ):
