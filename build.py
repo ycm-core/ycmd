@@ -440,7 +440,7 @@ def ParseArguments():
                        help = "Don't build the regex module" )
   parser.add_argument( '--clang-tidy',
                        action = 'store_true',
-                       help = 'For developers: Run clang-tidy static analysis'
+                       help = 'For developers: Run clang-tidy static analysis '
                               'on the ycm_core code itself.' )
   parser.add_argument( '--core-tests', nargs = '?', const = '*',
                        help = 'Run core tests and optionally filter them.' )
