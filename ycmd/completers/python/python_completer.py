@@ -24,7 +24,6 @@ from builtins import *  # noqa
 
 from ycmd import extra_conf_store, responses
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import GetFileContents
 from ycmd.utils import ExpandVariablesInPath, FindExecutable, LOGGER
 
 import os
@@ -174,21 +173,6 @@ class PythonCompleter( Completer ):
                         environment = environment )
 
 
-  def _GetJediScriptForDefinition( self, request_data, definition ):
-    path = definition.module_path
-    source = GetFileContents( request_data, path )
-    line = definition.line
-    column = definition.column
-    environment = self._EnvironmentForRequest( request_data )
-    sys_path = self._SysPathForFile( request_data, environment )
-    return jedi.Script( source,
-                        line,
-                        column,
-                        path,
-                        sys_path = sys_path,
-                        environment = environment )
-
-
   # This method must be called under Jedi's lock.
   def _GetExtraData( self, completion ):
     if completion.module_path and completion.line and completion.column:
@@ -234,8 +218,6 @@ class PythonCompleter( Completer ):
                            self._GoToDefinition( request_data ) ),
       'GoToDeclaration': ( lambda self, request_data, args:
                            self._GoToDefinition( request_data ) ),
-      'GoToType'       : ( lambda self, request_data, args:
-                           self._GoToType( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
       'GetType'        : ( lambda self, request_data, args:
@@ -262,47 +244,6 @@ class PythonCompleter( Completer ):
 
 
   def _GoToDefinition( self, request_data ):
-    def _GoToDefinitionsWithSameName( definition ):
-      module_path = definition.module_path
-      if not module_path:
-        return []
-      name = definition.name
-      line = definition.line
-      column = definition.column
-
-      definitions = self._GetJediScriptForDefinition(
-        request_data, definition ).goto_assignments()
-      return [ d for d in definitions if d.name == name and
-                                         ( d.module_path != module_path or
-                                           d.line != line or
-                                           d.column != column ) ]
-
-    with self._jedi_lock:
-      # Jedi's goto_assignments() does not jump to a different file unless the
-      # cursor is on an import statement or if the follow_imports parameter is
-      # set to True. Unfortunately, we can't use that option because it also
-      # jumps to the original name of aliases which is unexpected as an alias is
-      # a kind of definition. So, we need to traverse definitions by repeatedly
-      # calling goto_assignments() until we can't jump anymore.
-      definitions = self._GetJediScript( request_data ).goto_assignments()
-      keep_traversing = True
-      while keep_traversing:
-        keep_traversing = False
-        previous_definitions = definitions
-        definitions = []
-        for definition in previous_definitions:
-          goto_definitions = _GoToDefinitionsWithSameName( definition )
-          if goto_definitions:
-            definitions.extend( goto_definitions )
-            keep_traversing = True
-          else:
-            definitions.append( definition )
-      if definitions:
-        return self._BuildGoToResponse( definitions )
-    raise RuntimeError( 'Can\'t jump to definition.' )
-
-
-  def _GoToType( self, request_data ):
     with self._jedi_lock:
       definitions = self._GetJediScript( request_data ).goto_definitions()
       if definitions:
