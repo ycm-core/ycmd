@@ -23,8 +23,11 @@ from __future__ import absolute_import
 from builtins import *  # noqa
 
 from ycmd import extra_conf_store, responses
-from ycmd.completers.completer import Completer
-from ycmd.utils import ExpandVariablesInPath, FindExecutable, LOGGER
+from ycmd.completers.completer import Completer, SignatureHelpAvailalability
+from ycmd.utils import ( CodepointOffsetToByteOffset,
+                         ExpandVariablesInPath,
+                         FindExecutable,
+                         LOGGER )
 
 import os
 import jedi
@@ -45,6 +48,7 @@ class PythonCompleter( Completer ):
     self._environment_for_file = {}
     self._environment_for_interpreter_path = {}
     self._sys_path_for_file = {}
+    self.signature_triggers.SetServerSemanticTriggers( [ '(', ',' ] )
 
 
   def SupportedFiletypes( self ):
@@ -188,12 +192,65 @@ class PythonCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     with self._jedi_lock:
+      completions = self._GetJediScript( request_data ).completions()
       return [ responses.BuildCompletionData(
         insertion_text = completion.name,
         # We store the Completion object returned by Jedi in the extra_data
         # field to detail the candidates once the filtering is done.
         extra_data = completion
-      ) for completion in self._GetJediScript( request_data ).completions() ]
+      ) for completion in completions ]
+
+
+  def SignatureHelpAvailable( self ):
+    return SignatureHelpAvailalability.AVAILABLE
+
+
+  def ComputeSignaturesInner( self, request_data ):
+    with self._jedi_lock:
+      signatures = self._GetJediScript( request_data ).call_signatures()
+      # Sorting by the number or arguments makes the order stable for the tests
+      # and isn't harmful. The order returned by jedi seems to be arbitrary.
+      signatures.sort( key=lambda s: len( s.params ) )
+
+      active_signature = 0
+      active_parameter = 0
+      for index, signature in enumerate( signatures ):
+        if signature.index is not None:
+          active_signature = index
+          active_parameter = signature.index
+          break
+
+      def MakeSignature( s ):
+        label = s.description + '( '
+        parameters = []
+        for index, p in enumerate( s.params ):
+          # We remove 'param ' from the start of each parameter (hence the 6:)
+          param = p.description[ 6: ]
+
+          start = len( label )
+          end = start + len( param )
+
+          label += param
+          if index < len( s.params ) - 1:
+            label += ', '
+
+          parameters.append( {
+            'label': [ CodepointOffsetToByteOffset( label, start ),
+                       CodepointOffsetToByteOffset( label, end ) ]
+          } )
+
+        label += ' )'
+
+        return {
+          'label': label,
+          'parameters': parameters,
+        }
+
+      return {
+        'activeSignature': active_signature,
+        'activeParameter': active_parameter,
+        'signatures': [ MakeSignature( s ) for s in signatures ],
+      }
 
 
   def DetailCandidates( self, request_data, candidates ):
