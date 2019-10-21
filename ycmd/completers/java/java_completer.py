@@ -331,6 +331,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return [ 'java' ]
 
 
+  def GetSignatureTriggerCharacters( self, server_trigger_characters ):
+    return server_trigger_characters + [ ',' ]
+
+
   def GetCustomSubcommands( self ):
     return {
       'FixIt': (
