@@ -633,7 +633,7 @@ def LanguageServerCompleter_GetCompletions_List_test():
     { 'result': { 'label': 'test' } },
   ]
 
-  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+  with patch.object( completer, '_is_completion_provider', True ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ completion_response ] +
@@ -658,7 +658,7 @@ def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test():
     { 'result': { 'label': 'test' } },
   ]
 
-  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+  with patch.object( completer, '_is_completion_provider', True ):
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ completion_response ] +
@@ -687,7 +687,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test():
     }
   }
 
-  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+  with patch.object( completer, '_is_completion_provider', True ):
     request_data = RequestWrap( BuildRequest(
       column_num = 2,
       contents = 'a',
@@ -772,7 +772,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test():
     }
   }
 
-  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+  with patch.object( completer, '_is_completion_provider', True ):
     # User starts by typing the character "a".
     request_data = RequestWrap( BuildRequest(
       column_num = 2,

@@ -802,6 +802,7 @@ class LanguageServerCompleter( Completer ):
       self._initialize_event = threading.Event()
       self._on_initialize_complete_handlers = []
       self._server_capabilities = None
+      self._is_completion_provider = False
       self._resolve_completion_items = False
       self._project_directory = None
       self._settings = {}
@@ -899,7 +900,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def ComputeCandidatesInner( self, request_data, codepoint ):
-    if not self._ServerIsInitialized():
+    if not self._is_completion_provider:
       return None, False
 
     self._UpdateServerWithFileContents( request_data )
@@ -1666,6 +1667,9 @@ class LanguageServerCompleter( Completer ):
     with self._server_info_mutex:
       self._server_capabilities = response[ 'result' ][ 'capabilities' ]
       self._resolve_completion_items = self._ShouldResolveCompletionItems()
+
+      self._is_completion_provider = (
+          'completionProvider' in self._server_capabilities )
 
       if 'textDocumentSync' in self._server_capabilities:
         sync = self._server_capabilities[ 'textDocumentSync' ]

@@ -37,7 +37,10 @@ from pprint import pformat
 import requests
 
 from ycmd import handlers
-from ycmd.tests.java import DEFAULT_PROJECT_DIR, PathToTestFile, SharedYcmd
+from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
+                              IsolatedYcmd,
+                              PathToTestFile,
+                              SharedYcmd )
 from ycmd.tests.test_utils import ( CombineRequest,
                                     ChunkMatcher,
                                     CompletionEntryMatcher,
@@ -490,7 +493,7 @@ def GetCompletions_ResolveFailed_test( app ):
     } )
 
 
-@SharedYcmd
+@IsolatedYcmd
 def GetCompletions_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
@@ -500,7 +503,14 @@ def GetCompletions_ServerNotInitialized_test( app ):
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
-  with patch.object( completer, '_ServerIsInitialized', return_value = False ):
+
+  def MockHandleInitializeInPollThread( self, response ):
+    pass
+
+
+  with patch.object( completer,
+                     '_HandleInitializeInPollThread',
+                     MockHandleInitializeInPollThread ):
     RunTest( app, {
       'description': 'Completion works for unicode identifier',
       'request': {
