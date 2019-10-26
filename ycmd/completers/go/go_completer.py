@@ -28,8 +28,7 @@ import os
 
 from ycmd import responses
 from ycmd import utils
-from ycmd.completers.language_server import ( simple_language_server_completer,
-                                              language_server_completer )
+from ycmd.completers.language_server import simple_language_server_completer
 
 
 PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
@@ -116,10 +115,6 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       'RestartServer': (
         lambda self, request_data, args: self._RestartServer( request_data )
       ),
-      'FixIt': (
-        lambda self, request_data, args: self.GetCodeActions( request_data,
-                                                              args )
-      ),
       'GetDoc': (
         lambda self, request_data, args: self.GetDoc( request_data )
       ),
@@ -127,10 +122,3 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         lambda self, request_data, args: self.GetType( request_data )
       ),
     }
-
-
-  def HandleServerCommand( self, request_data, command ):
-    return language_server_completer.WorkspaceEditToFixIt(
-      request_data,
-      command[ 'edit' ],
-      text = command[ 'title' ] )

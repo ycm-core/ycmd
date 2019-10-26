@@ -244,6 +244,20 @@ def Initialize( request_id, project_directory, settings ):
     'capabilities': {
       'workspace': { 'applyEdit': True },
       'textDocument': {
+        'codeAction': {
+          'codeActionLiteralSupport': {
+            'codeActionKind': {
+              'valueSet': [ '',
+                            'quickfix',
+                            'refactor',
+                            'refactor.extract',
+                            'refactor.inline',
+                            'refactor.rewrite',
+                            'source',
+                            'source.organizeImports' ]
+            }
+          }
+        },
         'completion': {
           'completionItemKind': {
             # ITEM_KIND list is 1-based.
