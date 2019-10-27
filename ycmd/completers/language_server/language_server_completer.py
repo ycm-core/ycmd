@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import queue
+import subprocess
 import threading
 
 from ycmd import extra_conf_store, responses, utils
@@ -678,7 +679,6 @@ class LanguageServerCompleter( Completer ):
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
       - StartServer : Return True if the server was started.
-      - _RestartServer
     - Optionally override methods to customise behavior:
       - ConvertNotificationToMessage
       - GetCompleterName
@@ -732,12 +732,11 @@ class LanguageServerCompleter( Completer ):
       GetCustomSubcommands needs not contain GetType/GetDoc if the member
       functions implementing GetType/GetDoc are named GetType/GetDoc.
   """
-  @abc.abstractmethod
-  def GetConnection( sefl ):
+  def GetConnection( self ):
     """Method that must be implemented by derived classes to return an instance
     of LanguageServerConnection appropriate for the language server in
     question"""
-    pass # pragma: no cover
+    return self._connection
 
 
   def HandleServerCommandResponse( self,
@@ -788,25 +787,39 @@ class LanguageServerCompleter( Completer ):
 
     self._signature_help_disabled = user_options[ 'disable_signature_help' ]
 
+    self._server_state_mutex = threading.RLock()
+    self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._stderr_file = None
+
+    self._Reset()
+
+
+  def _Reset( self ):
+    self.ServerReset()
+    self._connection = None
+    self._server_handle = None
+    if not self._server_keep_logfiles and self._stderr_file:
+      utils.RemoveIfExists( self._stderr_file )
+      self._stderr_file = None
+
 
   def ServerReset( self ):
     """Clean up internal state related to the running server instance.
     Implementations are required to call this after disconnection and killing
     the downstream server."""
-    with self._server_info_mutex:
-      self._server_file_state = lsp.ServerFileStateStore()
-      self._latest_diagnostics = collections.defaultdict( list )
-      self._sync_type = 'Full'
-      self._initialize_response = None
-      self._initialize_event = threading.Event()
-      self._on_initialize_complete_handlers = []
-      self._server_capabilities = None
-      self._is_completion_provider = False
-      self._resolve_completion_items = False
-      self._project_directory = None
-      self._settings = {}
-      self._extra_conf_dir = None
-      self._server_started = False
+    self._server_file_state = lsp.ServerFileStateStore()
+    self._latest_diagnostics = collections.defaultdict( list )
+    self._sync_type = 'Full'
+    self._initialize_response = None
+    self._initialize_event = threading.Event()
+    self._on_initialize_complete_handlers = []
+    self._server_capabilities = None
+    self._is_completion_provider = False
+    self._resolve_completion_items = False
+    self._project_directory = None
+    self._settings = {}
+    self._extra_conf_dir = None
+    self._server_started = False
 
 
   def GetCompleterName( self ):
@@ -819,9 +832,92 @@ class LanguageServerCompleter( Completer ):
     return self._language
 
 
-  @abc.abstractmethod
-  def StartServer( self, request_data, **kwargs ):
-    pass # pragma: no cover
+  def StartServer( self, request_data ):
+    with self._server_info_mutex:
+      LOGGER.info( 'Starting %s: %s',
+                   self.GetServerName(),
+                   self.GetCommandLine() )
+
+      self._stderr_file = utils.CreateLogfile( '{}_stderr'.format(
+        utils.MakeSafeFileNameString( self.GetServerName() ) ) )
+
+      with utils.OpenForStdHandle( self._stderr_file ) as stderr:
+        self._server_handle = utils.SafePopen(
+          self.GetCommandLine(),
+          stdin = subprocess.PIPE,
+          stdout = subprocess.PIPE,
+          stderr = stderr,
+          env = self.GetServerEnvironment() )
+
+      self._connection = (
+        StandardIOLanguageServerConnection(
+          self._server_handle.stdin,
+          self._server_handle.stdout,
+          self.GetDefaultNotificationHandler() )
+      )
+
+      self._connection.Start()
+
+      try:
+        self._connection.AwaitServerConnection()
+      except LanguageServerConnectionTimeout:
+        LOGGER.error( '%s failed to start, or did not connect successfully',
+                      self.GetServerName() )
+        self.Shutdown()
+        return False
+
+    LOGGER.info( '%s started', self.GetServerName() )
+
+    return True
+
+
+  def Shutdown( self ):
+    with self._server_info_mutex:
+      LOGGER.info( 'Shutting down %s...', self.GetServerName() )
+
+      # Tell the connection to expect the server to disconnect
+      if self._connection:
+        self._connection.Stop()
+
+      if not self.ServerIsHealthy():
+        LOGGER.info( '%s is not running', self.GetServerName() )
+        self._Reset()
+        return
+
+      LOGGER.info( 'Stopping %s with PID %s',
+                   self.GetServerName(),
+                   self._server_handle.pid )
+
+    with self._server_state_mutex:
+      try:
+        with self._server_info_mutex:
+          self.ShutdownServer()
+
+          # By this point, the server should have shut down and terminated. To
+          # ensure that isn't blocked, we close all of our connections and wait
+          # for the process to exit.
+          #
+          # If, after a small delay, the server has not shut down we do NOT kill
+          # it; we expect that it will shut itself down eventually. This is
+          # predominantly due to strange process behaviour on Windows.
+        with self._server_state_mutex:
+          if self._connection:
+            self._connection.Close()
+
+        with self._server_info_mutex:
+          utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                              timeout = 15 )
+
+          LOGGER.info( '%s stopped', self.GetServerName() )
+      except Exception:
+        LOGGER.exception( 'Error while stopping %s', self.GetServerName() )
+        # We leave the process running. Hopefully it will eventually die of its
+        # own accord.
+
+    with self._server_info_mutex:
+      # Tidy up our internal state, even if the completer server didn't close
+      # down cleanly.
+      self._Reset()
 
 
   def ShutdownServer( self ):
@@ -857,9 +953,8 @@ class LanguageServerCompleter( Completer ):
     # release them, as there is no chance of getting a response now.
     if ( self._initialize_response is not None and
          not self._initialize_event.is_set() ):
-      with self._server_info_mutex:
-        self._initialize_response = None
-        self._initialize_event.set()
+      self._initialize_response = None
+      self._initialize_event.set()
 
 
   @abc.abstractmethod
@@ -884,6 +979,10 @@ class LanguageServerCompleter( Completer ):
 
     # Initialize request in progress. Will be handled asynchronously.
     return False
+
+
+  def ServerIsHealthy( self ):
+    return utils.ProcessIsRunning( self._server_handle )
 
 
   def ServerIsReady( self ):
@@ -1173,6 +1272,42 @@ class LanguageServerCompleter( Completer ):
     return responses.BuildDisplayMessageResponse( message )
 
 
+  @abc.abstractmethod
+  def GetServerName( self ):
+    pass # pragma: no cover
+
+
+  def GetServerEnvironment( self ):
+    return None
+
+
+  @abc.abstractmethod
+  def GetCommandLine( self ):
+    pass # pragma: no cover
+
+
+  def AdditionalLogFiles( self ):
+    return []
+
+
+  def ExtraDebugItems( self, request_data ):
+    return []
+
+
+  def DebugInfo( self, request_data ):
+    with self._server_info_mutex:
+      extras = self.CommonDebugItems() + self.ExtraDebugItems( request_data )
+      logfiles = [ self._stderr_file ] + self.AdditionalLogFiles()
+      server = responses.DebugInfoServer( name = self.GetServerName(),
+                                          handle = self._server_handle,
+                                          executable = self.GetCommandLine(),
+                                          logfiles = logfiles,
+                                          extras = extras )
+
+    return responses.BuildDebugInfoResponse( name = self.GetCompleterName(),
+                                             servers = [ server ] )
+
+
   def GetCustomSubcommands( self ):
     """Return a list of subcommand definitions to be used in conjunction with
     the subcommands detected by _DiscoverSubcommandSupport. The return is a dict
@@ -1206,6 +1341,11 @@ class LanguageServerCompleter( Completer ):
     commands.update( self.GetCustomSubcommands() )
 
     return self._DiscoverSubcommandSupport( commands )
+
+
+  def _RestartServer( self, request_data, *args, **kwargs ):
+    self.Shutdown()
+    self._StartAndInitializeServer( request_data, *args, **kwargs )
 
 
   def _GetSubcommandProvider( self, provider_list ):

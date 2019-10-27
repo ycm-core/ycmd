@@ -23,7 +23,6 @@ from ycmd import extra_conf_store, responses
 from ycmd.completers.cpp.flags import ( AddMacIncludePaths,
                                         RemoveUnusedFlags,
                                         ShouldAllowWinStyleFlags )
-from ycmd.completers.language_server import simple_language_server_completer
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.utils import ( CLANG_RESOURCE_DIR,
@@ -202,7 +201,7 @@ def BuildCompilationCommand( flags, filepath ):
   return flags + [ filepath ]
 
 
-class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
   """A LSP-based completer for C-family languages, powered by Clangd.
 
   Supported features:
@@ -224,9 +223,8 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def _Reset( self ):
-    with self._server_state_mutex:
-      super()._Reset()
-      self._compilation_commands = {}
+    super()._Reset()
+    self._compilation_commands = {}
 
 
   def GetCompleterName( self ):

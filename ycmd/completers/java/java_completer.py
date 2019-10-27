@@ -25,7 +25,7 @@ import threading
 
 from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_protocol as lsp
-from ycmd.completers.language_server import simple_language_server_completer
+from ycmd.completers.language_server import language_server_completer
 from ycmd.utils import LOGGER
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
@@ -279,7 +279,7 @@ def _WorkspaceDirForProject( workspace_root_path,
                        utils.ToUnicode( project_dir_hash.hexdigest() ) )
 
 
-class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
     self._workspace_path = None
     super().__init__( user_options )
@@ -307,7 +307,8 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     self._connection = None
     self._server_handle = None
     self._stderr_file = None
-    self._Reset()
+    with self._server_info_mutex:
+      self._Reset()
     self._command = []
 
 
@@ -381,11 +382,9 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     if len( args ) > 0 and '--with-config' in args:
       with_config = True
 
-    with self._server_state_mutex:
-      self.Shutdown()
-      self._StartAndInitializeServer( request_data,
-                                      wipe_workspace = True,
-                                      wipe_config = with_config )
+    self._RestartServer( request_data,
+                         wipe_workspace = True,
+                         wipe_config = with_config )
 
 
   def _OpenProject( self, request_data, args ):
@@ -404,10 +403,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         request_data[ 'working_dir' ],
         project_directory ) )
 
-    with self._server_state_mutex:
-      self.Shutdown()
-      self._StartAndInitializeServer( request_data,
-                                      project_directory = project_directory )
+    self._RestartServer( request_data, project_directory = project_directory )
 
 
   def _Reset( self ):
@@ -436,7 +432,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
                    project_directory = None,
                    wipe_workspace = False,
                    wipe_config = False ):
-    with self._server_state_mutex:
+    with self._server_info_mutex:
       LOGGER.info( 'Starting jdt.ls Language Server...' )
 
       if project_directory:

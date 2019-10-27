@@ -21,7 +21,6 @@ import os
 
 from ycmd import responses
 from ycmd import utils
-from ycmd.completers.language_server import simple_language_server_completer
 from ycmd.completers.language_server import language_server_completer
 
 
