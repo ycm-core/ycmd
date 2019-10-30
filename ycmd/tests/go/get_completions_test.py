@@ -38,7 +38,7 @@ def GetCompletions_Basic_test( app ):
                                   filetype = 'go',
                                   contents = ReadFile( filepath ),
                                   force_semantic = True,
-                                  line_num = 9,
+                                  line_num = 10,
                                   column_num = 9 )
 
   results = app.post_json( '/completions',
