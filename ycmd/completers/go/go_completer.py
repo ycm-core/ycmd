@@ -22,6 +22,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
+import json
 import logging
 import os
 
@@ -82,14 +83,32 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     return [ 'go' ]
 
 
+  def GetDoc( self, request_data ):
+    assert self._settings[ 'hoverKind' ] == 'Structured'
+    try:
+      result = json.loads( self.GetHoverResponse( request_data )[ 'value' ] )
+      docs = result[ 'signature' ] + '\n' + result[ 'fullDocumentation' ]
+      return responses.BuildDisplayMessageResponse( docs.strip() )
+    except RuntimeError as e:
+      if e.args[ 0 ] == 'No hover information.':
+        raise RuntimeError( 'No documentation available.' )
+      raise
+
+
   def GetType( self, request_data ):
     try:
-      result = self.GetHoverResponse( request_data )[ 'value' ]
+      result = json.loads(
+          self.GetHoverResponse( request_data )[ 'value' ] )[ 'signature' ]
       return responses.BuildDisplayMessageResponse( result )
     except RuntimeError as e:
       if e.args[ 0 ] == 'No hover information.':
         raise RuntimeError( 'Unknown type.' )
       raise
+
+
+  def DefaultSettings( self, request_data ):
+    return { 'hoverKind': 'Structured',
+             'fuzzyMatching': False }
 
 
   def GetCustomSubcommands( self ):
@@ -101,8 +120,10 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         lambda self, request_data, args: self.GetCodeActions( request_data,
                                                               args )
       ),
+      'GetDoc': (
+        lambda self, request_data, args: self.GetDoc( request_data )
+      ),
       'GetType': (
-        # In addition to type information we show declaration.
         lambda self, request_data, args: self.GetType( request_data )
       ),
     }

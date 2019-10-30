@@ -85,7 +85,8 @@ def Diagnostics_Poll_test( app ):
                                     { 'filepath': filepath,
                                       'contents': contents,
                                       'filetype': 'go' } ):
-      if message[ 'diagnostics' ][ 0 ][ 'text' ] == "expected ';', found 'EOF'":
+      if message[ 'diagnostics' ][ 0 ][ 'text' ].endswith(
+          "is not part of a package" ):
         continue
       print( 'Message {}'.format( pformat( message ) ) )
       if 'diagnostics' in message:

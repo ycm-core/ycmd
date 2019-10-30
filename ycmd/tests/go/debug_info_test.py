@@ -26,7 +26,8 @@ from hamcrest import ( assert_that,
                        contains,
                        has_entries,
                        has_entry,
-                       instance_of )
+                       instance_of,
+                       matches_regexp )
 
 from ycmd.tests.go import ( IsolatedYcmd,
                             PathToTestFile,
@@ -64,7 +65,8 @@ def DebugInfo_test( app ):
           } ),
           has_entries( {
             'key': 'Settings',
-            'value': '{}'
+            'value': matches_regexp( '{\n  "fuzzyMatching": false,\\s?\n'
+                                     '  "hoverKind": "Structured"\n}' )
           } ),
         )
       } ) ),
@@ -102,7 +104,8 @@ def DebugInfo_ProjectDirectory_test( app ):
           } ),
           has_entries( {
             'key': 'Settings',
-            'value': '{}'
+            'value': matches_regexp( '{\n  "fuzzyMatching": false,\\s?\n'
+                                     '  "hoverKind": "Structured"\n}' )
           } ),
         )
       } ) ),

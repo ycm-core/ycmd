@@ -118,6 +118,7 @@ def Subcommands_DefinedSubcommands_test( app ):
 
   assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
                contains_inanyorder( 'Format',
+                                    'GetDoc',
                                     'GetType',
                                     'RefactorRename',
                                     'GoTo',
@@ -154,6 +155,7 @@ def Subcommands_ServerNotInitialized_test():
     } )
 
   yield Test, 'Format', []
+  yield Test, 'GetDoc', []
   yield Test, 'GetType', []
   yield Test, 'GoTo', []
   yield Test, 'GoToDeclaration', []
@@ -261,6 +263,40 @@ def Subcommands_Format_Range_test( app ):
 
 
 @SharedYcmd
+def Subcommands_GetDoc_UnknownType_test( app ):
+  RunTest( app, {
+    'description': 'GetDoc on a unknown type raises an error',
+    'request': {
+      'command': 'GetDoc',
+      'line_num': 2,
+      'column_num': 4,
+      'filepath': PathToTestFile( 'td', 'test.go' ),
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError, 'No documentation available.' )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Function_test( app ):
+  RunTest( app, {
+    'description': 'GetDoc on a function returns its type',
+    'request': {
+      'command': 'GetDoc',
+      'line_num': 9,
+      'column_num': 6,
+      'filepath': PathToTestFile( 'td', 'test.go' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entry( 'message', 'func Hello()\nNow with doc!' ),
+    }
+  } )
+
+
+@SharedYcmd
 def Subcommands_GetType_UnknownType_test( app ):
   RunTest( app, {
     'description': 'GetType on a unknown type raises an error',
@@ -283,7 +319,7 @@ def Subcommands_GetType_Function_test( app ):
     'description': 'GetType on a function returns its type',
     'request': {
       'command': 'GetType',
-      'line_num': 8,
+      'line_num': 9,
       'column_num': 6,
       'filepath': PathToTestFile( 'td', 'test.go' ),
     },
