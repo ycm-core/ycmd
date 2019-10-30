@@ -82,10 +82,21 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     return [ 'go' ]
 
 
-  def GetType( self, request_data ):
+  def GetDoc( self, request_data ):
     try:
       result = self.GetHoverResponse( request_data )[ 'value' ]
       return responses.BuildDisplayMessageResponse( result )
+    except RuntimeError as e:
+      if e.args[ 0 ] == 'No hover information.':
+        raise RuntimeError( 'No documentation available.' )
+      raise
+
+
+  def GetType( self, request_data ):
+    try:
+      result = self.GetHoverResponse( request_data )[ 'value' ]
+      type_start = result.rfind( '\n' ) + 1
+      return responses.BuildDisplayMessageResponse( result[ type_start : ] )
     except RuntimeError as e:
       if e.args[ 0 ] == 'No hover information.':
         raise RuntimeError( 'Unknown type.' )
@@ -101,8 +112,10 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         lambda self, request_data, args: self.GetCodeActions( request_data,
                                                               args )
       ),
+      'GetDoc': (
+        lambda self, request_data, args: self.GetDoc( request_data )
+      ),
       'GetType': (
-        # In addition to type information we show declaration.
         lambda self, request_data, args: self.GetType( request_data )
       ),
     }
