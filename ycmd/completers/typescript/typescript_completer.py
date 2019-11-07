@@ -176,6 +176,11 @@ class TypeScriptCompleter( Completer ):
     self._latest_diagnostics_for_file_lock = threading.Lock()
     self._latest_diagnostics_for_file = defaultdict( list )
 
+    # There's someting in the API that lists the trigger characters, but
+    # there is no way to request that from the server, so we just hard-code
+    # the signature triggers.
+    self.signature_triggers.SetServerSemanticTriggers( [ '(', ',', '<' ] )
+
     LOGGER.info( 'Enabling TypeScript completion' )
 
 
@@ -362,6 +367,10 @@ class TypeScriptCompleter( Completer ):
 
   def SupportedFiletypes( self ):
     return [ 'javascript', 'typescript', 'typescriptreact' ]
+
+
+  def SignatureHelpAvailable( self ):
+    return responses.SignatureHelpAvailalability.AVAILABLE
 
 
   def ComputeCandidatesInner( self, request_data ):
@@ -579,6 +588,55 @@ class TypeScriptCompleter( Completer ):
       closest_ts_diagnostic )
 
     return responses.BuildDisplayMessageResponse( closest_diagnostic.text_ )
+
+
+  def ComputeSignaturesInner( self, request_data ):
+    self._Reload( request_data )
+    try:
+      items = self._SendRequest( 'signatureHelp', {
+        'file': request_data[ 'filepath' ],
+        'line': request_data[ 'line_num' ],
+        'offset': request_data[ 'start_codepoint' ],
+        # triggerReason - opitonal and tricky to populate
+      } )
+    except RuntimeError:
+      # We get an exception when there are no results, so squash it
+      if LOGGER.isEnabledFor( logging.DEBUG ):
+        LOGGER.exception( "No signatures from tsserver" )
+      return {}
+
+    def MakeSignature( s ):
+      label = _DisplayPartsToString( s[ 'prefixDisplayParts' ] )
+      parameters = []
+      sep = _DisplayPartsToString( s[ 'separatorDisplayParts' ] )
+      for index, p in enumerate( s[ 'parameters' ] ):
+        param = _DisplayPartsToString( p[ 'displayParts' ] )
+        start = len( label )
+        end = start + len( param )
+
+        label += param
+        if index < len( s[ 'parameters' ] ) - 1:
+          label += sep
+
+        parameters.append( {
+          'label': [ utils.CodepointOffsetToByteOffset( label, start ),
+                     utils.CodepointOffsetToByteOffset( label, end ) ]
+        } )
+
+      label += _DisplayPartsToString( s[ 'suffixDisplayParts' ] )
+
+      return {
+        'label': label,
+        'parameters': parameters
+      }
+
+    return {
+      'activeSignature': items[ 'selectedItemIndex' ],
+      'activeParameter': items[ 'argumentIndex' ],
+      'signatures': [
+        MakeSignature( s ) for s in items[ 'items' ]
+      ]
+    }
 
 
   def _GetSemanticDiagnostics( self, filename ):
@@ -878,8 +936,7 @@ def _LogLevel():
 
 
 def _BuildCompletionExtraMenuAndDetailedInfo( request_data, entry ):
-  display_parts = entry[ 'displayParts' ]
-  signature = ''.join( [ part[ 'text' ] for part in display_parts ] )
+  signature = _DisplayPartsToString( entry[ 'displayParts' ] )
   if entry[ 'name' ] == signature:
     extra_menu_info = None
     detailed_info = []
@@ -1001,3 +1058,7 @@ def _BuildTsFormatRange( request_data ):
     'endLine': end_line_num,
     'endOffset': end_codepoint
   }
+
+
+def _DisplayPartsToString( parts ):
+  return ''.join( [ p[ 'text' ] for p in parts ] )

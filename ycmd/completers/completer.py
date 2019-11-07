@@ -168,7 +168,14 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
   If your server is based on the Language Server Protocol (LSP), take a look at
   language_server/language_server_completer, which provides most of the work
-  necessary to get a LSP-based completion engine up and running."""
+  necessary to get a LSP-based completion engine up and running.
+
+  If your completer supports signature help, then you need to implemment:
+    - SignatureHelpAvailable
+    - something which calls self._signature_triggers.SetServerTriggerCharacters
+    - ComputeSignaturesInner
+  See the language_server_completer or Python completers for examples.
+  """
 
   def __init__( self, user_options ):
     self.user_options = user_options
