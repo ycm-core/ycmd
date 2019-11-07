@@ -26,12 +26,14 @@ from future.utils import iterkeys
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
-                       has_entries )
+                       has_entries,
+                       has_entry )
 from pprint import pformat
 import json
 
 from ycmd.tests.go import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( LocationMatcher,
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    LocationMatcher,
                                     PollForMessages,
                                     PollForMessagesTimeoutException,
                                     RangeMatcher,
@@ -55,6 +57,23 @@ DIAG_MATCHERS_PER_FILE = {
     } )
   )
 }
+
+
+@WithRetry
+@SharedYcmd
+def Diagnostics_DetailedDiags_test( app ):
+  filepath = PathToTestFile( 'goto.go' )
+  contents = ReadFile( filepath )
+  WaitForDiagnosticsToBeReady( app, filepath, contents, 'go' )
+  request_data = BuildRequest( contents = contents,
+                               filepath = filepath,
+                               filetype = 'go',
+                               line_num = 12,
+                               column_num = 5 )
+
+  results = app.post_json( '/detailed_diagnostic', request_data ).json
+  assert_that( results,
+               has_entry( 'message', 'undeclared name: diagnostics_test' ) )
 
 
 @WithRetry
