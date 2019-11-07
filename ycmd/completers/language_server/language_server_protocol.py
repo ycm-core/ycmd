@@ -242,6 +242,7 @@ def Initialize( request_id, project_directory, settings ):
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
     'capabilities': {
+      'workspace': { 'applyEdit': True },
       'textDocument': {
         'completion': {
           'completionItemKind': {
@@ -300,6 +301,18 @@ def Reject( request, request_error, data = None ):
     msg[ 'error' ][ 'data' ] = data
 
   return BuildResponse( request, msg )
+
+
+def Accept( request, result ):
+  msg = {
+    'result': result
+  }
+  return BuildResponse( request, msg )
+
+
+def ApplyEditResponse( request ):
+  msg = { 'applied': True }
+  return Accept( request, msg )
 
 
 def DidChangeConfiguration( config ):

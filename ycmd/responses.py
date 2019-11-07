@@ -186,6 +186,13 @@ class Diagnostic( object ):
     self.fixits_ = fixits
 
 
+class UnresolvedFixIt( object ):
+  def __init__( self, command, text ):
+    self.command = command
+    self.text = text
+    self.resolve = True
+
+
 class FixIt( object ):
   """A set of replacements (of type FixItChunk) to be applied to fix a single
   diagnostic. This can be used for any type of refactoring command, not just
@@ -287,11 +294,19 @@ def BuildFixItResponse( fixits ):
     }
 
   def BuildFixItData( fixit ):
-    return {
-      'location': BuildLocationData( fixit.location ),
-      'chunks' : [ BuildFixitChunkData( x ) for x in fixit.chunks ],
-      'text': fixit.text,
-    }
+    if hasattr( fixit, 'resolve' ):
+      return {
+        'command': fixit.command,
+        'text': fixit.text,
+        'resolve': fixit.resolve
+      }
+    else:
+      return {
+        'location': BuildLocationData( fixit.location ),
+        'chunks' : [ BuildFixitChunkData( x ) for x in fixit.chunks ],
+        'text': fixit.text,
+        'resolve': False
+      }
 
   return {
     'fixits' : [ BuildFixItData( x ) for x in fixits ]
