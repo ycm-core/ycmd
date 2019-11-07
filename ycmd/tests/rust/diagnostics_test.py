@@ -23,12 +23,17 @@ from __future__ import division
 from builtins import *  # noqa
 
 from future.utils import iterkeys
-from hamcrest import assert_that, contains, contains_inanyorder, has_entries
+from hamcrest import ( assert_that,
+                       contains,
+                       contains_inanyorder,
+                       has_entries,
+                       has_entry )
 from pprint import pformat
 import json
 
 from ycmd.tests.rust import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import ( LocationMatcher,
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    LocationMatcher,
                                     PollForMessages,
                                     PollForMessagesTimeoutException,
                                     RangeMatcher,
@@ -52,6 +57,23 @@ DIAG_MATCHERS_PER_FILE = {
     } )
   )
 }
+
+
+@SharedYcmd
+def Diagnostics_DetailedDiags_test( app ):
+  filepath = PathToTestFile( 'common', 'src', 'main.rs' )
+  contents = ReadFile( filepath )
+  WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
+  request_data = BuildRequest( contents = contents,
+                               filepath = filepath,
+                               filetype = 'rust',
+                               line_num = 14,
+                               column_num = 13 )
+
+  results = app.post_json( '/detailed_diagnostic', request_data ).json
+  assert_that( results, has_entry(
+      'message',
+      'no field `build_` on type `test::Builder`\n\nunknown field' ) )
 
 
 @SharedYcmd

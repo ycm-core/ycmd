@@ -33,6 +33,7 @@ from hamcrest import ( assert_that,
                        empty,
                        equal_to,
                        has_entries,
+                       has_entry,
                        has_item )
 from nose.tools import eq_
 
@@ -249,6 +250,24 @@ def _WaitForDiagnosticsForFile( app,
     )
 
   return diags
+
+
+@WithRetry
+@SharedYcmd
+def Diagnostics_DetailedDiags_test( app ):
+  filepath = TestFactory
+  contents = ReadFile( filepath )
+  WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
+  request_data = BuildRequest( contents = contents,
+                               filepath = filepath,
+                               filetype = 'java',
+                               line_num = 15,
+                               column_num = 19 )
+
+  results = app.post_json( '/detailed_diagnostic', request_data ).json
+  assert_that( results, has_entry(
+      'message',
+      'The value of the field TestFactory.Bar.testString is not used' ) )
 
 
 @WithRetry

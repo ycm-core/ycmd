@@ -1123,6 +1123,46 @@ class LanguageServerCompleter( Completer ):
     return result
 
 
+  def GetDetailedDiagnostic( self, request_data ):
+    self._UpdateServerWithFileContents( request_data )
+
+    current_line_lsp = request_data[ 'line_num' ] - 1
+    current_file = request_data[ 'filepath' ]
+
+    if not self._latest_diagnostics:
+      return responses.BuildDisplayMessageResponse(
+          'Diagnostics are not ready yet.' )
+
+    with self._server_info_mutex:
+      diagnostics = list( self._latest_diagnostics[
+          lsp.FilePathToUri( current_file ) ] )
+
+    if not diagnostics:
+      return responses.BuildDisplayMessageResponse(
+          'No diagnostics for current file.' )
+
+    current_column = lsp.CodepointsToUTF16CodeUnits(
+        GetFileLines( request_data, current_file )[ current_line_lsp ],
+        request_data[ 'column_codepoint' ] )
+    minimum_distance = None
+
+    message = 'No diagnostics for current line.'
+    for diagnostic in diagnostics:
+      start = diagnostic[ 'range' ][ 'start' ]
+      end = diagnostic[ 'range' ][ 'end' ]
+      if current_line_lsp < start[ 'line' ] or end[ 'line' ] < current_line_lsp:
+        continue
+      point = { 'line': current_line_lsp, 'character': current_column }
+      distance = _DistanceOfPointToRange( point, diagnostic[ 'range' ] )
+      if minimum_distance is None or distance < minimum_distance:
+        message = diagnostic[ 'message' ]
+        if distance == 0:
+          break
+        minimum_distance = distance
+
+    return responses.BuildDisplayMessageResponse( message )
+
+
   def GetCustomSubcommands( self ):
     """Return a list of subcommand definitions to be used in conjunction with
     the subcommands detected by _DiscoverSubcommandSupport. The return is a dict
@@ -2065,6 +2105,28 @@ class LanguageServerCompleter( Completer ):
                                       json.dumps( self._settings,
                                                   indent = 2,
                                                   sort_keys = True ) ) ]
+
+
+def _DistanceOfPointToRange( point, range ):
+  """Calculate the distance from a point to a range.
+
+  Assumes point is covered by lines in the range.
+  Returns 0 if point is already inside range. """
+  start = range[ 'start' ]
+  end = range[ 'end' ]
+
+  # Single-line range.
+  if start[ 'line' ] == end[ 'line' ]:
+    # 0 if point is within range, otherwise distance from start/end.
+    return max( 0, point[ 'character' ] - end[ 'character' ],
+                start[ 'character' ] - point[ 'character' ] )
+
+  if start[ 'line' ] == point[ 'line' ]:
+    return max( 0, start[ 'character' ] - point[ 'character' ] )
+  if end[ 'line' ] == point[ 'line' ]:
+    return max( 0, point[ 'character' ] - end[ 'character' ] )
+  # If not on the first or last line, then point is within range for sure.
+  return 0
 
 
 def _CompletionItemToCompletionData( insertion_text, item, fixits ):
