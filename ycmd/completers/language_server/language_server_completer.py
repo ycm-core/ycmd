@@ -52,6 +52,9 @@ CONNECTION_TIMEOUT         = 5
 MAX_QUEUED_MESSAGES = 250
 
 PROVIDERS_MAP = {
+  'codeActionProvider': (
+    lambda self, request_data, args: self.GetCodeActions( request_data, args )
+  ),
   'declarationProvider': (
     lambda self, request_data, args: self.GoTo( request_data,
                                                 [ 'Declaration' ] )
@@ -96,6 +99,7 @@ PROVIDERS_MAP = {
 # definition and vice versa.
 DEFAULT_SUBCOMMANDS_MAP = {
   'ExecuteCommand':     [ 'executeCommandProvider' ],
+  'FixIt':              [ 'codeActionProvider' ],
   'GoToDefinition':     [ 'definitionProvider' ],
   'GoToDeclaration':    [ 'declarationProvider', 'definitionProvider' ],
   'GoTo':               [ ( 'definitionProvider', 'declarationProvider' ),
@@ -667,7 +671,6 @@ class LanguageServerCompleter( Completer ):
       returning it in GetConnection
       - Set its notification handler to self.GetDefaultNotificationHandler()
       - See below for Startup/Shutdown instructions
-    - Implement any server-specific Commands in HandleServerCommand
     - Optionally handle server-specific command responses in
       HandleServerCommandResponse
     - Optionally override GetCustomSubcommands to return subcommand handlers
@@ -718,26 +721,22 @@ class LanguageServerCompleter( Completer ):
   - By default, the subcommands are detected from the server's capabilities.
     The logic for this is in DEFAULT_SUBCOMMANDS_MAP (and implemented by
     _DiscoverSubcommandSupport).
+  - By default FixIt should work, but for example, jdt.ls doesn't implement
+    CodeActions correctly and forces clients to handle it differently.
+    For these cases, completers can override any of:
+    - CodeActionLiteralToFixIt
+    - CodeActionCommandToFixIt
+    - CommandToFixIt
   - Other commands not covered by DEFAULT_SUBCOMMANDS_MAP are bespoke to the
     completer and should be returned by GetCustomSubcommands:
     - GetType/GetDoc are bespoke to the downstream server, though this class
       provides GetHoverResponse which is useful in this context.
-    - FixIt requests are handled by GetCodeActions, but the responses are passed
-      to HandleServerCommand, which must return a FixIt. See
-      WorkspaceEditToFixIt and TextEditToChunks for some helpers. If the server
-      returns other types of command that aren't FixIt, either throw an
-      exception or update the ycmd protocol to handle it :)
   """
   @abc.abstractmethod
   def GetConnection( sefl ):
     """Method that must be implemented by derived classes to return an instance
     of LanguageServerConnection appropriate for the language server in
     question"""
-    pass # pragma: no cover
-
-
-  @abc.abstractmethod
-  def HandleServerCommand( self, request_data, command ):
     pass # pragma: no cover
 
 
@@ -1940,15 +1939,68 @@ class LanguageServerCompleter( Completer ):
             [] ),
           REQUEST_TIMEOUT_COMMAND )
 
-    result = code_actions[ 'result' ]
-    if result is None:
-      result = []
+    return self.CodeActionResponseToFixIts( request_data,
+                                            code_actions[ 'result' ] )
 
-    response = [ self.HandleServerCommand( request_data, c ) for c in result ]
+
+  def CodeActionResponseToFixIts( self, request_data, code_actions ):
+    if code_actions is None:
+      return responses.BuildFixItResponse( [] )
+
+    fixits = []
+    for code_action in code_actions:
+      if 'edit' in code_action:
+        # TODO: Start supporting a mix of WorkspaceEdits and Commands
+        # once there's a need for such
+        assert 'command' not in code_action
+
+        # This is a WorkspaceEdit literal
+        fixits.append( self.CodeActionLiteralToFixIt( request_data,
+                                                      code_action ) )
+        continue
+
+      # Either a CodeAction or a Command
+      assert 'command' in code_action
+
+      action_command = code_action[ 'command' ]
+      if isinstance( action_command, dict ):
+        # CodeAction with a 'command' rather than 'edit'
+        fixits.append( self.CodeActionCommandToFixIt( request_data,
+                                                      code_action ) )
+        continue
+
+      # It is a Command
+      fixits.append( self.CommandToFixIt( request_data, code_action ) )
 
     # Show a list of actions to the user to select which one to apply.
     # This is (probably) a more common workflow for "code action".
-    return responses.BuildFixItResponse( [ r for r in response if r ] )
+    result = [ r for r in fixits if r ]
+    if len( result ) == 1:
+      fixit = result[ 0 ]
+      if hasattr( fixit, 'resolve' ):
+        # Be nice and resolve the fixit to save on roundtrips
+        unresolved_fixit = {
+          'command': fixit.command,
+          'text': fixit.text,
+          'resolve': fixit.resolve
+        }
+        return self._ResolveFixit( request_data, unresolved_fixit )
+    return responses.BuildFixItResponse( result )
+
+
+  def CodeActionLiteralToFixIt( self, request_data, code_action_literal ):
+    return WorkspaceEditToFixIt( request_data,
+                                 code_action_literal[ 'edit' ],
+                                 code_action_literal[ 'title' ] )
+
+
+  def CodeActionCommandToFixIt( self, request_data, code_action_command ):
+    command = code_action_command[ 'command' ]
+    return self.CommandToFixIt( request_data, command )
+
+
+  def CommandToFixIt( self, request_data, command ):
+    return responses.UnresolvedFixIt( command, command[ 'title' ] )
 
 
   def RefactorRename( self, request_data, args ):

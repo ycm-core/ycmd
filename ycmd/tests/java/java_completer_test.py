@@ -218,19 +218,6 @@ def JavaCompleter_GetDoc_test( app ):
                  raises( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
 
 
-@SharedYcmd
-def JavaCompleter_UnknownCommand_test( app ):
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
-
-  notification = {
-    'command': 'this_is_not_a_real_command',
-    'params': {}
-  }
-  assert_that( completer.HandleServerCommand( BuildRequest(), notification ),
-               equal_to( None ) )
-
-
-
 @patch( 'ycmd.completers.java.hook.ShouldEnableJavaCompleter',
         return_value = False )
 def JavaHook_JavaNotEnabled_test( *args ):

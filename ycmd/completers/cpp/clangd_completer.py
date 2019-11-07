@@ -283,10 +283,6 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
   def GetCustomSubcommands( self ):
     return {
-      'FixIt': (
-        lambda self, request_data, args: self.GetCodeActions( request_data,
-                                                              args )
-      ),
       'GetType': (
         # In addition to type information we show declaration.
         lambda self, request_data, args: self.GetType( request_data )
@@ -319,19 +315,6 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       #   lambda self, request_data, args: self.GetType( request_data )
       # )
     }
-
-
-  def HandleServerCommand( self, request_data, command ):
-    if command[ 'command' ] == 'clangd.applyFix':
-      return language_server_completer.WorkspaceEditToFixIt(
-        request_data,
-        command[ 'arguments' ][ 0 ],
-        text = command[ 'title' ] )
-
-    if command[ 'command' ] == 'clangd.applyTweak':
-      return responses.UnresolvedFixIt( command, command[ 'title' ] )
-
-    return None
 
 
   def ShouldCompleteIncludeStatement( self, request_data ):

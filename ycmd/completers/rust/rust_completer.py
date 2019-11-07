@@ -28,8 +28,7 @@ from future.utils import itervalues
 from subprocess import PIPE
 
 from ycmd import responses, utils
-from ycmd.completers.language_server import ( simple_language_server_completer,
-                                              language_server_completer )
+from ycmd.completers.language_server import simple_language_server_completer
 from ycmd.utils import LOGGER, re
 
 
@@ -66,21 +65,6 @@ def ShouldEnableRustCompleter():
     return False
   LOGGER.info( 'Using Rust completer' )
   return True
-
-
-def _ApplySuggestionsToFixIt( request_data, command ):
-  LOGGER.debug( 'command = %s', command )
-  args = command[ 'arguments' ]
-  text_edits = [ { 'range': args[ 0 ][ 'range' ], 'newText': args[ 1 ] } ]
-  uri = args[ 0 ][ 'uri' ]
-  return responses.FixIt(
-    responses.Location( request_data[ 'line_num' ],
-                        request_data[ 'column_num' ],
-                        request_data[ 'filepath' ] ),
-    language_server_completer.TextEditToChunks( request_data,
-                                                uri,
-                                                text_edits ),
-    args[ 1 ] )
 
 
 class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
@@ -147,10 +131,6 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       ),
       'GetType': (
         lambda self, request_data, args: self.GetType( request_data )
-      ),
-      'FixIt': (
-        lambda self, request_data, args: self.GetCodeActions( request_data,
-                                                              args )
       ),
       'RestartServer': (
         lambda self, request_data, args: self._RestartServer( request_data )
@@ -220,14 +200,3 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       raise RuntimeError( 'No documentation available for current context.' )
 
     return responses.BuildDetailedInfoResponse( documentation )
-
-
-  def HandleServerCommand( self, request_data, command ):
-    # NOTE: This assumes there's only a single FixItChunk to be applied,
-    # because I could not get RLS to return more.
-    if command[ 'command' ].startswith( 'rls.deglobImports' ):
-      arg = command[ 'arguments' ][ 0 ]
-      command[ 'arguments' ] = [ arg[ 'location' ], arg[ 'new_text' ] ]
-      return _ApplySuggestionsToFixIt( request_data, command )
-    if command[ 'command' ].startswith( 'rls.applySuggestion' ):
-      return _ApplySuggestionsToFixIt( request_data, command )
