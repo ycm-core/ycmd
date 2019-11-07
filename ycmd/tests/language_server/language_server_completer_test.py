@@ -1346,3 +1346,34 @@ def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test():
                     uri_to_filepath:
       assert_that( completer.OnFileReadyToParse( request_data ), diagnostics )
       uri_to_filepath.assert_called()
+
+
+def _TupleToLSPRange( tuple ):
+  return { 'line': tuple[ 0 ], 'character': tuple[ 1 ] }
+
+
+def _Check_Distance( point, start, end, expected ):
+  point = _TupleToLSPRange( point )
+  start = _TupleToLSPRange( start )
+  end = _TupleToLSPRange( end )
+  range = { 'start': start, 'end': end }
+  result = lsc._DistanceOfPointToRange( point, range )
+  eq_( result, expected )
+
+
+def LanguageServerCompleter_DistanceOfPointToRange_SingleLineRange_test():
+  # Point to the left of range.
+  _Check_Distance( ( 0, 0 ), ( 0, 2 ), ( 0, 5 ) , 2 )
+  # Point inside range.
+  _Check_Distance( ( 0, 4 ), ( 0, 2 ), ( 0, 5 ) , 0 )
+  # Point to the right of range.
+  _Check_Distance( ( 0, 8 ), ( 0, 2 ), ( 0, 5 ) , 3 )
+
+
+def LanguageServerCompleter_DistanceOfPointToRange_MultiLineRange_test():
+  # Point to the left of range.
+  _Check_Distance( ( 0, 0 ), ( 0, 2 ), ( 3, 5 ) , 2 )
+  # Point inside range.
+  _Check_Distance( ( 1, 4 ), ( 0, 2 ), ( 3, 5 ) , 0 )
+  # Point to the right of range.
+  _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 3 )
