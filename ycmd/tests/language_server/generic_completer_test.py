@@ -41,6 +41,7 @@ from os import path as p
 from ycmd.completers.language_server.language_server_completer import (
   ResponseFailedException
 )
+from ycmd import handlers
 from ycmd.tests.language_server import IsolatedYcmd, PathToTestFile
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
@@ -62,6 +63,27 @@ PATH_TO_GENERIC_COMPLETER = p.join( DIR_OF_THIS_SCRIPT,
                                     'server.js' )
 TEST_FILE = PathToTestFile( 'generic_server', 'test_file' )
 TEST_FILE_CONTENT = ReadFile( TEST_FILE )
+
+
+@IsolatedYcmd( { 'language_server':
+  [ { 'name': 'foo',
+      'filetypes': [ 'foo' ],
+      'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
+def GenericLSPCompleter_GetCompletions_NotACompletionProvider_test( app ):
+  completer = handlers._server_state.GetFiletypeCompleter( [ 'foo' ] )
+  with patch.object( completer, '_is_completion_provider', False ):
+    request = BuildRequest( filepath = TEST_FILE,
+                          filetype = 'foo',
+                          line_num = 1,
+                          column_num = 3,
+                          contents = 'Java',
+                          event_name = 'FileReadyToParse' )
+    app.post_json( '/event_notification', request )
+    WaitUntilCompleterServerReady( app, 'foo' )
+    request.pop( 'event_name' )
+    response = app.post_json( '/completions', BuildRequest( **request ) )
+    assert_that( response.json, has_entries( { 'completions': contains(
+      CompletionEntryMatcher( 'Java', '[ID]' ) ) } ) )
 
 
 @IsolatedYcmd( { 'semantic_triggers': { 'foo': [ 're!.' ] },
