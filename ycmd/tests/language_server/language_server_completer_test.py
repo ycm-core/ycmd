@@ -673,6 +673,28 @@ def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test():
       )
 
 
+def LanguageServerCompleter_GetCompletions_NullNoError_test():
+  completer = MockCompleter()
+  request_data = RequestWrap( BuildRequest() )
+  complete_response = { 'result': None }
+  resolve_responses = []
+  with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+    with patch.object( completer,
+                       '_is_completion_provider',
+                       return_value = True ):
+      with patch.object( completer.GetConnection(),
+                         'GetResponse',
+                         side_effect = [ complete_response ] +
+                                       resolve_responses ):
+        assert_that(
+          completer.ComputeCandidatesInner( request_data, 1 ),
+          contains(
+            empty(),
+            False
+          )
+        )
+
+
 def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test():
   completer = MockCompleter()
   completer._resolve_completion_items = False
