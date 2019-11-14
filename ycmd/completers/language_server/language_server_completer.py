@@ -910,7 +910,7 @@ class LanguageServerCompleter( Completer ):
     response = self.GetConnection().GetResponse( request_id,
                                                  msg,
                                                  REQUEST_TIMEOUT_COMPLETION )
-    result = response[ 'result' ]
+    result = response.get( 'result' ) or []
 
     if isinstance( result, list ):
       items = result
