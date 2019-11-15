@@ -288,7 +288,7 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 When plugging in a completer in this way, the `kwargs[ 'language' ]` will be set
 to the value of the `name` key, i.e. `gopls` in the above example.
 
-LSP completers currecntly supported without `language_server`:
+LSP completers currently supported without `language_server`:
 
 - Java
 - Rust
