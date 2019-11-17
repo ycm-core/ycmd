@@ -22,7 +22,7 @@ from __future__ import absolute_import
 # Not installing aliases from python-future; it's unreliable and slow.
 from builtins import *  # noqa
 
-from hamcrest import assert_that, has_entry, contains
+from hamcrest import assert_that, empty, has_entries, has_entry, contains
 from mock import patch
 from nose.tools import ok_
 import os.path
@@ -34,8 +34,245 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ErrorMatcher,
                                     LocationMatcher,
                                     MockProcessTerminationTimingOut,
+                                    RangeMatcher,
                                     WaitUntilCompleterServerReady )
-from ycmd.utils import ReadFile
+from ycmd.utils import ReadFile, LOGGER
+
+
+@SharedYcmd
+def Subcommands_FixIt_NoFixitsFound_test( app ):
+  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  with WrapOmniSharpServer( app, fixit_test ):
+    contents = ReadFile( fixit_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'FixIt' ],
+                            line_num = 1,
+                            column_num = 1,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = fixit_test )
+    response = app.post_json( '/run_completer_command', request ).json
+    assert_that( response, has_entries( { 'fixits': empty() } ) )
+
+
+@SharedYcmd
+def Subcommands_FixIt_Multi_test( app ):
+  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  with WrapOmniSharpServer( app, fixit_test ):
+    contents = ReadFile( fixit_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'FixIt' ],
+                            line_num = 4,
+                            column_num = 27,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = fixit_test )
+    response = app.post_json( '/run_completer_command', request ).json
+    assert_that( response, has_entries( {
+      'fixits': contains(
+        has_entries( {
+          'text': 'Introduce constant',
+          'command': has_entries( { 'index': 0 } ),
+          'resolve': True } ),
+        has_entries( {
+          'text': 'Convert to binary',
+          'command': has_entries( { 'index': 1 } ),
+          'resolve': True } ),
+        has_entries( {
+          'text': 'Convert to hex',
+          'command': has_entries( { 'index': 2 } ),
+          'resolve': True } ),
+      ) } ) )
+    request.pop( 'command_arguments' )
+    request.update( { 'fixit': response[ 'fixits' ][ 1 ] } )
+    response = app.post_json( '/resolve_fixit', request ).json
+    LOGGER.debug( 'r = %s', response )
+    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
+      'location': LocationMatcher( fixit_test, 4, 27 ),
+      'chunks': contains( has_entries( { 'replacement_text': '0b101', } ) )
+    } ) ) } ) )
+
+
+@SharedYcmd
+def Subcommands_FixIt_Range_test( app ):
+  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  with WrapOmniSharpServer( app, fixit_test ):
+    contents = ReadFile( fixit_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'FixIt' ],
+                            line_num = 4,
+                            column_num = 23,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = fixit_test )
+    request.update( { 'range': {
+      'start': { 'line_num': 4, 'column_num': 23 },
+      'end': { 'line_num': 4, 'column_num': 27 }
+    } } )
+    response = app.post_json( '/run_completer_command', request ).json
+    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
+      'location': LocationMatcher( fixit_test, 4, 23 ),
+      'chunks': contains(
+        has_entries( {
+          'replacement_text':
+            '\n        {\n            NewMethod();\n        }\n\n'
+            '        private static void NewMethod()\n        {\r\n',
+          'range': RangeMatcher( fixit_test, ( 3, 31 ), ( 4, 1 ) ) } )
+      )
+    } ) ) } ) )
+
+
+@SharedYcmd
+def Subcommands_FixIt_Single_test( app ):
+  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  with WrapOmniSharpServer( app, fixit_test ):
+    contents = ReadFile( fixit_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'FixIt' ],
+                            line_num = 4,
+                            column_num = 23,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = fixit_test )
+    response = app.post_json( '/run_completer_command', request ).json
+    LOGGER.debug( 'r = %s', response )
+    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
+      'location': LocationMatcher( fixit_test, 4, 23 ),
+      'chunks': contains(
+        has_entries( {
+          'replacement_text':
+            '\n        {\n            NewMethod();\n        }\n\n'
+            '        private static void NewMethod()\n        {\r\n',
+          'range': RangeMatcher( fixit_test, ( 3, 31 ), ( 4, 1 ) ) } )
+      )
+    } ) ) } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_MissingNewName_test( app ):
+  continuous_test = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+  with WrapOmniSharpServer( app, continuous_test ):
+    contents = ReadFile( continuous_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'RefactorRename' ],
+                            line_num = 5,
+                            column_num = 15,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = continuous_test )
+    response = app.post_json( '/run_completer_command',
+                              request,
+                              expect_errors = True ).json
+    assert_that( response, ErrorMatcher( ValueError,
+                            'Please specify a new name to rename it to.\n'
+                            'Usage: RefactorRename <new name>' ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Unicode_test( app ):
+  unicode_test = PathToTestFile( 'testy', 'Unicode.cs' )
+  with WrapOmniSharpServer( app, unicode_test ):
+    contents = ReadFile( unicode_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'RefactorRename', 'x' ],
+                            line_num = 30,
+                            column_num = 31,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = unicode_test )
+    response = app.post_json( '/run_completer_command', request ).json
+    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
+      'location': LocationMatcher( unicode_test, 30, 31 ),
+      'chunks': contains(
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( unicode_test, ( 30, 29 ), ( 30, 35 ) ) } )
+      )
+    } ) ) } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Basic_test( app ):
+  continuous_test = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+  with WrapOmniSharpServer( app, continuous_test ):
+    contents = ReadFile( continuous_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'RefactorRename', 'x' ],
+                            line_num = 5,
+                            column_num = 15,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = continuous_test )
+    response = app.post_json( '/run_completer_command', request ).json
+    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
+      'location': LocationMatcher( continuous_test, 5, 15 ),
+      'chunks': contains(
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( continuous_test, ( 5, 15 ), ( 5, 29 ) ) } )
+      )
+    } ) ) } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_MultiFile_test( app ):
+  continuous_test = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  get_type_test = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  goto_test = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  import_test = PathToTestFile( 'testy', 'ImportTest.cs' )
+  program = PathToTestFile( 'testy', 'Program.cs' )
+  get_doc_test = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  unicode_test = PathToTestFile( 'testy', 'Unicode.cs' )
+  with WrapOmniSharpServer( app, continuous_test ):
+    contents = ReadFile( continuous_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'RefactorRename', 'x' ],
+                            line_num = 3,
+                            column_num = 11,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = continuous_test )
+
+    response = app.post_json( '/run_completer_command', request ).json
+    print( 'response = ', response )
+    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
+      'location': LocationMatcher( continuous_test, 3, 11 ),
+      'chunks': contains(
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) ) } ),
+        has_entries( {
+          'replacement_text': 'x',
+          'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) ) } ),
+      )
+    } ) ) } ) )
 
 
 @SharedYcmd

@@ -30,13 +30,35 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_items,
                        raises )
-from nose import SkipTest
-from nose.tools import eq_
 from webtest import AppError
 
 from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
+
+
+@SharedYcmd
+def GetCompletions_DefaultToIdentifier_test( app ):
+  filepath = PathToTestFile( 'testy', 'Program.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'cs',
+                                    contents = contents,
+                                    line_num = 10,
+                                    column_num = 7 )
+    response_data = app.post_json( '/completions', completion_data ).json
+    print( 'Response: ', response_data )
+    assert_that(
+      response_data,
+      has_entries( {
+        'completion_start_column': 4,
+        'completions': has_items(
+          CompletionEntryMatcher( 'Console', '[ID]' ),
+        ),
+        'errors': empty(),
+      } ) )
 
 
 @SharedYcmd
@@ -156,41 +178,6 @@ def GetCompletions_PathWithSpace_test( app ):
         ),
         'errors': empty(),
       } ) )
-
-
-@SharedYcmd
-def GetCompletions_ReloadSolution_Basic_test( app ):
-  raise SkipTest( "No support for reload in rosyln" )
-  filepath = PathToTestFile( 'testy', 'Program.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    result = app.post_json(
-      '/run_completer_command',
-      BuildRequest( completer_target = 'filetype_default',
-                    command_arguments = [ 'ReloadSolution' ],
-                    filepath = filepath,
-                    filetype = 'cs' ) ).json
-
-    eq_( result, True )
-
-
-@SharedYcmd
-def GetCompletions_ReloadSolution_MultipleSolution_test( app ):
-  raise SkipTest( "No support for reload in rosyln" )
-  filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
-                PathToTestFile( 'testy-multiple-solutions',
-                                'solution-named-like-folder',
-                                'testy',
-                                'Program.cs' ) ]
-  for filepath in filepaths:
-    with WrapOmniSharpServer( app, filepath ):
-      result = app.post_json(
-        '/run_completer_command',
-        BuildRequest( completer_target = 'filetype_default',
-                      command_arguments = [ 'ReloadSolution' ],
-                      filepath = filepath,
-                      filetype = 'cs' ) ).json
-
-      eq_( result, True )
 
 
 @SharedYcmd
