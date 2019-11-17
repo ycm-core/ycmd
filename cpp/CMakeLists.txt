@@ -253,7 +253,7 @@ if ( USE_PYTHON2 )
       "necessary python2 headers & libraries." )
   endif()
 else()
-  set( Python_ADDITIONAL_VERSIONS 3.7 3.6 3.5 )
+  set( Python_ADDITIONAL_VERSIONS 3.9 3.8 3.7 3.6 3.5 )
   find_package( PythonLibs 3.5 REQUIRED )  # 3.5 is ONLY the mininum
 endif()
 
