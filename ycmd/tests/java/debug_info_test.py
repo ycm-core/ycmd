@@ -87,13 +87,25 @@ def DebugInfo_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'Java',
       'servers': contains( has_entries( {
-        'name': 'jdt.ls Java Language Server',
+        'name': 'jdt.ls',
         'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
+        'executable': instance_of( list ),
         'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
+        'logfiles': contains( instance_of( str ), instance_of( str ) ),
         'extras': contains(
+          has_entries( { 'key': 'Server State',
+                         'value': 'Initialized' } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'simple_eclipse_project' )
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': json.dumps(
+              { 'bundles': [] },
+              indent = 2,
+              sort_keys = True )
+          } ),
           has_entries( { 'key': 'Startup Status',
                          'value': 'Ready' } ),
           has_entries( { 'key': 'Java Path',
@@ -104,16 +116,6 @@ def DebugInfo_test( app ):
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Extension Path',
                          'value': contains( instance_of( str ) ) } ),
-          has_entries( { 'key': 'Server State',
-                         'value': 'Initialized' } ),
-          has_entries( { 'key': 'Project Directory',
-                         'value': PathToTestFile( DEFAULT_PROJECT_DIR ) } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': json.dumps( { 'bundles': [] },
-                                 indent = 2,
-                                 sort_keys = True )
-          } )
         )
       } ) )
     } ) )
@@ -138,23 +140,12 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'Java',
       'servers': contains( has_entries( {
-        'name': 'jdt.ls Java Language Server',
+        'name': 'jdt.ls',
         'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
+        'executable': instance_of( list ),
         'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
-                              instance_of( str ) ),
+        'logfiles': contains( instance_of( str ), instance_of( str ) ),
         'extras': contains(
-          has_entries( { 'key': 'Startup Status',
-                         'value': 'Ready' } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Extension Path',
-                         'value': contains( instance_of( str ) ) } ),
           has_entries( { 'key': 'Server State',
                          'value': 'Initialized' } ),
           has_entries( {
@@ -169,6 +160,16 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
               indent = 2,
               sort_keys = True )
           } ),
+          has_entries( { 'key': 'Startup Status',
+                         'value': 'Ready' } ),
+          has_entries( { 'key': 'Java Path',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Launcher Config.',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Workspace Path',
+                         'value': instance_of( str ) } ),
+          has_entries( { 'key': 'Extension Path',
+                         'value': contains( instance_of( str ) ) } ),
         )
       } ) )
     } ) )

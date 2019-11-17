@@ -29,11 +29,10 @@ import os
 import shutil
 import tempfile
 import threading
-from subprocess import PIPE
 
 from ycmd import responses, utils
-from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
+from ycmd.completers.language_server import simple_language_server_completer
 from ycmd.utils import LOGGER
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
@@ -287,8 +286,9 @@ def _WorkspaceDirForProject( workspace_root_path,
                        utils.ToUnicode( project_dir_hash.hexdigest() ) )
 
 
-class JavaCompleter( language_server_completer.LanguageServerCompleter ):
+class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def __init__( self, user_options ):
+    self._workspace_path = None
     super( JavaCompleter, self ).__init__( user_options )
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
@@ -311,14 +311,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._bundles = ( _CollectExtensionBundles( self._extension_path )
                       if self._extension_path else [] )
 
-    # Used to ensure that starting/stopping of the server is synchronized
-    self._server_state_mutex = threading.RLock()
-
     self._connection = None
     self._server_handle = None
-    self._server_stderr = None
-    self._workspace_path = None
-    self._CleanUp()
+    self._stderr_file = None
+    self._Reset()
+    self._command = []
 
 
   def DefaultSettings( self, request_data ):
@@ -359,11 +356,13 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     }
 
 
-  def GetConnection( self ):
-    return self._connection
+  def AdditionalLogFiles( self ):
+    if self._workspace_path:
+      return [ os.path.join( self._workspace_path, '.metadata', '.log' ) ]
+    return []
 
 
-  def DebugInfo( self, request_data ):
+  def ExtraDebugItems( self, request_data ):
     items = [
       responses.DebugInfoItem( 'Startup Status', self._server_init_status ),
       responses.DebugInfoItem( 'Java Path', PATH_TO_JAVA ),
@@ -380,28 +379,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     items.append( responses.DebugInfoItem( 'Extension Path',
                                            self._extension_path ) )
 
-    items.extend( self.CommonDebugItems() )
-
-
-    return responses.BuildDebugInfoResponse(
-      name = "Java",
-      servers = [
-        responses.DebugInfoServer(
-          name = "jdt.ls Java Language Server",
-          handle = self._server_handle,
-          executable = self._launcher_path,
-          logfiles = [
-            self._server_stderr,
-            ( os.path.join( self._workspace_path, '.metadata', '.log' )
-              if self._workspace_path else None )
-          ],
-          extras = items
-        )
-      ] )
-
-
-  def ServerIsHealthy( self ):
-    return self._ServerIsRunning()
+    return items
 
 
   def ServerIsReady( self ):
@@ -414,10 +392,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return self._java_project_dir
 
 
-  def _ServerIsRunning( self ):
-    return utils.ProcessIsRunning( self._server_handle )
-
-
   def _WipeWorkspace( self, request_data, args ):
     with_config = False
     if len( args ) > 0 and '--with-config' in args:
@@ -428,12 +402,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._StartAndInitializeServer( request_data,
                                       wipe_workspace = True,
                                       wipe_config = with_config )
-
-
-  def _RestartServer( self, request_data ):
-    with self._server_state_mutex:
-      self.Shutdown()
-      self._StartAndInitializeServer( request_data )
 
 
   def _OpenProject( self, request_data, args ):
@@ -458,11 +426,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
                                       project_directory = project_directory )
 
 
-  def _CleanUp( self ):
-    if not self._server_keep_logfiles and self._server_stderr:
-      utils.RemoveIfExists( self._server_stderr )
-      self._server_stderr = None
-
+  def _Reset( self ):
     if self._workspace_path and self._use_clean_workspace:
       try:
         shutil.rmtree( self._workspace_path )
@@ -477,11 +441,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._received_ready_message = threading.Event()
     self._server_init_status = 'Not started'
 
-    self._server_handle = None
-    self._connection = None
     self._started_message_sent = False
 
-    self.ServerReset()
+    super( JavaCompleter, self )._Reset()
+
 
 
   def StartServer( self,
@@ -512,7 +475,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       self._launcher_config = _LauncherConfiguration( self._workspace_root_path,
                                                       wipe_config )
 
-      command = [
+      self._command = [
         PATH_TO_JAVA,
         '-Dfile.encoding=UTF-8',
         '-Declipse.application=org.eclipse.jdt.ls.core.id1',
@@ -524,79 +487,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         '-data', self._workspace_path,
       ]
 
-      LOGGER.debug( 'Starting java-server with the following command: %s',
-                    command )
-
-      self._server_stderr = utils.CreateLogfile( 'jdt.ls_stderr_' )
-      with utils.OpenForStdHandle( self._server_stderr ) as stderr:
-        self._server_handle = utils.SafePopen( command,
-                                               stdin = PIPE,
-                                               stdout = PIPE,
-                                               stderr = stderr )
-
-      self._connection = (
-        language_server_completer.StandardIOLanguageServerConnection(
-          self._server_handle.stdin,
-          self._server_handle.stdout,
-          self.GetDefaultNotificationHandler() )
-      )
-
-      self._connection.Start()
-
-      try:
-        self._connection.AwaitServerConnection()
-      except language_server_completer.LanguageServerConnectionTimeout:
-        LOGGER.error( 'jdt.ls failed to start, or did not connect '
-                      'successfully' )
-        self.Shutdown()
-        return False
-
-    LOGGER.info( 'jdt.ls Language Server started' )
-
-    return True
-
-
-  def Shutdown( self ):
-    with self._server_state_mutex:
-      LOGGER.info( 'Shutting down jdt.ls...' )
-
-      # Tell the connection to expect the server to disconnect
-      if self._connection:
-        self._connection.Stop()
-
-      if not self._ServerIsRunning():
-        LOGGER.info( 'jdt.ls Language server not running' )
-        self._CleanUp()
-        return
-
-      LOGGER.info( 'Stopping java server with PID %s',
-                   self._server_handle.pid )
-
-      try:
-        self.ShutdownServer()
-
-        # By this point, the server should have shut down and terminated. To
-        # ensure that isn't blocked, we close all of our connections and wait
-        # for the process to exit.
-        #
-        # If, after a small delay, the server has not shut down we do NOT kill
-        # it; we expect that it will shut itself down eventually. This is
-        # predominantly due to strange process behaviour on Windows.
-        if self._connection:
-          self._connection.Close()
-
-        utils.WaitUntilProcessIsTerminated( self._server_handle,
-                                            timeout = 15 )
-
-        LOGGER.info( 'jdt.ls Language server stopped' )
-      except Exception:
-        LOGGER.exception( 'Error while stopping jdt.ls server' )
-        # We leave the process running. Hopefully it will eventually die of its
-        # own accord.
-
-      # Tidy up our internal state, even if the completer server didn't close
-      # down cleanly.
-      self._CleanUp()
+    return super( JavaCompleter, self ).StartServer( request_data )
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
@@ -756,3 +647,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return super( JavaCompleter, self ).CodeActionCommandToFixIt(
       request_data,
       command )
+
+
+  def GetServerName( self ):
+    return 'jdt.ls'
+
+
+  def GetCommandLine( self ):
+    return self._command
