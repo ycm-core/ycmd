@@ -24,16 +24,15 @@ from builtins import *  # noqa
 
 import json
 import os
-from frozendict import frozendict
 
-from ycmd.utils import ReadFile
+from ycmd.utils import HashableDict, ReadFile
 
 _USER_OPTIONS = {}
 
 
 def SetAll( new_options ):
   global _USER_OPTIONS
-  _USER_OPTIONS = frozendict( new_options )
+  _USER_OPTIONS = HashableDict( new_options )
 
 
 def GetAll():

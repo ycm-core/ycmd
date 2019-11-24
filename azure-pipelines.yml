@@ -10,21 +10,21 @@ jobs:
       # Tests are failing on Python 2.7.0 with the exception
       # "TypeError: argument can't be <type 'unicode'>"
       'Python 2.7 without libclang completer':
-        YCM_PYTHON_VERSION: '2.7.1'
+        YCM_PYTHON_VERSION: '2.7.13'
         USE_CLANG_COMPLETER: false
       'Python 2.7':
-        YCM_PYTHON_VERSION: '2.7.1'
+        YCM_PYTHON_VERSION: '2.7.13'
       'Python 3.5':
-        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_PYTHON_VERSION: '3.5.3'
       'Python 3.5 using Clang compiler':
-        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_PYTHON_VERSION: '3.5.3'
         YCM_COMPILER: 'clang'
       'C++ benchmark':
-        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_PYTHON_VERSION: '3.5.3'
         YCM_BENCHMARK: true
         COVERAGE: false
       'C++ linting':
-        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_PYTHON_VERSION: '3.5.3'
         YCM_CLANG_TIDY: true
         COVERAGE: false
     maxParallel: 6
@@ -61,11 +61,11 @@ jobs:
       'Python 2.7':
         # Prior versions fail to compile with error "ld: library not found for
         # -lSystemStubs"
-        YCM_PYTHON_VERSION: '2.7.2'
+        YCM_PYTHON_VERSION: '2.7.13'
       'Python 3.5':
-        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_PYTHON_VERSION: '3.5.3'
       'C++ benchmark':
-        YCM_PYTHON_VERSION: '3.5.1'
+        YCM_PYTHON_VERSION: '3.5.3'
         YCM_BENCHMARK: true
     maxParallel: 3
   variables:
