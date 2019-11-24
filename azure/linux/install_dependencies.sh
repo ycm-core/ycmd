@@ -45,15 +45,15 @@ eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 # We need to use openssl 1.0 because the versions of python we build don't
 # compile with openssl 1.1. We could bump python versions until they do, but
 # we've generally committed to testing older versions.
-brew install openssl@1.0 pyenv
+brew install pyenv
 
 eval "$(pyenv init -)"
 
 # In order to work with ycmd, Python *must* be built as a shared library. This
 # is set via the PYTHON_CONFIGURE_OPTS option.
 PYTHON_CONFIGURE_OPTS="--enable-shared" \
-CFLAGS="-I$(brew --prefix openssl@1.0)/include" \
-LDFLAGS="-L$(brew --prefix openssl@1.0)/lib" \
+CFLAGS="-I$(brew --prefix openssl)/include" \
+LDFLAGS="-L$(brew --prefix openssl)/lib" \
 pyenv install ${YCM_PYTHON_VERSION}
 pyenv global ${YCM_PYTHON_VERSION}
 
