@@ -546,10 +546,47 @@ def WorkspaceEditToFixIt_test():
   ) )
 
 
-  # We don't support versioned documentChanges
-  assert_that( lsc.WorkspaceEditToFixIt( request_data,
-                                         { 'documentChanges': [] } ),
+  # Null response to textDocument/codeActions is valid
+  assert_that( lsc.WorkspaceEditToFixIt( request_data, None ),
                equal_to( None ) )
+  # Empty WorkspaceEdit is not explicitly forbidden
+  assert_that( lsc.WorkspaceEditToFixIt( request_data, {} ), equal_to( None ) )
+  # We don't support versioned documentChanges
+  workspace_edit = {
+    'documentChanges': [
+      {
+        'textDocument': {
+          'version': 1,
+          'uri': uri
+        },
+        'edits': [
+          {
+            'newText': 'blah',
+            'range': {
+              'start': { 'line': 0, 'character': 5 },
+              'end': { 'line': 0, 'character': 5 },
+            }
+          }
+        ]
+      }
+    ]
+  }
+  response = responses.BuildFixItResponse( [
+    lsc.WorkspaceEditToFixIt( request_data, workspace_edit, 'test' )
+  ] )
+
+  print( 'Response: {0}'.format( response ) )
+  assert_that(
+    response,
+    has_entries( {
+      'fixits': contains( has_entries( {
+        'text': 'test',
+        'chunks': contains( ChunkMatcher( 'blah',
+                                          LocationMatcher( filepath, 1, 6 ),
+                                          LocationMatcher( filepath, 1, 6 ) ) )
+      } ) )
+    } )
+  )
 
   workspace_edit = {
     'changes': {

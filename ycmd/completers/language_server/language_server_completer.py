@@ -2581,18 +2581,24 @@ def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
   """Converts a LSP workspace edit to a ycmd FixIt suitable for passing to
   responses.BuildFixItResponse."""
 
-  if 'changes' not in workspace_edit:
+  if not workspace_edit:
     return None
 
-  chunks = []
-  # We sort the filenames to make the response stable. Edits are applied in
-  # strict sequence within a file, but apply to files in arbitrary order.
-  # However, it's important for the response to be stable for the tests.
-  for uri in sorted( iterkeys( workspace_edit[ 'changes' ] ) ):
-    chunks.extend( TextEditToChunks( request_data,
-                                     uri,
-                                     workspace_edit[ 'changes' ][ uri ] ) )
-
+  if 'changes' in workspace_edit:
+    chunks = []
+    # We sort the filenames to make the response stable. Edits are applied in
+    # strict sequence within a file, but apply to files in arbitrary order.
+    # However, it's important for the response to be stable for the tests.
+    for uri in sorted( iterkeys( workspace_edit[ 'changes' ] ) ):
+      chunks.extend( TextEditToChunks( request_data,
+                                       uri,
+                                       workspace_edit[ 'changes' ][ uri ] ) )
+  else:
+    chunks = []
+    for text_document_edit in workspace_edit[ 'documentChanges' ]:
+      uri = text_document_edit[ 'textDocument' ][ 'uri' ]
+      edits = text_document_edit[ 'edits' ]
+      chunks.extend( TextEditToChunks( request_data, uri, edits ) )
   return responses.FixIt(
     responses.Location( request_data[ 'line_num' ],
                         request_data[ 'column_num' ],
