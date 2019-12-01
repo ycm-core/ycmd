@@ -81,6 +81,56 @@ def RunTest( app, test ):
 
 
 @SharedYcmd
+def SignatureHelp_NoParams_test( app ):
+  RunTest( app, {
+    'description': 'Trigger after (',
+    'request': {
+      'filetype'  : 'go',
+      'filepath'  : PathToTestFile( 'goto.go' ),
+      'line_num'  : 8,
+      'column_num': 11,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'errors': empty(),
+        'signature_help': has_entries( {
+          'activeSignature': 0,
+          'activeParameter': 0,
+          'signatures': contains(
+            SignatureMatcher( 'dummy()', [] )
+          ),
+        } ),
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def SignatureHelp_NullResponse_test( app ):
+  RunTest( app, {
+    'description': 'No error on null response',
+    'request': {
+      'filetype'  : 'go',
+      'filepath'  : PathToTestFile( 'td', 'signature_help.go' ),
+      'line_num'  : 11,
+      'column_num': 17,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'errors': empty(),
+        'signature_help': has_entries( {
+          'activeSignature': 0,
+          'activeParameter': 0,
+          'signatures': empty(),
+        } ),
+      } )
+    }
+  } )
+
+
+@SharedYcmd
 def SignatureHelp_MethodTrigger_test( app ):
   RunTest( app, {
     'description': 'Trigger after (',
