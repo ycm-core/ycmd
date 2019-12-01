@@ -681,6 +681,7 @@ class LanguageServerCompleter( Completer ):
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
       - StartServer : Return True if the server was started.
+      - _RestartServer
     - Optionally override methods to customise behavior:
       - ConvertNotificationToMessage
       - GetCompleterName
@@ -731,6 +732,8 @@ class LanguageServerCompleter( Completer ):
     completer and should be returned by GetCustomSubcommands:
     - GetType/GetDoc are bespoke to the downstream server, though this class
       provides GetHoverResponse which is useful in this context.
+      GetCustomSubcommands needs not contain GetType/GetDoc if the member
+      functions implementing GetType/GetDoc are named GetType/GetDoc.
   """
   @abc.abstractmethod
   def GetConnection( sefl ):
@@ -859,6 +862,11 @@ class LanguageServerCompleter( Completer ):
       with self._server_info_mutex:
         self._initialize_response = None
         self._initialize_event.set()
+
+
+  @abc.abstractmethod
+  def _RestartServer( self, request_data ):
+    pass # pragma: no cover
 
 
   def _ServerIsInitialized( self ):
@@ -1186,7 +1194,18 @@ class LanguageServerCompleter( Completer ):
       'StopServer': (
         lambda self, request_data, args: self.Shutdown()
       ),
+      'RestartServer': (
+        lambda self, request_data, args: self._RestartServer( request_data )
+      ),
     } )
+    if hasattr( self, 'GetDoc' ):
+      commands[ 'GetDoc' ] = (
+        lambda self, request_data, args: self.GetDoc( request_data )
+      )
+    if hasattr( self, 'GetType' ):
+      commands[ 'GetType' ] = (
+        lambda self, request_data, args: self.GetType( request_data )
+      )
     commands.update( self.GetCustomSubcommands() )
 
     return self._DiscoverSubcommandSupport( commands )

@@ -284,10 +284,6 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
   def GetCustomSubcommands( self ):
     return {
-      'GetType': (
-        # In addition to type information we show declaration.
-        lambda self, request_data, args: self.GetType( request_data )
-      ),
       'GetTypeImprecise': (
         lambda self, request_data, args: self.GetType( request_data )
       ),
@@ -300,12 +296,6 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       'GoToInclude': (
         lambda self, request_data, args: self.GoTo( request_data,
                                                     [ 'Definition' ] )
-      ),
-      'RestartServer': (
-        lambda self, request_data, args: self._RestartServer( request_data )
-      ),
-      'GetDoc': (
-        lambda self, request_data, args: self.GetDoc( request_data )
       ),
       'GetDocImprecise': (
         lambda self, request_data, args: self.GetDoc( request_data )

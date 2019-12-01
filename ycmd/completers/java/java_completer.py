@@ -334,20 +334,11 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
   def GetCustomSubcommands( self ):
     return {
-      'GetDoc': (
-        lambda self, request_data, args: self.GetDoc( request_data )
-      ),
-      'GetType': (
-        lambda self, request_data, args: self.GetType( request_data )
-      ),
       'OrganizeImports': (
         lambda self, request_data, args: self.OrganizeImports( request_data )
       ),
       'OpenProject': (
         lambda self, request_data, args: self._OpenProject( request_data, args )
-      ),
-      'RestartServer': (
-        lambda self, request_data, args: self._RestartServer( request_data )
       ),
       'WipeWorkspace': (
         lambda self, request_data, args: self._WipeWorkspace( request_data,

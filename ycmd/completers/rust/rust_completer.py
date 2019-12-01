@@ -124,24 +124,10 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     return []
 
 
-  def GetCustomSubcommands( self ):
-    return {
-      'GetDoc': (
-        lambda self, request_data, args: self.GetDoc( request_data )
-      ),
-      'GetType': (
-        lambda self, request_data, args: self.GetType( request_data )
-      ),
-      'RestartServer': (
-        lambda self, request_data, args: self._RestartServer( request_data )
-      )
-    }
-
-
-  def CommonDebugItems( self ):
+  def ExtraDebugItems( self, request_data ):
     project_state = ', '.join(
       set( itervalues( self._server_progress ) ) ).capitalize()
-    return super( RustCompleter, self ).CommonDebugItems() + [
+    return [
       responses.DebugInfoItem( 'Project State', project_state ),
       responses.DebugInfoItem( 'Version', _GetRlsVersion() )
     ]
