@@ -40,6 +40,7 @@ from hamcrest import ( all_of,
 
 from ycmd.completers.language_server import language_server_completer as lsc
 from ycmd.completers.language_server.language_server_completer import (
+    NoHoverInfoException,
     NO_HOVER_INFORMATION )
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.tests.language_server import MockConnection
@@ -1194,7 +1195,7 @@ def LanguageServerCompleter_GetHoverResponse_test():
                        side_effect = [ { 'result': None } ] ):
       assert_that(
         calling( completer.GetHoverResponse ).with_args( request_data ),
-        raises( RuntimeError, NO_HOVER_INFORMATION )
+        raises( NoHoverInfoException, NO_HOVER_INFORMATION )
       )
     with patch.object( completer.GetConnection(),
                        'GetResponse',

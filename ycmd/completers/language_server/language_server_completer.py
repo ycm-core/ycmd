@@ -112,6 +112,12 @@ DEFAULT_SUBCOMMANDS_MAP = {
 }
 
 
+class NoHoverInfoException( Exception ):
+  """ Raised instead of RuntimeError for empty hover responses, to allow
+      completers to easily distinguish empty hover from other errors."""
+  pass # pragma: no cover
+
+
 class ResponseTimeoutException( Exception ):
   """Raised by LanguageServerConnection if a request exceeds the supplied
   time-to-live."""
@@ -1855,7 +1861,7 @@ class LanguageServerCompleter( Completer ):
     result = response[ 'result' ]
     if result:
       return result[ 'contents' ]
-    raise RuntimeError( NO_HOVER_INFORMATION )
+    raise NoHoverInfoException( NO_HOVER_INFORMATION )
 
 
   def _GoToRequest( self, request_data, handler ):
