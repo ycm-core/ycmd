@@ -1109,9 +1109,14 @@ class LanguageServerCompleter( Completer ):
                                                  REQUEST_TIMEOUT_COMPLETION )
 
     result = response[ 'result' ]
+    if result is None:
+      return {}
+
     for sig in result[ 'signatures' ]:
       sig_label = sig[ 'label' ]
       end = 0
+      if sig.get( 'parameters' ) is None:
+        sig[ 'parameters' ] = []
       for arg in sig[ 'parameters' ]:
         arg_label = arg[ 'label' ]
         assert not isinstance( arg_label, list )
