@@ -242,7 +242,7 @@ def Initialize( request_id, project_directory, settings ):
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
     'capabilities': {
-      'workspace': { 'applyEdit': True },
+      'workspace': { 'applyEdit': True, 'documentChanges': True },
       'textDocument': {
         'codeAction': {
           'codeActionLiteralSupport': {
