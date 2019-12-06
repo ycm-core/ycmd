@@ -108,17 +108,3 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def DefaultSettings( self, request_data ):
     return { 'hoverKind': 'Structured',
              'fuzzyMatching': False }
-
-
-  def GetCustomSubcommands( self ):
-    return {
-      'RestartServer': (
-        lambda self, request_data, args: self._RestartServer( request_data )
-      ),
-      'GetDoc': (
-        lambda self, request_data, args: self.GetDoc( request_data )
-      ),
-      'GetType': (
-        lambda self, request_data, args: self.GetType( request_data )
-      ),
-    }
