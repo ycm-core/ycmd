@@ -29,6 +29,7 @@ import os
 from ycmd import responses
 from ycmd import utils
 from ycmd.completers.language_server import simple_language_server_completer
+from ycmd.completers.language_server import language_server_completer
 
 
 PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
@@ -88,10 +89,8 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       result = json.loads( self.GetHoverResponse( request_data )[ 'value' ] )
       docs = result[ 'signature' ] + '\n' + result[ 'fullDocumentation' ]
       return responses.BuildDetailedInfoResponse( docs.strip() )
-    except RuntimeError as e:
-      if e.args[ 0 ] == 'No hover information.':
-        raise RuntimeError( 'No documentation available.' )
-      raise
+    except language_server_completer.NoHoverInfoException:
+      raise RuntimeError( 'No documentation available.' )
 
 
   def GetType( self, request_data ):
@@ -99,10 +98,8 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       result = json.loads(
           self.GetHoverResponse( request_data )[ 'value' ] )[ 'signature' ]
       return responses.BuildDisplayMessageResponse( result )
-    except RuntimeError as e:
-      if e.args[ 0 ] == 'No hover information.':
-        raise RuntimeError( 'Unknown type.' )
-      raise
+    except language_server_completer.NoHoverInfoException:
+      raise RuntimeError( 'Unknown type.' )
 
 
   def DefaultSettings( self, request_data ):
