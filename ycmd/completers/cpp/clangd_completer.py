@@ -265,12 +265,13 @@ class ClangdCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     #     <docstring>
     # GetType gets the first two lines.
     value = self.GetHoverResponse( request_data )[ 'value' ].split( '\n\n', 2 )
-    return responses.BuildDisplayMessageResponse( '\n\n'.join( value[ : 2 ] ) )
+    return responses.BuildDisplayMessageResponse(
+        value[ 1 ] + '; ' + value[ 0 ] )
 
 
   def GetDoc( self, request_data ):
     # Just pull `value` out of the textDocument/hover response
-    return responses.BuildDisplayMessageResponse(
+    return responses.BuildDetailedInfoResponse(
         self.GetHoverResponse( request_data )[ 'value' ] )
 
 

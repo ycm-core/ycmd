@@ -87,7 +87,7 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     try:
       result = json.loads( self.GetHoverResponse( request_data )[ 'value' ] )
       docs = result[ 'signature' ] + '\n' + result[ 'fullDocumentation' ]
-      return responses.BuildDisplayMessageResponse( docs.strip() )
+      return responses.BuildDetailedInfoResponse( docs.strip() )
     except RuntimeError as e:
       if e.args[ 0 ] == 'No hover information.':
         raise RuntimeError( 'No documentation available.' )
