@@ -95,6 +95,7 @@ def Subcommands_DefinedSubcommands_test( app ):
       'GoTo',
       'GoToDeclaration',
       'GoToDefinition',
+      'GoToImplementation',
       'GoToType',
       'GetDoc',
       'GetType',

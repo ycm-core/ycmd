@@ -427,32 +427,34 @@ class TypeScriptCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
-      'RestartServer'  : ( lambda self, request_data, args:
-                           self._RestartServer( request_data ) ),
-      'StopServer'     : ( lambda self, request_data, args:
-                           self._StopServer() ),
-      'GoTo'           : ( lambda self, request_data, args:
-                           self._GoToDefinition( request_data ) ),
-      'GoToDefinition' : ( lambda self, request_data, args:
-                           self._GoToDefinition( request_data ) ),
-      'GoToDeclaration': ( lambda self, request_data, args:
-                           self._GoToDefinition( request_data ) ),
-      'GoToReferences' : ( lambda self, request_data, args:
-                           self._GoToReferences( request_data ) ),
-      'GoToType'       : ( lambda self, request_data, args:
-                           self._GoToType( request_data ) ),
-      'GetType'        : ( lambda self, request_data, args:
-                           self._GetType( request_data ) ),
-      'GetDoc'         : ( lambda self, request_data, args:
-                           self._GetDoc( request_data ) ),
-      'FixIt'          : ( lambda self, request_data, args:
-                           self._FixIt( request_data, args ) ),
-      'OrganizeImports': ( lambda self, request_data, args:
-                           self._OrganizeImports( request_data ) ),
-      'RefactorRename' : ( lambda self, request_data, args:
-                           self._RefactorRename( request_data, args ) ),
-      'Format'         : ( lambda self, request_data, args:
-                           self._Format( request_data ) ),
+      'RestartServer'     : ( lambda self, request_data, args:
+                              self._RestartServer( request_data ) ),
+      'StopServer'        : ( lambda self, request_data, args:
+                              self._StopServer() ),
+      'GoTo'              : ( lambda self, request_data, args:
+                              self._GoToDefinition( request_data ) ),
+      'GoToDefinition'    : ( lambda self, request_data, args:
+                              self._GoToDefinition( request_data ) ),
+      'GoToDeclaration'   : ( lambda self, request_data, args:
+                              self._GoToDefinition( request_data ) ),
+      'GoToImplementation': ( lambda self, request_data, args:
+                              self._GoToImplementation( request_data ) ),
+      'GoToReferences'    : ( lambda self, request_data, args:
+                              self._GoToReferences( request_data ) ),
+      'GoToType'          : ( lambda self, request_data, args:
+                              self._GoToType( request_data ) ),
+      'GetType'           : ( lambda self, request_data, args:
+                              self._GetType( request_data ) ),
+      'GetDoc'            : ( lambda self, request_data, args:
+                              self._GetDoc( request_data ) ),
+      'FixIt'             : ( lambda self, request_data, args:
+                              self._FixIt( request_data, args ) ),
+      'OrganizeImports'   : ( lambda self, request_data, args:
+                              self._OrganizeImports( request_data ) ),
+      'RefactorRename'    : ( lambda self, request_data, args:
+                              self._RefactorRename( request_data, args ) ),
+      'Format'            : ( lambda self, request_data, args:
+                              self._Format( request_data ) ),
     }
 
 
@@ -655,14 +657,11 @@ class TypeScriptCompleter( Completer ):
 
   def _GoToDefinition( self, request_data ):
     self._Reload( request_data )
-    try:
-      filespans = self._SendRequest( 'definition', {
-        'file':   request_data[ 'filepath' ],
-        'line':   request_data[ 'line_num' ],
-        'offset': request_data[ 'column_codepoint' ]
-      } )
-    except RuntimeError:
-      raise RuntimeError( 'Could not find definition.' )
+    filespans = self._SendRequest( 'definition', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_codepoint' ]
+    } )
 
     if not filespans:
       raise RuntimeError( 'Could not find definition.' )
@@ -673,6 +672,29 @@ class TypeScriptCompleter( Completer ):
                       span[ 'file' ],
                       span[ 'start' ][ 'line' ],
                       span[ 'start' ][ 'offset' ] ) )
+
+
+  def _GoToImplementation( self, request_data ):
+    self._Reload( request_data )
+    filespans = self._SendRequest( 'implementation', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_codepoint' ]
+    } )
+
+    if not filespans:
+      raise RuntimeError( 'No implementation found.' )
+
+    results = []
+    for span in filespans:
+      filename = span[ 'file' ]
+      start = span[ 'start' ]
+      lines = GetFileLines( request_data, span[ 'file' ] )
+      line_num = start[ 'line' ]
+      results.append( responses.BuildGoToResponseFromLocation(
+        _BuildLocation( lines, filename, line_num, start[ 'offset' ] ),
+        lines[ line_num - 1 ] ) )
+    return results
 
 
   def _GoToReferences( self, request_data ):

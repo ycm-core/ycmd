@@ -22,7 +22,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 
-from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest import ( assert_that,
                        contains,
                        contains_string,
@@ -282,34 +281,30 @@ def RunGetSemanticTest( app,
     'filetype'         : filetype
   }
 
-  args = test[ 0 ]
-  if response == requests.codes.ok:
-    if not isinstance( test[ 1 ], BaseMatcher ):
-      expected = has_entry( 'message', contains_string( test[ 1 ] ) )
-    else:
-      expected = has_entry( 'message', test[ 1 ] )
-  else:
-    expected = test[ 1 ]
-
   request = common_args
-  request.update( args )
+  request.update( test[ 0 ] )
   test = { 'request': request,
            'route': '/run_completer_command',
            'expect': { 'response': response,
-                       'data': expected } }
+                       'data': test[ 1 ] } }
   RunAfterInitialized( app, test )
 
 
 def Subcommands_GetType_test():
   tests = [
     # Basic pod types
-    [ { 'line_num': 24, 'column_num':  3 }, 'Foo' ],
+    [ { 'line_num': 24, 'column_num':  3 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
     # [ { 'line_num': 12, 'column_num':  2 }, 'Foo' ],
-    [ { 'line_num': 12, 'column_num':  8 }, 'Foo' ],
-    [ { 'line_num': 12, 'column_num':  9 }, 'Foo' ],
-    [ { 'line_num': 12, 'column_num': 10 }, 'Foo' ],
+    [ { 'line_num': 12, 'column_num':  8 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 12, 'column_num':  9 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 12, 'column_num': 10 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
     # [ { 'line_num': 13, 'column_num':  3 }, 'int' ],
-    [ { 'line_num': 13, 'column_num':  7 }, 'int' ],
+    [ { 'line_num': 13, 'column_num':  7 },
+      has_entry( 'message', contains_string( 'int' ) ) ],
     # [ { 'line_num': 15, 'column_num':  7 }, 'char' ],
 
     # Function
@@ -329,34 +324,50 @@ def Subcommands_GetType_test():
     # 'Ns::Type => Ns::BasicType<char>' ],
 
     # Cursor on decl for refs & pointers
-    [ { 'line_num': 39, 'column_num':  3 }, 'Foo' ],
-    [ { 'line_num': 39, 'column_num': 11 }, 'Foo &' ],
-    [ { 'line_num': 39, 'column_num': 15 }, 'Foo' ],
-    [ { 'line_num': 40, 'column_num':  3 }, 'Foo' ],
-    [ { 'line_num': 40, 'column_num': 11 }, 'Foo *' ],
-    [ { 'line_num': 40, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 39, 'column_num':  3 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 39, 'column_num': 11 },
+      has_entry( 'message', contains_string( 'Foo &' ) ) ],
+    [ { 'line_num': 39, 'column_num': 15 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 40, 'column_num':  3 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 40, 'column_num': 11 },
+      has_entry( 'message', contains_string( 'Foo *' ) ) ],
+    [ { 'line_num': 40, 'column_num': 18 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
     # [ { 'line_num': 42, 'column_num':  3 }, 'const Foo &' ],
-    [ { 'line_num': 42, 'column_num': 16 }, 'const struct Foo &' ],
+    [ { 'line_num': 42, 'column_num': 16 },
+      has_entry( 'message', contains_string( 'const struct Foo &' ) ) ],
     # [ { 'line_num': 43, 'column_num':  3 }, 'const Foo *' ],
-    [ { 'line_num': 43, 'column_num': 16 }, 'const struct Foo *' ],
+    [ { 'line_num': 43, 'column_num': 16 },
+      has_entry( 'message', contains_string( 'const struct Foo *' ) ) ],
 
     # Cursor on usage
-    [ { 'line_num': 45, 'column_num': 13 }, 'const struct Foo' ],
+    [ { 'line_num': 45, 'column_num': 13 },
+      has_entry( 'message', contains_string( 'const struct Foo' ) ) ],
     # [ { 'line_num': 45, 'column_num': 19 }, 'const int' ],
-    [ { 'line_num': 46, 'column_num': 13 }, 'const struct Foo *' ],
+    [ { 'line_num': 46, 'column_num': 13 },
+      has_entry( 'message', contains_string( 'const struct Foo *' ) ) ],
     # [ { 'line_num': 46, 'column_num': 20 }, 'const int' ],
-    [ { 'line_num': 47, 'column_num': 12 }, 'Foo' ],
-    [ { 'line_num': 47, 'column_num': 17 }, 'int' ],
-    [ { 'line_num': 48, 'column_num': 12 }, 'Foo *' ],
-    [ { 'line_num': 48, 'column_num': 18 }, 'int' ],
+    [ { 'line_num': 47, 'column_num': 12 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 47, 'column_num': 17 },
+      has_entry( 'message', contains_string( 'int' ) ) ],
+    [ { 'line_num': 48, 'column_num': 12 },
+      has_entry( 'message', contains_string( 'Foo *' ) ) ],
+    [ { 'line_num': 48, 'column_num': 18 },
+      has_entry( 'message', contains_string( 'int' ) ) ],
 
     # Auto in declaration
     # [ { 'line_num': 28, 'column_num':  3 }, 'struct Foo &' ],
     # [ { 'line_num': 28, 'column_num': 11 }, 'struct Foo &' ],
-    [ { 'line_num': 28, 'column_num': 18 }, 'struct Foo' ],
+    [ { 'line_num': 28, 'column_num': 18 },
+      has_entry( 'message', contains_string( 'struct Foo' ) ) ],
     # [ { 'line_num': 29, 'column_num':  3 }, 'Foo *' ],
     # [ { 'line_num': 29, 'column_num': 11 }, 'Foo *' ],
-    [ { 'line_num': 29, 'column_num': 18 }, 'Foo' ],
+    [ { 'line_num': 29, 'column_num': 18 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
     # [ { 'line_num': 31, 'column_num':  3 }, 'const Foo &' ],
     # [ { 'line_num': 31, 'column_num': 16 }, 'const Foo &' ],
     # [ { 'line_num': 32, 'column_num':  3 }, 'const Foo *' ],
@@ -367,24 +378,28 @@ def Subcommands_GetType_test():
     # [ { 'line_num': 34, 'column_num': 21 }, 'const int' ],
     # [ { 'line_num': 35, 'column_num': 14 }, 'const Foo *' ],
     # [ { 'line_num': 35, 'column_num': 22 }, 'const int' ],
-    [ { 'line_num': 36, 'column_num': 13 }, 'Foo' ],
-    [ { 'line_num': 36, 'column_num': 19 }, 'int' ],
+    [ { 'line_num': 36, 'column_num': 13 },
+      has_entry( 'message', contains_string( 'Foo' ) ) ],
+    [ { 'line_num': 36, 'column_num': 19 },
+      has_entry( 'message', contains_string( 'int' ) ) ],
     # [ { 'line_num': 37, 'column_num': 13 }, 'Foo *' ],
-    [ { 'line_num': 37, 'column_num': 20 }, 'int' ],
+    [ { 'line_num': 37, 'column_num': 20 },
+      has_entry( 'message', contains_string( 'int' ) ) ],
 
     # Unicode
-    [ { 'line_num': 51, 'column_num': 13 }, 'Unicøde *' ],
+    [ { 'line_num': 51, 'column_num': 13 },
+      has_entry( 'message', contains_string( 'Unicøde *' ) ) ],
 
     # Bound methods
     # On Win32, methods pick up an __attribute__((thiscall)) to annotate their
     # calling convention.  This shows up in the type, which isn't ideal, but
     # also prohibitively complex to try and strip out.
     [ { 'line_num': 53, 'column_num': 15 },
-      matches_regexp(
-          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ],
+      has_entry( 'message', matches_regexp(
+          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ) ],
     [ { 'line_num': 54, 'column_num': 18 },
-      matches_regexp(
-          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ],
+      has_entry( 'message', matches_regexp(
+          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ) ],
   ]
 
   for subcommand in [ 'GetType', 'GetTypeImprecise' ]:
@@ -399,11 +414,17 @@ def Subcommands_GetType_test():
 def Subcommands_GetDoc_test():
   tests = [
     # from local file
-    [ { 'line_num': 5, 'column_num': 10 }, 'docstring', requests.codes.ok ],
+    [ { 'line_num': 5, 'column_num': 10 },
+      has_entry( 'detailed_info', contains_string( 'docstring' ) ),
+      requests.codes.ok ],
     # from header
-    [ { 'line_num': 6, 'column_num': 10 }, 'docstring', requests.codes.ok ],
+    [ { 'line_num': 6, 'column_num': 10 },
+      has_entry( 'detailed_info', contains_string( 'docstring' ) ),
+      requests.codes.ok ],
     # no docstring
-    [ { 'line_num': 7, 'column_num': 7 }, 'int x = 3', requests.codes.ok ],
+    [ { 'line_num': 7, 'column_num': 7 },
+      has_entry( 'detailed_info', contains_string( 'int x = 3' ) ),
+      requests.codes.ok ],
     # no hover
     [ { 'line_num': 8, 'column_num': 1 },
       ErrorMatcher( RuntimeError, 'No hover information.' ),

@@ -87,7 +87,7 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     try:
       result = json.loads( self.GetHoverResponse( request_data )[ 'value' ] )
       docs = result[ 'signature' ] + '\n' + result[ 'fullDocumentation' ]
-      return responses.BuildDisplayMessageResponse( docs.strip() )
+      return responses.BuildDetailedInfoResponse( docs.strip() )
     except RuntimeError as e:
       if e.args[ 0 ] == 'No hover information.':
         raise RuntimeError( 'No documentation available.' )
@@ -108,17 +108,3 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def DefaultSettings( self, request_data ):
     return { 'hoverKind': 'Structured',
              'fuzzyMatching': False }
-
-
-  def GetCustomSubcommands( self ):
-    return {
-      'RestartServer': (
-        lambda self, request_data, args: self._RestartServer( request_data )
-      ),
-      'GetDoc': (
-        lambda self, request_data, args: self.GetDoc( request_data )
-      ),
-      'GetType': (
-        lambda self, request_data, args: self.GetType( request_data )
-      ),
-    }
