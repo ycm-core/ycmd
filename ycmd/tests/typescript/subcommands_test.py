@@ -99,6 +99,7 @@ def Subcommands_DefinedSubcommands_test( app ):
       'GoTo',
       'GoToDeclaration',
       'GoToDefinition',
+      'GoToImplementation',
       'GoToType',
       'GetDoc',
       'GetType',
@@ -504,6 +505,51 @@ def Subcommands_GoToReferences_test( app ):
       )
     }
   } )
+
+
+@SharedYcmd
+def Subcommands_GoToImplementation_test( app ):
+  RunTest( app, {
+    'description': 'GoToImplementation works',
+    'request': {
+      'command': 'GoToImplementation',
+      'line_num': 6,
+      'column_num': 11,
+      'filepath': PathToTestFile( 'signatures.ts' ),
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': contains_inanyorder(
+        has_entries( { 'description': '  return {',
+                       'line_num'   : 12,
+                       'column_num' : 10,
+                       'filepath'   : PathToTestFile( 'signatures.ts' ) } ),
+        has_entries( { 'description': 'class SomeClass '
+                                      'implements ReturnValue {',
+                       'line_num'   : 35,
+                       'column_num' : 7,
+                       'filepath'   : PathToTestFile( 'signatures.ts' ) } ),
+      )
+    }
+  } )
+
+
+@SharedYcmd
+def Subcommands_GoToImplementation_InvalidLocation_test( app ):
+  RunTest( app, {
+    'description': 'GoToImplementation on an invalid location raises exception',
+    'request': {
+      'command': 'GoToImplementation',
+      'line_num': 1,
+      'column_num': 1,
+      'filepath': PathToTestFile( 'signatures.ts' ),
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError, 'No implementation found.' )
+    }
+  } )
+
 
 
 @SharedYcmd
