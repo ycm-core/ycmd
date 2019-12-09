@@ -444,6 +444,10 @@ def ParseArguments():
                               'on the ycm_core code itself.' )
   parser.add_argument( '--core-tests', nargs = '?', const = '*',
                        help = 'Run core tests and optionally filter them.' )
+  parser.add_argument( '--cmake-path',
+                       help = 'For developers: specify the cmake executable. '
+                              'Useful for testing with specific versions, or '
+                              'if the system is unable to find cmake.' )
 
   # These options are deprecated.
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
@@ -480,8 +484,13 @@ def ParseArguments():
   return args
 
 
-def FindCmake():
-  return FindExecutableOrDie( 'cmake', 'CMake is required to build ycmd' )
+def FindCmake( args ):
+  cmake_exe = 'cmake'
+
+  if args.cmake_path:
+    cmake_exe = args.cmake_path
+
+  return FindExecutableOrDie( cmake_exe, 'CMake is required to build ycmd' )
 
 
 def GetCmakeCommonArgs( args ):
@@ -1106,7 +1115,7 @@ def WritePythonUsedDuringBuild():
 
 
 def DoCmakeBuilds( args ):
-  cmake = FindCmake()
+  cmake = FindCmake( args )
   cmake_common_args = GetCmakeCommonArgs( args )
 
   if not args.skip_build:
