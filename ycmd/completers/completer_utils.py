@@ -226,6 +226,7 @@ DEFAULT_FILETYPE_TRIGGERS = {
     'python,'
     'scala,'
     'typescript,'
+    'typescriptreact,'
     'vb' ) : [ '.' ],
   'ruby,rust' : [ '.', '::' ],
   'lua' : [ '.', ':' ],
