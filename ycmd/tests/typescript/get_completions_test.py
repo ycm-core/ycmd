@@ -49,12 +49,12 @@ from ycmd.utils import ReadFile
 
 def RunTest( app, test ):
   contents = ReadFile( test[ 'request' ][ 'filepath' ] )
-
+  filetype = test[ 'request' ].get( 'filetype', 'typescript' )
   app.post_json(
     '/event_notification',
     CombineRequest( test[ 'request' ], {
       'contents': contents,
-      'filetype': 'typescript',
+      'filetype': filetype,
       'event_name': 'BufferVisit'
     } )
   )
@@ -285,6 +285,31 @@ def GetCompletions_AutoImport_test( app ):
               } )
             )
           } )
+        } ) )
+      } )
+    }
+  } )
+
+
+@SharedYcmd
+def GetCompletions_TypeScriptReact_DefaultTriggers_test( app ):
+  filepath = PathToTestFile( 'test.tsx' )
+  RunTest( app, {
+    'description': 'No need to force after a semantic trigger',
+    'request': {
+      'line_num': 17,
+      'column_num': 3,
+      'filepath': filepath,
+      'filetype': 'typescriptreact'
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': has_item( has_entries( {
+          'insertion_text':  'foo',
+          'extra_menu_info': "(property) 'foo': number",
+          'detailed_info':   "(property) 'foo': number",
+          'kind':            'property',
         } ) )
       } )
     }

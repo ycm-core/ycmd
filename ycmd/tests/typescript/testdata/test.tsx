@@ -12,3 +12,6 @@ const TestComponent: React.FunctionComponent<MyComponentProps> = (props) => {
     </div>
   );
 };
+
+const a = { 'foo': 3 }
+a.
