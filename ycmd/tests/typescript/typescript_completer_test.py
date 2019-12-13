@@ -16,16 +16,27 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest.mock import patch
-from hamcrest import assert_that
+from hamcrest import assert_that, equal_to
 
+from ycmd import user_options_store
 from ycmd.completers.typescript.typescript_completer import (
-    ShouldEnableTypeScriptCompleter )
+    ShouldEnableTypeScriptCompleter,
+    FindTSServer )
 
 
 def ShouldEnableTypeScriptCompleter_NodeAndTsserverFound_test():
-  assert_that( ShouldEnableTypeScriptCompleter() )
+  user_options = user_options_store.GetAll()
+  assert_that( ShouldEnableTypeScriptCompleter( user_options ) )
 
 
 @patch( 'ycmd.utils.FindExecutable', return_value = None )
 def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
-  assert_that( not ShouldEnableTypeScriptCompleter() )
+  user_options = user_options_store.GetAll()
+  assert_that( not ShouldEnableTypeScriptCompleter( user_options ) )
+
+
+@patch( 'ycmd.utils.FindExecutableWithFallback',
+        wraps = lambda x, fb: x if x == 'tsserver' else None )
+@patch( 'os.path.isfile', return_value = True )
+def FindTSServer_CustomTsserverPath_test( *args ):
+  assert_that( 'tsserver', equal_to( FindTSServer( 'tsserver' ) ) )

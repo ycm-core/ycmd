@@ -71,7 +71,10 @@ class DeferredResponse:
       return self._message[ 'body' ]
 
 
-def FindTSServer():
+def FindTSServer( user_options_path ):
+  tsserver = utils.FindExecutableWithFallback( user_options_path , None )
+  if tsserver and os.path.isfile( tsserver ):
+    return tsserver
   # The TSServer executable is installed at the root directory on Windows while
   # it's installed in the bin folder on other platforms.
   for executable in [ os.path.join( TSSERVER_DIR, 'bin', 'tsserver' ),
@@ -83,8 +86,8 @@ def FindTSServer():
   return None
 
 
-def ShouldEnableTypeScriptCompleter():
-  tsserver = FindTSServer()
+def ShouldEnableTypeScriptCompleter( user_options ):
+  tsserver = FindTSServer( user_options[ 'tsserver_binary_path' ] )
   if not tsserver:
     LOGGER.error( 'Not using TypeScript completer: TSServer not installed '
                   'in %s', TSSERVER_DIR )
@@ -138,7 +141,8 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_lock = threading.RLock()
     self._tsserver_handle = None
     self._tsserver_version = None
-    self._tsserver_executable = FindTSServer()
+    self._tsserver_executable = FindTSServer(
+        user_options[ 'tsserver_binary_path' ] )
     # Used to read response only if TSServer is running.
     self._tsserver_is_running = threading.Event()
 

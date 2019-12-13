@@ -34,5 +34,10 @@
   "clangd_binary_path": "",
   "clangd_args": [],
   "clangd_uses_ycmd_caching": 1,
-  "disable_signature_help": 0
+  "disable_signature_help": 0,
+  "gopls_binary_path": "",
+  "rls_binary_path": "",
+  "rustc_binary_path": "",
+  "tsserver_binary_path": "",
+  "roslyn_binary_path": ""
 }

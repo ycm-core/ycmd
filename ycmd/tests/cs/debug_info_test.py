@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains_exactly, empty, has_entries,
-                       has_entry, instance_of )
+from hamcrest import ( assert_that, contains_exactly, empty, equal_to,
+                       has_entries, has_entry, instance_of )
+from unittest.mock import patch
 
+from ycmd.completers.cs.hook import GetCompleter
 from ycmd.tests.cs import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     WaitUntilCompleterServerReady )
+from ycmd import user_options_store
 from ycmd.utils import ReadFile
 
 
@@ -179,3 +182,22 @@ def DebugInfo_ExtraConfStoreNonexisting_test( app ):
                                        'solution-not-named-like-folder',
                                        'extra-conf-bad',
                                        'testy', '.ycm_extra_conf.py' ) )
+
+
+def GetCompleter_RoslynFound_test():
+  assert_that( GetCompleter( user_options_store.GetAll() ) )
+
+
+@patch( 'ycmd.completers.cs.cs_completer.PATH_TO_OMNISHARP_ROSLYN_BINARY',
+        None )
+def GetCompleter_RoslynNotFound_test( *args ):
+  assert_that( not GetCompleter( user_options_store.GetAll() ) )
+
+
+@patch( 'ycmd.completers.cs.cs_completer.FindExecutableWithFallback',
+        wraps = lambda x, fb: x if x == 'roslyn' else fb )
+@patch( 'os.path.isfile', return_value = True )
+def GetCompleter_RoslynFromUserOption_test( *args ):
+  user_options = user_options_store.GetAll().copy(
+      roslyn_binary_path = 'roslyn' )
+  assert_that( GetCompleter( user_options )._roslyn_path, equal_to( 'roslyn' ) )

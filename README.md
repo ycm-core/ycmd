@@ -100,8 +100,8 @@ completer and [clangd][clangd]-based completer that both provide semantic
 completion for C-family languages. [clangd][clangd] support is currently
 **experimental** and changes in the near future might break backwards
 compatibility. There's also a Jedi-based completer for semantic completion for
-Python, an OmniSharp-based completer for C#, a [Gocode][gocode]-based completer
-for Go (using [Godef][godef] for jumping to definitions), a TSServer-based
+Python, an OmniSharp-based completer for C#, a [gopls][gopls]-based completer
+for Go (using [gopls][gopls] for jumping to definitions), a TSServer-based
 completer for JavaScript and TypeScript, a [jdt.ls][jdtls]-based server for
 Java, and a [RLS][]-based completer for Rust. More will be added with time.
 
@@ -480,8 +480,6 @@ This software is licensed under the [GPL v3 license][gpl].
 [extra-conf-doc]: https://github.com/ycm-core/YouCompleteMe#c-family-semantic-completion
 [emacs-ycmd]: https://github.com/abingham/emacs-ycmd
 [gpl]: http://www.gnu.org/copyleft/gpl.html
-[gocode]: https://github.com/nsf/gocode
-[godef]: https://github.com/Manishearth/godef
 [kak-ycmd]: https://github.com/mawww/kak-ycmd
 [ccoc]: https://github.com/ycm-core/ycmd/blob/master/CODE_OF_CONDUCT.md
 [dev-setup]: https://github.com/ycm-core/ycmd/blob/master/DEV_SETUP.md

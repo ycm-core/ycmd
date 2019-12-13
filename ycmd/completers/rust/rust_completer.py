@@ -41,8 +41,8 @@ def _GetCommandOutput( command ):
                      stderr = PIPE ).communicate()[ 0 ].rstrip() )
 
 
-def _GetRlsVersion():
-  rls_version = _GetCommandOutput( [ RLS_EXECUTABLE, '--version' ] )
+def _GetRlsVersion( rls_path ):
+  rls_version = _GetCommandOutput( [ rls_path, '--version' ] )
   match = RLS_VERSION_REGEX.match( rls_version )
   if not match:
     LOGGER.error( 'Cannot parse Rust Language Server version: %s', rls_version )
@@ -50,16 +50,31 @@ def _GetRlsVersion():
   return match.group( 'version' )
 
 
-def ShouldEnableRustCompleter():
-  if not RLS_EXECUTABLE:
+def ShouldEnableRustCompleter( user_options ):
+  if ( user_options[ 'rls_binary_path' ] and
+       not user_options[ 'rustc_binary_path' ] ):
+    LOGGER.error( 'Not using Rust completer: RUSTC not specified' )
+    return False
+
+  rls = utils.FindExecutableWithFallback( user_options[ 'rls_binary_path' ],
+                                          RLS_EXECUTABLE )
+  if not rls:
     LOGGER.error( 'Not using Rust completer: no RLS executable found at %s',
-                  RLS_EXECUTABLE )
+                  rls )
     return False
   LOGGER.info( 'Using Rust completer' )
   return True
 
 
 class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+  def __init__( self, user_options ):
+    super().__init__( user_options )
+    self._rls_path = utils.FindExecutableWithFallback(
+        user_options[ 'rls_binary_path' ],
+        RLS_EXECUTABLE )
+    self._rustc_path = utils.FindExecutableWithFallback(
+        user_options[ 'rustc_binary_path' ],
+        RUSTC_EXECUTABLE )
 
   def _Reset( self ):
     with self._server_state_mutex:
@@ -72,14 +87,12 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def GetCommandLine( self ):
-    return RLS_EXECUTABLE
+    return [ self._rls_path ]
 
 
   def GetServerEnvironment( self ):
     env = os.environ.copy()
-    # Force RLS to use the rustc from the toolchain in third_party/rls.
-    # TODO: allow users to pick a custom toolchain.
-    env[ 'RUSTC' ] = RUSTC_EXECUTABLE
+    env[ 'RUSTC' ] = self._rustc_path
     if LOGGER.isEnabledFor( logging.DEBUG ):
       env[ 'RUST_LOG' ] = 'rls=trace'
       env[ 'RUST_BACKTRACE' ] = '1'
@@ -121,7 +134,8 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       set( self._server_progress.values() ) ).capitalize()
     return [
       responses.DebugInfoItem( 'Project State', project_state ),
-      responses.DebugInfoItem( 'Version', _GetRlsVersion() )
+      responses.DebugInfoItem( 'Version', _GetRlsVersion( self._rls_path ) ),
+      responses.DebugInfoItem( 'RUSTC', self._rustc_path )
     ]
 
 

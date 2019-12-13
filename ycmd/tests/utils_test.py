@@ -385,6 +385,27 @@ def FindExecutable_AdditionalPathExt_test():
     assert_that( executable, equal_to( utils.FindExecutable( executable ) ) )
 
 
+def FindExecutableWithFallback_Empty_test():
+  with TemporaryExecutable() as fallback:
+    assert_that( utils.FindExecutableWithFallback( '', fallback ),
+                 equal_to( fallback ) )
+
+
+@patch( 'ycmd.utils.FindExecutable', return_value = None )
+def FindExecutableWithFallback_UserProvided_Invalid_test( find_executable ):
+  with TemporaryExecutable() as executable:
+    with TemporaryExecutable() as fallback:
+      assert_that( utils.FindExecutableWithFallback( executable, fallback ),
+                   equal_to( None ) )
+
+
+def FindExecutableWithFallback_UserProvided_test():
+  with TemporaryExecutable() as executable:
+    with TemporaryExecutable() as fallback:
+      assert_that( utils.FindExecutableWithFallback( executable, fallback ),
+                   equal_to( executable ) )
+
+
 @patch( 'ycmd.utils.ProcessIsRunning', return_value = True )
 def WaitUntilProcessIsTerminated_TimedOut_test( *args ):
   assert_that(
