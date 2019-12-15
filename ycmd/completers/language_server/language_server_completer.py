@@ -762,7 +762,7 @@ class LanguageServerCompleter( Completer ):
     #     server file state, and stored data about the server itself) when we
     #     are calling methods on this object from the message pump). We
     #     synchronise on this mutex for that.
-    self._server_info_mutex = threading.Lock()
+    self._server_info_mutex = threading.RLock()
     self.ServerReset()
 
     # LSP allows servers to return an incomplete list of completions. The cache
@@ -787,7 +787,6 @@ class LanguageServerCompleter( Completer ):
 
     self._signature_help_disabled = user_options[ 'disable_signature_help' ]
 
-    self._server_state_mutex = threading.RLock()
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._stderr_file = None
 
@@ -888,31 +887,38 @@ class LanguageServerCompleter( Completer ):
                    self.GetServerName(),
                    self._server_handle.pid )
 
-    with self._server_state_mutex:
-      try:
-        with self._server_info_mutex:
-          self.ShutdownServer()
+    try:
+      with self._server_info_mutex:
+        self.ShutdownServer()
 
-          # By this point, the server should have shut down and terminated. To
-          # ensure that isn't blocked, we close all of our connections and wait
-          # for the process to exit.
-          #
-          # If, after a small delay, the server has not shut down we do NOT kill
-          # it; we expect that it will shut itself down eventually. This is
-          # predominantly due to strange process behaviour on Windows.
-        with self._server_state_mutex:
-          if self._connection:
-            self._connection.Close()
+      # By this point, the server should have shut down and terminated. To
+      # ensure that isn't blocked, we close all of our connections and wait
+      # for the process to exit.
+      #
+      # If, after a small delay, the server has not shut down we do NOT kill
+      # it; we expect that it will shut itself down eventually. This is
+      # predominantly due to strange process behaviour on Windows.
 
-        with self._server_info_mutex:
-          utils.WaitUntilProcessIsTerminated( self._server_handle,
-                                              timeout = 15 )
+      # NOTE: While waiting for the connection to close, we must _not_ hold any
+      # locks (in fact, we must not hold locks that might be needed when
+      # processing messages in the poll thread - i.e. notifications).
+      # This is crucial, as the server closing (asyncronously) might
+      # involve _other activities_ if there are messages in the queue (e.g. on
+      # the socket) and we need to store/handle them in the message pump
+      # (such as notifications) or even the initialise response.
+      if self._connection:
+        # Actually this sits around waiting for the connection thraed to exit
+        self._connection.Close()
 
-          LOGGER.info( '%s stopped', self.GetServerName() )
-      except Exception:
-        LOGGER.exception( 'Error while stopping %s', self.GetServerName() )
-        # We leave the process running. Hopefully it will eventually die of its
-        # own accord.
+      with self._server_info_mutex:
+        utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                            timeout = 15 )
+
+        LOGGER.info( '%s stopped', self.GetServerName() )
+    except Exception:
+      LOGGER.exception( 'Error while stopping %s', self.GetServerName() )
+      # We leave the process running. Hopefully it will eventually die of its
+      # own accord.
 
     with self._server_info_mutex:
       # Tidy up our internal state, even if the completer server didn't close
