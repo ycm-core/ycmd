@@ -471,7 +471,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         '-data', self._workspace_path,
       ]
 
-    return super().StartServer( request_data )
+      return super( JavaCompleter, self )._StartServerNoLock( request_data )
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
