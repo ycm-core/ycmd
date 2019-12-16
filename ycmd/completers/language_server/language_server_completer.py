@@ -832,8 +832,14 @@ class LanguageServerCompleter( Completer ):
 
 
   def StartServer( self, request_data ):
-    with self._server_info_mutex:
-      return self._StartServerNoLock( request_data )
+    try:
+      with self._server_info_mutex:
+        return self._StartServerNoLock( request_data )
+    except LanguageServerConnectionTimeout:
+      LOGGER.error( '%s failed to start, or did not connect successfully',
+                    self.GetServerName() )
+      self.Shutdown()
+      return False
 
 
   def _StartServerNoLock( self, request_data ):
@@ -861,13 +867,7 @@ class LanguageServerCompleter( Completer ):
 
     self._connection.Start()
 
-    try:
-      self._connection.AwaitServerConnection()
-    except LanguageServerConnectionTimeout:
-      LOGGER.error( '%s failed to start, or did not connect successfully',
-                    self.GetServerName() )
-      self.Shutdown()
-      return False
+    self._connection.AwaitServerConnection()
 
     LOGGER.info( '%s started', self.GetServerName() )
 

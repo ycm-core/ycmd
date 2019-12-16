@@ -48,7 +48,7 @@ def ShouldEnableGoCompleter( user_options ):
   return False
 
 
-class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+class GoCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
     super().__init__( user_options )
     self._gopls_path = utils.FindExecutableWithFallback(
