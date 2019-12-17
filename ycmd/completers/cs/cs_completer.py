@@ -194,6 +194,9 @@ class CsharpCompleter( Completer ):
       'GetType'                          : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetType' ) ),
+      'Format'                           : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_Format' ) ),
       'FixIt'                            : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_FixIt' ) ),
@@ -597,6 +600,23 @@ class CsharpSolutionCompleter( object ):
     message = result[ "Type" ]
 
     return responses.BuildDisplayMessageResponse( message )
+
+
+  def _Format( self, request_data ):
+    request = self._DefaultParameters( request_data )
+    request[ 'WantsTextChanges' ] = True
+    result = self._GetResponse( '/codeformat', request )
+    fixit = responses.FixIt(
+      _BuildLocation(
+        request_data,
+        request_data[ 'filepath' ],
+        request_data[ 'line_num' ],
+        request_data[ 'column_codepoint' ] ),
+      _LinePositionSpanTextChangeToFixItChunks(
+        result[ 'Changes' ],
+        request_data[ 'filepath' ],
+        request_data ) )
+    return responses.BuildFixItResponse( [ fixit ] )
 
 
   def _FixIt( self, request_data ):
