@@ -33,7 +33,10 @@ import threading
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.cs import solutiondetection
-from ycmd.utils import CodepointOffsetToByteOffset, LOGGER, urljoin
+from ycmd.utils import ( ByteOffsetToCodepointOffset,
+                         CodepointOffsetToByteOffset,
+                         LOGGER,
+                         urljoin )
 from ycmd import responses
 from ycmd import utils
 
@@ -605,7 +608,30 @@ class CsharpSolutionCompleter( object ):
   def _Format( self, request_data ):
     request = self._DefaultParameters( request_data )
     request[ 'WantsTextChanges' ] = True
-    result = self._GetResponse( '/codeformat', request )
+    if 'range' in request_data:
+      lines = request_data[ 'lines' ]
+      start = request_data[ 'range' ][ 'start' ]
+      start_line_num = start[ 'line_num' ]
+      start_line_value = lines[ start_line_num ]
+
+      start_codepoint = ByteOffsetToCodepointOffset( start_line_value,
+                                                     start[ 'column_num' ] )
+
+      end = request_data[ 'range' ][ 'end' ]
+      end_line_num = end[ 'line_num' ]
+      end_line_value = lines[ end_line_num ]
+      end_codepoint = ByteOffsetToCodepointOffset( end_line_value,
+                                                   end[ 'column_num' ] )
+      request.update( {
+        'line': start_line_num,
+        'column': start_codepoint,
+        'EndLine': end_line_num,
+        'EndColumn': end_codepoint
+      } )
+      result = self._GetResponse( '/formatRange', request )
+    else:
+      result = self._GetResponse( '/codeformat', request )
+
     fixit = responses.FixIt(
       _BuildLocation(
         request_data,
