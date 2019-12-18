@@ -19,7 +19,8 @@ import ycm_core
 import os
 import inspect
 from ycmd import extra_conf_store
-from ycmd.utils import ( OnMac,
+from ycmd.utils import ( AbsoluatePath,
+                         OnMac,
                          OnWindows,
                          PathsToAllParentFolders,
                          re,
@@ -609,9 +610,7 @@ def _MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
 
     if make_next_absolute:
       make_next_absolute = False
-      if not os.path.isabs( new_flag ):
-        new_flag = os.path.join( working_directory, flag )
-      new_flag = os.path.normpath( new_flag )
+      new_flag = AbsoluatePath( flag, working_directory )
     else:
       for path_flag in path_flags:
         # Single dash argument alone, e.g. -isysroot <path>
@@ -623,10 +622,7 @@ def _MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
         # or double-dash argument, e.g. --isysroot=<path>
         if flag.startswith( path_flag ):
           path = flag[ len( path_flag ): ]
-          if not os.path.isabs( path ):
-            path = os.path.join( working_directory, path )
-          path = os.path.normpath( path )
-
+          path = AbsoluatePath( path, working_directory )
           new_flag = '{0}{1}'.format( path_flag, path )
           break
 

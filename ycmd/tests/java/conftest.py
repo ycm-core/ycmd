@@ -50,10 +50,15 @@ def teardown_module():
 
 
 def StartJavaCompleterServerInDirectory( app, directory ):
+  StartJavaCompleterServerWithFile( app,
+                                    os.path.join( directory, 'test.java' ) )
+
+
+def StartJavaCompleterServerWithFile( app, file_path ):
   app.post_json( '/event_notification',
                  BuildRequest(
-                   filepath = os.path.join( directory, 'test.java' ),
                    event_name = 'FileReadyToParse',
+                   filepath = file_path,
                    filetype = 'java' ) )
   WaitUntilCompleterServerReady( app, 'java', SERVER_STARTUP_TIMEOUT )
 

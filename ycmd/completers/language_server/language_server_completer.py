@@ -805,6 +805,7 @@ class LanguageServerCompleter( Completer ):
       self._resolve_completion_items = False
       self._project_directory = None
       self._settings = {}
+      self._extra_conf_dir = None
       self._server_started = False
 
 
@@ -1267,12 +1268,31 @@ class LanguageServerCompleter( Completer ):
 
 
   def _GetSettingsFromExtraConf( self, request_data ):
-    self._settings = self.DefaultSettings( request_data )
+    # The DefaultSettings method returns only the 'language server" ('ls')
+    # settings, but self._settings is a wider dict containing a 'ls' key and any
+    # other keys that we might want to add (e.g. 'project_directory',
+    # 'capabilities', etc.)
+    merged_ls_settings = self.DefaultSettings( request_data )
+
+    # If there is no extra-conf, the total settings are just the defaults:
+    self._settings = {
+      'ls': merged_ls_settings
+    }
 
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     if module:
-      settings = self.GetSettings( module, request_data )
-      self._settings.update( settings.get( 'ls', {} ) )
+      # The user-defined settings may contain a 'ls' key, which override (merge
+      # with) the DefaultSettings, and any other keys we specify generically for
+      # all LSP-based completers (such as 'project_directory').
+      user_settings = self.GetSettings( module, request_data )
+
+      # Merge any user-supplied 'ls' settings with the defaults
+      if 'ls' in user_settings:
+        merged_ls_settings.update( user_settings[ 'ls' ] )
+
+      user_settings[ 'ls' ] = merged_ls_settings
+      self._settings = user_settings
+
       # Only return the dir if it was found in the paths; we don't want to use
       # the path of the global extra conf as a project root dir.
       if not extra_conf_store.IsGlobalExtraConfModule( module ):
@@ -1280,6 +1300,7 @@ class LanguageServerCompleter( Completer ):
                       os.path.dirname( module.__file__ ) )
         return os.path.dirname( module.__file__ )
 
+    # No local extra conf
     return None
 
 
@@ -1289,14 +1310,14 @@ class LanguageServerCompleter( Completer ):
     StartServer. In general, completers don't need to call this as it is called
     automatically in OnFileReadyToParse, but this may be used in completer
     subcommands that require restarting the underlying server."""
-    extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
+    self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
     # Only attempt to start the server once. Set this after above call as it may
     # throw an exception
     self._server_started = True
 
     if self.StartServer( request_data, *args, **kwargs ):
-      self._SendInitialize( request_data, extra_conf_dir )
+      self._SendInitialize( request_data )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -1637,18 +1658,29 @@ class LanguageServerCompleter( Completer ):
     GetProjectDirectory."""
     return []
 
-  def GetProjectDirectory( self, request_data, extra_conf_dir ):
+
+  def GetProjectDirectory( self, request_data ):
     """Return the directory in which the server should operate. Language server
     protocol and most servers have a concept of a 'project directory'. Where a
     concrete completer can detect this better, it should override this method,
     but otherwise, we default as follows:
+      - If the user specified 'project_directory' in their extra conf
+        'Settings', use that.
       - try to find files from GetProjectRootFiles and use the
         first directory from there
       - if there's an extra_conf file, use that directory
       - otherwise if we know the client's cwd, use that
       - otherwise use the diretory of the file that we just opened
     Note: None of these are ideal. Ycmd doesn't really have a notion of project
-    directory and therefore neither do any of our clients."""
+    directory and therefore neither do any of our clients.
+
+    NOTE: Must be called _after_ _GetSettingsFromExtraConf, as it uses
+    self._settings and self._extra_conf_dir
+    """
+
+    if 'project_directory' in self._settings:
+      return utils.AbsoluatePath( self._settings[ 'project_directory' ],
+                                  self._extra_conf_dir )
 
     project_root_files = self.GetProjectRootFiles()
     if project_root_files:
@@ -1657,8 +1689,8 @@ class LanguageServerCompleter( Completer ):
           if os.path.isfile( os.path.join( folder, root_file ) ):
             return folder
 
-    if extra_conf_dir:
-      return extra_conf_dir
+    if self._extra_conf_dir:
+      return self._extra_conf_dir
 
     if 'working_dir' in request_data:
       return request_data[ 'working_dir' ]
@@ -1666,21 +1698,20 @@ class LanguageServerCompleter( Completer ):
     return os.path.dirname( request_data[ 'filepath' ] )
 
 
-  def _SendInitialize( self, request_data, extra_conf_dir ):
+  def _SendInitialize( self, request_data ):
     """Sends the initialize request asynchronously.
     This must be called immediately after establishing the connection with the
     language server. Implementations must not issue further requests to the
     server until the initialize exchange has completed. This can be detected by
     calling this class's implementation of _ServerIsInitialized.
-    The extra_conf_dir parameter is the value returned from
-    _GetSettingsFromExtraConf, which must be called before calling this method.
+    _GetSettingsFromExtraConf must be called before calling this method, as this
+    method release on self._extra_conf_dir.
     It is called before starting the server in OnFileReadyToParse."""
 
     with self._server_info_mutex:
       assert not self._initialize_response
 
-      self._project_directory = self.GetProjectDirectory( request_data,
-                                                          extra_conf_dir )
+      self._project_directory = self.GetProjectDirectory( request_data )
       request_id = self.GetConnection().NextRequestId()
 
       # FIXME: According to the discussion on
@@ -1690,7 +1721,7 @@ class LanguageServerCompleter( Completer ):
       # clear how/where that is specified.
       msg = lsp.Initialize( request_id,
                             self._project_directory,
-                            self._settings )
+                            self._settings.get( 'ls', {} ) )
 
       def response_handler( response, message ):
         if message is None:
@@ -1803,7 +1834,7 @@ class LanguageServerCompleter( Completer ):
       # configuration should be send in response to a workspace/configuration
       # request?
       self.GetConnection().SendNotification(
-          lsp.DidChangeConfiguration( self._settings ) )
+          lsp.DidChangeConfiguration( self._settings.get( 'ls', {} ) ) )
 
       # Notify the other threads that we have completed the initialize exchange.
       self._initialize_response = None
@@ -2048,6 +2079,10 @@ class LanguageServerCompleter( Completer ):
 
 
   def AdditionalFormattingOptions( self, request_data ):
+    # While we have the settings in self._settings[ 'formatting_options' ], we
+    # actually run Settings again here, which allows users to have different
+    # formatting options for different files etc. if they should decide that's
+    # appropriate.
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     try:
       settings = self.GetSettings( module, request_data )
@@ -2175,10 +2210,11 @@ class LanguageServerCompleter( Completer ):
                                       ServerStateDescription() ),
              responses.DebugInfoItem( 'Project Directory',
                                       self._project_directory ),
-             responses.DebugInfoItem( 'Settings',
-                                      json.dumps( self._settings,
-                                                  indent = 2,
-                                                  sort_keys = True ) ) ]
+             responses.DebugInfoItem(
+               'Settings',
+               json.dumps( self._settings.get( 'ls', {} ),
+                           indent = 2,
+                           sort_keys = True ) ) ]
 
 
 def _DistanceOfPointToRange( point, range ):

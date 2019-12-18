@@ -33,7 +33,10 @@ import json
 
 from ycmd.utils import ReadFile
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
-from ycmd.tests.java import PathToTestFile, SharedYcmd, IsolatedYcmd
+from ycmd.tests.java import ( PathToTestFile,
+                              SharedYcmd,
+                              StartJavaCompleterServerWithFile,
+                              IsolatedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
@@ -547,6 +550,52 @@ def Subcommands_GoToReferences_NoReferences_test( app ):
   assert_that( response.json,
                ErrorMatcher( RuntimeError,
                              'Cannot jump to location' ) )
+
+
+@WithRetry
+@IsolatedYcmd( {
+  'extra_conf_globlist': PathToTestFile( 'multiple_projects', '*' )
+} )
+def Subcommands_GoToReferences_MultipleProjects_test( app ):
+  filepath = PathToTestFile( 'multiple_projects',
+                             'src',
+                             'core',
+                             'java',
+                             'com',
+                             'puremourning',
+                             'widget',
+                             'core',
+                             'Utils.java' )
+  StartJavaCompleterServerWithFile( app, filepath )
+
+
+  RunTest( app, {
+    'description': 'GoToReferences works across multiple projects',
+    'request': {
+      'command': 'GoToReferences',
+      'filepath': filepath,
+      'line_num': 5,
+      'column_num': 22,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': contains_inanyorder(
+        LocationMatcher( filepath, 8, 35 ),
+        LocationMatcher( PathToTestFile( 'multiple_projects',
+                                         'src',
+                                         'input',
+                                         'java',
+                                         'com',
+                                         'puremourning',
+                                         'widget',
+                                         'input',
+                                         'InputApp.java' ),
+                         8,
+                         16 )
+      )
+    }
+  } )
+
 
 
 @WithRetry
