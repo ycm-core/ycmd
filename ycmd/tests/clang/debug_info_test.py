@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 ycmd contributors
+# Copyright (C) 2016-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -14,13 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import os
 from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
@@ -49,7 +42,7 @@ def DebugInfo_FlagsWhenExtraConfLoadedAndNoCompilationDatabase_test( app ):
         } ),
         has_entries( {
           'key': 'flags',
-          'value': matches_regexp( "\\[u?'-x', u?'c\\+\\+', .*\\]" )
+          'value': matches_regexp( "\\['-x', 'c\\+\\+', .*\\]" )
         } ),
         has_entries( {
           'key': 'translation unit',
@@ -166,7 +159,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndCompilationDatabaseLoaded_test( app ):
             has_entries( {
               'key': 'flags',
               'value': matches_regexp(
-                "\\[u?'clang\\+\\+', u?'-x', u?'c\\+\\+', .*, u?'-Wall', .*\\]"
+                "\\['clang\\+\\+', '-x', 'c\\+\\+', .*, '-Wall', .*\\]"
               )
             } ),
             has_entries( {
@@ -239,7 +232,7 @@ def DebugInfo_FlagsWhenGlobalExtraConfAndCompilationDatabaseLoaded_test( app ):
             has_entries( {
               'key': 'flags',
               'value': matches_regexp(
-                "\\[u?'clang\\+\\+', u?'-x', u?'c\\+\\+', .*, u?'-Wall', .*\\]"
+                "\\['clang\\+\\+', '-x', 'c\\+\\+', .*, '-Wall', .*\\]"
               )
             } ),
             has_entries( {
@@ -268,7 +261,7 @@ def DebugInfo_FlagsWhenGlobalExtraConfAndNoCompilationDatabase_test( app ):
         } ),
         has_entries( {
           'key': 'flags',
-          'value': matches_regexp( "\\[u?'-x', u?'c\\+\\+', .*\\]" )
+          'value': matches_regexp( "\\['-x', 'c\\+\\+', .*\\]" )
         } ),
         has_entries( {
           'key': 'translation unit',
@@ -300,7 +293,7 @@ def DebugInfo_Unity_test( app ):
           } ),
           has_entries( {
             'key': 'flags',
-            'value': matches_regexp( "\\[u?'-x', u?'c\\+\\+', .*\\]" )
+            'value': matches_regexp( "\\['-x', 'c\\+\\+', .*\\]" )
           } ),
           has_entries( {
             'key': 'translation unit',

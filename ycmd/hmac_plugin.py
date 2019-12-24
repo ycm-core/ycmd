@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2018 ycmd contributors
+# Copyright (C) 2014-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,19 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 import requests
 from base64 import b64decode, b64encode
-from bottle import request, abort
+from bottle import request, abort, response
+from hmac import compare_digest
+from urllib.parse import urlparse
 from ycmd import hmac_utils
-from ycmd.utils import LOGGER, ToBytes, urlparse
-from ycmd.bottle_utils import SetResponseHeader
+from ycmd.utils import LOGGER, ToBytes, ToUnicode
 
 _HMAC_HEADER = 'x-ycm-hmac'
 _HOST_HEADER = 'host'
@@ -42,7 +36,7 @@ _HOST_HEADER = 'host'
 # The x-ycm-hmac value is encoded as base64 during transport instead of sent raw
 # because https://tools.ietf.org/html/rfc5987 says header values must be in the
 # ISO-8859-1 character set.
-class HmacPlugin( object ):
+class HmacPlugin:
   name = 'hmac'
   api = 2
 
@@ -80,7 +74,7 @@ def RequestAuthenticated( method, path, body, hmac_secret ):
   if _HMAC_HEADER not in request.headers:
     return False
 
-  return hmac_utils.SecureBytesEqual(
+  return compare_digest(
       hmac_utils.CreateRequestHmac(
         ToBytes( method ),
         ToBytes( path ),
@@ -92,4 +86,4 @@ def RequestAuthenticated( method, path, body, hmac_secret ):
 def SetHmacHeader( body, hmac_secret ):
   value = b64encode( hmac_utils.CreateHmac( ToBytes( body ),
                                             ToBytes( hmac_secret ) ) )
-  SetResponseHeader( _HMAC_HEADER, value )
+  response.set_header( _HMAC_HEADER, ToUnicode( value ) )

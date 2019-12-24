@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
+# Copyright (C) 2017-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,32 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 import collections
 import os
 import json
 import hashlib
+from urllib.parse import urljoin, urlparse, unquote
+from urllib.request import pathname2url, url2pathname
 
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
-                         pathname2url,
                          ToBytes,
-                         ToUnicode,
-                         unquote,
-                         url2pathname,
-                         urlparse,
-                         urljoin )
+                         ToUnicode )
 
 
 Error = collections.namedtuple( 'RequestError', [ 'code', 'reason' ] )
 
 
-class Errors( object ):
+class Errors:
   # From
   # https://microsoft.github.io/language-server-protocol/specification#response-message
   #
@@ -126,7 +116,7 @@ class ServerFileStateStore( dict ):
     return self[ key ]
 
 
-class ServerFileState( object ):
+class ServerFileState:
   """State machine for a particular file from the server's perspective,
   including version."""
 

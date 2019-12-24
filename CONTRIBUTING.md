@@ -142,62 +142,6 @@ Creating good pull requests
     change is known. _What goal is your change trying to accomplish?_
 
 
-Writing code that runs on Python 2 & 3
-======================================
-
-We support Python 2.7 and 3.5+. Since we use
-[`python-future`][python-future], you should mostly write Python 3 as normal.
-Here's what you should watch out for:
-
-- New files should start with the following prologue after the copyright header:
-
-    ```python
-    from __future__ import absolute_import
-    from __future__ import unicode_literals
-    from __future__ import print_function
-    from __future__ import division
-    # Not installing aliases from python-future; it's unreliable and slow.
-    from builtins import *  # noqa
-    ```
-
-- Write `dict(a=1, b=2)` instead of `{'a':1, 'b':2}`. `python-future` patches
-  `dict()` to return a dictionary like the one from Python 3, but it can't patch
-  dictionary literals. You could also create a dict with `d = dict()` and then
-  use `d.update()` on it with a dict literal.
-- Read the [_What Else You Need to Know_][what-else] doc from `python-future`.
-- Create `bytes` objects from literals like so: `bytes( b'foo' )`. Note that
-  `bytes` is patched by `python-future` on py2.
-- Be careful when passing the `bytes` type from `python-future` to python
-  libraries (includes the standard library) on py2; while that type should in
-  theory behave just like `str` on py2, some libraries might have issues. If you
-  encounter any, pass the value through `future.utils`'s `native()` function
-  which will convert `bytes` to a real `str` (again, only on py2). Heed this
-  advice for your own sanity; behind it are 40 hours of debugging and an
-  instance of tears-down-the-cheek crying at 2 am.
-- **Use the `ToBytes()` and `ToUnicode()` helper functions from
-  `ycmd/utils.py`.** They work around weirdness, complexity and bugs in
-  `python-future` and behave as you would expect. They're also extensively
-  covered with tests.
-- Use `from future.utils import iteritems`
-  then `for key, value in iteritems( dict_obj )` to efficiently iterate dicts on
-  py2 & py3
-- Use `from future.utils import itervalues` then `for value in itervalues(
-  dict_obj )` to efficiently iterate over values in dicts on py2 & py3
-- `future.utils` has `PY2` and `PY3` constants that are `True` in the respective
-  interpreter; be careful about checking for py3 (better to check for py2);
-  don't write code that will break on py4!
-- If you run tests and get failures on importing ycm_core that mention
-  `initycm_core` or `PyInit_ycm_core`, you've built the C++ parts of ycmd for
-  py2 and are trying to run tests in py3 (or vice-versa). Rebuild!
-- Import the `urljoin` and `urlparse` functions from `ycmd/utils.py`:
-
-    ```python
-    from ycmd.utils import urljoin, urlparse
-    ```
-
-
 [build-bots]: https://dev.azure.com/YouCompleteMe/YCM/_build/latest?definitionId=2&branchName=master
 [ycmd-users]: https://groups.google.com/forum/?hl=en#!forum/ycmd-users
 [ycmd-tests]: https://github.com/ycm-core/ycmd/blob/master/TESTS.md
-[python-future]: http://python-future.org/index.html
-[what-else]: http://python-future.org/what_else.html

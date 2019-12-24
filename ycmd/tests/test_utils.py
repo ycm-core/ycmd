@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2019 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,14 +16,6 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
-from future.utils import iteritems, PY2
 from hamcrest import ( assert_that,
                        contains,
                        contains_string,
@@ -63,15 +55,11 @@ except ImportError:
 
 TESTS_DIR = os.path.abspath( os.path.dirname( __file__ ) )
 
-Py2Only = skipIf( not PY2, 'Python 2 only' )
-Py3Only = skipIf( PY2, 'Python 3 only' )
 WindowsOnly = skipIf( not OnWindows(), 'Windows only' )
 ClangOnly = skipIf( not ycm_core.HasClangSupport(),
                     'Only when Clang support available' )
 MacOnly = skipIf( not OnMac(), 'Mac only' )
 UnixOnly = skipIf( OnWindows(), 'Unix only' )
-NoWinPy2 = skipIf( OnWindows() and PY2, 'Disabled on Windows with Python 2' )
-
 
 EMPTY_SIGNATURE_HELP = has_entries( {
   'activeParameter': 0,
@@ -98,7 +86,7 @@ def BuildRequest( **kwargs ):
     }
   }
 
-  for key, value in iteritems( kwargs ):
+  for key, value in kwargs.items():
     if key in [ 'contents', 'filetype', 'filepath' ]:
       continue
 
@@ -325,7 +313,7 @@ def ClearCompletionsCache():
 
 class DummyCompleter( Completer ):
   def __init__( self, user_options ):
-    super( DummyCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
   def SupportedFiletypes( self ):
     return []

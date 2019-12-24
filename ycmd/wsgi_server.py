@@ -1,4 +1,4 @@
-# Copyright (C) 2016 ycmd contributors
+# Copyright (C) 2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,14 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
-from future.utils import listvalues
 from waitress.server import TcpWSGIServer
 import select
 
@@ -57,10 +49,9 @@ class StoppableWSGIServer( TcpWSGIServer ):
     # Shutdown waitress threads.
     self.task_dispatcher.shutdown()
     # Close asyncore channels.
-    # We don't use itervalues here because _map is modified while looping
-    # through it.
+    # We use list() here because _map is modified while looping through it.
     # NOTE: _map is an attribute from the asyncore.dispatcher class, which is a
     # base class of TcpWSGIServer. This may change in future versions of
     # waitress so extra care should be taken when updating waitress.
-    for channel in listvalues( self._map ):
+    for channel in list( self._map.values() ):
       channel.close()

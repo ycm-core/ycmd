@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 ycmd contributors
+# Copyright (C) 2017-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -14,13 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 from mock import patch
 from nose.tools import eq_
@@ -59,7 +52,7 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
   def __init__( self, custom_options = {} ):
     user_options = handlers._server_state._user_options.copy()
     user_options.update( custom_options )
-    super( MockCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
     self._connection = MockConnection()
     self._started = False
@@ -78,8 +71,7 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
 
 
   def HandleServerCommand( self, request_data, command ):
-    return super( MockCompleter, self ).HandleServerCommand( request_data,
-                                                             command )
+    return super().HandleServerCommand( request_data, command )
 
 
   def ServerIsHealthy( self ):
@@ -368,7 +360,7 @@ def LanguageServerCompleter_GoTo_test():
     } ], 'GoTo', LocationMatcher( '', 1, 1 ), False
 
   with patch( 'ycmd.completers.completer_utils.GetFileContents',
-              side_effect = lsp.IOError ):
+              side_effect = IOError ):
     yield Test, [ {
       'result': {
         'uri': uri,

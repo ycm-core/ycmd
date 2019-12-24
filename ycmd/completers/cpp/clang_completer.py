@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,15 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from collections import defaultdict
-from future.utils import iteritems
 import os.path
 import textwrap
 import xml.etree.ElementTree
@@ -33,7 +25,6 @@ import ycm_core
 from ycmd import responses
 from ycmd.utils import ( PathLeftSplit,
                          re,
-                         ToBytes,
                          ToCppStringCompatible,
                          ToUnicode )
 from ycmd.completers.completer import Completer
@@ -57,7 +48,7 @@ INCLUDE_REGEX = re.compile(
 
 class ClangCompleter( Completer ):
   def __init__( self, user_options ):
-    super( ClangCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
     self._completer = ycm_core.ClangCompleter()
     self._flags = Flags()
     self._include_cache = IncludeCache()
@@ -71,7 +62,7 @@ class ClangCompleter( Completer ):
 
   def GetUnsavedFilesVector( self, request_data ):
     files = ycm_core.UnsavedFileVector()
-    for filename, file_data in iteritems( request_data[ 'file_data' ] ):
+    for filename, file_data in request_data[ 'file_data' ].items():
       if not ClangAvailableForFiletypes( file_data[ 'filetypes' ] ):
         continue
       contents = file_data[ 'contents' ]
@@ -97,7 +88,7 @@ class ClangCompleter( Completer ):
   def ShouldUseNowInner( self, request_data ):
     if self.ShouldCompleteIncludeStatement( request_data ):
       return True
-    return super( ClangCompleter, self ).ShouldUseNowInner( request_data )
+    return super().ShouldUseNowInner( request_data )
 
 
   def GetIncludePaths( self, request_data ):
@@ -579,11 +570,7 @@ def _BuildGetDocResponse( doc_data ):
   # useful pieces of documentation available to the developer. Perhaps in
   # future, we can use this XML for more interesting things.
   try:
-    # Only python2 actually requires bytes here.
-    # Doing the same on python3 makes the code simpler,
-    # but introduces unnecessary, though quite acceptable overhead
-    # (compared to XML processing).
-    root = xml.etree.ElementTree.fromstring( ToBytes( doc_data.comment_xml ) )
+    root = xml.etree.ElementTree.fromstring( doc_data.comment_xml )
   except XmlParseError:
     raise ValueError( NO_DOCUMENTATION_MESSAGE )
 

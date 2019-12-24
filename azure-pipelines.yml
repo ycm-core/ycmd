@@ -7,13 +7,9 @@ jobs:
     vmImage: 'ubuntu-16.04'
   strategy:
     matrix:
-      # Tests are failing on Python 2.7.0 with the exception
-      # "TypeError: argument can't be <type 'unicode'>"
-      'Python 2.7 without libclang completer':
-        YCM_PYTHON_VERSION: '2.7.13'
+      'Python 3.5 without libclang completer':
+        YCM_PYTHON_VERSION: '3.5.3'
         USE_CLANG_COMPLETER: false
-      'Python 2.7':
-        YCM_PYTHON_VERSION: '2.7.13'
       'Python 3.5':
         YCM_PYTHON_VERSION: '3.5.3'
       'Python 3.5 using Clang compiler':
@@ -58,10 +54,6 @@ jobs:
     vmImage: 'macOS-10.13'
   strategy:
     matrix:
-      'Python 2.7':
-        # Prior versions fail to compile with error "ld: library not found for
-        # -lSystemStubs"
-        YCM_PYTHON_VERSION: '2.7.13'
       'Python 3.5':
         YCM_PYTHON_VERSION: '3.5.3'
       'C++ benchmark':
@@ -145,8 +137,6 @@ jobs:
     vmImage: 'windows-2019'
   strategy:
     matrix:
-      'Python 2.7 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/2.7.15/python-2.7.15.amd64.msi'
       'Python 3.7 32-bit':
         YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3.exe'
       'Python 3.7 64-bit':

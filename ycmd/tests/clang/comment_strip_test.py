@@ -1,4 +1,4 @@
-# Copyright (C) 2015 ycmd contributors
+# Copyright (C) 2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -20,13 +20,6 @@ method/variable,etc. headers in order to remove non-data-ink from the raw
 comment"""
 
 # flake8: noqa
-
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 from nose.tools import eq_
 from ycmd.completers.cpp import clang_completer

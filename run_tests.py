@@ -1,13 +1,4 @@
-#!/usr/bin/env python
-
-# Passing an environment variable containing unicode literals to a subprocess
-# on Windows and Python2 raises a TypeError. Since there is no unicode
-# string in this script, we don't import unicode_literals to avoid the issue.
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
+#!/usr/bin/env python3
 
 import argparse
 import platform
@@ -21,20 +12,9 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 LIBCLANG_DIR = p.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 
-# We skip python-future because it needs to be inserted in sys.path AFTER the
-# standard library imports but we can't do that with PYTHONPATH because the std
-# lib paths are always appended to PYTHONPATH. We do it correctly in ycmd
-# because we have access to the right sys.path. So for dev, we rely on
-# python-future being installed correctly with
-#   pip install -r test_requirements.txt
-#
-# Pip knows how to install this correctly so that it doesn't matter where in
-# sys.path the path is.
 python_path = [
   p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
-  p.join( DIR_OF_THIRD_PARTY,
-          'cregex',
-          'regex_{}'.format( sys.version_info[ 0 ] ) ),
+  p.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_3' ),
   p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
   p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
   p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ),

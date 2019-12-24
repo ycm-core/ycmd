@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 ycmd contributors
+# Copyright (C) 2017-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,15 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from functools import partial
-from future.utils import iteritems, iterkeys
 import abc
 import collections
 import contextlib
@@ -153,7 +145,7 @@ class LanguageServerConnectionStopped( Exception ):
   pass # pragma: no cover
 
 
-class Response( object ):
+class Response:
   """Represents a blocking pending request.
 
   LanguageServerCompleter handles create an instance of this class for each
@@ -305,7 +297,7 @@ class LanguageServerConnection( threading.Thread ):
 
 
   def __init__( self, notification_handler = None ):
-    super( LanguageServerConnection, self ).__init__()
+    super().__init__()
 
     self._last_id = 0
     self._responses = {}
@@ -342,7 +334,7 @@ class LanguageServerConnection( threading.Thread ):
     except LanguageServerConnectionStopped:
       # Abort any outstanding requests
       with self._response_mutex:
-        for _, response in iteritems( self._responses ):
+        for _, response in self._responses.items():
           response.Abort()
         self._responses.clear()
 
@@ -354,7 +346,7 @@ class LanguageServerConnection( threading.Thread ):
 
       # Abort any outstanding requests
       with self._response_mutex:
-        for _, response in iteritems( self._responses ):
+        for _, response in self._responses.items():
           response.Abort()
         self._responses.clear()
 
@@ -612,8 +604,7 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
                 server_stdin,
                 server_stdout,
                 notification_handler = None ):
-    super( StandardIOLanguageServerConnection, self ).__init__(
-      notification_handler )
+    super().__init__( notification_handler )
 
     self._server_stdin = server_stdin
     self._server_stdout = server_stdout
@@ -757,7 +748,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def __init__( self, user_options ):
-    super( LanguageServerCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
     # _server_info_mutex synchronises access to the state of the
     # LanguageServerCompleter object. There are a number of threads at play
@@ -901,8 +892,7 @@ class LanguageServerCompleter( Completer ):
   def ShouldUseNowInner( self, request_data ):
     # We should only do _anything_ after the initialize exchange has completed.
     return ( self._ServerIsInitialized() and
-             super( LanguageServerCompleter, self ).ShouldUseNowInner(
-               request_data ) )
+             super().ShouldUseNowInner( request_data ) )
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
@@ -1235,7 +1225,7 @@ class LanguageServerCompleter( Completer ):
 
   def _DiscoverSubcommandSupport( self, commands ):
     subcommands_map = {}
-    for command, handler in iteritems( commands ):
+    for command, handler in commands.items():
       if isinstance( handler, list ):
         provider = self._GetSubcommandProvider( handler )
         if provider:
@@ -1532,7 +1522,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def _UpdateDirtyFilesUnderLock( self, request_data ):
-    for file_name, file_data in iteritems( request_data[ 'file_data' ] ):
+    for file_name, file_data in request_data[ 'file_data' ].items():
       if not self._AnySupportedFileType( file_data[ 'filetypes' ] ):
         LOGGER.debug( 'Not updating file %s, it is not a supported filetype: '
                        '%s not in %s',
@@ -1568,7 +1558,7 @@ class LanguageServerCompleter( Completer ):
 
   def _UpdateSavedFilesUnderLock( self, request_data ):
     files_to_purge = []
-    for file_name, file_state in iteritems( self._server_file_state ):
+    for file_name, file_state in self._server_file_state.items():
       if file_name in request_data[ 'file_data' ]:
         continue
 
@@ -2612,7 +2602,7 @@ def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
     # We sort the filenames to make the response stable. Edits are applied in
     # strict sequence within a file, but apply to files in arbitrary order.
     # However, it's important for the response to be stable for the tests.
-    for uri in sorted( iterkeys( workspace_edit[ 'changes' ] ) ):
+    for uri in sorted( workspace_edit[ 'changes' ].keys() ):
       chunks.extend( TextEditToChunks( request_data,
                                        uri,
                                        workspace_edit[ 'changes' ][ uri ] ) )
@@ -2635,15 +2625,14 @@ class LanguageServerCompletionsCache( CompletionsCache ):
 
   def Invalidate( self ):
     with self._access_lock:
-      super( LanguageServerCompletionsCache, self ).Invalidate()
+      super().Invalidate()
       self._is_incomplete = False
       self._use_start_column = True
 
 
   def Update( self, request_data, completions, is_incomplete ):
     with self._access_lock:
-      super( LanguageServerCompletionsCache, self ).Update( request_data,
-                                                            completions )
+      super().Update( request_data, completions )
       self._is_incomplete = is_incomplete
       if is_incomplete:
         self._use_start_column = False
@@ -2665,18 +2654,17 @@ class LanguageServerCompletionsCache( CompletionsCache ):
     with self._access_lock:
       if ( not self._is_incomplete and
            ( self._use_start_column or self._IsQueryPrefix( request_data ) ) ):
-        return super( LanguageServerCompletionsCache,
-                      self ).GetCompletionsIfCacheValid( request_data )
+        return super().GetCompletionsIfCacheValid( request_data )
       return None
 
 
-class RejectCollector( object ):
+class RejectCollector:
   def HandleServerToClientRequest( self, request, connection ):
     message = lsp.Reject( request, lsp.Errors.MethodNotFound )
     connection.SendResponse( message )
 
 
-class EditCollector( object ):
+class EditCollector:
   def __init__( self ):
     self.requests = []
 

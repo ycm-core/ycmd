@@ -1,6 +1,4 @@
-# coding: utf-8
-#
-# Copyright (C) 2013 Google Inc.
+# Copyright (C) 2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -17,15 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-# Intentionally not importing unicode_literals!
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from collections import defaultdict
-from future.utils import iteritems
 from nose.tools import eq_, ok_
 
 from ycmd.completers import completer_utils as cu
@@ -37,7 +27,7 @@ def _ExtractPatternsFromFiletypeTriggerDict( triggerDict ):
   each set value replaced with the pattern strings. Needed for equality test of
   two filetype trigger dictionaries."""
   copy = triggerDict.copy()
-  for key, values in iteritems( triggerDict ):
+  for key, values in triggerDict.items():
     copy[ key ] = { sre_pattern.pattern for sre_pattern in values }
   return copy
 

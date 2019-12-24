@@ -1,6 +1,4 @@
-# encoding: utf-8
-#
-# Copyright (C) 2016-2019 ycmd contributors.
+# Copyright (C) 2016-2020 ycmd contributors.
 #
 # This file is part of ycmd.
 #
@@ -17,18 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-# Intentionally not importing unicode_literals!
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 import os
 import subprocess
 import tempfile
 import ycm_core
-from future.utils import native
 from hamcrest import ( assert_that,
                        calling,
                        empty,
@@ -41,7 +31,7 @@ from mock import patch, call
 from nose.tools import eq_, ok_
 from types import ModuleType
 from ycmd import utils
-from ycmd.tests.test_utils import ( Py2Only, Py3Only, WindowsOnly, UnixOnly,
+from ycmd.tests.test_utils import ( WindowsOnly, UnixOnly,
                                     CurrentWorkingDirectory,
                                     TemporaryExecutable )
 from ycmd.tests import PathToTestFile
@@ -49,41 +39,6 @@ from ycmd.utils import ImportAndCheckCore
 
 # NOTE: isinstance() vs type() is carefully used in this test file. Before
 # changing things here, read the comments in utils.ToBytes.
-
-
-@Py2Only
-def ToBytes_Py2Bytes_test():
-  value = utils.ToBytes( bytes( 'abc' ) )
-  eq_( value, bytes( 'abc' ) )
-  eq_( type( value ), bytes )
-
-
-@Py2Only
-def ToBytes_Py2Str_test():
-  value = utils.ToBytes( 'abc' )
-  eq_( value, bytes( 'abc' ) )
-  eq_( type( value ), bytes )
-
-
-@Py2Only
-def ToBytes_Py2FutureStr_test():
-  value = utils.ToBytes( str( 'abc' ) )
-  eq_( value, bytes( 'abc' ) )
-  eq_( type( value ), bytes )
-
-
-@Py2Only
-def ToBytes_Py2Unicode_test():
-  value = utils.ToBytes( u'abc' )
-  eq_( value, bytes( 'abc' ) )
-  eq_( type( value ), bytes )
-
-
-@Py2Only
-def ToBytes_Py2Int_test():
-  value = utils.ToBytes( 123 )
-  eq_( value, bytes( '123' ) )
-  eq_( type( value ), bytes )
 
 
 def ToBytes_Bytes_test():
@@ -110,41 +65,6 @@ def ToBytes_None_test():
   eq_( type( value ), bytes )
 
 
-@Py2Only
-def ToUnicode_Py2Bytes_test():
-  value = utils.ToUnicode( bytes( 'abc' ) )
-  eq_( value, u'abc' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def ToUnicode_Py2Str_test():
-  value = utils.ToUnicode( 'abc' )
-  eq_( value, u'abc' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def ToUnicode_Py2FutureStr_test():
-  value = utils.ToUnicode( str( 'abc' ) )
-  eq_( value, u'abc' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def ToUnicode_Py2Unicode_test():
-  value = utils.ToUnicode( u'abc' )
-  eq_( value, u'abc' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def ToUnicode_Py2Int_test():
-  value = utils.ToUnicode( 123 )
-  eq_( value, u'123' )
-  ok_( isinstance( value, str ) )
-
-
 def ToUnicode_Bytes_test():
   value = utils.ToUnicode( bytes( b'abc' ) )
   eq_( value, u'abc' )
@@ -166,34 +86,6 @@ def ToUnicode_Int_test():
 def ToUnicode_None_test():
   value = utils.ToUnicode( None )
   eq_( value, u'' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def JoinLinesAsUnicode_Py2Bytes_test():
-  value = utils.JoinLinesAsUnicode( [ bytes( 'abc' ), bytes( 'xyz' ) ] )
-  eq_( value, u'abc\nxyz' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def JoinLinesAsUnicode_Py2Str_test():
-  value = utils.JoinLinesAsUnicode( [ 'abc', 'xyz' ] )
-  eq_( value, u'abc\nxyz' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def JoinLinesAsUnicode_Py2FutureStr_test():
-  value = utils.JoinLinesAsUnicode( [ str( 'abc' ), str( 'xyz' ) ] )
-  eq_( value, u'abc\nxyz' )
-  ok_( isinstance( value, str ) )
-
-
-@Py2Only
-def JoinLinesAsUnicode_Py2Unicode_test():
-  value = utils.JoinLinesAsUnicode( [ u'abc', u'xyz' ] )
-  eq_( value, u'abc\nxyz' )
   ok_( isinstance( value, str ) )
 
 
@@ -222,51 +114,6 @@ def JoinLinesAsUnicode_BadInput_test():
   )
 
 
-@Py2Only
-def ToCppStringCompatible_Py2Str_test():
-  value = utils.ToCppStringCompatible( 'abc' )
-  eq_( value, 'abc' )
-  eq_( type( value ), type( '' ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], 'abc' )
-
-
-@Py2Only
-def ToCppStringCompatible_Py2Bytes_test():
-  value = utils.ToCppStringCompatible( bytes( b'abc' ) )
-  eq_( value, 'abc' )
-  eq_( type( value ), type( '' ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], 'abc' )
-
-
-@Py2Only
-def ToCppStringCompatible_Py2Unicode_test():
-  value = utils.ToCppStringCompatible( u'abc' )
-  eq_( value, 'abc' )
-  eq_( type( value ), type( '' ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], 'abc' )
-
-
-@Py2Only
-def ToCppStringCompatible_Py2Int_test():
-  value = utils.ToCppStringCompatible( 123 )
-  eq_( value, '123' )
-  eq_( type( value ), type( '' ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], '123' )
-
-
-@Py3Only
 def ToCppStringCompatible_Py3Bytes_test():
   value = utils.ToCppStringCompatible( bytes( b'abc' ) )
   eq_( value, bytes( b'abc' ) )
@@ -277,7 +124,6 @@ def ToCppStringCompatible_Py3Bytes_test():
   eq_( vector[ 0 ], 'abc' )
 
 
-@Py3Only
 def ToCppStringCompatible_Py3Str_test():
   value = utils.ToCppStringCompatible( 'abc' )
   eq_( value, bytes( b'abc' ) )
@@ -288,7 +134,6 @@ def ToCppStringCompatible_Py3Str_test():
   eq_( vector[ 0 ], 'abc' )
 
 
-@Py3Only
 def ToCppStringCompatible_Py3Int_test():
   value = utils.ToCppStringCompatible( 123 )
   eq_( value, bytes( b'123' ) )
@@ -343,7 +188,6 @@ def SafePopen_ReplaceStdinWindowsPIPEOnWindows_test( *args ):
 
 
 @WindowsOnly
-@patch( 'ycmd.utils.GetShortPathName', side_effect = lambda x: x )
 @patch( 'subprocess.Popen' )
 def SafePopen_WindowsPath_test( *args ):
   tempfile = PathToTestFile( 'safe-popen-file' )
@@ -357,27 +201,6 @@ def SafePopen_WindowsPath_test( *args ):
                creationflags = utils.CREATE_NO_WINDOW ) )
   finally:
     os.remove( tempfile )
-
-
-@UnixOnly
-def ConvertArgsToShortPath_PassthroughOnUnix_test( *args ):
-  eq_( 'foo', utils.ConvertArgsToShortPath( 'foo' ) )
-  eq_( [ 'foo' ], utils.ConvertArgsToShortPath( [ 'foo' ] ) )
-
-
-@UnixOnly
-def SetEnviron_UnicodeOnUnix_test( *args ):
-  env = {}
-  utils.SetEnviron( env, u'key', u'value' )
-  eq_( env, { u'key': u'value' } )
-
-
-@Py2Only
-@WindowsOnly
-def SetEnviron_UnicodeOnWindows_test( *args ):
-  env = {}
-  utils.SetEnviron( env, u'key', u'value' )
-  eq_( env, { native( bytes( b'key' ) ): native( bytes( b'value' ) ) } )
 
 
 def PathsToAllParentFolders_Basic_test():
@@ -615,13 +438,6 @@ def LoadPythonSource_UnicodePath_test():
   assert_that( module.SomeMethod(), equal_to( True ) )
 
 
-@Py2Only
-def GetCurrentDirectory_Py2NoCurrentDirectory_test():
-  with patch( 'os.getcwdu', side_effect = OSError ):
-    eq_( utils.GetCurrentDirectory(), tempfile.gettempdir() )
-
-
-@Py3Only
 def GetCurrentDirectory_Py3NoCurrentDirectory_test():
   with patch( 'os.getcwd', side_effect = FileNotFoundError ): # noqa
     eq_( utils.GetCurrentDirectory(), tempfile.gettempdir() )
@@ -663,12 +479,7 @@ def ImportAndCheckCore_Unexpected_test():
 
 
 def ImportAndCheckCore_Missing_test():
-  import_errors = [
-    # Raised by Python 2.
-    'No module named ycm_core',
-    # Raised by Python 3.
-    "No module named 'ycm_core'"
-  ]
+  import_errors = [ "No module named 'ycm_core'" ]
 
   for error in import_errors:
     yield RunImportAndCheckCoreException, {
@@ -677,40 +488,6 @@ def ImportAndCheckCore_Missing_test():
       'logged_message': 'ycm_core library not detected; you need to compile it '
                         'by running the build.py script. See the documentation '
                         'for more details.'
-    }
-
-
-def ImportAndCheckCore_Python2_test():
-  import_exception_messages = [
-    # Raised on Linux and OS X.
-    'dynamic module does not define module export function (PyInit_ycm_core).',
-    # Raised on Windows.
-    'Module use of python27.dll conflicts with this version of Python.'
-  ]
-
-  for message in import_exception_messages:
-    yield RunImportAndCheckCoreException, {
-      'exception_message': message,
-      'exit_status': 5,
-      'logged_message': 'ycm_core library compiled for Python 2 '
-                        'but loaded in Python 3.'
-    }
-
-
-def ImportAndCheckCore_Python3_test():
-  import_exception_messages = [
-    # Raised on Linux and OS X.
-    'dynamic module does not define init function (initycm_core).',
-    # Raised on Windows.
-    'Module use of python35.dll conflicts with this version of Python.'
-  ]
-
-  for message in import_exception_messages:
-    yield RunImportAndCheckCoreException, {
-      'exception_message': message,
-      'exit_status': 6,
-      'logged_message': 'ycm_core library compiled for Python 3 '
-                        'but loaded in Python 2.'
     }
 
 

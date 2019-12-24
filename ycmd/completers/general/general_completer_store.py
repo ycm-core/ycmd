@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2018 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,13 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from ycmd.completers.completer import Completer
 from ycmd.completers.all.identifier_completer import IdentifierCompleter
 from ycmd.completers.general.filename_completer import FilenameCompleter
@@ -37,7 +30,7 @@ class GeneralCompleterStore( Completer ):
   """
 
   def __init__( self, user_options ):
-    super( GeneralCompleterStore, self ).__init__( user_options )
+    super().__init__( user_options )
     self._identifier_completer = IdentifierCompleter( user_options )
     self._filename_completer = FilenameCompleter( user_options )
     self._ultisnips_completer = UltiSnipsCompleter( user_options )

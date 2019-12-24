@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# coding: utf8
-#
-# Copyright (C) 2018 ycmd contributors
+#!/usr/bin/env python3
+# Copyright (C) 2020 ycmd contributors
 #
 # This file is part of ycmd.
 #

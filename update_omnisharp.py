@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
+#!/usr/bin/env python3
 
 import argparse
 import contextlib
@@ -17,13 +13,6 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
 
-def GetStandardLibraryIndexInSysPath():
-  for index, path in enumerate( sys.path ):
-    if p.isfile( p.join( path, 'os.py' ) ):
-      return index
-  raise RuntimeError( 'Could not find standard library path in Python path.' )
-
-
 def AddRequestDependencies():
   request_dep_root = p.abspath( p.join( DIR_OF_THIRD_PARTY,
                                         'requests_deps' ) )
@@ -36,14 +25,8 @@ def AddRequestDependencies():
                                          'src' ) ) )
 
 
-sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
-                 p.abspath( p.join( DIR_OF_THIRD_PARTY, 'python-future',
-                                    'src' ) ) )
 AddRequestDependencies()
 
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-from future.utils import iteritems
 import requests
 
 
@@ -120,7 +103,7 @@ def FetchAndHash( download_url, output_dir, file_name ):
 def Process( output_dir, version ):
   result = {}
 
-  for os_name, file_name in iteritems( FILE_NAME ):
+  for os_name, file_name in FILE_NAME.items():
     download_url = GetDownloadUrl( version, file_name )
     result[ os_name ] = {
         'version': version,
@@ -153,9 +136,9 @@ def Main():
       output = Process( temp_dir, version )
 
   print( "Omnisharp configration for {} is:".format( version ) )
-  for os_name, os_data in iteritems( output ):
+  for os_name, os_data in output.items():
     print( "    {}: {{".format( repr( os_name ) ) )
-    for key, value in iteritems( os_data ):
+    for key, value in os_data.items():
       line = "      {}: {},".format( repr( key ), repr( value ) )
       if len( line ) > 80:
         line = "      {}: ( {} ),".format( repr( key ), repr( value ) )

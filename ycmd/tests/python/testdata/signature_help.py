@@ -6,7 +6,7 @@ def KeywordArguments( d, e, *args, **kwargs ):
   pass
 
 
-class Class( object ):
+class Class:
   def __init__( self, argument ):
     self.Method()
     self.MultipleArgumentsMethod( argument )

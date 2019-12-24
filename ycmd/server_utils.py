@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2019 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -28,44 +28,13 @@ import sys
 
 ROOT_DIR = p.normpath( p.join( p.dirname( __file__ ), '..' ) )
 DIR_OF_THIRD_PARTY = p.join( ROOT_DIR, 'third_party' )
-PYTHON_STDLIB_ZIP_REGEX = re.compile( 'python[23][0-9]\\.zip' )
-
-
-def IsStandardLibraryFolder( path ):
-  return ( ( p.isfile( path )
-             and PYTHON_STDLIB_ZIP_REGEX.match( p.basename( path ) ) )
-           or p.isfile( p.join( path, 'os.py' ) ) )
-
-
-def IsVirtualEnvLibraryFolder( path ):
-  return p.isfile( p.join( path, 'orig-prefix.txt' ) )
-
-
-def GetStandardLibraryIndexInSysPath():
-  for index, path in enumerate( sys.path ):
-    if ( IsStandardLibraryFolder( path ) and
-         not IsVirtualEnvLibraryFolder( path ) ):
-      return index
-  raise RuntimeError( 'Could not find standard library path in Python path.' )
+PYTHON_STDLIB_ZIP_REGEX = re.compile( 'python3[0-9]\\.zip' )
 
 
 def SetUpPythonPath():
-  # python-future needs special handling. Not only does it store the modules
-  # under its 'src' folder, but SOME of its modules are only meant to be
-  # accessible under py2, not py3. This is because these modules (like
-  # `queue`) are implementations of modules present in the py3 standard
-  # library. Furthermore, we need to be sure that they are not overridden by
-  # already installed packages (for example, the 'builtins' module from
-  # 'pies2overrides' or a different version of 'python-future'). To work
-  # around these issues, we place the python-future just after the Python
-  # standard library so that its modules can be overridden by standard
-  # modules but not by installed packages.
-  sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
-                   p.join( DIR_OF_THIRD_PARTY, 'python-future', 'src' ) )
   sys.path[ 0:0 ] = [ p.join( ROOT_DIR ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
-                      p.join( DIR_OF_THIRD_PARTY, 'cregex',
-                              'regex_{}'.format( sys.version_info[ 0 ] ) ),
+                      p.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_3' ),
                       p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ),

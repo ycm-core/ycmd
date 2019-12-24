@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,28 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from collections import defaultdict
-from future.utils import itervalues, PY2
 import os
 import errno
 import time
 import requests
 import threading
+from urllib.parse import urljoin
 
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.cs import solutiondetection
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          CodepointOffsetToByteOffset,
-                         LOGGER,
-                         urljoin )
+                         LOGGER )
 from ycmd import responses
 from ycmd import utils
 
@@ -64,7 +56,7 @@ class CsharpCompleter( Completer ):
   """
 
   def __init__( self, user_options ):
-    super( CsharpCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
     self._solution_for_file = {}
     self._completer_per_solution = {}
     self._diagnostic_store = None
@@ -78,7 +70,7 @@ class CsharpCompleter( Completer ):
 
   def Shutdown( self ):
     if self.user_options[ 'auto_stop_csharp_server' ]:
-      for solutioncompleter in itervalues( self._completer_per_solution ):
+      for solutioncompleter in self._completer_per_solution.values():
         solutioncompleter._StopServer()
 
 
@@ -339,7 +331,7 @@ class CsharpCompleter( Completer ):
 
 
   def _CheckAllRunning( self, action ):
-    solutioncompleters = itervalues( self._completer_per_solution )
+    solutioncompleters = self._completer_per_solution.values()
     return all( action( completer ) for completer in solutioncompleters
                 if completer._ServerIsRunning() )
 
@@ -356,7 +348,7 @@ class CsharpCompleter( Completer ):
     return self._solution_for_file[ filepath ]
 
 
-class CsharpSolutionCompleter( object ):
+class CsharpSolutionCompleter:
   def __init__( self, solution_path, keep_logfiles, desired_omnisharp_port ):
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
@@ -389,10 +381,6 @@ class CsharpSolutionCompleter( object ):
 
       self._ChooseOmnisharpPort()
 
-      # Roslyn fails unless you open it in shell in Window on Python 2
-      # Shell isn't preferred, but I don't see any other way to resolve
-      shell_required = PY2 and utils.OnWindows()
-
       command = [ PATH_TO_ROSLYN_OMNISHARP_BINARY,
                   '-p',
                   str( self._omnisharp_port ),
@@ -418,8 +406,7 @@ class CsharpSolutionCompleter( object ):
       with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
         with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
           self._omnisharp_phandle = utils.SafePopen(
-              command, stdout = fstdout, stderr = fstderr,
-              shell = shell_required )
+              command, stdout = fstdout, stderr = fstderr )
 
       LOGGER.info( 'Started OmniSharp server' )
 
@@ -759,7 +746,7 @@ class CsharpSolutionCompleter( object ):
   def _GetResponse( self, handler, parameters = {}, timeout = None ):
     """ Handle communication with server """
     target = urljoin( self._ServerLocation(), handler )
-    LOGGER.debug( 'TX: %s', parameters )
+    LOGGER.debug( 'TX (%s): %s', handler, parameters )
     response = requests.post( target, json = parameters, timeout = timeout )
     LOGGER.debug( 'RX: %s', response.json() )
     return response.json()

@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2019 ycmd contributors
+# Copyright (C) 2011-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,24 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 import ycm_core
 import os
 import inspect
-from future.utils import PY2, native
 from ycmd import extra_conf_store
 from ycmd.utils import ( OnMac,
                          OnWindows,
                          PathsToAllParentFolders,
                          re,
                          ToCppStringCompatible,
-                         ToBytes,
                          ToUnicode,
                          CLANG_RESOURCE_DIR )
 from ycmd.responses import NoExtraConfDetected
@@ -99,7 +90,7 @@ MAC_FOUNDATION_HEADERS_RELATIVE_DIR = (
   'System/Library/Frameworks/Foundation.framework/Headers' )
 
 
-class Flags( object ):
+class Flags:
   """Keeps track of the flags necessary to compile a file.
   The flags are loaded from user-created python files (hereafter referred to as
   'modules') that contain a method Settings( **kwargs )."""
@@ -263,17 +254,7 @@ def ShouldAllowWinStyleFlags( flags ):
 
 
 def _CallExtraConfFlagsForFile( module, filename, client_data ):
-  # We want to ensure we pass a native py2 `str` on py2 and a native py3 `str`
-  # (unicode) object on py3. That's the API we provide.
-  # In a vacuum, always passing a unicode object (`unicode` on py2 and `str` on
-  # py3) would be better, but we can't do that because that would break all the
-  # ycm_extra_conf files already out there that expect a py2 `str` object on
-  # py2, and WE DO NOT BREAK BACKWARDS COMPATIBILITY.
-  # Hindsight is 20/20.
-  if PY2:
-    filename = native( ToBytes( filename ) )
-  else:
-    filename = native( ToUnicode( filename ) )
+  filename = ToUnicode( filename )
 
   if hasattr( module, 'Settings' ):
     results = module.Settings( language = 'cfamily',
@@ -281,7 +262,7 @@ def _CallExtraConfFlagsForFile( module, filename, client_data ):
                                client_data = client_data )
   # For the sake of backwards compatibility, we need to first check whether the
   # FlagsForFile function in the extra conf module even allows keyword args.
-  elif inspect.getargspec( module.FlagsForFile ).keywords:
+  elif inspect.getfullargspec( module.FlagsForFile ).varkw:
     results = module.FlagsForFile( filename, client_data = client_data )
   else:
     results = module.FlagsForFile( filename )

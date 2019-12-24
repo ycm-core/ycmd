@@ -1,6 +1,4 @@
-# coding: utf-8
-#
-# Copyright (C) 2014 Google Inc.
+# Copyright (C) 2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -17,15 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from hamcrest import ( assert_that, calling, contains, empty, equal_to,
-                       has_entry, has_string, matches_regexp, raises )
+                       has_entry, has_string, raises )
 from nose.tools import eq_
 
 from ycmd.utils import ToBytes
@@ -388,7 +379,7 @@ def ExtraConfData_test():
   assert_that(
     extra_conf_data,
     has_string(
-      matches_regexp( "^<HashableDict {u?'key': \\[u?'value'\\]}>$" )
+      equal_to( "<HashableDict {'key': ['value']}>" )
     )
   )
 

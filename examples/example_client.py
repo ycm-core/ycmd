@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2014 Google Inc.
+# Copyright (C) 2020 ycmd contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ if sys.version_info[ 0 ] < 3:
             platform.python_version() )
 
 from base64 import b64encode, b64decode
+from hmac import compare_digest, new
 from tempfile import NamedTemporaryFile
 import collections
 import hashlib
-import hmac
 import json
 import os
 import socket
@@ -275,7 +275,7 @@ def ToBytes( value ):
 
 
 def ContentHmacValid( content, hmac, hmac_secret ):
-  return SecureBytesEqual( CreateHmac( content, hmac_secret ), hmac )
+  return compare_digest( CreateHmac( content, hmac_secret ), hmac )
 
 
 def CreateRequestHmac( method, path, body, hmac_secret ):
@@ -293,41 +293,16 @@ def CreateRequestHmac( method, path, body, hmac_secret ):
 
 
 def CreateHmac( content, hmac_secret ):
-  return bytes( hmac.new( ToBytes( hmac_secret ),
-                          msg = ToBytes( content ),
-                          digestmod = hashlib.sha256 ).digest() )
-
-
-# This is the compare_digest function from python 3.4
-#   http://hg.python.org/cpython/file/460407f35aa9/Lib/hmac.py#l16
-def SecureBytesEqual( a, b ):
-  """Returns the equivalent of 'a == b', but avoids content based short
-  circuiting to reduce the vulnerability to timing attacks."""
-  # Consistent timing matters more here than data type flexibility
-  # We do NOT want to support py2's str type because iterating over them
-  # (below) produces different results.
-  if type( a ) != bytes or type( b ) != bytes:
-    raise TypeError( "inputs must be bytes instances" )
-
-  # We assume the length of the expected digest is public knowledge,
-  # thus this early return isn't leaking anything an attacker wouldn't
-  # already know
-  if len( a ) != len( b ):
-    return False
-
-  # We assume that integers in the bytes range are all cached,
-  # thus timing shouldn't vary much due to integer object creation
-  result = 0
-  for x, y in zip( a, b ):
-    result |= x ^ y
-  return result == 0
+  return bytes( new( ToBytes( hmac_secret ),
+                     msg = ToBytes( content ),
+                     digestmod = hashlib.sha256 ).digest() )
 
 
 # Recurses through the object if it's a dict/iterable and converts all the
 # unicode objects to utf-8 encoded bytes.
 def RecursiveEncodeUnicodeToUtf8( value ):
   if isinstance( value, str ):
-    return value.encode( 'utf8' )
+    return value.encode( 'utf-8' )
   if isinstance( value, bytes ):
     return value
   elif isinstance( value, collections.Mapping ):
@@ -340,7 +315,7 @@ def RecursiveEncodeUnicodeToUtf8( value ):
 
 
 def ToUtf8Json( data ):
-  return json.dumps( data, ensure_ascii = False ).encode( 'utf8' )
+  return json.dumps( data, ensure_ascii = False ).encode( 'utf-8' )
 
 
 def PathToTestFile( filename ):

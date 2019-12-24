@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 ycmd contributors
+# Copyright (C) 2015-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,14 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
-from future.utils import iterkeys
 import logging
 import os
 import requests
@@ -116,7 +108,7 @@ class TernCompleter( Completer ):
   The protocol is defined here: http://ternjs.net/doc/manual.html#protocol"""
 
   def __init__( self, user_options ):
-    super( TernCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
 
@@ -324,7 +316,7 @@ class TernCompleter( Completer ):
 
     full_request = {
       'files': [ MakeIncompleteFile( x, file_data[ x ] )
-                 for x in iterkeys( file_data )
+                 for x in file_data.keys()
                  if 'javascript' in file_data[ x ][ 'filetypes' ] ],
     }
     full_request.update( request )
