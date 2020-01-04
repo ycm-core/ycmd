@@ -27,15 +27,21 @@ from builtins import *  # noqa
 from hamcrest import ( assert_that,
                        contains,
                        empty,
-                       has_entries )
+                       has_entries,
+                       has_items )
 from mock import patch
 from ycmd import handlers
 from ycmd.utils import ReadFile, LOGGER
-from ycmd.tests.cs import PathToTestFile, SharedYcmd, WrapOmniSharpServer
+from ycmd.tests.cs import ( PathToTestFile,
+                            IsolatedYcmd,
+                            SharedYcmd,
+                            WrapOmniSharpServer,
+                            WaitUntilCsCompleterIsReady )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ParameterMatcher,
                                     SignatureMatcher,
-                                    SignatureAvailableMatcher )
+                                    SignatureAvailableMatcher,
+                                    CompletionEntryMatcher )
 
 
 @SharedYcmd
@@ -103,6 +109,29 @@ def SignatureHelp_TriggerParen_test( app ):
           SignatureMatcher( 'void ContinuousTest.Main(string[] args)',
                             [ ParameterMatcher( 25, 38 ) ] )
         )
+      } )
+    } ) )
+
+
+@IsolatedYcmd( { 'disable_signature_help': True } )
+def SignatureHelp_TriggerParen_Disabled_test( app ):
+  filepath = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+  contents = ReadFile( filepath )
+  request = BuildRequest(
+    line_num = 10,
+    column_num = 9,
+    filetypes = [ 'cs' ],
+    filepath = filepath,
+    contents = contents )
+  with WrapOmniSharpServer( app, filepath ):
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 0,
+        'signatures': empty()
       } )
     } ) )
 
@@ -175,3 +204,33 @@ def SignatureHelp_NotAFunction_NoError_test( app ):
         'signatures': empty()
       } )
     } ) )
+
+
+@IsolatedYcmd( { 'disable_signature_help': True } )
+def GetCompletions_Basic_NoSigHelp_test( app ):
+  filepath = PathToTestFile( 'testy', 'Program.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    WaitUntilCsCompleterIsReady( app, filepath )
+    contents = ReadFile( filepath )
+
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'cs',
+                                    contents = contents,
+                                    line_num = 10,
+                                    column_num = 12 )
+    response_data = app.post_json( '/completions', completion_data ).json
+    print( 'Response: ', response_data )
+    assert_that(
+      response_data,
+      has_entries( {
+        'completion_start_column': 12,
+        'completions': has_items(
+          CompletionEntryMatcher( 'CursorLeft',
+                                  'CursorLeft',
+                                  { 'kind': 'Property' } ),
+          CompletionEntryMatcher( 'CursorSize',
+                                  'CursorSize',
+                                  { 'kind': 'Property' } ),
+        ),
+        'errors': empty(),
+      } ) )
