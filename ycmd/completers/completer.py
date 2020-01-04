@@ -172,7 +172,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
 
   If your completer supports signature help, then you need to implemment:
     - SignatureHelpAvailable
-    - something which calls self._signature_triggers.SetServerTriggerCharacters
+    - something which calls self.SetSignatureHelpTriggers()
     - ComputeSignaturesInner
   See the language_server_completer or Python completers for examples.
 
@@ -191,7 +191,7 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
             filetype_set = set( self.SupportedFiletypes() ) )
         if user_options[ 'auto_trigger' ] else None )
 
-    self.signature_triggers = (
+    self._signature_triggers = (
       completer_utils.PreparedTriggers(
         user_trigger_map = {}, # user triggers not supported for signature help
         filetype_set = set( self.SupportedFiletypes() ),
@@ -257,10 +257,17 @@ class Completer( with_metaclass( abc.ABCMeta, object ) ):
       # the menu and returns state 'INACTIVE').
       return True
 
-    return self.signature_triggers.MatchesForFiletype( current_line,
-                                                       column_codepoint,
-                                                       column_codepoint,
-                                                       filetype )
+    return self._signature_triggers.MatchesForFiletype( current_line,
+                                                        column_codepoint,
+                                                        column_codepoint,
+                                                        filetype )
+
+
+  def SetSignatureHelpTriggers( self, trigger_characters ):
+    if self._signature_triggers is None:
+      return
+
+    self._signature_triggers.SetServerSemanticTriggers( trigger_characters )
 
 
   def QueryLengthAboveMinThreshold( self, request_data ):

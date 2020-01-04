@@ -69,7 +69,7 @@ class CsharpCompleter( Completer ):
     self._completer_per_solution = {}
     self._diagnostic_store = None
     self._solution_state_lock = threading.Lock()
-    self.signature_triggers.SetServerSemanticTriggers( [ '(', ',' ] )
+    self.SetSignatureHelpTriggers( [ '(', ',' ] )
 
     if not os.path.isfile( PATH_TO_ROSLYN_OMNISHARP_BINARY ):
       raise RuntimeError(

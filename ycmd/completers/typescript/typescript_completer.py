@@ -179,7 +179,7 @@ class TypeScriptCompleter( Completer ):
     # There's someting in the API that lists the trigger characters, but
     # there is no way to request that from the server, so we just hard-code
     # the signature triggers.
-    self.signature_triggers.SetServerSemanticTriggers( [ '(', ',', '<' ] )
+    self.SetSignatureHelpTriggers( [ '(', ',', '<' ] )
 
     LOGGER.info( 'Enabling TypeScript completion' )
 

@@ -48,7 +48,7 @@ class PythonCompleter( Completer ):
     self._environment_for_file = {}
     self._environment_for_interpreter_path = {}
     self._sys_path_for_file = {}
-    self.signature_triggers.SetServerSemanticTriggers( [ '(', ',' ] )
+    self.SetSignatureHelpTriggers( [ '(', ',' ] )
 
 
   def SupportedFiletypes( self ):
