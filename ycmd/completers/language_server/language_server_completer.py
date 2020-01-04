@@ -1781,7 +1781,7 @@ class LanguageServerCompleter( Completer ):
           self.completion_triggers.SetServerSemanticTriggers(
             trigger_characters )
 
-      if self.signature_triggers is not None:
+      if self._signature_triggers is not None:
         server_trigger_characters = (
           ( self._server_capabilities.get( 'signatureHelpProvider' ) or {} )
                                      .get( 'triggerCharacters' ) or []
@@ -1797,9 +1797,7 @@ class LanguageServerCompleter( Completer ):
           LOGGER.info( '%s: Using characters for signature triggers: %s',
                        self.Language(),
                        ','.join( trigger_characters ) )
-
-          self.signature_triggers.SetServerSemanticTriggers(
-            trigger_characters )
+          self.SetSignatureHelpTriggers( trigger_characters )
 
       # We must notify the server that we received the initialize response (for
       # no apparent reason, other than that's what the protocol says).

@@ -28,7 +28,7 @@ from hamcrest import ( assert_that, contains, empty, has_entries )
 import requests
 
 from nose.tools import eq_
-from ycmd.tests.typescript import PathToTestFile, SharedYcmd
+from ycmd.tests.typescript import PathToTestFile, IsolatedYcmd, SharedYcmd
 from ycmd.tests.test_utils import ( CombineRequest,
                                     ParameterMatcher,
                                     SignatureMatcher,
@@ -103,6 +103,30 @@ def Signature_Help_Trigger_Paren_test( app ):
             SignatureMatcher( 'single_argument_with_return(a: string): string',
                               [ ParameterMatcher( 28, 37 ) ] )
           ),
+        } ),
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'disable_signature_help': True } )
+def Signature_Help_Trigger_Paren_Disabled_test( app ):
+  RunTest( app, {
+    'description': 'Trigger after (',
+    'request': {
+      'filetype'  : 'typescript',
+      'filepath'  : PathToTestFile( 'signatures.ts' ),
+      'line_num'  : 27,
+      'column_num': 29,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'errors': empty(),
+        'signature_help': has_entries( {
+          'activeSignature': 0,
+          'activeParameter': 0,
+          'signatures': empty()
         } ),
       } )
     }
