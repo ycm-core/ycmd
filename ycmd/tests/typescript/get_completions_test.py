@@ -147,6 +147,53 @@ def GetCompletions_Basic_test( app ):
   } )
 
 
+@IsolatedYcmd( { 'disable_signature_help': True } )
+def GetCompletions_Basic_NoSigHelp_test( app ):
+  RunTest( app, {
+    'description': 'Extra and detailed info when completions are methods',
+    'request': {
+      'line_num': 17,
+      'column_num': 6,
+      'filepath': PathToTestFile( 'test.ts' )
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher(
+            'methodA',
+            '(method) Foo.methodA(): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodA(): void\n\n'
+                               'Unicode string: 说话'
+            }
+          ),
+          CompletionEntryMatcher(
+            'methodB',
+            '(method) Foo.methodB(): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodB(): void'
+            }
+          ),
+          CompletionEntryMatcher(
+            'methodC',
+            '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodC(a: {\n'
+                               '    foo: string;\n'
+                               '    bar: number;\n'
+                               '}): void'
+            }
+          )
+        )
+      } )
+    }
+  } )
+
+
 @SharedYcmd
 def GetCompletions_Keyword_test( app ):
   RunTest( app, {
