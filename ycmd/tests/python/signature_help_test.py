@@ -32,7 +32,7 @@ from hamcrest import ( assert_that,
 import requests
 
 from ycmd.utils import ReadFile
-from ycmd.tests.python import PathToTestFile, SharedYcmd
+from ycmd.tests.python import PathToTestFile, IsolatedYcmd, SharedYcmd
 from ycmd.tests.test_utils import ( CombineRequest,
                                     ParameterMatcher,
                                     SignatureMatcher,
@@ -101,6 +101,31 @@ def SignatureHelp_MethodTrigger_test( app ):
             SignatureMatcher( 'def hack( obj )',
                               [ ParameterMatcher( 10, 13 ) ] )
           ),
+        } ),
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'disable_signature_help': True } )
+def SignatureHelp_MethodTrigger_Disabled_test( app ):
+  RunTest( app, {
+    'description': 'do not Trigger after (',
+    'request': {
+      'filetype'  : 'python',
+      'filepath'  : PathToTestFile( 'general_fallback',
+                                    'lang_python.py' ),
+      'line_num'  : 6,
+      'column_num': 10,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'errors': empty(),
+        'signature_help': has_entries( {
+          'activeSignature': 0,
+          'activeParameter': 0,
+          'signatures': empty(),
         } ),
       } )
     }
