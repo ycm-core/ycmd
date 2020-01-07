@@ -540,8 +540,11 @@ def Subcommands_GetType_EmptyMessage_test( app ):
                                  filetype = 'cs',
                                  filepath = filepath )
 
-    response = app.post_json( '/run_completer_command', gettype_data ).json
-    assert_that( response, has_entry( 'message', None ) )
+    response = app.post_json( '/run_completer_command',
+                              gettype_data,
+                              expect_errors = True ).json
+    assert_that( response, ErrorMatcher( RuntimeError,
+                                         'No type info available.' ) )
 
 
 @SharedYcmd
@@ -597,6 +600,27 @@ def Subcommands_GetType_DocsIgnored_test( app ):
     response = app.post_json( '/run_completer_command', gettype_data ).json
     assert_that( response, has_entry(
       'message', 'int GetTypeTestCase.an_int_with_docs' ) )
+
+
+@SharedYcmd
+def Subcommands_GetDoc_Invalid_test( app ):
+  filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+
+    getdoc_data = BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'GetDoc' ],
+                                line_num = 1,
+                                column_num = 1,
+                                contents = contents,
+                                filetype = 'cs',
+                                filepath = filepath )
+
+    response = app.post_json( '/run_completer_command',
+                              getdoc_data,
+                              expect_errors = True ).json
+    assert_that( response, ErrorMatcher( RuntimeError,
+                                         'No documentation available.' ) )
 
 
 @SharedYcmd
