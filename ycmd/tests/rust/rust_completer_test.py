@@ -16,16 +16,16 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest.mock import patch
-from nose.tools import ok_
+from hamcrest import assert_that
 
 from ycmd import user_options_store
 from ycmd.completers.rust.hook import GetCompleter
 
 
 def GetCompleter_RlsFound_test():
-  ok_( GetCompleter( user_options_store.GetAll() ) )
+  assert_that( GetCompleter( user_options_store.GetAll() ) )
 
 
 @patch( 'ycmd.completers.rust.rust_completer.RLS_EXECUTABLE', None )
 def GetCompleter_RlsNotFound_test( *args ):
-  ok_( not GetCompleter( user_options_store.GetAll() ) )
+  assert_that( not GetCompleter( user_options_store.GetAll() ) )

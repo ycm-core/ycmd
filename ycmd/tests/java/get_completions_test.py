@@ -19,10 +19,10 @@ from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
                        empty,
+                       equal_to,
                        matches_regexp,
                        has_entries,
                        has_item )
-from nose.tools import eq_
 
 from pprint import pformat
 import requests
@@ -81,7 +81,8 @@ def RunTest( app, test ):
 
   print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 

@@ -16,7 +16,6 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest.mock import patch
-from nose.tools import eq_
 from hamcrest import ( all_of,
                        assert_that,
                        calling,
@@ -96,7 +95,7 @@ def LanguageServerCompleter_ExtraConf_ServerReset_test( app ):
 
   completer = MockCompleter()
 
-  eq_( None, completer._project_directory )
+  assert_that( None, equal_to( completer._project_directory ) )
 
   completer.OnFileReadyToParse( request_data )
   assert_that( completer._project_directory, is_not( None ) )
@@ -104,7 +103,7 @@ def LanguageServerCompleter_ExtraConf_ServerReset_test( app ):
 
   completer.ServerReset()
   assert_that( completer._settings, empty() )
-  eq_( None, completer._project_directory )
+  assert_that( None, equal_to( completer._project_directory ) )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf':
@@ -117,7 +116,7 @@ def LanguageServerCompleter_ExtraConf_FileEmpty_test( app ):
                                             filetype = 'ycmtest',
                                             contents = '' ) )
   completer.OnFileReadyToParse( request_data )
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
 
   # Simulate receipt of response and initialization complete
   initialize_response = {
@@ -126,10 +125,11 @@ def LanguageServerCompleter_ExtraConf_FileEmpty_test( app ):
     }
   }
   completer._HandleInitializeInPollThread( initialize_response )
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
   # We shouldn't have used the extra_conf path for the project directory, but
   # that _also_ happens to be the path of the file we opened.
-  eq_( PathToTestFile( 'extra_confs' ), completer._project_directory )
+  assert_that( PathToTestFile( 'extra_confs' ),
+               equal_to( completer._project_directory ) )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf':
@@ -143,10 +143,11 @@ def LanguageServerCompleter_ExtraConf_SettingsReturnsNone_test( app ):
                                             filetype = 'ycmtest',
                                             contents = '' ) )
   completer.OnFileReadyToParse( request_data )
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
   # We shouldn't have used the extra_conf path for the project directory, but
   # that _also_ happens to be the path of the file we opened.
-  eq_( PathToTestFile( 'extra_confs' ), completer._project_directory )
+  assert_that( PathToTestFile( 'extra_confs' ),
+               equal_to( completer._project_directory ) )
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf':
@@ -160,12 +161,13 @@ def LanguageServerCompleter_ExtraConf_SettingValid_test( app ):
                                             working_dir = PathToTestFile(),
                                             contents = '' ) )
 
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
   completer.OnFileReadyToParse( request_data )
-  eq_( { 'java.rename.enabled' : False }, completer._settings )
+  assert_that( { 'java.rename.enabled' : False },
+               equal_to( completer._settings ) )
   # We use the working_dir not the path to the global extra conf (which is
   # ignored)
-  eq_( PathToTestFile(), completer._project_directory )
+  assert_that( PathToTestFile(), equal_to( completer._project_directory ) )
 
 
 @IsolatedYcmd( { 'extra_conf_globlist': [ '!*' ] } )
@@ -178,9 +180,9 @@ def LanguageServerCompleter_ExtraConf_NoExtraConf_test( app ):
                                             working_dir = PathToTestFile(),
                                             contents = '' ) )
 
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
   completer.OnFileReadyToParse( request_data )
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
 
   # Simulate receipt of response and initialization complete
   initialize_response = {
@@ -189,9 +191,9 @@ def LanguageServerCompleter_ExtraConf_NoExtraConf_test( app ):
     }
   }
   completer._HandleInitializeInPollThread( initialize_response )
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
   # We use the client working directory
-  eq_( PathToTestFile(), completer._project_directory )
+  assert_that( PathToTestFile(), equal_to( completer._project_directory ) )
 
 
 @IsolatedYcmd( { 'extra_conf_globlist': [ '*' ] } )
@@ -207,9 +209,10 @@ def LanguageServerCompleter_ExtraConf_NonGlobal_test( app ):
                                             working_dir = 'ignore_this',
                                             contents = '' ) )
 
-  eq_( {}, completer._settings )
+  assert_that( {}, equal_to( completer._settings ) )
   completer.OnFileReadyToParse( request_data )
-  eq_( { 'java.rename.enabled' : False }, completer._settings )
+  assert_that( { 'java.rename.enabled' : False },
+               equal_to( completer._settings ) )
 
   # Simulate receipt of response and initialization complete
   initialize_response = {
@@ -218,8 +221,8 @@ def LanguageServerCompleter_ExtraConf_NonGlobal_test( app ):
     }
   }
   completer._HandleInitializeInPollThread( initialize_response )
-  eq_( PathToTestFile( 'project', 'settings_extra_conf' ),
-       completer._project_directory )
+  assert_that( PathToTestFile( 'project', 'settings_extra_conf' ),
+               equal_to( completer._project_directory ) )
 
 
 def LanguageServerCompleter_Initialise_Aborted_test():
@@ -1192,7 +1195,8 @@ def LanguageServerCompleter_GetHoverResponse_test():
     with patch.object( completer.GetConnection(),
                        'GetResponse',
                        side_effect = [ { 'result': { 'contents': 'test' } } ] ):
-      eq_( completer.GetHoverResponse( request_data ), 'test' )
+      assert_that( completer.GetHoverResponse( request_data ),
+                   equal_to( 'test' ) )
 
 
 def LanguageServerCompleter_Diagnostics_Code_test():
@@ -1414,7 +1418,7 @@ def _Check_Distance( point, start, end, expected ):
   end = _TupleToLSPRange( end )
   range = { 'start': start, 'end': end }
   result = lsc._DistanceOfPointToRange( point, range )
-  eq_( result, expected )
+  assert_that( result, equal_to( expected ) )
 
 
 def LanguageServerCompleter_DistanceOfPointToRange_SingleLineRange_test():

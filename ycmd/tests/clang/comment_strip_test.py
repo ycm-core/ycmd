@@ -21,14 +21,14 @@ comment"""
 
 # flake8: noqa
 
-from nose.tools import eq_
+from hamcrest import assert_that, equal_to
 from ycmd.completers.cpp import clang_completer
 
 
 def _Check_FormatRawComment( comment, expected ):
   try:
     result = clang_completer._FormatRawComment( comment )
-    eq_( result, expected )
+    assert_that( result, equal_to( expected ) )
   except:
     print( "Failed while parsing:\n"
            "'" + comment + "'\n"

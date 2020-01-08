@@ -16,8 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_entries )
-from nose.tools import eq_
+                       equal_to, has_entries )
 from pprint import pformat
 import requests
 
@@ -68,7 +67,8 @@ def RunTest( app, test ):
 
   print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 

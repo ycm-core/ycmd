@@ -16,16 +16,16 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest.mock import patch
-from nose.tools import ok_
+from hamcrest import assert_that
 
 from ycmd import user_options_store
 from ycmd.completers.go.hook import GetCompleter
 
 
 def GetCompleter_GoplsFound_test():
-  ok_( GetCompleter( user_options_store.GetAll() ) )
+  assert_that( GetCompleter( user_options_store.GetAll() ) )
 
 
 @patch( 'ycmd.completers.go.go_completer.PATH_TO_GOPLS', 'path_does_not_exist' )
 def GetCompleter_GoplsNotFound_test( *args ):
-  ok_( not GetCompleter( user_options_store.GetAll() ) )
+  assert_that( not GetCompleter( user_options_store.GetAll() ) )

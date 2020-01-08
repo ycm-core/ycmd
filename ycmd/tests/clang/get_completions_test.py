@@ -19,12 +19,12 @@ import json
 import requests
 import ycm_core
 from unittest.mock import patch
-from nose.tools import eq_
 from hamcrest import ( all_of,
                        assert_that,
                        contains,
                        contains_inanyorder,
                        empty,
+                       equal_to,
                        has_item,
                        has_items,
                        has_entry,
@@ -103,7 +103,8 @@ def RunTest( app, test ):
                             } ),
                             expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   print( 'Completer response: {0}'.format( json.dumps(
     response.json, indent = 2 ) ) )
@@ -316,7 +317,8 @@ int main()
                has_items( CompletionEntryMatcher( 'c' ),
                           CompletionEntryMatcher( 'x' ),
                           CompletionEntryMatcher( 'y' ) ) )
-  eq_( 7, response_data[ 'completion_start_column' ] )
+  assert_that( 7,
+               equal_to( response_data[ 'completion_start_column' ] ) )
 
 
 @IsolatedYcmd( { 'auto_trigger': 0 } )
@@ -364,7 +366,8 @@ def GetCompletions_UnknownExtraConfException_test( app ):
                             completion_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
   assert_that( response.json,
                has_entry( 'exception',
                           has_entry( 'TYPE', UnknownExtraConf.__name__ ) ) )
@@ -377,7 +380,8 @@ def GetCompletions_UnknownExtraConfException_test( app ):
                             completion_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
   assert_that( response.json,
                has_entry( 'exception',
                           has_entry( 'TYPE',
@@ -423,7 +427,8 @@ def GetCompletions_ExceptionWhenNoFlagsFromExtraConf_test( app ):
   response = app.post_json( '/completions',
                             completion_data,
                             expect_errors = True )
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                has_entry( 'exception',

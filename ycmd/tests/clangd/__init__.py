@@ -19,8 +19,7 @@ import functools
 import json
 import os
 
-from hamcrest import assert_that
-from nose.tools import eq_
+from hamcrest import assert_that, equal_to
 
 
 from ycmd.tests.test_utils import ( ClearCompletionsCache,
@@ -151,6 +150,7 @@ def RunAfterInitialized( app, test ):
   if 'expect' in test:
     print( "Completer response: {}".format( json.dumps( response.json,
                                                         indent = 2 ) ) )
-    eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+    assert_that( response.status_code,
+                 equal_to( test[ 'expect' ][ 'response' ] ) )
     assert_that( response.json, test[ 'expect' ][ 'data' ] )
   return response.json

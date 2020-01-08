@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 from hamcrest import ( assert_that,
                        contains,
                        empty,
+                       equal_to,
                        has_entries )
 import requests
 
@@ -58,7 +58,8 @@ def RunTest( app, test ):
                             } ),
                             expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 

@@ -17,12 +17,12 @@
 
 from hamcrest import ( assert_that,
                        contains,
+                       equal_to,
                        has_item,
                        has_entries,
                        has_entry,
                        matches_regexp )
 from hamcrest.library.text.stringmatches import StringMatchesPattern
-from nose.tools import eq_
 from pprint import pformat
 import requests
 
@@ -52,7 +52,8 @@ def RunTest( app, test ):
 
   print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 

@@ -18,7 +18,6 @@
 import os
 from hamcrest import assert_that, contains_inanyorder, empty, is_not
 from unittest.mock import patch
-from nose.tools import ok_
 
 from ycmd.tests import IsolatedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -277,7 +276,7 @@ def FilenameCompleter_Completion_Windows_test():
 
 @IsolatedYcmd( { 'filepath_completion_use_working_dir': 0 } )
 def WorkingDir_UseFilePath_test( app ):
-  ok_( GetCurrentDirectory() != DATA_DIR, 'Please run this test from a '
+  assert_that( GetCurrentDirectory() != DATA_DIR, 'Please run this test from a '
                                           'different directory' )
 
   completion_data = BuildRequest( contents = 'ls ./dir with spaces (x64)/',
@@ -295,8 +294,8 @@ def WorkingDir_UseFilePath_test( app ):
 def WorkingDir_UseServerWorkingDirectory_test( app ):
   test_dir = os.path.join( DATA_DIR, 'dir with spaces (x64)' )
   with CurrentWorkingDirectory( test_dir ) as old_current_dir:
-    ok_( old_current_dir != test_dir, 'Please run this test from a different '
-                                      'directory' )
+    assert_that( old_current_dir != test_dir,
+                 'Please run this test from a different directory' )
 
     completion_data = BuildRequest( contents = 'ls ./',
                                     filepath = PATH_TO_TEST_FILE,
@@ -313,8 +312,8 @@ def WorkingDir_UseServerWorkingDirectory_test( app ):
 def WorkingDir_UseServerWorkingDirectory_Unicode_test( app ):
   test_dir = os.path.join( TEST_DIR, 'testdata', 'filename_completer', '∂†∫' )
   with CurrentWorkingDirectory( test_dir ) as old_current_dir:
-    ok_( old_current_dir != test_dir, ( 'Please run this test from a different '
-                                        'directory' ) )
+    assert_that( old_current_dir != test_dir,
+                 'Please run this test from a different directory' )
 
     # We don't supply working_dir in the request, so the current working
     # directory is used.
@@ -331,8 +330,8 @@ def WorkingDir_UseServerWorkingDirectory_Unicode_test( app ):
 @IsolatedYcmd( { 'filepath_completion_use_working_dir': 1 } )
 def WorkingDir_UseClientWorkingDirectory_test( app ):
   test_dir = os.path.join( DATA_DIR, 'dir with spaces (x64)' )
-  ok_( GetCurrentDirectory() != test_dir, ( 'Please run this test from a '
-                                            'different directory' ) )
+  assert_that( GetCurrentDirectory() != test_dir,
+               'Please run this test from a different directory' )
 
   # We supply working_dir in the request, so we expect results to be
   # relative to the supplied path.

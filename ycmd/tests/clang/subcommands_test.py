@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, calling, contains, contains_string,
-                       empty, equal_to, has_entry, has_entries, raises,
-                       matches_regexp )
+from hamcrest import ( assert_that, calling, contains, contains_inanyorder,
+                       contains_string, empty, equal_to, has_entry, has_entries,
+                       raises, matches_regexp )
 from unittest.mock import patch
-from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError
 import requests
@@ -42,7 +41,9 @@ from ycmd.utils import ReadFile
 @SharedYcmd
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'cpp' )
-  eq_( sorted( [ 'ClearCompilationFlagCache',
+  assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+               contains_inanyorder(
+                 'ClearCompilationFlagCache',
                  'FixIt',
                  'GetDoc',
                  'GetDocImprecise',
@@ -53,9 +54,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GoToDeclaration',
                  'GoToDefinition',
                  'GoToImprecise',
-                 'GoToInclude' ] ),
-       app.post_json( '/defined_subcommands',
-                      subcommands_data ).json )
+                 'GoToInclude' ) )
 
 
 @SharedYcmd
@@ -71,11 +70,8 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
                             contents = contents,
                             filetype = 'cpp' )
 
-  eq_( {
-    'filepath': os.path.abspath( '/foo' ),
-    'line_num': 2,
-    'column_num': 8
-  }, app.post_json( '/run_completer_command', goto_data ).json )
+  assert_that( app.post_json( '/run_completer_command', goto_data ).json,
+               LocationMatcher( os.path.abspath( '/foo' ), 2, 8 ) )
 
 
 @SharedYcmd
@@ -92,11 +88,8 @@ def Subcommands_GoTo_CUDA_test( app ):
                             contents = contents,
                             filetype = 'cuda' )
 
-  eq_( {
-    'filepath': filepath,
-    'line_num': 4,
-    'column_num': 17
-  }, app.post_json( '/run_completer_command', goto_data ).json )
+  assert_that( app.post_json( '/run_completer_command', goto_data ).json,
+               LocationMatcher( filepath, 4, 17 ) )
 
 
 @SharedYcmd
@@ -141,7 +134,7 @@ def RunGoToTest_all( app, filename, command, test ):
 
   actual_response = app.post_json( '/run_completer_command', goto_data ).json
   pprint( actual_response )
-  eq_( response, actual_response )
+  assert_that( response, equal_to( actual_response ) )
 
 
 def Subcommands_GoTo_all_test():
@@ -332,7 +325,7 @@ def RunGoToIncludeTest( app, command, test ):
 
   actual_response = app.post_json( '/run_completer_command', goto_data ).json
   pprint( actual_response )
-  eq_( response, actual_response )
+  assert_that( response, equal_to( actual_response ) )
 
 
 def Subcommands_GoToInclude_test():
@@ -1130,8 +1123,8 @@ def Subcommands_GetDoc_Variable_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char a_global_variable
 This really is a global variable.
 Type: char
@@ -1139,7 +1132,7 @@ Name: a_global_variable
 ---
 This really is a global variable.
 
-The first line of comment is the brief.""" } )
+The first line of comment is the brief.""" ) )
 
 
 @SharedYcmd
@@ -1159,8 +1152,8 @@ def Subcommands_GetDoc_Method_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char with_brief()
 brevity is for suckers
 Type: char ()
@@ -1172,7 +1165,7 @@ This is not the brief.
 \\brief brevity is for suckers
 
 This is more information
-""" } )
+""" ) )
 
 
 @SharedYcmd
@@ -1192,14 +1185,14 @@ def Subcommands_GetDoc_Namespace_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 namespace Test {}
 This is a test namespace
 Type: 
 Name: Test
 ---
-This is a test namespace""" } ) # noqa
+This is a test namespace""" ) ) # noqa
 
 
 @SharedYcmd
@@ -1219,7 +1212,8 @@ def Subcommands_GetDoc_Undocumented_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1242,7 +1236,8 @@ def Subcommands_GetDoc_NoCursor_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1304,8 +1299,8 @@ def Subcommands_GetDocImprecise_Variable_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char a_global_variable
 This really is a global variable.
 Type: char
@@ -1313,7 +1308,7 @@ Name: a_global_variable
 ---
 This really is a global variable.
 
-The first line of comment is the brief.""" } )
+The first line of comment is the brief.""" ) )
 
 
 @SharedYcmd
@@ -1342,8 +1337,8 @@ def Subcommands_GetDocImprecise_Method_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char with_brief()
 brevity is for suckers
 Type: char ()
@@ -1355,7 +1350,7 @@ This is not the brief.
 \\brief brevity is for suckers
 
 This is more information
-""" } )
+""" ) )
 
 
 @SharedYcmd
@@ -1384,14 +1379,14 @@ def Subcommands_GetDocImprecise_Namespace_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 namespace Test {}
 This is a test namespace
 Type: 
 Name: Test
 ---
-This is a test namespace""" } ) # noqa
+This is a test namespace""" ) ) # noqa
 
 
 @SharedYcmd
@@ -1420,7 +1415,8 @@ def Subcommands_GetDocImprecise_Undocumented_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1452,7 +1448,8 @@ def Subcommands_GetDocImprecise_NoCursor_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1473,15 +1470,15 @@ def Subcommands_GetDocImprecise_NoReadyToParse_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 int get_a_global_variable(bool test)
 This is a method which is only pretend global
 Type: int (bool)
 Name: get_a_global_variable
 ---
 This is a method which is only pretend global
-@param test Set this to true. Do it.""" } )
+@param test Set this to true. Do it.""" ) )
 
 
 @SharedYcmd
@@ -1533,8 +1530,8 @@ def Subcommands_GetDoc_Unicode_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 int member_with_å_unicøde
 This method has unicøde in it
 Type: int
@@ -1542,7 +1539,7 @@ Name: member_with_å_unicøde
 ---
 
 This method has unicøde in it
-""" } )
+""" ) )
 
 
 @SharedYcmd
@@ -1563,14 +1560,14 @@ def Subcommands_GetDoc_CUDA_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 void kernel()
 This is a test kernel
 Type: void ()
 Name: kernel
 ---
-This is a test kernel""" } )
+This is a test kernel""" ) )
 
 
 @SharedYcmd
@@ -1589,7 +1586,8 @@ def Subcommands_StillParsingError( app, command ):
                             data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   pprint( response.json )
 

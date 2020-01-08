@@ -23,8 +23,6 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_items )
 from unittest.mock import patch
-from nose.tools import eq_
-
 from ycmd.tests import IsolatedYcmd, SharedYcmd, PathToTestFile
 from ycmd.tests.test_utils import ( BuildRequest, CompletionEntryMatcher,
                                     DummyCompleter, PatchCompleter )
@@ -57,7 +55,7 @@ def GetCompletions_IdentifierCompleter_Works_test( app ):
                                   column_num = 3 )
   response_data = app.post_json( '/completions', completion_data ).json
 
-  eq_( 1, response_data[ 'completion_start_column' ] )
+  assert_that( 1, equal_to( response_data[ 'completion_start_column' ] ) )
   assert_that(
     response_data[ 'completions' ],
     has_items( CompletionEntryMatcher( 'foo', '[ID]' ),
@@ -85,7 +83,7 @@ def GetCompletions_IdentifierCompleter_StartColumn_AfterWord_test( app ):
   completion_data = BuildRequest( contents = 'oo foo foogoo ba',
                                   column_num = 11 )
   response_data = app.post_json( '/completions', completion_data ).json
-  eq_( 8, response_data[ 'completion_start_column' ] )
+  assert_that( 8, equal_to( response_data[ 'completion_start_column' ] ) )
 
 
 @SharedYcmd
@@ -182,7 +180,7 @@ def GetCompletions_IdentifierCompleter_Unicode_MultipleCodePoints_test( app ):
                                   column_num = 3 )
   response_data = app.post_json( '/completions', completion_data ).json
 
-  eq_( 1, response_data[ 'completion_start_column' ] )
+  assert_that( 1, equal_to( response_data[ 'completion_start_column' ] ) )
   assert_that(
     response_data[ 'completions' ],
     has_items( CompletionEntryMatcher( 'fōo', '[ID]' ),
@@ -400,9 +398,8 @@ def GetCompletions_UltiSnipsCompleter_UnusedWhenOffWithOption_test( app ):
 
   completion_data = BuildRequest( contents = 'oo ', column_num = 3 )
 
-  eq_( [],
-       app.post_json( '/completions',
-                      completion_data ).json[ 'completions' ] )
+  assert_that( app.post_json( '/completions', completion_data ).json,
+               has_entries( { 'completions': empty() } ) )
 
 
 @IsolatedYcmd( { 'semantic_triggers': { 'dummy_filetype': [ '_' ] } } )

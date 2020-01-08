@@ -15,9 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains, empty, has_entries, none
+from hamcrest import assert_that, contains, empty, equal_to, has_entries, none
 from unittest.mock import patch
-from nose.tools import eq_
 from pprint import pformat
 import os
 import requests
@@ -36,7 +35,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
                               filetype = 'javascript' ),
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.ok )
+  assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
 
   debug_info = app.post_json( '/debug_info',
@@ -65,7 +64,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
                               filetype = 'javascript' ),
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.ok )
+  assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
 
   debug_info = app.post_json( '/debug_info',
@@ -101,7 +100,8 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 
   print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that(
     response.json,
@@ -138,7 +138,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 
   print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, requests.codes.ok )
+  assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
 
   # Restart the server and check that it raises it again.
@@ -155,7 +155,8 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 
   print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that(
     response.json,
@@ -183,7 +184,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 
   print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, requests.codes.ok )
+  assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
 
   debug_info = app.post_json( '/debug_info',
@@ -216,7 +217,7 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):
 
   print( 'event response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, requests.codes.ok )
+  assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
 
   debug_info = app.post_json( '/debug_info',

@@ -20,7 +20,6 @@
 import os
 from time import sleep
 
-from nose.tools import eq_
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
@@ -37,15 +36,15 @@ from ycmd.tests.test_utils import TemporaryTestDir
 
 def IncludeCache_NotCached_DirInaccessible_test():
   include_cache = IncludeCache()
-  eq_( include_cache._cache, {} )
+  assert_that( include_cache._cache, equal_to( {} ) )
   includes = include_cache.GetIncludes( PathToTestFile( 'unknown_dir' ) )
-  eq_( includes, [] )
-  eq_( include_cache._cache, {} )
+  assert_that( includes, equal_to( [] ) )
+  assert_that( include_cache._cache, equal_to( {} ) )
 
 
 def IncludeCache_NotCached_DirAccessible_test():
   include_cache = IncludeCache()
-  eq_( include_cache._cache, {} )
+  assert_that( include_cache._cache, equal_to( {} ) )
   includes = include_cache.GetIncludes( PathToTestFile( 'cache_test' ) )
   mtime = os.path.getmtime( PathToTestFile( 'cache_test' ) )
   assert_that( includes, contains( has_properties( {
@@ -63,7 +62,7 @@ def IncludeCache_NotCached_DirAccessible_test():
 
 def IncludeCache_Cached_NoNewMtime_test():
   include_cache = IncludeCache()
-  eq_( include_cache._cache, {} )
+  assert_that( include_cache._cache, equal_to( {} ) )
   old_includes = include_cache.GetIncludes( PathToTestFile( 'cache_test' ) )
   old_mtime = os.path.getmtime( PathToTestFile( 'cache_test' ) )
 
@@ -82,7 +81,7 @@ def IncludeCache_Cached_NoNewMtime_test():
   new_includes = include_cache.GetIncludes( PathToTestFile( 'cache_test' ) )
   new_mtime = os.path.getmtime( PathToTestFile( 'cache_test' ) )
 
-  eq_( new_mtime, old_mtime )
+  assert_that( new_mtime, equal_to( old_mtime ) )
   assert_that( new_includes, contains( has_properties( {
                                          'name': 'foo.h',
                                          'entry_type': 1
@@ -99,7 +98,7 @@ def IncludeCache_Cached_NoNewMtime_test():
 def IncludeCache_Cached_NewMtime_test():
   with TemporaryTestDir() as tmp_dir:
     include_cache = IncludeCache()
-    eq_( include_cache._cache, {} )
+    assert_that( include_cache._cache, equal_to( {} ) )
     foo_path = os.path.join( tmp_dir, 'foo' )
     with open( foo_path, 'w' ) as foo_file:
       foo_file.write( 'foo' )

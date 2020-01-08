@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from hamcrest import assert_that, contains
 from unittest.mock import patch
-from nose.tools import eq_
 
 from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
@@ -31,9 +31,8 @@ from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 def Subcommands_Basic_test( app, *args ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
-
-    eq_( [ 'A', 'B', 'C' ],
-         app.post_json( '/defined_subcommands', subcommands_data ).json )
+    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+                 contains( 'A', 'B', 'C' ) )
 
 
 @SharedYcmd
@@ -44,6 +43,5 @@ def Subcommands_Basic_test( app, *args ):
 def Subcommands_NoExplicitCompleterTargetSpecified_test( app, *args ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
-
-    eq_( [ 'A', 'B', 'C' ],
-         app.post_json( '/defined_subcommands', subcommands_data ).json )
+    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+                 contains( 'A', 'B', 'C' ) )

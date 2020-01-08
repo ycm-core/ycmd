@@ -26,7 +26,6 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        has_item )
-from nose.tools import eq_
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
@@ -296,7 +295,7 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
 
   # This is a new file, so the diagnostics can't possibly be available when the
   # initial parse request is sent. We receive these asynchronously.
-  eq_( results, {} )
+  assert_that( results, empty() )
 
   diag_matcher = contains( has_entries( {
     'kind': 'ERROR',
@@ -772,4 +771,4 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
   )
 
   message_poll_task.join()
-  eq_( state[ 'aborted' ], True )
+  assert_that( state[ 'aborted' ] )

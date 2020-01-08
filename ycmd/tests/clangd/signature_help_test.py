@@ -18,8 +18,7 @@
 import json
 import requests
 from unittest.mock import patch
-from nose.tools import eq_
-from hamcrest import assert_that, contains, empty, has_entries
+from hamcrest import assert_that, contains, empty, equal_to, has_entries
 
 from ycmd import handlers
 from ycmd.tests.clangd import PathToTestFile, SharedYcmd, IsolatedYcmd
@@ -74,7 +73,8 @@ def RunTest( app, test ):
                             BuildRequest( **request ),
                             expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )

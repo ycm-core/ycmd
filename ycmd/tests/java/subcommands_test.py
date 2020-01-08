@@ -20,11 +20,12 @@ from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
                        empty,
+                       equal_to,
                        has_entries,
+                       has_entry,
                        instance_of,
                        is_not,
                        matches_regexp )
-from nose.tools import eq_
 from pprint import pformat
 import requests
 import json
@@ -58,7 +59,9 @@ from ycmd.responses import UnknownExtraConf
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'java' )
 
-  eq_( sorted( [ 'FixIt',
+  assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+               contains_inanyorder(
+                 'FixIt',
                  'ExecuteCommand',
                  'Format',
                  'GoToDeclaration',
@@ -73,8 +76,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'OrganizeImports',
                  'RefactorRename',
                  'RestartServer',
-                 'WipeWorkspace' ] ),
-       app.post_json( '/defined_subcommands', subcommands_data ).json )
+                 'WipeWorkspace' ) )
 
 
 def Subcommands_ServerNotInitialized_test():
@@ -152,7 +154,8 @@ def RunTest( app, test, contents = None ):
 
       print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+      assert_that( response.status_code,
+                   equal_to( test[ 'expect' ][ 'response' ] ) )
 
       assert_that( response.json, test[ 'expect' ][ 'data' ] )
       break
@@ -185,7 +188,8 @@ def Subcommands_GetDoc_NoDoc_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
@@ -211,10 +215,9 @@ def Subcommands_GetDoc_Method_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'detailed_info': 'Return runtime debugging info. Useful for finding the '
-                     'actual code which is useful.'
-  } )
+  assert_that( response, has_entry( 'detailed_info',
+    'Return runtime debugging info. Useful for finding the '
+    'actual code which is useful.' ) )
 
 
 @WithRetry
@@ -237,11 +240,10 @@ def Subcommands_GetDoc_Class_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'detailed_info': 'This is the actual code that matters. This concrete '
-                     'implementation is the equivalent of the main function in '
-                     'other languages'
-  } )
+  assert_that( response, has_entry( 'detailed_info',
+    'This is the actual code that matters. This concrete '
+    'implementation is the equivalent of the main function '
+    'in other languages' ) )
 
 
 @WithRetry
@@ -266,7 +268,8 @@ def Subcommands_GetType_NoKnownType_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, 'Unknown type' ) )
@@ -292,9 +295,7 @@ def Subcommands_GetType_Class_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'com.test.TestWidgetImpl'
-  } )
+  assert_that( response, has_entry( 'message', 'com.test.TestWidgetImpl' ) )
 
 
 @WithRetry
@@ -317,9 +318,8 @@ def Subcommands_GetType_Constructor_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'com.test.TestWidgetImpl.TestWidgetImpl(String info)'
-  } )
+  assert_that( response, has_entry(
+    'message', 'com.test.TestWidgetImpl.TestWidgetImpl(String info)' ) )
 
 
 @WithRetry
@@ -342,9 +342,7 @@ def Subcommands_GetType_ClassMemberVariable_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-      'message': 'String info'
-  } )
+  assert_that( response, has_entry( 'message', 'String info' ) )
 
 
 @WithRetry
@@ -367,10 +365,9 @@ def Subcommands_GetType_MethodArgument_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'String info - '
-                     'com.test.TestWidgetImpl.TestWidgetImpl(String)'
-  } )
+  assert_that( response, has_entry(
+    'message', 'String info - com.test.TestWidgetImpl.TestWidgetImpl(String)'
+  ) )
 
 
 @WithRetry
@@ -393,10 +390,8 @@ def Subcommands_GetType_MethodVariable_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'int a - '
-                    'com.test.TestWidgetImpl.TestWidgetImpl(String)'
-  } )
+  assert_that( response, has_entry(
+    'message', 'int a - com.test.TestWidgetImpl.TestWidgetImpl(String)' ) )
 
 
 @WithRetry
@@ -419,9 +414,8 @@ def Subcommands_GetType_Method_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()'
-  } )
+  assert_that( response, has_entry(
+    'message', 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()' ) )
 
 
 @WithRetry
@@ -450,9 +444,8 @@ def Subcommands_GetType_Unicode_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'String whåtawîdgé - com.youcompleteme.Test.doUnicødeTes()'
-  } )
+  assert_that( response, has_entry(
+    'message', 'String whåtawîdgé - com.youcompleteme.Test.doUnicødeTes()' ) )
 
 
 @WithRetry
@@ -477,7 +470,8 @@ def Subcommands_GetType_LiteralValue_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, 'Unknown type' ) )
@@ -505,7 +499,8 @@ def Subcommands_GoTo_NoLocation_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, 'Cannot jump to location' ) )
@@ -533,7 +528,8 @@ def Subcommands_GoToReferences_NoReferences_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError,
@@ -560,8 +556,7 @@ def Subcommands_GoToReferences_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, [
-         {
+  assert_that( response, contains( has_entries( {
            'filepath': PathToTestFile( 'simple_eclipse_project',
                                        'src',
                                        'com',
@@ -570,8 +565,8 @@ def Subcommands_GoToReferences_test( app ):
            'column_num': 9,
            'description': "      w.doSomethingVaguelyUseful();",
            'line_num': 28
-         },
-         {
+         } ),
+         has_entries( {
            'filepath': PathToTestFile( 'simple_eclipse_project',
                                        'src',
                                        'com',
@@ -580,7 +575,7 @@ def Subcommands_GoToReferences_test( app ):
            'column_num': 11,
            'description': "        w.doSomethingVaguelyUseful();",
            'line_num': 32
-         } ] )
+         } ) ) )
 
 
 @WithRetry
@@ -2001,7 +1996,8 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
   print( 'FileReadyToParse result: {}'.format( json.dumps( response.json,
                                                            indent = 2 ) ) )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
   assert_that( response.json, ErrorMatcher( UnknownExtraConf ) )
 
   app.post_json(

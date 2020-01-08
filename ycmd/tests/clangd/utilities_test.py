@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
-from nose.tools import eq_
+from hamcrest import assert_that, equal_to
 from unittest.mock import patch
 from ycmd import handlers
 from ycmd.completers.cpp import clangd_completer
@@ -42,20 +42,21 @@ def ClangdCompleter_GetClangdCommand_NoCustomBinary_test():
   clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
   with patch( 'ycmd.completers.cpp.clangd_completer.GetThirdPartyClangd',
               return_value = THIRD_PARTY ):
-    eq_( clangd_completer.GetClangdCommand( user_options )[ 0 ],
-         THIRD_PARTY )
+    assert_that( clangd_completer.GetClangdCommand( user_options )[ 0 ],
+                 equal_to( THIRD_PARTY ) )
     # With args
     clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
     CLANGD_ARGS = [ "1", "2", "3" ]
     user_options[ 'clangd_args' ] = CLANGD_ARGS
-    eq_( clangd_completer.GetClangdCommand( user_options )[ 1:4 ],
-         CLANGD_ARGS )
+    assert_that( clangd_completer.GetClangdCommand( user_options )[ 1:4 ],
+                 equal_to( CLANGD_ARGS ) )
 
   # No supported binary in third_party.
   clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
   with patch( 'ycmd.completers.cpp.clangd_completer.GetThirdPartyClangd',
               return_value = None ):
-    eq_( clangd_completer.GetClangdCommand( user_options ), None )
+    assert_that( clangd_completer.GetClangdCommand( user_options ),
+                 equal_to( None ) )
 
   clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
 
@@ -69,21 +70,23 @@ def ClangdCompleter_GetClangdCommand_CustomBinary_test():
   with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
               return_value = True ):
     clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-    eq_( clangd_completer.GetClangdCommand( user_options )[ 0 ],
-         CLANGD_PATH )
+    assert_that( clangd_completer.GetClangdCommand( user_options )[ 0 ],
+                 equal_to( CLANGD_PATH ) )
 
     # No Clangd binary in the given path.
     with patch( 'ycmd.completers.cpp.clangd_completer.FindExecutable',
                 return_value = None ):
       clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-      eq_( clangd_completer.GetClangdCommand( user_options ), None )
+      assert_that( clangd_completer.GetClangdCommand( user_options ),
+                 equal_to( None ) )
 
   # Unsupported version.
   with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
               return_value = False ):
     # Never fall back to the third-party Clangd.
     clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-    eq_( clangd_completer.GetClangdCommand( user_options ), None )
+    assert_that( clangd_completer.GetClangdCommand( user_options ),
+                 equal_to( None ) )
 
   clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
 
@@ -96,12 +99,18 @@ def ClangdCompleter_GetClangdCommand_CustomBinary_test():
                         ( 10, 10, 10 ),
                         ( 100, 100, 100 ) ] )
 def ClangdCompleter_CheckClangdVersion_test( *args ):
-  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
-  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), False )
-  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
-  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
-  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
-  eq_( clangd_completer.CheckClangdVersion( 'clangd' ), True )
+  assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
+                equal_to( True ) )
+  assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
+               equal_to( False ) )
+  assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
+               equal_to( True ) )
+  assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
+               equal_to( True ) )
+  assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
+               equal_to( True ) )
+  assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
+               equal_to( True ) )
 
 
 def ClangdCompleter_ShouldEnableClangdCompleter_test():
@@ -112,20 +121,24 @@ def ClangdCompleter_ShouldEnableClangdCompleter_test():
               return_value = None ):
     # Default.
     clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-    eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), False )
+    assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                 equal_to( False ) )
 
     # Found supported binary.
     with patch( 'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
                 return_value = [ 'clangd' ] ):
-      eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), True )
+      assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                   equal_to( True ) )
     # No supported binary found.
     with patch( 'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
                 return_value = None ):
-      eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), False )
+      assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                   equal_to( False ) )
 
     # Clangd is disabled.
     user_options[ 'use_clangd' ] = 0
-    eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), False )
+    assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                 equal_to( False ) )
 
   user_options = DefaultOptions()
 
@@ -134,22 +147,26 @@ def ClangdCompleter_ShouldEnableClangdCompleter_test():
               return_value = 'third_party_clangd' ):
     # Default.
     clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-    eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), True )
+    assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                 equal_to( True ) )
 
     # Enabled.
     user_options[ 'use_clangd' ] = 1
     # Found supported binary.
     with patch( 'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
                 return_value = [ 'clangd' ] ):
-      eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), True )
+      assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                   equal_to( True ) )
     # No supported binary found.
     with patch( 'ycmd.completers.cpp.clangd_completer.GetClangdCommand',
                 return_value = None ):
-      eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), False )
+      assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                   equal_to( False ) )
 
     # Disabled.
     user_options[ 'use_clangd' ] = 0
-    eq_( clangd_completer.ShouldEnableClangdCompleter( user_options ), False )
+    assert_that( clangd_completer.ShouldEnableClangdCompleter( user_options ),
+                 equal_to( False ) )
 
 
 class MockPopen:
@@ -163,7 +180,8 @@ class MockPopen:
 
 @patch( 'subprocess.Popen', return_value = MockPopen() )
 def ClangdCompleter_GetVersion_test( mock_popen ):
-  eq_( clangd_completer.GetVersion( '' ), None )
+  assert_that( clangd_completer.GetVersion( '' ),
+               equal_to( None ) )
   mock_popen.assert_called()
 
 
@@ -178,7 +196,8 @@ def ClangdCompleter_ParseClangdVersion_test():
   ]
 
   for version_str, expected in cases:
-    eq_( clangd_completer.ParseClangdVersion( version_str ), expected )
+    assert_that( clangd_completer.ParseClangdVersion( version_str ),
+                 equal_to( expected ) )
 
 
 @IsolatedYcmd()
@@ -195,17 +214,20 @@ def ClangdCompleter_ShutdownFail_test( app ):
 def ClangdCompleter_GetThirdParty_test():
   with patch( 'ycmd.completers.cpp.clangd_completer.GetExecutable',
               return_value = None ):
-    eq_( clangd_completer.GetThirdPartyClangd(), None )
+    assert_that( clangd_completer.GetThirdPartyClangd(),
+                 equal_to( None ) )
 
   with patch( 'ycmd.completers.cpp.clangd_completer.GetExecutable',
               return_value = '/third_party/clangd' ):
     with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
                 return_value = True ):
-      eq_( clangd_completer.GetThirdPartyClangd(), '/third_party/clangd' )
+      assert_that( clangd_completer.GetThirdPartyClangd(),
+                 equal_to( '/third_party/clangd' ) )
 
     with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
                 return_value = False ):
-      eq_( clangd_completer.GetThirdPartyClangd(), None )
+      assert_that( clangd_completer.GetThirdPartyClangd(),
+                 equal_to( None ) )
 
 
 @IsolatedYcmd()
@@ -222,5 +244,5 @@ def ClangdCompleter_StartServer_Fails_test( app ):
                        filepath = PathToTestFile( 'foo.cc' ),
                        contents = ""
                      ) )
-      eq_( resp.status_code, 200 )
+      assert_that( resp.status_code, equal_to( 200 ) )
       shutdown.assert_called()

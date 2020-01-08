@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from nose.tools import eq_
+from hamcrest import assert_that, empty, equal_to, contains
 from ycmd.user_options_store import DefaultOptions
 from ycmd.completers.all import identifier_completer as ic
 from ycmd.completers.all.identifier_completer import IdentifierCompleter
@@ -32,190 +32,264 @@ def BuildRequestWrap( contents, column_num, line_num = 1 ):
 
 
 def GetCursorIdentifier_StartOfLine_test():
-  eq_( 'foo', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', 1 ) ) )
-  eq_( 'fooBar', ic._GetCursorIdentifier( False,
-                                          BuildRequestWrap( 'fooBar', 1 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo',
+                             1 ) ) ) )
+  assert_that( 'fooBar', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'fooBar',
+                             1 ) ) ) )
 
 
 def GetCursorIdentifier_EndOfLine_test():
-  eq_( 'foo', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', 3 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo',
+                             3 ) ) ) )
 
 
 def GetCursorIdentifier_PastEndOfLine_test():
-  eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', 11 ) ) )
+  assert_that( '', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo',
+                             11 ) ) ) )
 
 
 def GetCursorIdentifier_NegativeColumn_test():
-  eq_( 'foo', ic._GetCursorIdentifier( False, BuildRequestWrap( 'foo', -10 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo',
+                             -10 ) ) ) )
 
 
 def GetCursorIdentifier_StartOfLine_StopsAtNonIdentifierChar_test():
-  eq_( 'foo', ic._GetCursorIdentifier( False,
-                                       BuildRequestWrap( 'foo(goo)', 1 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo(goo)',
+                             1 ) ) ) )
 
 
 def GetCursorIdentifier_AtNonIdentifier_test():
-  eq_( 'goo', ic._GetCursorIdentifier( False,
-                                       BuildRequestWrap( 'foo(goo)', 4 ) ) )
+  assert_that( 'goo', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo(goo)',
+                             4 ) ) ) )
 
 
 def GetCursorIdentifier_WalksForwardForIdentifier_test():
-  eq_( 'foo', ic._GetCursorIdentifier( False,
-                                       BuildRequestWrap( '       foo', 1 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( '       foo',
+                             1 ) ) ) )
 
 
 def GetCursorIdentifier_FindsNothingForward_test():
-  eq_( '', ic._GetCursorIdentifier( False,
-                                    BuildRequestWrap( 'foo   ()***()', 5 ) ) )
+  assert_that( '', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foo   ()***()',
+                             5 ) ) ) )
 
 
 def GetCursorIdentifier_SingleCharIdentifier_test():
-  eq_( 'f', ic._GetCursorIdentifier( False,
-                                     BuildRequestWrap( '    f    ', 1 ) ) )
+  assert_that( 'f', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( '    f    ',
+                             1 ) ) ) )
 
 
 def GetCursorIdentifier_StartsInMiddleOfIdentifier_test():
-  eq_( 'foobar', ic._GetCursorIdentifier( False,
-                                          BuildRequestWrap( 'foobar', 4 ) ) )
+  assert_that( 'foobar', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( 'foobar',
+                             4 ) ) ) )
 
 
 def GetCursorIdentifier_LineEmpty_test():
-  eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( '', 12 ) ) )
+  assert_that( '', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( '',
+                             12 ) ) ) )
 
 
 def GetCursorIdentifier_IgnoreIdentifierFromCommentsAndStrings_test():
-  eq_( '', ic._GetCursorIdentifier( False, BuildRequestWrap( '"foobar"', 4 ) ) )
-  eq_( '', ic._GetCursorIdentifier( False,
-                                    BuildRequestWrap( '/*\n'
-                                                      ' * foobar\n'
-                                                      ' */', 5, 2 ) ) )
+  assert_that( '', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( '"foobar"',
+                             4 ) ) ) )
+  assert_that( '', equal_to(
+    ic._GetCursorIdentifier( False,
+                             BuildRequestWrap( '/*\n' ' * foobar\n' ' */',
+                             5,
+                             2 ) ) ) )
 
 
 def GetCursorIdentifier_CollectIdentifierFromCommentsAndStrings_test():
-  eq_( 'foobar', ic._GetCursorIdentifier( True,
-                                          BuildRequestWrap( '"foobar"', 4 ) ) )
-  eq_( 'foobar', ic._GetCursorIdentifier( True,
-                                          BuildRequestWrap( '/*\n'
-                                                            ' * foobar\n'
-                                                            ' */', 5, 2 ) ) )
+  assert_that( 'foobar', equal_to(
+    ic._GetCursorIdentifier( True,
+                             BuildRequestWrap( '"foobar"',
+                             4 ) ) ) )
+  assert_that( 'foobar', equal_to(
+    ic._GetCursorIdentifier( True,
+                             BuildRequestWrap( '/*\n' ' * foobar\n' ' */',
+                             5,
+                             2 ) ) ) )
 
 
 def PreviousIdentifier_Simple_test():
-  eq_( 'foo', ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo', 4 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo',
+                            4 ) ) ) )
 
 
 def PreviousIdentifier_WholeIdentShouldBeBeforeColumn_test():
-  eq_( '',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foobar',
-                                                           column_num = 4 ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foobar',
+                            column_num = 4 ) ) ) )
 
 
 def PreviousIdentifier_DoNotWrap_test():
-  eq_( '',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foobar\n bar',
-                                                           column_num = 4 ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foobar\n bar',
+                            column_num = 4 ) ) ) )
 
 
 def PreviousIdentifier_IgnoreForwardIdents_test():
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo bar zoo',
-                                                           4 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo bar zoo',
+                            4 ) ) ) )
 
 
 def PreviousIdentifier_IgnoreTooSmallIdent_test():
-  eq_( '', ic._PreviousIdentifier( 4, False, BuildRequestWrap( 'foo', 4 ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 4,
+                            False,
+                            BuildRequestWrap( 'foo',
+                            4 ) ) ) )
 
 
 def PreviousIdentifier_IgnoreTooSmallIdent_DontContinueLooking_test():
-  eq_( '', ic._PreviousIdentifier( 4, False, BuildRequestWrap( 'abcde foo',
-                                                               10 ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 4,
+                            False,
+                            BuildRequestWrap( 'abcde foo',
+                            10 ) ) ) )
 
 
 def PreviousIdentifier_WhitespaceAfterIdent_test():
-  eq_( 'foo', ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo     ',
-                                                                  6 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo     ',
+                            6 ) ) ) )
 
 
 def PreviousIdentifier_JunkAfterIdent_test():
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo  ;;()**   ',
-                                                           13 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo  ;;()**   ',
+                            13 ) ) ) )
 
 
 def PreviousIdentifier_IdentInMiddleOfJunk_test():
-  eq_( 'aa',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo  ;;(aa)**   ',
-                                                           13 ) ) )
+  assert_that( 'aa', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo  ;;(aa)**   ',
+                            13 ) ) ) )
 
 
 def PreviousIdentifier_IdentOnPreviousLine_test():
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo\n   ',
-                                                           column_num = 3,
-                                                           line_num = 2 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo\n   ',
+                            column_num = 3,
+                            line_num = 2 ) ) ) )
 
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo\n',
-                                                           column_num = 1,
-                                                           line_num = 2 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo\n',
+                            column_num = 1,
+                            line_num = 2 ) ) ) )
 
 
 def PreviousIdentifier_IdentOnPreviousLine_JunkAfterIdent_test():
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( 'foo **;()\n   ',
-                                                           column_num = 3,
-                                                           line_num = 2 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( 'foo **;()\n   ',
+                            column_num = 3,
+                            line_num = 2 ) ) ) )
 
 
 def PreviousIdentifier_NoGoodIdentFound_test():
-  eq_( '',
-       ic._PreviousIdentifier( 5, False, BuildRequestWrap( 'foo\n ',
-                                                           column_num = 2,
-                                                           line_num = 2 ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 5,
+                            False,
+                            BuildRequestWrap( 'foo\n ',
+                            column_num = 2,
+                            line_num = 2 ) ) ) )
 
 
 def PreviousIdentifier_IgnoreIdentifierFromCommentsAndStrings_test():
-  eq_( '',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( '"foo"\n',
-                                                           column_num = 1,
-                                                           line_num = 2 ) ) )
-  eq_( '',
-       ic._PreviousIdentifier( 2, False, BuildRequestWrap( '/*\n'
-                                                           ' * foo\n'
-                                                           ' */',
-                                                           column_num = 2,
-                                                           line_num = 3 ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( '"foo"\n',
+                            column_num = 1,
+                            line_num = 2 ) ) ) )
+  assert_that( '', equal_to(
+    ic._PreviousIdentifier( 2,
+                            False,
+                            BuildRequestWrap( '/*\n' ' * foo\n' ' */',
+                            column_num = 2,
+                            line_num = 3 ) ) ) )
 
 
 def PreviousIdentifier_CollectIdentifierFromCommentsAndStrings_test():
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, True, BuildRequestWrap( '"foo"\n',
-                                                          column_num = 1,
-                                                          line_num = 2 ) ) )
-  eq_( 'foo',
-       ic._PreviousIdentifier( 2, True, BuildRequestWrap( '/*\n'
-                                                          ' * foo\n'
-                                                          ' */',
-                                                          column_num = 2,
-                                                          line_num = 3 ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            True,
+                            BuildRequestWrap( '"foo"\n',
+                            column_num = 1,
+                            line_num = 2 ) ) ) )
+  assert_that( 'foo', equal_to(
+    ic._PreviousIdentifier( 2,
+                            True,
+                            BuildRequestWrap( '/*\n' ' * foo\n' ' */',
+                            column_num = 2,
+                            line_num = 3 ) ) ) )
 
 
 def FilterUnchangedTagFiles_NoFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
-  eq_( [], list( ident_completer._FilterUnchangedTagFiles( [] ) ) )
+  assert_that( list( ident_completer._FilterUnchangedTagFiles( [] ) ),
+               empty() )
 
 
 def FilterUnchangedTagFiles_SkipBadFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
-  eq_( [],
-       list( ident_completer._FilterUnchangedTagFiles( [ '/some/tags' ] ) ) )
+  assert_that( list( ident_completer._FilterUnchangedTagFiles(
+                       [ '/some/tags' ] ) ),
+               empty() )
 
 
 def FilterUnchangedTagFiles_KeepGoodFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
   tag_file = PathToTestFile( 'basic.tags' )
-  eq_( [ tag_file ],
-       list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ) )
+  assert_that( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ),
+               contains( tag_file ) )
 
 
 def FilterUnchangedTagFiles_SkipUnchangesFiles_test():
@@ -226,4 +300,5 @@ def FilterUnchangedTagFiles_SkipUnchangesFiles_test():
   ident_completer._tags_file_last_mtime[ tag_file ] = os.path.getmtime(
       tag_file )
 
-  eq_( [], list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ) )
+  assert_that( list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ),
+               empty() )

@@ -18,10 +18,10 @@
 from hamcrest import ( assert_that,
                        contains,
                        contains_inanyorder,
+                       equal_to,
                        has_entry,
                        has_entries )
 from unittest.mock import patch
-from nose.tools import eq_
 from pprint import pformat
 import requests
 
@@ -40,15 +40,15 @@ from ycmd.utils import ReadFile
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'javascript' )
 
-  eq_( sorted( [ 'GoToDefinition',
+  assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+               contains_inanyorder(
+                 'GoToDefinition',
                  'GoTo',
                  'GetDoc',
                  'GetType',
                  'GoToReferences',
                  'RefactorRename',
-                 'RestartServer' ] ),
-       app.post_json( '/defined_subcommands',
-                      subcommands_data ).json )
+                 'RestartServer' ) )
 
 
 def RunTest( app, test, contents = None ):
@@ -83,7 +83,8 @@ def RunTest( app, test, contents = None ):
 
   print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 

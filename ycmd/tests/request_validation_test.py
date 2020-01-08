@@ -16,7 +16,6 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import raises, assert_that, calling
-from nose.tools import ok_
 from ycmd.request_validation import EnsureRequestValid
 from ycmd.responses import ServerError
 
@@ -36,7 +35,7 @@ def BasicData():
 
 
 def EnsureRequestValid_AllOk_test():
-  ok_( EnsureRequestValid( BasicData() ) )
+  assert_that( EnsureRequestValid( BasicData() ) )
 
 
 def EnsureRequestValid_MissingLineNum_test():

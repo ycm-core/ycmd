@@ -20,6 +20,7 @@ import subprocess
 import tempfile
 from hamcrest import ( assert_that,
                        calling,
+                       contains,
                        empty,
                        equal_to,
                        has_length,
@@ -27,7 +28,6 @@ from hamcrest import ( assert_that,
                        instance_of,
                        raises )
 from unittest.mock import patch, call
-from nose.tools import eq_, ok_
 from types import ModuleType
 from ycmd import utils
 from ycmd.tests.test_utils import ( WindowsOnly, UnixOnly,
@@ -42,68 +42,68 @@ from ycmd.utils import ImportAndCheckCore
 
 def ToBytes_Bytes_test():
   value = utils.ToBytes( bytes( b'abc' ) )
-  eq_( value, bytes( b'abc' ) )
-  eq_( type( value ), bytes )
+  assert_that( value, equal_to( bytes( b'abc' ) ) )
+  assert_that( type( value ), equal_to( bytes ) )
 
 
 def ToBytes_Str_test():
   value = utils.ToBytes( u'abc' )
-  eq_( value, bytes( b'abc' ) )
-  eq_( type( value ), bytes )
+  assert_that( value, equal_to( bytes( b'abc' ) ) )
+  assert_that( type( value ), equal_to( bytes ) )
 
 
 def ToBytes_Int_test():
   value = utils.ToBytes( 123 )
-  eq_( value, bytes( b'123' ) )
-  eq_( type( value ), bytes )
+  assert_that( value, equal_to( bytes( b'123' ) ) )
+  assert_that( type( value ), equal_to( bytes ) )
 
 
 def ToBytes_None_test():
   value = utils.ToBytes( None )
-  eq_( value, bytes( b'' ) )
-  eq_( type( value ), bytes )
+  assert_that( value, equal_to( bytes( b'' ) ) )
+  assert_that( type( value ), equal_to( bytes ) )
 
 
 def ToUnicode_Bytes_test():
   value = utils.ToUnicode( bytes( b'abc' ) )
-  eq_( value, u'abc' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'abc' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def ToUnicode_Str_test():
   value = utils.ToUnicode( u'abc' )
-  eq_( value, u'abc' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'abc' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def ToUnicode_Int_test():
   value = utils.ToUnicode( 123 )
-  eq_( value, u'123' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'123' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def ToUnicode_None_test():
   value = utils.ToUnicode( None )
-  eq_( value, u'' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def JoinLinesAsUnicode_Bytes_test():
   value = utils.JoinLinesAsUnicode( [ bytes( b'abc' ), bytes( b'xyz' ) ] )
-  eq_( value, u'abc\nxyz' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'abc\nxyz' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def JoinLinesAsUnicode_Str_test():
   value = utils.JoinLinesAsUnicode( [ u'abc', u'xyz' ] )
-  eq_( value, u'abc\nxyz' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'abc\nxyz' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def JoinLinesAsUnicode_EmptyList_test():
   value = utils.JoinLinesAsUnicode( [] )
-  eq_( value, u'' )
-  ok_( isinstance( value, str ) )
+  assert_that( value, equal_to( u'' ) )
+  assert_that( isinstance( value, str ) )
 
 
 def JoinLinesAsUnicode_BadInput_test():
@@ -116,44 +116,44 @@ def JoinLinesAsUnicode_BadInput_test():
 def RemoveIfExists_Exists_test():
   tempfile = PathToTestFile( 'remove-if-exists' )
   open( tempfile, 'a' ).close()
-  ok_( os.path.exists( tempfile ) )
+  assert_that( os.path.exists( tempfile ) )
   utils.RemoveIfExists( tempfile )
-  ok_( not os.path.exists( tempfile ) )
+  assert_that( not os.path.exists( tempfile ) )
 
 
 def RemoveIfExists_DoesntExist_test():
   tempfile = PathToTestFile( 'remove-if-exists' )
-  ok_( not os.path.exists( tempfile ) )
+  assert_that( not os.path.exists( tempfile ) )
   utils.RemoveIfExists( tempfile )
-  ok_( not os.path.exists( tempfile ) )
+  assert_that( not os.path.exists( tempfile ) )
 
 
 def PathToFirstExistingExecutable_Basic_test():
   if utils.OnWindows():
-    ok_( utils.PathToFirstExistingExecutable( [ 'notepad.exe' ] ) )
+    assert_that( utils.PathToFirstExistingExecutable( [ 'notepad.exe' ] ) )
   else:
-    ok_( utils.PathToFirstExistingExecutable( [ 'cat' ] ) )
+    assert_that( utils.PathToFirstExistingExecutable( [ 'cat' ] ) )
 
 
 def PathToFirstExistingExecutable_Failure_test():
-  ok_( not utils.PathToFirstExistingExecutable( [ 'ycmd-foobar' ] ) )
+  assert_that( not utils.PathToFirstExistingExecutable( [ 'ycmd-foobar' ] ) )
 
 
 @UnixOnly
 @patch( 'subprocess.Popen' )
 def SafePopen_RemoveStdinWindows_test( *args ):
   utils.SafePopen( [ 'foo' ], stdin_windows = 'bar' )
-  eq_( subprocess.Popen.call_args, call( [ 'foo' ] ) )
+  assert_that( subprocess.Popen.call_args, equal_to( call( [ 'foo' ] ) ) )
 
 
 @WindowsOnly
 @patch( 'subprocess.Popen' )
 def SafePopen_ReplaceStdinWindowsPIPEOnWindows_test( *args ):
   utils.SafePopen( [ 'foo' ], stdin_windows = subprocess.PIPE )
-  eq_( subprocess.Popen.call_args,
-       call( [ 'foo' ],
-             stdin = subprocess.PIPE,
-             creationflags = utils.CREATE_NO_WINDOW ) )
+  assert_that( subprocess.Popen.call_args,
+               equal_to( call( [ 'foo' ],
+                               stdin = subprocess.PIPE,
+                               creationflags = utils.CREATE_NO_WINDOW ) ) )
 
 
 @WindowsOnly
@@ -164,46 +164,53 @@ def SafePopen_WindowsPath_test( *args ):
 
   try:
     utils.SafePopen( [ 'foo', tempfile ], stdin_windows = subprocess.PIPE )
-    eq_( subprocess.Popen.call_args,
-         call( [ 'foo', tempfile ],
-               stdin = subprocess.PIPE,
-               creationflags = utils.CREATE_NO_WINDOW ) )
+    assert_that( subprocess.Popen.call_args,
+                 equal_to( call( [ 'foo', tempfile ],
+                                 stdin = subprocess.PIPE,
+                                 creationflags = utils.CREATE_NO_WINDOW ) ) )
   finally:
     os.remove( tempfile )
 
 
 def PathsToAllParentFolders_Basic_test():
-  eq_( [
-    os.path.normpath( '/home/user/projects' ),
-    os.path.normpath( '/home/user' ),
-    os.path.normpath( '/home' ),
-    os.path.normpath( '/' )
-  ], list( utils.PathsToAllParentFolders( '/home/user/projects/test.c' ) ) )
+  assert_that( utils.PathsToAllParentFolders( '/home/user/projects/test.c' ),
+    contains(
+      os.path.normpath( '/home/user/projects' ),
+      os.path.normpath( '/home/user' ),
+      os.path.normpath( '/home' ),
+      os.path.normpath( '/' ),
+    )
+  )
+
 
 
 @patch( 'os.path.isdir', return_value = True )
 def PathsToAllParentFolders_IsDirectory_test( *args ):
-  eq_( [
-    os.path.normpath( '/home/user/projects' ),
-    os.path.normpath( '/home/user' ),
-    os.path.normpath( '/home' ),
-    os.path.normpath( '/' )
-  ], list( utils.PathsToAllParentFolders( '/home/user/projects' ) ) )
+  assert_that( utils.PathsToAllParentFolders( '/home/user/projects' ),
+    contains(
+      os.path.normpath( '/home/user/projects' ),
+      os.path.normpath( '/home/user' ),
+      os.path.normpath( '/home' ),
+      os.path.normpath( '/' )
+    )
+  )
 
 
 def PathsToAllParentFolders_FileAtRoot_test():
-  eq_( [ os.path.normpath( '/' ) ],
-       list( utils.PathsToAllParentFolders( '/test.c' ) ) )
+  assert_that( utils.PathsToAllParentFolders( '/test.c' ),
+               contains( os.path.normpath( '/' ) ) )
 
 
 @WindowsOnly
 def PathsToAllParentFolders_WindowsPath_test():
-  eq_( [
-    os.path.normpath( r'C:\\foo\\goo\\zoo' ),
-    os.path.normpath( r'C:\\foo\\goo' ),
-    os.path.normpath( r'C:\\foo' ),
-    os.path.normpath( r'C:\\' )
-  ], list( utils.PathsToAllParentFolders( r'C:\\foo\\goo\\zoo\\test.c' ) ) )
+  assert_that( utils.PathsToAllParentFolders( r'C:\\foo\\goo\\zoo\\test.c' ),
+    contains(
+      os.path.normpath( r'C:\\foo\\goo\\zoo' ),
+      os.path.normpath( r'C:\\foo\\goo' ),
+      os.path.normpath( r'C:\\foo' ),
+      os.path.normpath( r'C:\\' )
+    )
+  )
 
 
 def PathLeftSplit_test():
@@ -221,7 +228,8 @@ def PathLeftSplit_test():
     ( '/foo/bar/xyz/', ( '/', 'foo/bar/xyz' ) )
   ]
   for test in tests:
-    yield lambda test: eq_( utils.PathLeftSplit( test[ 0 ] ), test[ 1 ] ), test
+    yield lambda test: assert_that( utils.PathLeftSplit( test[ 0 ] ),
+                                    equal_to( test[ 1 ] ) ), test
 
 
 @WindowsOnly
@@ -238,7 +246,8 @@ def PathLeftSplit_Windows_test():
     ( 'C:\\foo\\bar\\xyz\\', ( 'C:\\', 'foo\\bar\\xyz' ) )
   ]
   for test in tests:
-    yield lambda test: eq_( utils.PathLeftSplit( test[ 0 ] ), test[ 1 ] ), test
+    yield lambda test: assert_that( utils.PathLeftSplit( test[ 0 ] ),
+                                    equal_to( test[ 1 ] ) ), test
 
 
 def OpenForStdHandle_PrintDoesntThrowException_test():
@@ -283,8 +292,8 @@ def CodepointOffsetToByteOffset_test():
   ]
 
   for test in tests:
-    yield lambda: eq_( utils.CodepointOffsetToByteOffset( *test[ 0 ] ),
-                       test[ 1 ] )
+    yield lambda: assert_that( utils.CodepointOffsetToByteOffset( *test[ 0 ] ),
+                               equal_to( test[ 1 ] ) )
 
 
 def ByteOffsetToCodepointOffset_test():
@@ -317,8 +326,8 @@ def ByteOffsetToCodepointOffset_test():
   ]
 
   for test in tests:
-    yield lambda: eq_( utils.ByteOffsetToCodepointOffset( *test[ 0 ] ),
-                       test[ 1 ] )
+    yield lambda: assert_that( utils.ByteOffsetToCodepointOffset( *test[ 0 ] ),
+                               equal_to( test[ 1 ] ) )
 
 
 def SplitLines_test():
@@ -344,12 +353,13 @@ def SplitLines_test():
   ]
 
   for test in tests:
-    yield lambda: eq_( utils.SplitLines( test[ 0 ] ), test[ 1 ] )
+    yield lambda: assert_that( utils.SplitLines( test[ 0 ] ),
+                               equal_to( test[ 1 ] ) )
 
 
 def FindExecutable_AbsolutePath_test():
   with TemporaryExecutable() as executable:
-    eq_( executable, utils.FindExecutable( executable ) )
+    assert_that( executable, equal_to( utils.FindExecutable( executable ) ) )
 
 
 def FindExecutable_RelativePath_test():
@@ -357,19 +367,20 @@ def FindExecutable_RelativePath_test():
     dirname, exename = os.path.split( executable )
     relative_executable = os.path.join( '.', exename )
     with CurrentWorkingDirectory( dirname ):
-      eq_( relative_executable, utils.FindExecutable( relative_executable ) )
+      assert_that( relative_executable,
+                   equal_to( utils.FindExecutable( relative_executable ) ) )
 
 
 @patch.dict( 'os.environ', { 'PATH': tempfile.gettempdir() } )
 def FindExecutable_ExecutableNameInPath_test():
   with TemporaryExecutable() as executable:
     dirname, exename = os.path.split( executable )
-    eq_( executable, utils.FindExecutable( exename ) )
+    assert_that( executable, equal_to( utils.FindExecutable( exename ) ) )
 
 
 def FindExecutable_ReturnNoneIfFileIsNotExecutable_test():
   with tempfile.NamedTemporaryFile() as non_executable:
-    eq_( None, utils.FindExecutable( non_executable.name ) )
+    assert_that( None, equal_to( utils.FindExecutable( non_executable.name ) ) )
 
 
 @WindowsOnly
@@ -377,14 +388,14 @@ def FindExecutable_CurrentDirectory_test():
   with TemporaryExecutable() as executable:
     dirname, exename = os.path.split( executable )
     with CurrentWorkingDirectory( dirname ):
-      eq_( executable, utils.FindExecutable( exename ) )
+      assert_that( executable, equal_to( utils.FindExecutable( exename ) ) )
 
 
 @WindowsOnly
 @patch.dict( 'os.environ', { 'PATHEXT': '.xyz' } )
 def FindExecutable_AdditionalPathExt_test():
   with TemporaryExecutable( extension = '.xyz' ) as executable:
-    eq_( executable, utils.FindExecutable( executable ) )
+    assert_that( executable, equal_to( utils.FindExecutable( executable ) ) )
 
 
 @patch( 'ycmd.utils.ProcessIsRunning', return_value = True )
@@ -409,18 +420,19 @@ def LoadPythonSource_UnicodePath_test():
 
 def GetCurrentDirectory_Py3NoCurrentDirectory_test():
   with patch( 'os.getcwd', side_effect = FileNotFoundError ): # noqa
-    eq_( utils.GetCurrentDirectory(), tempfile.gettempdir() )
+    assert_that( utils.GetCurrentDirectory(),
+                 equal_to( tempfile.gettempdir() ) )
 
 
 def HashableDict_Equality_test():
   dict1 = { 'key': 'value' }
   dict2 = { 'key': 'another_value' }
-  ok_( utils.HashableDict( dict1 ) == utils.HashableDict( dict1 ) )
-  ok_( not utils.HashableDict( dict1 ) != utils.HashableDict( dict1 ) )
-  ok_( not utils.HashableDict( dict1 ) == dict1 )
-  ok_( utils.HashableDict( dict1 ) != dict1 )
-  ok_( not utils.HashableDict( dict1 ) == utils.HashableDict( dict2 ) )
-  ok_( utils.HashableDict( dict1 ) != utils.HashableDict( dict2 ) )
+  assert_that( utils.HashableDict( dict1 ) == utils.HashableDict( dict1 ) )
+  assert_that( not utils.HashableDict( dict1 ) != utils.HashableDict( dict1 ) )
+  assert_that( not utils.HashableDict( dict1 ) == dict1 )
+  assert_that( utils.HashableDict( dict1 ) != dict1 )
+  assert_that( not utils.HashableDict( dict1 ) == utils.HashableDict( dict2 ) )
+  assert_that( utils.HashableDict( dict1 ) != utils.HashableDict( dict2 ) )
 
 
 @patch( 'ycmd.utils.LOGGER', autospec = True )

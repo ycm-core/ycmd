@@ -26,7 +26,6 @@ from hamcrest import ( assert_that,
                        has_items,
                        instance_of )
 from unittest.mock import patch
-from nose.tools import eq_
 from os import path as p
 
 from ycmd.completers.language_server.language_server_completer import (
@@ -93,7 +92,7 @@ def GenericLSPCompleter_GetCompletions_FilteredNoForce_test( app ):
   WaitUntilCompleterServerReady( app, 'foo' )
   request.pop( 'event_name' )
   response = app.post_json( '/completions', BuildRequest( **request ) )
-  eq_( response.status_code, 200 )
+  assert_that( response.status_code, equal_to( 200 ) )
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )
   assert_that( response.json, has_entries( {
@@ -119,7 +118,7 @@ def GenericLSPCompleter_GetCompletions_test( app ):
   request[ 'force_semantic' ] = True
   request.pop( 'event_name' )
   response = app.post_json( '/completions', BuildRequest( **request ) )
-  eq_( response.status_code, 200 )
+  assert_that( response.status_code, equal_to( 200 ) )
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )
   assert_that( response.json, has_entries( {
@@ -178,7 +177,8 @@ def GenericLSPCompleter_Hover_RequestFails_test( app ):
   response = app.post_json( '/run_completer_command',
                             request,
                             expect_errors = True )
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json, ErrorMatcher( ResponseFailedException,
     'Request failed: -32601: Unhandled method textDocument/hover' ) )
@@ -203,9 +203,7 @@ def GenericLSPCompleter_Hover_HasResponse_test( app, *args ):
   request.pop( 'event_name' )
   request[ 'command_arguments' ] = [ 'GetHover' ]
   response = app.post_json( '/run_completer_command', request ).json
-  eq_( response, {
-    'message': 'asd'
-  } )
+  assert_that( response, has_entry( 'message', 'asd' ) )
 
 
 @IsolatedYcmd( { 'language_server':

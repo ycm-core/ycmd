@@ -17,7 +17,6 @@
 
 from hamcrest import assert_that, empty, has_entries, has_entry, contains
 from unittest.mock import patch
-from nose.tools import ok_
 import os.path
 
 from ycmd import user_options_store
@@ -701,7 +700,7 @@ def StopServer_KeepLogFiles( app ):
 
   try:
     for logfile in logfiles:
-      ok_( os.path.exists( logfile ),
+      assert_that( os.path.exists( logfile ),
            'Logfile should exist at {0}'.format( logfile ) )
   finally:
     app.post_json(
@@ -715,11 +714,11 @@ def StopServer_KeepLogFiles( app ):
 
   if user_options_store.Value( 'server_keep_logfiles' ):
     for logfile in logfiles:
-      ok_( os.path.exists( logfile ),
+      assert_that( os.path.exists( logfile ),
            'Logfile should still exist at {0}'.format( logfile ) )
   else:
     for logfile in logfiles:
-      ok_( not os.path.exists( logfile ),
+      assert_that( not os.path.exists( logfile ),
            'Logfile should no longer exist at {0}'.format( logfile ) )
 
 

@@ -18,9 +18,8 @@
 from time import sleep
 import json
 import requests
-from nose.tools import eq_
 from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entries )
+                       equal_to, has_item, has_items, has_entries )
 
 from ycmd import handlers
 from ycmd.tests.clangd import IsolatedYcmd, PathToTestFile, SharedYcmd
@@ -75,7 +74,8 @@ def RunTest( app, test ):
       response = app.post_json( '/completions', BuildRequest( **request ),
                                 expect_errors = True )
 
-      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+      assert_that( response.status_code,
+                   equal_to( test[ 'expect' ][ 'response' ] ) )
 
       print( 'Completer response: {}'.format( json.dumps(
         response.json, indent = 2 ) ) )

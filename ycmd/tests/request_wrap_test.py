@@ -17,7 +17,6 @@
 
 from hamcrest import ( assert_that, calling, contains, empty, equal_to,
                        has_entry, has_string, raises )
-from nose.tools import eq_
 
 from ycmd.utils import ToBytes
 from ycmd.request_wrap import RequestWrap
@@ -60,71 +59,79 @@ def Prefix_test():
   ]
 
   def Test( line, col, prefix ):
-    eq_( prefix,
-         RequestWrap( PrepareJson( line_num = 1,
-                                   contents = line,
-                                   column_num = col ) )[ 'prefix' ] )
+    assert_that( prefix,
+                 equal_to( RequestWrap(
+                   PrepareJson( line_num = 1,
+                                contents = line,
+                                column_num = col ) )[ 'prefix' ] ) )
 
   for test in tests:
     yield Test, test[ 0 ], test[ 1 ], test[ 2 ]
 
 
 def LineValue_OneLine_test():
-  eq_( 'zoo',
-       RequestWrap( PrepareJson( line_num = 1,
-                                 contents = 'zoo' ) )[ 'line_value' ] )
+  assert_that( 'zoo',
+               equal_to( RequestWrap(
+                 PrepareJson( line_num = 1,
+                              contents = 'zoo' ) )[ 'line_value' ] ) )
 
 
 def LineValue_LastLine_test():
-  eq_( 'zoo',
-       RequestWrap(
-          PrepareJson( line_num = 3,
-                       contents = 'goo\nbar\nzoo' ) )[ 'line_value' ] )
+  assert_that( 'zoo',
+               equal_to( RequestWrap(
+                 PrepareJson( line_num = 3,
+                              contents = 'goo\nbar\nzoo' ) )[ 'line_value' ] ) )
 
 
 def LineValue_MiddleLine_test():
-  eq_( 'zoo',
-       RequestWrap(
-          PrepareJson( line_num = 2,
-                       contents = 'goo\nzoo\nbar' ) )[ 'line_value' ] )
+  assert_that( 'zoo',
+               equal_to( RequestWrap(
+                 PrepareJson( line_num = 2,
+                              contents = 'goo\nzoo\nbar' ) )[ 'line_value' ] ) )
 
 
 def LineValue_WindowsLines_test():
-  eq_( 'zoo',
-       RequestWrap(
-          PrepareJson( line_num = 3,
-                       contents = 'goo\r\nbar\r\nzoo' ) )[ 'line_value' ] )
+  assert_that( 'zoo',
+               equal_to( RequestWrap(
+                 PrepareJson(
+                   line_num = 3,
+                   contents = 'goo\r\nbar\r\nzoo' ) )[ 'line_value' ] ) )
 
 
 def LineValue_MixedFormatLines_test():
-  eq_( 'zoo',
-       RequestWrap(
-          PrepareJson( line_num = 3,
-                       contents = 'goo\nbar\r\nzoo' ) )[ 'line_value' ] )
+  assert_that( 'zoo',
+               equal_to( RequestWrap(
+                 PrepareJson(
+                   line_num = 3,
+                   contents = 'goo\nbar\r\nzoo' ) )[ 'line_value' ] ) )
 
 
 def LineValue_EmptyContents_test():
-  eq_( '',
-       RequestWrap( PrepareJson( line_num = 1,
-                                 contents = '' ) )[ 'line_value' ] )
+  assert_that( '',
+               equal_to( RequestWrap(
+                 PrepareJson( line_num = 1,
+                              contents = '' ) )[ 'line_value' ] ) )
 
 
 def StartColumn_RightAfterDot_test():
-  eq_( 5,
-       RequestWrap( PrepareJson( column_num = 5,
-                                 contents = 'foo.' ) )[ 'start_column' ] )
+  assert_that( 5,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 5,
+                              contents = 'foo.' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_Dot_test():
-  eq_( 5,
-       RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo.bar' ) )[ 'start_column' ] )
+  assert_that( 5,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 8,
+                              contents = 'foo.bar' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_DotWithUnicode_test():
-  eq_( 7,
-       RequestWrap( PrepareJson( column_num = 11,
-                                 contents = 'fäö.bär' ) )[ 'start_column' ] )
+  assert_that( 7,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 11,
+                              contents = 'fäö.bär' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_UnicodeNotIdentifier_test():
@@ -134,189 +141,199 @@ def StartColumn_UnicodeNotIdentifier_test():
 
   for i in range( 13, 15 ):
     print( ToBytes( contents )[ i - 1 : i ] )
-    eq_( 13,
-         RequestWrap( PrepareJson( column_num = i,
-                                   contents = contents ) )[ 'start_column' ] )
+    assert_that( 13,
+                 equal_to( RequestWrap(
+                   PrepareJson( column_num = i,
+                                contents = contents ) )[ 'start_column' ] ) )
 
-  eq_( 13,
-       RequestWrap( PrepareJson( column_num = 15,
-                                 contents = contents ) )[ 'start_column' ] )
+  assert_that( 13,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 15,
+                              contents = contents ) )[ 'start_column' ] ) )
 
   for i in range( 18, 20 ):
     print( ToBytes( contents )[ i - 1 : i ] )
-    eq_( 18,
-         RequestWrap( PrepareJson( column_num = i,
-                                   contents = contents ) )[ 'start_column' ] )
+    assert_that( 18,
+                 equal_to( RequestWrap(
+                   PrepareJson( column_num = i,
+                                contents = contents ) )[ 'start_column' ] ) )
 
 
 def StartColumn_QueryIsUnicode_test():
   contents = "var x = ålpha.alphå"
-  eq_( 16,
-       RequestWrap( PrepareJson( column_num = 16,
-                                 contents = contents ) )[ 'start_column' ] )
-  eq_( 16,
-       RequestWrap( PrepareJson( column_num = 19,
-                                 contents = contents ) )[ 'start_column' ] )
+  assert_that( 16,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 16,
+                              contents = contents ) )[ 'start_column' ] ) )
+  assert_that( 16,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 19,
+                              contents = contents ) )[ 'start_column' ] ) )
 
 
 def StartColumn_QueryStartsWithUnicode_test():
   contents = "var x = ålpha.ålpha"
-  eq_( 16,
-       RequestWrap( PrepareJson( column_num = 16,
-                                 contents = contents ) )[ 'start_column' ] )
-  eq_( 16,
-       RequestWrap( PrepareJson( column_num = 19,
-                                 contents = contents ) )[ 'start_column' ] )
+  assert_that( 16,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 16,
+                              contents = contents ) )[ 'start_column' ] ) )
+  assert_that( 16,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 19,
+                              contents = contents ) )[ 'start_column' ] ) )
 
 
 def StartColumn_ThreeByteUnicode_test():
   contents = "var x = '†'."
-  eq_( 15,
-       RequestWrap( PrepareJson( column_num = 15,
-                                 contents = contents ) )[ 'start_column' ] )
+  assert_that( 15,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 15,
+                              contents = contents ) )[ 'start_column' ] ) )
 
 
 def StartColumn_Paren_test():
-  eq_( 5,
-       RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo(bar' ) )[ 'start_column' ] )
+  assert_that( 5,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 8,
+                              contents = 'foo(bar' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_AfterWholeWord_test():
-  eq_( 1,
-       RequestWrap( PrepareJson( column_num = 7,
-                                 contents = 'foobar' ) )[ 'start_column' ] )
+  assert_that( 1,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 7,
+                              contents = 'foobar' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_AfterWholeWord_Html_test():
-  eq_( 1,
-       RequestWrap( PrepareJson( column_num = 7,
-                                 filetype = 'html',
-                                 contents = 'fo-bar' ) )[ 'start_column' ] )
+  assert_that( 1,
+               equal_to( RequestWrap(
+                 PrepareJson( column_num = 7, filetype = 'html',
+                              contents = 'fo-bar' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_AfterWholeUnicodeWord_test():
-  eq_( 1,
-       RequestWrap( PrepareJson( column_num = 6,
-                                 contents = u'fäö' ) )[ 'start_column' ] )
+  assert_that( 1, equal_to( RequestWrap(
+                   PrepareJson( column_num = 6,
+                                contents = u'fäö' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_InMiddleOfWholeWord_test():
-  eq_( 1,
-       RequestWrap( PrepareJson( column_num = 4,
-                                 contents = 'foobar' ) )[ 'start_column' ] )
+  assert_that( 1, equal_to( RequestWrap(
+                   PrepareJson( column_num = 4,
+                                contents = 'foobar' ) )[ 'start_column' ] ) )
 
 
 def StartColumn_ColumnOne_test():
-  eq_( 1,
-       RequestWrap( PrepareJson( column_num = 1,
-                                 contents = 'foobar' ) )[ 'start_column' ] )
+  assert_that( 1, equal_to( RequestWrap(
+                     PrepareJson( column_num = 1,
+                                  contents = 'foobar' ) )[ 'start_column' ] ) )
 
 
 def Query_AtWordEnd_test():
-  eq_( 'foo',
-       RequestWrap( PrepareJson( column_num = 4,
-                                 contents = 'foo' ) )[ 'query' ] )
+  assert_that( 'foo', equal_to( RequestWrap(
+                        PrepareJson( column_num = 4,
+                                     contents = 'foo' ) )[ 'query' ] ) )
 
 
 def Query_InWordMiddle_test():
-  eq_( 'foo',
-       RequestWrap( PrepareJson( column_num = 4,
-                                 contents = 'foobar' ) )[ 'query' ] )
+  assert_that( 'foo', equal_to( RequestWrap(
+                        PrepareJson( column_num = 4,
+                                     contents = 'foobar' ) )[ 'query' ] ) )
 
 
 def Query_StartOfLine_test():
-  eq_( '',
-       RequestWrap( PrepareJson( column_num = 1,
-                                 contents = 'foobar' ) )[ 'query' ] )
+  assert_that( '', equal_to( RequestWrap(
+                     PrepareJson( column_num = 1,
+                                   contents = 'foobar' ) )[ 'query' ] ) )
 
 
 def Query_StopsAtParen_test():
-  eq_( 'bar',
-       RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo(bar' ) )[ 'query' ] )
+  assert_that( 'bar', equal_to( RequestWrap(
+                        PrepareJson( column_num = 8,
+                                     contents = 'foo(bar' ) )[ 'query' ] ) )
 
 
 def Query_InWhiteSpace_test():
-  eq_( '',
-       RequestWrap( PrepareJson( column_num = 8,
-                                 contents = 'foo       ' ) )[ 'query' ] )
+  assert_that( '', equal_to( RequestWrap(
+                     PrepareJson( column_num = 8,
+                                   contents = 'foo       ' ) )[ 'query' ] ) )
 
 
 def Query_UnicodeSinglecharInclusive_test():
-  eq_( 'ø',
-       RequestWrap( PrepareJson( column_num = 7,
-                                 contents = 'abc.ø' ) )[ 'query' ] )
+  assert_that( 'ø', equal_to( RequestWrap(
+                      PrepareJson( column_num = 7,
+                                   contents = 'abc.ø' ) )[ 'query' ] ) )
 
 
 def Query_UnicodeSinglecharExclusive_test():
-  eq_( '',
-       RequestWrap( PrepareJson( column_num = 5,
-                                 contents = 'abc.ø' ) )[ 'query' ] )
+  assert_that( '', equal_to( RequestWrap(
+                     PrepareJson( column_num = 5,
+                                  contents = 'abc.ø' ) )[ 'query' ] ) )
 
 
 def StartColumn_Set_test():
   wrap = RequestWrap( PrepareJson( column_num = 11,
                                    contents = 'this \'test',
                                    filetype = 'javascript' ) )
-  eq_( wrap[ 'start_column' ], 7 )
-  eq_( wrap[ 'start_codepoint' ], 7 )
-  eq_( wrap[ 'query' ], "test" )
-  eq_( wrap[ 'prefix' ], "this '" )
+  assert_that( wrap[ 'start_column' ], equal_to( 7 ) )
+  assert_that( wrap[ 'start_codepoint' ], equal_to( 7 ) )
+  assert_that( wrap[ 'query' ], equal_to( "test" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "this '" ) )
 
   wrap[ 'start_column' ] = 6
-  eq_( wrap[ 'start_column' ], 6 )
-  eq_( wrap[ 'start_codepoint' ], 6 )
-  eq_( wrap[ 'query' ], "'test" )
-  eq_( wrap[ 'prefix' ], "this " )
+  assert_that( wrap[ 'start_column' ], equal_to( 6 ) )
+  assert_that( wrap[ 'start_codepoint' ], equal_to( 6 ) )
+  assert_that( wrap[ 'query' ], equal_to( "'test" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "this " ) )
 
 
 def StartColumn_SetUnicode_test():
   wrap = RequestWrap( PrepareJson( column_num = 14,
                                    contents = '†eß† \'test',
                                    filetype = 'javascript' ) )
-  eq_( 7,  wrap[ 'start_codepoint' ] )
-  eq_( 12, wrap[ 'start_column' ] )
-  eq_( wrap[ 'query' ], "te" )
-  eq_( wrap[ 'prefix' ], "†eß† \'" )
+  assert_that( 7, equal_to(  wrap[ 'start_codepoint' ] ) )
+  assert_that( 12, equal_to( wrap[ 'start_column' ] ) )
+  assert_that( wrap[ 'query' ], equal_to( "te" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "†eß† \'" ) )
 
   wrap[ 'start_column' ] = 11
-  eq_( wrap[ 'start_column' ], 11 )
-  eq_( wrap[ 'start_codepoint' ], 6 )
-  eq_( wrap[ 'query' ], "'te" )
-  eq_( wrap[ 'prefix' ], "†eß† " )
+  assert_that( wrap[ 'start_column' ], equal_to( 11 ) )
+  assert_that( wrap[ 'start_codepoint' ], equal_to( 6 ) )
+  assert_that( wrap[ 'query' ], equal_to( "'te" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "†eß† " ) )
 
 
 def StartCodepoint_Set_test():
   wrap = RequestWrap( PrepareJson( column_num = 11,
                                    contents = 'this \'test',
                                    filetype = 'javascript' ) )
-  eq_( wrap[ 'start_column' ], 7 )
-  eq_( wrap[ 'start_codepoint' ], 7 )
-  eq_( wrap[ 'query' ], "test" )
-  eq_( wrap[ 'prefix' ], "this '" )
+  assert_that( wrap[ 'start_column' ], equal_to( 7 ) )
+  assert_that( wrap[ 'start_codepoint' ], equal_to( 7 ) )
+  assert_that( wrap[ 'query' ], equal_to( "test" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "this '" ) )
 
   wrap[ 'start_codepoint' ] = 6
-  eq_( wrap[ 'start_column' ], 6 )
-  eq_( wrap[ 'start_codepoint' ], 6 )
-  eq_( wrap[ 'query' ], "'test" )
-  eq_( wrap[ 'prefix' ], "this " )
+  assert_that( wrap[ 'start_column' ], equal_to( 6 ) )
+  assert_that( wrap[ 'start_codepoint' ], equal_to( 6 ) )
+  assert_that( wrap[ 'query' ], equal_to( "'test" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "this " ) )
 
 
 def StartCodepoint_SetUnicode_test():
   wrap = RequestWrap( PrepareJson( column_num = 14,
                                    contents = '†eß† \'test',
                                    filetype = 'javascript' ) )
-  eq_( 7,  wrap[ 'start_codepoint' ] )
-  eq_( 12, wrap[ 'start_column' ] )
-  eq_( wrap[ 'query' ], "te" )
-  eq_( wrap[ 'prefix' ], "†eß† \'" )
+  assert_that( 7, equal_to(  wrap[ 'start_codepoint' ] ) )
+  assert_that( 12, equal_to( wrap[ 'start_column' ] ) )
+  assert_that( wrap[ 'query' ], equal_to( "te" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "†eß† \'" ) )
 
   wrap[ 'start_codepoint' ] = 6
-  eq_( wrap[ 'start_column' ], 11 )
-  eq_( wrap[ 'start_codepoint' ], 6 )
-  eq_( wrap[ 'query' ], "'te" )
-  eq_( wrap[ 'prefix' ], "†eß† " )
+  assert_that( wrap[ 'start_column' ], equal_to( 11 ) )
+  assert_that( wrap[ 'start_codepoint' ], equal_to( 6 ) )
+  assert_that( wrap[ 'query' ], equal_to( "'te" ) )
+  assert_that( wrap[ 'prefix' ], equal_to( "†eß† " ) )
 
 
 def Calculated_SetMethod_test():
