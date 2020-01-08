@@ -184,6 +184,7 @@ of the following return codes if unsuccessful:
 - 3: unexpected error while loading the library;
 - 4: the `ycm_core` library is missing;
 - 7: the version of the `ycm_core` library is outdated.
+- 8: server is started with python; recompile with python3.
 
 User-level customization
 -----------------------

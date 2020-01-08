@@ -18,6 +18,9 @@
 import sys
 import os
 
+if sys.version_info[ 0 ] < 3:
+  sys.exit( 8 )
+
 sys.path.insert( 0, os.path.dirname( os.path.abspath( __file__ ) ) )
 from server_utils import SetUpPythonPath
 SetUpPythonPath()
