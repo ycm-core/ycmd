@@ -18,7 +18,7 @@
 from hamcrest import ( assert_that, calling, contains, contains_string,
                        empty, equal_to, has_entry, has_entries, raises,
                        matches_regexp )
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 from pprint import pprint
 from webtest import AppError

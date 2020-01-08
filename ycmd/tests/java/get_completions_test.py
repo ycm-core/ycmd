@@ -38,7 +38,7 @@ from ycmd.tests.test_utils import ( CombineRequest,
                                     LocationMatcher,
                                     WithRetry )
 from ycmd.utils import ReadFile
-from mock import patch
+from unittest.mock import patch
 
 
 def ProjectPath( *args ):

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 
 from ycmd.tests import SharedYcmd

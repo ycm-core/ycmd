@@ -17,7 +17,7 @@
 
 from hamcrest import ( assert_that, contains, has_entries, has_entry,
                        instance_of, none )
-from mock import patch
+from unittest.mock import patch
 
 from ycmd.tests.rust import ( IsolatedYcmd,
                               PathToTestFile,

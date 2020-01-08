@@ -24,7 +24,7 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        has_item )
-from mock import patch
+from unittest.mock import patch
 from pprint import pformat
 from webtest import TestApp
 import bottle

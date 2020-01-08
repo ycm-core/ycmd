@@ -21,7 +21,7 @@ import psutil
 import requests
 import time
 
-from mock import patch
+from unittest.mock import patch
 from hamcrest import assert_that, contains, equal_to, has_entry
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmd,

@@ -18,7 +18,7 @@
 import json
 import requests
 import ycm_core
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 from hamcrest import ( all_of,
                        assert_that,

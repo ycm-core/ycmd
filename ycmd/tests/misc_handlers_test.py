@@ -17,7 +17,7 @@
 
 from hamcrest import ( any_of, assert_that, contains, empty, equal_to,
                        has_entries, instance_of )
-from mock import patch
+from unittest.mock import patch
 import requests
 
 from ycmd.tests import IsolatedYcmd, PathToTestFile, SharedYcmd

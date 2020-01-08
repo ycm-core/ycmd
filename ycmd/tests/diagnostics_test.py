@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import assert_that
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 import requests
 

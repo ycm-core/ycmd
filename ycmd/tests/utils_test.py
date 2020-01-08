@@ -26,7 +26,7 @@ from hamcrest import ( assert_that,
                        has_property,
                        instance_of,
                        raises )
-from mock import patch, call
+from unittest.mock import patch, call
 from nose.tools import eq_, ok_
 from types import ModuleType
 from ycmd import utils

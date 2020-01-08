@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import assert_that, contains, has_entry
-from mock import patch
+from unittest.mock import patch
 
 from ycmd.tests.go import ( PathToTestFile,
                             IsolatedYcmd,

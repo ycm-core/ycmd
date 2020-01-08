@@ -17,7 +17,7 @@
 
 import os
 from hamcrest import assert_that, contains_inanyorder, empty, is_not
-from mock import patch
+from unittest.mock import patch
 from nose.tools import ok_
 
 from ycmd.tests import IsolatedYcmd

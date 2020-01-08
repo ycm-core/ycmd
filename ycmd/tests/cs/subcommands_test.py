@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import assert_that, empty, has_entries, has_entry, contains
-from mock import patch
+from unittest.mock import patch
 from nose.tools import ok_
 import os.path
 

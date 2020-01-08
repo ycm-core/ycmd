@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import inspect
-from mock import patch
+from unittest.mock import patch
 
 from hamcrest import ( assert_that, calling, equal_to, has_length, has_property,
                        none, raises, same_instance )

@@ -20,7 +20,7 @@ from hamcrest import ( assert_that,
                        empty,
                        has_entries,
                        has_items )
-from mock import patch
+from unittest.mock import patch
 from ycmd import handlers
 from ycmd.utils import ReadFile, LOGGER
 from ycmd.tests.cs import ( PathToTestFile,

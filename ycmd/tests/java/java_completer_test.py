@@ -18,7 +18,7 @@
 import os
 
 from hamcrest import assert_that, equal_to, calling, has_entries, is_not, raises
-from mock import patch
+from unittest.mock import patch
 
 from ycmd import handlers
 from ycmd.tests.test_utils import BuildRequest

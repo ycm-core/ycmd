@@ -22,7 +22,7 @@ from hamcrest import ( assert_that,
                        has_entries,
                        instance_of )
 
-from mock import patch
+from unittest.mock import patch
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
                               PathToTestFile,

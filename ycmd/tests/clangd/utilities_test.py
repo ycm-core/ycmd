@@ -24,7 +24,7 @@ from __future__ import division
 from __future__ import absolute_import
 
 from nose.tools import eq_
-from mock import patch
+from unittest.mock import patch
 from ycmd import handlers
 from ycmd.completers.cpp import clangd_completer
 from ycmd.completers.language_server.language_server_completer import (

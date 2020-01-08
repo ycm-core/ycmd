@@ -25,7 +25,7 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        has_items )
-from mock import patch
+from unittest.mock import patch
 from pprint import pprint
 
 from ycmd.tests.clangd import ( IsolatedYcmd,

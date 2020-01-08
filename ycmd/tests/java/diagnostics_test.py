@@ -45,7 +45,7 @@ from ycmd.utils import ReadFile, StartThread
 from ycmd.completers import completer
 
 from pprint import pformat
-from mock import patch
+from unittest.mock import patch
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd import handlers
 

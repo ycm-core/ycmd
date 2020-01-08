@@ -17,7 +17,7 @@
 
 from ycmd.tests.test_utils import DummyCompleter
 from ycmd.user_options_store import DefaultOptions
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 
 

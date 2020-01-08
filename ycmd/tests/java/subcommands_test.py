@@ -42,7 +42,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ExpectedFailure,
                                     LocationMatcher,
                                     WithRetry )
-from mock import patch
+from unittest.mock import patch
 from ycmd import handlers
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.completers.language_server.language_server_completer import (

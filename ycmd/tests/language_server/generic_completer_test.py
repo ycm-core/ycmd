@@ -25,7 +25,7 @@ from hamcrest import ( assert_that,
                        has_entry,
                        has_items,
                        instance_of )
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 from os import path as p
 

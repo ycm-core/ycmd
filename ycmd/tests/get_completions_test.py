@@ -22,7 +22,7 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_items )
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 
 from ycmd.tests import IsolatedYcmd, SharedYcmd, PathToTestFile

@@ -23,7 +23,7 @@ from hamcrest import ( assert_that,
                        empty,
                        equal_to,
                        raises )
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 from nose.tools import eq_
 from types import ModuleType
 

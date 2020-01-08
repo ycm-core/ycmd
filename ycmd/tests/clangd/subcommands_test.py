@@ -29,7 +29,7 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        matches_regexp )
-from mock import patch
+from unittest.mock import patch
 from pprint import pprint
 import requests
 import os.path

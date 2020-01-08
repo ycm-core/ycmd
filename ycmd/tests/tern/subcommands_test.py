@@ -20,7 +20,7 @@ from hamcrest import ( assert_that,
                        contains_inanyorder,
                        has_entry,
                        has_entries )
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 from pprint import pformat
 import requests

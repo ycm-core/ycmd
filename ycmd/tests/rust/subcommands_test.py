@@ -22,7 +22,7 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry )
-from mock import patch
+from unittest.mock import patch
 from pprint import pformat
 import os
 import requests

@@ -17,7 +17,7 @@
 
 import json
 import requests
-from mock import patch
+from unittest.mock import patch
 from nose.tools import eq_
 from hamcrest import assert_that, contains, empty, has_entries
 
