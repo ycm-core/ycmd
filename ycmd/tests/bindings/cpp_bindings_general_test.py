@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from ycmd.utils import ToCppStringCompatible as ToCppStr
 from ycmd.completers.cpp.clang_completer import ConvertCompletionData
 from ycmd.responses import BuildDiagnosticData
 from ycmd.tests.bindings import PathToTestFile
@@ -35,8 +34,8 @@ import os
 
 def CppBindings_FilterAndSortCandidates_test():
   candidates = [ 'foo1', 'foo2', 'foo3' ]
-  query = ToCppStr( 'oo' )
-  candidate_property = ToCppStr( '' )
+  query = 'oo'
+  candidate_property = ''
 
   result_full = ycm_core.FilterAndSortCandidates( candidates,
                                                   candidate_property,
@@ -57,38 +56,33 @@ def CppBindings_FilterAndSortCandidates_test():
 def CppBindings_IdentifierCompleter_test():
   identifier_completer = ycm_core.IdentifierCompleter()
   identifiers = ycm_core.StringVector()
-  identifiers.append( ToCppStr( 'foo' ) )
-  identifiers.append( ToCppStr( 'bar' ) )
-  identifiers.append( ToCppStr( 'baz' ) )
-  identifier_completer.AddIdentifiersToDatabase( identifiers,
-                                                 ToCppStr( 'foo' ),
-                                                 ToCppStr( 'file' ) )
+  identifiers.append( 'foo' )
+  identifiers.append( 'bar' )
+  identifiers.append( 'baz' )
+  identifier_completer.AddIdentifiersToDatabase( identifiers, 'foo', 'file' )
   del identifiers
   query_fo_10 = identifier_completer.CandidatesForQueryAndType(
-                                       ToCppStr( 'fo' ), ToCppStr( 'foo' ), 10 )
-  query_fo = identifier_completer.CandidatesForQueryAndType(
-                                    ToCppStr( 'fo' ), ToCppStr( 'foo' ) )
-  query_a = identifier_completer.CandidatesForQueryAndType(
-                                   ToCppStr( 'a' ), ToCppStr( 'foo' ) )
+                                       'fo', 'foo', 10 )
+  query_fo = identifier_completer.CandidatesForQueryAndType( 'fo', 'foo' )
+  query_a = identifier_completer.CandidatesForQueryAndType( 'a', 'foo' )
   assert_that( query_fo_10, contains( 'foo' ) )
   assert_that( query_fo, contains( 'foo' ) )
   assert_that( query_a, contains( 'bar', 'baz' ) )
   identifiers = ycm_core.StringVector()
-  identifiers.append( ToCppStr( 'oof' ) )
-  identifiers.append( ToCppStr( 'rab' ) )
-  identifiers.append( ToCppStr( 'zab' ) )
+  identifiers.append( 'oof' )
+  identifiers.append( 'rab' )
+  identifiers.append( 'zab' )
   identifier_completer.ClearForFileAndAddIdentifiersToDatabase(
-                         identifiers, ToCppStr( 'foo' ), ToCppStr( 'file' ) )
-  query_a_10 = identifier_completer.CandidatesForQueryAndType(
-                                      ToCppStr( 'a' ), ToCppStr( 'foo' ) )
+                         identifiers, 'foo', 'file' )
+  query_a_10 = identifier_completer.CandidatesForQueryAndType( 'a', 'foo' )
   assert_that( query_a_10, contains( 'rab', 'zab' ) )
 
 
 @ClangOnly
 def CppBindings_UnsavedFile_test():
   unsaved_file = ycm_core.UnsavedFile()
-  filename = ToCppStr( 'foo' )
-  contents = ToCppStr( 'bar\\n' )
+  filename = 'foo'
+  contents = 'bar\\n'
   length = len( contents )
   unsaved_file.filename_ = filename
   unsaved_file.contents_ = contents
@@ -105,13 +99,13 @@ def CppBindings_UnsavedFile_test():
 
 @ClangOnly
 def CppBindings_DeclarationLocation_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 9
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -139,13 +133,13 @@ def CppBindings_DeclarationLocation_test():
 
 @ClangOnly
 def CppBindings_DefinitionOrDeclarationLocation_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 9
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -174,13 +168,13 @@ def CppBindings_DefinitionOrDeclarationLocation_test():
 
 @ClangOnly
 def CppBindings_DefinitionLocation_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 9
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -208,13 +202,13 @@ def CppBindings_DefinitionLocation_test():
 
 @ClangOnly
 def CppBindings_Candidates_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 11
   column = 6
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc' ) )
+  flags.append( '-xc' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -255,13 +249,13 @@ def CppBindings_Candidates_test():
 
 @ClangOnly
 def CppBindings_GetType_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 9
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -286,13 +280,13 @@ def CppBindings_GetType_test():
 
 @ClangOnly
 def CppBindings_GetParent_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 9
   column = 17
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -319,13 +313,13 @@ def CppBindings_GetParent_test():
 
 @ClangOnly
 def CppBindings_FixIt_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 3
   column = 5
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -373,13 +367,13 @@ def CppBindings_FixIt_test():
 
 @ClangOnly
 def CppBindings_Docs_test():
-  translation_unit = ToCppStr( PathToTestFile( 'foo.c' ) )
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  translation_unit = PathToTestFile( 'foo.c' )
+  filename = PathToTestFile( 'foo.c' )
   line = 9
   column = 16
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 
@@ -413,10 +407,10 @@ def CppBindings_Docs_test():
 
 @ClangOnly
 def CppBindings_Diags_test():
-  filename = ToCppStr( PathToTestFile( 'foo.c' ) )
+  filename = PathToTestFile( 'foo.c' )
   unsaved_file_vector = ycm_core.UnsavedFileVector()
   flags = ycm_core.StringVector()
-  flags.append( ToCppStr( '-xc++' ) )
+  flags.append( '-xc++' )
   reparse = True
   clang_completer = ycm_core.ClangCompleter()
 

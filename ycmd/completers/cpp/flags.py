@@ -23,7 +23,6 @@ from ycmd.utils import ( OnMac,
                          OnWindows,
                          PathsToAllParentFolders,
                          re,
-                         ToCppStringCompatible,
                          ToUnicode,
                          CLANG_RESOURCE_DIR )
 from ycmd.responses import NoExtraConfDetected
@@ -303,7 +302,7 @@ def PrepareFlagsForClang( flags,
 
   vector = ycm_core.StringVector()
   for flag in flags:
-    vector.append( ToCppStringCompatible( flag ) )
+    vector.append( flag )
   return vector
 
 

@@ -110,17 +110,6 @@ def CreateLogfile( prefix = '' ):
     return logfile.name
 
 
-# Given an object, returns a str object that's utf-8 encoded. This is meant to
-# be used exclusively when producing strings to be passed to the C++ Python
-# plugins. For other code, you likely want to use ToBytes below.
-def ToCppStringCompatible( value ):
-  if isinstance( value, str ):
-    return value.encode( 'utf-8' )
-  if isinstance( value, bytes ):
-    return value
-  return str( value ).encode( 'utf-8' )
-
-
 def ToUnicode( value ):
   if not value:
     return ''
