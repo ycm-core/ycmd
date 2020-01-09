@@ -15,8 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       equal_to, has_entries )
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       contains_inanyorder,
+                       empty,
+                       equal_to,
+                       has_entries )
 from pprint import pformat
 import requests
 
@@ -120,7 +124,7 @@ def GetCompletions_Query_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'basic_type', 'number' ),
           CompletionEntryMatcher( 'isPrototypeOf',
                                   'fn(obj: ?) -> bool' ),
@@ -180,7 +184,7 @@ def GetCompletions_Require_Query_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'mine_bitcoin',
                                   'fn(how_much: ?) -> number' ),
         ),
@@ -204,7 +208,7 @@ def GetCompletions_Require_Query_LCS_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'get_number', 'number' ),
           CompletionEntryMatcher( 'get_thing',
                                   'fn(a: ?) -> number|string' ),
@@ -481,7 +485,7 @@ def GetCompletions_ChangeStartColumn_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( '"path"', 'path' )
         ),
         'completion_start_column': 14,

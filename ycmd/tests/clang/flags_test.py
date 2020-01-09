@@ -20,7 +20,7 @@ import os
 import pytest
 from hamcrest import ( assert_that,
                        calling,
-                       contains,
+                       contains_exactly,
                        empty,
                        equal_to,
                        raises )
@@ -95,7 +95,7 @@ def FlagsForFile_FlagsCachedByDefault_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
   def Settings( **kwargs ):
     return {
@@ -104,7 +104,7 @@ def FlagsForFile_FlagsCachedByDefault_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
 
 def FlagsForFile_FlagsNotCachedWhenDoCacheIsFalse_test():
@@ -118,7 +118,7 @@ def FlagsForFile_FlagsNotCachedWhenDoCacheIsFalse_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
   def Settings( **kwargs ):
     return {
@@ -127,7 +127,7 @@ def FlagsForFile_FlagsNotCachedWhenDoCacheIsFalse_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c++' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c++' ) )
 
 
 def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test():
@@ -141,7 +141,7 @@ def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
   def Settings( **kwargs ):
     return {
@@ -150,7 +150,7 @@ def FlagsForFile_FlagsCachedWhenDoCacheIsTrue_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
 
 def FlagsForFile_DoNotMakeRelativePathsAbsoluteByDefault_test():
@@ -164,7 +164,7 @@ def FlagsForFile_DoNotMakeRelativePathsAbsoluteByDefault_test():
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list,
-                 contains( '-x', 'c',
+                 contains_exactly( '-x', 'c',
                            '-I', 'header' ) )
 
 
@@ -180,7 +180,7 @@ def FlagsForFile_MakeRelativePathsAbsoluteIfOptionSpecified_test():
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
     assert_that( flags_list,
-                 contains( '-x', 'c',
+                 contains_exactly( '-x', 'c',
                            '-I', os.path.normpath( '/working_dir/header' ) ) )
 
 
@@ -197,7 +197,7 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_Default_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
       '-isystem',    '/usr/include/c++/v1',
@@ -224,7 +224,7 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_Xcode_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
       '-isystem',    '/Applications/Xcode.app/Contents/Developer/Platforms'
@@ -260,7 +260,7 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_CommandLine_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
       '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
@@ -294,7 +294,7 @@ def FlagsForFile_AddMacIncludePaths_Sysroot_Custom_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-isysroot/path/to/first/sys/root',
       '-isysroot', '/path/to/second/sys/root/',
@@ -325,7 +325,7 @@ def FlagsForFile_AddMacIncludePaths_Toolchain_Xcode_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
       '-isystem',    '/Applications/Xcode.app/Contents/Developer/Toolchains'
@@ -354,7 +354,7 @@ def FlagsForFile_AddMacIncludePaths_Toolchain_CommandLine_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
       '-isystem',    '/Library/Developer/CommandLineTools/usr/include/c++/v1',
@@ -380,7 +380,7 @@ def FlagsForFile_AddMacIncludePaths_ObjCppLanguage_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-x', 'c',
       '-xobjective-c++',
@@ -406,7 +406,7 @@ def FlagsForFile_AddMacIncludePaths_CppLanguage_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-x', 'c',
       '-xc++',
@@ -432,7 +432,7 @@ def FlagsForFile_AddMacIncludePaths_CLanguage_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-xc++',
       '-xc',
@@ -457,7 +457,7 @@ def FlagsForFile_AddMacIncludePaths_NoLibCpp_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-stdlib=libc++',
       '-stdlib=libstdc++',
@@ -482,7 +482,7 @@ def FlagsForFile_AddMacIncludePaths_NoStandardCppIncludes_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-nostdinc++',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
@@ -506,7 +506,7 @@ def FlagsForFile_AddMacIncludePaths_NoStandardSystemIncludes_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-nostdinc',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
@@ -526,7 +526,7 @@ def FlagsForFile_AddMacIncludePaths_NoBuiltinIncludes_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains(
+    assert_that( flags_list, contains_exactly(
       '-Wall',
       '-nobuiltininc',
       '-resource-dir=' + CLANG_RESOURCE_DIR,
@@ -549,7 +549,7 @@ def FlagsForFile_OverrideTranslationUnit_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, filename = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains() )
+    assert_that( flags_list, contains_exactly() )
     assert_that( filename, equal_to( 'changed:/foo' ) )
 
 
@@ -561,7 +561,7 @@ def FlagsForFile_OverrideTranslationUnit_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, filename = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains() )
+    assert_that( flags_list, contains_exactly() )
     assert_that( filename, equal_to( '/foo' ) )
 
 
@@ -573,7 +573,7 @@ def FlagsForFile_OverrideTranslationUnit_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, filename = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains() )
+    assert_that( flags_list, contains_exactly() )
     assert_that( filename, equal_to( '/foo' ) )
 
 
@@ -584,7 +584,7 @@ def FlagsForFile_OverrideTranslationUnit_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, filename = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains() )
+    assert_that( flags_list, contains_exactly() )
     assert_that( filename, equal_to( '/foo' ) )
 
 
@@ -596,7 +596,7 @@ def FlagsForFile_OverrideTranslationUnit_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, filename = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains() )
+    assert_that( flags_list, contains_exactly() )
     assert_that( filename, equal_to( '/foo' ) )
 
 
@@ -608,7 +608,7 @@ def FlagsForFile_OverrideTranslationUnit_test():
 
   with MockExtraConfModule( Settings ):
     flags_list, filename = flags_object.FlagsForFile( '/foo' )
-    assert_that( flags_list, contains() )
+    assert_that( flags_list, contains_exactly() )
     assert_that( filename, equal_to( '0' ) )
 
 
@@ -622,7 +622,7 @@ def FlagsForFile_Compatibility_KeywordArguments_test():
 
   with MockExtraConfModule( FlagsForFile ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
 
 def FlagsForFile_Compatibility_NoKeywordArguments_test():
@@ -635,7 +635,7 @@ def FlagsForFile_Compatibility_NoKeywordArguments_test():
 
   with MockExtraConfModule( FlagsForFile ):
     flags_list, _ = flags_object.FlagsForFile( '/foo', False )
-    assert_that( flags_list, contains( '-x', 'c' ) )
+    assert_that( flags_list, contains_exactly( '-x', 'c' ) )
 
 
 def RemoveUnusedFlags_Passthrough_test():
@@ -644,7 +644,7 @@ def RemoveUnusedFlags_Passthrough_test():
                   compiler_flags,
                   'file',
                   ShouldAllowWinStyleFlags( compiler_flags ) ),
-               contains( '-foo', '-bar' ) )
+               contains_exactly( '-foo', '-bar' ) )
 
 
 def RemoveUnusedFlags_RemoveDashC_test():
@@ -966,7 +966,7 @@ def RemoveUnusedFlags_Depfiles_test():
                                         'test.m',
                                         ShouldAllowWinStyleFlags(
                                           full_flags ) ),
-               contains( *expected ) )
+               contains_exactly( *expected ) )
 
 
 def EnableTypoCorrection_Empty_test():
@@ -1041,7 +1041,7 @@ def AddLanguageFlagWhenAppropriate_Passthrough_test():
   assert_that( flags._AddLanguageFlagWhenAppropriate(
                   compiler_flags,
                   ShouldAllowWinStyleFlags( compiler_flags ) ),
-               contains( '-foo', '-bar' ) )
+               contains_exactly( '-foo', '-bar' ) )
 
 
 @WindowsOnly
@@ -1050,7 +1050,7 @@ def AddLanguageFlagWhenAppropriate_CLDriver_Passthrough_test():
   assert_that( flags._AddLanguageFlagWhenAppropriate(
                   compiler_flags,
                   ShouldAllowWinStyleFlags( compiler_flags ) ),
-               contains( '-foo', '-bar', '--driver-mode=cl' ) )
+               contains_exactly( '-foo', '-bar', '--driver-mode=cl' ) )
 
 
 def _AddLanguageFlagWhenAppropriateTester( compiler, language_flag = [] ):
@@ -1126,7 +1126,7 @@ def CompilationDatabase_UseFlagsFromDatabase_test():
         flags.Flags().FlagsForFile(
           os.path.join( tmp_dir, 'test.cc' ),
           add_extra_clang_flags = False )[ 0 ],
-        contains( 'clang++',
+        contains_exactly( 'clang++',
                   '-x',
                   'c++',
                   '--driver-mode=g++',
@@ -1156,8 +1156,8 @@ def CompilationDatabase_UseFlagsFromSameDir_test():
         f.FlagsForFile(
           os.path.join( tmp_dir, 'test1.cc' ),
           add_extra_clang_flags = False ),
-        contains(
-          contains( 'clang++',
+        contains_exactly(
+          contains_exactly( 'clang++',
                     '-x',
                     'c++',
                     '--driver-mode=g++',
@@ -1172,8 +1172,8 @@ def CompilationDatabase_UseFlagsFromSameDir_test():
         f.FlagsForFile(
           os.path.join( tmp_dir, 'some_dir', 'test1.cc' ),
           add_extra_clang_flags = False ),
-        contains(
-          contains( 'clang++',
+        contains_exactly(
+          contains_exactly( 'clang++',
                     '-x',
                     'c++',
                     '--driver-mode=g++',
@@ -1201,7 +1201,7 @@ def CompilationDatabase_HeaderFile_SameNameAsSourceFile_test():
         flags.Flags().FlagsForFile(
           os.path.join( tmp_dir, 'test.h' ),
           add_extra_clang_flags = False )[ 0 ],
-        contains( 'clang++',
+        contains_exactly( 'clang++',
                   '-x',
                   'c++',
                   '--driver-mode=g++',
@@ -1228,7 +1228,7 @@ def CompilationDatabase_HeaderFile_DifferentNameFromSourceFile_test():
         flags.Flags().FlagsForFile(
           os.path.join( tmp_dir, 'not_in_the_db.h' ),
           add_extra_clang_flags = False )[ 0 ],
-        contains( 'clang++',
+        contains_exactly( 'clang++',
                   '-x',
                   'c++',
                   '--driver-mode=g++',
@@ -1258,7 +1258,7 @@ def CompilationDatabase_ExplicitHeaderFileEntry_test():
         flags.Flags().FlagsForFile(
           os.path.join( tmp_dir, 'test.h' ),
           add_extra_clang_flags = False )[ 0 ],
-        contains( 'clang++',
+        contains_exactly( 'clang++',
                   '-x',
                   'c++',
                   '--driver-mode=g++',
@@ -1282,7 +1282,7 @@ def CompilationDatabase_CUDALanguageFlags_test():
         flags.Flags().FlagsForFile(
           os.path.join( tmp_dir, 'test.cuh' ),
           add_extra_clang_flags = False )[ 0 ],
-        contains( 'clang++',
+        contains_exactly( 'clang++',
                   '-x',
                   'cuda',
                   '--driver-mode=g++',
@@ -1293,7 +1293,7 @@ def _MakeRelativePathsInFlagsAbsoluteTest( test ):
   wd = test[ 'wd' ] if 'wd' in test else '/not_test'
   assert_that(
     flags._MakeRelativePathsInFlagsAbsolute( test[ 'flags' ], wd ),
-    contains( *test[ 'expect' ] ) )
+    contains_exactly( *test[ 'expect' ] ) )
 
 
 @pytest.mark.parametrize( 'test', [

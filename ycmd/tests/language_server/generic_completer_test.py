@@ -18,7 +18,7 @@
 import json
 import requests
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        equal_to,
                        has_entries,
@@ -72,7 +72,7 @@ def GenericLSPCompleter_GetCompletions_NotACompletionProvider_test( app ):
     WaitUntilCompleterServerReady( app, 'foo' )
     request.pop( 'event_name' )
     response = app.post_json( '/completions', BuildRequest( **request ) )
-    assert_that( response.json, has_entries( { 'completions': contains(
+    assert_that( response.json, has_entries( { 'completions': contains_exactly(
       CompletionEntryMatcher( 'Java', '[ID]' ) ) } ) )
 
 
@@ -96,7 +96,7 @@ def GenericLSPCompleter_GetCompletions_FilteredNoForce_test( app ):
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )
   assert_that( response.json, has_entries( {
-    'completions': contains(
+    'completions': contains_exactly(
       CompletionEntryMatcher( 'JavaScript', 'JavaScript details' ),
     )
   } ) )
@@ -122,7 +122,7 @@ def GenericLSPCompleter_GetCompletions_test( app ):
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )
   assert_that( response.json, has_entries( {
-    'completions': contains(
+    'completions': contains_exactly(
       CompletionEntryMatcher( 'JavaScript', 'JavaScript details' ),
       CompletionEntryMatcher( 'TypeScript', 'TypeScript details' ),
     )
@@ -229,17 +229,17 @@ def GenericLSPCompleter_DebugInfo_CustomRoot_test( app, *args ):
     response,
     has_entry( 'completer', has_entries( {
       'name': 'GenericLSP',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'fooCompleter',
         'is_running': instance_of( bool ),
-        'executable': contains( instance_of( str ),
+        'executable': contains_exactly( instance_of( str ),
                                 instance_of( str ),
                                 instance_of( str ) ),
         'address': None,
         'port': None,
         'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ) ),
-        'extras': contains(
+        'logfiles': contains_exactly( instance_of( str ) ),
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': instance_of( str ),

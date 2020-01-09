@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        equal_to,
                        has_entry,
                        has_entries,
@@ -79,13 +79,13 @@ def DebugInfo_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'Java',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'jdt.ls',
         'is_running': instance_of( bool ),
         'executable': instance_of( list ),
         'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ), instance_of( str ) ),
-        'extras': contains(
+        'logfiles': contains_exactly( instance_of( str ), instance_of( str ) ),
+        'extras': contains_exactly(
           has_entries( { 'key': 'Server State',
                          'value': 'Initialized' } ),
           has_entries( {
@@ -108,7 +108,7 @@ def DebugInfo_test( app ):
           has_entries( { 'key': 'Workspace Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Extension Path',
-                         'value': contains( instance_of( str ) ) } ),
+                         'value': contains_exactly( instance_of( str ) ) } ),
         )
       } ) )
     } ) )
@@ -132,13 +132,13 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'Java',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'jdt.ls',
         'is_running': instance_of( bool ),
         'executable': instance_of( list ),
         'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ), instance_of( str ) ),
-        'extras': contains(
+        'logfiles': contains_exactly( instance_of( str ), instance_of( str ) ),
+        'extras': contains_exactly(
           has_entries( { 'key': 'Server State',
                          'value': 'Initialized' } ),
           has_entries( {
@@ -162,7 +162,7 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
           has_entries( { 'key': 'Workspace Path',
                          'value': instance_of( str ) } ),
           has_entries( { 'key': 'Extension Path',
-                         'value': contains( instance_of( str ) ) } ),
+                         'value': contains_exactly( instance_of( str ) ) } ),
         )
       } ) )
     } ) )

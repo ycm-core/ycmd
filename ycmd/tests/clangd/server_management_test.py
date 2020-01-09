@@ -19,7 +19,7 @@ from unittest.mock import patch
 import psutil
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        has_entries,
                        has_entry,
@@ -56,7 +56,7 @@ def CheckStopped( app ):
     GetDebugInfo( app ),
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'pid': None,
         'is_running': False
@@ -161,7 +161,7 @@ def ServerManagement_RestartServer_test( app ):
     GetDebugInfo( app ),
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
         'extras': has_item( has_entries( {

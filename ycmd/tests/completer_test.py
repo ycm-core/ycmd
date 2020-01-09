@@ -18,7 +18,7 @@
 from ycmd.tests.test_utils import DummyCompleter
 from ycmd.user_options_store import DefaultOptions
 from unittest.mock import patch
-from hamcrest import assert_that, contains, equal_to
+from hamcrest import assert_that, contains_exactly, equal_to
 
 
 def _FilterAndSortCandidates_Match( candidates, query, expected_matches ):
@@ -73,4 +73,4 @@ def FilterAndSortCandidates_Unicode_test():
         return_value = { 'Foo': '', 'StopServer': '' } )
 def DefinedSubcommands_RemoveStopServerSubcommand_test( subcommands_map ):
   completer = DummyCompleter( DefaultOptions() )
-  assert_that( completer.DefinedSubcommands(), contains( 'Foo' ) )
+  assert_that( completer.DefinedSubcommands(), contains_exactly( 'Foo' ) )

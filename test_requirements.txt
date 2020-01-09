@@ -1,7 +1,7 @@
 flake8                >= 3.0.0
 flake8-comprehensions
 flake8-ycm            >= 0.1.0
-PyHamcrest            >= 1.8.5
+PyHamcrest            >= 1.10.1
 WebTest               >= 2.0.20
 # psutil 5.0.1 is broken on Python 3.6 and Windows 64-bit
 psutil                >= 3.3.0, != 5.0.1

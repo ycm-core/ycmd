@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-from hamcrest import ( assert_that, calling, contains, empty, equal_to,
+from hamcrest import ( assert_that, calling, contains_exactly, empty, equal_to,
                        has_entry, has_string, raises )
 
 from ycmd.utils import ToBytes
@@ -388,7 +388,8 @@ def ExtraConfData_test():
 
   wrap = RequestWrap( PrepareJson( extra_conf_data = { 'key': [ 'value' ] } ) )
   extra_conf_data = wrap[ 'extra_conf_data' ]
-  assert_that( extra_conf_data, has_entry( 'key', contains( 'value' ) ) )
+  assert_that( extra_conf_data,
+               has_entry( 'key', contains_exactly( 'value' ) ) )
   assert_that(
     extra_conf_data,
     has_string(
@@ -402,4 +403,5 @@ def ExtraConfData_test():
 
   # Check that extra_conf_data's values are immutable.
   extra_conf_data[ 'key' ].append( 'another_value' )
-  assert_that( extra_conf_data, has_entry( 'key', contains( 'value' ) ) )
+  assert_that( extra_conf_data,
+               has_entry( 'key', contains_exactly( 'value' ) ) )

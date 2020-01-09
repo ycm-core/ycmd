@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains
+from hamcrest import assert_that, contains_exactly
 from unittest.mock import patch
 
 from ycmd.tests import SharedYcmd
@@ -32,7 +32,7 @@ def Subcommands_Basic_test( get_subcmd_map, app ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
     assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-                 contains( 'A', 'B', 'C' ) )
+                 contains_exactly( 'A', 'B', 'C' ) )
 
 
 @SharedYcmd
@@ -44,4 +44,4 @@ def Subcommands_NoExplicitCompleterTargetSpecified_test( get_subcmd_map, app ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
     assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-                 contains( 'A', 'B', 'C' ) )
+                 contains_exactly( 'A', 'B', 'C' ) )

@@ -17,7 +17,7 @@
 
 import time
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
                        equal_to,
@@ -557,7 +557,7 @@ def Subcommands_GoToReferences_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  assert_that( response, contains( has_entries( {
+  assert_that( response, contains_exactly( has_entries( {
            'filepath': PathToTestFile( 'simple_eclipse_project',
                                        'src',
                                        'com',
@@ -599,8 +599,8 @@ def Subcommands_RefactorRename_Simple_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
               ChunkMatcher( 'renamed_l = new TestLauncher( 10 );'
                             '\n    renamed_l',
                             LocationMatcher( filepath, 27, 18 ),
@@ -652,8 +652,8 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               'a_quite_long_string',
               LocationMatcher( AbstractTestWidget, 10, 15 ),
@@ -723,8 +723,8 @@ def Subcommands_RefactorRename_Unicode_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               'shorter = "Test";\n    return shorter',
               LocationMatcher( filepath, 7, 12 ),
@@ -785,7 +785,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Import 'Wibble' (com.test.wobble)",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'package com.test;\n\n'
                         'import com.test.wobble.Wibble;\n\n',
                         LocationMatcher( filepath, 1, 1 ),
@@ -794,7 +794,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create constant 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nprivate static final String Wibble = null;',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
@@ -802,7 +802,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create class 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( wibble_text.format( os.linesep, 'class' ),
                         LocationMatcher( wibble_path, 1, 1 ),
                         LocationMatcher( wibble_path, 1, 1 ) ),
@@ -810,7 +810,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create interface 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( wibble_text.format( os.linesep, 'interface' ),
                         LocationMatcher( wibble_path, 1, 1 ),
                         LocationMatcher( wibble_path, 1, 1 ) ),
@@ -818,7 +818,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create enum 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( wibble_text.format( os.linesep, 'enum' ),
                         LocationMatcher( wibble_path, 1, 1 ),
                         LocationMatcher( wibble_path, 1, 1 ) ),
@@ -826,7 +826,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create local variable 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'Object Wibble;\n\t',
                         LocationMatcher( filepath, 19, 5 ),
                         LocationMatcher( filepath, 19, 5 ) ),
@@ -834,7 +834,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create field 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nprivate Object Wibble;',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
@@ -842,7 +842,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': "Create parameter 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( ', Object Wibble',
                         LocationMatcher( filepath, 18, 32 ),
                         LocationMatcher( filepath, 18, 32 ) ),
@@ -850,7 +850,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': 'Generate toString()...',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
                         '\n\treturn "TestFactory []";\n}',
                         LocationMatcher( filepath, 32, 4 ),
@@ -859,7 +859,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': 'Organize imports',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( filepath, 1, 18 ),
                         LocationMatcher( filepath, 3, 1 ) ),
@@ -887,7 +887,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'boolean',
                         LocationMatcher( filepath, 14, 12 ),
                         LocationMatcher( filepath, 14, 15 ) ),
@@ -895,7 +895,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
       } ),
       has_entries( {
         'text': 'Generate toString()...',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
                         '\n\treturn "TestFactory []";\n}',
                         LocationMatcher( filepath, 32, 4 ),
@@ -904,7 +904,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
       } ),
       has_entries( {
         'text': 'Organize imports',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( filepath, 1, 18 ),
                         LocationMatcher( filepath, 3, 1 ) ),
@@ -929,7 +929,7 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove 'testString', keep assignments with side effects",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
                         LocationMatcher( filepath, 14, 21 ),
                         LocationMatcher( filepath, 15, 30 ) ),
@@ -978,7 +978,7 @@ def Subcommands_FixIt_MultipleDiags_test( app, description, column ):
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'boolean',
                         LocationMatcher( filepath, 14, 12 ),
                         LocationMatcher( filepath, 14, 15 ) ),
@@ -986,7 +986,7 @@ def Subcommands_FixIt_MultipleDiags_test( app, description, column ):
       } ),
       has_entries( {
         'text': "Remove argument to match 'doSomethingVaguelyUseful()'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
                         LocationMatcher( filepath, 30, 48 ),
                         LocationMatcher( filepath, 30, 50 ) ),
@@ -1046,7 +1046,7 @@ def Subcommands_FixIt_Range_test( app ):
         'fixits': contains_inanyorder(
           has_entries( {
             'text': 'Extract to field',
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   'private String \\w+;\n'
@@ -1067,7 +1067,7 @@ def Subcommands_FixIt_Range_test( app ):
           } ),
           has_entries( {
             'text': 'Extract to method',
-            'chunks': contains(
+            'chunks': contains_exactly(
               # This one is a wall of text that rewrites 35 lines
               ChunkMatcher( instance_of( str ),
                             LocationMatcher( filepath, 1, 1 ),
@@ -1076,7 +1076,7 @@ def Subcommands_FixIt_Range_test( app ):
           } ),
           has_entries( {
             'text': 'Extract to local variable (replace all occurrences)',
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   'String \\w+ = "Did something '
@@ -1088,7 +1088,7 @@ def Subcommands_FixIt_Range_test( app ):
           } ),
           has_entries( {
             'text': 'Extract to local variable',
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   'String \\w+ = "Did something '
@@ -1138,7 +1138,7 @@ def Subcommands_FixIt_Unicode_test( app ):
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove argument to match 'doUnicødeTes()'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
                         LocationMatcher( filepath, 13, 24 ),
                         LocationMatcher( filepath, 13, 29 ) ),
@@ -1146,7 +1146,7 @@ def Subcommands_FixIt_Unicode_test( app ):
       } ),
       has_entries( {
         'text': "Change method 'doUnicødeTes()': Add parameter 'String'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'String test2',
                         LocationMatcher( filepath, 6, 31 ),
                         LocationMatcher( filepath, 6, 31 ) ),
@@ -1154,7 +1154,7 @@ def Subcommands_FixIt_Unicode_test( app ):
       } ),
       has_entries( {
         'text': "Create method 'doUnicødeTes(String)'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'private void doUnicødeTes(String test2) {\n}\n\n\n',
                         LocationMatcher( filepath, 20, 3 ),
                         LocationMatcher( filepath, 20, 3 ) ),
@@ -1184,7 +1184,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'boolean',
                         LocationMatcher( '', 14, 12 ),
                         LocationMatcher( '', 14, 15 ) ),
@@ -1192,7 +1192,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
       } ),
       has_entries( {
         'text': 'Organize imports',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( '', 1, 1 ),
                         LocationMatcher( '', 3, 1 ) ),
@@ -1200,7 +1200,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
       } ),
       has_entries( {
         'text': 'Generate toString()...',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
                         '\n\treturn "TestFactory []";\n}',
                         LocationMatcher( '', 32, 4 ),
@@ -1263,8 +1263,8 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\n    ',
                           LocationMatcher( filepath,  3, 20 ),
                           LocationMatcher( filepath,  4,  3 ) ),
@@ -1354,8 +1354,8 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\n\t',
                           LocationMatcher( filepath,  3, 20 ),
                           LocationMatcher( filepath,  4,  3 ) ),
@@ -1455,8 +1455,8 @@ def Subcommands_Format_Range_Spaces_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '    ',
                           LocationMatcher( filepath, 20,  1 ),
                           LocationMatcher( filepath, 20,  3 ) ),
@@ -1514,8 +1514,8 @@ def Subcommands_Format_Range_Tabs_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\t',
                           LocationMatcher( filepath, 20,  1 ),
                           LocationMatcher( filepath, 20,  3 ) ),
@@ -1818,8 +1818,8 @@ def Subcommands_OrganizeImports_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( 'import com.youcompleteme.Test;\n'
                           'import com.youcompleteme.testing.Tset;',
                           LocationMatcher( filepath, 3,  1 ),
@@ -1917,7 +1917,7 @@ def Subcommands_IndexOutOfRange_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries( { 'fixits': contains( has_entries(
+      'data': has_entries( { 'fixits': contains_exactly( has_entries(
         { 'text': 'Generate Getters and Setters',
           'chunks': instance_of( list ) } ) ) } ),
     }
@@ -1969,7 +1969,7 @@ def Subcommands_DifferentFileTypesUpdate_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries( { 'fixits': contains( has_entries(
+      'data': has_entries( { 'fixits': contains_exactly( has_entries(
         { 'text': 'Generate Getters and Setters',
           'chunks': instance_of( list ) } ) ) } ),
     }
@@ -1996,7 +1996,7 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           'chunks': empty(),
           'location': LocationMatcher( filepath, 1, 7 )
         } ) )
@@ -2026,8 +2026,8 @@ def Subcommands_AdditionalFormatterOptions_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\n    ',
                           LocationMatcher( filepath,  1, 18 ),
                           LocationMatcher( filepath,  2,  3 ) ),
@@ -2128,7 +2128,7 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           # Just prove that we actually got a reasonable result
           'chunks': is_not( empty() ),
         } ) )

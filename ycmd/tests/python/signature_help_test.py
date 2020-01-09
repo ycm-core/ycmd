@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        equal_to,
                        has_entries )
@@ -89,7 +89,7 @@ def SignatureHelp_MethodTrigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'def hack( obj )',
                               [ ParameterMatcher( 10, 13 ) ] )
           ),
@@ -141,7 +141,7 @@ def SignatureHelp_MultipleParameters_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'def MultipleArguments( a, b, c )',
                               [ ParameterMatcher( 23, 24 ),
                                 ParameterMatcher( 26, 27 ),
@@ -170,7 +170,7 @@ def SignatureHelp_CallWithinCall_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'def center( width: int, fillchar: str=... )',
                               [ ParameterMatcher( 12, 22 ),
                                 ParameterMatcher( 24, 41 ) ] )
@@ -198,7 +198,7 @@ def SignatureHelp_Constructor_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'class Class( argument )',
                               [ ParameterMatcher( 13, 21 ) ] )
           ),
@@ -225,7 +225,7 @@ def SignatureHelp_MultipleDefinitions_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 2,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'def MultipleDefinitions( a, b, c )',
                               [ ParameterMatcher( 25, 26 ),
                                 ParameterMatcher( 28, 29 ),
@@ -267,7 +267,7 @@ def SignatureHelp_MultipleDefinitions_OneActive_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 1,
           'activeParameter': 3,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'def MultipleDefinitions( a, b, c )',
                               [ ParameterMatcher( 25, 26 ),
                                 ParameterMatcher( 28, 29 ),

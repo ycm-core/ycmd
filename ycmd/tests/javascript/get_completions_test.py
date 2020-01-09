@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        equal_to,
                        has_entries,
@@ -154,7 +154,7 @@ def GetCompletions_AutoImport_test( app ):
             'fixits': contains_inanyorder(
               has_entries( {
                 'text': 'Import \'Bår\' from module "./unicode"',
-                'chunks': contains(
+                'chunks': contains_exactly(
                   ChunkMatcher(
                     matches_regexp( '^import { Bår } from "./unicode";\r?\n'
                                     '\r?\n' ),
@@ -184,7 +184,7 @@ def GetCompletions_IgnoreIdentifiers_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher(
             'foo',
             '(property) foo: string',

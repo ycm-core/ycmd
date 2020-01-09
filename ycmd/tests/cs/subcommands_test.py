@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, empty, has_entries, has_entry, contains
+from hamcrest import ( assert_that,
+                       empty,
+                       has_entries,
+                       has_entry,
+                       contains_exactly )
 from unittest.mock import patch
 import os.path
 
@@ -65,7 +69,7 @@ def Subcommands_FixIt_Multi_test( app ):
                             filepath = fixit_test )
     response = app.post_json( '/run_completer_command', request ).json
     assert_that( response, has_entries( {
-      'fixits': contains(
+      'fixits': contains_exactly(
         has_entries( {
           'text': 'Introduce constant',
           'command': has_entries( { 'index': 0 } ),
@@ -83,10 +87,12 @@ def Subcommands_FixIt_Multi_test( app ):
     request.update( { 'fixit': response[ 'fixits' ][ 1 ] } )
     response = app.post_json( '/resolve_fixit', request ).json
     LOGGER.debug( 'r = %s', response )
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( fixit_test, 4, 27 ),
-      'chunks': contains( has_entries( { 'replacement_text': '0b101', } ) )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( fixit_test, 4, 27 ),
+        'chunks': contains_exactly(
+          has_entries( { 'replacement_text': '0b101', } ) )
+      } ) ) } ) )
 
 
 @SharedYcmd
@@ -107,16 +113,16 @@ def Subcommands_FixIt_Range_test( app ):
       'end': { 'line_num': 4, 'column_num': 27 }
     } } )
     response = app.post_json( '/run_completer_command', request ).json
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( fixit_test, 4, 23 ),
-      'chunks': contains(
-        has_entries( {
-          'replacement_text':
-            '\n        {\n            NewMethod();\n        }\n\n'
-            '        private static void NewMethod()\n        {\r\n',
-          'range': RangeMatcher( fixit_test, ( 3, 31 ), ( 4, 1 ) ) } )
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( fixit_test, 4, 23 ),
+        'chunks': contains_exactly(
+          has_entries( {
+            'replacement_text':
+              '\n        {\n            NewMethod();\n        }\n\n'
+              '        private static void NewMethod()\n        {\r\n',
+            'range': RangeMatcher( fixit_test, ( 3, 31 ), ( 4, 1 ) ) } )
+        ) } ) ) } ) )
 
 
 @SharedYcmd
@@ -134,16 +140,16 @@ def Subcommands_FixIt_Single_test( app ):
                             filepath = fixit_test )
     response = app.post_json( '/run_completer_command', request ).json
     LOGGER.debug( 'r = %s', response )
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( fixit_test, 4, 23 ),
-      'chunks': contains(
-        has_entries( {
-          'replacement_text':
-            '\n        {\n            NewMethod();\n        }\n\n'
-            '        private static void NewMethod()\n        {\r\n',
-          'range': RangeMatcher( fixit_test, ( 3, 31 ), ( 4, 1 ) ) } )
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( fixit_test, 4, 23 ),
+        'chunks': contains_exactly(
+          has_entries( {
+            'replacement_text':
+              '\n        {\n            NewMethod();\n        }\n\n'
+              '        private static void NewMethod()\n        {\r\n',
+            'range': RangeMatcher( fixit_test, ( 3, 31 ), ( 4, 1 ) ) } )
+        ) } ) ) } ) )
 
 
 @SharedYcmd
@@ -181,14 +187,14 @@ def Subcommands_RefactorRename_Unicode_test( app ):
                             filetype = 'cs',
                             filepath = unicode_test )
     response = app.post_json( '/run_completer_command', request ).json
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( unicode_test, 30, 31 ),
-      'chunks': contains(
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( unicode_test, ( 30, 29 ), ( 30, 35 ) ) } )
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( unicode_test, 30, 31 ),
+        'chunks': contains_exactly(
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( unicode_test, ( 30, 29 ), ( 30, 35 ) ) } )
+        ) } ) ) } ) )
 
 
 @SharedYcmd
@@ -205,14 +211,14 @@ def Subcommands_RefactorRename_Basic_test( app ):
                             filetype = 'cs',
                             filepath = continuous_test )
     response = app.post_json( '/run_completer_command', request ).json
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( continuous_test, 5, 15 ),
-      'chunks': contains(
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( continuous_test, ( 5, 15 ), ( 5, 29 ) ) } )
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( continuous_test, 5, 15 ),
+        'chunks': contains_exactly(
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( continuous_test, ( 5, 15 ), ( 5, 29 ) ) } )
+        ) } ) ) } ) )
 
 
 @SharedYcmd
@@ -238,43 +244,43 @@ def Subcommands_RefactorRename_MultiFile_test( app ):
 
     response = app.post_json( '/run_completer_command', request ).json
     print( 'response = ', response )
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( continuous_test, 3, 11 ),
-      'chunks': contains(
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) )
-        } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) )
-        } ),
-        # has_entries( {
-        #   'replacement_text': 'x',
-        #   'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) )
-        # } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) )
-        } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) )
-        } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) )
-        } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) )
-        } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) )
-        } ),
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( continuous_test, 3, 11 ),
+        'chunks': contains_exactly(
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) )
+          } ),
+          # has_entries( {
+          #   'replacement_text': 'x',
+          #   'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) )
+          # } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) )
+          } ),
+        ) } ) ) } ) )
 
 
 @WithRetry
@@ -446,8 +452,9 @@ def Subcommands_GoToImplementationElseDeclaration_MultipleImplementations_test(
     )
 
     response = app.post_json( '/run_completer_command', goto_data ).json
-    assert_that( response, contains( LocationMatcher( filepath, 44, 15 ),
-                                     LocationMatcher( filepath, 49, 15 ) ) )
+    assert_that( response,
+                 contains_exactly( LocationMatcher( filepath, 44, 15 ),
+                                   LocationMatcher( filepath, 49, 15 ) ) )
 
 
 @SharedYcmd
@@ -489,8 +496,9 @@ def Subcommands_GoToReferences_MultipleReferences_test( app ):
     )
 
     response = app.post_json( '/run_completer_command', goto_data ).json
-    assert_that( response, contains( LocationMatcher( filepath, 17, 54 ),
-                                     LocationMatcher( filepath, 18, 4 ) ) )
+    assert_that( response,
+                 contains_exactly( LocationMatcher( filepath, 17, 54 ),
+                                   LocationMatcher( filepath, 18, 4 ) ) )
 
 
 @SharedYcmd
@@ -530,8 +538,9 @@ def Subcommands_GetToImplementation_Unicode_test( app ):
     )
 
     response = app.post_json( '/run_completer_command', goto_data ).json
-    assert_that( response, contains( LocationMatcher( filepath, 49, 66 ),
-                                     LocationMatcher( filepath, 50, 62 ) ) )
+    assert_that( response,
+                 contains_exactly( LocationMatcher( filepath, 49, 66 ),
+                                   LocationMatcher( filepath, 50, 62 ) ) )
 
 
 @SharedYcmd
@@ -689,7 +698,7 @@ def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -820,7 +829,7 @@ def Subcommands_StopServer_Timeout_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -841,36 +850,36 @@ def Subcommands_Format_Works_test( app ):
 
     response = app.post_json( '/run_completer_command', request ).json
     print( 'completer response = ', response )
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 1, 1 ),
-      'chunks': contains(
-        ChunkMatcher(
-          '\n        }\n    ',
-          LocationMatcher( filepath, 11, 1 ),
-          LocationMatcher( filepath, 12, 2 )
-        ),
-        ChunkMatcher(
-          '            ',
-          LocationMatcher( filepath, 10, 1 ),
-          LocationMatcher( filepath, 10, 4 )
-        ),
-        ChunkMatcher(
-          '        {\n            ',
-          LocationMatcher( filepath, 8, 1 ),
-          LocationMatcher( filepath, 9, 4 )
-        ),
-        ChunkMatcher(
-          '',
-          LocationMatcher( filepath, 7, 26 ),
-          LocationMatcher( filepath, 7, 27 )
-        ),
-        ChunkMatcher(
-          '    class MainClass\n    {\n        ',
-          LocationMatcher( filepath, 5, 1 ),
-          LocationMatcher( filepath, 7, 3 )
-        ),
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( filepath, 1, 1 ),
+        'chunks': contains_exactly(
+          ChunkMatcher(
+            '\n        }\n    ',
+            LocationMatcher( filepath, 11, 1 ),
+            LocationMatcher( filepath, 12, 2 )
+          ),
+          ChunkMatcher(
+            '            ',
+            LocationMatcher( filepath, 10, 1 ),
+            LocationMatcher( filepath, 10, 4 )
+          ),
+          ChunkMatcher(
+            '        {\n            ',
+            LocationMatcher( filepath, 8, 1 ),
+            LocationMatcher( filepath, 9, 4 )
+          ),
+          ChunkMatcher(
+            '',
+            LocationMatcher( filepath, 7, 26 ),
+            LocationMatcher( filepath, 7, 27 )
+          ),
+          ChunkMatcher(
+            '    class MainClass\n    {\n        ',
+            LocationMatcher( filepath, 5, 1 ),
+            LocationMatcher( filepath, 7, 3 )
+          ),
+        ) } ) ) } ) )
 
 
 @SharedYcmd
@@ -891,23 +900,23 @@ def Subcommands_RangeFormat_Works_test( app ):
     }
     response = app.post_json( '/run_completer_command', request ).json
     print( 'completer response = ', response )
-    assert_that( response, has_entries( { 'fixits': contains( has_entries( {
-      'location': LocationMatcher( filepath, 11, 2 ),
-      'chunks': contains(
-        ChunkMatcher(
-          '\n        ',
-          LocationMatcher( filepath, 11, 1 ),
-          LocationMatcher( filepath, 11, 3 )
-        ),
-        ChunkMatcher(
-          '            ',
-          LocationMatcher( filepath, 10, 1 ),
-          LocationMatcher( filepath, 10, 4 )
-        ),
-        ChunkMatcher(
-          '        {\n            ',
-          LocationMatcher( filepath, 8, 1 ),
-          LocationMatcher( filepath, 9, 4 )
-        ),
-      )
-    } ) ) } ) )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( filepath, 11, 2 ),
+        'chunks': contains_exactly(
+          ChunkMatcher(
+            '\n        ',
+            LocationMatcher( filepath, 11, 1 ),
+            LocationMatcher( filepath, 11, 3 )
+          ),
+          ChunkMatcher(
+            '            ',
+            LocationMatcher( filepath, 10, 1 ),
+            LocationMatcher( filepath, 10, 4 )
+          ),
+          ChunkMatcher(
+            '        {\n            ',
+            LocationMatcher( filepath, 8, 1 ),
+            LocationMatcher( filepath, 9, 4 )
+          ),
+        ) } ) ) } ) )

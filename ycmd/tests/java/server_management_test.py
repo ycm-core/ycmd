@@ -22,7 +22,7 @@ import requests
 import time
 
 from unittest.mock import patch
-from hamcrest import assert_that, contains, equal_to, has_entry
+from hamcrest import assert_that, contains_exactly, equal_to, has_entry
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmd,
                               SharedYcmd,
@@ -300,7 +300,7 @@ def ServerManagement_CloseServer_Unclean_test( rm, app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -323,7 +323,7 @@ def ServerManagement_StopServerTwice_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -342,7 +342,7 @@ def ServerManagement_StopServerTwice_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -373,7 +373,7 @@ def ServerManagement_ServerDies_test( app ):
   assert_that( debug_info,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -419,7 +419,7 @@ def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
   assert_that( debug_info,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -460,7 +460,7 @@ def ServerManagement_ConnectionRaisesWhileShuttingDown_test( app ):
   assert_that( debug_info,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )

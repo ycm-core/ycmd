@@ -18,7 +18,7 @@
 import json
 import requests
 from unittest.mock import patch
-from hamcrest import assert_that, contains, empty, equal_to, has_entries
+from hamcrest import assert_that, contains_exactly, empty, equal_to, has_entries
 
 from ycmd import handlers
 from ycmd.tests.clangd import PathToTestFile, SharedYcmd, IsolatedYcmd
@@ -101,7 +101,7 @@ def Signature_Help_Trigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -208,7 +208,7 @@ def Signature_Help_Trigger_After_Trigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -271,7 +271,7 @@ def Signature_Help_Trigger_After_Trigger_PlusText_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -312,7 +312,7 @@ def Signature_Help_Trigger_After_Trigger_PlusCompletion_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -353,7 +353,7 @@ def Signature_Help_Trigger_After_OtherTrigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -394,7 +394,7 @@ def Signature_Help_Trigger_After_Arguments_Narrow_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 2,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'double fizziness, '
                               'Flavour Flavour) -> Drink &', [
@@ -428,7 +428,7 @@ def Signature_Help_Trigger_After_Arguments_Narrow2_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 2,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -462,7 +462,7 @@ def Signature_Help_Trigger_After_OtherTrigger_ReTrigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [
@@ -503,7 +503,7 @@ def Signature_Help_Trigger_JustBeforeClose_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'make_drink(TypeOfDrink type, '
                               'Temperature temp, '
                               'int sugargs) -> Drink &', [

@@ -23,7 +23,7 @@ from hamcrest import ( all_of,
                        empty,
                        ends_with,
                        equal_to,
-                       contains,
+                       contains_exactly,
                        has_entries,
                        has_entry,
                        has_items,
@@ -344,7 +344,7 @@ def LanguageServerCompleter_GoTo_test( app ):
     ( [ { 'result': [ location ] } ], 'GoToReferences', goto_response, False ),
     ( [ { 'result': [ location, location ] } ],
       'GoToReferences',
-      contains( goto_response, goto_response ),
+      contains_exactly( goto_response, goto_response ),
       False ),
   ]
 
@@ -408,7 +408,7 @@ def LanguageServerCompleter_GoTo_test( app ):
         'end': { 'line': 1, 'character': 4 },
       }
     } ],
-  } ], 'GoTo', contains(
+  } ], 'GoTo', contains_exactly(
     LocationMatcher( filepath, 1, 1 ),
     LocationMatcher( filepath, 2, 1 )
   ), False )
@@ -576,9 +576,9 @@ def WorkspaceEditToFixIt_test():
   assert_that(
     response,
     has_entries( {
-      'fixits': contains( has_entries( {
+      'fixits': contains_exactly( has_entries( {
         'text': 'test',
-        'chunks': contains( ChunkMatcher( 'blah',
+        'chunks': contains_exactly( ChunkMatcher( 'blah',
                                           LocationMatcher( filepath, 1, 6 ),
                                           LocationMatcher( filepath, 1, 6 ) ) )
       } ) )
@@ -609,9 +609,9 @@ def WorkspaceEditToFixIt_test():
   assert_that(
     response,
     has_entries( {
-      'fixits': contains( has_entries( {
+      'fixits': contains_exactly( has_entries( {
         'text': 'test',
-        'chunks': contains( ChunkMatcher( 'blah',
+        'chunks': contains_exactly( ChunkMatcher( 'blah',
                                           LocationMatcher( filepath, 1, 6 ),
                                           LocationMatcher( filepath, 1, 6 ) ) )
       } ) )
@@ -676,7 +676,7 @@ def LanguageServerCompleter_GetCompletions_List_test( app ):
                                      resolve_responses ):
       assert_that(
         completer.ComputeCandidatesInner( request_data, 1 ),
-        contains(
+        contains_exactly(
           has_items( has_entries( { 'insertion_text': 'test' } ) ),
           False
         )
@@ -702,7 +702,7 @@ def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test( app ):
                                      resolve_responses ):
       assert_that(
         completer.ComputeCandidatesInner( request_data, 1 ),
-        contains(
+        contains_exactly(
           has_items( all_of( has_entry( 'insertion_text', 'test' ),
                              is_not( has_key( 'kind' ) ) ) ),
           False
@@ -726,7 +726,7 @@ def LanguageServerCompleter_GetCompletions_NullNoError_test( app ):
                                        resolve_responses ):
         assert_that(
           completer.ComputeCandidatesInner( request_data, 1 ),
-          contains(
+          contains_exactly(
             empty(),
             False
           )
@@ -760,7 +760,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test( app ):
                        return_value = complete_response ) as response:
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aa' ),
           has_entry( 'insertion_text', 'ab' ),
           has_entry( 'insertion_text', 'ac' )
@@ -781,7 +781,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test( app ):
                        return_value = complete_response ) as response:
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'ab' )
         )
       )
@@ -847,7 +847,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
                        return_value = a_response ) as response:
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aaa' ),
           has_entry( 'insertion_text', 'aab' ),
           has_entry( 'insertion_text', 'aba' )
@@ -869,7 +869,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
                        return_value = aa_response ) as response:
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aaa' ),
           has_entry( 'insertion_text', 'aab' )
         )
@@ -892,7 +892,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
 
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aaa' )
         )
       )
@@ -915,7 +915,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
 
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aaa' ),
           has_entry( 'insertion_text', 'aab' )
         )
@@ -938,7 +938,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
 
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aaa' ),
           has_entry( 'insertion_text', 'aab' ),
           has_entry( 'insertion_text', 'aba' )
@@ -962,7 +962,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
 
       assert_that(
         completer.ComputeCandidates( request_data ),
-        contains(
+        contains_exactly(
           has_entry( 'insertion_text', 'aba' ),
           has_entry( 'insertion_text', 'abb' )
         )
@@ -1074,12 +1074,12 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test(
     }
     completer._HandleInitializeInPollThread( initialize_response )
 
-    diagnostics = contains(
+    diagnostics = contains_exactly(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 11 ),
         'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'First error' ),
         'fixit_available': False
@@ -1088,7 +1088,8 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test(
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 1, 1 ),
         'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) ),
         'text': equal_to( 'Maximum number of diagnostics exceeded.' ),
         'fixit_available': False
       } )
@@ -1098,7 +1099,7 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test(
 
     assert_that(
       completer.PollForMessages( request_data ),
-      contains( has_entries( {
+      contains_exactly( has_entries( {
         'diagnostics': diagnostics,
         'filepath': filepath
       } ) )
@@ -1150,12 +1151,12 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test(
     }
     completer._HandleInitializeInPollThread( initialize_response )
 
-    diagnostics = contains(
+    diagnostics = contains_exactly(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 11 ),
         'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'First error' ),
         'fixit_available': False
@@ -1164,7 +1165,8 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test(
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 5, 8 ),
         'location_extent': RangeMatcher( filepath, ( 5, 8 ), ( 5, 14 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 5, 8 ), ( 5, 14 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 5, 8 ), ( 5, 14 ) ) ),
         'text': equal_to( 'Second error' ),
         'fixit_available': False
       } )
@@ -1174,7 +1176,7 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test(
 
     assert_that(
       completer.PollForMessages( request_data ),
-      contains( has_entries( {
+      contains_exactly( has_entries( {
         'diagnostics': diagnostics,
         'filepath': filepath
       } ) )
@@ -1257,12 +1259,12 @@ def LanguageServerCompleter_Diagnostics_Code_test( app ):
     }
     completer._HandleInitializeInPollThread( initialize_response )
 
-    diagnostics = contains(
+    diagnostics = contains_exactly(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 11 ),
         'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'First error [random_error]' ),
         'fixit_available': False
@@ -1271,7 +1273,7 @@ def LanguageServerCompleter_Diagnostics_Code_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 11 ),
         'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'Second error [8]' ),
         'fixit_available': False
@@ -1280,7 +1282,7 @@ def LanguageServerCompleter_Diagnostics_Code_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 11 ),
         'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'Third error [8]' ),
         'fixit_available': False
@@ -1291,7 +1293,7 @@ def LanguageServerCompleter_Diagnostics_Code_test( app ):
 
     assert_that(
       completer.PollForMessages( request_data ),
-      contains( has_entries( {
+      contains_exactly( has_entries( {
         'diagnostics': diagnostics,
         'filepath': filepath
       } ) )
@@ -1336,12 +1338,12 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test( app ):
     }
     completer._HandleInitializeInPollThread( initialize_response )
 
-    diagnostics = contains(
+    diagnostics = contains_exactly(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 11 ),
         'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'First error' ),
         'fixit_available': False
@@ -1352,7 +1354,7 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test( app ):
 
     assert_that(
       completer.PollForMessages( request_data ),
-      contains( has_entries( {
+      contains_exactly( has_entries( {
         'diagnostics': diagnostics,
         'filepath': filepath
       } ) )
@@ -1396,12 +1398,12 @@ def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test( app ):
     }
     completer._HandleInitializeInPollThread( initialize_response )
 
-    diagnostics = contains(
+    diagnostics = contains_exactly(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( '', 4, 11 ),
         'location_extent': RangeMatcher( '', ( 4, 11 ), ( 4, 12 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
            RangeMatcher( '', ( 4, 11 ), ( 4, 12 ) ) ),
         'text': equal_to( 'First error' ),
         'fixit_available': False

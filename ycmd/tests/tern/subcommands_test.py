@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        equal_to,
                        has_entry,
@@ -314,8 +314,8 @@ def Subcommands_RefactorRename_Simple_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
               ChunkMatcher( 'test',
                             LocationMatcher( filepath, 1, 5 ),
                             LocationMatcher( filepath, 1, 22 ) ),
@@ -362,8 +362,8 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file1, 1, 5 ),
@@ -425,8 +425,8 @@ def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               'a-quite-long-string',
               LocationMatcher( file1, 1, 5 ),
@@ -489,8 +489,8 @@ def Subcommands_RefactorRename_Unicode_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
               ChunkMatcher( '†es†',
                             LocationMatcher( filepath, 5, 5 ),
                             LocationMatcher( filepath, 5, 13 ) ),
@@ -526,7 +526,7 @@ def Subcommands_StopServer_Timeout_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )

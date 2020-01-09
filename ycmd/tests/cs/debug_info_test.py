@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
-                       instance_of )
+from hamcrest import ( assert_that, contains_exactly, empty, has_entries,
+                       has_entry, instance_of )
 
 from ycmd.tests.cs import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -42,16 +42,16 @@ def DebugInfo_ServerIsRunning_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C#',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'OmniSharp',
         'is_running': True,
         'executable': instance_of( str ),
         'pid': instance_of( int ),
         'address': instance_of( str ),
         'port': instance_of( int ),
-        'logfiles': contains( instance_of( str ),
+        'logfiles': contains_exactly( instance_of( str ),
                               instance_of( str ) ),
-        'extras': contains( has_entries( {
+        'extras': contains_exactly( has_entries( {
           'key': 'solution',
           'value': instance_of( str )
         } ) )
@@ -68,7 +68,7 @@ def DebugInfo_ServerIsNotRunning_NoSolution_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C#',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'OmniSharp',
         'is_running': False,
         'executable': instance_of( str ),
@@ -99,8 +99,8 @@ def SolutionSelectCheck( app, sourcefile, reference_solution,
     result,
     has_entry( 'completer', has_entries( {
       'name': 'C#',
-      'servers': contains( has_entries( {
-        'extras': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
+        'extras': contains_exactly( has_entries( {
           'key': 'solution',
           'value': reference_solution
         } ) )

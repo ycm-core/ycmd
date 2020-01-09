@@ -106,7 +106,7 @@ def LanguageServerConnection_ConnectionTimeout_test():
     assert_that( calling( connection.AwaitServerConnection ),
                  raises( lsc.LanguageServerConnectionTimeout ) )
 
-  assert_that( connection.isAlive(), equal_to( False ) )
+  assert_that( connection.is_alive(), equal_to( False ) )
 
 
 def LanguageServerConnection_CloseTwice_test():

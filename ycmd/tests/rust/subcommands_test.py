@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
                        equal_to,
@@ -94,7 +94,7 @@ def RunTest( app, test, contents = None ):
       '/resolve_fixit',
       CombineRequest( test[ 'request' ], { 'fixit': fixit } ) ).json
     assert_that( response, has_entries( {
-      'fixits': contains( fixit ) } ) )
+      'fixits': contains_exactly( fixit ) } ) )
 
 
 @SharedYcmd
@@ -172,8 +172,8 @@ def Subcommands_Format_WholeFile_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '  create_universe();\n'
                           '  let builder = Builder {};\n'
                           '  builder.build_\n',
@@ -220,8 +220,8 @@ def Subcommands_Format_Range_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( 'fn format_test() {\n'
                           '\tlet a: i32 = 5;\n',
                           LocationMatcher( filepath, 17, 1 ),
@@ -320,7 +320,7 @@ def RunGoToTest( app, command, test ):
   if isinstance( response, list ):
     expect = {
       'response': requests.codes.ok,
-      'data': contains( *[
+      'data': contains_exactly( *[
         LocationMatcher(
           os.path.join( folder, location[ 0 ] ),
           location[ 1 ],
@@ -432,9 +432,9 @@ def Subcommands_RefactorRename_Works_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           'text': '',
-          'chunks': contains(
+          'chunks': contains_exactly(
             ChunkMatcher( 'update_universe',
                           LocationMatcher( main_filepath, 12,  5 ),
                           LocationMatcher( main_filepath, 12, 20 ) ),
@@ -510,8 +510,8 @@ def Subcommands_FixIt_ApplySuggestion_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '_x',
                           LocationMatcher( filepath, 8, 13 ),
                           LocationMatcher( filepath, 8, 14 ) )
@@ -539,8 +539,8 @@ def Subcommands_FixIt_DeglobImport_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '{create_universe, Builder}',
                           LocationMatcher( filepath, 3, 11 ),
                           LocationMatcher( filepath, 3, 12 ) )

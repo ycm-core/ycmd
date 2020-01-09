@@ -22,7 +22,7 @@ from ycmd.tests.test_utils import ( ClangOnly, TemporaryTestDir,
                                     TemporaryClangProject )
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        contains_string,
                        equal_to,
@@ -49,8 +49,8 @@ def CppBindings_FilterAndSortCandidates_test():
   del query
   del candidate_property
 
-  assert_that( result_full, contains( 'foo1', 'foo2', 'foo3' ) )
-  assert_that( result_2, contains( 'foo1', 'foo2' ) )
+  assert_that( result_full, contains_exactly( 'foo1', 'foo2', 'foo3' ) )
+  assert_that( result_2, contains_exactly( 'foo1', 'foo2' ) )
 
 
 def CppBindings_IdentifierCompleter_test():
@@ -65,9 +65,9 @@ def CppBindings_IdentifierCompleter_test():
                                        'fo', 'foo', 10 )
   query_fo = identifier_completer.CandidatesForQueryAndType( 'fo', 'foo' )
   query_a = identifier_completer.CandidatesForQueryAndType( 'a', 'foo' )
-  assert_that( query_fo_10, contains( 'foo' ) )
-  assert_that( query_fo, contains( 'foo' ) )
-  assert_that( query_a, contains( 'bar', 'baz' ) )
+  assert_that( query_fo_10, contains_exactly( 'foo' ) )
+  assert_that( query_fo, contains_exactly( 'foo' ) )
+  assert_that( query_a, contains_exactly( 'bar', 'baz' ) )
   identifiers = ycm_core.StringVector()
   identifiers.append( 'oof' )
   identifiers.append( 'rab' )
@@ -75,7 +75,7 @@ def CppBindings_IdentifierCompleter_test():
   identifier_completer.ClearForFileAndAddIdentifiersToDatabase(
                          identifiers, 'foo', 'file' )
   query_a_10 = identifier_completer.CandidatesForQueryAndType( 'a', 'foo' )
-  assert_that( query_a_10, contains( 'rab', 'zab' ) )
+  assert_that( query_a_10, contains_exactly( 'rab', 'zab' ) )
 
 
 @ClangOnly
@@ -341,7 +341,7 @@ def CppBindings_FixIt_test():
 
   assert_that(
     fixits,
-    contains( has_properties( {
+    contains_exactly( has_properties( {
       'text': ( PathToTestFile( 'foo.c' ) +
                 ':3:16: error: expected \';\' at end of declaration' ),
       'location': has_properties( {
@@ -349,7 +349,7 @@ def CppBindings_FixIt_test():
         'column_number_': 16,
         'filename_': PathToTestFile( 'foo.c' )
       } ),
-      'chunks': contains( has_properties( {
+      'chunks': contains_exactly( has_properties( {
         'replacement_text': ';',
         'range': has_properties( {
           'start_': has_properties( {
@@ -429,11 +429,11 @@ def CppBindings_Diags_test():
 
   assert_that(
     diags,
-    contains(
+    contains_exactly(
       has_entries( {
         'kind': 'ERROR',
         'text': contains_string( 'expected \';\' at end of declaration' ),
-        'ranges': contains(),
+        'ranges': contains_exactly(),
         'location': has_entries( {
           'line_num': 3,
           'column_num': 16,
@@ -476,7 +476,7 @@ def CppBindings_CompilationDatabase_test():
       assert_that( compilation_info,
                    has_properties( {
                      'compiler_working_dir_': tmp_dir,
-                     'compiler_flags_': contains( 'clang++',
+                     'compiler_flags_': contains_exactly( 'clang++',
                                                   '--driver-mode=g++',
                                                   '-x',
                                                   'c++',

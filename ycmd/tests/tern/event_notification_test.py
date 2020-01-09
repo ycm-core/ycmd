@@ -15,7 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains, empty, equal_to, has_entries, none
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       empty,
+                       equal_to,
+                       has_entries,
+                       none )
 from unittest.mock import patch
 from pprint import pformat
 import os
@@ -42,7 +47,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains(
+    contains_exactly(
       has_entries( {
         'key': 'configuration file',
         'value': PathToTestFile( '.tern-project' )
@@ -71,7 +76,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains(
+    contains_exactly(
       has_entries( {
         'key': 'configuration file',
         'value': PathToTestFile( '.tern-project' )
@@ -119,7 +124,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains(
+    contains_exactly(
       has_entries( {
         'key': 'configuration file',
         'value': none()
@@ -192,7 +197,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains(
+    contains_exactly(
       has_entries( {
         'key': 'configuration file',
         'value': PathToTestFile( '.tern-project' )
@@ -226,7 +231,7 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test(
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains(
+    contains_exactly(
       has_entries( {
         'key': 'configuration file',
         'value': os.path.join( os.path.expanduser( '~' ), '.tern-config' )
@@ -249,7 +254,7 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test(
                               BuildRequest( filetype = 'javascript' ) ).json
   assert_that(
     debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'extras' ],
-    contains(
+    contains_exactly(
       has_entries( {
         'key': 'configuration file',
         'value': os.path.join( os.path.expanduser( '~' ), '.tern-config' )

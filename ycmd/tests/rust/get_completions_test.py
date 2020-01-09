@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains
+from hamcrest import assert_that, contains_exactly
 
 from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
@@ -38,7 +38,7 @@ def GetCompletions_Basic_test( app ):
 
   assert_that(
     results,
-    contains(
+    contains_exactly(
       CompletionEntryMatcher(
         'build_rocket',
         'fn build_rocket(&self)',

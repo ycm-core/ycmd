@@ -21,7 +21,7 @@ import ycm_core
 from unittest.mock import patch
 from hamcrest import ( all_of,
                        assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
                        equal_to,
@@ -127,7 +127,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
         ),
@@ -223,7 +223,7 @@ def GetCompletions_Fallback_Exception_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a_parameter', '[ID]' ),
           CompletionEntryMatcher( 'another_parameter', '[ID]' ),
         ),
@@ -617,7 +617,7 @@ def GetCompletions_ClientDataGivenToExtraConf_Cache_test( app ):
     app.post_json( '/completions', completion_request ).json,
     has_entries( {
       'completions': empty(),
-      'errors': contains(
+      'errors': contains_exactly(
         ErrorMatcher( RuntimeError, NO_COMPILE_FLAGS_MESSAGE )
       )
     } )
@@ -804,7 +804,7 @@ def GetCompletions_QuotedInclude_AtStart_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'dir with spaces',    '[Dir]' ),
@@ -837,7 +837,7 @@ def GetCompletions_QuotedInclude_UserIncludeFlag_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
@@ -872,7 +872,7 @@ def GetCompletions_QuotedInclude_SystemIncludeFlag_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'c.hpp',              '[File]' ),
@@ -907,7 +907,7 @@ def GetCompletions_QuotedInclude_QuoteIncludeFlag_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'b.hpp',              '[File]' ),
@@ -943,7 +943,7 @@ def GetCompletions_QuotedInclude_MultipleIncludeFlags_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( '.ycm_extra_conf.py', '[File]' ),
           CompletionEntryMatcher( 'a.hpp',              '[File]' ),
           CompletionEntryMatcher( 'b.hpp',              '[File]' ),
@@ -977,7 +977,7 @@ def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 27,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'd.hpp', '[File]' )
         ),
         'errors': empty(),
@@ -1001,7 +1001,7 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 27,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'd.hpp', '[File]' )
         ),
         'errors': empty(),
@@ -1025,7 +1025,7 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'dir with spaces', '[Dir]' )
         ),
         'errors': empty(),
@@ -1074,7 +1074,7 @@ def GetCompletions_QuotedInclude_FrameworkHeader_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 18,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'gl.h', '[File]' )
         ),
         'errors': empty()
@@ -1123,7 +1123,7 @@ def GetCompletions_BracketInclude_UserIncludeFlag_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp',  '[File]' ),
           CompletionEntryMatcher( 'c.hpp',  '[File]' ),
           CompletionEntryMatcher( 'common', '[Dir]' )
@@ -1152,7 +1152,7 @@ def GetCompletions_BracketInclude_SystemIncludeFlag_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp',  '[File]' ),
           CompletionEntryMatcher( 'c.hpp',  '[File]' ),
           CompletionEntryMatcher( 'common', '[Dir]' )
@@ -1208,7 +1208,7 @@ def GetCompletions_BracketInclude_MultipleIncludeFlags_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp',  '[File]' ),
           CompletionEntryMatcher( 'b.hpp',  '[File]' ),
           CompletionEntryMatcher( 'c.hpp',  '[File]' ),
@@ -1264,7 +1264,7 @@ def GetCompletions_BracketInclude_FrameworkHeader_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 18,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'gl.h', '[File]' )
         ),
         'errors': empty()
@@ -1293,7 +1293,7 @@ def GetCompletions_BracketInclude_FileAndDirectory_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp',  '[File]' ),
           CompletionEntryMatcher( 'c.hpp',  '[File]' ),
           CompletionEntryMatcher( 'common', '[File&Dir]' )
@@ -1323,7 +1323,7 @@ def GetCompletions_BracketInclude_FileAndFramework_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'common', '[File&Framework]' ),
           CompletionEntryMatcher( 'OpenGL', '[Framework]' )
         ),
@@ -1353,7 +1353,7 @@ def GetCompletions_BracketInclude_DirectoryAndFramework_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp',  '[File]' ),
           CompletionEntryMatcher( 'c.hpp',  '[File]' ),
           CompletionEntryMatcher( 'common', '[Dir&Framework]' ),
@@ -1386,7 +1386,7 @@ def GetCompletions_BracketInclude_FileAndDirectoryAndFramework_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp',  '[File]' ),
           CompletionEntryMatcher( 'c.hpp',  '[File]' ),
           CompletionEntryMatcher( 'common', '[File&Dir&Framework]' ),
@@ -1436,7 +1436,7 @@ def GetCompletions_Unity_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 20,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'this_is_an_it', 'int' ),
         ),
         'errors': empty(),
@@ -1547,7 +1547,7 @@ def GetCompletions_FixIt_test( app ):
             'fixits': contains_inanyorder(
               has_entries( {
                 'text': '',
-                'chunks': contains(
+                'chunks': contains_exactly(
                   ChunkMatcher(
                     '->',
                     LocationMatcher( filepath, 7, 6 ),

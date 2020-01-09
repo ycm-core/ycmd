@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        has_entries,
                        has_entry,
@@ -40,11 +40,11 @@ def DebugInfo_NotInitialized_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'pid': None,
         'is_running': False,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Dead',
@@ -78,10 +78,10 @@ def DebugInfo_Initialized_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -117,10 +117,10 @@ def DebugInfo_ExtraConf_ReturningFlags_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -157,10 +157,10 @@ def DebugInfo_ExtraConf_NotReturningFlags_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -199,10 +199,10 @@ def DebugInfo_ExtraConf_Global_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -242,10 +242,10 @@ def DebugInfo_ExtraConf_LocalOverGlobal_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -291,10 +291,10 @@ def DebugInfo_ExtraConf_Database_test( app ):
         app.post_json( '/debug_info', request_data ).json,
         has_entry( 'completer', has_entries( {
           'name': 'C-family',
-          'servers': contains( has_entries( {
+          'servers': contains_exactly( has_entries( {
             'name': 'Clangd',
             'is_running': True,
-            'extras': contains(
+            'extras': contains_exactly(
               has_entries( {
                 'key': 'Server State',
                 'value': 'Initialized',
@@ -348,10 +348,10 @@ def Settings( **kwargs ):
           app.post_json( '/debug_info', request_data ).json,
           has_entry( 'completer', has_entries( {
             'name': 'C-family',
-            'servers': contains( has_entries( {
+            'servers': contains_exactly( has_entries( {
               'name': 'Clangd',
               'is_running': True,
-              'extras': contains(
+              'extras': contains_exactly(
                 has_entries( {
                   'key': 'Server State',
                   'value': 'Initialized',
@@ -402,10 +402,10 @@ def DebugInfo_ExtraConf_UseDatabaseOverGlobal_test( app ):
         app.post_json( '/debug_info', request_data ).json,
         has_entry( 'completer', has_entries( {
           'name': 'C-family',
-          'servers': contains( has_entries( {
+          'servers': contains_exactly( has_entries( {
             'name': 'Clangd',
             'is_running': True,
-            'extras': contains(
+            'extras': contains_exactly(
               has_entries( {
                 'key': 'Server State',
                 'value': 'Initialized',
@@ -442,10 +442,10 @@ def DebugInfo_ExtraConf_MacIncludeFlags_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',

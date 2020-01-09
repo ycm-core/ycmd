@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( any_of, assert_that, contains, empty, equal_to,
+from hamcrest import ( any_of, assert_that, contains_exactly, empty, equal_to,
                        has_entries, instance_of )
 from unittest.mock import patch
 import requests
@@ -124,7 +124,7 @@ def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
 
   response_data = app.post_json( '/filter_and_sort_candidates', data ).json
 
-  assert_that( response_data, contains( candidate2, candidate3 ) )
+  assert_that( response_data, contains_exactly( candidate2, candidate3 ) )
 
 
 @SharedYcmd
@@ -264,7 +264,7 @@ def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( compute_sig, app ):
         'activeParameter': 0,
         'signatures': empty()
       } ),
-      'errors': contains(
+      'errors': contains_exactly(
         ErrorMatcher( RuntimeError, '' )
       )
     } ) )

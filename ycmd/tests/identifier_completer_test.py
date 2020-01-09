@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from hamcrest import assert_that, empty, equal_to, contains
+from hamcrest import assert_that, empty, equal_to, contains_exactly
 from ycmd.user_options_store import DefaultOptions
 from ycmd.completers.all import identifier_completer as ic
 from ycmd.completers.all.identifier_completer import IdentifierCompleter
@@ -289,7 +289,7 @@ def FilterUnchangedTagFiles_KeepGoodFiles_test():
   ident_completer = IdentifierCompleter( DefaultOptions() )
   tag_file = PathToTestFile( 'basic.tags' )
   assert_that( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ),
-               contains( tag_file ) )
+               contains_exactly( tag_file ) )
 
 
 def FilterUnchangedTagFiles_SkipUnchangesFiles_test():

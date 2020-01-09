@@ -21,7 +21,7 @@ import subprocess
 import tempfile
 from hamcrest import ( assert_that,
                        calling,
-                       contains,
+                       contains_exactly,
                        empty,
                        equal_to,
                        has_length,
@@ -175,7 +175,7 @@ def SafePopen_WindowsPath_test( *args ):
 
 def PathsToAllParentFolders_Basic_test():
   assert_that( utils.PathsToAllParentFolders( '/home/user/projects/test.c' ),
-    contains(
+    contains_exactly(
       os.path.normpath( '/home/user/projects' ),
       os.path.normpath( '/home/user' ),
       os.path.normpath( '/home' ),
@@ -188,7 +188,7 @@ def PathsToAllParentFolders_Basic_test():
 @patch( 'os.path.isdir', return_value = True )
 def PathsToAllParentFolders_IsDirectory_test( *args ):
   assert_that( utils.PathsToAllParentFolders( '/home/user/projects' ),
-    contains(
+    contains_exactly(
       os.path.normpath( '/home/user/projects' ),
       os.path.normpath( '/home/user' ),
       os.path.normpath( '/home' ),
@@ -199,13 +199,13 @@ def PathsToAllParentFolders_IsDirectory_test( *args ):
 
 def PathsToAllParentFolders_FileAtRoot_test():
   assert_that( utils.PathsToAllParentFolders( '/test.c' ),
-               contains( os.path.normpath( '/' ) ) )
+               contains_exactly( os.path.normpath( '/' ) ) )
 
 
 @WindowsOnly
 def PathsToAllParentFolders_WindowsPath_test():
   assert_that( utils.PathsToAllParentFolders( r'C:\\foo\\goo\\zoo\\test.c' ),
-    contains(
+    contains_exactly(
       os.path.normpath( r'C:\\foo\\goo\\zoo' ),
       os.path.normpath( r'C:\\foo\\goo' ),
       os.path.normpath( r'C:\\foo' ),

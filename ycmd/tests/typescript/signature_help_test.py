@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains, empty, equal_to, has_entries
+from hamcrest import assert_that, contains_exactly, empty, equal_to, has_entries
 import requests
 
 from ycmd.tests.typescript import PathToTestFile, IsolatedYcmd, SharedYcmd
@@ -90,7 +90,7 @@ def Signature_Help_Trigger_Paren_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'single_argument_with_return(a: string): string',
                               [ ParameterMatcher( 28, 37 ) ] )
           ),
@@ -141,7 +141,7 @@ def Signature_Help_Trigger_Comma_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher(
               ( 'multi_argument_no_return(løng_våriable_name: number, '
                                           'untyped_argument: any): number' ),
@@ -170,7 +170,7 @@ def Signature_Help_Trigger_AngleBracket_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher(
               'generic<TYPE extends ReturnValue>(t: SomeClass): string',
               [ ParameterMatcher( 8, 32 ) ] )
@@ -198,7 +198,7 @@ def Signature_Help_Multiple_Signatures_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 1,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'øverløåd(a: number): string',
                               [ ParameterMatcher( 12, 21 ) ] ),
             SignatureMatcher( 'øverløåd(a: string, b: number): string',

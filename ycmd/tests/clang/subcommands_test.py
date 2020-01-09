@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, calling, contains, contains_inanyorder,
-                       contains_string, empty, equal_to, has_entry, has_entries,
-                       raises, matches_regexp )
+from hamcrest import ( assert_that, calling, contains_exactly,
+                       contains_inanyorder, contains_string, empty, equal_to,
+                       has_entry, has_entries, raises, matches_regexp )
 from unittest.mock import patch
 from pprint import pprint
 from webtest import AppError
@@ -673,8 +673,8 @@ def FixIt_Check_cpp11_Ins( results ):
   # First fixit
   #   switch(A()) { // expected-error{{explicit conversion to}}
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'static_cast<int>(' ),
           'range': has_entries( {
@@ -699,8 +699,8 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
   # Similar to FixIt_Check_cpp11_1 but inserts split across lines
   #
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'static_cast<int>(' ),
           'range': has_entries( {
@@ -724,8 +724,8 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
 def FixIt_Check_cpp11_Del( results ):
   # Removal of ::
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( '' ),
           'range': has_entries( {
@@ -741,8 +741,8 @@ def FixIt_Check_cpp11_Del( results ):
 
 def FixIt_Check_cpp11_Repl( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'foo' ),
           'range': has_entries( {
@@ -758,8 +758,8 @@ def FixIt_Check_cpp11_Repl( results ):
 
 def FixIt_Check_cpp11_DelAdd( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( '' ),
           'range': has_entries( {
@@ -782,8 +782,8 @@ def FixIt_Check_cpp11_DelAdd( results ):
 
 def FixIt_Check_objc( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'id' ),
           'range': has_entries( {
@@ -804,10 +804,10 @@ def FixIt_Check_objc_NoFixIt( results ):
 
 def FixIt_Check_cpp11_MultiFirst( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # first fix-it at 54,16
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( 'foo' ),
             'range': has_entries( {
@@ -820,7 +820,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
       } ),
       # second fix-it at 54,52
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
             'range': has_entries( {
@@ -844,10 +844,10 @@ def FixIt_Check_cpp11_MultiFirst( results ):
 
 def FixIt_Check_cpp11_MultiSecond( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # second fix-it at 54,52
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
             'range': has_entries( {
@@ -867,7 +867,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
       } ),
       # first fix-it at 54,16
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( 'foo' ),
             'range': has_entries( {
@@ -884,8 +884,8 @@ def FixIt_Check_cpp11_MultiSecond( results ):
 
 def FixIt_Check_unicode_Ins( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( ';' ),
           'range': has_entries( {
@@ -901,11 +901,11 @@ def FixIt_Check_unicode_Ins( results ):
 
 def FixIt_Check_cpp11_Note( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # First note: put parens around it
       has_entries( {
         'text': contains_string( 'parentheses around the assignment' ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '(',
                         LineColMatcher( 59, 8 ),
                         LineColMatcher( 59, 8 ) ),
@@ -919,7 +919,7 @@ def FixIt_Check_cpp11_Note( results ):
       # Second note: change to ==
       has_entries( {
         'text': contains_string( '==' ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '==',
                         LineColMatcher( 60, 8 ),
                         LineColMatcher( 60, 9 ) )
@@ -932,11 +932,11 @@ def FixIt_Check_cpp11_Note( results ):
 
 def FixIt_Check_cpp11_SpellCheck( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # Change to SpellingIsNotMyStrongPoint
       has_entries( {
         'text': contains_string( "did you mean 'SpellingIsNotMyStrongPoint'" ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'SpellingIsNotMyStrongPoint',
                         LineColMatcher( 72, 9 ),
                         LineColMatcher( 72, 35 ) )
@@ -948,11 +948,11 @@ def FixIt_Check_cpp11_SpellCheck( results ):
 
 def FixIt_Check_cuda( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       has_entries( {
         'text': contains_string(
            "error: kernel function type 'int ()' must have void " ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'void',
                         LineColMatcher( 3, 12 ),
                         LineColMatcher( 3, 15 ) )
@@ -1052,9 +1052,9 @@ def Subcommands_FixIt_Unity_test( app ):
 
   pprint( results )
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
+    'fixits': contains_exactly( has_entries( {
       'text': contains_string( "expected ';' after expression" ),
-      'chunks': contains(
+      'chunks': contains_exactly(
         ChunkMatcher( ';',
                       LocationMatcher( file_path, 11, 18 ),
                       LocationMatcher( file_path, 11, 18 ) ),
@@ -1119,9 +1119,9 @@ def Subcommands_FixIt_NonExistingFile_test( app ):
 
   pprint( results )
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
+    'fixits': contains_exactly( has_entries( {
       'text': contains_string( "expected ';' after top level declarator" ),
-      'chunks': contains(
+      'chunks': contains_exactly(
         ChunkMatcher( ';',
                       LocationMatcher( normal_file_path, 1, 9 ),
                       LocationMatcher( normal_file_path, 1, 9 ) ),

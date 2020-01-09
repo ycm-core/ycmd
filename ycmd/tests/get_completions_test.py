@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
                        equal_to,
@@ -228,7 +228,7 @@ def GetCompletions_ForceSemantic_NoSemanticCompleter_test( app, *args ):
                                   column_num = 4 )
   results = app.post_json( '/completions', completion_data ).json
   assert_that( results, has_entries( {
-    'completions': contains(
+    'completions': contains_exactly(
       CompletionEntryMatcher( 'com' ),
       CompletionEntryMatcher( 'complete_this_word' ) ),
     'errors': empty(),

@@ -18,7 +18,7 @@
 import os
 from pprint import pformat
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_string,
                        empty,
                        equal_to,
@@ -58,12 +58,13 @@ void foo() {
 
   test = { 'request': request, 'route': '/receive_messages' }
   results = RunAfterInitialized( app, test )
-  assert_that( results, contains(
-    has_entries( { 'diagnostics': contains(
+  assert_that( results, contains_exactly(
+    has_entries( { 'diagnostics': contains_exactly(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'text': contains_string( 'Cannot initialize' ),
-        'ranges': contains( RangeMatcher( filepath, ( 3, 10 ), ( 3, 13 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 3, 10 ), ( 3, 13 ) ) ),
         'location': LocationMatcher( filepath, 3, 10 ),
         'location_extent': RangeMatcher( filepath, ( 3, 10 ), ( 3, 13 ) )
       } )
@@ -87,8 +88,8 @@ void foo() {
               'filetype': 'cpp' }
   test = { 'request': request, 'route': '/receive_messages' }
   results = RunAfterInitialized( app, test )
-  assert_that( results, contains(
-    has_entries( { 'diagnostics': contains(
+  assert_that( results, contains_exactly(
+    has_entries( { 'diagnostics': contains_exactly(
       has_entries( {
         'location_extent': RangeMatcher( filepath, ( 3, 3 ), ( 3, 6 ) )
       } )
@@ -113,7 +114,7 @@ struct Foo {
               'filetype': 'cpp' }
   test = { 'request': request, 'route': '/receive_messages' }
   response = RunAfterInitialized( app, test )
-  assert_that( response, contains(
+  assert_that( response, contains_exactly(
       has_entries( { 'diagnostics': empty() } ) ) )
 
 
@@ -238,13 +239,14 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
 
   pprint( response )
 
-  assert_that( response, contains(
+  assert_that( response, contains_exactly(
     has_entries( { 'diagnostics': has_items(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 2, 9 ),
         'location_extent': RangeMatcher( filepath, ( 2, 9 ), ( 2, 9 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 2, 9 ), ( 2, 9 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 2, 9 ), ( 2, 9 ) ) ),
         'text': equal_to( "Expected ';' at end of declaration list (fix "
                           "available) [expected_semi_decl_list]" ),
         'fixit_available': False
@@ -253,7 +255,8 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 5, 1 ),
         'location_extent': RangeMatcher( filepath, ( 5, 1 ), ( 6, 11 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 5, 1 ), ( 6, 11 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 5, 1 ), ( 6, 11 ) ) ),
         'text': equal_to( "Unknown type name 'multiline_identifier'"
                           " [unknown_typename]" ),
         'fixit_available': False
@@ -262,7 +265,8 @@ def Diagnostics_LocationExtent_MissingSemicolon_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 8, 7 ),
         'location_extent': RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) ) ),
         'text': equal_to( 'Constructor cannot have a return type'
                           ' [constructor_return_type]' ),
         'fixit_available': False
@@ -284,13 +288,14 @@ def Diagnostics_CUDA_Kernel_test( app ):
 
   pprint( response )
 
-  assert_that( response, contains(
+  assert_that( response, contains_exactly(
     has_entries( { 'diagnostics': has_items(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 59, 5 ),
         'location_extent': RangeMatcher( filepath, ( 59, 5 ), ( 59, 6 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 59, 5 ), ( 59, 6 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 59, 5 ), ( 59, 6 ) ) ),
         'text': equal_to( 'Call to global function \'g1\' not configured'
                           ' [global_call_not_config]' ),
         'fixit_available': False
@@ -299,7 +304,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 60, 9 ),
         'location_extent': RangeMatcher( filepath, ( 60, 9 ), ( 60, 12 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 60, 9 ), ( 60, 12 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 60, 9 ), ( 60, 12 ) ) ),
         'text': equal_to( 'Too few execution configuration arguments to kernel '
                           'function call, expected at least 2, have 1'
                           ' [typecheck_call_too_few_args_at_least]' ),
@@ -309,7 +315,7 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 61, 20 ),
         'location_extent': RangeMatcher( filepath, ( 61, 20 ), ( 61, 21 ) ),
-        'ranges': contains(
+        'ranges': contains_exactly(
           RangeMatcher( filepath, ( 61, 20 ), ( 61, 21 ) )
         ),
         'text': equal_to( 'Too many execution configuration arguments to '
@@ -321,7 +327,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 65, 15 ),
         'location_extent': RangeMatcher( filepath, ( 65, 15 ), ( 65, 16 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 65, 15 ), ( 65, 16 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 65, 15 ), ( 65, 16 ) ) ),
         'text': equal_to( 'Kernel call to non-global function \'h1\''
                           ' [kern_call_not_global_function]' ),
         'fixit_available': False
@@ -330,7 +337,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 68, 15 ),
         'location_extent': RangeMatcher( filepath, ( 68, 15 ), ( 68, 16 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 68, 15 ), ( 68, 16 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 68, 15 ), ( 68, 16 ) ) ),
         'text': equal_to( "Kernel function type 'int (*)(int)' must have "
                           "void return type [kern_type_not_void_return]" ),
         'fixit_available': False
@@ -339,7 +347,8 @@ def Diagnostics_CUDA_Kernel_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 70, 8 ),
         'location_extent': RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ) ),
         'text': equal_to( "Use of undeclared identifier 'undeclared'"
                            ' [undeclared_var_use]' ),
         'fixit_available': False
@@ -361,13 +370,14 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
 
   pprint( response )
 
-  assert_that( response, contains(
+  assert_that( response, contains_exactly(
     has_entries( { 'diagnostics': has_items(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 3, 9 ),
         'location_extent': RangeMatcher( filepath, ( 3, 9 ), ( 3, 13 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 3, 9 ), ( 3, 13 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 3, 9 ), ( 3, 13 ) ) ),
         'text': contains_string( "Redefinition of 'test'" ),
         'fixit_available': False
       } ),
@@ -375,7 +385,8 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 1, 1 ),
         'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) ),
         'text': equal_to( 'Maximum number of diagnostics exceeded.' ),
         'fixit_available': False
       } )
@@ -396,13 +407,14 @@ def Diagnostics_NoLimitToNumberOfDiagnostics_test( app ):
 
   pprint( response )
 
-  assert_that( response, contains(
+  assert_that( response, contains_exactly(
     has_entries( { 'diagnostics': has_items(
       has_entries( {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 3, 9 ),
         'location_extent': RangeMatcher( filepath, ( 3, 9 ), ( 3, 13 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 3, 9 ), ( 3, 13 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 3, 9 ), ( 3, 13 ) ) ),
         'text': contains_string( "Redefinition of 'test'" ),
         'fixit_available': False
       } ),
@@ -410,7 +422,8 @@ def Diagnostics_NoLimitToNumberOfDiagnostics_test( app ):
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 4, 9 ),
         'location_extent': RangeMatcher( filepath, ( 4, 9 ), ( 4, 13 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 4, 9 ), ( 4, 13 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 4, 9 ), ( 4, 13 ) ) ),
         'text': contains_string( "Redefinition of 'test'" ),
         'fixit_available': False
       } )
@@ -477,7 +490,7 @@ struct S{static int h();};
 
     test = { 'request': messages_request, 'route': '/receive_messages' }
     response = RunAfterInitialized( app, test )
-    assert_that( response, contains(
+    assert_that( response, contains_exactly(
       has_entries( { 'diagnostics': empty() } ) ) )
 
     # Overwrite header.cpp
@@ -497,11 +510,11 @@ struct S{static int h();};
     for message in PollForMessages( app, messages_request ):
       if 'diagnostics' in message:
         assert_that( message,
-          has_entries( { 'diagnostics': contains(
+          has_entries( { 'diagnostics': contains_exactly(
             has_entries( {
               'kind': equal_to( 'ERROR' ),
               'text': "Use of undeclared identifier 'S' [undeclared_var_use]",
-              'ranges': contains( RangeMatcher(
+              'ranges': contains_exactly( RangeMatcher(
                 contains_string( source_file ), ( 2, 20 ), ( 2, 21 ) ) ),
               'location': LocationMatcher(
                 contains_string( source_file ), 2, 20 ),

@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        equal_to,
                        has_entries,
@@ -118,8 +118,8 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  2,  1 ),
                           LocationMatcher( filepath,  2,  3 ) ),
@@ -189,8 +189,8 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  2,  1 ),
                           LocationMatcher( filepath,  2,  3 ) ),
@@ -270,8 +270,8 @@ def Subcommands_Format_Range_Spaces_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '    ',
                           LocationMatcher( filepath,  5,  1 ),
                           LocationMatcher( filepath,  5,  3 ) ),
@@ -318,8 +318,8 @@ def Subcommands_Format_Range_Tabs_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  5,  1 ),
                           LocationMatcher( filepath,  5,  3 ) ),
@@ -493,7 +493,7 @@ def Subcommands_FixIt_test( app ):
         'fixits': contains_inanyorder(
           has_entries( {
             'text': "Declare method 'nonExistingMethod'",
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
@@ -525,8 +525,8 @@ def Subcommands_OrganizeImports_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               matches_regexp(
                 'import \\* as lib from "library";\r?\n'
@@ -601,7 +601,7 @@ def Subcommands_RefactorRename_Simple_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           'chunks': contains_inanyorder(
             ChunkMatcher(
               'test',
@@ -633,7 +633,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           'chunks': contains_inanyorder(
             ChunkMatcher(
               'this-is-a-longer-string',

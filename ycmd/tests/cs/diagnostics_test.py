@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains, contains_string, equal_to,
+from hamcrest import ( assert_that, contains_exactly, contains_string, equal_to,
                        has_entries, has_entry, has_items )
 
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
@@ -92,7 +92,7 @@ def Diagnostics_WithRange_test( app ):
 
     results = app.post_json( '/event_notification', event_data ).json
 
-    assert_that( results, contains(
+    assert_that( results, contains_exactly(
       has_entries( {
         'kind': equal_to( 'WARNING' ),
         'text': contains_string(
@@ -157,7 +157,7 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
 
   results = app.post_json( '/event_notification', event_data ).json
 
-  assert_that( results, contains(
+  assert_that( results, contains_exactly(
     has_entries( {
       'kind': equal_to( 'ERROR' ),
       'text': contains_string( "The type 'MaxDiagnostics' already contains "
@@ -170,7 +170,7 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
       'text': contains_string( 'Maximum number of diagnostics exceeded.' ),
       'location': LocationMatcher( filepath, 1, 1 ),
       'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ),
-      'ranges': contains( RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) )
+      'ranges': contains_exactly( RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ) )
     } )
   ) )
 

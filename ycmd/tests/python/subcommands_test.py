@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        equal_to,
                        has_item,
                        has_entries,
@@ -272,7 +272,7 @@ def Subcommands_GoToReferences_Function_test( app ):
 
   assert_that(
     app.post_json( '/run_completer_command', command_data ).json,
-    contains(
+    contains_exactly(
       has_entries( {
         'filepath': filepath,
         'line_num': 1,

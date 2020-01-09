@@ -17,7 +17,7 @@
 
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_string,
                        empty,
                        equal_to,
@@ -165,7 +165,7 @@ def LineColMatcher( line, col ):
 def CompleterProjectDirectoryMatcher( project_directory ):
   return has_entry(
     'completer',
-    has_entry( 'servers', contains(
+    has_entry( 'servers', contains_exactly(
       has_entry( 'extras', has_item(
         has_entries( {
           'key': 'Project Directory',
@@ -179,7 +179,7 @@ def CompleterProjectDirectoryMatcher( project_directory ):
 def SignatureMatcher( label, parameters ):
   return has_entries( {
     'label': equal_to( label ),
-    'parameters': contains( *parameters )
+    'parameters': contains_exactly( *parameters )
   } )
 
 
@@ -189,7 +189,7 @@ def SignatureAvailableMatcher( available ):
 
 def ParameterMatcher( begin, end ):
   return has_entries( {
-    'label': contains( begin, end )
+    'label': contains_exactly( begin, end )
   } )
 
 

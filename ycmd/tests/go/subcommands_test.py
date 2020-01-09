@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
                        equal_to,
@@ -181,8 +181,8 @@ def Subcommands_Format_WholeFile_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '',
                           LocationMatcher( filepath, 8, 1 ),
                           LocationMatcher( filepath, 9, 1 ) ),
@@ -234,8 +234,8 @@ def Subcommands_Format_Range_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
                           '\treturn param;\n'
                           '}\n'
@@ -339,7 +339,7 @@ def RunGoToTest( app, command, test ):
 
     expect = {
       'response': requests.codes.ok,
-      'data': contains( *[
+      'data': contains_exactly( *[
         LocationMatcher(
           os.path.join( folder, location[ 0 ] ),
           location[ 1 ],
@@ -402,7 +402,7 @@ def Subcommands_FixIt_NullResponse_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
   RunFixItTest( app,
                 'Gopls returned NULL for response[ \'result\' ]',
-                filepath, 1, 1, has_entry( 'fixits', contains(
+                filepath, 1, 1, has_entry( 'fixits', contains_exactly(
                   has_entries( { 'text': "Organize Imports",
                                  'chunks': empty() } ) ) ) )
 
@@ -429,10 +429,10 @@ def Subcommands_FixIt_ParseError_test( app ):
 def Subcommands_FixIt_Simple_test( app ):
   filepath = PathToTestFile( 'goto.go' )
   fixit = has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       has_entries( {
         'text': "Organize Imports",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
                         LocationMatcher( filepath, 8, 1 ),
                         LocationMatcher( filepath, 9, 1 ) ),
@@ -467,9 +467,9 @@ def Subcommands_RefactorRename_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           'text': '',
-          'chunks': contains(
+          'chunks': contains_exactly(
             ChunkMatcher( 'xxx',
                           LocationMatcher( filepath, 3, 6 ),
                           LocationMatcher( filepath, 3, 10 ) ),
