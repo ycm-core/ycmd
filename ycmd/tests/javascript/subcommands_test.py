@@ -23,6 +23,7 @@ from hamcrest import ( assert_that,
                        matches_regexp )
 import requests
 import pprint
+import pytest
 
 from ycmd.tests.javascript import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -434,7 +435,6 @@ def Subcommands_GoToReferences_test( app ):
   } )
 
 
-@SharedYcmd
 def Subcommands_GoTo( app, goto_command ):
   RunTest( app, {
     'description': goto_command + ' works within file',
@@ -451,9 +451,12 @@ def Subcommands_GoTo( app, goto_command ):
   } )
 
 
-def Subcommands_GoTo_test():
-  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
-    yield Subcommands_GoTo, command
+@pytest.mark.parametrize( 'command', [ 'GoTo',
+                                       'GoToDefinition',
+                                       'GoToDeclaration' ] )
+@SharedYcmd
+def Subcommands_GoTo_test( app, command ):
+  Subcommands_GoTo( app, command )
 
 
 @SharedYcmd
@@ -494,9 +497,9 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '    nonExistingMethod\\(\\) {\r?\n'
-                  '        throw new Error\\("Method not implemented."\\);\r?\n'
-                  '    }$',
+                  '\tnonExistingMethod\\(\\) {\r?\n'
+                  '\t\tthrow new Error\\("Method not implemented."\\);\r?\n'
+                  '\t}$',
                 ),
                 LocationMatcher( filepath, 22, 12 ),
                 LocationMatcher( filepath, 22, 12 ) )

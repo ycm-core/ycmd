@@ -28,6 +28,7 @@ from hamcrest import ( assert_that,
                        matches_regexp )
 from pprint import pformat
 import requests
+import pytest
 import json
 
 from ycmd.utils import ReadFile
@@ -79,7 +80,9 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'WipeWorkspace' ) )
 
 
-def Subcommands_ServerNotInitialized_test():
+@WithRetry
+@SharedYcmd
+def Subcommands_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -88,8 +91,6 @@ def Subcommands_ServerNotInitialized_test():
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
-  @WithRetry
-  @SharedYcmd
   @patch.object( completer, '_ServerIsInitialized', return_value = False )
   def Test( app, cmd, arguments, *args ):
     RunTest( app, {
@@ -108,16 +109,16 @@ def Subcommands_ServerNotInitialized_test():
       }
     } )
 
-  yield Test, 'GoTo', []
-  yield Test, 'GoToDeclaration', []
-  yield Test, 'GoToDefinition', []
-  yield Test, 'GoToReferences', []
-  yield Test, 'GetType', []
-  yield Test, 'GetDoc', []
-  yield Test, 'FixIt', []
-  yield Test, 'Format', []
-  yield Test, 'OrganizeImports', []
-  yield Test, 'RefactorRename', [ 'test' ]
+  Test( app, 'GoTo', [] )
+  Test( app, 'GoToDeclaration', [] )
+  Test( app, 'GoToDefinition', [] )
+  Test( app, 'GoToReferences', [] )
+  Test( app, 'GetType', [] )
+  Test( app, 'GetDoc', [] )
+  Test( app, 'FixIt', [] )
+  Test( app, 'Format', [] )
+  Test( app, 'OrganizeImports', [] )
+  Test( app, 'RefactorRename', [ 'test' ] )
 
 
 def RunTest( app, test, contents = None ):
@@ -738,7 +739,6 @@ def Subcommands_RefactorRename_Unicode_test( app ):
 
 
 @WithRetry
-@SharedYcmd
 def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   RunTest( app, {
     'description': description,
@@ -755,7 +755,16 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   } )
 
 
-def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
+@pytest.mark.parametrize( 'description,column', [
+  ( 'FixIt works at the firtst char of the line', 1 ),
+  ( 'FixIt works at the begin of the range of the diag.', 15 ),
+  ( 'FixIt works at the end of the range of the diag.', 20 ),
+  ( 'FixIt works at the end of the line', 34 ),
+] )
+@SharedYcmd
+def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
+                                                                description,
+                                                                column ):
   import os
   wibble_path = PathToTestFile( 'simple_eclipse_project',
                                 'src',
@@ -859,20 +868,11 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIt works at the first char of the line',
-          filepath, 19, 1, fixits_for_line )
-
-  yield ( RunFixItTest, 'FixIt works at the begin of the range of the diag.',
-          filepath, 19, 15, fixits_for_line )
-
-  yield ( RunFixItTest, 'FixIt works at the end of the range of the diag.',
-          filepath, 19, 20, fixits_for_line )
-
-  yield ( RunFixItTest, 'FixIt works at the end of line',
-          filepath, 19, 34, fixits_for_line )
+  RunFixItTest( app, description, filepath, 19, column, fixits_for_line )
 
 
-def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
+@SharedYcmd
+def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -913,11 +913,12 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIts can change lines as well as add them',
-          filepath, 27, 12, fixits )
+  RunFixItTest( app, 'FixIts can change lines as well as add them',
+                filepath, 27, 12, fixits )
 
 
-def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
+@SharedYcmd
+def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -953,11 +954,20 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIts can change lines as well as add them',
-          filepath, 15, 29, fixits )
+  RunFixItTest( app, 'FixIts can change lines as well as add them',
+                filepath, 15, 29, fixits )
 
 
-def Subcommands_FixIt_MultipleDiags_test():
+@pytest.mark.parametrize( 'description,column', [
+  ( 'diags are merged in FixIt options - start of line', 1 ),
+  ( 'diags are merged in FixIt options - start of diag 1', 10 ),
+  ( 'diags are merged in FixIt options - end of diag 1', 15 ),
+  ( 'diags are merged in FixIt options - start of diag 2', 23 ),
+  ( 'diags are merged in FixIt options - end of diag 2', 46 ),
+  ( 'diags are merged in FixIt options - end of line', 55 ),
+] )
+@SharedYcmd
+def Subcommands_FixIt_MultipleDiags_test( app, description, column ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -1003,18 +1013,7 @@ def Subcommands_FixIt_MultipleDiags_test():
     )
   } )
 
-  yield ( RunFixItTest, 'diags are merged in FixIt options - start of line',
-          filepath, 30, 1, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - start of diag 1',
-          filepath, 30, 10, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - end of diag 1',
-          filepath, 30, 15, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - start of diag 2',
-          filepath, 30, 23, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - end of diag 2',
-          filepath, 30, 46, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - end of line',
-          filepath, 30, 55, fixits )
+  RunFixItTest( app, description, filepath, 30, column, fixits )
 
 
 @SharedYcmd
@@ -1110,22 +1109,25 @@ def Subcommands_FixIt_Range_test( app ):
 
 
 
-def Subcommands_FixIt_NoDiagnostics_test():
+@SharedYcmd
+def Subcommands_FixIt_NoDiagnostics_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
                              'test',
                              'TestFactory.java' )
 
-  yield ( RunFixItTest, "no FixIts means you gotta code it yo' self",
-          filepath, 1, 1, has_entries( { 'fixits': contains_inanyorder(
-            has_entries( { 'text': 'Organize imports',
-                           'chunks': instance_of( list ) } ),
-            has_entries( { 'text': 'Generate toString()...',
-                           'chunks': instance_of( list ) } ) ) } ) )
+  RunFixItTest( app, "no FixIts means you gotta code it yo' self",
+                filepath, 1, 1, has_entries( {
+                  'fixits': contains_inanyorder(
+                    has_entries( { 'text': 'Organize imports',
+                                   'chunks': instance_of( list ) } ),
+                    has_entries( { 'text': 'Generate toString()...',
+                                   'chunks': instance_of( list ) } ) ) } ) )
 
 
-def Subcommands_FixIt_Unicode_test():
+@SharedYcmd
+def Subcommands_FixIt_Unicode_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -1165,8 +1167,8 @@ def Subcommands_FixIt_Unicode_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIts and diagnostics work with unicode strings',
-          filepath, 13, 1, fixits )
+  RunFixItTest( app, 'FixIts and diagnostics work with unicode strings',
+                filepath, 13, 1, fixits )
 
 
 @WithRetry
@@ -1557,136 +1559,245 @@ def RunGoToTest( app, description, filepath, line, col, cmd, goto_response ):
   } )
 
 
-def Subcommands_GoTo_test():
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestLauncher.java' )
-
-  unicode_filepath = PathToTestFile( 'simple_eclipse_project',
+@pytest.mark.parametrize( 'test', [
+    # Member function local variable
+    { 'request': { 'line': 28, 'col': 5,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 27, 'column_num': 18,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for member local variable' },
+    # Member variable
+    { 'request': { 'line': 22, 'col': 7,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 8, 'column_num': 16,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'description': 'GoTo works for member variable' },
+    # Method
+    { 'request': { 'line': 28, 'col': 7,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 21, 'column_num': 16,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for method' },
+    # Constructor
+    { 'request': { 'line': 38, 'col': 26,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 10, 'column_num': 10,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for jumping to constructor' },
+    # Jump to self - main()
+    { 'request': { 'line': 26, 'col': 22,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 26, 'column_num': 22,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for jumping to the same position' },
+    # Static method
+    { 'request': { 'line': 37, 'col': 11,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 13, 'column_num': 21,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for static method' },
+    # Static variable
+    { 'request': { 'line': 14, 'col': 11,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 12, 'column_num': 21,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for static variable' },
+    # Argument variable
+    { 'request': { 'line': 23, 'col': 5,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 21, 'column_num': 32,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for argument variable' },
+    # Class
+    { 'request': { 'line': 27, 'col': 10,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 6, 'column_num': 7,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
+      'description': 'GoTo works for jumping to class declaration' },
+    # Unicode
+    { 'request': { 'line': 8, 'col': 12,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
                                      'src',
                                      'com',
                                      'youcompleteme',
-                                     'Test.java' )
-
-  tests = [
-    # Member function local variable
-    { 'request': { 'line': 28, 'col': 5, 'filepath': filepath },
-      'response': { 'line_num': 27, 'column_num': 18, 'filepath': filepath },
-      'description': 'GoTo works for member local variable' },
-    # Member variable
-    { 'request': { 'line': 22, 'col': 7, 'filepath': filepath },
-      'response': { 'line_num': 8, 'column_num': 16, 'filepath': filepath },
-      'description': 'GoTo works for member variable' },
-    # Method
-    { 'request': { 'line': 28, 'col': 7, 'filepath': filepath },
-      'response': { 'line_num': 21, 'column_num': 16, 'filepath': filepath },
-      'description': 'GoTo works for method' },
-    # Constructor
-    { 'request': { 'line': 38, 'col': 26, 'filepath': filepath },
-      'response': { 'line_num': 10, 'column_num': 10, 'filepath': filepath },
-      'description': 'GoTo works for jumping to constructor' },
-    # Jump to self - main()
-    { 'request': { 'line': 26, 'col': 22, 'filepath': filepath },
-      'response': { 'line_num': 26, 'column_num': 22, 'filepath': filepath },
-      'description': 'GoTo works for jumping to the same position' },
-    # Static method
-    { 'request': { 'line': 37, 'col': 11, 'filepath': filepath },
-      'response': { 'line_num': 13, 'column_num': 21, 'filepath': filepath },
-      'description': 'GoTo works for static method' },
-    # Static variable
-    { 'request': { 'line': 14, 'col': 11, 'filepath': filepath },
-      'response': { 'line_num': 12, 'column_num': 21, 'filepath': filepath },
-      'description': 'GoTo works for static variable' },
-    # Argument variable
-    { 'request': { 'line': 23, 'col': 5, 'filepath': filepath },
-      'response': { 'line_num': 21, 'column_num': 32, 'filepath': filepath },
-      'description': 'GoTo works for argument variable' },
-    # Class
-    { 'request': { 'line': 27, 'col': 10, 'filepath': filepath },
-      'response': { 'line_num': 6, 'column_num': 7, 'filepath': filepath },
-      'description': 'GoTo works for jumping to class declaration' },
-    # Unicode
-    { 'request': { 'line': 8, 'col': 12, 'filepath': unicode_filepath },
-      'response': { 'line_num': 7, 'column_num': 12, 'filepath':
-                    unicode_filepath },
+                                     'Test.java' ) },
+      'response': { 'line_num': 7, 'column_num': 12,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'youcompleteme',
+                                                'Test.java' ) },
       'description': 'GoTo works for unicode identifiers' }
-  ]
+  ] )
+@pytest.mark.parametrize( 'command', [ 'GoTo',
+                                       'GoToDefinition',
+                                       'GoToDeclaration' ] )
+@SharedYcmd
+def Subcommands_GoTo_test( app, command, test ):
+  RunGoToTest( app,
+               test[ 'description' ],
+               test[ 'request' ][ 'filepath' ],
+               test[ 'request' ][ 'line' ],
+               test[ 'request' ][ 'col' ],
+               command,
+               has_entries( test[ 'response' ] ) )
 
-  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
-    for test in tests:
-      yield ( RunGoToTest,
-              test[ 'description' ],
-              test[ 'request' ][ 'filepath' ],
-              test[ 'request' ][ 'line' ],
-              test[ 'request' ][ 'col' ],
-              command,
-              has_entries( test[ 'response' ] ) )
 
-
-def Subcommands_GoToType_test():
-  launcher_file = PathToTestFile( 'simple_eclipse_project',
-                                  'src',
-                                  'com',
-                                  'test',
-                                  'TestLauncher.java' )
-  tset_file = PathToTestFile( 'simple_eclipse_project',
-                              'src',
-                              'com',
-                              'youcompleteme',
-                              'testing',
-                              'Tset.java' )
-
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Member function local variable
-    { 'request': { 'line': 28, 'col': 5, 'filepath': launcher_file },
-      'response': { 'line_num': 6, 'column_num': 7, 'filepath': launcher_file },
+    { 'request': { 'line': 28, 'col': 5,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 6, 'column_num': 7,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
       'description': 'GoToType works for member local variable' },
     # Member variable
-    { 'request': { 'line': 22, 'col': 7, 'filepath': launcher_file },
-      'response': { 'line_num': 6, 'column_num': 14, 'filepath': tset_file },
+    { 'request': { 'line': 22, 'col': 7,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 6, 'column_num': 14,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'youcompleteme',
+                                                'testing',
+                                                'Tset.java' ) },
       'description': 'GoToType works for member variable' },
-  ]
+  ] )
+@SharedYcmd
+def Subcommands_GoToType_test( app, test ):
+  RunGoToTest( app,
+               test[ 'description' ],
+               test[ 'request' ][ 'filepath' ],
+               test[ 'request' ][ 'line' ],
+               test[ 'request' ][ 'col' ],
+               'GoToType',
+               has_entries( test[ 'response' ] ) )
 
-  for test in tests:
-    yield ( RunGoToTest,
-            test[ 'description' ],
-            test[ 'request' ][ 'filepath' ],
-            test[ 'request' ][ 'line' ],
-            test[ 'request' ][ 'col' ],
-            'GoToType',
-            has_entries( test[ 'response' ] ) )
 
-
-def Subcommands_GoToImplementation_test():
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestLauncher.java' )
-
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Interface
-    { 'request': { 'line': 17, 'col': 25, 'filepath': filepath },
-      'response': { 'line_num': 28, 'column_num': 16, 'filepath': filepath },
+    { 'request': { 'line': 17, 'col': 25,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
+      'response': { 'line_num': 28, 'column_num': 16,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                               'src',
+                                               'com',
+                                               'test',
+                                               'TestLauncher.java' ) },
       'description': 'GoToImplementation on interface '
                      'jumps to its implementation' },
     # Interface reference
-    { 'request': { 'line': 21, 'col': 30, 'filepath': filepath },
-      'response': { 'line_num': 28, 'column_num': 16, 'filepath': filepath },
+    { 'request': { 'line': 21, 'col': 30,
+                   'filepath': PathToTestFile( 'simple_eclipse_project',
+                                              'src',
+                                              'com',
+                                              'test',
+                                              'TestLauncher.java' ) },
+      'response': { 'line_num': 28, 'column_num': 16,
+                    'filepath': PathToTestFile( 'simple_eclipse_project',
+                                                'src',
+                                                'com',
+                                                'test',
+                                                'TestLauncher.java' ) },
       'description': 'GoToImplementation on interface reference '
                      'jumpts to its implementation' },
-  ]
-
-  for test in tests:
-    yield ( RunGoToTest,
-            test[ 'description' ],
-            test[ 'request' ][ 'filepath' ],
-            test[ 'request' ][ 'line' ],
-            test[ 'request' ][ 'col' ],
-            'GoToImplementation',
-            has_entries( test[ 'response' ] ) )
+  ] )
+@SharedYcmd
+def Subcommands_GoToImplementation_test( app, test ):
+  RunGoToTest( app,
+               test[ 'description' ],
+               test[ 'request' ][ 'filepath' ],
+               test[ 'request' ][ 'line' ],
+               test[ 'request' ][ 'col' ],
+               'GoToImplementation',
+               has_entries( test[ 'response' ] ) )
 
 
 @WithRetry

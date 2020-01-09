@@ -78,7 +78,7 @@ def ClangdCompleter_GetClangdCommand_CustomBinary_test():
                 return_value = None ):
       clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
       assert_that( clangd_completer.GetClangdCommand( user_options ),
-                 equal_to( None ) )
+                   equal_to( None ) )
 
   # Unsupported version.
   with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
@@ -222,12 +222,12 @@ def ClangdCompleter_GetThirdParty_test():
     with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
                 return_value = True ):
       assert_that( clangd_completer.GetThirdPartyClangd(),
-                 equal_to( '/third_party/clangd' ) )
+                   equal_to( '/third_party/clangd' ) )
 
     with patch( 'ycmd.completers.cpp.clangd_completer.CheckClangdVersion',
                 return_value = False ):
       assert_that( clangd_completer.GetThirdPartyClangd(),
-                 equal_to( None ) )
+                   equal_to( None ) )
 
 
 @IsolatedYcmd()

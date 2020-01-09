@@ -26,6 +26,7 @@ from hamcrest import ( assert_that,
 from unittest.mock import patch
 from pprint import pformat
 import os
+import pytest
 import requests
 
 from ycmd import handlers
@@ -88,7 +89,6 @@ def RunTest( app, test, contents = None ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
 def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   RunTest( app, {
     'description': description,
@@ -123,12 +123,12 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'RestartServer' ) )
 
 
-def Subcommands_ServerNotInitialized_test():
+@SharedYcmd
+def Subcommands_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'goto.go' )
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'go' ] )
 
-  @SharedYcmd
   @patch.object( completer, '_ServerIsInitialized', return_value = False )
   def Test( app, cmd, arguments, *args ):
     RunTest( app, {
@@ -147,14 +147,14 @@ def Subcommands_ServerNotInitialized_test():
       }
     } )
 
-  yield Test, 'Format', []
-  yield Test, 'GetDoc', []
-  yield Test, 'GetType', []
-  yield Test, 'GoTo', []
-  yield Test, 'GoToDeclaration', []
-  yield Test, 'GoToDefinition', []
-  yield Test, 'GoToType', []
-  yield Test, 'FixIt', []
+  Test( app, 'Format', [] )
+  Test( app, 'GetDoc', [] )
+  Test( app, 'GetType', [] )
+  Test( app, 'GoTo', [] )
+  Test( app, 'GoToDeclaration', [] )
+  Test( app, 'GoToDefinition', [] )
+  Test( app, 'GoToType', [] )
+  Test( app, 'FixIt', [] )
 
 
 @SharedYcmd
@@ -323,7 +323,6 @@ def Subcommands_GetType_Function_test( app ):
   } )
 
 
-@SharedYcmd
 def RunGoToTest( app, command, test ):
   folder = PathToTestFile()
   filepath = PathToTestFile( test[ 'req' ][ 0 ] )
@@ -369,38 +368,43 @@ def RunGoToTest( app, command, test ):
   } )
 
 
-def Subcommands_GoTo_test():
-  unicode_go_path = os.path.join( 'unicode', 'unicode.go' )
-  tests = [
+@pytest.mark.parametrize( 'command', [ 'GoToDeclaration',
+                                       'GoToDefinition',
+                                       'GoTo' ] )
+@pytest.mark.parametrize( 'test', [
     # Struct
-    { 'req': ( unicode_go_path, 13, 5 ), 'res': ( unicode_go_path, 10, 5 ) },
+    { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 13, 5 ),
+      'res': ( os.path.join( 'unicode', 'unicode.go' ), 10, 5 ) },
     # Function
     { 'req': ( 'goto.go', 8, 5 ), 'res': ( 'goto.go', 3, 6 ) },
     # Keyword
     { 'req': ( 'goto.go', 3, 2 ), 'res': 'Cannot jump to location' },
-  ]
+  ] )
+@SharedYcmd
+def Subcommands_GoTo_test( app, command, test ):
+  RunGoToTest( app, command, test )
 
-  for test in tests:
-    for command in [ 'GoToDeclaration', 'GoToDefinition', 'GoTo' ]:
-      yield RunGoToTest, command, test
 
-
-def Subcommands_GoToType_test():
-  unicode_go_path = os.path.join( 'unicode', 'unicode.go' )
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Works
-    { 'req': ( unicode_go_path, 13, 5 ), 'res': ( unicode_go_path, 3, 6 ) },
+    { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 13, 5 ),
+      'res': ( os.path.join( 'unicode', 'unicode.go' ), 3, 6 ) },
     # Fails
-    { 'req': ( unicode_go_path, 11, 7 ), 'res': 'Cannot jump to location' } ]
-  for test in tests:
-    yield RunGoToTest, 'GoToType', test
+    { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 11, 7 ),
+      'res': 'Cannot jump to location' } ] )
+@SharedYcmd
+def Subcommands_GoToType_test( app, test ):
+  RunGoToTest( app, 'GoToType', test )
 
 
-def Subcommands_FixIt_NullResponse_test():
+@SharedYcmd
+def Subcommands_FixIt_NullResponse_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
-  yield ( RunFixItTest, 'Gopls returned NULL for response[ \'result\' ]',
-      filepath, 1, 1, has_entry( 'fixits', contains(
-        has_entries( { 'text': "Organize Imports", 'chunks': empty() } ) ) ) )
+  RunFixItTest( app,
+                'Gopls returned NULL for response[ \'result\' ]',
+                filepath, 1, 1, has_entry( 'fixits', contains(
+                  has_entries( { 'text': "Organize Imports",
+                                 'chunks': empty() } ) ) ) )
 
 
 @SharedYcmd
@@ -421,7 +425,8 @@ def Subcommands_FixIt_ParseError_test( app ):
   } )
 
 
-def Subcommands_FixIt_Simple_test():
+@SharedYcmd
+def Subcommands_FixIt_Simple_test( app ):
   filepath = PathToTestFile( 'goto.go' )
   fixit = has_entries( {
     'fixits': contains(
@@ -444,8 +449,7 @@ def Subcommands_FixIt_Simple_test():
       } ),
     )
   } )
-  yield ( RunFixItTest, 'Only one fixit returned',
-          filepath, 1, 1, fixit )
+  RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
 
 
 @SharedYcmd
@@ -479,8 +483,9 @@ def Subcommands_RefactorRename_test( app ):
   } )
 
 
-def Subcommands_GoToReferences_test():
+@SharedYcmd
+def Subcommands_GoToReferences_test( app ):
   filepath = os.path.join( 'unicode', 'unicode.go' )
   test = { 'req': ( filepath, 10, 5 ), 'res': [ ( filepath, 10, 5 ),
                                                 ( filepath, 13, 5 ) ] }
-  yield RunGoToTest, 'GoToReferences', test
+  RunGoToTest( app, 'GoToReferences', test )

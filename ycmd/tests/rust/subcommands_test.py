@@ -25,6 +25,7 @@ from hamcrest import ( assert_that,
 from unittest.mock import patch
 from pprint import pformat
 import os
+import pytest
 import requests
 
 from ycmd import handlers
@@ -115,12 +116,12 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'RestartServer' ) )
 
 
-def Subcommands_ServerNotInitialized_test():
+@SharedYcmd
+def Subcommands_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'rust' ] )
 
-  @SharedYcmd
   @patch.object( completer, '_ServerIsInitialized', return_value = False )
   def Test( app, cmd, arguments, *args ):
     RunTest( app, {
@@ -139,16 +140,16 @@ def Subcommands_ServerNotInitialized_test():
       }
     } )
 
-  yield Test, 'Format', []
-  yield Test, 'FixIt', []
-  yield Test, 'GetType', []
-  yield Test, 'GetDoc', []
-  yield Test, 'GoTo', []
-  yield Test, 'GoToDeclaration', []
-  yield Test, 'GoToDefinition', []
-  yield Test, 'GoToImplementation', []
-  yield Test, 'GoToReferences', []
-  yield Test, 'RefactorRename', [ 'test' ]
+  Test( app, 'Format', [] )
+  Test( app, 'FixIt', [] )
+  Test( app, 'GetType', [] )
+  Test( app, 'GetDoc', [] )
+  Test( app, 'GoTo', [] )
+  Test( app, 'GoToDeclaration', [] )
+  Test( app, 'GoToDefinition', [] )
+  Test( app, 'GoToImplementation', [] )
+  Test( app, 'GoToReferences', [] )
+  Test( app, 'RefactorRename', [ 'test' ] )
 
 
 @SharedYcmd
@@ -286,6 +287,7 @@ def Subcommands_GetType_UnknownType_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetType_Function_test( app ):
   RunTest( app, {
@@ -303,8 +305,6 @@ def Subcommands_GetType_Function_test( app ):
   } )
 
 
-@WithRetry
-@SharedYcmd
 def RunGoToTest( app, command, test ):
   folder = PathToTestFile( 'common', 'src' )
   filepath = os.path.join( folder, test[ 'req' ][ 0 ] )
@@ -350,8 +350,7 @@ def RunGoToTest( app, command, test ):
   } )
 
 
-def Subcommands_GoTo_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Structure
     { 'req': ( 'main.rs',  8, 24 ), 'res': ( 'main.rs', 5, 8 ) },
     # Function
@@ -360,15 +359,17 @@ def Subcommands_GoTo_test():
     { 'req': ( 'main.rs',  9, 12 ), 'res': ( 'main.rs', 7, 7 ) },
     # Keyword
     { 'req': ( 'main.rs',  3,  2 ), 'res': 'Cannot jump to location' },
-  ]
+  ] )
+@pytest.mark.parametrize( 'command', [ 'GoToDeclaration',
+                                       'GoToDefinition',
+                                       'GoTo' ] )
+@WithRetry
+@SharedYcmd
+def Subcommands_GoTo_test( app, command, test ):
+  RunGoToTest( app, command, test )
 
-  for test in tests:
-    for command in [ 'GoToDeclaration', 'GoToDefinition', 'GoTo' ]:
-      yield RunGoToTest, command, test
 
-
-def Subcommands_GoToImplementation_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Structure
     { 'req': ( 'main.rs',  5,  9 ), 'res': ( 'main.rs', 8, 21 ) },
     # Trait
@@ -377,24 +378,24 @@ def Subcommands_GoToImplementation_test():
     # Implementation
     { 'req': ( 'main.rs',  9, 15 ), 'res': [ ( 'main.rs', 8, 21 ),
                                              ( 'main.rs', 9, 21 ) ] },
-  ]
-
-  for test in tests:
-    yield RunGoToTest, 'GoToImplementation', test
+  ] )
+@WithRetry
+@SharedYcmd
+def Subcommands_GoToImplementation_test( app, test ):
+  RunGoToTest( app, 'GoToImplementation', test )
 
 
 @WithRetry
-def Subcommands_GoToImplementation_Failure_test():
-  RunGoToTest(
-    'GoToImplementation',
-    { 'req': ( 'main.rs', 11,  2 ),
-      'res': 'Request failed: -32603: An unknown error occurred',
-      'exc': ResponseFailedException }
-  )
+@SharedYcmd
+def Subcommands_GoToImplementation_Failure_test( app ):
+  RunGoToTest( app,
+               'GoToImplementation',
+               { 'req': ( 'main.rs', 11,  2 ),
+                 'res': 'Request failed: -32603: An unknown error occurred',
+                 'exc': ResponseFailedException } )
 
 
-def Subcommands_GoToReferences_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Struct
     { 'req': ( 'main.rs',  9, 22 ), 'res': [ ( 'main.rs',  6,  8 ),
                                              ( 'main.rs',  9, 21 ) ] },
@@ -407,10 +408,10 @@ def Subcommands_GoToReferences_test():
                                              ( 'main.rs',  9,  6 ) ] },
     # Keyword
     { 'req': ( 'main.rs',  1,  1 ), 'res': 'Cannot jump to location' }
-  ]
-
-  for test in tests:
-    yield RunGoToTest, 'GoToReferences', test
+  ] )
+@SharedYcmd
+def Subcommands_GoToReferences_test( app, test ):
+  RunGoToTest( app, 'GoToReferences', test )
 
 
 @WithRetry

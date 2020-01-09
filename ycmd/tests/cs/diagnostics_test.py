@@ -103,32 +103,38 @@ def Diagnostics_WithRange_test( app ):
     ) )
 
 
-@SharedYcmd
+@IsolatedYcmd()
 def Diagnostics_MultipleSolution_test( app ):
   filepaths = [ PathToTestFile( 'testy', 'Program.cs' ),
                 PathToTestFile( 'testy-multiple-solutions',
                                 'solution-named-like-folder',
                                 'testy', 'Program.cs' ) ]
   for filepath in filepaths:
-    with WrapOmniSharpServer( app, filepath ):
-      contents = ReadFile( filepath )
+    contents = ReadFile( filepath )
 
-      event_data = BuildRequest( filepath = filepath,
-                                 event_name = 'FileReadyToParse',
-                                 filetype = 'cs',
-                                 contents = contents )
+    event_data = BuildRequest( filepath = filepath,
+                               event_name = 'FileReadyToParse',
+                               filetype = 'cs',
+                               contents = contents )
 
-      results = app.post_json( '/event_notification', event_data ).json
+    results = app.post_json( '/event_notification', event_data ).json
+    WaitUntilCsCompleterIsReady( app, filepath )
 
-      assert_that( results, has_items(
-        has_entries( {
-          'kind': equal_to( 'ERROR' ),
-          'text': contains_string( "Identifier expected" ),
-          'location': LocationMatcher( filepath, 10, 12 ),
-          'location_extent': RangeMatcher(
-              filepath, ( 10, 12 ), ( 10, 12 ) )
-        } )
-      ) )
+    event_data = BuildRequest( filepath = filepath,
+                               event_name = 'FileReadyToParse',
+                               filetype = 'cs',
+                               contents = contents )
+
+    results = app.post_json( '/event_notification', event_data ).json
+    assert_that( results, has_items(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'text': contains_string( "Identifier expected" ),
+        'location': LocationMatcher( filepath, 10, 12 ),
+        'location_extent': RangeMatcher(
+            filepath, ( 10, 12 ), ( 10, 12 ) )
+      } )
+    ) )
 
 
 @IsolatedYcmd( { 'max_diagnostics_to_display': 1 } )

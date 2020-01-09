@@ -25,6 +25,7 @@ from hamcrest import ( assert_that,
 from unittest.mock import patch
 import requests
 import pprint
+import pytest
 
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -578,7 +579,6 @@ def Subcommands_GoToReferences_Unicode_test( app ):
   } )
 
 
-@SharedYcmd
 def Subcommands_GoTo_Basic( app, goto_command ):
   RunTest( app, {
     'description': goto_command + ' works within file',
@@ -595,12 +595,14 @@ def Subcommands_GoTo_Basic( app, goto_command ):
   } )
 
 
-def Subcommands_GoTo_Basic_test():
-  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
-    yield Subcommands_GoTo_Basic, command
-
-
+@pytest.mark.parametrize( 'command', [ 'GoTo',
+                                       'GoToDefinition',
+                                       'GoToDeclaration' ] )
 @SharedYcmd
+def Subcommands_GoTo_Basic_test( app, command ):
+  Subcommands_GoTo_Basic( app, command )
+
+
 def Subcommands_GoTo_Unicode( app, goto_command ):
   RunTest( app, {
     'description': goto_command + ' works with Unicode characters',
@@ -617,12 +619,14 @@ def Subcommands_GoTo_Unicode( app, goto_command ):
   } )
 
 
-def Subcommands_GoTo_Unicode_test():
-  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
-    yield Subcommands_GoTo_Unicode, command
-
-
+@pytest.mark.parametrize( 'command', [ 'GoTo',
+                                       'GoToDefinition',
+                                       'GoToDeclaration' ] )
 @SharedYcmd
+def Subcommands_GoTo_Unicode_test( app, command ):
+  Subcommands_GoTo_Unicode( app, command )
+
+
 def Subcommands_GoTo_Fail( app, goto_command ):
   RunTest( app, {
     'description': goto_command + ' fails on non-existing method',
@@ -639,9 +643,12 @@ def Subcommands_GoTo_Fail( app, goto_command ):
   } )
 
 
-def Subcommands_GoTo_Fail_test():
-  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
-    yield Subcommands_GoTo_Fail, command
+@pytest.mark.parametrize( 'command', [ 'GoTo',
+                                       'GoToDefinition',
+                                       'GoToDeclaration' ] )
+@SharedYcmd
+def Subcommands_GoTo_Fail_test( app, command ):
+  Subcommands_GoTo_Fail( app, command )
 
 
 @SharedYcmd
@@ -698,9 +705,9 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '    nonExistingMethod\\(\\) {\r?\n'
-                  '        throw new Error\\("Method not implemented."\\);\r?\n'
-                  '    }$',
+                  '\tnonExistingMethod\\(\\) {\r?\n'
+                  '\t\tthrow new Error\\("Method not implemented."\\);\r?\n'
+                  '\t}$',
                 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
@@ -712,7 +719,7 @@ def Subcommands_FixIt_test( app ):
             'chunks': contains(
               ChunkMatcher(
                 matches_regexp( '^\r?\n'
-                                '    nonExistingMethod: any;$' ),
+                                '\tnonExistingMethod: any;$' ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),
@@ -723,7 +730,7 @@ def Subcommands_FixIt_test( app ):
             'chunks': contains(
               ChunkMatcher(
                 matches_regexp( '^\r?\n'
-                                '    \\[x: string\\]: any;$' ),
+                                '\t\\[x: string\\]: any;$' ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),

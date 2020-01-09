@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
 from ycmd import identifier_utils as iu
 from hamcrest import assert_that, equal_to, has_item
 
@@ -395,34 +396,19 @@ def LoopExpectLongestIdentifier( ident, expected, end_index ):
     iu.StartOfLongestIdentifierEndingAtIndex( ident, end_index ) ) )
 
 
-def StartOfLongestIdentifierEndingAtIndex_Entire_Simple_test():
-  ident = 'foobar'
+@pytest.mark.parametrize(
+    'ident',
+    [ 'foobar', 'f12341234', 'f123f1234', 'fäöttccoö', ],
+    ids = [ 'Simple', '1stNonNumber', 'Subidentifier', 'Unicode' ] )
+def StartOfLongestIdentifierEndingAtIndex_Entire_test( ident ):
   for i in range( len( ident ) ):
-    yield LoopExpectLongestIdentifier, ident, 0, i
+    LoopExpectLongestIdentifier( ident, 0, i )
 
 
 def StartOfLongestIdentifierEndingAtIndex_Entire_AllBad_test():
   ident = '....'
   for i in range( len( ident ) ):
-    yield LoopExpectLongestIdentifier, ident, i, i
-
-
-def StartOfLongestIdentifierEndingAtIndex_Entire_FirstCharNotNumber_test():
-  ident = 'f12341234'
-  for i in range( len( ident ) ):
-    yield LoopExpectLongestIdentifier, ident, 0, i
-
-
-def StartOfLongestIdentifierEndingAtIndex_Entire_SubIdentifierValid_test():
-  ident = 'f123f1234'
-  for i in range( len( ident ) ):
-    yield LoopExpectLongestIdentifier, ident, 0, i
-
-
-def StartOfLongestIdentifierEndingAtIndex_Entire_Unicode_test():
-  ident = u'fäöttccoö'
-  for i in range( len( ident ) ):
-    yield LoopExpectLongestIdentifier, ident, 0, i
+    LoopExpectLongestIdentifier( ident, i, i )
 
 
 # Not a test, but a test helper function
@@ -430,16 +416,12 @@ def LoopExpectIdentfierAtIndex( ident, index, expected ):
   assert_that( expected, equal_to( iu.IdentifierAtIndex( ident, index ) ) )
 
 
-def IdentifierAtIndex_Entire_Simple_test():
-  ident = u'foobar'
+@pytest.mark.parametrize( 'ident',
+                          [ 'foobar', 'fäöttccoö', ],
+                          ids = [ 'Simple', 'Unicode' ] )
+def IdentifierAtIndex_Entire_test( ident ):
   for i in range( len( ident ) ):
-    yield LoopExpectIdentfierAtIndex, ident, i, ident
-
-
-def IdentifierAtIndex_Entire_Unicode_test():
-  ident = u'fäöttccoö'
-  for i in range( len( ident ) ):
-    yield LoopExpectIdentfierAtIndex, ident, i, ident
+    LoopExpectIdentfierAtIndex( ident, i, ident )
 
 
 def IdentifierAtIndex_BadInput_test():

@@ -28,7 +28,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
                                     MockProcessTerminationTimingOut,
                                     RangeMatcher,
-                                    WaitUntilCompleterServerReady )
+                                    WaitUntilCompleterServerReady,
+                                    WithRetry )
 from ycmd.utils import ReadFile, LOGGER
 
 
@@ -222,7 +223,7 @@ def Subcommands_RefactorRename_MultiFile_test( app ):
   goto_test = PathToTestFile( 'testy', 'GotoTestCase.cs' )
   import_test = PathToTestFile( 'testy', 'ImportTest.cs' )
   program = PathToTestFile( 'testy', 'Program.cs' )
-  get_doc_test = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  # get_doc_test = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
   unicode_test = PathToTestFile( 'testy', 'Unicode.cs' )
   with WrapOmniSharpServer( app, continuous_test ):
     contents = ReadFile( continuous_test )
@@ -242,49 +243,64 @@ def Subcommands_RefactorRename_MultiFile_test( app ):
       'chunks': contains(
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) ) } ),
+          'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) )
+        } ),
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) ) } ),
+          'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) )
+        } ),
+        # has_entries( {
+        #   'replacement_text': 'x',
+        #   'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) )
+        # } ),
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) ) } ),
+          'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) )
+        } ),
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) ) } ),
+          'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) )
+        } ),
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) ) } ),
+          'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) )
+        } ),
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) ) } ),
+          'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) )
+        } ),
         has_entries( {
           'replacement_text': 'x',
-          'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) ) } ),
-        has_entries( {
-          'replacement_text': 'x',
-          'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) ) } ),
+          'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) )
+        } ),
       )
     } ) ) } ) )
 
 
-@SharedYcmd
+@WithRetry
+@IsolatedYcmd()
 def Subcommands_GoTo_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  contents = ReadFile( filepath )
+  event_data = BuildRequest( filepath = filepath,
+                             filetype = 'cs',
+                             contents = contents,
+                             event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', event_data )
+  WaitUntilCompleterServerReady( app, 'cs' )
   destination = PathToTestFile( 'testy', 'Program.cs' )
-  with WrapOmniSharpServer( app, filepath ):
-    contents = ReadFile( filepath )
 
-    goto_data = BuildRequest( completer_target = 'filetype_default',
-                              command_arguments = [ 'GoTo' ],
-                              line_num = 10,
-                              column_num = 15,
-                              contents = contents,
-                              filetype = 'cs',
-                              filepath = filepath )
+  goto_data = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'GoTo' ],
+                            line_num = 10,
+                            column_num = 15,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = filepath )
 
-    response = app.post_json( '/run_completer_command', goto_data ).json
-    assert_that( response, LocationMatcher( destination, 7, 22 ) )
+  response = app.post_json( '/run_completer_command', goto_data ).json
+  assert_that( response, LocationMatcher( destination, 7, 22 ) )
 
 
 @SharedYcmd

@@ -77,7 +77,7 @@ def ServerManagement_StopServer_Clean_test( app ):
 @patch( 'os.remove', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
-def ServerManagement_StopServer_Unclean_test( app, *args ):
+def ServerManagement_StopServer_Unclean_test( rm, app ):
   StartClangd( app )
   StopCompleterServer( app, 'cpp', '' )
   CheckStopped( app )

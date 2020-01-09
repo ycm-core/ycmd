@@ -28,7 +28,7 @@ from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
         return_value = { 'A': lambda x: x,
                          'B': lambda x: x,
                          'C': lambda x: x } )
-def Subcommands_Basic_test( app, *args ):
+def Subcommands_Basic_test( get_subcmd_map, app ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
     assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
@@ -40,7 +40,7 @@ def Subcommands_Basic_test( app, *args ):
         return_value = { 'A': lambda x: x,
                          'B': lambda x: x,
                          'C': lambda x: x } )
-def Subcommands_NoExplicitCompleterTargetSpecified_test( app, *args ):
+def Subcommands_NoExplicitCompleterTargetSpecified_test( get_subcmd_map, app ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
     assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,

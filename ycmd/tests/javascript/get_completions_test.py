@@ -172,7 +172,7 @@ def GetCompletions_AutoImport_test( app ):
   } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_IgnoreIdentifiers_test( app ):
   RunTest( app, {
     'description': 'Identifier "test" is not returned as a suggestion',

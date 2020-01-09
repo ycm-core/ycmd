@@ -71,7 +71,7 @@ def DebugInfo_RlsVersion_test( app ):
 @IsolatedYcmd
 @patch( 'ycmd.completers.rust.rust_completer._GetCommandOutput',
         return_value = '' )
-def DebugInfo_NoRlsVersion_test( app, *args ):
+def DebugInfo_NoRlsVersion_test( get_command_output, app ):
   StartRustCompleterServerInDirectory( app, PathToTestFile( 'common', 'src' ) )
 
   request_data = BuildRequest( filetype = 'rust' )

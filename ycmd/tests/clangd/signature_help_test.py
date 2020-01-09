@@ -574,7 +574,9 @@ def Signature_Help_Clears_After_Function_Call_test( app ):
 @patch( 'ycmd.completers.language_server.language_server_completer.'
         'LanguageServerCompleter._ServerIsInitialized', return_value = False )
 @IsolatedYcmd()
-def Signature_Help_Server_Not_Initialized_test( app, *args ):
+def Signature_Help_Server_Not_Initialized_test( should_use_sig,
+                                                server_init,
+                                                app ):
   filepath = PathToTestFile( 'general_fallback', 'make_drink.cc' )
   request = {
     'filetype'  : 'cpp',

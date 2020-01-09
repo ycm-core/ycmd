@@ -62,7 +62,7 @@ def ServerManagement_RestartServer_test( app ):
 @patch( 'shutil.rmtree', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
-def ServerManagement_CloseServer_Unclean_test( app, *args ):
+def ServerManagement_CloseServer_Unclean_test( rm_tree, app ):
   StartGoCompleterServerInDirectory( app, PathToTestFile() )
 
   app.post_json(

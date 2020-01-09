@@ -46,18 +46,13 @@ LOGFILE_FORMAT = 'server_{port}_{std}_'
 
 
 class Client_test:
-
-  def __init__( self ):
+  def setUp( self ):
     self._location = None
     self._port = None
-    self._hmac_secret = None
     self._servers = []
     self._logfiles = []
     self._options_dict = DefaultOptions()
     self._popen_handle = None
-
-
-  def setUp( self ):
     self._hmac_secret = os.urandom( HMAC_SECRET_LENGTH )
     self._options_dict[ 'hmac_secret' ] = ToUnicode(
       b64encode( self._hmac_secret ) )
@@ -249,6 +244,7 @@ class Client_test:
     @functools.wraps( test )
     def Wrapper( self, *args ):
       try:
+        self.setUp()
         test( self, *args )
       finally:
         for logfile in self._logfiles:
@@ -256,5 +252,6 @@ class Client_test:
             sys.stdout.write( 'Logfile {0}:\n\n'.format( logfile ) )
             sys.stdout.write( ReadFile( logfile ) )
             sys.stdout.write( '\n' )
+        self.tearDown()
 
     return Wrapper

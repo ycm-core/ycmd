@@ -190,7 +190,7 @@ def GenericLSPCompleter_Hover_RequestFails_test( app ):
       'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
 @patch( 'ycmd.completers.language_server.generic_lsp_completer.'
         'GenericLSPCompleter.GetHoverResponse', return_value = 'asd' )
-def GenericLSPCompleter_Hover_HasResponse_test( app, *args ):
+def GenericLSPCompleter_Hover_HasResponse_test( get_hover, app ):
   request = BuildRequest( filepath = TEST_FILE,
                           filetype = 'foo',
                           line_num = 1,
@@ -294,7 +294,8 @@ def GenericLSPCompleter_SignatureHelp_NoTriggers_test( app ):
       'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
 @patch( 'ycmd.completers.completer.Completer.ShouldUseSignatureHelpNow',
         return_value = True )
-def GenericLSPCompleter_SignatureHelp_NotASigHelpProvider_test( app, *args ):
+def GenericLSPCompleter_SignatureHelp_NotASigHelpProvider_test( should_use_sig,
+                                                                app ):
   test_file = PathToTestFile(
       'generic_server', 'foo', 'bar', 'baz', 'test_file' )
   request = BuildRequest( filepath = test_file,

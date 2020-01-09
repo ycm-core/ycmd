@@ -17,6 +17,7 @@
 
 import contextlib
 import os
+import pytest
 from hamcrest import ( assert_that,
                        calling,
                        contains,
@@ -758,7 +759,7 @@ def RemoveUnusedFlags_RemoveFilename_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
   assert_that( expected,
                equal_to( flags.RemoveUnusedFlags(
                  expected[ :1 ] + to_remove + expected[ -1: ],
@@ -784,7 +785,7 @@ def RemoveUnusedFlags_RemoveFlagWithoutPrecedingDashFlag_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
 
 @WindowsOnly
@@ -806,7 +807,7 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
   # clang-cl and --driver-mode=cl
   expected = [ 'clang-cl.exe', '-foo', '--driver-mode=cl', '-xc++', '-bar',
@@ -818,14 +819,14 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                equal_to( flags.RemoveUnusedFlags(
                  expected + to_remove,
                  filename,
-                 ShouldAllowWinStyleFlags( expected + to_remove) ) ) )
+                 ShouldAllowWinStyleFlags( expected + to_remove ) ) ) )
   assert_that( expected,
                equal_to( flags.RemoveUnusedFlags(
                  expected[ :1 ] + to_remove + expected[ 1: ],
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
   # clang-cl only
   expected = [ 'clang-cl.exe', '-foo', '-xc++', '-bar',
@@ -844,7 +845,7 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
   # clang-cl and --driver-mode=gcc
   expected = [ 'clang-cl', '-foo', '-xc++', '--driver-mode=gcc',
@@ -863,7 +864,7 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
 
   # cl only with extension
@@ -882,7 +883,7 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
   # cl path with Windows separators
   expected = [ 'path\\to\\cl', '-foo', '-xc++', '/I', 'path\\to\\include\\dir' ]
@@ -900,7 +901,7 @@ def RemoveUnusedFlags_RemoveStrayFilenames_CLDriver_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
 
 
@@ -927,7 +928,7 @@ def RemoveUnusedFlags_MultipleDriverModeFlagsWindows_test():
                  filename,
                  ShouldAllowWinStyleFlags( expected[ :1 ] +
                                            to_remove +
-                                           expected[ 1: ]) ) ) )
+                                           expected[ 1: ] ) ) ) )
 
   flags_expected = [ '/usr/bin/g++', '--driver-mode=cl', '--driver-mode=gcc' ]
   flags_all = [ '/usr/bin/g++',
@@ -989,37 +990,33 @@ def EnableTypoCorrection_ReciprocalOthers_test():
                equal_to( compile_flags ) )
 
 
-def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test():
-  def tester( flag ):
-    expected = [ 'clang', flag, '/foo/bar', '-isystem/zoo/goo' ]
-
-    assert_that( expected,
-                 equal_to( flags.RemoveUnusedFlags(
-                   expected + to_remove,
-                   filename,
-                   ShouldAllowWinStyleFlags( expected + to_remove ) ) ) )
-    assert_that( expected,
-                 equal_to( flags.RemoveUnusedFlags(
-                   expected[ :1 ] + to_remove + expected[ 1: ],
-                   filename,
-                   ShouldAllowWinStyleFlags( expected[ :1 ] +
-                                           to_remove +
-                                           expected[ 1: ] ) ) ) )
-    assert_that( expected + expected[ 1: ],
-                 equal_to(
-                   flags.RemoveUnusedFlags( expected +
-                                            to_remove +
-                                            expected[ 1: ],
-                   filename,
-                   ShouldAllowWinStyleFlags( expected +
-                                             to_remove +
-                                             expected[ 1: ]) ) ) )
-
+@pytest.mark.parametrize( 'flag', INCLUDE_FLAGS )
+def RemoveUnusedFlags_RemoveFilenameWithoutPrecedingInclude_test( flag ):
   to_remove = [ '/moo/boo' ]
   filename = 'file'
+  expected = [ 'clang', flag, '/foo/bar', '-isystem/zoo/goo' ]
 
-  for flag in INCLUDE_FLAGS:
-    yield tester, flag
+  assert_that( expected,
+               equal_to( flags.RemoveUnusedFlags(
+                 expected + to_remove,
+                 filename,
+                 ShouldAllowWinStyleFlags( expected + to_remove ) ) ) )
+  assert_that( expected,
+               equal_to( flags.RemoveUnusedFlags(
+                 expected[ :1 ] + to_remove + expected[ 1: ],
+                 filename,
+                 ShouldAllowWinStyleFlags( expected[ :1 ] +
+                                         to_remove +
+                                         expected[ 1: ] ) ) ) )
+  assert_that( expected + expected[ 1: ],
+               equal_to(
+                 flags.RemoveUnusedFlags( expected +
+                                          to_remove +
+                                          expected[ 1: ],
+                 filename,
+                 ShouldAllowWinStyleFlags( expected +
+                                           to_remove +
+                                           expected[ 1: ] ) ) ) )
 
 
 def RemoveXclangFlags_test():
@@ -1073,24 +1070,20 @@ def _AddLanguageFlagWhenAppropriateTester( compiler, language_flag = [] ):
                                                        expected ) ) ) )
 
 
-def AddLanguageFlagWhenAppropriate_CCompiler_test():
-  compilers = [ 'cc', 'gcc', 'clang', '/usr/bin/cc',
-                '/some/other/path', 'some_command' ]
-
-  for compiler in compilers:
-    yield _AddLanguageFlagWhenAppropriateTester, compiler
+@pytest.mark.parametrize( 'compiler', [ 'cc', 'gcc', 'clang', '/usr/bin/cc',
+                                        '/some/other/path', 'some_command' ] )
+def AddLanguageFlagWhenAppropriate_CCompiler_test( compiler ):
+  _AddLanguageFlagWhenAppropriateTester( compiler )
 
 
-def AddLanguageFlagWhenAppropriate_CppCompiler_test():
-  compilers = [ 'c++', 'g++', 'clang++', '/usr/bin/c++',
+@pytest.mark.parametrize( 'compiler', [ 'c++', 'g++', 'clang++', '/usr/bin/c++',
                 '/some/other/path++', 'some_command++',
                 'c++-5', 'g++-5.1', 'clang++-3.7.3', '/usr/bin/c++-5',
                 'c++-5.11', 'g++-50.1.49', 'clang++-3.12.3', '/usr/bin/c++-10',
                 '/some/other/path++-4.9.3', 'some_command++-5.1',
-                '/some/other/path++-4.9.31', 'some_command++-5.10' ]
-
-  for compiler in compilers:
-    yield _AddLanguageFlagWhenAppropriateTester, compiler, [ '-x', 'c++' ]
+                '/some/other/path++-4.9.31', 'some_command++-5.10' ] )
+def AddLanguageFlagWhenAppropriate_CppCompiler_test( compiler ):
+  _AddLanguageFlagWhenAppropriateTester( compiler, [ '-x', 'c++' ] )
 
 
 def CompilationDatabase_NoDatabase_test():
@@ -1303,8 +1296,7 @@ def _MakeRelativePathsInFlagsAbsoluteTest( test ):
     contains( *test[ 'expect' ] ) )
 
 
-def MakeRelativePathsInFlagsAbsolute_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Already absolute, positional arguments
     {
       'flags':  [ '-isystem', '/test' ],
@@ -1479,14 +1471,12 @@ def MakeRelativePathsInFlagsAbsolute_test():
       'expect': [ '--idirafter=test' ],
       'wd':     '/test',
     },
-  ]
+  ] )
+def MakeRelativePathsInFlagsAbsolute_test( test ):
+  _MakeRelativePathsInFlagsAbsoluteTest( test )
 
-  for test in tests:
-    yield _MakeRelativePathsInFlagsAbsoluteTest, test
 
-
-def MakeRelativePathsInFlagsAbsolute_IgnoreUnknown_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     {
       'flags': [
         'ignored',
@@ -1590,15 +1580,14 @@ def MakeRelativePathsInFlagsAbsolute_IgnoreUnknown_test():
       ],
       'wd': '/test',
     },
-  ]
-
-  for test in tests:
-    yield _MakeRelativePathsInFlagsAbsoluteTest, test
+  ] )
+def MakeRelativePathsInFlagsAbsolute_IgnoreUnknown_test( test ):
+  _MakeRelativePathsInFlagsAbsoluteTest( test )
 
 
 def MakeRelativePathsInFlagsAbsolute_NoWorkingDir_test():
-  yield _MakeRelativePathsInFlagsAbsoluteTest, {
+  _MakeRelativePathsInFlagsAbsoluteTest( {
     'flags': [ 'list', 'of', 'flags', 'not', 'changed', '-Itest' ],
     'expect': [ 'list', 'of', 'flags', 'not', 'changed', '-Itest' ],
     'wd': ''
-  }
+  } )

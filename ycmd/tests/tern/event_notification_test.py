@@ -87,7 +87,8 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
 @IsolatedYcmd
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = False )
-def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
+def EventNotification_OnFileReadyToParse_NoProjectFile_test(
+    global_config_exists, app ):
   # We raise an error if we can't detect a .tern-project file.
   # We only do this on the first OnFileReadyToParse event after a
   # server startup.
@@ -207,7 +208,8 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test( app, *args ):
 @IsolatedYcmd
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = True )
-def EventNotification_OnFileReadyToParse_UseGlobalConfig_test( app, *args ):
+def EventNotification_OnFileReadyToParse_UseGlobalConfig_test(
+    global_config_exists, app ):
   # No working directory is given.
   response = app.post_json( '/event_notification',
                             BuildRequest( filepath = PathToTestFile( '..' ),

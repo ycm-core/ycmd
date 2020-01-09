@@ -44,7 +44,7 @@ def Diagnostics_DoesntWork_test( app ):
 @SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.GetDetailedDiagnostic',
         return_value = BuildDisplayMessageResponse( 'detailed diagnostic' ) )
-def Diagnostics_DoesWork_test( app, *args ):
+def Diagnostics_DoesWork_test( get_detailed_diag, app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     diag_data = BuildRequest( contents = 'foo = 5',
                               filetype = 'dummy_filetype' )

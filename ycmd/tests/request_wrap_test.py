@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
 from hamcrest import ( assert_that, calling, contains, empty, equal_to,
                        has_entry, has_string, raises )
 
@@ -47,8 +48,7 @@ def PrepareJson( contents = '',
   return message
 
 
-def Prefix_test():
-  tests = [
+@pytest.mark.parametrize( 'line,col,prefix', [
     ( 'abc.def', 5, 'abc.' ),
     ( 'abc.def', 6, 'abc.' ),
     ( 'abc.def', 8, 'abc.' ),
@@ -56,17 +56,13 @@ def Prefix_test():
     ( 'abc.', 5, 'abc.' ),
     ( 'abc.', 4, '' ),
     ( '', 1, '' ),
-  ]
-
-  def Test( line, col, prefix ):
-    assert_that( prefix,
-                 equal_to( RequestWrap(
-                   PrepareJson( line_num = 1,
-                                contents = line,
-                                column_num = col ) )[ 'prefix' ] ) )
-
-  for test in tests:
-    yield Test, test[ 0 ], test[ 1 ], test[ 2 ]
+  ] )
+def Prefix_test( line, col, prefix ):
+  assert_that( prefix,
+               equal_to( RequestWrap(
+                 PrepareJson( line_num = 1,
+                              contents = line,
+                              column_num = col ) )[ 'prefix' ] ) )
 
 
 def LineValue_OneLine_test():
@@ -292,7 +288,7 @@ def StartColumn_SetUnicode_test():
   wrap = RequestWrap( PrepareJson( column_num = 14,
                                    contents = '†eß† \'test',
                                    filetype = 'javascript' ) )
-  assert_that( 7, equal_to(  wrap[ 'start_codepoint' ] ) )
+  assert_that( 7, equal_to( wrap[ 'start_codepoint' ] ) )
   assert_that( 12, equal_to( wrap[ 'start_column' ] ) )
   assert_that( wrap[ 'query' ], equal_to( "te" ) )
   assert_that( wrap[ 'prefix' ], equal_to( "†eß† \'" ) )
@@ -324,7 +320,7 @@ def StartCodepoint_SetUnicode_test():
   wrap = RequestWrap( PrepareJson( column_num = 14,
                                    contents = '†eß† \'test',
                                    filetype = 'javascript' ) )
-  assert_that( 7, equal_to(  wrap[ 'start_codepoint' ] ) )
+  assert_that( 7, equal_to( wrap[ 'start_codepoint' ] ) )
   assert_that( 12, equal_to( wrap[ 'start_column' ] ) )
   assert_that( wrap[ 'query' ], equal_to( "te" ) )
   assert_that( wrap[ 'prefix' ], equal_to( "†eß† \'" ) )

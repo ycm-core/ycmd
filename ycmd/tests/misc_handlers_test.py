@@ -145,7 +145,7 @@ def MiscHandlers_IgnoreExtraConfFile_AlwaysJsonResponse_test( app ):
                equal_to( True ) )
 
 
-@SharedYcmd
+@IsolatedYcmd()
 def MiscHandlers_DebugInfo_ExtraConfLoaded_test( app ):
   filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
   app.post_json( '/load_extra_conf_file', { 'filepath': filepath } )
@@ -236,7 +236,7 @@ def MiscHandlers_ReceiveMessages_NotSupportedByCompleter_test( app ):
 @SharedYcmd
 @patch( 'ycmd.completers.completer.Completer.ShouldUseSignatureHelpNow',
         return_value = True )
-def MiscHandlers_SignatureHelp_DefaultEmptyResponse_test( app, *args ):
+def MiscHandlers_SignatureHelp_DefaultEmptyResponse_test( should_use, app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
     response = app.post_json( '/signature_help', request_data ).json
@@ -253,7 +253,7 @@ def MiscHandlers_SignatureHelp_DefaultEmptyResponse_test( app, *args ):
 @SharedYcmd
 @patch( 'ycmd.completers.completer.Completer.ComputeSignatures',
         side_effect = RuntimeError )
-def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( app, *args ):
+def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( compute_sig, app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
     response = app.post_json( '/signature_help', request_data ).json

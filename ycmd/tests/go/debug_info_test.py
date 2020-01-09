@@ -39,10 +39,7 @@ def DebugInfo_test( app ):
       'servers': contains( has_entries( {
         'name': 'gopls',
         'is_running': instance_of( bool ),
-        'executable': contains( instance_of( str ),
-                                instance_of( str ),
-                                instance_of( str ),
-                                instance_of( str ) ),
+        'executable': instance_of( list ),
         'address': None,
         'port': None,
         'pid': instance_of( int ),
@@ -78,10 +75,7 @@ def DebugInfo_ProjectDirectory_test( app ):
       'servers': contains( has_entries( {
         'name': 'gopls',
         'is_running': instance_of( bool ),
-        'executable': contains( instance_of( str ),
-                                instance_of( str ),
-                                instance_of( str ),
-                                instance_of( str ) ),
+        'executable': instance_of( list ),
         'address': None,
         'port': None,
         'pid': instance_of( int ),

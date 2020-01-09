@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
 from unittest.mock import patch
 from hamcrest import ( all_of,
                        assert_that,
@@ -225,7 +226,8 @@ def LanguageServerCompleter_ExtraConf_NonGlobal_test( app ):
                equal_to( completer._project_directory ) )
 
 
-def LanguageServerCompleter_Initialise_Aborted_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_Initialise_Aborted_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest() )
 
@@ -249,7 +251,8 @@ def LanguageServerCompleter_Initialise_Aborted_test():
     assert_that( completer.ServerIsReady(), equal_to( False ) )
 
 
-def LanguageServerCompleter_Initialise_Shutdown_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_Initialise_Shutdown_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest() )
 
@@ -273,7 +276,8 @@ def LanguageServerCompleter_Initialise_Shutdown_test():
     assert_that( completer.ServerIsReady(), equal_to( False ) )
 
 
-def LanguageServerCompleter_GoTo_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GoTo_test( app ):
   if utils.OnWindows():
     filepath = 'C:\\test.test'
     uri = 'file:///c:/test.test'
@@ -345,43 +349,40 @@ def LanguageServerCompleter_GoTo_test():
   ]
 
   for response, goto_handlers, exception, throws in cases:
-    yield Test, response, goto_handlers, exception, throws
+    Test( response, goto_handlers, exception, throws )
 
 
   # All requests return an invalid URI.
   with patch(
     'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
     side_effect = lsp.InvalidUriException ):
-    yield Test, [ {
+    Test( [ {
       'result': {
         'uri': uri,
         'range': {
           'start': { 'line': 0, 'character': 0 },
-          'end': { 'line': 0, 'character': 0 },
-        }
+          'end': { 'line': 0, 'character': 0 } }
       }
-    } ], 'GoTo', LocationMatcher( '', 1, 1 ), False
+    } ], 'GoTo', LocationMatcher( '', 1, 1 ), False )
 
   with patch( 'ycmd.completers.completer_utils.GetFileContents',
               side_effect = IOError ):
-    yield Test, [ {
+    Test( [ {
       'result': {
         'uri': uri,
         'range': {
           'start': { 'line': 0, 'character': 0 },
-          'end': { 'line': 0, 'character': 0 },
-        }
+          'end': { 'line': 0, 'character': 0 } }
       }
-    } ], 'GoToDefinition', LocationMatcher( filepath, 1, 1 ), False
+    } ], 'GoToDefinition', LocationMatcher( filepath, 1, 1 ), False )
 
   # Both requests return the location where the cursor is.
-  yield Test, [ {
+  Test( [ {
     'result': {
       'uri': uri,
       'range': {
         'start': { 'line': 1, 'character': 0 },
-        'end': { 'line': 1, 'character': 4 },
-      }
+        'end': { 'line': 1, 'character': 4 } }
     }
   }, {
     'result': {
@@ -391,16 +392,15 @@ def LanguageServerCompleter_GoTo_test():
         'end': { 'line': 1, 'character': 4 },
       }
     }
-  } ], 'GoTo', LocationMatcher( filepath, 2, 1 ), False
+  } ], 'GoTo', LocationMatcher( filepath, 2, 1 ), False )
 
   # First request returns two locations.
-  yield Test, [ {
+  Test( [ {
     'result': [ {
       'uri': uri,
       'range': {
         'start': { 'line': 0, 'character': 0 },
-        'end': { 'line': 0, 'character': 4 },
-      }
+        'end': { 'line': 0, 'character': 4 } }
     }, {
       'uri': uri,
       'range': {
@@ -411,7 +411,7 @@ def LanguageServerCompleter_GoTo_test():
   } ], 'GoTo', contains(
     LocationMatcher( filepath, 1, 1 ),
     LocationMatcher( filepath, 2, 1 )
-  ), False
+  ), False )
 
   # First request returns the location where the cursor is and second request
   # returns a different URI.
@@ -422,13 +422,12 @@ def LanguageServerCompleter_GoTo_test():
     other_filepath = '/another.test'
     other_uri = 'file:/another.test'
 
-  yield Test, [ {
+  Test( [ {
     'result': {
       'uri': uri,
       'range': {
         'start': { 'line': 1, 'character': 0 },
-        'end': { 'line': 1, 'character': 4 },
-      }
+        'end': { 'line': 1, 'character': 4 } }
     }
   }, {
     'result': {
@@ -438,29 +437,27 @@ def LanguageServerCompleter_GoTo_test():
         'end': { 'line': 1, 'character': 4 },
       }
     }
-  } ], 'GoTo', LocationMatcher( other_filepath, 2, 1 ), False
+  } ], 'GoTo', LocationMatcher( other_filepath, 2, 1 ), False )
 
   # First request returns a location before the cursor.
-  yield Test, [ {
+  Test( [ {
     'result': {
       'uri': uri,
       'range': {
         'start': { 'line': 0, 'character': 1 },
-        'end': { 'line': 1, 'character': 1 },
-      }
+        'end': { 'line': 1, 'character': 1 } }
     }
-  } ], 'GoTo', LocationMatcher( filepath, 1, 2 ), False
+  } ], 'GoTo', LocationMatcher( filepath, 1, 2 ), False )
 
   # First request returns a location after the cursor.
-  yield Test, [ {
+  Test( [ {
     'result': {
       'uri': uri,
       'range': {
         'start': { 'line': 1, 'character': 3 },
-        'end': { 'line': 2, 'character': 3 },
-      }
+        'end': { 'line': 2, 'character': 3 } }
     }
-  } ], 'GoTo', LocationMatcher( filepath, 2, 4 ), False
+  } ], 'GoTo', LocationMatcher( filepath, 2, 4 ), False )
 
 
 def GetCompletions_RejectInvalid_test():
@@ -646,7 +643,8 @@ def LanguageServerCompleter_DelayedInitialization_test( app ):
       purge.assert_called_with( 'Test.ycmtest' )
 
 
-def LanguageServerCompleter_ShowMessage_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_ShowMessage_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest() )
   notification = {
@@ -660,7 +658,8 @@ def LanguageServerCompleter_ShowMessage_test():
                has_entries( { 'message': 'this is a test' } ) )
 
 
-def LanguageServerCompleter_GetCompletions_List_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetCompletions_List_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest() )
 
@@ -684,7 +683,8 @@ def LanguageServerCompleter_GetCompletions_List_test():
       )
 
 
-def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest() )
 
@@ -710,7 +710,8 @@ def LanguageServerCompleter_GetCompletions_UnsupportedKinds_test():
       )
 
 
-def LanguageServerCompleter_GetCompletions_NullNoError_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetCompletions_NullNoError_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest() )
   complete_response = { 'result': None }
@@ -732,7 +733,8 @@ def LanguageServerCompleter_GetCompletions_NullNoError_test():
         )
 
 
-def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test( app ):
   completer = MockCompleter()
   completer._resolve_completion_items = False
   complete_response = {
@@ -790,7 +792,8 @@ def LanguageServerCompleter_GetCompletions_CompleteOnStartColumn_test():
       assert_that( response.call_count, equal_to( 0 ) )
 
 
-def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test( app ):
   completer = MockCompleter()
   completer._resolve_completion_items = False
 
@@ -969,8 +972,7 @@ def LanguageServerCompleter_GetCompletions_CompleteOnCurrentColumn_test():
       assert_that( response.call_count, equal_to( 1 ) )
 
 
-def FindOverlapLength_test():
-  tests = [
+@pytest.mark.parametrize( 'line,text,overlap', [
     ( '', '', 0 ),
     ( 'a', 'a', 1 ),
     ( 'a', 'b', 0 ),
@@ -989,16 +991,13 @@ def FindOverlapLength_test():
     ( 'Some CoCo', 'CoCo Beans', 4 ),
     ( 'Have some CoCo and CoCo', 'CoCo and CoCo is here.', 13 ),
     ( 'TEST xyAzA', 'xyAzA test', 5 ),
-  ]
-
-  def Test( line, text, overlap ):
-    assert_that( lsc.FindOverlapLength( line, text ), equal_to( overlap ) )
-
-  for test in tests:
-    yield Test, test[ 0 ], test[ 1 ], test[ 2 ]
+  ] )
+def FindOverlapLength_test( line, text, overlap ):
+  assert_that( lsc.FindOverlapLength( line, text ), equal_to( overlap ) )
 
 
-def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest( line_num = 1,
                                             column_num = 1,
@@ -1030,7 +1029,9 @@ def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test():
         )
 
 
-def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test(
+    app ):
   completer = MockCompleter( { 'max_diagnostics_to_display': 1 } )
   filepath = os.path.realpath( '/foo' )
   uri = lsp.FilePathToUri( filepath )
@@ -1104,7 +1105,9 @@ def LanguageServerCompleter_Diagnostics_MaxDiagnosticsNumberExceeded_test():
     )
 
 
-def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test(
+    app ):
   completer = MockCompleter( { 'max_diagnostics_to_display': 0 } )
   filepath = os.path.realpath( '/foo' )
   uri = lsp.FilePathToUri( filepath )
@@ -1178,7 +1181,8 @@ def LanguageServerCompleter_Diagnostics_NoLimitToNumberOfDiagnostics_test():
     )
 
 
-def LanguageServerCompleter_GetHoverResponse_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_GetHoverResponse_test( app ):
   completer = MockCompleter()
   request_data = RequestWrap( BuildRequest( line_num = 1,
                                             column_num = 1,
@@ -1199,7 +1203,8 @@ def LanguageServerCompleter_GetHoverResponse_test():
                    equal_to( 'test' ) )
 
 
-def LanguageServerCompleter_Diagnostics_Code_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_Diagnostics_Code_test( app ):
   completer = MockCompleter()
   filepath = os.path.realpath( '/foo.cpp' )
   uri = lsp.FilePathToUri( filepath )
@@ -1293,7 +1298,8 @@ def LanguageServerCompleter_Diagnostics_Code_test():
     )
 
 
-def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test( app ):
   completer = MockCompleter()
   filepath = os.path.realpath( '/foo?' )
   uri = lsp.FilePathToUri( filepath )
@@ -1353,7 +1359,8 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test():
     )
 
 
-def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test():
+@IsolatedYcmd()
+def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test( app ):
   completer = MockCompleter()
   filepath = os.path.realpath( '/foo?' )
   uri = lsp.FilePathToUri( filepath )

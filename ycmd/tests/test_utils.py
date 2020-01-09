@@ -29,7 +29,7 @@ from pprint import pformat
 from webtest import TestApp
 import bottle
 import contextlib
-import nose
+import pytest
 import functools
 import os
 import tempfile
@@ -48,10 +48,7 @@ from ycmd.utils import ( GetCurrentDirectory,
                          WaitUntilProcessIsTerminated )
 import ycm_core
 
-try:
-  from unittest import skipIf
-except ImportError:
-  from unittest2 import skipIf
+from unittest import skipIf
 
 TESTS_DIR = os.path.abspath( os.path.dirname( __file__ ) )
 
@@ -364,7 +361,7 @@ def ExpectedFailure( reason, *exception_matchers ):
           raise test_exception
 
         # Failed for the right reason
-        raise nose.SkipTest( reason )
+        pytest.skip( reason )
       else:
         raise AssertionError( 'Test was expected to fail: {0}'.format(
           reason ) )

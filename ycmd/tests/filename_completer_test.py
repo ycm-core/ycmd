@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import pytest
 from hamcrest import assert_that, contains_inanyorder, empty, is_not
 from unittest.mock import patch
 
@@ -38,7 +39,6 @@ DRIVE = os.path.splitdrive( TEST_DIR )[ 0 ]
 PATH_TO_TEST_FILE = os.path.join( DATA_DIR, 'test.cpp' )
 
 
-@IsolatedYcmd( { 'max_num_candidates': 0 } )
 def FilenameCompleter_Completion( app,
                                   contents,
                                   environ,
@@ -62,12 +62,11 @@ def FilenameCompleter_Completion( app,
   assert_that( results, expected_results )
 
 
-def FilenameCompleter_Completion_test():
   # A series of tests represented by tuples whose elements are:
   #  - the line to complete;
   #  - the environment variables;
   #  - the expected completions.
-  tests = (
+@pytest.mark.parametrize( 'contents,env,expected', [
     ( '/',
       {},
       ROOT_FOLDER_COMPLETIONS ),
@@ -192,19 +191,13 @@ def FilenameCompleter_Completion_test():
     ( 'test ' + DATA_DIR + '/../∂',
       {},
       ( ( '∂†∫', '[Dir]' ), ) ),
-  )
+  ] )
+@IsolatedYcmd( { 'max_num_candidates': 0 } )
+def FilenameCompleter_Completion_test( app, contents, env, expected ):
+  FilenameCompleter_Completion( app, contents, env, 'foo', expected )
 
-  for test in tests:
-    yield FilenameCompleter_Completion, test[ 0 ], test[ 1 ], 'foo', test[ 2 ]
 
-
-@WindowsOnly
-def FilenameCompleter_Completion_Windows_test():
-  # A series of tests represented by tuples whose elements are:
-  #  - the line to complete;
-  #  - the environment variables;
-  #  - the expected completions.
-  tests = (
+@pytest.mark.parametrize( 'contents,env,expected', [
     ( '\\',
       {},
       ROOT_FOLDER_COMPLETIONS ),
@@ -268,10 +261,11 @@ def FilenameCompleter_Completion_Windows_test():
     ( 'set x = %YCM_TEST_DIR\\testdata/filename_completer\\inner_dir/test',
       { 'YCM_TEST_DIR': TEST_DIR },
       () ),
-  )
-
-  for test in tests:
-    yield FilenameCompleter_Completion, test[ 0 ], test[ 1 ], 'foo', test[ 2 ]
+  ] )
+@WindowsOnly
+@IsolatedYcmd( { 'max_num_candidates': 0 } )
+def FilenameCompleter_Completion_Windows_test( app, contents, env, expected ):
+  FilenameCompleter_Completion( app, contents, env, 'foo', expected )
 
 
 @IsolatedYcmd( { 'filepath_completion_use_working_dir': 0 } )

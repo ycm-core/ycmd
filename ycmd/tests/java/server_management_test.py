@@ -109,78 +109,72 @@ def ServerManagement_RestartServer_test( app ):
                CompleterProjectDirectoryMatcher( maven_project ) )
 
 
-def ServerManagement_WipeWorkspace_NoConfig_test():
-  with TemporaryTestDir() as test_dir:
-    @IsolatedYcmd( {
-      'java_jdtls_use_clean_workspace': 1,
-      'java_jdtls_workspace_root_path': test_dir
-    } )
-    def ServerManagement_WipeWorkspace_NoConfig( app ):
-      StartJavaCompleterServerInDirectory(
-        app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
+with TemporaryTestDir() as test_dir:
+  @IsolatedYcmd( {
+    'java_jdtls_use_clean_workspace': 1,
+    'java_jdtls_workspace_root_path': test_dir
+  } )
+  def ServerManagement_WipeWorkspace_NoConfig_test( app ):
+    StartJavaCompleterServerInDirectory(
+      app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
-      project = PathToTestFile( 'simple_eclipse_project' )
-      filepath = PathToTestFile( 'simple_eclipse_project',
-                                 'src',
-                                 'com',
-                                 'youcompleteme',
-                                 'Test.java' )
+    project = PathToTestFile( 'simple_eclipse_project' )
+    filepath = PathToTestFile( 'simple_eclipse_project',
+                               'src',
+                               'com',
+                               'youcompleteme',
+                               'Test.java' )
 
-      app.post_json(
-        '/run_completer_command',
-        BuildRequest(
-          filepath = filepath,
-          filetype = 'java',
-          command_arguments = [ 'WipeWorkspace' ],
-        ),
-      )
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filepath = filepath,
+        filetype = 'java',
+        command_arguments = [ 'WipeWorkspace' ],
+      ),
+    )
 
-      WaitUntilCompleterServerReady( app, 'java' )
+    WaitUntilCompleterServerReady( app, 'java' )
 
-      assert_that(
-        app.post_json( '/debug_info',
-                       BuildRequest( filetype = 'java',
-                                     filepath = filepath ) ).json,
-        CompleterProjectDirectoryMatcher( project ) )
-
-  yield ServerManagement_WipeWorkspace_NoConfig
+    assert_that(
+      app.post_json( '/debug_info',
+                     BuildRequest( filetype = 'java',
+                                   filepath = filepath ) ).json,
+      CompleterProjectDirectoryMatcher( project ) )
 
 
-def ServerManagement_WipeWorkspace_WithConfig_test():
-  with TemporaryTestDir() as test_dir:
-    @IsolatedYcmd( {
-      'java_jdtls_use_clean_workspace': 1,
-      'java_jdtls_workspace_root_path': test_dir
-    } )
-    def ServerManagement_WipeWorkspace_WithConfig( app ):
-      StartJavaCompleterServerInDirectory(
-        app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
+with TemporaryTestDir() as test_dir:
+  @IsolatedYcmd( {
+    'java_jdtls_use_clean_workspace': 1,
+    'java_jdtls_workspace_root_path': test_dir
+  } )
+  def ServerManagement_WipeWorkspace_WithConfig_test( app ):
+    StartJavaCompleterServerInDirectory(
+      app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
-      project = PathToTestFile( 'simple_eclipse_project' )
-      filepath = PathToTestFile( 'simple_eclipse_project',
-                                 'src',
-                                 'com',
-                                 'youcompleteme',
-                                 'Test.java' )
+    project = PathToTestFile( 'simple_eclipse_project' )
+    filepath = PathToTestFile( 'simple_eclipse_project',
+                               'src',
+                               'com',
+                               'youcompleteme',
+                               'Test.java' )
 
-      app.post_json(
-        '/run_completer_command',
-        BuildRequest(
-          filepath = filepath,
-          filetype = 'java',
-          command_arguments = [ 'WipeWorkspace', '--with-config' ],
-        ),
-      )
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filepath = filepath,
+        filetype = 'java',
+        command_arguments = [ 'WipeWorkspace', '--with-config' ],
+      ),
+    )
 
-      WaitUntilCompleterServerReady( app, 'java' )
+    WaitUntilCompleterServerReady( app, 'java' )
 
-      assert_that(
-        app.post_json( '/debug_info',
-                       BuildRequest( filetype = 'java',
-                                     filepath = filepath ) ).json,
-        CompleterProjectDirectoryMatcher( project ) )
-
-    yield ServerManagement_WipeWorkspace_WithConfig
+    assert_that(
+      app.post_json( '/debug_info',
+                     BuildRequest( filetype = 'java',
+                                   filepath = filepath ) ).json,
+      CompleterProjectDirectoryMatcher( project ) )
 
 
 @IsolatedYcmd()
@@ -276,26 +270,21 @@ def ServerManagement_OpenProject_RelativePathNoPath_test( app ):
                              'Usage: OpenProject <project directory>' ) )
 
 
-def ServerManagement_ProjectDetection_NoParent_test():
+@IsolatedYcmd()
+def ServerManagement_ProjectDetection_NoParent_test( app ):
   with TemporaryTestDir() as tmp_dir:
-
-    @IsolatedYcmd()
-    def Test( app ):
-      StartJavaCompleterServerInDirectory( app, tmp_dir )
-
-      # Run the debug info to check that we have the correct project dir (cwd)
-      request_data = BuildRequest( filetype = 'java' )
-      assert_that( app.post_json( '/debug_info', request_data ).json,
-                   CompleterProjectDirectoryMatcher( tmp_dir ) )
-
-    yield Test
+    StartJavaCompleterServerInDirectory( app, tmp_dir )
+    # Run the debug info to check that we have the correct project dir (cwd)
+    request_data = BuildRequest( filetype = 'java' )
+    assert_that( app.post_json( '/debug_info', request_data ).json,
+                 CompleterProjectDirectoryMatcher( tmp_dir ) )
 
 
 @IsolatedYcmd()
 @patch( 'shutil.rmtree', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
-def ServerManagement_CloseServer_Unclean_test( app, *args ):
+def ServerManagement_CloseServer_Unclean_test( rm, app ):
   StartJavaCompleterServerInDirectory(
     app, PathToTestFile( 'simple_eclipse_project' ) )
 

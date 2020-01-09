@@ -32,6 +32,7 @@ from hamcrest import ( assert_that,
 from unittest.mock import patch
 from pprint import pprint
 import requests
+import pytest
 import os.path
 
 from ycmd import handlers
@@ -85,11 +86,12 @@ def Subcommands_DefinedSubcommands_test( app ):
   } )
 
 
-def Subcommands_ServerNotInitialized_test():
+@WithRetry
+@SharedYcmd
+def Subcommands_ServerNotInitialized_test( app ):
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
 
-  @SharedYcmd
   @patch.object( completer, '_ServerIsInitialized', return_value = False )
   def Test( app, cmd, *args ):
     request = {
@@ -112,18 +114,18 @@ def Subcommands_ServerNotInitialized_test():
                  ErrorMatcher( RuntimeError,
                                'Server is initializing. Please wait.' ) )
 
-  yield Test, 'FixIt'
-  yield Test, 'Format'
-  yield Test, 'GetDoc'
-  yield Test, 'GetDocImprecise'
-  yield Test, 'GetType'
-  yield Test, 'GetTypeImprecise'
-  yield Test, 'GoTo'
-  yield Test, 'GoToDeclaration'
-  yield Test, 'GoToDefinition'
-  yield Test, 'GoToInclude'
-  yield Test, 'GoToReferences'
-  yield Test, 'RefactorRename'
+  Test( app, 'FixIt' )
+  Test( app, 'Format' )
+  Test( app, 'GetDoc' )
+  Test( app, 'GetDocImprecise' )
+  Test( app, 'GetType' )
+  Test( app, 'GetTypeImprecise' )
+  Test( app, 'GoTo' )
+  Test( app, 'GoToDeclaration' )
+  Test( app, 'GoToDefinition' )
+  Test( app, 'GoToInclude' )
+  Test( app, 'GoToReferences' )
+  Test( app, 'RefactorRename' )
 
 
 @SharedYcmd
@@ -151,7 +153,6 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
   } )
 
 
-@SharedYcmd
 def RunGoToTest_all( app, folder, command, test ):
   filepath = PathToTestFile( folder, test[ 'req' ][ 0 ] )
   common_request = {
@@ -203,8 +204,7 @@ def RunGoToTest_all( app, folder, command, test ):
   } )
 
 
-def Subcommands_GoTo_all_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Local::x -> definition/declaration of x
     { 'req': ( 'goto.cc', 23, 21 ), 'res': ( 'goto.cc', 4, 9 ) },
     # Local::in_line -> definition/declaration of Local::in_line
@@ -228,15 +228,14 @@ def Subcommands_GoTo_all_test():
     # Expected failures
     { 'req': ( 'goto.cc', 13,  1 ), 'res': 'Cannot jump to location' },
     { 'req': ( 'goto.cc', 16,  6 ), 'res': 'Cannot jump to location' },
-  ]
+  ] )
+@pytest.mark.parametrize( 'cmd', [ 'GoToImprecise', 'GoToDefinition', 'GoTo' ] )
+@SharedYcmd
+def Subcommands_GoTo_all_test( app, cmd, test ):
+  RunGoToTest_all( app, '', cmd, test )
 
-  for test in tests:
-    for cmd in [ 'GoToDefinition', 'GoTo', 'GoToImprecise' ]:
-      yield RunGoToTest_all, '', cmd, test
 
-
-def Subcommands_GoToDeclaration_all_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Local::x -> definition/declaration of x
     { 'req': ( 'goto.cc', 23, 21 ), 'res': ( 'goto.cc', 4, 9 ) },
     # Local::in_line -> definition/declaration of Local::in_line
@@ -260,14 +259,13 @@ def Subcommands_GoToDeclaration_all_test():
     # Expected failures
     { 'req': ( 'goto.cc', 13,  1 ), 'res': 'Cannot jump to location' },
     { 'req': ( 'goto.cc', 16,  6 ), 'res': 'Cannot jump to location' },
-  ]
+  ] )
+@SharedYcmd
+def Subcommands_GoToDeclaration_all_test( app, test ):
+  RunGoToTest_all( app, '', 'GoToDeclaration', test )
 
-  for test in tests:
-    yield RunGoToTest_all, '', 'GoToDeclaration', test
 
-
-def Subcommands_GoToInclude_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     { 'req': ( 'main.cpp',  1,  6 ), 'res': ( 'a.hpp',        1, 1 ) },
     { 'req': ( 'main.cpp',  2, 14 ), 'res': ( 'system/a.hpp', 1, 1 ) },
     { 'req': ( 'main.cpp',  3,  1 ), 'res': ( 'quote/b.hpp',  1, 1 ) },
@@ -279,15 +277,14 @@ def Subcommands_GoToInclude_test():
     # Expected failures
     { 'req': ( 'main.cpp',  7,  1 ), 'res': 'Cannot jump to location' },
     { 'req': ( 'main.cpp', 10, 13 ), 'res': 'Cannot jump to location' },
-  ]
+  ] )
+@pytest.mark.parametrize( 'cmd', [ 'GoToImprecise', 'GoToInclude', 'GoTo' ] )
+@SharedYcmd
+def Subcommands_GoToInclude_test( app, cmd, test ):
+  RunGoToTest_all( app, 'test-include', cmd, test )
 
-  for test in tests:
-    for cmd in [ 'GoToInclude', 'GoTo', 'GoToImprecise' ]:
-      yield RunGoToTest_all, 'test-include', cmd, test
 
-
-def Subcommands_GoToReferences_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Function
     { 'req': ( 'goto.cc', 14, 21 ), 'res': [ ( 'goto.cc', 11, 10 ),
                                              ( 'goto.cc', 14, 13 ),
@@ -300,13 +297,12 @@ def Subcommands_GoToReferences_test():
                                              ( 'goto.cc', 25, 15 ) ] },
     # Expected failure
     { 'req': ( 'goto.cc', 27,  8 ), 'res': 'Cannot jump to location' },
-  ]
-
-  for test in tests:
-    yield RunGoToTest_all, '', 'GoToReferences', test
-
-
+  ] )
 @SharedYcmd
+def Subcommands_GoToReferences_test( app, test ):
+  RunGoToTest_all( app, '', 'GoToReferences', test )
+
+
 def RunGetSemanticTest( app,
                         filepath,
                         filetype,
@@ -333,8 +329,7 @@ def RunGetSemanticTest( app,
   RunAfterInitialized( app, test )
 
 
-def Subcommands_GetType_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Basic pod types
     [ { 'line_num': 24, 'column_num':  3 },
       has_entry( 'message', contains_string( 'Foo' ) ),
@@ -470,20 +465,19 @@ def Subcommands_GetType_test():
       has_entry( 'message', matches_regexp(
           r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ),
       requests.codes.ok ],
-  ]
+  ] )
+@pytest.mark.parametrize( 'subcommand', [ 'GetType', 'GetTypeImprecise' ] )
+@SharedYcmd
+def Subcommands_GetType_test( app, subcommand, test ):
+  RunGetSemanticTest( app,
+                      PathToTestFile( 'GetType_Clang_test.cc' ),
+                      'cpp',
+                      test,
+                      [ subcommand ],
+                      test[ 2 ] )
 
-  for subcommand in [ 'GetType', 'GetTypeImprecise' ]:
-    for test in tests:
-      yield ( RunGetSemanticTest,
-              PathToTestFile( 'GetType_Clang_test.cc' ),
-              'cpp',
-              test,
-              [ subcommand ],
-              test[ 2 ] )
 
-
-def Subcommands_GetDoc_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # from local file
     [ { 'line_num': 5, 'column_num': 10 },
       has_entry( 'detailed_info', contains_string( 'docstring' ) ),
@@ -500,18 +494,18 @@ def Subcommands_GetDoc_test():
     [ { 'line_num': 8, 'column_num': 1 },
       ErrorMatcher( RuntimeError, 'No documentation available.' ),
       requests.codes.server_error ]
-  ]
-  for subcommand in [ 'GetDoc', 'GetDocImprecise' ]:
-    for test in tests:
-      yield ( RunGetSemanticTest,
-              PathToTestFile( 'GetDoc_Clang_test.cc' ),
-              'cpp',
-              test,
-              [ subcommand ],
-              test[ 2 ] )
-
-
+  ] )
+@pytest.mark.parametrize( 'subcommand', [ 'GetDoc', 'GetDocImprecise' ] )
 @SharedYcmd
+def Subcommands_GetDoc_test( app, subcommand, test ):
+  RunGetSemanticTest( app,
+                      PathToTestFile( 'GetDoc_Clang_test.cc' ),
+                      'cpp',
+                      test,
+                      [ subcommand ],
+                      test[ 2 ] )
+
+
 def RunFixItTest( app, line, column, lang, file_path, check ):
   contents = ReadFile( file_path )
 
@@ -944,50 +938,45 @@ def FixIt_Check_AutoExpand_Resolved( results ):
   } ) )
 
 
-def Subcommands_FixIt_all_test():
-  cfile = PathToTestFile( 'FixIt_Clang_cpp11.cpp' )
-  mfile = PathToTestFile( 'objc', 'FixIt_Clang_objc.m' )
-  cufile = PathToTestFile( 'cuda', 'fixit_test.cu' )
-  ufile = PathToTestFile( 'unicode.cc' )
-
-  tests = [
-    # L
-    # i   C
-    # n   o
-    # e   l   Lang     File,  Checker
-    [ 16, 0,  'cpp11', cfile, FixIt_Check_cpp11_Ins ],
-    [ 25, 14, 'cpp11', cfile, FixIt_Check_cpp11_InsMultiLine ],
-    [ 35, 7,  'cpp11', cfile, FixIt_Check_cpp11_Del ],
-    [ 40, 6,  'cpp11', cfile, FixIt_Check_cpp11_Repl ],
-    [ 48, 3,  'cpp11', cfile, FixIt_Check_cpp11_DelAdd ],
-
-    [ 5, 3,   'objective-c', mfile, FixIt_Check_objc ],
-    [ 7, 1,   'objective-c', mfile, FixIt_Check_objc_NoFixIt ],
-
-    [ 3, 12,  'cuda', cufile, FixIt_Check_cuda ],
-
+@pytest.mark.parametrize( 'line,column,language,filepath,check', [
+    [ 16, 0,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Ins ],
+    [ 25, 14, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_InsMultiLine ],
+    [ 35, 7,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Del ],
+    [ 40, 6,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Repl ],
+    [ 48, 3,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_DelAdd ],
+    [ 5, 3,   'objective-c', PathToTestFile( 'objc', 'FixIt_Clang_objc.m' ),
+      FixIt_Check_objc ],
+    [ 7, 1,   'objective-c', PathToTestFile( 'objc', 'FixIt_Clang_objc.m' ),
+      FixIt_Check_objc_NoFixIt ],
+    [ 3, 12,  'cuda', PathToTestFile( 'cuda', 'fixit_test.cu' ),
+      FixIt_Check_cuda ],
     # multiple errors on a single line; both with fixits
-    [ 54, 15, 'cpp11', cfile, FixIt_Check_cpp11_MultiFirst ],
-
+    [ 54, 15, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiFirst ],
     # should put closest fix-it first?
-    [ 54, 51, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
-
+    [ 54, 51, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiSecond ],
     # unicode in line for fixit
-    [ 21, 16, 'cpp11', ufile, FixIt_Check_unicode_Ins ],
-
+    [ 21, 16, 'cpp11', PathToTestFile( 'unicode.cc' ),
+      FixIt_Check_unicode_Ins ],
     # FixIt attached to a "child" diagnostic (i.e. a Note)
-    [ 60, 1,  'cpp11', cfile, FixIt_Check_cpp11_Note ],
-
+    [ 60, 1,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Note ],
     # FixIt due to forced spell checking
-    [ 72, 9,  'cpp11', cfile, FixIt_Check_cpp11_SpellCheck ],
-  ]
-
-  for test in tests:
-    yield RunFixItTest, test[ 0 ], test[ 1 ], test[ 2 ], test[ 3 ], test[ 4 ]
+    [ 72, 9,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_SpellCheck ],
+  ] )
+@SharedYcmd
+def Subcommands_FixIt_all_test( app, line, column, language, filepath, check ):
+  RunFixItTest( app, line, column, language, filepath, check )
 
 
 @WithRetry
-@SharedYcmd
 def RunRangedFixItTest( app, rng, expected ):
   contents = ReadFile( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
   args = {
@@ -1014,31 +1003,31 @@ def RunRangedFixItTest( app, rng, expected ):
   expected( response )
 
 
-def Subcommands_FixIt_Ranged_test():
-  expand_auto_range = {
-    'start': { 'line_num': 80, 'column_num': 1 },
-    'end': { 'line_num': 80, 'column_num': 4 },
-  }
-  subexpression_extract_range = {
-    'start': { 'line_num': 84, 'column_num': 14 },
-    'end': { 'line_num': 84, 'column_num': 20 },
-  }
-  macro_expand_range = {
-    'start': { 'line_num': 83, 'column_num': 3 },
-    'end': { 'line_num': 83, 'column_num': 13 },
-  }
-  raw_string_range = {
-    'start': { 'line_num': 80, 'column_num': 19 },
-    'end': { 'line_num': 80, 'column_num': 35 },
-  }
-  tests = [
-    [ expand_auto_range, FixIt_Check_AutoExpand_Resolved ],
-    [ macro_expand_range, FixIt_Check_MacroExpand_Resolved ],
-    [ subexpression_extract_range, FixIt_Check_SubexprExtract_Resolved ],
-    [ raw_string_range, FixIt_Check_RawStringReplace_Resolved ],
-  ]
-  for test in tests:
-    yield RunRangedFixItTest, test[ 0 ], test[ 1 ]
+@pytest.mark.parametrize( 'test', [
+    [ {
+        'start': { 'line_num': 80, 'column_num': 1 },
+        'end': { 'line_num': 80, 'column_num': 4 },
+      },
+      FixIt_Check_AutoExpand_Resolved ],
+    [ {
+        'start': { 'line_num': 83, 'column_num': 3 },
+        'end': { 'line_num': 83, 'column_num': 13 },
+      },
+      FixIt_Check_MacroExpand_Resolved ],
+    [ {
+        'start': { 'line_num': 84, 'column_num': 14 },
+        'end': { 'line_num': 84, 'column_num': 20 },
+      },
+      FixIt_Check_SubexprExtract_Resolved ],
+    [ {
+        'start': { 'line_num': 80, 'column_num': 19 },
+        'end': { 'line_num': 80, 'column_num': 35 },
+      },
+      FixIt_Check_RawStringReplace_Resolved ],
+  ] )
+@SharedYcmd
+def Subcommands_FixIt_Ranged_test( app, test ):
+  RunRangedFixItTest( app, test[ 0 ], test[ 1 ] )
 
 
 @WithRetry

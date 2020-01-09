@@ -156,8 +156,8 @@ def ExtraConfStore_ModuleForSourceFile_GlobalExtraConf_WinEnvVar_test( app ):
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': NO_EXTRA_CONF } )
 @patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
-def ExtraConfStore_CallGlobalExtraConfMethod_NoGlobalExtraConf_test( app,
-                                                                     logger ):
+def ExtraConfStore_CallGlobalExtraConfMethod_NoGlobalExtraConf_test( logger,
+                                                                     app ):
   extra_conf_store._CallGlobalExtraConfMethod( 'SomeMethod' )
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.debug.assert_called_with(
@@ -167,7 +167,7 @@ def ExtraConfStore_CallGlobalExtraConfMethod_NoGlobalExtraConf_test( app,
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
 @patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
-def CallGlobalExtraConfMethod_NoMethodInGlobalExtraConf_test( app, logger ):
+def CallGlobalExtraConfMethod_NoMethodInGlobalExtraConf_test( logger, app ):
   extra_conf_store._CallGlobalExtraConfMethod( 'MissingMethod' )
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.debug.assert_called_with(
@@ -177,7 +177,7 @@ def CallGlobalExtraConfMethod_NoMethodInGlobalExtraConf_test( app, logger ):
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
 @patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
-def CallGlobalExtraConfMethod_NoExceptionFromMethod_test( app, logger ):
+def CallGlobalExtraConfMethod_NoExceptionFromMethod_test( logger, app ):
   extra_conf_store._CallGlobalExtraConfMethod( 'NoException' )
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.info.assert_called_with(
@@ -188,7 +188,7 @@ def CallGlobalExtraConfMethod_NoExceptionFromMethod_test( app, logger ):
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': GLOBAL_EXTRA_CONF } )
 @patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
-def CallGlobalExtraConfMethod_CatchExceptionFromMethod_test( app, logger ):
+def CallGlobalExtraConfMethod_CatchExceptionFromMethod_test( logger, app ):
   extra_conf_store._CallGlobalExtraConfMethod( 'RaiseException' )
   assert_that( logger.method_calls, has_length( 2 ) )
   logger.info.assert_called_with(
@@ -203,7 +203,7 @@ def CallGlobalExtraConfMethod_CatchExceptionFromMethod_test( app, logger ):
 
 @IsolatedYcmd( { 'global_ycm_extra_conf': ERRONEOUS_EXTRA_CONF } )
 @patch( 'ycmd.extra_conf_store.LOGGER', autospec = True )
-def CallGlobalExtraConfMethod_CatchExceptionFromExtraConf_test( app, logger ):
+def CallGlobalExtraConfMethod_CatchExceptionFromExtraConf_test( logger, app ):
   extra_conf_store._CallGlobalExtraConfMethod( 'NoException' )
   assert_that( logger.method_calls, has_length( 1 ) )
   logger.exception.assert_called_with(

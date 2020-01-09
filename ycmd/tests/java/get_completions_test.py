@@ -485,7 +485,7 @@ def GetCompletions_ResolveFailed_test( app ):
     } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',

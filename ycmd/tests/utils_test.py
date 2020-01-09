@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import pytest
 import subprocess
 import tempfile
 from hamcrest import ( assert_that,
@@ -213,9 +214,7 @@ def PathsToAllParentFolders_WindowsPath_test():
   )
 
 
-def PathLeftSplit_test():
-  # Tuples of ( path, expected_result ) for utils.PathLeftSplit.
-  tests = [
+@pytest.mark.parametrize( 'path,expected', [
     ( '',              ( '', '' ) ),
     ( 'foo',           ( 'foo', '' ) ),
     ( 'foo/bar',       ( 'foo', 'bar' ) ),
@@ -226,16 +225,13 @@ def PathLeftSplit_test():
     ( '/foo/bar',      ( '/', 'foo/bar' ) ),
     ( '/foo/bar/xyz',  ( '/', 'foo/bar/xyz' ) ),
     ( '/foo/bar/xyz/', ( '/', 'foo/bar/xyz' ) )
-  ]
-  for test in tests:
-    yield lambda test: assert_that( utils.PathLeftSplit( test[ 0 ] ),
-                                    equal_to( test[ 1 ] ) ), test
+  ] )
+def PathLeftSplit_test( path, expected ):
+  assert_that( utils.PathLeftSplit( path ), equal_to( expected ) )
 
 
 @WindowsOnly
-def PathLeftSplit_Windows_test():
-  # Tuples of ( path, expected_result ) for utils.PathLeftSplit.
-  tests = [
+@pytest.mark.parametrize( 'path,expected', [
     ( 'foo\\bar',            ( 'foo', 'bar' ) ),
     ( 'foo\\bar\\xyz',       ( 'foo', 'bar\\xyz' ) ),
     ( 'foo\\bar\\xyz\\',     ( 'foo', 'bar\\xyz' ) ),
@@ -244,10 +240,9 @@ def PathLeftSplit_Windows_test():
     ( 'C:\\foo\\bar',        ( 'C:\\', 'foo\\bar' ) ),
     ( 'C:\\foo\\bar\\xyz',   ( 'C:\\', 'foo\\bar\\xyz' ) ),
     ( 'C:\\foo\\bar\\xyz\\', ( 'C:\\', 'foo\\bar\\xyz' ) )
-  ]
-  for test in tests:
-    yield lambda test: assert_that( utils.PathLeftSplit( test[ 0 ] ),
-                                    equal_to( test[ 1 ] ) ), test
+  ] )
+def PathLeftSplit_Windows_test( path, expected ):
+  assert_that( utils.PathLeftSplit( path ), equal_to( expected ) )
 
 
 def OpenForStdHandle_PrintDoesntThrowException_test():
@@ -259,9 +254,8 @@ def OpenForStdHandle_PrintDoesntThrowException_test():
     os.remove( temp )
 
 
-def CodepointOffsetToByteOffset_test():
-  # Tuples of ( ( unicode_line_value, codepoint_offset ), expected_result ).
-  tests = [
+# Tuples of ( ( unicode_line_value, codepoint_offset ), expected_result ).
+@pytest.mark.parametrize( 'test,expected', [
     # Simple ascii strings.
     ( ( 'test', 1 ), 1 ),
     ( ( 'test', 4 ), 4 ),
@@ -289,16 +283,14 @@ def CodepointOffsetToByteOffset_test():
 
     # Converts bytes to Unicode.
     ( ( utils.ToBytes( '†est' ), 2 ), 4 )
-  ]
+  ] )
+def CodepointOffsetToByteOffset_test( test, expected ):
+  assert_that( utils.CodepointOffsetToByteOffset( *test ),
+               equal_to( expected ) )
 
-  for test in tests:
-    yield lambda: assert_that( utils.CodepointOffsetToByteOffset( *test[ 0 ] ),
-                               equal_to( test[ 1 ] ) )
 
-
-def ByteOffsetToCodepointOffset_test():
-  # Tuples of ( ( unicode_line_value, byte_offset ), expected_result ).
-  tests = [
+# Tuples of ( ( unicode_line_value, byte_offset ), expected_result ).
+@pytest.mark.parametrize( 'test,expected', [
     # Simple ascii strings.
     ( ( 'test', 1 ), 1 ),
     ( ( 'test', 4 ), 4 ),
@@ -323,16 +315,13 @@ def ByteOffsetToCodepointOffset_test():
     ( ( 'tes†ing', 7 ), 5 ),
     ( ( 'tes†ing', 9 ), 7 ),
     ( ( 'tes†ing', 10 ), 8 ),
-  ]
+  ] )
+def ByteOffsetToCodepointOffset_test( test, expected ):
+  assert_that( utils.ByteOffsetToCodepointOffset( *test ),
+               equal_to( expected ) )
 
-  for test in tests:
-    yield lambda: assert_that( utils.ByteOffsetToCodepointOffset( *test[ 0 ] ),
-                               equal_to( test[ 1 ] ) )
 
-
-def SplitLines_test():
-  # Tuples of ( input, expected_output ) for utils.SplitLines.
-  tests = [
+@pytest.mark.parametrize( 'lines,expected', [
     ( '', [ '' ] ),
     ( ' ', [ ' ' ] ),
     ( '\n', [ '', '' ] ),
@@ -350,11 +339,9 @@ def SplitLines_test():
     ( '\ntesting', [ '', 'testing' ] ),
     # Do not split lines on \f and \v characters.
     ( '\f\n\v', [ '\f', '\v' ] )
-  ]
-
-  for test in tests:
-    yield lambda: assert_that( utils.SplitLines( test[ 0 ] ),
-                               equal_to( test[ 1 ] ) )
+  ] )
+def SplitLines_test( lines, expected ):
+  assert_that( utils.SplitLines( lines ), expected )
 
 
 def FindExecutable_AbsolutePath_test():
@@ -460,16 +447,13 @@ def ImportAndCheckCore_Unexpected_test():
 
 
 def ImportAndCheckCore_Missing_test():
-  import_errors = [ "No module named 'ycm_core'" ]
-
-  for error in import_errors:
-    yield RunImportAndCheckCoreException, {
-      'exception_message': error,
-      'exit_status': 4,
-      'logged_message': 'ycm_core library not detected; you need to compile it '
-                        'by running the build.py script. See the documentation '
-                        'for more details.'
-    }
+  RunImportAndCheckCoreException( {
+    'exception_message': "No module named 'ycm_core'",
+    'exit_status': 4,
+    'logged_message': 'ycm_core library not detected; you need to compile it '
+                      'by running the build.py script. See the documentation '
+                      'for more details.'
+  } )
 
 
 @patch( 'ycm_core.YcmCoreVersion', side_effect = AttributeError() )

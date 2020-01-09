@@ -478,9 +478,9 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
         'completion_start_column': 3,
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'driver_mode_cl_include_func',
-                                  'void\n"driver_mode_cl_include.h"' ),
+                                  'void' ),
           CompletionEntryMatcher( 'driver_mode_cl_include_int',
-                                  'int\n"driver_mode_cl_include.h"' ),
+                                  'int' ),
         ),
         'errors': empty(),
       } )
