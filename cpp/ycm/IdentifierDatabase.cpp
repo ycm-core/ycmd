@@ -63,10 +63,9 @@ void IdentifierDatabase::ClearCandidatesStoredForFile(
 }
 
 
-void IdentifierDatabase::ResultsForQueryAndType(
+std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   std::string&& query,
   const std::string &filetype,
-  std::vector< Result > &results,
   const size_t max_results ) const {
   FiletypeCandidateMap::const_iterator it;
   {
@@ -74,13 +73,14 @@ void IdentifierDatabase::ResultsForQueryAndType(
     it = filetype_candidate_map_.find( filetype );
 
     if ( it == filetype_candidate_map_.end() ) {
-      return;
+      return {};
     }
   }
   Word query_object( std::move( query ) );
 
   std::unordered_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
+  std::vector< Result > results;
 
   {
     std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
@@ -106,6 +106,7 @@ void IdentifierDatabase::ResultsForQueryAndType(
   }
 
   PartialSort( results, max_results );
+  return results;
 }
 
 

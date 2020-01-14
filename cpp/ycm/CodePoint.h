@@ -124,7 +124,7 @@ public:
 
   inline bool operator< ( const CodePoint &other ) const {
     return combining_class_ < other.combining_class_;
-  };
+  }
 
 private:
   explicit CodePoint( RawCodePoint&& code_point );
@@ -149,9 +149,8 @@ YCM_EXPORT CodePointSequence BreakIntoCodePoints( const std::string &text );
 
 // Thrown when an error occurs while decoding a UTF-8 string.
 struct YCM_EXPORT UnicodeDecodeError : std::runtime_error {
-  explicit UnicodeDecodeError( const char *what_arg )
-    : std::runtime_error( what_arg ) {
-  }
+  using std::runtime_error::runtime_error;
+  const char* what() const noexcept override;
 };
 
 } // namespace YouCompleteMe

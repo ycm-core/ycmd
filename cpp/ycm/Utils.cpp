@@ -32,13 +32,17 @@ std::string ReadUtf8File( const fs::path &filepath ) {
   // in case filepath's file_status is "other".
   // "other" in this case means everything that is not a regular file,
   // directory or a symlink.
+  // For the algorithm check:
+  // https://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
+  std::string contents;
   if ( !fs::is_empty( filepath ) && fs::is_regular_file( filepath ) ) {
-    fs::ifstream file( filepath, std::ios::in | std::ios::binary );
-    std::vector< char > contents( ( std::istreambuf_iterator< char >( file ) ),
-                                  std::istreambuf_iterator< char >() );
-    return std::string( contents.begin(), contents.end() );
+    fs::ifstream file( filepath, std::ios::in | std::ios::binary | std::ios::ate );
+    const size_t size = static_cast< std::string::size_type >( file.tellg() );
+    contents.resize( size );
+    file.seekg( 0, std::ios::beg );
+    file.read( &contents[ 0 ], static_cast< std::streamsize >( size ) );
   }
-  return std::string();
+  return contents;
 }
 
 

@@ -26,8 +26,14 @@ namespace YouCompleteMe {
 
 class Result {
 public:
-  Result();
-  ~Result() = default;
+  Result()
+  : is_subsequence_( false ),
+    first_char_same_in_query_and_text_( false ),
+    query_is_candidate_prefix_( false ),
+    char_match_index_sum_( 0 ),
+    num_wb_matches_( 0 ),
+    candidate_( nullptr ),
+    query_( nullptr ) {}
 
   Result( const Candidate *candidate,
           const Word *query,
@@ -104,21 +110,6 @@ struct ResultAnd {
   }
 
   T extra_object_;
-  Result result_;
-};
-
-template< class T >
-struct ResultAnd<T * > {
-  ResultAnd( const Result &result, const T *extra_object )
-    : extra_object_( extra_object ),
-      result_( result ) {
-  }
-
-  bool operator< ( const ResultAnd &other ) const {
-    return result_ < other.result_;
-  }
-
-  const T *extra_object_;
   Result result_;
 };
 

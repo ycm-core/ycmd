@@ -35,18 +35,18 @@ YCM_EXPORT inline bool IsUppercase( uint8_t ascii_character ) {
 
 // An uppercase ASCII character can be converted to lowercase and vice versa by
 // flipping its third most significant bit.
-YCM_EXPORT inline uint8_t Lowercase( uint8_t ascii_character ) {
+YCM_EXPORT inline char Lowercase( uint8_t ascii_character ) {
   if ( IsUppercase( ascii_character ) ) {
-    return ascii_character ^ 0x20;
+    return static_cast< char >( ascii_character ^ 0x20 );
   }
-  return ascii_character;
+  return static_cast< char >( ascii_character );
 }
 
 
 YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
   std::string result;
-  for ( uint8_t ascii_character : text ) {
-    result.push_back( Lowercase( ascii_character ) );
+  for ( auto ascii_character : text ) {
+    result.push_back( Lowercase( static_cast< uint8_t >( ascii_character ) ) );
   }
   return result;
 }
@@ -111,6 +111,7 @@ template <typename Element>
 void PartialSort( std::vector< Element > &elements,
                   const size_t num_sorted_elements ) {
 
+  using diff = typename std::vector< Element >::iterator::difference_type;
   size_t nb_elements = elements.size();
   size_t max_elements = num_sorted_elements > 0 &&
                         nb_elements >= num_sorted_elements ?
@@ -126,18 +127,19 @@ void PartialSort( std::vector< Element > &elements,
   if ( max_elements <= std::max( static_cast< size_t >( 1024 ),
                                  nb_elements / 64 ) ) {
     std::partial_sort( elements.begin(),
-                       elements.begin() + max_elements,
+                       elements.begin() + static_cast< diff >( max_elements ),
                        elements.end() );
   } else {
     std::nth_element( elements.begin(),
-                      elements.begin() + max_elements,
+                      elements.begin() + static_cast< diff >( max_elements ),
                       elements.end() );
-    std::sort( elements.begin(), elements.begin() + max_elements );
+    std::sort( elements.begin(), elements.begin() + static_cast< diff >( max_elements ) );
   }
 
   // Remove the unsorted elements. Use erase instead of resize as it doesn't
   // require a default constructor on Element.
-  elements.erase( elements.begin() + max_elements, elements.end() );
+  elements.erase( elements.begin() + static_cast< diff >( max_elements ),
+                  elements.end() );
 }
 
 } // namespace YouCompleteMe
