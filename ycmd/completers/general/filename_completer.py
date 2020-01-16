@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2018 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -14,13 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import os
 
@@ -73,7 +66,7 @@ class FilenameCompleter( Completer ):
   """
 
   def __init__( self, user_options ):
-    super( FilenameCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
     if OnWindows():
       self._path_separators = r'/\\'

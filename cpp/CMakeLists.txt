@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -239,23 +239,8 @@ else()
   message( FATAL_ERROR "Your C++ compiler does NOT fully support C++11." )
 endif()
 
-# Note: build.py always explicitly sets this option, so the default used here
-# rarely matters.
-option( USE_PYTHON2 "If on, link to Python 2 instead of 3" ON )
-
-if ( USE_PYTHON2 )
-  find_package( PythonLibs 2.7 REQUIRED )
-
-  if ( NOT PYTHONLIBS_VERSION_STRING VERSION_LESS "3.0.0" )
-    message( FATAL_ERROR
-      "You set USE_PYTHON2 to make CMake find python2 libs only, but CMake "
-      "found python3 libs instead. Either don't set USE_PYTHON2 or install the "
-      "necessary python2 headers & libraries." )
-  endif()
-else()
-  set( Python_ADDITIONAL_VERSIONS 3.9 3.8 3.7 3.6 3.5 )
-  find_package( PythonLibs 3.5 REQUIRED )  # 3.5 is ONLY the mininum
-endif()
+set( Python_ADDITIONAL_VERSIONS 3.9 3.8 3.7 3.6 3.5 )
+find_package( PythonLibs 3.5 REQUIRED )  # 3.5 is ONLY the mininum
 
 #############################################################################
 

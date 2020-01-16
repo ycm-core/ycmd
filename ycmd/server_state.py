@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2018 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,15 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 import threading
-from future.utils import itervalues
 from importlib import import_module
 from ycmd.completers.general.general_completer_store import (
     GeneralCompleterStore )
@@ -40,7 +32,7 @@ def _GetGenericLSPCompleter( user_options, filetype ):
   return None
 
 
-class ServerState( object ):
+class ServerState:
   def __init__( self, user_options ):
     self._user_options = user_options
     self._filetype_completers = {}
@@ -103,7 +95,7 @@ class ServerState( object ):
   def GetLoadedFiletypeCompleters( self ):
     with self._filetype_completers_lock:
       return { completer for completer in
-               itervalues( self._filetype_completers ) if completer }
+               self._filetype_completers.values() if completer }
 
 
   def FiletypeCompletionAvailable( self, filetypes, silent = False ):

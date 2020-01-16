@@ -1,6 +1,6 @@
 # Copyright (C) 2017 Davit Samvelyan davitsamvelyan@gmail.com
 #                    Synopsys.
-#               2018 ycmd contributors
+#               2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,15 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
-from future.utils import iteritems
 
 import os
 import threading
@@ -43,7 +34,7 @@ entry_type is an integer indicating whether the candidate is a
 IncludeEntry = namedtuple( 'IncludeEntry', [ 'name', 'entry_type' ] )
 
 
-class IncludeList( object ):
+class IncludeList:
   """
   Helper class for combining include completion candidates from
   several include paths.
@@ -62,13 +53,13 @@ class IncludeList( object ):
 
   def GetIncludes( self ):
     includes = []
-    for name, include_type in iteritems( self._includes ):
+    for name, include_type in self._includes.items():
       includes.append( responses.BuildCompletionData(
         name, GetPathTypeName( include_type ) ) )
     return includes
 
 
-class IncludeCache( object ):
+class IncludeCache:
   """
   Holds a dictionary representing the include path cache.
   Dictionary keys are the include path directories.

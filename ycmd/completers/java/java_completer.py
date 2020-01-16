@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 ycmd contributors
+# Copyright (C) 2017-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -14,13 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import glob
 import hashlib
@@ -289,7 +282,7 @@ def _WorkspaceDirForProject( workspace_root_path,
 class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def __init__( self, user_options ):
     self._workspace_path = None
-    super( JavaCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._use_clean_workspace = user_options[ CLEAN_WORKSPACE_OPTION ]
@@ -376,7 +369,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
   def ServerIsReady( self ):
     return ( self.ServerIsHealthy() and
              self._received_ready_message.is_set() and
-             super( JavaCompleter, self ).ServerIsReady() )
+             super().ServerIsReady() )
 
 
   def GetProjectDirectory( self, *args, **kwargs ):
@@ -434,7 +427,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
     self._started_message_sent = False
 
-    super( JavaCompleter, self )._Reset()
+    super()._Reset()
 
 
 
@@ -478,7 +471,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         '-data', self._workspace_path,
       ]
 
-    return super( JavaCompleter, self ).StartServer( request_data )
+    return super().StartServer( request_data )
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
@@ -497,8 +490,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     # even if this means the "filtering and sorting" is not 100% ycmd flavor.
     if request_data[ 'force_semantic' ]:
       return request_data[ 'column_codepoint' ]
-    return super( JavaCompleter, self ).GetCodepointForCompletionRequest(
-      request_data )
+    return super().GetCodepointForCompletionRequest( request_data )
 
 
   def HandleNotificationInPollThread( self, notification ):
@@ -512,7 +504,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       elif not self._received_ready_message.is_set():
         self._server_init_status = notification[ 'params' ][ 'message' ]
 
-    super( JavaCompleter, self ).HandleNotificationInPollThread( notification )
+    super().HandleNotificationInPollThread( notification )
 
 
   def ConvertNotificationToMessage( self, request_data, notification ):
@@ -527,9 +519,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         return responses.BuildDisplayMessageResponse(
           'Initializing Java completer: {}'.format( message ) )
 
-    return super( JavaCompleter, self ).ConvertNotificationToMessage(
-      request_data,
-      notification )
+    return super().ConvertNotificationToMessage( request_data, notification )
 
 
   def GetType( self, request_data ):
@@ -632,12 +622,8 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     # https://github.com/eclipse/eclipse.jdt.ls/issues/376
     if command[ 'command' ][ 'command' ] == 'java.apply.workspaceEdit':
       command[ 'edit' ] = command.pop( 'command' )[ 'arguments' ][ 0 ]
-      return super( JavaCompleter, self ).CodeActionLiteralToFixIt(
-        request_data,
-        command )
-    return super( JavaCompleter, self ).CodeActionCommandToFixIt(
-      request_data,
-      command )
+      return super().CodeActionLiteralToFixIt( request_data, command )
+    return super().CodeActionCommandToFixIt( request_data, command )
 
 
   def GetServerName( self ):

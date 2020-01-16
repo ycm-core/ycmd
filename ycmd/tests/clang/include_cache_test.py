@@ -1,5 +1,6 @@
 # Copyright (C) 2017 Davit Samvelyan davitsamvelyan@gmail.com
 #                    Synopsys.
+#               2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,13 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import os
 from time import sleep

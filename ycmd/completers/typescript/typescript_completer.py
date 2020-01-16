@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 ycmd contributors
+# Copyright (C) 2015-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -14,13 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import json
 import logging
@@ -51,7 +44,7 @@ TSSERVER_DIR = os.path.abspath(
 LOGFILE_FORMAT = 'tsserver_'
 
 
-class DeferredResponse( object ):
+class DeferredResponse:
   """
   A deferred that resolves to a response from TSServer.
   """
@@ -138,7 +131,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def __init__( self, user_options ):
-    super( TypeScriptCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
 
     self._logfile = None
 
@@ -203,7 +196,7 @@ class TypeScriptCompleter( Completer ):
       # looking at the source code it seems like this is the way:
       # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
       environ = os.environ.copy()
-      utils.SetEnviron( environ, 'TSS_LOG', tsserver_log )
+      environ[ 'TSS_LOG' ] = tsserver_log
 
       LOGGER.info( 'TSServer log file: %s', self._logfile )
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2019 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,21 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-# Other imports from `future` must be placed after SetUpPythonPath.
-
 import sys
 import os
+
+if sys.version_info[ 0 ] < 3:
+  sys.exit( 8 )
 
 sys.path.insert( 0, os.path.dirname( os.path.abspath( __file__ ) ) )
 from server_utils import SetUpPythonPath
 SetUpPythonPath()
-
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import atexit
 import sys

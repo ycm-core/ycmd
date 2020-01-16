@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 ycmd contributors
+# Copyright (C) 2011-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,13 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 import os
 import ycm_core
 from collections import defaultdict
@@ -35,7 +28,7 @@ SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
 
 class IdentifierCompleter( GeneralCompleter ):
   def __init__( self, user_options ):
-    super( IdentifierCompleter, self ).__init__( user_options )
+    super().__init__( user_options )
     self._completer = ycm_core.IdentifierCompleter()
     self._tags_file_last_mtime = defaultdict( int )
     self._max_candidates = user_options[ 'max_num_identifier_candidates' ]

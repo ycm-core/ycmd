@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2018 ycmd contributors
+# Copyright (C) 2013-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,22 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 # Must not import ycm_core here! Vim imports completer, which imports this file.
 # We don't want ycm_core inside Vim.
 from collections import defaultdict
-from future.utils import iteritems
 from ycmd.utils import ( LOGGER, ToCppStringCompatible, ToUnicode, re, ReadFile,
                          SplitLines )
 
 
-class PreparedTriggers( object ):
+class PreparedTriggers:
   def __init__( self,
                 user_trigger_map = None,
                 filetype_set = None,
@@ -60,7 +52,7 @@ class PreparedTriggers( object ):
                                          user_prepared_triggers )
 
     if self._filetype_set:
-      final_triggers = { k: v for k, v in iteritems( final_triggers )
+      final_triggers = { k: v for k, v in final_triggers.items()
                          if k in self._filetype_set }
 
     self._filetype_to_prepared_triggers = final_triggers
@@ -102,7 +94,7 @@ class PreparedTriggers( object ):
 def _FiletypeTriggerDictFromSpec( trigger_dict_spec ):
   triggers_for_filetype = defaultdict( set )
 
-  for key, triggers in iteritems( trigger_dict_spec ):
+  for key, triggers in trigger_dict_spec.items():
     filetypes = key.split( ',' )
     for filetype in filetypes:
       regexes = [ _PrepareTrigger( x ) for x in triggers ]
@@ -116,7 +108,7 @@ def _FiletypeDictUnion( *args ):
   """Returns a new filetype dict that's a union of the provided two dicts.
   Dict params are supposed to be type defaultdict(set)."""
   def UpdateDict( first, second ):
-    for key, value in iteritems( second ):
+    for key, value in second.items():
       first[ key ].update( value )
 
   final_dict = defaultdict( set )
@@ -186,14 +178,13 @@ def FilterAndSortCandidatesWrap( candidates, sort_property, query,
                                  max_candidates ):
   from ycm_core import FilterAndSortCandidates
 
-  # The c++ interface we use only understands the (*native*) 'str' type (i.e.
-  # not the 'str' type from python-future. If we pass it a 'unicode' or
-  # 'bytes' instance then various things blow up, such as converting to
-  # std::string. Therefore all strings passed into the c++ API must pass through
-  # ToCppStringCompatible (or more strictly all strings which the C++ code
-  # needs to use and convert. In this case, just the insertion text property)
-  # For efficiency, the conversion of the insertion text property is done in the
-  # C++ layer.
+  # The c++ interface we use only understands the 'str' type. If we pass it a
+  # 'unicode' or 'bytes' instance then various things blow up, such as
+  # converting to std::string. Therefore all strings passed into the c++ API
+  # must pass through ToCppStringCompatible (or more strictly all strings which
+  # the C++ code needs to use and convert. In this case, just the insertion
+  # text property) For efficiency, the conversion of the insertion text
+  # property is done in the C++ layer.
   return FilterAndSortCandidates( candidates,
                                   ToCppStringCompatible( sort_property ),
                                   ToCppStringCompatible( query ),

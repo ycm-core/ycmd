@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-
-# Passing an environment variable containing unicode literals to a subprocess
-# on Windows and Python2 raises a TypeError. Since there is no unicode
-# string in this script, we don't import unicode_literals to avoid the issue.
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
+#!/usr/bin/env python3
 
 import argparse
 import contextlib
@@ -30,13 +23,6 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
 
-def GetStandardLibraryIndexInSysPath():
-  for index, path in enumerate( sys.path ):
-    if p.isfile( p.join( path, 'os.py' ) ):
-      return index
-  raise RuntimeError( 'Could not find standard library path in Python path.' )
-
-
 sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
                     p.join( DIR_OF_THIRD_PARTY,
                             'requests_deps',
@@ -45,14 +31,8 @@ sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
                     p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
                     p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
                     p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
-sys.path.insert( GetStandardLibraryIndexInSysPath() + 1,
-                 p.abspath( p.join( DIR_OF_THIRD_PARTY, 'python-future',
-                                    'src' ) ) )
 
 import requests
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-from future.utils import iteritems
 from io import BytesIO
 
 
@@ -291,11 +271,7 @@ def ExtractGZIP( compressed_data, destination ):
 def Extract7Z( llvm_package, archive, destination ):
   # Extract with appropriate tool
   if OnWindows():
-    # The winreg module is named _winreg on Python 2.
-    try:
-      import winreg
-    except ImportError:
-      import _winreg as winreg
+    import winreg
 
     with winreg.OpenKey( winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\7-Zip' ) as key:
       executable = os.path.join( winreg.QueryValueEx( key, "Path" )[ 0 ],
@@ -588,7 +564,7 @@ def Main():
     hashes = {}
     with TemporaryDirectory( args.keep_temp ) as temp_dir:
       license_file_name = DownloadClangLicense( args.version, temp_dir )
-      for os_name, download_data in iteritems( LLVM_DOWNLOAD_DATA ):
+      for os_name, download_data in LLVM_DOWNLOAD_DATA.items():
         BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
                          license_file_name, hashes )
       UpdateClangHeaders( args, temp_dir )
@@ -596,7 +572,7 @@ def Main():
     if not args.output_dir:
       shutil.rmtree( output_dir )
 
-  for bundle_file_name, sha256 in iteritems( hashes ):
+  for bundle_file_name, sha256 in hashes.items():
     print( 'Checksum for {bundle_file_name}: {sha256}'.format(
       bundle_file_name = bundle_file_name,
       sha256 = sha256 ) )

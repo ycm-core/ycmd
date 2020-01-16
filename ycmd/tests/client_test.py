@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 ycmd contributors
+# Copyright (C) 2016-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,16 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
-
 from base64 import b64decode, b64encode
-from future.utils import native
 from hamcrest import assert_that, empty, equal_to, is_in
+from hmac import compare_digest
 from tempfile import NamedTemporaryFile
 import functools
 import json
@@ -34,15 +27,15 @@ import requests
 import subprocess
 import sys
 import time
+from urllib.parse import urljoin, urlparse
 
-from ycmd.hmac_utils import CreateHmac, CreateRequestHmac, SecureBytesEqual
+from ycmd.hmac_utils import CreateHmac, CreateRequestHmac
 from ycmd.tests import PathToTestFile
 from ycmd.tests.test_utils import BuildRequest
 from ycmd.user_options_store import DefaultOptions
 from ycmd.utils import ( CloseStandardStreams, CreateLogfile,
                          GetUnusedLocalhostPort, ReadFile, RemoveIfExists,
-                         SafePopen, SetEnviron, ToBytes, ToUnicode, urljoin,
-                         urlparse )
+                         SafePopen, ToBytes, ToUnicode )
 
 HEADERS = { 'content-type': 'application/json' }
 HMAC_HEADER = 'x-ycm-hmac'
@@ -52,7 +45,7 @@ PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..' )
 LOGFILE_FORMAT = 'server_{port}_{std}_'
 
 
-class Client_test( object ):
+class Client_test:
 
   def __init__( self ):
     self._location = None
@@ -91,7 +84,7 @@ class Client_test( object ):
     # Define environment variable to enable subprocesses coverage. See:
     # http://coverage.readthedocs.org/en/coverage-4.0.3/subprocess.html
     env = os.environ.copy()
-    SetEnviron( env, 'COVERAGE_PROCESS_START', '.coveragerc' )
+    env[ 'COVERAGE_PROCESS_START' ] = '.coveragerc'
 
     ycmd_args = [
       sys.executable,
@@ -221,7 +214,7 @@ class Client_test( object ):
 
 
   def _BuildUri( self, handler ):
-    return native( ToBytes( urljoin( self._location, handler ) ) )
+    return ToBytes( urljoin( self._location, handler ) )
 
 
   def _ExtraHeaders( self, method, request_uri, request_body = None ):
@@ -248,7 +241,7 @@ class Client_test( object ):
   def _ContentHmacValid( self, response ):
     our_hmac = CreateHmac( response.content, self._hmac_secret )
     their_hmac = ToBytes( b64decode( response.headers[ HMAC_HEADER ] ) )
-    return SecureBytesEqual( our_hmac, their_hmac )
+    return compare_digest( our_hmac, their_hmac )
 
 
   @staticmethod

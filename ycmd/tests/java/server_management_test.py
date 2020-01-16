@@ -1,5 +1,4 @@
-# Copyright (C) 2017-2018 ycmd contributors
-# encoding: utf-8
+# Copyright (C) 2017-2020 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,13 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-# Not installing aliases from python-future; it's unreliable and slow.
-from builtins import *  # noqa
 
 import functools
 import os
@@ -39,7 +31,6 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
                                     ErrorMatcher,
                                     MockProcessTerminationTimingOut,
-                                    NoWinPy2,
                                     TemporaryTestDir,
                                     WaitUntilCompleterServerReady )
 from ycmd import utils, handlers
@@ -244,109 +235,6 @@ def ServerManagement_ProjectDetection_MavenParent_Submodule_test( app ):
   request_data = BuildRequest( filetype = 'java' )
   assert_that( app.post_json( '/debug_info', request_data ).json,
                CompleterProjectDirectoryMatcher( project ) )
-
-
-@NoWinPy2
-@TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
-@IsolatedYcmd()
-def ServerManagement_ProjectDetection_GradleParent_test( app ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( 'simple_gradle_project',
-                                                       'src',
-                                                       'main',
-                                                       'java',
-                                                       'com',
-                                                       'test' ) )
-
-  project = PathToTestFile( 'simple_gradle_project' )
-
-  # Run the debug info to check that we have the correct project dir
-  request_data = BuildRequest( filetype = 'java' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               CompleterProjectDirectoryMatcher( project ) )
-
-
-@NoWinPy2
-@TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
-@TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmd()
-def ServerManagement_OpenProject_AbsolutePath_test( app ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( 'simple_gradle_project',
-                                                       'src',
-                                                       'main',
-                                                       'java',
-                                                       'com',
-                                                       'test' ) )
-
-  # Initially, we detect the gradle project...
-  gradle_project = PathToTestFile( 'simple_gradle_project' )
-  maven_project = PathToTestFile( 'simple_maven_project' )
-
-  # Run the debug info to check that we have the correct project dir
-  request_data = BuildRequest( filetype = 'java' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               CompleterProjectDirectoryMatcher( gradle_project ) )
-
-
-  # We then force it to reload the maven project
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'java',
-      command_arguments = [ 'OpenProject', maven_project ],
-    ),
-  )
-
-  # Run the debug info to check that we now have the maven project, without
-  # changing anything else
-  request_data = BuildRequest( filetype = 'java' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               CompleterProjectDirectoryMatcher( maven_project ) )
-
-
-@NoWinPy2
-@TidyJDTProjectFiles( PathToTestFile( 'simple_gradle_project' ) )
-@TidyJDTProjectFiles( PathToTestFile( 'simple_maven_project' ) )
-@IsolatedYcmd()
-def ServerManagement_OpenProject_RelativePath_test( app ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( 'simple_gradle_project',
-                                                       'src',
-                                                       'main',
-                                                       'java',
-                                                       'com',
-                                                       'test' ) )
-
-  # Initially, we detect the gradle project...
-  gradle_project = PathToTestFile( 'simple_gradle_project' )
-  maven_project = PathToTestFile( 'simple_maven_project' )
-
-  # Run the debug info to check that we have the correct project dir
-  request_data = BuildRequest( filetype = 'java' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               CompleterProjectDirectoryMatcher( gradle_project ) )
-
-
-  # We then force it to reload the maven project
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'java',
-      command_arguments = [
-        'OpenProject',
-        os.path.join( '..', 'simple_maven_project' ),
-      ],
-      working_dir = gradle_project,
-    ),
-  )
-
-  # Run the debug info to check that we now have the maven project, without
-  # changing anything else
-  request_data = BuildRequest( filetype = 'java' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               CompleterProjectDirectoryMatcher( maven_project ) )
-
 
 
 @SharedYcmd
