@@ -313,7 +313,7 @@ def Subcommands_Format_Range_Spaces_test( app ):
   } )
 
 
-@SharedYcmd
+@IsolatedYcmd()
 def Subcommands_Format_Range_Tabs_test( app ):
   filepath = PathToTestFile( 'test.ts' )
   RunTest( app, {
@@ -705,9 +705,9 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '\tnonExistingMethod\\(\\) {\r?\n'
-                  '\t\tthrow new Error\\("Method not implemented."\\);\r?\n'
-                  '\t}$',
+                  '    nonExistingMethod\\(\\) {\r?\n'
+                  '        throw new Error\\("Method not implemented."\\);\r?\n'
+                  '    }$',
                 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
@@ -719,7 +719,7 @@ def Subcommands_FixIt_test( app ):
             'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp( '^\r?\n'
-                                '\tnonExistingMethod: any;$' ),
+                                '    nonExistingMethod: any;$' ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),
@@ -730,7 +730,7 @@ def Subcommands_FixIt_test( app ):
             'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp( '^\r?\n'
-                                '\t\\[x: string\\]: any;$' ),
+                                '    \\[x: string\\]: any;$' ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ),
                 LocationMatcher( PathToTestFile( 'test.ts' ), 25, 12 ) )
             ),

@@ -19,6 +19,7 @@ import functools
 import os
 import psutil
 import requests
+import tempfile
 import time
 
 from unittest.mock import patch
@@ -109,72 +110,72 @@ def ServerManagement_RestartServer_test( app ):
                CompleterProjectDirectoryMatcher( maven_project ) )
 
 
-with TemporaryTestDir() as test_dir:
-  @IsolatedYcmd( {
-    'java_jdtls_use_clean_workspace': 1,
-    'java_jdtls_workspace_root_path': test_dir
-  } )
-  def ServerManagement_WipeWorkspace_NoConfig_test( app ):
-    StartJavaCompleterServerInDirectory(
-      app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
+# NOTE: TemporaryTestDir() makes no sense outside of a function.
+@IsolatedYcmd( {
+  'java_jdtls_use_clean_workspace': 1,
+  'java_jdtls_workspace_root_path': tempfile.mkdtemp()
+} )
+def ServerManagement_WipeWorkspace_NoConfig_test( app ):
+  StartJavaCompleterServerInDirectory(
+    app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
-    project = PathToTestFile( 'simple_eclipse_project' )
-    filepath = PathToTestFile( 'simple_eclipse_project',
-                               'src',
-                               'com',
-                               'youcompleteme',
-                               'Test.java' )
+  project = PathToTestFile( 'simple_eclipse_project' )
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
 
-    app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filepath = filepath,
-        filetype = 'java',
-        command_arguments = [ 'WipeWorkspace' ],
-      ),
-    )
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filepath = filepath,
+      filetype = 'java',
+      command_arguments = [ 'WipeWorkspace' ],
+    ),
+  )
 
-    WaitUntilCompleterServerReady( app, 'java' )
+  WaitUntilCompleterServerReady( app, 'java' )
 
-    assert_that(
-      app.post_json( '/debug_info',
-                     BuildRequest( filetype = 'java',
-                                   filepath = filepath ) ).json,
-      CompleterProjectDirectoryMatcher( project ) )
+  assert_that(
+    app.post_json( '/debug_info',
+                   BuildRequest( filetype = 'java',
+                                 filepath = filepath ) ).json,
+    CompleterProjectDirectoryMatcher( project ) )
 
 
-with TemporaryTestDir() as test_dir:
-  @IsolatedYcmd( {
-    'java_jdtls_use_clean_workspace': 1,
-    'java_jdtls_workspace_root_path': test_dir
-  } )
-  def ServerManagement_WipeWorkspace_WithConfig_test( app ):
-    StartJavaCompleterServerInDirectory(
-      app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
+# NOTE: TemporaryTestDir() makes no sense outside of a function.
+@IsolatedYcmd( {
+  'java_jdtls_use_clean_workspace': 1,
+  'java_jdtls_workspace_root_path': tempfile.mkdtemp()
+} )
+def ServerManagement_WipeWorkspace_WithConfig_test( app ):
+  StartJavaCompleterServerInDirectory(
+    app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
-    project = PathToTestFile( 'simple_eclipse_project' )
-    filepath = PathToTestFile( 'simple_eclipse_project',
-                               'src',
-                               'com',
-                               'youcompleteme',
-                               'Test.java' )
+  project = PathToTestFile( 'simple_eclipse_project' )
+  filepath = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'youcompleteme',
+                             'Test.java' )
 
-    app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filepath = filepath,
-        filetype = 'java',
-        command_arguments = [ 'WipeWorkspace', '--with-config' ],
-      ),
-    )
+  app.post_json(
+    '/run_completer_command',
+    BuildRequest(
+      filepath = filepath,
+      filetype = 'java',
+      command_arguments = [ 'WipeWorkspace', '--with-config' ],
+    ),
+  )
 
-    WaitUntilCompleterServerReady( app, 'java' )
+  WaitUntilCompleterServerReady( app, 'java' )
 
-    assert_that(
-      app.post_json( '/debug_info',
-                     BuildRequest( filetype = 'java',
-                                   filepath = filepath ) ).json,
-      CompleterProjectDirectoryMatcher( project ) )
+  assert_that(
+    app.post_json( '/debug_info',
+                   BuildRequest( filetype = 'java',
+                                 filepath = filepath ) ).json,
+    CompleterProjectDirectoryMatcher( project ) )
 
 
 @IsolatedYcmd()

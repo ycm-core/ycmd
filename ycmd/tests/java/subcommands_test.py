@@ -33,10 +33,7 @@ import json
 
 from ycmd.utils import ReadFile
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
-from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
-                              PathToTestFile,
-                              SharedYcmd,
-                              IsolatedYcmd )
+from ycmd.tests.java import PathToTestFile, SharedYcmd, IsolatedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
@@ -53,6 +50,24 @@ from ycmd.completers.language_server.language_server_completer import (
 )
 from ycmd.responses import UnknownExtraConf
 
+TESTLAUNCHER_JAVA = PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestLauncher.java' )
+
+TEST_JAVA = PathToTestFile( 'simple_eclipse_project',
+                            'src',
+                            'com',
+                            'youcompleteme',
+                            'Test.java' )
+
+TSET_JAVA = PathToTestFile( 'simple_eclipse_project',
+                            'src',
+                            'com',
+                            'youcompleteme',
+                            'testing',
+                            'Tset.java' )
 
 
 @WithRetry
@@ -80,9 +95,20 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'WipeWorkspace' ) )
 
 
-@WithRetry
+@pytest.mark.parametrize( 'cmd,arguments', [
+  ( 'GoTo', [] ),
+  ( 'GoToDeclaration', [] ),
+  ( 'GoToDefinition', [] ),
+  ( 'GoToReferences', [] ),
+  ( 'GetType', [] ),
+  ( 'GetDoc', [] ),
+  ( 'FixIt', [] ),
+  ( 'Format', [] ),
+  ( 'OrganizeImports', [] ),
+  ( 'RefactorRename', [ 'test' ] ),
+] )
 @SharedYcmd
-def Subcommands_ServerNotInitialized_test( app ):
+def Subcommands_ServerNotInitialized_test( app, cmd, arguments ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -109,16 +135,7 @@ def Subcommands_ServerNotInitialized_test( app ):
       }
     } )
 
-  Test( app, 'GoTo', [] )
-  Test( app, 'GoToDeclaration', [] )
-  Test( app, 'GoToDefinition', [] )
-  Test( app, 'GoToReferences', [] )
-  Test( app, 'GetType', [] )
-  Test( app, 'GetDoc', [] )
-  Test( app, 'FixIt', [] )
-  Test( app, 'Format', [] )
-  Test( app, 'OrganizeImports', [] )
-  Test( app, 'RefactorRename', [ 'test' ] )
+  Test( app, cmd, arguments )
 
 
 def RunTest( app, test, contents = None ):
@@ -422,20 +439,15 @@ def Subcommands_GetType_Method_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_GetType_Unicode_test( app ):
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-  contents = ReadFile( filepath )
+  contents = ReadFile( TEST_JAVA )
 
   app.post_json( '/event_notification',
-                 BuildRequest( filepath = filepath,
+                 BuildRequest( filepath = TEST_JAVA,
                                filetype = 'java',
                                contents = contents,
                                event_name = 'FileReadyToParse' ) )
 
-  event_data = BuildRequest( filepath = filepath,
+  event_data = BuildRequest( filepath = TEST_JAVA,
                              filetype = 'java',
                              line_num = 7,
                              column_num = 17,
@@ -706,11 +718,6 @@ def Subcommands_RefactorRename_Missing_New_Name_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_Unicode_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Rename works for unicode identifier',
     'request': {
@@ -718,7 +725,7 @@ def Subcommands_RefactorRename_Unicode_test( app ):
       'arguments': [ 'shorter' ],
       'line_num': 7,
       'column_num': 21,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       'response': requests.codes.ok,
@@ -727,8 +734,8 @@ def Subcommands_RefactorRename_Unicode_test( app ):
           'chunks': contains_exactly(
             ChunkMatcher(
               'shorter = "Test";\n    return shorter',
-              LocationMatcher( filepath, 7, 12 ),
-              LocationMatcher( filepath, 8, 25 )
+              LocationMatcher( TEST_JAVA, 7, 12 ),
+              LocationMatcher( TEST_JAVA, 8, 25 )
             ),
           ),
         } ) ),
@@ -1128,36 +1135,30 @@ def Subcommands_FixIt_NoDiagnostics_test( app ):
 
 @SharedYcmd
 def Subcommands_FixIt_Unicode_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   fixits = has_entries( {
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove argument to match 'doUnicødeTes()'",
         'chunks': contains_exactly(
           ChunkMatcher( '',
-                        LocationMatcher( filepath, 13, 24 ),
-                        LocationMatcher( filepath, 13, 29 ) ),
+                        LocationMatcher( TEST_JAVA, 13, 24 ),
+                        LocationMatcher( TEST_JAVA, 13, 29 ) ),
         ),
       } ),
       has_entries( {
         'text': "Change method 'doUnicødeTes()': Add parameter 'String'",
         'chunks': contains_exactly(
           ChunkMatcher( 'String test2',
-                        LocationMatcher( filepath, 6, 31 ),
-                        LocationMatcher( filepath, 6, 31 ) ),
+                        LocationMatcher( TEST_JAVA, 6, 31 ),
+                        LocationMatcher( TEST_JAVA, 6, 31 ) ),
         ),
       } ),
       has_entries( {
         'text': "Create method 'doUnicødeTes(String)'",
         'chunks': contains_exactly(
           ChunkMatcher( 'private void doUnicødeTes(String test2) {\n}\n\n\n',
-                        LocationMatcher( filepath, 20, 3 ),
-                        LocationMatcher( filepath, 20, 3 ) ),
+                        LocationMatcher( TEST_JAVA, 20, 3 ),
+                        LocationMatcher( TEST_JAVA, 20, 3 ) ),
         ),
       } ),
       has_entries( {
@@ -1168,7 +1169,7 @@ def Subcommands_FixIt_Unicode_test( app ):
   } )
 
   RunFixItTest( app, 'FixIts and diagnostics work with unicode strings',
-                filepath, 13, 1, fixits )
+                TEST_JAVA, 13, 1, fixits )
 
 
 @WithRetry
@@ -1244,17 +1245,12 @@ def Subcommands_FixIt_InvalidURI_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_Spaces_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on the whole file '
                    'with tabs composed of 4 spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'options': {
         'tab_size': 4,
         'insert_spaces': True
@@ -1266,65 +1262,65 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
         'fixits': contains_exactly( has_entries( {
           'chunks': contains_exactly(
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath,  3, 20 ),
-                          LocationMatcher( filepath,  4,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  3, 20 ),
+                          LocationMatcher( TEST_JAVA,  4,  3 ) ),
             ChunkMatcher( '\n\n    ',
-                          LocationMatcher( filepath,  4, 22 ),
-                          LocationMatcher( filepath,  6,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  4, 22 ),
+                          LocationMatcher( TEST_JAVA,  6,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath,  6, 34 ),
-                          LocationMatcher( filepath,  7,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  6, 34 ),
+                          LocationMatcher( TEST_JAVA,  7,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath,  7, 35 ),
-                          LocationMatcher( filepath,  8,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  7, 35 ),
+                          LocationMatcher( TEST_JAVA,  8,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath,  8, 25 ),
-                          LocationMatcher( filepath,  8, 26 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 25 ),
+                          LocationMatcher( TEST_JAVA,  8, 26 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath,  8, 27 ),
-                          LocationMatcher( filepath,  9,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 27 ),
+                          LocationMatcher( TEST_JAVA,  9,  3 ) ),
             ChunkMatcher( '\n\n    ',
-                          LocationMatcher( filepath,  9,  4 ),
-                          LocationMatcher( filepath, 11,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  9,  4 ),
+                          LocationMatcher( TEST_JAVA, 11,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 11, 29 ),
-                          LocationMatcher( filepath, 12,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 11, 29 ),
+                          LocationMatcher( TEST_JAVA, 12,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 12, 26 ),
-                          LocationMatcher( filepath, 13,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 12, 26 ),
+                          LocationMatcher( TEST_JAVA, 13,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 24 ),
-                          LocationMatcher( filepath, 13, 25 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 24 ),
+                          LocationMatcher( TEST_JAVA, 13, 25 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 29 ),
-                          LocationMatcher( filepath, 13, 30 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 29 ),
+                          LocationMatcher( TEST_JAVA, 13, 30 ) ),
             ChunkMatcher( '\n\n        ',
-                          LocationMatcher( filepath, 13, 32 ),
-                          LocationMatcher( filepath, 15,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 32 ),
+                          LocationMatcher( TEST_JAVA, 15,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 15, 58 ),
-                          LocationMatcher( filepath, 16,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 15, 58 ),
+                          LocationMatcher( TEST_JAVA, 16,  5 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath, 16, 42 ),
-                          LocationMatcher( filepath, 17,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 16, 42 ),
+                          LocationMatcher( TEST_JAVA, 17,  3 ) ),
             ChunkMatcher( '\n\n    ',
-                          LocationMatcher( filepath, 17,  4 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 17,  4 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1335,17 +1331,12 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_Tabs_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on the whole file '
                    'with tabs composed of 2 spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'options': {
         'tab_size': 4,
         'insert_spaces': False
@@ -1357,65 +1348,65 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
         'fixits': contains_exactly( has_entries( {
           'chunks': contains_exactly(
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath,  3, 20 ),
-                          LocationMatcher( filepath,  4,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  3, 20 ),
+                          LocationMatcher( TEST_JAVA,  4,  3 ) ),
             ChunkMatcher( '\n\n\t',
-                          LocationMatcher( filepath,  4, 22 ),
-                          LocationMatcher( filepath,  6,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  4, 22 ),
+                          LocationMatcher( TEST_JAVA,  6,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath,  6, 34 ),
-                          LocationMatcher( filepath,  7,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  6, 34 ),
+                          LocationMatcher( TEST_JAVA,  7,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath,  7, 35 ),
-                          LocationMatcher( filepath,  8,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  7, 35 ),
+                          LocationMatcher( TEST_JAVA,  8,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath,  8, 25 ),
-                          LocationMatcher( filepath,  8, 26 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 25 ),
+                          LocationMatcher( TEST_JAVA,  8, 26 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath,  8, 27 ),
-                          LocationMatcher( filepath,  9,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 27 ),
+                          LocationMatcher( TEST_JAVA,  9,  3 ) ),
             ChunkMatcher( '\n\n\t',
-                          LocationMatcher( filepath,  9,  4 ),
-                          LocationMatcher( filepath, 11,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  9,  4 ),
+                          LocationMatcher( TEST_JAVA, 11,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 11, 29 ),
-                          LocationMatcher( filepath, 12,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 11, 29 ),
+                          LocationMatcher( TEST_JAVA, 12,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 12, 26 ),
-                          LocationMatcher( filepath, 13,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 12, 26 ),
+                          LocationMatcher( TEST_JAVA, 13,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 24 ),
-                          LocationMatcher( filepath, 13, 25 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 24 ),
+                          LocationMatcher( TEST_JAVA, 13, 25 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 29 ),
-                          LocationMatcher( filepath, 13, 30 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 29 ),
+                          LocationMatcher( TEST_JAVA, 13, 30 ) ),
             ChunkMatcher( '\n\n\t\t',
-                          LocationMatcher( filepath, 13, 32 ),
-                          LocationMatcher( filepath, 15,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 32 ),
+                          LocationMatcher( TEST_JAVA, 15,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 15, 58 ),
-                          LocationMatcher( filepath, 16,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 15, 58 ),
+                          LocationMatcher( TEST_JAVA, 16,  5 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath, 16, 42 ),
-                          LocationMatcher( filepath, 17,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 16, 42 ),
+                          LocationMatcher( TEST_JAVA, 17,  3 ) ),
             ChunkMatcher( '\n\n\t',
-                          LocationMatcher( filepath, 17,  4 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 17,  4 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1426,17 +1417,12 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_Range_Spaces_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on some part of the file '
                    'with tabs composed of 4 spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'range': {
         'start': {
           'line_num': 20,
@@ -1458,23 +1444,23 @@ def Subcommands_Format_Range_Spaces_test( app ):
         'fixits': contains_exactly( has_entries( {
           'chunks': contains_exactly(
             ChunkMatcher( '    ',
-                          LocationMatcher( filepath, 20,  1 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 20,  1 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1485,17 +1471,12 @@ def Subcommands_Format_Range_Spaces_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_Range_Tabs_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on some part of the file '
                    'with tabs instead of spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'range': {
         'start': {
           'line_num': 20,
@@ -1517,23 +1498,23 @@ def Subcommands_Format_Range_Tabs_test( app ):
         'fixits': contains_exactly( has_entries( {
           'chunks': contains_exactly(
             ChunkMatcher( '\t',
-                          LocationMatcher( filepath, 20,  1 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 20,  1 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1561,144 +1542,53 @@ def RunGoToTest( app, description, filepath, line, col, cmd, goto_response ):
 
 @pytest.mark.parametrize( 'test', [
     # Member function local variable
-    { 'request': { 'line': 28, 'col': 5,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 28, 'col': 5, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 27, 'column_num': 18,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for member local variable' },
     # Member variable
-    { 'request': { 'line': 22, 'col': 7,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 22, 'col': 7, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 8, 'column_num': 16,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for member variable' },
     # Method
-    { 'request': { 'line': 28, 'col': 7,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 28, 'col': 7, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 21, 'column_num': 16,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for method' },
     # Constructor
-    { 'request': { 'line': 38, 'col': 26,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 38, 'col': 26, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 10, 'column_num': 10,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for jumping to constructor' },
     # Jump to self - main()
-    { 'request': { 'line': 26, 'col': 22,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 26, 'col': 22, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 26, 'column_num': 22,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for jumping to the same position' },
     # Static method
-    { 'request': { 'line': 37, 'col': 11,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 37, 'col': 11, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 13, 'column_num': 21,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for static method' },
     # Static variable
-    { 'request': { 'line': 14, 'col': 11,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 14, 'col': 11, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 12, 'column_num': 21,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for static variable' },
     # Argument variable
-    { 'request': { 'line': 23, 'col': 5,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 23, 'col': 5, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 21, 'column_num': 32,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for argument variable' },
     # Class
-    { 'request': { 'line': 27, 'col': 10,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 27, 'col': 10, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 6, 'column_num': 7,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for jumping to class declaration' },
     # Unicode
-    { 'request': { 'line': 8, 'col': 12,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                     'src',
-                                     'com',
-                                     'youcompleteme',
-                                     'Test.java' ) },
-      'response': { 'line_num': 7, 'column_num': 12,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'youcompleteme',
-                                                'Test.java' ) },
+    { 'request': { 'line': 8, 'col': 12, 'filepath': TEST_JAVA },
+      'response': { 'line_num': 7, 'column_num': 12, 'filepath': TEST_JAVA },
       'description': 'GoTo works for unicode identifiers' }
   ] )
 @pytest.mark.parametrize( 'command', [ 'GoTo',
@@ -1717,33 +1607,13 @@ def Subcommands_GoTo_test( app, command, test ):
 
 @pytest.mark.parametrize( 'test', [
     # Member function local variable
-    { 'request': { 'line': 28, 'col': 5,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 28, 'col': 5, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 6, 'column_num': 7,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoToType works for member local variable' },
     # Member variable
-    { 'request': { 'line': 22, 'col': 7,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
-      'response': { 'line_num': 6, 'column_num': 14,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'youcompleteme',
-                                                'testing',
-                                                'Tset.java' ) },
+    { 'request': { 'line': 22, 'col': 7, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 6, 'column_num': 14, 'filepath': TSET_JAVA },
       'description': 'GoToType works for member variable' },
   ] )
 @SharedYcmd
@@ -1759,33 +1629,15 @@ def Subcommands_GoToType_test( app, test ):
 
 @pytest.mark.parametrize( 'test', [
     # Interface
-    { 'request': { 'line': 17, 'col': 25,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+    { 'request': { 'line': 17, 'col': 25, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 28, 'column_num': 16,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                               'src',
-                                               'com',
-                                               'test',
-                                               'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoToImplementation on interface '
                      'jumps to its implementation' },
     # Interface reference
-    { 'request': { 'line': 21, 'col': 30,
-                   'filepath': PathToTestFile( 'simple_eclipse_project',
-                                              'src',
-                                              'com',
-                                              'test',
-                                              'TestLauncher.java' ) },
+    { 'request': { 'line': 21, 'col': 30, 'filepath': TESTLAUNCHER_JAVA },
       'response': { 'line_num': 28, 'column_num': 16,
-                    'filepath': PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) },
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoToImplementation on interface reference '
                      'jumpts to its implementation' },
   ] )
@@ -1803,17 +1655,12 @@ def Subcommands_GoToImplementation_test( app, test ):
 @WithRetry
 @SharedYcmd
 def Subcommands_OrganizeImports_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestLauncher.java' )
   RunTest( app, {
     'description': 'Imports are resolved and sorted, '
                    'and unused ones are removed',
     'request': {
       'command': 'OrganizeImports',
-      'filepath': filepath
+      'filepath': TESTLAUNCHER_JAVA
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1822,8 +1669,8 @@ def Subcommands_OrganizeImports_test( app ):
           'chunks': contains_exactly(
             ChunkMatcher( 'import com.youcompleteme.Test;\n'
                           'import com.youcompleteme.testing.Tset;',
-                          LocationMatcher( filepath, 3,  1 ),
-                          LocationMatcher( filepath, 4, 54 ) ),
+                          LocationMatcher( TESTLAUNCHER_JAVA, 3,  1 ),
+                          LocationMatcher( TESTLAUNCHER_JAVA, 4, 54 ) ),
           )
         } ) )
       } )
@@ -1837,12 +1684,6 @@ def Subcommands_OrganizeImports_test( app ):
         'REQUEST_TIMEOUT_COMMAND',
         5 )
 def Subcommands_RequestTimeout_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   with patch.object(
     handlers._server_state.GetFiletypeCompleter( [ 'java' ] ).GetConnection(),
     'WriteData' ):
@@ -1852,7 +1693,7 @@ def Subcommands_RequestTimeout_test( app ):
         'command': 'FixIt',
         'line_num': 1,
         'column_num': 1,
-        'filepath': filepath,
+        'filepath': TEST_JAVA,
       },
       'expect': {
         'response': requests.codes.internal_server_error,
@@ -1864,12 +1705,6 @@ def Subcommands_RequestTimeout_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_RequestFailed_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   connection = handlers._server_state.GetFiletypeCompleter(
     [ 'java' ] ).GetConnection()
 
@@ -1889,7 +1724,7 @@ def Subcommands_RequestFailed_test( app ):
         'command': 'FixIt',
         'line_num': 1,
         'column_num': 1,
-        'filepath': filepath,
+        'filepath': TEST_JAVA,
       },
       'expect': {
         'response': requests.codes.internal_server_error,
@@ -1901,19 +1736,13 @@ def Subcommands_RequestFailed_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_IndexOutOfRange_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Request error handles the error',
     'request': {
       'command': 'FixIt',
       'line_num': 99,
       'column_num': 99,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1927,19 +1756,13 @@ def Subcommands_IndexOutOfRange_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_DifferentFileTypesUpdate_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Request error handles the error',
     'request': {
       'command': 'FixIt',
       'line_num': 99,
       'column_num': 99,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'file_data': {
         '!/bin/sh': {
           'filetypes': [],
@@ -1949,17 +1772,9 @@ def Subcommands_DifferentFileTypesUpdate_test( app ):
           'filetypes': [ 'c' ],
           'contents': 'this should be ignored by the completer',
         },
-        PathToTestFile( 'simple_eclipse_project',
-                        'src',
-                        'com',
-                        'test',
-                        'TestLauncher.java' ): {
+        TESTLAUNCHER_JAVA: {
           'filetypes': [ 'some', 'java', 'junk', 'also' ],
-          'contents': ReadFile( PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) ),
+          'contents': ReadFile( TESTLAUNCHER_JAVA ),
         },
         '!/usr/bin/sh': {
           'filetypes': [ 'java' ],
@@ -2139,19 +1954,13 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
 
 @SharedYcmd
 def Subcommands_ExecuteCommand_NoArguments_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Running a command without args fails',
     'request': {
       'command': 'ExecuteCommand',
       'line_num': 1,
       'column_num': 1,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       'response': requests.codes.internal_server_error,
@@ -2163,12 +1972,6 @@ def Subcommands_ExecuteCommand_NoArguments_test( app ):
 
 @SharedYcmd
 def Subcommands_ExecuteCommand_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Running a command does what it says it does',
     'request': {
@@ -2176,7 +1979,7 @@ def Subcommands_ExecuteCommand_test( app ):
       'arguments': [ 'java.edit.organizeImports' ],
       'line_num': 1,
       'column_num': 1,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       # We dont specify the path for import organize, and jdt.ls returns shrug

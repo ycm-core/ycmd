@@ -34,12 +34,14 @@ shared_filepaths = []
 shared_log_indexes = {}
 
 
-@pytest.fixture( scope = 'module', autouse = True )
-def setUpAndTearDown():
+def setup_module():
   global shared_app, shared_filepaths
   shared_app = SetUpApp()
-  yield
-  print( shared_filepaths )
+
+
+def teardown_module():
+  global shared_app, shared_filepaths
+
   for filepath in shared_filepaths:
     StopCompleterServer( shared_app, 'cs', filepath )
 

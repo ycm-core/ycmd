@@ -221,68 +221,6 @@ def Subcommands_RefactorRename_Basic_test( app ):
         ) } ) ) } ) )
 
 
-@SharedYcmd
-def Subcommands_RefactorRename_MultiFile_test( app ):
-  continuous_test = PathToTestFile( 'testy', 'ContinuousTest.cs' )
-  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  get_type_test = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  goto_test = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  import_test = PathToTestFile( 'testy', 'ImportTest.cs' )
-  program = PathToTestFile( 'testy', 'Program.cs' )
-  # get_doc_test = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-  unicode_test = PathToTestFile( 'testy', 'Unicode.cs' )
-  with WrapOmniSharpServer( app, continuous_test ):
-    contents = ReadFile( continuous_test )
-
-    request = BuildRequest( completer_target = 'filetype_default',
-                            command_arguments = [ 'RefactorRename', 'x' ],
-                            line_num = 3,
-                            column_num = 11,
-                            contents = contents,
-                            filetype = 'cs',
-                            filepath = continuous_test )
-
-    response = app.post_json( '/run_completer_command', request ).json
-    print( 'response = ', response )
-    assert_that( response, has_entries( {
-      'fixits': contains_exactly( has_entries( {
-        'location': LocationMatcher( continuous_test, 3, 11 ),
-        'chunks': contains_exactly(
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) )
-          } ),
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) )
-          } ),
-          # has_entries( {
-          #   'replacement_text': 'x',
-          #   'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) )
-          # } ),
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) )
-          } ),
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) )
-          } ),
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) )
-          } ),
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) )
-          } ),
-          has_entries( {
-            'replacement_text': 'x',
-            'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) )
-          } ),
-        ) } ) ) } ) )
-
-
 @WithRetry
 @IsolatedYcmd()
 def Subcommands_GoTo_Basic_test( app ):
@@ -919,4 +857,66 @@ def Subcommands_RangeFormat_Works_test( app ):
             LocationMatcher( filepath, 8, 1 ),
             LocationMatcher( filepath, 9, 4 )
           ),
+        ) } ) ) } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_MultiFile_test( app ):
+  continuous_test = PathToTestFile( 'testy', 'ContinuousTest.cs' )
+  fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
+  get_type_test = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
+  goto_test = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  import_test = PathToTestFile( 'testy', 'ImportTest.cs' )
+  program = PathToTestFile( 'testy', 'Program.cs' )
+  get_doc_test = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+  unicode_test = PathToTestFile( 'testy', 'Unicode.cs' )
+  with WrapOmniSharpServer( app, continuous_test ):
+    contents = ReadFile( continuous_test )
+
+    request = BuildRequest( completer_target = 'filetype_default',
+                            command_arguments = [ 'RefactorRename', 'x' ],
+                            line_num = 3,
+                            column_num = 11,
+                            contents = contents,
+                            filetype = 'cs',
+                            filepath = continuous_test )
+
+    response = app.post_json( '/run_completer_command', request ).json
+    print( 'response = ', response )
+    assert_that( response, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'location': LocationMatcher( continuous_test, 3, 11 ),
+        'chunks': contains_exactly(
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( continuous_test, ( 3, 11 ), ( 3, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( fixit_test, ( 1, 11 ), ( 1, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( get_doc_test, ( 4, 11 ), ( 4, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( get_type_test, ( 2, 11 ), ( 2, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( goto_test, ( 4, 11 ), ( 4, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( import_test, ( 3, 11 ), ( 3, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( program, ( 3, 11 ), ( 3, 16 ) )
+          } ),
+          has_entries( {
+            'replacement_text': 'x',
+            'range': RangeMatcher( unicode_test, ( 4, 11 ), ( 4, 16 ) )
+          } ),
         ) } ) ) } ) )

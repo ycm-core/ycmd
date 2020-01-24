@@ -17,6 +17,7 @@
 
 import os
 import pytest
+import shutil
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
                                     IgnoreExtraConfOutsideTestsFolder,
@@ -29,8 +30,9 @@ SERVER_STARTUP_TIMEOUT = 120 # seconds
 
 
 DEFAULT_PROJECT_DIR = 'simple_eclipse_project'
-@pytest.fixture( scope = 'module', autouse = True )
-def setUpAndTearDown():
+
+
+def setup_module():
   """Initializes the ycmd server as a WebTest application that will be shared
   by all tests using the SharedYcmd decorator in this package. Additional
   configuration that is common to these tests, like starting a semantic
@@ -40,7 +42,10 @@ def setUpAndTearDown():
   with IgnoreExtraConfOutsideTestsFolder():
     StartJavaCompleterServerInDirectory( shared_app,
                                          PathToTestFile( DEFAULT_PROJECT_DIR ) )
-    yield
+
+
+def teardown_module():
+  global shared_app
   StopCompleterServer( shared_app, 'java' )
 
 
@@ -58,11 +63,15 @@ def app( request ):
   which = request.param[ 0 ]
   assert which == 'isolated' or which == 'shared'
   if which == 'isolated':
-    with IsolatedApp( request.param[ 1 ] ) as app:
+    custom_options = request.param[ 1 ]
+    wipe_ws_dir = custom_options.get( 'java_jdtls_workspace_root_path', None )
+    with IsolatedApp( custom_options ) as app:
       try:
         yield app
       finally:
         StopCompleterServer( app, 'java' )
+        if wipe_ws_dir:
+          shutil.rmtree( wipe_ws_dir )
   else:
     global shared_app
     ClearCompletionsCache()

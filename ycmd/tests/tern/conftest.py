@@ -23,8 +23,7 @@ from ycmd.tests.test_utils import ( BuildRequest, ClearCompletionsCache,
 shared_app = None
 
 
-@pytest.fixture( scope = 'module', autouse = True )
-def setUpAndTearDown():
+def setup_module():
   """Initializes the ycmd server as a WebTest application that will be shared
   by all tests using the SharedYcmd decorator in this package. Additional
   configuration that is common to these tests, like starting a semantic
@@ -32,7 +31,10 @@ def setUpAndTearDown():
   global shared_app
   shared_app = SetUpApp()
   StartJavaScriptCompleterServerInDirectory( shared_app, PathToTestFile() )
-  yield
+
+
+def teardown_module():
+  global shared_app
   StopCompleterServer( shared_app, 'java' )
 
 

@@ -88,7 +88,21 @@ def Subcommands_DefinedSubcommands_test( app ):
 
 @WithRetry
 @SharedYcmd
-def Subcommands_ServerNotInitialized_test( app ):
+@pytest.mark.parametrize( 'cmd', [
+  'FixIt',
+  'Format',
+  'GetDoc',
+  'GetDocImprecise',
+  'GetType',
+  'GetTypeImprecise',
+  'GoTo',
+  'GoToDeclaration',
+  'GoToDefinition',
+  'GoToInclude',
+  'GoToReferences',
+  'RefactorRename',
+] )
+def Subcommands_ServerNotInitialized_test( app, cmd ):
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
 
@@ -114,18 +128,7 @@ def Subcommands_ServerNotInitialized_test( app ):
                  ErrorMatcher( RuntimeError,
                                'Server is initializing. Please wait.' ) )
 
-  Test( app, 'FixIt' )
-  Test( app, 'Format' )
-  Test( app, 'GetDoc' )
-  Test( app, 'GetDocImprecise' )
-  Test( app, 'GetType' )
-  Test( app, 'GetTypeImprecise' )
-  Test( app, 'GoTo' )
-  Test( app, 'GoToDeclaration' )
-  Test( app, 'GoToDefinition' )
-  Test( app, 'GoToInclude' )
-  Test( app, 'GoToReferences' )
-  Test( app, 'RefactorRename' )
+  Test( app, cmd )
 
 
 @SharedYcmd

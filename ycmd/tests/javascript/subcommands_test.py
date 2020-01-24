@@ -25,7 +25,7 @@ import requests
 import pprint
 import pytest
 
-from ycmd.tests.javascript import PathToTestFile, SharedYcmd
+from ycmd.tests.javascript import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
@@ -77,7 +77,7 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
+@IsolatedYcmd()
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'javascript' )
 
@@ -291,7 +291,7 @@ def Subcommands_Format_Range_Spaces_test( app ):
   } )
 
 
-@SharedYcmd
+@IsolatedYcmd()
 def Subcommands_Format_Range_Tabs_test( app ):
   filepath = PathToTestFile( 'test.js' )
   RunTest( app, {
@@ -497,9 +497,9 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '\tnonExistingMethod\\(\\) {\r?\n'
-                  '\t\tthrow new Error\\("Method not implemented."\\);\r?\n'
-                  '\t}$',
+                  '    nonExistingMethod\\(\\) {\r?\n'
+                  '        throw new Error\\("Method not implemented."\\);\r?\n'
+                  '    }$',
                 ),
                 LocationMatcher( filepath, 22, 12 ),
                 LocationMatcher( filepath, 22, 12 ) )

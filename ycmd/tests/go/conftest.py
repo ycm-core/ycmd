@@ -27,14 +27,11 @@ from ycmd.tests.test_utils import ( BuildRequest,
 shared_app = None
 
 
-@pytest.fixture( scope = 'module', autouse = True )
-def setUpAndTearDown():
+def setup_module():
   global shared_app
   shared_app = SetUpApp()
   with IgnoreExtraConfOutsideTestsFolder():
     StartGoCompleterServerInDirectory( shared_app, PathToTestFile() )
-    yield
-  StopCompleterServer( shared_app, 'go' )
 
 
 def StartGoCompleterServerInDirectory( app, directory ):
@@ -44,6 +41,11 @@ def StartGoCompleterServerInDirectory( app, directory ):
                    event_name = 'FileReadyToParse',
                    filetype = 'go' ) )
   WaitUntilCompleterServerReady( app, 'go' )
+
+
+def teardown_module():
+  global shared_app
+  StopCompleterServer( shared_app, 'go' )
 
 
 @pytest.fixture

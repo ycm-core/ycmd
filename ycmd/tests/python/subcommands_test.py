@@ -22,8 +22,8 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        matches_regexp )
-from hamcrest.library.text.stringmatches import StringMatchesPattern
 from pprint import pformat
+import os
 import pytest
 import requests
 
@@ -33,6 +33,10 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     LocationMatcher,
                                     ErrorMatcher )
+
+TYPESHED_PATH = os.path.normpath(
+  PathToTestFile( '..', '..', '..', '..', 'third_party', 'jedi_deps', 'jedi',
+    'jedi', 'third_party', 'typeshed', 'stdlib', '2and3', 'builtins.pyi' ) )
 
 
 def RunTest( app, test ):
@@ -61,21 +65,13 @@ def RunTest( app, test ):
 
 def Subcommands_GoTo( app, test, command ):
   if isinstance( test[ 'response' ], tuple ):
-    if not isinstance( test[ 'response' ][ 0 ], StringMatchesPattern ):
-      expect = {
-        'response': requests.codes.ok,
-        'data': LocationMatcher( PathToTestFile( 'goto',
-                                                 test[ 'response' ][ 0 ] ),
-                                 test[ 'response' ][ 1 ],
-                                 test[ 'response' ][ 2 ] )
-      }
-    else:
-      expect = {
-        'response': requests.codes.ok,
-        'data': LocationMatcher( test[ 'response' ][ 0 ],
-                                 test[ 'response' ][ 1 ],
-                                 test[ 'response' ][ 2 ] )
-      }
+    expect = {
+      'response': requests.codes.ok,
+      'data': LocationMatcher( PathToTestFile( 'goto',
+                                               test[ 'response' ][ 0 ] ),
+                               test[ 'response' ][ 1 ],
+                               test[ 'response' ][ 2 ] )
+    }
   else:
     expect = {
       'response': requests.codes.internal_server_error,
@@ -106,12 +102,9 @@ def Subcommands_GoTo( app, test, command ):
     { 'request': ( 'basic.py', 4,  3 ), 'response': 'Can\'t jump to '
                                                     'type definition.' },
     # Builtin
-    { 'request': ( 'basic.py', 1,  4 ),
-      'response': ( matches_regexp( 'typeshed' ), 927, 7 ) },
-    { 'request': ( 'basic.py', 1, 12 ),
-      'response': ( matches_regexp( 'typeshed' ), 927, 7 ) },
-    { 'request': ( 'basic.py', 2,  2 ),
-      'response': ( matches_regexp( 'typeshed' ), 927, 7 ) },
+    { 'request': ( 'basic.py', 1,  4 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
+    { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
+    { 'request': ( 'basic.py', 2,  2 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
     # Class
     { 'request': ( 'basic.py', 4,  7 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 4, 11 ), 'response': ( 'basic.py', 4, 7 ) },
@@ -128,9 +121,9 @@ def Subcommands_GoTo( app, test, command ):
     { 'request':  ( 'child.py', 4, 12 ), 'response': ( 'parent.py', 2, 7 ) },
     # Builtin from different file
     { 'request':  ( 'multifile1.py', 2, 30 ),
-      'response': ( matches_regexp( 'typeshed' ), 130, 7 ) },
+      'response': ( TYPESHED_PATH, 130, 7 ) },
     { 'request':  ( 'multifile1.py', 4,  5 ),
-      'response': ( matches_regexp( 'typeshed' ), 130, 7 ) },
+      'response': ( TYPESHED_PATH, 130, 7 ) },
     # Function from different file
     { 'request':  ( 'multifile1.py', 1, 24 ),
       'response': ( 'multifile3.py', 3,  5 ) },

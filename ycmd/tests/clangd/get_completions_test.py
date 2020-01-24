@@ -465,7 +465,7 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
 
 @WindowsOnly
 @WithRetry
-@SharedYcmd
+@IsolatedYcmd()
 def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
   RunTest( app, {
     'description': 'basic completion with --driver-mode=cl',
@@ -484,9 +484,9 @@ def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
         'completion_start_column': 3,
         'completions': contains_inanyorder(
           CompletionEntryMatcher( 'driver_mode_cl_include_func',
-                                  'void' ),
+                                  'void\n"driver_mode_cl_include.h"' ),
           CompletionEntryMatcher( 'driver_mode_cl_include_int',
-                                  'int' ),
+                                  'int\n"driver_mode_cl_include.h"' ),
         ),
         'errors': empty(),
       } )

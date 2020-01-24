@@ -25,11 +25,9 @@ from ycmd.tests.test_utils import ( ClearCompletionsCache,
 shared_app = None
 
 
-@pytest.fixture( scope = 'module', autouse = True )
-def setUpAndTearDown():
+def setup_module():
   global shared_app
   shared_app = SetUpApp()
-  yield
 
 
 @pytest.fixture
