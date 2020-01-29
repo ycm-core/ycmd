@@ -59,9 +59,6 @@ private:
   CandidateRepository() = default;
   ~CandidateRepository() = default;
 
-  const std::string &ValidatedCandidateText(
-      const std::string &candidate_text );
-
   // This data structure owns all the Candidate pointers
   CandidateHolder candidate_holder_;
   std::mutex candidate_holder_mutex_;

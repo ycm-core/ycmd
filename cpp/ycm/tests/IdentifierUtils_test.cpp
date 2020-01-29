@@ -28,6 +28,7 @@ namespace YouCompleteMe {
 namespace fs = boost::filesystem;
 using ::testing::ElementsAre;
 using ::testing::ContainerEq;
+using ::testing::IsEmpty;
 using ::testing::WhenSorted;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
@@ -65,32 +66,28 @@ TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
 TEST( IdentifierUtilsTest, TagFileIsDirectory ) {
   fs::path testfile = PathToTestFile( "directory.tags" );
 
-  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
-               ContainerEq( FiletypeIdentifierMap() ) );
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), IsEmpty() );
 }
 
 
 TEST( IdentifierUtilsTest, TagFileIsEmpty ) {
   fs::path testfile = PathToTestFile( "empty.tags" );
 
-  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
-               ContainerEq( FiletypeIdentifierMap() ) );
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), IsEmpty() );
 }
 
 
 TEST( IdentifierUtilsTest, TagLanguageMissing ) {
   fs::path testfile = PathToTestFile( "invalid_tag_file_format.tags" );
 
-  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
-               ContainerEq( FiletypeIdentifierMap() ) );
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), IsEmpty() );
 }
 
 
 TEST( IdentifierUtilsTest, TagFileInvalidPath ) {
   fs::path testfile = PathToTestFile( "invalid_path_to_tag_file.tags" );
 
-  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
-               ContainerEq( FiletypeIdentifierMap() ) );
+  EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ), IsEmpty() );
 }
 
 } // namespace YouCompleteMe

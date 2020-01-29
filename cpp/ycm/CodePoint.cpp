@@ -62,7 +62,7 @@ RawCodePoint FindCodePoint( const char *text ) {
     auto it = first + step;
     int cmp = std::strcmp( *it, text );
     if ( cmp == 0 ) {
-      size_t index = std::distance( start, it );
+      auto index = static_cast< size_t >( std::distance( start, it ) );
       return { *it,
                code_points.normal[ index ],
                code_points.folded_case[ index ],
@@ -109,7 +109,7 @@ CodePointSequence BreakIntoCodePoints( const std::string &text ) {
   // and the bytes themselves are valid (they must start with bits '10').
   std::vector< std::string > code_points;
   for ( auto iter = text.begin(); iter != text.end(); ) {
-    int length = GetCodePointLength( *iter );
+    int length = GetCodePointLength( static_cast< uint8_t >( *iter ) );
     if ( text.end() - iter < length ) {
       throw UnicodeDecodeError( "Invalid code point length." );
     }
@@ -119,5 +119,10 @@ CodePointSequence BreakIntoCodePoints( const std::string &text ) {
 
   return CodePointRepository::Instance().GetCodePoints( code_points );
 }
+
+
+const char* UnicodeDecodeError::what() const noexcept {
+  return std::runtime_error::what();
+};
 
 } // namespace YouCompleteMe

@@ -66,10 +66,10 @@ public:
   void ClearCandidatesStoredForFile( const std::string &filetype,
                                      const std::string &filepath );
 
-  void ResultsForQueryAndType( std::string&& query,
-                               const std::string &filetype,
-                               std::vector< Result >& results,
-                               const size_t max_results ) const;
+  std::vector< Result > ResultsForQueryAndType(
+    std::string&& query,
+    const std::string &filetype,
+    const size_t max_results ) const;
 
 private:
   std::set< const Candidate * > &GetCandidateSet(
