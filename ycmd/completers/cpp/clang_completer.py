@@ -23,10 +23,7 @@ from xml.etree.ElementTree import ParseError as XmlParseError
 
 import ycm_core
 from ycmd import responses
-from ycmd.utils import ( PathLeftSplit,
-                         re,
-                         ToCppStringCompatible,
-                         ToUnicode )
+from ycmd.utils import PathLeftSplit, re, ToBytes, ToUnicode
 from ycmd.completers.completer import Completer
 from ycmd.completers.cpp.flags import ( Flags, PrepareFlagsForClang,
                                         UserIncludePaths )
@@ -70,10 +67,10 @@ class ClangCompleter( Completer ):
         continue
 
       unsaved_file = ycm_core.UnsavedFile()
-      utf8_contents = ToCppStringCompatible( contents )
+      utf8_contents = ToBytes( contents )
       unsaved_file.contents_ = utf8_contents
       unsaved_file.length_ = len( utf8_contents )
-      unsaved_file.filename_ = ToCppStringCompatible( filename )
+      unsaved_file.filename_ = filename
 
       files.append( unsaved_file )
     return files
@@ -138,8 +135,7 @@ class ClangCompleter( Completer ):
     if includes is not None:
       return includes
 
-    if self._completer.UpdatingTranslationUnit(
-        ToCppStringCompatible( filename ) ):
+    if self._completer.UpdatingTranslationUnit( filename ):
       raise RuntimeError( PARSING_FILE_MESSAGE )
 
     files = self.GetUnsavedFilesVector( request_data )
@@ -147,8 +143,8 @@ class ClangCompleter( Completer ):
     column = request_data[ 'start_column' ]
     with self._files_being_compiled.GetExclusive( filename ):
       results = self._completer.CandidatesForLocationInFile(
-          ToCppStringCompatible( filename ),
-          ToCppStringCompatible( request_data[ 'filepath' ] ),
+          filename,
+          request_data[ 'filepath' ],
           line,
           column,
           files,
@@ -203,16 +199,15 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
-    if self._completer.UpdatingTranslationUnit(
-        ToCppStringCompatible( filename ) ):
+    if self._completer.UpdatingTranslationUnit( filename ):
       raise RuntimeError( PARSING_FILE_MESSAGE )
 
     files = self.GetUnsavedFilesVector( request_data )
     line = request_data[ 'line_num' ]
     column = request_data[ 'column_num' ]
     return getattr( self._completer, goto_function )(
-        ToCppStringCompatible( filename ),
-        ToCppStringCompatible( request_data[ 'filepath' ] ),
+        filename,
+        request_data[ 'filepath' ],
         line,
         column,
         files,
@@ -312,8 +307,7 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
-    if self._completer.UpdatingTranslationUnit(
-        ToCppStringCompatible( filename ) ):
+    if self._completer.UpdatingTranslationUnit( filename ):
       raise RuntimeError( PARSING_FILE_MESSAGE )
 
     files = self.GetUnsavedFilesVector( request_data )
@@ -321,8 +315,8 @@ class ClangCompleter( Completer ):
     column = request_data[ 'column_num' ]
 
     message = getattr( self._completer, func )(
-        ToCppStringCompatible( filename ),
-        ToCppStringCompatible( request_data[ 'filepath' ] ),
+        filename,
+        request_data[ 'filepath' ],
         line,
         column,
         files,
@@ -344,8 +338,7 @@ class ClangCompleter( Completer ):
     if not flags:
       raise ValueError( NO_COMPILE_FLAGS_MESSAGE )
 
-    if self._completer.UpdatingTranslationUnit(
-        ToCppStringCompatible( filename ) ):
+    if self._completer.UpdatingTranslationUnit( filename ):
       raise RuntimeError( PARSING_FILE_MESSAGE )
 
     files = self.GetUnsavedFilesVector( request_data )
@@ -353,8 +346,8 @@ class ClangCompleter( Completer ):
     column = request_data[ 'column_num' ]
 
     fixits = getattr( self._completer, "GetFixItsForLocationInFile" )(
-        ToCppStringCompatible( filename ),
-        ToCppStringCompatible( request_data[ 'filepath' ] ),
+        filename,
+        request_data[ 'filepath' ],
         line,
         column,
         files,
@@ -374,7 +367,7 @@ class ClangCompleter( Completer ):
 
     with self._files_being_compiled.GetExclusive( filename ):
       diagnostics = self._completer.UpdateTranslationUnit(
-        ToCppStringCompatible( filename ),
+        filename,
         self.GetUnsavedFilesVector( request_data ),
         flags )
 
@@ -395,8 +388,7 @@ class ClangCompleter( Completer ):
     #
     # Solving this would require remembering the graph of files to translation
     # units and only closing a unit when there are no files open which use it.
-    self._completer.DeleteCachesForFile(
-        ToCppStringCompatible( request_data[ 'filepath' ] ) )
+    self._completer.DeleteCachesForFile( request_data[ 'filepath' ] )
 
 
   def GetDetailedDiagnostic( self, request_data ):

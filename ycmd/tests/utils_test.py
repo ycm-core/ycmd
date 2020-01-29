@@ -18,7 +18,6 @@
 import os
 import subprocess
 import tempfile
-import ycm_core
 from hamcrest import ( assert_that,
                        calling,
                        empty,
@@ -112,36 +111,6 @@ def JoinLinesAsUnicode_BadInput_test():
     calling( utils.JoinLinesAsUnicode ).with_args( [ 42 ] ),
     raises( ValueError, 'lines must contain either strings or bytes' )
   )
-
-
-def ToCppStringCompatible_Py3Bytes_test():
-  value = utils.ToCppStringCompatible( bytes( b'abc' ) )
-  eq_( value, bytes( b'abc' ) )
-  ok_( isinstance( value, bytes ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], 'abc' )
-
-
-def ToCppStringCompatible_Py3Str_test():
-  value = utils.ToCppStringCompatible( 'abc' )
-  eq_( value, bytes( b'abc' ) )
-  ok_( isinstance( value, bytes ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], 'abc' )
-
-
-def ToCppStringCompatible_Py3Int_test():
-  value = utils.ToCppStringCompatible( 123 )
-  eq_( value, bytes( b'123' ) )
-  ok_( isinstance( value, bytes ) )
-
-  vector = ycm_core.StringVector()
-  vector.append( value )
-  eq_( vector[ 0 ], '123' )
 
 
 def RemoveIfExists_Exists_test():

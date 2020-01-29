@@ -20,7 +20,7 @@ import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import identifier_utils
-from ycmd.utils import LOGGER, ToCppStringCompatible, SplitLines
+from ycmd.utils import LOGGER, SplitLines
 from ycmd import responses
 
 SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
@@ -43,8 +43,8 @@ class IdentifierCompleter( GeneralCompleter ):
       return []
 
     completions = self._completer.CandidatesForQueryAndType(
-      ToCppStringCompatible( _SanitizeQuery( request_data[ 'query' ] ) ),
-      ToCppStringCompatible( request_data[ 'first_filetype' ] ),
+      _SanitizeQuery( request_data[ 'query' ] ),
+      request_data[ 'first_filetype' ],
       self._max_candidates )
 
     completions = _RemoveSmallCandidates(
@@ -66,12 +66,12 @@ class IdentifierCompleter( GeneralCompleter ):
       return
 
     vector = ycm_core.StringVector()
-    vector.append( ToCppStringCompatible( identifier ) )
+    vector.append( identifier )
     LOGGER.info( 'Adding ONE buffer identifier for file: %s', filepath )
     self._completer.AddIdentifiersToDatabase(
       vector,
-      ToCppStringCompatible( filetype ),
-      ToCppStringCompatible( filepath ) )
+      filetype,
+      filepath )
 
 
   def _AddPreviousIdentifier( self, request_data ):
@@ -106,8 +106,8 @@ class IdentifierCompleter( GeneralCompleter ):
         _IdentifiersFromBuffer( text,
                                 filetype,
                                 collect_from_comments_and_strings ),
-        ToCppStringCompatible( filetype ),
-        ToCppStringCompatible( filepath ) )
+        filetype,
+        filepath )
 
 
   def _FilterUnchangedTagFiles( self, tag_files ):
@@ -132,7 +132,7 @@ class IdentifierCompleter( GeneralCompleter ):
   def _AddIdentifiersFromTagFiles( self, tag_files ):
     absolute_paths_to_tag_files = ycm_core.StringVector()
     for tag_file in self._FilterUnchangedTagFiles( tag_files ):
-      absolute_paths_to_tag_files.append( ToCppStringCompatible( tag_file ) )
+      absolute_paths_to_tag_files.append( tag_file )
 
     if not absolute_paths_to_tag_files:
       return
@@ -144,13 +144,13 @@ class IdentifierCompleter( GeneralCompleter ):
   def _AddIdentifiersFromSyntax( self, keyword_list, filetype ):
     keyword_vector = ycm_core.StringVector()
     for keyword in keyword_list:
-      keyword_vector.append( ToCppStringCompatible( keyword ) )
+      keyword_vector.append( keyword )
 
     filepath = SYNTAX_FILENAME + filetype
     self._completer.AddIdentifiersToDatabase(
       keyword_vector,
-      ToCppStringCompatible( filetype ),
-      ToCppStringCompatible( filepath ) )
+      filetype,
+      filepath )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -243,7 +243,7 @@ def _IdentifiersFromBuffer( text,
   idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
   vector = ycm_core.StringVector()
   for ident in idents:
-    vector.append( ToCppStringCompatible( ident ) )
+    vector.append( ident )
   return vector
 
 
