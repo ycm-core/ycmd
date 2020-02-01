@@ -1039,7 +1039,7 @@ def DownloadClangd( printer ):
   CLANGD_OUTPUT_DIR = p.join( CLANGD_DIR, 'output' )
 
   target = GetClangdTarget()
-  target_name, check_sum = target[ not IS_64BIT ]
+  target_name, check_sum = target[ not IS_64BIT if len(target) > 1 else 0 ]
   target_name = target_name.format( version = CLANGD_VERSION )
   file_name = '{}.tar.bz2'.format( target_name )
   download_url = 'https://dl.bintray.com/ycm-core/clangd/{}'.format( file_name )
