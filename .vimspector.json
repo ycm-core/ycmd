@@ -1,14 +1,18 @@
 {
   "configurations": {
-    "python - launch nosetests": {
-      "adapter": "vscode-python",
+    "python - launch pytest": {
+      "adapter": {
+        "command": [
+          "python",
+          "-m",
+          "debugpy.adapter"
+        ],
+        "name": "debugpy"
+      },
       "variables": [
         {
           "python": {
             "shell": "/bin/bash -c 'if [ -z \"${dollar}VIRTUAL_ENV\" ]; then echo $$(which python); else echo \"${dollar}VIRTUAL_ENV/bin/python\"; fi'"
-          },
-          "nosetests": {
-            "shell": "/bin/bash -c 'if [ -z \"${dollar}VIRTUAL_ENV\" ]; then echo $$(which nosetests); else echo \"${dollar}VIRTUAL_ENV/bin/nosetests\"; fi'"
           }
         },
         {
@@ -29,16 +33,15 @@
         "cwd": "${workspaceRoot}",
         "stopOnEntry": true,
         "console": "integratedTerminal",
-        "justMyCode": false,
+        "justMyCode": true,
 
         "debugOptions": [],
 
-        "program": "${nosetests}",
-        "pythonPath": "${python}",
+        "module": "pytest",
+        "python": "${python}",
         "args": [
           "-v",
-          "--with-id",
-          "--ignore-files=(^\\.|^setup\\.py$$)",
+          "--ignore=ycmd/tests/python/testdata",
           "${Test}"
         ],
         "env": {
