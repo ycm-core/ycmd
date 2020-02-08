@@ -18,7 +18,6 @@
 import contextlib
 import os
 import pytest
-import shutil
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
                                     IgnoreExtraConfOutsideTestsFolder,
@@ -61,6 +60,16 @@ def StartJavaCompleterServerInDirectory( app, directory ):
 
 @pytest.fixture
 def isolated_app():
+  """Defines a pytest fixture to be used in cases where it is easier to
+  specify user options of the isolated ycmdat some point inside the function.
+
+  Example usage:
+
+    def some_test( isolated_app ):
+      with TemporaryTestDir() as tmp_dir:
+        with isolated_app( user_options ) as app:
+
+  """
   @contextlib.contextmanager
   def manager( custom_options ):
     with IsolatedApp( custom_options ) as app:
@@ -77,15 +86,11 @@ def app( request ):
   which = request.param[ 0 ]
   assert which == 'isolated' or which == 'shared'
   if which == 'isolated':
-    custom_options = request.param[ 1 ]
-    wipe_ws_dir = custom_options.get( 'java_jdtls_workspace_root_path', None )
-    with IsolatedApp( custom_options ) as app:
+    with IsolatedApp( request.param[ 1 ] ) as app:
       try:
         yield app
       finally:
         StopCompleterServer( app, 'java' )
-        if wipe_ws_dir:
-          shutil.rmtree( wipe_ws_dir )
   else:
     global shared_app
     ClearCompletionsCache()
