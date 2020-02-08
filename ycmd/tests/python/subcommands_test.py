@@ -91,8 +91,8 @@ def Subcommands_GoTo( app, test, command ):
   } )
 
 
-@pytest.mark.parametrize( 'cmd', [ 'GoTo',
-                                   'GoToDefinition',
+@pytest.mark.parametrize( 'cmd', [ #'GoTo',
+                                   #'GoToDefinition',
                                    'GoToDeclaration' ] )
 @pytest.mark.parametrize( 'test', [
     # Nothing
@@ -102,9 +102,9 @@ def Subcommands_GoTo( app, test, command ):
     { 'request': ( 'basic.py', 4,  3 ), 'response': 'Can\'t jump to '
                                                     'type definition.' },
     # Builtin
-    { 'request': ( 'basic.py', 1,  4 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
-    { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
-    { 'request': ( 'basic.py', 2,  2 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
+    { 'request': ( 'basic.py', 1,  4 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request': ( 'basic.py', 2,  2 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
     # Class
     { 'request': ( 'basic.py', 4,  7 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 4, 11 ), 'response': ( 'basic.py', 4, 7 ) },

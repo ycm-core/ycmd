@@ -86,24 +86,14 @@ def GetCompletions_Basic_test( app ):
                  CompletionEntryMatcher( 'a',
                                          'self.a = 1',
                                          {
-                                           'extra_data': has_entry(
-                                             'location', has_entries( {
-                                               'line_num': 3,
-                                               'column_num': 10,
-                                               'filepath': filepath
-                                             } )
-                                           )
+                                           'detailed_info': '',
+                                           'kind': 'statement'
                                          } ),
                  CompletionEntryMatcher( 'b',
                                          'self.b = 2',
                                          {
-                                           'extra_data': has_entry(
-                                             'location', has_entries( {
-                                               'line_num': 4,
-                                               'column_num': 10,
-                                               'filepath': filepath
-                                             } )
-                                           )
+                                           'detailed_info': '',
+                                           'kind': 'statement'
                                          } )
                ) )
 
@@ -121,14 +111,10 @@ def GetCompletions_Basic_test( app ):
                    CompletionEntryMatcher( 'a',
                                            'self.a = 1',
                                            {
-                                             'extra_data': has_entry(
-                                               'location', has_entries( {
-                                                 'line_num': 3,
-                                                 'column_num': 10,
-                                                 'filepath': filepath
-                                               } )
-                                             )
-                                           } ) ),
+                                             'detailed_info': '',
+                                             'kind': 'statement'
+                                           }
+                                         ) ),
                  is_not( has_item( CompletionEntryMatcher( 'b' ) ) )
                ) )
 

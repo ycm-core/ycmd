@@ -156,15 +156,9 @@ class PythonCompleter( Completer ):
   def _GetJediScript( self, request_data ):
     path = request_data[ 'filepath' ]
     source = request_data[ 'file_data' ][ path ][ 'contents' ]
-    line = request_data[ 'line_num' ]
-    # Jedi expects columns to start at 0, not 1, and for them to be Unicode
-    # codepoint offsets.
-    column = request_data[ 'start_codepoint' ] - 1
     environment = self._EnvironmentForRequest( request_data )
     sys_path = self._SysPathForFile( request_data, environment )
     return jedi.Script( source,
-                        line,
-                        column,
                         path,
                         sys_path = sys_path,
                         environment = environment )
@@ -185,7 +179,11 @@ class PythonCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     with self._jedi_lock:
-      completions = self._GetJediScript( request_data ).completions()
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      completions = self._GetJediScript( request_data ).complete( line, column )
       return [ responses.BuildCompletionData(
         insertion_text = completion.name,
         # We store the Completion object returned by Jedi in the extra_data
@@ -200,7 +198,12 @@ class PythonCompleter( Completer ):
 
   def ComputeSignaturesInner( self, request_data ):
     with self._jedi_lock:
-      signatures = self._GetJediScript( request_data ).call_signatures()
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      signatures = self._GetJediScript( request_data ).get_signatures( line,
+                                                                       column )
       # Sorting by the number or arguments makes the order stable for the tests
       # and isn't harmful. The order returned by jedi seems to be arbitrary.
       signatures.sort( key=lambda s: len( s.params ) )
@@ -295,7 +298,11 @@ class PythonCompleter( Completer ):
 
   def _GoToDefinition( self, request_data ):
     with self._jedi_lock:
-      definitions = self._GetJediScript( request_data ).goto_definitions()
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      definitions = self._GetJediScript( request_data ).infer( line, column )
       if definitions:
         return self._BuildGoToResponse( definitions )
     raise RuntimeError( 'Can\'t jump to type definition.' )
@@ -303,7 +310,12 @@ class PythonCompleter( Completer ):
 
   def _GoToReferences( self, request_data ):
     with self._jedi_lock:
-      definitions = self._GetJediScript( request_data ).usages()
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      definitions = self._GetJediScript( request_data ).get_references( line,
+                                                                        column )
       if definitions:
         return self._BuildGoToResponse( definitions )
     raise RuntimeError( 'Can\'t find references.' )
@@ -325,7 +337,11 @@ class PythonCompleter( Completer ):
 
   def _GetType( self, request_data ):
     with self._jedi_lock:
-      definitions = self._GetJediScript( request_data ).goto_definitions()
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      definitions = self._GetJediScript( request_data ).infer( line, column )
       type_info = [ self._BuildTypeInfo( definition )
                     for definition in definitions ]
     type_info = ', '.join( type_info )
@@ -336,7 +352,11 @@ class PythonCompleter( Completer ):
 
   def _GetDoc( self, request_data ):
     with self._jedi_lock:
-      definitions = self._GetJediScript( request_data ).goto_definitions()
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      definitions = self._GetJediScript( request_data ).infer( line, column )
       documentation = [ definition.docstring() for definition in definitions ]
     documentation = '\n---\n'.join( documentation )
     if documentation:
