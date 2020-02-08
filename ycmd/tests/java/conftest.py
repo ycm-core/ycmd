@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
 import os
 import pytest
 import shutil
@@ -56,6 +57,19 @@ def StartJavaCompleterServerInDirectory( app, directory ):
                    event_name = 'FileReadyToParse',
                    filetype = 'java' ) )
   WaitUntilCompleterServerReady( app, 'java', SERVER_STARTUP_TIMEOUT )
+
+
+@pytest.fixture
+def isolated_app():
+  @contextlib.contextmanager
+  def manager( custom_options ):
+    with IsolatedApp( custom_options ) as app:
+      try:
+        yield app
+      finally:
+        StopCompleterServer( app, 'java' )
+
+  return manager
 
 
 @pytest.fixture

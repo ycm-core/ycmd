@@ -23,7 +23,13 @@ import tempfile
 import time
 
 from unittest.mock import patch
-from hamcrest import assert_that, contains_exactly, equal_to, has_entry
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       equal_to,
+                       has_entries,
+                       has_entry,
+                       has_item,
+                       starts_with )
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmd,
                               SharedYcmd,
@@ -110,38 +116,54 @@ def ServerManagement_RestartServer_test( app ):
                CompleterProjectDirectoryMatcher( maven_project ) )
 
 
-# NOTE: TemporaryTestDir() makes no sense outside of a function.
-@IsolatedYcmd( {
-  'java_jdtls_use_clean_workspace': 1,
-  'java_jdtls_workspace_root_path': tempfile.mkdtemp()
-} )
-def ServerManagement_WipeWorkspace_NoConfig_test( app ):
-  StartJavaCompleterServerInDirectory(
-    app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
+def ServerManagement_WipeWorkspace_NoConfig_test( isolated_app ):
+  with TemporaryTestDir() as tmp_dir:
+    with isolated_app( {
+      'java_jdtls_use_clean_workspace': 1,
+      'java_jdtls_workspace_root_path': tmp_dir
+    } ) as app:
+      StartJavaCompleterServerInDirectory(
+        app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
-  project = PathToTestFile( 'simple_eclipse_project' )
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
+      project = PathToTestFile( 'simple_eclipse_project' )
+      filepath = PathToTestFile( 'simple_eclipse_project',
+                                 'src',
+                                 'com',
+                                 'youcompleteme',
+                                 'Test.java' )
 
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filepath = filepath,
-      filetype = 'java',
-      command_arguments = [ 'WipeWorkspace' ],
-    ),
-  )
+      app.post_json(
+        '/run_completer_command',
+        BuildRequest(
+          filepath = filepath,
+          filetype = 'java',
+          command_arguments = [ 'WipeWorkspace' ],
+        ),
+      )
 
-  WaitUntilCompleterServerReady( app, 'java' )
+      WaitUntilCompleterServerReady( app, 'java' )
 
-  assert_that(
-    app.post_json( '/debug_info',
-                   BuildRequest( filetype = 'java',
-                                 filepath = filepath ) ).json,
-    CompleterProjectDirectoryMatcher( project ) )
+      assert_that(
+        app.post_json( '/debug_info',
+                       BuildRequest( filetype = 'java',
+                                     filepath = filepath ) ).json,
+        CompleterProjectDirectoryMatcher( project ) )
+
+      assert_that(
+        app.post_json( '/debug_info',
+                       BuildRequest( filetype = 'java',
+                                     filepath = filepath ) ).json,
+        has_entry(
+          'completer',
+          has_entry( 'servers', contains_exactly(
+            has_entry( 'extras', has_item(
+              has_entries( {
+                'key': 'Workspace Path',
+                'value': starts_with( tmp_dir ),
+              } )
+            ) )
+          ) )
+        ) )
 
 
 # NOTE: TemporaryTestDir() makes no sense outside of a function.
