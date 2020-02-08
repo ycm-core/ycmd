@@ -102,38 +102,38 @@ def Subcommands_GoTo( app, test, command ):
     { 'request': ( 'basic.py', 4,  3 ), 'response': 'Can\'t jump to '
                                                     'type definition.' },
     # Builtin
-    { 'request': ( 'basic.py', 1,  4 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request': ( 'basic.py', 1,  4 ), 'response': ( 'basic.py', 1, 1 ) },
     { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
-    { 'request': ( 'basic.py', 2,  2 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request': ( 'basic.py', 2,  2 ), 'response': ( 'basic.py', 1, 1 ) },
     # Class
     { 'request': ( 'basic.py', 4,  7 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 4, 11 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 7, 19 ), 'response': ( 'basic.py', 4, 7 ) },
     # Instance
-    { 'request': ( 'basic.py', 7,  1 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 7, 11 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 8, 23 ), 'response': ( 'basic.py', 4, 7 ) },
+    { 'request': ( 'basic.py', 7,  1 ), 'response': ( 'basic.py', 7, 1 ) },
+    { 'request': ( 'basic.py', 7, 11 ), 'response': ( 'basic.py', 7, 1 ) },
+    { 'request': ( 'basic.py', 8, 23 ), 'response': ( 'basic.py', 7, 1 ) },
     # Instance reference
-    { 'request': ( 'basic.py', 8,  1 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 8,  5 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 9, 12 ), 'response': ( 'basic.py', 4, 7 ) },
+    { 'request': ( 'basic.py', 8,  1 ), 'response': ( 'basic.py', 8, 1 ) },
+    { 'request': ( 'basic.py', 8,  5 ), 'response': ( 'basic.py', 8, 1 ) },
+    { 'request': ( 'basic.py', 9, 12 ), 'response': ( 'basic.py', 8, 1 ) },
     # Member access
     { 'request':  ( 'child.py', 4, 12 ), 'response': ( 'parent.py', 2, 7 ) },
     # Builtin from different file
     { 'request':  ( 'multifile1.py', 2, 30 ),
       'response': ( TYPESHED_PATH, 130, 7 ) },
     { 'request':  ( 'multifile1.py', 4,  5 ),
-      'response': ( TYPESHED_PATH, 130, 7 ) },
+      'response': ( 'multifile1.py', 2, 24 ) },
     # Function from different file
     { 'request':  ( 'multifile1.py', 1, 24 ),
       'response': ( 'multifile3.py', 3,  5 ) },
     { 'request':  ( 'multifile1.py', 5,  4 ),
-      'response': ( 'multifile3.py', 3,  5 ) },
+      'response': ( 'multifile1.py', 1, 24 ) },
     # Alias from different file
     { 'request':  ( 'multifile1.py', 2, 47 ),
       'response': ( 'multifile3.py', 3,  5 ) },
     { 'request':  ( 'multifile1.py', 6, 14 ),
-      'response': ( 'multifile3.py', 3,  5 ) },
+      'response': ( 'multifile1.py', 2, 36 ) },
   ] )
 @SharedYcmd
 def Subcommands_GoTo_test( app, cmd, test ):
@@ -158,13 +158,12 @@ def Subcommands_GetType( app, position, expected_message ):
 
 
 @pytest.mark.parametrize( 'position,expected_message',  [
-    ( ( 11,  7 ), 'instance int' ),
+    ( ( 11,  7 ), 'some_integer = some_function()' ),
     ( ( 11, 20 ), 'def some_function()' ),
     ( ( 12, 15 ), 'class SomeClass(*args, **kwargs)' ),
-    ( ( 13,  8 ), 'instance SomeClass' ),
+    ( ( 13,  8 ), 'some_class = SomeClass()' ),
     ( ( 13, 17 ), 'def SomeMethod(first_param, second_param)' ),
-    ( ( 19,  4 ), matches_regexp( '^(instance str, instance int|'
-                                  'instance int, instance str)$' ) )
+    ( ( 19,  4 ), "variable = 'test', variable = some_function()" )
   ] )
 @SharedYcmd
 def Subcommands_GetType_test( app, position, expected_message ):

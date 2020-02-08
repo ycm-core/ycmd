@@ -280,18 +280,26 @@ class PythonCompleter( Completer ):
     }
 
 
-  def _BuildGoToResponse( self, definitions ):
+  def _BuildGoToResponse( self, definitions, request_data ):
     if len( definitions ) == 1:
       definition = definitions[ 0 ]
-      return responses.BuildGoToResponse( definition.module_path,
+      column = 1
+      if definition.column is not None:
+        column += definition.column
+      filepath = definition.module_path or request_data[ 'filepath' ]
+      return responses.BuildGoToResponse( filepath,
                                           definition.line,
-                                          definition.column + 1 )
+                                          column )
 
     gotos = []
     for definition in definitions:
+      column = 1
+      if definition.column is not None:
+        column += definition.column
+      filepath = definition.module_path or request_data[ 'filepath' ]
       gotos.append( responses.BuildGoToResponse( definition.module_path,
                                                  definition.line,
-                                                 definition.column + 1,
+                                                 column,
                                                  definition.description ) )
     return gotos
 
@@ -302,9 +310,11 @@ class PythonCompleter( Completer ):
       # Jedi expects columns to start at 0, not 1, and for them to be Unicode
       # codepoint offsets.
       column = request_data[ 'start_codepoint' ] - 1
-      definitions = self._GetJediScript( request_data ).infer( line, column )
+      script = self._GetJediScript( request_data )
+      definitions = script.goto( line, column )
       if definitions:
-        return self._BuildGoToResponse( definitions )
+        return self._BuildGoToResponse( definitions, request_data )
+
     raise RuntimeError( 'Can\'t jump to type definition.' )
 
 
@@ -317,7 +327,7 @@ class PythonCompleter( Completer ):
       definitions = self._GetJediScript( request_data ).get_references( line,
                                                                         column )
       if definitions:
-        return self._BuildGoToResponse( definitions )
+        return self._BuildGoToResponse( definitions, request_data )
     raise RuntimeError( 'Can\'t find references.' )
 
 
@@ -341,7 +351,7 @@ class PythonCompleter( Completer ):
       # Jedi expects columns to start at 0, not 1, and for them to be Unicode
       # codepoint offsets.
       column = request_data[ 'start_codepoint' ] - 1
-      definitions = self._GetJediScript( request_data ).infer( line, column )
+      definitions = self._GetJediScript( request_data ).goto( line, column )
       type_info = [ self._BuildTypeInfo( definition )
                     for definition in definitions ]
     type_info = ', '.join( type_info )
@@ -356,7 +366,7 @@ class PythonCompleter( Completer ):
       # Jedi expects columns to start at 0, not 1, and for them to be Unicode
       # codepoint offsets.
       column = request_data[ 'start_codepoint' ] - 1
-      definitions = self._GetJediScript( request_data ).infer( line, column )
+      definitions = self._GetJediScript( request_data ).goto( line, column )
       documentation = [ definition.docstring() for definition in definitions ]
     documentation = '\n---\n'.join( documentation )
     if documentation:
