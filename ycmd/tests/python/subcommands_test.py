@@ -252,6 +252,17 @@ def Subcommands_GetDoc_NoDocumentation_test( app ):
                ErrorMatcher( RuntimeError, 'No documentation available.' ) )
 
 
+@pytest.mark.parametrize( 'test', [
+    { 'request':  ( 'basic.py', 2, 1 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request':  ( 'basic.py', 8, 1 ), 'response': ( 'basic.py', 4, 7 ) },
+    { 'request':  ( 'basic.py', 3, 1 ),
+      'response': 'Can\'t jump to type definition.' },
+  ] )
+@SharedYcmd
+def Subcommands_GoToType_test( app, test ):
+  Subcommands_GoTo( app, test, 'GoToType' )
+
+
 @SharedYcmd
 def Subcommands_GoToReferences_Function_test( app ):
   filepath = PathToTestFile( 'goto', 'references.py' )
