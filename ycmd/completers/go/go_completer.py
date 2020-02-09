@@ -73,7 +73,7 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def GetDoc( self, request_data ):
-    assert self._settings[ 'hoverKind' ] == 'Structured'
+    assert self._settings[ 'ls' ][ 'hoverKind' ] == 'Structured'
     try:
       result = json.loads( self.GetHoverResponse( request_data )[ 'value' ] )
       docs = result[ 'signature' ] + '\n' + result[ 'fullDocumentation' ]
@@ -92,5 +92,7 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
 
 
   def DefaultSettings( self, request_data ):
-    return { 'hoverKind': 'Structured',
-             'fuzzyMatching': False }
+    return {
+      'hoverKind': 'Structured',
+      'fuzzyMatching': False,
+    }
