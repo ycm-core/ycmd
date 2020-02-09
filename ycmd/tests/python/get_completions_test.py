@@ -113,8 +113,7 @@ def GetCompletions_Basic_test( app ):
                                            {
                                              'detailed_info': '',
                                              'kind': 'statement'
-                                           }
-                                         ) ),
+                                           } ) ),
                  is_not( has_item( CompletionEntryMatcher( 'b' ) ) )
                ) )
 

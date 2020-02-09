@@ -159,7 +159,7 @@ class PythonCompleter( Completer ):
     environment = self._EnvironmentForRequest( request_data )
     sys_path = self._SysPathForFile( request_data, environment )
     return jedi.Script( source,
-                        path,
+                        path = path,
                         sys_path = sys_path,
                         environment = environment )
 
@@ -185,7 +185,7 @@ class PythonCompleter( Completer ):
       column = request_data[ 'start_codepoint' ] - 1
       completions = self._GetJediScript( request_data ).complete( line, column )
       return [ responses.BuildCompletionData(
-        insertion_text = completion.name,
+        insertion_text = completion.complete,
         # We store the Completion object returned by Jedi in the extra_data
         # field to detail the candidates once the filtering is done.
         extra_data = completion
@@ -273,6 +273,8 @@ class PythonCompleter( Completer ):
                            self._GoToDefinition( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
+      'GoToType'       : ( lambda self, request_data, args:
+                           self._GoToType( request_data ) ),
       'GetType'        : ( lambda self, request_data, args:
                            self._GetType( request_data ) ),
       'GetDoc'         : ( lambda self, request_data, args:
@@ -297,11 +299,25 @@ class PythonCompleter( Completer ):
       if definition.column is not None:
         column += definition.column
       filepath = definition.module_path or request_data[ 'filepath' ]
-      gotos.append( responses.BuildGoToResponse( definition.module_path,
+      gotos.append( responses.BuildGoToResponse( filepath,
                                                  definition.line,
                                                  column,
                                                  definition.description ) )
     return gotos
+
+
+  def _GoToType( self, request_data ):
+    with self._jedi_lock:
+      line = request_data[ 'line_num' ]
+      # Jedi expects columns to start at 0, not 1, and for them to be Unicode
+      # codepoint offsets.
+      column = request_data[ 'start_codepoint' ] - 1
+      script = self._GetJediScript( request_data )
+      definitions = script.infer( line, column )
+      if definitions:
+        return self._BuildGoToResponse( definitions, request_data )
+
+    raise RuntimeError( 'Can\'t jump to type definition.' )
 
 
   def _GoToDefinition( self, request_data ):
@@ -315,7 +331,7 @@ class PythonCompleter( Completer ):
       if definitions:
         return self._BuildGoToResponse( definitions, request_data )
 
-    raise RuntimeError( 'Can\'t jump to type definition.' )
+    raise RuntimeError( 'Can\'t jump to definition.' )
 
 
   def _GoToReferences( self, request_data ):
@@ -351,7 +367,7 @@ class PythonCompleter( Completer ):
       # Jedi expects columns to start at 0, not 1, and for them to be Unicode
       # codepoint offsets.
       column = request_data[ 'start_codepoint' ] - 1
-      definitions = self._GetJediScript( request_data ).goto( line, column )
+      definitions = self._GetJediScript( request_data ).infer( line, column )
       type_info = [ self._BuildTypeInfo( definition )
                     for definition in definitions ]
     type_info = ', '.join( type_info )

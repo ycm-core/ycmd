@@ -91,16 +91,16 @@ def Subcommands_GoTo( app, test, command ):
   } )
 
 
-@pytest.mark.parametrize( 'cmd', [ #'GoTo',
-                                   #'GoToDefinition',
+@pytest.mark.parametrize( 'cmd', [ 'GoTo',
+                                   'GoToDefinition',
                                    'GoToDeclaration' ] )
 @pytest.mark.parametrize( 'test', [
     # Nothing
     { 'request': ( 'basic.py', 3,  5 ), 'response': 'Can\'t jump to '
-                                                    'type definition.' },
+                                                    'definition.' },
     # Keyword
     { 'request': ( 'basic.py', 4,  3 ), 'response': 'Can\'t jump to '
-                                                    'type definition.' },
+                                                    'definition.' },
     # Builtin
     { 'request': ( 'basic.py', 1,  4 ), 'response': ( 'basic.py', 1, 1 ) },
     { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
@@ -118,10 +118,11 @@ def Subcommands_GoTo( app, test, command ):
     { 'request': ( 'basic.py', 8,  5 ), 'response': ( 'basic.py', 8, 1 ) },
     { 'request': ( 'basic.py', 9, 12 ), 'response': ( 'basic.py', 8, 1 ) },
     # Member access
-    { 'request':  ( 'child.py', 4, 12 ), 'response': ( 'parent.py', 2, 7 ) },
+    { 'request':  ( 'child.py', 4, 12 ),
+      'response': ( 'parent.py', 2, 7 ) },
     # Builtin from different file
     { 'request':  ( 'multifile1.py', 2, 30 ),
-      'response': ( TYPESHED_PATH, 130, 7 ) },
+      'response': ( 'multifile2.py', 1, 24 ) },
     { 'request':  ( 'multifile1.py', 4,  5 ),
       'response': ( 'multifile1.py', 2, 24 ) },
     # Function from different file
@@ -131,7 +132,7 @@ def Subcommands_GoTo( app, test, command ):
       'response': ( 'multifile1.py', 1, 24 ) },
     # Alias from different file
     { 'request':  ( 'multifile1.py', 2, 47 ),
-      'response': ( 'multifile3.py', 3,  5 ) },
+      'response': ( 'multifile2.py', 1, 51 ) },
     { 'request':  ( 'multifile1.py', 6, 14 ),
       'response': ( 'multifile1.py', 2, 36 ) },
   ] )
@@ -158,12 +159,13 @@ def Subcommands_GetType( app, position, expected_message ):
 
 
 @pytest.mark.parametrize( 'position,expected_message',  [
-    ( ( 11,  7 ), 'some_integer = some_function()' ),
+    ( ( 11,  7 ), 'instance int' ),
     ( ( 11, 20 ), 'def some_function()' ),
     ( ( 12, 15 ), 'class SomeClass(*args, **kwargs)' ),
-    ( ( 13,  8 ), 'some_class = SomeClass()' ),
+    ( ( 13,  8 ), 'instance SomeClass' ),
     ( ( 13, 17 ), 'def SomeMethod(first_param, second_param)' ),
-    ( ( 19,  4 ), "variable = 'test', variable = some_function()" )
+    ( ( 19,  4 ), matches_regexp( '^(instance str, instance int|'
+                                  'instance int, instance str)$' ) )
   ] )
 @SharedYcmd
 def Subcommands_GetType_test( app, position, expected_message ):
@@ -219,14 +221,14 @@ def Subcommands_GetDoc_Class_test( app ):
   command_data = BuildRequest( filepath = filepath,
                                filetype = 'python',
                                line_num = 19,
-                               column_num = 2,
+                               column_num = 6,
                                contents = contents,
                                command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command', command_data ).json
 
   assert_that( response, has_entry(
-    'detailed_info', 'Class Documentation',
+    'detailed_info', 'TestClass()\n\nClass Documentation',
   ) )
 
 
