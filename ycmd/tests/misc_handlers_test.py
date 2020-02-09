@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( any_of, assert_that, contains, empty, equal_to,
+from hamcrest import ( any_of, assert_that, contains_exactly, empty, equal_to,
                        has_entries, instance_of )
-from mock import patch
+from unittest.mock import patch
 import requests
 
 from ycmd.tests import IsolatedYcmd, PathToTestFile, SharedYcmd
@@ -124,7 +124,7 @@ def MiscHandlers_FilterAndSortCandidates_Basic_test( app ):
 
   response_data = app.post_json( '/filter_and_sort_candidates', data ).json
 
-  assert_that( response_data, contains( candidate2, candidate3 ) )
+  assert_that( response_data, contains_exactly( candidate2, candidate3 ) )
 
 
 @SharedYcmd
@@ -145,7 +145,7 @@ def MiscHandlers_IgnoreExtraConfFile_AlwaysJsonResponse_test( app ):
                equal_to( True ) )
 
 
-@SharedYcmd
+@IsolatedYcmd()
 def MiscHandlers_DebugInfo_ExtraConfLoaded_test( app ):
   filepath = PathToTestFile( 'extra_conf', 'project', '.ycm_extra_conf.py' )
   app.post_json( '/load_extra_conf_file', { 'filepath': filepath } )
@@ -236,7 +236,7 @@ def MiscHandlers_ReceiveMessages_NotSupportedByCompleter_test( app ):
 @SharedYcmd
 @patch( 'ycmd.completers.completer.Completer.ShouldUseSignatureHelpNow',
         return_value = True )
-def MiscHandlers_SignatureHelp_DefaultEmptyResponse_test( app, *args ):
+def MiscHandlers_SignatureHelp_DefaultEmptyResponse_test( should_use, app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
     response = app.post_json( '/signature_help', request_data ).json
@@ -253,7 +253,7 @@ def MiscHandlers_SignatureHelp_DefaultEmptyResponse_test( app, *args ):
 @SharedYcmd
 @patch( 'ycmd.completers.completer.Completer.ComputeSignatures',
         side_effect = RuntimeError )
-def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( app, *args ):
+def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( compute_sig, app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     request_data = BuildRequest( filetype = 'dummy_filetype' )
     response = app.post_json( '/signature_help', request_data ).json
@@ -264,7 +264,7 @@ def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( app, *args ):
         'activeParameter': 0,
         'signatures': empty()
       } ),
-      'errors': contains(
+      'errors': contains_exactly(
         ErrorMatcher( RuntimeError, '' )
       )
     } ) )

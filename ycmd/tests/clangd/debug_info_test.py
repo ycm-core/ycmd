@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        has_entries,
                        has_entry,
@@ -40,11 +40,11 @@ def DebugInfo_NotInitialized_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'pid': None,
         'is_running': False,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Dead',
@@ -78,10 +78,10 @@ def DebugInfo_Initialized_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -117,10 +117,10 @@ def DebugInfo_ExtraConf_ReturningFlags_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -157,10 +157,10 @@ def DebugInfo_ExtraConf_NotReturningFlags_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -199,10 +199,10 @@ def DebugInfo_ExtraConf_Global_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -242,10 +242,10 @@ def DebugInfo_ExtraConf_LocalOverGlobal_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',
@@ -269,7 +269,8 @@ def DebugInfo_ExtraConf_LocalOverGlobal_test( app ):
   )
 
 
-def DebugInfo_ExtraConf_Database_test():
+@IsolatedYcmd()
+def DebugInfo_ExtraConf_Database_test( app ):
   with TemporaryTestDir() as tmp_dir:
     database = [
       {
@@ -280,48 +281,45 @@ def DebugInfo_ExtraConf_Database_test():
     ]
 
     with TemporaryClangProject( tmp_dir, database ):
-      @IsolatedYcmd()
-      def Test( app ):
-        request_data = BuildRequest( filepath = os.path.join( tmp_dir,
-                                                              'foo.cpp' ),
-                                     filetype = 'cpp' )
-        request_data[ 'contents' ] = ''
-        test = { 'request': request_data }
-        RunAfterInitialized( app, test )
-        assert_that(
-          app.post_json( '/debug_info', request_data ).json,
-          has_entry( 'completer', has_entries( {
-            'name': 'C-family',
-            'servers': contains( has_entries( {
-              'name': 'Clangd',
-              'is_running': True,
-              'extras': contains(
-                has_entries( {
-                  'key': 'Server State',
-                  'value': 'Initialized',
-                } ),
-                has_entries( {
-                  'key': 'Project Directory',
-                  'value': tmp_dir,
-                } ),
-                has_entries( {
-                  'key': 'Settings',
-                  'value': '{}',
-                } ),
-                has_entries( {
-                  'key': 'Compilation Command',
-                  'value': False
-                } ),
-              ),
-            } ) ),
-            'items': empty()
-          } ) )
-        )
-
-      yield Test
+      request_data = BuildRequest( filepath = os.path.join( tmp_dir,
+                                                            'foo.cpp' ),
+                                   filetype = 'cpp' )
+      request_data[ 'contents' ] = ''
+      test = { 'request': request_data }
+      RunAfterInitialized( app, test )
+      assert_that(
+        app.post_json( '/debug_info', request_data ).json,
+        has_entry( 'completer', has_entries( {
+          'name': 'C-family',
+          'servers': contains_exactly( has_entries( {
+            'name': 'Clangd',
+            'is_running': True,
+            'extras': contains_exactly(
+              has_entries( {
+                'key': 'Server State',
+                'value': 'Initialized',
+              } ),
+              has_entries( {
+                'key': 'Project Directory',
+                'value': tmp_dir,
+              } ),
+              has_entries( {
+                'key': 'Settings',
+                'value': '{}',
+              } ),
+              has_entries( {
+                'key': 'Compilation Command',
+                'value': False
+              } ),
+            ),
+          } ) ),
+          'items': empty()
+        } ) )
+      )
 
 
-def DebugInfo_ExtraConf_UseLocalOverDatabase_test():
+@IsolatedYcmd( { 'confirm_extra_conf': 0 } )
+def DebugInfo_ExtraConf_UseLocalOverDatabase_test( app ):
   with TemporaryTestDir() as tmp_dir:
     database = [
       {
@@ -332,73 +330,14 @@ def DebugInfo_ExtraConf_UseLocalOverDatabase_test():
     ]
 
     with TemporaryClangProject( tmp_dir, database ):
-      @IsolatedYcmd( { 'confirm_extra_conf': 0 } )
-      def Test( app ):
-        extra_conf = os.path.join( tmp_dir, '.ycm_extra_conf.py' )
-        with open( extra_conf, 'w' ) as f:
-          f.write( '''
+      extra_conf = os.path.join( tmp_dir, '.ycm_extra_conf.py' )
+      with open( extra_conf, 'w' ) as f:
+        f.write( '''
 def Settings( **kwargs ):
   return { 'flags': [ '-x', 'c++', '-I', 'ycm' ] }
   ''' )
 
-        try:
-          request_data = BuildRequest( filepath = os.path.join( tmp_dir,
-                                                                'foo.cpp' ),
-                                       filetype = 'cpp' )
-          request_data[ 'contents' ] = ''
-          test = { 'request': request_data }
-          RunAfterInitialized( app, test )
-          assert_that(
-            app.post_json( '/debug_info', request_data ).json,
-            has_entry( 'completer', has_entries( {
-              'name': 'C-family',
-              'servers': contains( has_entries( {
-                'name': 'Clangd',
-                'is_running': True,
-                'extras': contains(
-                  has_entries( {
-                    'key': 'Server State',
-                    'value': 'Initialized',
-                  } ),
-                  has_entries( {
-                    'key': 'Project Directory',
-                    'value': tmp_dir,
-                  } ),
-                  has_entries( {
-                    'key': 'Settings',
-                    'value': '{}',
-                  } ),
-                  has_entries( {
-                    'key': 'Compilation Command',
-                    'value': has_items( '-x', 'c++', '-I', 'ycm' )
-                  } ),
-                ),
-              } ) ),
-              'items': empty()
-            } ) )
-          )
-        finally:
-          os.remove( extra_conf )
-
-      yield Test
-
-
-def DebugInfo_ExtraConf_UseDatabaseOverGlobal_test():
-  with TemporaryTestDir() as tmp_dir:
-    database = [
-      {
-        'directory': tmp_dir,
-        'command': 'clang++ -x c++ -I test foo.cpp' ,
-        'file': os.path.join( tmp_dir, 'foo.cpp' ),
-      }
-    ]
-
-    with TemporaryClangProject( tmp_dir, database ):
-      @IsolatedYcmd( {
-        'global_ycm_extra_conf': PathToTestFile( 'extra_conf',
-                                                 'global_extra_conf.py' ),
-      } )
-      def Test( app ):
+      try:
         request_data = BuildRequest( filepath = os.path.join( tmp_dir,
                                                               'foo.cpp' ),
                                      filetype = 'cpp' )
@@ -409,10 +348,10 @@ def DebugInfo_ExtraConf_UseDatabaseOverGlobal_test():
           app.post_json( '/debug_info', request_data ).json,
           has_entry( 'completer', has_entries( {
             'name': 'C-family',
-            'servers': contains( has_entries( {
+            'servers': contains_exactly( has_entries( {
               'name': 'Clangd',
               'is_running': True,
-              'extras': contains(
+              'extras': contains_exactly(
                 has_entries( {
                   'key': 'Server State',
                   'value': 'Initialized',
@@ -427,15 +366,67 @@ def DebugInfo_ExtraConf_UseDatabaseOverGlobal_test():
                 } ),
                 has_entries( {
                   'key': 'Compilation Command',
-                  'value': False
+                  'value': has_items( '-x', 'c++', '-I', 'ycm' )
                 } ),
               ),
             } ) ),
             'items': empty()
           } ) )
         )
+      finally:
+        os.remove( extra_conf )
 
-      yield Test
+
+@IsolatedYcmd( {
+  'global_ycm_extra_conf': PathToTestFile( 'extra_conf',
+                                           'global_extra_conf.py' ),
+} )
+def DebugInfo_ExtraConf_UseDatabaseOverGlobal_test( app ):
+  with TemporaryTestDir() as tmp_dir:
+    database = [
+      {
+        'directory': tmp_dir,
+        'command': 'clang++ -x c++ -I test foo.cpp' ,
+        'file': os.path.join( tmp_dir, 'foo.cpp' ),
+      }
+    ]
+
+    with TemporaryClangProject( tmp_dir, database ):
+      request_data = BuildRequest( filepath = os.path.join( tmp_dir,
+                                                            'foo.cpp' ),
+                                   filetype = 'cpp' )
+      request_data[ 'contents' ] = ''
+      test = { 'request': request_data }
+      RunAfterInitialized( app, test )
+      assert_that(
+        app.post_json( '/debug_info', request_data ).json,
+        has_entry( 'completer', has_entries( {
+          'name': 'C-family',
+          'servers': contains_exactly( has_entries( {
+            'name': 'Clangd',
+            'is_running': True,
+            'extras': contains_exactly(
+              has_entries( {
+                'key': 'Server State',
+                'value': 'Initialized',
+              } ),
+              has_entries( {
+                'key': 'Project Directory',
+                'value': tmp_dir,
+              } ),
+              has_entries( {
+                'key': 'Settings',
+                'value': '{}',
+              } ),
+              has_entries( {
+                'key': 'Compilation Command',
+                'value': False
+              } ),
+            ),
+          } ) ),
+          'items': empty()
+        } ) )
+      )
 
 
 @MacOnly
@@ -451,10 +442,10 @@ def DebugInfo_ExtraConf_MacIncludeFlags_test( app ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
-        'extras': contains(
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': 'Initialized',

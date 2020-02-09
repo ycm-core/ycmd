@@ -7,20 +7,20 @@ jobs:
     vmImage: 'ubuntu-16.04'
   strategy:
     matrix:
-      'Python 3.5 without libclang completer':
-        YCM_PYTHON_VERSION: '3.5.3'
+      'Python 3.6 without libclang completer':
+        YCM_PYTHON_VERSION: '3.6.3'
         USE_CLANG_COMPLETER: false
-      'Python 3.5':
-        YCM_PYTHON_VERSION: '3.5.3'
-      'Python 3.5 using Clang compiler':
-        YCM_PYTHON_VERSION: '3.5.3'
+      'Python 3.6':
+        YCM_PYTHON_VERSION: '3.6.3'
+      'Python 3.6 using Clang compiler':
+        YCM_PYTHON_VERSION: '3.6.3'
         YCM_COMPILER: 'clang'
       'C++ benchmark':
-        YCM_PYTHON_VERSION: '3.5.3'
+        YCM_PYTHON_VERSION: '3.6.3'
         YCM_BENCHMARK: true
         COVERAGE: false
       'C++ linting':
-        YCM_PYTHON_VERSION: '3.5.3'
+        YCM_PYTHON_VERSION: '3.6.3'
         YCM_CLANG_TIDY: true
         COVERAGE: false
     maxParallel: 6
@@ -54,10 +54,10 @@ jobs:
     vmImage: 'macOS-10.13'
   strategy:
     matrix:
-      'Python 3.5':
-        YCM_PYTHON_VERSION: '3.5.3'
+      'Python 3.6':
+        YCM_PYTHON_VERSION: '3.6.3'
       'C++ benchmark':
-        YCM_PYTHON_VERSION: '3.5.3'
+        YCM_PYTHON_VERSION: '3.6.3'
         YCM_BENCHMARK: true
     maxParallel: 3
   variables:

@@ -16,11 +16,11 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        has_entries,
                        has_items )
-from mock import patch
+from unittest.mock import patch
 from ycmd import handlers
 from ycmd.utils import ReadFile, LOGGER
 from ycmd.tests.cs import ( PathToTestFile,
@@ -69,7 +69,7 @@ def SignatureHelp_TriggerComma_test( app ):
       'signature_help': has_entries( {
         'activeSignature': 0,
         'activeParameter': 1,
-        'signatures': contains(
+        'signatures': contains_exactly(
           SignatureMatcher( 'void ContinuousTest.MultiArg(int i, string s)',
                             [ ParameterMatcher( 29, 34 ),
                               ParameterMatcher( 36, 44 ) ] )
@@ -96,7 +96,7 @@ def SignatureHelp_TriggerParen_test( app ):
       'signature_help': has_entries( {
         'activeSignature': 0,
         'activeParameter': 0,
-        'signatures': contains(
+        'signatures': contains_exactly(
           SignatureMatcher( 'void ContinuousTest.Main(string[] args)',
                             [ ParameterMatcher( 25, 38 ) ] )
         )
@@ -145,7 +145,7 @@ def SignatureHelp_MultipleSignatures_test( app ):
       'signature_help': has_entries( {
         'activeSignature': 0,
         'activeParameter': 0,
-        'signatures': contains(
+        'signatures': contains_exactly(
           SignatureMatcher( 'void ContinuousTest.Overloaded(int i, int a)',
                             [ ParameterMatcher( 31, 36 ),
                               ParameterMatcher( 38, 43 ) ] ),
@@ -163,7 +163,7 @@ def SignatureHelp_MultipleSignatures_test( app ):
       'signature_help': has_entries( {
         'activeSignature': 0,
         'activeParameter': 1,
-        'signatures': contains(
+        'signatures': contains_exactly(
           SignatureMatcher( 'void ContinuousTest.Overloaded(int i, int a)',
                             [ ParameterMatcher( 31, 36 ),
                               ParameterMatcher( 38, 43 ) ] ),

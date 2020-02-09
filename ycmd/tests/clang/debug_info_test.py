@@ -16,8 +16,8 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from hamcrest import ( assert_that, contains, empty, has_entries, has_entry,
-                       instance_of, matches_regexp )
+from hamcrest import ( assert_that, contains_exactly, empty, has_entries,
+                       has_entry, instance_of, matches_regexp )
 
 from ycmd.tests.clang import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest, TemporaryTestDir,
@@ -35,7 +35,7 @@ def DebugInfo_FlagsWhenExtraConfLoadedAndNoCompilationDatabase_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
       'servers': empty(),
-      'items': contains(
+      'items': contains_exactly(
         has_entries( {
           'key': 'compilation database path',
           'value': 'None'
@@ -62,7 +62,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndNoCompilationDatabase_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
       'servers': empty(),
-      'items': contains(
+      'items': contains_exactly(
         has_entries( {
           'key': 'compilation database path',
           'value': 'None'
@@ -84,7 +84,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndNoCompilationDatabase_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
       'servers': empty(),
-      'items': contains(
+      'items': contains_exactly(
         has_entries( {
           'key': 'compilation database path',
           'value': 'None'
@@ -113,7 +113,7 @@ def DebugInfo_FlagsWhenExtraConfNotLoadedAndNoCompilationDatabase_test(
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
       'servers': empty(),
-      'items': contains(
+      'items': contains_exactly(
         has_entries( {
           'key': 'compilation database path',
           'value': 'None'
@@ -151,7 +151,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndCompilationDatabaseLoaded_test( app ):
         has_entry( 'completer', has_entries( {
           'name': 'C-family',
           'servers': empty(),
-          'items': contains(
+          'items': contains_exactly(
             has_entries( {
               'key': 'compilation database path',
               'value': instance_of( str )
@@ -185,7 +185,7 @@ def DebugInfo_FlagsWhenNoExtraConfAndInvalidCompilationDatabase_test( app ):
         has_entry( 'completer', has_entries( {
           'name': 'C-family',
           'servers': empty(),
-          'items': contains(
+          'items': contains_exactly(
             has_entries( {
               'key': 'compilation database path',
               'value': 'None'
@@ -224,7 +224,7 @@ def DebugInfo_FlagsWhenGlobalExtraConfAndCompilationDatabaseLoaded_test( app ):
         has_entry( 'completer', has_entries( {
           'name': 'C-family',
           'servers': empty(),
-          'items': contains(
+          'items': contains_exactly(
             has_entries( {
               'key': 'compilation database path',
               'value': instance_of( str )
@@ -254,7 +254,7 @@ def DebugInfo_FlagsWhenGlobalExtraConfAndNoCompilationDatabase_test( app ):
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
       'servers': empty(),
-      'items': contains(
+      'items': contains_exactly(
         has_entries( {
           'key': 'compilation database path',
           'value': 'None'
@@ -286,7 +286,7 @@ def DebugInfo_Unity_test( app ):
       has_entry( 'completer', has_entries( {
         'name': 'C-family',
         'servers': empty(),
-        'items': contains(
+        'items': contains_exactly(
           has_entries( {
             'key': 'compilation database path',
             'value': 'None'

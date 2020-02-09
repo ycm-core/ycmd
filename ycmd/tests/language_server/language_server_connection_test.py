@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 from ycmd.completers.language_server import language_server_completer as lsc
 from hamcrest import assert_that, calling, equal_to, raises
 from ycmd.tests.language_server import MockConnection
@@ -106,7 +106,7 @@ def LanguageServerConnection_ConnectionTimeout_test():
     assert_that( calling( connection.AwaitServerConnection ),
                  raises( lsc.LanguageServerConnectionTimeout ) )
 
-  assert_that( connection.isAlive(), equal_to( False ) )
+  assert_that( connection.is_alive(), equal_to( False ) )
 
 
 def LanguageServerConnection_CloseTwice_test():

@@ -46,24 +46,19 @@ LOGFILE_FORMAT = 'server_{port}_{std}_'
 
 
 class Client_test:
-
-  def __init__( self ):
+  def setup_method( self ):
     self._location = None
     self._port = None
-    self._hmac_secret = None
     self._servers = []
     self._logfiles = []
     self._options_dict = DefaultOptions()
     self._popen_handle = None
-
-
-  def setUp( self ):
     self._hmac_secret = os.urandom( HMAC_SECRET_LENGTH )
     self._options_dict[ 'hmac_secret' ] = ToUnicode(
       b64encode( self._hmac_secret ) )
 
 
-  def tearDown( self ):
+  def teardown_method( self ):
     for server in self._servers:
       if server.is_running():
         server.terminate()

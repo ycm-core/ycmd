@@ -49,7 +49,7 @@ To run the full suite, just run `run_tests.py`. Options are:
   Windows only;
 * `--coverage`: generate code coverage data.
 
-Remaining arguments are passed to "nosetests" directly. This means that you
+Remaining arguments are passed to "pytest" directly. This means that you
 can run a specific script or a specific test as follows:
 
 * Specific script: `./run_tests.py ycmd/tests/<module_name>.py`
@@ -76,7 +76,7 @@ C++ coverage testing is available only on Linux/Mac and uses gcov.
 Stricly speaking, we use the `-coverage` option to your compiler, which in the
 case of GNU and LLVM compilers, generate gcov-compatible data.
 
-For Python, there's a coverage module which works nicely with `nosetests`. This
+For Python, there's a coverage module which works nicely with `pytest`. This
 is very useful for highlighting areas of your code which are not covered by the
 automated integration tests.
 
@@ -89,7 +89,7 @@ Run it like this:
 This will print a summary and generate HTML output in `./cover`.
 
 More information: https://coverage.readthedocs.org and
-https://nose.readthedocs.org/en/latest/plugins/cover.html
+https://pytest-cov.readthedocs.io/en/stable/
 
 ## Troubleshooting
 

@@ -18,9 +18,14 @@
 from time import sleep
 import json
 import requests
-from nose.tools import eq_
-from hamcrest import ( assert_that, contains, contains_inanyorder, empty,
-                       has_item, has_items, has_entries )
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       contains_inanyorder,
+                       empty,
+                       equal_to,
+                       has_item,
+                       has_items,
+                       has_entries )
 
 from ycmd import handlers
 from ycmd.tests.clangd import IsolatedYcmd, PathToTestFile, SharedYcmd
@@ -75,7 +80,8 @@ def RunTest( app, test ):
       response = app.post_json( '/completions', BuildRequest( **request ),
                                 expect_errors = True )
 
-      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+      assert_that( response.status_code,
+                   equal_to( test[ 'expect' ][ 'response' ] ) )
 
       print( 'Completer response: {}'.format( json.dumps(
         response.json, indent = 2 ) ) )
@@ -107,7 +113,7 @@ def GetCompletions_ForcedWithNoTrigger_NoYcmdCaching_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
           CompletionEntryMatcher( 'do_something', 'void' ),
@@ -133,7 +139,7 @@ def GetCompletions_NotForced_NoYcmdCaching_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
           CompletionEntryMatcher( 'do_something', 'void' ),
@@ -161,7 +167,7 @@ def GetCompletions_ForcedWithNoTrigger_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
         ),
@@ -261,7 +267,7 @@ def GetCompletions_Fallback_Exception_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a_parameter', 'int' ),
           CompletionEntryMatcher( 'another_parameter', 'int' ),
         ),
@@ -386,7 +392,7 @@ int main()
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains( CompletionEntryMatcher( 'foobar' ),
+        'completions': contains_exactly( CompletionEntryMatcher( 'foobar' ),
                                  CompletionEntryMatcher( 'floozar' ) ),
         'errors': empty()
       } )
@@ -459,7 +465,7 @@ def GetCompletions_ClangCLDriverFlag_SimpleCompletion_test( app ):
 
 @WindowsOnly
 @WithRetry
-@SharedYcmd
+@IsolatedYcmd()
 def GetCompletions_ClangCLDriverExec_SimpleCompletion_test( app ):
   RunTest( app, {
     'description': 'basic completion with --driver-mode=cl',
@@ -557,7 +563,7 @@ def GetCompletions_UnicodeInLine_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 8,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'member_with_å_unicøde', 'int' ),
         ),
         'errors': empty(),
@@ -605,7 +611,7 @@ def GetCompletions_QuotedInclude_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'a.hpp"' ),
           CompletionEntryMatcher( 'b.hpp"' ),
           CompletionEntryMatcher( 'c.hpp"' ),
@@ -634,7 +640,7 @@ def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 27,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'd.hpp"' ),
         ),
         'errors': empty(),
@@ -659,7 +665,7 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 27,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'd.hpp"' ),
         ),
         'errors': empty(),
@@ -683,7 +689,7 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 11,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'dir with spaces/' ),
         ),
         'errors': empty(),
@@ -781,7 +787,7 @@ def GetCompletions_cuda_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 29,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'do_something', 'void',
               { 'menu_text': 'do_something(float *a)' } ),
         ),
@@ -806,7 +812,7 @@ def GetCompletions_WithHeaderInsertionDecorators_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 29,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'do_something', 'void',
               { 'menu_text': ' do_something(float *a)' } ),
         ),
@@ -853,7 +859,8 @@ def GetCompletions_SupportExtraConf_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 15,
-        'completions': contains( CompletionEntryMatcher( 'member_foo' ) ),
+        'completions': contains_exactly(
+          CompletionEntryMatcher( 'member_foo' ) ),
         'errors': empty(),
       } )
     }
@@ -871,7 +878,8 @@ def GetCompletions_SupportExtraConf_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 15,
-        'completions': contains( CompletionEntryMatcher( 'member_foo' ) ),
+        'completions': contains_exactly(
+          CompletionEntryMatcher( 'member_foo' ) ),
         'errors': empty(),
       } )
     }
@@ -889,7 +897,8 @@ def GetCompletions_SupportExtraConf_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 15,
-        'completions': contains( CompletionEntryMatcher( 'member_bar' ) ),
+        'completions': contains_exactly(
+          CompletionEntryMatcher( 'member_bar' ) ),
         'errors': empty(),
       } )
     }

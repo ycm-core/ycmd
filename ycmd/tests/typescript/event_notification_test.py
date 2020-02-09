@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains, has_entries
+from hamcrest import assert_that, contains_exactly, has_entries
 
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
@@ -42,7 +42,7 @@ def EventNotification_OnBufferUnload_CloseFile_test( app ):
                                   column_num = 10 )
   response = app.post_json( '/completions', completion_data )
   assert_that( response.json, has_entries( {
-    'completions': contains( CompletionEntryMatcher( 'method' ) ) } ) )
+    'completions': contains_exactly( CompletionEntryMatcher( 'method' ) ) } ) )
 
   # Open imported.ts file in another buffer.
   imported_filepath = PathToTestFile( 'buffer_unload', 'imported.ts' )
@@ -82,8 +82,8 @@ def EventNotification_OnBufferUnload_CloseFile_test( app ):
                                   file_data = imported_data )
   response = app.post_json( '/completions', completion_data )
   assert_that( response.json, has_entries( {
-    'completions': contains( CompletionEntryMatcher( 'modified_method' ) ) } )
-  )
+    'completions': contains_exactly(
+                     CompletionEntryMatcher( 'modified_method' ) ) } ) )
 
   # Unload imported.ts buffer.
   event_data = BuildRequest( filepath = imported_filepath,
@@ -100,4 +100,4 @@ def EventNotification_OnBufferUnload_CloseFile_test( app ):
                                   column_num = 10 )
   response = app.post_json( '/completions', completion_data )
   assert_that( response.json, has_entries( {
-    'completions': contains( CompletionEntryMatcher( 'method' ) ) } ) )
+    'completions': contains_exactly( CompletionEntryMatcher( 'method' ) ) } ) )

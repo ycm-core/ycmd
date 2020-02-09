@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
+                       equal_to,
                        has_entries )
 import requests
 
@@ -67,7 +67,8 @@ def RunTest( app, test ):
                             } ),
                             expect_errors = True )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
@@ -90,7 +91,7 @@ def SignatureHelp_MethodTrigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'unique(double d) : void',
                               [ ParameterMatcher( 7, 15 ) ] )
           ),
@@ -118,7 +119,7 @@ def SignatureHelp_ArgTrigger_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 1,
           'activeParameter': 1,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'test(int i, String s) : void',
                               [ ParameterMatcher( 5, 10 ),
                                 ParameterMatcher( 12, 20 ) ] ),
@@ -150,7 +151,7 @@ def SignatureHelp_Constructor_test( app ):
         'signature_help': has_entries( {
           'activeSignature': 0,
           'activeParameter': 0,
-          'signatures': contains(
+          'signatures': contains_exactly(
             SignatureMatcher( 'SignatureHelp(String signature)',
                               [ ParameterMatcher( 14, 30 ) ] )
           ),

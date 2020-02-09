@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, calling, contains, contains_string,
-                       empty, equal_to, has_entry, has_entries, raises,
-                       matches_regexp )
-from mock import patch
-from nose.tools import eq_
+from hamcrest import ( assert_that, calling, contains_exactly,
+                       contains_inanyorder, contains_string, empty, equal_to,
+                       has_entry, has_entries, raises, matches_regexp )
+from unittest.mock import patch
 from pprint import pprint
 from webtest import AppError
+import pytest
 import requests
 import os.path
 
@@ -42,7 +42,9 @@ from ycmd.utils import ReadFile
 @SharedYcmd
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'cpp' )
-  eq_( sorted( [ 'ClearCompilationFlagCache',
+  assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+               contains_inanyorder(
+                 'ClearCompilationFlagCache',
                  'FixIt',
                  'GetDoc',
                  'GetDocImprecise',
@@ -53,9 +55,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GoToDeclaration',
                  'GoToDefinition',
                  'GoToImprecise',
-                 'GoToInclude' ] ),
-       app.post_json( '/defined_subcommands',
-                      subcommands_data ).json )
+                 'GoToInclude' ) )
 
 
 @SharedYcmd
@@ -71,11 +71,8 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
                             contents = contents,
                             filetype = 'cpp' )
 
-  eq_( {
-    'filepath': os.path.abspath( '/foo' ),
-    'line_num': 2,
-    'column_num': 8
-  }, app.post_json( '/run_completer_command', goto_data ).json )
+  assert_that( app.post_json( '/run_completer_command', goto_data ).json,
+               LocationMatcher( os.path.abspath( '/foo' ), 2, 8 ) )
 
 
 @SharedYcmd
@@ -92,14 +89,10 @@ def Subcommands_GoTo_CUDA_test( app ):
                             contents = contents,
                             filetype = 'cuda' )
 
-  eq_( {
-    'filepath': filepath,
-    'line_num': 4,
-    'column_num': 17
-  }, app.post_json( '/run_completer_command', goto_data ).json )
+  assert_that( app.post_json( '/run_completer_command', goto_data ).json,
+               LocationMatcher( filepath, 4, 17 ) )
 
 
-@SharedYcmd
 def RunGoToTest_all( app, filename, command, test ):
   contents = ReadFile( PathToTestFile( filename ) )
   common_request = {
@@ -141,10 +134,11 @@ def RunGoToTest_all( app, filename, command, test ):
 
   actual_response = app.post_json( '/run_completer_command', goto_data ).json
   pprint( actual_response )
-  eq_( response, actual_response )
+  assert_that( response, equal_to( actual_response ) )
 
 
-def Subcommands_GoTo_all_test():
+@SharedYcmd
+def Subcommands_GoTo_all_test( app ):
   # GoToDeclaration
   tests = [
     # Local::x -> definition/declaration of x
@@ -167,10 +161,10 @@ def Subcommands_GoTo_all_test():
   ]
 
   for test in tests:
-    yield ( RunGoToTest_all,
-            'GoTo_all_Clang_test.cc',
-            [ 'GoToDeclaration' ],
-            test )
+    RunGoToTest_all( app,
+                     'GoTo_all_Clang_test.cc',
+                     [ 'GoToDeclaration' ],
+                     test )
 
   # GoToDefinition
   tests = [
@@ -191,10 +185,10 @@ def Subcommands_GoTo_all_test():
   ]
 
   for test in tests:
-    yield ( RunGoToTest_all,
-            'GoTo_all_Clang_test.cc',
-            [ 'GoToDefinition' ],
-            test )
+    RunGoToTest_all( app,
+                     'GoTo_all_Clang_test.cc',
+                     [ 'GoToDefinition' ],
+                     test )
 
   # GoTo
   tests = [
@@ -220,10 +214,10 @@ def Subcommands_GoTo_all_test():
   ]
 
   for test in tests:
-    yield ( RunGoToTest_all,
-            'GoTo_all_Clang_test.cc',
-            [ 'GoTo' ],
-            test )
+    RunGoToTest_all( app,
+                     'GoTo_all_Clang_test.cc',
+                     [ 'GoTo' ],
+                     test )
 
   # GoToImprecise - identical to GoTo
   tests = [
@@ -249,67 +243,75 @@ def Subcommands_GoTo_all_test():
   ]
 
   for test in tests:
-    yield ( RunGoToTest_all,
-            'GoTo_all_Clang_test.cc',
-            [ 'GoToImprecise' ],
-            test )
+    RunGoToTest_all( app,
+                     'GoTo_all_Clang_test.cc',
+                     [ 'GoToImprecise' ],
+                     test )
 
 
-def Subcommands_GoTo_all_Fail_test():
+@SharedYcmd
+def Subcommands_GoTo_all_Fail_test( app ):
   cursor_on_nothing = { 'request': [ 13, 1 ], 'response': [ 1, 1 ] }
   cursor_on_another_unicode = { 'request': [ 36, 17 ], 'response': [ 1, 1 ] }
   cursor_on_keyword = { 'request': [ 16, 6 ], 'response': [ 1, 1 ] }
 
   # GoToDeclaration
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoToDeclaration' ],
                                           cursor_on_nothing ),
     raises( AppError, r'Can\\\'t jump to declaration.' ) )
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoToDeclaration' ],
                                           cursor_on_keyword ),
     raises( AppError, r'Can\\\'t jump to declaration.' ) )
 
   # GoToDefinition
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoToDefinition' ],
                                           cursor_on_nothing ),
     raises( AppError, r'Can\\\'t jump to definition.' ) )
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoToDefinition' ],
                                           cursor_on_another_unicode ),
     raises( AppError, r'Can\\\'t jump to definition.' ) )
 
   # GoTo
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoTo' ],
                                           cursor_on_nothing ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoTo' ],
                                           cursor_on_keyword ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
   # GoToImprecise
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoToImprecise' ],
                                           cursor_on_nothing ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
   assert_that(
-    calling( RunGoToTest_all ).with_args( 'GoTo_all_Clang_test.cc',
+    calling( RunGoToTest_all ).with_args( app,
+                                          'GoTo_all_Clang_test.cc',
                                           [ 'GoToImprecise' ],
                                           cursor_on_keyword ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
 
-@SharedYcmd
 def RunGoToIncludeTest( app, command, test ):
   app.post_json(
     '/load_extra_conf_file',
@@ -332,11 +334,11 @@ def RunGoToIncludeTest( app, command, test ):
 
   actual_response = app.post_json( '/run_completer_command', goto_data ).json
   pprint( actual_response )
-  eq_( response, actual_response )
+  assert_that( response, equal_to( actual_response ) )
 
 
-def Subcommands_GoToInclude_test():
-  tests = [
+@pytest.mark.parametrize( 'cmd', [ 'GoToInclude', 'GoTo', 'GoToImprecise' ] )
+@pytest.mark.parametrize( 'test', [
     { 'request': [ 1, 1 ], 'response': 'a.hpp' },
     { 'request': [ 2, 1 ], 'response': os.path.join( 'system', 'a.hpp' ) },
     { 'request': [ 3, 1 ], 'response': os.path.join( 'quote',  'b.hpp' ) },
@@ -350,63 +352,72 @@ def Subcommands_GoToInclude_test():
                                                      'OpenGL.framework',
                                                      'Headers',
                                                      'gl.h' ) },
-  ]
-  for test in tests:
-    yield RunGoToIncludeTest, 'GoToInclude', test
-    yield RunGoToIncludeTest, 'GoTo', test
-    yield RunGoToIncludeTest, 'GoToImprecise', test
+  ] )
+@SharedYcmd
+def Subcommands_GoToInclude_test( app, cmd, test ):
+  RunGoToIncludeTest( app, cmd, test )
 
 
-def Subcommands_GoToInclude_Fail_test():
+@SharedYcmd
+def Subcommands_GoToInclude_Fail_test( app ):
   test = { 'request': [ 4, 1 ], 'response': '' }
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoToInclude', test ),
     raises( AppError, 'Include file not found.' ) )
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoTo', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoTo', test ),
     raises( AppError, 'Include file not found.' ) )
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoToImprecise', test ),
     raises( AppError, 'Include file not found.' ) )
 
   test = { 'request': [ 9, 1 ], 'response': '' }
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoToInclude', test ),
     raises( AppError, 'Not an include/import line.' ) )
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoTo', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoTo', test ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoToImprecise', test ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
 
   # Unclosed #include statement.
   test = { 'request': [ 12, 13 ], 'response': '' }
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoToInclude', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoToInclude', test ),
     raises( AppError, 'Not an include/import line.' ) )
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoTo', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoTo', test ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
   assert_that(
-    calling( RunGoToIncludeTest ).with_args( 'GoToImprecise', test ),
+    calling( RunGoToIncludeTest ).with_args( app,
+                                             'GoToImprecise', test ),
     raises( AppError, r'Can\\\'t jump to definition or declaration.' ) )
-
-
-def Subcommands_GoTo_Unity_test():
-  yield RunGoToTest_all, 'unitya.cc', [ 'GoToDeclaration' ], {
-    'request': [ 8, 21 ],
-    'response': [ 1, 8, 'unity.cc' ],
-    'extra_conf': [ '.ycm_extra_conf.py' ],
-  }
-  yield RunGoToTest_all, 'unitya.cc', [ 'GoToInclude' ], {
-    'request': [ 1, 14 ],
-    'response': [ 1, 1, 'unity.h' ],
-    'extra_conf': [ '.ycm_extra_conf.py' ],
-  }
 
 
 @SharedYcmd
+def Subcommands_GoTo_Unity_test( app ):
+  RunGoToTest_all( app, 'unitya.cc', [ 'GoToDeclaration' ], {
+    'request': [ 8, 21 ],
+    'response': [ 1, 8, 'unity.cc' ],
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+  } )
+  RunGoToTest_all( app, 'unitya.cc', [ 'GoToInclude' ], {
+    'request': [ 1, 14 ],
+    'response': [ 1, 1, 'unity.h' ],
+    'extra_conf': [ '.ycm_extra_conf.py' ],
+  } )
+
+
 def RunGetSemanticTest( app, filepath, filetype, test, command ):
   contents = ReadFile( filepath )
   language = { 'cpp': 'c++', 'cuda': 'cuda' }
@@ -449,8 +460,7 @@ def RunGetSemanticTest( app, filepath, filetype, test, command ):
   assert_that( response, has_entry( 'message', expected ) )
 
 
-def Subcommands_GetType_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Basic pod types
     [ { 'line_num': 24, 'column_num':  3 }, 'Foo' ],
     [ { 'line_num':  1, 'column_num':  1 }, 'Internal error: '
@@ -531,35 +541,29 @@ def Subcommands_GetType_test():
       matches_regexp( r'int \(int\)(?: __attribute__\(\(thiscall\)\))?' ) ],
     [ { 'line_num': 54, 'column_num': 18 },
       matches_regexp( r'int \(int\)(?: __attribute__\(\(thiscall\)\))?' ) ],
-  ]
-
-  for test in tests:
-    yield ( RunGetSemanticTest,
-            PathToTestFile( 'GetType_Clang_test.cc' ),
-            'cpp',
-            test,
-            [ 'GetType' ] )
-
-  # For every practical scenario, GetTypeImprecise is the same as GetType (it
-  # just skips the reparse)
-  for test in tests:
-    yield ( RunGetSemanticTest,
-            PathToTestFile( 'GetType_Clang_test.cc' ),
-            'cpp',
-            test,
-            [ 'GetTypeImprecise' ] )
+  ] )
+@pytest.mark.parametrize( 'cmd', [ 'GetType', 'GoToImprecise' ] )
+@SharedYcmd
+def Subcommands_GetType_test( app, cmd, test ):
+  RunGetSemanticTest( app,
+                      PathToTestFile( 'GetType_Clang_test.cc' ),
+                      'cpp',
+                      test,
+                      [ 'GetType' ] )
 
 
-def SubCommands_GetType_CUDA_test():
+@SharedYcmd
+def SubCommands_GetType_CUDA_test( app ):
   test = [ { 'line_num': 8, 'column_num': 3, }, 'void ()' ]
-  yield ( RunGetSemanticTest,
-          PathToTestFile( 'cuda', 'basic.cu' ),
-          'cuda',
-          test,
-          [ 'GetType' ] )
+  RunGetSemanticTest( app,
+                      PathToTestFile( 'cuda', 'basic.cu' ),
+                      'cuda',
+                      test,
+                      [ 'GetType' ] )
 
 
-def SubCommands_GetType_Unity_test():
+@SharedYcmd
+def SubCommands_GetType_Unity_test( app ):
   test = [
     {
       'line_num': 10,
@@ -568,15 +572,14 @@ def SubCommands_GetType_Unity_test():
     },
     'int'
   ]
-  yield ( RunGetSemanticTest,
-          PathToTestFile( 'unitya.cc' ),
-          'cpp',
-          test,
-          [ 'GetType' ] )
+  RunGetSemanticTest( app,
+                      PathToTestFile( 'unitya.cc' ),
+                      'cpp',
+                      test,
+                      [ 'GetType' ] )
 
 
-def Subcommands_GetParent_test():
-  tests = [
+@pytest.mark.parametrize( 'test', [
     [ { 'line_num':  1,  'column_num':  1 }, 'Internal error: '
                                             'cursor not valid' ],
     [ { 'line_num':  2,  'column_num':  8 },
@@ -604,17 +607,16 @@ def Subcommands_GetParent_test():
     [ { 'line_num': 49,  'column_num': 14 }, 'l' ],
     [ { 'line_num': 50,  'column_num': 19 }, 'l' ],
     [ { 'line_num': 51,  'column_num': 16 }, 'main()' ],
-  ]
-
-  for test in tests:
-    yield ( RunGetSemanticTest,
-            PathToTestFile( 'GetParent_Clang_test.cc' ),
-            'cpp',
-            test,
-            [ 'GetParent' ] )
-
-
+  ] )
 @SharedYcmd
+def Subcommands_GetParent_test( app, test ):
+  RunGetSemanticTest( app,
+                      PathToTestFile( 'GetParent_Clang_test.cc' ),
+                      'cpp',
+                      test,
+                      [ 'GetParent' ] )
+
+
 def RunFixItTest( app, line, column, lang, file_path, check ):
   contents = ReadFile( file_path )
 
@@ -671,8 +673,8 @@ def FixIt_Check_cpp11_Ins( results ):
   # First fixit
   #   switch(A()) { // expected-error{{explicit conversion to}}
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'static_cast<int>(' ),
           'range': has_entries( {
@@ -697,8 +699,8 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
   # Similar to FixIt_Check_cpp11_1 but inserts split across lines
   #
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'static_cast<int>(' ),
           'range': has_entries( {
@@ -722,8 +724,8 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
 def FixIt_Check_cpp11_Del( results ):
   # Removal of ::
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( '' ),
           'range': has_entries( {
@@ -739,8 +741,8 @@ def FixIt_Check_cpp11_Del( results ):
 
 def FixIt_Check_cpp11_Repl( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'foo' ),
           'range': has_entries( {
@@ -756,8 +758,8 @@ def FixIt_Check_cpp11_Repl( results ):
 
 def FixIt_Check_cpp11_DelAdd( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( '' ),
           'range': has_entries( {
@@ -780,8 +782,8 @@ def FixIt_Check_cpp11_DelAdd( results ):
 
 def FixIt_Check_objc( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'id' ),
           'range': has_entries( {
@@ -802,10 +804,10 @@ def FixIt_Check_objc_NoFixIt( results ):
 
 def FixIt_Check_cpp11_MultiFirst( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # first fix-it at 54,16
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( 'foo' ),
             'range': has_entries( {
@@ -818,7 +820,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
       } ),
       # second fix-it at 54,52
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
             'range': has_entries( {
@@ -842,10 +844,10 @@ def FixIt_Check_cpp11_MultiFirst( results ):
 
 def FixIt_Check_cpp11_MultiSecond( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # second fix-it at 54,52
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
             'range': has_entries( {
@@ -865,7 +867,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
       } ),
       # first fix-it at 54,16
       has_entries( {
-        'chunks': contains(
+        'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( 'foo' ),
             'range': has_entries( {
@@ -882,8 +884,8 @@ def FixIt_Check_cpp11_MultiSecond( results ):
 
 def FixIt_Check_unicode_Ins( results ):
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
-      'chunks': contains(
+    'fixits': contains_exactly( has_entries( {
+      'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( ';' ),
           'range': has_entries( {
@@ -899,11 +901,11 @@ def FixIt_Check_unicode_Ins( results ):
 
 def FixIt_Check_cpp11_Note( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # First note: put parens around it
       has_entries( {
         'text': contains_string( 'parentheses around the assignment' ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '(',
                         LineColMatcher( 59, 8 ),
                         LineColMatcher( 59, 8 ) ),
@@ -917,7 +919,7 @@ def FixIt_Check_cpp11_Note( results ):
       # Second note: change to ==
       has_entries( {
         'text': contains_string( '==' ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '==',
                         LineColMatcher( 60, 8 ),
                         LineColMatcher( 60, 9 ) )
@@ -930,11 +932,11 @@ def FixIt_Check_cpp11_Note( results ):
 
 def FixIt_Check_cpp11_SpellCheck( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       # Change to SpellingIsNotMyStrongPoint
       has_entries( {
         'text': contains_string( "did you mean 'SpellingIsNotMyStrongPoint'" ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'SpellingIsNotMyStrongPoint',
                         LineColMatcher( 72, 9 ),
                         LineColMatcher( 72, 35 ) )
@@ -946,11 +948,11 @@ def FixIt_Check_cpp11_SpellCheck( results ):
 
 def FixIt_Check_cuda( results ):
   assert_that( results, has_entries( {
-    'fixits': contains(
+    'fixits': contains_exactly(
       has_entries( {
         'text': contains_string(
            "error: kernel function type 'int ()' must have void " ),
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'void',
                         LineColMatcher( 3, 12 ),
                         LineColMatcher( 3, 15 ) )
@@ -960,55 +962,71 @@ def FixIt_Check_cuda( results ):
   } ) )
 
 
-def Subcommands_FixIt_all_test():
-  cfile = PathToTestFile( 'FixIt_Clang_cpp11.cpp' )
-  mfile = PathToTestFile( 'FixIt_Clang_objc.m' )
-  cufile = PathToTestFile( 'cuda', 'fixit_test.cu' )
-  ufile = PathToTestFile( 'unicode.cc' )
-
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # L
     # i   C
     # n   o
     # e   l   Lang     File,  Checker
-    [ 16, 0,  'cpp11', cfile, FixIt_Check_cpp11_Ins ],
-    [ 16, 1,  'cpp11', cfile, FixIt_Check_cpp11_Ins ],
-    [ 16, 10, 'cpp11', cfile, FixIt_Check_cpp11_Ins ],
-    [ 25, 14, 'cpp11', cfile, FixIt_Check_cpp11_InsMultiLine ],
-    [ 25, 0,  'cpp11', cfile, FixIt_Check_cpp11_InsMultiLine ],
-    [ 35, 7,  'cpp11', cfile, FixIt_Check_cpp11_Del ],
-    [ 40, 6,  'cpp11', cfile, FixIt_Check_cpp11_Repl ],
-    [ 48, 3,  'cpp11', cfile, FixIt_Check_cpp11_DelAdd ],
+    [ 16, 0,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Ins ],
+    [ 16, 1,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Ins ],
+    [ 16, 10, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Ins ],
+    [ 25, 14, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_InsMultiLine ],
+    [ 25, 0,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_InsMultiLine ],
+    [ 35, 7,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Del ],
+    [ 40, 6,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Repl ],
+    [ 48, 3,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_DelAdd ],
 
-    [ 5, 3,   'objective-c', mfile, FixIt_Check_objc ],
-    [ 7, 1,   'objective-c', mfile, FixIt_Check_objc_NoFixIt ],
+    [ 5, 3,   'objective-c', PathToTestFile( 'FixIt_Clang_objc.m' ),
+      FixIt_Check_objc ],
+    [ 7, 1,   'objective-c', PathToTestFile( 'FixIt_Clang_objc.m' ),
+      FixIt_Check_objc_NoFixIt ],
 
-    [ 3, 12,  'cuda', cufile, FixIt_Check_cuda ],
+    [ 3, 12,  'cuda', PathToTestFile( 'cuda', 'fixit_test.cu' ),
+      FixIt_Check_cuda ],
 
     # multiple errors on a single line; both with fixits
-    [ 54, 15, 'cpp11', cfile, FixIt_Check_cpp11_MultiFirst ],
-    [ 54, 16, 'cpp11', cfile, FixIt_Check_cpp11_MultiFirst ],
-    [ 54, 16, 'cpp11', cfile, FixIt_Check_cpp11_MultiFirst ],
-    [ 54, 17, 'cpp11', cfile, FixIt_Check_cpp11_MultiFirst ],
-    [ 54, 18, 'cpp11', cfile, FixIt_Check_cpp11_MultiFirst ],
+    [ 54, 15, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiFirst ],
+    [ 54, 16, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiFirst ],
+    [ 54, 16, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiFirst ],
+    [ 54, 17, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiFirst ],
+    [ 54, 18, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiFirst ],
 
     # should put closest fix-it first?
-    [ 54, 51, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
-    [ 54, 52, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
-    [ 54, 53, 'cpp11', cfile, FixIt_Check_cpp11_MultiSecond ],
+    [ 54, 51, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiSecond ],
+    [ 54, 52, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiSecond ],
+    [ 54, 53, 'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_MultiSecond ],
 
     # unicode in line for fixit
-    [ 21, 16, 'cpp11', ufile, FixIt_Check_unicode_Ins ],
+    [ 21, 16, 'cpp11', PathToTestFile( 'unicode.cc' ),
+      FixIt_Check_unicode_Ins ],
 
     # FixIt attached to a "child" diagnostic (i.e. a Note)
-    [ 60, 1,  'cpp11', cfile, FixIt_Check_cpp11_Note ],
+    [ 60, 1,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_Note ],
 
     # FixIt due to forced spell checking
-    [ 72, 9,  'cpp11', cfile, FixIt_Check_cpp11_SpellCheck ],
-  ]
-
-  for test in tests:
-    yield RunFixItTest, test[ 0 ], test[ 1 ], test[ 2 ], test[ 3 ], test[ 4 ]
+    [ 72, 9,  'cpp11', PathToTestFile( 'FixIt_Clang_cpp11.cpp' ),
+      FixIt_Check_cpp11_SpellCheck ],
+  ] )
+@SharedYcmd
+def Subcommands_FixIt_all_test( app, test ):
+  RunFixItTest( app, test[ 0 ], test[ 1 ], test[ 2 ], test[ 3 ], test[ 4 ] )
 
 
 @SharedYcmd
@@ -1034,9 +1052,9 @@ def Subcommands_FixIt_Unity_test( app ):
 
   pprint( results )
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
+    'fixits': contains_exactly( has_entries( {
       'text': contains_string( "expected ';' after expression" ),
-      'chunks': contains(
+      'chunks': contains_exactly(
         ChunkMatcher( ';',
                       LocationMatcher( file_path, 11, 18 ),
                       LocationMatcher( file_path, 11, 18 ) ),
@@ -1101,9 +1119,9 @@ def Subcommands_FixIt_NonExistingFile_test( app ):
 
   pprint( results )
   assert_that( results, has_entries( {
-    'fixits': contains( has_entries( {
+    'fixits': contains_exactly( has_entries( {
       'text': contains_string( "expected ';' after top level declarator" ),
-      'chunks': contains(
+      'chunks': contains_exactly(
         ChunkMatcher( ';',
                       LocationMatcher( normal_file_path, 1, 9 ),
                       LocationMatcher( normal_file_path, 1, 9 ) ),
@@ -1130,8 +1148,8 @@ def Subcommands_GetDoc_Variable_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char a_global_variable
 This really is a global variable.
 Type: char
@@ -1139,7 +1157,7 @@ Name: a_global_variable
 ---
 This really is a global variable.
 
-The first line of comment is the brief.""" } )
+The first line of comment is the brief.""" ) )
 
 
 @SharedYcmd
@@ -1159,8 +1177,8 @@ def Subcommands_GetDoc_Method_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char with_brief()
 brevity is for suckers
 Type: char ()
@@ -1172,7 +1190,7 @@ This is not the brief.
 \\brief brevity is for suckers
 
 This is more information
-""" } )
+""" ) )
 
 
 @SharedYcmd
@@ -1192,14 +1210,14 @@ def Subcommands_GetDoc_Namespace_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 namespace Test {}
 This is a test namespace
 Type: 
 Name: Test
 ---
-This is a test namespace""" } ) # noqa
+This is a test namespace""" ) ) # noqa
 
 
 @SharedYcmd
@@ -1219,7 +1237,8 @@ def Subcommands_GetDoc_Undocumented_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1242,7 +1261,8 @@ def Subcommands_GetDoc_NoCursor_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1304,8 +1324,8 @@ def Subcommands_GetDocImprecise_Variable_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char a_global_variable
 This really is a global variable.
 Type: char
@@ -1313,7 +1333,7 @@ Name: a_global_variable
 ---
 This really is a global variable.
 
-The first line of comment is the brief.""" } )
+The first line of comment is the brief.""" ) )
 
 
 @SharedYcmd
@@ -1342,8 +1362,8 @@ def Subcommands_GetDocImprecise_Method_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 char with_brief()
 brevity is for suckers
 Type: char ()
@@ -1355,7 +1375,7 @@ This is not the brief.
 \\brief brevity is for suckers
 
 This is more information
-""" } )
+""" ) )
 
 
 @SharedYcmd
@@ -1384,14 +1404,14 @@ def Subcommands_GetDocImprecise_Namespace_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 namespace Test {}
 This is a test namespace
 Type: 
 Name: Test
 ---
-This is a test namespace""" } ) # noqa
+This is a test namespace""" ) ) # noqa
 
 
 @SharedYcmd
@@ -1420,7 +1440,8 @@ def Subcommands_GetDocImprecise_Undocumented_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1452,7 +1473,8 @@ def Subcommands_GetDocImprecise_NoCursor_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( ValueError, NO_DOCUMENTATION_MESSAGE ) )
@@ -1473,15 +1495,15 @@ def Subcommands_GetDocImprecise_NoReadyToParse_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 int get_a_global_variable(bool test)
 This is a method which is only pretend global
 Type: int (bool)
 Name: get_a_global_variable
 ---
 This is a method which is only pretend global
-@param test Set this to true. Do it.""" } )
+@param test Set this to true. Do it.""" ) )
 
 
 @SharedYcmd
@@ -1533,8 +1555,8 @@ def Subcommands_GetDoc_Unicode_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 int member_with_å_unicøde
 This method has unicøde in it
 Type: int
@@ -1542,7 +1564,7 @@ Name: member_with_å_unicøde
 ---
 
 This method has unicøde in it
-""" } )
+""" ) )
 
 
 @SharedYcmd
@@ -1563,17 +1585,16 @@ def Subcommands_GetDoc_CUDA_test( app ):
 
   pprint( response )
 
-  eq_( response, {
-    'detailed_info': """\
+  assert_that( response, has_entry(
+    'detailed_info', """\
 void kernel()
 This is a test kernel
 Type: void ()
 Name: kernel
 ---
-This is a test kernel""" } )
+This is a test kernel""" ) )
 
 
-@SharedYcmd
 def Subcommands_StillParsingError( app, command ):
   filepath = PathToTestFile( 'test.cpp' )
 
@@ -1589,7 +1610,8 @@ def Subcommands_StillParsingError( app, command ):
                             data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   pprint( response.json )
 
@@ -1597,16 +1619,17 @@ def Subcommands_StillParsingError( app, command ):
                                             PARSING_FILE_MESSAGE ) )
 
 
-def Subcommands_StillParsingError_test():
+@SharedYcmd
+def Subcommands_StillParsingError_test( app ):
   completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
   with patch.object( completer, '_completer', MockCoreClangCompleter() ):
-    yield Subcommands_StillParsingError, 'FixIt'
-    yield Subcommands_StillParsingError, 'GetDoc'
-    yield Subcommands_StillParsingError, 'GetDocImprecise'
-    yield Subcommands_StillParsingError, 'GetParent'
-    yield Subcommands_StillParsingError, 'GetType'
-    yield Subcommands_StillParsingError, 'GetTypeImprecise'
-    yield Subcommands_StillParsingError, 'GoTo'
-    yield Subcommands_StillParsingError, 'GoToDeclaration'
-    yield Subcommands_StillParsingError, 'GoToDefinition'
-    yield Subcommands_StillParsingError, 'GoToImprecise'
+    Subcommands_StillParsingError( app, 'FixIt' )
+    Subcommands_StillParsingError( app, 'GetDoc' )
+    Subcommands_StillParsingError( app, 'GetDocImprecise' )
+    Subcommands_StillParsingError( app, 'GetParent' )
+    Subcommands_StillParsingError( app, 'GetType' )
+    Subcommands_StillParsingError( app, 'GetTypeImprecise' )
+    Subcommands_StillParsingError( app, 'GoTo' )
+    Subcommands_StillParsingError( app, 'GoToDeclaration' )
+    Subcommands_StillParsingError( app, 'GoToDefinition' )
+    Subcommands_StillParsingError( app, 'GoToImprecise' )

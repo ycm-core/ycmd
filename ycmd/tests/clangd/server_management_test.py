@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch
+from unittest.mock import patch
 import psutil
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        has_entries,
                        has_entry,
@@ -56,7 +56,7 @@ def CheckStopped( app ):
     GetDebugInfo( app ),
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'pid': None,
         'is_running': False
@@ -77,7 +77,7 @@ def ServerManagement_StopServer_Clean_test( app ):
 @patch( 'os.remove', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
-def ServerManagement_StopServer_Unclean_test( app, *args ):
+def ServerManagement_StopServer_Unclean_test( rm, app ):
   StartClangd( app )
   StopCompleterServer( app, 'cpp', '' )
   CheckStopped( app )
@@ -161,7 +161,7 @@ def ServerManagement_RestartServer_test( app ):
     GetDebugInfo( app ),
     has_entry( 'completer', has_entries( {
       'name': 'C-family',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'Clangd',
         'is_running': True,
         'extras': has_item( has_entries( {

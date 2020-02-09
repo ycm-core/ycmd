@@ -18,15 +18,14 @@
 import json
 import requests
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        empty,
                        equal_to,
                        has_entries,
                        has_entry,
                        has_items,
                        instance_of )
-from mock import patch
-from nose.tools import eq_
+from unittest.mock import patch
 from os import path as p
 
 from ycmd.completers.language_server.language_server_completer import (
@@ -73,7 +72,7 @@ def GenericLSPCompleter_GetCompletions_NotACompletionProvider_test( app ):
     WaitUntilCompleterServerReady( app, 'foo' )
     request.pop( 'event_name' )
     response = app.post_json( '/completions', BuildRequest( **request ) )
-    assert_that( response.json, has_entries( { 'completions': contains(
+    assert_that( response.json, has_entries( { 'completions': contains_exactly(
       CompletionEntryMatcher( 'Java', '[ID]' ) ) } ) )
 
 
@@ -93,11 +92,11 @@ def GenericLSPCompleter_GetCompletions_FilteredNoForce_test( app ):
   WaitUntilCompleterServerReady( app, 'foo' )
   request.pop( 'event_name' )
   response = app.post_json( '/completions', BuildRequest( **request ) )
-  eq_( response.status_code, 200 )
+  assert_that( response.status_code, equal_to( 200 ) )
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )
   assert_that( response.json, has_entries( {
-    'completions': contains(
+    'completions': contains_exactly(
       CompletionEntryMatcher( 'JavaScript', 'JavaScript details' ),
     )
   } ) )
@@ -119,11 +118,11 @@ def GenericLSPCompleter_GetCompletions_test( app ):
   request[ 'force_semantic' ] = True
   request.pop( 'event_name' )
   response = app.post_json( '/completions', BuildRequest( **request ) )
-  eq_( response.status_code, 200 )
+  assert_that( response.status_code, equal_to( 200 ) )
   print( 'Completer response: {}'.format( json.dumps(
     response.json, indent = 2 ) ) )
   assert_that( response.json, has_entries( {
-    'completions': contains(
+    'completions': contains_exactly(
       CompletionEntryMatcher( 'JavaScript', 'JavaScript details' ),
       CompletionEntryMatcher( 'TypeScript', 'TypeScript details' ),
     )
@@ -178,7 +177,8 @@ def GenericLSPCompleter_Hover_RequestFails_test( app ):
   response = app.post_json( '/run_completer_command',
                             request,
                             expect_errors = True )
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json, ErrorMatcher( ResponseFailedException,
     'Request failed: -32601: Unhandled method textDocument/hover' ) )
@@ -190,7 +190,7 @@ def GenericLSPCompleter_Hover_RequestFails_test( app ):
       'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
 @patch( 'ycmd.completers.language_server.generic_lsp_completer.'
         'GenericLSPCompleter.GetHoverResponse', return_value = 'asd' )
-def GenericLSPCompleter_Hover_HasResponse_test( app, *args ):
+def GenericLSPCompleter_Hover_HasResponse_test( get_hover, app ):
   request = BuildRequest( filepath = TEST_FILE,
                           filetype = 'foo',
                           line_num = 1,
@@ -203,9 +203,7 @@ def GenericLSPCompleter_Hover_HasResponse_test( app, *args ):
   request.pop( 'event_name' )
   request[ 'command_arguments' ] = [ 'GetHover' ]
   response = app.post_json( '/run_completer_command', request ).json
-  eq_( response, {
-    'message': 'asd'
-  } )
+  assert_that( response, has_entry( 'message', 'asd' ) )
 
 
 @IsolatedYcmd( { 'language_server':
@@ -231,17 +229,17 @@ def GenericLSPCompleter_DebugInfo_CustomRoot_test( app, *args ):
     response,
     has_entry( 'completer', has_entries( {
       'name': 'GenericLSP',
-      'servers': contains( has_entries( {
+      'servers': contains_exactly( has_entries( {
         'name': 'fooCompleter',
         'is_running': instance_of( bool ),
-        'executable': contains( instance_of( str ),
+        'executable': contains_exactly( instance_of( str ),
                                 instance_of( str ),
                                 instance_of( str ) ),
         'address': None,
         'port': None,
         'pid': instance_of( int ),
-        'logfiles': contains( instance_of( str ) ),
-        'extras': contains(
+        'logfiles': contains_exactly( instance_of( str ) ),
+        'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',
             'value': instance_of( str ),
@@ -296,7 +294,8 @@ def GenericLSPCompleter_SignatureHelp_NoTriggers_test( app ):
       'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
 @patch( 'ycmd.completers.completer.Completer.ShouldUseSignatureHelpNow',
         return_value = True )
-def GenericLSPCompleter_SignatureHelp_NotASigHelpProvider_test( app, *args ):
+def GenericLSPCompleter_SignatureHelp_NotASigHelpProvider_test( should_use_sig,
+                                                                app ):
   test_file = PathToTestFile(
       'generic_server', 'foo', 'bar', 'baz', 'test_file' )
   request = BuildRequest( filepath = test_file,

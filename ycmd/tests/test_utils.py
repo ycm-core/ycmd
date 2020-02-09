@@ -17,19 +17,19 @@
 
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_string,
                        empty,
                        equal_to,
                        has_entries,
                        has_entry,
                        has_item )
-from mock import patch
+from unittest.mock import patch
 from pprint import pformat
 from webtest import TestApp
 import bottle
 import contextlib
-import nose
+import pytest
 import functools
 import os
 import tempfile
@@ -48,10 +48,7 @@ from ycmd.utils import ( GetCurrentDirectory,
                          WaitUntilProcessIsTerminated )
 import ycm_core
 
-try:
-  from unittest import skipIf
-except ImportError:
-  from unittest2 import skipIf
+from unittest import skipIf
 
 TESTS_DIR = os.path.abspath( os.path.dirname( __file__ ) )
 
@@ -168,7 +165,7 @@ def LineColMatcher( line, col ):
 def CompleterProjectDirectoryMatcher( project_directory ):
   return has_entry(
     'completer',
-    has_entry( 'servers', contains(
+    has_entry( 'servers', contains_exactly(
       has_entry( 'extras', has_item(
         has_entries( {
           'key': 'Project Directory',
@@ -182,7 +179,7 @@ def CompleterProjectDirectoryMatcher( project_directory ):
 def SignatureMatcher( label, parameters ):
   return has_entries( {
     'label': equal_to( label ),
-    'parameters': contains( *parameters )
+    'parameters': contains_exactly( *parameters )
   } )
 
 
@@ -192,7 +189,7 @@ def SignatureAvailableMatcher( available ):
 
 def ParameterMatcher( begin, end ):
   return has_entries( {
-    'label': contains( begin, end )
+    'label': contains_exactly( begin, end )
   } )
 
 
@@ -364,7 +361,7 @@ def ExpectedFailure( reason, *exception_matchers ):
           raise test_exception
 
         # Failed for the right reason
-        raise nose.SkipTest( reason )
+        pytest.skip( reason )
       else:
         raise AssertionError( 'Test was expected to fail: {0}'.format(
           reason ) )

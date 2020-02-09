@@ -17,24 +17,23 @@
 
 import time
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
+                       equal_to,
                        has_entries,
+                       has_entry,
                        instance_of,
                        is_not,
                        matches_regexp )
-from nose.tools import eq_
 from pprint import pformat
 import requests
+import pytest
 import json
 
 from ycmd.utils import ReadFile
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
-from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
-                              PathToTestFile,
-                              SharedYcmd,
-                              IsolatedYcmd )
+from ycmd.tests.java import PathToTestFile, SharedYcmd, IsolatedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
@@ -42,7 +41,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ExpectedFailure,
                                     LocationMatcher,
                                     WithRetry )
-from mock import patch
+from unittest.mock import patch
 from ycmd import handlers
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.completers.language_server.language_server_completer import (
@@ -51,6 +50,24 @@ from ycmd.completers.language_server.language_server_completer import (
 )
 from ycmd.responses import UnknownExtraConf
 
+TESTLAUNCHER_JAVA = PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestLauncher.java' )
+
+TEST_JAVA = PathToTestFile( 'simple_eclipse_project',
+                            'src',
+                            'com',
+                            'youcompleteme',
+                            'Test.java' )
+
+TSET_JAVA = PathToTestFile( 'simple_eclipse_project',
+                            'src',
+                            'com',
+                            'youcompleteme',
+                            'testing',
+                            'Tset.java' )
 
 
 @WithRetry
@@ -58,7 +75,9 @@ from ycmd.responses import UnknownExtraConf
 def Subcommands_DefinedSubcommands_test( app ):
   subcommands_data = BuildRequest( completer_target = 'java' )
 
-  eq_( sorted( [ 'FixIt',
+  assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+               contains_inanyorder(
+                 'FixIt',
                  'ExecuteCommand',
                  'Format',
                  'GoToDeclaration',
@@ -73,11 +92,23 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'OrganizeImports',
                  'RefactorRename',
                  'RestartServer',
-                 'WipeWorkspace' ] ),
-       app.post_json( '/defined_subcommands', subcommands_data ).json )
+                 'WipeWorkspace' ) )
 
 
-def Subcommands_ServerNotInitialized_test():
+@pytest.mark.parametrize( 'cmd,arguments', [
+  ( 'GoTo', [] ),
+  ( 'GoToDeclaration', [] ),
+  ( 'GoToDefinition', [] ),
+  ( 'GoToReferences', [] ),
+  ( 'GetType', [] ),
+  ( 'GetDoc', [] ),
+  ( 'FixIt', [] ),
+  ( 'Format', [] ),
+  ( 'OrganizeImports', [] ),
+  ( 'RefactorRename', [ 'test' ] ),
+] )
+@SharedYcmd
+def Subcommands_ServerNotInitialized_test( app, cmd, arguments ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -86,8 +117,6 @@ def Subcommands_ServerNotInitialized_test():
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
-  @WithRetry
-  @SharedYcmd
   @patch.object( completer, '_ServerIsInitialized', return_value = False )
   def Test( app, cmd, arguments, *args ):
     RunTest( app, {
@@ -106,16 +135,7 @@ def Subcommands_ServerNotInitialized_test():
       }
     } )
 
-  yield Test, 'GoTo', []
-  yield Test, 'GoToDeclaration', []
-  yield Test, 'GoToDefinition', []
-  yield Test, 'GoToReferences', []
-  yield Test, 'GetType', []
-  yield Test, 'GetDoc', []
-  yield Test, 'FixIt', []
-  yield Test, 'Format', []
-  yield Test, 'OrganizeImports', []
-  yield Test, 'RefactorRename', [ 'test' ]
+  Test( app, cmd, arguments )
 
 
 def RunTest( app, test, contents = None ):
@@ -152,7 +172,8 @@ def RunTest( app, test, contents = None ):
 
       print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-      eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+      assert_that( response.status_code,
+                   equal_to( test[ 'expect' ][ 'response' ] ) )
 
       assert_that( response.json, test[ 'expect' ][ 'data' ] )
       break
@@ -185,7 +206,8 @@ def Subcommands_GetDoc_NoDoc_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, NO_DOCUMENTATION_MESSAGE ) )
@@ -211,10 +233,9 @@ def Subcommands_GetDoc_Method_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'detailed_info': 'Return runtime debugging info. Useful for finding the '
-                     'actual code which is useful.'
-  } )
+  assert_that( response, has_entry( 'detailed_info',
+    'Return runtime debugging info. Useful for finding the '
+    'actual code which is useful.' ) )
 
 
 @WithRetry
@@ -237,11 +258,10 @@ def Subcommands_GetDoc_Class_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'detailed_info': 'This is the actual code that matters. This concrete '
-                     'implementation is the equivalent of the main function in '
-                     'other languages'
-  } )
+  assert_that( response, has_entry( 'detailed_info',
+    'This is the actual code that matters. This concrete '
+    'implementation is the equivalent of the main function '
+    'in other languages' ) )
 
 
 @WithRetry
@@ -266,7 +286,8 @@ def Subcommands_GetType_NoKnownType_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, 'Unknown type' ) )
@@ -292,9 +313,7 @@ def Subcommands_GetType_Class_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'com.test.TestWidgetImpl'
-  } )
+  assert_that( response, has_entry( 'message', 'com.test.TestWidgetImpl' ) )
 
 
 @WithRetry
@@ -317,9 +336,8 @@ def Subcommands_GetType_Constructor_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'com.test.TestWidgetImpl.TestWidgetImpl(String info)'
-  } )
+  assert_that( response, has_entry(
+    'message', 'com.test.TestWidgetImpl.TestWidgetImpl(String info)' ) )
 
 
 @WithRetry
@@ -342,9 +360,7 @@ def Subcommands_GetType_ClassMemberVariable_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-      'message': 'String info'
-  } )
+  assert_that( response, has_entry( 'message', 'String info' ) )
 
 
 @WithRetry
@@ -367,10 +383,9 @@ def Subcommands_GetType_MethodArgument_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'String info - '
-                     'com.test.TestWidgetImpl.TestWidgetImpl(String)'
-  } )
+  assert_that( response, has_entry(
+    'message', 'String info - com.test.TestWidgetImpl.TestWidgetImpl(String)'
+  ) )
 
 
 @WithRetry
@@ -393,10 +408,8 @@ def Subcommands_GetType_MethodVariable_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'int a - '
-                    'com.test.TestWidgetImpl.TestWidgetImpl(String)'
-  } )
+  assert_that( response, has_entry(
+    'message', 'int a - com.test.TestWidgetImpl.TestWidgetImpl(String)' ) )
 
 
 @WithRetry
@@ -419,28 +432,22 @@ def Subcommands_GetType_Method_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()'
-  } )
+  assert_that( response, has_entry(
+    'message', 'void com.test.TestWidgetImpl.doSomethingVaguelyUseful()' ) )
 
 
 @WithRetry
 @SharedYcmd
 def Subcommands_GetType_Unicode_test( app ):
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-  contents = ReadFile( filepath )
+  contents = ReadFile( TEST_JAVA )
 
   app.post_json( '/event_notification',
-                 BuildRequest( filepath = filepath,
+                 BuildRequest( filepath = TEST_JAVA,
                                filetype = 'java',
                                contents = contents,
                                event_name = 'FileReadyToParse' ) )
 
-  event_data = BuildRequest( filepath = filepath,
+  event_data = BuildRequest( filepath = TEST_JAVA,
                              filetype = 'java',
                              line_num = 7,
                              column_num = 17,
@@ -450,9 +457,8 @@ def Subcommands_GetType_Unicode_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, {
-    'message': 'String whåtawîdgé - com.youcompleteme.Test.doUnicødeTes()'
-  } )
+  assert_that( response, has_entry(
+    'message', 'String whåtawîdgé - com.youcompleteme.Test.doUnicødeTes()' ) )
 
 
 @WithRetry
@@ -477,7 +483,8 @@ def Subcommands_GetType_LiteralValue_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, 'Unknown type' ) )
@@ -505,7 +512,8 @@ def Subcommands_GoTo_NoLocation_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError, 'Cannot jump to location' ) )
@@ -533,7 +541,8 @@ def Subcommands_GoToReferences_NoReferences_test( app ):
                             event_data,
                             expect_errors = True )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
 
   assert_that( response.json,
                ErrorMatcher( RuntimeError,
@@ -560,8 +569,7 @@ def Subcommands_GoToReferences_test( app ):
 
   response = app.post_json( '/run_completer_command', event_data ).json
 
-  eq_( response, [
-         {
+  assert_that( response, contains_exactly( has_entries( {
            'filepath': PathToTestFile( 'simple_eclipse_project',
                                        'src',
                                        'com',
@@ -570,8 +578,8 @@ def Subcommands_GoToReferences_test( app ):
            'column_num': 9,
            'description': "      w.doSomethingVaguelyUseful();",
            'line_num': 28
-         },
-         {
+         } ),
+         has_entries( {
            'filepath': PathToTestFile( 'simple_eclipse_project',
                                        'src',
                                        'com',
@@ -580,7 +588,7 @@ def Subcommands_GoToReferences_test( app ):
            'column_num': 11,
            'description': "        w.doSomethingVaguelyUseful();",
            'line_num': 32
-         } ] )
+         } ) ) )
 
 
 @WithRetry
@@ -603,8 +611,8 @@ def Subcommands_RefactorRename_Simple_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
               ChunkMatcher( 'renamed_l = new TestLauncher( 10 );'
                             '\n    renamed_l',
                             LocationMatcher( filepath, 27, 18 ),
@@ -656,8 +664,8 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               'a_quite_long_string',
               LocationMatcher( AbstractTestWidget, 10, 15 ),
@@ -710,11 +718,6 @@ def Subcommands_RefactorRename_Missing_New_Name_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_RefactorRename_Unicode_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Rename works for unicode identifier',
     'request': {
@@ -722,17 +725,17 @@ def Subcommands_RefactorRename_Unicode_test( app ):
       'arguments': [ 'shorter' ],
       'line_num': 7,
       'column_num': 21,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher(
               'shorter = "Test";\n    return shorter',
-              LocationMatcher( filepath, 7, 12 ),
-              LocationMatcher( filepath, 8, 25 )
+              LocationMatcher( TEST_JAVA, 7, 12 ),
+              LocationMatcher( TEST_JAVA, 8, 25 )
             ),
           ),
         } ) ),
@@ -743,7 +746,6 @@ def Subcommands_RefactorRename_Unicode_test( app ):
 
 
 @WithRetry
-@SharedYcmd
 def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   RunTest( app, {
     'description': description,
@@ -760,7 +762,16 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   } )
 
 
-def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
+@pytest.mark.parametrize( 'description,column', [
+  ( 'FixIt works at the firtst char of the line', 1 ),
+  ( 'FixIt works at the begin of the range of the diag.', 15 ),
+  ( 'FixIt works at the end of the range of the diag.', 20 ),
+  ( 'FixIt works at the end of the line', 34 ),
+] )
+@SharedYcmd
+def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
+                                                                description,
+                                                                column ):
   import os
   wibble_path = PathToTestFile( 'simple_eclipse_project',
                                 'src',
@@ -781,7 +792,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Import 'Wibble' (com.test.wobble)",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'package com.test;\n\n'
                         'import com.test.wobble.Wibble;\n\n',
                         LocationMatcher( filepath, 1, 1 ),
@@ -790,7 +801,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create constant 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nprivate static final String Wibble = null;',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
@@ -798,7 +809,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create class 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( wibble_text.format( os.linesep, 'class' ),
                         LocationMatcher( wibble_path, 1, 1 ),
                         LocationMatcher( wibble_path, 1, 1 ) ),
@@ -806,7 +817,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create interface 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( wibble_text.format( os.linesep, 'interface' ),
                         LocationMatcher( wibble_path, 1, 1 ),
                         LocationMatcher( wibble_path, 1, 1 ) ),
@@ -814,7 +825,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create enum 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( wibble_text.format( os.linesep, 'enum' ),
                         LocationMatcher( wibble_path, 1, 1 ),
                         LocationMatcher( wibble_path, 1, 1 ) ),
@@ -822,7 +833,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create local variable 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'Object Wibble;\n\t',
                         LocationMatcher( filepath, 19, 5 ),
                         LocationMatcher( filepath, 19, 5 ) ),
@@ -830,7 +841,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create field 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nprivate Object Wibble;',
                         LocationMatcher( filepath, 16, 4 ),
                         LocationMatcher( filepath, 16, 4 ) ),
@@ -838,7 +849,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': "Create parameter 'Wibble'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( ', Object Wibble',
                         LocationMatcher( filepath, 18, 32 ),
                         LocationMatcher( filepath, 18, 32 ) ),
@@ -846,7 +857,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': 'Generate toString()...',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
                         '\n\treturn "TestFactory []";\n}',
                         LocationMatcher( filepath, 32, 4 ),
@@ -855,7 +866,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
       } ),
       has_entries( {
         'text': 'Organize imports',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( filepath, 1, 18 ),
                         LocationMatcher( filepath, 3, 1 ) ),
@@ -864,20 +875,11 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIt works at the first char of the line',
-          filepath, 19, 1, fixits_for_line )
-
-  yield ( RunFixItTest, 'FixIt works at the begin of the range of the diag.',
-          filepath, 19, 15, fixits_for_line )
-
-  yield ( RunFixItTest, 'FixIt works at the end of the range of the diag.',
-          filepath, 19, 20, fixits_for_line )
-
-  yield ( RunFixItTest, 'FixIt works at the end of line',
-          filepath, 19, 34, fixits_for_line )
+  RunFixItTest( app, description, filepath, 19, column, fixits_for_line )
 
 
-def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
+@SharedYcmd
+def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -892,7 +894,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'boolean',
                         LocationMatcher( filepath, 14, 12 ),
                         LocationMatcher( filepath, 14, 15 ) ),
@@ -900,7 +902,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
       } ),
       has_entries( {
         'text': 'Generate toString()...',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
                         '\n\treturn "TestFactory []";\n}',
                         LocationMatcher( filepath, 32, 4 ),
@@ -909,7 +911,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
       } ),
       has_entries( {
         'text': 'Organize imports',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( filepath, 1, 18 ),
                         LocationMatcher( filepath, 3, 1 ) ),
@@ -918,11 +920,12 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIts can change lines as well as add them',
-          filepath, 27, 12, fixits )
+  RunFixItTest( app, 'FixIts can change lines as well as add them',
+                filepath, 27, 12, fixits )
 
 
-def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
+@SharedYcmd
+def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -933,7 +936,7 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove 'testString', keep assignments with side effects",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
                         LocationMatcher( filepath, 14, 21 ),
                         LocationMatcher( filepath, 15, 30 ) ),
@@ -958,11 +961,20 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIts can change lines as well as add them',
-          filepath, 15, 29, fixits )
+  RunFixItTest( app, 'FixIts can change lines as well as add them',
+                filepath, 15, 29, fixits )
 
 
-def Subcommands_FixIt_MultipleDiags_test():
+@pytest.mark.parametrize( 'description,column', [
+  ( 'diags are merged in FixIt options - start of line', 1 ),
+  ( 'diags are merged in FixIt options - start of diag 1', 10 ),
+  ( 'diags are merged in FixIt options - end of diag 1', 15 ),
+  ( 'diags are merged in FixIt options - start of diag 2', 23 ),
+  ( 'diags are merged in FixIt options - end of diag 2', 46 ),
+  ( 'diags are merged in FixIt options - end of line', 55 ),
+] )
+@SharedYcmd
+def Subcommands_FixIt_MultipleDiags_test( app, description, column ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
@@ -973,7 +985,7 @@ def Subcommands_FixIt_MultipleDiags_test():
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'boolean',
                         LocationMatcher( filepath, 14, 12 ),
                         LocationMatcher( filepath, 14, 15 ) ),
@@ -981,7 +993,7 @@ def Subcommands_FixIt_MultipleDiags_test():
       } ),
       has_entries( {
         'text': "Remove argument to match 'doSomethingVaguelyUseful()'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
                         LocationMatcher( filepath, 30, 48 ),
                         LocationMatcher( filepath, 30, 50 ) ),
@@ -1008,18 +1020,7 @@ def Subcommands_FixIt_MultipleDiags_test():
     )
   } )
 
-  yield ( RunFixItTest, 'diags are merged in FixIt options - start of line',
-          filepath, 30, 1, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - start of diag 1',
-          filepath, 30, 10, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - end of diag 1',
-          filepath, 30, 15, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - start of diag 2',
-          filepath, 30, 23, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - end of diag 2',
-          filepath, 30, 46, fixits )
-  yield ( RunFixItTest, 'diags are merged in FixIt options - end of line',
-          filepath, 30, 55, fixits )
+  RunFixItTest( app, description, filepath, 30, column, fixits )
 
 
 @SharedYcmd
@@ -1052,7 +1053,7 @@ def Subcommands_FixIt_Range_test( app ):
         'fixits': contains_inanyorder(
           has_entries( {
             'text': 'Extract to field',
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   'private String \\w+;\n'
@@ -1073,7 +1074,7 @@ def Subcommands_FixIt_Range_test( app ):
           } ),
           has_entries( {
             'text': 'Extract to method',
-            'chunks': contains(
+            'chunks': contains_exactly(
               # This one is a wall of text that rewrites 35 lines
               ChunkMatcher( instance_of( str ),
                             LocationMatcher( filepath, 1, 1 ),
@@ -1082,7 +1083,7 @@ def Subcommands_FixIt_Range_test( app ):
           } ),
           has_entries( {
             'text': 'Extract to local variable (replace all occurrences)',
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   'String \\w+ = "Did something '
@@ -1094,7 +1095,7 @@ def Subcommands_FixIt_Range_test( app ):
           } ),
           has_entries( {
             'text': 'Extract to local variable',
-            'chunks': contains(
+            'chunks': contains_exactly(
               ChunkMatcher(
                 matches_regexp(
                   'String \\w+ = "Did something '
@@ -1115,52 +1116,49 @@ def Subcommands_FixIt_Range_test( app ):
 
 
 
-def Subcommands_FixIt_NoDiagnostics_test():
+@SharedYcmd
+def Subcommands_FixIt_NoDiagnostics_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
                              'test',
                              'TestFactory.java' )
 
-  yield ( RunFixItTest, "no FixIts means you gotta code it yo' self",
-          filepath, 1, 1, has_entries( { 'fixits': contains_inanyorder(
-            has_entries( { 'text': 'Organize imports',
-                           'chunks': instance_of( list ) } ),
-            has_entries( { 'text': 'Generate toString()...',
-                           'chunks': instance_of( list ) } ) ) } ) )
+  RunFixItTest( app, "no FixIts means you gotta code it yo' self",
+                filepath, 1, 1, has_entries( {
+                  'fixits': contains_inanyorder(
+                    has_entries( { 'text': 'Organize imports',
+                                   'chunks': instance_of( list ) } ),
+                    has_entries( { 'text': 'Generate toString()...',
+                                   'chunks': instance_of( list ) } ) ) } ) )
 
 
-def Subcommands_FixIt_Unicode_test():
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
+@SharedYcmd
+def Subcommands_FixIt_Unicode_test( app ):
   fixits = has_entries( {
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Remove argument to match 'doUnicødeTes()'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '',
-                        LocationMatcher( filepath, 13, 24 ),
-                        LocationMatcher( filepath, 13, 29 ) ),
+                        LocationMatcher( TEST_JAVA, 13, 24 ),
+                        LocationMatcher( TEST_JAVA, 13, 29 ) ),
         ),
       } ),
       has_entries( {
         'text': "Change method 'doUnicødeTes()': Add parameter 'String'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'String test2',
-                        LocationMatcher( filepath, 6, 31 ),
-                        LocationMatcher( filepath, 6, 31 ) ),
+                        LocationMatcher( TEST_JAVA, 6, 31 ),
+                        LocationMatcher( TEST_JAVA, 6, 31 ) ),
         ),
       } ),
       has_entries( {
         'text': "Create method 'doUnicødeTes(String)'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'private void doUnicødeTes(String test2) {\n}\n\n\n',
-                        LocationMatcher( filepath, 20, 3 ),
-                        LocationMatcher( filepath, 20, 3 ) ),
+                        LocationMatcher( TEST_JAVA, 20, 3 ),
+                        LocationMatcher( TEST_JAVA, 20, 3 ) ),
         ),
       } ),
       has_entries( {
@@ -1170,8 +1168,8 @@ def Subcommands_FixIt_Unicode_test():
     )
   } )
 
-  yield ( RunFixItTest, 'FixIts and diagnostics work with unicode strings',
-          filepath, 13, 1, fixits )
+  RunFixItTest( app, 'FixIts and diagnostics work with unicode strings',
+                TEST_JAVA, 13, 1, fixits )
 
 
 @WithRetry
@@ -1187,7 +1185,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
     'fixits': contains_inanyorder(
       has_entries( {
         'text': "Change type of 'test' to 'boolean'",
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( 'boolean',
                         LocationMatcher( '', 14, 12 ),
                         LocationMatcher( '', 14, 15 ) ),
@@ -1195,7 +1193,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
       } ),
       has_entries( {
         'text': 'Organize imports',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( '', 1, 1 ),
                         LocationMatcher( '', 3, 1 ) ),
@@ -1203,7 +1201,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
       } ),
       has_entries( {
         'text': 'Generate toString()...',
-        'chunks': contains(
+        'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
                         '\n\treturn "TestFactory []";\n}',
                         LocationMatcher( '', 32, 4 ),
@@ -1247,17 +1245,12 @@ def Subcommands_FixIt_InvalidURI_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_Spaces_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on the whole file '
                    'with tabs composed of 4 spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'options': {
         'tab_size': 4,
         'insert_spaces': True
@@ -1266,68 +1259,68 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath,  3, 20 ),
-                          LocationMatcher( filepath,  4,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  3, 20 ),
+                          LocationMatcher( TEST_JAVA,  4,  3 ) ),
             ChunkMatcher( '\n\n    ',
-                          LocationMatcher( filepath,  4, 22 ),
-                          LocationMatcher( filepath,  6,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  4, 22 ),
+                          LocationMatcher( TEST_JAVA,  6,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath,  6, 34 ),
-                          LocationMatcher( filepath,  7,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  6, 34 ),
+                          LocationMatcher( TEST_JAVA,  7,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath,  7, 35 ),
-                          LocationMatcher( filepath,  8,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  7, 35 ),
+                          LocationMatcher( TEST_JAVA,  8,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath,  8, 25 ),
-                          LocationMatcher( filepath,  8, 26 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 25 ),
+                          LocationMatcher( TEST_JAVA,  8, 26 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath,  8, 27 ),
-                          LocationMatcher( filepath,  9,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 27 ),
+                          LocationMatcher( TEST_JAVA,  9,  3 ) ),
             ChunkMatcher( '\n\n    ',
-                          LocationMatcher( filepath,  9,  4 ),
-                          LocationMatcher( filepath, 11,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  9,  4 ),
+                          LocationMatcher( TEST_JAVA, 11,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 11, 29 ),
-                          LocationMatcher( filepath, 12,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 11, 29 ),
+                          LocationMatcher( TEST_JAVA, 12,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 12, 26 ),
-                          LocationMatcher( filepath, 13,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 12, 26 ),
+                          LocationMatcher( TEST_JAVA, 13,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 24 ),
-                          LocationMatcher( filepath, 13, 25 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 24 ),
+                          LocationMatcher( TEST_JAVA, 13, 25 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 29 ),
-                          LocationMatcher( filepath, 13, 30 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 29 ),
+                          LocationMatcher( TEST_JAVA, 13, 30 ) ),
             ChunkMatcher( '\n\n        ',
-                          LocationMatcher( filepath, 13, 32 ),
-                          LocationMatcher( filepath, 15,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 32 ),
+                          LocationMatcher( TEST_JAVA, 15,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 15, 58 ),
-                          LocationMatcher( filepath, 16,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 15, 58 ),
+                          LocationMatcher( TEST_JAVA, 16,  5 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath, 16, 42 ),
-                          LocationMatcher( filepath, 17,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 16, 42 ),
+                          LocationMatcher( TEST_JAVA, 17,  3 ) ),
             ChunkMatcher( '\n\n    ',
-                          LocationMatcher( filepath, 17,  4 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 17,  4 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1338,17 +1331,12 @@ def Subcommands_Format_WholeFile_Spaces_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_Tabs_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on the whole file '
                    'with tabs composed of 2 spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'options': {
         'tab_size': 4,
         'insert_spaces': False
@@ -1357,68 +1345,68 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath,  3, 20 ),
-                          LocationMatcher( filepath,  4,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  3, 20 ),
+                          LocationMatcher( TEST_JAVA,  4,  3 ) ),
             ChunkMatcher( '\n\n\t',
-                          LocationMatcher( filepath,  4, 22 ),
-                          LocationMatcher( filepath,  6,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  4, 22 ),
+                          LocationMatcher( TEST_JAVA,  6,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath,  6, 34 ),
-                          LocationMatcher( filepath,  7,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  6, 34 ),
+                          LocationMatcher( TEST_JAVA,  7,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath,  7, 35 ),
-                          LocationMatcher( filepath,  8,  5 ) ),
+                          LocationMatcher( TEST_JAVA,  7, 35 ),
+                          LocationMatcher( TEST_JAVA,  8,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath,  8, 25 ),
-                          LocationMatcher( filepath,  8, 26 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 25 ),
+                          LocationMatcher( TEST_JAVA,  8, 26 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath,  8, 27 ),
-                          LocationMatcher( filepath,  9,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  8, 27 ),
+                          LocationMatcher( TEST_JAVA,  9,  3 ) ),
             ChunkMatcher( '\n\n\t',
-                          LocationMatcher( filepath,  9,  4 ),
-                          LocationMatcher( filepath, 11,  3 ) ),
+                          LocationMatcher( TEST_JAVA,  9,  4 ),
+                          LocationMatcher( TEST_JAVA, 11,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 11, 29 ),
-                          LocationMatcher( filepath, 12,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 11, 29 ),
+                          LocationMatcher( TEST_JAVA, 12,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 12, 26 ),
-                          LocationMatcher( filepath, 13,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 12, 26 ),
+                          LocationMatcher( TEST_JAVA, 13,  5 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 24 ),
-                          LocationMatcher( filepath, 13, 25 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 24 ),
+                          LocationMatcher( TEST_JAVA, 13, 25 ) ),
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 13, 29 ),
-                          LocationMatcher( filepath, 13, 30 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 29 ),
+                          LocationMatcher( TEST_JAVA, 13, 30 ) ),
             ChunkMatcher( '\n\n\t\t',
-                          LocationMatcher( filepath, 13, 32 ),
-                          LocationMatcher( filepath, 15,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 13, 32 ),
+                          LocationMatcher( TEST_JAVA, 15,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 15, 58 ),
-                          LocationMatcher( filepath, 16,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 15, 58 ),
+                          LocationMatcher( TEST_JAVA, 16,  5 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath, 16, 42 ),
-                          LocationMatcher( filepath, 17,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 16, 42 ),
+                          LocationMatcher( TEST_JAVA, 17,  3 ) ),
             ChunkMatcher( '\n\n\t',
-                          LocationMatcher( filepath, 17,  4 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 17,  4 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1429,17 +1417,12 @@ def Subcommands_Format_WholeFile_Tabs_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_Range_Spaces_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on some part of the file '
                    'with tabs composed of 4 spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'range': {
         'start': {
           'line_num': 20,
@@ -1458,26 +1441,26 @@ def Subcommands_Format_Range_Spaces_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '    ',
-                          LocationMatcher( filepath, 20,  1 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 20,  1 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n        ',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n    ',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1488,17 +1471,12 @@ def Subcommands_Format_Range_Spaces_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_Format_Range_Tabs_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
   RunTest( app, {
     'description': 'Formatting is applied on some part of the file '
                    'with tabs instead of spaces',
     'request': {
       'command': 'Format',
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'range': {
         'start': {
           'line_num': 20,
@@ -1517,26 +1495,26 @@ def Subcommands_Format_Range_Tabs_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\t',
-                          LocationMatcher( filepath, 20,  1 ),
-                          LocationMatcher( filepath, 20,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 20,  1 ),
+                          LocationMatcher( TEST_JAVA, 20,  3 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 20, 28 ),
-                          LocationMatcher( filepath, 21,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 20, 28 ),
+                          LocationMatcher( TEST_JAVA, 21,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 21, 28 ),
-                          LocationMatcher( filepath, 22,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 21, 28 ),
+                          LocationMatcher( TEST_JAVA, 22,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 22, 30 ),
-                          LocationMatcher( filepath, 23,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 22, 30 ),
+                          LocationMatcher( TEST_JAVA, 23,  5 ) ),
             ChunkMatcher( '\n\t\t',
-                          LocationMatcher( filepath, 23, 23 ),
-                          LocationMatcher( filepath, 24,  5 ) ),
+                          LocationMatcher( TEST_JAVA, 23, 23 ),
+                          LocationMatcher( TEST_JAVA, 24,  5 ) ),
             ChunkMatcher( '\n\t',
-                          LocationMatcher( filepath, 24, 27 ),
-                          LocationMatcher( filepath, 25,  3 ) ),
+                          LocationMatcher( TEST_JAVA, 24, 27 ),
+                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
@@ -1562,162 +1540,137 @@ def RunGoToTest( app, description, filepath, line, col, cmd, goto_response ):
   } )
 
 
-def Subcommands_GoTo_test():
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestLauncher.java' )
-
-  unicode_filepath = PathToTestFile( 'simple_eclipse_project',
-                                     'src',
-                                     'com',
-                                     'youcompleteme',
-                                     'Test.java' )
-
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Member function local variable
-    { 'request': { 'line': 28, 'col': 5, 'filepath': filepath },
-      'response': { 'line_num': 27, 'column_num': 18, 'filepath': filepath },
+    { 'request': { 'line': 28, 'col': 5, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 27, 'column_num': 18,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for member local variable' },
     # Member variable
-    { 'request': { 'line': 22, 'col': 7, 'filepath': filepath },
-      'response': { 'line_num': 8, 'column_num': 16, 'filepath': filepath },
+    { 'request': { 'line': 22, 'col': 7, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 8, 'column_num': 16,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for member variable' },
     # Method
-    { 'request': { 'line': 28, 'col': 7, 'filepath': filepath },
-      'response': { 'line_num': 21, 'column_num': 16, 'filepath': filepath },
+    { 'request': { 'line': 28, 'col': 7, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 21, 'column_num': 16,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for method' },
     # Constructor
-    { 'request': { 'line': 38, 'col': 26, 'filepath': filepath },
-      'response': { 'line_num': 10, 'column_num': 10, 'filepath': filepath },
+    { 'request': { 'line': 38, 'col': 26, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 10, 'column_num': 10,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for jumping to constructor' },
     # Jump to self - main()
-    { 'request': { 'line': 26, 'col': 22, 'filepath': filepath },
-      'response': { 'line_num': 26, 'column_num': 22, 'filepath': filepath },
+    { 'request': { 'line': 26, 'col': 22, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 26, 'column_num': 22,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for jumping to the same position' },
     # Static method
-    { 'request': { 'line': 37, 'col': 11, 'filepath': filepath },
-      'response': { 'line_num': 13, 'column_num': 21, 'filepath': filepath },
+    { 'request': { 'line': 37, 'col': 11, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 13, 'column_num': 21,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for static method' },
     # Static variable
-    { 'request': { 'line': 14, 'col': 11, 'filepath': filepath },
-      'response': { 'line_num': 12, 'column_num': 21, 'filepath': filepath },
+    { 'request': { 'line': 14, 'col': 11, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 12, 'column_num': 21,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for static variable' },
     # Argument variable
-    { 'request': { 'line': 23, 'col': 5, 'filepath': filepath },
-      'response': { 'line_num': 21, 'column_num': 32, 'filepath': filepath },
+    { 'request': { 'line': 23, 'col': 5, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 21, 'column_num': 32,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for argument variable' },
     # Class
-    { 'request': { 'line': 27, 'col': 10, 'filepath': filepath },
-      'response': { 'line_num': 6, 'column_num': 7, 'filepath': filepath },
+    { 'request': { 'line': 27, 'col': 10, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 6, 'column_num': 7,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoTo works for jumping to class declaration' },
     # Unicode
-    { 'request': { 'line': 8, 'col': 12, 'filepath': unicode_filepath },
-      'response': { 'line_num': 7, 'column_num': 12, 'filepath':
-                    unicode_filepath },
+    { 'request': { 'line': 8, 'col': 12, 'filepath': TEST_JAVA },
+      'response': { 'line_num': 7, 'column_num': 12, 'filepath': TEST_JAVA },
       'description': 'GoTo works for unicode identifiers' }
-  ]
+  ] )
+@pytest.mark.parametrize( 'command', [ 'GoTo',
+                                       'GoToDefinition',
+                                       'GoToDeclaration' ] )
+@SharedYcmd
+def Subcommands_GoTo_test( app, command, test ):
+  RunGoToTest( app,
+               test[ 'description' ],
+               test[ 'request' ][ 'filepath' ],
+               test[ 'request' ][ 'line' ],
+               test[ 'request' ][ 'col' ],
+               command,
+               has_entries( test[ 'response' ] ) )
 
-  for command in [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ]:
-    for test in tests:
-      yield ( RunGoToTest,
-              test[ 'description' ],
-              test[ 'request' ][ 'filepath' ],
-              test[ 'request' ][ 'line' ],
-              test[ 'request' ][ 'col' ],
-              command,
-              has_entries( test[ 'response' ] ) )
 
-
-def Subcommands_GoToType_test():
-  launcher_file = PathToTestFile( 'simple_eclipse_project',
-                                  'src',
-                                  'com',
-                                  'test',
-                                  'TestLauncher.java' )
-  tset_file = PathToTestFile( 'simple_eclipse_project',
-                              'src',
-                              'com',
-                              'youcompleteme',
-                              'testing',
-                              'Tset.java' )
-
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Member function local variable
-    { 'request': { 'line': 28, 'col': 5, 'filepath': launcher_file },
-      'response': { 'line_num': 6, 'column_num': 7, 'filepath': launcher_file },
+    { 'request': { 'line': 28, 'col': 5, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 6, 'column_num': 7,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoToType works for member local variable' },
     # Member variable
-    { 'request': { 'line': 22, 'col': 7, 'filepath': launcher_file },
-      'response': { 'line_num': 6, 'column_num': 14, 'filepath': tset_file },
+    { 'request': { 'line': 22, 'col': 7, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 6, 'column_num': 14, 'filepath': TSET_JAVA },
       'description': 'GoToType works for member variable' },
-  ]
+  ] )
+@SharedYcmd
+def Subcommands_GoToType_test( app, test ):
+  RunGoToTest( app,
+               test[ 'description' ],
+               test[ 'request' ][ 'filepath' ],
+               test[ 'request' ][ 'line' ],
+               test[ 'request' ][ 'col' ],
+               'GoToType',
+               has_entries( test[ 'response' ] ) )
 
-  for test in tests:
-    yield ( RunGoToTest,
-            test[ 'description' ],
-            test[ 'request' ][ 'filepath' ],
-            test[ 'request' ][ 'line' ],
-            test[ 'request' ][ 'col' ],
-            'GoToType',
-            has_entries( test[ 'response' ] ) )
 
-
-def Subcommands_GoToImplementation_test():
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestLauncher.java' )
-
-  tests = [
+@pytest.mark.parametrize( 'test', [
     # Interface
-    { 'request': { 'line': 17, 'col': 25, 'filepath': filepath },
-      'response': { 'line_num': 28, 'column_num': 16, 'filepath': filepath },
+    { 'request': { 'line': 17, 'col': 25, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 28, 'column_num': 16,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoToImplementation on interface '
                      'jumps to its implementation' },
     # Interface reference
-    { 'request': { 'line': 21, 'col': 30, 'filepath': filepath },
-      'response': { 'line_num': 28, 'column_num': 16, 'filepath': filepath },
+    { 'request': { 'line': 21, 'col': 30, 'filepath': TESTLAUNCHER_JAVA },
+      'response': { 'line_num': 28, 'column_num': 16,
+                    'filepath': TESTLAUNCHER_JAVA },
       'description': 'GoToImplementation on interface reference '
                      'jumpts to its implementation' },
-  ]
-
-  for test in tests:
-    yield ( RunGoToTest,
-            test[ 'description' ],
-            test[ 'request' ][ 'filepath' ],
-            test[ 'request' ][ 'line' ],
-            test[ 'request' ][ 'col' ],
-            'GoToImplementation',
-            has_entries( test[ 'response' ] ) )
+  ] )
+@SharedYcmd
+def Subcommands_GoToImplementation_test( app, test ):
+  RunGoToTest( app,
+               test[ 'description' ],
+               test[ 'request' ][ 'filepath' ],
+               test[ 'request' ][ 'line' ],
+               test[ 'request' ][ 'col' ],
+               'GoToImplementation',
+               has_entries( test[ 'response' ] ) )
 
 
 @WithRetry
 @SharedYcmd
 def Subcommands_OrganizeImports_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'TestLauncher.java' )
   RunTest( app, {
     'description': 'Imports are resolved and sorted, '
                    'and unused ones are removed',
     'request': {
       'command': 'OrganizeImports',
-      'filepath': filepath
+      'filepath': TESTLAUNCHER_JAVA
     },
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( 'import com.youcompleteme.Test;\n'
                           'import com.youcompleteme.testing.Tset;',
-                          LocationMatcher( filepath, 3,  1 ),
-                          LocationMatcher( filepath, 4, 54 ) ),
+                          LocationMatcher( TESTLAUNCHER_JAVA, 3,  1 ),
+                          LocationMatcher( TESTLAUNCHER_JAVA, 4, 54 ) ),
           )
         } ) )
       } )
@@ -1731,12 +1684,6 @@ def Subcommands_OrganizeImports_test( app ):
         'REQUEST_TIMEOUT_COMMAND',
         5 )
 def Subcommands_RequestTimeout_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   with patch.object(
     handlers._server_state.GetFiletypeCompleter( [ 'java' ] ).GetConnection(),
     'WriteData' ):
@@ -1746,7 +1693,7 @@ def Subcommands_RequestTimeout_test( app ):
         'command': 'FixIt',
         'line_num': 1,
         'column_num': 1,
-        'filepath': filepath,
+        'filepath': TEST_JAVA,
       },
       'expect': {
         'response': requests.codes.internal_server_error,
@@ -1758,12 +1705,6 @@ def Subcommands_RequestTimeout_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_RequestFailed_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   connection = handlers._server_state.GetFiletypeCompleter(
     [ 'java' ] ).GetConnection()
 
@@ -1783,7 +1724,7 @@ def Subcommands_RequestFailed_test( app ):
         'command': 'FixIt',
         'line_num': 1,
         'column_num': 1,
-        'filepath': filepath,
+        'filepath': TEST_JAVA,
       },
       'expect': {
         'response': requests.codes.internal_server_error,
@@ -1795,23 +1736,17 @@ def Subcommands_RequestFailed_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_IndexOutOfRange_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Request error handles the error',
     'request': {
       'command': 'FixIt',
       'line_num': 99,
       'column_num': 99,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries( { 'fixits': contains( has_entries(
+      'data': has_entries( { 'fixits': contains_exactly( has_entries(
         { 'text': 'Generate Getters and Setters',
           'chunks': instance_of( list ) } ) ) } ),
     }
@@ -1821,19 +1756,13 @@ def Subcommands_IndexOutOfRange_test( app ):
 @WithRetry
 @SharedYcmd
 def Subcommands_DifferentFileTypesUpdate_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Request error handles the error',
     'request': {
       'command': 'FixIt',
       'line_num': 99,
       'column_num': 99,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
       'file_data': {
         '!/bin/sh': {
           'filetypes': [],
@@ -1843,17 +1772,9 @@ def Subcommands_DifferentFileTypesUpdate_test( app ):
           'filetypes': [ 'c' ],
           'contents': 'this should be ignored by the completer',
         },
-        PathToTestFile( 'simple_eclipse_project',
-                        'src',
-                        'com',
-                        'test',
-                        'TestLauncher.java' ): {
+        TESTLAUNCHER_JAVA: {
           'filetypes': [ 'some', 'java', 'junk', 'also' ],
-          'contents': ReadFile( PathToTestFile( 'simple_eclipse_project',
-                                                'src',
-                                                'com',
-                                                'test',
-                                                'TestLauncher.java' ) ),
+          'contents': ReadFile( TESTLAUNCHER_JAVA ),
         },
         '!/usr/bin/sh': {
           'filetypes': [ 'java' ],
@@ -1863,7 +1784,7 @@ def Subcommands_DifferentFileTypesUpdate_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries( { 'fixits': contains( has_entries(
+      'data': has_entries( { 'fixits': contains_exactly( has_entries(
         { 'text': 'Generate Getters and Setters',
           'chunks': instance_of( list ) } ) ) } ),
     }
@@ -1890,7 +1811,7 @@ def Subcommands_ExtraConf_SettingsValid_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           'chunks': empty(),
           'location': LocationMatcher( filepath, 1, 7 )
         } ) )
@@ -1920,8 +1841,8 @@ def Subcommands_AdditionalFormatterOptions_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
-          'chunks': contains(
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
             ChunkMatcher( '\n    ',
                           LocationMatcher( filepath,  1, 18 ),
                           LocationMatcher( filepath,  2,  3 ) ),
@@ -2001,7 +1922,8 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
   print( 'FileReadyToParse result: {}'.format( json.dumps( response.json,
                                                            indent = 2 ) ) )
 
-  eq_( response.status_code, requests.codes.internal_server_error )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
   assert_that( response.json, ErrorMatcher( UnknownExtraConf ) )
 
   app.post_json(
@@ -2021,7 +1943,7 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'fixits': contains( has_entries( {
+        'fixits': contains_exactly( has_entries( {
           # Just prove that we actually got a reasonable result
           'chunks': is_not( empty() ),
         } ) )
@@ -2032,19 +1954,13 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
 
 @SharedYcmd
 def Subcommands_ExecuteCommand_NoArguments_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Running a command without args fails',
     'request': {
       'command': 'ExecuteCommand',
       'line_num': 1,
       'column_num': 1,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       'response': requests.codes.internal_server_error,
@@ -2056,12 +1972,6 @@ def Subcommands_ExecuteCommand_NoArguments_test( app ):
 
 @SharedYcmd
 def Subcommands_ExecuteCommand_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-
   RunTest( app, {
     'description': 'Running a command does what it says it does',
     'request': {
@@ -2069,7 +1979,7 @@ def Subcommands_ExecuteCommand_test( app ):
       'arguments': [ 'java.edit.organizeImports' ],
       'line_num': 1,
       'column_num': 1,
-      'filepath': filepath,
+      'filepath': TEST_JAVA,
     },
     'expect': {
       # We dont specify the path for import organize, and jdt.ls returns shrug

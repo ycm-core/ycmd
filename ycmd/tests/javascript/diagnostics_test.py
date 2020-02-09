@@ -21,7 +21,10 @@ from __future__ import print_function
 from __future__ import division
 from builtins import *  # noqa
 
-from hamcrest import ( assert_that, contains, contains_inanyorder, has_entries,
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       contains_inanyorder,
+                       has_entries,
                        has_entry )
 
 from ycmd.tests.javascript import PathToTestFile, SharedYcmd
@@ -53,7 +56,8 @@ def Diagnostics_FileReadyToParse_test( app ):
         'text': "Property 'm' does not exist on type 'Foo'.",
         'location': LocationMatcher( filepath, 14, 5 ),
         'location_extent': RangeMatcher( filepath, ( 14, 5 ), ( 14, 6 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 14, 5 ), ( 14, 6 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 14, 5 ), ( 14, 6 ) ) ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -61,7 +65,8 @@ def Diagnostics_FileReadyToParse_test( app ):
         'text': "Property 'nonExistingMethod' does not exist on type 'Bar'.",
         'location': LocationMatcher( filepath, 32, 5 ),
         'location_extent': RangeMatcher( filepath, ( 32, 5 ), ( 32, 22 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 32, 5 ), ( 32, 22 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 32, 5 ), ( 32, 22 ) ) ),
         'fixit_available': True
       } ),
       has_entries( {
@@ -69,7 +74,8 @@ def Diagnostics_FileReadyToParse_test( app ):
         'text': 'Expected 1-2 arguments, but got 0.',
         'location': LocationMatcher( filepath, 34, 5 ),
         'location_extent': RangeMatcher( filepath, ( 34, 5 ), ( 34, 12 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 34, 5 ), ( 34, 12 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 34, 5 ), ( 34, 12 ) ) ),
         'fixit_available': False
       } ),
       has_entries( {
@@ -77,7 +83,8 @@ def Diagnostics_FileReadyToParse_test( app ):
         'text': "Cannot find name 'Bår'.",
         'location': LocationMatcher( filepath, 36, 1 ),
         'location_extent': RangeMatcher( filepath, ( 36, 1 ), ( 36, 5 ) ),
-        'ranges': contains( RangeMatcher( filepath, ( 36, 1 ), ( 36, 5 ) ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 36, 1 ), ( 36, 5 ) ) ),
         'fixit_available': True
       } ),
     )

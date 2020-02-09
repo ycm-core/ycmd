@@ -16,13 +16,13 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
+                       equal_to,
                        matches_regexp,
                        has_entries,
                        has_item )
-from nose.tools import eq_
 
 from pprint import pformat
 import requests
@@ -38,7 +38,7 @@ from ycmd.tests.test_utils import ( CombineRequest,
                                     LocationMatcher,
                                     WithRetry )
 from ycmd.utils import ReadFile
-from mock import patch
+from unittest.mock import patch
 
 
 def ProjectPath( *args ):
@@ -81,7 +81,8 @@ def RunTest( app, test ):
 
   print( 'completer response: {0}'.format( pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
@@ -219,7 +220,7 @@ def GetCompletions_Package_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 9,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'com.test.wobble', None, {
             'kind': 'Module'
           } ),
@@ -244,7 +245,7 @@ def GetCompletions_Import_Class_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 34,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'Tset;', None, {
             'menu_text': 'Tset - com.youcompleteme.testing',
             'kind': 'Class',
@@ -271,7 +272,7 @@ def GetCompletions_Import_Classes_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 52,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'A;', None, {
             'menu_text': 'A - com.test.wobble',
             'kind': 'Class',
@@ -310,7 +311,7 @@ def GetCompletions_Import_ModuleAndClass_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 26,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'testing.*;', None, {
             'menu_text': 'com.youcompleteme.testing',
             'kind': 'Module',
@@ -346,8 +347,8 @@ def GetCompletions_WithFixIt_test( app ):
           {
             'kind': 'EnumMember',
             'extra_data': has_entries( {
-              'fixits': contains( has_entries( {
-                'chunks': contains(
+              'fixits': contains_exactly( has_entries( {
+                'chunks': contains_exactly(
                   ChunkMatcher( 'Wibble',
                                 LocationMatcher( filepath, 19, 15 ),
                                 LocationMatcher( filepath, 19, 21 ) ),
@@ -382,7 +383,7 @@ def GetCompletions_RejectMultiLineInsertion_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completion_start_column': 16,
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'TestLauncher', 'com.test.TestLauncher', {
             'kind': 'Constructor'
           } )
@@ -484,7 +485,7 @@ def GetCompletions_ResolveFailed_test( app ):
     } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
@@ -563,7 +564,7 @@ def GetCompletions_MoreThan100ForceSemantic_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'com.youcompleteme.*;', None, {
             'kind': 'Module',
             'detailed_info': 'com.youcompleteme\n\n',
@@ -594,7 +595,7 @@ def GetCompletions_ForceAtTopLevel_NoImport_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'TestFactory', None, {
             'kind': 'Class',
             'menu_text': 'TestFactory - com.test',
@@ -621,7 +622,7 @@ def GetCompletions_NoForceAtTopLevel_NoImport_test( app ):
     'expect': {
       'response': requests.codes.ok,
       'data': has_entries( {
-        'completions': contains(
+        'completions': contains_exactly(
           CompletionEntryMatcher( 'TestFactory', '[ID]', {} ),
         ),
         'completion_start_column': 12,
@@ -651,8 +652,8 @@ def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
             'kind': 'Class',
             'menu_text': 'InputStreamReader - java.io',
             'extra_data': has_entries( {
-              'fixits': contains( has_entries( {
-                'chunks': contains(
+              'fixits': contains_exactly( has_entries( {
+                'chunks': contains_exactly(
                   ChunkMatcher( '\n\nimport java.io.InputStreamReader;\n\n',
                                 LocationMatcher( filepath, 1, 18 ),
                                 LocationMatcher( filepath, 3, 1 ) ),

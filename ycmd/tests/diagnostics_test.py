@@ -15,9 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that
-from mock import patch
-from nose.tools import eq_
+from hamcrest import assert_that, equal_to
+from unittest.mock import patch
 import requests
 
 from ycmd.responses import NoDiagnosticSupport, BuildDisplayMessageResponse
@@ -37,14 +36,15 @@ def Diagnostics_DoesntWork_test( app ):
                               diag_data,
                               expect_errors = True )
 
-    eq_( response.status_code, requests.codes.internal_server_error )
+    assert_that( response.status_code,
+                 equal_to( requests.codes.internal_server_error ) )
     assert_that( response.json, ErrorMatcher( NoDiagnosticSupport ) )
 
 
 @SharedYcmd
 @patch( 'ycmd.tests.test_utils.DummyCompleter.GetDetailedDiagnostic',
         return_value = BuildDisplayMessageResponse( 'detailed diagnostic' ) )
-def Diagnostics_DoesWork_test( app, *args ):
+def Diagnostics_DoesWork_test( get_detailed_diag, app ):
   with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
     diag_data = BuildRequest( contents = 'foo = 5',
                               filetype = 'dummy_filetype' )

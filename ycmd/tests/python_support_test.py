@@ -17,7 +17,7 @@
 
 import os
 
-from nose.tools import eq_
+from hamcrest import assert_that, equal_to
 
 import ycm_core
 from ycmd.tests.test_utils import ClangOnly
@@ -35,15 +35,16 @@ COMPILE_COMMANDS_WORKING_DIR = 'C:\\dir' if OnWindows() else '/dir'
 
 
 def GetUtf8String_Str_test():
-  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( 'foø' ) )
+  assert_that( b'fo\xc3\xb8', equal_to( ycm_core.GetUtf8String( 'foø' ) ) )
 
 
 def GetUtf8String_Bytes_test():
-  eq_( b'fo\xc3\xb8', ycm_core.GetUtf8String( bytes( 'foø', 'utf8' ) ) )
+  assert_that( b'fo\xc3\xb8',
+               equal_to( ycm_core.GetUtf8String( bytes( 'foø', 'utf8' ) ) ) )
 
 
 def GetUtf8String_Int_test():
-  eq_( b'123', ycm_core.GetUtf8String( 123 ) )
+  assert_that( b'123', equal_to( ycm_core.GetUtf8String( 123 ) ) )
 
 
 @ClangOnly
@@ -56,10 +57,14 @@ def CompilationDatabase_Py3Bytes_test():
   db = ycm_core.CompilationDatabase( cc_dir )
   info = db.GetCompilationInfoForFile( cc_filename )
 
-  eq_( str( info.compiler_working_dir_ ), COMPILE_COMMANDS_WORKING_DIR )
-  eq_( str( info.compiler_flags_[ 0 ] ), '/usr/bin/clang++' )
-  eq_( str( info.compiler_flags_[ 1 ] ), '--driver-mode=g++' )
-  eq_( str( info.compiler_flags_[ 2 ] ), 'example.cc' )
+  assert_that( str( info.compiler_working_dir_ ),
+               equal_to( COMPILE_COMMANDS_WORKING_DIR ) )
+  assert_that( str( info.compiler_flags_[ 0 ] ),
+               equal_to( '/usr/bin/clang++' ) )
+  assert_that( str( info.compiler_flags_[ 1 ] ),
+               equal_to( '--driver-mode=g++' ) )
+  assert_that( str( info.compiler_flags_[ 2 ] ),
+               equal_to( 'example.cc' ) )
 
 
 @ClangOnly
@@ -71,7 +76,11 @@ def CompilationDatabase_NativeString_test():
   db = ycm_core.CompilationDatabase( cc_dir )
   info = db.GetCompilationInfoForFile( cc_filename )
 
-  eq_( str( info.compiler_working_dir_ ), COMPILE_COMMANDS_WORKING_DIR )
-  eq_( str( info.compiler_flags_[ 0 ] ), '/usr/bin/clang++' )
-  eq_( str( info.compiler_flags_[ 1 ] ), '--driver-mode=g++' )
-  eq_( str( info.compiler_flags_[ 2 ] ), 'example.cc' )
+  assert_that( str( info.compiler_working_dir_ ),
+               equal_to( COMPILE_COMMANDS_WORKING_DIR ) )
+  assert_that( str( info.compiler_flags_[ 0 ] ),
+               equal_to( '/usr/bin/clang++' ) )
+  assert_that( str( info.compiler_flags_[ 1 ] ),
+               equal_to( '--driver-mode=g++' ) )
+  assert_that( str( info.compiler_flags_[ 2 ] ),
+               equal_to( 'example.cc' ) )

@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        has_entries,
                        has_entry )
@@ -42,7 +42,7 @@ DIAG_MATCHERS_PER_FILE = {
           'no field `build_` on type `test::Builder`\n\nunknown field [E0609]',
       'location': LocationMatcher( MAIN_FILEPATH, 14, 13 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 14, 13 ), ( 14, 19 ) ),
-      'ranges': contains( RangeMatcher( MAIN_FILEPATH,
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
                                         ( 14, 13 ),
                                         ( 14, 19 ) ) ),
       'fixit_available': False

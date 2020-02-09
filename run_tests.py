@@ -63,33 +63,33 @@ SIMPLE_COMPLETERS = [
 COMPLETERS = {
   'cfamily': {
     'build': [ '--clang-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/clang' ],
+    'test': [ '--ignore=ycmd/tests/clang' ],
     'aliases': [ 'c', 'cpp', 'c++', 'objc', 'clang', ]
   },
   'cs': {
     'build': [ '--cs-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/cs' ],
+    'test': [ '--ignore=ycmd/tests/cs' ],
     'aliases': [ 'omnisharp', 'csharp', 'c#' ]
   },
   'javascript': {
     'build': [ '--js-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/tern' ],
+    'test': [ '--ignore=ycmd/tests/tern' ],
     'aliases': [ 'js', 'tern' ]
   },
   'typescript': {
     'build': [ '--ts-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/javascript',
-              '--exclude-dir=ycmd/tests/typescript' ],
+    'test': [ '--ignore=ycmd/tests/javascript',
+              '--ignore=ycmd/tests/typescript' ],
     'aliases': [ 'ts' ]
   },
   'python': {
     'build': [],
-    'test': [ '--exclude-dir=ycmd/tests/python' ],
+    'test': [ '--ignore=ycmd/tests/python' ],
     'aliases': [ 'jedi', 'jedihttp', ]
   },
   'java': {
     'build': [ '--java-completer' ],
-    'test': [ '--exclude-dir=ycmd/tests/java' ],
+    'test': [ '--ignore=ycmd/tests/java' ],
     'aliases': [ 'jdt' ],
   },
 }
@@ -98,7 +98,7 @@ COMPLETERS = {
 for completer in SIMPLE_COMPLETERS:
   COMPLETERS[ completer ] = {
     'build': [ '--{}-completer'.format( completer ) ],
-    'test': [ '--exclude-dir=ycmd/tests/{}'.format( completer ) ],
+    'test': [ '--ignore=ycmd/tests/{}'.format( completer ) ],
   }
 
 
@@ -148,14 +148,14 @@ def ParseArguments():
                        help = 'Quiet installation mode. Just print overall '
                               'progress and errors' )
 
-  parsed_args, nosetests_args = parser.parse_known_args()
+  parsed_args, pytests_args = parser.parse_known_args()
 
   parsed_args.completers = FixupCompleters( parsed_args )
 
   if 'COVERAGE' in os.environ:
     parsed_args.coverage = ( os.environ[ 'COVERAGE' ] == 'true' )
 
-  return parsed_args, nosetests_args
+  return parsed_args, pytests_args
 
 
 def FixupCompleters( parsed_args ):
@@ -211,32 +211,22 @@ def BuildYcmdLibs( args ):
     subprocess.check_call( build_cmd )
 
 
-def NoseTests( parsed_args, extra_nosetests_args ):
-  # Always passing --with-id to nosetests enables non-surprising usage of
-  # its --failed flag.
-  # By default, nose does not include files starting with a underscore in its
-  # report but we want __main__.py to be included. Only ignore files starting
-  # with a dot and setup.py.
-  nosetests_args = [ '-v', '--with-id', r'--ignore-files=(^\.|^setup\.py$)' ]
+def PytestTests( parsed_args, extra_pytests_args ):
+  pytests_args = [ '-v' ]
 
   for key in COMPLETERS:
     if key not in parsed_args.completers:
-      nosetests_args.extend( COMPLETERS[ key ][ 'test' ] )
+      pytests_args.extend( COMPLETERS[ key ][ 'test' ] )
 
   if parsed_args.coverage:
     # We need to exclude the ycmd/tests/python/testdata directory since it
     # contains Python files and its base name starts with "test".
-    nosetests_args += [ '--exclude-dir=ycmd/tests/python/testdata',
-                        '--with-coverage',
-                        '--cover-erase',
-                        '--cover-package=ycmd',
-                        '--cover-html',
-                        '--cover-inclusive' ]
+    pytests_args += [ '--ignore=ycmd/tests/python/testdata', '--cov=ycmd' ]
 
-  if extra_nosetests_args:
-    nosetests_args.extend( extra_nosetests_args )
+  if extra_pytests_args:
+    pytests_args.extend( extra_pytests_args )
   else:
-    nosetests_args.append( p.join( DIR_OF_THIS_SCRIPT, 'ycmd' ) )
+    pytests_args.append( p.join( DIR_OF_THIS_SCRIPT, 'ycmd' ) )
 
   env = os.environ.copy()
 
@@ -251,7 +241,7 @@ def NoseTests( parsed_args, extra_nosetests_args ):
   else:
     env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
 
-  subprocess.check_call( [ sys.executable, '-m', 'nose' ] + nosetests_args,
+  subprocess.check_call( [ sys.executable, '-m', 'pytest' ] + pytests_args,
                          env=env )
 
 
@@ -303,7 +293,7 @@ def SetUpGenericLSPCompleter():
 
 
 def Main():
-  parsed_args, nosetests_args = ParseArguments()
+  parsed_args, pytests_args = ParseArguments()
   if parsed_args.dump_path:
     print( os.environ[ 'PYTHONPATH' ] )
     sys.exit()
@@ -313,7 +303,7 @@ def Main():
   if not parsed_args.no_flake8:
     RunFlake8()
   BuildYcmdLibs( parsed_args )
-  NoseTests( parsed_args, nosetests_args )
+  PytestTests( parsed_args, pytests_args )
 
 
 if __name__ == "__main__":

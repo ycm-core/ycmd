@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch
-from nose.tools import eq_
+from hamcrest import assert_that, contains_exactly
+from unittest.mock import patch
 
 from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
@@ -28,12 +28,11 @@ from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
         return_value = { 'A': lambda x: x,
                          'B': lambda x: x,
                          'C': lambda x: x } )
-def Subcommands_Basic_test( app, *args ):
+def Subcommands_Basic_test( get_subcmd_map, app ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
-
-    eq_( [ 'A', 'B', 'C' ],
-         app.post_json( '/defined_subcommands', subcommands_data ).json )
+    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+                 contains_exactly( 'A', 'B', 'C' ) )
 
 
 @SharedYcmd
@@ -41,9 +40,8 @@ def Subcommands_Basic_test( app, *args ):
         return_value = { 'A': lambda x: x,
                          'B': lambda x: x,
                          'C': lambda x: x } )
-def Subcommands_NoExplicitCompleterTargetSpecified_test( app, *args ):
+def Subcommands_NoExplicitCompleterTargetSpecified_test( get_subcmd_map, app ):
   with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
     subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
-
-    eq_( [ 'A', 'B', 'C' ],
-         app.post_json( '/defined_subcommands', subcommands_data ).json )
+    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+                 contains_exactly( 'A', 'B', 'C' ) )

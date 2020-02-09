@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
 from ycmd.completers.language_server import language_server_protocol as lsp
 from hamcrest import assert_that, equal_to, calling, is_not, raises
 from ycmd.tests.test_utils import UnixOnly, WindowsOnly
@@ -183,24 +184,20 @@ def FilePathToUri_Windows_test():
                equal_to( 'file:///C:/usr/local/test/test.test' ) )
 
 
-def CodepointsToUTF16CodeUnitsAndReverse_test():
-  def Test( line_value, codepoints, code_units ):
-    assert_that( lsp.CodepointsToUTF16CodeUnits( line_value, codepoints ),
-                 equal_to( code_units ) )
-    assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
-                 equal_to( codepoints ) )
-
-  tests = (
-    ( '', 0, 0 ),
-    ( 'abcdef', 1, 1 ),
-    ( 'abcdef', 2, 2 ),
-    ( 'abc', 4, 4 ),
-    ( '😉test', len( '😉' ), 2 ),
-    ( '😉', len( '😉' ), 2 ),
-    ( '😉test', len( '😉' ) + 1, 3 ),
-    ( 'te😉st', 1, 1 ),
-    ( 'te😉st', 2 + len( '😉' ) + 1, 5 ),
-  )
-
-  for test in tests:
-    yield Test, test[ 0 ], test[ 1 ], test[ 2 ]
+@pytest.mark.parametrize( 'line_value,codepoints,code_units', [ ( '', 0, 0 ),
+      ( 'abcdef', 1, 1 ),
+      ( 'abcdef', 2, 2 ),
+      ( 'abc', 4, 4 ),
+      ( '😉test', len( '😉' ), 2 ),
+      ( '😉', len( '😉' ), 2 ),
+      ( '😉test', len( '😉' ) + 1, 3 ),
+      ( 'te😉st', 1, 1 ),
+      ( 'te😉st', 2 + len( '😉' ) + 1, 5 ),
+  ] )
+def CodepointsToUTF16CodeUnitsAndReverse_test( line_value,
+                                               codepoints,
+                                               code_units ):
+  assert_that( lsp.CodepointsToUTF16CodeUnits( line_value, codepoints ),
+               equal_to( code_units ) )
+  assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
+               equal_to( codepoints ) )

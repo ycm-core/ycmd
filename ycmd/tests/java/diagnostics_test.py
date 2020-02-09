@@ -19,14 +19,13 @@ import contextlib
 import json
 import time
 from hamcrest import ( assert_that,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
                        empty,
                        equal_to,
                        has_entries,
                        has_entry,
                        has_item )
-from nose.tools import eq_
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
@@ -45,7 +44,7 @@ from ycmd.utils import ReadFile, StartThread
 from ycmd.completers import completer
 
 from pprint import pformat
-from mock import patch
+from unittest.mock import patch
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd import handlers
 
@@ -78,7 +77,8 @@ DIAG_MATCHERS_PER_FILE = {
               '[570425421]',
       'location': LocationMatcher( TestFactory, 15, 19 ),
       'location_extent': RangeMatcher( TestFactory, ( 15, 19 ), ( 15, 29 ) ),
-      'ranges': contains( RangeMatcher( TestFactory, ( 15, 19 ), ( 15, 29 ) ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( TestFactory, ( 15, 19 ), ( 15, 29 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -86,7 +86,8 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'Wibble cannot be resolved to a type [16777218]',
       'location': LocationMatcher( TestFactory, 18, 24 ),
       'location_extent': RangeMatcher( TestFactory, ( 18, 24 ), ( 18, 30 ) ),
-      'ranges': contains( RangeMatcher( TestFactory, ( 18, 24 ), ( 18, 30 ) ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( TestFactory, ( 18, 24 ), ( 18, 30 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -94,7 +95,8 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'Wibble cannot be resolved to a variable [33554515]',
       'location': LocationMatcher( TestFactory, 19, 15 ),
       'location_extent': RangeMatcher( TestFactory, ( 19, 15 ), ( 19, 21 ) ),
-      'ranges': contains( RangeMatcher( TestFactory, ( 19, 15 ), ( 19, 21 ) ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( TestFactory, ( 19, 15 ), ( 19, 21 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -102,7 +104,8 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'Type mismatch: cannot convert from int to boolean [16777233]',
       'location': LocationMatcher( TestFactory, 27, 10 ),
       'location_extent': RangeMatcher( TestFactory, ( 27, 10 ), ( 27, 16 ) ),
-      'ranges': contains( RangeMatcher( TestFactory, ( 27, 10 ), ( 27, 16 ) ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( TestFactory, ( 27, 10 ), ( 27, 16 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -110,7 +113,8 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'Type mismatch: cannot convert from int to boolean [16777233]',
       'location': LocationMatcher( TestFactory, 30, 10 ),
       'location_extent': RangeMatcher( TestFactory, ( 30, 10 ), ( 30, 16 ) ),
-      'ranges': contains( RangeMatcher( TestFactory, ( 30, 10 ), ( 30, 16 ) ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( TestFactory, ( 30, 10 ), ( 30, 16 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
@@ -120,7 +124,8 @@ DIAG_MATCHERS_PER_FILE = {
               '(TestFactory.Bar) [67108979]',
       'location': LocationMatcher( TestFactory, 30, 23 ),
       'location_extent': RangeMatcher( TestFactory, ( 30, 23 ), ( 30, 47 ) ),
-      'ranges': contains( RangeMatcher( TestFactory, ( 30, 23 ), ( 30, 47 ) ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( TestFactory, ( 30, 23 ), ( 30, 47 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -130,7 +135,7 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'The value of the local variable a is not used [536870973]',
       'location': LocationMatcher( TestWidgetImpl, 15, 9 ),
       'location_extent': RangeMatcher( TestWidgetImpl, ( 15, 9 ), ( 15, 10 ) ),
-      'ranges': contains( RangeMatcher( TestWidgetImpl,
+      'ranges': contains_exactly( RangeMatcher( TestWidgetImpl,
                                         ( 15, 9 ),
                                         ( 15, 10 ) ) ),
       'fixit_available': False
@@ -140,7 +145,7 @@ DIAG_MATCHERS_PER_FILE = {
       'text': 'ISR cannot be resolved to a variable [33554515]',
       'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
       'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
-      'ranges': contains( RangeMatcher( TestWidgetImpl,
+      'ranges': contains_exactly( RangeMatcher( TestWidgetImpl,
                                         ( 34, 12 ),
                                         ( 34, 15 ) ) ),
       'fixit_available': False
@@ -151,7 +156,7 @@ DIAG_MATCHERS_PER_FILE = {
               '[1610612976]',
       'location': LocationMatcher( TestWidgetImpl, 34, 12 ),
       'location_extent': RangeMatcher( TestWidgetImpl, ( 34, 12 ), ( 34, 15 ) ),
-      'ranges': contains( RangeMatcher( TestWidgetImpl,
+      'ranges': contains_exactly( RangeMatcher( TestWidgetImpl,
                                         ( 34, 12 ),
                                         ( 34, 15 ) ) ),
       'fixit_available': False
@@ -165,7 +170,7 @@ DIAG_MATCHERS_PER_FILE = {
               'TestFactory) [67109264]',
       'location': LocationMatcher( TestLauncher, 28, 16 ),
       'location_extent': RangeMatcher( TestLauncher, ( 28, 16 ), ( 28, 28 ) ),
-      'ranges': contains( RangeMatcher( TestLauncher,
+      'ranges': contains_exactly( RangeMatcher( TestLauncher,
                                         ( 28, 16 ),
                                         ( 28, 28 ) ) ),
       'fixit_available': False
@@ -176,7 +181,7 @@ DIAG_MATCHERS_PER_FILE = {
               'must override or implement a supertype method [67109498]',
       'location': LocationMatcher( TestLauncher, 30, 19 ),
       'location_extent': RangeMatcher( TestLauncher, ( 30, 19 ), ( 30, 27 ) ),
-      'ranges': contains( RangeMatcher( TestLauncher,
+      'ranges': contains_exactly( RangeMatcher( TestLauncher,
                                         ( 30, 19 ),
                                         ( 30, 27 ) ) ),
       'fixit_available': False
@@ -187,13 +192,13 @@ DIAG_MATCHERS_PER_FILE = {
               '[33554506]',
       'location': LocationMatcher( TestLauncher, 31, 32 ),
       'location_extent': RangeMatcher( TestLauncher, ( 31, 32 ), ( 31, 39 ) ),
-      'ranges': contains( RangeMatcher( TestLauncher,
+      'ranges': contains_exactly( RangeMatcher( TestLauncher,
                                         ( 31, 32 ),
                                         ( 31, 39 ) ) ),
       'fixit_available': False
     } ),
   ),
-  youcompleteme_Test: contains(
+  youcompleteme_Test: contains_exactly(
     has_entries( {
       'kind': 'ERROR',
       'text': 'The method doUnicødeTes() in the type Test is not applicable '
@@ -202,7 +207,7 @@ DIAG_MATCHERS_PER_FILE = {
       'location_extent': RangeMatcher( youcompleteme_Test,
                                        ( 13, 10 ),
                                        ( 13, 23 ) ),
-      'ranges': contains( RangeMatcher( youcompleteme_Test,
+      'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
                                         ( 13, 10 ),
                                         ( 13, 23 ) ) ),
       'fixit_available': False
@@ -296,15 +301,16 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
 
   # This is a new file, so the diagnostics can't possibly be available when the
   # initial parse request is sent. We receive these asynchronously.
-  eq_( results, {} )
+  assert_that( results, empty() )
 
-  diag_matcher = contains( has_entries( {
+  diag_matcher = contains_exactly( has_entries( {
     'kind': 'ERROR',
     'text': 'Syntax error, insert ";" to complete ClassBodyDeclarations '
             '[1610612976]',
     'location': LocationMatcher( filepath, 4, 21 ),
     'location_extent': RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ),
-    'ranges': contains( RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
+    'ranges': contains_exactly(
+      RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
     'fixit_available': False
   } ) )
 
@@ -453,7 +459,7 @@ public class Test {
           messages_for_filepath,
           has_item( has_entries( {
             'filepath': filepath,
-            'diagnostics': contains(
+            'diagnostics': contains_exactly(
               has_entries( {
                 'kind': 'ERROR',
                 'text': 'Duplicate field Test.test [33554772]',
@@ -461,7 +467,7 @@ public class Test {
                 'location_extent': RangeMatcher( youcompleteme_Test,
                                                  ( 4, 17 ),
                                                  ( 4, 21 ) ),
-                'ranges': contains( RangeMatcher( youcompleteme_Test,
+                'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
                                                   ( 4, 17 ),
                                                   ( 4, 21 ) ) ),
                 'fixit_available': False
@@ -473,7 +479,7 @@ public class Test {
                 'location_extent': RangeMatcher( youcompleteme_Test,
                                                  ( 5, 17 ),
                                                  ( 5, 21 ) ),
-                'ranges': contains( RangeMatcher( youcompleteme_Test,
+                'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
                                                   ( 5, 17 ),
                                                   ( 5, 21 ) ) ),
                 'fixit_available': False
@@ -772,4 +778,4 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
   )
 
   message_poll_task.join()
-  eq_( state[ 'aborted' ], True )
+  assert_that( state[ 'aborted' ] )

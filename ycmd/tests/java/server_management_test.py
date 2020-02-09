@@ -21,8 +21,14 @@ import psutil
 import requests
 import time
 
-from mock import patch
-from hamcrest import assert_that, contains, equal_to, has_entry
+from unittest.mock import patch
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       equal_to,
+                       has_entries,
+                       has_entry,
+                       has_item,
+                       starts_with )
 from ycmd.tests.java import ( PathToTestFile,
                               IsolatedYcmd,
                               SharedYcmd,
@@ -109,13 +115,12 @@ def ServerManagement_RestartServer_test( app ):
                CompleterProjectDirectoryMatcher( maven_project ) )
 
 
-def ServerManagement_WipeWorkspace_NoConfig_test():
-  with TemporaryTestDir() as test_dir:
-    @IsolatedYcmd( {
+def ServerManagement_WipeWorkspace_NoConfig_test( isolated_app ):
+  with TemporaryTestDir() as tmp_dir:
+    with isolated_app( {
       'java_jdtls_use_clean_workspace': 1,
-      'java_jdtls_workspace_root_path': test_dir
-    } )
-    def ServerManagement_WipeWorkspace_NoConfig( app ):
+      'java_jdtls_workspace_root_path': tmp_dir
+    } ) as app:
       StartJavaCompleterServerInDirectory(
         app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
@@ -143,16 +148,29 @@ def ServerManagement_WipeWorkspace_NoConfig_test():
                                      filepath = filepath ) ).json,
         CompleterProjectDirectoryMatcher( project ) )
 
-  yield ServerManagement_WipeWorkspace_NoConfig
+      assert_that(
+        app.post_json( '/debug_info',
+                       BuildRequest( filetype = 'java',
+                                     filepath = filepath ) ).json,
+        has_entry(
+          'completer',
+          has_entry( 'servers', contains_exactly(
+            has_entry( 'extras', has_item(
+              has_entries( {
+                'key': 'Workspace Path',
+                'value': starts_with( tmp_dir ),
+              } )
+            ) )
+          ) )
+        ) )
 
 
-def ServerManagement_WipeWorkspace_WithConfig_test():
-  with TemporaryTestDir() as test_dir:
-    @IsolatedYcmd( {
+def ServerManagement_WipeWorkspace_WithConfig_test( isolated_app ):
+  with TemporaryTestDir() as tmp_dir:
+    with isolated_app( {
       'java_jdtls_use_clean_workspace': 1,
-      'java_jdtls_workspace_root_path': test_dir
-    } )
-    def ServerManagement_WipeWorkspace_WithConfig( app ):
+      'java_jdtls_workspace_root_path': tmp_dir
+    } ) as app:
       StartJavaCompleterServerInDirectory(
         app, PathToTestFile( 'simple_eclipse_project', 'src' ) )
 
@@ -180,7 +198,21 @@ def ServerManagement_WipeWorkspace_WithConfig_test():
                                      filepath = filepath ) ).json,
         CompleterProjectDirectoryMatcher( project ) )
 
-    yield ServerManagement_WipeWorkspace_WithConfig
+      assert_that(
+        app.post_json( '/debug_info',
+                       BuildRequest( filetype = 'java',
+                                     filepath = filepath ) ).json,
+        has_entry(
+          'completer',
+          has_entry( 'servers', contains_exactly(
+            has_entry( 'extras', has_item(
+              has_entries( {
+                'key': 'Workspace Path',
+                'value': starts_with( tmp_dir ),
+              } )
+            ) )
+          ) )
+        ) )
 
 
 @IsolatedYcmd()
@@ -276,26 +308,21 @@ def ServerManagement_OpenProject_RelativePathNoPath_test( app ):
                              'Usage: OpenProject <project directory>' ) )
 
 
-def ServerManagement_ProjectDetection_NoParent_test():
+@IsolatedYcmd()
+def ServerManagement_ProjectDetection_NoParent_test( app ):
   with TemporaryTestDir() as tmp_dir:
-
-    @IsolatedYcmd()
-    def Test( app ):
-      StartJavaCompleterServerInDirectory( app, tmp_dir )
-
-      # Run the debug info to check that we have the correct project dir (cwd)
-      request_data = BuildRequest( filetype = 'java' )
-      assert_that( app.post_json( '/debug_info', request_data ).json,
-                   CompleterProjectDirectoryMatcher( tmp_dir ) )
-
-    yield Test
+    StartJavaCompleterServerInDirectory( app, tmp_dir )
+    # Run the debug info to check that we have the correct project dir (cwd)
+    request_data = BuildRequest( filetype = 'java' )
+    assert_that( app.post_json( '/debug_info', request_data ).json,
+                 CompleterProjectDirectoryMatcher( tmp_dir ) )
 
 
 @IsolatedYcmd()
 @patch( 'shutil.rmtree', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
-def ServerManagement_CloseServer_Unclean_test( app, *args ):
+def ServerManagement_CloseServer_Unclean_test( rm, app ):
   StartJavaCompleterServerInDirectory(
     app, PathToTestFile( 'simple_eclipse_project' ) )
 
@@ -311,7 +338,7 @@ def ServerManagement_CloseServer_Unclean_test( app, *args ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -334,7 +361,7 @@ def ServerManagement_StopServerTwice_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -353,7 +380,7 @@ def ServerManagement_StopServerTwice_test( app ):
   assert_that( app.post_json( '/debug_info', request_data ).json,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -384,7 +411,7 @@ def ServerManagement_ServerDies_test( app ):
   assert_that( debug_info,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -430,7 +457,7 @@ def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
   assert_that( debug_info,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )
@@ -471,7 +498,7 @@ def ServerManagement_ConnectionRaisesWhileShuttingDown_test( app ):
   assert_that( debug_info,
                has_entry(
                  'completer',
-                 has_entry( 'servers', contains(
+                 has_entry( 'servers', contains_exactly(
                    has_entry( 'is_running', False )
                  ) )
                ) )

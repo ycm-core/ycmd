@@ -5,6 +5,7 @@ set -e
 # Compiler setup
 #
 
+sudo apt-get install libsqlite3-dev
 if [ "${YCM_COMPILER}" == "clang" ]; then
   sudo apt-get install clang-3.5
   sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-3.5 100

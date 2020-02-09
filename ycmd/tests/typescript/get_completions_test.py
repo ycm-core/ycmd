@@ -17,13 +17,13 @@
 
 from hamcrest import ( assert_that,
                        calling,
-                       contains,
+                       contains_exactly,
                        contains_inanyorder,
+                       equal_to,
                        has_entries,
                        has_item,
                        matches_regexp,
                        raises )
-from nose.tools import eq_
 from webtest import AppError
 import pprint
 import requests
@@ -61,7 +61,8 @@ def RunTest( app, test ):
 
   print( 'completer response: {0}'.format( pprint.pformat( response.json ) ) )
 
-  eq_( response.status_code, test[ 'expect' ][ 'response' ] )
+  assert_that( response.status_code,
+               equal_to( test[ 'expect' ][ 'response' ] ) )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
@@ -312,7 +313,7 @@ def GetCompletions_AutoImport_test( app ):
             'fixits': contains_inanyorder(
               has_entries( {
                 'text': 'Import \'Bår\' from module "./unicode"',
-                'chunks': contains(
+                'chunks': contains_exactly(
                   ChunkMatcher(
                     matches_regexp( '^import { Bår } from "./unicode";\r?\n' ),
                     LocationMatcher( filepath, 1, 1 ),
