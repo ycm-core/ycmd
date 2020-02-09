@@ -1023,6 +1023,7 @@ def GetClangdTarget():
         'e593f7d036434db023c1c323756d6630bb4a2f868c45d682ba967846061f5fa9' ) ]
   if OnArm():
     return [
+      None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
         'ff1d8f20eddd7c9d659fb1e692fe961526ff1b858c0798781fad62f2f9e0522b' ) ]
   if OnX86_64():
