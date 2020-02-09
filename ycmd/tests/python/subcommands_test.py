@@ -97,43 +97,44 @@ def Subcommands_GoTo( app, test, command ):
 @pytest.mark.parametrize( 'test', [
     # Nothing
     { 'request': ( 'basic.py', 3,  5 ), 'response': 'Can\'t jump to '
-                                                    'type definition.' },
+                                                    'definition.' },
     # Keyword
     { 'request': ( 'basic.py', 4,  3 ), 'response': 'Can\'t jump to '
-                                                    'type definition.' },
+                                                    'definition.' },
     # Builtin
-    { 'request': ( 'basic.py', 1,  4 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
-    { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
-    { 'request': ( 'basic.py', 2,  2 ), 'response': ( TYPESHED_PATH, 927, 7 ) },
+    { 'request': ( 'basic.py', 1,  4 ), 'response': ( 'basic.py', 1, 1 ) },
+    { 'request': ( 'basic.py', 1, 12 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request': ( 'basic.py', 2,  2 ), 'response': ( 'basic.py', 1, 1 ) },
     # Class
     { 'request': ( 'basic.py', 4,  7 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 4, 11 ), 'response': ( 'basic.py', 4, 7 ) },
     { 'request': ( 'basic.py', 7, 19 ), 'response': ( 'basic.py', 4, 7 ) },
     # Instance
-    { 'request': ( 'basic.py', 7,  1 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 7, 11 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 8, 23 ), 'response': ( 'basic.py', 4, 7 ) },
+    { 'request': ( 'basic.py', 7,  1 ), 'response': ( 'basic.py', 7, 1 ) },
+    { 'request': ( 'basic.py', 7, 11 ), 'response': ( 'basic.py', 7, 1 ) },
+    { 'request': ( 'basic.py', 8, 23 ), 'response': ( 'basic.py', 7, 1 ) },
     # Instance reference
-    { 'request': ( 'basic.py', 8,  1 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 8,  5 ), 'response': ( 'basic.py', 4, 7 ) },
-    { 'request': ( 'basic.py', 9, 12 ), 'response': ( 'basic.py', 4, 7 ) },
+    { 'request': ( 'basic.py', 8,  1 ), 'response': ( 'basic.py', 8, 1 ) },
+    { 'request': ( 'basic.py', 8,  5 ), 'response': ( 'basic.py', 8, 1 ) },
+    { 'request': ( 'basic.py', 9, 12 ), 'response': ( 'basic.py', 8, 1 ) },
     # Member access
-    { 'request':  ( 'child.py', 4, 12 ), 'response': ( 'parent.py', 2, 7 ) },
+    { 'request':  ( 'child.py', 4, 12 ),
+      'response': ( 'parent.py', 2, 7 ) },
     # Builtin from different file
     { 'request':  ( 'multifile1.py', 2, 30 ),
-      'response': ( TYPESHED_PATH, 130, 7 ) },
+      'response': ( 'multifile2.py', 1, 24 ) },
     { 'request':  ( 'multifile1.py', 4,  5 ),
-      'response': ( TYPESHED_PATH, 130, 7 ) },
+      'response': ( 'multifile1.py', 2, 24 ) },
     # Function from different file
     { 'request':  ( 'multifile1.py', 1, 24 ),
       'response': ( 'multifile3.py', 3,  5 ) },
     { 'request':  ( 'multifile1.py', 5,  4 ),
-      'response': ( 'multifile3.py', 3,  5 ) },
+      'response': ( 'multifile1.py', 1, 24 ) },
     # Alias from different file
     { 'request':  ( 'multifile1.py', 2, 47 ),
-      'response': ( 'multifile3.py', 3,  5 ) },
+      'response': ( 'multifile2.py', 1, 51 ) },
     { 'request':  ( 'multifile1.py', 6, 14 ),
-      'response': ( 'multifile3.py', 3,  5 ) },
+      'response': ( 'multifile1.py', 2, 36 ) },
   ] )
 @SharedYcmd
 def Subcommands_GoTo_test( app, cmd, test ):
@@ -220,14 +221,14 @@ def Subcommands_GetDoc_Class_test( app ):
   command_data = BuildRequest( filepath = filepath,
                                filetype = 'python',
                                line_num = 19,
-                               column_num = 2,
+                               column_num = 6,
                                contents = contents,
                                command_arguments = [ 'GetDoc' ] )
 
   response = app.post_json( '/run_completer_command', command_data ).json
 
   assert_that( response, has_entry(
-    'detailed_info', 'Class Documentation',
+    'detailed_info', 'TestClass()\n\nClass Documentation',
   ) )
 
 
@@ -249,6 +250,17 @@ def Subcommands_GetDoc_NoDocumentation_test( app ):
 
   assert_that( response,
                ErrorMatcher( RuntimeError, 'No documentation available.' ) )
+
+
+@pytest.mark.parametrize( 'test', [
+    { 'request':  ( 'basic.py', 2, 1 ), 'response': ( TYPESHED_PATH, 947, 7 ) },
+    { 'request':  ( 'basic.py', 8, 1 ), 'response': ( 'basic.py', 4, 7 ) },
+    { 'request':  ( 'basic.py', 3, 1 ),
+      'response': 'Can\'t jump to type definition.' },
+  ] )
+@SharedYcmd
+def Subcommands_GoToType_test( app, test ):
+  Subcommands_GoTo( app, test, 'GoToType' )
 
 
 @SharedYcmd
