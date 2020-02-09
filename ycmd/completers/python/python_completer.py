@@ -354,9 +354,10 @@ class PythonCompleter( Completer ):
     # from the params field.
     try:
       # Remove the "param " prefix from the description.
+      parameters = definition.get_signatures()[ 0 ].params
       type_info += '(' + ', '.join(
-        [ param.description[ 6: ] for param in definition.params ] ) + ')'
-    except AttributeError:
+        [ param.description[ 6: ] for param in parameters ] ) + ')'
+    except IndexError:
       pass
     return type_info
 
