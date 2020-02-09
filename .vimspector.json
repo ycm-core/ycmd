@@ -1,14 +1,7 @@
 {
   "configurations": {
     "python - launch pytest": {
-      "adapter": {
-        "command": [
-          "python",
-          "-m",
-          "debugpy.adapter"
-        ],
-        "name": "debugpy"
-      },
+      "adapter": "debugpy",
       "variables": [
         {
           "python": {
