@@ -37,7 +37,6 @@ def SetUpPythonPath():
                       p.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_3' ),
                       p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
-                      p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
                       p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
                       p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
@@ -48,3 +47,4 @@ def SetUpPythonPath():
                               'urllib3',
                               'src' ),
                       p.join( DIR_OF_THIRD_PARTY, 'waitress' ) ]
+  sys.path.append( p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )
