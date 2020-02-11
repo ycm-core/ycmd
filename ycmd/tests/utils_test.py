@@ -417,7 +417,7 @@ def WaitUntilProcessIsTerminated_TimedOut_test( *args ):
 
 
 def LoadPythonSource_UnicodePath_test():
-  filename = PathToTestFile( u'uni¢𐍈d€.py' )
+  filename = PathToTestFile( u'uni¢od€.py' )
   module = utils.LoadPythonSource( 'module_name', filename )
   assert_that( module, instance_of( ModuleType ) )
   assert_that( module.__file__, equal_to( filename ) )
