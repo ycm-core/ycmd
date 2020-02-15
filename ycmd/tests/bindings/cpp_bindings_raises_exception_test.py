@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from ycmd.utils import ImportCore
 from ycmd.tests.test_utils import ClangOnly
 from hamcrest import assert_that, calling, raises
-import ycm_core
+ycm_core = ImportCore()
 
 READONLY_MESSAGE = 'can\'t set attribute'
 

@@ -30,6 +30,7 @@ LOGGER = logging.getLogger( 'ycmd' )
 ROOT_DIR = os.path.normpath( os.path.join( os.path.dirname( __file__ ), '..' ) )
 DIR_OF_THIRD_PARTY = os.path.join( ROOT_DIR, 'third_party' )
 LIBCLANG_DIR = os.path.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
+ADD_DLL_DIRECTORY_CALLED = False
 
 
 from collections.abc import Mapping
@@ -460,6 +461,10 @@ def LoadYcmCoreDependencies():
     if name.startswith( 'libclang' ):
       libclang_path = os.path.join( LIBCLANG_DIR, name )
       if os.path.isfile( libclang_path ):
+        global ADD_DLL_DIRECTORY_CALLED
+        if not ADD_DLL_DIRECTORY_CALLED and hasattr( os, 'add_dll_directory' ):
+          ADD_DLL_DIRECTORY_CALLED = True
+          os.add_dll_directory( LIBCLANG_DIR )
         import ctypes
         ctypes.cdll.LoadLibrary( libclang_path )
         return
@@ -468,6 +473,10 @@ def LoadYcmCoreDependencies():
 def ImportCore():
   """Imports and returns the ycm_core module. This function exists for easily
   mocking this import in tests."""
+  global ADD_DLL_DIRECTORY_CALLED
+  if not ADD_DLL_DIRECTORY_CALLED and hasattr( os, 'add_dll_directory' ):
+    ADD_DLL_DIRECTORY_CALLED = True
+    os.add_dll_directory( LIBCLANG_DIR )
   import ycm_core as ycm_core
   return ycm_core
 

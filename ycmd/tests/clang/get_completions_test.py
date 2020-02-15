@@ -17,7 +17,6 @@
 
 import json
 import requests
-import ycm_core
 from unittest.mock import patch
 from hamcrest import ( all_of,
                        assert_that,
@@ -47,7 +46,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ErrorMatcher,
                                     LocationMatcher,
                                     WindowsOnly )
-from ycmd.utils import ReadFile
+from ycmd.utils import ImportCore, ReadFile
+ycm_core = ImportCore()
 
 NO_COMPLETIONS_ERROR = ErrorMatcher( RuntimeError, NO_COMPLETIONS_MESSAGE )
 

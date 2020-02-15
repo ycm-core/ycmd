@@ -16,12 +16,12 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import ycm_core
 from collections import defaultdict
 from ycmd.completers.general_completer import GeneralCompleter
 from ycmd import identifier_utils
-from ycmd.utils import LOGGER, SplitLines
+from ycmd.utils import ImportCore, LOGGER, SplitLines
 from ycmd import responses
+ycm_core = ImportCore()
 
 SYNTAX_FILENAME = 'YCM_PLACEHOLDER_FOR_SYNTAX'
 

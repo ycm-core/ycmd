@@ -19,6 +19,7 @@ from ycmd.completers.cpp.clang_completer import ConvertCompletionData
 from ycmd.responses import BuildDiagnosticData
 from ycmd.tests.bindings import PathToTestFile
 from ycmd.tests.test_utils import ClangOnly
+from ycmd.utils import ImportCore
 
 from hamcrest import ( assert_that,
                        contains_exactly,
@@ -26,7 +27,7 @@ from hamcrest import ( assert_that,
                        contains_string,
                        has_entries,
                        has_properties )
-import ycm_core
+ycm_core = ImportCore()
 
 
 def EmplaceBack( vector, element ):

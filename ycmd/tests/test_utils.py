@@ -42,11 +42,12 @@ from ycmd import extra_conf_store, handlers, user_options_store
 from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 from ycmd.utils import ( GetCurrentDirectory,
+                         ImportCore,
                          OnMac,
                          OnWindows,
                          ToUnicode,
                          WaitUntilProcessIsTerminated )
-import ycm_core
+ycm_core = ImportCore()
 
 from unittest import skipIf
 

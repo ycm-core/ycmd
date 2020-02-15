@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import ycm_core
 from ycmd.completers.cpp.clang_completer import ClangCompleter
 from ycmd.completers.cpp.clangd_completer import ( ShouldEnableClangdCompleter,
                                                    ClangdCompleter )
+from ycmd.utils import ImportCore
+ycm_core = ImportCore()
 
 
 def GetCompleter( user_options ):

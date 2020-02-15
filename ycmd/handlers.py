@@ -23,7 +23,7 @@ import time
 import traceback
 from bottle import request
 
-import ycm_core
+
 from ycmd import extra_conf_store, hmac_plugin, server_state, user_options_store
 from ycmd.responses import ( BuildExceptionResponse,
                              BuildCompletionResponse,
@@ -33,7 +33,8 @@ from ycmd.responses import ( BuildExceptionResponse,
                              UnknownExtraConf )
 from ycmd.request_wrap import RequestWrap
 from ycmd.completers.completer_utils import FilterAndSortCandidatesWrap
-from ycmd.utils import LOGGER, StartThread
+from ycmd.utils import LOGGER, StartThread, ImportCore
+ycm_core = ImportCore()
 
 
 # num bytes for the request body buffer; request.json only works if the request
