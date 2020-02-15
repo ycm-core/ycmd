@@ -359,7 +359,7 @@ def SafePopen( args, **kwargs ):
 # Shim for importlib.machinery.SourceFileLoader.
 # See upstream Python docs for info on what this does.
 def LoadPythonSource( name, pathname ):
-  import importlib
+  import importlib.machinery
   return importlib.machinery.SourceFileLoader( name, pathname ).load_module()
 
 
