@@ -54,7 +54,7 @@ YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
 
 // Reads the entire contents of the specified file. If the file does not exist,
 // an exception is thrown.
-std::string ReadUtf8File( const fs::path &filepath );
+std::vector< std::string > ReadUtf8File( const fs::path &filepath );
 
 
 // Normalizes a path by making it absolute relative to |base|, resolving
