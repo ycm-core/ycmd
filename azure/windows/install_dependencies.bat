@@ -1,17 +1,8 @@
 ::
 :: Python configuration
 ::
-
-set python_installer_extension=%YCM_PYTHON_INSTALLER_URL:~-3%
-
-if "%python_installer_extension%" == "exe" (
-  curl %YCM_PYTHON_INSTALLER_URL% -o C:\python-installer.exe
-  C:\python-installer.exe /quiet TargetDir=C:\Python
-) else (
-  curl %YCM_PYTHON_INSTALLER_URL% -o C:\python-installer.msi
-  msiexec /i C:\python-installer.msi TARGETDIR=C:\Python /qn
-)
-
+curl %YCM_PYTHON_INSTALLER_URL% -o C:\python-installer.exe
+C:\python-installer.exe /quiet TargetDir=C:\Python
 C:\Python\Scripts\pip install -r test_requirements.txt
 
 :: Enable coverage for Python subprocesses. See:

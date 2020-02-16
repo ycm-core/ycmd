@@ -30,6 +30,8 @@ LOGGER = logging.getLogger( 'ycmd' )
 ROOT_DIR = os.path.normpath( os.path.join( os.path.dirname( __file__ ), '..' ) )
 DIR_OF_THIRD_PARTY = os.path.join( ROOT_DIR, 'third_party' )
 LIBCLANG_DIR = os.path.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
+if hasattr( os, 'add_dll_directory' ):
+  os.add_dll_directory( LIBCLANG_DIR )
 
 
 from collections.abc import Mapping

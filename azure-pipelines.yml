@@ -87,8 +87,8 @@ jobs:
     vmImage: 'vs2015-win2012r2'
   strategy:
     matrix:
-      'Python 3.7 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+      'Python 3.8 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
   variables:
     MSVC: 14
     MSBUILD_PATH: 'C:\Program Files (x86)\MSBuild\14.0\Bin'
@@ -112,8 +112,8 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      'Python 3.7 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+      'Python 3.8 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
   variables:
     MSVC: 15
     MSBUILD_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin'
@@ -137,12 +137,12 @@ jobs:
     vmImage: 'windows-2019'
   strategy:
     matrix:
-      'Python 3.7 32-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3.exe'
-      'Python 3.7 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+      'Python 3.8 32-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1.exe'
+      'Python 3.8 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
       'C++ benchmark':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.7.3/python-3.7.3-amd64.exe'
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
         YCM_BENCHMARK: true
         COVERAGE: false
     maxParallel: 4

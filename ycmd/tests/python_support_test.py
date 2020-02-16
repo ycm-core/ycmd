@@ -19,9 +19,9 @@ import os
 
 from hamcrest import assert_that, equal_to
 
-import ycm_core
 from ycmd.tests.test_utils import ClangOnly
-from ycmd.utils import ToBytes, OnWindows
+from ycmd.utils import ToBytes, OnWindows, ImportCore
+ycm_core = ImportCore()
 
 
 # We don't use PathToTestFile from test_utils module because this module

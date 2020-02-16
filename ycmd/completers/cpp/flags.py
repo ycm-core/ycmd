@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import ycm_core
 import os
 import inspect
 from ycmd import extra_conf_store
 from ycmd.utils import ( AbsoluatePath,
+                         ImportCore,
                          OnMac,
                          OnWindows,
                          PathsToAllParentFolders,
@@ -27,6 +27,7 @@ from ycmd.utils import ( AbsoluatePath,
                          ToUnicode,
                          CLANG_RESOURCE_DIR )
 from ycmd.responses import NoExtraConfDetected
+ycm_core = ImportCore()
 
 # -include-pch and --sysroot= must be listed before -include and --sysroot
 # respectively because the latter is a prefix of the former (and the algorithm
