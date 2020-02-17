@@ -17,7 +17,6 @@ python_path = [
   p.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_3' ),
   p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
   p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
-  p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ),
   p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
   p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
   p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
@@ -28,7 +27,10 @@ python_path = [
 ]
 if os.environ.get( 'PYTHONPATH' ) is not None:
   python_path.append( os.environ[ 'PYTHONPATH' ] )
-os.environ[ 'PYTHONPATH' ] = os.pathsep.join( python_path )
+os.environ[ 'PYTHONPATH' ] = (
+    os.pathsep.join( python_path ) +
+    os.pathsep +
+    p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )
 
 
 def OnWindows():
