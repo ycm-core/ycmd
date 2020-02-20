@@ -770,46 +770,44 @@ def GetCsCompleterDataForPlatform():
   ####################################
   DATA = {
     'win32': {
+      'version': 'v1.34.12',
+      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
+                        's/download/v1.34.12/omnisharp.http-win-x86.zip' ),
       'file_name': 'omnisharp.http-win-x86.zip',
-      'version': 'v1.34.2',
-      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.34.2/omnisharp.http-win-x86.zip' ),
-      'check_sum': ( 'd66ee6ce347bba58de06a585bff63e8f42178c8b212883be0700919'
-                     '61c3c63d6' ),
+      'check_sum': ( '3413b635c224043d16d1fd4ccf7eb3b67a6bfe8b7fdf810938ab13b2'
+                     'caab9ecc' ),
     },
     'win64': {
+      'version': 'v1.34.12',
+      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
+                        's/download/v1.34.12/omnisharp.http-win-x64.zip' ),
       'file_name': 'omnisharp.http-win-x64.zip',
-      'version': 'v1.34.2',
-      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.34.2/omnisharp.http-win-x64.zip' ),
-      'check_sum': ( 'ab6bdac04b7225a69de11a0bdf0777facbe7d9895e9b6b4c8ebe8b5'
-                     '4b51412e5' ),
+      'check_sum': ( '3b22b11f97b8d482ae92f1063434d1ec50ccfa326c16440ec2d79b1b'
+                     '505658cc' ),
     },
     'macos': {
+      'version': 'v1.34.12',
+      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
+                        's/download/v1.34.12/omnisharp.http-osx.tar.gz' ),
       'file_name': 'omnisharp.http-osx.tar.gz',
-      'version': 'v1.34.2',
-      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.34.2/omnisharp.http-osx.tar.gz' ),
-      'check_sum': ( 'bea5e6e35a45bcece293ad2a32b717be16242d5ee6ca0004ca1c7af'
-                     'c9cacdbf7' ),
-    },
-    'linux64': {
-      'file_name': 'omnisharp.http-linux-x64.tar.gz',
-      'version': 'v1.34.2',
-      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.34.2/omnisharp.http-linux-x64.tar.g'
-                        'z' ),
-      'check_sum': ( '16aa6f3d97c11829b3fc177cea5c221ddb952a5d372fe84e735f695'
-                     '50d661722' ),
+      'check_sum': ( '79efdb9467dc3a6aef559bc4dc8dcd14c9fd44d0abaf54a37c6b9721'
+                     '2d6ffddf' ),
     },
     'linux32': {
+      'version': 'v1.34.12',
+      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
+                        's/download/v1.34.12/omnisharp.http-linux-x86.tar.gz' ),
       'file_name': 'omnisharp.http-linux-x86.tar.gz',
-      'version': 'v1.34.2',
-      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/relea'
-                        'ses/download/v1.34.2/omnisharp.http-linux-x86.tar.g'
-                        'z' ),
-      'check_sum': ( '6f89480ce95286640f670943f5d8e0d1f1c28db6bab07461be3f452'
-                     'e8b43c70b' ),
+      'check_sum': ( 'b9e25af0cf86a55bad863b626ab77eac32c2ba9e9a73dfa98f18d5e1'
+                     '4d090dee' ),
+    },
+    'linux64': {
+      'version': 'v1.34.12',
+      'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
+                        's/download/v1.34.12/omnisharp.http-linux-x64.tar.gz' ),
+      'file_name': 'omnisharp.http-linux-x64.tar.gz',
+      'check_sum': ( 'e7346bd87f259db5274ed3d29a86b85bbc4577f4b8bfd270e192b45d'
+                     '4498005b' ),
     },
   }
   if OnWindows():
