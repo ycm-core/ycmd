@@ -294,6 +294,13 @@ LSP completers currently supported without `language_server`:
 - Go
 - C-family
 
+One can also override the root directory, with `project_directory`.
+
+```python
+def Settings( **kwargs ):
+  return { 'project_directory': 'src/' } # The path may be absolute as well.
+```
+
 ##### C-family settings
 
 The `Settings` function is called by the libclang and clangd-based completers to
