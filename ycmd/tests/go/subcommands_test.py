@@ -118,9 +118,11 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'GoToDeclaration',
                                     'GoToDefinition',
                                     'GoToReferences',
+                                    'GoToImplementation',
                                     'GoToType',
                                     'FixIt',
-                                    'RestartServer' ) )
+                                    'RestartServer',
+                                    'ExecuteCommand' ) )
 
 
 @SharedYcmd
@@ -402,9 +404,7 @@ def Subcommands_FixIt_NullResponse_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
   RunFixItTest( app,
                 'Gopls returned NULL for response[ \'result\' ]',
-                filepath, 1, 1, has_entry( 'fixits', contains_exactly(
-                  has_entries( { 'text': "Organize Imports",
-                                 'chunks': empty() } ) ) ) )
+                filepath, 1, 1, has_entry( 'fixits', empty() ) )
 
 
 @SharedYcmd
@@ -423,33 +423,6 @@ def Subcommands_FixIt_ParseError_test( app ):
                             matches_regexp( '^Request failed: \\d' ) )
     }
   } )
-
-
-@SharedYcmd
-def Subcommands_FixIt_Simple_test( app ):
-  filepath = PathToTestFile( 'goto.go' )
-  fixit = has_entries( {
-    'fixits': contains_exactly(
-      has_entries( {
-        'text': "Organize Imports",
-        'chunks': contains_exactly(
-          ChunkMatcher( '',
-                        LocationMatcher( filepath, 8, 1 ),
-                        LocationMatcher( filepath, 9, 1 ) ),
-          ChunkMatcher( '\tdummy() //GoTo\n',
-                        LocationMatcher( filepath, 9, 1 ),
-                        LocationMatcher( filepath, 9, 1 ) ),
-          ChunkMatcher( '',
-                        LocationMatcher( filepath, 12, 1 ),
-                        LocationMatcher( filepath, 13, 1 ) ),
-          ChunkMatcher( '\tdiagnostics_test\n',
-                        LocationMatcher( filepath, 13, 1 ),
-                        LocationMatcher( filepath, 13, 1 ) ),
-        ),
-      } ),
-    )
-  } )
-  RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
 
 
 @SharedYcmd

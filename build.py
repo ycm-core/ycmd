@@ -825,7 +825,7 @@ def EnableGoCompleter( args ):
 
   go_dir = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
   os.chdir( p.join(
-    go_dir, 'src', 'golang.org', 'x', 'tools', 'cmd', 'gopls' ) )
+    go_dir, 'src', 'golang.org', 'x', 'tools', 'gopls' ) )
   CheckCall( [ go, 'build' ],
              quiet = args.quiet,
              status_message = 'Building gopls for go completion' )

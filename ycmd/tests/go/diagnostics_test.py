@@ -96,16 +96,10 @@ def Diagnostics_Poll_test( app ):
                                     { 'filepath': filepath,
                                       'contents': contents,
                                       'filetype': 'go' } ):
-      if message[ 'diagnostics' ][ 0 ][ 'text' ].endswith(
-          "is not part of a package" ):
-        continue
-      print( 'Message {}'.format( pformat( message ) ) )
       if 'diagnostics' in message:
-        seen[ message[ 'filepath' ] ] = True
         if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
-          raise AssertionError(
-            'Received diagnostics for unexpected file {}. '
-            'Only expected {}'.format( message[ 'filepath' ], to_see ) )
+          continue
+        seen[ message[ 'filepath' ] ] = True
         assert_that( message, has_entries( {
           'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
           'filepath': message[ 'filepath' ]

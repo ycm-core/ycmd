@@ -35,7 +35,6 @@ PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
   'golang.org',
   'x',
   'tools',
-  'cmd',
   'gopls',
   utils.ExecutableName( 'gopls' ) ) )
 
