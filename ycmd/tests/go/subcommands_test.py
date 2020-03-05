@@ -438,6 +438,27 @@ def Subcommands_FixIt_ParseError_test( app ):
 
 
 @SharedYcmd
+def Subcommands_FixIt_Simple_test( app ):
+  filepath = PathToTestFile( 'fixit.go' )
+  fixit = has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': "Organize Imports",
+        'chunks': contains_exactly(
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 1, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+          ChunkMatcher( 'package main',
+                        LocationMatcher( filepath, 3, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+        ),
+      } ),
+    )
+  } )
+  RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
+
+
+@SharedYcmd
 def Subcommands_RefactorRename_test( app ):
   filepath = PathToTestFile( 'unicode', 'unicode.go' )
   RunTest( app, {
