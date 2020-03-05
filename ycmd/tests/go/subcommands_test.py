@@ -399,6 +399,18 @@ def Subcommands_GoToType_test( app, test ):
   RunGoToTest( app, 'GoToType', test )
 
 
+@pytest.mark.parametrize( 'test', [
+    # Works
+    { 'req': ( 'thing.go', 3, 8 ),
+      'res': ( 'thing.go', 7, 6 ) },
+    # Fails
+    { 'req': ( 'thing.go', 12, 7 ),
+      'res': 'Cannot jump to location' } ] )
+@SharedYcmd
+def Subcommands_GoToImplementation_test( app, test ):
+  RunGoToTest( app, 'GoToImplementation', test )
+
+
 @SharedYcmd
 def Subcommands_FixIt_NullResponse_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
