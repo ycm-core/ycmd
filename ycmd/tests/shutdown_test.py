@@ -19,6 +19,7 @@ from hamcrest import assert_that, equal_to
 from threading import Event
 import time
 import requests
+import pytest
 
 from ycmd.tests.client_test import Client_test
 from ycmd.utils import StartThread
@@ -46,6 +47,7 @@ class Shutdown_test( Client_test ):
     self.AssertLogfilesAreRemoved()
 
 
+  @pytest.mark.valgrind_skip
   @Client_test.CaptureLogfiles
   def FromHandlerWithSubservers_test( self ):
     self.Start()
@@ -76,6 +78,7 @@ class Shutdown_test( Client_test ):
     self.AssertLogfilesAreRemoved()
 
 
+  @pytest.mark.valgrind_skip
   @Client_test.CaptureLogfiles
   def FromWatchdogWithSubservers_test( self ):
     all_servers_are_running = Event()
