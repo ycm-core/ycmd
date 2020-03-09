@@ -18,7 +18,6 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
-#include <boost/regex.hpp>
 #include <unordered_map>
 
 namespace YouCompleteMe {
@@ -26,19 +25,6 @@ namespace YouCompleteMe {
 namespace fs = boost::filesystem;
 
 namespace {
-
-// For details on the tag format supported, see here for details:
-// http://ctags.sourceforge.net/FORMAT
-// TL;DR: The only supported format is the one Exuberant Ctags emits.
-const char *const TAG_REGEX =
-  "^([^\\t\\n\\r]+)"  // The first field is the identifier
-  "\\t"  // A TAB char is the field separator
-  // The second field is the path to the file that has the identifier; either
-  // absolute or relative to the tags file.
-  "([^\\t\\n\\r]+)"
-  "\\t.*?"  // Non-greedy everything
-  "language:([^\\t\\n\\r]+)"  // We want to capture the language of the file
-  ".*?$";
 
 // Only used as the equality comparer for the below unordered_map which stores
 // const char* pointers and not std::string but needs to hash based on string
@@ -161,40 +147,58 @@ const std::unordered_map < const char *,
 }  // unnamed namespace
 
 
+// For details on the tag format supported, see here for details:
+// http://ctags.sourceforge.net/FORMAT
+// TL;DR: The only supported format is the one Exuberant Ctags emits.
 FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
   const fs::path &path_to_tag_file ) {
   FiletypeIdentifierMap filetype_identifier_map;
-  std::string tags_file_contents;
+  const auto lines = [ &path_to_tag_file ]{
+    try {
+      return ReadUtf8File( path_to_tag_file );
+    } catch ( ... ) {
+      return std::vector< std::string >{};
+    }
+  }();
 
-  try {
-    tags_file_contents = ReadUtf8File( path_to_tag_file );
-  } catch ( ... ) {
-    return filetype_identifier_map;
-  }
-
-  std::string::const_iterator start = tags_file_contents.begin();
-  std::string::const_iterator end   = tags_file_contents.end();
-
-  boost::smatch matches;
-  const boost::regex expression( TAG_REGEX );
-  const boost::match_flag_type options = boost::match_not_dot_newline;
-
-  while ( boost::regex_search( start, end, matches, expression, options ) ) {
-    start = matches[ 0 ].second;
-
-    std::string language( matches[ 3 ] );
+  for (auto&& line : lines) {
+    // Identifier name is from the start of the line to the first \t.
+    const size_t id_end = line.find( '\t' );
+    if ( id_end == std::string::npos ) {
+      continue;
+    }
+    // File path the identifier is in is the second field.
+    const size_t path_begin = line.find_first_not_of( '\t', id_end + 1 );
+    if ( path_begin == std::string::npos ) {
+      continue;
+    }
+    const size_t path_end = line.find( '\t', path_begin + 1 );
+    if ( path_end == std::string::npos ) {
+      continue;
+    }
+    // IdentifierCompleter depends on the "language:Foo" field.
+    // strlen( "language:" ) == 9
+    const size_t lang_begin = line.find( "language:", path_end + 1 ) + 9;
+    if ( lang_begin == std::string::npos + 9 ) {
+      continue;
+    }
+    const size_t lang_end = [ &line, lang_begin ] {
+      auto end = line.find( '\t', lang_begin + 1 );
+      if (end == std::string::npos) {
+        end = line.back() == '\r' ? line.size() - 1 : line.size();
+      }
+      return end;
+    }();
+    auto identifier = line.substr( 0, id_end );
+    fs::path path( line.substr( path_begin, path_end - path_begin ) );
+    path = NormalizePath( path, path_to_tag_file.parent_path() );
+    const auto language = line.substr( lang_begin, lang_end - lang_begin );
     std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
                                             language.c_str(),
                                             Lowercase( language ).c_str() );
-
-    std::string identifier( matches[ 1 ] );
-    fs::path path( matches[ 2 ].str() );
-    path = NormalizePath( path, path_to_tag_file.parent_path() );
-
     filetype_identifier_map[ std::move( filetype ) ][ path.string() ]
       .push_back( std::move( identifier ) );
   }
-
   return filetype_identifier_map;
 }
 
