@@ -315,16 +315,15 @@
 	fun:malloc
 	fun:_dl_map_object_deps
 	fun:dl_open_worker
-	fun:_dl_catch_error
+	fun:_dl_catch_exception
 	fun:_dl_open
 	fun:dlopen_doit
+	fun:_dl_catch_exception
 	fun:_dl_catch_error
 	fun:_dlerror_run
 	fun:dlopen@@GLIBC_2.2.5
 	fun:_PyImport_FindSharedFuncptr
 	fun:_PyImport_LoadDynamicModuleWithSpec
-	fun:_imp_create_dynamic_impl
-	fun:_imp_create_dynamic
 }
 {
 	Pytest at shutdown
@@ -349,4 +348,25 @@
 	fun:call_method
 	fun:slot_mp_ass_subscript
 	fun:_PyEval_EvalFrameDefault
+}
+{
+	Magically appeared when upgrading to Ubuntu 18.04
+	Memcheck:Cond
+	fun:__wcsnlen_avx2
+	fun:wcsrtombs
+	fun:wcstombs
+	fun:wcstombs
+	fun:encode_current_locale
+	fun:encode_locale_ex
+}
+{
+	Magically appeared when upgrading to Ubuntu 18.04
+	Memcheck:Cond
+	fun:internal_utf8_loop
+	fun:__gconv_transform_internal_utf8
+	fun:wcsrtombs
+	fun:wcstombs
+	fun:wcstombs
+	fun:encode_current_locale
+	fun:encode_locale_ex
 }
