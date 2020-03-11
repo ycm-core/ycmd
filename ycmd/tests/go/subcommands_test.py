@@ -411,6 +411,29 @@ def Subcommands_GoToImplementation_test( app, test ):
   RunGoToTest( app, 'GoToImplementation', test )
 
 
+@ExpectedFailure( 'Gopls bug - golang/go#37702',
+                  matches_regexp( '.*No item matched.*' ) )
+@SharedYcmd
+def Subcommands_FixIt_FixItWorksAtEndOfFile_test( app ):
+  filepath = PathToTestFile( 'fixit_goplsbug.go' )
+  fixit = has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': "Organize Imports",
+        'chunks': contains_exactly(
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 1, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+          ChunkMatcher( 'package main',
+                        LocationMatcher( filepath, 3, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+        ),
+      } ),
+    )
+  } )
+  RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
+
+
 @SharedYcmd
 def Subcommands_FixIt_NullResponse_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
