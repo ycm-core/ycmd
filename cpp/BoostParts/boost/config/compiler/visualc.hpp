@@ -111,8 +111,8 @@
 // TR1 features:
 //
 #if (_MSC_VER >= 1700) && defined(_HAS_CXX17) && (_HAS_CXX17 > 0)
-// # define BOOST_HAS_TR1_HASH			// don't know if this is true yet.
-// # define BOOST_HAS_TR1_TYPE_TRAITS	// don't know if this is true yet.
+// # define BOOST_HAS_TR1_HASH          // don't know if this is true yet.
+// # define BOOST_HAS_TR1_TYPE_TRAITS   // don't know if this is true yet.
 # define BOOST_HAS_TR1_UNORDERED_MAP
 # define BOOST_HAS_TR1_UNORDERED_SET
 #endif

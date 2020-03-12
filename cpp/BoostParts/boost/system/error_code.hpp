@@ -335,8 +335,11 @@ template<class T> struct BOOST_SYMBOL_VISIBLE cat_holder
     static constexpr generic_error_category generic_category_instance{};
 };
 
+// Before C++17 it was mandatory to redeclare all static constexpr
+#if defined(BOOST_NO_CXX17_INLINE_VARIABLES)
 template<class T> constexpr system_error_category cat_holder<T>::system_category_instance;
 template<class T> constexpr generic_error_category cat_holder<T>::generic_category_instance;
+#endif
 
 } // namespace detail
 

@@ -97,7 +97,7 @@
 #endif
 #include <typeinfo>
 #if ( (!_HAS_EXCEPTIONS && !defined(__ghs__)) || (defined(__ghs__) && !_HAS_NAMESPACE) ) && !defined(__TI_COMPILER_VERSION__) && !defined(__VISUALDSPVERSION__) \
-	&& !defined(__VXWORKS__)
+   && !defined(__VXWORKS__)
 #  define BOOST_NO_STD_TYPEINFO
 #endif  
 
@@ -136,6 +136,7 @@
 #  define BOOST_NO_CXX11_HDR_RATIO
 #  define BOOST_NO_CXX11_HDR_THREAD
 #  define BOOST_NO_CXX11_ATOMIC_SMART_PTR
+#  define BOOST_NO_CXX11_HDR_EXCEPTION
 #endif
 
 //  C++0x headers implemented in 610 (as shipped by Microsoft)

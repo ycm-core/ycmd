@@ -1,0 +1,372 @@
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:_PyLong_New
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:_PyBytes_FromSize
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:_PyObject_GC_Alloc
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_dict_with_shared_keys
+	fun:_PyObjectDict_SetItem
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_keys_object
+	fun:dictresize
+	fun:insertion_resize
+	fun:insertdict
+	fun:PyDict_SetItem
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_keys_object
+	fun:insert_to_emptydict
+	fun:PyDict_SetItem
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:PyFloat_FromDouble
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:PyUnicode_New
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:clone_combined_dict
+	fun:PyDict_Copy
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:realloc
+	fun:_PyObject_GC_Resize
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:PyCode_NewWithPosOnlyArgs
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_keys_object
+	fun:_PyDict_NewPresized
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_keys_object
+	fun:dictresize
+	fun:insertion_resize
+	fun:PyDict_SetDefault
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_keys_object
+	fun:dictresize
+	fun:dict_merge
+	fun:PyDict_Update
+	fun:PyImport_Cleanup
+	fun:Py_FinalizeEx
+}
+{
+	GTest use of uninitialized value of size 8
+	Memcheck:Value8
+	fun:_itoa_word
+	fun:vfprintf
+	fun:__vsnprintf_chk
+	fun:__snprintf_chk
+	fun:_ZN7testing12_GLOBAL__N_126PrintByteSegmentInObjectToEPKhmmPSo
+	fun:_ZN7testing9internal220PrintBytesInObjectToEPKhmPSo
+	fun:_ZN7testing8internal20MatchPrintAndExplainIKSt6vectorIN13YouCompleteMe14CompletionDataESaIS4_EERS7_EEbRT_RKNS_7MatcherIT0_EEPNS_19MatchResultListenerE
+	fun:_ZNK7testing8internal29PredicateFormatterFromMatcherINS0_15ContainsMatcherINS_18PolymorphicMatcherINS0_15PropertyMatcherIN13YouCompleteMe14CompletionDataESsEEEEEEEclISt6vectorIS6_SaIS6_EEEENS_15AssertionResultEPKcRKT_
+	fun:_ZN13YouCompleteMe42ClangCompleterTest_BufferTextNoParens_Test8TestBodyEv
+	fun:_ZN7testing8internal35HandleExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+	fun:_ZN7testing4Test3RunEv
+	fun:_ZN7testing8TestInfo3RunEv
+}
+{
+	GTest conditional jump depends on uninitialized variable
+	Memcheck:Cond
+	fun:vfprintf
+	fun:__vsnprintf_chk
+	fun:__snprintf_chk
+	fun:_ZN7testing12_GLOBAL__N_126PrintByteSegmentInObjectToEPKhmmPSo
+	fun:_ZN7testing9internal220PrintBytesInObjectToEPKhmPSo
+	fun:_ZN7testing8internal20MatchPrintAndExplainIKSt6vectorIN13YouCompleteMe14CompletionDataESaIS4_EERS7_EEbRT_RKNS_7MatcherIT0_EEPNS_19MatchResultListenerE
+	fun:_ZNK7testing8internal29PredicateFormatterFromMatcherINS0_15ContainsMatcherINS_18PolymorphicMatcherINS0_15PropertyMatcherIN13YouCompleteMe14CompletionDataESsEEEEEEEclISt6vectorIS6_SaIS6_EEEENS_15AssertionResultEPKcRKT_
+	fun:_ZN13YouCompleteMe42ClangCompleterTest_BufferTextNoParens_Test8TestBodyEv
+	fun:_ZN7testing8internal35HandleExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+	fun:_ZN7testing4Test3RunEv
+	fun:_ZN7testing8TestInfo3RunEv
+	fun:_ZN7testing8TestCase3RunEv
+}
+{
+	GTest conditional jump depends on uninitialized variable
+	Memcheck:Cond
+	fun:_itoa_word
+	fun:vfprintf
+	fun:__vsnprintf_chk
+	fun:__snprintf_chk
+	fun:_ZN7testing12_GLOBAL__N_126PrintByteSegmentInObjectToEPKhmmPSo
+	fun:_ZN7testing9internal220PrintBytesInObjectToEPKhmPSo
+	fun:_ZN7testing8internal20MatchPrintAndExplainIKSt6vectorIN13YouCompleteMe14CompletionDataESaIS4_EERS7_EEbRT_RKNS_7MatcherIT0_EEPNS_19MatchResultListenerE
+	fun:_ZNK7testing8internal29PredicateFormatterFromMatcherINS0_15ContainsMatcherINS_18PolymorphicMatcherINS0_15PropertyMatcherIN13YouCompleteMe14CompletionDataESsEEEEEEEclISt6vectorIS6_SaIS6_EEEENS_15AssertionResultEPKcRKT_
+	fun:_ZN13YouCompleteMe42ClangCompleterTest_BufferTextNoParens_Test8TestBodyEv
+	fun:_ZN7testing8internal35HandleExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+	fun:_ZN7testing4Test3RunEv
+	fun:_ZN7testing8TestInfo3RunEv
+}
+{
+	Pytest during collection
+	Memcheck:Addr8
+	fun:strncmp
+	fun:is_dst
+	fun:_dl_dst_count
+	fun:expand_dynamic_string_token
+	fun:fillin_rpath
+	fun:decompose_rpath.isra.0
+	fun:_dl_map_object
+	fun:openaux
+	fun:_dl_catch_exception
+	fun:_dl_map_object_deps
+	fun:dl_open_worker
+	fun:_dl_catch_exception
+}
+{
+	Pytest during collection
+	Memcheck:Addr8
+	fun:strncmp
+	fun:is_dst
+	fun:_dl_dst_substitute
+	fun:fillin_rpath
+	fun:decompose_rpath.isra.0
+	fun:_dl_map_object
+	fun:openaux
+	fun:_dl_catch_exception
+	fun:_dl_map_object_deps
+	fun:dl_open_worker
+	fun:_dl_catch_exception
+	fun:_dl_open
+}
+{
+	Pybind11 leak, see https://github.com/pybind/pybind11/pull/2024 - definitely lost
+	Memcheck:Leak
+	match-leak-kinds: definite
+	fun:_Znwm
+	fun:_ZN8pybind116moduleC1EPKcS2_
+	fun:PyInit_ycm_core
+	fun:_PyImport_LoadDynamicModuleWithSpec
+	fun:_imp_create_dynamic_impl
+	fun:_imp_create_dynamic
+	fun:cfunction_vectorcall_FASTCALL
+	fun:PyVectorcall_Call
+	fun:do_call_core
+	fun:_PyEval_EvalFrameDefault
+	fun:_PyEval_EvalCodeWithName
+	fun:_PyFunction_Vectorcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+}
+{
+	Libclang leak? - definitely lost
+	Memcheck:Leak
+	fun:_ZnwmRKSt9nothrow_t
+	fun:_ZN4llvm20WritableMemoryBuffer21getNewUninitMemBufferEmRKNS_5TwineE
+	fun:_ZN4llvm12MemoryBuffer16getMemBufferCopyENS_9StringRefERKNS_5TwineE
+	fun:_ZN4llvm12function_refIFvvEE11callback_fnIZ35clang_parseTranslationUnit2FullArgvEUlvE_EEvl
+	fun:_ZN4llvm20CrashRecoveryContext9RunSafelyENS_12function_refIFvvEEE
+	fun:_ZL26RunSafelyOnThread_DispatchPv
+	fun:_ZL24ExecuteOnThread_DispatchPv
+	fun:start_thread
+}
+{
+	Pytest at shutdown?
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:malloc
+	fun:PyType_GenericAlloc
+	fun:s_new
+	fun:type_call
+	fun:_PyObject_MakeTpCall
+	fun:_PyObject_Vectorcall
+	fun:_PyObject_FastCall
+	fun:object_vacall
+	fun:PyObject_CallFunctionObjArgs
+	fun:cache_struct_converter
+	fun:pack
+	fun:cfunction_vectorcall_FASTCALL
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+}
+{
+	Pytest at shutdown?
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:malloc
+	fun:prepare_s
+	fun:Struct___init___impl
+	fun:Struct___init__
+	fun:type_call
+	fun:_PyObject_MakeTpCall
+	fun:_PyObject_Vectorcall
+	fun:_PyObject_FastCall
+	fun:object_vacall
+	fun:PyObject_CallFunctionObjArgs
+	fun:cache_struct_converter
+	fun:pack
+	fun:cfunction_vectorcall_FASTCALL
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+}
+{
+	Pytest at shutdown?
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:malloc
+	fun:PyType_GenericAlloc
+	fun:s_new
+	fun:type_call
+	fun:_PyObject_MakeTpCall
+	fun:_PyObject_Vectorcall
+	fun:_PyObject_FastCall
+	fun:object_vacall
+	fun:PyObject_CallFunctionObjArgs
+	fun:cache_struct_converter
+	fun:calcsize
+	fun:cfunction_vectorcall_O
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:_PyEval_EvalCodeWithName
+	fun:PyEval_EvalCodeEx
+}
+{
+	Pytest at shutdown?
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:malloc
+	fun:prepare_s
+	fun:Struct___init___impl
+	fun:Struct___init__
+	fun:type_call
+	fun:_PyObject_MakeTpCall
+	fun:_PyObject_Vectorcall
+	fun:_PyObject_FastCall
+	fun:object_vacall
+	fun:PyObject_CallFunctionObjArgs
+	fun:cache_struct_converter
+	fun:calcsize
+	fun:cfunction_vectorcall_O
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:_PyEval_EvalCodeWithName
+	fun:PyEval_EvalCodeEx
+	fun:PyEval_EvalCode
+}
+{
+	Pytest at shutdown
+	Memcheck:Leak
+	match-leak-kinds: definite
+	fun:malloc
+	fun:_dl_map_object_deps
+	fun:dl_open_worker
+	fun:_dl_catch_exception
+	fun:_dl_open
+	fun:dlopen_doit
+	fun:_dl_catch_exception
+	fun:_dl_catch_error
+	fun:_dlerror_run
+	fun:dlopen@@GLIBC_2.2.5
+	fun:_PyImport_FindSharedFuncptr
+	fun:_PyImport_LoadDynamicModuleWithSpec
+}
+{
+	Pytest at shutdown
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:realloc
+	fun:_PyBytes_Resize
+	fun:_PyBytesWriter_Finish
+	fun:PyBytes_FromFormatV
+	fun:PyBytes_FromFormat
+	fun:os_putenv_impl
+	fun:os_putenv
+	fun:cfunction_vectorcall_FASTCALL
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+	fun:_PyObject_Vectorcall
+	fun:_PyObject_FastCall
+	fun:_PyObject_FastCall_Prepend
+	fun:call_unbound
+	fun:call_method
+	fun:slot_mp_ass_subscript
+	fun:_PyEval_EvalFrameDefault
+}
+{
+	Magically appeared when upgrading to Ubuntu 18.04
+	Memcheck:Cond
+	fun:__wcsnlen_avx2
+	fun:wcsrtombs
+	fun:wcstombs
+	fun:wcstombs
+	fun:encode_current_locale
+	fun:encode_locale_ex
+}
+{
+	Magically appeared when upgrading to Ubuntu 18.04
+	Memcheck:Cond
+	fun:internal_utf8_loop
+	fun:__gconv_transform_internal_utf8
+	fun:wcsrtombs
+	fun:wcstombs
+	fun:wcstombs
+	fun:encode_current_locale
+	fun:encode_locale_ex
+}
