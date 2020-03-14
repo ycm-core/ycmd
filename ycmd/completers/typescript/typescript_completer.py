@@ -138,7 +138,7 @@ class TypeScriptCompleter( Completer ):
 
     self._logfile = None
 
-    self._tsserver_lock = threading.RLock()
+    self._tsserver_lock = threading.Lock()
     self._tsserver_handle = None
     self._tsserver_version = None
     self._tsserver_executable = FindTSServer(
@@ -189,31 +189,35 @@ class TypeScriptCompleter( Completer ):
 
   def _StartServer( self ):
     with self._tsserver_lock:
-      if self._ServerIsRunning():
-        return
+      self._StartServerNoLock()
 
-      self._logfile = utils.CreateLogfile( LOGFILE_FORMAT )
-      tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
-                                                           level = _LogLevel() )
-      # TSServer gets the configuration for the log file through the
-      # environment variable 'TSS_LOG'. This seems to be undocumented but
-      # looking at the source code it seems like this is the way:
-      # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
-      environ = os.environ.copy()
-      environ[ 'TSS_LOG' ] = tsserver_log
 
-      LOGGER.info( 'TSServer log file: %s', self._logfile )
+  def _StartServerNoLock( self ):
+    if self._ServerIsRunning():
+      return
 
-      # We need to redirect the error stream to the output one on Windows.
-      self._tsserver_handle = utils.SafePopen( self._tsserver_executable,
-                                               stdin = subprocess.PIPE,
-                                               stdout = subprocess.PIPE,
-                                               stderr = subprocess.STDOUT,
-                                               env = environ )
+    self._logfile = utils.CreateLogfile( LOGFILE_FORMAT )
+    tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
+                                                         level = _LogLevel() )
+    # TSServer gets the configuration for the log file through the
+    # environment variable 'TSS_LOG'. This seems to be undocumented but
+    # looking at the source code it seems like this is the way:
+    # https://github.com/Microsoft/TypeScript/blob/8a93b489454fdcbdf544edef05f73a913449be1d/src/server/server.ts#L136
+    environ = os.environ.copy()
+    environ[ 'TSS_LOG' ] = tsserver_log
 
-      self._tsserver_is_running.set()
+    LOGGER.info( 'TSServer log file: %s', self._logfile )
 
-      utils.StartThread( self._SetServerVersion )
+    # We need to redirect the error stream to the output one on Windows.
+    self._tsserver_handle = utils.SafePopen( self._tsserver_executable,
+                                             stdin = subprocess.PIPE,
+                                             stdout = subprocess.PIPE,
+                                             stderr = subprocess.STDOUT,
+                                             env = environ )
+
+    self._tsserver_is_running.set()
+
+    utils.StartThread( self._SetServerVersion )
 
 
   def _ReaderLoop( self ):
@@ -354,8 +358,7 @@ class TypeScriptCompleter( Completer ):
 
 
   def _ServerIsRunning( self ):
-    with self._tsserver_lock:
-      return utils.ProcessIsRunning( self._tsserver_handle )
+    return utils.ProcessIsRunning( self._tsserver_handle )
 
 
   def ServerIsHealthy( self ):
@@ -895,8 +898,8 @@ class TypeScriptCompleter( Completer ):
 
   def _RestartServer( self, request_data ):
     with self._tsserver_lock:
-      self._StopServer()
-      self._StartServer()
+      self._StopServerNoLock()
+      self._StartServerNoLock()
       # This is needed because after we restart the TSServer it would lose all
       # the information about the files we were working on. This means that the
       # newly started TSServer will know nothing about the buffer we're working
@@ -908,18 +911,22 @@ class TypeScriptCompleter( Completer ):
 
   def _StopServer( self ):
     with self._tsserver_lock:
-      if self._ServerIsRunning():
-        LOGGER.info( 'Stopping TSServer with PID %s',
-                     self._tsserver_handle.pid )
-        try:
-          self._SendCommand( 'exit' )
-          utils.WaitUntilProcessIsTerminated( self._tsserver_handle,
-                                              timeout = 5 )
-          LOGGER.info( 'TSServer stopped' )
-        except Exception:
-          LOGGER.exception( 'Error while stopping TSServer' )
+      self._StopServerNoLock()
 
-      self._CleanUp()
+
+  def _StopServerNoLock( self ):
+    if self._ServerIsRunning():
+      LOGGER.info( 'Stopping TSServer with PID %s',
+                   self._tsserver_handle.pid )
+      try:
+        self._SendCommand( 'exit' )
+        utils.WaitUntilProcessIsTerminated( self._tsserver_handle,
+                                            timeout = 5 )
+        LOGGER.info( 'TSServer stopped' )
+      except Exception:
+        LOGGER.exception( 'Error while stopping TSServer' )
+
+    self._CleanUp()
 
 
   def _CleanUp( self ):

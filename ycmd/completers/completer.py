@@ -475,24 +475,36 @@ class CompletionsCache:
   """Cache of computed completions for a particular request."""
 
   def __init__( self ):
-    self._access_lock = threading.RLock()
+    self._access_lock = threading.Lock()
     self.Invalidate()
 
 
   def Invalidate( self ):
     with self._access_lock:
-      self._request_data = None
-      self._completions = None
+      self.InvalidateNoLock()
+
+
+  def InvalidateNoLock( self ):
+    self._request_data = None
+    self._completions = None
 
 
   def Update( self, request_data, completions ):
     with self._access_lock:
-      self._request_data = request_data
-      self._completions = completions
+      self.UpdateNoLock( request_data, completions )
+
+
+  def UpdateNoLock( self, request_data, completions ):
+    self._request_data = request_data
+    self._completions = completions
 
 
   def GetCompletionsIfCacheValid( self, request_data ):
     with self._access_lock:
-      if self._request_data and self._request_data == request_data:
-        return self._completions
-      return None
+      return self.GetCompletionsIfCacheValidNoLock( request_data )
+
+
+  def GetCompletionsIfCacheValidNoLock( self, request_data ):
+    if self._request_data and self._request_data == request_data:
+      return self._completions
+    return None

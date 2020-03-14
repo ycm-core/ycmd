@@ -371,7 +371,7 @@ class CsharpSolutionCompleter( object ):
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
-    self._server_state_lock = threading.RLock()
+    self._server_state_lock = threading.Lock()
     self._roslyn_path = roslyn_path
 
 
@@ -385,63 +385,71 @@ class CsharpSolutionCompleter( object ):
 
 
   def _StartServer( self ):
+    with self._server_state_lock:
+      return self._StartServerNoLock()
+
+
+  def _StartServerNoLock( self ):
     """ Start the OmniSharp server if not already running. Use a lock to avoid
     starting the server multiple times for the same solution. """
-    with self._server_state_lock:
-      if self._ServerIsRunning():
-        return
+    if self._ServerIsRunning():
+      return
 
-      LOGGER.info( 'Starting OmniSharp server' )
-      LOGGER.info( 'Loading solution file %s', self._solution_path )
+    LOGGER.info( 'Starting OmniSharp server' )
+    LOGGER.info( 'Loading solution file %s', self._solution_path )
 
-      self._ChooseOmnisharpPort()
+    self._ChooseOmnisharpPort()
 
-      command = [ PATH_TO_OMNISHARP_ROSLYN_BINARY,
-                  '-p',
-                  str( self._omnisharp_port ),
-                  '-s',
-                  str( self._solution_path ) ]
+    command = [ PATH_TO_OMNISHARP_ROSLYN_BINARY,
+                '-p',
+                str( self._omnisharp_port ),
+                '-s',
+                str( self._solution_path ) ]
 
-      if ( not utils.OnWindows()
-           and self._roslyn_path.endswith( '.exe' ) ):
-        command.insert( 0, 'mono' )
+    if ( not utils.OnWindows()
+         and self._roslyn_path.endswith( '.exe' ) ):
+      command.insert( 0, 'mono' )
 
-      LOGGER.info( 'Starting OmniSharp server with: %s', command )
+    LOGGER.info( 'Starting OmniSharp server with: %s', command )
 
-      solutionfile = os.path.basename( self._solution_path )
-      self._filename_stdout = utils.CreateLogfile(
-          LOGFILE_FORMAT.format( port = self._omnisharp_port,
-                                 sln = solutionfile,
-                                 std = 'stdout' ) )
-      self._filename_stderr = utils.CreateLogfile(
-          LOGFILE_FORMAT.format( port = self._omnisharp_port,
-                                 sln = solutionfile,
-                                 std = 'stderr' ) )
+    solutionfile = os.path.basename( self._solution_path )
+    self._filename_stdout = utils.CreateLogfile(
+        LOGFILE_FORMAT.format( port = self._omnisharp_port,
+                               sln = solutionfile,
+                               std = 'stdout' ) )
+    self._filename_stderr = utils.CreateLogfile(
+        LOGFILE_FORMAT.format( port = self._omnisharp_port,
+                               sln = solutionfile,
+                               std = 'stderr' ) )
 
-      with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
-        with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
-          self._omnisharp_phandle = utils.SafePopen(
-              command, stdout = fstdout, stderr = fstderr )
+    with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
+      with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
+        self._omnisharp_phandle = utils.SafePopen(
+            command, stdout = fstdout, stderr = fstderr )
 
-      LOGGER.info( 'Started OmniSharp server' )
+    LOGGER.info( 'Started OmniSharp server' )
 
 
   def _StopServer( self ):
-    """ Stop the OmniSharp server using a lock. """
     with self._server_state_lock:
-      if self._ServerIsRunning():
-        LOGGER.info( 'Stopping OmniSharp server with PID %s',
-                     self._omnisharp_phandle.pid )
-        try:
-          self._TryToStopServer()
-          self._ForceStopServer()
-          utils.WaitUntilProcessIsTerminated( self._omnisharp_phandle,
-                                              timeout = 5 )
-          LOGGER.info( 'OmniSharp server stopped' )
-        except Exception:
-          LOGGER.exception( 'Error while stopping OmniSharp server' )
+      return self._StopServerNoLock()
 
-      self._CleanUp()
+
+  def _StopServerNoLock( self ):
+    """ Stop the OmniSharp server using a lock. """
+    if self._ServerIsRunning():
+      LOGGER.info( 'Stopping OmniSharp server with PID %s',
+                   self._omnisharp_phandle.pid )
+      try:
+        self._TryToStopServer()
+        self._ForceStopServer()
+        utils.WaitUntilProcessIsTerminated( self._omnisharp_phandle,
+                                            timeout = 5 )
+        LOGGER.info( 'OmniSharp server stopped' )
+      except Exception:
+        LOGGER.exception( 'Error while stopping OmniSharp server' )
+
+    self._CleanUp()
 
 
   def _TryToStopServer( self ):
@@ -488,8 +496,8 @@ class CsharpSolutionCompleter( object ):
   def _RestartServer( self ):
     """ Restarts the OmniSharp server using a lock. """
     with self._server_state_lock:
-      self._StopServer()
-      return self._StartServer()
+      self._StopServerNoLock()
+      return self._StartServerNoLock()
 
 
   def _GetCompletions( self, request_data ):
