@@ -673,7 +673,14 @@ class LanguageServerCompleter( Completer ):
       HandleServerCommandResponse
     - Optionally override GetCustomSubcommands to return subcommand handlers
       that cannot be detected from the capabilities response.
+    - Optionally override AdditionalLogFiles for logs other than stderr
+    - Optionally override ExtraDebugItems for anything that should be in the
+      /debug_info response, that isn't covered by default
+    - Optionally override GetServerEnvironment if the server needs to be run
+      with specific environment variables.
     - Implement the following Completer abstract methods:
+      - GetServerName
+      - GetCommandLine
       - SupportedFiletypes
       - DebugInfo
       - Shutdown
@@ -733,7 +740,7 @@ class LanguageServerCompleter( Completer ):
       functions implementing GetType/GetDoc are named GetType/GetDoc.
   """
   def GetConnection( self ):
-    """Method that must be implemented by derived classes to return an instance
+    """Method that can be implemented by derived classes to return an instance
     of LanguageServerConnection appropriate for the language server in
     question"""
     return self._connection
@@ -762,6 +769,9 @@ class LanguageServerCompleter( Completer ):
     #     server file state, and stored data about the server itself) when we
     #     are calling methods on this object from the message pump). We
     #     synchronise on this mutex for that.
+    #   - We need to make sure that multiple client requests dont try to start
+    #     or stop the server simultaneously, so we also do all server
+    #     start/stop/etc. operations under this mutex
     self._server_info_mutex = threading.Lock()
     self.ServerReset()
 
@@ -882,7 +892,7 @@ class LanguageServerCompleter( Completer ):
       if self._connection:
         self._connection.Stop()
 
-      if not self._ServerIsHealthyNoLock():
+      if not self.ServerIsHealthy():
         LOGGER.info( '%s is not running', self.GetServerName() )
         self._Reset()
         return
@@ -956,7 +966,7 @@ class LanguageServerCompleter( Completer ):
         # anyway
         LOGGER.exception( 'Shutdown request failed. Ignoring' )
 
-    if self._ServerIsHealthyNoLock():
+    if self.ServerIsHealthy():
       self.GetConnection().SendNotification( lsp.Exit() )
 
     # If any threads are waiting for the initialize exchange to complete,
@@ -976,7 +986,7 @@ class LanguageServerCompleter( Completer ):
     """Returns True if the server is running and the initialization exchange has
     completed successfully. Implementations must not issue requests until this
     method returns True."""
-    if not self._ServerIsHealthyNoLock():
+    if not self.ServerIsHealthy():
       return False
 
     if self._initialize_event.is_set():
@@ -992,17 +1002,11 @@ class LanguageServerCompleter( Completer ):
 
 
   def ServerIsHealthy( self ):
-    with self._server_info_mutex:
-      return self._ServerIsHealthyNoLock()
-
-
-  def _ServerIsHealthyNoLock( self ):
     return utils.ProcessIsRunning( self._server_handle )
 
 
   def ServerIsReady( self ):
-    with self._server_info_mutex:
-      return self._ServerIsInitialized()
+    return self._ServerIsInitialized()
 
 
   def ShouldUseNowInner( self, request_data ):
@@ -1290,23 +1294,29 @@ class LanguageServerCompleter( Completer ):
 
   @abc.abstractmethod
   def GetServerName( self ):
+    """ A string representing a human readable name of the server."""
     pass # pragma: no cover
 
 
   def GetServerEnvironment( self ):
+    """ None or a dictionary containing the environment variables. """
     return None
 
 
   @abc.abstractmethod
   def GetCommandLine( self ):
+    """ An override in a concrete class needs to return a list of cli arguments
+        for starting the LSP server."""
     pass # pragma: no cover
 
 
   def AdditionalLogFiles( self ):
+    """ Returns the list of server logs other than stderr. """
     return []
 
 
   def ExtraDebugItems( self, request_data ):
+    """ A list of DebugInfoItems """
     return []
 
 
@@ -2349,7 +2359,7 @@ class LanguageServerCompleter( Completer ):
 
   def CommonDebugItems( self ):
     def ServerStateDescription():
-      if not self._ServerIsHealthyNoLock():
+      if not self.ServerIsHealthy():
         return 'Dead'
 
       if not self._ServerIsInitialized():

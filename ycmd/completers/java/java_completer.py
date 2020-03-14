@@ -307,8 +307,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._connection = None
     self._server_handle = None
     self._stderr_file = None
-    with self._server_info_mutex:
-      self._Reset()
+    self._Reset()
     self._command = []
 
 

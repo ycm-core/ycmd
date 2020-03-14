@@ -201,9 +201,7 @@ def ClangdCompleter_ShutdownFail_test( app ):
   with patch.object( completer, 'ShutdownServer',
                      side_effect = Exception ) as shutdown_server:
     completer._server_handle = MockPopen()
-    with patch.object( completer,
-                       '_ServerIsHealthyNoLock',
-                       return_value = True ):
+    with patch.object( completer, 'ServerIsHealthy', return_value = True ):
       completer.Shutdown()
       shutdown_server.assert_called()
 
