@@ -1,3 +1,11 @@
+trigger:
+  branches:
+    include:
+    - '*'
+pr:
+  branches:
+    include:
+    - '*'
 jobs:
 - job: linux
   displayName: 'Linux'
