@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import queue
+import subprocess
 import threading
 
 from ycmd import extra_conf_store, responses, utils
@@ -672,13 +673,19 @@ class LanguageServerCompleter( Completer ):
       HandleServerCommandResponse
     - Optionally override GetCustomSubcommands to return subcommand handlers
       that cannot be detected from the capabilities response.
+    - Optionally override AdditionalLogFiles for logs other than stderr
+    - Optionally override ExtraDebugItems for anything that should be in the
+      /debug_info response, that isn't covered by default
+    - Optionally override GetServerEnvironment if the server needs to be run
+      with specific environment variables.
     - Implement the following Completer abstract methods:
+      - GetServerName
+      - GetCommandLine
       - SupportedFiletypes
       - DebugInfo
       - Shutdown
       - ServerIsHealthy : Return True if the server is _running_
       - StartServer : Return True if the server was started.
-      - _RestartServer
     - Optionally override methods to customise behavior:
       - ConvertNotificationToMessage
       - GetCompleterName
@@ -732,12 +739,11 @@ class LanguageServerCompleter( Completer ):
       GetCustomSubcommands needs not contain GetType/GetDoc if the member
       functions implementing GetType/GetDoc are named GetType/GetDoc.
   """
-  @abc.abstractmethod
-  def GetConnection( sefl ):
-    """Method that must be implemented by derived classes to return an instance
+  def GetConnection( self ):
+    """Method that can be implemented by derived classes to return an instance
     of LanguageServerConnection appropriate for the language server in
     question"""
-    pass # pragma: no cover
+    return self._connection
 
 
   def HandleServerCommandResponse( self,
@@ -763,6 +769,9 @@ class LanguageServerCompleter( Completer ):
     #     server file state, and stored data about the server itself) when we
     #     are calling methods on this object from the message pump). We
     #     synchronise on this mutex for that.
+    #   - We need to make sure that multiple client requests dont try to start
+    #     or stop the server simultaneously, so we also do all server
+    #     start/stop/etc. operations under this mutex
     self._server_info_mutex = threading.Lock()
     self.ServerReset()
 
@@ -788,25 +797,38 @@ class LanguageServerCompleter( Completer ):
 
     self._signature_help_disabled = user_options[ 'disable_signature_help' ]
 
+    self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._stderr_file = None
+
+    self._Reset()
+
+
+  def _Reset( self ):
+    self.ServerReset()
+    self._connection = None
+    self._server_handle = None
+    if not self._server_keep_logfiles and self._stderr_file:
+      utils.RemoveIfExists( self._stderr_file )
+      self._stderr_file = None
+
 
   def ServerReset( self ):
     """Clean up internal state related to the running server instance.
     Implementations are required to call this after disconnection and killing
     the downstream server."""
-    with self._server_info_mutex:
-      self._server_file_state = lsp.ServerFileStateStore()
-      self._latest_diagnostics = collections.defaultdict( list )
-      self._sync_type = 'Full'
-      self._initialize_response = None
-      self._initialize_event = threading.Event()
-      self._on_initialize_complete_handlers = []
-      self._server_capabilities = None
-      self._is_completion_provider = False
-      self._resolve_completion_items = False
-      self._project_directory = None
-      self._settings = {}
-      self._extra_conf_dir = None
-      self._server_started = False
+    self._server_file_state = lsp.ServerFileStateStore()
+    self._latest_diagnostics = collections.defaultdict( list )
+    self._sync_type = 'Full'
+    self._initialize_response = None
+    self._initialize_event = threading.Event()
+    self._on_initialize_complete_handlers = []
+    self._server_capabilities = None
+    self._is_completion_provider = False
+    self._resolve_completion_items = False
+    self._project_directory = None
+    self._settings = {}
+    self._extra_conf_dir = None
+    self._server_started = False
 
 
   def GetCompleterName( self ):
@@ -819,9 +841,103 @@ class LanguageServerCompleter( Completer ):
     return self._language
 
 
-  @abc.abstractmethod
-  def StartServer( self, request_data, **kwargs ):
-    pass # pragma: no cover
+  def StartServer( self, request_data ):
+    try:
+      with self._server_info_mutex:
+        return self._StartServerNoLock( request_data )
+    except LanguageServerConnectionTimeout:
+      LOGGER.error( '%s failed to start, or did not connect successfully',
+                    self.GetServerName() )
+      self.Shutdown()
+      return False
+
+
+  def _StartServerNoLock( self, request_data ):
+    LOGGER.info( 'Starting %s: %s',
+                 self.GetServerName(),
+                 self.GetCommandLine() )
+
+    self._stderr_file = utils.CreateLogfile( '{}_stderr'.format(
+      utils.MakeSafeFileNameString( self.GetServerName() ) ) )
+
+    with utils.OpenForStdHandle( self._stderr_file ) as stderr:
+      self._server_handle = utils.SafePopen(
+        self.GetCommandLine(),
+        stdin = subprocess.PIPE,
+        stdout = subprocess.PIPE,
+        stderr = stderr,
+        env = self.GetServerEnvironment() )
+
+    self._connection = (
+      StandardIOLanguageServerConnection(
+        self._server_handle.stdin,
+        self._server_handle.stdout,
+        self.GetDefaultNotificationHandler() )
+    )
+
+    self._connection.Start()
+
+    self._connection.AwaitServerConnection()
+
+    LOGGER.info( '%s started', self.GetServerName() )
+
+    return True
+
+
+  def Shutdown( self ):
+    with self._server_info_mutex:
+      LOGGER.info( 'Shutting down %s...', self.GetServerName() )
+
+      # Tell the connection to expect the server to disconnect
+      if self._connection:
+        self._connection.Stop()
+
+      if not self.ServerIsHealthy():
+        LOGGER.info( '%s is not running', self.GetServerName() )
+        self._Reset()
+        return
+
+      LOGGER.info( 'Stopping %s with PID %s',
+                   self.GetServerName(),
+                   self._server_handle.pid )
+
+    try:
+      with self._server_info_mutex:
+        self.ShutdownServer()
+
+      # By this point, the server should have shut down and terminated. To
+      # ensure that isn't blocked, we close all of our connections and wait
+      # for the process to exit.
+      #
+      # If, after a small delay, the server has not shut down we do NOT kill
+      # it; we expect that it will shut itself down eventually. This is
+      # predominantly due to strange process behaviour on Windows.
+
+      # NOTE: While waiting for the connection to close, we must _not_ hold any
+      # locks (in fact, we must not hold locks that might be needed when
+      # processing messages in the poll thread - i.e. notifications).
+      # This is crucial, as the server closing (asyncronously) might
+      # involve _other activities_ if there are messages in the queue (e.g. on
+      # the socket) and we need to store/handle them in the message pump
+      # (such as notifications) or even the initialise response.
+      if self._connection:
+        # Actually this sits around waiting for the connection thraed to exit
+        self._connection.Close()
+
+      with self._server_info_mutex:
+        utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                            timeout = 15 )
+
+        LOGGER.info( '%s stopped', self.GetServerName() )
+    except Exception:
+      LOGGER.exception( 'Error while stopping %s', self.GetServerName() )
+      # We leave the process running. Hopefully it will eventually die of its
+      # own accord.
+
+    with self._server_info_mutex:
+      # Tidy up our internal state, even if the completer server didn't close
+      # down cleanly.
+      self._Reset()
 
 
   def ShutdownServer( self ):
@@ -857,14 +973,13 @@ class LanguageServerCompleter( Completer ):
     # release them, as there is no chance of getting a response now.
     if ( self._initialize_response is not None and
          not self._initialize_event.is_set() ):
-      with self._server_info_mutex:
-        self._initialize_response = None
-        self._initialize_event.set()
+      self._initialize_response = None
+      self._initialize_event.set()
 
 
-  @abc.abstractmethod
-  def _RestartServer( self, request_data ):
-    pass # pragma: no cover
+  def _RestartServer( self, request_data, *args, **kwargs ):
+    self.Shutdown()
+    self._StartAndInitializeServer( request_data, *args, **kwargs )
 
 
   def _ServerIsInitialized( self ):
@@ -886,13 +1001,17 @@ class LanguageServerCompleter( Completer ):
     return False
 
 
+  def ServerIsHealthy( self ):
+    return utils.ProcessIsRunning( self._server_handle )
+
+
   def ServerIsReady( self ):
     return self._ServerIsInitialized()
 
 
   def ShouldUseNowInner( self, request_data ):
     # We should only do _anything_ after the initialize exchange has completed.
-    return ( self._ServerIsInitialized() and
+    return ( self.ServerIsReady() and
              super().ShouldUseNowInner( request_data ) )
 
 
@@ -1171,6 +1290,48 @@ class LanguageServerCompleter( Completer ):
         minimum_distance = distance
 
     return responses.BuildDisplayMessageResponse( message )
+
+
+  @abc.abstractmethod
+  def GetServerName( self ):
+    """ A string representing a human readable name of the server."""
+    pass # pragma: no cover
+
+
+  def GetServerEnvironment( self ):
+    """ None or a dictionary containing the environment variables. """
+    return None
+
+
+  @abc.abstractmethod
+  def GetCommandLine( self ):
+    """ An override in a concrete class needs to return a list of cli arguments
+        for starting the LSP server."""
+    pass # pragma: no cover
+
+
+  def AdditionalLogFiles( self ):
+    """ Returns the list of server logs other than stderr. """
+    return []
+
+
+  def ExtraDebugItems( self, request_data ):
+    """ A list of DebugInfoItems """
+    return []
+
+
+  def DebugInfo( self, request_data ):
+    with self._server_info_mutex:
+      extras = self.CommonDebugItems() + self.ExtraDebugItems( request_data )
+      logfiles = [ self._stderr_file ] + self.AdditionalLogFiles()
+      server = responses.DebugInfoServer( name = self.GetServerName(),
+                                          handle = self._server_handle,
+                                          executable = self.GetCommandLine(),
+                                          logfiles = logfiles,
+                                          extras = extras )
+
+    return responses.BuildDebugInfoResponse( name = self.GetCompleterName(),
+                                             servers = [ server ] )
 
 
   def GetCustomSubcommands( self ):
@@ -1901,7 +2062,7 @@ class LanguageServerCompleter( Completer ):
     multiple locations or a location the cursor does not belong since the user
     wants to jump somewhere else. If that's the last handler, the location is
     returned anyway."""
-    if not self._ServerIsInitialized():
+    if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -1921,7 +2082,7 @@ class LanguageServerCompleter( Completer ):
   def GetCodeActions( self, request_data, args ):
     """Performs the codeAction request and returns the result as a FixIt
     response."""
-    if not self._ServerIsInitialized():
+    if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -2054,7 +2215,7 @@ class LanguageServerCompleter( Completer ):
 
   def RefactorRename( self, request_data, args ):
     """Issues the rename request and returns the result as a FixIt response."""
-    if not self._ServerIsInitialized():
+    if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     if len( args ) != 1:
@@ -2094,7 +2255,7 @@ class LanguageServerCompleter( Completer ):
   def Format( self, request_data ):
     """Issues the formatting or rangeFormatting request (depending on the
     presence of a range) and returns the result as a FixIt response."""
-    if not self._ServerIsInitialized():
+    if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )
@@ -2183,7 +2344,7 @@ class LanguageServerCompleter( Completer ):
 
 
   def GetCommandResponse( self, request_data, command, arguments ):
-    if not self._ServerIsInitialized():
+    if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     self._UpdateServerWithFileContents( request_data )

@@ -18,13 +18,8 @@
 
 """This test is for utilites used in clangd."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-
-from hamcrest import assert_that, equal_to
 from unittest.mock import patch
+from hamcrest import assert_that, equal_to
 from ycmd import handlers
 from ycmd.completers.cpp import clangd_completer
 from ycmd.completers.language_server.language_server_completer import (

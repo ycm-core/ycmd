@@ -78,8 +78,12 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
     return self._started
 
 
-  def _RestartServer( self, request_data ):
-    pass
+  def GetCommandLine( self ):
+    return [ 'server' ]
+
+
+  def GetServerName( self ):
+    return 'mock_completer'
 
 
 @IsolatedYcmd( { 'global_ycm_extra_conf':

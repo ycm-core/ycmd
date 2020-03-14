@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains_exactly, has_entry
+from hamcrest import assert_that, contains_exactly, equal_to, has_entry
 from unittest.mock import patch
 
+from ycmd.completers.language_server.language_server_completer import (
+    LanguageServerConnectionTimeout )
 from ycmd.tests.rust import ( PathToTestFile,
                               IsolatedYcmd,
                               StartRustCompleterServerInDirectory )
@@ -107,3 +109,28 @@ def ServerManagement_StopServerTwice_test( app ):
   )
 
   AssertRustCompleterServerIsRunning( app, False )
+
+
+@IsolatedYcmd
+def ServerManagement_StartServer_Fails_test( app ):
+  with patch( 'ycmd.completers.language_server.language_server_completer.'
+              'LanguageServerConnection.AwaitServerConnection',
+              side_effect = LanguageServerConnectionTimeout ):
+    resp = app.post_json( '/event_notification',
+                   BuildRequest(
+                     event_name = 'FileReadyToParse',
+                     filetype = 'rust',
+                     filepath = PathToTestFile( 'common', 'src', 'main.rs' ),
+                     contents = ""
+                   ) )
+
+    assert_that( resp.status_code, equal_to( 200 ) )
+
+    request_data = BuildRequest( filetype = 'java' )
+    assert_that( app.post_json( '/debug_info', request_data ).json,
+                 has_entry(
+                   'completer',
+                   has_entry( 'servers', contains_exactly(
+                     has_entry( 'is_running', False )
+                   ) )
+                 ) )

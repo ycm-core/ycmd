@@ -20,7 +20,7 @@ import os
 from subprocess import PIPE
 
 from ycmd import responses, utils
-from ycmd.completers.language_server import simple_language_server_completer
+from ycmd.completers.language_server import language_server_completer
 from ycmd.utils import LOGGER, re
 
 
@@ -66,7 +66,7 @@ def ShouldEnableRustCompleter( user_options ):
   return True
 
 
-class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+class RustCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
     super().__init__( user_options )
     self._rls_path = utils.FindExecutableWithFallback(
@@ -76,10 +76,10 @@ class RustCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         user_options[ 'rustc_binary_path' ],
         RUSTC_EXECUTABLE )
 
+
   def _Reset( self ):
-    with self._server_state_mutex:
-      super()._Reset()
-      self._server_progress = {}
+    super()._Reset()
+    self._server_progress = {}
 
 
   def GetServerName( self ):

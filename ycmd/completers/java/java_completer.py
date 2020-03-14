@@ -25,7 +25,7 @@ import threading
 
 from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_protocol as lsp
-from ycmd.completers.language_server import simple_language_server_completer
+from ycmd.completers.language_server import language_server_completer
 from ycmd.utils import LOGGER
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
@@ -279,7 +279,7 @@ def _WorkspaceDirForProject( workspace_root_path,
                        utils.ToUnicode( project_dir_hash.hexdigest() ) )
 
 
-class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
+class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
     self._workspace_path = None
     super().__init__( user_options )
@@ -381,11 +381,9 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
     if len( args ) > 0 and '--with-config' in args:
       with_config = True
 
-    with self._server_state_mutex:
-      self.Shutdown()
-      self._StartAndInitializeServer( request_data,
-                                      wipe_workspace = True,
-                                      wipe_config = with_config )
+    self._RestartServer( request_data,
+                         wipe_workspace = True,
+                         wipe_config = with_config )
 
 
   def _OpenProject( self, request_data, args ):
@@ -404,10 +402,7 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
         request_data[ 'working_dir' ],
         project_directory ) )
 
-    with self._server_state_mutex:
-      self.Shutdown()
-      self._StartAndInitializeServer( request_data,
-                                      project_directory = project_directory )
+    self._RestartServer( request_data, project_directory = project_directory )
 
 
   def _Reset( self ):
@@ -436,46 +431,53 @@ class JavaCompleter( simple_language_server_completer.SimpleLSPCompleter ):
                    project_directory = None,
                    wipe_workspace = False,
                    wipe_config = False ):
-    with self._server_state_mutex:
-      LOGGER.info( 'Starting jdt.ls Language Server...' )
+    try:
+      with self._server_info_mutex:
+        LOGGER.info( 'Starting jdt.ls Language Server...' )
 
-      if project_directory:
-        self._java_project_dir = project_directory
-      elif 'project_directory' in self._settings:
-        self._java_project_dir = utils.AbsoluatePath(
-          self._settings[ 'project_directory' ],
-          self._extra_conf_dir )
-      else:
-        self._java_project_dir = _FindProjectDir(
-          os.path.dirname( request_data[ 'filepath' ] ) )
+        if project_directory:
+          self._java_project_dir = project_directory
+        elif 'project_directory' in self._settings:
+          self._java_project_dir = utils.AbsoluatePath(
+            self._settings[ 'project_directory' ],
+            self._extra_conf_dir )
+        else:
+          self._java_project_dir = _FindProjectDir(
+            os.path.dirname( request_data[ 'filepath' ] ) )
 
-      self._workspace_path = _WorkspaceDirForProject(
-        self._workspace_root_path,
-        self._java_project_dir,
-        self._use_clean_workspace )
+        self._workspace_path = _WorkspaceDirForProject(
+          self._workspace_root_path,
+          self._java_project_dir,
+          self._use_clean_workspace )
 
-      if not self._use_clean_workspace and wipe_workspace:
-        if os.path.isdir( self._workspace_path ):
-          LOGGER.info( 'Wiping out workspace {0}'.format(
-            self._workspace_path ) )
-          shutil.rmtree( self._workspace_path )
+        if not self._use_clean_workspace and wipe_workspace:
+          if os.path.isdir( self._workspace_path ):
+            LOGGER.info( 'Wiping out workspace {0}'.format(
+              self._workspace_path ) )
+            shutil.rmtree( self._workspace_path )
 
-      self._launcher_config = _LauncherConfiguration( self._workspace_root_path,
-                                                      wipe_config )
+        self._launcher_config = _LauncherConfiguration(
+            self._workspace_root_path,
+            wipe_config )
 
-      self._command = [
-        PATH_TO_JAVA,
-        '-Dfile.encoding=UTF-8',
-        '-Declipse.application=org.eclipse.jdt.ls.core.id1',
-        '-Dosgi.bundles.defaultStartLevel=4',
-        '-Declipse.product=org.eclipse.jdt.ls.core.product',
-        '-Dlog.level=ALL',
-        '-jar', self._launcher_path,
-        '-configuration', self._launcher_config,
-        '-data', self._workspace_path,
-      ]
+        self._command = [
+          PATH_TO_JAVA,
+          '-Dfile.encoding=UTF-8',
+          '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+          '-Dosgi.bundles.defaultStartLevel=4',
+          '-Declipse.product=org.eclipse.jdt.ls.core.product',
+          '-Dlog.level=ALL',
+          '-jar', self._launcher_path,
+          '-configuration', self._launcher_config,
+          '-data', self._workspace_path,
+        ]
 
-    return super().StartServer( request_data )
+        return super( JavaCompleter, self )._StartServerNoLock( request_data )
+    except language_server_completer.LanguageServerConnectionTimeout:
+      LOGGER.error( '%s failed to start, or did not connect successfully',
+                    self.GetServerName() )
+      self.Shutdown()
+      return False
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
