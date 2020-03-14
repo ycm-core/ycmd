@@ -118,9 +118,11 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'GoToDeclaration',
                                     'GoToDefinition',
                                     'GoToReferences',
+                                    'GoToImplementation',
                                     'GoToType',
                                     'FixIt',
-                                    'RestartServer' ) )
+                                    'RestartServer',
+                                    'ExecuteCommand' ) )
 
 
 @SharedYcmd
@@ -397,14 +399,47 @@ def Subcommands_GoToType_test( app, test ):
   RunGoToTest( app, 'GoToType', test )
 
 
+@pytest.mark.parametrize( 'test', [
+    # Works
+    { 'req': ( 'thing.go', 3, 8 ),
+      'res': ( 'thing.go', 7, 6 ) },
+    # Fails
+    { 'req': ( 'thing.go', 12, 7 ),
+      'res': 'Cannot jump to location' } ] )
+@SharedYcmd
+def Subcommands_GoToImplementation_test( app, test ):
+  RunGoToTest( app, 'GoToImplementation', test )
+
+
+@ExpectedFailure( 'Gopls bug - golang/go#37702',
+                  matches_regexp( '.*No item matched.*' ) )
+@SharedYcmd
+def Subcommands_FixIt_FixItWorksAtEndOfFile_test( app ):
+  filepath = PathToTestFile( 'fixit_goplsbug.go' )
+  fixit = has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': "Organize Imports",
+        'chunks': contains_exactly(
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 1, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+          ChunkMatcher( 'package main',
+                        LocationMatcher( filepath, 3, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+        ),
+      } ),
+    )
+  } )
+  RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
+
+
 @SharedYcmd
 def Subcommands_FixIt_NullResponse_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
   RunFixItTest( app,
                 'Gopls returned NULL for response[ \'result\' ]',
-                filepath, 1, 1, has_entry( 'fixits', contains_exactly(
-                  has_entries( { 'text': "Organize Imports",
-                                 'chunks': empty() } ) ) ) )
+                filepath, 1, 1, has_entry( 'fixits', empty() ) )
 
 
 @SharedYcmd
@@ -427,24 +462,18 @@ def Subcommands_FixIt_ParseError_test( app ):
 
 @SharedYcmd
 def Subcommands_FixIt_Simple_test( app ):
-  filepath = PathToTestFile( 'goto.go' )
+  filepath = PathToTestFile( 'fixit.go' )
   fixit = has_entries( {
     'fixits': contains_exactly(
       has_entries( {
         'text': "Organize Imports",
         'chunks': contains_exactly(
           ChunkMatcher( '',
-                        LocationMatcher( filepath, 8, 1 ),
-                        LocationMatcher( filepath, 9, 1 ) ),
-          ChunkMatcher( '\tdummy() //GoTo\n',
-                        LocationMatcher( filepath, 9, 1 ),
-                        LocationMatcher( filepath, 9, 1 ) ),
-          ChunkMatcher( '',
-                        LocationMatcher( filepath, 12, 1 ),
-                        LocationMatcher( filepath, 13, 1 ) ),
-          ChunkMatcher( '\tdiagnostics_test\n',
-                        LocationMatcher( filepath, 13, 1 ),
-                        LocationMatcher( filepath, 13, 1 ) ),
+                        LocationMatcher( filepath, 1, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
+          ChunkMatcher( 'package main',
+                        LocationMatcher( filepath, 3, 1 ),
+                        LocationMatcher( filepath, 3, 1 ) ),
         ),
       } ),
     )

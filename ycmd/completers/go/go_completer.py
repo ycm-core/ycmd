@@ -35,7 +35,6 @@ PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
   'golang.org',
   'x',
   'tools',
-  'cmd',
   'gopls',
   utils.ExecutableName( 'gopls' ) ) )
 
@@ -105,3 +104,16 @@ class GoCompleter( simple_language_server_completer.SimpleLSPCompleter ):
       'hoverKind': 'Structured',
       'fuzzyMatching': False,
     }
+
+
+  def CodeActionLiteralToFixIt( self, request_data, code_action_literal ):
+    document_changes = code_action_literal[ 'edit' ][ 'documentChanges' ]
+    for text_document_edit in document_changes:
+      for text_edit in text_document_edit[ 'edits' ]:
+        end_line = text_edit[ 'range' ][ 'end' ][ 'line' ]
+        # LSP offsets are zero based, plus `request_data[ 'lines' ]` contains
+        # a trailing empty line.
+        if end_line >= len( request_data[ 'lines' ] ) - 1:
+          return None
+
+    return super().CodeActionLiteralToFixIt( request_data, code_action_literal )
