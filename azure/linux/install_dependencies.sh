@@ -1,10 +1,11 @@
 # Exit immediately if a command returns a non-zero status.
 set -e
 
+
 #
 # Compiler setup
 #
-
+sudo apt-get update
 sudo apt-get install libsqlite3-dev
 if [ "${YCM_COMPILER}" == "clang" ]; then
   sudo apt-get install clang-3.9
