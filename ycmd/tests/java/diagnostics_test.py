@@ -58,7 +58,6 @@ def ProjectPath( *args ):
                          *args )
 
 
-InternalNonProjectFile = PathToTestFile( DEFAULT_PROJECT_DIR, 'test.java' )
 TestFactory = ProjectPath( 'TestFactory.java' )
 TestLauncher = ProjectPath( 'TestLauncher.java' )
 TestWidgetImpl = ProjectPath( 'TestWidgetImpl.java' )
@@ -69,7 +68,6 @@ youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
-  InternalNonProjectFile: [],
   TestFactory: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',

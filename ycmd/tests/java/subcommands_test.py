@@ -921,6 +921,17 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
                         LocationMatcher( filepath, 3, 1 ) ),
         ),
       } ),
+      has_entries( {
+        'text': 'Change modifiers to final where possible',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
+                        '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
+                        '( final String info ) {\n    final AbstractTestWidget'
+                        ' w = new TestWidgetImpl( info );\n    final ',
+                        LocationMatcher( filepath, 18, 24 ),
+                        LocationMatcher( filepath, 25, 5 ) ),
+        ),
+      } ),
     )
   } )
 
@@ -966,6 +977,17 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
                         LocationMatcher( filepath, 3, 1 ) ),
         ),
       } ),
+      has_entries( {
+        'text': 'Change modifiers to final where possible',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
+                        '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
+                        '( final String info ) {\n    final AbstractTestWidget'
+                        ' w = new TestWidgetImpl( info );\n    final ',
+                        LocationMatcher( filepath, 18, 24 ),
+                        LocationMatcher( filepath, 25, 5 ) ),
+        ),
+      } ),
     )
   } )
 
@@ -1005,6 +1027,10 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
       } ),
       has_entries( {
         'text': "Generate Getters and Setters",
+        'chunks': instance_of( list )
+      } ),
+      has_entries( {
+        'text': 'Change modifiers to final where possible',
         'chunks': instance_of( list )
       } ),
     )
@@ -1064,6 +1090,10 @@ def Subcommands_FixIt_MultipleDiags_test( app, description, column ):
       } ),
       has_entries( {
         'text': "Organize imports",
+        'chunks': instance_of( list ),
+      } ),
+      has_entries( {
+        'text': 'Change modifiers to final where possible',
         'chunks': instance_of( list ),
       } ),
     )
@@ -1158,6 +1188,10 @@ def Subcommands_FixIt_Range_test( app ):
             'text': 'Organize imports',
             'chunks': instance_of( list ),
           } ),
+          has_entries( {
+            'text': 'Change modifiers to final where possible',
+            'chunks': instance_of( list ),
+          } ),
         )
       } )
     }
@@ -1176,6 +1210,9 @@ def Subcommands_FixIt_NoDiagnostics_test( app ):
   RunFixItTest( app, "no FixIts means you gotta code it yo' self",
                 filepath, 1, 1, has_entries( {
                   'fixits': contains_inanyorder(
+                    has_entries( {
+                      'text': 'Change modifiers to final where possible',
+                      'chunks': instance_of( list ) } ),
                     has_entries( { 'text': 'Organize imports',
                                    'chunks': instance_of( list ) } ),
                     has_entries( { 'text': 'Generate toString()...',
@@ -1209,6 +1246,10 @@ def Subcommands_FixIt_Unicode_test( app ):
                         LocationMatcher( TEST_JAVA, 20, 3 ),
                         LocationMatcher( TEST_JAVA, 20, 3 ) ),
         ),
+      } ),
+      has_entries( {
+        'text': 'Change modifiers to final where possible',
+        'chunks': instance_of( list ),
       } ),
       has_entries( {
         'text': "Generate Getters and Setters",
@@ -1246,6 +1287,17 @@ def Subcommands_FixIt_InvalidURI_test( app ):
           ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                         LocationMatcher( '', 1, 1 ),
                         LocationMatcher( '', 3, 1 ) ),
+        ),
+      } ),
+      has_entries( {
+        'text': 'Change modifiers to final where possible',
+        'chunks': contains_exactly(
+          ChunkMatcher( "final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {"
+                        "\n    }\n  }\n\n  public AbstractTestWidget getWidget"
+                        "( final String info ) {\n    final AbstractTestWidget"
+                        " w = new TestWidgetImpl( info );\n    final ",
+                        LocationMatcher( '', 18, 24 ),
+                        LocationMatcher( '', 25, 5 ) ),
         ),
       } ),
       has_entries( {
@@ -1492,24 +1544,21 @@ def Subcommands_Format_Range_Spaces_test( app ):
       'data': has_entries( {
         'fixits': contains_exactly( has_entries( {
           'chunks': contains_exactly(
-            ChunkMatcher( '    ',
+            ChunkMatcher( '  ',
                           LocationMatcher( TEST_JAVA, 20,  1 ),
                           LocationMatcher( TEST_JAVA, 20,  3 ) ),
-            ChunkMatcher( '\n        ',
+            ChunkMatcher( '\n      ',
                           LocationMatcher( TEST_JAVA, 20, 28 ),
                           LocationMatcher( TEST_JAVA, 21,  5 ) ),
-            ChunkMatcher( '\n        ',
+            ChunkMatcher( '\n      ',
                           LocationMatcher( TEST_JAVA, 21, 28 ),
                           LocationMatcher( TEST_JAVA, 22,  5 ) ),
-            ChunkMatcher( '\n        ',
+            ChunkMatcher( '\n      ',
                           LocationMatcher( TEST_JAVA, 22, 30 ),
                           LocationMatcher( TEST_JAVA, 23,  5 ) ),
-            ChunkMatcher( '\n        ',
+            ChunkMatcher( '\n      ',
                           LocationMatcher( TEST_JAVA, 23, 23 ),
                           LocationMatcher( TEST_JAVA, 24,  5 ) ),
-            ChunkMatcher( '\n    ',
-                          LocationMatcher( TEST_JAVA, 24, 27 ),
-                          LocationMatcher( TEST_JAVA, 25,  3 ) ),
           )
         } ) )
       } )
