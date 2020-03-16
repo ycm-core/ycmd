@@ -47,8 +47,26 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
 
   def GetCustomSubcommands( self ):
     return { 'GetHover': lambda self, request_data, args:
-      responses.BuildDisplayMessageResponse(
-        self.GetHoverResponse( request_data ) ) }
+      self._GetHover( request_data ) }
+
+
+  def _GetHover( self, request_data ):
+    raw_hover = self.GetHoverResponse( request_data )
+    if isinstance( raw_hover, dict ):
+      # Both MarkedString and MarkupContent contain 'value' key.
+      # MarkupContent is the only one not deprecated.
+      return responses.BuildDetailedInfoResponse( raw_hover[ 'value' ] )
+    if isinstance( raw_hover, str ):
+      # MarkedString might be just a string.
+      return responses.BuildDetailedInfoResponse( raw_hover )
+    # If we got this far, this is a list of MarkedString objects.
+    lines = []
+    for marked_string in raw_hover:
+      if isinstance( marked_string, str ):
+        lines.append( marked_string )
+      else:
+        lines.append( marked_string[ 'value' ] )
+    return responses.BuildDetailedInfoResponse( '\n'.join( lines ) )
 
 
   def GetCodepointForCompletionRequest( self, request_data ):
