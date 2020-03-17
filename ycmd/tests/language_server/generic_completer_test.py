@@ -190,7 +190,7 @@ def GenericLSPCompleter_Hover_RequestFails_test( app ):
       'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
 @patch( 'ycmd.completers.language_server.generic_lsp_completer.'
         'GenericLSPCompleter.GetHoverResponse', return_value = 'asd' )
-def GenericLSPCompleter_Hover_HasResponse_test( get_hover, app ):
+def GenericLSPCompleter_HoverIsString_test( get_hover, app ):
   request = BuildRequest( filepath = TEST_FILE,
                           filetype = 'foo',
                           line_num = 1,
@@ -203,7 +203,56 @@ def GenericLSPCompleter_Hover_HasResponse_test( get_hover, app ):
   request.pop( 'event_name' )
   request[ 'command_arguments' ] = [ 'GetHover' ]
   response = app.post_json( '/run_completer_command', request ).json
-  assert_that( response, has_entry( 'message', 'asd' ) )
+  assert_that( response, has_entry( 'detailed_info', 'asd' ) )
+
+
+@IsolatedYcmd( { 'language_server':
+  [ { 'name': 'foo',
+      'filetypes': [ 'foo' ],
+      'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
+@patch( 'ycmd.completers.language_server.generic_lsp_completer.'
+        'GenericLSPCompleter.GetHoverResponse',
+        return_value = { 'whatever': 'blah', 'value': 'asd' } )
+def GenericLSPCompleter_HoverIsDict_test( get_hover, app ):
+  request = BuildRequest( filepath = TEST_FILE,
+                          filetype = 'foo',
+                          line_num = 1,
+                          column_num = 1,
+                          contents = TEST_FILE_CONTENT,
+                          event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', request )
+  WaitUntilCompleterServerReady( app, 'foo' )
+  request.pop( 'event_name' )
+  request[ 'command_arguments' ] = [ 'GetHover' ]
+  response = app.post_json( '/run_completer_command', request ).json
+  assert_that( response, has_entry( 'detailed_info', 'asd' ) )
+
+
+@IsolatedYcmd( { 'language_server':
+  [ { 'name': 'foo',
+      'filetypes': [ 'foo' ],
+      'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
+@patch( 'ycmd.completers.language_server.generic_lsp_completer.'
+        'GenericLSPCompleter.GetHoverResponse',
+        return_value = [ { 'whatever': 'blah', 'value': 'asd' },
+                         'qe',
+                         { 'eh?': 'hover_sucks', 'value': 'yes, it does' } ] )
+def GenericLSPCompleter_HoverIsList_test( get_hover, app ):
+  request = BuildRequest( filepath = TEST_FILE,
+                          filetype = 'foo',
+                          line_num = 1,
+                          column_num = 1,
+                          contents = TEST_FILE_CONTENT,
+                          event_name = 'FileReadyToParse' )
+
+  app.post_json( '/event_notification', request )
+  WaitUntilCompleterServerReady( app, 'foo' )
+  request.pop( 'event_name' )
+  request[ 'command_arguments' ] = [ 'GetHover' ]
+  response = app.post_json( '/run_completer_command', request ).json
+  assert_that( response, has_entry( 'detailed_info', 'asd\nqe\nyes, it does' ) )
+
 
 
 @IsolatedYcmd( { 'language_server':
