@@ -121,7 +121,7 @@ def ServerManagement_RestartServer_test( app ):
 def ServerManagement_WipeWorkspace_NoConfig_test( isolated_app ):
   with TemporaryTestDir() as tmp_dir:
     with isolated_app( {
-      'java_jdtls_use_clean_workspace': 1,
+      'java_jdtls_use_clean_workspace': 0,
       'java_jdtls_workspace_root_path': tmp_dir
     } ) as app:
       StartJavaCompleterServerInDirectory(
@@ -171,7 +171,7 @@ def ServerManagement_WipeWorkspace_NoConfig_test( isolated_app ):
 def ServerManagement_WipeWorkspace_WithConfig_test( isolated_app ):
   with TemporaryTestDir() as tmp_dir:
     with isolated_app( {
-      'java_jdtls_use_clean_workspace': 1,
+      'java_jdtls_use_clean_workspace': 0,
       'java_jdtls_workspace_root_path': tmp_dir
     } ) as app:
       StartJavaCompleterServerInDirectory(
