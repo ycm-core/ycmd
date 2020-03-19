@@ -108,6 +108,9 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'or use your system Clangd. '
   'See the YCM docs for details on how to use a custom Clangd.' )
 
+# use --proxy [http|socks5]://user:pass@host:port to get file on web
+PROXY = {}
+
 
 def RemoveDirectory( directory ):
   try_number = 0
@@ -136,7 +139,11 @@ def CheckFileIntegrity( file_path, check_sum ):
 
 
 def DownloadFileTo( download_url, file_path ):
-  request = requests.get( download_url, stream = True )
+  if PROXY:
+    assert isinstance(PROXY, dict)
+    request = requests.get( download_url, stream = True, proxies=PROXY )
+  else:
+    request = requests.get( download_url, stream = True )
   with open( file_path, 'wb' ) as package_file:
     package_file.write( request.content )
   request.close()
@@ -444,6 +451,14 @@ def ParseArguments():
                        help = 'For developers: specify the cmake executable. '
                               'Useful for testing with specific versions, or '
                               'if the system is unable to find cmake.' )
+  parser.add_argument( '--proxy-http',
+                       help = 'For developers: connect with web to download '
+                              'file by proxy. looks like: [http|socks5]://user:pass'
+                              '@host:port (socks5 need third party\'s suppost)')
+  parser.add_argument( '--proxy-https',
+                       help = 'For developers: connect with web to download '
+                              'file by proxy. looks like: [http|socks5]://user:pass'
+                              '@host:port (socks5 need third party\'s suppost)')
 
   # These options are deprecated.
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
@@ -458,6 +473,12 @@ def ParseArguments():
                        help = argparse.SUPPRESS )
 
   args = parser.parse_args()
+
+  # set PROXY to change the behave of DownloadFileTo
+  if args.proxy_http:
+    PROXY['http'] = args.proxy_http
+  if args.proxy_https:
+    PROXY['https'] = args.proxy_https
 
   # coverage is not supported for c++ on MSVC
   if not OnWindows() and args.enable_coverage:
