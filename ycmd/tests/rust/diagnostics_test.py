@@ -22,14 +22,19 @@ from hamcrest import ( assert_that,
                        has_entry )
 from pprint import pformat
 import json
+import os
 
-from ycmd.tests.rust import PathToTestFile, SharedYcmd
+from ycmd.tests.rust import ( PathToTestFile,
+                              SharedYcmd,
+                              IsolatedYcmd,
+                              StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
                                     PollForMessages,
                                     PollForMessagesTimeoutException,
                                     RangeMatcher,
-                                    WaitForDiagnosticsToBeReady )
+                                    WaitForDiagnosticsToBeReady,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 
 
@@ -51,6 +56,7 @@ DIAG_MATCHERS_PER_FILE = {
 }
 
 
+@WithRetry
 @SharedYcmd
 def Diagnostics_DetailedDiags_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
@@ -68,6 +74,7 @@ def Diagnostics_DetailedDiags_test( app ):
       'no field `build_` on type `test::Builder`\n\nunknown field' ) )
 
 
+@WithRetry
 @SharedYcmd
 def Diagnostics_FileReadyToParse_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
@@ -80,10 +87,12 @@ def Diagnostics_FileReadyToParse_test( app ):
   assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
-@SharedYcmd
+@IsolatedYcmd
 def Diagnostics_Poll_test( app ):
-  filepath = PathToTestFile( 'common', 'src', 'main.rs' )
+  project_dir = PathToTestFile( 'common' )
+  filepath = os.path.join( project_dir, 'src', 'main.rs' )
   contents = ReadFile( filepath )
+  StartRustCompleterServerInDirectory( app, project_dir )
 
   # Poll until we receive _all_ the diags asynchronously.
   to_see = sorted( DIAG_MATCHERS_PER_FILE.keys() )
