@@ -2822,14 +2822,14 @@ class LanguageServerCompletionsCache( CompletionsCache ):
 
   def Invalidate( self ):
     with self._access_lock:
-      super().Invalidate()
+      super().InvalidateNoLock()
       self._is_incomplete = False
       self._use_start_column = True
 
 
   def Update( self, request_data, completions, is_incomplete ):
     with self._access_lock:
-      super().Update( request_data, completions )
+      super().UpdateNoLock( request_data, completions )
       self._is_incomplete = is_incomplete
       if is_incomplete:
         self._use_start_column = False
@@ -2851,7 +2851,7 @@ class LanguageServerCompletionsCache( CompletionsCache ):
     with self._access_lock:
       if ( not self._is_incomplete and
            ( self._use_start_column or self._IsQueryPrefix( request_data ) ) ):
-        return super().GetCompletionsIfCacheValid( request_data )
+        return super().GetCompletionsIfCacheValidNoLock( request_data )
       return None
 
 
