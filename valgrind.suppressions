@@ -448,3 +448,17 @@
 	fun:resize_compact
 	fun:_PyUnicodeWriter_Finish
 }
+{
+	Libclang 10 new leak
+	Memcheck:Leak
+	fun:_ZnwmRKSt9nothrow_t
+	fun:_ZN4llvm20WritableMemoryBuffer21getNewUninitMemBufferEmRKNS_5TwineE
+	fun:_ZN4llvm12MemoryBuffer16getMemBufferCopyENS_9StringRefERKNS_5TwineE
+	fun:_ZL31clang_parseTranslationUnit_ImplPvPKcPKS1_iN4llvm8ArrayRefI13CXUnsavedFileEEjPP21CXTranslationUnitImpl
+	fun:_ZN4llvm12function_refIFvvEE11callback_fnIZ35clang_parseTranslationUnit2FullArgvEUlvE_EEvl
+	fun:_ZN4llvm20CrashRecoveryContext9RunSafelyENS_12function_refIFvvEEE
+	fun:_ZL26RunSafelyOnThread_DispatchPv
+	fun:_ZL14threadFuncSyncPv
+	fun:start_thread
+	fun:clone
+}

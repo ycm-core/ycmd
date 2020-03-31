@@ -19,10 +19,10 @@ fi
 
 if [ "${YCM_CLANG_TIDY}" ]; then
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-  sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main"
+  sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main"
   sudo apt-get update
-  sudo apt-get install -y clang-tidy-9 valgrind
-  sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-9 100
+  sudo apt-get install -y clang-tidy-10 valgrind
+  sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
 fi
 
 #
@@ -65,15 +65,5 @@ pip install -r test_requirements.txt
 # http://coverage.readthedocs.io/en/latest/subprocess.html
 echo -e "import coverage\ncoverage.process_startup()" > \
 ${HOME}/.pyenv/versions/${YCM_PYTHON_VERSION}/lib/python${YCM_PYTHON_VERSION%.*}/site-packages/sitecustomize.py
-
-#
-# Rust setup
-#
-
-# rustup is required to enable the Rust completer on Python versions older than
-# 2.7.9.
-if [ "${YCM_PYTHON_VERSION}" == "2.7.1" ]; then
-  curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain none
-fi
 
 set +e

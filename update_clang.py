@@ -2,7 +2,6 @@
 
 import argparse
 import contextlib
-import gzip
 import os
 import os.path as p
 import platform
@@ -46,7 +45,8 @@ def OnMac():
 
 LLVM_DOWNLOAD_DATA = {
   'win32': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
     'format': 'nsis',
     'llvm_package': 'LLVM-{llvm_version}-{os_name}.exe',
     'clangd_package': {
@@ -64,7 +64,8 @@ LLVM_DOWNLOAD_DATA = {
     }
   },
   'win64': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
     'format': 'nsis',
     'llvm_package': 'LLVM-{llvm_version}-{os_name}.exe',
     'clangd_package': {
@@ -82,9 +83,10 @@ LLVM_DOWNLOAD_DATA = {
     }
   },
   'x86_64-apple-darwin': {
-    'url': 'https://homebrew.bintray.com/bottles/{llvm_package}',
-    'format': 'gzip',
-    'llvm_package': 'llvm-{llvm_version}.sierra.bottle.tar.gz',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
+    'format': 'lzma',
+    'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'clangd_package': {
       'name': 'clangd-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
@@ -94,18 +96,8 @@ LLVM_DOWNLOAD_DATA = {
     'libclang_package': {
       'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
-        {
-          'from': os.path.join( '{llvm_version}', 'lib', 'libclang.dylib' ),
-          'to': os.path.join( 'lib', 'libclang.dylib' ),
-        }
+        os.path.join( 'lib', 'libclang.dylib' ),
       ],
-      'run_after_extract':
-        lambda temporary_dir, llvm_version : _SetMacOSLibraryID(
-          os.path.join( temporary_dir,
-                        llvm_version,
-                        'lib',
-                        'libclang.dylib' ),
-          '@rpath/libclang.dylib' )
     }
   },
   'x86_64-unknown-linux-gnu': {
@@ -123,12 +115,13 @@ LLVM_DOWNLOAD_DATA = {
       'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
         os.path.join( 'lib', 'libclang.so' ),
-        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.2}' )
       ]
     }
   },
   'i386-unknown-freebsd11': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'clangd_package': {
@@ -141,12 +134,13 @@ LLVM_DOWNLOAD_DATA = {
       'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
         os.path.join( 'lib', 'libclang.so' ),
-        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.2}' )
       ]
     }
   },
   'amd64-unknown-freebsd11': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'clangd_package': {
@@ -159,12 +153,13 @@ LLVM_DOWNLOAD_DATA = {
       'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
         os.path.join( 'lib', 'libclang.so' ),
-        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.2}' )
       ]
     }
   },
   'aarch64-linux-gnu': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'clangd_package': {
@@ -177,12 +172,13 @@ LLVM_DOWNLOAD_DATA = {
       'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
         os.path.join( 'lib', 'libclang.so' ),
-        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.2}' )
       ]
     }
   },
   'armv7a-linux-gnueabihf': {
-    'url': 'https://releases.llvm.org/{llvm_version}/{llvm_package}',
+    'url': 'https://github.com/llvm/llvm-project/releases/download/'
+           'llvmorg-{llvm_version}/{llvm_package}',
     'format': 'lzma',
     'llvm_package': 'clang+llvm-{llvm_version}-{os_name}.tar.xz',
     'clangd_package': {
@@ -195,21 +191,11 @@ LLVM_DOWNLOAD_DATA = {
       'name': 'libclang-{llvm_version}-{os_name}.tar.bz2',
       'files_to_copy': [
         os.path.join( 'lib', 'libclang.so' ),
-        os.path.join( 'lib', 'libclang.so.{llvm_version:.1}' )
+        os.path.join( 'lib', 'libclang.so.{llvm_version:.2}' )
       ]
     }
   },
 }
-
-
-def _SetMacOSLibraryID( lib_path, new_id ):
-  current_mode = os.stat( lib_path ).st_mode
-  try:
-    import stat
-    os.chmod( lib_path, current_mode | stat.S_IWUSR )
-    subprocess.check_call( [ 'install_name_tool', '-id', new_id, lib_path ] )
-  finally:
-    os.chmod( lib_path, current_mode )
 
 
 @contextlib.contextmanager
@@ -263,11 +249,6 @@ def ExtractLZMA( compressed_data, destination ):
   return ExtractTar( uncompressed_data, destination )
 
 
-def ExtractGZIP( compressed_data, destination ):
-  uncompressed_data = BytesIO( gzip.decompress( compressed_data ) )
-  return ExtractTar( uncompressed_data, destination )
-
-
 def Extract7Z( llvm_package, archive, destination ):
   # Extract with appropriate tool
   if OnWindows():
@@ -308,12 +289,8 @@ def MakeBundle( files_to_copy,
   with tarfile.open( name=bundle_file_name, mode='w:bz2' ) as tar_file:
     tar_file.add( license_file_name, arcname='LICENSE.TXT' )
     for item in files_to_copy:
-      if isinstance( item, dict ):
-        source_file_name = item[ 'from' ].format( llvm_version = version )
-        target_file_name = item[ 'to' ].format( llvm_version = version )
-      else:
-        source_file_name = item.format( llvm_version = version )
-        target_file_name = source_file_name
+      source_file_name = item.format( llvm_version = version )
+      target_file_name = source_file_name
 
       name = os.path.join( source_dir, source_file_name )
       if not os.path.exists( name ):
@@ -437,14 +414,6 @@ def PrepareBundleLZMA( cache_dir, llvm_package, download_url, temp_dir ):
                                temp_dir )
 
 
-def PrepareBundleGZIP( cache_dir, llvm_package, download_url, temp_dir ):
-  return PrepareBundleBuiltIn( ExtractGZIP,
-                               cache_dir,
-                               llvm_package,
-                               download_url,
-                               temp_dir )
-
-
 def PrepareBundleNSIS( cache_dir, llvm_package, download_url, temp_dir ):
   archive = None
   if cache_dir:
@@ -487,11 +456,6 @@ def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
                                        llvm_package,
                                        download_url,
                                        temp_dir )
-    elif download_data[ 'format' ] == 'gzip':
-      package_dir = PrepareBundleGZIP( args.from_cache,
-                                       llvm_package,
-                                       download_url,
-                                       temp_dir )
     else:
       raise AssertionError( 'Format not yet implemented: {}'.format(
         download_data[ 'format' ] ) )
@@ -507,10 +471,6 @@ def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
       os_name = os_name,
       llvm_version = args.version )
     archive_path = os.path.join( output_dir, archive_name )
-
-    if 'run_after_extract' in download_data[ package_name ]:
-      extra_cmd = download_data[ package_name ][ 'run_after_extract' ]
-      extra_cmd( package_dir, args.version )
 
     MakeBundle( download_data[ package_name ][ 'files_to_copy' ],
                 license_file_name,
@@ -535,10 +495,11 @@ def Overwrite( src, dest ):
 
 
 def UpdateClangHeaders( args, temp_dir ):
-  src_name = 'cfe-{version}.src'.format( version = args.version )
+  src_name = 'clang-{version}.src'.format( version = args.version )
   archive_name = src_name + '.tar.xz'
 
-  compressed_data = Download( 'https://releases.llvm.org/{version}/'
+  compressed_data = Download( 'https://github.com/llvm/llvm-project/releases/'
+                              'download/llvmorg-{version}/'
                               '{archive}'.format( version = args.version,
                                                   archive = archive_name ) )
   print( 'Extracting {}'.format( archive_name ) )
