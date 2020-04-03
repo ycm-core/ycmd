@@ -27,7 +27,7 @@ namespace {
 
 // Break a sequence of code points into characters (grapheme clusters) according
 // to the rules in
-// https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
+// https://www.unicode.org/reports/tr29/tr29-37.html#Grapheme_Cluster_Boundary_Rules
 std::vector< std::string > BreakCodePointsIntoCharacters(
   const CodePointSequence &code_points ) {
 

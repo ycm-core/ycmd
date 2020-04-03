@@ -18,6 +18,7 @@
 #include "CodePoint.h"
 #include "CodePointRepository.h"
 
+#include <algorithm>
 #include <array>
 #include <cstring>
 
@@ -53,32 +54,25 @@ RawCodePoint FindCodePoint( const char *text ) {
   // corresponding to the text. If no code point is found, return the default
   // raw code point for that text.
   const auto& original = code_points.original;
-  auto first = original.begin();
-  const auto start = first;
-  size_t count = original.size();
 
-  while ( count > 0 ) {
-    size_t step = count / 2;
-    auto it = first + step;
-    int cmp = std::strcmp( *it, text );
-    if ( cmp == 0 ) {
-      auto index = static_cast< size_t >( std::distance( start, it ) );
-      return { *it,
-               code_points.normal[ index ],
-               code_points.folded_case[ index ],
-               code_points.swapped_case[ index ],
-               code_points.is_letter[ index ],
-               code_points.is_punctuation[ index ],
-               code_points.is_uppercase[ index ],
-               code_points.break_property[ index ],
-               code_points.combining_class[ index ] };
-    }
-    if ( cmp < 0 ) {
-      first = ++it;
-      count -= step + 1;
-    } else {
-      count = step;
-    }
+  auto it = std::lower_bound(
+    original.begin(),
+    original.end(),
+    text,
+    []( const char* cp, const char* text ) {
+      return std::strcmp( cp, text ) < 0;
+    } );
+  if ( it != original.end() && strcmp( text, *it ) == 0 ) {
+    size_t index = std::distance( original.begin(), it );
+    return { *it,
+             code_points.normal[ index ],
+             code_points.folded_case[ index ],
+             code_points.swapped_case[ index ],
+             code_points.is_letter[ index ],
+             code_points.is_punctuation[ index ],
+             code_points.is_uppercase[ index ],
+             code_points.break_property[ index ],
+             code_points.combining_class[ index ] };
   }
 
   return { text, text, text, text, false, false, false, 0, 0 };

@@ -65,7 +65,7 @@ TEST_P( CodePointTest, PropertiesAreCorrect ) {
 
 
 // Tests mostly based on the table
-// http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Break_Property_Values
+// http://www.unicode.org/reports/tr29/tr29-37.html#Grapheme_Cluster_Break_Property_Values
 const TextCodePointPair tests[] = {
   { "\r", { "\r", "\r", "\r", false, false, false, BreakProperty::CR } },
 
