@@ -335,21 +335,21 @@ def RunGetSemanticTest( app,
 @pytest.mark.parametrize( 'test', [
     # Basic pod types
     [ { 'line_num': 24, 'column_num':  3 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'struct Foo {}' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 12, 'column_num':  2 }, 'Foo',
     [ { 'line_num': 12, 'column_num':  8 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'struct Foo {}' ) ),
       requests.codes.ok ],
     [ { 'line_num': 12, 'column_num':  9 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'struct Foo {}' ) ),
       requests.codes.ok ],
     [ { 'line_num': 12, 'column_num': 10 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'struct Foo {}' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 13, 'column_num':  3 }, 'int',
     [ { 'line_num': 13, 'column_num':  7 },
-      has_entry( 'message', contains_string( 'int' ) ),
+      has_entry( 'message', equal_to( 'int x; // In Foo' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 15, 'column_num':  7 }, 'char' ],
 
@@ -371,64 +371,64 @@ def RunGetSemanticTest( app,
 
     # Cursor on decl for refs & pointers
     [ { 'line_num': 39, 'column_num':  3 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'struct Foo {}' ) ),
       requests.codes.ok ],
     [ { 'line_num': 39, 'column_num': 11 },
-      has_entry( 'message', contains_string( 'Foo &' ) ),
+      has_entry( 'message', equal_to( 'Foo &rFoo = foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 39, 'column_num': 15 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'Foo foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 40, 'column_num':  3 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'struct Foo {}' ) ),
       requests.codes.ok ],
     [ { 'line_num': 40, 'column_num': 11 },
-      has_entry( 'message', contains_string( 'Foo *' ) ),
+      has_entry( 'message', equal_to( 'Foo *pFoo = &foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 40, 'column_num': 18 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'Foo foo; // In main' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 42, 'column_num':  3 }, 'const Foo &' ],
     [ { 'line_num': 42, 'column_num': 16 },
-      has_entry( 'message', contains_string( 'const struct Foo &' ) ),
+      has_entry( 'message', equal_to( 'const Foo &crFoo = foo; // In main' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 43, 'column_num':  3 }, 'const Foo *' ],
     [ { 'line_num': 43, 'column_num': 16 },
-      has_entry( 'message', contains_string( 'const struct Foo *' ) ),
+      has_entry( 'message', equal_to( 'const Foo *cpFoo = &foo; // In main' ) ),
       requests.codes.ok ],
 
     # Cursor on usage
     [ { 'line_num': 45, 'column_num': 13 },
-      has_entry( 'message', contains_string( 'const struct Foo' ) ),
+      has_entry( 'message', equal_to( 'const Foo &crFoo = foo; // In main' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 45, 'column_num': 19 }, 'const int' ],
     [ { 'line_num': 46, 'column_num': 13 },
-      has_entry( 'message', contains_string( 'const struct Foo *' ) ),
+      has_entry( 'message', equal_to( 'const Foo *cpFoo = &foo; // In main' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 46, 'column_num': 20 }, 'const int' ],
     [ { 'line_num': 47, 'column_num': 12 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'Foo &rFoo = foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 47, 'column_num': 17 },
-      has_entry( 'message', contains_string( 'int' ) ),
+      has_entry( 'message', equal_to( 'int y; // In Foo' ) ),
       requests.codes.ok ],
     [ { 'line_num': 48, 'column_num': 12 },
-      has_entry( 'message', contains_string( 'Foo *' ) ),
+      has_entry( 'message', equal_to( 'Foo *pFoo = &foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 48, 'column_num': 18 },
-      has_entry( 'message', contains_string( 'int' ) ),
+      has_entry( 'message', equal_to( 'int x; // In Foo' ) ),
       requests.codes.ok ],
 
     # Auto in declaration
     # [ { 'line_num': 28, 'column_num':  3 }, 'struct Foo &' ],
     # [ { 'line_num': 28, 'column_num': 11 }, 'struct Foo &' ],
     [ { 'line_num': 28, 'column_num': 18 },
-      has_entry( 'message', contains_string( 'struct Foo' ) ),
+      has_entry( 'message', equal_to( 'Foo foo; // In main' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 29, 'column_num':  3 }, 'Foo *' ],
     # [ { 'line_num': 29, 'column_num': 11 }, 'Foo *' ],
     [ { 'line_num': 29, 'column_num': 18 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'Foo foo; // In main' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 31, 'column_num':  3 }, 'const Foo &' ],
     # [ { 'line_num': 31, 'column_num': 16 }, 'const Foo &' ],
@@ -441,19 +441,19 @@ def RunGetSemanticTest( app,
     # [ { 'line_num': 35, 'column_num': 14 }, 'const Foo *' ],
     # [ { 'line_num': 35, 'column_num': 22 }, 'const int' ],
     [ { 'line_num': 36, 'column_num': 13 },
-      has_entry( 'message', contains_string( 'Foo' ) ),
+      has_entry( 'message', equal_to( 'auto &arFoo = foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 36, 'column_num': 19 },
-      has_entry( 'message', contains_string( 'int' ) ),
+      has_entry( 'message', equal_to( 'int y; // In Foo' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 37, 'column_num': 13 }, 'Foo *' ],
     [ { 'line_num': 37, 'column_num': 20 },
-      has_entry( 'message', contains_string( 'int' ) ),
+      has_entry( 'message', equal_to( 'int x; // In Foo' ) ),
       requests.codes.ok ],
 
     # Unicode
     [ { 'line_num': 51, 'column_num': 13 },
-      has_entry( 'message', contains_string( 'Unicøde *' ) ),
+      has_entry( 'message', equal_to( 'Unicøde *ø; // In main' ) ),
       requests.codes.ok ],
 
     # Bound methods
@@ -462,11 +462,22 @@ def RunGetSemanticTest( app,
     # also prohibitively complex to try and strip out.
     [ { 'line_num': 53, 'column_num': 15 },
       has_entry( 'message', matches_regexp(
-          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ),
+          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?; // In Foo' ) ),
       requests.codes.ok ],
     [ { 'line_num': 54, 'column_num': 18 },
       has_entry( 'message', matches_regexp(
-          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?' ) ),
+          r'int bar\(int i\)(?: __attribute__\(\(thiscall\)\))?; // In Foo' ) ),
+      requests.codes.ok ],
+    # Multi-line function declaration
+    [ { 'line_num': 58, 'column_num': 20 },
+      has_entry( 'message', equal_to(
+          'unsigned long long long_function_name(unsigned long long first, '
+          'unsigned long long second)' ) ),
+      requests.codes.ok ],
+    [ { 'line_num': 61, 'column_num': 20 },
+      has_entry( 'message', equal_to(
+          'unsigned long long long_function_name(unsigned long long first, '
+          'unsigned long long second); // In namespace ns' ) ),
       requests.codes.ok ],
   ] )
 @pytest.mark.parametrize( 'subcommand', [ 'GetType', 'GetTypeImprecise' ] )
@@ -483,15 +494,21 @@ def Subcommands_GetType_test( app, subcommand, test ):
 @pytest.mark.parametrize( 'test', [
     # from local file
     [ { 'line_num': 5, 'column_num': 10 },
-      has_entry( 'detailed_info', contains_string( 'docstring' ) ),
+      has_entry( 'detailed_info', equal_to(
+        'function docstring_int_main_TU_file\n\n→ void\ndocstring\n\n'
+        'void docstring_int_main_TU_file()' ) ),
       requests.codes.ok ],
     # from header
     [ { 'line_num': 6, 'column_num': 10 },
-      has_entry( 'detailed_info', contains_string( 'docstring' ) ),
+      has_entry( 'detailed_info', equal_to(
+        'function docstring_from_header_file\n\n→ void\ndocstring\n\n'
+        'void docstring_from_header_file()' ) ),
       requests.codes.ok ],
     # no docstring
     [ { 'line_num': 7, 'column_num': 7 },
-      has_entry( 'detailed_info', contains_string( 'int x = 3' ) ),
+      has_entry( 'detailed_info', equal_to(
+        'variable x\n\nType: int\nValue = 3\n\n'
+        '// In docstring_int_main_TU_file\nint x = 3' ) ),
       requests.codes.ok ],
     # no hover
     [ { 'line_num': 8, 'column_num': 1 },
@@ -669,6 +686,12 @@ def FixIt_Check_cpp11_DelAdd( results ):
         ),
         'location': has_entries( { 'line_num': 48, 'column_num': 3 } )
       } ),
+      # Unresolved, requires /resolve_fixit request
+      has_entries( {
+        'text': 'Move function body to declaration',
+        'resolve': True,
+        'command': has_entries( { 'command': 'clangd.applyTweak' } )
+      } ),
     )
   } ) )
 
@@ -843,12 +866,6 @@ def FixIt_Check_cpp11_Note( results ):
         ),
         'location': LineColMatcher( 60, 1 ),
       } ),
-      # Unresolved, requires /resolve_fixit request
-      has_entries( {
-        'text': 'Extract subexpression to variable',
-        'resolve': True,
-        'command': has_entries( { 'command': 'clangd.applyTweak' } )
-      } )
     )
   } ) )
 
@@ -891,12 +908,12 @@ def FixIt_Check_SubexprExtract_Resolved( results ):
     'fixits': contains_exactly( has_entries( {
         'text': 'Extract subexpression to variable',
         'chunks': contains_exactly(
-          ChunkMatcher( 'auto dummy = foo(i + 3);\n  ',
+          ChunkMatcher( 'auto dummy = i + 3;\n  ',
                         LineColMatcher( 84, 3 ),
                         LineColMatcher( 84, 3 ) ),
           ChunkMatcher( 'dummy',
-                        LineColMatcher( 84, 10 ),
-                        LineColMatcher( 84, 22 ) ),
+                        LineColMatcher( 84, 14 ),
+                        LineColMatcher( 84, 21 ) ),
         )
     } ) )
   } ) )

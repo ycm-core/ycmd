@@ -34,7 +34,7 @@ from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          PathsToAllParentFolders,
                          re )
 
-MIN_SUPPORTED_VERSION = ( 9, 0, 0 )
+MIN_SUPPORTED_VERSION = ( 10, 0, 0 )
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
 NOT_CACHED = 'NOT_CACHED'
@@ -249,15 +249,15 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
   def GetType( self, request_data ):
     try:
-      # Clangd's hover response looks like this:
-      #     Declared in namespace <namespace name>
-      #
-      #     <declaration line>
-      #
-      #     <docstring>
-      # GetType gets the first two lines.
       hover_value = self.GetHoverResponse( request_data )[ 'value' ]
-      type_info = '\n\n'.join( hover_value.split( '\n\n', 2 )[ : 2 ] )
+      # Last "paragraph" contains the signature/declaration - i.e. type info.
+      type_info = hover_value.split( '\n\n' )[ -1 ]
+      # The first line might contain the info of enclosing scope.
+      if type_info.startswith( '// In' ):
+        comment, signature = type_info.split( '\n', 1 )
+        type_info = signature + '; ' + comment
+      # Condense multi-line function declarations into one line.
+      type_info = re.sub( r'\s+', ' ', type_info )
       return responses.BuildDisplayMessageResponse( type_info )
     except language_server_completer.NoHoverInfoException:
       raise RuntimeError( 'Unknown type.' )
