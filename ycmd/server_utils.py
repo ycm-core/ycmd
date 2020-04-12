@@ -28,6 +28,7 @@ import sys
 
 ROOT_DIR = p.normpath( p.join( p.dirname( __file__ ), '..' ) )
 DIR_OF_THIRD_PARTY = p.join( ROOT_DIR, 'third_party' )
+DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
 PYTHON_STDLIB_ZIP_REGEX = re.compile( 'python3[0-9]\\.zip' )
 
 
@@ -46,5 +47,10 @@ def SetUpPythonPath():
                               'requests_deps',
                               'urllib3',
                               'src' ),
+                      p.join( DIR_OF_WATCHDOG_DEPS,
+                              'watchdog',
+                              'build',
+                              'lib3' ),
+                      p.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
                       p.join( DIR_OF_THIRD_PARTY, 'waitress' ) ]
   sys.path.append( p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )

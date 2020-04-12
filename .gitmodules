@@ -35,3 +35,9 @@
 	path = third_party/go/src/golang.org/x/tools
 	url = https://github.com/golang/tools
 	ignore = dirty
+[submodule "third_party/watchdog_deps/pathtools"]
+	path = third_party/watchdog_deps/pathtools
+	url = https://github.com/gorakhargosh/pathtools
+[submodule "third_party/watchdog"]
+	path = third_party/watchdog_deps/watchdog
+	url = https://github.com/gorakhargosh/watchdog
