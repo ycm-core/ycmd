@@ -1125,14 +1125,25 @@ def CompileWatchdog( script_args ):
     RemoveDirectoryIfExists( build_dir )
     RemoveDirectoryIfExists( lib_dir )
 
-    CheckCall( [ sys.executable,
-                 'setup.py',
-                 'build',
-                 '--build-base=' + build_dir,
-                 '--build-lib=' + lib_dir ],
-               exit_message = 'Failed to build watchdog module.',
-               quiet = script_args.quiet,
-               status_message = 'Building watchdog module' )
+    try:
+      import setuptools # noqa
+      CheckCall( [ sys.executable,
+                   'setup.py',
+                   'build',
+                   '--build-base=' + build_dir,
+                   '--build-lib=' + lib_dir ],
+                 exit_message = 'Failed to build watchdog module.',
+                 quiet = script_args.quiet,
+                 status_message = 'Building watchdog module' )
+    except ImportError:
+      if OnMac():
+        print( 'WARNING: setuptools unavailable. Watchdog will fall back to '
+               'the slower kqueue filesystem event API.\n'
+               'To use the faster fsevents, install setuptools and '
+               'rerun this script.' )
+      os.makedirs( lib_dir )
+      shutil.copytree( p.join( 'src', 'watchdog' ),
+                       p.join( lib_dir, 'watchdog' ) )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
 
