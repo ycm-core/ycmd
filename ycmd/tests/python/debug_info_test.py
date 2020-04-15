@@ -38,6 +38,10 @@ def DebugInfo_test( app ):
           'value': instance_of( str )
         } ),
         has_entries( {
+          'key': 'Python root',
+          'value': instance_of( str )
+        } ),
+        has_entries( {
           'key': 'Python path',
           'value': instance_of( str )
         } ),
