@@ -462,3 +462,27 @@
 	fun:start_thread
 	fun:clone
 }
+{
+	Watchdog update from 0.9.0 to 0.10.2
+	Memcheck:Leak
+	fun:malloc
+	fun:new_keys_object
+	fun:dictresize
+	fun:dict_merge
+	fun:dict_update_common
+	fun:dict_update
+	fun:method_vectorcall_VARARGS_KEYWORDS
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:_PyEval_EvalCodeWithName
+	fun:_PyFunction_Vectorcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:_PyEval_EvalCodeWithName
+	fun:_PyFunction_Vectorcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+}
