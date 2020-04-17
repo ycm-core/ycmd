@@ -81,15 +81,15 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   )$
 """
 
-JDTLS_MILESTONE = '0.52.0'
-JDTLS_BUILD_STAMP = '202003042214'
+JDTLS_MILESTONE = '0.54.0'
+JDTLS_BUILD_STAMP = '202004152304'
 JDTLS_SHA256 = (
-  '8ce11802c4524a1813f112d7a5d8d9544f00b1c3b5ee67c8d276b16c4decc995'
+  '2e6474e39a85e243d869a88c5a4a569884d6e1bf3718b556c5584195a5bb9f2e'
 )
 
-TSSERVER_VERSION = '3.7.2'
+TSSERVER_VERSION = '3.8.3'
 
-RUST_TOOLCHAIN = 'nightly-2020-03-12'
+RUST_TOOLCHAIN = 'nightly-2020-04-17'
 RLS_DIR = p.join( DIR_OF_THIRD_PARTY, 'rls' )
 
 BUILD_ERROR_MESSAGE = (
@@ -840,12 +840,13 @@ def GetCsCompleterDataForPlatform():
 
 
 def EnableGoCompleter( args ):
-  go = FindExecutableOrDie( 'go', 'go is required to build gocode.' )
+  go = FindExecutableOrDie( 'go', 'go is required to build gopls.' )
 
-  go_dir = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
-  os.chdir( p.join(
-    go_dir, 'src', 'golang.org', 'x', 'tools', 'gopls' ) )
-  CheckCall( [ go, 'build' ],
+  new_env = os.environ.copy()
+  new_env[ 'GO111MODULE' ] = 'on'
+  new_env[ 'GOPATH' ] = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
+  CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.4.0' ],
+             env = new_env,
              quiet = args.quiet,
              status_message = 'Building gopls for go completion' )
 

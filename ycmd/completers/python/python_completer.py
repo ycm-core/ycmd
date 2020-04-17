@@ -40,7 +40,7 @@ class PythonCompleter( Completer ):
     self._settings_for_file = {}
     self._environment_for_file = {}
     self._environment_for_interpreter_path = {}
-    self._sys_path_for_file = {}
+    self._jedi_project_for_file = {}
     self.SetSignatureHelpTriggers( [ '(', ',' ] )
 
 
@@ -52,7 +52,7 @@ class PythonCompleter( Completer ):
     # This is implicitly loading the extra conf file and caching the Jedi
     # environment and Python path.
     environment = self._EnvironmentForRequest( request_data )
-    self._SysPathForFile( request_data, environment )
+    self._JediProjectForFile( request_data, environment )
 
 
   def _SettingsForRequest( self, request_data ):
@@ -122,7 +122,7 @@ class PythonCompleter( Completer ):
     return environment
 
 
-  def _GetSysPath( self, request_data, environment ):
+  def _GetJediProject( self, request_data, environment ):
     settings = {
       'sys_path': []
     }
@@ -135,32 +135,40 @@ class PythonCompleter( Completer ):
     # We don't warn the user if no extra conf file is found.
     if module:
       if hasattr( module, 'PythonSysPath' ):
-        return module.PythonSysPath( **settings )
+        settings[ 'sys_path' ] = module.PythonSysPath( **settings )
       LOGGER.debug( 'No PythonSysPath function defined in %s', module.__file__ )
-    return settings[ 'sys_path' ]
+    if not settings.get( 'project_directory' ):
+      module = extra_conf_store.ModuleForSourceFile( filepath )
+      if module:
+        settings[ 'project_directory' ] = os.path.dirname( module.__file__ )
+      else:
+        settings[ 'project_directory' ] = os.path.dirname( filepath )
+    return jedi.Project( settings[ 'project_directory' ],
+                         sys_path = settings[ 'sys_path' ],
+                         environment_path = settings[ 'interpreter_path' ] )
 
 
-  def _SysPathForFile( self, request_data, environment ):
+  def _JediProjectForFile( self, request_data, environment ):
     filepath = request_data[ 'filepath' ]
     client_data = request_data[ 'extra_conf_data' ]
     try:
-      return self._sys_path_for_file[ filepath, client_data ]
+      return self._jedi_project_for_file[ filepath, client_data ]
     except KeyError:
       pass
 
-    sys_path = self._GetSysPath( request_data, environment )
-    self._sys_path_for_file[ filepath, client_data ] = sys_path
-    return sys_path
+    jedi_project = self._GetJediProject( request_data, environment )
+    self._jedi_project_for_file[ filepath, client_data ] = jedi_project
+    return jedi_project
 
 
   def _GetJediScript( self, request_data ):
     path = request_data[ 'filepath' ]
     source = request_data[ 'file_data' ][ path ][ 'contents' ]
     environment = self._EnvironmentForRequest( request_data )
-    sys_path = self._SysPathForFile( request_data, environment )
+    jedi_project = self._JediProjectForFile( request_data, environment )
     return jedi.Script( source,
                         path = path,
-                        sys_path = sys_path,
+                        project = jedi_project,
                         environment = environment )
 
 
@@ -398,9 +406,15 @@ class PythonCompleter( Completer ):
       key = 'Python interpreter',
       value = environment.executable )
 
+    python_root = responses.DebugInfoItem(
+      key = 'Python root',
+      value = str( self._JediProjectForFile( request_data,
+                                             environment )._path ) )
+
     python_path = responses.DebugInfoItem(
       key = 'Python path',
-      value = str( self._SysPathForFile( request_data, environment ) ) )
+      value = str( self._JediProjectForFile( request_data,
+                                             environment )._sys_path ) )
 
     python_version = responses.DebugInfoItem(
       key = 'Python version',
@@ -416,6 +430,7 @@ class PythonCompleter( Completer ):
 
     return responses.BuildDebugInfoResponse( name = 'Python',
                                              items = [ python_interpreter,
+                                                       python_root,
                                                        python_path,
                                                        python_version,
                                                        jedi_version,

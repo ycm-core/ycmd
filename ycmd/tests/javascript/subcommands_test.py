@@ -497,9 +497,9 @@ def Subcommands_FixIt_test( app ):
               ChunkMatcher(
                 matches_regexp(
                   '^\r?\n'
-                  '    nonExistingMethod\\(\\) {\r?\n'
-                  '        throw new Error\\("Method not implemented."\\);\r?\n'
-                  '    }$',
+                  '  nonExistingMethod\\(\\) {\r?\n'
+                  '      throw new Error\\("Method not implemented."\\);\r?\n'
+                  '  }$',
                 ),
                 LocationMatcher( filepath, 22, 12 ),
                 LocationMatcher( filepath, 22, 12 ) )
