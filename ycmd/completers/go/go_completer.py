@@ -30,11 +30,7 @@ PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
   '..',
   'third_party',
   'go',
-  'src',
-  'golang.org',
-  'x',
-  'tools',
-  'gopls',
+  'bin',
   utils.ExecutableName( 'gopls' ) ) )
 
 
@@ -51,6 +47,7 @@ def ShouldEnableGoCompleter( user_options ):
 class GoCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
     super().__init__( user_options )
+    self._user_supplied_gopls_args = user_options[ 'gopls_args' ]
     self._gopls_path = utils.FindExecutableWithFallback(
         user_options[ 'gopls_binary_path' ],
         PATH_TO_GOPLS )
@@ -69,7 +66,9 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def GetCommandLine( self ):
-    cmdline = [ self._gopls_path, '-logfile', self._stderr_file ]
+    cmdline = [ self._gopls_path ] + self._user_supplied_gopls_args + [
+                '-logfile',
+                self._stderr_file ]
     if utils.LOGGER.isEnabledFor( logging.DEBUG ):
       cmdline.append( '-rpc.trace' )
     return cmdline
