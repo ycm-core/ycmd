@@ -384,6 +384,10 @@ class Completer( metaclass = abc.ABCMeta ):
     pass # pragma: no cover
 
 
+  def OnFileSave( self, request_data ):
+    pass # pragma: no cover
+
+
   def OnBufferVisit( self, request_data ):
     pass # pragma: no cover
 
