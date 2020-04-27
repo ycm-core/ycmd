@@ -289,6 +289,9 @@ def Initialize( request_id, project_directory, settings ):
             ],
           },
         },
+        'synchronization': {
+          'didSave': True
+        },
       },
     },
   } )
@@ -375,6 +378,19 @@ def DidChangeTextDocument( file_state, file_contents ):
       { 'text': file_contents },
     ] if file_contents is not None else [],
   } )
+
+
+def DidSaveTextDocument( file_state, file_contents ):
+  params = {
+    'textDocument': {
+      'uri': FilePathToUri( file_state.filename ),
+      'version': file_state.version,
+    },
+  }
+  if file_contents is not None:
+    params.update( { 'text': file_contents } )
+
+  return BuildNotification( 'textDocument/didSave', params )
 
 
 def DidCloseTextDocument( file_state ):

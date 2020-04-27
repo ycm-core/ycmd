@@ -668,6 +668,8 @@ paths:
           - `CurrentIdentifierFinished` (optional)
             Call when the user finishes typing what appears to the client to be
             an identifier.
+          - `FileSave`
+            Call whe the user writes to a file on disk. (optional)
       produces:
         - application/json
       parameters:

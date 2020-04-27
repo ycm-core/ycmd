@@ -1367,6 +1367,17 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test( app ):
 
 
 @IsolatedYcmd()
+def LanguageServerCompleter_OnFileSave_BeforeServerReady_test( app ):
+  completer = MockCompleter()
+  request_data = RequestWrap( BuildRequest() )
+  with patch.object( completer, 'ServerIsReady', return_value = False ):
+    with patch.object( completer.GetConnection(),
+                       'SendNotification' ) as send_notification:
+      completer.OnFileSave( request_data )
+      send_notification.assert_not_called()
+
+
+@IsolatedYcmd()
 def LanguageServerCompleter_OnFileReadyToParse_InvalidURI_test( app ):
   completer = MockCompleter()
   filepath = os.path.realpath( '/foo?' )
