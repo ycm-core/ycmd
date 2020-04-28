@@ -1,4 +1,4 @@
-// SIMPLE FUNCITONS
+// SIMPLE FUNCTIONS
 
 function no_arguments_no_return() {
 }

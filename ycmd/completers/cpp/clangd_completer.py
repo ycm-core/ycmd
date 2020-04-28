@@ -164,7 +164,7 @@ def GetClangdCommand( user_options ):
 def ShouldEnableClangdCompleter( user_options ):
   """Checks whether clangd should be enabled or not.
 
-  - Returns True iff an up-to-date binary exists either in `clangd_binary_path`
+  - Returns True if an up-to-date binary exists either in `clangd_binary_path`
     or in third party folder and `use_clangd` is not set to `0`.
   """
   # User disabled clangd explicitly.

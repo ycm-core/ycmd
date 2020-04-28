@@ -3,7 +3,7 @@ package com.test;
 /**
  * This is the actual code that matters.
  *
- * This concrete implentation is the equivalent of the main function in other
+ * This concrete implementation is the equivalent of the main function in other
  * languages
  */
 

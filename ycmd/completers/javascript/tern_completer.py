@@ -514,7 +514,7 @@ class TernCompleter( Completer ):
   def _GetDoc( self, request_data ):
     # Note: we use the 'type' request because this is the best
     # way to get the name, type and doc string. The 'documentation' request
-    # doesn't return the 'name' (strangely), wheras the 'type' request returns
+    # doesn't return the 'name' (strangely), whereas the 'type' request returns
     # the same docs with extra info.
     query = {
       'type':      'type',

@@ -381,7 +381,7 @@ definitions:
       resolve:
         type: boolean
         description: |-
-          Indicates wether the fixit requires additional processing.
+          Indicates whether the fixit requires additional processing.
   FixIt:
     type: object
     required:
@@ -400,7 +400,7 @@ definitions:
       resolve:
         type: boolean
         description: |-
-          Indicates wether the fixit requires additional processing.
+          Indicates whether the fixit requires additional processing.
       chunks:
         type: array
         description: |-
@@ -596,7 +596,7 @@ definitions:
 
       - An object with a property `message` is a *simple display message* where
         the property value is the message.
-      - An object with a property `diagnostics` contains diagnotics for a
+      - An object with a property `diagnostics` contains diagnostics for a
         project file. The value of the property is described below.
     items:
       $ref: '#/definitions/Message'
@@ -635,7 +635,7 @@ definitions:
     properties:
       filpath:
         $ref: '#/definitions/FilePath'
-      diagnotics:
+      diagnostics:
         type: array
         items:
           $ref: "#/definitions/DiagnosticData"
@@ -659,7 +659,7 @@ paths:
             Call when the user closes a buffer that was previously known to be
             open. Closing buffers is important to limit resource usage.
           - `BufferVisit` (optional)
-            Call when the user focusses on a buffer that is already known.
+            Call when the user focuses on a buffer that is already known.
             *Note*: The `ultisnips_snippets` property is optional when firing
             calling this event. Otherwise it is ignored.
           - `InsertLeave` (optional)
@@ -669,7 +669,7 @@ paths:
             Call when the user finishes typing what appears to the client to be
             an identifier.
           - `FileSave`
-            Call whe the user writes to a file on disk. (optional)
+            Call when the user writes to a file on disk. (optional)
       produces:
         - application/json
       parameters:
@@ -1492,7 +1492,7 @@ paths:
               - message: 'Initializing: Done.'
               - diagonostics:
                   filepath: '/file'
-                  diagnotics:
+                  diagnostics:
                   - ranges:
                     - start: { line_num: 10, column_num: 11, filepath: '/file' }
                       end: { line_num: 10, column_num: 20, filepath: '/file' }
@@ -1567,6 +1567,6 @@ paths:
           schema:
             $ref: "#/definitions/SubcommandResponse"
         500:
-          description: An error occured
+          description: An error occurred
           schema:
             $ref: "#/definitions/ExceptionResponse"

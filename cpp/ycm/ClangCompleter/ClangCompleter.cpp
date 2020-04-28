@@ -49,7 +49,7 @@ ClangCompleter::~ClangCompleter() {
   // when we destroy the clang index, but since we're shutting down, we don't
   // really care.
   // In practice, this situation shouldn't happen because the server threads are
-  // Python deamon threads and will all be killed before the main thread exits.
+  // Python daemon threads and will all be killed before the main thread exits.
   translation_unit_store_.RemoveAll();
   clang_disposeIndex( clang_index_ );
 }

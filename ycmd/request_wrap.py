@@ -274,7 +274,7 @@ def CompletionStartCodepoint( line_value, column_num, filetype ):
   codepoint_column_num = ByteOffsetToCodepointOffset( line_value, column_num )
 
   unicode_line_value = ToUnicode( line_value )
-  # -1 and then +1 to account for difference betwen 0-based and 1-based
+  # -1 and then +1 to account for difference between 0-based and 1-based
   # indices/columns
   codepoint_start_column = StartOfLongestIdentifierEndingAtIndex(
       unicode_line_value, codepoint_column_num - 1, filetype ) + 1
