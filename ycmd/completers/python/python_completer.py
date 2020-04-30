@@ -392,8 +392,9 @@ class PythonCompleter( Completer ):
       # codepoint offsets.
       column = request_data[ 'start_codepoint' ] - 1
       definitions = self._GetJediScript( request_data ).goto( line, column )
-      documentation = [ definition.docstring() for definition in definitions ]
-    documentation = '\n---\n'.join( documentation )
+      documentation = [
+        definition.docstring().strip() for definition in definitions ]
+    documentation = '\n---\n'.join( [ d for d in documentation if d ] )
     if documentation:
       return responses.BuildDetailedInfoResponse( documentation )
     raise RuntimeError( 'No documentation available.' )

@@ -233,6 +233,27 @@ def Subcommands_GetDoc_Class_test( app ):
 
 
 @SharedYcmd
+def Subcommands_GetDoc_WhitespaceOnly_test( app ):
+  filepath = PathToTestFile( 'GetDoc.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 27,
+                               column_num = 10,
+                               contents = contents,
+                               command_arguments = [ 'GetDoc' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data,
+                            expect_errors = True ).json
+
+  assert_that( response,
+               ErrorMatcher( RuntimeError, 'No documentation available.' ) )
+
+
+
+@SharedYcmd
 def Subcommands_GetDoc_NoDocumentation_test( app ):
   filepath = PathToTestFile( 'GetDoc.py' )
   contents = ReadFile( filepath )
