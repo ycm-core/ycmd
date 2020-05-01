@@ -18,3 +18,10 @@ _ModuleMethod()
 
 tc = TestClass()
 tc.TestMethod()
+
+class BoringClass:
+  def __init__( self ):
+    self._buffers = None
+
+  def BoringMethod( self ):
+    self._buffers = []
