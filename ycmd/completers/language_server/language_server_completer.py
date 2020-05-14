@@ -849,6 +849,7 @@ class LanguageServerCompleter( Completer ):
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._stderr_file = None
+    self._server_started = False
 
     self._Reset()
 
@@ -878,7 +879,6 @@ class LanguageServerCompleter( Completer ):
     self._project_directory = None
     self._settings = {}
     self._extra_conf_dir = None
-    self._server_started = False
 
 
   def GetCompleterName( self ):
@@ -1524,6 +1524,7 @@ class LanguageServerCompleter( Completer ):
     StartServer. In general, completers don't need to call this as it is called
     automatically in OnFileReadyToParse, but this may be used in completer
     subcommands that require restarting the underlying server."""
+    self._server_started = False
     self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
     # Only attempt to start the server once. Set this after above call as it may
@@ -1634,9 +1635,10 @@ class LanguageServerCompleter( Completer ):
           # restarted while this loop is running.
           self._initialize_event.wait( timeout=timeout )
 
-          # If the timeout is hit waiting for the server to be ready, we return
-          # False and kill the message poll.
-          return self._initialize_event.is_set()
+          # If the timeout is hit waiting for the server to be ready, after we
+          # tried to start the server, we return False and kill the message
+          # poll.
+          return not self._server_started or self._initialize_event.is_set()
 
         if not self.GetConnection():
           # The server isn't running or something. Don't re-poll, as this will
