@@ -31,6 +31,7 @@ from hamcrest import ( all_of,
                        is_not,
                        raises )
 
+from ycmd.completers import completer
 from ycmd.completers.language_server import language_server_completer as lsc
 from ycmd.completers.language_server.language_server_completer import (
     NoHoverInfoException,
@@ -1364,6 +1365,14 @@ def LanguageServerCompleter_Diagnostics_PercentEncodeCannonical_test( app ):
         'filepath': filepath
       } ) )
     )
+
+
+@IsolatedYcmd()
+@patch.object( completer, 'MESSAGE_POLL_TIMEOUT', 0.01 )
+def LanguageServerCompleter_PollForMessages_ServerNotStarted_test( app ):
+  server = MockCompleter()
+  request_data = RequestWrap( BuildRequest() )
+  assert_that( server.PollForMessages( request_data ), equal_to( True ) )
 
 
 @IsolatedYcmd()
