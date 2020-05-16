@@ -137,13 +137,13 @@ class PythonCompleter( Completer ):
       if hasattr( module, 'PythonSysPath' ):
         settings[ 'sys_path' ] = module.PythonSysPath( **settings )
       LOGGER.debug( 'No PythonSysPath function defined in %s', module.__file__ )
-    if not settings.get( 'project_directory' ):
-      module = extra_conf_store.ModuleForSourceFile( filepath )
-      if module:
-        settings[ 'project_directory' ] = os.path.dirname( module.__file__ )
-      else:
-        settings[ 'project_directory' ] = os.path.dirname( filepath )
-    return jedi.Project( settings[ 'project_directory' ],
+
+    project_directory = settings.get( 'project_directory' )
+    if not project_directory:
+      default_project = jedi.get_default_project(
+        os.path.dirname( request_data[ 'filepath' ] ) )
+      project_directory = default_project._path
+    return jedi.Project( project_directory,
                          sys_path = settings[ 'sys_path' ],
                          environment_path = settings[ 'interpreter_path' ] )
 
