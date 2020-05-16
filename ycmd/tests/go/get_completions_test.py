@@ -41,7 +41,10 @@ def GetCompletions_Basic_test( app ):
                      'Llongfile',
                      'int',
                      {
-                       'detailed_info': 'Llongfile\n\n',
+                       'detailed_info': 'Llongfile\n\n'
+                                        'These flags define which text to'
+                                        ' prefix to each log entry generated'
+                                        ' by the Logger.',
                        'menu_text': 'Llongfile',
                        'kind': 'Constant',
                      }

@@ -13,5 +13,5 @@ C:\Python\python -c "with open('C:\Python\Lib\site-packages\sitecustomize.py', '
 :: Go configuration
 ::
 
-curl https://dl.google.com/go/go1.12.4.windows-amd64.msi -o C:\go-installer.msi
+curl https://dl.google.com/go/go1.14.3.windows-amd64.msi -o C:\go-installer.msi
 msiexec /i C:\go-installer.msi TARGETDIR=C:\Go /qn
