@@ -539,6 +539,7 @@ __DEVICE__ void __sincosf(float __a, float *__s, float *__c) {
   return __nv_fast_sincosf(__a, __s, __c);
 }
 __DEVICE__ float __sinf(float __a) { return __nv_fast_sinf(__a); }
+__DEVICE__ int __syncthreads(void) { return __nvvm_bar0(); }  
 __DEVICE__ int __syncthreads_and(int __a) { return __nvvm_bar0_and(__a); }
 __DEVICE__ int __syncthreads_count(int __a) { return __nvvm_bar0_popc(__a); }
 __DEVICE__ int __syncthreads_or(int __a) { return __nvvm_bar0_or(__a); }
