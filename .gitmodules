@@ -31,10 +31,6 @@
 [submodule "third_party/idna"]
 	path = third_party/requests_deps/idna
 	url = https://github.com/kjd/idna
-[submodule "third_party/go/src/golang.org/x/tools"]
-	path = third_party/go/src/golang.org/x/tools
-	url = https://github.com/golang/tools
-	ignore = dirty
 [submodule "third_party/watchdog_deps/pathtools"]
 	path = third_party/watchdog_deps/pathtools
 	url = https://github.com/gorakhargosh/pathtools
