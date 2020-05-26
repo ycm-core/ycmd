@@ -279,6 +279,9 @@ def BuildFixItResponse( fixits ):
   can be used to apply arbitrary changes to arbitrary files and is suitable for
   both quick fix and refactor operations"""
 
+  if not fixits:
+    return {}
+
   def BuildFixitChunkData( chunk ):
     return {
       'replacement_text': chunk.replacement_text,
