@@ -1013,7 +1013,7 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
                         LocationMatcher( filepath, 15, 30 ) ),
         ),
       } ),
-      # The edit reported for this is juge and uninteresting really. Manual
+      # The edit reported for this is huge and uninteresting really. Manual
       # testing can show that it works. This test is really about the previous
       # FixIt (and nonetheless, the previous tests ensure that we correctly
       # populate the chunks list; the contents all come from jdt.ls)
@@ -2080,7 +2080,7 @@ def Subcommands_ExecuteCommand_test( app ):
       'filepath': TEST_JAVA,
     },
     'expect': {
-      # We dont specify the path for import organize, and jdt.ls returns shrug
+      # We don't specify the path for import organize, and jdt.ls returns shrug
       'response': requests.codes.ok,
       'data': ''
     }

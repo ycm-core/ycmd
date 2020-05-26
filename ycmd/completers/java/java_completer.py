@@ -438,7 +438,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         if project_directory:
           self._java_project_dir = project_directory
         elif 'project_directory' in self._settings:
-          self._java_project_dir = utils.AbsoluatePath(
+          self._java_project_dir = utils.AbsolutePath(
             self._settings[ 'project_directory' ],
             self._extra_conf_dir )
         else:

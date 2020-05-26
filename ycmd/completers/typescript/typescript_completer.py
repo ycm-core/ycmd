@@ -147,7 +147,7 @@ class TypeScriptCompleter( Completer ):
     self._tsserver_is_running = threading.Event()
 
     # Used to prevent threads from concurrently writing to
-    # the tsserver process' stdin
+    # the tsserver process's stdin
     self._write_lock = threading.Lock()
 
     # Each request sent to tsserver must have a sequence id.
@@ -173,7 +173,7 @@ class TypeScriptCompleter( Completer ):
     self._latest_diagnostics_for_file_lock = threading.Lock()
     self._latest_diagnostics_for_file = defaultdict( list )
 
-    # There's someting in the API that lists the trigger characters, but
+    # There's something in the API that lists the trigger characters, but
     # there is no way to request that from the server, so we just hard-code
     # the signature triggers.
     self.SetSignatureHelpTriggers( [ '(', ',', '<' ] )
@@ -341,7 +341,7 @@ class TypeScriptCompleter( Completer ):
 
   def _Reload( self, request_data ):
     """
-    Syncronize TSServer's view of the file to
+    Synchronize TSServer's view of the file to
     the contents of the unsaved buffer.
     """
 

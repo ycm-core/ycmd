@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-"""This test is for utilites used in clangd."""
+"""This test is for utilities used in clangd."""
 
 from unittest.mock import patch
 from hamcrest import assert_that, equal_to

@@ -35,7 +35,7 @@ card][design]. In short:
 
 * 2 classes implement the language server protocol in the
   `language_server_completer.py` module:
- * `LanguageServerConnection` - an abstraction of the comminication with the
+ * `LanguageServerConnection` - an abstraction of the communication with the
    server, which may be over stdio or any number of TCP/IP ports (or a domain
    socket, etc.). Only a single implementation is included (stdio), but
    [implementations for TCP/IP](https://github.com/puremourning/ycmd-1/commit/f3cd06245692b05031a64745054326273d52d12f)
@@ -52,11 +52,11 @@ the [trello board][trello] I used for development.
 
 ## Threads, and why we need them
 
-LSP is by its nature an asyncronous protocol. There are request-reply like
+LSP is by its nature an asynchronous protocol. There are request-reply like
 `requests` and unsolicited `notifications`. Receipt of the latter is mandatory,
 so we cannot rely on their being a `bottle` thread executing a client request.
 
-So we need a message pump and despatch thread. This is actually the
+So we need a message pump and dispatch thread. This is actually the
 `LanguageServerConnection`, which implements `thread`. It's main method simply
 listens on the socket/stream and despatches complete messages to the
 `LanguageServerCompleter`. It does this:
@@ -212,7 +212,7 @@ fiddly. 2 things are required:
 
 This isn't so bad, but jdt.ls is buggy and actually dies without responding to
 the `shutdown` request. So we have a bunch of code to handle that and to ensure
-that the server dies eventually, as it had a habbit of getting stuck running,
+that the server dies eventually, as it had a habit of getting stuck running,
 particularly if we threw an exception.
 
 [PR]: https://github.com/valloric/ycmd/pull/857

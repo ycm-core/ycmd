@@ -819,7 +819,7 @@ class LanguageServerCompleter( Completer ):
     #     server file state, and stored data about the server itself) when we
     #     are calling methods on this object from the message pump). We
     #     synchronise on this mutex for that.
-    #   - We need to make sure that multiple client requests dont try to start
+    #   - We need to make sure that multiple client requests don't try to start
     #     or stop the server simultaneously, so we also do all server
     #     start/stop/etc. operations under this mutex
     self._server_info_mutex = threading.Lock()
@@ -969,7 +969,7 @@ class LanguageServerCompleter( Completer ):
       # NOTE: While waiting for the connection to close, we must _not_ hold any
       # locks (in fact, we must not hold locks that might be needed when
       # processing messages in the poll thread - i.e. notifications).
-      # This is crucial, as the server closing (asyncronously) might
+      # This is crucial, as the server closing (asynchronously) might
       # involve _other activities_ if there are messages in the queue (e.g. on
       # the socket) and we need to store/handle them in the message pump
       # (such as notifications) or even the initialise response.
@@ -1672,10 +1672,10 @@ class LanguageServerCompleter( Completer ):
       # diagnostics and return them in OnFileReadyToParse. We also need these
       # for correct FixIt handling, as they are part of the FixIt context.
       params = notification[ 'params' ]
-      # Since percent-encoded strings are not cannonical, they can choose to use
+      # Since percent-encoded strings are not canonical, they can choose to use
       # upper case or lower case letters, also there are some characters that
       # can be encoded or not. Therefore, we convert them back and forth
-      # according to our implementation to make sure they are in a cannonical
+      # according to our implementation to make sure they are in a canonical
       # form for access later on.
       try:
         uri = lsp.FilePathToUri( lsp.UriToFilePath( params[ 'uri' ] ) )
@@ -1903,7 +1903,7 @@ class LanguageServerCompleter( Completer ):
         first directory from there
       - if there's an extra_conf file, use that directory
       - otherwise if we know the client's cwd, use that
-      - otherwise use the diretory of the file that we just opened
+      - otherwise use the directory of the file that we just opened
     Note: None of these are ideal. Ycmd doesn't really have a notion of project
     directory and therefore neither do any of our clients.
 
@@ -1912,7 +1912,7 @@ class LanguageServerCompleter( Completer ):
     """
 
     if 'project_directory' in self._settings:
-      return utils.AbsoluatePath( self._settings[ 'project_directory' ],
+      return utils.AbsolutePath( self._settings[ 'project_directory' ],
                                   self._extra_conf_dir )
 
     project_root_files = self.GetProjectRootFiles()
@@ -2387,7 +2387,7 @@ class LanguageServerCompleter( Completer ):
       raise ValueError( 'Must specify a command to execute' )
 
     # We don't have any actual knowledge of the responses here. Unfortunately,
-    # the LSP "comamnds" require client/server specific understanding of the
+    # the LSP "commands" require client/server specific understanding of the
     # commands.
     collector = EditCollector()
     with self.GetConnection().CollectApplyEdits( collector ):

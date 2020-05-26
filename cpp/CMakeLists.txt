@@ -240,7 +240,7 @@ else()
 endif()
 
 set( Python_ADDITIONAL_VERSIONS 3.9 3.8 3.7 3.6 3.5 )
-find_package( PythonLibs 3.5 REQUIRED )  # 3.5 is ONLY the mininum
+find_package( PythonLibs 3.5 REQUIRED )  # 3.5 is ONLY the minimum
 
 #############################################################################
 

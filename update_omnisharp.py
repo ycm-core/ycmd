@@ -135,7 +135,7 @@ def Main():
     with TemporaryDirectory() as temp_dir:
       output = Process( temp_dir, version )
 
-  print( "Omnisharp configration for {} is:".format( version ) )
+  print( "Omnisharp configuration for {} is:".format( version ) )
   for os_name, os_data in output.items():
     print( "    {}: {{".format( repr( os_name ) ) )
     for key, value in os_data.items():

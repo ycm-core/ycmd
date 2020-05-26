@@ -378,7 +378,7 @@ def GetCompletions_IncludeMultiFileType_test( app ):
   assert_that( response,
     has_entries( {
       'completion_start_column': 3,
-      # Note: This time, we *do* see the completions, becuase one of the 2
+      # Note: This time, we *do* see the completions, because one of the 2
       # filetypes for trivial.js is javascript.
       'completions': contains_inanyorder(
           CompletionEntryMatcher( 'y', 'string' ),
