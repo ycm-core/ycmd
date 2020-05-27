@@ -2472,7 +2472,7 @@ def _DistanceOfPointToRange( point, range ):
   return 0
 
 
-def _CompletionItemToCompletionData( insertion_text, item, fixits ):
+def _CompletionItemToCompletionData( insertion_text, item, extra_data ):
   # Since we send completionItemKind capabilities, we guarantee to handle
   # values outside our value set and fall back to a default.
   try:
@@ -2484,13 +2484,24 @@ def _CompletionItemToCompletionData( insertion_text, item, fixits ):
   if isinstance( documentation, dict ):
     documentation = documentation[ 'value' ]
 
+  extra_lines = []
+  for fixit in ( extra_data or {} ).get( 'fixits', [] ):
+    # We use the last cunk (there is usually only 1), because jdt.ls likes to
+    # pointlessly rewrite existing parts of the text and only add the 'import'
+    # line as the last chunk. We also strip whitespace pre/post the text.
+    text = fixit[ 'text' ] if fixit[ 'text' ] else fixit[ 'chunks' ][ -1 ][
+      'replacement_text' ]
+    extra_lines.extend( [ '---', text.strip() ] )
+
+  documentation = documentation + '\n'.join( extra_lines )
+
   return responses.BuildCompletionData(
     insertion_text,
     extra_menu_info = item.get( 'detail' ),
     detailed_info = item[ 'label' ] + '\n\n' + documentation,
     menu_text = item[ 'label' ],
     kind = kind,
-    extra_data = fixits )
+    extra_data = extra_data )
 
 
 def _FixUpCompletionPrefixes( completions,
