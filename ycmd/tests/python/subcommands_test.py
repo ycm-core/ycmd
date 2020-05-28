@@ -136,13 +136,13 @@ def Subcommands_GoTo( app, test, command ):
     { 'request':  ( 'multifile1.py', 6, 14 ),
       'response': ( 'multifile1.py', 2, 36 ) },
     # Absolute import from nested module
-    { 'request':  ( 'nested_import/importer.py', 1, 19 ),
+    { 'request':  ( os.path.join( 'nested_import', 'importer.py' ), 1, 19 ),
       'response': ( 'basic.py', 4, 7 ) },
-    { 'request':  ( 'nested_import/importer.py', 2, 40 ),
-      'response': ( 'nested_import/to_import.py', 1, 5 ) },
+    { 'request':  ( os.path.join( 'nested_import', 'importer.py' ), 2, 40 ),
+      'response': ( os.path.join( 'nested_import', 'to_import.py' ), 1, 5 ) },
     # Relative within nested module
-    { 'request':  ( 'nested_import/importer.py', 3, 28 ),
-      'response': ( 'nested_import/to_import.py', 4, 5 ) },
+    { 'request':  ( os.path.join( 'nested_import', 'importer.py' ), 3, 28 ),
+      'response': ( os.path.join( 'nested_import', 'to_import.py' ), 4, 5 ) },
   ] )
 @SharedYcmd
 def Subcommands_GoTo_test( app, cmd, test ):
