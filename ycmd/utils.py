@@ -157,7 +157,7 @@ def ByteOffsetToCodepointOffset( line_value, byte_offset ):
   """The API calls for byte offsets into the UTF-8 encoded version of the
   buffer. However, ycmd internally uses unicode strings. This means that
   when we need to walk 'characters' within the buffer, such as when checking
-  for semantic triggers and similar, we must use codepoint offets, rather than
+  for semantic triggers and similar, we must use codepoint offsets, rather than
   byte offsets.
 
   This method converts the |byte_offset|, which is a utf-8 byte offset, into
@@ -171,7 +171,7 @@ def CodepointOffsetToByteOffset( unicode_line_value, codepoint_offset ):
   """The API calls for byte offsets into the UTF-8 encoded version of the
   buffer. However, ycmd internally uses unicode strings. This means that
   when we need to walk 'characters' within the buffer, such as when checking
-  for semantic triggers and similar, we must use codepoint offets, rather than
+  for semantic triggers and similar, we must use codepoint offsets, rather than
   byte offsets.
 
   This method converts the |codepoint_offset| which is a unicode codepoint
@@ -528,8 +528,8 @@ def GetClangResourceDir():
 CLANG_RESOURCE_DIR = GetClangResourceDir()
 
 
-def AbsoluatePath( path, relative_to ):
-  """Returns a normalised, absoluate path to |path|. If |path| is relative, it
+def AbsolutePath( path, relative_to ):
+  """Returns a normalised, absolute path to |path|. If |path| is relative, it
   is resolved relative to |relative_to|."""
   if not os.path.isabs( path ):
     path = os.path.join( relative_to, path )

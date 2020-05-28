@@ -44,7 +44,7 @@ def DebugInfo_HandleNotificationInPollThread_Throw_test( app ):
                              'Test.java' )
   StartJavaCompleterServerInDirectory( app, filepath )
 
-  # This mock will be called in the message pump thread, so syncronize the
+  # This mock will be called in the message pump thread, so synchronize the
   # result (thrown) using an Event
   thrown = threading.Event()
 

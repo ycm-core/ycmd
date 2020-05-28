@@ -138,7 +138,7 @@ class Completer( metaclass = abc.ABCMeta ):
   Do not override this function. Instead, you need to implement the
   GetSubcommandsMap method. It should return a map between the user commands
   and the methods of your completer. See the documentation of this method for
-  more informations on how to implement it.
+  more information on how to implement it.
 
   Override the Shutdown() member function if your Completer subclass needs to do
   custom cleanup logic on server shutdown.
