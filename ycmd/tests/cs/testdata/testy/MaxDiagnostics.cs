@@ -1,6 +1,4 @@
-public class MaxDiagnostics
+ublic class MaxDiagnostics
 {
-    public int test;
-    public int test;
-    public int test;
+    ublic int test;
 }

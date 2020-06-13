@@ -1,7 +1,7 @@
 namespace testy {
     public class FixItTestCase {
         public FixItTestCase() {
-            const int j = 5;
+            int l1 = 5;
         }
     }
 }
