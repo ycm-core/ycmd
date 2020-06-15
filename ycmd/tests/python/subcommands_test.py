@@ -23,6 +23,7 @@ from hamcrest import ( assert_that,
                        has_entry,
                        matches_regexp )
 from pprint import pformat
+from unittest.mock import patch
 import os
 import pytest
 import requests
@@ -37,6 +38,14 @@ from ycmd.tests.test_utils import ( BuildRequest,
 TYPESHED_PATH = os.path.normpath(
   PathToTestFile( '..', '..', '..', '..', 'third_party', 'jedi_deps', 'jedi',
     'jedi', 'third_party', 'typeshed', 'stdlib', '2and3', 'builtins.pyi' ) )
+
+
+class JediDef:
+  def __init__( self, col = None, line = None, path = None ):
+    self.column = col
+    self.line = line
+    self.module_path = path
+    self.description = ''
 
 
 def RunTest( app, test ):
@@ -147,6 +156,26 @@ def Subcommands_GoTo( app, test, command ):
 @SharedYcmd
 def Subcommands_GoTo_test( app, cmd, test ):
   Subcommands_GoTo( app, test, cmd )
+
+
+@pytest.mark.parametrize( 'test', [
+  { 'request': ( 'basic.py', 1, 4 ),
+    'response': 'Can\'t jump to definition.', 'cmd': 'GoTo' },
+  { 'request': ( 'basic.py', 1, 4 ),
+    'response': 'Can\'t find references.', 'cmd': 'GoToReferences' },
+  { 'request': ( 'basic.py', 1, 4 ),
+    'response': 'Can\'t jump to type definition.', 'cmd': 'GoToType' }
+] )
+@SharedYcmd
+def Subcommands_GoTo_SingleInvalidJediDefinition_test( app, test ):
+  with patch( 'ycmd.completers.python.python_completer.jedi.Script.infer',
+              return_value = [ JediDef() ] ):
+    with patch( 'ycmd.completers.python.python_completer.jedi.Script.goto',
+                return_value = [ JediDef() ] ):
+      with patch( 'ycmd.completers.python.python_completer.'
+                  'jedi.Script.get_references',
+                  return_value = [ JediDef() ] ):
+        Subcommands_GoTo( app, test, test.pop( 'cmd' ) )
 
 
 def Subcommands_GetType( app, position, expected_message ):
@@ -378,3 +407,30 @@ def Subcommands_GoToReferences_NoReferences_test( app ):
 
   assert_that( response,
                ErrorMatcher( RuntimeError, 'Can\'t find references.' ) )
+
+
+@SharedYcmd
+def Subcommands_GoToReferences_InvalidJediReferences_test( app ):
+  with patch( 'ycmd.completers.python.python_completer.'
+              'jedi.Script.get_references',
+              return_value = [ JediDef(),
+                               JediDef( 1, 1, PathToTestFile( 'foo.py' ) ) ] ):
+
+    filepath = PathToTestFile( 'goto', 'references.py' )
+    contents = ReadFile( filepath )
+
+    command_data = BuildRequest( filepath = filepath,
+                                 filetype = 'python',
+                                 line_num = 2,
+                                 column_num = 5,
+                                 contents = contents,
+                                 command_arguments = [ 'GoToReferences' ] )
+
+    response = app.post_json( '/run_completer_command',
+                              command_data,
+                              expect_errors = True ).json
+
+    assert_that( response, contains_exactly( has_entries( {
+      'line_num': 1,
+      'column_num': 2, # Jedi columns are 0 based
+      'filepath': PathToTestFile( 'foo.py' ) } ) ) )
