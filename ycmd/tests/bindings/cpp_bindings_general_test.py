@@ -363,6 +363,7 @@ def CppBindings_FixIt_test():
           } ),
         } )
       } ) ),
+      'kind': None,
     } ) ) )
 
 

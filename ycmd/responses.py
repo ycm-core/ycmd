@@ -179,10 +179,11 @@ class Diagnostic:
 
 
 class UnresolvedFixIt:
-  def __init__( self, command, text ):
+  def __init__( self, command, text, kind = None ):
     self.command = command
     self.text = text
     self.resolve = True
+    self.kind = kind
 
 
 class FixIt:
@@ -194,11 +195,12 @@ class FixIt:
   must be byte offsets into the UTF-8 encoded version of the appropriate
   buffer.
   """
-  def __init__( self, location, chunks, text = '' ):
+  def __init__( self, location, chunks, text = '', kind = None ):
     """location of type Location, chunks of type list<FixItChunk>"""
     self.location = location
     self.chunks = chunks
     self.text = text
+    self.kind = kind
 
 
 class FixItChunk:
@@ -287,18 +289,25 @@ def BuildFixItResponse( fixits ):
 
   def BuildFixItData( fixit ):
     if hasattr( fixit, 'resolve' ):
-      return {
+      result = {
         'command': fixit.command,
         'text': fixit.text,
+        'kind': fixit.kind,
         'resolve': fixit.resolve
       }
     else:
-      return {
+      result = {
         'location': BuildLocationData( fixit.location ),
         'chunks' : [ BuildFixitChunkData( x ) for x in fixit.chunks ],
         'text': fixit.text,
+        'kind': fixit.kind,
         'resolve': False
       }
+
+    if result[ 'kind' ] is None:
+      result.pop( 'kind' )
+
+    return result
 
   return {
     'fixits' : [ BuildFixItData( x ) for x in fixits ]

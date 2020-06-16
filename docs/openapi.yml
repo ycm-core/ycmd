@@ -401,6 +401,14 @@ definitions:
         type: boolean
         description: |-
           Indicates whether the fixit requires additional processing.
+      kind:
+        type: string
+        description: |-
+          FixIt kind is meant to suggest what sort of fixit this is. Clients
+          are free to ignore this property or use it to decide whether to
+          automatically apply the fixit. SUpported values are those of LSP.
+          Search for `namespace CodeActionKind` in the following link
+          https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_codeAction
       chunks:
         type: array
         description: |-

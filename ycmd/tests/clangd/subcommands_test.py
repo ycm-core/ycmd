@@ -570,6 +570,7 @@ def FixIt_Check_cpp11_Ins( results ):
   #   switch(A()) { // expected-error{{explicit conversion to}}
   assert_that( results, has_entries( {
     'fixits': contains_exactly( has_entries( {
+      'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'static_cast<int>(' ),
@@ -596,6 +597,7 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
   #
   assert_that( results, has_entries( {
     'fixits': contains_exactly( has_entries( {
+      'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'static_cast<int>(' ),
@@ -621,6 +623,7 @@ def FixIt_Check_cpp11_Del( results ):
   # Removal of ::
   assert_that( results, has_entries( {
     'fixits': contains_exactly( has_entries( {
+      'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( '' ),
@@ -638,6 +641,7 @@ def FixIt_Check_cpp11_Del( results ):
 def FixIt_Check_cpp11_Repl( results ):
   assert_that( results, has_entries( {
     'fixits': contains_exactly( has_entries( {
+      'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'foo' ),
@@ -656,6 +660,7 @@ def FixIt_Check_cpp11_DelAdd( results ):
   assert_that( results, has_entries( {
     'fixits': contains_exactly(
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
@@ -699,6 +704,7 @@ def FixIt_Check_cpp11_DelAdd( results ):
 def FixIt_Check_objc( results ):
   assert_that( results, has_entries( {
     'fixits': contains_exactly( has_entries( {
+      'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'id' ),
@@ -723,6 +729,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
     'fixits': contains_exactly(
       # first fix-it at 54,16
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( 'foo' ),
@@ -736,6 +743,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
       } ),
       # second fix-it at 54,52
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
@@ -755,6 +763,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
         'location': has_entries( { 'line_num': 54, 'column_num': 15 } )
       } ),
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '= default;' ),
@@ -775,6 +784,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
     'fixits': contains_exactly(
       # first fix-it at 54,16
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( 'foo' ),
@@ -788,6 +798,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
       } ),
       # second fix-it at 54,52
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '' ),
@@ -807,6 +818,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
         'location': has_entries( { 'line_num': 54, 'column_num': 51 } )
       } ),
       has_entries( {
+        'kind': 'quickfix',
         'chunks': contains_exactly(
           has_entries( {
             'replacement_text': equal_to( '= default;' ),
@@ -825,6 +837,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
 def FixIt_Check_unicode_Ins( results ):
   assert_that( results, has_entries( {
     'fixits': contains_exactly( has_entries( {
+      'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( '=' ),
@@ -844,6 +857,7 @@ def FixIt_Check_cpp11_Note( results ):
     'fixits': contains_exactly(
       # First note: put parens around it
       has_entries( {
+        'kind': 'quickfix',
         'text': contains_string( 'parentheses around the assignment' ),
         'chunks': contains_exactly(
           ChunkMatcher( '(',
@@ -858,6 +872,7 @@ def FixIt_Check_cpp11_Note( results ):
 
       # Second note: change to ==
       has_entries( {
+        'kind': 'quickfix',
         'text': contains_string( '==' ),
         'chunks': contains_exactly(
           ChunkMatcher( '==',
@@ -875,6 +890,7 @@ def FixIt_Check_cpp11_SpellCheck( results ):
     'fixits': contains_exactly(
       # Change to SpellingIsNotMyStrongPoint
       has_entries( {
+        'kind': 'quickfix',
         'text': contains_string( "change 'SpellingIsNotMyStringPiont' to "
                                  "'SpellingIsNotMyStrongPoint'" ),
         'chunks': contains_exactly(
@@ -891,6 +907,7 @@ def FixIt_Check_cuda( results ):
   assert_that( results, has_entries( {
     'fixits': contains_exactly(
       has_entries( {
+        'kind': 'quickfix',
         'text': contains_string(
            "change 'int' to 'void'" ),
         'chunks': contains_exactly(

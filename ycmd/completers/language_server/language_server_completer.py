@@ -2271,18 +2271,25 @@ class LanguageServerCompleter( Completer ):
 
 
   def CodeActionLiteralToFixIt( self, request_data, code_action_literal ):
-    return WorkspaceEditToFixIt( request_data,
-                                 code_action_literal[ 'edit' ],
-                                 code_action_literal[ 'title' ] )
+    return WorkspaceEditToFixIt(
+        request_data,
+        code_action_literal[ 'edit' ],
+        code_action_literal[ 'title' ],
+        code_action_literal.get( 'kind' ) )
 
 
   def CodeActionCommandToFixIt( self, request_data, code_action_command ):
     command = code_action_command[ 'command' ]
-    return self.CommandToFixIt( request_data, command )
+    return self.CommandToFixIt(
+        request_data,
+        command,
+        code_action_command.get( 'kind' ) )
 
 
-  def CommandToFixIt( self, request_data, command ):
-    return responses.UnresolvedFixIt( command, command[ 'title' ] )
+  def CommandToFixIt( self, request_data, command, kind = None ):
+    return responses.UnresolvedFixIt( command,
+                                      command[ 'title' ],
+                                      kind )
 
 
   def RefactorRename( self, request_data, args ):
@@ -2859,7 +2866,10 @@ def TextEditToChunks( request_data, uri, text_edit ):
   ]
 
 
-def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
+def WorkspaceEditToFixIt( request_data,
+                          workspace_edit,
+                          text='',
+                          kind = None ):
   """Converts a LSP workspace edit to a ycmd FixIt suitable for passing to
   responses.BuildFixItResponse."""
 
@@ -2886,7 +2896,8 @@ def WorkspaceEditToFixIt( request_data, workspace_edit, text='' ):
                         request_data[ 'column_num' ],
                         request_data[ 'filepath' ] ),
     chunks,
-    text )
+    text,
+    kind )
 
 
 class LanguageServerCompletionsCache( CompletionsCache ):
