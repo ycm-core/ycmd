@@ -27,10 +27,13 @@ from ycmd.tests.test_utils import ( BuildRequest,
 shared_app = None
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   global shared_app
   shared_app = SetUpApp()
   WaitUntilCompleterServerReady( shared_app, 'typescript' )
+  yield
+  StopCompleterServer( shared_app, 'typescript' )
 
 
 def StartGoCompleterServerInDirectory( app, directory ):
@@ -40,11 +43,6 @@ def StartGoCompleterServerInDirectory( app, directory ):
                    event_name = 'FileReadyToParse',
                    filetype = 'go' ) )
   WaitUntilCompleterServerReady( app, 'go' )
-
-
-def teardown_module():
-  global shared_app
-  StopCompleterServer( shared_app, 'typescript' )
 
 
 @pytest.fixture

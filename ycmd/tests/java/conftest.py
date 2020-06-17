@@ -32,7 +32,8 @@ SERVER_STARTUP_TIMEOUT = 120 # seconds
 DEFAULT_PROJECT_DIR = 'simple_eclipse_project'
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   """Initializes the ycmd server as a WebTest application that will be shared
   by all tests using the SharedYcmd decorator in this package. Additional
   configuration that is common to these tests, like starting a semantic
@@ -42,10 +43,7 @@ def setup_module():
   with IgnoreExtraConfOutsideTestsFolder():
     StartJavaCompleterServerInDirectory( shared_app,
                                          PathToTestFile( DEFAULT_PROJECT_DIR ) )
-
-
-def teardown_module():
-  global shared_app
+  yield
   StopCompleterServer( shared_app, 'java' )
 
 

@@ -27,12 +27,15 @@ from ycmd.tests.test_utils import ( BuildRequest,
 shared_app = None
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   global shared_app
   shared_app = SetUpApp()
   with IgnoreExtraConfOutsideTestsFolder():
     StartRustCompleterServerInDirectory( shared_app,
                                          PathToTestFile( 'common', 'src' ) )
+  yield
+  StopCompleterServer( shared_app, 'rust' )
 
 
 def StartRustCompleterServerInDirectory( app, directory ):
@@ -42,11 +45,6 @@ def StartRustCompleterServerInDirectory( app, directory ):
                    event_name = 'FileReadyToParse',
                    filetype = 'rust' ) )
   WaitUntilCompleterServerReady( app, 'rust' )
-
-
-def teardown_module():
-  global shared_app
-  StopCompleterServer( shared_app, 'rust' )
 
 
 @pytest.fixture

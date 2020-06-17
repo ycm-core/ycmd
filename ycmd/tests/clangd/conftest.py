@@ -26,13 +26,11 @@ from ycmd.completers.cpp import clangd_completer
 shared_app = None
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   global shared_app
   shared_app = SetUpApp()
-
-
-def teardown_module():
-  global shared_app
+  yield
   StopCompleterServer( shared_app, 'cpp' )
 
 

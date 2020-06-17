@@ -28,16 +28,14 @@ from ycmd.tests.test_utils import ( BuildRequest,
 shared_app = None
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   global shared_app
   with patch( 'ycmd.completers.javascript.hook.'
               'ShouldEnableTernCompleter', return_value = False ):
     shared_app = SetUpApp()
     WaitUntilCompleterServerReady( shared_app, 'javascript' )
-
-
-def teardown_module():
-  global shared_app
+  yield
   StopCompleterServer( shared_app, 'typescript' )
 
 
