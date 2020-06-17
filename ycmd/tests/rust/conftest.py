@@ -53,10 +53,8 @@ def app( request ):
   assert which == 'isolated' or which == 'shared'
   if which == 'isolated':
     with IsolatedApp( {} ) as app:
-      try:
-        yield app
-      finally:
-        StopCompleterServer( app, 'rust' )
+      yield app
+      StopCompleterServer( app, 'rust' )
   else:
     global shared_app
     ClearCompletionsCache()
