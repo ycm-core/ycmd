@@ -67,20 +67,21 @@ def Subcommands_DefinedSubcommands_test( app ):
       'expect': {
         'response': requests.codes.ok,
         'data': contains_exactly( *sorted( [ 'ExecuteCommand',
-                                     'FixIt',
-                                     'Format',
-                                     'GetDoc',
-                                     'GetDocImprecise',
-                                     'GetType',
-                                     'GetTypeImprecise',
-                                     'GoTo',
-                                     'GoToDeclaration',
-                                     'GoToDefinition',
-                                     'GoToImprecise',
-                                     'GoToInclude',
-                                     'GoToReferences',
-                                     'RefactorRename',
-                                     'RestartServer' ] ) )
+                                             'FixIt',
+                                             'Format',
+                                             'GetDoc',
+                                             'GetDocImprecise',
+                                             'GetType',
+                                             'GetTypeImprecise',
+                                             'GoTo',
+                                             'GoToDeclaration',
+                                             'GoToDefinition',
+                                             'GoToImprecise',
+                                             'GoToInclude',
+                                             'GoToReferences',
+                                             'GoToSymbol',
+                                             'RefactorRename',
+                                             'RestartServer' ] ) )
       },
       'route': '/defined_subcommands',
   } )
@@ -157,20 +158,17 @@ def Subcommands_GoTo_ZeroBasedLineAndColumn_test( app ):
 
 
 def RunGoToTest_all( app, folder, command, test ):
-  filepath = PathToTestFile( folder, test[ 'req' ][ 0 ] )
-  common_request = {
+  req = test[ 'req' ]
+  filepath = PathToTestFile( folder, req[ 0 ] )
+  request = {
     'completer_target' : 'filetype_default',
     'filepath'         : filepath,
-    'command_arguments': [ command ],
     'contents'         : ReadFile( filepath ),
-    'filetype'         : 'cpp'
+    'filetype'         : 'cpp',
+    'line_num'         : req[ 1 ],
+    'column_num'       : req[ 2 ],
+    'command_arguments': [ command ] + ( [] if len( req ) < 4 else req[ 3 ] ),
   }
-
-  request = common_request
-  request.update( {
-    'line_num'  : test[ 'req' ][ 1 ],
-    'column_num': test[ 'req' ][ 2 ],
-  } )
 
   response = test[ 'res' ]
 
@@ -304,6 +302,25 @@ def Subcommands_GoToInclude_test( app, cmd, test ):
 @SharedYcmd
 def Subcommands_GoToReferences_test( app, test ):
   RunGoToTest_all( app, '', 'GoToReferences', test )
+
+
+@pytest.mark.parametrize( 'test', [
+  # In same file - 1 result
+  { 'req': ( 'goto.cc', 1, 1, [ 'out_of_line' ] ),
+    'res': ( 'goto.cc', 14, 13 ) },
+  # In same file - multiple results
+  { 'req': ( 'goto.cc', 1, 1, [ 'line' ] ),
+    'res': [ ( 'goto.cc', 6, 10 ), ( 'goto.cc', 14, 13 ) ] },
+  # None
+  { 'req': ( 'goto.cc', 1, 1, [ '' ] ), 'res': 'Symbol not found' },
+
+  # Note we don't actually have any testdata that has a full index, so we can't
+  # test multiple files easily, but that's really a clangd thing, not a ycmd
+  # thing.
+] )
+@SharedYcmd
+def Subcommands_GoToSymbol_test( app, test ):
+  RunGoToTest_all( app, '', 'GoToSymbol', test )
 
 
 def RunGetSemanticTest( app,
