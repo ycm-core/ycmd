@@ -84,7 +84,7 @@ def GetCompletions_Basic_test( app ):
 @SharedYcmd
 def GetCompletions_Unicode_test( app ):
   filepath = PathToTestFile( 'testy', 'Unicode.cs' )
-  with WrapOmniSharpServer( app, filepath, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
     completion_data = BuildRequest( filepath = filepath,

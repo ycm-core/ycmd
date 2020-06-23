@@ -34,13 +34,13 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     RangeMatcher,
                                     WaitUntilCompleterServerReady,
                                     WithRetry )
-from ycmd.utils import ReadFile, LOGGER
+from ycmd.utils import ReadFile
 
 
 @SharedYcmd
 def Subcommands_FixIt_NoFixitsFound_test( app ):
   fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  with WrapOmniSharpServer( app, fixit_test, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, fixit_test ):
     contents = ReadFile( fixit_test )
 
     request = BuildRequest( completer_target = 'filetype_default',
@@ -57,13 +57,13 @@ def Subcommands_FixIt_NoFixitsFound_test( app ):
 @SharedYcmd
 def Subcommands_FixIt_Multi_test( app ):
   fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  with WrapOmniSharpServer( app, fixit_test, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, fixit_test ):
     contents = ReadFile( fixit_test )
 
     request = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = [ 'FixIt' ],
-                            line_num = 4,
-                            column_num = 22,
+                            line_num = 5,
+                            column_num = 27,
                             contents = contents,
                             filetype = 'cs',
                             filepath = fixit_test )
@@ -75,29 +75,20 @@ def Subcommands_FixIt_Multi_test( app ):
           'command': has_entries( { 'index': 0 } ),
           'resolve': True } ),
         has_entries( {
-          'text': 'Extract method',
+          'text': 'Convert to binary',
           'command': has_entries( { 'index': 1 } ),
           'resolve': True } ),
         has_entries( {
-          'text': 'Extract local function',
-          'command': has_entries( { 'index': 2 } ),
-          'resolve': True } ),
-        has_entries( {
-          'text': 'Convert to binary',
-          'command': has_entries( { 'index': 3 } ),
-          'resolve': True } ),
-        has_entries( {
           'text': 'Convert to hex',
-          'command': has_entries( { 'index': 4 } ),
+          'command': has_entries( { 'index': 2 } ),
           'resolve': True } ),
       ) } ) )
     request.pop( 'command_arguments' )
-    request.update( { 'fixit': response[ 'fixits' ][ 3 ] } )
+    request.update( { 'fixit': response[ 'fixits' ][ 1 ] } )
     response = app.post_json( '/resolve_fixit', request ).json
-    LOGGER.debug( 'r = %s', response )
     assert_that( response, has_entries( {
       'fixits': contains_exactly( has_entries( {
-        'location': LocationMatcher( fixit_test, 4, 22 ),
+        'location': LocationMatcher( fixit_test, 5, 27 ),
         'chunks': contains_exactly(
           has_entries( { 'replacement_text': '0b101', } ) )
       } ) ) } ) )
@@ -106,35 +97,39 @@ def Subcommands_FixIt_Multi_test( app ):
 @SharedYcmd
 def Subcommands_FixIt_Range_test( app ):
   fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  with WrapOmniSharpServer( app, fixit_test, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, fixit_test ):
     contents = ReadFile( fixit_test )
 
     request = BuildRequest( completer_target = 'filetype_default',
                             command_arguments = [ 'FixIt' ],
-                            line_num = 4,
-                            column_num = 17,
+                            line_num = 5,
+                            column_num = 23,
                             contents = contents,
                             filetype = 'cs',
                             filepath = fixit_test )
     request.update( { 'range': {
-      'start': { 'line_num': 4, 'column_num': 17 },
-      'end': { 'line_num': 4, 'column_num': 19 }
+      'start': { 'line_num': 5, 'column_num': 23 },
+      'end': { 'line_num': 5, 'column_num': 27 }
     } } )
     response = app.post_json( '/run_completer_command', request ).json
     assert_that( response, has_entries( {
-      'fixits': contains_exactly( has_entries( {
-        'location': LocationMatcher( fixit_test, 4, 17 ),
-        'chunks': contains_exactly(
-          has_entries( {
-            'replacement_text': 'var',
-            'range': RangeMatcher( fixit_test, ( 4, 13 ), ( 4, 16 ) ) } )
-        ) } ) ) } ) )
+      'fixits': contains_exactly(
+        has_entries( {
+          'text': 'Extract method',
+          'command': has_entries( { 'index': 0 } ),
+          'resolve': True } ),
+        has_entries( {
+          'text': 'Extract local function',
+          'command': has_entries( { 'index': 1 } ),
+          'resolve': True } ),
+      )
+    } ) )
 
 
 @SharedYcmd
 def Subcommands_FixIt_Single_test( app ):
   fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
-  with WrapOmniSharpServer( app, fixit_test, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, fixit_test ):
     contents = ReadFile( fixit_test )
 
     request = BuildRequest( completer_target = 'filetype_default',
@@ -145,7 +140,6 @@ def Subcommands_FixIt_Single_test( app ):
                             filetype = 'cs',
                             filepath = fixit_test )
     response = app.post_json( '/run_completer_command', request ).json
-    LOGGER.debug( 'r = %s', response )
     assert_that( response, has_entries( {
       'fixits': contains_exactly( has_entries( {
         'location': LocationMatcher( fixit_test, 4, 17 ),
@@ -180,7 +174,7 @@ def Subcommands_RefactorRename_MissingNewName_test( app ):
 @SharedYcmd
 def Subcommands_RefactorRename_Unicode_test( app ):
   unicode_test = PathToTestFile( 'testy', 'Unicode.cs' )
-  with WrapOmniSharpServer( app, unicode_test, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, unicode_test ):
     contents = ReadFile( unicode_test )
 
     request = BuildRequest( completer_target = 'filetype_default',
@@ -272,7 +266,7 @@ def Subcommands_GoTo_Unicode_test( app ):
 @SharedYcmd
 def Subcommands_GoToImplementation_Basic_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
     goto_data = BuildRequest(
@@ -488,7 +482,7 @@ def Subcommands_GetToImplementation_Unicode_test( app ):
 @SharedYcmd
 def Subcommands_GetType_EmptyMessage_test( app ):
   filepath = PathToTestFile( 'testy', 'GetTypeTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
     gettype_data = BuildRequest( completer_target = 'filetype_default',
@@ -564,7 +558,7 @@ def Subcommands_GetType_DocsIgnored_test( app ):
 @SharedYcmd
 def Subcommands_GetDoc_Invalid_test( app ):
   filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
-  with WrapOmniSharpServer( app, filepath, wait_for_diags = False ):
+  with WrapOmniSharpServer( app, filepath ):
     contents = ReadFile( filepath )
 
     getdoc_data = BuildRequest( completer_target = 'filetype_default',

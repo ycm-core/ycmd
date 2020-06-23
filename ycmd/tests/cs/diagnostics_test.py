@@ -92,14 +92,13 @@ def Diagnostics_WithRange_test( app ):
 
     results = app.post_json( '/event_notification', event_data ).json
 
-    assert_that( results, has_items(
+    assert_that( results, contains_exactly(
       has_entries( {
-        'kind': equal_to( 'ERROR' ),
+        'kind': equal_to( 'WARNING' ),
         'text': contains_string(
-          "A namespace cannot directly "
-          "contain members such as fields or methods" ),
-        'location': LocationMatcher( filepath, 1, 1 ),
-        'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 6 ) )
+          "The variable '\u4e5d' is assigned but its value is never used" ),
+        'location': LocationMatcher( filepath, 6, 13 ),
+        'location_extent': RangeMatcher( filepath, ( 6, 13 ), ( 6, 16 ) )
       } )
     ) )
 
@@ -149,7 +148,7 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
                              contents = contents )
 
   app.post_json( '/event_notification', event_data ).json
-  WaitUntilCsCompleterIsReady( app, filepath, False )
+  WaitUntilCsCompleterIsReady( app, filepath )
 
   event_data = BuildRequest( filepath = filepath,
                              event_name = 'FileReadyToParse',
@@ -161,11 +160,10 @@ def Diagnostics_MaximumDiagnosticsNumberExceeded_test( app ):
   assert_that( results, contains_exactly(
     has_entries( {
       'kind': equal_to( 'ERROR' ),
-      'text': contains_string(
-          "A namespace cannot directly "
-          "contain members such as fields or methods" ),
-      'location': LocationMatcher( filepath, 1, 1 ),
-      'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 6 ) )
+      'text': contains_string( "The type 'MaxDiagnostics' already contains "
+                               "a definition for 'test'" ),
+      'location': LocationMatcher( filepath, 4, 16 ),
+      'location_extent': RangeMatcher( filepath, ( 4, 16 ), ( 4, 20 ) )
     } ),
     has_entries( {
       'kind': equal_to( 'ERROR' ),

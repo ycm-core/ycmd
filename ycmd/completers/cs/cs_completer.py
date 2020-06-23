@@ -28,6 +28,7 @@ from ycmd.completers.completer_utils import GetFileLines
 from ycmd.completers.cs import solutiondetection
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          CodepointOffsetToByteOffset,
+                         FindExecutable,
                          FindExecutableWithFallback,
                          LOGGER )
 from ycmd import responses
@@ -45,18 +46,29 @@ PATH_TO_ROSLYN_OMNISHARP = os.path.join(
 PATH_TO_OMNISHARP_ROSLYN_BINARY = os.path.join(
   PATH_TO_ROSLYN_OMNISHARP, 'Omnisharp.exe' )
 if ( not os.path.isfile( PATH_TO_OMNISHARP_ROSLYN_BINARY )
-     and os.path.isfile( os.path.join( PATH_TO_ROSLYN_OMNISHARP, 'run' ) ) ):
+     and os.path.isfile( os.path.join(
+       PATH_TO_ROSLYN_OMNISHARP, 'omnisharp', 'OmniSharp.exe' ) ) ):
   PATH_TO_OMNISHARP_ROSLYN_BINARY = (
-    os.path.join( PATH_TO_ROSLYN_OMNISHARP, 'run' ) )
+    os.path.join( PATH_TO_ROSLYN_OMNISHARP, 'omnisharp', 'OmniSharp.exe' ) )
 LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
 def ShouldEnableCsCompleter( user_options ):
-  roslyn = FindExecutableWithFallback( user_options[ 'roslyn_binary_path' ],
-                                       PATH_TO_OMNISHARP_ROSLYN_BINARY )
-  if roslyn:
+  user_roslyn_path = user_options[ 'roslyn_binary_path' ]
+  if user_roslyn_path and not os.path.isfile( user_roslyn_path ):
+    LOGGER.error( 'No omnisharp-roslyn executable at %s', user_roslyn_path )
+    # We should trust the user who specifically asked for a custom path.
+    return False
+
+  if os.path.isfile( user_roslyn_path ):
+    roslyn = user_roslyn_path
+  else:
+    roslyn = PATH_TO_OMNISHARP_ROSLYN_BINARY
+  mono = FindExecutableWithFallback( user_options[ 'mono_binary_path' ],
+                                     FindExecutable( 'mono' ) )
+  if roslyn and ( mono or utils.OnWindows() ):
     return True
-  LOGGER.info( 'No omnisharp-roslyn executable at %s', roslyn )
+  LOGGER.info( 'No mono executable at %s', mono )
   return False
 
 
@@ -72,9 +84,13 @@ class CsharpCompleter( Completer ):
     self._diagnostic_store = None
     self._solution_state_lock = threading.Lock()
     self.SetSignatureHelpTriggers( [ '(', ',' ] )
-    self._roslyn_path = FindExecutableWithFallback(
-        user_options[ 'roslyn_binary_path' ],
-        PATH_TO_OMNISHARP_ROSLYN_BINARY )
+    if os.path.isfile( user_options[ 'roslyn_binary_path' ] ):
+      self._roslyn_path = user_options[ 'roslyn_binary_path' ]
+    else:
+      self._roslyn_path = PATH_TO_OMNISHARP_ROSLYN_BINARY
+    self._mono_path = FindExecutableWithFallback(
+        user_options[ 'mono_binary_path' ],
+        FindExecutable( 'mono' ) )
 
 
   def Shutdown( self ):
@@ -101,7 +117,8 @@ class CsharpCompleter( Completer ):
         completer = CsharpSolutionCompleter( solution,
                                              keep_logfiles,
                                              desired_omnisharp_port,
-                                             self._roslyn_path )
+                                             self._roslyn_path,
+                                             self._mono_path )
         self._completer_per_solution[ solution ] = completer
 
     return self._completer_per_solution[ solution ]
@@ -363,7 +380,8 @@ class CsharpSolutionCompleter( object ):
                 solution_path,
                 keep_logfiles,
                 desired_omnisharp_port,
-                roslyn_path ):
+                roslyn_path,
+                mono_path ):
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
     self._filename_stderr = None
@@ -373,6 +391,7 @@ class CsharpSolutionCompleter( object ):
     self._desired_omnisharp_port = desired_omnisharp_port
     self._server_state_lock = threading.Lock()
     self._roslyn_path = roslyn_path
+    self._mono_path = mono_path
 
 
   def CodeCheck( self, request_data ):
@@ -408,7 +427,7 @@ class CsharpSolutionCompleter( object ):
 
     if ( not utils.OnWindows()
          and self._roslyn_path.endswith( '.exe' ) ):
-      command.insert( 0, 'mono' )
+      command.insert( 0, self._mono_path )
 
     LOGGER.info( 'Starting OmniSharp server with: %s', command )
 
