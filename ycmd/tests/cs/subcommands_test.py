@@ -621,6 +621,7 @@ def Subcommands_GetDoc_Function_test( app ):
 @IsolatedYcmd()
 def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  # Don't wrap the server - we don't want to start it!
   app.post_json(
     '/run_completer_command',
     BuildRequest(
@@ -642,45 +643,37 @@ def Subcommands_StopServer_NoErrorIfNotStarted_test( app ):
 
 def StopServer_KeepLogFiles( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  contents = ReadFile( filepath )
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'cs',
-                             contents = contents,
-                             event_name = 'FileReadyToParse' )
+  with WrapOmniSharpServer( app, filepath ):
+    event_data = BuildRequest( filetype = 'cs', filepath = filepath )
 
-  app.post_json( '/event_notification', event_data )
-  WaitUntilCompleterServerReady( app, 'cs' )
+    response = app.post_json( '/debug_info', event_data ).json
 
-  event_data = BuildRequest( filetype = 'cs', filepath = filepath )
+    logfiles = []
+    for server in response[ 'completer' ][ 'servers' ]:
+      logfiles.extend( server[ 'logfiles' ] )
 
-  response = app.post_json( '/debug_info', event_data ).json
-
-  logfiles = []
-  for server in response[ 'completer' ][ 'servers' ]:
-    logfiles.extend( server[ 'logfiles' ] )
-
-  try:
-    for logfile in logfiles:
-      assert_that( os.path.exists( logfile ),
-           'Logfile should exist at {0}'.format( logfile ) )
-  finally:
-    app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filetype = 'cs',
-        filepath = filepath,
-        command_arguments = [ 'StopServer' ]
+    try:
+      for logfile in logfiles:
+        assert_that( os.path.exists( logfile ),
+             'Logfile should exist at {0}'.format( logfile ) )
+    finally:
+      app.post_json(
+        '/run_completer_command',
+        BuildRequest(
+          filetype = 'cs',
+          filepath = filepath,
+          command_arguments = [ 'StopServer' ]
+        )
       )
-    )
 
-  if user_options_store.Value( 'server_keep_logfiles' ):
-    for logfile in logfiles:
-      assert_that( os.path.exists( logfile ),
-           'Logfile should still exist at {0}'.format( logfile ) )
-  else:
-    for logfile in logfiles:
-      assert_that( not os.path.exists( logfile ),
-           'Logfile should no longer exist at {0}'.format( logfile ) )
+    if user_options_store.Value( 'server_keep_logfiles' ):
+      for logfile in logfiles:
+        assert_that( os.path.exists( logfile ),
+             'Logfile should still exist at {0}'.format( logfile ) )
+    else:
+      for logfile in logfiles:
+        assert_that( not os.path.exists( logfile ),
+             'Logfile should no longer exist at {0}'.format( logfile ) )
 
 
 @IsolatedYcmd( { 'server_keep_logfiles': 1 } )
@@ -696,16 +689,7 @@ def Subcommands_StopServer_DoNotKeepLogFiles_test( app ):
 @IsolatedYcmd()
 def Subcommands_RestartServer_PidChanges_test( app ):
   filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-  contents = ReadFile( filepath )
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'cs',
-                             contents = contents,
-                             event_name = 'FileReadyToParse' )
-
-  app.post_json( '/event_notification', event_data )
-
-  try:
-    WaitUntilCompleterServerReady( app, 'cs' )
+  with WrapOmniSharpServer( app, filepath ):
 
     def GetPid():
       request_data = BuildRequest( filetype = 'cs', filepath = filepath )
@@ -727,15 +711,6 @@ def Subcommands_RestartServer_PidChanges_test( app ):
     new_pid = GetPid()
 
     assert old_pid != new_pid, '%r == %r' % ( old_pid, new_pid )
-  finally:
-    app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filetype = 'cs',
-        filepath = filepath,
-        command_arguments = [ 'StopServer' ]
-      )
-    )
 
 
 @IsolatedYcmd()

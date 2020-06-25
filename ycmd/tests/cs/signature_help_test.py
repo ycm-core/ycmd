@@ -26,8 +26,7 @@ from ycmd.utils import ReadFile, LOGGER
 from ycmd.tests.cs import ( PathToTestFile,
                             IsolatedYcmd,
                             SharedYcmd,
-                            WrapOmniSharpServer,
-                            WaitUntilCsCompleterIsReady )
+                            WrapOmniSharpServer )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ParameterMatcher,
                                     SignatureMatcher,
@@ -201,7 +200,6 @@ def SignatureHelp_NotAFunction_NoError_test( app ):
 def GetCompletions_Basic_NoSigHelp_test( app ):
   filepath = PathToTestFile( 'testy', 'Program.cs' )
   with WrapOmniSharpServer( app, filepath ):
-    WaitUntilCsCompleterIsReady( app, filepath )
     contents = ReadFile( filepath )
 
     completion_data = BuildRequest( filepath = filepath,
