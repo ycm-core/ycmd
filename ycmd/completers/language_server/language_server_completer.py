@@ -932,7 +932,9 @@ class LanguageServerCompleter( Completer ):
 
     self._connection.AwaitServerConnection()
 
-    LOGGER.info( '%s started', self.GetServerName() )
+    LOGGER.info( '%s started with PID %s',
+                 self.GetServerName(),
+                 self._server_handle.pid )
 
     return True
 
