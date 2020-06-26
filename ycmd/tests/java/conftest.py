@@ -74,7 +74,7 @@ def isolated_app():
 
   """
   @contextlib.contextmanager
-  def manager( custom_options ):
+  def manager( custom_options = {} ):
     with IsolatedApp( custom_options ) as app:
       try:
         yield app
@@ -94,6 +94,7 @@ def app( request ):
         yield app
       finally:
         StopCompleterServer( app, 'java' )
+        ShutdownSubservers( app )
   else:
     global shared_app
     ClearCompletionsCache()
