@@ -27,11 +27,14 @@ from ycmd.tests.test_utils import ( BuildRequest,
 shared_app = None
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   global shared_app
   shared_app = SetUpApp()
   with IgnoreExtraConfOutsideTestsFolder():
     StartGoCompleterServerInDirectory( shared_app, PathToTestFile() )
+  yield
+  StopCompleterServer( shared_app, 'go' )
 
 
 def StartGoCompleterServerInDirectory( app, directory ):
@@ -43,21 +46,14 @@ def StartGoCompleterServerInDirectory( app, directory ):
   WaitUntilCompleterServerReady( app, 'go' )
 
 
-def teardown_module():
-  global shared_app
-  StopCompleterServer( shared_app, 'go' )
-
-
 @pytest.fixture
 def app( request ):
   which = request.param[ 0 ]
   assert which == 'isolated' or which == 'shared'
   if which == 'isolated':
     with IsolatedApp( {} ) as app:
-      try:
-        yield app
-      finally:
-        StopCompleterServer( app, 'go' )
+      yield app
+      StopCompleterServer( app, 'go' )
   else:
     global shared_app
     ClearCompletionsCache()

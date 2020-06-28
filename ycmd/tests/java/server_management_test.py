@@ -334,14 +334,16 @@ def ServerManagement_OpenProject_RelativePathNoPath_test( app ):
                              'Usage: OpenProject <project directory>' ) )
 
 
-@IsolatedYcmd()
-def ServerManagement_ProjectDetection_NoParent_test( app ):
+def ServerManagement_ProjectDetection_NoParent_test( isolated_app ):
   with TemporaryTestDir() as tmp_dir:
-    StartJavaCompleterServerInDirectory( app, tmp_dir )
-    # Run the debug info to check that we have the correct project dir (cwd)
-    request_data = BuildRequest( filetype = 'java' )
-    assert_that( app.post_json( '/debug_info', request_data ).json,
-                 CompleterProjectDirectoryMatcher( tmp_dir ) )
+    with isolated_app() as app:
+      StartJavaCompleterServerInDirectory( app, tmp_dir )
+      # Run the debug info to check that we have the correct project dir (cwd)
+      request_data = BuildRequest(
+        filetype = 'java',
+        filepath = os.path.join( tmp_dir, 'foo.java' ) )
+      assert_that( app.post_json( '/debug_info', request_data ).json,
+                   CompleterProjectDirectoryMatcher( tmp_dir ) )
 
 
 @IsolatedYcmd()

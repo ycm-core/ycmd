@@ -1,4 +1,4 @@
-ublic class Class
+public class Class
 {
     public int attribute;
     public static void Main (string[] args)

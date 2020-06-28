@@ -201,3 +201,10 @@ def GetCompleter_RoslynFromUserOption_test( *args ):
   user_options = user_options_store.GetAll().copy(
       roslyn_binary_path = 'roslyn' )
   assert_that( GetCompleter( user_options )._roslyn_path, equal_to( 'roslyn' ) )
+
+
+@patch( 'os.path.isfile', return_value = False )
+def GetCompleter_CustomPathToServer_NotAFile_test( *args ):
+  user_options = user_options_store.GetAll().copy(
+    roslyn_binary_path = 'does-not-exist' )
+  assert_that( not GetCompleter( user_options ) )

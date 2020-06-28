@@ -932,7 +932,9 @@ class LanguageServerCompleter( Completer ):
 
     self._connection.AwaitServerConnection()
 
-    LOGGER.info( '%s started', self.GetServerName() )
+    LOGGER.info( '%s started with PID %s',
+                 self.GetServerName(),
+                 self._server_handle.pid )
 
     return True
 
@@ -979,7 +981,7 @@ class LanguageServerCompleter( Completer ):
 
       with self._server_info_mutex:
         utils.WaitUntilProcessIsTerminated( self._server_handle,
-                                            timeout = 15 )
+                                            timeout = 30 )
 
         LOGGER.info( '%s stopped', self.GetServerName() )
     except Exception:

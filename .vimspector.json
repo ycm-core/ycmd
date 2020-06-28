@@ -43,6 +43,12 @@
           "YCM_TEST_NO_RETRY": "1"
         }
       }
+    },
+    "python - attach": {
+      "adapter": "multi-session",
+      "configuration": {
+        "request": "attach"
+      }
     }
   }
 }

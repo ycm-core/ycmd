@@ -30,20 +30,19 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     SetUpApp )
 
 shared_app = None
-shared_filepaths = []
+# map of 'app' to filepaths
+shared_filepaths = {}
 shared_log_indexes = {}
 
 
-def setup_module():
+@pytest.fixture( scope='package', autouse=True )
+def set_up_shared_app():
   global shared_app, shared_filepaths
   shared_app = SetUpApp()
-
-
-def teardown_module():
-  global shared_app, shared_filepaths
-
-  for filepath in shared_filepaths:
+  yield
+  for filepath in shared_filepaths.get( shared_app, [] ):
     StopCompleterServer( shared_app, 'cs', filepath )
+
 
 
 @pytest.fixture
@@ -54,6 +53,10 @@ def app( request ):
     custom_options = request.param[ 1 ]
     with IsolatedApp( custom_options ) as app:
       yield app
+      # Shutdown the isolated app
+      for filepath in shared_filepaths.get( app, [] ):
+        StopCompleterServer( app, 'cs', filepath )
+
   else:
     global shared_app
     ClearCompletionsCache()
@@ -128,15 +131,15 @@ def GetDiagnostics( app, filepath ):
 
 
 @contextmanager
-def WrapOmniSharpServer( app, filepath, wait_for_diags = True ):
+def WrapOmniSharpServer( app, filepath ):
   global shared_filepaths
   global shared_log_indexes
 
-  if filepath not in shared_filepaths:
+  if filepath not in shared_filepaths.setdefault( app, [] ):
     # StartCompleterServer( app, 'cs', filepath )
     GetDiagnostics( app, filepath )
-    shared_filepaths.append( filepath )
-    WaitUntilCsCompleterIsReady( app, filepath, wait_for_diags )
+    shared_filepaths[ app ].append( filepath )
+    WaitUntilCsCompleterIsReady( app, filepath )
 
   logfiles = []
   response = GetDebugInfo( app, filepath )
@@ -156,15 +159,10 @@ def WrapOmniSharpServer( app, filepath, wait_for_diags = True ):
         sys.stdout.write( '\n' )
 
 
-def WaitUntilCsCompleterIsReady( app, filepath, wait_for_diags = True ):
+def WaitUntilCsCompleterIsReady( app, filepath ):
   WaitUntilCompleterServerReady( app, 'cs' )
   # Omnisharp isn't ready when it says it is, so wait until Omnisharp returns
   # at least one diagnostic multiple times.
-  if not wait_for_diags:
-    # Wait a fixed amount of time, because there's no reliable way to
-    # know Roslyn is actually ready.
-    time.sleep( 15 )
-    return
   success_count = 0
   for reraise_error in [ False ] * 39 + [ True ]:
     try:

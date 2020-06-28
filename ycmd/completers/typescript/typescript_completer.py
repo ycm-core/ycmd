@@ -215,6 +215,7 @@ class TypeScriptCompleter( Completer ):
                                              stderr = subprocess.STDOUT,
                                              env = environ )
 
+    LOGGER.info( "TSServer started with PID %s", self._tsserver_handle.pid )
     self._tsserver_is_running.set()
 
     utils.StartThread( self._SetServerVersion )

@@ -26,13 +26,11 @@ from ycmd.completers.cpp import clangd_completer
 shared_app = None
 
 
-def setup_module():
+@pytest.fixture( scope='module', autouse=True )
+def set_up_shared_app():
   global shared_app
   shared_app = SetUpApp()
-
-
-def teardown_module():
-  global shared_app
+  yield
   StopCompleterServer( shared_app, 'cpp' )
 
 
@@ -43,10 +41,8 @@ def app( request ):
   if which == 'isolated':
     with IsolatedApp( request.param[ 1 ] ) as app:
       clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
-      try:
-        yield app
-      finally:
-        StopCompleterServer( app, 'cpp' )
+      yield app
+      StopCompleterServer( app, 'cpp' )
   else:
     global shared_app
     ClearCompletionsCache()
