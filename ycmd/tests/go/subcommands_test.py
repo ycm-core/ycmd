@@ -469,9 +469,9 @@ def Subcommands_FixIt_Simple_test( app ):
         'text': "Organize Imports",
         'chunks': contains_exactly(
           ChunkMatcher( '',
-                        LocationMatcher( filepath, 1, 1 ),
+                        LocationMatcher( filepath, 2, 1 ),
                         LocationMatcher( filepath, 3, 1 ) ),
-          ChunkMatcher( 'package main',
+          ChunkMatcher( '\n',
                         LocationMatcher( filepath, 3, 1 ),
                         LocationMatcher( filepath, 3, 1 ) ),
         ),
