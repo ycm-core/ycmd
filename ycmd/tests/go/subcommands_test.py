@@ -428,6 +428,7 @@ def Subcommands_FixIt_FixItWorksAtEndOfFile_test( app ):
                         LocationMatcher( filepath, 3, 1 ),
                         LocationMatcher( filepath, 3, 1 ) ),
         ),
+        'kind': 'source.organizeImports',
       } ),
     )
   } )
@@ -475,6 +476,7 @@ def Subcommands_FixIt_Simple_test( app ):
                         LocationMatcher( filepath, 3, 1 ),
                         LocationMatcher( filepath, 3, 1 ) ),
         ),
+        'kind': 'source.organizeImports',
       } ),
     )
   } )
