@@ -1014,7 +1014,7 @@ def Subcommands_FixIt_all_test( app, line, column, language, filepath, check ):
 
 
 @WithRetry
-def RunRangedFixItTest( app, rng, expected ):
+def RunRangedFixItTest( app, rng, expected, chosen_fixit = 0 ):
   contents = ReadFile( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
   args = {
     'completer_target' : 'filetype_default',
@@ -1032,7 +1032,7 @@ def RunRangedFixItTest( app, rng, expected ):
   WaitUntilCompleterServerReady( app, 'cpp' )
   response = app.post_json( '/run_completer_command',
                             BuildRequest( **args ) ).json
-  args[ 'fixit' ] = response[ 'fixits' ][ 0 ]
+  args[ 'fixit' ] = response[ 'fixits' ][ chosen_fixit ]
   response = app.post_json( '/resolve_fixit',
                             BuildRequest( **args ) ).json
   print( 'Resolved fixit response = ' )
@@ -1096,6 +1096,24 @@ def Subcommands_FixIt_AlreadyResolved_test( app ):
   print( 'actual = ' )
   print( actual )
   assert_that( actual, equal_to( expected ) )
+
+
+@IsolatedYcmd( { 'clangd_args': [ '-hidden-features' ] } )
+def Subcommands_FixIt_ClangdTweaks_test( app ):
+  selection = {
+      'start': { 'line_num': 80, 'column_num': 19 },
+      'end': { 'line_num': 80, 'column_num': 4 }
+  }
+
+  def NoFixitsProduced( results ):
+    assert_that( results, has_entries( {
+      'fixits': contains_exactly( has_entries( {
+        'chunks': [],
+        'location': LocationMatcher(
+                      PathToTestFile( 'FixIt_Clang_cpp11.cpp' ), 1, 1 )
+      } ) )
+    } ) )
+  RunRangedFixItTest( app, selection, NoFixitsProduced, 2 )
 
 
 @SharedYcmd

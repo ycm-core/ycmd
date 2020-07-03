@@ -2379,7 +2379,13 @@ class LanguageServerCompleter( Completer ):
 
     # Return a ycmd fixit
     response = collector.requests
-    assert len( response ) == 1
+    assert len( response ) < 2
+    if not response:
+      return responses.BuildFixItResponse( [ responses.FixIt(
+        responses.Location( request_data[ 'line_num' ],
+                            request_data[ 'column_num' ],
+                            request_data[ 'filepath' ] ),
+        [] ) ] )
     fixit = WorkspaceEditToFixIt(
       request_data,
       response[ 0 ][ 'edit' ],
