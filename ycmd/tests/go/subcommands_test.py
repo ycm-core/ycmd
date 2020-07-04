@@ -120,6 +120,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'GoToReferences',
                                     'GoToImplementation',
                                     'GoToType',
+                                    'GoToSymbol',
                                     'FixIt',
                                     'RestartServer',
                                     'ExecuteCommand' ) )
