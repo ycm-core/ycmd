@@ -21,6 +21,7 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry,
+                       has_items,
                        matches_regexp )
 from unittest.mock import patch
 import requests
@@ -97,6 +98,7 @@ def Subcommands_DefinedSubcommands_test( app ):
       'GetDoc',
       'GetType',
       'GoToReferences',
+      'GoToSymbol',
       'FixIt',
       'OrganizeImports',
       'RefactorRename',
@@ -592,6 +594,54 @@ def Subcommands_GoTo_Basic( app, goto_command ):
       'response': requests.codes.ok,
       'data': LocationMatcher( PathToTestFile( 'test.ts' ), 30, 3 )
     }
+  } )
+
+
+@pytest.mark.parametrize( "req,rep", [
+  ( ( 'signatures.ts', 1, 1, 'no_arguments_no_return' ),
+    ( 'signatures.ts', 3, 1, 'no_arguments_no_return' ) ),
+
+  ( ( 'signatures.ts', 1, 1, 'ReturnValue' ),
+    [ ( 'signatures.ts', 6, 1, 'ReturnValue' ) ] ),
+
+  ( ( 'signatures.ts', 1, 1, 'Foo' ),
+    [ ( 'test.ts', 14, 5, 'foo' ),
+      ( 'test.ts', 2, 1, 'Foo' ) ] ),
+
+  ( ( 'signatures.ts', 1, 1, 'nothinghere' ), 'Symbol not found' )
+] )
+@SharedYcmd
+def Subcommands_GoToSymbol_test( app, req, rep ):
+  if isinstance( rep, tuple ):
+    expect = {
+      'response': requests.codes.ok,
+      'data': LocationMatcher( PathToTestFile( rep[ 0 ] ), *rep[ 1: ] )
+    }
+  elif isinstance( rep, list ):
+    # NOTE: We use has_items here because tsserver will include results from
+    # node_modules and all sorts of other random places.
+    expect = {
+      'response': requests.codes.ok,
+      'data': has_items( *[
+        LocationMatcher( PathToTestFile( r[ 0 ] ), *r[ 1: ] )
+          for r in rep
+      ] )
+    }
+  else:
+    expect = {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError, rep )
+    }
+
+  RunTest( app, {
+    'request': {
+      'command': 'GoToSymbol',
+      'arguments': [ req[ 3 ] ],
+      'line_num': req[ 1 ],
+      'column_num': req[ 2 ],
+      'filepath': PathToTestFile( req[ 0 ] ),
+    },
+    'expect': expect
   } )
 
 

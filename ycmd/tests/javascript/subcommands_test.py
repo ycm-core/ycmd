@@ -93,6 +93,7 @@ def Subcommands_DefinedSubcommands_test( app ):
       'GetDoc',
       'GetType',
       'GoToReferences',
+      'GoToSymbol',
       'FixIt',
       'OrganizeImports',
       'RefactorRename',
@@ -433,6 +434,50 @@ def Subcommands_GoToReferences_test( app ):
       )
     }
   } )
+
+
+@pytest.mark.parametrize( "req,rep", [
+  ( ( 'file3.js', 1, 1, 'testMethod' ), ( 'test.js', 27, 3, 'testMethod' ) ),
+
+  ( ( 'file3.js', 1, 1, 'BAR' ),
+    [ ( 'file3.js', 1, 5, 'bar' ),
+      ( 'test.js', 30, 5, 'bar' ),
+      ( 'test.js', 22, 1, 'Bar' ) ] ),
+
+  ( ( 'file3.js', 1, 1, 'nothinghere' ), 'Symbol not found' )
+] )
+@SharedYcmd
+def Subcommands_GoToSymbol_test( app, req, rep ):
+  if isinstance( rep, tuple ):
+    expect = {
+      'response': requests.codes.ok,
+      'data': LocationMatcher( PathToTestFile( rep[ 0 ] ), *rep[ 1: ] )
+    }
+  elif isinstance( rep, list ):
+    expect = {
+      'response': requests.codes.ok,
+      'data': contains_inanyorder( *[
+        LocationMatcher( PathToTestFile( r[ 0 ] ), *r[ 1: ] )
+          for r in rep
+      ] )
+    }
+  else:
+    expect = {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError, rep )
+    }
+
+  RunTest( app, {
+    'request': {
+      'command': 'GoToSymbol',
+      'arguments': [ req[ 3 ] ],
+      'line_num': req[ 1 ],
+      'column_num': req[ 2 ],
+      'filepath': PathToTestFile( req[ 0 ] ),
+    },
+    'expect': expect
+  } )
+
 
 
 def Subcommands_GoTo( app, goto_command ):
