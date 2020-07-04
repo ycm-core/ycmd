@@ -131,12 +131,12 @@ def ParseArguments():
                        help = argparse.SUPPRESS ) # deprecated
   group.add_argument( '--no-completers', nargs ='*', type = CompleterType,
                        help = 'Do not build or test with listed semantic '
-                       'completion engine(s). Valid values: {0}'.format(
-                        COMPLETERS.keys() ) )
+                       'completion engine(s).',
+                       choices = COMPLETERS.keys() )
   group.add_argument( '--completers', nargs ='*', type = CompleterType,
                        help = 'Only build and test with listed semantic '
-                       'completion engine(s). Valid values: {0}'.format(
-                        COMPLETERS.keys() ) )
+                       'completion engine(s).',
+                       choices = COMPLETERS.keys() )
   parser.add_argument( '--skip-build', action = 'store_true',
                        help = 'Do not build ycmd before testing.' )
   parser.add_argument( '--msvc', type = int, choices = [ 14, 15, 16 ],

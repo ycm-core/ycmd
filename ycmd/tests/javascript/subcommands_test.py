@@ -31,7 +31,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
                                     ErrorMatcher,
                                     LocationMatcher,
-                                    MessageMatcher )
+                                    MessageMatcher,
+                                    WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
 
@@ -333,6 +334,69 @@ def Subcommands_Format_Range_Tabs_test( app ):
             ChunkMatcher( '\t',
                           LocationMatcher( filepath,  8,  1 ),
                           LocationMatcher( filepath,  8,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'global_ycm_extra_conf':
+                 PathToTestFile( 'extra_confs', 'brace_on_same_line.py' ) } )
+def Subcommands_Format_ExtraConf_BraceOnSameLine_test( app ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+  filepath = PathToTestFile( 'extra_confs', 'func.js' )
+  RunTest( app, {
+    'description': 'Format with an extra conf, braces on new line',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  2,  1 ),
+                          LocationMatcher( filepath,  2,  1 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'global_ycm_extra_conf':
+                 PathToTestFile( 'extra_confs', 'brace_on_new_line.py' ) } )
+def Subcommands_Format_ExtraConf_BraceOnNewLine_test( app ):
+  WaitUntilCompleterServerReady( app, 'javascript' )
+  filepath = PathToTestFile( 'extra_confs', 'func.js' )
+  RunTest( app, {
+    'description': 'Format with an extra conf, braces on new line',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
+            ChunkMatcher( matches_regexp( '\r?\n' ),
+                          LocationMatcher( filepath,  1, 19 ),
+                          LocationMatcher( filepath,  1, 20 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  2,  1 ),
+                          LocationMatcher( filepath,  2,  1 ) ),
           )
         } ) )
       } )

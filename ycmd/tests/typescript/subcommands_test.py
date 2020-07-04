@@ -317,6 +317,7 @@ def Subcommands_Format_Range_Spaces_test( app ):
 
 @IsolatedYcmd()
 def Subcommands_Format_Range_Tabs_test( app ):
+  WaitUntilCompleterServerReady( app, 'typescript' )
   filepath = PathToTestFile( 'test.ts' )
   RunTest( app, {
     'description': 'Formatting is applied on some part of the file '
@@ -362,6 +363,69 @@ def Subcommands_Format_Range_Tabs_test( app ):
             ChunkMatcher( '\t',
                           LocationMatcher( filepath, 11,  1 ),
                           LocationMatcher( filepath, 11,  3 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'global_ycm_extra_conf':
+                 PathToTestFile( 'extra_confs', 'brace_on_same_line.py' ) } )
+def Subcommands_Format_ExtraConf_BraceOnSameLine_test( app ):
+  WaitUntilCompleterServerReady( app, 'typescript' )
+  filepath = PathToTestFile( 'extra_confs', 'func.ts' )
+  RunTest( app, {
+    'description': 'Format with an extra conf, braces on new line',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  2,  1 ),
+                          LocationMatcher( filepath,  2,  1 ) ),
+          )
+        } ) )
+      } )
+    }
+  } )
+
+
+@IsolatedYcmd( { 'global_ycm_extra_conf':
+                 PathToTestFile( 'extra_confs', 'brace_on_new_line.py' ) } )
+def Subcommands_Format_ExtraConf_BraceOnNewLine_test( app ):
+  WaitUntilCompleterServerReady( app, 'typescript' )
+  filepath = PathToTestFile( 'extra_confs', 'func.ts' )
+  RunTest( app, {
+    'description': 'Format with an extra conf, braces on new line',
+    'request': {
+      'command': 'Format',
+      'filepath': filepath,
+      'options': {
+        'tab_size': 4,
+        'insert_spaces': True
+      }
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'fixits': contains_exactly( has_entries( {
+          'chunks': contains_exactly(
+            ChunkMatcher( matches_regexp( '\n?\n' ),
+                          LocationMatcher( filepath,  1, 19 ),
+                          LocationMatcher( filepath,  1, 20 ) ),
+            ChunkMatcher( '    ',
+                          LocationMatcher( filepath,  2,  1 ),
+                          LocationMatcher( filepath,  2,  1 ) ),
           )
         } ) )
       } )
