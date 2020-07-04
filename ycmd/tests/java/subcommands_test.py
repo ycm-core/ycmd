@@ -91,6 +91,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                  'GoToImplementation',
                  'GoToReferences',
                  'GoToType',
+                 'GoToSymbol',
                  'OpenProject',
                  'OrganizeImports',
                  'RefactorRename',
@@ -103,6 +104,7 @@ def Subcommands_DefinedSubcommands_test( app ):
   ( 'GoToDeclaration', [] ),
   ( 'GoToDefinition', [] ),
   ( 'GoToReferences', [] ),
+  ( 'GoToSymbol', [ 'test' ] ),
   ( 'GetType', [] ),
   ( 'GetDoc', [] ),
   ( 'FixIt', [] ),
@@ -638,6 +640,113 @@ def Subcommands_GoToReferences_test( app ):
            'description': "        w.doSomethingVaguelyUseful();",
            'line_num': 32
          } ) ) )
+
+
+@WithRetry
+@SharedYcmd
+def Subcommands_GoToSymbol_SingleSameFile_test( app ):
+  contents = ReadFile( TEST_JAVA )
+
+  event_data = BuildRequest( filepath = TEST_JAVA,
+                             filetype = 'java',
+                             line_num = 1,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GoToSymbol', 'TéstClass' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  assert_that( response, has_entries( {
+    'filepath': TEST_JAVA,
+    'description': "TéstClass",
+    'line_num': 20,
+    'column_num': 16,
+  } ) )
+
+
+@WithRetry
+@SharedYcmd
+def Subcommands_GoToSymbol_Multiple_test( app ):
+  contents = ReadFile( TEST_JAVA )
+
+  event_data = BuildRequest( filepath = TEST_JAVA,
+                             filetype = 'java',
+                             line_num = 1,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GoToSymbol', 'test' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command', event_data ).json
+
+  assert_that( response, contains_inanyorder(
+    has_entries( {
+      'filepath': PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'TestFactory.java' ) ,
+      'description': "TestFactory",
+      'line_num': 12,
+      'column_num': 14,
+    } ),
+    has_entries( {
+      'filepath': PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'TestWidgetImpl.java' ) ,
+      'description': "TestWidgetImpl",
+      'line_num': 11,
+      'column_num': 7,
+    } ),
+    has_entries( {
+      'filepath': PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'TestLauncher.java' ) ,
+      'description': "TestLauncher",
+      'line_num': 6,
+      'column_num': 7,
+    } ),
+    has_entries( {
+      'filepath': PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'youcompleteme',
+                                  'Test.java' ) ,
+      'description': "Test",
+      'line_num': 3,
+      'column_num': 14,
+    } )
+  ) )
+
+
+@WithRetry
+@SharedYcmd
+def Subcommands_GoToSymbol_None_test( app ):
+  contents = ReadFile( TEST_JAVA )
+
+  event_data = BuildRequest( filepath = TEST_JAVA,
+                             filetype = 'java',
+                             line_num = 1,
+                             column_num = 1,
+                             contents = contents,
+                             command_arguments = [ 'GoToSymbol', 'abcd' ],
+                             completer_target = 'filetype_default' )
+
+  response = app.post_json( '/run_completer_command',
+                            event_data,
+                            expect_errors = True )
+
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
+
+  assert_that( response.json,
+               ErrorMatcher( RuntimeError, 'Symbol not found' ) )
+
 
 
 @WithRetry

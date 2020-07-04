@@ -112,6 +112,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'GoToDefinition',
                                     'GoToImplementation',
                                     'GoToReferences',
+                                    'GoToSymbol',
                                     'RefactorRename',
                                     'RestartServer' ) )
 

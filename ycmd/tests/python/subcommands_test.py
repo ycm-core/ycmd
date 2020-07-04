@@ -17,6 +17,7 @@
 
 from hamcrest import ( assert_that,
                        contains_exactly,
+                       contains_inanyorder,
                        equal_to,
                        has_item,
                        has_entries,
@@ -73,7 +74,15 @@ def RunTest( app, test ):
 
 
 def Subcommands_GoTo( app, test, command ):
-  if isinstance( test[ 'response' ], tuple ):
+  if isinstance( test[ 'response' ], list ):
+    expect = {
+      'response': requests.codes.ok,
+      'data': contains_inanyorder( *[
+        LocationMatcher( PathToTestFile( 'goto', r[ 0 ] ), r[ 1 ], r[ 2 ] )
+          for r in test[ 'response' ]
+      ] )
+    }
+  elif isinstance( test[ 'response' ], tuple ):
     expect = {
       'response': requests.codes.ok,
       'data': LocationMatcher( PathToTestFile( 'goto',
@@ -87,14 +96,16 @@ def Subcommands_GoTo( app, test, command ):
       'data': ErrorMatcher( RuntimeError, test[ 'response' ] )
     }
 
+  req = test[ 'request' ]
   RunTest( app, {
     'description': command + ' jumps to the right location',
     'request': {
       'command'   : command,
+      'arguments': [] if len( req ) < 4 else req[ 3 ],
       'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'goto', test[ 'request' ][ 0 ] ),
-      'line_num'  : test[ 'request' ][ 1 ],
-      'column_num': test[ 'request' ][ 2 ]
+      'filepath'  : PathToTestFile( 'goto', req[ 0 ] ),
+      'line_num'  : req[ 1 ],
+      'column_num': req[ 2 ]
     },
     'expect': expect,
   } )
@@ -156,6 +167,24 @@ def Subcommands_GoTo( app, test, command ):
 @SharedYcmd
 def Subcommands_GoTo_test( app, cmd, test ):
   Subcommands_GoTo( app, test, cmd )
+
+
+@pytest.mark.parametrize( 'test', [
+  { 'request': ( 'basic.py', 1, 1, [ 'MyClass' ] ),
+    'response': ( 'basic.py', 4, 7 ) },
+
+  { 'request': ( 'basic.py', 1, 1, [ 'class C' ] ),
+    'response': ( 'child.py', 2, 7 ) },
+
+  { 'request': ( 'basic.py', 1, 1, [ 'C.c' ] ),
+    'response': [ ( 'child.py', 3, 7 ), ( 'parent.py', 3, 7 ) ] },
+
+  { 'request': ( 'basic.py', 1, 1, [ 'nothing_here_mate' ] ),
+    'response': 'Symbol not found' }
+] )
+@SharedYcmd
+def Subcommands_GoToSymbol_test( app, test ):
+  Subcommands_GoTo( app, test, 'GoToSymbol' )
 
 
 @pytest.mark.parametrize( 'test', [

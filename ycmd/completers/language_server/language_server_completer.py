@@ -84,6 +84,9 @@ PROVIDERS_MAP = {
     lambda self, request_data, args: self.GoTo( request_data,
                                                 [ 'TypeDefinition' ] )
   ),
+  'workspaceSymbolProvider': (
+    lambda self, request_data, args: self.GoToSymbol( request_data, args )
+  ),
 }
 
 # Each command is mapped to a list of providers. This allows a command to use
@@ -104,6 +107,7 @@ DEFAULT_SUBCOMMANDS_MAP = {
   'GoToReferences':     [ 'referencesProvider' ],
   'RefactorRename':     [ 'renameProvider' ],
   'Format':             [ 'documentFormattingProvider' ],
+  'GoToSymbol':         [ 'workspaceSymbolProvider' ],
 }
 
 
@@ -2149,6 +2153,40 @@ class LanguageServerCompleter( Completer ):
           break
 
     return _LocationListToGoTo( request_data, result )
+
+
+  def GoToSymbol( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    self._UpdateServerWithFileContents( request_data )
+
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify something to search for' )
+
+    query = args[ 0 ]
+
+    request_id = self.GetConnection().NextRequestId()
+    response = self.GetConnection().GetResponse(
+      request_id,
+      lsp.WorkspaceSymbol( request_id, query ),
+      REQUEST_TIMEOUT_COMMAND )
+
+    result = response.get( 'result' ) or []
+
+    locations = [
+      responses.BuildGoToResponseFromLocation(
+        _PositionToLocationAndDescription( request_data,
+                                           symbol_info[ 'location' ] )[ 0 ],
+        symbol_info[ 'name' ] ) for symbol_info in result
+    ]
+
+    if not locations:
+      raise RuntimeError( "Symbol not found" )
+    elif len( locations ) == 1:
+      return locations[ 0 ]
+    else:
+      return locations
 
 
   def GetCodeActions( self, request_data, args ):

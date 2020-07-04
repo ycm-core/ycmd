@@ -106,6 +106,36 @@ FILE_EVENT_KIND = {
   'delete': 3
 }
 
+SYMBOL_KIND = [
+  None,
+  'File',
+  'Module',
+  'Namespace',
+  'Package',
+  'Class',
+  'Method',
+  'Property',
+  'Field',
+  'Constructor',
+  'Enum',
+  'Interface',
+  'Function',
+  'Variable',
+  'Constant',
+  'String',
+  'Number',
+  'Boolean',
+  'Array',
+  'Object',
+  'Key',
+  'Null',
+  'EnumMember',
+  'Struct',
+  'Event',
+  'Operator',
+  'TypeParameter',
+]
+
 
 class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme
@@ -243,7 +273,12 @@ def Initialize( request_id, project_directory, settings ):
         'didChangeWatchedFiles': {
           'dynamicRegistration': True
         },
-        'documentChanges': True
+        'documentChanges': True,
+        'symbol': {
+          'symbolKind': {
+            'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
+          }
+        }
       },
       'textDocument': {
         'codeAction': {
@@ -263,6 +298,7 @@ def Initialize( request_id, project_directory, settings ):
         'completion': {
           'completionItemKind': {
             # ITEM_KIND list is 1-based.
+            # valueSet is a list of the indices of items supported
             'valueSet': list( range( 1, len( ITEM_KIND ) ) ),
           },
           'completionItem': {
@@ -475,6 +511,12 @@ def Rename( request_id, request_data, new_name ):
     'position': Position( request_data[ 'line_num' ],
                           request_data[ 'line_value' ],
                           request_data[ 'column_codepoint' ] )
+  } )
+
+
+def WorkspaceSymbol( request_id, query ):
+  return BuildRequest( request_id, 'workspace/symbol', {
+    'query': query,
   } )
 
 

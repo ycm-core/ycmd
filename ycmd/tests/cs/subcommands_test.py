@@ -19,9 +19,11 @@ from hamcrest import ( assert_that,
                        empty,
                        has_entries,
                        has_entry,
+                       has_items,
                        contains_exactly )
 from unittest.mock import patch
 import os.path
+import pytest
 
 from ycmd import user_options_store
 from ycmd.tests.cs import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
@@ -243,6 +245,38 @@ def Subcommands_GoTo_Basic_test( app ):
 
   response = app.post_json( '/run_completer_command', goto_data ).json
   assert_that( response, LocationMatcher( destination, 7, 22 ) )
+
+
+@SharedYcmd
+@pytest.mark.parametrize( 'identifier,expected', [
+  ( 'IGotoTestMultiple',
+    LocationMatcher( PathToTestFile( 'testy', 'GotoTestCase.cs' ), 39, 12 ) ),
+  ( 'DoSomething',
+    has_items(
+      LocationMatcher( PathToTestFile( 'testy', 'GotoTestCase.cs' ), 27, 8 ),
+      LocationMatcher( PathToTestFile( 'testy', 'GotoTestCase.cs' ), 31, 15 ),
+      LocationMatcher( PathToTestFile( 'testy', 'GotoTestCase.cs' ), 36, 8 ),
+      LocationMatcher( PathToTestFile( 'testy', 'GotoTestCase.cs' ), 40, 8 ),
+      LocationMatcher( PathToTestFile( 'testy', 'GotoTestCase.cs' ), 44, 15 ),
+      LocationMatcher( PathToTestFile( 'testy',
+                                       'GotoTestCase.cs' ), 49, 15 ) ) ),
+  ( 'asd', ErrorMatcher( RuntimeError, 'No symbols found' ) )
+] )
+def Subcommands_GoToSymbol_test( app, identifier, expected ):
+  filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+  with WrapOmniSharpServer( app, filepath ):
+    contents = ReadFile( filepath )
+    goto_data = BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ 'GoToSymbol', identifier ],
+                              line_num = 1,
+                              column_num = 1,
+                              contents = contents,
+                              filetype = 'cs',
+                              filepath = filepath )
+    response =  app.post_json( '/run_completer_command',
+                               goto_data,
+                               expect_errors = True ).json
+    assert_that( response, expected )
 
 
 @SharedYcmd

@@ -22,8 +22,9 @@ from ycmd.utils import ( CodepointOffsetToByteOffset,
                          FindExecutable,
                          LOGGER )
 
-import os
+import itertools
 import jedi
+import os
 import parso
 from threading import Lock
 
@@ -281,6 +282,8 @@ class PythonCompleter( Completer ):
                            self._GoToDefinition( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
+      'GoToSymbol' : ( lambda self, request_data, args:
+                       self._GoToSymbol( request_data, args ) ),
       'GoToType'       : ( lambda self, request_data, args:
                            self._GoToType( request_data ) ),
       'GetType'        : ( lambda self, request_data, args:
@@ -367,6 +370,33 @@ class PythonCompleter( Completer ):
         if references is not None:
           return references
     raise RuntimeError( 'Can\'t find references.' )
+
+
+  def _GoToSymbol( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify something to search for' )
+
+    query = args[ 0 ]
+
+    # Jedi docs say:
+    #   Searches a name in the whole project. If the project is very big, at
+    #   some point Jedi will stop searching. However it’s also very much
+    #   recommended to not exhaust the generator. Just display the first ten
+    #   results to the user.
+    MAX_RESULTS = 10
+
+    with self._jedi_lock:
+      environent = self._EnvironmentForRequest( request_data )
+      project = self._JediProjectForFile( request_data, environent )
+
+      definitions = list( itertools.islice( project.complete_search( query ),
+                                            MAX_RESULTS ) )
+      if definitions:
+        definitions = self._BuildGoToResponse( definitions, request_data )
+        if definitions is not None:
+          return definitions
+
+    raise RuntimeError( 'Symbol not found' )
 
 
   # This method must be called under Jedi's lock.

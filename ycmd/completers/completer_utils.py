@@ -232,7 +232,7 @@ def GetFileContents( request_data, filename ):
 
   try:
     return ToUnicode( ReadFile( filename ) )
-  except IOError:
+  except ( OSError, UnicodeError ):
     LOGGER.exception( 'Error reading file %s', filename )
     return ''
 

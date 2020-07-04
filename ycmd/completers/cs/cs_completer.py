@@ -225,6 +225,10 @@ class CsharpCompleter( Completer ):
       'GetDoc'                           : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_GetDoc' ) ),
+      'GoToSymbol'                       : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_GoToSymbol',
+                                   args = args ) ),
       'RefactorRename'                   : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_RefactorRename',
@@ -554,25 +558,27 @@ class CsharpSolutionCompleter( object ):
     except ValueError:
       implementation = { 'QuickFixes': None }
 
-    if implementation[ 'QuickFixes' ]:
-      if len( implementation[ 'QuickFixes' ] ) == 1:
+    quickfixes = implementation[ 'QuickFixes' ]
+    if quickfixes:
+      if len( quickfixes ) == 1:
+        impl = quickfixes[ 0 ]
         return responses.BuildGoToResponseFromLocation(
           _BuildLocation(
             request_data,
-            implementation[ 'QuickFixes' ][ 0 ][ 'FileName' ],
-            implementation[ 'QuickFixes' ][ 0 ][ 'Line' ],
-            implementation[ 'QuickFixes' ][ 0 ][ 'Column' ] ) )
+            impl[ 'FileName' ],
+            impl[ 'Line' ],
+            impl[ 'Column' ] ) )
       else:
         return [ responses.BuildGoToResponseFromLocation(
                    _BuildLocation( request_data,
                                    x[ 'FileName' ],
                                    x[ 'Line' ],
                                    x[ 'Column' ] ) )
-                 for x in implementation[ 'QuickFixes' ] ]
+                 for x in quickfixes ]
     else:
       if ( fallback_to_declaration ):
         return self._GoToDefinition( request_data )
-      elif implementation[ 'QuickFixes' ] is None:
+      elif quickfixes is None:
         raise RuntimeError( 'Can\'t jump to implementation' )
       else:
         raise RuntimeError( 'No implementations found' )
@@ -595,6 +601,48 @@ class CsharpSolutionCompleter( object ):
     return responses.BuildFixItResponse( [ fixit ] )
 
 
+  def _GoToSymbol( self, request_data, args ):
+    request = self._DefaultParameters( request_data )
+    request.update( {
+      'Language': 'C#',
+      'Filter': args[ 0 ]
+    } )
+    response = self._GetResponse( '/findsymbols', request )
+
+    quickfixes = response[ 'QuickFixes' ]
+    if quickfixes:
+      if len( quickfixes ) == 1:
+        ref = quickfixes[ 0 ]
+        ref_file = ref[ 'FileName' ]
+        ref_line = ref[ 'Line' ]
+        lines = GetFileLines( request_data, ref_file )
+        line = lines[ min( len( lines ), ref_line - 1 ) ]
+        return responses.BuildGoToResponseFromLocation(
+          _BuildLocation(
+            request_data,
+            ref_file,
+            ref_line,
+            ref[ 'Column' ] ),
+          line )
+      else:
+        goto_locations = []
+        for ref in quickfixes:
+          ref_file = ref[ 'FileName' ]
+          ref_line = ref[ 'Line' ]
+          lines = GetFileLines( request_data, ref_file )
+          line = lines[ min( len( lines ), ref_line - 1 ) ]
+          goto_locations.append(
+            responses.BuildGoToResponseFromLocation(
+              _BuildLocation( request_data,
+                              ref_file,
+                              ref_line,
+                              ref[ 'Column' ] ),
+              line ) )
+
+        return goto_locations
+    else:
+      raise RuntimeError( 'No symbols found' )
+
   def _GoToReferences( self, request_data ):
     """ Jump to references of identifier under cursor """
     # _GetResponse can throw. Original code by @mispencer
@@ -605,21 +653,23 @@ class CsharpSolutionCompleter( object ):
        '/findusages',
        self._DefaultParameters( request_data ) )
 
-    if reference[ 'QuickFixes' ]:
-      if len( reference[ 'QuickFixes' ] ) == 1:
+    quickfixes = reference[ 'QuickFixes' ]
+    if quickfixes:
+      if len( quickfixes ) == 1:
+        ref = quickfixes[ 0 ]
         return responses.BuildGoToResponseFromLocation(
           _BuildLocation(
             request_data,
-            reference[ 'QuickFixes' ][ 0 ][ 'FileName' ],
-            reference[ 'QuickFixes' ][ 0 ][ 'Line' ],
-            reference[ 'QuickFixes' ][ 0 ][ 'Column' ] ) )
+            ref[ 'FileName' ],
+            ref[ 'Line' ],
+            ref[ 'Column' ] ) )
       else:
         return [ responses.BuildGoToResponseFromLocation(
                    _BuildLocation( request_data,
                                    ref[ 'FileName' ],
                                    ref[ 'Line' ],
                                    ref[ 'Column' ] ) )
-                 for ref in reference[ 'QuickFixes' ] ]
+                 for ref in quickfixes ]
     else:
       raise RuntimeError( 'No references found' )
 
@@ -819,7 +869,7 @@ def _BuildLocation( request_data, filename, line_num, column_num ):
   if column_num <= 0:
     column_num = 1
   contents = GetFileLines( request_data, filename )
-  line_value = contents[ line_num - 1 ]
+  line_value = contents[ min( len( contents ), line_num - 1 ) ]
   return responses.Location(
       line_num,
       CodepointOffsetToByteOffset( line_value, column_num ),
