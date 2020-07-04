@@ -282,8 +282,8 @@ class PythonCompleter( Completer ):
                            self._GoToDefinition( request_data ) ),
       'GoToReferences' : ( lambda self, request_data, args:
                            self._GoToReferences( request_data ) ),
-      'GoToSymbol' : ( lambda self, request_data, args:
-                       self._GoToSymbol( request_data, args ) ),
+      'GoToSymbol'     : ( lambda self, request_data, args:
+                           self._GoToSymbol( request_data, args ) ),
       'GoToType'       : ( lambda self, request_data, args:
                            self._GoToType( request_data ) ),
       'GetType'        : ( lambda self, request_data, args:

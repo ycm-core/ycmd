@@ -448,6 +448,8 @@ class TypeScriptCompleter( Completer ):
                               self._GoToReferences( request_data ) ),
       'GoToType'          : ( lambda self, request_data, args:
                               self._GoToType( request_data ) ),
+      'GoToSymbol'        : ( lambda self, request_data, args:
+                              self._GoToSymbol( request_data, args ) ),
       'GetType'           : ( lambda self, request_data, args:
                               self._GetType( request_data ) ),
       'GetDoc'            : ( lambda self, request_data, args:
@@ -742,6 +744,36 @@ class TypeScriptCompleter( Completer ):
       line_num   = span[ 'start' ][ 'line' ],
       column_num = span[ 'start' ][ 'offset' ]
     )
+
+
+  def _GoToSymbol( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify something to search for' )
+    query = args[ 0 ]
+
+    self._Reload( request_data )
+    filespans = self._SendRequest( 'navto', {
+      'searchValue': query,
+      'file': request_data[ 'filepath' ]
+    } )
+
+    if not filespans:
+      raise RuntimeError( 'Symbol not found' )
+
+    results = [
+      responses.BuildGoToResponseFromLocation(
+        _BuildLocation( GetFileLines( request_data, fs[ 'file' ] ),
+                        fs[ 'file' ],
+                        fs[ 'start' ][ 'line' ],
+                        fs[ 'start' ][ 'offset' ] ),
+        fs[ 'name' ] )
+      for fs in filespans
+    ]
+
+    if len( results ) == 1:
+      return results[ 0 ]
+
+    return results
 
 
   def _GetType( self, request_data ):
