@@ -890,8 +890,6 @@ class LanguageServerCompleter( Completer ):
 
 
   def Language( self ):
-    """Returns the string used to identify the language in user's
-    .ycm_extra_conf.py file. Default to the completer name in lower case."""
     return self._language
 
 
@@ -1470,20 +1468,6 @@ class LanguageServerCompleter( Completer ):
 
 
   def DefaultSettings( self, request_data ):
-    return {}
-
-
-  def GetSettings( self, module, request_data ):
-    if hasattr( module, 'Settings' ):
-      settings = module.Settings(
-        language = self.Language(),
-        filename = request_data[ 'filepath' ],
-        client_data = request_data[ 'extra_conf_data' ] )
-      if settings is not None:
-        return settings
-
-    LOGGER.debug( 'No Settings function defined in %s', module.__file__ )
-
     return {}
 
 
@@ -2354,19 +2338,6 @@ class LanguageServerCompleter( Completer ):
       raise RuntimeError( 'Cannot rename the symbol under cursor.' )
 
     return responses.BuildFixItResponse( [ fixit ] )
-
-
-  def AdditionalFormattingOptions( self, request_data ):
-    # While we have the settings in self._settings[ 'formatting_options' ], we
-    # actually run Settings again here, which allows users to have different
-    # formatting options for different files etc. if they should decide that's
-    # appropriate.
-    module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
-    try:
-      settings = self.GetSettings( module, request_data )
-      return settings.get( 'formatting_options', {} )
-    except AttributeError:
-      return {}
 
 
   def Format( self, request_data ):

@@ -15,12 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import pytest
 
 from unittest.mock import patch
-from ycmd.tests.test_utils import ( BuildRequest,
-                                    ClearCompletionsCache,
+from ycmd.tests.test_utils import ( ClearCompletionsCache,
+                                    IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
                                     SetUpApp,
                                     StopCompleterServer,
@@ -36,16 +35,7 @@ def set_up_shared_app():
     shared_app = SetUpApp()
     WaitUntilCompleterServerReady( shared_app, 'javascript' )
   yield
-  StopCompleterServer( shared_app, 'typescript' )
-
-
-def StartGoCompleterServerInDirectory( app, directory ):
-  app.post_json( '/event_notification',
-                 BuildRequest(
-                   filepath = os.path.join( directory, 'goto.go' ),
-                   event_name = 'FileReadyToParse',
-                   filetype = 'go' ) )
-  WaitUntilCompleterServerReady( app, 'go' )
+  StopCompleterServer( shared_app, 'javascript' )
 
 
 @pytest.fixture
@@ -58,11 +48,12 @@ def app( request ):
                 'ShouldEnableTernCompleter', return_value = False ):
       with IsolatedApp( request.param[ 1 ] ) as app:
         yield app
-        StopCompleterServer( app, 'go' )
+        StopCompleterServer( app, 'javascript' )
   else:
     global shared_app
     ClearCompletionsCache()
-    yield shared_app
+    with IgnoreExtraConfOutsideTestsFolder():
+      yield shared_app
 
 
 """Defines a decorator to be attached to tests of this package. This decorator

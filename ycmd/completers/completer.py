@@ -17,8 +17,10 @@
 
 import abc
 import threading
+from ycmd import extra_conf_store
 from ycmd.completers import completer_utils
 from ycmd.responses import NoDiagnosticSupport, SignatureHelpAvailalability
+from ycmd.utils import LOGGER
 
 NO_USER_COMMANDS = 'This completer does not define any commands.'
 
@@ -118,6 +120,10 @@ class Completer( metaclass = abc.ABCMeta ):
   "insertion_text" field in ComputeCandidatesInner() then fill the remaining
   fields in DetailCandidates() which is called after the filtering is done. See
   python_completer.py for an example.
+
+  If the completer wants to use extra confs, it should implement Language()
+  function as well, which returns a string that identifies the language in
+  user's .ycmd_extra_conf.py file.
 
   You also need to implement the SupportedFiletypes() function which should
   return a list of strings, where the strings are Vim filetypes your completer
@@ -400,6 +406,10 @@ class Completer( metaclass = abc.ABCMeta ):
     pass # pragma: no cover
 
 
+  def Langauge( self ):
+    pass # pragma: no cover
+
+
   def OnUserCommand( self, arguments, request_data ):
     if not arguments:
       raise ValueError( self.UserCommandsHelpMessage() )
@@ -473,6 +483,29 @@ class Completer( metaclass = abc.ABCMeta ):
     # Protocol. As such, the default implementation just returns False, meaning
     # that unsolicited messages are not supported for this filetype.
     return False
+
+
+  def AdditionalFormattingOptions( self, request_data ):
+    module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
+    try:
+      settings = self.GetSettings( module, request_data )
+      return settings.get( 'formatting_options', {} )
+    except AttributeError:
+      return {}
+
+
+  def GetSettings( self, module, request_data ):
+    if hasattr( module, 'Settings' ):
+      settings = module.Settings(
+        filename = request_data[ 'filepath' ],
+        language = self.Language(),
+        client_data = request_data[ 'extra_conf_data' ] )
+      if settings is not None:
+        return settings
+
+    LOGGER.debug( 'No Settings function defined in %s', module.__file__ )
+
+    return {}
 
 
 class CompletionsCache:
