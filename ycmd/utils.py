@@ -160,8 +160,8 @@ def ByteOffsetToCodepointOffset( line_value, byte_offset ):
   for semantic triggers and similar, we must use codepoint offsets, rather than
   byte offsets.
 
-  This method converts the |byte_offset|, which is a utf-8 byte offset, into
-  a codepoint offset in the unicode string |line_value|."""
+  This method converts the |byte_offset|, which is a 1-based utf-8 byte offset,
+  into a 1-based codepoint offset in the unicode string |line_value|."""
 
   byte_line_value = ToBytes( line_value )
   return len( ToUnicode( byte_line_value[ : byte_offset - 1 ] ) ) + 1
@@ -174,9 +174,9 @@ def CodepointOffsetToByteOffset( unicode_line_value, codepoint_offset ):
   for semantic triggers and similar, we must use codepoint offsets, rather than
   byte offsets.
 
-  This method converts the |codepoint_offset| which is a unicode codepoint
-  offset into an byte offset into the utf-8 encoded bytes version of
-  |unicode_line_value|."""
+  This method converts the |codepoint_offset| which is a 1-based unicode
+  codepoint offset into a 1-based byte offset into the utf-8 encoded bytes
+  version of |unicode_line_value|."""
 
   # Should be a no-op, but in case someone passes a bytes instance.
   unicode_line_value = ToUnicode( unicode_line_value )
