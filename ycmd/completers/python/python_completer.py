@@ -22,6 +22,7 @@ from ycmd.utils import ( CodepointOffsetToByteOffset,
                          FindExecutable,
                          LOGGER )
 
+import difflib
 import itertools
 import jedi
 import os
@@ -289,7 +290,9 @@ class PythonCompleter( Completer ):
       'GetType'        : ( lambda self, request_data, args:
                            self._GetType( request_data ) ),
       'GetDoc'         : ( lambda self, request_data, args:
-                           self._GetDoc( request_data ) )
+                           self._GetDoc( request_data ) ),
+      'RefactorRename' : ( lambda self, request_data, args:
+                           self._RefactorRename( request_data, args ) ),
     }
 
 
@@ -444,6 +447,32 @@ class PythonCompleter( Completer ):
     raise RuntimeError( 'No documentation available.' )
 
 
+  def _RefactorRename( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify a new name' )
+
+    new_name = args[ 0 ]
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).rename(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1,
+        new_name = new_name )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
+  # Jedi has the following refactorings:
+  #  - renmae (RefactorRename)
+  #  - inline variable
+  #  - extract variable (requires argument)
+  #  - extract function (requires argument)
+  #
+  # We could add inline variable via FixIt, but for the others we have no way to
+  # ask for the argument on "resolve" of the FixIt. We could add
+  # Refactor Inline ... but that would be inconsistent.
+
+
   def DebugInfo( self, request_data ):
     environment = self._EnvironmentForRequest( request_data )
 
@@ -480,3 +509,89 @@ class PythonCompleter( Completer ):
                                                        python_version,
                                                        jedi_version,
                                                        parso_version ] )
+
+
+def _RefactoringToFixIt( refactoring ):
+  """Converts a Jedi Refactoring instance to a single responses.FixIt."""
+
+  # FIXME: refactorings can rename files (apparently). ycmd API doesn't have any
+  # interface for that, so we just ignore them.
+  changes = refactoring.get_changed_files()
+  chunks = []
+
+  # We sort the files to ensure the tests are stable
+  for filename in sorted( changes.keys() ):
+    changed_file = changes[ filename ]
+
+    # NOTE: This is an internal API. We _could_ use GetFileContents( filename )
+    # here, but using Jedi's representation means that it is always consistent
+    # with get_new_code()
+    old_text = changed_file._module_node.get_code()
+    new_text = changed_file.get_new_code()
+
+    # Cache the offsets of all the newlines in the file. These are used to
+    # calculate the line/column values from the offsets retuned by the diff
+    # scanner
+    newlines = [ i for i, c in enumerate( old_text ) if c == '\n' ]
+    newlines.append( len( old_text ) )
+
+    sequence_matcher = difflib.SequenceMatcher( a = old_text,
+                                                b = new_text,
+                                                autojunk = False )
+
+    for ( operation,
+          old_start, old_end,
+          new_start, new_end ) in sequence_matcher.get_opcodes():
+      # Tag of equal means the range is identical, so nothing to do.
+      if operation == 'equal':
+        continue
+
+      # operation can be 'insert', 'replace' or 'delete', the offsets actually
+      # already cover that in our FixIt API (a delete has an empty new_text, an
+      # insert has an empty range), so we just encode the line/column offset and
+      # the replacement text extracted from new_text
+      chunks.append( responses.FixItChunk(
+        new_text[ new_start : new_end ],
+        # FIXME: new_end must be equal to or after new_start, so we should make
+        # OffsetToPosition take 2 offsets and return them rather than repeating
+        # work
+        responses.Range( _OffsetToPosition( old_start,
+                                            filename,
+                                            old_text,
+                                            newlines ),
+                         _OffsetToPosition( old_end,
+                                            filename,
+                                            old_text,
+                                            newlines ) )
+      ) )
+
+  return responses.FixIt( responses.Location( 1, 1, 'none' ),
+                          chunks,
+                          '',
+                          kind = responses.FixIt.Kind.REFACTOR )
+
+
+def _OffsetToPosition( offset, filename, text, newlines ):
+  """Convert the 0-based codepoint offset |offset| to a position (line/col) in
+  |text|. |filename| is the full path of the file containing |text| and
+  |newlines| is a cache of the 0-based character offsets of all the \n
+  characters in |text| (plus one extra). Returns responses.Position."""
+
+  for index, newline in enumerate( newlines ):
+    if newline >= offset:
+      start_of_line = newlines[ index - 1 ] + 1 if index > 0 else 0
+      column = offset - start_of_line
+      line_value = text[ start_of_line : newline ]
+      return responses.Location( index + 1,
+                                 CodepointOffsetToByteOffset( line_value,
+                                                              column + 1 ),
+                                 filename )
+
+  # Invalid position - it's outside of the text. Just return the last
+  # position in the text. This is an internal error.
+  LOGGER.error( "Invalid offset %s in file %s with text %s and newlines %s",
+                offset,
+                filename,
+                text,
+                newlines )
+  raise RuntimeError( "Invalid file offset in diff" )

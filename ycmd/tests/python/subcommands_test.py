@@ -33,8 +33,10 @@ from ycmd.utils import ReadFile
 from ycmd.tests.python import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
+                                    ChunkMatcher,
                                     LocationMatcher,
-                                    ErrorMatcher )
+                                    ErrorMatcher,
+                                    ExpectedFailure )
 
 TYPESHED_PATH = os.path.normpath(
   PathToTestFile( '..', '..', '..', '..', 'third_party', 'jedi_deps', 'jedi',
@@ -463,3 +465,278 @@ def Subcommands_GoToReferences_InvalidJediReferences_test( app ):
       'line_num': 1,
       'column_num': 2, # Jedi columns are 0 based
       'filepath': PathToTestFile( 'foo.py' ) } ) ) )
+
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_NoNewName_test( app ):
+  filepath = PathToTestFile( 'basic.py' )
+  contents = ReadFile( filepath )
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 3,
+                               column_num = 10,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data,
+                            expect_errors = True )
+
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
+  assert_that( response.json,
+               ErrorMatcher( RuntimeError, 'Must specify a new name' ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Same_test( app ):
+  filepath = PathToTestFile( 'basic.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 3,
+                               column_num = 10,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'c' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'c',
+                        LocationMatcher( filepath, 3, 10 ),
+                        LocationMatcher( filepath, 3, 11 ) ),
+          ChunkMatcher( 'c',
+                        LocationMatcher( filepath, 7, 3 ),
+                        LocationMatcher( filepath, 7, 4 ) )
+        )
+      } )
+    )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Longer_test( app ):
+  filepath = PathToTestFile( 'basic.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 3,
+                               column_num = 10,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'booo' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'booo',
+                        LocationMatcher( filepath, 3, 10 ),
+                        LocationMatcher( filepath, 3, 11 ) ),
+          ChunkMatcher( 'booo',
+                        LocationMatcher( filepath, 7, 3 ),
+                        LocationMatcher( filepath, 7, 4 ) )
+        )
+      } )
+    )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_ShortenDelete_test( app ):
+  filepath = PathToTestFile( 'basic.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 1,
+                               column_num = 8,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'F' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 1, 8 ),
+                        LocationMatcher( filepath, 1, 10 ) ),
+          ChunkMatcher( '',
+                        LocationMatcher( filepath, 6, 6 ),
+                        LocationMatcher( filepath, 6, 8 ) )
+        )
+      } )
+    )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_Shorten_test( app ):
+  filepath = PathToTestFile( 'basic.py' )
+  contents = ReadFile( filepath )
+
+  command_data = BuildRequest( filepath = filepath,
+                               filetype = 'python',
+                               line_num = 1,
+                               column_num = 8,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'G' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'G',
+                        LocationMatcher( filepath, 1, 7 ),
+                        LocationMatcher( filepath, 1, 10 ) ),
+          ChunkMatcher( 'G',
+                        LocationMatcher( filepath, 6, 5 ),
+                        LocationMatcher( filepath, 6, 8 ) )
+        )
+      } )
+    )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_StartOfFile_test( app ):
+  one = PathToTestFile( 'rename', 'one.py' )
+  contents = ReadFile( one )
+
+  command_data = BuildRequest( filepath = one,
+                               filetype = 'python',
+                               line_num = 8,
+                               column_num = 44,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'myvariable' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'myvariable',
+                        LocationMatcher( one, 1, 1 ),
+                        LocationMatcher( one, 1, 13 ) ),
+          ChunkMatcher( 'myvariable',
+                        LocationMatcher( one, 8, 33 ),
+                        LocationMatcher( one, 8, 45 ) ),
+          ChunkMatcher( 'myvariable',
+                        LocationMatcher( one, 16, 32 ),
+                        LocationMatcher( one, 16, 44 ) )
+        )
+      } )
+    )
+  } ) )
+
+
+@SharedYcmd
+def Subcommands_RefactorRename_MultiFIle_test( app ):
+  one = PathToTestFile( 'rename', 'one.py' )
+  two = PathToTestFile( 'rename', 'two.py' )
+  contents = ReadFile( one )
+
+  command_data = BuildRequest( filepath = one,
+                               filetype = 'python',
+                               line_num = 4,
+                               column_num = 7,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'OneLove' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'eLov',
+                        LocationMatcher( one, 4, 9 ),
+                        LocationMatcher( one, 4, 9 ) ),
+          ChunkMatcher( 'eLov',
+                        LocationMatcher( one, 9, 24 ),
+                        LocationMatcher( one, 9, 24 ) ),
+          ChunkMatcher( 'Love',
+                        LocationMatcher( one, 16, 15 ),
+                        LocationMatcher( one, 16, 15 ) ),
+          ChunkMatcher( 'eLov',
+                        LocationMatcher( two, 4, 18 ),
+                        LocationMatcher( two, 4, 18 ) ),
+          ChunkMatcher( 'Love',
+                        LocationMatcher( two, 11, 14 ),
+                        LocationMatcher( two, 11, 14 ) )
+        )
+      } )
+    )
+  } ) )
+
+
+@ExpectedFailure( 'file renames not implemented yet' )
+@SharedYcmd
+def Subcommands_RefactorRename_Module_test( app ):
+  one = PathToTestFile( 'rename', 'one.py' )
+  two = PathToTestFile( 'rename', 'two.py' )
+  contents = ReadFile( two )
+
+  command_data = BuildRequest( filepath = two,
+                               filetype = 'python',
+                               line_num = 1,
+                               column_num = 8,
+                               contents = contents,
+                               command_arguments = [ 'RefactorRename',
+                                                     'pfivr' ] )
+
+  response = app.post_json( '/run_completer_command',
+                            command_data ).json
+
+  assert_that( response, has_entries( {
+    'fixits': contains_exactly(
+      has_entries( {
+        'text': '',
+        'chunks': contains_exactly(
+          ChunkMatcher( 'pfivr',
+                        LocationMatcher( two, 1, 8 ),
+                        LocationMatcher( two, 1, 11 ) ),
+          ChunkMatcher( 'pfivr',
+                        LocationMatcher( two, 4, 12 ),
+                        LocationMatcher( two, 4, 15 ) )
+        ),
+        'files': contains_exactly(
+          has_entries( {
+            'operation': 'RENAME',
+            'old_file': one,
+            'new_file': PathToTestFile( 'rename', 'pfivr.py' )
+          } )
+        )
+      } )
+    )
+  } ) )

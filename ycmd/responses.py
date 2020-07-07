@@ -195,6 +195,11 @@ class FixIt:
   must be byte offsets into the UTF-8 encoded version of the appropriate
   buffer.
   """
+  class Kind:
+    """These are LSP kinds that we use outside of LSP completers."""
+    REFACTOR = 'refactor'
+
+
   def __init__( self, location, chunks, text = '', kind = None ):
     """location of type Location, chunks of type list<FixItChunk>"""
     self.location = location
