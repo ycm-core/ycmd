@@ -268,6 +268,7 @@ def Initialize( request_id, project_directory, settings ):
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
     'capabilities': {
+      'experimental': { 'statusNotification': True },
       'workspace': {
         'applyEdit': True,
         'didChangeWatchedFiles': {

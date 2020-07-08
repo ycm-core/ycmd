@@ -26,7 +26,6 @@ import os
 
 from ycmd.tests.rust import ( PathToTestFile,
                               SharedYcmd,
-                              IsolatedYcmd,
                               StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
@@ -44,7 +43,7 @@ DIAG_MATCHERS_PER_FILE = {
     has_entries( {
       'kind': 'ERROR',
       'text':
-          'no field `build_` on type `test::Builder`\n\nunknown field [E0609]',
+          'no field `build_` on type `test::Builder`\nunknown field [E0609]',
       'location': LocationMatcher( MAIN_FILEPATH, 14, 13 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 14, 13 ), ( 14, 19 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
@@ -71,7 +70,7 @@ def Diagnostics_DetailedDiags_test( app ):
   results = app.post_json( '/detailed_diagnostic', request_data ).json
   assert_that( results, has_entry(
       'message',
-      'no field `build_` on type `test::Builder`\n\nunknown field' ) )
+      'no field `build_` on type `test::Builder`\nunknown field' ) )
 
 
 @WithRetry
@@ -87,7 +86,7 @@ def Diagnostics_FileReadyToParse_test( app ):
   assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
-@IsolatedYcmd
+@SharedYcmd
 def Diagnostics_Poll_test( app ):
   project_dir = PathToTestFile( 'common' )
   filepath = os.path.join( project_dir, 'src', 'main.rs' )
@@ -105,6 +104,9 @@ def Diagnostics_Poll_test( app ):
                                       'filetype': 'rust' } ):
       print( 'Message {}'.format( pformat( message ) ) )
       if 'diagnostics' in message:
+        if message[ 'diagnostics' ] == []:
+          # Sometimes we get empty diagnostics before the real ones.
+          continue
         seen[ message[ 'filepath' ] ] = True
         if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
           raise AssertionError(

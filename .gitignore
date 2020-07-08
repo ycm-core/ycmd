@@ -85,7 +85,7 @@ third_party/tsserver
 third_party/clangd
 
 # Rust
-third_party/rls
+third_party/rust-analyzer
 ycmd/tests/rust/testdata/common/target
 ycmd/tests/rust/testdata/formatting/target
 

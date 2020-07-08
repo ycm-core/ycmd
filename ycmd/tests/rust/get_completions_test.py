@@ -18,10 +18,13 @@
 from hamcrest import assert_that, contains_exactly
 
 from ycmd.tests.rust import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    CompletionEntryMatcher,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
@@ -41,20 +44,20 @@ def GetCompletions_Basic_test( app ):
     contains_exactly(
       CompletionEntryMatcher(
         'build_rocket',
-        'fn build_rocket(&self)',
+        'pub fn build_rocket(&self)',
         {
           'detailed_info': 'build_rocket\n\nDo not try at home',
           'menu_text':     'build_rocket',
-          'kind':          'Function'
+          'kind':          'Method'
         }
       ),
       CompletionEntryMatcher(
         'build_shuttle',
-        'fn build_shuttle(&self)',
+        'pub fn build_shuttle(&self)',
         {
           'detailed_info': 'build_shuttle\n\n',
           'menu_text':     'build_shuttle',
-          'kind':          'Function'
+          'kind':          'Method'
         }
       )
     )

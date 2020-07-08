@@ -89,8 +89,8 @@ JDTLS_SHA256 = (
 
 TSSERVER_VERSION = '3.8.3'
 
-RUST_TOOLCHAIN = 'nightly-2020-04-17'
-RLS_DIR = p.join( DIR_OF_THIRD_PARTY, 'rls' )
+RUST_TOOLCHAIN = 'nightly-2020-07-08'
+RLS_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
   'ERROR: the build failed.\n\n'
@@ -904,7 +904,10 @@ def EnableRustCompleter( switches ):
                  env = new_env,
                  quiet = switches.quiet )
 
-      for component in [ 'rls', 'rust-analysis', 'rust-src' ]:
+      for component in [ 'rust-src',
+                         'rust-analyzer-preview',
+                         'rustfmt',
+                         'clippy' ]:
         CheckCall( [ rustup, 'component', 'add', component,
                      '--toolchain', RUST_TOOLCHAIN ],
                    env = new_env,

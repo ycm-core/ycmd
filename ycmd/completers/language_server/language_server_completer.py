@@ -1306,6 +1306,7 @@ class LanguageServerCompleter( Completer ):
         arg[ 'label' ] = [
           utils.CodepointOffsetToByteOffset( sig_label, begin ),
           utils.CodepointOffsetToByteOffset( sig_label, end ) ]
+    result.setdefault( 'activeParameter', 0 )
     return result
 
 
