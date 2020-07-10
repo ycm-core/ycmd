@@ -63,7 +63,7 @@ def DebugInfo_RlsVersion_test( app ):
             'value': instance_of( str )
           } ),
           has_entries( {
-            'key': 'RUSTC',
+            'key': 'Rust Root',
             'value': instance_of( str )
           } )
         )
@@ -113,7 +113,7 @@ def DebugInfo_NoRlsVersion_test( get_command_output, app ):
             'value': none()
           } ),
           has_entries( {
-            'key': 'RUSTC',
+            'key': 'Rust Root',
             'value': instance_of( str )
           } )
         )

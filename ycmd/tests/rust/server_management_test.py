@@ -126,7 +126,7 @@ def ServerManagement_StartServer_Fails_test( app ):
 
     assert_that( resp.status_code, equal_to( 200 ) )
 
-    request_data = BuildRequest( filetype = 'java' )
+    request_data = BuildRequest( filetype = 'rust' )
     assert_that( app.post_json( '/debug_info', request_data ).json,
                  has_entry(
                    'completer',
