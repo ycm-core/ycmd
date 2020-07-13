@@ -194,3 +194,15 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
     documentation = '\n'.join(
       line for line in lines if line and not line.startswith( '```' ) ).strip()
     return responses.BuildDetailedInfoResponse( documentation )
+
+
+  def ExtraCapabilities( self ):
+    return {
+      'experimental': { 'statusNotification': True },
+      'workspace': { 'configuration': True }
+    }
+
+
+  def WorkspaceConfigurationResponse( self, request ):
+    assert len( request[ 'params' ][ 'items' ] ) == 1
+    return [ self._settings.get( 'ls', {} ).get( 'rust-analyzer' ) ]

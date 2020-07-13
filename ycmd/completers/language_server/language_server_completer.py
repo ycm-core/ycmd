@@ -321,10 +321,12 @@ class LanguageServerConnection( threading.Thread ):
   def __init__( self,
                 project_directory,
                 watchdog_factory,
+                workspace_conf_handler,
                 notification_handler = None ):
     super().__init__()
 
     self._watchdog_factory = watchdog_factory
+    self._workspace_conf_handler = workspace_conf_handler
     self._project_directory = project_directory
     self._last_id = 0
     self._responses = {}
@@ -572,29 +574,39 @@ class LanguageServerConnection( threading.Thread ):
     return data, read_bytes, headers
 
 
+  def _HandleDynamicRegistrations( self, request ):
+    for reg in request[ 'params' ][ 'registrations' ]:
+      if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
+        globs = []
+        for watcher in reg[ 'registerOptions' ][ 'watchers' ]:
+          # TODO: Take care of watcher kinds. Not everything needs
+          # to be watched for create, modify *and* delete actions.
+          pattern = os.path.join( self._project_directory,
+                                  watcher[ 'globPattern' ] )
+          if os.path.isdir( pattern ):
+            pattern = os.path.join( pattern, '**' )
+          globs.append( pattern )
+        observer = Observer()
+        observer.schedule( self._watchdog_factory( globs ),
+                           self._project_directory,
+                           recursive = True )
+        observer.start()
+        self._observers.append( observer )
+    self.SendResponse( lsp.Void( request ) )
+
+
   def _ServerToClientRequest( self, request ):
     method = request[ 'method' ]
     if method == 'workspace/applyEdit':
       self._collector.CollectApplyEdit( request, self )
+    elif method == 'workspace/configuration':
+      response = self._workspace_conf_handler( request )
+      if response is not None:
+        self.SendResponse( lsp.Accept( request, response ) )
+      else:
+        self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
     elif method == 'client/registerCapability':
-      for reg in request[ 'params' ][ 'registrations' ]:
-        if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
-          globs = []
-          for watcher in reg[ 'registerOptions' ][ 'watchers' ]:
-            # TODO: Take care of watcher kinds. Not everything needs
-            # to be watched for create, modify *and* delete actions.
-            pattern = os.path.join( self._project_directory,
-                                    watcher[ 'globPattern' ] )
-            if os.path.isdir( pattern ):
-              pattern = os.path.join( pattern, '**' )
-            globs.append( pattern )
-          observer = Observer()
-          observer.schedule( self._watchdog_factory( globs ),
-                             self._project_directory,
-                             recursive = True )
-          observer.start()
-          self._observers.append( observer )
-      self.SendResponse( lsp.Void( request ) )
+      self._HandleDynamicRegistrations( request )
     elif method == 'client/unregisterCapability':
       for reg in request[ 'params' ][ 'unregisterations' ]:
         if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
@@ -667,9 +679,11 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
                 watchdog_factory,
                 server_stdin,
                 server_stdout,
+                workspace_conf_handler,
                 notification_handler = None ):
     super().__init__( project_directory,
                       watchdog_factory,
+                      workspace_conf_handler,
                       notification_handler )
 
     self._server_stdin = server_stdin
@@ -740,9 +754,11 @@ class TCPSingleStreamConnection( LanguageServerConnection ):
                 project_directory,
                 watchdog_factory,
                 port,
-                notification_handler ):
+                workspace_conf_handler,
+                notification_handler = None ):
     super().__init__( project_directory,
                       watchdog_factory,
+                      workspace_conf_handler,
                       notification_handler )
 
     self.port = port
@@ -1044,6 +1060,7 @@ class LanguageServerCompleter( Completer ):
         self._project_directory,
         lambda globs: WatchdogHandler( self, globs ),
         self._port,
+        lambda request: self.WorkspaceConfigurationResponse( request ),
         self.GetDefaultNotificationHandler() )
     else:
       self._connection = (
@@ -1052,6 +1069,7 @@ class LanguageServerCompleter( Completer ):
           lambda globs: WatchdogHandler( self, globs ),
           self._server_handle.stdin,
           self._server_handle.stdout,
+          lambda request: self.WorkspaceConfigurationResponse( request ),
           self.GetDefaultNotificationHandler() )
       )
 
@@ -1505,6 +1523,18 @@ class LanguageServerCompleter( Completer ):
     """ An override in a concrete class needs to return a list of cli arguments
         for starting the LSP server."""
     pass # pragma: no cover
+
+
+  def WorkspaceConfigurationResponse( self, request ):
+    """If the concrete completer wants to respond to workspace/configuration
+       requests, it should override this method."""
+    return None
+
+
+  def ExtraCapabilities( self ):
+    """ If the server is a special snowflake that need special attention,
+        override this to supply special snowflake capabilities."""
+    return {}
 
 
   def AdditionalLogFiles( self ):
@@ -2084,6 +2114,7 @@ class LanguageServerCompleter( Completer ):
       # clear how/where that is specified.
       msg = lsp.Initialize( request_id,
                             self._project_directory,
+                            self.ExtraCapabilities(),
                             self._settings.get( 'ls', {} ) )
 
       def response_handler( response, message ):

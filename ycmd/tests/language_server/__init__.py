@@ -28,7 +28,7 @@ def PathToTestFile( *args ):
 
 class MockConnection( lsc.LanguageServerConnection ):
   def __init__( self ):
-    super().__init__( None, None )
+    super().__init__( None, None, None )
 
   def TryServerConnectionBlocking( self ):
     return True

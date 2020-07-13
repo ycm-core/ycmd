@@ -21,7 +21,6 @@ import requests
 from ycmd.utils import ReadFile
 from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( CombineRequest,
-                                    ParameterMatcher,
                                     SignatureMatcher,
                                     SignatureAvailableMatcher,
                                     WaitUntilCompleterServerReady,
@@ -108,8 +107,7 @@ def SignatureHelp_MethodTrigger_test( app ):
           'activeSignature': 0,
           'activeParameter': 0,
           'signatures': contains_exactly(
-            SignatureMatcher( 'pub fn build_rocket(&self)',
-                              [ ParameterMatcher( 20, 25 ) ] )
+            SignatureMatcher( 'fn build_rocket(&self)', [] )
           ),
         } ),
       } )
