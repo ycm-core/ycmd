@@ -99,3 +99,17 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
 
   def DefaultSettings( self, request_data ):
     return { 'hoverKind': 'Structured' }
+
+
+  def ExtraCapabilities( self ):
+    return {
+      'workspace': { 'configuration': True }
+    }
+
+
+  def WorkspaceConfigurationResponse( self, request ):
+    # Returns the same settings for each "section", since gopls requests
+    # settings for each open project, but ycmd only has a single settings
+    # object per LSP completer.
+    return [ self._settings.get( 'ls', {} )
+             for i in request[ 'params' ][ 'items' ] ]
