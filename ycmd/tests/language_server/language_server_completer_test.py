@@ -323,7 +323,7 @@ def LanguageServerCompleter_GoTo_test( app ):
         )
       else:
         result = completer.OnUserCommand( [ command ], request_data )
-        print( 'Result: {}'.format( result ) )
+        print( f'Result: { result }' )
         assert_that( result, exception )
 
 
@@ -578,7 +578,7 @@ def WorkspaceEditToFixIt_test():
     lsc.WorkspaceEditToFixIt( request_data, workspace_edit, 'test' )
   ] )
 
-  print( 'Response: {0}'.format( response ) )
+  print( f'Response: { response }' )
   assert_that(
     response,
     has_entries( {
@@ -609,8 +609,8 @@ def WorkspaceEditToFixIt_test():
     lsc.WorkspaceEditToFixIt( request_data, workspace_edit, 'test' )
   ] )
 
-  print( 'Response: {0}'.format( response ) )
-  print( 'Type Response: {0}'.format( type( response ) ) )
+  print( f'Response: { response }' )
+  print( f'Type Response: { type( response ) }' )
 
   assert_that(
     response,

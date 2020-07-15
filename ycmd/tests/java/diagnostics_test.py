@@ -229,7 +229,7 @@ def _WaitForDiagnosticsForFile( app,
                                     **kwargs ):
       if ( 'diagnostics' in message and
            message[ 'filepath' ] == diags_filepath ):
-        print( 'Message {0}'.format( pformat( message ) ) )
+        print( f'Message { pformat( message ) }' )
         diags = message[ 'diagnostics' ]
         if diags_are_ready( diags ):
           return diags
@@ -238,9 +238,7 @@ def _WaitForDiagnosticsForFile( app,
       # if we don't see the diagnostics go empty
   except PollForMessagesTimeoutException as e:
     raise AssertionError(
-      '{0}. Timed out waiting for diagnostics for file {1}. '.format(
-        e,
-        diags_filepath )
+      f'{ e }. Timed out waiting for diagnostics for file { diags_filepath }.'
     )
 
   return diags
@@ -272,7 +270,7 @@ def FileReadyToParse_Diagnostics_Simple_test( app ):
 
   # It can take a while for the diagnostics to be ready
   results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
-  print( 'completer response: {0}'.format( pformat( results ) ) )
+  print( f'completer response: { pformat( results ) }' )
 
   assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
@@ -318,7 +316,7 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
                                     'contents': contents,
                                     'filetype': 'java' } ):
     if 'diagnostics' in message and message[ 'filepath' ] == filepath:
-      print( 'Message {0}'.format( pformat( message ) ) )
+      print( f'Message { pformat( message ) }' )
       assert_that( message, has_entries( {
         'diagnostics': diag_matcher,
         'filepath': filepath
@@ -332,7 +330,7 @@ def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
       break
     time.sleep( 0.5 )
 
-  print( 'completer response: {0}'.format( pformat( results ) ) )
+  print( f'completer response: { pformat( results ) }' )
 
   assert_that( results, diag_matcher )
 
@@ -355,13 +353,12 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
                                     { 'filepath': filepath,
                                       'contents': contents,
                                       'filetype': 'java' } ):
-      print( 'Message {0}'.format( pformat( message ) ) )
+      print( f'Message { pformat( message ) }' )
       if 'diagnostics' in message:
         seen[ message[ 'filepath' ] ] = True
         if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
-          raise AssertionError(
-            'Received diagnostics for unexpected file {0}. '
-            'Only expected {1}'.format( message[ 'filepath' ], to_see ) )
+          raise AssertionError( 'Received diagnostics for unexpected file '
+            f'{ message[ "filepath" ] }. Only expected { to_see }' )
         assert_that( message, has_entries( {
           'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
           'filepath': message[ 'filepath' ]
@@ -371,8 +368,8 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
         break
       else:
         print( 'Seen diagnostics for {0}, still waiting for {1}'.format(
-          json.dumps( sorted( seen.keys() ), indent=2 ),
-          json.dumps( [ x for x in to_see if x not in seen ], indent=2 ) ) )
+          json.dumps( sorted( seen.keys() ), indent = 2 ),
+          json.dumps( [ x for x in to_see if x not in seen ], indent = 2 ) ) )
 
       # Eventually PollForMessages will throw
       # a timeout exception and we'll fail
@@ -381,9 +378,8 @@ def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
     raise AssertionError(
       str( e ) +
       'Timed out waiting for full set of diagnostics. '
-      'Expected to see diags for {0}, but only saw {1}.'.format(
-        json.dumps( to_see, indent=2 ),
-        json.dumps( sorted( seen.keys() ), indent=2 ) ) )
+      f'Expected to see diags for { json.dumps( to_see, indent = 2 ) }, '
+      f'but only saw { json.dumps( sorted( seen.keys() ), indent = 2 ) }.' )
 
 
 @contextlib.contextmanager
@@ -571,7 +567,7 @@ def FileReadyToParse_ChangeFileContents_test( app ):
                                     { 'filepath': filepath,
                                       'contents': contents,
                                       'filetype': 'java' } ):
-      print( 'Message {0}'.format( pformat( message ) ) )
+      print( f'Message { pformat( message ) }' )
       if 'diagnostics' in message and message[ 'filepath' ]  == filepath:
         diags = message[ 'diagnostics' ]
         if not diags:
@@ -581,8 +577,8 @@ def FileReadyToParse_ChangeFileContents_test( app ):
       # if we don't see the diagnostics go empty
   except PollForMessagesTimeoutException as e:
     raise AssertionError(
-      '{0}. Timed out waiting for diagnostics to clear for updated file. '
-      'Expected to see none, but diags were: {1}'.format( e, diags ) )
+      f'{ e }. Timed out waiting for diagnostics to clear for updated file. '
+      f'Expected to see none, but diags were: { diags }' )
 
   assert_that( diags, empty() )
 
@@ -762,8 +758,8 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
         state[ 'aborted' ] = True
         return
 
-    raise AssertionError( 'The poll request was not aborted in {} tries'.format(
-      max_tries ) )
+    raise AssertionError(
+      f'The poll request was not aborted in { max_tries } tries' )
 
   message_poll_task = StartThread( AwaitMessages )
 

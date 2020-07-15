@@ -93,8 +93,7 @@ def GenericLSPCompleter_GetCompletions_FilteredNoForce_test( app ):
   request.pop( 'event_name' )
   response = app.post_json( '/completions', BuildRequest( **request ) )
   assert_that( response.status_code, equal_to( 200 ) )
-  print( 'Completer response: {}'.format( json.dumps(
-    response.json, indent = 2 ) ) )
+  print( f'Completer response: { json.dumps( response.json, indent = 2 ) }' )
   assert_that( response.json, has_entries( {
     'completions': contains_exactly(
       CompletionEntryMatcher( 'JavaScript', 'JavaScript details' ),
@@ -119,8 +118,7 @@ def GenericLSPCompleter_GetCompletions_test( app ):
   request.pop( 'event_name' )
   response = app.post_json( '/completions', BuildRequest( **request ) )
   assert_that( response.status_code, equal_to( 200 ) )
-  print( 'Completer response: {}'.format( json.dumps(
-    response.json, indent = 2 ) ) )
+  print( f'Completer response: { json.dumps( response.json, indent = 2 ) }' )
   assert_that( response.json, has_entries( {
     'completions': contains_exactly(
       CompletionEntryMatcher( 'JavaScript', 'JavaScript details' ),
