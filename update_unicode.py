@@ -572,7 +572,7 @@ def GenerateNormalizationTestCases( output_file ):
   test_contents = Download(
       'https://unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt' )
   hex_codepoint = '(?:[A-F0-9]{4,} ?)+'
-  pattern = f'(?:{hex_codepoint};){{5}}'
+  pattern = f'(?:{ hex_codepoint };){{5}}'
   pattern = re.compile( pattern )
 
   res = []

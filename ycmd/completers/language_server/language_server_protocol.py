@@ -637,8 +637,7 @@ def _BuildMessageData( message ):
   data = ToBytes( json.dumps( message,
                               separators = ( ',', ':' ),
                               sort_keys=True ) )
-  packet = ToBytes( 'Content-Length: {0}\r\n'
-                    '\r\n'.format( len( data ) ) ) + data
+  packet = ToBytes( f'Content-Length: { len( data ) }\r\n\r\n' ) + data
   return packet
 
 

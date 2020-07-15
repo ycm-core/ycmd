@@ -105,7 +105,7 @@ class RequestWrap:
         setter( value )
         return
 
-    raise ValueError( 'Key "{0}" is read-only'.format( key ) )
+    raise ValueError( f'Key "{ key }" is read-only' )
 
 
   def __contains__( self, key ):

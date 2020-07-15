@@ -306,8 +306,8 @@ def WaitUntilProcessIsTerminated( handle, timeout = 5 ):
   expiration = time.time() + timeout
   while True:
     if time.time() > expiration:
-      raise RuntimeError( 'Waited process to terminate for {0} seconds, '
-                          'aborting.'.format( timeout ) )
+      raise RuntimeError( f'Waited process to terminate for { timeout } '
+                          'seconds, aborting.' )
     if not ProcessIsRunning( handle ):
       return
     time.sleep( 0.1 )

@@ -34,15 +34,15 @@ def EnsureRequestValid( request_json ):
 
 
 def _FieldMissingMessage( field ):
-  return 'Request missing required field: {0}'.format( field )
+  return f'Request missing required field: { field }'
 
 
 def _FilepathInFileDataSpec( request_json ):
-  return 'file_data["{0}"]'.format( request_json[ 'filepath' ] )
+  return f'''file_data[ "{ request_json[ 'filepath' ] }" ]'''
 
 
 def _SingleFileDataFieldSpec( request_json, field ):
-  return '{0}["{1}"]'.format( _FilepathInFileDataSpec( request_json ), field )
+  return f'''{ _FilepathInFileDataSpec( request_json ) }[ "{field}" ]'''
 
 
 def _MissingFieldsForFileData( request_json ):
@@ -55,8 +55,8 @@ def _MissingFieldsForFileData( request_json ):
         missing.add( _SingleFileDataFieldSpec( request_json, required ) )
     filetypes = data_for_file.get( 'filetypes', [] )
     if not filetypes:
-      missing.add( '{0}[0]'.format(
-          _SingleFileDataFieldSpec( request_json, 'filetypes' ) ) )
+      missing.add(
+        f'{ _SingleFileDataFieldSpec( request_json, "filetypes" ) }[ 0 ]' )
   else:
     missing.add( _FilepathInFileDataSpec( request_json ) )
   return missing
