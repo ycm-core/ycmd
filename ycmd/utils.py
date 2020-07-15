@@ -244,7 +244,7 @@ def GetExecutable( filename ):
   return None
 
 
-# Adapted from https://github.com/python/cpython/blob/v3.5.0/Lib/shutil.py#L1072
+# Adapted from https://github.com/python/cpython/blob/v3.6.0/Lib/shutil.py#L1087
 # to be backward compatible with Python2 and more consistent to our codebase.
 def FindExecutable( executable ):
   # If we're given a path with a directory part, look it up directly rather
