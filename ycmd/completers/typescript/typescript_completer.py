@@ -197,8 +197,7 @@ class TypeScriptCompleter( Completer ):
       return
 
     self._logfile = utils.CreateLogfile( LOGFILE_FORMAT )
-    tsserver_log = '-file {path} -level {level}'.format( path = self._logfile,
-                                                         level = _LogLevel() )
+    tsserver_log = f'-file { self._logfile } -level {_LogLevel()}'
     # TSServer gets the configuration for the log file through the
     # environment variable 'TSS_LOG'. This seems to be undocumented but
     # looking at the source code it seems like this is the way:
@@ -794,8 +793,7 @@ class TypeScriptCompleter( Completer ):
       'offset': request_data[ 'column_codepoint' ]
     } )
 
-    message = '{0}\n\n{1}'.format( info[ 'displayString' ],
-                                   info[ 'documentation' ] )
+    message = f'{ info[ "displayString" ] }\n\n{info[ "documentation" ]}'
     return responses.BuildDetailedInfoResponse( message )
 
 
@@ -854,8 +852,8 @@ class TypeScriptCompleter( Completer ):
     } )
 
     if not response[ 'info' ][ 'canRename' ]:
-      raise RuntimeError( 'Value cannot be renamed: {0}'.format(
-        response[ 'info' ][ 'localizedErrorMessage' ] ) )
+      raise RuntimeError( 'Value cannot be renamed: '
+                          f'{ response[ "info" ][ "localizedErrorMessage" ] }' )
 
     # The format of the response is:
     #

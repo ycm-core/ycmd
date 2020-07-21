@@ -206,9 +206,11 @@ class Response:
 
     if 'error' in self._message:
       error = self._message[ 'error' ]
-      raise ResponseFailedException( 'Request failed: {0}: {1}'.format(
-        error.get( 'code' ) or 0,
-        error.get( 'message' ) or 'No message' ) )
+      raise ResponseFailedException(
+        'Request failed: '
+        f'{ error.get( "code" ) or 0 }'
+        ': '
+        f'{ error.get( "message" ) or "No message" }' )
 
     return self._message
 
@@ -909,8 +911,8 @@ class LanguageServerCompleter( Completer ):
                  self.GetServerName(),
                  self.GetCommandLine() )
 
-    self._stderr_file = utils.CreateLogfile( '{}_stderr'.format(
-      utils.MakeSafeFileNameString( self.GetServerName() ) ) )
+    self._stderr_file = utils.CreateLogfile(
+      f'{ utils.MakeSafeFileNameString( self.GetServerName() ) }_stderr' )
 
     with utils.OpenForStdHandle( self._stderr_file ) as stderr:
       self._server_handle = utils.SafePopen(
@@ -2714,9 +2716,9 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
 
   # Conservatively rejecting candidates that breach the protocol
   if edit_range[ 'start' ][ 'line' ] != edit_range[ 'end' ][ 'line' ]:
+    new_text = text_edit[ 'newText' ]
     raise IncompatibleCompletionException(
-      "The TextEdit '{0}' spans multiple lines".format(
-        text_edit[ 'newText' ] ) )
+      f"The TextEdit '{ new_text }' spans multiple lines" )
 
   file_contents = GetFileLines( request_data, request_data[ 'filepath' ] )
   line_value = file_contents[ edit_range[ 'start' ][ 'line' ] ]
@@ -2726,9 +2728,9 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
     edit_range[ 'start' ][ 'character' ] + 1 )
 
   if start_codepoint > request_data[ 'start_codepoint' ]:
+    new_text = text_edit[ 'newText' ]
     raise IncompatibleCompletionException(
-      "The TextEdit '{0}' starts after the start position".format(
-        text_edit[ 'newText' ] ) )
+      f"The TextEdit '{ new_text }' starts after the start position" )
 
   return start_codepoint
 

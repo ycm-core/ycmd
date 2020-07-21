@@ -21,8 +21,8 @@ import tempfile
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 PY_VERSION = sys.version_info[ 0 : 3 ]
-if PY_VERSION < ( 3, 5, 1 ):
-  sys.exit( 'ycmd requires Python >= 3.5.1; '
+if PY_VERSION < ( 3, 6, 0 ):
+  sys.exit( 'ycmd requires Python >= 3.6.0; '
             'your version of Python is ' + sys.version +
             '\nHint: Try running python3 ' + ' '.join( sys.argv ) )
 
@@ -62,7 +62,7 @@ NO_PYTHON_HEADERS_ERROR = 'ERROR: Python headers are missing in {include_dir}.'
 # Regular expressions used to find static and dynamic Python libraries.
 # Notes:
 #  - Python 3 library name may have an 'm' suffix on Unix platforms, for
-#    instance libpython3.5m.so;
+#    instance libpython3.6m.so;
 #  - the linker name (the soname without the version) does not always
 #    exist so we look for the versioned names too;
 #  - on Windows, the .lib extension is used instead of the .dll one. See

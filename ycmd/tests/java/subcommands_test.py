@@ -175,7 +175,7 @@ def RunTest( app, test, contents = None ):
         expect_errors = True
       )
 
-      print( 'completer response: {0}'.format( pformat( response.json ) ) )
+      print( f'completer response: { pformat( response.json ) }' )
 
       assert_that( response.status_code,
                    equal_to( test[ 'expect' ][ 'response' ] ) )
@@ -2155,8 +2155,8 @@ def Subcommands_ExtraConf_SettingsValid_UnknownExtraConf_test( app ):
                             } ),
                             expect_errors = True )
 
-  print( 'FileReadyToParse result: {}'.format( json.dumps( response.json,
-                                                           indent = 2 ) ) )
+  print( 'FileReadyToParse result: '
+         f'{ json.dumps( response.json, indent = 2 ) }' )
 
   assert_that( response.status_code,
                equal_to( requests.codes.internal_server_error ) )

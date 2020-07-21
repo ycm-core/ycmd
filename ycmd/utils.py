@@ -244,7 +244,7 @@ def GetExecutable( filename ):
   return None
 
 
-# Adapted from https://github.com/python/cpython/blob/v3.5.0/Lib/shutil.py#L1072
+# Adapted from https://github.com/python/cpython/blob/v3.6.0/Lib/shutil.py#L1087
 # to be backward compatible with Python2 and more consistent to our codebase.
 def FindExecutable( executable ):
   # If we're given a path with a directory part, look it up directly rather
@@ -306,8 +306,8 @@ def WaitUntilProcessIsTerminated( handle, timeout = 5 ):
   expiration = time.time() + timeout
   while True:
     if time.time() > expiration:
-      raise RuntimeError( 'Waited process to terminate for {0} seconds, '
-                          'aborting.'.format( timeout ) )
+      raise RuntimeError( f'Waited process to terminate for { timeout } '
+                          'seconds, aborting.' )
     if not ProcessIsRunning( handle ):
       return
     time.sleep( 0.1 )

@@ -17,7 +17,7 @@
 import sys
 import platform
 if sys.version_info[ 0 ] < 3:
-  sys.exit( 'example_client.py requires Python 3.5+; detected Python ' +
+  sys.exit( 'example_client.py requires Python 3.6+; detected Python ' +
             platform.python_version() )
 
 from base64 import b64encode, b64decode
@@ -85,10 +85,9 @@ class YcmdHandle( object ):
     server_port = GetUnusedLocalhostPort()
     ycmd_args = [ sys.executable,
                   PATH_TO_YCMD,
-                  '--port={0}'.format( server_port ),
-                  '--options_file={0}'.format( options_file.name ),
-                  '--idle_suicide_seconds={0}'.format(
-                    SERVER_IDLE_SUICIDE_SECONDS ) ]
+                  f'--port={server_port}',
+                  f'--options_file={options_file.name}',
+                  f'--idle_suicide_seconds={SERVER_IDLE_SUICIDE_SECONDS}' ]
 
     std_handles = None if INCLUDE_YCMD_OUTPUT else subprocess.PIPE
     child_handle = subprocess.Popen( ycmd_args,
@@ -207,8 +206,8 @@ class YcmdHandle( object ):
       try:
         if total_slept > MAX_SERVER_WAIT_TIME_SECONDS:
           raise RuntimeError(
-              'waited for the server for {0} seconds, aborting'.format(
-                    MAX_SERVER_WAIT_TIME_SECONDS ) )
+            'waited for the server for '
+            f'{MAX_SERVER_WAIT_TIME_SECONDS} seconds, aborting' )
 
         if self.IsReady( filetype ):
           return

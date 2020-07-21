@@ -534,7 +534,7 @@ struct S{static int h();};
 
     # Assert no diagnostics
     for message in PollForMessages( app, messages_request ):
-      print( 'Message {}'.format( pformat( message ) ) )
+      print( f'Message { pformat( message ) }' )
       if 'diagnostics' in message:
         assert_that( message,
           has_entries( { 'diagnostics': empty() } ) )

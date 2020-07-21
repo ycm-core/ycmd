@@ -93,8 +93,8 @@ class PythonCompleter( Completer ):
       resolved_interpreter_path = FindExecutable(
         ExpandVariablesInPath( interpreter_path ) )
       if not resolved_interpreter_path:
-        raise RuntimeError( 'Cannot find Python interpreter path {}.'.format(
-          interpreter_path ) )
+        raise RuntimeError( 'Cannot find Python interpreter path '
+                            f'{ interpreter_path }.' )
       interpreter_path = os.path.normpath( resolved_interpreter_path )
 
     try:

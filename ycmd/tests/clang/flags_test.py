@@ -1271,7 +1271,7 @@ def CompilationDatabase_CUDALanguageFlags_test():
     compile_commands = [
       {
         'directory': tmp_dir,
-        'command': 'clang++ -Wall {}'.format( './test.cu' ),
+        'command': 'clang++ -Wall ./test.cu',
         'file': os.path.join( tmp_dir, 'test.cu' ),
       },
     ]

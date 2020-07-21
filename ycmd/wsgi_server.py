@@ -32,9 +32,7 @@ class StoppableWSGIServer( TcpWSGIServer ):
 
     # Message for compatibility with clients who expect the output from
     # waitress.serve here
-    print( 'serving on http://{0}:{1}'.format(
-      self.effective_host,
-      self.effective_port ) )
+    print( f'serving on http://{ self.effective_host }:{self.effective_port}' )
 
     try:
       self.run()

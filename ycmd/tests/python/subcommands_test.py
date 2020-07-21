@@ -67,7 +67,7 @@ def RunTest( app, test ):
     expect_errors = True
   )
 
-  print( 'completer response: {0}'.format( pformat( response.json ) ) )
+  print( f'completer response: { pformat( response.json ) }' )
 
   assert_that( response.status_code,
                equal_to( test[ 'expect' ][ 'response' ] ) )

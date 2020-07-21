@@ -150,7 +150,7 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
       message = notification[ 'params' ]
       if message != 'invalid': # RA produces a better message for `invalid`
         return responses.BuildDisplayMessageResponse(
-          'Initializing Rust completer: {}'.format( message ) )
+          f'Initializing Rust completer: { message }' )
     return super().ConvertNotificationToMessage( request_data, notification )
 
 

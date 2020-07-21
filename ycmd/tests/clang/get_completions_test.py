@@ -106,8 +106,7 @@ def RunTest( app, test ):
   assert_that( response.status_code,
                equal_to( test[ 'expect' ][ 'response' ] ) )
 
-  print( 'Completer response: {0}'.format( json.dumps(
-    response.json, indent = 2 ) ) )
+  print( f'Completer response: { json.dumps( response.json, indent = 2 ) }' )
 
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 

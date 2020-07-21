@@ -689,7 +689,7 @@ def StopServer_KeepLogFiles( app ):
     try:
       for logfile in logfiles:
         assert_that( os.path.exists( logfile ),
-             'Logfile should exist at {0}'.format( logfile ) )
+                     f'Logfile should exist at { logfile }' )
     finally:
       app.post_json(
         '/run_completer_command',
@@ -703,11 +703,11 @@ def StopServer_KeepLogFiles( app ):
     if user_options_store.Value( 'server_keep_logfiles' ):
       for logfile in logfiles:
         assert_that( os.path.exists( logfile ),
-             'Logfile should still exist at {0}'.format( logfile ) )
+                     f'Logfile should still exist at { logfile }' )
     else:
       for logfile in logfiles:
         assert_that( not os.path.exists( logfile ),
-             'Logfile should no longer exist at {0}'.format( logfile ) )
+                     f'Logfile should no longer exist at { logfile }' )
 
 
 @IsolatedYcmd( { 'server_keep_logfiles': 1 } )

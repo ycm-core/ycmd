@@ -24,9 +24,9 @@ YCM_EXTRA_CONF_FILENAME = '.ycm_extra_conf.py'
 CONFIRM_CONF_FILE_MESSAGE = ( 'Found {0}. Load? \n\n(Question can be turned '
                               'off with options, see YCM docs)' )
 
-NO_EXTRA_CONF_FILENAME_MESSAGE = ( 'No {0} file detected, so no compile flags '
-  'are available. Thus no semantic support for C/C++/ObjC/ObjC++. Go READ THE '
-  'DOCS *NOW*, DON\'T file a bug report.' ).format( YCM_EXTRA_CONF_FILENAME )
+NO_EXTRA_CONF_FILENAME_MESSAGE = ( f'No { YCM_EXTRA_CONF_FILENAME } file '
+  'detected, so no compile flags are available. Thus no semantic support for '
+  'C/C++/ObjC/ObjC++. Go READ THE ' 'DOCS *NOW*, DON\'T file a bug report.' )
 
 NO_DIAGNOSTIC_SUPPORT_MESSAGE = ( 'YCM has no diagnostics support for this '
   'filetype; refer to Syntastic docs if using Syntastic.' )

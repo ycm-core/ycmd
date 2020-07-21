@@ -154,7 +154,7 @@ def WrapOmniSharpServer( app, filepath ):
         log_content, log_end_position = ReadFile(
             logfile, shared_log_indexes.get( logfile, 0 ) )
         shared_log_indexes[ logfile ] = log_end_position
-        sys.stdout.write( 'Logfile {0}:\n\n'.format( logfile ) )
+        sys.stdout.write( f'Logfile { logfile }:\n\n' )
         sys.stdout.write( log_content )
         sys.stdout.write( '\n' )
 

@@ -422,9 +422,9 @@ def ServerManagement_ServerDies_test( app ):
 
   request_data = BuildRequest( filetype = 'java' )
   debug_info = app.post_json( '/debug_info', request_data ).json
-  print( 'Debug info: {0}'.format( debug_info ) )
+  print( f'Debug info: { debug_info }' )
   pid = debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
-  print( 'pid: {0}'.format( pid ) )
+  print( f'pid: { pid }' )
   process = psutil.Process( pid )
   process.terminate()
 
@@ -453,9 +453,9 @@ def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
 
   request_data = BuildRequest( filetype = 'java' )
   debug_info = app.post_json( '/debug_info', request_data ).json
-  print( 'Debug info: {0}'.format( debug_info ) )
+  print( f'Debug info: { debug_info }' )
   pid = debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
-  print( 'pid: {0}'.format( pid ) )
+  print( f'pid: { pid }' )
   process = psutil.Process( pid )
 
 
@@ -499,9 +499,9 @@ def ServerManagement_ConnectionRaisesWhileShuttingDown_test( app ):
 
   request_data = BuildRequest( filetype = 'java' )
   debug_info = app.post_json( '/debug_info', request_data ).json
-  print( 'Debug info: {0}'.format( debug_info ) )
+  print( f'Debug info: { debug_info }' )
   pid = debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'pid' ]
-  print( 'pid: {0}'.format( pid ) )
+  print( f'pid: { pid }' )
   process = psutil.Process( pid )
 
   completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )

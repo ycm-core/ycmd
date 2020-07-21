@@ -104,7 +104,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
                             expect_errors = True )
 
 
-  print( 'event response: {0}'.format( pformat( response.json ) ) )
+  print( f'event response: { pformat( response.json ) }' )
 
   assert_that( response.status_code,
                equal_to( requests.codes.internal_server_error ) )
@@ -142,7 +142,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
                                           filetype = 'javascript' ),
                             expect_errors = True )
 
-  print( 'event response: {0}'.format( pformat( response.json ) ) )
+  print( f'event response: { pformat( response.json ) }' )
 
   assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
@@ -159,7 +159,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
                                           filetype = 'javascript' ),
                             expect_errors = True )
 
-  print( 'event response: {0}'.format( pformat( response.json ) ) )
+  print( f'event response: { pformat( response.json ) }' )
 
   assert_that( response.status_code,
                equal_to( requests.codes.internal_server_error ) )
@@ -188,7 +188,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
                                           filetype = 'javascript' ),
                             expect_errors = True )
 
-  print( 'event response: {0}'.format( pformat( response.json ) ) )
+  print( f'event response: { pformat( response.json ) }' )
 
   assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )
@@ -222,7 +222,7 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test(
                                           filetype = 'javascript' ),
                             expect_errors = True )
 
-  print( 'event response: {0}'.format( pformat( response.json ) ) )
+  print( f'event response: { pformat( response.json ) }' )
 
   assert_that( response.status_code, equal_to( requests.codes.ok ) )
   assert_that( response.json, empty() )

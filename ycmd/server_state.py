@@ -62,7 +62,7 @@ class ServerState:
         pass
 
       try:
-        module = import_module( 'ycmd.completers.{}.hook'.format( filetype ) )
+        module = import_module( f'ycmd.completers.{ filetype }.hook' )
         completer = module.GetCompleter( self._user_options )
       except ImportError:
         completer = None
@@ -88,8 +88,8 @@ class ServerState:
       if completer:
         return completer
 
-    raise ValueError( 'No semantic completer exists for filetypes: {0}'.format(
-        current_filetypes ) )
+    raise ValueError(
+      f'No semantic completer exists for filetypes: { current_filetypes }' )
 
 
   def GetLoadedFiletypeCompleters( self ):
