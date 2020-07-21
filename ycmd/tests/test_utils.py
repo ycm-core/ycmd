@@ -469,9 +469,8 @@ def PollForMessages( app, request_data, timeout = 60 ):
   expiration = time.time() + timeout
   while True:
     if time.time() > expiration:
-      raise PollForMessagesTimeoutException(
-        'Waited for diagnostics to be ready for {0} seconds, aborting.'.format(
-          timeout ) )
+      raise PollForMessagesTimeoutException( 'Waited for diagnostics to be '
+        f'ready for { timeout } seconds, aborting.' )
 
     default_args = {
       'line_num'  : 1,

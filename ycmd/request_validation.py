@@ -38,11 +38,12 @@ def _FieldMissingMessage( field ):
 
 
 def _FilepathInFileDataSpec( request_json ):
-  return f'''file_data[ "{ request_json[ 'filepath' ] }" ]'''
+  filepath = request_json[ 'filepath' ]
+  return f'file_data[ "{ filepath }" ]'
 
 
 def _SingleFileDataFieldSpec( request_json, field ):
-  return f'''{ _FilepathInFileDataSpec( request_json ) }[ "{field}" ]'''
+  return f'{ _FilepathInFileDataSpec( request_json ) }[ "{ field }" ]'
 
 
 def _MissingFieldsForFileData( request_json ):
