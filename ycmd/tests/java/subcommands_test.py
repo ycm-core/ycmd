@@ -1316,6 +1316,20 @@ def Subcommands_FixIt_Range_test( app ):
             ),
           } ),
           has_entries( {
+            'text': 'Introduce Parameter...',
+            'kind': 'refactor.introduce.parameter',
+            'chunks': contains_exactly(
+              ChunkMatcher(
+                'String string) {\n'
+                '        AbstractTestWidget w = factory.getWidget( "Test" );\n'
+                '        w.doSomethingVaguelyUseful();\n'
+                '\n'
+                '        System.out.println( string',
+                LocationMatcher( filepath, 30, 26 ),
+                LocationMatcher( filepath, 34, 73 ) ),
+            ),
+          } ),
+          has_entries( {
             'text': 'Organize imports',
             'chunks': instance_of( list ),
           } ),
