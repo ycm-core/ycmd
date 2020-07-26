@@ -58,8 +58,7 @@ def DebugInfo_test( app ):
           } ),
           has_entries( {
             'key': 'Settings',
-            'value': matches_regexp( '{\n  "fuzzyMatching": false,\\s?\n'
-                                     '  "hoverKind": "Structured"\n}' )
+            'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
           } ),
         )
       } ) ),
@@ -97,8 +96,7 @@ def DebugInfo_ProjectDirectory_test( app ):
           } ),
           has_entries( {
             'key': 'Settings',
-            'value': matches_regexp( '{\n  "fuzzyMatching": false,\\s?\n'
-                                     '  "hoverKind": "Structured"\n}' )
+            'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
           } ),
         )
       } ) ),
