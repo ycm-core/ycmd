@@ -274,7 +274,7 @@ def Initialize( request_id, project_directory, settings ):
         'didChangeWatchedFiles': {
           'dynamicRegistration': True
         },
-        'documentChanges': True,
+        'workspaceEdit': { 'documentChanges': True, },
         'symbol': {
           'symbolKind': {
             'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
