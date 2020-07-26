@@ -684,13 +684,13 @@ class TypeScriptCompleter( Completer ):
 
   def _GoToImplementation( self, request_data ):
     self._Reload( request_data )
-    filespans = self._SendRequest( 'implementation', {
-      'file':   request_data[ 'filepath' ],
-      'line':   request_data[ 'line_num' ],
-      'offset': request_data[ 'column_codepoint' ]
-    } )
-
-    if not filespans:
+    try:
+      filespans = self._SendRequest( 'implementation', {
+        'file':   request_data[ 'filepath' ],
+        'line':   request_data[ 'line_num' ],
+        'offset': request_data[ 'column_codepoint' ]
+      } )
+    except RuntimeError:
       raise RuntimeError( 'No implementation found.' )
 
     results = []
