@@ -20,7 +20,7 @@ from ycmd.completers.java.java_completer import (
 
 
 def GetCompleter( user_options ):
-  if not ShouldEnableJavaCompleter():
+  if not ShouldEnableJavaCompleter( user_options ):
     return None
 
   return JavaCompleter( user_options )

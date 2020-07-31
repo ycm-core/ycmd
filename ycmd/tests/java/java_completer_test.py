@@ -16,38 +16,57 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import requests
 
 from hamcrest import assert_that, equal_to, calling, has_entries, is_not, raises
 from unittest.mock import patch
 
-from ycmd import handlers
-from ycmd.tests.test_utils import BuildRequest
+from ycmd import handlers, user_options_store
+from ycmd.tests.test_utils import BuildRequest, ErrorMatcher
 from ycmd.tests.java import SharedYcmd
 from ycmd.completers.java import java_completer, hook
 from ycmd.completers.java.java_completer import NO_DOCUMENTATION_MESSAGE
+from ycmd.tests import IsolatedYcmd as IsolatedYcmdWithoutJava
 
 
-def ShouldEnableJavaCompleter_NoJava_test():
-  orig_java_path = java_completer.PATH_TO_JAVA
-  try:
-    java_completer.PATH_TO_JAVA = ''
-    assert_that( java_completer.ShouldEnableJavaCompleter(), equal_to( False ) )
-  finally:
-    java_completer.PATH_TO_JAVA = orig_java_path
+DEFAULT_OPTIONS = user_options_store.DefaultOptions()
+
+
+@patch( 'ycmd.completers.java.java_completer.utils.FindExecutable',
+        return_value = '' )
+def ShouldEnableJavaCompleter_NoJava_test( *args ):
+  assert_that( java_completer.ShouldEnableJavaCompleter( DEFAULT_OPTIONS ),
+               equal_to( False ) )
+
+
+@IsolatedYcmdWithoutJava( { 'java_binary_path': '/this/path/does/not/exist' } )
+def ShouldEnableJavaCompleter_JavaNotFound_test( app ):
+  request_data = BuildRequest( filetype = 'java' )
+  response = app.post_json( '/defined_subcommands',
+                            request_data,
+                            expect_errors = True )
+  assert_that( response.status_code,
+               equal_to( requests.codes.internal_server_error ) )
+  assert_that( response.json,
+               ErrorMatcher( ValueError,
+                             'No semantic completer exists for filetypes: '
+                             "['java']" ) )
 
 
 def ShouldEnableJavaCompleter_NotInstalled_test():
   orig_language_server_home = java_completer.LANGUAGE_SERVER_HOME
   try:
     java_completer.LANGUAGE_SERVER_HOME = ''
-    assert_that( java_completer.ShouldEnableJavaCompleter(), equal_to( False ) )
+    assert_that( java_completer.ShouldEnableJavaCompleter( DEFAULT_OPTIONS ),
+                 equal_to( False ) )
   finally:
     java_completer.LANGUAGE_SERVER_HOME = orig_language_server_home
 
 
 @patch( 'glob.glob', return_value = [] )
 def ShouldEnableJavaCompleter_NoLauncherJar_test( glob ):
-  assert_that( java_completer.ShouldEnableJavaCompleter(), equal_to( False ) )
+  assert_that( java_completer.ShouldEnableJavaCompleter( DEFAULT_OPTIONS ),
+               equal_to( False ) )
   glob.assert_called()
 
 
