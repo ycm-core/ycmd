@@ -960,6 +960,26 @@ def EnableJavaScriptCompleter( args ):
              status_message = 'Setting up Tern for JavaScript completion' )
 
 
+def CheckJavaVersion( required_version ):
+  java = FindExecutableOrDie(
+    'java',
+    f'java {required_version} is required to install JDT.LS' )
+  java_version = None
+  try:
+    java_version = int(
+      subprocess.check_output( [ java, 'CheckJavaVersion.java' ],
+                               stderr=subprocess.STDOUT )
+      .decode( 'utf-8' )
+      .strip() )
+  except subprocess.CalledProcessError:
+    pass
+
+  if java_version is None or java_version < required_version:
+    print( f'\n\n*** WARNING ***: jdt.ls requires Java { required_version }.'
+           ' You must set the option java_binary_path to point to a working '
+           f'java { required_version }.\n\n' )
+
+
 def EnableJavaCompleter( switches ):
   def Print( *args, **kwargs ):
     if not switches.quiet:
@@ -968,6 +988,8 @@ def EnableJavaCompleter( switches ):
   if switches.quiet:
     sys.stdout.write( 'Installing jdt.ls for Java support...' )
     sys.stdout.flush()
+
+  CheckJavaVersion( 11 )
 
   TARGET = p.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls', 'target', )
   REPOSITORY = p.join( TARGET, 'repository' )
