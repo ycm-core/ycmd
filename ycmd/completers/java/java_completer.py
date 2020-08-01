@@ -40,7 +40,7 @@ LANGUAGE_SERVER_HOME = os.path.abspath( os.path.join(
   'target',
   'repository' ) )
 
-PATH_TO_JAVA = utils.PathToFirstExistingExecutable( [ 'java' ] )
+PATH_TO_JAVA = None
 
 PROJECT_FILE_TAILS = [
   '.project',
@@ -102,10 +102,16 @@ WORKSPACE_ROOT_PATH_OPTION = 'java_jdtls_workspace_root_path'
 EXTENSION_PATH_OPTION = 'java_jdtls_extension_path'
 
 
-def ShouldEnableJavaCompleter():
+def ShouldEnableJavaCompleter( user_options ):
   LOGGER.info( 'Looking for jdt.ls' )
+
+  global PATH_TO_JAVA
+  PATH_TO_JAVA = utils.FindExecutableWithFallback(
+    user_options[ 'java_binary_path' ],
+    utils.FindExecutable( 'java' ) )
+
   if not PATH_TO_JAVA:
-    LOGGER.warning( "Not enabling java completion: Couldn't find java" )
+    LOGGER.warning( "Not enabling java completion: Couldn't find java 11" )
     return False
 
   if not os.path.exists( LANGUAGE_SERVER_HOME ):

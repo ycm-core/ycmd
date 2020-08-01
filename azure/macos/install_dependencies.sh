@@ -23,14 +23,4 @@ pip install -r test_requirements.txt
 echo -e "import coverage\ncoverage.process_startup()" > \
 ${HOME}/.pyenv/versions/${YCM_PYTHON_VERSION}/lib/python${YCM_PYTHON_VERSION%.*}/site-packages/sitecustomize.py
 
-#
-# Rust setup
-#
-
-# rustup is required to enable the Rust completer on Python versions older than
-# 2.7.9.
-if [ "${YCM_PYTHON_VERSION}" == "2.7.2" ]; then
-  curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain none
-fi
-
 set +e

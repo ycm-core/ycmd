@@ -1,8 +1,7 @@
 # Exit immediately if a command returns a non-zero status.
 set -e
 
-# Required to enable Homebrew on Linux.
-test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+test -d "$HOME/.pyenv/bin" && export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 
 pyenv global ${YCM_PYTHON_VERSION}
@@ -16,6 +15,16 @@ test ${python_version} == ${YCM_PYTHON_VERSION}
 
 # Add the Cargo executable to PATH
 PATH="${HOME}/.cargo/bin:${PATH}"
+
+# JDT requires Java 11
+if [[ -d /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64 ]]; then
+  export JAVA_HOME='/usr/lib/jvm/adoptopenjdk-11-hotspot-amd64'
+  export PATH="${JAVA_HOME}/bin:${PATH}"
+else
+  export JAVA_HOME='/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home'
+fi
+java -version
+javac -version
 
 python run_tests.py
 

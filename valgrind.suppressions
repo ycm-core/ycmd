@@ -21,6 +21,13 @@
 	Memcheck:Leak
 	fun:malloc
 	fun:new_dict_with_shared_keys
+	fun:PyObject_GenericGetDict
+}
+{
+	Python default invocation - possibly lost
+	Memcheck:Leak
+	fun:malloc
+	fun:new_dict_with_shared_keys
 	fun:_PyObjectDict_SetItem
 }
 {
@@ -31,7 +38,6 @@
 	fun:dictresize
 	fun:insertion_resize
 	fun:insertdict
-	fun:PyDict_SetItem
 }
 {
 	Python default invocation - possibly lost
@@ -87,17 +93,6 @@
 	fun:dictresize
 	fun:insertion_resize
 	fun:PyDict_SetDefault
-}
-{
-	Python default invocation - possibly lost
-	Memcheck:Leak
-	fun:malloc
-	fun:new_keys_object
-	fun:dictresize
-	fun:dict_merge
-	fun:PyDict_Update
-	fun:PyImport_Cleanup
-	fun:Py_FinalizeEx
 }
 {
 	GTest use of uninitialized value of size 8
@@ -222,19 +217,6 @@
 	fun:type_call
 	fun:_PyObject_MakeTpCall
 	fun:_PyObject_Vectorcall
-	fun:_PyObject_FastCall
-	fun:object_vacall
-	fun:PyObject_CallFunctionObjArgs
-	fun:cache_struct_converter
-	fun:pack
-	fun:cfunction_vectorcall_FASTCALL
-	fun:_PyObject_Vectorcall
-	fun:call_function
-	fun:_PyEval_EvalFrameDefault
-	fun:function_code_fastcall
-	fun:_PyObject_Vectorcall
-	fun:call_function
-	fun:_PyEval_EvalFrameDefault
 }
 {
 	Pytest at shutdown?
@@ -331,23 +313,6 @@
 	match-leak-kinds: possible
 	fun:realloc
 	fun:_PyBytes_Resize
-	fun:_PyBytesWriter_Finish
-	fun:PyBytes_FromFormatV
-	fun:PyBytes_FromFormat
-	fun:os_putenv_impl
-	fun:os_putenv
-	fun:cfunction_vectorcall_FASTCALL
-	fun:_PyObject_Vectorcall
-	fun:call_function
-	fun:_PyEval_EvalFrameDefault
-	fun:function_code_fastcall
-	fun:_PyObject_Vectorcall
-	fun:_PyObject_FastCall
-	fun:_PyObject_FastCall_Prepend
-	fun:call_unbound
-	fun:call_method
-	fun:slot_mp_ass_subscript
-	fun:_PyEval_EvalFrameDefault
 }
 {
 	Magically appeared when upgrading to Ubuntu 18.04
@@ -405,9 +370,6 @@
 	fun:malloc
 	fun:new_keys_object
 	fun:_PyDict_NewKeysForClass
-	fun:type_new
-	fun:type_call
-	fun:_PyObject_MakeTpCall
 }
 {
 	Pytest at shutdown?
@@ -435,10 +397,6 @@
 	fun:new_keys_object
 	fun:dictresize
 	fun:dict_merge
-	fun:dict_update_common
-	fun:dict_init
-	fun:type_call
-	fun:_PyObject_MakeTpCall
 }
 {
 	Pytest at shutdown?
@@ -463,26 +421,37 @@
 	fun:clone
 }
 {
-	Watchdog update from 0.9.0 to 0.10.2
+	<insert_a_suppression_name_here>
 	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:realloc
+	fun:_PyBytes_Resize
+	fun:assemble
+	fun:compiler_function
+	fun:compiler_function
+	fun:compiler_body
+	fun:compiler_class
+	fun:compiler_visit_stmt
+	fun:compiler_body
+	fun:compiler_mod
+	fun:PyAST_CompileObject
+}
+{
+	<insert_a_suppression_name_here>
+	Memcheck:Leak
+	match-leak-kinds: possible
 	fun:malloc
 	fun:new_keys_object
-	fun:dictresize
-	fun:dict_merge
-	fun:dict_update_common
-	fun:dict_update
-	fun:method_vectorcall_VARARGS_KEYWORDS
+	fun:dict_new
+	fun:type_call
+}
+{
+	<insert_a_suppression_name_here>
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:malloc
+	fun:_sre_compile_impl
+	fun:_sre_compile
+	fun:cfunction_vectorcall_FASTCALL_KEYWORDS
 	fun:_PyObject_Vectorcall
-	fun:call_function
-	fun:_PyEval_EvalFrameDefault
-	fun:_PyEval_EvalCodeWithName
-	fun:_PyFunction_Vectorcall
-	fun:_PyObject_Vectorcall
-	fun:call_function
-	fun:_PyEval_EvalFrameDefault
-	fun:_PyEval_EvalCodeWithName
-	fun:_PyFunction_Vectorcall
-	fun:_PyObject_Vectorcall
-	fun:call_function
-	fun:_PyEval_EvalFrameDefault
 }

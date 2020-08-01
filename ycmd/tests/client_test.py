@@ -199,6 +199,7 @@ class Client_test:
     headers = self._ExtraHeaders( method,
                                   request_uri,
                                   data )
+
     response = requests.request( method,
                                  request_uri,
                                  headers = headers,
