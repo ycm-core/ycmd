@@ -967,8 +967,9 @@ def CheckJavaVersion( required_version ):
   java_version = None
   try:
     java_version = int(
-      subprocess.check_output( [ java, 'CheckJavaVersion.java' ],
-                               stderr=subprocess.STDOUT )
+      subprocess.check_output(
+        [ java, os.path.join( DIR_OF_THIS_SCRIPT, 'CheckJavaVersion.java' ) ],
+        stderr=subprocess.STDOUT )
       .decode( 'utf-8' )
       .strip() )
   except subprocess.CalledProcessError:
