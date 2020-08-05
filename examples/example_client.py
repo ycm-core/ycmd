@@ -34,7 +34,6 @@ import urllib.parse
 import time
 
 import requests
-# enum34 on PyPi
 from enum import Enum
 
 HMAC_HEADER = 'X-Ycm-Hmac'
@@ -247,7 +246,7 @@ class YcmdHandle( object ):
     method = method.upper()
     request_uri = self._BuildUri( handler )
     args = [ 'http', '-v', method, request_uri ]
-    if isinstance( data, collections.Mapping ):
+    if isinstance( data, collections.abc.Mapping ):
       args.append( 'content-type:application/json' )
       data = ToUtf8Json( data )
 
@@ -390,14 +389,14 @@ def PythonSemanticCompletionResults( server ):
 
 
 def LanguageAgnosticIdentifierCompletion( server ):
-  # We're using JavaScript here, but the language doesn't matter; the identifier
+  # We're using vimscript here, but the language doesn't matter; the identifier
   # completion engine just extracts identifiers.
   server.SendEventNotification( Event.FileReadyToParse,
-                                test_filename = 'some_javascript.js',
-                                filetype = 'javascript' )
+                                test_filename = 'some_vimscript.vim',
+                                filetype = 'vim' )
 
-  server.SendCodeCompletionRequest( test_filename = 'some_javascript.js',
-                                    filetype = 'javascript',
+  server.SendCodeCompletionRequest( test_filename = 'some_vimscript.vim',
+                                    filetype = 'vim',
                                     line_num = 21,
                                     column_num = 6 )
 
