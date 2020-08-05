@@ -204,6 +204,7 @@ DEFAULT_FILETYPE_TRIGGERS = {
     'groovy,'
     'java,'
     'javascript,'
+    'javascriptreact,'
     'julia,'
     'perl6,'
     'python,'
