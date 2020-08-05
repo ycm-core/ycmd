@@ -188,16 +188,16 @@ def Subcommands_Format_WholeFile_test( app ):
           'chunks': contains_exactly(
             ChunkMatcher( '',
                           LocationMatcher( filepath, 8, 1 ),
-                          LocationMatcher( filepath, 9, 1 ) ),
-            ChunkMatcher( '\tdummy() //GoTo\n',
-                          LocationMatcher( filepath, 9, 1 ),
-                          LocationMatcher( filepath, 9, 1 ) ),
+                          LocationMatcher( filepath, 8, 5 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath, 8, 5 ),
+                          LocationMatcher( filepath, 8, 5 ) ),
             ChunkMatcher( '',
                           LocationMatcher( filepath, 12, 1 ),
-                          LocationMatcher( filepath, 13, 1 ) ),
-            ChunkMatcher( '\tdiagnostics_test\n',
-                          LocationMatcher( filepath, 13, 1 ),
-                          LocationMatcher( filepath, 13, 1 ) ),
+                          LocationMatcher( filepath, 12, 5 ) ),
+            ChunkMatcher( '\t',
+                          LocationMatcher( filepath, 12, 5 ),
+                          LocationMatcher( filepath, 12, 5 ) ),
           )
         } ) )
       } )
@@ -418,24 +418,6 @@ def Subcommands_FixIt_NullResponse_test( app ):
   RunFixItTest( app,
                 'Gopls returned NULL for response[ \'result\' ]',
                 filepath, 1, 1, has_entry( 'fixits', empty() ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_ParseError_test( app ):
-  RunTest( app, {
-    'description': 'Parse error leads to ResponseFailedException',
-    'request': {
-      'command': 'FixIt',
-      'line_num': 1,
-      'column_num': 1,
-      'filepath': PathToTestFile( 'unicode', 'unicode.go' ),
-    },
-    'expect': {
-      'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( ResponseFailedException,
-                            matches_regexp( '^Request failed: \\d' ) )
-    }
-  } )
 
 
 @SharedYcmd

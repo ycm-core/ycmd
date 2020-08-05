@@ -18,10 +18,13 @@
 from hamcrest import all_of, assert_that, has_items
 
 from ycmd.tests.go import PathToTestFile, SharedYcmd
-from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    CompletionEntryMatcher,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )
