@@ -1302,13 +1302,16 @@ class LanguageServerCompleter( Completer ):
         sig[ 'parameters' ] = []
       for arg in sig[ 'parameters' ]:
         arg_label = arg[ 'label' ]
-        assert not isinstance( arg_label, list )
-        begin = sig[ 'label' ].find( arg_label, end )
-        end = begin + len( arg_label )
+        if not isinstance( arg_label, list ):
+          begin = sig[ 'label' ].find( arg_label, end )
+          end = begin + len( arg_label )
+        else:
+          begin, end = arg_label
         arg[ 'label' ] = [
           utils.CodepointOffsetToByteOffset( sig_label, begin ),
           utils.CodepointOffsetToByteOffset( sig_label, end ) ]
     result.setdefault( 'activeParameter', 0 )
+    result.setdefault( 'activeSignature', 0 )
     return result
 
 
