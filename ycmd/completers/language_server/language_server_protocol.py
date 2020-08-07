@@ -318,7 +318,7 @@ def Initialize( request_id, project_directory, settings ):
         'signatureHelp': {
           'signatureInformation': {
             'parameterInformation': {
-              'labelOffsetSupport': False, # For now.
+              'labelOffsetSupport': True,
             },
             'documentationFormat': [
               'plaintext',
