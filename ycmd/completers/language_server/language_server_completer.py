@@ -1538,16 +1538,21 @@ class LanguageServerCompleter( Completer ):
 
 
   def ComputeSemanticTokens( self, request_data ):
+    if not self._initialize_event.wait( REQUEST_TIMEOUT_COMPLETION ):
+      return {}
+
+    if not self._ServerIsInitialized():
+      return {}
+
+    # FIXME: This all happens at the same time as OnFileReadyToParse, so this is
+    # all duplicated work
+    self._UpdateServerWithFileContents( request_data )
+
     server_config = self._server_capabilities.get( 'semanticTokensProvider' )
     if server_config is None:
       return {}
 
-    class Atlas:
-      def __init__( self, legend ):
-        self.tokenTypes = legend[ 'tokenTypes' ]
-        self.tokenModifiers = legend[ 'tokenModifiers' ]
-
-    atlas = Atlas( server_config[ 'legend' ] )
+    atlas = TokenAtlas( server_config[ 'legend' ] )
 
     server_full_support = server_config.get( 'full' )
     if server_full_support == {}:
@@ -1559,63 +1564,25 @@ class LanguageServerCompleter( Completer ):
     request_id = self.GetConnection().NextRequestId()
     response = self._connection.GetResponse(
       request_id,
-      lsp.SemanticTokens( request_id, request_data ),
+      lsp.SemanticTokens(
+        request_id,
+        request_data ),
       REQUEST_TIMEOUT_COMPLETION )
 
     if response is None:
       return {}
 
-    token_data = ( response.get( 'result' ) or {} ).get( 'data' ) or []
-    assert len( token_data ) % 5 == 0
-
-    class Token:
-      line = 0
-      start_character = 0
-      num_characters = 0
-      token_type = 0
-      token_modifiers = 0
-
-    tokens = []
-    last_token = Token()
     filename = request_data[ 'filepath' ]
     contents = GetFileLines( request_data, filename )
+    result = response.get( 'result' ) or {}
+    tokens = _DecodeSemanticTokens( atlas,
+                                    result.get( 'data' ) or [],
+                                    filename,
+                                    contents )
 
-    for token_index in range( 0, len( token_data ), 5 ):
-      token = Token()
-
-      token.line = last_token.line + token_data[ token_index ]
-
-      token.start_character = token_data[ token_index + 1 ]
-      if token.line == last_token.line:
-        token.start_character += last_token.start_character
-
-      token.num_characters = token_data[ token_index + 2 ]
-
-      token.token_type = token_data[ token_index + 3 ]
-      token.token_modifiers = token_data[ token_index + 4 ]
-
-      tokens.append( {
-        'range': responses.BuildRangeData( _BuildRange(
-          contents,
-          filename,
-          {
-            'start': {
-              'line': token.line,
-              'character': token.start_character,
-            },
-            'end': {
-              'line': token.line,
-              'character': token.start_character + token.num_characters,
-            }
-          }
-        ) ),
-        'type': atlas.tokenTypes[ token.token_type ],
-        'modifiers': [] # TODO: bits represent indexes in atlas
-      } )
-
-      last_token = token
-
-    return { 'tokens': tokens }
+    return {
+      'tokens': tokens
+    }
 
 
   def GetDetailedDiagnostic( self, request_data ):
@@ -3414,3 +3381,60 @@ class WatchdogHandler( PatternMatchingEventHandler ):
       with self._server._server_info_mutex:
         msg = lsp.DidChangeWatchedFiles( event.src_path, 'delete' )
         self._server.GetConnection().SendNotification( msg )
+
+
+class TokenAtlas:
+  def __init__( self, legend ):
+    self.tokenTypes = legend[ 'tokenTypes' ]
+    self.tokenModifiers = legend[ 'tokenModifiers' ]
+
+
+def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
+  assert len( token_data ) % 5 == 0
+
+  class Token:
+    line = 0
+    start_character = 0
+    num_characters = 0
+    token_type = 0
+    token_modifiers = 0
+
+  last_token = Token()
+  tokens = []
+
+  for token_index in range( 0, len( token_data ), 5 ):
+    token = Token()
+
+    token.line = last_token.line + token_data[ token_index ]
+
+    token.start_character = token_data[ token_index + 1 ]
+    if token.line == last_token.line:
+      token.start_character += last_token.start_character
+
+    token.num_characters = token_data[ token_index + 2 ]
+
+    token.token_type = token_data[ token_index + 3 ]
+    token.token_modifiers = token_data[ token_index + 4 ]
+
+    tokens.append( {
+      'range': responses.BuildRangeData( _BuildRange(
+        contents,
+        filename,
+        {
+          'start': {
+            'line': token.line,
+            'character': token.start_character,
+          },
+          'end': {
+            'line': token.line,
+            'character': token.start_character + token.num_characters,
+          }
+        }
+      ) ),
+      'type': atlas.tokenTypes[ token.token_type ],
+      'modifiers': [] # TODO: bits represent indexes in atlas
+    } )
+
+    last_token = token
+
+  return tokens
