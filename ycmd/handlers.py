@@ -30,6 +30,7 @@ from ycmd.responses import ( BuildExceptionResponse,
                              BuildResolveCompletionResponse,
                              BuildSignatureHelpResponse,
                              BuildSignatureHelpAvailableResponse,
+                             BuildSemanticTokensResponse,
                              SignatureHelpAvailalability,
                              UnknownExtraConf )
 from ycmd.request_wrap import RequestWrap
@@ -176,6 +177,32 @@ def GetSignatureHelp():
   # to offer anything of for that here.
   return _JsonResponse(
       BuildSignatureHelpResponse( signature_info, errors = errors ) )
+
+
+@app.post( '/semantic_tokens' )
+def GetSemanticTokens():
+  LOGGER.info( 'Received semantic tokens request' )
+  request_data = RequestWrap( request.json )
+
+  if not _server_state.FiletypeCompletionUsable( request_data[ 'filetypes' ],
+                                                 silent = True ):
+    return _JsonResponse( BuildSemanticTokensResponse( None ) )
+
+  errors = None
+  semantic_tokens = None
+
+  try:
+    filetype_completer = _server_state.GetFiletypeCompleter(
+      request_data[ 'filetypes' ] )
+    semantic_tokens = filetype_completer.ComputeSemanticTokens( request_data )
+  except Exception as exception:
+    LOGGER.exception( 'Exception from semantic completer during sig help' )
+    errors = [ BuildExceptionResponse( exception, traceback.format_exc() ) ]
+
+  # No fallback for signature help. The general completer is unlikely to be able
+  # to offer anything of for that here.
+  return _JsonResponse(
+      BuildSemanticTokensResponse( semantic_tokens, errors = errors ) )
 
 
 @app.post( '/filter_and_sort_candidates' )

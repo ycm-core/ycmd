@@ -1496,6 +1496,7 @@ class LanguageServerCompleter( Completer ):
     else:
       return responses.SignatureHelpAvailalability.NOT_AVAILABLE
 
+
   def ComputeSignaturesInner( self, request_data ):
     if not self.ServerIsReady():
       return {}
@@ -1534,6 +1535,87 @@ class LanguageServerCompleter( Completer ):
     result.setdefault( 'activeParameter', 0 )
     result.setdefault( 'activeSignature', 0 )
     return result
+
+
+  def ComputeSemanticTokens( self, request_data ):
+    server_config = self._server_capabilities.get( 'semanticTokensProvider' )
+    if server_config is None:
+      return {}
+
+    class Atlas:
+      def __init__( self, legend ):
+        self.tokenTypes = legend[ 'tokenTypes' ]
+        self.tokenModifiers = legend[ 'tokenModifiers' ]
+
+    atlas = Atlas( server_config[ 'legend' ] )
+
+    server_full_support = server_config.get( 'full' )
+    if server_full_support == {}:
+      server_full_support = True
+
+    if not server_full_support:
+      return {}
+
+    request_id = self.GetConnection().NextRequestId()
+    response = self._connection.GetResponse(
+      request_id,
+      lsp.SemanticTokens( request_id, request_data ),
+      REQUEST_TIMEOUT_COMPLETION )
+
+    if response is None:
+      return {}
+
+    token_data = ( response.get( 'result' ) or {} ).get( 'data' ) or []
+    assert len( token_data ) % 5 == 0
+
+    class Token:
+      line = 0
+      start_character = 0
+      num_characters = 0
+      token_type = 0
+      token_modifiers = 0
+
+    tokens = []
+    last_token = Token()
+    filename = request_data[ 'filepath' ]
+    contents = GetFileLines( request_data, filename )
+
+    for token_index in range( 0, len( token_data ), 5 ):
+      token = Token()
+
+      token.line = last_token.line + token_data[ token_index ]
+
+      token.start_character = token_data[ token_index + 1 ]
+      if token.line == last_token.line:
+        token.start_character += last_token.start_character
+
+      token.num_characters = token_data[ token_index + 2 ]
+
+      token.token_type = token_data[ token_index + 3 ]
+      token.token_modifiers = token_data[ token_index + 4 ]
+
+      tokens.append( {
+        'range': responses.BuildRangeData( _BuildRange(
+          contents,
+          filename,
+          {
+            'start': {
+              'line': token.line,
+              'character': token.start_character,
+            },
+            'end': {
+              'line': token.line,
+              'character': token.start_character + token.num_characters,
+            }
+          }
+        ) ),
+        'type': atlas.tokenTypes[ token.token_type ],
+        'modifiers': [] # TODO: bits represent indexes in atlas
+      } )
+
+      last_token = token
+
+    return { 'tokens': tokens }
 
 
   def GetDetailedDiagnostic( self, request_data ):

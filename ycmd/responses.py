@@ -152,6 +152,14 @@ def BuildSignatureHelpResponse( signature_info, errors = None ):
   }
 
 
+def BuildSemanticTokensResponse( semantic_tokens, errors = None ):
+  return {
+    'semantic_tokens':
+      semantic_tokens if semantic_tokens else {},
+    'errors': errors if errors else [],
+  }
+
+
 # location.column_number_ is a byte offset
 def BuildLocationData( location ):
   return {
