@@ -1279,7 +1279,7 @@ class LanguageServerCompleter( Completer ):
     if not self._is_completion_provider:
       return None, False
 
-    self._UpdateServerWithFileContents( request_data )
+    self._UpdateServerWithCurrentFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
 
@@ -1504,11 +1504,10 @@ class LanguageServerCompleter( Completer ):
     if not self._server_capabilities.get( 'signatureHelpProvider' ):
       return {}
 
-    self._UpdateServerWithFileContents( request_data )
+    self._UpdateServerWithCurrentFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
     msg = lsp.SignatureHelp( request_id, request_data )
-
     response = self.GetConnection().GetResponse( request_id,
                                                  msg,
                                                  REQUEST_TIMEOUT_COMPLETION )
@@ -1544,9 +1543,7 @@ class LanguageServerCompleter( Completer ):
     if not self._ServerIsInitialized():
       return {}
 
-    # FIXME: This all happens at the same time as OnFileReadyToParse, so this is
-    # all duplicated work
-    self._UpdateServerWithFileContents( request_data )
+    self._UpdateServerWithCurrentFileContents( request_data )
 
     server_config = self._server_capabilities.get( 'semanticTokensProvider' )
     if server_config is None:
@@ -2040,6 +2037,14 @@ class LanguageServerCompleter( Completer ):
     return False
 
 
+  def _UpdateServerWithCurrentFileContents( self, request_data ):
+    file_name = request_data[ 'filepath' ]
+    contents = GetFileContents( request_data, file_name )
+    filetypes = request_data[ 'filetypes' ]
+    with self._server_info_mutex:
+      self._RefreshFileContentsUnderLock( file_name, contents, filetypes )
+
+
   def _UpdateServerWithFileContents( self, request_data ):
     """Update the server with the current contents of all open buffers, and
     close any buffers no longer open.
@@ -2052,6 +2057,32 @@ class LanguageServerCompleter( Completer ):
       self._PurgeMissingFilesUnderLock( files_to_purge )
 
 
+  def _RefreshFileContentsUnderLock( self, file_name, contents, file_types ):
+    file_state = self._server_file_state[ file_name ]
+    action = file_state.GetDirtyFileAction( contents )
+
+    LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
+                  file_name,
+                  file_state.state,
+                  action )
+
+    if action == lsp.ServerFileState.OPEN_FILE:
+      msg = lsp.DidOpenTextDocument( file_state,
+                                     file_types,
+                                     contents )
+
+      self.GetConnection().SendNotification( msg )
+    elif action == lsp.ServerFileState.CHANGE_FILE:
+      # FIXME: DidChangeTextDocument doesn't actually do anything
+      # different from DidOpenTextDocument other than send the right
+      # message, because we don't actually have a mechanism for generating
+      # the diffs. This isn't strictly necessary, but might lead to
+      # performance problems.
+      msg = lsp.DidChangeTextDocument( file_state, contents )
+
+      self.GetConnection().SendNotification( msg )
+
+
   def _UpdateDirtyFilesUnderLock( self, request_data ):
     for file_name, file_data in request_data[ 'file_data' ].items():
       if not self._AnySupportedFileType( file_data[ 'filetypes' ] ):
@@ -2062,29 +2093,10 @@ class LanguageServerCompleter( Completer ):
                        self.SupportedFiletypes() )
         continue
 
-      file_state = self._server_file_state[ file_name ]
-      action = file_state.GetDirtyFileAction( file_data[ 'contents' ] )
+      self._RefreshFileContentsUnderLock( file_name,
+                                          file_data[ 'contents' ],
+                                          file_data[ 'filetypes' ] )
 
-      LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
-                    file_name,
-                    file_state.state,
-                    action )
-
-      if action == lsp.ServerFileState.OPEN_FILE:
-        msg = lsp.DidOpenTextDocument( file_state,
-                                       file_data[ 'filetypes' ],
-                                       file_data[ 'contents' ] )
-
-        self.GetConnection().SendNotification( msg )
-      elif action == lsp.ServerFileState.CHANGE_FILE:
-        # FIXME: DidChangeTextDocument doesn't actually do anything
-        # different from DidOpenTextDocument other than send the right
-        # message, because we don't actually have a mechanism for generating
-        # the diffs. This isn't strictly necessary, but might lead to
-        # performance problems.
-        msg = lsp.DidChangeTextDocument( file_state, file_data[ 'contents' ] )
-
-        self.GetConnection().SendNotification( msg )
 
 
   def _UpdateSavedFilesUnderLock( self, request_data ):
