@@ -1021,6 +1021,8 @@ def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test( app ):
                      has_entry( 'fixits', empty() ) )
         assert_that(
           # Range passed to lsp.CodeAction.
+          # LSP requires to use the start of the next line as the end position
+          # for a range that ends with a newline.
           code_action.call_args[ 0 ][ 2 ],
           has_entries( {
             'start': has_entries( {
@@ -1028,7 +1030,7 @@ def LanguageServerCompleter_GetCodeActions_CursorOnEmptyLine_test( app ):
               'character': 0
             } ),
             'end': has_entries( {
-              'line': 0,
+              'line': 1,
               'character': 0
             } )
           } )

@@ -1165,65 +1165,81 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
                 filepath, 15, 29, fixits )
 
 
-@pytest.mark.parametrize( 'description,column', [
-  ( 'diags are merged in FixIt options - start of line', 1 ),
-  ( 'diags are merged in FixIt options - start of diag 1', 10 ),
-  ( 'diags are merged in FixIt options - end of diag 1', 15 ),
-  ( 'diags are merged in FixIt options - start of diag 2', 23 ),
-  ( 'diags are merged in FixIt options - end of diag 2', 46 ),
-  ( 'diags are merged in FixIt options - end of line', 55 ),
+@pytest.mark.parametrize( 'description,column,expect_fixits', [
+  ( 'diags are merged in FixIt options - start of line', 1, 'MERGE' ),
+  ( 'diags are not merged in FixIt options - start of diag 1', 10, 'FIRST' ),
+  ( 'diags are not merged in FixIt options - end of diag 1', 15, 'FIRST' ),
+  ( 'diags are not merged in FixIt options - start of diag 2', 23, 'SECOND' ),
+  ( 'diags are not merged in FixIt options - end of diag 2', 46, 'SECOND' ),
+  ( 'diags are merged in FixIt options - end of line', 55, 'MERGE' ),
 ] )
 @SharedYcmd
-def Subcommands_FixIt_MultipleDiags_test( app, description, column ):
+def Subcommands_FixIt_MultipleDiags_test( app,
+                                          description,
+                                          column,
+                                          expect_fixits ):
   filepath = PathToTestFile( 'simple_eclipse_project',
                              'src',
                              'com',
                              'test',
                              'TestFactory.java' )
 
+  FIRST = [
+    has_entries( {
+      'text': "Change type of 'test' to 'boolean'",
+      'kind': 'quickfix',
+      'chunks': contains_exactly(
+        ChunkMatcher( 'boolean',
+                      LocationMatcher( filepath, 14, 12 ),
+                      LocationMatcher( filepath, 14, 15 ) ),
+      ),
+    } ),
+  ]
+  SECOND = [
+    has_entries( {
+      'text': "Remove argument to match 'doSomethingVaguelyUseful()'",
+      'kind': 'quickfix',
+      'chunks': contains_exactly(
+        ChunkMatcher( '',
+                      LocationMatcher( filepath, 30, 48 ),
+                      LocationMatcher( filepath, 30, 50 ) ),
+      ),
+    } ),
+    has_entries( {
+      'text': "Change method 'doSomethingVaguelyUseful()': Add parameter "
+      "'Bar'",
+      'chunks': instance_of( list ),
+    } ),
+    has_entries( {
+      'text': "Create method 'doSomethingVaguelyUseful(Bar)' in type "
+      "'AbstractTestWidget'",
+      'chunks': instance_of( list ),
+    } ),
+  ]
+
+  ACTIONS = [
+    has_entries( {
+      'text': "Generate toString()...",
+      'chunks': instance_of( list ),
+    } ),
+    has_entries( {
+      'text': "Organize imports",
+      'chunks': instance_of( list ),
+    } ),
+    has_entries( {
+      'text': 'Change modifiers to final where possible',
+      'chunks': instance_of( list ),
+    } ),
+  ]
+
+  FIXITS = {
+    'FIRST': FIRST + ACTIONS,
+    'SECOND': SECOND + ACTIONS,
+    'MERGE': FIRST + SECOND + ACTIONS,
+  }
+
   fixits = has_entries( {
-    'fixits': contains_inanyorder(
-      has_entries( {
-        'text': "Change type of 'test' to 'boolean'",
-        'kind': 'quickfix',
-        'chunks': contains_exactly(
-          ChunkMatcher( 'boolean',
-                        LocationMatcher( filepath, 14, 12 ),
-                        LocationMatcher( filepath, 14, 15 ) ),
-        ),
-      } ),
-      has_entries( {
-        'text': "Remove argument to match 'doSomethingVaguelyUseful()'",
-        'kind': 'quickfix',
-        'chunks': contains_exactly(
-          ChunkMatcher( '',
-                        LocationMatcher( filepath, 30, 48 ),
-                        LocationMatcher( filepath, 30, 50 ) ),
-        ),
-      } ),
-      has_entries( {
-        'text': "Change method 'doSomethingVaguelyUseful()': Add parameter "
-                "'Bar'",
-        'chunks': instance_of( list ),
-      } ),
-      has_entries( {
-        'text': "Create method 'doSomethingVaguelyUseful(Bar)' in type "
-                "'AbstractTestWidget'",
-        'chunks': instance_of( list ),
-      } ),
-      has_entries( {
-        'text': "Generate toString()...",
-        'chunks': instance_of( list ),
-      } ),
-      has_entries( {
-        'text': "Organize imports",
-        'chunks': instance_of( list ),
-      } ),
-      has_entries( {
-        'text': 'Change modifiers to final where possible',
-        'chunks': instance_of( list ),
-      } ),
-    )
+    'fixits': contains_inanyorder( *FIXITS[ expect_fixits ] )
   } )
 
   RunFixItTest( app, description, filepath, 30, column, fixits )
@@ -1987,7 +2003,7 @@ def Subcommands_RequestFailed_test( app ):
 @SharedYcmd
 def Subcommands_IndexOutOfRange_test( app ):
   RunTest( app, {
-    'description': 'Request error handles the error',
+    'description': 'Request with invalid position does not crash',
     'request': {
       'command': 'FixIt',
       'line_num': 99,
@@ -1999,6 +2015,34 @@ def Subcommands_IndexOutOfRange_test( app ):
       'data': has_entries( { 'fixits': contains_exactly( has_entries(
         { 'text': 'Generate Getters and Setters',
           'chunks': instance_of( list ) } ) ) } ),
+    }
+  } )
+
+
+@WithRetry
+@SharedYcmd
+def Subcommands_InvalidRange_test( app ):
+  RunTest( app, {
+    'description': 'Request with invalid visual range is rejected',
+    'request': {
+      'command': 'FixIt',
+      'line_num': 99,
+      'column_num': 99,
+      'filepath': TEST_JAVA,
+      'range': {
+        'start': {
+          'line_num': 99,
+          'column_num': 99
+        },
+        'end': {
+          'line_num': 100,
+          'column_num': 100
+        }
+      }
+    },
+    'expect': {
+      'response': requests.codes.internal_server_error,
+      'data': ErrorMatcher( RuntimeError, 'Invalid range' ),
     }
   } )
 

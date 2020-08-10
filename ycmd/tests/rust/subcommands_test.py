@@ -496,7 +496,7 @@ def Subcommands_FixIt_Basic_test( app ):
     'request': {
       'command': 'FixIt',
       'line_num': 17,
-      'column_num': 13,
+      'column_num': 2,
       'filepath': filepath
     },
     'expect': {
