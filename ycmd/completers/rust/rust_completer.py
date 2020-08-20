@@ -141,6 +141,10 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
     if notification[ 'method' ] == 'rust-analyzer/status':
       if self._server_progress not in [ 'invalid', 'ready' ]:
         self._server_progress = notification[ 'params' ]
+    if notification[ 'method' ] == 'window/showMessage':
+      if ( notification[ 'params' ][ 'message' ] ==
+           'rust-analyzer failed to discover workspace' ):
+        self._server_progress = 'invalid'
 
     super().HandleNotificationInPollThread( notification )
 
