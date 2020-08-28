@@ -965,6 +965,11 @@ def CheckJavaVersion( required_version ):
     'java',
     f'java {required_version} is required to install JDT.LS' )
   java_version = None
+
+  java_tool_options=os.getenv('JAVA_TOOL_OPTIONS')
+
+  if(java_tool_options is not None):
+      os.unsetenv('JAVA_TOOL_OPTIONS')
   try:
     java_version = int(
       subprocess.check_output(
@@ -974,6 +979,8 @@ def CheckJavaVersion( required_version ):
       .strip() )
   except subprocess.CalledProcessError:
     pass
+
+  os.environ['JAVA_TOOL_OPTIONS']=java_tool_options
 
   if java_version is None or java_version < required_version:
     print( f'\n\n*** WARNING ***: jdt.ls requires Java { required_version }.'
