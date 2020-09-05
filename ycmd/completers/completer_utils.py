@@ -201,6 +201,7 @@ DEFAULT_FILETYPE_TRIGGERS = {
   ( 'd,'
     'elixir,'
     'go,'
+    'gdscript,'
     'groovy,'
     'java,'
     'javascript,'
