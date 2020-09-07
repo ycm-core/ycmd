@@ -752,13 +752,13 @@ class TCPSingleStreamConnection( LanguageServerConnection ):
   def TryServerConnectionBlocking( self ):
     LOGGER.info( "Connecting to localhost:%s", self.port )
     expiration = time.time() + TCPSingleStreamConnection.TCP_CONNECT_TIMEOUT
-    reason = None
+    reason = RuntimeError( f"Timeout connecting to port { self.port }" )
     while True:
       if time.time() > expiration:
-        if reason:
-          raise reason
-        else:
-          raise RuntimeError( "Timed out waiting for connection" )
+        LOGGER.error( "Timed out after %s seconds connecting to port %s",
+                      TCPSingleStreamConnection.TCP_CONNECT_TIMEOUT,
+                      self.port )
+        raise reason
 
       try:
         self._client_socket = socket.create_connection( ( '127.0.0.1',
