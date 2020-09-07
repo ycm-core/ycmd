@@ -28,6 +28,10 @@ NO_USER_COMMANDS = 'This completer does not define any commands.'
 MESSAGE_POLL_TIMEOUT = 10
 
 
+class CompletionsChanged( Exception ):
+  pass # pragma: no cover
+
+
 class Completer( metaclass = abc.ABCMeta ):
   """A base class for all Completers in YCM.
 
@@ -121,6 +125,14 @@ class Completer( metaclass = abc.ABCMeta ):
   fields in DetailCandidates() which is called after the filtering is done. See
   python_completer.py for an example.
 
+  You can also support 'delayed' detailing of candidates. The way this works is
+  that you must add a 'resolve' key to the candidate's 'extra_data' which will
+  be round-tripped to the client. The client passes the 'resolve' key back to us
+  in the /resolve_completion request and your completer must override the
+  DetailSingleCandidate() method, which is passed the full list of candidates
+  from the cache and the resolve key supplied. This method must return the
+  candidate, fully detailed. See the LanguageServerCompleter for an example.
+
   If the completer wants to use extra confs, it should implement Language()
   function as well, which returns a string that identifies the language in
   user's .ycmd_extra_conf.py file.
@@ -198,6 +210,11 @@ class Completer( metaclass = abc.ABCMeta ):
 
     self._completions_cache = CompletionsCache()
     self._max_candidates = user_options[ 'max_num_candidates' ]
+    self._max_candidates_to_detail = user_options[
+      'max_num_candidates_to_detail' ]
+
+    LOGGER.info( f"Completion config: { self._max_candidates }, detailing "
+                 f"{ self._max_candidates_to_detail } candiates" )
 
 
   # It's highly likely you DON'T want to override this function but the *Inner
@@ -286,7 +303,31 @@ class Completer( metaclass = abc.ABCMeta ):
     candidates = self._GetCandidatesFromSubclass( request_data )
     candidates = self.FilterAndSortCandidates( candidates,
                                                request_data[ 'query' ] )
+
     return self.DetailCandidates( request_data, candidates )
+
+
+  def ShouldDetailCandidateList( self, candidates ):
+    if self._max_candidates_to_detail < 0:
+      return True
+
+    if len( candidates ) < self._max_candidates_to_detail:
+      return True
+
+    return False
+
+
+  def ResolveCompletionItem( self, request_data ):
+    candidates = self._completions_cache.GetCompletionsIfCacheValid(
+      request_data )
+
+    if not candidates:
+      raise CompletionsChanged( 'Resolve request must not change request data' )
+
+    return self.DetailSingleCandidate( request_data,
+                                       candidates,
+                                       request_data[ 'resolve' ] )
+
 
 
   def _GetCandidatesFromSubclass( self, request_data ):
@@ -299,6 +340,13 @@ class Completer( metaclass = abc.ABCMeta ):
     raw_completions = self.ComputeCandidatesInner( request_data )
     self._completions_cache.Update( request_data, raw_completions )
     return raw_completions
+
+
+  def DetailSingleCandidate( self,
+                             request_data,
+                             candidates,
+                             to_resolve ): # pragma: no cover
+    raise RuntimeError( "Delayed detail candidate not implemented" )
 
 
   def DetailCandidates( self, request_data, candidates ):

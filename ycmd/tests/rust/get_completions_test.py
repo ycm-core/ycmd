@@ -15,7 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import assert_that, contains_exactly
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       empty,
+                       has_key,
+                       is_not )
+from pprint import pformat
+
 
 from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -62,3 +68,18 @@ def GetCompletions_Basic_test( app ):
       )
     )
   )
+
+  # This completer does not require or support resolve
+  assert_that( results[ 0 ], is_not( has_key( 'resolve' ) ) )
+  assert_that( results[ 0 ], is_not( has_key( 'item' ) ) )
+
+  # So (erroneously) resolving an item returns the item
+  completion_data[ 'resolve' ] = 0
+  response = app.post_json( '/resolve_completion', completion_data ).json
+  print( f"Resolve resolve: { pformat( response ) }" )
+
+  # We can't actually check the result because we don't know what completion
+  # resolve ID 0 actually is (could be anything), so we just check that we get 1
+  # result, and that there are no errors.
+  assert_that( response[ 'completion' ], is_not( None ) )
+  assert_that( response[ 'errors' ], empty() )

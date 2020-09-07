@@ -480,6 +480,19 @@ definitions:
             description: |-
               Additional documentation/information to be displayed
               alongside (after) information in `detailed_info`.
+          fixits:
+            type: array
+            description: |-
+              Any editional edits to apply when selecting this completion
+            items:
+              $ref: "#/definitions/FixIt"
+          resolve:
+            type: number
+            description: |-
+              Identifier used to resolve this completion item using
+              /resolve_completion. If not supplied, the item is already
+              fully resolved.
+
 
   CompletionResponse:
     type: object
@@ -498,6 +511,20 @@ definitions:
           1-based byte index of the column from which the completion should be
           applied. This is the column in which the words suggested in
           `completions` should be placed.
+      errors:
+        type: array
+        description: Any errors reported by the semantic completion engine.
+        items:
+          $ref: "#/definitions/ExceptionResponse"
+
+  ResolveCompletionResponse:
+    type: object
+    required:
+      - completion
+      - errors
+    properties:
+      completion:
+        $ref: "#/definitions/Candidate"
       errors:
         type: array
         description: Any errors reported by the semantic completion engine.
@@ -931,6 +958,62 @@ paths:
           description: An error occurred.
           schema:
             $ref: "#/definitions/ExceptionResponse"
+  /resolve_completion:
+    post:
+      summary: Resolve detailed_info for a completion item
+      description: |-
+        Given the `resolve` ID for a completion item, returns the item with
+        additional data filled in.
+
+        Note, the supplied `request_data` must match exactly the `request_data`
+        for the corresponding completion request, except with the `resolve` key
+        filled in with the `resolve` ID from the completion item's `extra_data`.
+      produces:
+        - application/json
+      parameters:
+        - name: request_data
+          in: body
+          description: |-
+            The context data, including the current cursor position, and details
+            of dirty buffers.
+          required: true
+          schema:
+            type: object
+            required:
+              - line_num
+              - column_num
+              - filepath
+              - file_data
+              - resolve
+            properties:
+              line_num:
+                $ref: "#/definitions/LineNumber"
+              column_num:
+                $ref: "#/definitions/ColumnNumber"
+              filepath:
+                $ref: "#/definitions/FilePath"
+              file_data:
+                $ref: "#/definitions/FileDataMap"
+              completer_target:
+                $ref: "#/definitions/CompleterTarget"
+              working_dir:
+                $ref: "#/definitions/WorkingDirectory"
+              extra_conf_data:
+                $ref: "#/definitions/ExtraConfData"
+              resolve:
+                description: |-
+                  The 'resolve' key from the 'extra_data' in the completion item
+                  to resolve.
+      responses:
+        200:
+          description: The list of completion suggestions.
+          schema:
+            $ref: "#/definitions/ResolveCompletionResponse"
+        500:
+          description: An error occurred.
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
+
 
   /signature_help_available:
     get:

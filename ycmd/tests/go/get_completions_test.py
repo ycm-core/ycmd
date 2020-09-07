@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import all_of, assert_that, has_items
+from hamcrest import ( all_of,
+                       assert_that,
+                       has_items,
+                       has_key,
+                       is_not )
 
 from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
@@ -64,3 +68,8 @@ def GetCompletions_Basic_test( app ):
                        'kind': 'Struct',
                      }
                    ) ) ) )
+
+
+  # This completer does not require or support resolve
+  assert_that( results[ 0 ], is_not( has_key( 'resolve' ) ) )
+  assert_that( results[ 0 ], is_not( has_key( 'item' ) ) )
