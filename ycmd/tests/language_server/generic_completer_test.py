@@ -49,6 +49,7 @@ PATH_TO_GENERIC_COMPLETER = p.join( DIR_OF_THIS_SCRIPT,
                                     '..',
                                     'third_party',
                                     'generic_server',
+                                    'server',
                                     'out',
                                     'server.js' )
 TEST_FILE = PathToTestFile( 'generic_server', 'test_file' )

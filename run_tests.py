@@ -330,6 +330,7 @@ def SetUpGenericLSPCompleter():
   npm = FindExecutableOrDie( 'npm', 'npm is required to'
                                     'run GenericLSPCompleter tests.' )
   subprocess.check_call( [ npm, 'install' ] )
+  subprocess.check_call( [ npm, 'run', 'compile' ] )
   os.chdir( old_cwd )
 
 
@@ -340,7 +341,8 @@ def Main():
     sys.exit()
 
   print( 'Running tests on Python', platform.python_version() )
-  SetUpGenericLSPCompleter()
+  if not parsed_args.skip_build:
+    SetUpGenericLSPCompleter()
   if not parsed_args.no_flake8:
     RunFlake8()
   BuildYcmdLibs( parsed_args )

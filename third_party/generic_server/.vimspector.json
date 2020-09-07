@@ -1,0 +1,15 @@
+{
+  "$schema": "https://puremourning.github.io/vimspector/schema/vimspector.schema.json",
+  "configurations": {
+    "Run server": {
+      "adapter": "vscode-node",
+      "configuration": {
+        "request": "launch",
+        "stopOnEntry": "true",
+        "console": "integratedTerminal",
+        "program": "${workspaceRoot}/server/out/server.js",
+        "args": [ "*${CmdLine:--stdio}" ]
+      }
+    }
+  }
+}
