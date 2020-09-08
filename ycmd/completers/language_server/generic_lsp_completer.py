@@ -95,4 +95,6 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
 
   def WorkspaceConfigurationResponse( self, request ):
     if self.ExtraCapabilities().get( 'workspace', {} ).get( 'configuration' ):
-      return self._settings.get( 'ls_config', lambda x: None )( request )
+      sections_to_config_map = self._settings.get( 'ls_config', {} )
+      return [ sections_to_config_map.get( i, None )
+               for i in request[ 'params' ][ 'items' ] ]

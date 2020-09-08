@@ -565,9 +565,9 @@ def UpdateDict( target, override ):
 
   for key, value in override.items():
     current_value = target.get( key )
-    if not isinstance( current_value, collections_abc.Mapping ):
+    if not isinstance( current_value, Mapping ):
       target[ key ] = value
-    elif isinstance( value, collections_abc.Mapping ):
+    elif isinstance( value, Mapping ):
       target[ key ] = UpdateDict( current_value, value )
     else:
       target[ key ] = value
