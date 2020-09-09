@@ -843,6 +843,7 @@ def EnableGoCompleter( args ):
   new_env = os.environ.copy()
   new_env[ 'GO111MODULE' ] = 'on'
   new_env[ 'GOPATH' ] = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
+  new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
   CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.4.4' ],
              env = new_env,
@@ -963,13 +964,16 @@ def EnableJavaScriptCompleter( args ):
 def CheckJavaVersion( required_version ):
   java = FindExecutableOrDie(
     'java',
-    f'java {required_version} is required to install JDT.LS' )
+    f'java { required_version } is required to install JDT.LS' )
   java_version = None
   try:
+    new_env = os.environ.copy()
+    new_env.pop( 'JAVA_TOOL_OPTIONS', None )
     java_version = int(
       subprocess.check_output(
         [ java, os.path.join( DIR_OF_THIS_SCRIPT, 'CheckJavaVersion.java' ) ],
-        stderr=subprocess.STDOUT )
+        stderr=subprocess.STDOUT,
+        env = new_env )
       .decode( 'utf-8' )
       .strip() )
   except subprocess.CalledProcessError:
