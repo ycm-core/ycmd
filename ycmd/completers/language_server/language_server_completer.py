@@ -22,6 +22,8 @@ import contextlib
 import json
 import logging
 import os
+import socket
+import time
 import queue
 import subprocess
 import threading
@@ -227,6 +229,7 @@ class LanguageServerConnection( threading.Thread ):
     - TryServerConnectionBlocking: Connect to the server and return when the
                                     connection is established
     - Shutdown: Close any sockets or channels prior to the thread exit
+    - IsConnected: Whether the socket is connected
     - WriteData: Write some data to the server
     - ReadData: Read some data from the server, blocking until some data is
              available
@@ -298,6 +301,11 @@ class LanguageServerConnection( threading.Thread ):
 
   def Shutdown( self ):
     self._CancelWatchdogThreads()
+
+
+  @abc.abstractmethod
+  def IsConnected( self ):
+    pass
 
 
   @abc.abstractmethod
@@ -603,13 +611,15 @@ class LanguageServerConnection( threading.Thread ):
     them in a Queue which is polled by the long-polling mechanism in
     LanguageServerCompleter."""
     if 'id' in message:
+      message_id = message[ 'id' ]
+      if message_id is None:
+        return
       if 'method' in message:
         # This is a server->client request, which requires a response.
         self._ServerToClientRequest( message )
       else:
         # This is a response to the message with id message[ 'id' ]
         with self._response_mutex:
-          message_id = message[ 'id' ]
           assert message_id in self._responses
           self._responses[ message_id ].ResponseReceived( message )
           del self._responses[ message_id ]
@@ -680,6 +690,11 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
     return True
 
 
+  def IsConnected( self ):
+    # TODO ? self._server_stdin.closed / self._server_stdout.closed?
+    return True
+
+
   def Shutdown( self ):
     super().Shutdown()
     with self._stdin_lock:
@@ -715,6 +730,103 @@ class StandardIOLanguageServerConnection( LanguageServerConnection ):
       raise RuntimeError( "Connection to server died" )
 
     return data
+
+
+class TCPSingleStreamConnection( LanguageServerConnection ):
+  # Connection timeout in seconds
+  TCP_CONNECT_TIMEOUT = 10
+
+  def __init__( self,
+                project_directory,
+                watchdog_factory,
+                port,
+                notification_handler ):
+    super().__init__( project_directory,
+                      watchdog_factory,
+                      notification_handler )
+
+    self.port = port
+    self._client_socket = None
+
+
+  def TryServerConnectionBlocking( self ):
+    LOGGER.info( "Connecting to localhost:%s", self.port )
+    expiration = time.time() + TCPSingleStreamConnection.TCP_CONNECT_TIMEOUT
+    reason = RuntimeError( f"Timeout connecting to port { self.port }" )
+    while True:
+      if time.time() > expiration:
+        LOGGER.error( "Timed out after %s seconds connecting to port %s",
+                      TCPSingleStreamConnection.TCP_CONNECT_TIMEOUT,
+                      self.port )
+        raise reason
+
+      try:
+        self._client_socket = socket.create_connection( ( '127.0.0.1',
+                                                          self.port ) )
+        LOGGER.info( "Language server connection successful on port %s",
+                     self.port )
+        return True
+      except IOError as e:
+        reason = e
+
+      time.sleep( 0.1 )
+
+  def IsConnected( self ):
+    return bool( self._client_socket )
+
+  def Shutdown( self ):
+    super().Shutdown()
+    self._client_socket.close()
+
+
+  def WriteData( self, data ):
+    assert self._connection_event.isSet()
+    assert self._client_socket
+
+    total_sent = 0
+    while total_sent < len( data ):
+      try:
+        sent = self._client_socket.send( data[ total_sent: ] )
+      except OSError:
+        sent = 0
+
+      if sent == 0:
+        raise RuntimeError( 'Socket was closed when writing' )
+
+      total_sent += sent
+
+
+  def ReadData( self, size=-1 ):
+    assert self._connection_event.isSet()
+    assert self._client_socket
+
+    chunks = []
+    bytes_read = 0
+    while bytes_read < size or size < 0:
+      try:
+        if size < 0:
+          chunk = self._client_socket.recv( 2048 )
+        else:
+          chunk = self._client_socket.recv( min( size - bytes_read , 2048 ) )
+      except OSError:
+        chunk = ''
+
+      if chunk == '':
+        # The socket was closed
+        if self.IsStopped():
+          raise LanguageServerConnectionStopped()
+
+        raise RuntimeError( 'Scoket closed unexpectedly when reading' )
+
+      if size < 0:
+        # We just return whatever we read
+        return chunk
+
+      # Otherwise, keep reading if there's more data requested
+      chunks.append( chunk )
+      bytes_read += len( chunk )
+
+    return b''.join( chunks )
 
 
 class LanguageServerCompleter( Completer ):
@@ -809,8 +921,10 @@ class LanguageServerCompleter( Completer ):
     pass # pragma: no cover
 
 
-  def __init__( self, user_options ):
+  def __init__( self, user_options, connection_type = 'stdio' ):
     super().__init__( user_options )
+
+    self._connection_type = connection_type
 
     # _server_info_mutex synchronises access to the state of the
     # LanguageServerCompleter object. There are a number of threads at play
@@ -911,34 +1025,44 @@ class LanguageServerCompleter( Completer ):
                  self.GetServerName(),
                  self.GetCommandLine() )
 
-    self._stderr_file = utils.CreateLogfile(
-      f'{ utils.MakeSafeFileNameString( self.GetServerName() ) }_stderr' )
+    if self.GetCommandLine():
+      self._stderr_file = utils.CreateLogfile(
+        f'{ utils.MakeSafeFileNameString( self.GetServerName() ) }_stderr' )
 
-    with utils.OpenForStdHandle( self._stderr_file ) as stderr:
-      self._server_handle = utils.SafePopen(
-        self.GetCommandLine(),
-        stdin = subprocess.PIPE,
-        stdout = subprocess.PIPE,
-        stderr = stderr,
-        env = self.GetServerEnvironment() )
+      with utils.OpenForStdHandle( self._stderr_file ) as stderr:
+        self._server_handle = utils.SafePopen(
+          self.GetCommandLine(),
+          stdin = subprocess.PIPE,
+          stdout = subprocess.PIPE,
+          stderr = stderr,
+          env = self.GetServerEnvironment() )
 
     self._project_directory = self.GetProjectDirectory( request_data )
-    self._connection = (
-      StandardIOLanguageServerConnection(
+
+    if self._connection_type == 'tcp':
+      self._connection = TCPSingleStreamConnection(
         self._project_directory,
         lambda globs: WatchdogHandler( self, globs ),
-        self._server_handle.stdin,
-        self._server_handle.stdout,
+        self._port,
         self.GetDefaultNotificationHandler() )
-    )
+    else:
+      self._connection = (
+        StandardIOLanguageServerConnection(
+          self._project_directory,
+          lambda globs: WatchdogHandler( self, globs ),
+          self._server_handle.stdin,
+          self._server_handle.stdout,
+          self.GetDefaultNotificationHandler() )
+      )
 
     self._connection.Start()
 
     self._connection.AwaitServerConnection()
 
-    LOGGER.info( '%s started with PID %s',
-                 self.GetServerName(),
-                 self._server_handle.pid )
+    if self._server_handle:
+      LOGGER.info( '%s started with PID %s',
+                   self.GetServerName(),
+                   self._server_handle.pid )
 
     return True
 
@@ -956,9 +1080,10 @@ class LanguageServerCompleter( Completer ):
         self._Reset()
         return
 
-      LOGGER.info( 'Stopping %s with PID %s',
-                   self.GetServerName(),
-                   self._server_handle.pid )
+      if self._server_handle:
+        LOGGER.info( 'Stopping %s with PID %s',
+                     self.GetServerName(),
+                     self._server_handle.pid )
 
     try:
       with self._server_info_mutex:
@@ -983,9 +1108,15 @@ class LanguageServerCompleter( Completer ):
         # Actually this sits around waiting for the connection thraed to exit
         self._connection.Close()
 
-      with self._server_info_mutex:
-        utils.WaitUntilProcessIsTerminated( self._server_handle,
-                                            timeout = 30 )
+      if self._server_handle:
+        for stream in [ self._server_handle.stdout,
+                        self._server_handle.stdin ]:
+          if stream and not stream.closed:
+            stream.close()
+
+        with self._server_info_mutex:
+          utils.WaitUntilProcessIsTerminated( self._server_handle,
+                                              timeout = 30 )
 
         LOGGER.info( '%s stopped', self.GetServerName() )
     except Exception:
@@ -1061,7 +1192,10 @@ class LanguageServerCompleter( Completer ):
 
 
   def ServerIsHealthy( self ):
-    return utils.ProcessIsRunning( self._server_handle )
+    if not self.GetCommandLine():
+      return self._connection and self._connection.IsConnected()
+    else:
+      return utils.ProcessIsRunning( self._server_handle )
 
 
   def ServerIsReady( self ):
@@ -1387,11 +1521,13 @@ class LanguageServerCompleter( Completer ):
     with self._server_info_mutex:
       extras = self.CommonDebugItems() + self.ExtraDebugItems( request_data )
       logfiles = [ self._stderr_file ] + self.AdditionalLogFiles()
-      server = responses.DebugInfoServer( name = self.GetServerName(),
-                                          handle = self._server_handle,
-                                          executable = self.GetCommandLine(),
-                                          logfiles = logfiles,
-                                          extras = extras )
+      server = responses.DebugInfoServer(
+        name = self.GetServerName(),
+        handle = self._server_handle,
+        executable = self.GetCommandLine(),
+        port = self._port if self._connection_type == 'tcp' else None,
+        logfiles = logfiles,
+        extras = extras )
 
     return responses.BuildDebugInfoResponse( name = self.GetCompleterName(),
                                              servers = [ server ] )

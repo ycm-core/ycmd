@@ -1,11 +1,12 @@
 {
+  "$schema": "https://puremourning.github.io/vimspector/schema/vimspector.schema.json",
   "configurations": {
     "python - launch pytest": {
       "adapter": "debugpy",
       "variables": [
         {
           "python": {
-            "shell": "/bin/bash -c 'if [ -z \"${dollar}VIRTUAL_ENV\" ]; then echo $$(which python); else echo \"${dollar}VIRTUAL_ENV/bin/python\"; fi'"
+            "shell": "/bin/bash -c 'if [ -z \"${dollar}VIRTUAL_ENV\" ]; then echo $$(which python3); else echo \"${dollar}VIRTUAL_ENV/bin/python\"; fi'"
           }
         },
         {
