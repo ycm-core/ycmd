@@ -553,13 +553,13 @@ def UpdateDict( target, override ):
   )
   yields:
     {
-      outer: {
-        inner: {
-           key: 'newValue',
-           exitingKey: True
+      'outer': {
+        'inner': {
+           'key': 'newValue',
+           'existingKey': True
         }
       },
-      newKey: { newDict: True }
+      'newKey': { newDict: True }
     }
   """
 

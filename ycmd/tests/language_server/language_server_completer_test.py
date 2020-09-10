@@ -55,7 +55,8 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
     user_options.update( custom_options )
     super().__init__( user_options )
 
-    self._connection = MockConnection()
+    self._connection = MockConnection(
+        lambda request: self.WorkspaceConfigurationResponse( request ) )
     self._started = False
 
   def Language( self ):
@@ -647,6 +648,23 @@ def LanguageServerCompleter_DelayedInitialization_test( app ):
 
       update.assert_called_with( request_data )
       purge.assert_called_with( 'Test.ycmtest' )
+
+
+@IsolatedYcmd()
+def LanguageServerCompleter_RejectWorkspaceConfigurationRequest_test( app ):
+  completer = MockCompleter()
+  notification = {
+    'jsonrpc': '2.0',
+    'method': 'workspace/configuration',
+    'id': 1234,
+    'params': {
+      'items': [ { 'section': 'whatever' } ]
+    }
+  }
+  with patch( 'ycmd.completers.language_server.'
+              'language_server_protocol.Reject' ) as reject:
+    completer.GetConnection()._DispatchMessage( notification )
+    reject.assert_called_with( notification, lsp.Errors.MethodNotFound )
 
 
 @IsolatedYcmd()

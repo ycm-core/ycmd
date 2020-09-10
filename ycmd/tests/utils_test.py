@@ -507,15 +507,43 @@ def GetClangResourceDir_NotFound_test( *args ):
   )
 
 
-def MakeSafeFileNameString_test():
-  tests = (
+@pytest.mark.parametrize( 'unsafe_name,safe_name', [
     ( 'this is a test 0123 -x', 'this_is_a_test_0123__x' ),
     ( 'This Is A Test 0123 -x', 'this_is_a_test_0123__x' ),
     ( 'T˙^ß ^ß å †´ß† 0123 -x', 't______________0123__x' ),
     ( 'contains/slashes',       'contains_slashes' ),
     ( 'contains/newline/\n',    'contains_newline__' ),
     ( '',                       '' ),
-  )
-  for t in tests:
-    assert_that( utils.MakeSafeFileNameString( t[ 0 ] ),
-                 equal_to( t[ 1 ] ) )
+  ] )
+def MakeSafeFileNameString_test( unsafe_name, safe_name ):
+  assert_that( utils.MakeSafeFileNameString( unsafe_name ),
+               equal_to( safe_name ) )
+
+
+@pytest.mark.parametrize( 'target,override,expected', [
+  ( {}, {}, {} ),
+  ( { 1: 1 }, {}, { 1: 1 } ),
+  ( {}, { 1: 1 }, { 1: 1 } ),
+  ( { 1: { 4: 4 } }, { 1: { 2: { 3: 3 } } }, { 1: { 2: { 3: 3 }, 4: 4 } } ),
+  ( { 1: {} }, { 1: 1 }, { 1: 1 } ),
+  (
+    {
+      'outer': { 'inner': { 'key': 'oldValue', 'existingKey': True } }
+    },
+    {
+      'outer': { 'inner': { 'key': 'newValue' } },
+      'newKey': { 'newDict': True },
+    },
+    {
+      'outer': {
+        'inner': {
+           'key': 'newValue',
+           'existingKey': True
+        }
+      },
+      'newKey': { 'newDict': True }
+    } ),
+] )
+def UpdateDict_test( target, override, expected ):
+  assert_that( utils.UpdateDict( target, override ),
+               equal_to( expected ) )
