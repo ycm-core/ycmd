@@ -535,3 +535,41 @@ def AbsolutePath( path, relative_to ):
     path = os.path.join( relative_to, path )
 
   return os.path.normpath( path )
+
+
+def UpdateDict( target, override ):
+  """Apply the updates in |override| to the dict |target|. This is like
+  dict.update, but recursive. i.e. if the existing element is a dict, then
+  override elements of the sub-dict rather than wholesale replacing.
+  e.g.
+  UpdateDict(
+    {
+      'outer': { 'inner': { 'key': 'oldValue', 'existingKey': True } }
+    },
+    {
+      'outer': { 'inner': { 'key': 'newValue' } },
+      'newKey': { 'newDict': True },
+    }
+  )
+  yields:
+    {
+      'outer': {
+        'inner': {
+           'key': 'newValue',
+           'existingKey': True
+        }
+      },
+      'newKey': { newDict: True }
+    }
+  """
+
+  for key, value in override.items():
+    current_value = target.get( key )
+    if not isinstance( current_value, Mapping ):
+      target[ key ] = value
+    elif isinstance( value, Mapping ):
+      target[ key ] = UpdateDict( current_value, value )
+    else:
+      target[ key ] = value
+
+  return target

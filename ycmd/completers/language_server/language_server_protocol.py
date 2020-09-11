@@ -24,7 +24,8 @@ from urllib.request import pathname2url, url2pathname
 
 from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          ToBytes,
-                         ToUnicode )
+                         ToUnicode,
+                         UpdateDict )
 
 
 Error = collections.namedtuple( 'RequestError', [ 'code', 'reason' ] )
@@ -259,78 +260,78 @@ def BuildResponse( request, parameters ):
   return _BuildMessageData( message )
 
 
-def Initialize( request_id, project_directory, settings ):
+def Initialize( request_id, project_directory, extra_capabilities, settings ):
   """Build the Language Server initialize request"""
 
+  capabilities = {
+    'workspace': {
+      'applyEdit': True,
+      'didChangeWatchedFiles': {
+        'dynamicRegistration': True
+      },
+      'workspaceEdit': { 'documentChanges': True, },
+      'symbol': {
+        'symbolKind': {
+          'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
+        }
+      }
+    },
+    'textDocument': {
+      'codeAction': {
+        'codeActionLiteralSupport': {
+          'codeActionKind': {
+            'valueSet': [ '',
+                          'quickfix',
+                          'refactor',
+                          'refactor.extract',
+                          'refactor.inline',
+                          'refactor.rewrite',
+                          'source',
+                          'source.organizeImports' ]
+          }
+        }
+      },
+      'completion': {
+        'completionItemKind': {
+          # ITEM_KIND list is 1-based.
+          # valueSet is a list of the indices of items supported
+          'valueSet': list( range( 1, len( ITEM_KIND ) ) ),
+        },
+        'completionItem': {
+          'documentationFormat': [
+            'plaintext',
+            'markdown'
+          ],
+        },
+      },
+      'hover': {
+        'contentFormat': [
+          'plaintext',
+          'markdown'
+        ]
+      },
+      'signatureHelp': {
+        'signatureInformation': {
+          'parameterInformation': {
+            'labelOffsetSupport': True,
+          },
+          'documentationFormat': [
+            'plaintext',
+            'markdown'
+          ],
+        },
+      },
+      'synchronization': {
+        'didSave': True
+      },
+    },
+  }
   return BuildRequest( request_id, 'initialize', {
     'processId': os.getpid(),
     'rootPath': project_directory,
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
-    'capabilities': {
-      'experimental': { 'statusNotification': True },
-      'workspace': {
-        'applyEdit': True,
-        'didChangeWatchedFiles': {
-          'dynamicRegistration': True
-        },
-        'workspaceEdit': { 'documentChanges': True, },
-        'symbol': {
-          'symbolKind': {
-            'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
-          }
-        }
-      },
-      'textDocument': {
-        'codeAction': {
-          'codeActionLiteralSupport': {
-            'codeActionKind': {
-              'valueSet': [ '',
-                            'quickfix',
-                            'refactor',
-                            'refactor.extract',
-                            'refactor.inline',
-                            'refactor.rewrite',
-                            'source',
-                            'source.organizeImports' ]
-            }
-          }
-        },
-        'completion': {
-          'completionItemKind': {
-            # ITEM_KIND list is 1-based.
-            # valueSet is a list of the indices of items supported
-            'valueSet': list( range( 1, len( ITEM_KIND ) ) ),
-          },
-          'completionItem': {
-            'documentationFormat': [
-              'plaintext',
-              'markdown'
-            ],
-          },
-        },
-        'hover': {
-          'contentFormat': [
-            'plaintext',
-            'markdown'
-          ]
-        },
-        'signatureHelp': {
-          'signatureInformation': {
-            'parameterInformation': {
-              'labelOffsetSupport': True,
-            },
-            'documentationFormat': [
-              'plaintext',
-              'markdown'
-            ],
-          },
-        },
-        'synchronization': {
-          'didSave': True
-        },
-      },
-    },
+    'capabilities': UpdateDict( capabilities, extra_capabilities ),
   } )
 
 

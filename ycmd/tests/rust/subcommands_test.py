@@ -238,6 +238,7 @@ def Subcommands_GetDoc_NoDocumentation_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_GetDoc_Function_test( app ):
   RunTest( app, {

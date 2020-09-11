@@ -256,12 +256,19 @@ returned from `Settings` under the `ls` key. The python dictionary is converted
 to json and included verbatim in the LSP initialize request. In order to
 determine the set of options for a server, consult the server's documentation or
 `package.json` file.
+A `config_sections` object is a dictionary whose keys are "sections" and values
+are pieces of settings (usually found in the `ls` object) corresponding to
+those sections. This is even more underspecified and requires trial and error
+to make it work. It is optional and only useful if you explicitly enable
+`workspace/configuration` support.
 
 Example of LSP configuration:
 ```python
 def Settings( **kwargs ):
   if kwargs[ 'language' ] == 'java':
-    return { 'ls': { 'java.rename.enabled' : False } }
+    return { 'ls': { 'java.rename.enabled' : False },
+             # `config_sections` is not used for java...
+             'config_sections': { 'section0': {} }
 ```
 
 In addition, ycmd can use any language server, given a file type and a command
@@ -272,6 +279,9 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `cmdline`: the list representing the command line to execute the server
 - `filetypes`: list of supported filetypes.
 - `project_root_files`: Tells ycmd which files indicate project root.
+- `capabilities'`: Overrides the default LSP capabilities of ycmd.
+  - If you enable `workspace/configuration` support, check the extra conf
+    details, relevant to LSP servers.
 
 ```json
 {

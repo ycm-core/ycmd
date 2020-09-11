@@ -141,6 +141,10 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
     if notification[ 'method' ] == 'rust-analyzer/status':
       if self._server_progress not in [ 'invalid', 'ready' ]:
         self._server_progress = notification[ 'params' ]
+    if notification[ 'method' ] == 'window/showMessage':
+      if ( notification[ 'params' ][ 'message' ] ==
+           'rust-analyzer failed to discover workspace' ):
+        self._server_progress = 'invalid'
 
     super().HandleNotificationInPollThread( notification )
 
@@ -194,3 +198,15 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
     documentation = '\n'.join(
       line for line in lines if line and not line.startswith( '```' ) ).strip()
     return responses.BuildDetailedInfoResponse( documentation )
+
+
+  def ExtraCapabilities( self ):
+    return {
+      'experimental': { 'statusNotification': True },
+      'workspace': { 'configuration': True }
+    }
+
+
+  def WorkspaceConfigurationResponse( self, request ):
+    assert len( request[ 'params' ][ 'items' ] ) == 1
+    return [ self._settings.get( 'ls', {} ).get( 'rust-analyzer' ) ]

@@ -16,8 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-from ycmd.tests.test_utils import ( IsolatedApp,
-                                    StopCompleterServer )
+from ycmd.tests.test_utils import IsolatedApp, StopCompleterServer
 
 
 @pytest.fixture

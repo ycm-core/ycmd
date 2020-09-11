@@ -24,6 +24,7 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
     self._name = server_settings[ 'name' ]
     self._supported_filetypes = server_settings[ 'filetypes' ]
     self._project_root_files = server_settings.get( 'project_root_files', [] )
+    self._capabilities = server_settings.get( 'capabilities', {} )
 
     self._command_line = server_settings.get( 'cmdline' )
     self._port = server_settings.get( 'port' )
@@ -87,3 +88,14 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
 
   def SupportedFiletypes( self ):
     return self._supported_filetypes
+
+
+  def ExtraCapabilities( self ):
+    return self._capabilities
+
+
+  def WorkspaceConfigurationResponse( self, request ):
+    if self._capabilities.get( 'workspace', {} ).get( 'configuration' ):
+      sections_to_config_map = self._settings.get( 'config_sections', {} )
+      return [ sections_to_config_map.get( item.get( 'section', '' ) )
+               for item in request[ 'params' ][ 'items' ] ]
