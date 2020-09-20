@@ -956,15 +956,19 @@ class LanguageServerCompleter( Completer ):
     #     separate thread and might call methods requiring us to synchronise the
     #     server's view of file state with our own. We protect from clobbering
     #     by doing all server-file-state operations under this mutex.
-    #   - There are certain events that we handle in the message pump thread.
-    #     These include diagnostics and some parts of initialization. We must
-    #     protect against concurrent access to our internal state (such as the
-    #     server file state, and stored data about the server itself) when we
-    #     are calling methods on this object from the message pump). We
-    #     synchronise on this mutex for that.
+    #   - There are certain events that we handle in the message pump thread,
+    #     like some parts of initialization. We must protect against concurrent
+    #     access to our internal state (such as the server file state, and
+    #     stored data about the server itself) when we are calling methods on
+    #     this object from the message pump). We synchronise on this mutex for
+    #     that.
     #   - We need to make sure that multiple client requests don't try to start
     #     or stop the server simultaneously, so we also do all server
     #     start/stop/etc. operations under this mutex
+    #   - Acquiring this mutex from the poll thread can lead to deadlocks.
+    #     Currently, this is avoided by using _latest_diagnostics_mutex to
+    #     access _latest_diagnostics, as that is the only resource shared with
+    #     the poll thread.
     self._server_info_mutex = threading.Lock()
     self.ServerReset()
 
@@ -1011,6 +1015,7 @@ class LanguageServerCompleter( Completer ):
     Implementations are required to call this after disconnection and killing
     the downstream server."""
     self._server_file_state = lsp.ServerFileStateStore()
+    self._latest_diagnostics_mutex = threading.Lock()
     self._latest_diagnostics = collections.defaultdict( list )
     self._sync_type = 'Full'
     self._initialize_response = None
@@ -1511,7 +1516,7 @@ class LanguageServerCompleter( Completer ):
       return responses.BuildDisplayMessageResponse(
           'Diagnostics are not ready yet.' )
 
-    with self._server_info_mutex:
+    with self._latest_diagnostics_mutex:
       diagnostics = list( self._latest_diagnostics[
           lsp.FilePathToUri( current_file ) ] )
 
@@ -1767,7 +1772,7 @@ class LanguageServerCompleter( Completer ):
     filepath = request_data[ 'filepath' ]
     uri = lsp.FilePathToUri( filepath )
     contents = GetFileLines( request_data, filepath )
-    with self._server_info_mutex:
+    with self._latest_diagnostics_mutex:
       if uri in self._latest_diagnostics:
         diagnostics = [ _BuildDiagnostic( contents, uri, diag )
                         for diag in self._latest_diagnostics[ uri ] ]
@@ -1879,7 +1884,7 @@ class LanguageServerCompleter( Completer ):
         # Ignore diagnostics for URIs we don't recognise
         LOGGER.exception( 'Ignoring diagnostics for unrecognized URI' )
         return
-      with self._server_info_mutex:
+      with self._latest_diagnostics_mutex:
         self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
 
 
@@ -2400,7 +2405,7 @@ class LanguageServerCompleter( Completer ):
 
     cursor_range_ls = lsp.Range( request_data )
 
-    with self._server_info_mutex:
+    with self._latest_diagnostics_mutex:
       # _latest_diagnostics contains LSP rnages, _not_ YCM ranges
       file_diagnostics = list( self._latest_diagnostics[
           lsp.FilePathToUri( request_data[ 'filepath' ] ) ] )
