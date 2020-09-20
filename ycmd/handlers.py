@@ -27,6 +27,7 @@ from bottle import request
 from ycmd import extra_conf_store, hmac_plugin, server_state, user_options_store
 from ycmd.responses import ( BuildExceptionResponse,
                              BuildCompletionResponse,
+                             BuildResolveCompletionResponse,
                              BuildSignatureHelpResponse,
                              BuildSignatureHelpAvailableResponse,
                              SignatureHelpAvailalability,
@@ -140,6 +141,22 @@ def GetCompletions():
       BuildCompletionResponse( completions if completions else [],
                                request_data[ 'start_column' ],
                                errors = errors ) )
+
+
+@app.post( '/resolve_completion' )
+def ResolveCompletionItem():
+  LOGGER.info( "Received resolve request" )
+  request_data = RequestWrap( request.json )
+  completer = _GetCompleterForRequestData( request_data )
+
+  errors = None
+  completion = None
+  try:
+    completion = completer.ResolveCompletionItem( request_data )
+  except Exception as e:
+    errors = [ BuildExceptionResponse( e, traceback.format_exc() ) ]
+
+  return _JsonResponse( BuildResolveCompletionResponse( completion, errors ) )
 
 
 @app.post( '/signature_help' )

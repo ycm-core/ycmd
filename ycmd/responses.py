@@ -137,6 +137,13 @@ def BuildCompletionResponse( completions,
   }
 
 
+def BuildResolveCompletionResponse( completion, errors ):
+  return {
+    'completion': completion,
+    'errors': errors if errors else [],
+  }
+
+
 def BuildSignatureHelpResponse( signature_info, errors = None ):
   return {
     'signature_help':

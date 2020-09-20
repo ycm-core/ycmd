@@ -52,6 +52,11 @@ ycm_core = ImportCore()
 from unittest import skipIf
 
 TESTS_DIR = os.path.abspath( os.path.dirname( __file__ ) )
+TEST_OPTIONS = {
+  # The 'client' represented by the tests supports on-demand resolve, but the
+  # server default config doesn't for backward compatibility
+  'max_num_candidates_to_detail': 10
+}
 
 WindowsOnly = skipIf( not OnWindows(), 'Windows only' )
 ClangOnly = skipIf( not ycm_core.HasClangSupport(),
@@ -237,6 +242,7 @@ def TemporarySymlink( source, link ):
 def SetUpApp( custom_options = {} ):
   bottle.debug( True )
   options = user_options_store.DefaultOptions()
+  options.update( TEST_OPTIONS )
   options.update( custom_options )
   handlers.UpdateUserOptions( options )
   extra_conf_store.Reset()
@@ -399,8 +405,7 @@ def WithRetry( test ):
     expiry = time.time() + 30
     while True:
       try:
-        test( *args, **kwargs )
-        return
+        return test( *args, **kwargs )
       except Exception as test_exception:
         if time.time() > expiry:
           raise

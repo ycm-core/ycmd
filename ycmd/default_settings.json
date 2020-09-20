@@ -10,6 +10,7 @@
   "collect_identifiers_from_comments_and_strings": 0,
   "max_num_identifier_candidates": 10,
   "max_num_candidates": 50,
+  "max_num_candidates_to_detail": -1,
   "extra_conf_globlist": [],
   "global_ycm_extra_conf": "",
   "confirm_extra_conf": 1,
