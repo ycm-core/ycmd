@@ -90,7 +90,7 @@ JDTLS_SHA256 = (
 TSSERVER_VERSION = '3.9.7'
 
 RUST_TOOLCHAIN = 'nightly-2020-08-19'
-RLS_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
+RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
   'ERROR: the build failed.\n\n'
@@ -852,14 +852,14 @@ def EnableGoCompleter( args ):
 
 
 def WriteToolchainVersion( version ):
-  path = p.join( RLS_DIR, 'TOOLCHAIN_VERSION' )
+  path = p.join( RUST_ANALYZER_DIR, 'TOOLCHAIN_VERSION' )
   with open( path, 'w' ) as f:
     f.write( version )
 
 
 def ReadToolchainVersion():
   try:
-    filepath = p.join( RLS_DIR, 'TOOLCHAIN_VERSION' )
+    filepath = p.join( RUST_ANALYZER_DIR, 'TOOLCHAIN_VERSION' )
     with open( filepath ) as f:
       return f.read().strip()
   except OSError:
@@ -868,7 +868,7 @@ def ReadToolchainVersion():
 
 def EnableRustCompleter( switches ):
   if switches.quiet:
-    sys.stdout.write( 'Installing RLS for Rust support...' )
+    sys.stdout.write( 'Installing rust-analyzer for Rust support...' )
     sys.stdout.flush()
 
   toolchain_version = ReadToolchainVersion()
@@ -919,12 +919,12 @@ def EnableRustCompleter( switches ):
         env = new_env
       ).rstrip().decode( 'utf8' )
 
-      if p.exists( RLS_DIR ):
-        RemoveDirectory( RLS_DIR )
-      os.makedirs( RLS_DIR )
+      if p.exists( RUST_ANALYZER_DIR ):
+        RemoveDirectory( RUST_ANALYZER_DIR )
+      os.makedirs( RUST_ANALYZER_DIR )
 
       for folder in os.listdir( toolchain_dir ):
-        shutil.move( p.join( toolchain_dir, folder ), RLS_DIR )
+        shutil.move( p.join( toolchain_dir, folder ), RUST_ANALYZER_DIR )
 
       WriteToolchainVersion( RUST_TOOLCHAIN )
     finally:
