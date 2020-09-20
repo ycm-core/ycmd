@@ -43,7 +43,8 @@ from ycmd.tests.test_utils import ( ClearCompletionsCache,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
                                     LocationMatcher,
-                                    WithRetry )
+                                    WithRetry,
+                                    UnixOnly )
 from ycmd.utils import ReadFile
 from unittest.mock import patch
 from ycmd.completers.completer import CompletionsChanged
@@ -554,6 +555,7 @@ def GetCompletions_ServerNotInitialized_test( app ):
     } )
 
 
+@UnixOnly
 @SharedYcmd
 def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
   ClearCompletionsCache()
@@ -630,6 +632,7 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
 
 
 
+@UnixOnly
 @SharedYcmd
 def GetCompletions_FewerThan10_Resolved_test( app ):
   ClearCompletionsCache()
@@ -675,6 +678,7 @@ def GetCompletions_FewerThan10_Resolved_test( app ):
 
 
 
+@UnixOnly
 @SharedYcmd
 def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
   ClearCompletionsCache()
@@ -732,6 +736,7 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
 
 
 
+@UnixOnly
 @SharedYcmd
 def GetCompletions_MoreThan10ForceSemantic_test( app ):
   ClearCompletionsCache()
