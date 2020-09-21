@@ -17,7 +17,9 @@ import sysconfig
 import tarfile
 from zipfile import ZipFile
 import tempfile
+from pget.down import Downloader
 
+DOWNLOAD_SPLIT = 8
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 PY_VERSION = sys.version_info[ 0 : 3 ]
@@ -141,10 +143,9 @@ def CheckFileIntegrity( file_path, check_sum ):
 
 
 def DownloadFileTo( download_url, file_path ):
-  request = requests.get( download_url, stream = True )
-  with open( file_path, 'wb' ) as package_file:
-    package_file.write( request.content )
-  request.close()
+    downloader = Downloader(download_url, file_path, DOWNLOAD_SPLIT)
+    downloader.start()
+    downloader.wait_for_finish()
 
 
 def OnMac():
