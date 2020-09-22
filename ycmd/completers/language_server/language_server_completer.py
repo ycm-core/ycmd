@@ -1955,8 +1955,8 @@ class LanguageServerCompleter( Completer ):
     synchronous operation."""
     with self._server_info_mutex:
       self._UpdateDirtyFilesUnderLock( request_data )
-      # files_to_purge = self._UpdateSavedFilesUnderLock( request_data )
-      # self._PurgeMissingFilesUnderLock( files_to_purge )
+      files_to_purge = self._UpdateSavedFilesUnderLock( request_data )
+      self._PurgeMissingFilesUnderLock( files_to_purge )
 
 
   def _UpdateDirtyFilesUnderLock( self, request_data ):
