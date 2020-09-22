@@ -413,14 +413,10 @@ def DidChangeTextDocument( file_state, file_contents ):
     content_changes = [
       { 'text': change[ 'replacement_text' ],
         'range': {
-          'start': { 'line':
-                       int( change[ 'range' ][ 'start' ][ 'line' ] ) - 1,
-                     'character':
-                       int( change[ 'range' ][ 'start' ][ 'col' ] ) - 1 },
-          'end':   { 'line':
-                       int( change[ 'range' ][ 'end' ][ 'line' ] ) - 1,
-                     'character':
-                       int( change[ 'range' ][ 'end' ][ 'col' ] ) - 1 }
+          'start': { 'line': change[ 'range' ][ 'start' ][ 'line' ] - 1,
+                     'character': change[ 'range' ][ 'start' ][ 'col' ] - 1 },
+          'end':   { 'line': change[ 'range' ][ 'end' ][ 'line' ] - 1,
+                     'character': change[ 'range' ][ 'end' ][ 'col' ] - 1 }
         } } for change in file_contents ]
   else:
     content_changes = [ { 'text': file_contents } ]
@@ -429,7 +425,7 @@ def DidChangeTextDocument( file_state, file_contents ):
       'uri': FilePathToUri( file_state.filename ),
       'version': file_state.version,
     },
-    'contentChanges': content_changes  } )
+    'contentChanges': content_changes } )
 
 
 def DidSaveTextDocument( file_state, file_contents ):
