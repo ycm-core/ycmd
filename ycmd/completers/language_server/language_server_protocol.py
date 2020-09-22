@@ -407,15 +407,29 @@ def DidChangeTextDocument( file_state, file_contents ):
   # textDocument/didChange notification. It is useful when a LSP server
   # needs to be forced to reparse a file without sending all the changes.
   # More specifically, clangd completer relies on this.
+  if file_contents is None:
+    content_changes = []
+  elif isinstance( file_contents, list ):
+    content_changes = [
+      { 'text': change[ 'replacement_text' ],
+        'range': {
+          'start': { 'line':
+                       int( change[ 'range' ][ 'start' ][ 'line' ] ) - 1,
+                     'character':
+                       int( change[ 'range' ][ 'start' ][ 'col' ] ) - 1 },
+          'end':   { 'line':
+                       int( change[ 'range' ][ 'end' ][ 'line' ] ) - 1,
+                     'character':
+                       int( change[ 'range' ][ 'end' ][ 'col' ] ) - 1 }
+        } } for change in file_contents ]
+  else:
+    content_changes = [ { 'text': file_contents } ]
   return BuildNotification( 'textDocument/didChange', {
     'textDocument': {
       'uri': FilePathToUri( file_state.filename ),
       'version': file_state.version,
     },
-    'contentChanges': [
-      { 'text': file_contents },
-    ] if file_contents is not None else [],
-  } )
+    'contentChanges': content_changes  } )
 
 
 def DidSaveTextDocument( file_state, file_contents ):
