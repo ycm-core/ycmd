@@ -89,7 +89,7 @@ def GetSignatureHelpAvailable():
 
 @app.get( '/buffer_update_type' )
 def GetBufferUpdateType():
-  LOGGER.info( 'Received buffer update type request = %s', request.query_string )
+  LOGGER.info( 'Received buffer update type request' )
   if request.query.subserver:
     filetype = request.query.subserver
     try:

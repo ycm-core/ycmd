@@ -413,10 +413,12 @@ def DidChangeTextDocument( file_state, file_contents ):
     content_changes = [
       { 'text': change[ 'replacement_text' ],
         'range': {
-          'start': { 'line': change[ 'range' ][ 'start' ][ 'line' ] - 1,
-                     'character': change[ 'range' ][ 'start' ][ 'col' ] - 1 },
-          'end':   { 'line': change[ 'range' ][ 'end' ][ 'line' ] - 1,
-                     'character': change[ 'range' ][ 'end' ][ 'col' ] - 1 }
+          'start': {
+            'line': change[ 'range' ][ 'start' ][ 'line_num' ] - 1,
+            'character': change[ 'range' ][ 'start' ][ 'column_num' ] - 1 },
+          'end': {
+            'line': change[ 'range' ][ 'end' ][ 'line_num' ] - 1,
+            'character': change[ 'range' ][ 'end' ][ 'column_num' ] - 1 }
         } } for change in file_contents ]
   else:
     content_changes = [ { 'text': file_contents } ]
