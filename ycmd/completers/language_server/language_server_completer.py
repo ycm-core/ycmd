@@ -1454,6 +1454,12 @@ class LanguageServerCompleter( Completer ):
     return completions
 
 
+  def BufferUpdateType( self ):
+    if not self.ServerIsReady():
+      return responses.BufferUpdateTypes.PENDING
+    return self._sync_type if self._sync_type != 'None' else 'Full'
+
+
   def SignatureHelpAvailable( self ):
     if self._signature_help_disabled:
       return responses.SignatureHelpAvailalability.NOT_AVAILABLE

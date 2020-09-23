@@ -19,7 +19,9 @@ import abc
 import threading
 from ycmd import extra_conf_store
 from ycmd.completers import completer_utils
-from ycmd.responses import NoDiagnosticSupport, SignatureHelpAvailalability
+from ycmd.responses import ( BufferUpdateTypes,
+                             NoDiagnosticSupport,
+                             SignatureHelpAvailalability )
 from ycmd.utils import LOGGER
 
 NO_USER_COMMANDS = 'This completer does not define any commands.'
@@ -509,6 +511,10 @@ class Completer( metaclass = abc.ABCMeta ):
 
   def ServerIsReady( self ):
     return self.ServerIsHealthy()
+
+
+  def BufferUpdateType( self ):
+    return BufferUpdateTypes.FULL
 
 
   def SignatureHelpAvailable( self ):

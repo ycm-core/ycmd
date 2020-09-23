@@ -29,6 +29,8 @@ from ycmd.responses import ( BuildExceptionResponse,
                              BuildCompletionResponse,
                              BuildResolveCompletionResponse,
                              BuildSignatureHelpResponse,
+                             BuildBufferUpdateTypeResponse,
+                             BufferUpdateTypes,
                              BuildSignatureHelpAvailableResponse,
                              SignatureHelpAvailalability,
                              UnknownExtraConf )
@@ -81,6 +83,22 @@ def GetSignatureHelpAvailable():
         SignatureHelpAvailalability.NOT_AVAILABLE ) )
     value = completer.SignatureHelpAvailable()
     return _JsonResponse( BuildSignatureHelpAvailableResponse( value ) )
+  else:
+    raise RuntimeError( 'Subserver not specified' )
+
+
+@app.get( '/buffer_update_type' )
+def GetBufferUpdateType():
+  LOGGER.info( 'Received buffer update type request = %s', request.query_string )
+  if request.query.subserver:
+    filetype = request.query.subserver
+    try:
+      completer = _server_state.GetFiletypeCompleter( [ filetype ] )
+    except ValueError:
+      return _JsonResponse( BuildBufferUpdateTypeResponse(
+        BufferUpdateTypes.FULL ) )
+    value = completer.BufferUpdateType()
+    return _JsonResponse( BuildBufferUpdateTypeResponse( value ) )
   else:
     raise RuntimeError( 'Subserver not specified' )
 

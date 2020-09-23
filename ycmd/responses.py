@@ -38,6 +38,12 @@ EMPTY_SIGNATURE_INFO = {
 }
 
 
+class BufferUpdateTypes:
+  FULL = 'Full'
+  INCREMENTAL = 'Incremental'
+  PENDING = 'PENDING'
+
+
 class SignatureHelpAvailalability:
   AVAILABLE = 'YES'
   NOT_AVAILABLE = 'NO'
@@ -408,6 +414,10 @@ def BuildDebugInfoResponse( name, servers = [], items = [] ):
     'servers': [ BuildServerData( server ) for server in servers ],
     'items': [ BuildItemData( item ) for item in items ]
   }
+
+
+def BuildBufferUpdateTypeResponse( value ):
+  return { 'update_type': value }
 
 
 def BuildSignatureHelpAvailableResponse( value ):
