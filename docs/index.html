@@ -100,6 +100,18 @@
             <tbody>
                     <tr>
                             <td class="swagger--summary-path" rowspan="1">
+                                <a href="#path--buffer_update_type">/buffer_update_type</a>
+                            </td>
+                        <td>
+                            <a href="#operation--buffer_update_type-get">GET</a>
+                        </td>
+                        <td>
+                            <p>Are incremental buffer updates supported for some filetype</p>
+        
+                        </td>
+                    </tr>
+                    <tr>
+                            <td class="swagger--summary-path" rowspan="1">
                                 <a href="#path--completions">/completions</a>
                             </td>
                         <td>
@@ -297,6 +309,133 @@
     
     <h2>Paths</h2>
     
+        
+        <span id="path--buffer_update_type"></span>
+            <div id="operation--buffer_update_type-get" class="swagger--panel-operation-get panel">
+                <div class="panel-heading">
+                    <div class="operation-summary">Are incremental buffer updates supported for some filetype</div>
+                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/buffer_update_type</strong></h3>
+                </div>
+                <div class="panel-body">
+                    <section class="sw-operation-description">
+                        <p>Some filetypes, most often those backed by a LSP server, support
+            incremental updates.</p>
+            <p>If the response is PENDING, the client should make another
+            /signature_help_available request later.</p>
+            
+                    </section>
+            
+                    
+                        <section class="sw-request-params">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th class="sw-param-name"></th>
+                                    <th class="sw-param-description"></th>
+                                    <th class="sw-param-type"></th>
+                                    <th class="sw-param-data-type"></th>
+                                    <th class="sw-param-annotation"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                        <tr>
+                                            <td>
+                                                subserver
+                                            </td>
+                                            <td><p>Subserver filetype for which the request is made. If a subserver
+                                        supports multiple filetypes, the parameter may hold any one of them.</p>
+                                        </td>
+                                            <td>query</td>
+                                            <td>
+                                        <span class="json-property-type">string</span>
+                                        <span class="json-property-range" title="Value limits"></span>
+                                        
+                                            </td>
+                                            <td>
+                                                    <span class="json-property-required"></span>
+                                            </td>
+                                        </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    
+                        <section class="sw-responses">
+                                <p><span class="label label-default">application/json</span> 
+                    </p>
+                    
+                            <dl>
+                                    <dt class="sw-response-200">
+                                        200 OK
+                                    
+                                    </dt>
+                                    <dd class="sw-response-200">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>Buffer update type info.</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                            
+                                                                    <section class="json-schema-properties">
+                                                                        <dl>
+                                                                                <dt data-property-name="buffer_update_type">
+                                                                                    <span class="json-property-name">buffer_update_type:</span>
+                                                                                    
+                                                                                    <span class="json-property-type">string</span>    <span class="json-property-enum" title="Possible values">, x &isin; {
+                                                                                                    <span class="json-property-enum-item">Full</span>
+                                                                                                ,
+                                                                                                    <span class="json-property-enum-item">Incremental</span>
+                                                                                                ,
+                                                                                                    <span class="json-property-enum-item">PENDING</span>
+                                                                                                
+                                                                                            }
+                                                                                            </span>
+                                                                                    <span class="json-property-range" title="Value limits"></span>
+                                                                                    
+                                                                                        <span class="json-property-required"></span>
+                                                                                </dt>
+                                                                                <dd>
+                                                                                    
+                                                                                    <div class="json-inner-schema">
+                                                                                        
+                                                                                    </div>
+                                                                                </dd>
+                                                                        </dl>
+                                                                    </section>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                                    <dt class="sw-response-500">
+                                        500 Internal Server Error
+                                    
+                                    </dt>
+                                    <dd class="sw-response-500">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>An error occurred.</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                                <a class="json-schema-ref" href="#/definitions/ExceptionResponse">ExceptionResponse</a>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                            </dl>
+                        </section>
+                </div>
+            </div>
         
         <span id="path--completions"></span>
             <div id="operation--completions-post" class="swagger--panel-operation-post panel">
@@ -3714,10 +3853,10 @@
                                                     <span class="json-property-type">string[]</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
-                                                        <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
-                                                    
+                                                    <p><em>NOTE</em>: Required for the current buffer.</p>
+                                    
                                                     <div class="json-inner-schema">
                                                         
                                                                         <section class="json-schema-array-items">
@@ -3736,14 +3875,70 @@
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
-                                                        <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
-                                                    <p>The entire contents of the buffer encoded as UTF-8.</p>
+                                                    <p>The entire contents of the buffer encoded as UTF-8.
+                                    <em>NOTE</em>: REQUIRED for the current buffer.</p>
                                     
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
+                                                </dd>
+                                                <dt data-property-name="changes">
+                                                    <span class="json-property-name">changes:</span>
+                                                    
+                                                    <span class="json-property-type">object[]</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>The list of incremental changes.</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                                        <section class="json-schema-array-items">
+                                                                            
+                                                                            <span class="json-property-type">object</span>
+                                                                            <span class="json-property-range" title="Value limits"></span>
+                                                                            
+                                                                            <div class="json-inner-schema">
+                                                                                
+                                                                                        <section class="json-schema-properties">
+                                                                                            <dl>
+                                                                                                    <dt data-property-name="replacement_text">
+                                                                                                        <span class="json-property-name">replacement_text:</span>
+                                                                                                        
+                                                                                                        <span class="json-property-type">string</span>
+                                                                                                        <span class="json-property-range" title="Value limits"></span>
+                                                                                                        
+                                                                                                            <span class="json-property-required"></span>
+                                                                                                    </dt>
+                                                                                                    <dd>
+                                                                                                        <p>The text with which to replace the range identified by <code>range</code>.</p>
+                                                                                        
+                                                                                                        <div class="json-inner-schema">
+                                                                                                            
+                                                                                                        </div>
+                                                                                                    </dd>
+                                                                                                    <dt data-property-name="range">
+                                                                                                        <span class="json-property-name">range:</span>
+                                                                                                        
+                                                                                                        <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/Range">Range</a>
+                                                                                                        </span>
+                                                                                                        <span class="json-property-range" title="Value limits"></span>
+                                                                                                        
+                                                                                                            <span class="json-property-required"></span>
+                                                                                                    </dt>
+                                                                                                    <dd>
+                                                                                                        
+                                                                                                        <div class="json-inner-schema">
+                                                                                                            
+                                                                                                        </div>
+                                                                                                    </dd>
+                                                                                            </dl>
+                                                                                        </section>
+                                                                            </div>
+                                                                        </section>                </div>
                                                 </dd>
                                         </dl>
                                     </section>

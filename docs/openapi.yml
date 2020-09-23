@@ -160,17 +160,33 @@ definitions:
     type: object
     description: |-
       Contents and details of a dirty buffer.
-    required:
-      - filetypes
-      - contents
     properties:
       filetypes:
         type: array
+        description: |-
+          *NOTE*: Required for the current buffer.
         items:
           type: string
       contents:
         type: string
-        description: The entire contents of the buffer encoded as UTF-8.
+        description: |-
+          The entire contents of the buffer encoded as UTF-8.
+          *NOTE*: REQUIRED for the current buffer.
+      changes:
+        type: array
+        description: The list of incremental changes.
+        items:
+          type: object
+          required:
+            - replacement_text
+            - range
+          properties:
+            replacement_text:
+              type: string
+              description: |-
+                The text with which to replace the range identified by `range`.
+            range:
+              $ref: "#/definitions/Range"
   FileDataMap:
     type: object
     description: |-
@@ -1015,6 +1031,43 @@ paths:
             $ref: "#/definitions/ExceptionResponse"
 
 
+  /buffer_update_type:
+    get:
+      summary: Are incremental buffer updates supported for some filetype
+      description: |-
+        Some filetypes, most often those backed by a LSP server, support
+        incremental updates.
+
+        If the response is PENDING, the client should make another
+        /signature_help_available request later.
+      produces:
+        - application/json
+      parameters:
+        - name: subserver
+          in: query
+          description: |-
+            Subserver filetype for which the request is made. If a subserver
+            supports multiple filetypes, the parameter may hold any one of them.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Buffer update type info.
+          schema:
+            type: object
+            required:
+              - buffer_update_type
+            properties:
+              buffer_update_type:
+                type: string
+                enum:
+                  - Full
+                  - Incremental
+                  - PENDING
+        500:
+          description: An error occurred.
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
   /signature_help_available:
     get:
       summary: Is /signature_help supported for some filetype
