@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import string
 from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_completer
 
@@ -30,12 +31,20 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
     self._port = server_settings.get( 'port' )
     if self._port:
       connection_type = 'tcp'
+      if self._port == '*':
+        self._port = utils.GetUnusedLocalhostPort()
     else:
       connection_type = 'stdio'
 
     if self._command_line:
       self._command_line[ 0 ] = utils.FindExecutable(
         self._command_line[ 0 ] )
+
+      for idx in range( len( self._command_line ) ):
+        self._command_line[ idx ] = string.Template(
+          self._command_line[ idx ] ).safe_substitute( {
+            'port': self._port
+          } )
 
     super().__init__( user_options, connection_type )
 
