@@ -555,7 +555,6 @@ def GetCompletions_ServerNotInitialized_test( app ):
     } )
 
 
-@UnixOnly
 @SharedYcmd
 def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
   ClearCompletionsCache()
@@ -563,8 +562,8 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
     'description': "More than 10 candiates after filtering, don't resolve",
     'request': {
       'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'MethodsWithDocumentation.java' ),
-      'line_num'  : 33,
+      'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
+      'line_num'  : 6,
       'column_num': 7,
     },
     'expect': {
@@ -632,7 +631,6 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
 
 
 
-@UnixOnly
 @SharedYcmd
 def GetCompletions_FewerThan10_Resolved_test( app ):
   ClearCompletionsCache()
@@ -641,8 +639,8 @@ def GetCompletions_FewerThan10_Resolved_test( app ):
     'description': "More than 10 candiates after filtering, don't resolve",
     'request': {
       'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'MethodsWithDocumentation.java' ),
-      'line_num'  : 33,
+      'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
+      'line_num'  : 6,
       'column_num': 10,
     },
     'expect': {
@@ -678,7 +676,6 @@ def GetCompletions_FewerThan10_Resolved_test( app ):
 
 
 
-@UnixOnly
 @SharedYcmd
 def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
   ClearCompletionsCache()
@@ -686,8 +683,8 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
     'description': "More than 10 candiates after filtering, don't resolve",
     'request': {
       'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'MethodsWithDocumentation.java' ),
-      'line_num'  : 33,
+      'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
+      'line_num'  : 6,
       'column_num': 7,
     },
     'expect': {

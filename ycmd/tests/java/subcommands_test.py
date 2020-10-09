@@ -720,6 +720,16 @@ def Subcommands_GoToSymbol_Multiple_test( app ):
       'description': "Test",
       'line_num': 3,
       'column_num': 14,
+    } ),
+    has_entries( {
+      'filepath': PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'TestWithDocumentation.java' ) ,
+      'description': "TestWithDocumentation",
+      'line_num': 3,
+      'column_num': 14,
     } )
   ) )
 
