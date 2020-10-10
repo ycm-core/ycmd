@@ -394,7 +394,14 @@ def TemporaryTestDir():
 
 
 """Decorator to be applied to tests that retries the test over and over"""
-WithRetry = pytest.mark.flaky( max_runs = 5 )
+if os.environ.get( 'YCM_TEST_NO_RETRY' ) == 'IGNORE':
+  WithRetry = pytest.mark.xfail( strict = False )
+elif os.environ.get( 'YCM_TEST_NO_RETRY' ):
+  # This is a "null" decorator
+  def WithRetry( f ):
+    return f
+else:
+  WithRetry = pytest.mark.flaky( reruns=20, reruns_delay=0.5 )
 
 
 @contextlib.contextmanager
