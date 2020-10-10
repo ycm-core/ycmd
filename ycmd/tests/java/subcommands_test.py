@@ -913,7 +913,6 @@ def Subcommands_RefactorRename_Unicode_test( app ):
 
 
 
-@WithRetry
 def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   RunTest( app, {
     'description': description,
@@ -930,6 +929,7 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   } )
 
 
+@WithRetry
 @pytest.mark.parametrize( 'description,column', [
   ( 'FixIt works at the firtst char of the line', 1 ),
   ( 'FixIt works at the begin of the range of the diag.', 15 ),
@@ -1068,6 +1068,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
   RunFixItTest( app, description, filepath, 19, column, fixits_for_line )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1129,6 +1130,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
                 filepath, 27, 12, fixits )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1175,6 +1177,7 @@ def Subcommands_FixIt_SingleDiag_MultiOption_Delete_test( app ):
                 filepath, 15, 29, fixits )
 
 
+@WithRetry
 @pytest.mark.parametrize( 'description,column,expect_fixits', [
   ( 'diags are merged in FixIt options - start of line', 1, 'MERGE' ),
   ( 'diags are not merged in FixIt options - start of diag 1', 10, 'FIRST' ),
@@ -1370,6 +1373,7 @@ def Subcommands_FixIt_Range_test( app ):
 
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_FixIt_NoDiagnostics_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1390,6 +1394,7 @@ def Subcommands_FixIt_NoDiagnostics_test( app ):
                                    'chunks': instance_of( list ) } ) ) } ) )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_FixIt_Unicode_test( app ):
   fixits = has_entries( {

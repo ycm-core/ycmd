@@ -393,25 +393,8 @@ def TemporaryTestDir():
     shutil.rmtree( tmp_dir )
 
 
-def WithRetry( test ):
-  """Decorator to be applied to tests that retries the test over and over
-  until it passes or |timeout| seconds have passed."""
-
-  if 'YCM_TEST_NO_RETRY' in os.environ:
-    return test
-
-  @functools.wraps( test )
-  def wrapper( *args, **kwargs ):
-    expiry = time.time() + 30
-    while True:
-      try:
-        return test( *args, **kwargs )
-      except Exception as test_exception:
-        if time.time() > expiry:
-          raise
-        print( f'Test failed, retrying: { test_exception }' )
-        time.sleep( 0.25 )
-  return wrapper
+"""Decorator to be applied to tests that retries the test over and over"""
+WithRetry = pytest.mark.flaky( max_runs = 5 )
 
 
 @contextlib.contextmanager

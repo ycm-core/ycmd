@@ -58,7 +58,6 @@ def ProjectPath( *args ):
                          *args )
 
 
-@WithRetry
 def RunTest( app, test ):
   """
   Method to run a simple completion test and verify the result
@@ -143,6 +142,7 @@ def WithObjectMethods( *args ):
   return list( PUBLIC_OBJECT_METHODS ) + list( args )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_NoQuery_test( app ):
   RunTest( app, {
@@ -172,6 +172,7 @@ def GetCompletions_NoQuery_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_WithQuery_test( app ):
   RunTest( app, {
@@ -201,6 +202,7 @@ def GetCompletions_WithQuery_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_DetailFromCache_test( app ):
   for i in range( 0, 2 ):
@@ -231,6 +233,7 @@ def GetCompletions_DetailFromCache_test( app ):
     } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Package_test( app ):
   RunTest( app, {
@@ -256,6 +259,7 @@ def GetCompletions_Package_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Import_Class_test( app ):
   RunTest( app, {
@@ -282,6 +286,7 @@ def GetCompletions_Import_Class_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Import_Classes_test( app ):
   filepath = ProjectPath( 'TestLauncher.java' )
@@ -321,6 +326,7 @@ def GetCompletions_Import_Classes_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_Import_ModuleAndClass_test( app ):
   filepath = ProjectPath( 'TestLauncher.java' )
@@ -352,6 +358,7 @@ def GetCompletions_Import_ModuleAndClass_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_WithFixIt_test( app ):
   filepath = ProjectPath( 'TestFactory.java' )
@@ -393,6 +400,7 @@ def GetCompletions_WithFixIt_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_RejectMultiLineInsertion_test( app ):
   filepath = ProjectPath( 'TestLauncher.java' )
@@ -426,6 +434,7 @@ def GetCompletions_RejectMultiLineInsertion_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_UnicodeIdentifier_test( app ):
   filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
@@ -467,6 +476,7 @@ def GetCompletions_UnicodeIdentifier_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_ResolveFailed_test( app ):
   filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
@@ -517,6 +527,7 @@ def GetCompletions_ResolveFailed_test( app ):
     } )
 
 
+@WithRetry
 @IsolatedYcmd()
 def GetCompletions_ServerNotInitialized_test( app ):
   filepath = PathToTestFile( 'simple_eclipse_project',
@@ -555,6 +566,7 @@ def GetCompletions_ServerNotInitialized_test( app ):
     } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
   ClearCompletionsCache()
@@ -631,6 +643,7 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
 
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_FewerThan10_Resolved_test( app ):
   ClearCompletionsCache()
@@ -676,6 +689,7 @@ def GetCompletions_FewerThan10_Resolved_test( app ):
 
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
   ClearCompletionsCache()
@@ -733,6 +747,7 @@ def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
 
 
 
+@WithRetry
 @UnixOnly
 @SharedYcmd
 def GetCompletions_MoreThan10ForceSemantic_test( app ):
@@ -766,6 +781,7 @@ def GetCompletions_MoreThan10ForceSemantic_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_ForceAtTopLevel_NoImport_test( app ):
   RunTest( app, {
@@ -793,6 +809,7 @@ def GetCompletions_ForceAtTopLevel_NoImport_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_NoForceAtTopLevel_NoImport_test( app ):
   RunTest( app, {
@@ -817,6 +834,7 @@ def GetCompletions_NoForceAtTopLevel_NoImport_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
   filepath = ProjectPath( 'TestWidgetImpl.java' )
@@ -854,6 +872,7 @@ def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
   } )
 
 
+@WithRetry
 @SharedYcmd
 def GetCompletions_UseServerTriggers_test( app ):
   filepath = ProjectPath( 'TestWidgetImpl.java' )

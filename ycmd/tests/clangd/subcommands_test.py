@@ -983,7 +983,6 @@ def Subcommands_FixIt_all_test( app, line, column, language, filepath, check ):
   RunFixItTest( app, line, column, language, filepath, check )
 
 
-@WithRetry
 def RunRangedFixItTest( app, rng, expected, chosen_fixit = 0 ):
   contents = ReadFile( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
   args = {
@@ -1010,6 +1009,7 @@ def RunRangedFixItTest( app, rng, expected, chosen_fixit = 0 ):
   expected( response )
 
 
+@WithRetry
 @pytest.mark.parametrize( 'test', [
     [ {
         'start': { 'line_num': 80, 'column_num': 1 },
@@ -1068,6 +1068,7 @@ def Subcommands_FixIt_AlreadyResolved_test( app ):
   assert_that( actual, equal_to( expected ) )
 
 
+@WithRetry
 @IsolatedYcmd( { 'clangd_args': [ '-hidden-features' ] } )
 def Subcommands_FixIt_ClangdTweaks_test( app ):
   selection = {
