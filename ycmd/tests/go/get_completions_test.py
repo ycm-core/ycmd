@@ -28,7 +28,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
 from ycmd.utils import ReadFile
 
 
-@WithRetry
+@WithRetry( reruns = 100 )
 @SharedYcmd
 def GetCompletions_Basic_test( app ):
   filepath = PathToTestFile( 'td', 'test.go' )

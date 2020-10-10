@@ -25,7 +25,8 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry,
-                       has_item )
+                       has_item,
+                       matches_regexp )
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
@@ -210,6 +211,11 @@ DIAG_MATCHERS_PER_FILE = {
                                         ( 13, 23 ) ) ),
       'fixit_available': False
     } ),
+  ),
+  PathToTestFile( DEFAULT_PROJECT_DIR, 'test.java' ): contains_exactly(
+    has_entries( {
+      'text': matches_regexp( 'test.java is not on the classpath .*' )
+    } )
   ),
 }
 
