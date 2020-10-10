@@ -455,3 +455,30 @@
 	fun:cfunction_vectorcall_FASTCALL_KEYWORDS
 	fun:_PyObject_Vectorcall
 }
+{
+	<insert_a_suppression_name_here>
+	Memcheck:Leak
+	match-leak-kinds: possible
+	fun:malloc
+	fun:new_keys_object
+	fun:insert_to_emptydict
+	fun:_PyDict_SetItem_KnownHash
+	fun:bounded_lru_cache_wrapper
+	fun:_PyObject_MakeTpCall
+	fun:_PyObject_Vectorcall
+	fun:trace_call_function
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+	fun:_PyObject_Vectorcall
+	fun:call_function
+	fun:_PyEval_EvalFrameDefault
+	fun:function_code_fastcall
+	fun:_PyObject_Vectorcall
+	fun:method_vectorcall
+	fun:PyVectorcall_Call
+}
