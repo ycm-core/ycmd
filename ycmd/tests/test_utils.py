@@ -393,15 +393,29 @@ def TemporaryTestDir():
     shutil.rmtree( tmp_dir )
 
 
-"""Decorator to be applied to tests that retries the test over and over"""
-if os.environ.get( 'YCM_TEST_NO_RETRY' ) == 'IGNORE':
-  WithRetry = pytest.mark.xfail( strict = False )
-elif os.environ.get( 'YCM_TEST_NO_RETRY' ):
-  # This is a "null" decorator
-  def WithRetry( f ):
-    return f
-else:
-  WithRetry = pytest.mark.flaky( reruns=20, reruns_delay=0.5 )
+def WithRetry( *args, **kwargs ):
+  """Decorator to be applied to tests that retries the test over and over"""
+
+  if len( args ) == 1 and callable( args[ 0 ] ):
+    # We are the decorator
+    f = args[ 0 ]
+
+    def ReturnDecorator( wrapper ):
+      return wrapper( f )
+  else:
+    # We need to return the decorator
+    def ReturnDecorator( wrapper ):
+      return wrapper
+
+  if os.environ.get( 'YCM_TEST_NO_RETRY' ) == 'XFAIL':
+    return ReturnDecorator( pytest.mark.xfail( strict = False ) )
+  elif os.environ.get( 'YCM_TEST_NO_RETRY' ):
+    # This is a "null" decorator
+    return ReturnDecorator( lambda f: f )
+  else:
+    opts = { 'reruns': 20, 'reruns_delay': 0.5 }
+    opts.update( kwargs )
+    return ReturnDecorator( pytest.mark.flaky( **opts ) )
 
 
 @contextlib.contextmanager
