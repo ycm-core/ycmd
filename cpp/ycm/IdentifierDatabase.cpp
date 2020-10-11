@@ -118,14 +118,14 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
 std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
   std::string&& filetype,
   std::string&& filepath ) {
-  std::shared_ptr< FilepathToCandidates > &path_to_candidates =
+  std::unique_ptr< FilepathToCandidates > &path_to_candidates =
     filetype_candidate_map_[ std::move( filetype ) ];
 
   if ( !path_to_candidates ) {
     path_to_candidates = std::make_unique< FilepathToCandidates >();
   }
 
-  std::shared_ptr< std::set< const Candidate * > > &candidates =
+  std::unique_ptr< std::set< const Candidate * > > &candidates =
     ( *path_to_candidates )[ std::move( filepath ) ];
 
   if ( !candidates ) {
