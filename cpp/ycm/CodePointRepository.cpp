@@ -43,7 +43,7 @@ CodePointSequence CodePointRepository::GetCodePoints(
   {
     std::lock_guard< std::mutex > locker( code_point_holder_mutex_ );
 
-    for ( const std::string & code_point : code_points ) {
+    for ( std::string_view code_point : code_points ) {
       std::unique_ptr< CodePoint > &code_point_object = GetValueElseInsert(
                                                           code_point_holder_,
                                                           code_point,

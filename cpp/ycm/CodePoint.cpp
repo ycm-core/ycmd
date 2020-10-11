@@ -80,8 +80,8 @@ RawCodePoint FindCodePoint( const char *text ) {
 
 } // unnamed namespace
 
-CodePoint::CodePoint( const std::string &code_point )
-  : CodePoint( FindCodePoint( code_point.c_str() ) ) {
+CodePoint::CodePoint( std::string_view code_point )
+  : CodePoint( FindCodePoint( code_point.data() ) ) {
 }
 
 
@@ -98,7 +98,7 @@ CodePoint::CodePoint( RawCodePoint&& code_point )
 }
 
 
-CodePointSequence BreakIntoCodePoints( const std::string &text ) {
+CodePointSequence BreakIntoCodePoints( std::string_view text ) {
   // NOTE: for efficiency, we don't check if the number of continuation bytes
   // and the bytes themselves are valid (they must start with bits '10').
   std::vector< std::string > code_points;

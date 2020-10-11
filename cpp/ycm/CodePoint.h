@@ -83,7 +83,7 @@ struct RawCodePoint {
 //    https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G49591).
 class CodePoint {
 public:
-  YCM_EXPORT explicit CodePoint( const std::string &code_point );
+  YCM_EXPORT explicit CodePoint( std::string_view code_point );
   // Make class noncopyable
   CodePoint( const CodePoint& ) = delete;
   CodePoint& operator=( const CodePoint& ) = delete;
@@ -144,7 +144,7 @@ using CodePointSequence = std::vector< const CodePoint * >;
 
 
 // Split a UTF-8 encoded string into UTF-8 code points.
-YCM_EXPORT CodePointSequence BreakIntoCodePoints( const std::string &text );
+YCM_EXPORT CodePointSequence BreakIntoCodePoints( std::string_view text );
 
 
 // Thrown when an error occurs while decoding a UTF-8 string.

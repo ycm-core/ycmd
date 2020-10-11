@@ -64,7 +64,7 @@ CodePointSequence CanonicalSort( CodePointSequence code_points ) {
 // Decompose a UTF-8 encoded string into a sequence of code points according to
 // Canonical Decomposition. See
 // https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G733
-CodePointSequence CanonicalDecompose( const std::string &text ) {
+CodePointSequence CanonicalDecompose( std::string_view text ) {
   CodePointSequence code_points = BreakIntoCodePoints( text );
   std::string normal;
 
@@ -77,7 +77,7 @@ CodePointSequence CanonicalDecompose( const std::string &text ) {
 
 } // unnamed namespace
 
-Character::Character( const std::string &character )
+Character::Character( std::string_view character )
   : is_base_( true ),
     is_letter_( false ),
     is_punctuation_( false ),
