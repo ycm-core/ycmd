@@ -55,6 +55,5 @@ if( MSVC )
 endif()
 
 target_link_libraries( ${PROJECT_NAME}
-                       ${Boost_LIBRARIES}
                        ycm_core
                        ${BENCHMARK_LIBRARIES} )

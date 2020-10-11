@@ -7,11 +7,13 @@ set -e
 sudo apt-get update
 sudo apt-get install libsqlite3-dev
 if [ "${YCM_COMPILER}" == "clang" ]; then
-  sudo apt-get install clang-8
-  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-8 100
-  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-8 100
+  sudo apt-get install clang-7
+  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
+  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-7 100
 else
-  sudo apt-get install gcc g++
+  sudo apt-get install gcc-8 g++-8
+  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-8 100
+  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-8 100
 fi
 
 if [ "${YCM_CLANG_TIDY}" ]; then

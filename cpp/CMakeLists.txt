@@ -87,9 +87,6 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
 # This is needed so that on macs, the library is built in both 32 bit and 64 bit
 # versions. Without this python might refuse to load the module, depending on
 # how python was built.
-# On Mac, boost needs to be compiled universal as well, if used instead of the
-# included BoostParts lib. For brew, that's
-# "brew install boost --universal"
 # If the user chose to use the system libclang.dylib (or the libclang.dylib
 # binary downloaded from llvm.org) on a mac, then we don't specify universal
 # binary building since the system libclang on macs is not  universal (and thus
@@ -150,7 +147,6 @@ endif()
 #############################################################################
 
 # MSVC has snprintf since version 14 which is newer than what we support.
-# *NOT* defining HAVE_SNPRINTF will break compiling the bundled boost libraries.
 if ( MSVC )
   add_definitions( -DHAVE_SNPRINTF )
 endif()
@@ -164,21 +160,21 @@ endif()
 
 #############################################################################
 
-# Determining the presence of C++11 support in the compiler
-set( CPP11_AVAILABLE false )
+# Determining the presence of C++17 support in the compiler
+set( CPP17_AVAILABLE false )
 if ( CMAKE_COMPILER_IS_GNUCXX )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8 )
-    set( CPP11_AVAILABLE true )
+  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8 )
+    set( CPP17_AVAILABLE true )
   endif()
 elseif( COMPILER_IS_CLANG )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3 )
-    set( CPP11_AVAILABLE true )
-    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11" )
+  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7 )
+    set( CPP17_AVAILABLE true )
+    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++17" )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
   endif()
 elseif( MSVC )
-  if ( NOT MSVC_VERSION LESS 1900 )
-    set( CPP11_AVAILABLE true )
+  if ( NOT MSVC_VERSION LESS 1914 )
+    set( CPP17_AVAILABLE true )
   endif()
 endif()
 
@@ -188,13 +184,8 @@ endif()
 # number of sections that an object file can hold. This is needed for storing
 # the Unicode table. Also, force MSVC to treat source files as UTF-8 encoded.
 if ( MSVC )
-  add_definitions( /DUNICODE /D_UNICODE /Zc:wchar_t- )
+  add_definitions( /DUNICODE /D_UNICODE )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj /utf-8" )
-endif()
-
-if( MSVC OR CYGWIN OR MSYS)
-  # BOOST_ALL_NO_LIB turns off MSVC library autolinking
-  add_definitions( -DBOOST_ALL_NO_LIB )
 endif()
 
 # Enables Python compilation for 64-bit Windows. Already defined by Python
@@ -205,49 +196,45 @@ endif()
 
 #############################################################################
 
-if ( CPP11_AVAILABLE )
+if ( CPP17_AVAILABLE )
   # Cygwin needs its hand held a bit; see issue #473
   if ( CYGWIN AND CMAKE_COMPILER_IS_GNUCXX )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11" )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17" )
   elseif( NOT MSVC )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17" )
+  elseif( MSVC )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17" )
   endif()
 else()
   # Platform-specific advice goes here. In particular, we have plenty of users
   # in corporate environments on RHEL/CentOS, where the default system compiler
   # is too old.
 
-  # on RHEL and CentOS, users require the devtoolset-3 or greater. However, we
-  # recommended the devtoolset-6 because it is the newest at the time of
+  # on RHEL and CentOS, users require the devtoolset-8 or greater. However, we
+  # recommended the devtoolset-8 because it is the newest at the time of
   # writing. And why not.
   if ( DISTRIBUTION STREQUAL "CentOS" OR DISTRIBUTION STREQUAL "Red Hat" )
     message( STATUS "NOTE: You appear to be on ${DISTRIBUTION}. "
     "In order to use this application, you require a more modern compiler "
     "than the default compiler on this platform. "
-    "Please install the devtoolset-6 or greater. For example, see this link: "
-    "https://www.softwarecollections.org/en/scls/rhscl/devtoolset-6/" )
+    "Please install the devtoolset-8 or greater. For example, see this link: "
+    "https://www.softwarecollections.org/en/scls/rhscl/devtoolset-8/" )
 
     # Finally, just check if it is installed and they just need to activate it.
-    if ( EXISTS /opt/rh/devtoolset-6 )
-      message( STATUS "NOTE: It looks like you have the devtoolset-6 "
-                      "installed in /opt/rh/devtoolset-6, so you probably "
+    if ( EXISTS /opt/rh/devtoolset-8 )
+      message( STATUS "NOTE: It looks like you have the devtoolset-8 "
+                      "installed in /opt/rh/devtoolset-8, so you probably "
                       "just need to activate it and re-run the installation. "
-                      "For example: source /opt/rh/devtoolset-6/enable")
+                      "For example: source /opt/rh/devtoolset-8/enable")
     endif()
   endif()
 
-  message( FATAL_ERROR "Your C++ compiler does NOT fully support C++11." )
+  message( FATAL_ERROR "Your C++ compiler does NOT fully support C++17." )
 endif()
 
-set( Python_ADDITIONAL_VERSIONS 3.9 3.8 3.7 3.6 3.5 )
-find_package( PythonLibs 3.5 REQUIRED )  # 3.5 is ONLY the minimum
+set( Python_ADDITIONAL_VERSIONS 3.10 3.9 3.8 3.7 3.6 )
+find_package( PythonLibs 3.6 REQUIRED )  # 3.6 is ONLY the minimum
 
 #############################################################################
-
-option( USE_SYSTEM_BOOST "Set to ON to use the system boost libraries" OFF )
-
-if (NOT USE_SYSTEM_BOOST)
-  add_subdirectory( BoostParts )
-endif()
 
 add_subdirectory( ycm )

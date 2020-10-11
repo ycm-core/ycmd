@@ -22,26 +22,14 @@
 #include "CodePoint.h"
 #include "Word.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
 using ::testing::PrintToString;
 
-namespace fs = boost::filesystem;
-
-// A segmentation fault occurs when gtest tries to print a
-// boost::filesystem::path. Teach gtest how to print it.
-namespace boost {
-
-namespace filesystem {
-
-void PrintTo( const fs::path &path, std::ostream *os );
-
-}
-
-}
+namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 
