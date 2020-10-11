@@ -85,11 +85,11 @@ private:
   // filepath -> *( *candidate )
   using FilepathToCandidates =
     std::unordered_map < std::string,
-                         std::shared_ptr< std::set< const Candidate * > > >;
+                         std::unique_ptr< std::set< const Candidate * > > >;
 
   // filetype -> *( filepath -> *( *candidate ) )
   using FiletypeCandidateMap =
-    std::unordered_map < std::string, std::shared_ptr< FilepathToCandidates > >;
+    std::unordered_map < std::string, std::unique_ptr< FilepathToCandidates > >;
 
 
   CandidateRepository &candidate_repository_;
