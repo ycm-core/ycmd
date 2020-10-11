@@ -242,8 +242,8 @@ def PytestValgrind( parsed_args, extra_pytests_args ):
           '--gen-suppressions=all',
           '--error-exitcode=1',
           '--leak-check=full',
-          '--show-leak-kinds=all',
-          '--show-reachable=no',
+          '--show-leak-kinds=definite,indirect',
+          '--errors-for-leak-kinds=definite,indirect',
           '--suppressions=' + p.join( DIR_OF_THIS_SCRIPT,
                                       'valgrind.suppressions' ) ]
   subprocess.check_call( cmd +
