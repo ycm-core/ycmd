@@ -20,12 +20,12 @@
 
 #include "IdentifierDatabase.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace YouCompleteMe {
 
 YCM_EXPORT FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
-  const boost::filesystem::path &path_to_tag_file );
+  const std::filesystem::path &path_to_tag_file );
 
 } // namespace YouCompleteMe
 

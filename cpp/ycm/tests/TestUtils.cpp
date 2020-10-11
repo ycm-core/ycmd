@@ -19,7 +19,7 @@
 
 #include <whereami.c>
 
-namespace boost {
+namespace std {
 
 namespace filesystem {
 
@@ -29,7 +29,7 @@ void PrintTo( const fs::path &path, std::ostream *os ) {
 
 } // namespace filesystem
 
-} // namespace boost
+} // namespace std
 
 namespace YouCompleteMe {
 

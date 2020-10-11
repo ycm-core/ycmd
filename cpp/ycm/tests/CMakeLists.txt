@@ -58,10 +58,7 @@ include_directories(
   ${GTEST_INCLUDE_DIRS}
   )
 
-link_directories(
-  ${Boost_LIBRARY_DIRS}
-  ${PYTHON_LIBRARIES}
-  )
+link_directories( ${PYTHON_LIBRARIES} )
 
 file( GLOB_RECURSE SOURCES *.h *.cpp )
 
@@ -107,9 +104,7 @@ if ( MSVC )
   endforeach()
 endif()
 
-# ycm_core must be linked after Boost libraries on Windows.
 target_link_libraries( ${PROJECT_NAME}
-                       ${Boost_LIBRARIES}
                        ycm_core
                        ${GTEST_LIBRARIES}
                        ${GMOCK_LIBRARIES} )

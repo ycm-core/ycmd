@@ -18,11 +18,12 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
+#include <filesystem>
 #include <unordered_map>
 
 namespace YouCompleteMe {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace {
 
@@ -191,7 +192,7 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     }();
     auto identifier = line.substr( 0, id_end );
     fs::path path( line.substr( path_begin, path_end - path_begin ) );
-    path = NormalizePath( path, path_to_tag_file.parent_path() );
+    path = fs::weakly_canonical( path_to_tag_file.parent_path() / path );
     const auto language = line.substr( lang_begin, lang_end - lang_begin );
     std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
                                             language.c_str(),

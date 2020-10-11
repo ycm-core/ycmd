@@ -7,9 +7,9 @@ set -e
 sudo apt-get update
 sudo apt-get install libsqlite3-dev
 if [ "${YCM_COMPILER}" == "clang" ]; then
-  sudo apt-get install clang-9
-  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-9 100
-  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-9 100
+  sudo apt-get install clang-8
+  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-8 100
+  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-8 100
 else
   sudo apt-get install gcc g++
 fi
