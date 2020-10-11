@@ -23,6 +23,7 @@
 #include "Result.h"
 #include "Utils.h"
 
+#include <memory>
 #include <unordered_set>
 
 namespace YouCompleteMe {
@@ -121,14 +122,14 @@ std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
     filetype_candidate_map_[ std::move( filetype ) ];
 
   if ( !path_to_candidates ) {
-    path_to_candidates.reset( new FilepathToCandidates() );
+    path_to_candidates = std::make_unique< FilepathToCandidates >();
   }
 
   std::shared_ptr< std::set< const Candidate * > > &candidates =
     ( *path_to_candidates )[ std::move( filepath ) ];
 
   if ( !candidates ) {
-    candidates.reset( new std::set< const Candidate * >() );
+    candidates = std::make_unique< std::set< const Candidate * > >();
   }
 
   return *candidates;

@@ -48,7 +48,7 @@ CodePointSequence CodePointRepository::GetCodePoints(
                                                           nullptr );
 
       if ( !code_point_object ) {
-        code_point_object.reset( new CodePoint( code_point ) );
+        code_point_object = std::make_unique< CodePoint >( code_point );
       }
 
       code_point_objects.push_back( code_point_object.get() );
