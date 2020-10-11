@@ -34,7 +34,7 @@ IdentifierDatabase::IdentifierDatabase()
 
 void IdentifierDatabase::AddIdentifiers(
   FiletypeIdentifierMap&& filetype_identifier_map ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
 
   for ( auto&& filetype_and_map : filetype_identifier_map ) {
     for ( auto&& filepath_and_identifiers : filetype_and_map.second ) {
@@ -52,7 +52,7 @@ void IdentifierDatabase::AddIdentifiers(
   std::vector< std::string >&& new_candidates,
   std::string&& filetype,
   std::string&& filepath ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
   AddIdentifiersNoLock( std::move( new_candidates ), std::move( filetype ), std::move( filepath ) );
 }
 
@@ -60,7 +60,7 @@ void IdentifierDatabase::AddIdentifiers(
 void IdentifierDatabase::ClearCandidatesStoredForFile(
   std::string&& filetype,
   std::string&& filepath ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
   GetCandidateSet( std::move( filetype ), std::move( filepath ) ).clear();
 }
 
@@ -71,7 +71,7 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   const size_t max_results ) const {
   FiletypeCandidateMap::const_iterator it;
   {
-    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    std::shared_lock locker( filetype_candidate_map_mutex_ );
     it = filetype_candidate_map_.find( filetype );
 
     if ( it == filetype_candidate_map_.end() ) {
@@ -85,7 +85,7 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   std::vector< Result > results;
 
   {
-    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    std::lock_guard locker( filetype_candidate_map_mutex_ );
     for ( const auto& path_and_candidates : *it->second ) {
       for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) ) {

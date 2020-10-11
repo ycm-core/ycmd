@@ -19,8 +19,6 @@
 #include "CodePoint.h"
 #include "Utils.h"
 
-#include <mutex>
-
 namespace YouCompleteMe {
 
 CodePointRepository &CodePointRepository::Instance() {
@@ -29,8 +27,8 @@ CodePointRepository &CodePointRepository::Instance() {
 }
 
 
-size_t CodePointRepository::NumStoredCodePoints() {
-  std::lock_guard< std::mutex > locker( code_point_holder_mutex_ );
+size_t CodePointRepository::NumStoredCodePoints() const {
+  std::shared_lock locker( code_point_holder_mutex_ );
   return code_point_holder_.size();
 }
 
@@ -41,7 +39,7 @@ CodePointSequence CodePointRepository::GetCodePoints(
   code_point_objects.reserve( code_points.size() );
 
   {
-    std::lock_guard< std::mutex > locker( code_point_holder_mutex_ );
+    std::lock_guard locker( code_point_holder_mutex_ );
 
     for ( std::string_view code_point : code_points ) {
       std::unique_ptr< CodePoint > &code_point_object = GetValueElseInsert(
