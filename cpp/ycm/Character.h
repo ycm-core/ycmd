@@ -19,6 +19,7 @@
 #define CHARACTER_H_YTIET2HZ
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace YouCompleteMe {
@@ -32,7 +33,7 @@ namespace YouCompleteMe {
 // punctuation, and if it is uppercase.
 class Character {
 public:
-  YCM_EXPORT explicit Character( const std::string &character );
+  YCM_EXPORT explicit Character( std::string_view character );
   // Make class noncopyable
   Character( const Character& ) = delete;
   Character& operator=( const Character& ) = delete;

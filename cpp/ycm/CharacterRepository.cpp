@@ -20,6 +20,7 @@
 #include "Utils.h"
 
 #include <mutex>
+#include <string_view>
 
 namespace YouCompleteMe {
 
@@ -43,7 +44,7 @@ CharacterSequence CharacterRepository::GetCharacters(
   {
     std::lock_guard< std::mutex > locker( character_holder_mutex_ );
 
-    for ( const std::string & character : characters ) {
+    for ( std::string_view character : characters ) {
       std::unique_ptr< Character > &character_object = GetValueElseInsert(
                                                          character_holder_,
                                                          character,

@@ -47,7 +47,7 @@ int GetCodePointLength( uint8_t leading_byte ) {
 }
 
 
-RawCodePoint FindCodePoint( const char *text ) {
+RawCodePoint FindCodePoint( std::string_view text ) {
 #include "UnicodeTable.inc"
 
   // Do a binary search on the array of code points to find the raw code point
@@ -55,14 +55,8 @@ RawCodePoint FindCodePoint( const char *text ) {
   // raw code point for that text.
   const auto& original = code_points.original;
 
-  auto it = std::lower_bound(
-    original.begin(),
-    original.end(),
-    text,
-    []( const char* cp, const char* text ) {
-      return std::strcmp( cp, text ) < 0;
-    } );
-  if ( it != original.end() && strcmp( text, *it ) == 0 ) {
+  auto it = std::lower_bound( original.begin(), original.end(), text );
+  if ( it != original.end() && text == *it ) {
     size_t index = std::distance( original.begin(), it );
     return { *it,
              code_points.normal[ index ],
@@ -80,8 +74,8 @@ RawCodePoint FindCodePoint( const char *text ) {
 
 } // unnamed namespace
 
-CodePoint::CodePoint( const std::string &code_point )
-  : CodePoint( FindCodePoint( code_point.c_str() ) ) {
+CodePoint::CodePoint( std::string_view code_point )
+  : CodePoint( FindCodePoint( code_point ) ) {
 }
 
 
@@ -98,7 +92,7 @@ CodePoint::CodePoint( RawCodePoint&& code_point )
 }
 
 
-CodePointSequence BreakIntoCodePoints( const std::string &text ) {
+CodePointSequence BreakIntoCodePoints( std::string_view text ) {
   // NOTE: for efficiency, we don't check if the number of continuation bytes
   // and the bytes themselves are valid (they must start with bits '10').
   std::vector< std::string > code_points;

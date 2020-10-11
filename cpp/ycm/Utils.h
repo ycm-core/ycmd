@@ -23,6 +23,8 @@
 #include <filesystem>
 #include <limits>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -44,8 +46,9 @@ YCM_EXPORT inline char Lowercase( uint8_t ascii_character ) {
 }
 
 
-YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
+YCM_EXPORT inline std::string Lowercase( std::string_view text ) {
   std::string result;
+  result.reserve( text.size() );
   for ( auto ascii_character : text ) {
     result.push_back( Lowercase( static_cast< uint8_t >( ascii_character ) ) );
   }
@@ -74,13 +77,17 @@ bool ContainsKey( Container &container, const Key &key ) {
 }
 
 
-template <class Container, class Key>
-typename Container::mapped_type
+template <class Container, class Key, class Ret>
+Ret
 FindWithDefault( Container &container,
                  const Key &key,
-                 const typename Container::mapped_type &value ) {
+                 Ret&& value ) {
+  static_assert( std::is_constructible_v< Ret, typename Container::mapped_type > );
   typename Container::const_iterator it = container.find( key );
-  return it != container.end() ? it->second : value;
+  if ( it != container.end() ) {
+    return Ret{ it->second };
+  }
+  return std::move( value );
 }
 
 

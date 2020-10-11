@@ -60,11 +60,11 @@ public:
 
   void AddIdentifiers(
     std::vector< std::string >&& new_candidates,
-    const std::string &filetype,
-    const std::string &filepath );
+    std::string&& filetype,
+    std::string&& filepath );
 
-  void ClearCandidatesStoredForFile( const std::string &filetype,
-                                     const std::string &filepath );
+  void ClearCandidatesStoredForFile( std::string&& filetype,
+                                     std::string&& filepath );
 
   std::vector< Result > ResultsForQueryAndType(
     std::string&& query,
@@ -73,13 +73,13 @@ public:
 
 private:
   std::set< const Candidate * > &GetCandidateSet(
-    const std::string &filetype,
-    const std::string &filepath );
+    std::string&& filetype,
+    std::string&& filepath );
 
   void AddIdentifiersNoLock(
     std::vector< std::string >&& new_candidates,
-    const std::string &filetype,
-    const std::string &filepath );
+    std::string&& filetype,
+    std::string&& filepath );
 
 
   // filepath -> *( *candidate )

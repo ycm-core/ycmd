@@ -103,7 +103,7 @@ std::ostream& operator<<( std::ostream& os, const fs::path *path ) {
 }
 
 
-fs::path PathToTestFile( const std::string &filepath ) {
+fs::path PathToTestFile( std::string_view filepath ) {
   int dirname_length;
   int exec_length = wai_getExecutablePath( NULL, 0, NULL );
   std::unique_ptr< char[] > executable( new char [ exec_length ] );
