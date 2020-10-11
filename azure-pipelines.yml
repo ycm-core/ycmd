@@ -12,7 +12,7 @@ jobs:
   pool:
     # List of available software on this image:
     # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/linux/Ubuntu1604-README.md
-    vmImage: 'ubuntu-18.04'
+    vmImage: 'ubuntu-20.04'
   strategy:
     matrix:
       'Python 3.6 without libclang completer':
@@ -28,7 +28,7 @@ jobs:
         YCM_BENCHMARK: true
         COVERAGE: false
       'C++ linting':
-        YCM_PYTHON_VERSION: '3.8.0'
+        YCM_PYTHON_VERSION: '3.9.0'
         YCM_CLANG_TIDY: true
         COVERAGE: false
     maxParallel: 5
@@ -95,8 +95,8 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      'Python 3.8 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
+      'Python 3.9 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe'
   variables:
     MSVC: 15
     MSBUILD_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin'
@@ -120,12 +120,12 @@ jobs:
     vmImage: 'windows-2019'
   strategy:
     matrix:
-      'Python 3.8 32-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1.exe'
-      'Python 3.8 64-bit':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
+      'Python 3.9 32-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe'
+      'Python 3.9 64-bit':
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe'
       'C++ benchmark':
-        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe'
+        YCM_PYTHON_INSTALLER_URL: 'https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe'
         YCM_BENCHMARK: true
         COVERAGE: false
     maxParallel: 3

@@ -7,20 +7,17 @@ set -e
 sudo apt-get update
 sudo apt-get install libsqlite3-dev
 if [ "${YCM_COMPILER}" == "clang" ]; then
-  sudo apt-get install clang-3.9
-  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-3.9 100
-  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-3.9 100
+  sudo apt-get install clang-9
+  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-9 100
+  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-9 100
 else
-  sudo apt-get install gcc-4.8 g++-4.8
-  sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-4.8 100
-  sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-4.8 100
+  sudo apt-get install gcc g++
 fi
 
 if [ "${YCM_CLANG_TIDY}" ]; then
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-  sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main"
   sudo apt-get update
-  sudo apt-get install -y clang-tidy-10 valgrind
+  sudo apt-get install -y clang-tidy valgrind
   sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
 fi
 
