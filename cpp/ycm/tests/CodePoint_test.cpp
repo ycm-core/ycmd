@@ -184,6 +184,6 @@ const TextCodePointPair tests[] = {
 };
 
 
-INSTANTIATE_TEST_CASE_P( UnicodeTest, CodePointTest, ValuesIn( tests ) );
+INSTANTIATE_TEST_SUITE_P( UnicodeTest, CodePointTest, ValuesIn( tests ) );
 
 } // namespace YouCompleteMe

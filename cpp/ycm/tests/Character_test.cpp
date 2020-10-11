@@ -205,7 +205,7 @@ const std::array< TextCharacterPair, 13 > tests = { {
 } };
 
 
-INSTANTIATE_TEST_CASE_P( UnicodeTest, CharacterTest, ValuesIn( tests ) );
+INSTANTIATE_TEST_SUITE_P( UnicodeTest, CharacterTest, ValuesIn( tests ) );
 
 
 TEST( CharacterTest, Equality ) {
