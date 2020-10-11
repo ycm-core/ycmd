@@ -16,10 +16,8 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CharacterRepository.h"
-#include "Character.h"
 #include "Utils.h"
 
-#include <mutex>
 #include <string_view>
 
 namespace YouCompleteMe {
@@ -30,8 +28,8 @@ CharacterRepository &CharacterRepository::Instance() {
 }
 
 
-size_t CharacterRepository::NumStoredCharacters() {
-  std::lock_guard< std::mutex > locker( character_holder_mutex_ );
+size_t CharacterRepository::NumStoredCharacters() const {
+  std::shared_lock locker( character_holder_mutex_ );
   return character_holder_.size();
 }
 
@@ -42,7 +40,7 @@ CharacterSequence CharacterRepository::GetCharacters(
   character_objects.reserve( characters.size() );
 
   {
-    std::lock_guard< std::mutex > locker( character_holder_mutex_ );
+    std::lock_guard locker( character_holder_mutex_ );
 
     for ( std::string_view character : characters ) {
       std::unique_ptr< Character > &character_object = GetValueElseInsert(
