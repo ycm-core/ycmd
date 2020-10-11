@@ -64,7 +64,7 @@ std::vector< const Candidate * > CandidateRepository::GetCandidatesForStrings(
                                                   nullptr );
 
       if ( !candidate ) {
-        candidate.reset( new Candidate( std::move( candidate_text ) ) );
+        candidate = std::make_unique< Candidate >( std::move( candidate_text ) );
       }
 
       candidates.push_back( candidate.get() );

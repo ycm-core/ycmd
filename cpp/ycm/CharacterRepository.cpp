@@ -49,7 +49,7 @@ CharacterSequence CharacterRepository::GetCharacters(
                                                          nullptr );
 
       if ( !character_object ) {
-        character_object.reset( new Character( character ) );
+        character_object = std::make_unique< Character >( character );
       }
 
       character_objects.push_back( character_object.get() );
