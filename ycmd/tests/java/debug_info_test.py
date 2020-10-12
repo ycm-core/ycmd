@@ -180,3 +180,8 @@ def DebugInfo_ExtraConf_SettingsValid_test( app ):
       'servers': contains_exactly( has_entries( {
         'name': 'jdt.ls',
         'is_running': instance_of( bool ) } ) ) } ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

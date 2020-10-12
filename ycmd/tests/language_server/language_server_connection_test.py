@@ -174,3 +174,8 @@ def LanguageServerConnection_RejectUnsupportedRequest_test():
     with patch.object( connection, 'WriteData' ) as write_data:
       connection.run()
       write_data.assert_called_with( expected_response )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

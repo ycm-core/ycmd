@@ -101,3 +101,8 @@ def EventNotification_OnBufferUnload_CloseFile_test( app ):
   response = app.post_json( '/completions', completion_data )
   assert_that( response.json, has_entries( {
     'completions': contains_exactly( CompletionEntryMatcher( 'method' ) ) } ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

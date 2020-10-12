@@ -405,3 +405,8 @@ def ExtraConfData_test():
   extra_conf_data[ 'key' ].append( 'another_value' )
   assert_that( extra_conf_data,
                has_entry( 'key', contains_exactly( 'value' ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

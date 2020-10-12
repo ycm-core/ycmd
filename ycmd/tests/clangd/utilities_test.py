@@ -241,3 +241,8 @@ def ClangdCompleter_StartServer_Fails_test( app ):
                      ) )
       assert_that( resp.status_code, equal_to( 200 ) )
       shutdown.assert_called()
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

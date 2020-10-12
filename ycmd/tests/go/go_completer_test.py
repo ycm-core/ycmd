@@ -37,3 +37,8 @@ def GetCompleter_GoplsNotFound_test( *args ):
 def GetCompleter_GoplsFromUserOption_test( *args ):
   user_options = user_options_store.GetAll().copy( gopls_binary_path = 'gopls' )
   assert_that( GetCompleter( user_options )._gopls_path, equal_to( 'gopls' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

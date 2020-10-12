@@ -65,3 +65,8 @@ def SignatureHelp_NotImplemented_test( app ):
     'errors': empty(),
     'signature_help': EMPTY_SIGNATURE_HELP
   } ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

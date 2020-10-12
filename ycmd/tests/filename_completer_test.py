@@ -379,3 +379,8 @@ def FilenameCompleter_AllFiletypesBlacklisted_test( app ):
   results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
   assert_that( results, empty() )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

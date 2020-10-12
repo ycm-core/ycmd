@@ -234,3 +234,8 @@ def JavaCompleter_GetDoc_test( app ):
         return_value = False )
 def JavaHook_JavaNotEnabled_test( *args ):
   assert_that( hook.GetCompleter( {} ), equal_to( None ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

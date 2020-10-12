@@ -456,3 +456,8 @@ def IdentifierAtIndex_SingleCharIdent_test():
 def IdentifierAtIndex_Css_test():
   assert_that( 'font-face', equal_to(
     iu.IdentifierAtIndex( 'font-face', 0, 'css' ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

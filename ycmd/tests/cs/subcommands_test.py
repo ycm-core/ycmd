@@ -865,3 +865,8 @@ def Subcommands_RangeFormat_Works_test( app ):
             LocationMatcher( filepath, 9, 4 )
           ),
         ) } ) ) } ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

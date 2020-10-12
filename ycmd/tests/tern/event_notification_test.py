@@ -265,3 +265,8 @@ def EventNotification_OnFileReadyToParse_UseGlobalConfig_test(
       } )
     )
   )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

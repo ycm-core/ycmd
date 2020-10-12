@@ -40,3 +40,8 @@ def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
 @patch( 'os.path.isfile', return_value = True )
 def FindTSServer_CustomTsserverPath_test( *args ):
   assert_that( 'tsserver', equal_to( FindTSServer( 'tsserver' ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

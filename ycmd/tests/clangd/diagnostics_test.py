@@ -543,3 +543,8 @@ struct S{static int h();};
     # Assert no dirty files
     with open( header_file, 'r' ) as f:
       assert_that( f.read(), equal_to( old_header_content ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

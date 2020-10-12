@@ -1591,3 +1591,8 @@ def MakeRelativePathsInFlagsAbsolute_NoWorkingDir_test():
     'expect': [ 'list', 'of', 'flags', 'not', 'changed', '-Itest' ],
     'wd': ''
   } )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

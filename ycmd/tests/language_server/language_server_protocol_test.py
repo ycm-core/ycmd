@@ -201,3 +201,8 @@ def CodepointsToUTF16CodeUnitsAndReverse_test( line_value,
                equal_to( code_units ) )
   assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
                equal_to( codepoints ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

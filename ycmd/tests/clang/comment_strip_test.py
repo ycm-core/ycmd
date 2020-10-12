@@ -165,3 +165,8 @@ def ClangCompleter_FormatRawComment_MultiLine_empty_test():
 
 
 """ ) # noqa
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

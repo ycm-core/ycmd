@@ -635,3 +635,8 @@ def Signature_Help_Available_Disabled_By_User_test( app, *args ):
   response = app.get( '/signature_help_available',
                       { 'subserver': 'cpp' } ).json
   assert_that( response, SignatureAvailableMatcher( 'NO' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

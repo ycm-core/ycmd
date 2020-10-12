@@ -1138,3 +1138,8 @@ def Subcommands_RefactorRename_test( app ):
     'route': '/run_completer_command'
   }
   RunAfterInitialized( app, test )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

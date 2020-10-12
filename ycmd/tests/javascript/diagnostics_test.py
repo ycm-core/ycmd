@@ -114,3 +114,8 @@ def Diagnostics_DetailedDiagnostics_test( app ):
       'message', "Property 'nonExistingMethod' does not exist on type 'Bar'."
     )
   )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

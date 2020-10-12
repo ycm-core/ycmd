@@ -92,3 +92,8 @@ def EnsureRequestValid_MissingEntryForFileInFileData_test():
   data[ 'filepath' ] = '/bar'
   assert_that( calling( EnsureRequestValid ).with_args( data ),
                raises( ServerError, ".*/bar.*" ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

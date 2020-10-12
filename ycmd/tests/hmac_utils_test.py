@@ -66,3 +66,8 @@ def CreateRequestHmac_WithBytes_test():
     bytes( b'key' ) ) ),
     equal_to( bytes( b'bfbb6bc7a2b3eca2a78f4e7ec8a7dfa7'
                      b'e58bb8974166eaf20e0224d999894b34' ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

@@ -367,3 +367,8 @@ def CppBindings_CompletionDataVector_test():
                                'menu_text': 'a'
                              } )
                            ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

@@ -73,3 +73,8 @@ def GetCompletions_Basic_test( app ):
   # This completer does not require or support resolve
   assert_that( results[ 0 ], is_not( has_key( 'resolve' ) ) )
   assert_that( results[ 0 ], is_not( has_key( 'item' ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

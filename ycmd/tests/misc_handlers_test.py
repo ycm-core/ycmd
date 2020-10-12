@@ -268,3 +268,8 @@ def MiscHandlers_SignatureHelp_ComputeSignatureThrows_test( compute_sig, app ):
         ErrorMatcher( RuntimeError, '' )
       )
     } ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

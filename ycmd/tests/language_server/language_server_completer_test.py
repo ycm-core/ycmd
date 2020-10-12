@@ -1491,3 +1491,8 @@ def LanguageServerCompleter_DistanceOfPointToRange_MultiLineRange_test():
   _Check_Distance( ( 1, 4 ), ( 0, 2 ), ( 3, 5 ) , 0 )
   # Point to the right of range.
   _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 3 )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

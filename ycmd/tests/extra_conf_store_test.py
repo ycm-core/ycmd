@@ -246,3 +246,8 @@ def Load_DoNotReloadExtraConf_ForceEqualsTrue_test( app ):
 def ExtraConfStore_IsGlobalExtraConfStore_NotAExtraConf_test():
   assert_that( calling( extra_conf_store.IsGlobalExtraConfModule ).with_args(
     extra_conf_store ), raises( AttributeError ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True
