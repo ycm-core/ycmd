@@ -193,7 +193,56 @@ def GenericLSPCompleter_DebugInfo_TCP_test( app ):
         'name': 'fooCompleter',
         'port': TEST_PORT,
         'pid': instance_of( int ),
-        'logfiles': contains_exactly( instance_of( str ) ),
+        'logfiles': contains_exactly( instance_of( str ),
+                                      instance_of( str ) ),
+        'extras': contains_exactly(
+          has_entries( {
+            'key': 'Server State',
+            'value': instance_of( str ),
+          } ),
+          has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'generic_server' ),
+          } ),
+          has_entries( {
+            'key': 'Settings',
+            'value': '{}'
+          } ),
+        )
+      } ) ),
+    } ) )
+  )
+
+
+@IsolatedYcmd( { 'language_server':
+  [ { 'name': 'foo',
+      'filetypes': [ 'foo' ],
+      'cmdline': [ 'node',
+                   PATH_TO_GENERIC_COMPLETER,
+                   '--listen', '${port}' ],
+      'port': '*' } ] } )
+def GenericLSPCompleter_DebugInfo_TCP_GeneratePort_test( app ):
+  request = BuildRequest( filepath = TEST_FILE,
+                          filetype = 'foo',
+                          line_num = 1,
+                          column_num = 1,
+                          contents = TEST_FILE_CONTENT,
+                          event_name = 'FileReadyToParse' )
+  app.post_json( '/event_notification', request )
+  WaitUntilCompleterServerReady( app, 'foo' )
+
+  request.pop( 'event_name' )
+  response = app.post_json( '/debug_info', request ).json
+  assert_that(
+    response,
+    has_entry( 'completer', has_entries( {
+      'name': 'GenericLSP',
+      'servers': contains_exactly( has_entries( {
+        'name': 'fooCompleter',
+        'port': instance_of( int ),
+        'pid': instance_of( int ),
+        'logfiles': contains_exactly( instance_of( str ),
+                                      instance_of( str ) ),
         'extras': contains_exactly(
           has_entries( {
             'key': 'Server State',

@@ -277,6 +277,10 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 
 - `name`: the string representing the name of the server
 - `cmdline`: the list representing the command line to execute the server
+  (optional; mandatory if port not specified)
+- `port`: optional. If specified, a TCP connection is used to this port. If set
+  to `*`, an unused locall port is selected and made availble in the `cmdline`
+  as `${port}` (see below examples).
 - `filetypes`: list of supported filetypes.
 - `project_root_files`: Tells ycmd which files indicate project root.
 - `capabilities'`: Overrides the default LSP capabilities of ycmd.
@@ -293,6 +297,34 @@ wouldn't usually know about. The value is a list of dictionaries containing:
   } ]
 }
 ```
+
+Or, to use a TCP connection:
+
+```json
+{
+  "language_server": [ {
+    "name": "godot",
+    "port": "6008",
+    "filetypes": [ "gdscript" ]
+  } ]
+}
+```
+
+Or, to use an unused  local port, set `port` to `*` and use `${port}` in the
+`cmdline`:
+
+```json
+{
+  "language_server": [ {
+    "name": "someserver",
+    "cmdline": [ "/path/to/some/server", "--port", "${port}" ],
+    "port": "*",
+    "filetypes": [ "somethign" ],
+    "project_root_files": [ "somethingfile" ]
+  } ]
+}
+```
+
 
 When plugging in a completer in this way, the `kwargs[ 'language' ]` will be set
 to the value of the `name` key, i.e. `gopls` in the above example.

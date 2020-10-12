@@ -995,6 +995,7 @@ class LanguageServerCompleter( Completer ):
     self._signature_help_disabled = user_options[ 'disable_signature_help' ]
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
+    self._stdout_file = None
     self._stderr_file = None
     self._server_started = False
 
@@ -1005,6 +1006,9 @@ class LanguageServerCompleter( Completer ):
     self.ServerReset()
     self._connection = None
     self._server_handle = None
+    if not self._server_keep_logfiles and self._stdout_file:
+      utils.RemoveIfExists( self._stdout_file )
+      self._stdout_file = None
     if not self._server_keep_logfiles and self._stderr_file:
       utils.RemoveIfExists( self._stderr_file )
       self._stderr_file = None
@@ -1053,7 +1057,31 @@ class LanguageServerCompleter( Completer ):
                  self.GetServerName(),
                  self.GetCommandLine() )
 
-    if self.GetCommandLine():
+    self._project_directory = self.GetProjectDirectory( request_data )
+
+    if self._connection_type == 'tcp':
+      if self.GetCommandLine():
+        self._stderr_file = utils.CreateLogfile(
+          f'{ utils.MakeSafeFileNameString( self.GetServerName() ) }_stderr' )
+        self._stdout_file = utils.CreateLogfile(
+          f'{ utils.MakeSafeFileNameString( self.GetServerName() ) }_stdout' )
+
+        with utils.OpenForStdHandle( self._stderr_file ) as stderr:
+          with utils.OpenForStdHandle( self._stdout_file ) as stdout:
+            self._server_handle = utils.SafePopen(
+              self.GetCommandLine(),
+              stdin = subprocess.PIPE,
+              stdout = stdout,
+              stderr = stderr,
+              env = self.GetServerEnvironment() )
+
+      self._connection = TCPSingleStreamConnection(
+        self._project_directory,
+        lambda globs: WatchdogHandler( self, globs ),
+        self._port,
+        lambda request: self.WorkspaceConfigurationResponse( request ),
+        self.GetDefaultNotificationHandler() )
+    else:
       self._stderr_file = utils.CreateLogfile(
         f'{ utils.MakeSafeFileNameString( self.GetServerName() ) }_stderr' )
 
@@ -1065,16 +1093,6 @@ class LanguageServerCompleter( Completer ):
           stderr = stderr,
           env = self.GetServerEnvironment() )
 
-    self._project_directory = self.GetProjectDirectory( request_data )
-
-    if self._connection_type == 'tcp':
-      self._connection = TCPSingleStreamConnection(
-        self._project_directory,
-        lambda globs: WatchdogHandler( self, globs ),
-        self._port,
-        lambda request: self.WorkspaceConfigurationResponse( request ),
-        self.GetDefaultNotificationHandler() )
-    else:
       self._connection = (
         StandardIOLanguageServerConnection(
           self._project_directory,
@@ -1589,7 +1607,8 @@ class LanguageServerCompleter( Completer ):
   def DebugInfo( self, request_data ):
     with self._server_info_mutex:
       extras = self.CommonDebugItems() + self.ExtraDebugItems( request_data )
-      logfiles = [ self._stderr_file ] + self.AdditionalLogFiles()
+      logfiles = [ self._stdout_file,
+                   self._stderr_file ] + self.AdditionalLogFiles()
       server = responses.DebugInfoServer(
         name = self.GetServerName(),
         handle = self._server_handle,
