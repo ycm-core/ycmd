@@ -236,3 +236,8 @@ def PreparedTriggers_ObjectiveC_test():
       'objc' ) )
 
   assert_that( not triggers.MatchesForFiletype( '// foo ', 8, 8, 'objc' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

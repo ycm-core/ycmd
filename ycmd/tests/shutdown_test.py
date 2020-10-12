@@ -117,3 +117,8 @@ class Shutdown_test( Client_test ):
 
     self.AssertServersShutDown( timeout = SUBSERVER_SHUTDOWN_TIMEOUT + 10 )
     self.AssertLogfilesAreRemoved()
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

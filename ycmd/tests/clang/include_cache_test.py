@@ -151,3 +151,8 @@ def IncludeCache_Cached_NewMtime_test():
                                   'entry_type': 1
                                 } ) )
                             } ) ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

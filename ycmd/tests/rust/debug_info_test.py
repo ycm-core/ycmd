@@ -120,3 +120,8 @@ def DebugInfo_NoRlsVersion_test( get_command_output, app ):
       } ) )
     } ) )
   )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

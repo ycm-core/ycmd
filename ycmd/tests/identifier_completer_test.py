@@ -302,3 +302,8 @@ def FilterUnchangedTagFiles_SkipUnchangesFiles_test():
 
   assert_that( list( ident_completer._FilterUnchangedTagFiles( [ tag_file ] ) ),
                empty() )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

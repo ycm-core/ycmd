@@ -486,3 +486,8 @@ def CppBindings_CompilationDatabase_test():
                                                   '-I/absolute/path',
                                                   '-Wall' )
                    } ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

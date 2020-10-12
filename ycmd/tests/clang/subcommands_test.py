@@ -1633,3 +1633,8 @@ def Subcommands_StillParsingError_test( app ):
     Subcommands_StillParsingError( app, 'GoToDeclaration' )
     Subcommands_StillParsingError( app, 'GoToDefinition' )
     Subcommands_StillParsingError( app, 'GoToImprecise' )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

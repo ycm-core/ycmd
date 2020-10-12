@@ -63,3 +63,8 @@ def DebugInfo_NoCompleter_test( app, *args ):
     app.post_json( '/debug_info', request_data ).json,
     has_entry( 'completer', none() )
   )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

@@ -779,3 +779,8 @@ def PollForMessages_AbortedWhenServerDies_test( app ):
 
   message_poll_task.join()
   assert_that( state[ 'aborted' ] )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

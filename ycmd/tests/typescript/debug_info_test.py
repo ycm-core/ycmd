@@ -48,3 +48,8 @@ def DebugInfo_test( app ):
       } ) )
     } ) )
   )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

@@ -189,3 +189,8 @@ def GetCompletions_DoesntStartWithAmbiguousMultipleSolutions_test( app ):
     "suitable solution file to feed it. Did you fiddle with the solution "
     "finding code in cs_completer.py? Hopefully you've enhanced it: you need "
     "to update this test then :)" )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

@@ -58,3 +58,8 @@ def GetCompleter_WarnsAboutOldConfig_test( logger ):
   GetCompleter( user_options )
   logger.warning.assert_called_with(
       'rls_binary_path detected. Did you mean rust_toolchain_root?' )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

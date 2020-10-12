@@ -208,3 +208,8 @@ def GetCompleter_CustomPathToServer_NotAFile_test( *args ):
   user_options = user_options_store.GetAll().copy(
     roslyn_binary_path = 'does-not-exist' )
   assert_that( not GetCompleter( user_options ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

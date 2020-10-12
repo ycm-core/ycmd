@@ -547,3 +547,8 @@ def MakeSafeFileNameString_test( unsafe_name, safe_name ):
 def UpdateDict_test( target, override, expected ):
   assert_that( utils.UpdateDict( target, override ),
                equal_to( expected ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

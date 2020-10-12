@@ -45,3 +45,8 @@ def Subcommands_NoExplicitCompleterTargetSpecified_test( get_subcmd_map, app ):
     subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
     assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
                  contains_exactly( 'A', 'B', 'C' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

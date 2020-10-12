@@ -530,3 +530,8 @@ def Subcommands_StopServer_Timeout_test( app ):
                    has_entry( 'is_running', False )
                  ) )
                ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

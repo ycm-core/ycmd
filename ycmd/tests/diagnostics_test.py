@@ -51,3 +51,8 @@ def Diagnostics_DoesWork_test( get_detailed_diag, app ):
 
     response = app.post_json( '/detailed_diagnostic', diag_data )
     assert_that( response.json, MessageMatcher( 'detailed diagnostic' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

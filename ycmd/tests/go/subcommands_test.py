@@ -476,3 +476,8 @@ def Subcommands_GoToReferences_test( app ):
   test = { 'req': ( filepath, 10, 5 ), 'res': [ ( filepath, 10, 5 ),
                                                 ( filepath, 13, 5 ) ] }
   RunGoToTest( app, 'GoToReferences', test )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

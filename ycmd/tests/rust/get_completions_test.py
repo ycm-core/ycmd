@@ -83,3 +83,8 @@ def GetCompletions_Basic_test( app ):
   # result, and that there are no errors.
   assert_that( response[ 'completion' ], is_not( None ) )
   assert_that( response[ 'errors' ], empty() )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

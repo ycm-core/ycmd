@@ -121,3 +121,8 @@ def CppBindings_CompilationInfo_NoInit_test():
   assert_that( calling( ycm_core.CompilationInfoForFile ),
       raises( TypeError, 'ycm_core.CompilationInfoForFile:'
                          ' No constructor defined!' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

@@ -2296,3 +2296,8 @@ def Subcommands_ExecuteCommand_test( app ):
       'data': ''
     }
   } )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

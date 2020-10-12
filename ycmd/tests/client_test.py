@@ -253,3 +253,8 @@ class Client_test:
             sys.stdout.write( '\n' )
 
     return Wrapper
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

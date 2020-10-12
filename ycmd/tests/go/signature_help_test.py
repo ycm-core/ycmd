@@ -160,3 +160,8 @@ def Signature_Help_Available_test( app ):
   response = app.get( '/signature_help_available',
                       { 'subserver': 'go' } ).json
   assert_that( response, SignatureAvailableMatcher( 'YES' ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

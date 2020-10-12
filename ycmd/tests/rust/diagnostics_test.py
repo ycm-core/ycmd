@@ -127,3 +127,8 @@ def Diagnostics_Poll_test( app ):
       'Timed out waiting for full set of diagnostics. '
       f'Expected to see diags for { json.dumps( to_see, indent = 2 ) }, '
       f'but only saw { json.dumps( sorted( seen.keys() ), indent = 2 ) }.' )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

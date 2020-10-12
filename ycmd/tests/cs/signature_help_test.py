@@ -223,3 +223,8 @@ def GetCompletions_Basic_NoSigHelp_test( app ):
         ),
         'errors': empty(),
       } ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True

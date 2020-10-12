@@ -786,3 +786,8 @@ def GetCompletions_FilterThenReturnFromCache_test( candidates_list,
                             CompletionEntryMatcher( 'cbc' ) ) )
 
     assert_that( candidates_list.call_count, equal_to( 1 ) )
+
+
+def Dummy_test():
+  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+  assert True
