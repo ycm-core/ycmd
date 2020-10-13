@@ -254,7 +254,7 @@ def Subcommands_GetDoc_Function_test( app ):
       'data': has_entry( 'detailed_info',
                          'common::test\n'
                          'pub fn create_universe()\n'
-                         '___\n'
+                         '---\n'
                          'Be careful when using that function' ),
     }
   } )
