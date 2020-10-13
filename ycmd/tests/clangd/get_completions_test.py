@@ -659,7 +659,7 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 9,
       'column_num': 28,
-      'compilation_flags': [ '-x', 'cpp' ]
+      'compilation_flags': [ '-x', 'c++' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -755,7 +755,7 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 10,
       'column_num': 18,
-      'compilation_flags': [ '-x', 'cpp' ],
+      'compilation_flags': [ '-x', 'c++' ],
       # NOTE: when not forcing semantic, it falls back to the filename
       # completer and returns the root folder entries.
       'force_semantic': True

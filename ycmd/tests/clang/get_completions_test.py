@@ -797,7 +797,7 @@ def GetCompletions_QuotedInclude_AtStart_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 11,
       'column_num': 11,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ]
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -828,7 +828,7 @@ def GetCompletions_QuotedInclude_UserIncludeFlag_test( app ):
       'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-I', PathToTestFile( 'test-include', 'system' )
       ]
     },
@@ -863,7 +863,7 @@ def GetCompletions_QuotedInclude_SystemIncludeFlag_test( app ):
       'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-isystem', PathToTestFile( 'test-include', 'system' )
       ]
     },
@@ -898,7 +898,7 @@ def GetCompletions_QuotedInclude_QuoteIncludeFlag_test( app ):
       'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iquote', PathToTestFile( 'test-include', 'quote' )
       ]
     },
@@ -932,7 +932,7 @@ def GetCompletions_QuotedInclude_MultipleIncludeFlags_test( app ):
       'line_num'  : 11,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-I', PathToTestFile( 'test-include', 'dir with spaces' ),
         '-I', PathToTestFile( 'test-include', 'quote' ),
         '-I', PathToTestFile( 'test-include', 'system' )
@@ -970,7 +970,7 @@ def GetCompletions_QuotedInclude_AfterDirectorySeparator_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 11,
       'column_num': 27,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ]
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -994,7 +994,7 @@ def GetCompletions_QuotedInclude_AfterDot_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 11,
       'column_num': 28,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ]
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1018,7 +1018,7 @@ def GetCompletions_QuotedInclude_AfterSpace_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 11,
       'column_num': 20,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ]
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1042,7 +1042,7 @@ def GetCompletions_QuotedInclude_Invalid_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 13,
       'column_num': 12,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ]
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1065,7 +1065,7 @@ def GetCompletions_QuotedInclude_FrameworkHeader_test( app ):
       'line_num'  : 14,
       'column_num': 18,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iframework', PathToTestFile( 'test-include', 'Frameworks' )
       ]
     },
@@ -1091,7 +1091,7 @@ def GetCompletions_BracketInclude_AtStart_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 12,
       'column_num': 11,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ]
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ]
     },
     'expect': {
       'response': requests.codes.ok,
@@ -1114,7 +1114,7 @@ def GetCompletions_BracketInclude_UserIncludeFlag_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-I', PathToTestFile( 'test-include', 'system' )
       ]
     },
@@ -1143,7 +1143,7 @@ def GetCompletions_BracketInclude_SystemIncludeFlag_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-isystem', PathToTestFile( 'test-include', 'system' )
       ]
     },
@@ -1172,7 +1172,7 @@ def GetCompletions_BracketInclude_QuoteIncludeFlag_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iquote', PathToTestFile( 'test-include', 'quote' )
       ]
     },
@@ -1197,7 +1197,7 @@ def GetCompletions_BracketInclude_MultipleIncludeFlags_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-I', PathToTestFile( 'test-include', 'dir with spaces' ),
         '-I', PathToTestFile( 'test-include', 'quote' ),
         '-I', PathToTestFile( 'test-include', 'system' )
@@ -1229,7 +1229,7 @@ def GetCompletions_BracketInclude_AtDirectorySeparator_test( app ):
       'filepath'  : PathToTestFile( 'test-include', 'main.cpp' ),
       'line_num'  : 12,
       'column_num': 18,
-      'compilation_flags': [ '-x', 'cpp', '-nostdinc', '-nobuiltininc' ],
+      'compilation_flags': [ '-x', 'c++', '-nostdinc', '-nobuiltininc' ],
       # NOTE: when not forcing semantic, it falls back to the filename
       # completer and returns the root folder entries.
       'force_semantic': True
@@ -1255,7 +1255,7 @@ def GetCompletions_BracketInclude_FrameworkHeader_test( app ):
       'line_num'  : 15,
       'column_num': 18,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iframework', PathToTestFile( 'test-include', 'Frameworks' )
       ]
     },
@@ -1283,7 +1283,7 @@ def GetCompletions_BracketInclude_FileAndDirectory_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-isystem', PathToTestFile( 'test-include', 'system' ),
         '-isystem', PathToTestFile( 'test-include', 'system', 'common' )
       ]
@@ -1313,7 +1313,7 @@ def GetCompletions_BracketInclude_FileAndFramework_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iframework', PathToTestFile( 'test-include', 'Frameworks' ),
         '-isystem', PathToTestFile( 'test-include', 'system', 'common' )
       ]
@@ -1343,7 +1343,7 @@ def GetCompletions_BracketInclude_DirectoryAndFramework_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iframework', PathToTestFile( 'test-include', 'Frameworks' ),
         '-isystem', PathToTestFile( 'test-include', 'system' )
       ]
@@ -1375,7 +1375,7 @@ def GetCompletions_BracketInclude_FileAndDirectoryAndFramework_test( app ):
       'line_num'  : 12,
       'column_num': 11,
       'compilation_flags': [
-        '-x', 'cpp', '-nostdinc', '-nobuiltininc',
+        '-x', 'c++', '-nostdinc', '-nobuiltininc',
         '-iframework', PathToTestFile( 'test-include', 'Frameworks' ),
         '-isystem', PathToTestFile( 'test-include', 'system' ),
         '-isystem', PathToTestFile( 'test-include', 'system', 'common' )
