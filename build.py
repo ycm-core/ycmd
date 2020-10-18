@@ -81,13 +81,13 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   )$
 """
 
-JDTLS_MILESTONE = '0.59.0'
-JDTLS_BUILD_STAMP = '202007221016'
+JDTLS_MILESTONE = '0.63.0'
+JDTLS_BUILD_STAMP = '202010141717'
 JDTLS_SHA256 = (
-  'a3a7999032114673bd2212d929a74c56b22fece0fb7e7410bd82f3e17443a295'
+  '56eef6b138bdaa60ff8a794d622d390abac8286c0e5e1370616baf9a601fd1c8'
 )
 
-TSSERVER_VERSION = '3.9.7'
+TSSERVER_VERSION = '4.0.3'
 
 RUST_TOOLCHAIN = 'nightly-2020-10-05'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
@@ -845,7 +845,7 @@ def EnableGoCompleter( args ):
   new_env[ 'GOPATH' ] = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
-  CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.4.4' ],
+  CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.5.1' ],
              env = new_env,
              quiet = args.quiet,
              status_message = 'Building gopls for go completion' )

@@ -536,7 +536,7 @@ def Subcommands_GoToReferences_NoReferences_test( app ):
 
   event_data = BuildRequest( filepath = filepath,
                              filetype = 'java',
-                             line_num = 18,
+                             line_num = 2,
                              column_num = 1,
                              contents = contents,
                              command_arguments = [ 'GoToReferences' ],
@@ -1052,7 +1052,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
       } ),
       has_entries( {
         'text': 'Change modifiers to final where possible',
-        'kind': 'refactor',
+        'kind': 'source.generate.finalModifiers',
         'chunks': contains_exactly(
           ChunkMatcher( 'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
                         '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
@@ -1113,7 +1113,7 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
       } ),
       has_entries( {
         'text': 'Change modifiers to final where possible',
-        'kind': 'refactor',
+        'kind': 'source.generate.finalModifiers',
         'chunks': contains_exactly(
           ChunkMatcher( 'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
                         '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
@@ -1472,7 +1472,7 @@ def Subcommands_FixIt_InvalidURI_test( app ):
       } ),
       has_entries( {
         'text': 'Change modifiers to final where possible',
-        'kind': 'refactor',
+        'kind': 'source.generate.finalModifiers',
         'chunks': contains_exactly(
           ChunkMatcher( "final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {"
                         "\n    }\n  }\n\n  public AbstractTestWidget getWidget"
@@ -2027,9 +2027,12 @@ def Subcommands_IndexOutOfRange_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries( { 'fixits': contains_exactly( has_entries(
-        { 'text': 'Generate Getters and Setters',
-          'chunks': instance_of( list ) } ) ) } ),
+      'data': has_entries( { 'fixits': contains_exactly(
+        has_entries( { 'text': 'Generate Getters and Setters',
+          'chunks': instance_of( list ) } ),
+        has_entries( { 'text': 'Change modifiers to final where possible',
+          'chunks': instance_of( list ) } ),
+      ) } ),
     }
   } )
 
@@ -2093,9 +2096,12 @@ def Subcommands_DifferentFileTypesUpdate_test( app ):
     },
     'expect': {
       'response': requests.codes.ok,
-      'data': has_entries( { 'fixits': contains_exactly( has_entries(
-        { 'text': 'Generate Getters and Setters',
-          'chunks': instance_of( list ) } ) ) } ),
+      'data': has_entries( { 'fixits': contains_exactly(
+        has_entries( { 'text': 'Generate Getters and Setters',
+          'chunks': instance_of( list ) } ),
+        has_entries( { 'text': 'Change modifiers to final where possible',
+          'chunks': instance_of( list ) } ),
+      ) } ),
     }
   } )
 

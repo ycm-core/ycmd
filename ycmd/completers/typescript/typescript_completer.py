@@ -379,12 +379,12 @@ class TypeScriptCompleter( Completer ):
 
   def ComputeCandidatesInner( self, request_data ):
     self._Reload( request_data )
-    entries = self._SendRequest( 'completions', {
+    entries = self._SendRequest( 'completionInfo', {
       'file':                         request_data[ 'filepath' ],
       'line':                         request_data[ 'line_num' ],
       'offset':                       request_data[ 'start_codepoint' ],
       'includeExternalModuleExports': True
-    } )
+    } )[ 'entries' ]
     # Ignore entries with the "warning" kind. They are identifiers from the
     # current file that TSServer returns sometimes in JavaScript.
     return [ responses.BuildCompletionData(
