@@ -195,8 +195,7 @@ def PythonSysPath( **kwargs ):
 
   sys_path[ 0:0 ] = [ p.join( DIR_OF_THIS_SCRIPT ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
-                      p.join( DIR_OF_THIRD_PARTY, 'cregex',
-                              'regex_{}'.format( major_version ) ),
+                      p.join( DIR_OF_THIRD_PARTY, 'mrab-regex', 'build' ),
                       p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),

@@ -35,7 +35,7 @@ PYTHON_STDLIB_ZIP_REGEX = re.compile( 'python3[0-9]\\.zip' )
 def SetUpPythonPath():
   sys.path[ 0:0 ] = [ p.join( ROOT_DIR ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
-                      p.join( DIR_OF_THIRD_PARTY, 'cregex', 'regex_3' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'mrab-regex', 'build' ),
                       p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),

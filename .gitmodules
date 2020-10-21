@@ -16,9 +16,6 @@
 [submodule "third_party/parso"]
 	path = third_party/jedi_deps/parso
 	url = https://github.com/davidhalter/parso
-[submodule "third_party/cregex"]
-	path = third_party/cregex
-	url = https://github.com/ycm-core/regex.git
 [submodule "third_party/urllib3"]
 	path = third_party/requests_deps/urllib3
 	url = https://github.com/urllib3/urllib3
@@ -37,3 +34,6 @@
 [submodule "third_party/watchdog"]
 	path = third_party/watchdog_deps/watchdog
 	url = https://github.com/gorakhargosh/watchdog
+[submodule "third_party/mrab-regex"]
+	path = third_party/mrab-regex
+	url = https://bitbucket.org/mrabarnett/mrab-regex.git
