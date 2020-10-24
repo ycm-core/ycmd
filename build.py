@@ -665,32 +665,32 @@ def BuildYcmdLib( cmake, cmake_common_args, script_args ):
       RemoveDirectory( build_dir )
 
 
-def BuildRegexModule( cmake, cmake_common_args, script_args ):
-  build_dir = mkdtemp( prefix = 'regex_build_' )
+def BuildRegexModule( script_args ):
+  DIR_OF_REGEX = p.join( DIR_OF_THIRD_PARTY, 'mrab-regex' )
+  build_dir = os.path.join( DIR_OF_REGEX, 'build', '3' )
+  lib_dir = os.path.join( DIR_OF_REGEX, 'build' )
 
   try:
-    os.chdir( build_dir )
+    os.chdir( DIR_OF_REGEX )
 
-    configure_command = [ cmake ] + cmake_common_args
-    configure_command.append( p.join( DIR_OF_THIS_SCRIPT,
-                                      'third_party', 'cregex' ) )
+    RemoveDirectoryIfExists( build_dir )
+    RemoveDirectoryIfExists( lib_dir )
 
-    CheckCall( configure_command,
-               exit_message = BUILD_ERROR_MESSAGE,
-               quiet = script_args.quiet,
-               status_message = 'Generating regex build configuration' )
+    try:
+      import setuptools # noqa
+      CheckCall( [ sys.executable,
+                   'setup.py',
+                   'build',
+                   '--build-base=' + build_dir,
+                   '--build-lib=' + lib_dir ],
+                 exit_message = 'Failed to build regex module.',
+                 quiet = script_args.quiet,
+                 status_message = 'Building regex module' )
+    except ImportError:
+      pass # Swallow the error - ycmd will fall back to the standard `re`.
 
-    build_config = GetCMakeBuildConfiguration( script_args )
-
-    build_command = ( [ cmake, '--build', '.', '--target', '_regex' ] +
-                      build_config )
-    CheckCall( build_command,
-               exit_message = BUILD_ERROR_MESSAGE,
-               quiet = script_args.quiet,
-               status_message = 'Compiling regex module' )
   finally:
     os.chdir( DIR_OF_THIS_SCRIPT )
-    RemoveDirectory( build_dir )
 
 
 def EnableCsCompleter( args ):
@@ -1145,12 +1145,12 @@ def WritePythonUsedDuringBuild():
     f.write( sys.executable )
 
 
-def CompileWatchdog( script_args ):
+def BuildWatchdogModule( script_args ):
+  DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
+  build_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', '3' )
+  lib_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' )
   try:
-    DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
     os.chdir( p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog' ) )
-    build_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', '3' )
-    lib_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' )
 
     RemoveDirectoryIfExists( build_dir )
     RemoveDirectoryIfExists( lib_dir )
@@ -1175,6 +1175,7 @@ def CompileWatchdog( script_args ):
       shutil.copytree( p.join( 'src', 'watchdog' ),
                        p.join( lib_dir, 'watchdog' ) )
   finally:
+    RemoveDirectoryIfExists( build_dir )
     os.chdir( DIR_OF_THIS_SCRIPT )
 
 
@@ -1186,9 +1187,8 @@ def DoCmakeBuilds( args ):
   BuildYcmdLib( cmake, cmake_common_args, args )
   WritePythonUsedDuringBuild()
 
-  BuildRegexModule( cmake, cmake_common_args, args )
-
-  CompileWatchdog( args )
+  BuildRegexModule( args )
+  BuildWatchdogModule( args )
 
 
 def Main():

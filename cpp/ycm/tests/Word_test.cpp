@@ -70,7 +70,7 @@ const WordTuple tests[] = {
 };
 
 
-INSTANTIATE_TEST_CASE_P( UnicodeTest, WordTest, ValuesIn( tests ) );
+INSTANTIATE_TEST_SUITE_P( UnicodeTest, WordTest, ValuesIn( tests ) );
 
 
 TEST( WordTest, MatchesBytes ) {
