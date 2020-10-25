@@ -83,16 +83,8 @@ get_python_inc(),
 'cpp/ycm/tests/gmock/googletest/include',
 '-isystem',
 'cpp/ycm/benchmarks/benchmark/include',
+'-std=c++17',
 ]
-
-# Clang automatically sets the '-std=' flag to 'c++14' for MSVC 2015 or later,
-# which is required for compiling the standard library, and to 'c++17' for older
-# versions.
-if platform.system() != 'Windows':
-  flags.append( '-std=c++17' )
-else:
-  flags.append( '/std:c++17' )
-
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
 # compile_commands.json file to use that instead of 'flags'. See here for
@@ -197,7 +189,7 @@ def PythonSysPath( **kwargs ):
 
   sys_path[ 0:0 ] = [ p.join( DIR_OF_THIS_SCRIPT ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
-                      p.join( DIR_OF_THIRD_PARTY, 'mrab-regex', 'build' ),
+                      p.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
                       p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
