@@ -201,7 +201,7 @@ def FindExecutable( executable ):
     executable_name = executable + extension
     if not os.path.isfile( executable_name ):
       for path in paths:
-        executable_path = os.path.join( path, executable_name )
+        executable_path = p.join( path, executable_name )
         if os.path.isfile( executable_path ):
           return executable_path
     else:
@@ -666,12 +666,11 @@ def BuildYcmdLib( cmake, cmake_common_args, script_args ):
 
 
 def BuildRegexModule( script_args ):
-  DIR_OF_REGEX = p.join( DIR_OF_THIRD_PARTY, 'mrab-regex' )
-  build_dir = os.path.join( DIR_OF_REGEX, 'build', '3' )
-  lib_dir = os.path.join( DIR_OF_REGEX, 'build' )
+  build_dir = p.join( DIR_OF_THIRD_PARTY, 'regex-build', '3' )
+  lib_dir = p.join( DIR_OF_THIRD_PARTY, 'regex-build' )
 
   try:
-    os.chdir( DIR_OF_REGEX )
+    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex' ) )
 
     RemoveDirectoryIfExists( build_dir )
     RemoveDirectoryIfExists( lib_dir )
@@ -690,6 +689,7 @@ def BuildRegexModule( script_args ):
       pass # Swallow the error - ycmd will fall back to the standard `re`.
 
   finally:
+    RemoveDirectoryIfExists( build_dir )
     os.chdir( DIR_OF_THIS_SCRIPT )
 
 
@@ -734,7 +734,7 @@ def MkDirIfMissing( path ):
 
 def CleanCsCompleter( build_dir, version ):
   for file_name in os.listdir( build_dir ):
-    file_path = os.path.join( build_dir, file_name )
+    file_path = p.join( build_dir, file_name )
     if file_name == version:
       continue
     if os.path.isfile( file_path ):
@@ -878,7 +878,7 @@ def EnableRustCompleter( switches ):
     new_env = os.environ.copy()
     new_env[ 'RUSTUP_HOME' ] = install_dir
 
-    rustup_init = os.path.join( install_dir, 'rustup-init' )
+    rustup_init = p.join( install_dir, 'rustup-init' )
 
     if OnWindows():
       rustup_cmd = [ rustup_init ]
@@ -898,7 +898,7 @@ def EnableRustCompleter( switches ):
                env = new_env,
                quiet = switches.quiet )
 
-    rustup = os.path.join( install_dir, 'bin', 'rustup' )
+    rustup = p.join( install_dir, 'bin', 'rustup' )
 
     try:
       CheckCall( [ rustup, 'toolchain', 'install', RUST_TOOLCHAIN ],
@@ -971,7 +971,7 @@ def CheckJavaVersion( required_version ):
     new_env.pop( 'JAVA_TOOL_OPTIONS', None )
     java_version = int(
       subprocess.check_output(
-        [ java, os.path.join( DIR_OF_THIS_SCRIPT, 'CheckJavaVersion.java' ) ],
+        [ java, p.join( DIR_OF_THIS_SCRIPT, 'CheckJavaVersion.java' ) ],
         stderr=subprocess.STDOUT,
         env = new_env )
       .decode( 'utf-8' )
@@ -1147,8 +1147,8 @@ def WritePythonUsedDuringBuild():
 
 def BuildWatchdogModule( script_args ):
   DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
-  build_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', '3' )
-  lib_dir = os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' )
+  build_dir = p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', '3' )
+  lib_dir = p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' )
   try:
     os.chdir( p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog' ) )
 

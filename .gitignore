@@ -98,3 +98,5 @@ third_party/generic_server/package-lock.json
 
 # installation directory for gopls
 third_party/go
+
+third_party/regex-build
