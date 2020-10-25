@@ -23,6 +23,7 @@
 #include "Result.h"
 #include "Utils.h"
 
+#include <memory>
 #include <unordered_set>
 
 namespace YouCompleteMe {
@@ -34,13 +35,15 @@ IdentifierDatabase::IdentifierDatabase()
 
 void IdentifierDatabase::AddIdentifiers(
   FiletypeIdentifierMap&& filetype_identifier_map ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
 
   for ( auto&& filetype_and_map : filetype_identifier_map ) {
     for ( auto&& filepath_and_identifiers : filetype_and_map.second ) {
+      auto filetype = filetype_and_map.first;
+      auto filepath = filepath_and_identifiers.first;
       AddIdentifiersNoLock( std::move( filepath_and_identifiers.second ),
-                            filetype_and_map.first,
-                            filepath_and_identifiers.first );
+                            std::move( filetype ),
+                            std::move( filepath ) );
     }
   }
 }
@@ -48,18 +51,18 @@ void IdentifierDatabase::AddIdentifiers(
 
 void IdentifierDatabase::AddIdentifiers(
   std::vector< std::string >&& new_candidates,
-  const std::string &filetype,
-  const std::string &filepath ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
-  AddIdentifiersNoLock( std::move( new_candidates ), filetype, filepath );
+  std::string&& filetype,
+  std::string&& filepath ) {
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
+  AddIdentifiersNoLock( std::move( new_candidates ), std::move( filetype ), std::move( filepath ) );
 }
 
 
 void IdentifierDatabase::ClearCandidatesStoredForFile(
-  const std::string &filetype,
-  const std::string &filepath ) {
-  std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
-  GetCandidateSet( filetype, filepath ).clear();
+  std::string&& filetype,
+  std::string&& filepath ) {
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
+  GetCandidateSet( std::move( filetype ), std::move( filepath ) ).clear();
 }
 
 
@@ -69,7 +72,7 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   const size_t max_results ) const {
   FiletypeCandidateMap::const_iterator it;
   {
-    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    std::shared_lock locker( filetype_candidate_map_mutex_ );
     it = filetype_candidate_map_.find( filetype );
 
     if ( it == filetype_candidate_map_.end() ) {
@@ -83,7 +86,7 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   std::vector< Result > results;
 
   {
-    std::lock_guard< std::mutex > locker( filetype_candidate_map_mutex_ );
+    std::lock_guard locker( filetype_candidate_map_mutex_ );
     for ( const auto& path_and_candidates : *it->second ) {
       for ( const Candidate * candidate : *path_and_candidates.second ) {
         if ( ContainsKey( seen_candidates, candidate ) ) {
@@ -113,20 +116,20 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
 // WARNING: You need to hold the filetype_candidate_map_mutex_ before calling
 // this function and while using the returned set.
 std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
-  const std::string &filetype,
-  const std::string &filepath ) {
-  std::shared_ptr< FilepathToCandidates > &path_to_candidates =
-    filetype_candidate_map_[ filetype ];
+  std::string&& filetype,
+  std::string&& filepath ) {
+  std::unique_ptr< FilepathToCandidates > &path_to_candidates =
+    filetype_candidate_map_[ std::move( filetype ) ];
 
   if ( !path_to_candidates ) {
-    path_to_candidates.reset( new FilepathToCandidates() );
+    path_to_candidates = std::make_unique< FilepathToCandidates >();
   }
 
-  std::shared_ptr< std::set< const Candidate * > > &candidates =
-    ( *path_to_candidates )[ filepath ];
+  std::unique_ptr< std::set< const Candidate * > > &candidates =
+    ( *path_to_candidates )[ std::move( filepath ) ];
 
   if ( !candidates ) {
-    candidates.reset( new std::set< const Candidate * >() );
+    candidates = std::make_unique< std::set< const Candidate * > >();
   }
 
   return *candidates;
@@ -137,10 +140,10 @@ std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
 // this function and while using the returned set.
 void IdentifierDatabase::AddIdentifiersNoLock(
   std::vector< std::string >&& new_candidates,
-  const std::string &filetype,
-  const std::string &filepath ) {
+  std::string&& filetype,
+  std::string&& filepath ) {
   std::set< const Candidate *> &candidates =
-    GetCandidateSet( filetype, filepath );
+    GetCandidateSet( std::move( filetype ), std::move( filepath ) );
 
   std::vector< const Candidate * > repository_candidates =
     candidate_repository_.GetCandidatesForStrings(

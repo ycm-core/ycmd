@@ -21,7 +21,7 @@
 #include "CodePoint.h"
 
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -44,7 +44,7 @@ public:
   CodePointRepository( const CodePointRepository& ) = delete;
   CodePointRepository& operator=( const CodePointRepository& ) = delete;
 
-  YCM_EXPORT size_t NumStoredCodePoints();
+  YCM_EXPORT size_t NumStoredCodePoints() const;
 
   YCM_EXPORT CodePointSequence GetCodePoints(
     const std::vector< std::string > &code_points );
@@ -58,7 +58,7 @@ private:
 
   // This data structure owns all the CodePoint pointers
   CodePointHolder code_point_holder_;
-  std::mutex code_point_holder_mutex_;
+  mutable std::shared_mutex code_point_holder_mutex_;
 };
 
 } // namespace YouCompleteMe

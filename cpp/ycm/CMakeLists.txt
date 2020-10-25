@@ -191,15 +191,12 @@ if ( APPLE )
   set( CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem " )
 endif()
 
-if ( USE_SYSTEM_BOOST )
-  set( Boost_COMPONENTS filesystem )
-  find_package( Boost REQUIRED COMPONENTS ${Boost_COMPONENTS} )
-else()
-  set( Boost_INCLUDE_DIR ${BoostParts_SOURCE_DIR} )
-  set( Boost_LIBRARIES BoostParts )
-endif()
-
 set( PYBIND11_INCLUDES_DIR "${CMAKE_SOURCE_DIR}/pybind11" )
+
+# Makes MSVC conform to the standard
+if ( MSVC )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive-" )
+endif()
 
 file( GLOB_RECURSE SERVER_SOURCES *.h *.cpp )
 
@@ -228,14 +225,13 @@ endif()
 
 # The SYSTEM flag makes sure that -isystem[header path] is passed to the
 # compiler instead of the standard -I[header path]. Headers included with
-# -isystem do not generate warnings (and they shouldn't; e.g. boost warnings are
-# just noise for us since we won't be changing them).
+# -isystem do not generate warnings (and they shouldn't; e.g. pybind11 warnings
+# are just noise for us since we won't be changing them).
 # Since there is no -isystem flag equivalent on Windows, headers from external
 # projects may conflict with our headers and override them. We prevent that by
 # including these directories after ours.
 include_directories(
   SYSTEM
-  ${Boost_INCLUDE_DIR}
   ${PYBIND11_INCLUDES_DIR}
   ${PYTHON_INCLUDE_DIRS}
   ${CLANG_INCLUDES_DIR}
@@ -318,6 +314,36 @@ if ( UNIX AND NOT ( APPLE OR SYSTEM_IS_OPENBSD OR HAIKU ) )
   set( EXTRA_LIBS rt )
 endif()
 
+# Check if we need to add -lstdc++fs or -lc++fs or nothing
+if( MSVC )
+  set( STD_FS_NO_LIB_NEEDED TRUE )
+else()
+  file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp "#include <filesystem>\nint main( int argc, char ** argv ) {\n  std::filesystem::path p( argv[ 0 ] );\n  return p.string().length();\n}" )
+  try_compile( STD_FS_NO_LIB_NEEDED ${CMAKE_CURRENT_BINARY_DIR}
+               SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+               COMPILE_DEFINITIONS -std=c++17 )
+  try_compile( STD_FS_NEEDS_STDCXXFS ${CMAKE_CURRENT_BINARY_DIR}
+               SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+               COMPILE_DEFINITIONS -std=c++17
+               LINK_LIBRARIES stdc++fs )
+  try_compile( STD_FS_NEEDS_CXXFS ${CMAKE_CURRENT_BINARY_DIR}
+               SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+               COMPILE_DEFINITIONS -std=c++17
+               LINK_LIBRARIES c++fs )
+  file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp )
+endif()
+
+if( ${STD_FS_NEEDS_STDCXXFS} )
+  set( STD_FS_LIB stdc++fs )
+elseif( ${STD_FS_NEEDS_CXXFS} )
+  set( STD_FS_LIB c++fs )
+elseif( ${STD_FS_NO_LIB_NEEDED} )
+  set( STD_FS_LIB "" )
+else()
+  message( WARNING "Unknown compiler - not passing -lstdc++fs" )
+  set( STD_FS_LIB "" )
+endif()
+
 #############################################################################
 
 add_library( ${PROJECT_NAME} SHARED
@@ -331,9 +357,9 @@ if ( USE_CLANG_COMPLETER AND NOT LIBCLANG_TARGET )
 endif()
 
 target_link_libraries( ${PROJECT_NAME}
-                       ${Boost_LIBRARIES}
                        ${PYTHON_LIBRARIES}
                        ${LIBCLANG_TARGET}
+                       ${STD_FS_LIB}
                        ${EXTRA_LIBS}
                      )
 
@@ -398,11 +424,7 @@ set_target_properties( ${PROJECT_NAME} PROPERTIES
 
 #############################################################################
 
-
-# For some reason, Xcode is too dumb to understand the -isystem flag and thus
-# borks on warnings in Boost.
-if ( USE_DEV_FLAGS AND ( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG ) AND
-     NOT CMAKE_GENERATOR_IS_XCODE )
+if ( USE_DEV_FLAGS AND ( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG ) )
   # We want all warnings, and warnings should be treated as errors
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror" )
 endif()

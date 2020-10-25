@@ -27,10 +27,10 @@ jobs:
         YCM_PYTHON_VERSION: '3.6.3'
         YCM_BENCHMARK: true
         COVERAGE: false
-      # 'C++ linting':
-      #   YCM_PYTHON_VERSION: '3.9.0'
-      #   YCM_CLANG_TIDY: true
-      #   COVERAGE: false
+      'C++ linting':
+        YCM_PYTHON_VERSION: '3.9.0'
+        YCM_CLANG_TIDY: true
+        COVERAGE: false
     maxParallel: 5
   variables:
     COVERAGE: true

@@ -21,7 +21,7 @@
 #include "Candidate.h"
 
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -47,7 +47,7 @@ public:
   CandidateRepository( const CandidateRepository& ) = delete;
   CandidateRepository& operator=( const CandidateRepository& ) = delete;
 
-  size_t NumStoredCandidates();
+  size_t NumStoredCandidates() const;
 
   YCM_EXPORT std::vector< const Candidate * > GetCandidatesForStrings(
     std::vector< std::string >&& strings );
@@ -61,7 +61,7 @@ private:
 
   // This data structure owns all the Candidate pointers
   CandidateHolder candidate_holder_;
-  std::mutex candidate_holder_mutex_;
+  mutable std::shared_mutex candidate_holder_mutex_;
 };
 
 } // namespace YouCompleteMe

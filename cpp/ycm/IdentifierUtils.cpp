@@ -18,21 +18,21 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
+#include <filesystem>
+#include <string_view>
 #include <unordered_map>
 
 namespace YouCompleteMe {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace {
 
 // Only used as the equality comparer for the below unordered_map which stores
 // const char* pointers and not std::string but needs to hash based on string
 // values and not pointer values.
-// When passed a const char* this will create a temporary std::string for
-// comparison, but it's fast enough for our use case.
 struct StringEqualityComparer {
-  bool operator()( const std::string &a, const std::string &b ) const {
+  bool operator()( std::string_view a, std::string_view b ) const {
     return a == b;
   }
 };
@@ -43,10 +43,8 @@ struct StringEqualityComparer {
 //   :e $VIMRUNTIME/filetype.vim
 // This is a map of const char* and not std::string to prevent issues with
 // static initialization.
-const std::unordered_map < const char *,
-      const char *,
-      std::hash< std::string >,
-      StringEqualityComparer > LANG_TO_FILETYPE = {
+const std::unordered_map < std::string_view, std::string_view
+      > LANG_TO_FILETYPE = {
         { "Ada"                 , "ada"                 },
         { "AnsiblePlaybook"     , "ansibleplaybook"     },
         { "Ant"                 , "ant"                 },
@@ -189,15 +187,16 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
       }
       return end;
     }();
-    auto identifier = line.substr( 0, id_end );
-    fs::path path( line.substr( path_begin, path_end - path_begin ) );
-    path = NormalizePath( path, path_to_tag_file.parent_path() );
-    const auto language = line.substr( lang_begin, lang_end - lang_begin );
-    std::string filetype = FindWithDefault( LANG_TO_FILETYPE,
-                                            language.c_str(),
-                                            Lowercase( language ).c_str() );
-    filetype_identifier_map[ std::move( filetype ) ][ path.string() ]
-      .push_back( std::move( identifier ) );
+    std::string_view identifier(&line[ 0 ], id_end );
+    fs::path path( line.begin() + path_begin, line.begin() + path_end );
+    path = fs::weakly_canonical( path_to_tag_file.parent_path() / path );
+    std::string_view language( &line[ lang_begin ], lang_end - lang_begin );
+    std::string filetype( FindWithDefault( LANG_TO_FILETYPE,
+                                           language,
+                                           Lowercase( language ) ) );
+    filetype_identifier_map[ std::move( filetype ) ]
+                           [ std::move( path ).string() ]
+      .emplace_back( identifier );
   }
   return filetype_identifier_map;
 }

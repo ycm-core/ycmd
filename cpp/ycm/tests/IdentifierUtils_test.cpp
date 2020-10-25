@@ -21,11 +21,11 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace YouCompleteMe {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 using ::testing::ElementsAre;
 using ::testing::ContainerEq;
 using ::testing::IsEmpty;
@@ -37,7 +37,8 @@ using ::testing::UnorderedElementsAre;
 TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
   fs::path root = fs::current_path().root_path();
   fs::path testfile = PathToTestFile( "basic.tags" );
-  fs::path testfile_parent = testfile.parent_path();
+  /* VS2017 returns C:\DIRECT~1\ paths without fs::weakly_canonical() */
+  fs::path testfile_parent = fs::weakly_canonical( testfile.parent_path() );
 
   EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
       UnorderedElementsAre(

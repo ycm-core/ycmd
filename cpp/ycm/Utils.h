@@ -18,13 +18,16 @@
 #ifndef UTILS_H_KEPMRPBH
 #define UTILS_H_KEPMRPBH
 
-#include <boost/filesystem.hpp>
+#include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <limits>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <vector>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 
@@ -43,8 +46,9 @@ YCM_EXPORT inline char Lowercase( uint8_t ascii_character ) {
 }
 
 
-YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
+YCM_EXPORT inline std::string Lowercase( std::string_view text ) {
   std::string result;
+  result.reserve( text.size() );
   for ( auto ascii_character : text ) {
     result.push_back( Lowercase( static_cast< uint8_t >( ascii_character ) ) );
   }
@@ -55,14 +59,6 @@ YCM_EXPORT inline std::string Lowercase( const std::string &text ) {
 // Reads the entire contents of the specified file. If the file does not exist,
 // an exception is thrown.
 std::vector< std::string > ReadUtf8File( const fs::path &filepath );
-
-
-// Normalizes a path by making it absolute relative to |base|, resolving
-// symbolic links, removing '.' and '..' in the path, and converting slashes
-// into backslashes on Windows. Contrarily to boost::filesystem::canonical, this
-// works even if the file doesn't exist.
-YCM_EXPORT fs::path NormalizePath( const fs::path &filepath,
-                                   const fs::path &base = fs::current_path() );
 
 
 template <class Container, class Key>
@@ -81,13 +77,17 @@ bool ContainsKey( Container &container, const Key &key ) {
 }
 
 
-template <class Container, class Key>
-typename Container::mapped_type
+template <class Container, class Key, class Ret>
+Ret
 FindWithDefault( Container &container,
                  const Key &key,
-                 const typename Container::mapped_type &value ) {
+                 Ret&& value ) {
+  static_assert( std::is_constructible_v< Ret, typename Container::mapped_type > );
   typename Container::const_iterator it = container.find( key );
-  return it != container.end() ? it->second : value;
+  if ( it != container.end() ) {
+    return Ret{ it->second };
+  }
+  return std::move( value );
 }
 
 

@@ -403,7 +403,7 @@ def ParseArguments():
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
-  parser.add_argument( '--msvc', type = int, choices = [ 14, 15, 16 ],
+  parser.add_argument( '--msvc', type = int, choices = [ 15, 16 ],
                        default = 16, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--ninja', action = 'store_true',
@@ -560,8 +560,8 @@ def RunYcmdTests( args, build_dir ):
             '--gen-suppressions=all',
             '--error-exitcode=1',
             '--leak-check=full',
-            '--show-leak-kinds=all',
-            '--show-reachable=no',
+            '--show-leak-kinds=definite,indirect',
+            '--errors-for-leak-kinds=definite,indirect',
             '--suppressions=' + p.join( DIR_OF_THIS_SCRIPT,
                                         'valgrind.suppressions' ),
             p.join( tests_dir, 'ycm_core_tests' ) ]

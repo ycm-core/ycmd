@@ -22,26 +22,14 @@
 #include "CodePoint.h"
 #include "Word.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
 using ::testing::PrintToString;
 
-namespace fs = boost::filesystem;
-
-// A segmentation fault occurs when gtest tries to print a
-// boost::filesystem::path. Teach gtest how to print it.
-namespace boost {
-
-namespace filesystem {
-
-void PrintTo( const fs::path &path, std::ostream *os );
-
-}
-
-}
+namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 
@@ -64,9 +52,9 @@ struct CodePointTuple {
                       code_point.GetBreakProperty() ) {
   }
 
-  CodePointTuple( const std::string &normal,
-                  const std::string &folded_case,
-                  const std::string &swapped_case,
+  CodePointTuple( std::string_view normal,
+                  std::string_view folded_case,
+                  std::string_view swapped_case,
                   bool is_letter,
                   bool is_punctuation,
                   bool is_uppercase,
@@ -116,10 +104,10 @@ struct CharacterTuple {
                       character.IsUppercase() ) {
   }
 
-  CharacterTuple( const std::string &normal,
-                  const std::string &base,
-                  const std::string &folded_case,
-                  const std::string &swapped_case,
+  CharacterTuple( std::string_view normal,
+                  std::string_view base,
+                  std::string_view folded_case,
+                  std::string_view swapped_case,
                   bool is_base,
                   bool is_letter,
                   bool is_punctuation,
@@ -224,7 +212,7 @@ MATCHER_P( ContainsPointees, expected, PrintToString( expected ) ) {
 }
 
 
-fs::path PathToTestFile( const std::string &filepath );
+fs::path PathToTestFile( std::string_view filepath );
 
 } // namespace YouCompleteMe
 

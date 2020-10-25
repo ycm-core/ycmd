@@ -21,7 +21,7 @@
 #include "Character.h"
 
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -44,7 +44,7 @@ public:
   CharacterRepository( const CharacterRepository& ) = delete;
   CharacterRepository& operator=( const CharacterRepository& ) = delete;
 
-  YCM_EXPORT size_t NumStoredCharacters();
+  YCM_EXPORT size_t NumStoredCharacters() const;
 
   YCM_EXPORT CharacterSequence GetCharacters(
     const std::vector< std::string > &characters );
@@ -58,7 +58,7 @@ private:
 
   // This data structure owns all the Character pointers
   CharacterHolder character_holder_;
-  std::mutex character_holder_mutex_;
+  mutable std::shared_mutex character_holder_mutex_;
 };
 
 } // namespace YouCompleteMe

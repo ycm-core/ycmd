@@ -20,8 +20,8 @@
 
 #include <map>
 #include <memory>
-#include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -60,11 +60,11 @@ public:
 
   void AddIdentifiers(
     std::vector< std::string >&& new_candidates,
-    const std::string &filetype,
-    const std::string &filepath );
+    std::string&& filetype,
+    std::string&& filepath );
 
-  void ClearCandidatesStoredForFile( const std::string &filetype,
-                                     const std::string &filepath );
+  void ClearCandidatesStoredForFile( std::string&& filetype,
+                                     std::string&& filepath );
 
   std::vector< Result > ResultsForQueryAndType(
     std::string&& query,
@@ -73,29 +73,29 @@ public:
 
 private:
   std::set< const Candidate * > &GetCandidateSet(
-    const std::string &filetype,
-    const std::string &filepath );
+    std::string&& filetype,
+    std::string&& filepath );
 
   void AddIdentifiersNoLock(
     std::vector< std::string >&& new_candidates,
-    const std::string &filetype,
-    const std::string &filepath );
+    std::string&& filetype,
+    std::string&& filepath );
 
 
   // filepath -> *( *candidate )
   using FilepathToCandidates =
     std::unordered_map < std::string,
-                         std::shared_ptr< std::set< const Candidate * > > >;
+                         std::unique_ptr< std::set< const Candidate * > > >;
 
   // filetype -> *( filepath -> *( *candidate ) )
   using FiletypeCandidateMap =
-    std::unordered_map < std::string, std::shared_ptr< FilepathToCandidates > >;
+    std::unordered_map < std::string, std::unique_ptr< FilepathToCandidates > >;
 
 
   CandidateRepository &candidate_repository_;
 
   FiletypeCandidateMap filetype_candidate_map_;
-  mutable std::mutex filetype_candidate_map_mutex_;
+  mutable std::shared_mutex filetype_candidate_map_mutex_;
 };
 
 } // namespace YouCompleteMe
