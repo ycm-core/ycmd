@@ -79,7 +79,8 @@ docs/package-lock.json
 third_party/eclipse.jdt.ls
 
 # TSServer
-third_party/tsserver
+third_party/tsserver/node_modules
+third_party/tsserver/package-lock.json
 
 # clangd local installation
 third_party/clangd
