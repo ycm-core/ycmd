@@ -1,0 +1,6 @@
+{
+  "description": "ycmd tern runtime area with required typescript version and plugins",
+  "dependencies": {
+    "typescript": "4.0.3"
+  }
+}

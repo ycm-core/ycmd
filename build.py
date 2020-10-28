@@ -87,8 +87,6 @@ JDTLS_SHA256 = (
   '56eef6b138bdaa60ff8a794d622d390abac8286c0e5e1370616baf9a601fd1c8'
 )
 
-TSSERVER_VERSION = '4.0.3'
-
 RUST_TOOLCHAIN = 'nightly-2020-10-05'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
@@ -936,25 +934,6 @@ def EnableRustCompleter( switches ):
 
 def EnableJavaScriptCompleter( args ):
   npm = FindExecutableOrDie( 'npm', 'npm is required to set up Tern.' )
-
-  # We install Tern into a runtime directory. This allows us to control
-  # precisely the version (and/or git commit) that is used by ycmd.  We use a
-  # separate runtime directory rather than a submodule checkout directory
-  # because we want to allow users to install third party plugins to
-  # node_modules of the Tern runtime.  We also want to be able to install our
-  # own plugins to improve the user experience for all users.
-  #
-  # This is not possible if we use a git submodule for Tern and simply run 'npm
-  # install' within the submodule source directory, as subsequent 'npm install
-  # tern-my-plugin' will (heinously) install another (arbitrary) version of Tern
-  # within the Tern source tree (e.g. third_party/tern/node_modules/tern. The
-  # reason for this is that the plugin that gets installed has "tern" as a
-  # dependency, and npm isn't smart enough to know that you're installing
-  # *within* the Tern distribution. Or it isn't intended to work that way.
-  #
-  # So instead, we have a package.json within our "Tern runtime" directory
-  # (third_party/tern_runtime) that defines the packages that we require,
-  # including Tern and any plugins which we require as standard.
   os.chdir( p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'tern_runtime' ) )
   CheckCall( [ npm, 'install', '--production' ],
              quiet = args.quiet,
@@ -1040,13 +1019,13 @@ def EnableJavaCompleter( switches ):
 
 
 def EnableTypeScriptCompleter( args ):
+  RemoveDirectoryIfExists( p.join( DIR_OF_THIRD_PARTY, 'tsserver', 'bin' ) )
+  RemoveDirectoryIfExists( p.join( DIR_OF_THIRD_PARTY, 'tsserver', 'lib' ) )
   npm = FindExecutableOrDie( 'npm', 'npm is required to install TSServer.' )
-  tsserver_folder = p.join( DIR_OF_THIRD_PARTY, 'tsserver' )
-  CheckCall( [ npm, 'install', '-g', '--prefix', tsserver_folder,
-               'typescript@{version}'.format( version = TSSERVER_VERSION ) ],
+  os.chdir( p.join( DIR_OF_THIRD_PARTY, 'tsserver' ) )
+  CheckCall( [ npm, 'install', '--production' ],
              quiet = args.quiet,
-             status_message = 'Installing TSServer for JavaScript '
-                              'and TypeScript completion' )
+             status_message = 'Setting up TSserver for TypeScript completion' )
 
 
 def GetClangdTarget():

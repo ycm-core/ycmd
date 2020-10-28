@@ -78,8 +78,11 @@ def FindTSServer( user_options_path ):
     return tsserver
   # The TSServer executable is installed at the root directory on Windows while
   # it's installed in the bin folder on other platforms.
-  for executable in [ os.path.join( TSSERVER_DIR, 'bin', 'tsserver' ),
-                      os.path.join( TSSERVER_DIR, 'tsserver' ),
+  for executable in [ os.path.join( TSSERVER_DIR,
+                                    'node_modules',
+                                    'typescript',
+                                    'bin',
+                                    'tsserver' ),
                       'tsserver' ]:
     tsserver = utils.FindExecutable( executable )
     if tsserver:
