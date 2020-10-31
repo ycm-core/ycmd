@@ -347,10 +347,10 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   first flag starting with a dash is usually the path to the compiler that
   should be invoked. Since LibClang does not deduce the language from the
   compiler name, we explicitly set the language to C++ if the compiler is a C++
-  one (g++, clang++, etc.). We also set the language to CUDA if any of the
-  source files has a .cu or .cuh extension. Otherwise, we let LibClang guess the
-  language from the file extension. This handles the case where the .h extension
-  is used for C++ headers."""
+  one (g++, clang++, etc.). We skip setting the language to CUDA if any of the
+  source files has a .cu or .cuh extension, because LLVM11 does that for us.
+  Otherwise, we let LibClang guess the language from the file extension. This
+  handles the case where the .h extension is used for C++ headers."""
 
   flags = _RemoveFlagsPrecedingCompiler( flags, enable_windows_style_flags )
 
@@ -364,11 +364,10 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
   if first_flag.startswith( '-' ):
     return flags
 
-  # Explicitly set the language to CUDA to avoid setting it to C++ when
-  # compiling CUDA source files with a C++ compiler
+  # Libclang has already added `-xcuda` for us.
   if any( fl.endswith( '.cu' ) or fl.endswith( '.cuh' )
           for fl in reversed( flags ) ):
-    return [ first_flag, '-x', 'cuda' ] + flags[ 1: ]
+    return flags
 
   # NOTE: This is intentionally NOT checking for enable_windows_style_flags.
   #

@@ -500,6 +500,13 @@ struct S{static int h();};
     with open( header_file, 'w' ) as f:
       f.write( new_header_content )
 
+    # Send BufferSaved notification for the header
+    file_save_request = { "event_name": "FileSave",
+                          "filepath": header_file,
+                          "filetype": 'cpp' }
+    app.post_json( '/event_notification',
+                   BuildRequest( **file_save_request ) )
+
     # Send BufferVisit notification
     buffer_visit_request = { "event_name": "BufferVisit",
                              "filepath": source_file,
@@ -527,6 +534,13 @@ struct S{static int h();};
     # Restore original content
     with open( header_file, 'w' ) as f:
       f.write( old_header_content )
+
+    # Send BufferSaved notification for the header
+    file_save_request = { "event_name": "FileSave",
+                          "filepath": header_file,
+                          "filetype": 'cpp' }
+    app.post_json( '/event_notification',
+                   BuildRequest( **file_save_request ) )
 
     # Send BufferVisit notification
     app.post_json( '/event_notification',

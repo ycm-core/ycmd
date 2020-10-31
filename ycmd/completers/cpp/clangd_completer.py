@@ -34,7 +34,7 @@ from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          PathsToAllParentFolders,
                          re )
 
-MIN_SUPPORTED_VERSION = ( 10, 0, 0 )
+MIN_SUPPORTED_VERSION = ( 11, 0, 0 )
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
 NOT_CACHED = 'NOT_CACHED'
@@ -394,15 +394,6 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
         'Compilation Command',
         self._compilation_commands.get( request_data[ 'filepath' ], False ) )
     ]
-
-
-  def OnBufferVisit( self, request_data ):
-    # In case a header has been changed, we need to make clangd reparse the TU.
-    file_state = self._server_file_state[ request_data[ 'filepath' ] ]
-    if file_state.state == lsp.ServerFileState.OPEN:
-      msg = lsp.DidChangeTextDocument( file_state, None )
-      self.GetConnection().SendNotification( msg )
-
 
 
 def CompilationDatabaseExists( file_dir ):

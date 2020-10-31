@@ -403,10 +403,6 @@ def DidOpenTextDocument( file_state, file_types, file_contents ):
 
 
 def DidChangeTextDocument( file_state, file_contents ):
-  # NOTE: Passing `None` for the second argument will send an empty
-  # textDocument/didChange notification. It is useful when a LSP server
-  # needs to be forced to reparse a file without sending all the changes.
-  # More specifically, clangd completer relies on this.
   return BuildNotification( 'textDocument/didChange', {
     'textDocument': {
       'uri': FilePathToUri( file_state.filename ),
@@ -414,7 +410,7 @@ def DidChangeTextDocument( file_state, file_contents ):
     },
     'contentChanges': [
       { 'text': file_contents },
-    ] if file_contents is not None else [],
+    ]
   } )
 
 

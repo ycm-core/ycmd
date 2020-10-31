@@ -366,7 +366,7 @@ def RunGetSemanticTest( app,
       requests.codes.ok ],
     # [ { 'line_num': 13, 'column_num':  3 }, 'int',
     [ { 'line_num': 13, 'column_num':  7 },
-      has_entry( 'message', equal_to( 'int x; // In Foo' ) ),
+      has_entry( 'message', equal_to( 'public: int x; // In Foo' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 15, 'column_num':  7 }, 'char' ],
 
@@ -427,13 +427,13 @@ def RunGetSemanticTest( app,
       has_entry( 'message', equal_to( 'Foo &rFoo = foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 47, 'column_num': 17 },
-      has_entry( 'message', equal_to( 'int y; // In Foo' ) ),
+      has_entry( 'message', equal_to( 'public: int y; // In Foo' ) ),
       requests.codes.ok ],
     [ { 'line_num': 48, 'column_num': 12 },
       has_entry( 'message', equal_to( 'Foo *pFoo = &foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 48, 'column_num': 18 },
-      has_entry( 'message', equal_to( 'int x; // In Foo' ) ),
+      has_entry( 'message', equal_to( 'public: int x; // In Foo' ) ),
       requests.codes.ok ],
 
     # Auto in declaration
@@ -461,11 +461,11 @@ def RunGetSemanticTest( app,
       has_entry( 'message', equal_to( 'auto &arFoo = foo; // In main' ) ),
       requests.codes.ok ],
     [ { 'line_num': 36, 'column_num': 19 },
-      has_entry( 'message', equal_to( 'int y; // In Foo' ) ),
+      has_entry( 'message', equal_to( 'public: int y; // In Foo' ) ),
       requests.codes.ok ],
     # [ { 'line_num': 37, 'column_num': 13 }, 'Foo *' ],
     [ { 'line_num': 37, 'column_num': 20 },
-      has_entry( 'message', equal_to( 'int x; // In Foo' ) ),
+      has_entry( 'message', equal_to( 'public: int x; // In Foo' ) ),
       requests.codes.ok ],
 
     # Unicode
@@ -868,6 +868,13 @@ def FixIt_Check_cpp11_SpellCheck( results ):
                         LineColMatcher( 72, 35 ) )
         ),
         'location': LineColMatcher( 72, 9 ),
+      } ),
+      has_entries( {
+        'kind': 'refactor',
+        'text': contains_string( "Add using-declaration for "
+                                 "SpellingIsNotMyStrongPoint and "
+                                 "remove qualifier." ),
+        'resolve': True
       } ) )
   } ) )
 
@@ -1110,27 +1117,12 @@ def Subcommands_RefactorRename_test( app ):
             ChunkMatcher( 'Bar',
                           LineColMatcher( 9, 3 ),
                           LineColMatcher( 9, 6 ) ),
-            ChunkMatcher( '\n\n',
-                          LineColMatcher( 12, 2 ),
-                          LineColMatcher( 15, 1 ) ),
             ChunkMatcher( 'Bar',
                           LineColMatcher( 15,  8 ),
                           LineColMatcher( 15, 11 ) ),
-            ChunkMatcher( ' ',
-                          LineColMatcher( 15,  46 ),
-                          LineColMatcher( 16,  1 ) ),
             ChunkMatcher( 'Bar',
                           LineColMatcher( 17, 3 ),
                           LineColMatcher( 17, 6 ) ),
-            ChunkMatcher( '',
-                          LineColMatcher( 17, 14 ),
-                          LineColMatcher( 17, 15 ) ),
-            ChunkMatcher( ' ',
-                          LineColMatcher( 17, 17 ),
-                          LineColMatcher( 17, 17 ) ),
-            ChunkMatcher( ' ',
-                          LineColMatcher( 17, 19 ),
-                          LineColMatcher( 17, 19 ) ),
           )
         } ) )
       } )
