@@ -99,7 +99,7 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script\n'
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '10.0.0'
+CLANGD_VERSION = '11.0.0'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -1032,32 +1032,32 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '193ebaa9bddb750d3678342de16cd59724e10b919d5da1f78e0202db0c67c339' ),
+        '6c9ac8abc7b7597f92268624d200326f8681eecb387c875d319b7fdc9f400102' ),
       ( 'clangd-{version}-win32',
-        '83d9cb3f18e23558997f6248559095d468dab3e3132b9e12b62401707a085d11' ) ]
+        '67dba0988e55d472ebef78d1b0c7227261818809a4dd66d45cf8ed2cdc92825c' ) ]
   if OnMac():
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '641e07ba19a38a9570260125df6464cd75a3d209c661177bfc8221ceb090bd6a' ) ]
+        '04be91e7812328c3262963a3206c1ebc87e0e46892323a1b8eea980ffbf2d16f' ) ]
   if OnFreeBSD():
     return [
       ( 'clangd-{version}-amd64-unknown-freebsd11',
-        'eef613abbc5946f489cd5ef369eb29ad78881b08514be780c0a4dc1cec9cdbec' ),
+        '2532850e2269d533d5b4bf9cb676587fd3e80914b0dbee13b694d9f3eb4b45b1' ),
       ( 'clangd-{version}-i386-unknown-freebsd11',
-        'aba343ba9bc080b19fa8162018f8e1bf4cc55907a892d50ce8ff7515cf666fd7' ) ]
+        '542d2012da260df76e4747abeef2a90dfb8f7923bf781dab296eaf484bfec4f6' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        '1ee49413e2216d59f7df994a3b528d9deed2f0d999716ab2d5c584fbb0c1a337' ) ]
+        '4a62bb2ca1b60ef0be0617c9caa1f297edf1a60f81c48c366625a715f9563e8e' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        'db2e81ae6d70bc53d6558181aebc8dcd6d0ec6ae30fee7d533c1fa4a66d6ed4c' ) ]
+        'fd00fc69c49ff397a38cf4ba5ded3ccd2e6c5c955b9e3a9d7b26fce8a1465b05' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '36b99e35b00ce7aa20738e33ede95a775ff62e10711130917711a3cab38fd85d' ) ]
+        '6288eb10e24d50227415e787bdc9392c3fe6917ceb25cc1c41f9843b8d9f9461' ) ]
   sys.exit( CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                                   platform = 'this system' ) )
 
