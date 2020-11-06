@@ -3068,7 +3068,7 @@ def _BuildDiagnostic( contents, uri, diag ):
     location = r.start_,
     location_extent = r,
     text = diag_text,
-    kind = lsp.SEVERITY[ diag[ 'severity' ] ].upper() )
+    kind = lsp.SEVERITY[ diag.get( 'severity' ) or 1 ].upper() )
 
 
 def TextEditToChunks( request_data, uri, text_edit ):
