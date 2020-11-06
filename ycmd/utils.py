@@ -22,13 +22,32 @@ import os
 import socket
 import subprocess
 import sys
+import site
 import tempfile
 import time
 import threading
 
+
+def FindRootDirs():
+  root = os.path.normpath( os.path.join( os.path.dirname( __file__ ), '..' ) )
+  tp = os.path.join( root, 'third_party' )
+
+  if os.path.isdir( tp ):
+    # Standalone/classic install
+    return root, tp
+
+  # setuptools package install
+  for pfx in ( site.getuserbase(), sys.exec_prefix, sys.prefix ):
+    root = os.path.join( pfx, 'ycmd' )
+    tp = os.path.join( root, 'third_party' )
+    if os.path.isdir( tp ):
+      return root, tp
+
+  raise RuntimeError( "Unable to find ROOT_DIR, DIR_OF_THIRD_PARTY" )
+
+
 LOGGER = logging.getLogger( 'ycmd' )
-ROOT_DIR = os.path.normpath( os.path.join( os.path.dirname( __file__ ), '..' ) )
-DIR_OF_THIRD_PARTY = os.path.join( ROOT_DIR, 'third_party' )
+ROOT_DIR, DIR_OF_THIRD_PARTY = FindRootDirs()
 LIBCLANG_DIR = os.path.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 if hasattr( os, 'add_dll_directory' ):
   os.add_dll_directory( LIBCLANG_DIR )

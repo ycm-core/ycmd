@@ -33,6 +33,11 @@ PYTHON_STDLIB_ZIP_REGEX = re.compile( 'python3[0-9]\\.zip' )
 
 
 def SetUpPythonPath():
+  if not p.isdir( DIR_OF_THIRD_PARTY ):
+    # Must be a setuptools/package install, assume sys path is correct
+    return
+
+  # Standalone/classic install
   sys.path[ 0:0 ] = [ p.join( ROOT_DIR ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
                       p.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
