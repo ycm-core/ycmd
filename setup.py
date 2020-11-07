@@ -38,11 +38,11 @@ def GetDirContents( data_files: list, root: pathlib.Path ):
 
 setuptools.setup(
   # project_urls = { TODO
-  #   'Documentation': 'https://packaging.python.org/tutorials/distributing-packages/',
-  #   'Funding': 'https://donate.pypi.org',
-  #   'Say Thanks!': 'http://saythanks.io/to/example',
-  #   'Source': 'https://github.com/pypa/sampleproject/',
-  #   'Tracker': 'https://github.com/pypa/sampleproject/issues',
+  #   'Documentation': '',
+  #   'Funding': '',
+  #   'Say Thanks!': '',
+  #   'Source': '',
+  #   'Tracker': '',
   # },
   # classifiers = [], TODO
   # keywords = [], TODO
