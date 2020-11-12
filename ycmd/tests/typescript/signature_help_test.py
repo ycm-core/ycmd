@@ -62,6 +62,7 @@ def RunTest( app, test ):
   assert_that( response.status_code,
                equal_to( test[ 'expect' ][ 'response' ] ) )
 
+  print( response.json )
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
@@ -92,7 +93,8 @@ def Signature_Help_Trigger_Paren_test( app ):
           'activeParameter': 0,
           'signatures': contains_exactly(
             SignatureMatcher( 'single_argument_with_return(a: string): string',
-                              [ ParameterMatcher( 28, 37 ) ] )
+                              [ ParameterMatcher( 28, 37, '' ) ],
+                              '' )
           ),
         } ),
       } )
@@ -145,7 +147,8 @@ def Signature_Help_Trigger_Comma_test( app ):
             SignatureMatcher(
               ( 'multi_argument_no_return(løng_våriable_name: number, '
                                           'untyped_argument: any): number' ),
-              [ ParameterMatcher( 25, 53 ), ParameterMatcher( 55, 76 ) ] )
+              [ ParameterMatcher( 25, 53, '' ), ParameterMatcher( 55, 76, '' ) ],
+              '' )
           ),
         } ),
       } )
@@ -173,7 +176,8 @@ def Signature_Help_Trigger_AngleBracket_test( app ):
           'signatures': contains_exactly(
             SignatureMatcher(
               'generic<TYPE extends ReturnValue>(t: SomeClass): string',
-              [ ParameterMatcher( 8, 32 ) ] )
+              [ ParameterMatcher( 8, 32, '' ) ],
+              '' )
           ),
         } ),
       } )
@@ -200,10 +204,12 @@ def Signature_Help_Multiple_Signatures_test( app ):
           'activeParameter': 1,
           'signatures': contains_exactly(
             SignatureMatcher( 'øverløåd(a: number): string',
-                              [ ParameterMatcher( 12, 21 ) ] ),
+                              [ ParameterMatcher( 12, 21, '' ) ],
+                              '' ),
             SignatureMatcher( 'øverløåd(a: string, b: number): string',
-                              [ ParameterMatcher( 12, 21 ),
-                                ParameterMatcher( 23, 32 ) ] )
+                              [ ParameterMatcher( 12, 21, '' ),
+                                ParameterMatcher( 23, 32, '' ) ],
+                              '' )
           ),
         } ),
       } )

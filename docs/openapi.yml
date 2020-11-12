@@ -1160,25 +1160,33 @@ paths:
                           description: |
                             The full signature text, including parameters
                           type: string
+                        documentation:
+                          description: |
+                            Human readable docstring of the signature.
+                          type: string
                         parameters:
                           description: List of parameters
                           type: array
                           items:
                             type: object
                             properties:
-                             label:
-                               description: |
-                                 The array of offsets representing an inclusive
-                                 start and exclusive end within the parameter's
-                                 containing signature label.
+                              documentation:
+                                description: |
+                                  Human readable docstring of the parameter.
+                                type: string
+                              label:
+                                description: |
+                                  The array of offsets representing an inclusive
+                                  start and exclusive end within the parameter's
+                                  containing signature label.
 
-                                 Offsets are byte offsets into the UTF8 encoded
-                                 string 'label'
-                               type: array
-                               maxItems: 2
-                               minItems: 2
-                               items:
-                                 type: integer
+                                  Offsets are byte offsets into the UTF8 encoded
+                                  string 'label'
+                                type: array
+                                maxItems: 2
+                                minItems: 2
+                                items:
+                                  type: integer
                       required:
                         - label
                         - parameters
