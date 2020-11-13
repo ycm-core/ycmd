@@ -17,12 +17,6 @@ test ${python_version} == ${YCM_PYTHON_VERSION}
 PATH="${HOME}/.cargo/bin:${PATH}"
 
 # JDT requires Java 11
-if [[ -d /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64 ]]; then
-  export JAVA_HOME='/usr/lib/jvm/adoptopenjdk-11-hotspot-amd64'
-  export PATH="${JAVA_HOME}/bin:${PATH}"
-else
-  export JAVA_HOME='/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home'
-fi
 java -version
 javac -version
 
