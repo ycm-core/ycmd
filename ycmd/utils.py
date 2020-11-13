@@ -370,11 +370,15 @@ def SafePopen( args, **kwargs ):
   return subprocess.Popen( args, **kwargs )
 
 
-# Shim for importlib.machinery.SourceFileLoader.
-# See upstream Python docs for info on what this does.
+# Read the link and don't ask questions. Python likes to make importing hard.
+# https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
 def LoadPythonSource( name, pathname ):
-  import importlib.machinery
-  return importlib.machinery.SourceFileLoader( name, pathname ).load_module()
+  import importlib.util
+  spec = importlib.util.spec_from_file_location( name, pathname )
+  module = importlib.util.module_from_spec( spec )
+  sys.modules[ spec.name ] = module
+  spec.loader.exec_module( module )
+  return module
 
 
 def SplitLines( contents ):

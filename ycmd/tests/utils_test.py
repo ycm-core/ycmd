@@ -18,12 +18,14 @@
 import os
 import pytest
 import subprocess
+import sys
 import tempfile
 from hamcrest import ( assert_that,
                        calling,
                        contains_exactly,
                        empty,
                        equal_to,
+                       has_entry,
                        has_length,
                        has_property,
                        instance_of,
@@ -424,6 +426,7 @@ def LoadPythonSource_UnicodePath_test():
   assert_that( module.__name__, equal_to( 'module_name' ) )
   assert_that( module, has_property( 'SomeMethod' ) )
   assert_that( module.SomeMethod(), equal_to( True ) )
+  assert_that( sys.modules, has_entry( module.__name__, module ) )
 
 
 def GetCurrentDirectory_Py3NoCurrentDirectory_test():
