@@ -158,14 +158,6 @@ def _MatchingSemanticTrigger( line_value, start_codepoint, column_codepoint,
   return None
 
 
-def _MatchesSemanticTrigger( line_value, start_codepoint, column_codepoint,
-                             trigger_list ):
-  return _MatchingSemanticTrigger( line_value,
-                                   start_codepoint,
-                                   column_codepoint,
-                                   trigger_list ) is not None
-
-
 def _PrepareTrigger( trigger ):
   trigger = ToUnicode( trigger )
   if trigger.startswith( TRIGGER_REGEX_PREFIX ):
