@@ -114,12 +114,19 @@ def ShouldEnableJavaCompleter( user_options ):
     LOGGER.warning( "Not enabling java completion: Couldn't find java 11" )
     return False
 
+  # TODO: Is this the canonical way to do this ?
+  if 'jdtls_repository_path' in user_options:
+    global LANGUAGE_SERVER_HOME
+    LANGUAGE_SERVER_HOME = user_options[ 'jdtls_repository_path' ]
+
   if not os.path.exists( LANGUAGE_SERVER_HOME ):
-    LOGGER.warning( 'Not using java completion: jdt.ls is not installed' )
+    LOGGER.warning( 'Not using java completion: jdt.ls is not installed at ' +
+                    LANGUAGE_SERVER_HOME )
     return False
 
   if not _PathToLauncherJar():
-    LOGGER.warning( 'Not using java completion: jdt.ls is not built' )
+    LOGGER.warning( 'Not using java completion: jdt.ls is not built in ' +
+                    LANGUAGE_SERVER_HOME )
     return False
 
   return True
@@ -299,10 +306,11 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     if not isinstance( self._extension_path, list ):
       raise ValueError( f'{ EXTENSION_PATH_OPTION } option must be a list' )
 
-    if not self._extension_path:
-      self._extension_path = [ DEFAULT_EXTENSION_PATH ]
-    else:
-      self._extension_path.append( DEFAULT_EXTENSION_PATH )
+    if os.path.isdir( DEFAULT_EXTENSION_PATH ):
+      if not self._extension_path:
+        self._extension_path = [ DEFAULT_EXTENSION_PATH ]
+      else:
+        self._extension_path.append( DEFAULT_EXTENSION_PATH )
 
     self._bundles = ( _CollectExtensionBundles( self._extension_path )
                       if self._extension_path else [] )
