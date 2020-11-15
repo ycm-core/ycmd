@@ -620,7 +620,7 @@ class TypeScriptCompleter( Completer ):
 
     def MakeSignature( s ):
       def GetTSDocs( docs_list ):
-        return '\n'.join( l[ 'text' ] for l in docs_list )
+        return '\n'.join( item[ 'text' ] for item in docs_list )
 
       label = _DisplayPartsToString( s[ 'prefixDisplayParts' ] )
       parameters = []

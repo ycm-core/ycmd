@@ -147,7 +147,8 @@ def Signature_Help_Trigger_Comma_test( app ):
             SignatureMatcher(
               ( 'multi_argument_no_return(løng_våriable_name: number, '
                                           'untyped_argument: any): number' ),
-              [ ParameterMatcher( 25, 53, '' ), ParameterMatcher( 55, 76, '' ) ],
+              [ ParameterMatcher( 25, 53, '' ),
+                ParameterMatcher( 55, 76, '' ) ],
               '' )
           ),
         } ),
@@ -242,13 +243,40 @@ def Signature_Help_NoSignatures_test( app ):
 
 
 @SharedYcmd
+def Signature_Help_WithDoc_test( app ):
+  RunTest( app, {
+    'description': 'Test parameter documentation',
+    'request': {
+      'filetype': 'typescript',
+      'filepath': PathToTestFile( 'signatures.ts' ),
+      'line_num': 101,
+      'column_num': 26,
+    },
+    'expect': {
+      'response': requests.codes.ok,
+      'data': has_entries( {
+        'errors': empty(),
+        'signature_help': has_entries( {
+          'activeSignature': 0,
+          'activeParameter': 0,
+          'signatures': contains_exactly(
+            SignatureMatcher( 'single_argument_with_doc(a: string): string',
+                              [ ParameterMatcher( 25, 34, '- The argument' ) ],
+                              'A function with a single argument' ) )
+        } ),
+      } )
+    }
+  } )
+
+
+@SharedYcmd
 def Signature_Help_NoErrorWhenNoSignatureInfo_test( app ):
   RunTest( app, {
     'description': 'Test dodgy (',
     'request': {
       'filetype'  : 'typescript',
       'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 92,
+      'line_num'  : 103,
       'column_num': 5,
     },
     'expect': {
