@@ -89,4 +89,15 @@ function øverløåd( a: string | number, b: number = 1 ) : string {
 øverløåd( 'a', 1 );
 øverløåd( 1 );
 
+/**
+* A function with a single argument
+* @param {string} a - The argument
+* @returns {string} - The hashed input
+*/
+function single_argument_with_doc( a: string ) : string {
+  return 's';
+}
+
+single_argument_with_doc("a");
+
 dod(

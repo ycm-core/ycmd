@@ -619,6 +619,9 @@ class TypeScriptCompleter( Completer ):
       return {}
 
     def MakeSignature( s ):
+      def GetTSDocs( docs_list ):
+        return '\n'.join( item[ 'text' ] for item in docs_list )
+
       label = _DisplayPartsToString( s[ 'prefixDisplayParts' ] )
       parameters = []
       sep = _DisplayPartsToString( s[ 'separatorDisplayParts' ] )
@@ -632,6 +635,7 @@ class TypeScriptCompleter( Completer ):
           label += sep
 
         parameters.append( {
+          'documentation': GetTSDocs( p.get( 'documentation', [] ) ),
           'label': [ utils.CodepointOffsetToByteOffset( label, start ),
                      utils.CodepointOffsetToByteOffset( label, end ) ]
         } )
@@ -639,6 +643,7 @@ class TypeScriptCompleter( Completer ):
       label += _DisplayPartsToString( s[ 'suffixDisplayParts' ] )
 
       return {
+        'documentation': GetTSDocs( s.get( 'documentation', [] ) ),
         'label': label,
         'parameters': parameters
       }

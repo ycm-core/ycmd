@@ -70,6 +70,7 @@ def RunTest( app, test ):
   assert_that( response.status_code,
                equal_to( test[ 'expect' ][ 'response' ] ) )
 
+  print( response.json )
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 

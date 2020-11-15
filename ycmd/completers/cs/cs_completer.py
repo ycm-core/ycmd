@@ -147,11 +147,13 @@ class CsharpCompleter( Completer ):
         begin = sig_label.find( arg_label, end )
         end = begin + len( arg_label )
         parameters.append( {
+          'documentation': arg.get( 'Documentation', '' ),
           'label': [ CodepointOffsetToByteOffset( sig_label, begin ),
                      CodepointOffsetToByteOffset( sig_label, end ) ]
         } )
 
       return {
+        'documentation': s.get( 'Documentation', '' ),
         'label': sig_label,
         'parameters': parameters
       }
