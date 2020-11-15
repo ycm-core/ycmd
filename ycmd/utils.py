@@ -27,6 +27,8 @@ import tempfile
 import time
 import threading
 
+LOGGER = logging.getLogger( 'ycmd' )
+
 
 def FindRootDirs():
   root = os.path.normpath( os.path.join( os.path.dirname( __file__ ), '..' ) )
@@ -34,6 +36,8 @@ def FindRootDirs():
 
   if os.path.isdir( tp ):
     # Standalone/classic install
+    LOGGER.info( "Standalone install: "
+                 f"ROOT_DIR, DIR_OF_THIRD_PARTY = { root }, { tp }" )
     return root, tp
 
   # setuptools package install
@@ -41,17 +45,17 @@ def FindRootDirs():
     root = os.path.join( pfx, 'ycmd' )
     tp = os.path.join( root, 'third_party' )
     if os.path.isdir( tp ):
+      LOGGER.info( "Package install: "
+                   f"ROOT_DIR, DIR_OF_THIRD_PARTY = { root }, { tp }" )
       return root, tp
 
   raise RuntimeError( "Unable to find ROOT_DIR, DIR_OF_THIRD_PARTY" )
 
 
-LOGGER = logging.getLogger( 'ycmd' )
-ROOT_DIR, DIR_OF_THIRD_PARTY = FindRootDirs()
-LIBCLANG_DIR = os.path.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
-if hasattr( os, 'add_dll_directory' ):
-  os.add_dll_directory( LIBCLANG_DIR )
-
+ROOT_DIR = None
+DIR_OF_THIRD_PARTY = None
+LIBCLANG_DIR = None
+CLANG_RESOURCE_DIR = None
 
 from collections.abc import Mapping
 from urllib.parse import urljoin, urlparse, unquote, quote  # noqa
@@ -493,6 +497,15 @@ def ExpectedCoreVersion():
 
 
 def LoadYcmCoreDependencies():
+  global ROOT_DIR
+  global DIR_OF_THIRD_PARTY
+  ROOT_DIR, DIR_OF_THIRD_PARTY = FindRootDirs()
+
+  global LIBCLANG_DIR
+  LIBCLANG_DIR = os.path.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
+  if hasattr( os, 'add_dll_directory' ):
+    os.add_dll_directory( LIBCLANG_DIR )
+
   for name in ListDirectory( LIBCLANG_DIR ):
     if name.startswith( 'libclang' ):
       libclang_path = os.path.join( LIBCLANG_DIR, name )
@@ -537,14 +550,16 @@ def ImportAndCheckCore():
 
 
 def GetClangResourceDir():
+  global CLANG_RESOURCE_DIR
+
+  if CLANG_RESOURCE_DIR:
+    return CLANG_RESOURCE_DIR
+
   resource_dir = os.path.join( LIBCLANG_DIR, 'clang' )
   for version in ListDirectory( resource_dir ):
     return os.path.join( resource_dir, version )
 
   raise RuntimeError( 'Cannot find Clang resource directory.' )
-
-
-CLANG_RESOURCE_DIR = GetClangResourceDir()
 
 
 def AbsolutePath( path, relative_to ):

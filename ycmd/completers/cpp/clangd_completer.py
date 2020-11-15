@@ -25,7 +25,7 @@ from ycmd.completers.cpp.flags import ( AddMacIncludePaths,
                                         ShouldAllowWinStyleFlags )
 from ycmd.completers.language_server import language_server_completer
 from ycmd.completers.language_server import language_server_protocol as lsp
-from ycmd.utils import ( CLANG_RESOURCE_DIR,
+from ycmd.utils import ( GetClangResourceDir,
                          GetExecutable,
                          ExpandVariablesInPath,
                          FindExecutable,
@@ -116,7 +116,7 @@ def GetClangdExecutableAndResourceDir( user_options ):
     if not third_party_clangd:
       return None, None
     clangd = third_party_clangd
-    resource_dir = CLANG_RESOURCE_DIR
+    resource_dir = GetClangResourceDir()
 
   LOGGER.info( 'Using Clangd from %s', clangd )
   return clangd, resource_dir

@@ -25,7 +25,7 @@ from ycmd.utils import ( AbsolutePath,
                          PathsToAllParentFolders,
                          re,
                          ToUnicode,
-                         CLANG_RESOURCE_DIR )
+                         GetClangResourceDir )
 from ycmd.responses import NoExtraConfDetected
 ycm_core = ImportCore()
 
@@ -287,7 +287,7 @@ def PrepareFlagsForClang( flags,
   flags = RemoveUnusedFlags( flags, filename, enable_windows_style_flags )
   if add_extra_clang_flags:
     # This flag tells libclang where to find the builtin includes.
-    flags.append( '-resource-dir=' + CLANG_RESOURCE_DIR )
+    flags.append( '-resource-dir=' + GetClangResourceDir() )
     # On Windows, parsing of templates is delayed until instantiation time.
     # This makes GetType and GetParent commands fail to return the expected
     # result when the cursor is in a template.
@@ -565,7 +565,7 @@ def AddMacIncludePaths( flags ):
 
   if use_builtin_includes:
     flags.extend( [
-      '-isystem', os.path.join( CLANG_RESOURCE_DIR, 'include' ) ] )
+      '-isystem', os.path.join( GetClangResourceDir(), 'include' ) ] )
 
   if use_standard_system_includes:
     if toolchain:

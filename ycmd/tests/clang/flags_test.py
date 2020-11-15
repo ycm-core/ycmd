@@ -31,7 +31,7 @@ from ycmd.completers.cpp import flags
 from ycmd.completers.cpp.flags import ShouldAllowWinStyleFlags, INCLUDE_FLAGS
 from ycmd.tests.test_utils import ( MacOnly, TemporaryTestDir, WindowsOnly,
                                     TemporaryClangProject )
-from ycmd.utils import CLANG_RESOURCE_DIR
+from ycmd.utils import GetClangResourceDir
 from ycmd.responses import NoExtraConfDetected
 
 
@@ -199,10 +199,10 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_Default_test():
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
     assert_that( flags_list, contains_exactly(
       '-Wall',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/include/c++/v1',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
       '-iframework', '/Library/Frameworks',
@@ -226,7 +226,7 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_Xcode_test():
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
     assert_that( flags_list, contains_exactly(
       '-Wall',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/Applications/Xcode.app/Contents/Developer/Platforms'
                      '/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
                      '/usr/include/c++/v1',
@@ -234,7 +234,7 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_Xcode_test():
                      '/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
                      '/usr/local/include',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/Applications/Xcode.app/Contents/Developer/Platforms'
                      '/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include',
       '-iframework', '/Applications/Xcode.app/Contents/Developer/Platforms'
@@ -262,13 +262,13 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_CommandLine_test():
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
     assert_that( flags_list, contains_exactly(
       '-Wall',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
                      '/usr/include/c++/v1',
       '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
                      '/usr/local/include',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
                      '/usr/include',
       '-iframework', '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
@@ -300,11 +300,11 @@ def FlagsForFile_AddMacIncludePaths_Sysroot_Custom_test():
       '-isysroot', '/path/to/second/sys/root/',
       '--sysroot=/path/to/third/sys/root',
       '--sysroot', '/path/to/fourth/sys/root',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/path/to/second/sys/root/usr/include/c++/v1',
       '-isystem',    '/path/to/second/sys/root/usr/local/include',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/path/to/second/sys/root/usr/include',
       '-iframework', '/path/to/second/sys/root/System/Library/Frameworks',
       '-iframework', '/path/to/second/sys/root/Library/Frameworks',
@@ -327,12 +327,12 @@ def FlagsForFile_AddMacIncludePaths_Toolchain_Xcode_test():
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
     assert_that( flags_list, contains_exactly(
       '-Wall',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/Applications/Xcode.app/Contents/Developer/Toolchains'
                      '/XcodeDefault.xctoolchain/usr/include/c++/v1',
       '-isystem',    '/usr/include/c++/v1',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/Applications/Xcode.app/Contents/Developer/Toolchains'
                      '/XcodeDefault.xctoolchain/usr/include',
       '-isystem',    '/usr/include',
@@ -356,11 +356,11 @@ def FlagsForFile_AddMacIncludePaths_Toolchain_CommandLine_test():
     flags_list, _ = flags_object.FlagsForFile( '/foo' )
     assert_that( flags_list, contains_exactly(
       '-Wall',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/Library/Developer/CommandLineTools/usr/include/c++/v1',
       '-isystem',    '/usr/include/c++/v1',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/Library/Developer/CommandLineTools/usr/include',
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
@@ -384,10 +384,10 @@ def FlagsForFile_AddMacIncludePaths_ObjCppLanguage_test():
       '-Wall',
       '-x', 'c',
       '-xobjective-c++',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/include/c++/v1',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
       '-iframework', '/Library/Frameworks',
@@ -410,10 +410,10 @@ def FlagsForFile_AddMacIncludePaths_CppLanguage_test():
       '-Wall',
       '-x', 'c',
       '-xc++',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/include/c++/v1',
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
       '-iframework', '/Library/Frameworks',
@@ -436,9 +436,9 @@ def FlagsForFile_AddMacIncludePaths_CLanguage_test():
       '-Wall',
       '-xc++',
       '-xc',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
       '-iframework', '/Library/Frameworks',
@@ -461,9 +461,9 @@ def FlagsForFile_AddMacIncludePaths_NoLibCpp_test():
       '-Wall',
       '-stdlib=libc++',
       '-stdlib=libstdc++',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
       '-iframework', '/Library/Frameworks',
@@ -485,9 +485,9 @@ def FlagsForFile_AddMacIncludePaths_NoStandardCppIncludes_test():
     assert_that( flags_list, contains_exactly(
       '-Wall',
       '-nostdinc++',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/local/include',
-      '-isystem',    os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-isystem',    os.path.join( GetClangResourceDir(), 'include' ),
       '-isystem',    '/usr/include',
       '-iframework', '/System/Library/Frameworks',
       '-iframework', '/Library/Frameworks',
@@ -509,8 +509,8 @@ def FlagsForFile_AddMacIncludePaths_NoStandardSystemIncludes_test():
     assert_that( flags_list, contains_exactly(
       '-Wall',
       '-nostdinc',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
-      '-isystem', os.path.join( CLANG_RESOURCE_DIR, 'include' ),
+      '-resource-dir=' + GetClangResourceDir(),
+      '-isystem', os.path.join( GetClangResourceDir(), 'include' ),
       '-fspell-checking' ) )
 
 
@@ -529,7 +529,7 @@ def FlagsForFile_AddMacIncludePaths_NoBuiltinIncludes_test():
     assert_that( flags_list, contains_exactly(
       '-Wall',
       '-nobuiltininc',
-      '-resource-dir=' + CLANG_RESOURCE_DIR,
+      '-resource-dir=' + GetClangResourceDir(),
       '-isystem',    '/usr/include/c++/v1',
       '-isystem',    '/usr/local/include',
       '-isystem',    '/usr/include',
