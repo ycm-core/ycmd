@@ -68,87 +68,7 @@ def FiletypeDictUnion_Works_test():
 
 def PrepareTrigger_UnicodeTrigger_Test():
   regex = cu._PrepareTrigger( 'æ' )
-  assert_that( regex.pattern, equal_to( re.escape( u'æ' ) ) )
-
-
-def MatchesSemanticTrigger_Basic_test():
-  triggers = [ cu._PrepareTrigger( '.' ) ]
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 7, 7, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 6, 7, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 5, 7, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo.bar', 4, 7, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo.bar', 3, 7, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo.bar', 2, 7, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo.bar', 1, 7, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo.bar', 0, 7, triggers ) )
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 3, 3, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 2, 3, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 1, 3, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 0, 3, triggers ) )
-
-
-def MatchesSemanticTrigger_JustTrigger_test():
-  triggers = [ cu._PrepareTrigger( '.' ) ]
-
-  assert_that( not cu._MatchesSemanticTrigger( '.', 2, 2, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( '.', 1, 1, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( '.', 0, 0, triggers ) )
-
-
-def MatchesSemanticTrigger_TriggerBetweenWords_test():
-  triggers = [ cu._PrepareTrigger( '.' ) ]
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo . bar', 6, 9, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo . bar', 5, 9, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo . bar', 4, 9, triggers ) )
-
-
-def MatchesSemanticTrigger_BadInput_test():
-  triggers = [ cu._PrepareTrigger( '.' ) ]
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 10, 7, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', -1, 7, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 4, -1, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( '', -1, 0, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( '', 0, 0, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( '', 1, 0, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 4, 7, [] ) )
-
-
-def MatchesSemanticTrigger_TriggerIsWrong_test():
-  triggers = [ cu._PrepareTrigger( ':' ) ]
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo.bar', 4, 7, triggers ) )
-
-
-def MatchesSemanticTrigger_LongerTrigger_test():
-  triggers = [ cu._PrepareTrigger( '::' ) ]
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo::bar', 6, 8, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo::bar', 5, 8, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo::bar', 4, 8, triggers ) )
-  assert_that( cu._MatchesSemanticTrigger( 'foo::bar', 3, 8, triggers ) )
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo::bar', 4, 4, triggers ) )
-  assert_that( not cu._MatchesSemanticTrigger( 'foo::bar', 3, 4, triggers ) )
-
-
-def MatchesSemanticTrigger_OneTriggerMatches_test():
-  triggers = [ cu._PrepareTrigger( '.' ),
-               cu._PrepareTrigger( ';' ),
-               cu._PrepareTrigger( '::' ) ]
-
-  assert_that( cu._MatchesSemanticTrigger( 'foo::bar', 5, 8, triggers ) )
-
-
-def MatchesSemanticTrigger_RegexTrigger_test():
-  triggers = [ cu._PrepareTrigger( r're!\w+\.' ) ]
-
-  assert_that( cu._MatchesSemanticTrigger( 'foo.bar', 4, 8, triggers ) )
-
-  assert_that( not cu._MatchesSemanticTrigger( 'foo . bar', 5, 8, triggers ) )
+  assert_that( regex.pattern, equal_to( re.escape( 'æ' ) ) )
 
 
 def MatchingSemanticTrigger_Basic_test():
@@ -162,6 +82,50 @@ def MatchingSemanticTrigger_Basic_test():
                                             9,
                                             triggers ).pattern,
                equal_to( re.escape( '::' ) ) )
+
+
+def MatchingSemanticTrigger_JustTrigger_test():
+  triggers = [ cu._PrepareTrigger( '.' ) ]
+
+  assert_that( cu._MatchingSemanticTrigger( '.', 2, 2, triggers ), none() )
+  assert_that( cu._MatchingSemanticTrigger( '.', 1, 1, triggers ),
+               re.escape( '.' ) )
+  assert_that( cu._MatchingSemanticTrigger( '.', 0, 0, triggers ), none() )
+
+
+def MatchingSemanticTrigger_TriggerBetweenWords_test():
+  triggers = [ cu._PrepareTrigger( '.' ) ]
+
+  assert_that( cu._MatchingSemanticTrigger( 'foo . bar', 6, 9, triggers ),
+               none() )
+  assert_that( cu._MatchingSemanticTrigger( 'foo . bar', 5, 9, triggers ),
+               re.escape( '.' ) )
+  assert_that( cu._MatchingSemanticTrigger( 'foo . bar', 4, 9, triggers ),
+               re.escape( '.' ) )
+
+
+def MatchingSemanticTrigger_BadInput_test():
+  triggers = [ cu._PrepareTrigger( '.' ) ]
+
+  assert_that( cu._MatchingSemanticTrigger( 'foo.bar', 10, 7, triggers ),
+               none() )
+  assert_that( cu._MatchingSemanticTrigger( 'foo.bar', -1, 7, triggers ),
+               none() )
+  assert_that( cu._MatchingSemanticTrigger( 'foo.bar', 4, -1, triggers ),
+               none() )
+  assert_that( cu._MatchingSemanticTrigger( '', -1, 0, triggers ), none() )
+  assert_that( cu._MatchingSemanticTrigger( '', 0, 0, triggers ), none() )
+  assert_that( cu._MatchingSemanticTrigger( '', 1, 0, triggers ), none() )
+  assert_that( cu._MatchingSemanticTrigger( 'foo.bar', 4, 7, [] ), none() )
+
+
+def MatchingSemanticTrigger_RegexTrigger_test():
+  triggers = [ cu._PrepareTrigger( r're!\w+\.' ) ]
+
+  assert_that( cu._MatchingSemanticTrigger( 'foo.bar', 4, 8, triggers ),
+               re.escape( r'\w+\.' ) )
+  assert_that( cu._MatchingSemanticTrigger( 'foo . bar', 5, 8, triggers ),
+               none() )
 
 
 def PreparedTriggers_Basic_test():
