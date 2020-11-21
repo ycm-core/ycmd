@@ -441,15 +441,17 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       with self._server_info_mutex:
         LOGGER.info( 'Starting jdt.ls Language Server...' )
 
+        filepath = request_data[ 'filepath' ]
+        settings = self._filepath_to_data[ filepath ][ 'settings' ]
         if project_directory:
           self._java_project_dir = project_directory
-        elif 'project_directory' in self._settings:
+        elif 'project_directory' in settings:
           self._java_project_dir = utils.AbsolutePath(
-            self._settings[ 'project_directory' ],
+            settings[ 'project_directory' ],
             self._extra_conf_dir )
         else:
           self._java_project_dir = _FindProjectDir(
-            os.path.dirname( request_data[ 'filepath' ] ) )
+            os.path.dirname( filepath ) )
 
         self._workspace_path = _WorkspaceDirForProject(
           self._workspace_root_path,
@@ -476,7 +478,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           '-data', self._workspace_path,
         ]
 
-        return super( JavaCompleter, self )._StartServerNoLock( request_data )
+        return super()._StartServerNoLock( request_data )
     except language_server_completer.LanguageServerConnectionTimeout:
       LOGGER.error( '%s failed to start, or did not connect successfully',
                     self.GetServerName() )

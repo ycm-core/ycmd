@@ -585,6 +585,7 @@ class LanguageServerConnection( threading.Thread ):
         for watcher in reg[ 'registerOptions' ][ 'watchers' ]:
           # TODO: Take care of watcher kinds. Not everything needs
           # to be watched for create, modify *and* delete actions.
+          # TODO: Use workspace root here.
           pattern = os.path.join( self._project_directory,
                                   watcher[ 'globPattern' ] )
           if os.path.isdir( pattern ):
@@ -617,6 +618,8 @@ class LanguageServerConnection( threading.Thread ):
           if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
             self._CancelWatchdogThreads()
         self.SendResponse( lsp.Void( request ) )
+      elif method == 'workspace/workspaceFolders':
+        self.SendResponse( lsp.Accept( request, self._workspace_folders ) )
       else: # method unknown - reject
         self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
       return
@@ -1041,8 +1044,10 @@ class LanguageServerCompleter( Completer ):
     self._is_completion_provider = False
     self._resolve_completion_items = False
     self._project_directory = None
-    self._settings = {}
     self._extra_conf_dir = None
+    self._workspace_folders = []
+    self._filepath_to_data = collections.defaultdict(
+        lambda: { 'settings': {} } )
 
 
   def GetCompleterName( self ):
@@ -1091,7 +1096,9 @@ class LanguageServerCompleter( Completer ):
         self._project_directory,
         lambda globs: WatchdogHandler( self, globs ),
         self._port,
-        lambda request: self.WorkspaceConfigurationResponse( request ),
+        lambda request: self.WorkspaceConfigurationResponse(
+          request_data[ 'filepath' ],
+          request ),
         self.GetDefaultNotificationHandler() )
     else:
       self._stderr_file = utils.CreateLogfile(
@@ -1105,15 +1112,15 @@ class LanguageServerCompleter( Completer ):
           stderr = stderr,
           env = self.GetServerEnvironment() )
 
-      self._connection = (
-        StandardIOLanguageServerConnection(
-          self._project_directory,
-          lambda globs: WatchdogHandler( self, globs ),
-          self._server_handle.stdin,
-          self._server_handle.stdout,
-          lambda request: self.WorkspaceConfigurationResponse( request ),
-          self.GetDefaultNotificationHandler() )
-      )
+      self._connection = StandardIOLanguageServerConnection(
+        self._project_directory,
+        lambda globs: WatchdogHandler( self, globs ),
+        self._server_handle.stdin,
+        self._server_handle.stdout,
+        lambda request: self.WorkspaceConfigurationResponse(
+          request_data[ 'filepath' ],
+          request ),
+        self.GetDefaultNotificationHandler() )
 
     self._connection.Start()
 
@@ -1594,7 +1601,7 @@ class LanguageServerCompleter( Completer ):
     pass # pragma: no cover
 
 
-  def WorkspaceConfigurationResponse( self, request ):
+  def WorkspaceConfigurationResponse( self, filepath, request ):
     """If the concrete completer wants to respond to workspace/configuration
        requests, it should override this method."""
     return None
@@ -1618,7 +1625,8 @@ class LanguageServerCompleter( Completer ):
 
   def DebugInfo( self, request_data ):
     with self._server_info_mutex:
-      extras = self.CommonDebugItems() + self.ExtraDebugItems( request_data )
+      extras = ( self.CommonDebugItems( request_data ) +
+                 self.ExtraDebugItems( request_data ) )
       logfiles = [ self._stdout_file,
                    self._stderr_file ] + self.AdditionalLogFiles()
       server = responses.DebugInfoServer(
@@ -1721,9 +1729,9 @@ class LanguageServerCompleter( Completer ):
     merged_ls_settings = self.DefaultSettings( request_data )
 
     # If there is no extra-conf, the total settings are just the defaults:
-    self._settings = {
-      'ls': merged_ls_settings
-    }
+    filepath = request_data[ 'filepath' ]
+    settings_and_workspace = self._filepath_to_data[ filepath ]
+    settings_and_workspace[ 'settings' ] = { 'ls': merged_ls_settings }
 
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     if module:
@@ -1737,7 +1745,7 @@ class LanguageServerCompleter( Completer ):
         merged_ls_settings.update( user_settings[ 'ls' ] )
 
       user_settings[ 'ls' ] = merged_ls_settings
-      self._settings = user_settings
+      settings_and_workspace[ 'settings' ] = user_settings
 
       # Only return the dir if it was found in the paths; we don't want to use
       # the path of the global extra conf as a project root dir.
@@ -1765,6 +1773,29 @@ class LanguageServerCompleter( Completer ):
 
     if self.StartServer( request_data, *args, **kwargs ):
       self._SendInitialize( request_data )
+
+
+  def _UpdateWorkspacesForFile( self, filepath ):
+    if not self._ServerIsInitialized():
+      return
+
+    if filepath in self._filepath_to_data:
+      return
+
+    workspace_path = self._GetWorkspaceForFile( filepath )
+    workspace_folder = lsp.WorkspaceFolder(
+      lsp.FilePathToUri( workspace_path ),
+      workspace_path
+    )
+    self._workspace_folders.append( workspace_folder )
+    self.GetConnection().SendNotification(
+        lsp.DidChangeWorkspaceFolders( [ workspace_folder ] ) )
+    self._filepath_to_data[ filepath ][ 'workspace' ] = workspace_folder
+
+
+  def OnBufferVisit( self, request_data ):
+    self._UpdateWorkspacesForFile( request_data[ 'filepath' ] )
+    self._GetSettingsFromExtraConf( request_data )
 
 
   def OnFileReadyToParse( self, request_data ):
@@ -2116,12 +2147,42 @@ class LanguageServerCompleter( Completer ):
 
     del self._server_file_state[ file_state.filename ]
 
+    old_workspace = self._filepath_to_data[ file_path ][ 'workspace' ]
+    del self._filepath_to_data[ file_path ]
+
+    # TODO: This is awfully, horribly inefficient.
+    workspace_still_in_use = False
+    for settings_and_workspace in self._filepath_to_data:
+      workspace = settings_and_workspace[ 'workspace' ]
+      if ( lsp.UriToFilePath( workspace[ 'uri' ] ) ==
+           self._GetWorkspaceForFile( file_path ) ):
+        workspace_still_in_use = True
+
+    if not workspace_still_in_use:
+      self.GetConnection().SendNotification(
+          lsp.DidChangeWorkspaceFolders( removed = [ workspace ] ) )
+      self._workspace_folders.remove( old_workspace )
+
 
   def GetProjectRootFiles( self ):
     """Returns a list of files that indicate the root of the project.
     It should be easier to override just this method than the whole
     GetProjectDirectory."""
     return []
+
+
+  def _GetWorkspaceForFile( self, filepath ):
+    project_root_files = self.GetProjectRootFiles()
+    if project_root_files:
+      for folder in utils.PathsToAllParentFolders( filepath ):
+        for root_file in project_root_files:
+          if os.path.isfile( os.path.join( folder, root_file ) ):
+            return folder
+
+    if self._extra_conf_dir:
+      return self._extra_conf_dir
+
+    return os.path.dirname( filepath )
 
 
   def GetProjectDirectory( self, request_data ):
@@ -2143,9 +2204,11 @@ class LanguageServerCompleter( Completer ):
     self._settings and self._extra_conf_dir
     """
 
-    if 'project_directory' in self._settings:
-      return utils.AbsolutePath( self._settings[ 'project_directory' ],
-                                  self._extra_conf_dir )
+    filepath = request_data[ 'filepath' ]
+    settings = self._filepath_to_data[ filepath ][ 'settings' ]
+    if 'project_directory' in settings:
+      return utils.AbsolutePath( settings[ 'project_directory' ],
+                                 self._extra_conf_dir )
 
     project_root_files = self.GetProjectRootFiles()
     if project_root_files:
@@ -2182,16 +2245,18 @@ class LanguageServerCompleter( Completer ):
       # the settings on the Initialize request are somehow subtly different from
       # the settings supplied in didChangeConfiguration, though it's not exactly
       # clear how/where that is specified.
+      filepath = request_data[ 'filepath' ]
+      settings = self._filepath_to_data[ filepath ][ 'settings' ]
       msg = lsp.Initialize( request_id,
                             self._project_directory,
                             self.ExtraCapabilities(),
-                            self._settings.get( 'ls', {} ) )
+                            settings.get( 'ls', {} ) )
 
       def response_handler( response, message ):
         if message is None:
           return
 
-        self._HandleInitializeInPollThread( message )
+        self._HandleInitializeInPollThread( message, settings )
 
       self._initialize_response = self.GetConnection().GetResponseAsync(
         request_id,
@@ -2215,7 +2280,7 @@ class LanguageServerCompleter( Completer ):
     return server_trigger_characters
 
 
-  def _HandleInitializeInPollThread( self, response ):
+  def _HandleInitializeInPollThread( self, response, settings ):
     """Called within the context of the LanguageServerConnection's message pump
     when the initialize request receives a response."""
     with self._server_info_mutex:
@@ -2306,7 +2371,7 @@ class LanguageServerCompleter( Completer ):
       # configuration should be send in response to a workspace/configuration
       # request?
       self.GetConnection().SendNotification(
-          lsp.DidChangeConfiguration( self._settings.get( 'ls', {} ) ) )
+          lsp.DidChangeConfiguration( settings.get( 'ls', {} ) ) )
 
       # Notify the other threads that we have completed the initialize exchange.
       self._initialize_response = None
@@ -2684,7 +2749,7 @@ class LanguageServerCompleter( Completer ):
     return response[ 'result' ]
 
 
-  def CommonDebugItems( self ):
+  def CommonDebugItems( self, request_data ):
     def ServerStateDescription():
       if not self.ServerIsHealthy():
         return 'Dead'
@@ -2694,13 +2759,15 @@ class LanguageServerCompleter( Completer ):
 
       return 'Initialized'
 
+    filepath = request_data[ 'filepath' ]
+    settings = self._filepath_to_data[ filepath ][ 'settings' ]
     return [ responses.DebugInfoItem( 'Server State',
                                       ServerStateDescription() ),
              responses.DebugInfoItem( 'Project Directory',
                                       self._project_directory ),
              responses.DebugInfoItem(
                'Settings',
-               json.dumps( self._settings.get( 'ls', {} ),
+               json.dumps( settings.get( 'ls', {} ),
                            indent = 2,
                            sort_keys = True ) ) ]
 

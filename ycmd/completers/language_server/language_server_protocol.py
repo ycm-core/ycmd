@@ -270,6 +270,7 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
         'dynamicRegistration': True
       },
       'workspaceEdit': { 'documentChanges': True, },
+      'workspaceFolders': True,
       'symbol': {
         'symbolKind': {
           'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
@@ -337,6 +338,9 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
     'processId': os.getpid(),
     'rootPath': project_directory,
     'rootUri': FilePathToUri( project_directory ),
+    'workspaceFolders': [ WorkspaceFolder(
+                            FilePathToUri( project_directory ),
+                            project_directory ) ],
     'initializationOptions': settings,
     'capabilities': UpdateDict( capabilities, extra_capabilities ),
   } )
@@ -381,6 +385,13 @@ def Accept( request, result ):
 def ApplyEditResponse( request, applied ):
   msg = { 'applied': applied }
   return Accept( request, msg )
+
+
+def DidChangeWorkspaceFolders( added = [], removed = [] ):
+  return BuildNotification( 'workspace/didChangeWorkspaceFolders', {
+    'added': added,
+    'removed': removed
+  } )
 
 
 def DidChangeWatchedFiles( path, kind ):
@@ -652,6 +663,10 @@ def UriToFilePath( uri ):
   # Therefore first unquote pathname.
   pathname = unquote( parsed_uri.path )
   return os.path.abspath( url2pathname( pathname ) )
+
+
+def WorkspaceFolder( uri, name ):
+  return { 'uri': uri, 'name': name }
 
 
 def _BuildMessageData( message ):

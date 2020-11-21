@@ -103,8 +103,9 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
     return self._capabilities
 
 
-  def WorkspaceConfigurationResponse( self, request ):
+  def WorkspaceConfigurationResponse( self, filepath, request ):
     if self._capabilities.get( 'workspace', {} ).get( 'configuration' ):
-      sections_to_config_map = self._settings.get( 'config_sections', {} )
+      settings = self._filepath_to_data[ filepath ][ 'settings' ]
+      sections_to_config_map = settings.get( 'config_sections', {} )
       return [ sections_to_config_map.get( item.get( 'section', '' ) )
                for item in request[ 'params' ][ 'items' ] ]

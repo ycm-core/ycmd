@@ -58,10 +58,6 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def GetProjectRootFiles( self ):
-    # Without LSP workspaces support, GOPLS relies on the rootUri to detect a
-    # project.
-    # TODO: add support for LSP workspaces to allow users to change project
-    # without having to restart GOPLS.
     return [ 'go.mod' ]
 
 
@@ -79,7 +75,9 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def GetDoc( self, request_data ):
-    assert self._settings[ 'ls' ][ 'hoverKind' ] == 'Structured'
+    filepath = request_data[ 'filepath' ]
+    settings = self._filepath_to_data[ filepath ][ 'settings' ]
+    assert settings[ 'ls' ][ 'hoverKind' ] == 'Structured'
     try:
       result = json.loads( self.GetHoverResponse( request_data )[ 'value' ] )
       docs = result[ 'signature' ] + '\n' + result[ 'fullDocumentation' ]
@@ -107,9 +105,10 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
     }
 
 
-  def WorkspaceConfigurationResponse( self, request ):
+  def WorkspaceConfigurationResponse( self, filepath, request ):
     # Returns the same settings for each "section", since gopls requests
     # settings for each open project, but ycmd only has a single settings
     # object per LSP completer.
-    return [ self._settings.get( 'ls', {} )
+    settings = self._filepath_to_data[ filepath ][ 'settings' ]
+    return [ settings.get( 'ls', {} )
              for i in request[ 'params' ][ 'items' ] ]

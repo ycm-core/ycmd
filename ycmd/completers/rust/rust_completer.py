@@ -107,10 +107,6 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def GetProjectRootFiles( self ):
-    # Without LSP workspaces support, RA relies on the rootUri to detect a
-    # project.
-    # TODO: add support for LSP workspaces to allow users to change project
-    # without having to restart RA.
     return [ 'Cargo.toml' ]
 
 
@@ -220,6 +216,7 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
     }
 
 
-  def WorkspaceConfigurationResponse( self, request ):
+  def WorkspaceConfigurationResponse( self, filepath, request ):
     assert len( request[ 'params' ][ 'items' ] ) == 1
-    return [ self._settings.get( 'ls', {} ).get( 'rust-analyzer' ) ]
+    settings = self._filepath_to_data[ filepath ][ 'settings' ]
+    return [ settings.get( 'ls', {} ).get( 'rust-analyzer' ) ]
