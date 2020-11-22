@@ -212,6 +212,7 @@ class Completer( metaclass = abc.ABCMeta ):
     self._max_candidates = user_options[ 'max_num_candidates' ]
     self._max_candidates_to_detail = user_options[
       'max_num_candidates_to_detail' ]
+    self._server_file_state = completer_utils.ServerFileStateStore()
 
     LOGGER.info( f"Completion config: { self._max_candidates }, detailing "
                  f"{ self._max_candidates_to_detail } candiates" )
@@ -448,7 +449,10 @@ class Completer( metaclass = abc.ABCMeta ):
 
 
   def OnBufferUnload( self, request_data ):
-    pass # pragma: no cover
+    try:
+      del self._server_file_state[ request_data[ 'filepath' ] ]
+    except KeyError:
+      pass
 
 
   def OnInsertLeave( self, request_data ):
@@ -555,6 +559,60 @@ class Completer( metaclass = abc.ABCMeta ):
     LOGGER.debug( 'No Settings function defined in %s', module.__file__ )
 
     return {}
+
+
+  def Reset( self ):
+    self._server_file_state = completer_utils.ServerFileStateStore()
+
+
+  def OpenFileHandler( self, file_state, filetypes, changes ):
+    pass # pragma: no cover
+
+
+  def ChangeFileHandler( self, file_state, filetypes, changes ):
+    pass # pragma: no cover
+
+
+  def _AnySupportedFileType( self, file_types ):
+    for supported in self.SupportedFiletypes():
+      if supported in file_types:
+        return True
+    return False
+
+
+  def _UpdateDirtyFilesUnderLock( self, request_data ):
+    for file_name, file_data in request_data[ 'file_data' ].items():
+      if not self._AnySupportedFileType( file_data[ 'filetypes' ] ):
+        LOGGER.debug( 'Not updating file %s, it is not a supported filetype: '
+                       '%s not in %s',
+                       file_name,
+                       file_data[ 'filetypes' ],
+                       self.SupportedFiletypes() )
+        continue
+
+      file_state = self._server_file_state[ file_name ]
+      if 'contents' in file_data:
+        action = file_state.GetDirtyFileAction( file_data[ 'contents' ] )
+      elif 'changes' in file_data:
+        changes = file_data[ 'changes' ]
+        changes_start = changes[ 'start' ][ 'line_num' ]
+        changes_end = changes[ 'end' ][ 'line_num' ]
+        file_state[ changes_start :
+                    changes_end ] = changes[ 'replacement_text' ]
+        action = completer_utils.ServerFileState.CHANGE_FILE
+
+      LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
+                    file_name,
+                    file_state.state,
+                    action )
+      if action == completer_utils.ServerFileState.OPEN_FILE:
+        self.OpenFileHandler( file_state,
+                              file_data[ 'filetypes' ],
+                              file_data.get( 'changes' ) )
+      elif action == completer_utils.ServerFileState.CHANGE_FILE:
+        self.ChangeFileHandler( file_state,
+                                file_data[ 'filetypes' ],
+                                file_data.get( 'changes' ) )
 
 
 class CompletionsCache:

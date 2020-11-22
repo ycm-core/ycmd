@@ -117,11 +117,15 @@ class CsharpCompleter( Completer ):
       if solution not in self._completer_per_solution:
         keep_logfiles = self.user_options[ 'server_keep_logfiles' ]
         desired_omnisharp_port = self.user_options.get( 'csharp_server_port' )
-        completer = CsharpSolutionCompleter( solution,
-                                             keep_logfiles,
-                                             desired_omnisharp_port,
-                                             self._roslyn_path,
-                                             self._mono_path )
+        completer = CsharpSolutionCompleter(
+            solution,
+            keep_logfiles,
+            desired_omnisharp_port,
+            self._roslyn_path,
+            self._mono_path,
+            lambda request_data:
+              self._UpdateDirtyFilesUnderLock( request_data ),
+            self._server_file_state )
         self._completer_per_solution[ solution ] = completer
 
     return self._completer_per_solution[ solution ]
@@ -393,7 +397,9 @@ class CsharpSolutionCompleter( object ):
                 keep_logfiles,
                 desired_omnisharp_port,
                 roslyn_path,
-                mono_path ):
+                mono_path,
+                update_dirty_files,
+                server_file_state ):
     self._solution_path = solution_path
     self._keep_logfiles = keep_logfiles
     self._filename_stderr = None
@@ -404,6 +410,8 @@ class CsharpSolutionCompleter( object ):
     self._server_state_lock = threading.Lock()
     self._roslyn_path = roslyn_path
     self._mono_path = mono_path
+    self._update_dirty_files = update_dirty_files
+    self._server_file_state = server_file_state
 
 
   def CodeCheck( self, request_data ):
@@ -821,8 +829,9 @@ class CsharpSolutionCompleter( object ):
     parameters[ 'column' ] = request_data[ 'column_codepoint' ]
 
     filepath = request_data[ 'filepath' ]
+    self._update_dirty_files( request_data )
     parameters[ 'buffer' ] = (
-      request_data[ 'file_data' ][ filepath ][ 'contents' ] )
+      self._server_file_state[ filepath ].contents )
     parameters[ 'filename' ] = filepath
     return parameters
 

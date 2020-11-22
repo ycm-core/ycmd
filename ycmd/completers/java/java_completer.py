@@ -310,7 +310,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._connection = None
     self._server_handle = None
     self._stderr_file = None
-    self._Reset()
+    self.Reset()
     self._command = []
 
 
@@ -408,7 +408,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._RestartServer( request_data, project_directory = project_directory )
 
 
-  def _Reset( self ):
+  def Reset( self ):
     if self._workspace_path and self._use_clean_workspace:
       try:
         shutil.rmtree( self._workspace_path )
@@ -425,7 +425,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
     self._started_message_sent = False
 
-    super()._Reset()
+    super().Reset()
 
 
   def _GetJvmArgs( self, request_data ):
@@ -476,7 +476,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           '-data', self._workspace_path,
         ]
 
-        return super( JavaCompleter, self )._StartServerNoLock( request_data )
+        return super()._StartServerNoLock( request_data )
     except language_server_completer.LanguageServerConnectionTimeout:
       LOGGER.error( '%s failed to start, or did not connect successfully',
                     self.GetServerName() )

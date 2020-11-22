@@ -222,8 +222,8 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
     )
 
 
-  def _Reset( self ):
-    super()._Reset()
+  def Reset( self ):
+    super().Reset()
     self._compilation_commands = {}
 
 

@@ -352,7 +352,8 @@ class TypeScriptCompleter( Completer ):
     """
 
     filename = request_data[ 'filepath' ]
-    contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
+    self._UpdateDirtyFilesUnderLock( request_data )
+    contents = self._server_file_state[ filename ].contents
     tmpfile = NamedTemporaryFile( delete = False )
     tmpfile.write( utils.ToBytes( contents ) )
     tmpfile.close()

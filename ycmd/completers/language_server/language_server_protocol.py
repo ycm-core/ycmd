@@ -18,7 +18,6 @@
 import collections
 import os
 import json
-import hashlib
 from urllib.parse import urljoin, urlparse, unquote
 from urllib.request import pathname2url, url2pathname
 
@@ -142,95 +141,6 @@ class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme
   was not supported. Only the file: scheme is supported"""
   pass
-
-
-class ServerFileStateStore( dict ):
-  """Trivial default-dict-like class to hold ServerFileState for a given
-  filepath. Language server clients must maintain one of these for each language
-  server connection."""
-  def __missing__( self, key ):
-    self[ key ] = ServerFileState( key )
-    return self[ key ]
-
-
-class ServerFileState:
-  """State machine for a particular file from the server's perspective,
-  including version."""
-
-  # States
-  OPEN = 'Open'
-  CLOSED = 'Closed'
-
-  # Actions
-  CLOSE_FILE = 'Close'
-  NO_ACTION = 'None'
-  OPEN_FILE = 'Open'
-  CHANGE_FILE = 'Change'
-
-  def __init__( self, filename ):
-    self.filename = filename
-    self.version = 0
-    self.state = ServerFileState.CLOSED
-    self.checksum = None
-    self.contents = ''
-
-
-  def GetDirtyFileAction( self, contents ):
-    """Progress the state for a file to be updated due to being supplied in the
-    dirty buffers list. Returns any one of the Actions to perform."""
-    new_checksum = self._CalculateCheckSum( contents )
-
-    if ( self.state == ServerFileState.OPEN and
-         self.checksum.digest() == new_checksum.digest() ):
-      return ServerFileState.NO_ACTION
-    elif self.state == ServerFileState.CLOSED:
-      self.version = 0
-      action = ServerFileState.OPEN_FILE
-    else:
-      action = ServerFileState.CHANGE_FILE
-
-    return self._SendNewVersion( new_checksum, action, contents )
-
-
-  def GetSavedFileAction( self, contents ):
-    """Progress the state for a file to be updated due to having previously been
-    opened, but no longer supplied in the dirty buffers list. Returns one of the
-    Actions to perform: either NO_ACTION or CHANGE_FILE."""
-    # We only need to update if the server state is open
-    if self.state != ServerFileState.OPEN:
-      return ServerFileState.NO_ACTION
-
-    new_checksum = self._CalculateCheckSum( contents )
-    if self.checksum.digest() == new_checksum.digest():
-      return ServerFileState.NO_ACTION
-
-    return self._SendNewVersion( new_checksum,
-                                 ServerFileState.CHANGE_FILE,
-                                 contents )
-
-
-  def GetFileCloseAction( self ):
-    """Progress the state for a file which was closed in the client. Returns one
-    of the actions to perform: either NO_ACTION or CLOSE_FILE."""
-    if self.state == ServerFileState.OPEN:
-      self.state = ServerFileState.CLOSED
-      return ServerFileState.CLOSE_FILE
-
-    self.state = ServerFileState.CLOSED
-    return ServerFileState.NO_ACTION
-
-
-  def _SendNewVersion( self, new_checksum, action, contents ):
-    self.checksum = new_checksum
-    self.version = self.version + 1
-    self.state = ServerFileState.OPEN
-    self.contents = contents
-
-    return action
-
-
-  def _CalculateCheckSum( self, contents ):
-    return hashlib.sha1( ToBytes( contents ) )
 
 
 def BuildRequest( request_id, method, parameters ):
@@ -398,38 +308,36 @@ def DidChangeConfiguration( config ):
   } )
 
 
-def DidOpenTextDocument( file_state, file_types, file_contents ):
+def DidOpenTextDocument( file_state, file_types ):
   return BuildNotification( 'textDocument/didOpen', {
     'textDocument': {
       'uri': FilePathToUri( file_state.filename ),
       'languageId': '/'.join( file_types ),
       'version': file_state.version,
-      'text': file_contents
+      'text': file_state.contents
     }
   } )
 
 
-def DidChangeTextDocument( file_state, file_contents ):
+def DidChangeTextDocument( file_state, content_changes ):
   return BuildNotification( 'textDocument/didChange', {
     'textDocument': {
       'uri': FilePathToUri( file_state.filename ),
       'version': file_state.version,
     },
-    'contentChanges': [
-      { 'text': file_contents },
-    ]
+    'contentChanges': content_changes
   } )
 
 
-def DidSaveTextDocument( file_state, file_contents ):
+def DidSaveTextDocument( file_state ):
   params = {
     'textDocument': {
       'uri': FilePathToUri( file_state.filename ),
       'version': file_state.version,
     },
   }
-  if file_contents is not None:
-    params.update( { 'text': file_contents } )
+  if file_state.contents is not None:
+    params.update( { 'text': file_state.contents } )
 
   return BuildNotification( 'textDocument/didSave', params )
 

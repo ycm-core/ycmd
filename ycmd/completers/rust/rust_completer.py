@@ -83,9 +83,9 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
         os.path.join( self._rust_root, 'bin', 'rust-analyzer' ) )
 
 
-  def _Reset( self ):
+  def Reset( self ):
     self._server_progress = 'Not started'
-    super()._Reset()
+    super().Reset()
 
 
   def GetServerName( self ):

@@ -160,9 +160,6 @@ definitions:
     type: object
     description: |-
       Contents and details of a dirty buffer.
-    required:
-      - filetypes
-      - contents
     properties:
       filetypes:
         type: array
@@ -171,6 +168,21 @@ definitions:
       contents:
         type: string
         description: The entire contents of the buffer encoded as UTF-8.
+      changes:
+        type: array
+        description: The list of incremental changes.
+        items:
+          type: object
+          required:
+            - replacement_text
+            - range
+          properties:
+            replacement_text:
+              type: string
+              description: |-
+                The text with which to replace the range identified by `range`.
+            range:
+              $ref: "#/definitions/Range"
   FileDataMap:
     type: object
     description: |-

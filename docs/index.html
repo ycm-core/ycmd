@@ -3898,7 +3898,6 @@
                                                     <span class="json-property-type">string[]</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
-                                                        <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
                                                     
@@ -3920,7 +3919,6 @@
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
-                                                        <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
                                                     <p>The entire contents of the buffer encoded as UTF-8.</p>
@@ -3928,6 +3926,62 @@
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
+                                                </dd>
+                                                <dt data-property-name="changes">
+                                                    <span class="json-property-name">changes:</span>
+                                                    
+                                                    <span class="json-property-type">object[]</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>The list of incremental changes.</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                                        <section class="json-schema-array-items">
+                                                                            
+                                                                            <span class="json-property-type">object</span>
+                                                                            <span class="json-property-range" title="Value limits"></span>
+                                                                            
+                                                                            <div class="json-inner-schema">
+                                                                                
+                                                                                        <section class="json-schema-properties">
+                                                                                            <dl>
+                                                                                                    <dt data-property-name="replacement_text">
+                                                                                                        <span class="json-property-name">replacement_text:</span>
+                                                                                                        
+                                                                                                        <span class="json-property-type">string</span>
+                                                                                                        <span class="json-property-range" title="Value limits"></span>
+                                                                                                        
+                                                                                                            <span class="json-property-required"></span>
+                                                                                                    </dt>
+                                                                                                    <dd>
+                                                                                                        <p>The text with which to replace the range identified by <code>range</code>.</p>
+                                                                                        
+                                                                                                        <div class="json-inner-schema">
+                                                                                                            
+                                                                                                        </div>
+                                                                                                    </dd>
+                                                                                                    <dt data-property-name="range">
+                                                                                                        <span class="json-property-name">range:</span>
+                                                                                                        
+                                                                                                        <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/Range">Range</a>
+                                                                                                        </span>
+                                                                                                        <span class="json-property-range" title="Value limits"></span>
+                                                                                                        
+                                                                                                            <span class="json-property-required"></span>
+                                                                                                    </dt>
+                                                                                                    <dd>
+                                                                                                        
+                                                                                                        <div class="json-inner-schema">
+                                                                                                            
+                                                                                                        </div>
+                                                                                                    </dd>
+                                                                                            </dl>
+                                                                                        </section>
+                                                                            </div>
+                                                                        </section>                </div>
                                                 </dd>
                                         </dl>
                                     </section>
