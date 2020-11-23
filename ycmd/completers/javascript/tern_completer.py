@@ -17,14 +17,18 @@
 
 import logging
 import os
-import requests
+import urllib.request
+import urllib.error
+import json
 import threading
 
 from subprocess import PIPE
 from ycmd import utils, responses
 from ycmd.completers.completer import Completer
 from ycmd.completers.completer_utils import GetFileLines
-from ycmd.utils import LOGGER
+from ycmd.utils import LOGGER, ToBytes, ToUnicode
+
+HTTP_OK = 200
 
 PATH_TO_TERN_BINARY = os.path.abspath(
   os.path.join(
@@ -286,9 +290,9 @@ class TernCompleter( Completer ):
 
     try:
       target = self._GetServerAddress() + '/ping'
-      response = requests.get( target )
-      return response.status_code == requests.codes.ok
-    except requests.ConnectionError:
+      response = urllib.request.urlopen( target )
+      return response.code == HTTP_OK
+    except urllib.error.URLError:
       return False
 
 
@@ -320,14 +324,14 @@ class TernCompleter( Completer ):
                  if 'javascript' in file_data[ x ][ 'filetypes' ] ],
     }
     full_request.update( request )
+    try:
+      response = urllib.request.urlopen(
+        self._GetServerAddress(),
+        data = ToBytes( json.dumps( full_request ) ) )
 
-    response = requests.post( self._GetServerAddress(),
-                              json = full_request )
-
-    if response.status_code != requests.codes.ok:
-      raise RuntimeError( response.text )
-
-    return response.json()
+      return json.loads( response.read() )
+    except urllib.error.HTTPError as response:
+      raise RuntimeError( ToUnicode( response.fp.read() ) )
 
 
   def _GetResponse( self, query, codepoint, request_data ):

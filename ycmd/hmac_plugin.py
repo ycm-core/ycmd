@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import requests
 from base64 import b64decode, b64encode
 from bottle import request, abort, response
 from hmac import compare_digest
 from urllib.parse import urlparse
 from ycmd import hmac_utils
 from ycmd.utils import LOGGER, ToBytes, ToUnicode
+
+HTTP_UNAUTHORIZED = 401
 
 _HMAC_HEADER = 'x-ycm-hmac'
 _HOST_HEADER = 'host'
@@ -49,15 +50,14 @@ class HmacPlugin:
     def wrapper( *args, **kwargs ):
       if not HostHeaderCorrect( request ):
         LOGGER.info( 'Dropping request with bad Host header' )
-        abort( requests.codes.unauthorized,
-               'Unauthorized, received bad Host header.' )
+        abort( HTTP_UNAUTHORIZED, 'Unauthorized, received bad Host header.' )
         return
 
       body = ToBytes( request.body.read() )
       if not RequestAuthenticated( request.method, request.path, body,
                                    self._hmac_secret ):
         LOGGER.info( 'Dropping request with bad HMAC' )
-        abort( requests.codes.unauthorized, 'Unauthorized, received bad HMAC.' )
+        abort( HTTP_UNAUTHORIZED, 'Unauthorized, received bad HMAC.' )
         return
       body = callback( *args, **kwargs )
       SetHmacHeader( body, self._hmac_secret )

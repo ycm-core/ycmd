@@ -282,7 +282,7 @@ def Subcommands_GoToReferences_Unicode_test( app ):
 
 
 @SharedYcmd
-def Subcommands_GetDocWithNoItendifier_test( app ):
+def Subcommands_GetDocWithNoIdentifier_test( app ):
   RunTest( app, {
     'description': 'GetDoc works when no identifier',
     'request': {
