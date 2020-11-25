@@ -9,3 +9,4 @@ codecov               >= 2.0.5
 pytest
 pytest-cov
 pytest-rerunfailures
+requests

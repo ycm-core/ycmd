@@ -4,9 +4,6 @@
 [submodule "third_party/waitress"]
 	path = third_party/waitress
 	url = https://github.com/Pylons/waitress
-[submodule "third_party/requests"]
-	path = third_party/requests_deps/requests
-	url = https://github.com/requests/requests
 [submodule "third_party/jedi"]
 	path = third_party/jedi_deps/jedi
 	url = https://github.com/davidhalter/jedi
@@ -16,18 +13,6 @@
 [submodule "third_party/parso"]
 	path = third_party/jedi_deps/parso
 	url = https://github.com/davidhalter/parso
-[submodule "third_party/urllib3"]
-	path = third_party/requests_deps/urllib3
-	url = https://github.com/urllib3/urllib3
-[submodule "third_party/chardet"]
-	path = third_party/requests_deps/chardet
-	url = https://github.com/chardet/chardet
-[submodule "third_party/certifi"]
-	path = third_party/requests_deps/certifi
-	url = https://github.com/certifi/python-certifi
-[submodule "third_party/idna"]
-	path = third_party/requests_deps/idna
-	url = https://github.com/kjd/idna
 [submodule "third_party/watchdog_deps/pathtools"]
 	path = third_party/watchdog_deps/pathtools
 	url = https://github.com/gorakhargosh/pathtools
