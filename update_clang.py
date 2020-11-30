@@ -22,16 +22,8 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
 
-sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
-                    p.join( DIR_OF_THIRD_PARTY,
-                            'requests_deps',
-                            'urllib3',
-                            'src' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
-
-import requests
+import urllib.error
+import urllib.request
 from io import BytesIO
 
 
@@ -212,27 +204,20 @@ def TemporaryDirectory( keep_temp ):
 
 def DownloadClangLicense( version, destination ):
   print( 'Downloading license...' )
-  request = requests.get(
+  request = urllib.request.urlopen(
     'https://releases.llvm.org/{version}/LICENSE.TXT'.format( version=version ),
-    stream = True )
-  request.raise_for_status()
+  )
 
   file_name = os.path.join( destination, 'LICENSE.TXT' )
   with open( file_name, 'wb' ) as f:
-    f.write( request.content )
-
-  request.close()
+    f.write( request.read() )
 
   return file_name
 
 
 def Download( url ):
   print( 'Downloading {}'.format( url.rsplit( '/', 1 )[ -1 ] ) )
-  request = requests.get( url, stream=True )
-  request.raise_for_status()
-  content = request.content
-  request.close()
-  return content
+  return urllib.request.urlopen( url ).read()
 
 
 def ExtractTar( uncompressed_data, destination ):
@@ -312,20 +297,26 @@ def UploadBundleToBintray( user_name,
   print( 'Uploading to bintray...' )
   repo = bundle_file_name[ : bundle_file_name.find( '-' ) ]
   with open( bundle_file_name, 'rb' ) as bundle:
-    request = requests.put(
+    request = urllib.request.Request(
       'https://api.bintray.com/content/{subject}/{repo}/{file_path}'.format(
         subject = subject,
         repo = repo,
         file_path = os.path.basename( bundle_file_name ) ),
       data = bundle,
-      auth = ( user_name, api_token ),
       headers = {
         'X-Bintray-Package': repo,
         'X-Bintray-Version': version,
         'X-Bintray-Publish': '1',
         'X-Bintray-Override': '1',
-      } )
-    request.raise_for_status()
+      },
+      method = 'POST' )
+    auth_handler = urllib.request.HTTPBasicAuthHandler()
+    auth_handler.add_password( None,
+                               'https://api.bintray.com/',
+                               user_name,
+                               api_token )
+    opener = urllib.request.build_opener( auth_handler )
+    request = opener.open( request )
 
 
 def ParseArguments():
@@ -459,8 +450,8 @@ def BundleAndUpload( args, temp_dir, output_dir, os_name, download_data,
     else:
       raise AssertionError( 'Format not yet implemented: {}'.format(
         download_data[ 'format' ] ) )
-  except requests.exceptions.HTTPError as error:
-    if error.response.status_code != 404:
+  except urllib.error.HTTPError as error:
+    if error.status != 404:
       raise
     print( 'Cannot download {}'.format( llvm_package ) )
     return

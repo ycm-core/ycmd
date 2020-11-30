@@ -17,6 +17,7 @@ import sysconfig
 import tarfile
 from zipfile import ZipFile
 import tempfile
+import urllib.request
 
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
@@ -39,16 +40,6 @@ for folder in os.listdir( DIR_OF_THIRD_PARTY ):
                                                             DIR_OF_THIRD_PARTY )
     )
 
-sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
-                    p.join( DIR_OF_THIRD_PARTY,
-                            'requests_deps',
-                            'urllib3',
-                            'src' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
-
-import requests
 
 NO_DYNAMIC_PYTHON_ERROR = (
   'ERROR: found static Python library ({library}) but a dynamic one is '
@@ -139,10 +130,9 @@ def CheckFileIntegrity( file_path, check_sum ):
 
 
 def DownloadFileTo( download_url, file_path ):
-  request = requests.get( download_url, stream = True )
+  request = urllib.request.urlopen( download_url )
   with open( file_path, 'wb' ) as package_file:
-    package_file.write( request.content )
-  request.close()
+    package_file.write( request.read() )
 
 
 def OnMac():

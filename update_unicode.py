@@ -26,18 +26,10 @@ from io import StringIO
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
-sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'requests' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
-                    p.join( DIR_OF_THIRD_PARTY,
-                            'requests_deps',
-                            'urllib3',
-                            'src' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'chardet' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'certifi' ),
-                    p.join( DIR_OF_THIRD_PARTY, 'requests_deps', 'idna' ) ]
+sys.path[ 0:0 ] = [ p.join( DIR_OF_THIRD_PARTY, 'regex-build' ) ]
 
 import regex as re
-import requests
+import urllib.request
 
 DIR_OF_CPP_SOURCES = p.join( DIR_OF_THIS_SCRIPT, 'cpp', 'ycm' )
 UNICODE_TABLE_TEMPLATE = (
@@ -107,9 +99,8 @@ HANGUL_LVT_COUNT = HANGUL_L_COUNT * HANGUL_VT_COUNT
 
 
 def Download( url ):
-  request = requests.get( url )
-  request.raise_for_status()
-  return request.text.splitlines()
+  request = urllib.request.urlopen( url )
+  return request.read().splitlines()
 
 
 # Encode a Unicode code point in UTF-8 binary form.
