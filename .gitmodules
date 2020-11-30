@@ -1,9 +1,6 @@
 [submodule "third_party/bottle"]
 	path = third_party/bottle
 	url = https://github.com/defnull/bottle
-[submodule "third_party/waitress"]
-	path = third_party/waitress
-	url = https://github.com/Pylons/waitress
 [submodule "third_party/jedi"]
 	path = third_party/jedi_deps/jedi
 	url = https://github.com/davidhalter/jedi

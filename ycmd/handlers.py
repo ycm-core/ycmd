@@ -306,7 +306,6 @@ def DebugInfo():
 def Shutdown():
   LOGGER.info( 'Received shutdown request' )
   ServerShutdown()
-
   return _JsonResponse( True )
 
 
@@ -369,7 +368,7 @@ def _GetCompleterForRequestData( request_data ):
 def ServerShutdown():
   def Terminator():
     if wsgi_server:
-      wsgi_server.Shutdown()
+      wsgi_server.shutdown()
 
   # Use a separate thread to let the server send the response before shutting
   # down.
