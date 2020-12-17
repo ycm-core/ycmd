@@ -29,15 +29,15 @@ namespace YouCompleteMe {
 /// |max_candidates|. If |max_candidates| is omitted or 0, all candidates are
 /// sorted.
 YCM_EXPORT pybind11::list FilterAndSortCandidates(
-  pybind11::list candidates,
-  const std::string &candidate_property,
-  std::string query,
+  const pybind11::list& candidates,
+  pybind11::str candidate_property,
+  std::string& query,
   const size_t max_candidates = 0 );
 
 /// Given a Python object that's supposed to be "string-like", returns a UTF-8
 /// encoded std::string. Raises an exception if the object can't be converted to
 /// a string.
-std::string GetUtf8String( const pybind11::object &value );
+std::string GetUtf8String( pybind11::handle value );
 
 } // namespace YouCompleteMe
 
