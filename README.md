@@ -95,15 +95,15 @@ provided in the completion request, other files of the same filetype that were
 provided previously and any tags files produced by ctags. This engine is
 non-semantic.
 
-There are also several semantic engines in YCM. There's a libclang-based
-completer and [clangd][clangd]-based completer that both provide semantic
-completion for C-family languages. [clangd][clangd] support is currently
-**experimental** and changes in the near future might break backwards
-compatibility. There's also a Jedi-based completer for semantic completion for
-Python, an OmniSharp-based completer for C#, a [gopls][gopls]-based completer
-for Go (using [gopls][gopls] for jumping to definitions), a TSServer-based
-completer for JavaScript and TypeScript, a [jdt.ls][jdtls]-based server for
-Java, and a [RLS][]-based completer for Rust. More will be added with time.
+There are also several semantic engines in YCM. There's [clangd][clangd]-based
+completer that both provide semantic completion for C-family languages.
+[clangd][clangd] support is currently **experimental** and changes in the near
+future might break backwards compatibility. There's also a Jedi-based completer
+for semantic completion for Python, an OmniSharp-based completer for C#, a
+[gopls][gopls]-based completer for Go (using [gopls][gopls] for jumping to
+definitions), a TSServer-based completer for JavaScript and TypeScript, a
+[jdt.ls][jdtls]-based server for Java, and a [RLS][]-based completer for Rust.
+More will be added with time.
 
 There are also other completion engines, like the filepath completer (part of
 the identifier completer).
@@ -550,4 +550,5 @@ This software is licensed under the [GPL v3 license][gpl].
 [api-docs]: https://ycm-core.github.io/ycmd/
 [ycmd-extra-conf]: https://github.com/ycm-core/ycmd/blob/master/.ycm_extra_conf.py
 [clangd]: https://clang.llvm.org/extra/clangd.html
+[gopls]: https://github.com/golang/tools/
 [RLS]: https://github.com/rust-lang-nursery/rls
