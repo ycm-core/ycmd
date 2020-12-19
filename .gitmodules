@@ -13,9 +13,6 @@
 [submodule "third_party/parso"]
 	path = third_party/jedi_deps/parso
 	url = https://github.com/davidhalter/parso
-[submodule "third_party/watchdog_deps/pathtools"]
-	path = third_party/watchdog_deps/pathtools
-	url = https://github.com/gorakhargosh/pathtools
 [submodule "third_party/watchdog"]
 	path = third_party/watchdog_deps/watchdog
 	url = https://github.com/gorakhargosh/watchdog
