@@ -17,7 +17,9 @@
 
 from ycmd import extra_conf_store, responses
 from ycmd.completers.completer import Completer, SignatureHelpAvailalability
-from ycmd.utils import ( CodepointOffsetToByteOffset,
+from ycmd.completers.completer_utils import GetFileLines
+from ycmd.utils import ( ByteOffsetToCodepointOffset,
+                         CodepointOffsetToByteOffset,
                          ExpandVariablesInPath,
                          FindExecutable,
                          LOGGER )
@@ -55,6 +57,47 @@ class PythonCompleter( Completer ):
     # environment and Python path.
     environment = self._EnvironmentForRequest( request_data )
     self._JediProjectForFile( request_data, environment )
+    diagnostics = self.GetDiagnosticsForCurrentFile( request_data )
+    filepath = request_data[ 'filepath' ]
+    return responses.BuildDiagnosticResponse( diagnostics,
+                                              filepath,
+                                              self.max_diagnostics_to_display )
+
+
+  def GetDiagnosticsForCurrentFile( self, request_data ):
+    syntax_errors = self._GetJediScript( request_data ).get_syntax_errors()
+    return [ _JediDiagnosticToYcmdDiagnostic( request_data, d )
+             for d in syntax_errors ]
+
+
+  def GetDetailedDiagnostic( self, request_data ):
+    jedi_diagnostics = self._GetJediScript( request_data ).get_syntax_errors()
+    jedi_diagnostics_on_line = list( filter(
+        lambda d: d.line <= request_data[ 'line_num' ] <= d.until_line,
+        jedi_diagnostics ) )
+
+    if not jedi_diagnostics_on_line:
+      raise ValueError( 'No diagnostic for current line!' )
+
+    closest_jedi_diagnostic = None
+    distance_to_closest_jedi_diagnostic = None
+
+    line_value = request_data[ 'line_value' ]
+    current_byte_offset = request_data[ 'column_num' ]
+
+    for jedi_diagnostic in jedi_diagnostics_on_line:
+      distance = GetByteOffsetDistanceFromJediDiagnosticRange(
+        current_byte_offset,
+        line_value,
+        jedi_diagnostic
+      )
+      if ( not closest_jedi_diagnostic
+           or distance < distance_to_closest_jedi_diagnostic ):
+        distance_to_closest_jedi_diagnostic = distance
+        closest_jedi_diagnostic = jedi_diagnostic
+
+    return responses.BuildDisplayMessageResponse(
+        closest_jedi_diagnostic.get_message() )
 
 
   def _SettingsForRequest( self, request_data ):
@@ -144,7 +187,7 @@ class PythonCompleter( Completer ):
     if not project_directory:
       default_project = jedi.get_default_project(
         os.path.dirname( request_data[ 'filepath' ] ) )
-      project_directory = default_project._path
+      project_directory = default_project.path
     return jedi.Project( project_directory,
                          sys_path = settings[ 'sys_path' ],
                          environment_path = settings[ 'interpreter_path' ] )
@@ -595,3 +638,39 @@ def _OffsetToPosition( offset, filename, text, newlines ):
                 text,
                 newlines )
   raise RuntimeError( "Invalid file offset in diff" )
+
+
+def GetByteOffsetDistanceFromJediDiagnosticRange(
+      byte_offset,
+      line_value,
+      jedi_diagnostic ):
+  jedi_start_offset = jedi_diagnostic.column + 1
+  jedi_end_offset = jedi_diagnostic.until_column + 1
+
+  codepoint_offset = ByteOffsetToCodepointOffset( line_value, byte_offset )
+
+  start_difference = codepoint_offset - jedi_start_offset
+  end_difference = codepoint_offset - ( jedi_end_offset - 1 )
+
+  if start_difference >= 0 and end_difference <= 0:
+    return 0
+
+  return min( abs( start_difference ), abs( end_difference ) )
+
+
+def _JediDiagnosticToYcmdDiagnostic( request_data, error ):
+  filepath = request_data[ 'filepath' ]
+  lines = GetFileLines( request_data, filepath )
+  start_line = lines[ error.line ]
+  start_column = CodepointOffsetToByteOffset( start_line, error.column + 1 )
+  location_start = responses.Location( error.line, start_column, filepath )
+  end_line = lines[ error.until_line ]
+  end_column = CodepointOffsetToByteOffset( end_line, error.until_column + 1 )
+  location_end = responses.Location( error.until_line, end_column, filepath )
+  location_range = responses.Range( location_start, location_end )
+  return responses.Diagnostic( [ location_range ],
+                               location_start,
+                               location_range,
+                               error.get_message(),
+                               'ERROR',
+                               [] )

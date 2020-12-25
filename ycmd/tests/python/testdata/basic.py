@@ -5,3 +5,6 @@ class Foo(object):
 
 f = Foo()
 f.a
+
+def function arg1):
+  """TODO: Docstring for function ."""
