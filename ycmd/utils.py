@@ -498,8 +498,11 @@ def ImportAndCheckCore():
   """Checks if ycm_core library is compatible and returns with an exit
   status."""
   try:
-    LoadYcmCoreDependencies()
-    ycm_core = ImportCore()
+    try:
+      ycm_core = ImportCore()
+    except ImportError:
+      LoadYcmCoreDependencies()
+      ycm_core = ImportCore()
   except ImportError as error:
     message = str( error )
     if CORE_MISSING_ERROR_REGEX.match( message ):
