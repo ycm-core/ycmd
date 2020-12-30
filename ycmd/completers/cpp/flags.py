@@ -305,7 +305,7 @@ def PrepareFlagsForClang( flags,
   vector = ycm_core.StringVector()
   for flag in flags:
     vector.append( flag )
-  return vector
+  return ycm_core.StringVector( flags )
 
 
 def _RemoveXclangFlags( flags ):

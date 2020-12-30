@@ -42,7 +42,7 @@ IdentifierCompleter::IdentifierCompleter(
 
 
 void IdentifierCompleter::AddIdentifiersToDatabase(
-  std::vector< std::string > new_candidates,
+  std::vector< std::string >& new_candidates,
   std::string& filetype,
   std::string& filepath ) {
   identifier_database_.AddIdentifiers( std::move( new_candidates ),
@@ -52,12 +52,12 @@ void IdentifierCompleter::AddIdentifiersToDatabase(
 
 
 void IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase(
-  std::vector< std::string > new_candidates,
+  std::vector< std::string >& new_candidates,
   std::string& filetype,
   std::string& filepath ) {
   identifier_database_.ClearCandidatesStoredForFile( std::string( filetype ),
                                                      std::string( filepath ) );
-  AddIdentifiersToDatabase( std::move( new_candidates ),
+  AddIdentifiersToDatabase( new_candidates,
                             filetype,
                             filepath );
 }
@@ -75,12 +75,12 @@ void IdentifierCompleter::AddIdentifiersToDatabaseFromTagFiles(
 std::vector< std::string > IdentifierCompleter::CandidatesForQuery(
   std::string&& query,
   const size_t max_candidates ) const {
-  return CandidatesForQueryAndType( std::move( query ), "", max_candidates );
+  return CandidatesForQueryAndType( query, "", max_candidates );
 }
 
 
 std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
-  std::string query,
+  std::string& query,
   const std::string &filetype,
   const size_t max_candidates ) const {
 

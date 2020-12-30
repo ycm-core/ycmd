@@ -65,11 +65,9 @@ class IdentifierCompleter( GeneralCompleter ):
     if not filetype or not filepath or not identifier:
       return
 
-    vector = ycm_core.StringVector()
-    vector.append( identifier )
     LOGGER.info( 'Adding ONE buffer identifier for file: %s', filepath )
     self._completer.AddIdentifiersToDatabase(
-      vector,
+      ycm_core.StringVector( [ identifier ] ),
       filetype,
       filepath )
 
@@ -130,25 +128,15 @@ class IdentifierCompleter( GeneralCompleter ):
 
 
   def _AddIdentifiersFromTagFiles( self, tag_files ):
-    absolute_paths_to_tag_files = ycm_core.StringVector()
-    for tag_file in self._FilterUnchangedTagFiles( tag_files ):
-      absolute_paths_to_tag_files.append( tag_file )
-
-    if not absolute_paths_to_tag_files:
-      return
-
     self._completer.AddIdentifiersToDatabaseFromTagFiles(
-      absolute_paths_to_tag_files )
+      ycm_core.StringVector(
+        self._FilterUnchangedTagFiles( tag_files ) ) )
 
 
   def _AddIdentifiersFromSyntax( self, keyword_list, filetype ):
-    keyword_vector = ycm_core.StringVector()
-    for keyword in keyword_list:
-      keyword_vector.append( keyword )
-
     filepath = SYNTAX_FILENAME + filetype
     self._completer.AddIdentifiersToDatabase(
-      keyword_vector,
+      ycm_core.StringVector( keyword_list ),
       filetype,
       filepath )
 
@@ -241,10 +229,7 @@ def _IdentifiersFromBuffer( text,
   if not collect_from_comments_and_strings:
     text = identifier_utils.RemoveIdentifierFreeText( text, filetype )
   idents = identifier_utils.ExtractIdentifiersFromText( text, filetype )
-  vector = ycm_core.StringVector()
-  for ident in idents:
-    vector.append( ident )
-  return vector
+  return ycm_core.StringVector( idents )
 
 
 def _SanitizeQuery( query ):

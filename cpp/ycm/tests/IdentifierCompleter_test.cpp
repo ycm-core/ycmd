@@ -270,10 +270,9 @@ TEST( IdentifierCompleterTest, LotOfCandidates ) {
   // Generate a lot of candidates of the form [a-z]{5} in reverse order.
   std::vector< std::string > candidates;
   for ( int i = 0; i < 2048; ++i ) {
-    std::string candidate = "";
-    int letter = i;
-    for ( int pos = 0; pos < 5; letter /= 26, ++pos ) {
-      candidate = std::string( 1, letter % 26 + 'a' ) + candidate;
+    std::string candidate;
+    for ( int pos = 0, letter = i; pos < 5; letter /= 26, ++pos ) {
+      candidate.insert( size_t{ 0 }, 1, letter % 26 + 'a' );
     }
     candidates.insert( candidates.begin(), candidate );
   }
@@ -297,7 +296,8 @@ TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
 
   completer.AddIdentifiersToDatabaseFromTagFiles( tag_files );
 
-  EXPECT_THAT( completer.CandidatesForQueryAndType( "fo", "cpp" ),
+  std::string query = "fo";
+  EXPECT_THAT( completer.CandidatesForQueryAndType( query, "cpp" ),
                ElementsAre( "foosy",
                             "fooaaa" ) );
 
@@ -307,11 +307,12 @@ TEST( IdentifierCompleterTest, TagsEndToEndWorks ) {
 // Filetype checking
 TEST( IdentifierCompleterTest, ManyCandidateSimpleFileType ) {
   IdentifierCompleter completer;
+  std::string query = "fbr";
   EXPECT_THAT( IdentifierCompleter( {
                  "foobar",
                  "foobartest",
                  "Foobartest"
-               }, "c", "foo" ).CandidatesForQueryAndType( "fbr", "c" ),
+               }, "c", "foo" ).CandidatesForQueryAndType( query, "c" ),
                WhenSorted( ElementsAre( "Foobartest",
                                         "foobar",
                                         "foobartest" ) ) );
@@ -320,11 +321,12 @@ TEST( IdentifierCompleterTest, ManyCandidateSimpleFileType ) {
 
 TEST( IdentifierCompleterTest, ManyCandidateSimpleWrongFileType ) {
   IdentifierCompleter completer;
+  std::string query = "fbr";
   EXPECT_THAT( IdentifierCompleter( {
                  "foobar",
                  "foobartest",
                  "Foobartest"
-               }, "c", "foo" ).CandidatesForQueryAndType( "fbr", "cpp" ),
+               }, "c", "foo" ).CandidatesForQueryAndType( query, "cpp" ),
                IsEmpty() );
 }
 
