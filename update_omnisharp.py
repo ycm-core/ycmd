@@ -2,32 +2,18 @@
 
 import argparse
 import contextlib
-from os import ( listdir, mkdir )
+from os import mkdir
 import os.path as p
 import shutil
-import sys
 import tempfile
 import hashlib
+import urllib.error
+import urllib.request
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 
 
-def AddRequestDependencies():
-  request_dep_root = p.abspath( p.join( DIR_OF_THIRD_PARTY,
-                                        'requests_deps' ) )
-  for path in listdir( request_dep_root ):
-    sys.path.insert( 0, p.join( request_dep_root, path ) )
-
-  sys.path.insert( 0, p.abspath( p.join( DIR_OF_THIRD_PARTY,
-                                         'requests_deps',
-                                         'urllib3',
-                                         'src' ) ) )
-
-
-AddRequestDependencies()
-
-import requests
 
 
 URL_FORMAT = {
@@ -56,11 +42,7 @@ def TemporaryDirectory():
 
 def Download( url ):
   print( 'Downloading {}'.format( url.rsplit( '/', 1 )[ -1 ] ) )
-  request = requests.get( url, stream=True )
-  request.raise_for_status()
-  content = request.content
-  request.close()
-  return content
+  return urllib.request.urlopen( url ).read()
 
 
 def ParseArguments():
@@ -90,8 +72,8 @@ def FetchAndHash( download_url, output_dir, file_name ):
       compressed_data = Download( download_url )
       with open( archive, 'wb' ) as f:
         f.write( compressed_data )
-  except requests.exceptions.HTTPError as error:
-    if error.response.status_code != 404:
+  except urllib.error.HTTPError as error:
+    if error.status != 404:
       raise
     print( 'Cannot download {}'.format( file_name ) )
     return
