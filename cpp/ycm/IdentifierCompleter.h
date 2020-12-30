@@ -44,14 +44,14 @@ public:
                        std::string&& filepath );
 
   void AddIdentifiersToDatabase(
-    std::vector< std::string > new_candidates,
+    std::vector< std::string >& new_candidates,
     std::string& filetype,
     std::string& filepath );
 
   // Same as above, but clears all identifiers stored for the file before adding
   // new identifiers.
   void ClearForFileAndAddIdentifiersToDatabase(
-    std::vector< std::string > new_candidates,
+    std::vector< std::string >& new_candidates,
     std::string& filetype,
     std::string& filepath );
 
@@ -64,7 +64,7 @@ public:
     const size_t max_candidates = 0 ) const;
 
   YCM_EXPORT std::vector< std::string > CandidatesForQueryAndType(
-    std::string query,
+    std::string& query,
     const std::string &filetype,
     const size_t max_candidates = 0 ) const;
 

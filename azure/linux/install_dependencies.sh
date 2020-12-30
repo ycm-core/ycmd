@@ -5,7 +5,6 @@ set -e
 # Compiler setup
 #
 sudo apt-get update
-sudo apt-get install libsqlite3-dev
 if [ "${YCM_COMPILER}" == "clang" ]; then
   sudo apt-get install clang-7
   sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
@@ -19,8 +18,13 @@ fi
 if [ "${YCM_CLANG_TIDY}" ]; then
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
   sudo apt-get update
-  sudo apt-get install -y clang-tidy valgrind
+  sudo apt-get install -y clang-tidy libc6-dbg build-essential
   sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
+  wget https://sourceware.org/pub/valgrind/valgrind-3.16.1.tar.bz2
+  tar xf valgrind-3.16.1.tar.bz2
+  pushd valgrind-3.16.1
+  ./configure && make -j3 && sudo make install
+  popd
 fi
 
 #
