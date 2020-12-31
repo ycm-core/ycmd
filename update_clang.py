@@ -204,20 +204,20 @@ def TemporaryDirectory( keep_temp ):
 
 def DownloadClangLicense( version, destination ):
   print( 'Downloading license...' )
-  request = urllib.request.urlopen(
-    'https://releases.llvm.org/{version}/LICENSE.TXT'.format( version=version ),
-  )
-
   file_name = os.path.join( destination, 'LICENSE.TXT' )
-  with open( file_name, 'wb' ) as f:
-    f.write( request.read() )
+  with urllib.request.urlopen(
+      f'https://releases.llvm.org/{ version }/LICENSE.TXT' ) as response:
+
+    with open( file_name, 'wb' ) as f:
+      f.write( response.read() )
 
   return file_name
 
 
 def Download( url ):
   print( 'Downloading {}'.format( url.rsplit( '/', 1 )[ -1 ] ) )
-  return urllib.request.urlopen( url ).read()
+  with urllib.request.urlopen( url ) as response:
+    return response.read()
 
 
 def ExtractTar( uncompressed_data, destination ):
