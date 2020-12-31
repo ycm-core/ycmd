@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 project( ycm_core_benchmarks )
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 3.14 )
 
 # We don't want to test the benchmark library.
 set( BENCHMARK_ENABLE_TESTING
@@ -27,20 +27,12 @@ add_subdirectory( benchmark )
 set( BENCHMARK_INCLUDE_DIRS ${benchmark_SOURCE_DIR}/include )
 set( BENCHMARK_LIBRARIES benchmark )
 
-include_directories( ${ycm_core_SOURCE_DIR}
-                     ${BENCHMARK_INCLUDE_DIRS} )
-
-file( GLOB_RECURSE SOURCES *.h *.cpp )
-
-# We don't want benchmark sources in this target.
-file( GLOB_RECURSE to_remove benchmark/*.h benchmark/*.cpp CMakeFiles/*.cpp )
-
-if( to_remove )
-  list( REMOVE_ITEM SOURCES ${to_remove} )
-endif()
+file( GLOB SOURCES *.h *.cpp )
 
 add_executable( ${PROJECT_NAME}
                 ${SOURCES} )
+
+target_include_directories( ${PROJECT_NAME} PRIVATE ${BENCHMARK_INCLUDE_DIRS} )
 
 if( MSVC )
   # Build benchmark and ycm_core_benchmarks targets in cmake ycm/benchmarks
@@ -55,5 +47,5 @@ if( MSVC )
 endif()
 
 target_link_libraries( ${PROJECT_NAME}
-                       ycm_core
-                       ${BENCHMARK_LIBRARIES} )
+                       PRIVATE ycm_core
+                       PRIVATE ${BENCHMARK_LIBRARIES} )

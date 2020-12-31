@@ -15,13 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-if ( APPLE )
-  # OSX requires CMake >= 2.8.12, see YCM issue #1439
-  cmake_minimum_required( VERSION 2.8.12 )
-else()
-  # CMake 2.8.11 is the latest available version on RHEL/CentOS 7
-  cmake_minimum_required( VERSION 2.8.11 )
-endif()
+cmake_minimum_required( VERSION 3.14 )
 
 project( YouCompleteMe )
 
@@ -97,12 +91,8 @@ endif()
 
 #############################################################################
 
-# To shut up the warning about CMake policy CMP0042
-set( CMAKE_MACOSX_RPATH ON )
-
-#############################################################################
-
-if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
+if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+     CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
   set( COMPILER_IS_CLANG true )
 
   # Linux machines don't necessarily have libc++ installed alongside clang,
@@ -127,9 +117,7 @@ endif()
 # set the visibility to hidden to achieve the same result and then manually
 # expose what we need. This results in smaller ycm_core dynamic library and thus
 # a shorter loading time and higher performance.
-if( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden" )
-endif()
+set( CMAKE_CXX_VISIBILITY_PRESET hidden )
 
 if ( DEFINED ENV{YCM_BENCHMARK} OR DEFINED ENV{YCM_TESTRUN})
   if ( MSVC )
@@ -162,12 +150,18 @@ endif()
 
 # Determining the presence of C++17 support in the compiler
 set( CPP17_AVAILABLE false )
-if ( CMAKE_COMPILER_IS_GNUCXX )
+if ( CMAKE_CXX_COMPILER_ID STREQUAL "GNU"  )
   if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8 )
     set( CPP17_AVAILABLE true )
   endif()
-elseif( COMPILER_IS_CLANG )
+elseif( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
   if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7 )
+    set( CPP17_AVAILABLE true )
+    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++17" )
+    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
+  endif()
+elseif( CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
+  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11 )
     set( CPP17_AVAILABLE true )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++17" )
     set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
@@ -196,16 +190,10 @@ endif()
 
 #############################################################################
 
-if ( CPP17_AVAILABLE )
-  # Cygwin needs its hand held a bit; see issue #473
-  if ( CYGWIN AND CMAKE_COMPILER_IS_GNUCXX )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17" )
-  elseif( NOT MSVC )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17" )
-  elseif( MSVC )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17" )
-  endif()
-else()
+set( CMAKE_CXX_STANDARD 17 )
+set( CMAKE_CXX_STANDARD_REQUIRED ON )
+set( CMAKE_CXX_EXTENSIONS OFF )
+if ( NOT CPP17_AVAILABLE )
   # Platform-specific advice goes here. In particular, we have plenty of users
   # in corporate environments on RHEL/CentOS, where the default system compiler
   # is too old.
@@ -232,8 +220,7 @@ else()
   message( FATAL_ERROR "Your C++ compiler does NOT fully support C++17." )
 endif()
 
-set( Python_ADDITIONAL_VERSIONS 3.10 3.9 3.8 3.7 3.6 )
-find_package( PythonLibs 3.6 REQUIRED )  # 3.6 is ONLY the minimum
+find_package( Python3 3.6...3.10 REQUIRED COMPONENTS Interpreter Development )
 
 #############################################################################
 

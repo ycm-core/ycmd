@@ -16,7 +16,7 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 project( ycm_core_tests )
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 3.14 )
 
 # The gtest library triggers warnings, so we turn them off; it's not up to us to
 # fix gtest warnings, it's up to upstream.
@@ -47,40 +47,28 @@ else()
   set( GMOCK_LIBRARIES gmock )
 endif()
 
-include_directories(
-  ${ycm_core_SOURCE_DIR}
-  ${ycm_core_SOURCE_DIR}/../whereami
-  )
+file( GLOB SOURCES *.h *.cpp )
 
-include_directories(
-  SYSTEM
-  ${GMOCK_INCLUDE_DIRS}
-  ${GTEST_INCLUDE_DIRS}
-  )
+if ( USE_CLANG_COMPLETER )
+  file( GLOB_RECURSE add_clang ClangCompleter/*.h ClangCompleter/*.cpp )
 
-link_directories( ${PYTHON_LIBRARIES} )
-
-file( GLOB_RECURSE SOURCES *.h *.cpp )
-
-# We don't want gmock sources in this target
-file( GLOB_RECURSE to_remove gmock/*.h gmock/*.cpp CMakeFiles/*.cpp
-  testdata/*.cpp testdata/*.h )
-
-if( to_remove )
-  list( REMOVE_ITEM SOURCES ${to_remove} )
-endif()
-
-if ( NOT USE_CLANG_COMPLETER )
-  file( GLOB_RECURSE to_remove_clang ClangCompleter/*.h ClangCompleter/*.cpp )
-
-  if( to_remove_clang )
-    list( REMOVE_ITEM SOURCES ${to_remove_clang} )
+  if( add_clang )
+    list( APPEND SOURCES ${add_clang} )
   endif()
 endif()
 
-add_executable( ${PROJECT_NAME}
-                ${SOURCES}
-              )
+add_executable( ${PROJECT_NAME} ${SOURCES} )
+
+target_include_directories(
+  ${PROJECT_NAME}
+  PRIVATE ${ycm_core_SOURCE_DIR}/../whereami )
+
+target_include_directories(
+  ${PROJECT_NAME}
+  SYSTEM
+  PRIVATE ${GMOCK_INCLUDE_DIRS}
+  PRIVATE ${GTEST_INCLUDE_DIRS}
+  )
 
 if ( MSVC )
   # This is needed to compile tests with the gtest shared library
@@ -88,11 +76,6 @@ if ( MSVC )
                          PROPERTIES
                          COMPILE_DEFINITIONS
                          "GTEST_LINKED_AS_SHARED_LIBRARY=1" )
-
-  # Fix gtest build on MSVC 11.  See: http://stackoverflow.com/a/8274747
-  if ( MSVC_VERSION EQUAL 1700 )
-    add_definitions( /D _VARIADIC_MAX=10 )
-  endif()
 
   # Build gmock and ycm_core_tests targets in cmake ycm/tests folder
   foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
@@ -105,9 +88,9 @@ if ( MSVC )
 endif()
 
 target_link_libraries( ${PROJECT_NAME}
-                       ycm_core
-                       ${GTEST_LIBRARIES}
-                       ${GMOCK_LIBRARIES} )
+                       PRIVATE ycm_core
+                       PRIVATE ${GTEST_LIBRARIES}
+                       PRIVATE ${GMOCK_LIBRARIES} )
 
 if ( NOT CMAKE_GENERATOR_IS_XCODE )
   # There is no portable way of discovering the absolute path of the executable,
