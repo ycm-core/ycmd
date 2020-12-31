@@ -76,6 +76,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                                              'GoTo',
                                              'GoToDeclaration',
                                              'GoToDefinition',
+                                             'GoToDocumentOutline',
                                              'GoToImprecise',
                                              'GoToInclude',
                                              'GoToReferences',
@@ -179,7 +180,8 @@ def RunGoToTest_all( app, folder, command, test ):
         LocationMatcher(
           PathToTestFile( folder, os.path.normpath( location[ 0 ] ) ),
           location[ 1 ],
-          location[ 2 ]
+          location[ 2 ],
+          **( {} if len( location ) < 4 else location[ 3 ] )
         ) for location in response
       ] )
     }
@@ -189,7 +191,8 @@ def RunGoToTest_all( app, folder, command, test ):
       'data': LocationMatcher(
         PathToTestFile( folder, os.path.normpath( response[ 0 ] ) ),
         response[ 1 ],
-        response[ 2 ]
+        response[ 2 ],
+        **( {} if len( response ) < 4 else response[ 3 ] )
       )
     }
   else:
@@ -321,6 +324,25 @@ def Subcommands_GoToReferences_test( app, test ):
 @SharedYcmd
 def Subcommands_GoToSymbol_test( app, test ):
   RunGoToTest_all( app, '', 'GoToSymbol', test )
+
+
+@pytest.mark.parametrize( 'test', [
+  # In same file - multiple results
+  { 'req': ( 'goto.cc', 1, 1 ),
+    'res': [
+      ( 'goto.cc', 2, 1, { 'description': "Namespace: Local" } ),
+      ( 'goto.cc', 14, 1, { 'description': "Function: Local::out_of_line" } ),
+      ( 'goto.cc', 6, 5, { 'description': "Function: in_line" } ),
+      ( 'goto.cc', 11, 5, { 'description': 'Function: out_of_line' } ),
+      ( 'goto.cc', 19, 1, { 'description': "Function: test" } ),
+      ( 'goto.cc', 21, 1, { 'description': "Function: test" } ),
+      ( 'goto.cc', 30, 1, { 'description': "Function: unicode" } ),
+      ( 'goto.cc', 4, 5, { 'description': "Variable: x" } ),
+    ] },
+] )
+@SharedYcmd
+def Subcommands_GoToDocumentOutline_test( app, test ):
+  RunGoToTest_all( app, '', 'GoToDocumentOutline', test )
 
 
 def RunGetSemanticTest( app,
