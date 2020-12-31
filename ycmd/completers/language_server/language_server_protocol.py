@@ -304,6 +304,13 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
           ],
         },
       },
+      'documentSymbol': {
+        'symbolKind': {
+          'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
+        },
+        'hierarchicalDocumentSymbolSupport': False,
+        'labelSupport': False,
+      },
       'hover': {
         'contentFormat': [
           'plaintext',
@@ -515,6 +522,14 @@ def Rename( request_id, request_data, new_name ):
 def WorkspaceSymbol( request_id, query ):
   return BuildRequest( request_id, 'workspace/symbol', {
     'query': query,
+  } )
+
+
+def DocumentSymbol( request_id, request_data ):
+  return BuildRequest( request_id, 'textDocument/documentSymbol', {
+    'textDocument': {
+      'uri': FilePathToUri( request_data[ 'filepath' ] ),
+    },
   } )
 
 

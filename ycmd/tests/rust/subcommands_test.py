@@ -97,6 +97,7 @@ def Subcommands_DefinedSubcommands_test( app ):
                                     'GoTo',
                                     'GoToDeclaration',
                                     'GoToDefinition',
+                                    'GoToDocumentOutline',
                                     'GoToImplementation',
                                     'GoToReferences',
                                     'GoToSymbol',
