@@ -99,8 +99,8 @@ HANGUL_LVT_COUNT = HANGUL_L_COUNT * HANGUL_VT_COUNT
 
 
 def Download( url ):
-  request = urllib.request.urlopen( url )
-  return request.read().splitlines()
+  with urllib.request.urlopen( url ) as response:
+    return response.read().splitlines()
 
 
 # Encode a Unicode code point in UTF-8 binary form.

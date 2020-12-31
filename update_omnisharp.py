@@ -42,7 +42,8 @@ def TemporaryDirectory():
 
 def Download( url ):
   print( 'Downloading {}'.format( url.rsplit( '/', 1 )[ -1 ] ) )
-  return urllib.request.urlopen( url ).read()
+  with urllib.request.urlopen( url ) as response:
+    return response.read()
 
 
 def ParseArguments():
