@@ -61,19 +61,13 @@ YCM_EXPORT inline std::string Lowercase( std::string_view text ) {
 std::vector< std::string > ReadUtf8File( const fs::path &filepath );
 
 
-template <class Container, class Key>
+template <class Container, class Key, typename Value>
 typename Container::mapped_type &
 GetValueElseInsert( Container &container,
-                    const Key &key,
-                    typename Container::mapped_type &&value ) {
-  return container.insert(
-    typename Container::value_type( key, std::move( value ) ) ).first->second;
-}
-
-
-template <class Container, class Key>
-bool ContainsKey( Container &container, const Key &key ) {
-  return container.find( key ) != container.end();
+                    Key&& key,
+                    Value&& value ) {
+  return container.try_emplace(
+    std::forward< Key >( key ), std::forward< Value >( value ) ).first->second;
 }
 
 

@@ -87,12 +87,12 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
 
   {
     std::lock_guard locker( filetype_candidate_map_mutex_ );
-    for ( const auto& path_and_candidates : *it->second ) {
+    auto& paths_to_candidates = *it->second;
+    for ( const auto& path_and_candidates : paths_to_candidates ) {
       for ( const Candidate * candidate : *path_and_candidates.second ) {
-        if ( ContainsKey( seen_candidates, candidate ) ) {
+        if ( !seen_candidates.insert( candidate ).second ) {
           continue;
         }
-        seen_candidates.insert( candidate );
 
         if ( candidate->IsEmpty() ||
              !candidate->ContainsBytes( query_object ) ) {
