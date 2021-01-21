@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.14 )
+cmake_minimum_required( VERSION 3.10 )
 
 project( ycm_core )
 
@@ -295,6 +295,12 @@ try_compile( STD_FS_NEEDS_CXXFS ${CMAKE_CURRENT_BINARY_DIR}
 	     CXX_STANDARD_REQUIRED TRUE
 	     CXX_EXTENSIONS FALSE
              LINK_LIBRARIES c++fs )
+try_compile( STD_FS_CLANG_FS ${CMAKE_CURRENT_BINARY_DIR}
+             SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+	     CXX_STANDARD 17
+         COMPILE_DEFINITIONS -stdlib=libc++
+         CXX_EXTENSIONS TRUE
+         LINK_LIBRARIES c++ c++abi)
 file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp )
 
 if( ${STD_FS_NEEDS_STDCXXFS} )
@@ -303,6 +309,9 @@ elseif( ${STD_FS_NEEDS_CXXFS} )
   set( STD_FS_LIB c++fs )
 elseif( ${STD_FS_NO_LIB_NEEDED} )
   set( STD_FS_LIB "" )
+elseif( ${STD_FS_CLANG_FS})
+    message(" I am in bitches!!!")
+    set(STD_FS_LIB c++ c++abi)
 else()
   message( FATAL_ERROR "Unknown compiler - C++17 filesystem library missing" )
 endif()

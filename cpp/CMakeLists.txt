@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required( VERSION 3.14 )
+cmake_minimum_required( VERSION 3.10 )
 
 project( YouCompleteMe )
 
 # Get the core version
 file( STRINGS "../CORE_VERSION" YCMD_CORE_VERSION )
 add_definitions( -DYCMD_CORE_VERSION=${YCMD_CORE_VERSION} )
+
+if ( CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    add_compile_options("-stdlib=libc++")
+endif()
 
 option( UNIVERSAL "Build universal mac binary" OFF )
 
@@ -220,7 +224,10 @@ if ( NOT CPP17_AVAILABLE )
   message( FATAL_ERROR "Your C++ compiler does NOT fully support C++17." )
 endif()
 
-find_package( Python3 3.6...3.10 REQUIRED COMPONENTS Interpreter Development )
+find_package( PythonLibs 3.6...3.10 REQUIRED COMPONENTS Interpreter Development )
+set(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
+set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
+set(Python3_EXECUTABLE /usr/bin/python3)
 
 #############################################################################
 
