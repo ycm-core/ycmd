@@ -310,10 +310,21 @@ elseif( ${STD_FS_NEEDS_CXXFS} )
 elseif( ${STD_FS_NO_LIB_NEEDED} )
   set( STD_FS_LIB "" )
 elseif( ${STD_FS_CLANG_FS})
-    message(" I am in bitches!!!")
     set(STD_FS_LIB c++ c++abi)
 else()
-  message( FATAL_ERROR "Unknown compiler - C++17 filesystem library missing" )
+    file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp "#include <experimental/filesystem>\nint main( int argc, char ** argv ) {\n  std::experimental::filesystem::path p( argv[ 0 ] );\n  return p.string().length();\n}" )
+    try_compile(STD_OLD_GCC_7_UBUNTU_1804 ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+	     CXX_STANDARD 17
+         CXX_EXTENSIONS TRUE
+         LINK_LIBRARIES stdc++fs
+        )
+    if(${STD_OLD_GCC_7_UBUNTU_1804})
+        set(STD_FS_LIB stdc++fs)
+        add_definitions(-DSTD_OLD_GCC_7_UBUNTU_1804)
+    else()
+      message( FATAL_ERROR "Unknown compiler - C++17 filesystem library missing" )
+    endif()
 endif()
 
 #############################################################################

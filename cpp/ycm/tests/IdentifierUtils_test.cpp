@@ -21,11 +21,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <filesystem>
 
 namespace YouCompleteMe {
 
-namespace fs = std::filesystem;
 using ::testing::ElementsAre;
 using ::testing::ContainerEq;
 using ::testing::IsEmpty;
@@ -38,7 +36,11 @@ TEST( IdentifierUtilsTest, ExtractIdentifiersFromTagsFileWorks ) {
   fs::path root = fs::current_path().root_path();
   fs::path testfile = PathToTestFile( "basic.tags" );
   /* VS2017 returns C:\DIRECT~1\ paths without fs::weakly_canonical() */
+#ifdef STD_OLD_GCC_7_UBUNTU_1804
+  fs::path testfile_parent = fs::canonical( testfile.parent_path() );
+#else
   fs::path testfile_parent = fs::weakly_canonical( testfile.parent_path() );
+#endif
 
   EXPECT_THAT( ExtractIdentifiersFromTagsFile( testfile ),
       UnorderedElementsAre(

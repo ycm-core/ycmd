@@ -22,14 +22,19 @@
 #include "CodePoint.h"
 #include "Word.h"
 
+#ifdef STD_OLD_GCC_7_UBUNTU_1804
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
 #include <filesystem>
+namespace fs = std::filesystem;
+#endif
 #include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
 using ::testing::PrintToString;
 
-namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 

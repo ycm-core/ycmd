@@ -20,14 +20,19 @@
 
 #include <algorithm>
 #include <cmath>
+#ifdef STD_OLD_GCC_7_UBUNTU_1804
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
 #include <filesystem>
+namespace fs = std::filesystem;
+#endif
 #include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 
-namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 

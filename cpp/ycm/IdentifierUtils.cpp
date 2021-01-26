@@ -18,13 +18,10 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
-#include <filesystem>
 #include <string_view>
 #include <unordered_map>
 
 namespace YouCompleteMe {
-
-namespace fs = std::filesystem;
 
 namespace {
 
@@ -189,7 +186,12 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     }();
     std::string_view identifier(&line[ 0 ], id_end );
     fs::path path( line.begin() + path_begin, line.begin() + path_end );
+
+#ifdef STD_OLD_GCC_7_UBUNTU_1804
+    path = fs::canonical( path_to_tag_file.parent_path() / path );
+#else
     path = fs::weakly_canonical( path_to_tag_file.parent_path() / path );
+#endif
     std::string_view language( &line[ lang_begin ], lang_end - lang_begin );
     std::string filetype( FindWithDefault( LANG_TO_FILETYPE,
                                            language,

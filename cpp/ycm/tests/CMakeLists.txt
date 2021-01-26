@@ -16,7 +16,7 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 project( ycm_core_tests )
-cmake_minimum_required( VERSION 3.14 )
+cmake_minimum_required( VERSION 3.10 )
 
 # The gtest library triggers warnings, so we turn them off; it's not up to us to
 # fix gtest warnings, it's up to upstream.

@@ -155,7 +155,7 @@ endif()
 # Determining the presence of C++17 support in the compiler
 set( CPP17_AVAILABLE false )
 if ( CMAKE_CXX_COMPILER_ID STREQUAL "GNU"  )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8 )
+  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7 )
     set( CPP17_AVAILABLE true )
   endif()
 elseif( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )

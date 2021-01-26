@@ -18,13 +18,10 @@
 #include "Utils.h"
 
 #include <cmath>
-#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <string>
 #include <vector>
-
-namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 

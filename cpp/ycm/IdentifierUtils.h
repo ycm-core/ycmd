@@ -20,12 +20,18 @@
 
 #include "IdentifierDatabase.h"
 
+#ifdef STD_OLD_GCC_7_UBUNTU_1804
+#include <experimental/filesystem>
+namespace fs= std::experimental::filesystem;
+#else
 #include <filesystem>
+namespace fs= std::filesystem;
+#endif
 
 namespace YouCompleteMe {
 
 YCM_EXPORT FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
-  const std::filesystem::path &path_to_tag_file );
+  const fs::path &path_to_tag_file );
 
 } // namespace YouCompleteMe
 
