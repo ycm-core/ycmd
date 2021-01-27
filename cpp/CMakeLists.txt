@@ -23,10 +23,6 @@ project( YouCompleteMe )
 file( STRINGS "../CORE_VERSION" YCMD_CORE_VERSION )
 add_definitions( -DYCMD_CORE_VERSION=${YCMD_CORE_VERSION} )
 
-if ( CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    add_compile_options("-stdlib=libc++")
-endif()
-
 option( UNIVERSAL "Build universal mac binary" OFF )
 
 if ( CMAKE_GENERATOR STREQUAL Xcode )
