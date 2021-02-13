@@ -61,9 +61,11 @@ pybind11::list FilterAndSortCandidates(
   std::string& query,
   const size_t max_candidates ) {
 
-  size_t num_candidates = PyList_GET_SIZE( candidates.ptr() );
+  auto num_candidates = size_t( PyList_GET_SIZE( candidates.ptr() ) );
   std::vector< const Candidate * > repository_candidates =
-    CandidatesFromObjectList( candidates, std::move( candidate_property ), num_candidates );
+    CandidatesFromObjectList( candidates,
+                              std::move( candidate_property ),
+                              num_candidates );
 
   std::vector< ResultAnd< size_t > > result_and_objects;
   {
@@ -89,8 +91,9 @@ pybind11::list FilterAndSortCandidates(
 
   pybind11::list filtered_candidates( result_and_objects.size() );
   for ( size_t i = 0; i < result_and_objects.size(); ++i ) {
-    auto new_candidate = 
-        PyList_GET_ITEM( candidates.ptr(), result_and_objects[ i ].extra_object_ );
+    auto new_candidate = PyList_GET_ITEM(
+        candidates.ptr(),
+        result_and_objects[ i ].extra_object_ );
     Py_INCREF( new_candidate );
     PyList_SET_ITEM( filtered_candidates.ptr(), i, new_candidate );
   }
@@ -107,13 +110,13 @@ std::string GetUtf8String( pybind11::handle value ) {
     ssize_t size = 0;
     const char* buffer = nullptr;
     buffer = PyUnicode_AsUTF8AndSize( value.ptr(), &size );
-    return { buffer, (size_t)size };
+    return { buffer, static_cast< size_t >( size ) };
   }
   if ( PyBytes_CheckExact( value.ptr() ) ) {
     ssize_t size = 0;
     char* buffer = nullptr;
     PyBytes_AsStringAndSize( value.ptr(), &buffer, &size );
-    return { buffer, (size_t)size };
+    return { buffer, static_cast< size_t >( size ) };
   }
 
   // Otherwise go through Python's built-in `str`.
@@ -121,7 +124,7 @@ std::string GetUtf8String( pybind11::handle value ) {
   ssize_t size = 0;
   const char* buffer =
       PyUnicode_AsUTF8AndSize( keep_alive.ptr(), &size );
-  return { buffer, (size_t)size };
+  return { buffer, static_cast< size_t >( size ) };
 }
 
 } // namespace YouCompleteMe
