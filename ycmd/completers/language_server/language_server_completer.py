@@ -3193,9 +3193,12 @@ class LanguageServerCompletionsCache( CompletionsCache ):
     return request_data[ 'query' ].startswith( self._request_data[ 'query' ] )
 
 
-  def GetCompletionsIfCacheValid( self, request_data ):
+  def GetCompletionsIfCacheValid( self,
+                                  request_data,
+                                  **kwargs ):
     with self._access_lock:
-      if ( not self._is_incomplete and
+      if ( ( not self._is_incomplete
+             or kwargs.get( 'ignore_incomplete' ) ) and
            ( self._use_start_column or self._IsQueryPrefix( request_data ) ) ):
         return super().GetCompletionsIfCacheValidNoLock( request_data )
       return None
