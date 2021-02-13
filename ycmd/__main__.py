@@ -152,7 +152,8 @@ def SetupOptions( options_file ):
 
 
 def CloseStdin():
-  sys.stdin.close()
+  if sys.stdin is not None:
+    sys.stdin.close()
   os.close( 0 )
 
 
