@@ -2550,10 +2550,13 @@ class LanguageServerCompleter( Completer ):
     new_name = args[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    response = self.GetConnection().GetResponse(
-      request_id,
-      lsp.Rename( request_id, request_data, new_name ),
-      REQUEST_TIMEOUT_COMMAND )
+    try:
+      response = self.GetConnection().GetResponse(
+        request_id,
+        lsp.Rename( request_id, request_data, new_name ),
+        REQUEST_TIMEOUT_COMMAND )
+    except ResponseFailedException:
+      raise RuntimeError( 'Cannot rename the symbol under cursor.' )
 
     fixit = WorkspaceEditToFixIt( request_data, response[ 'result' ] )
     if not fixit:

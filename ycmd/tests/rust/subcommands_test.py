@@ -161,16 +161,21 @@ def Subcommands_Format_WholeFile_test( app ):
       'data': has_entries( {
         'fixits': contains_exactly( has_entries( {
           'chunks': contains_exactly(
-            # Let's just rewrite the whole file...
-            ChunkMatcher( "mod test;\n\nuse test::*;\n\nstruct Earth {}"
-                          "\nstruct Mars {}\ntrait Atmosphere {}\nimpl "
-                          "Atmosphere for Earth {}\nimpl Atmosphere for "
-                          "Mars {}\n\nfn main() {\n    create_universe();"
-                          "\n    let builder = Builder {};\n    builder."
-                          "build_\n}\n\nfn format_test() {\n    let a: "
-                          "i32 = 5;\n}\n",
-                          LocationMatcher( filepath,  1, 1 ),
-                          LocationMatcher( filepath, 23, 1 ) ),
+            ChunkMatcher( "",
+                          LocationMatcher( filepath, 17,  4 ),
+                          LocationMatcher( filepath, 17, 16 ) ),
+            ChunkMatcher( "",
+                          LocationMatcher( filepath, 18,  1 ),
+                          LocationMatcher( filepath, 19,  1 ) ),
+            ChunkMatcher( "",
+                          LocationMatcher( filepath, 19,  8 ),
+                          LocationMatcher( filepath, 20,  8 ) ),
+            ChunkMatcher( "",
+                          LocationMatcher( filepath, 20, 10 ),
+                          LocationMatcher( filepath, 20, 11 ) ),
+            ChunkMatcher( "",
+                          LocationMatcher( filepath, 20, 13 ),
+                          LocationMatcher( filepath, 21,  1 ) ),
           )
         } ) )
       } )
@@ -439,11 +444,11 @@ def Subcommands_RefactorRename_Works_test( app ):
           'text': '',
           'chunks': contains_exactly(
             ChunkMatcher( 'update_universe',
-                          LocationMatcher( test_filepath,  2,  8 ),
-                          LocationMatcher( test_filepath,  2, 23 ) ),
-            ChunkMatcher( 'update_universe',
                           LocationMatcher( main_filepath, 12,  5 ),
                           LocationMatcher( main_filepath, 12, 20 ) ),
+            ChunkMatcher( 'update_universe',
+                          LocationMatcher( test_filepath,  2,  8 ),
+                          LocationMatcher( test_filepath,  2, 23 ) ),
           )
         } ) )
       } )
