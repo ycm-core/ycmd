@@ -17,6 +17,7 @@
 
 from waitress.server import TcpWSGIServer
 import select
+import sys
 
 
 class StoppableWSGIServer( TcpWSGIServer ):
@@ -32,7 +33,9 @@ class StoppableWSGIServer( TcpWSGIServer ):
 
     # Message for compatibility with clients who expect the output from
     # waitress.serve here
-    print( f'serving on http://{ self.effective_host }:{self.effective_port}' )
+    if sys.stdin is not None:
+      print( f'serving on http://{ self.effective_host }:'
+             f'{ self.effective_port }' )
 
     try:
       self.run()
