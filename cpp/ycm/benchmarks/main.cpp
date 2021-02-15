@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <benchmark/benchmark_api.h>
+#include <benchmark/benchmark.h>
 #include <pybind11/embed.h>
 
 int main( int argc, char** argv ) {

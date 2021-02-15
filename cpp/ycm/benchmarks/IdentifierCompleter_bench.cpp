@@ -21,7 +21,7 @@
 #include "CodePointRepository.h"
 #include "IdentifierCompleter.h"
 
-#include <benchmark/benchmark_api.h>
+#include <benchmark/benchmark.h>
 
 namespace YouCompleteMe {
 
@@ -42,7 +42,7 @@ BENCHMARK_DEFINE_F( IdentifierCompleterFixture, CandidatesWithCommonPrefix )(
     GenerateCandidatesWithCommonPrefix( "a_A_a_", state.range( 0 ) );
   IdentifierCompleter completer( std::move( candidates ) );
 
-  while ( state.KeepRunning() ) {
+  for ( auto _ : state ) {
     completer.CandidatesForQuery( "aA", state.range( 1 ) );
   }
 

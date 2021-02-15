@@ -31,20 +31,25 @@ endif()
 option( USE_SYSTEM_GMOCK "Set to ON to use the system gmock/gtest libraries" OFF )
 
 if ( USE_SYSTEM_GMOCK )
-  set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}" )
   find_package( GTest REQUIRED )
-  find_package( GMock REQUIRED )
 else()
   if ( WIN32 )
     # Override BUILD_SHARED_LIBS option in gmock and gtest CMakeLists
     set( BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (DLLs)." )
   endif()
 
+  include( FetchContent )
+  FetchContent_Declare(
+    gmock
+    URL https://github.com/google/googletest/archive/release-1.10.0.tar.gz
+    URL_HASH SHA256=9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gmock
+  )
+  FetchContent_GetProperties( gmock )
+  if ( NOT benchmark_POPULATED )
+    FetchContent_Populate( gmock )
+  endif()
   add_subdirectory( gmock )
-  set( GTEST_INCLUDE_DIRS ${gtest_SOURCE_DIR} ${gtest_SOURCE_DIR}/include )
-  set( GMOCK_INCLUDE_DIRS ${gmock_SOURCE_DIR} ${gmock_SOURCE_DIR}/include )
-  set( GTEST_LIBRARIES "" )
-  set( GMOCK_LIBRARIES gmock )
 endif()
 
 file( GLOB SOURCES *.h *.cpp )
@@ -61,36 +66,25 @@ add_executable( ${PROJECT_NAME} ${SOURCES} )
 
 target_include_directories(
   ${PROJECT_NAME}
-  PRIVATE ${ycm_core_SOURCE_DIR}/../whereami )
-
-target_include_directories(
-  ${PROJECT_NAME}
   SYSTEM
-  PRIVATE ${GMOCK_INCLUDE_DIRS}
-  PRIVATE ${GTEST_INCLUDE_DIRS}
+  PRIVATE ${ycm_core_SOURCE_DIR}/../whereami
   )
 
 if ( MSVC )
-  # This is needed to compile tests with the gtest shared library
-  set_target_properties( ${PROJECT_NAME}
-                         PROPERTIES
-                         COMPILE_DEFINITIONS
-                         "GTEST_LINKED_AS_SHARED_LIBRARY=1" )
-
-  # Build gmock and ycm_core_tests targets in cmake ycm/tests folder
+  # Build ycm_core_tests and dependencies targets in cmake ycm/tests folder
   foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
-    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    set_target_properties( ${GMOCK_LIBRARIES} PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR} )
-    set_target_properties( ${PROJECT_NAME} PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR} )
+    foreach( TARGET_LIBRARY gtest gmock ${PROJECT_NAME} )
+      string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+      set_target_properties( ${TARGET_LIBRARY} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR} )
+    endforeach()
   endforeach()
 endif()
 
 target_link_libraries( ${PROJECT_NAME}
                        PRIVATE ycm_core
-                       PRIVATE ${GTEST_LIBRARIES}
-                       PRIVATE ${GMOCK_LIBRARIES} )
+                       PRIVATE gtest
+                       PRIVATE gmock )
 
 if ( NOT CMAKE_GENERATOR_IS_XCODE )
   # There is no portable way of discovering the absolute path of the executable,

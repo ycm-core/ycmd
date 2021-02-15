@@ -102,3 +102,6 @@ third_party/generic_server/package-lock.json
 third_party/go
 
 third_party/regex-build
+
+cpp/ycm/benchmarks/benchmark/
+cpp/ycm/tests/gmock/
