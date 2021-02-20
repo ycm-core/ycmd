@@ -342,12 +342,9 @@ def SetUpJavaCompleter():
   LOMBOR_DIR = p.join( DIR_OF_THIRD_PARTY, 'lombok', )
   CACHE = p.join( LOMBOR_DIR, 'cache' )
 
-  LOMBOK_JAR_URL_FORMAT = ( 'https://projectlombok.org/downloads/'
-                            '{lombok_jar_name}' )
-  LOMBOK_JAR_NAME_FORMAT = 'lombok-{lombok_version}.jar'
+  jar_name = f'lombok-{ LOMBOK_VERSION }.jar'
+  url = f'https://projectlombok.org/downloads/{ jar_name }'
 
-  jar_name = LOMBOK_JAR_NAME_FORMAT.format( lombok_version = LOMBOK_VERSION )
-  url = LOMBOK_JAR_URL_FORMAT.format( lombok_jar_name = jar_name )
   file_name = p.join( CACHE, jar_name )
 
   if not p.exists( CACHE ):

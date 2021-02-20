@@ -27,7 +27,6 @@ from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_protocol as lsp
 from ycmd.completers.language_server import language_server_completer
 from ycmd.utils import LOGGER
-from ycmd import extra_conf_store
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
 
@@ -430,12 +429,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def _GetJvmArgs( self, request_data ):
-    module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
-    if module:
-      settings = self.GetSettings( module, request_data )
-      return ( settings.get( 'server', {} ) ).get( 'jvm_args', [] )
-
-    return []
+    return self._settings.get( 'server', {} ).get( 'jvm_args', [] )
 
 
   def StartServer( self,
