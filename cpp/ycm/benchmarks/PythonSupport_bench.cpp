@@ -21,8 +21,7 @@
 #include "CodePointRepository.h"
 #include "PythonSupport.h"
 
-#include <benchmark/benchmark_api.h>
-#include <string>
+#include <benchmark/benchmark.h>
 
 namespace YouCompleteMe {
 
@@ -52,7 +51,7 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
   }
 
   pybind11::str candidate_property("insertion_text");
-  while ( state.KeepRunning() ) {
+  for ( auto _ : state ) {
     state.PauseTiming();
     CharacterRepository::Instance().ClearCharacters();
     CandidateRepository::Instance().ClearCandidates();
@@ -87,7 +86,7 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
   FilterAndSortCandidates( candidates, candidate_property, query,
                            state.range( 1 ) );
 
-  while ( state.KeepRunning() ) {
+  for ( auto _ : state ) {
     std::string query = "aA";
     FilterAndSortCandidates( candidates, candidate_property, query,
                              state.range( 1 ) );

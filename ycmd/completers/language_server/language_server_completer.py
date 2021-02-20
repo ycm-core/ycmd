@@ -2550,10 +2550,13 @@ class LanguageServerCompleter( Completer ):
     new_name = args[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    response = self.GetConnection().GetResponse(
-      request_id,
-      lsp.Rename( request_id, request_data, new_name ),
-      REQUEST_TIMEOUT_COMMAND )
+    try:
+      response = self.GetConnection().GetResponse(
+        request_id,
+        lsp.Rename( request_id, request_data, new_name ),
+        REQUEST_TIMEOUT_COMMAND )
+    except ResponseFailedException:
+      raise RuntimeError( 'Cannot rename the symbol under cursor.' )
 
     fixit = WorkspaceEditToFixIt( request_data, response[ 'result' ] )
     if not fixit:
@@ -3193,9 +3196,12 @@ class LanguageServerCompletionsCache( CompletionsCache ):
     return request_data[ 'query' ].startswith( self._request_data[ 'query' ] )
 
 
-  def GetCompletionsIfCacheValid( self, request_data ):
+  def GetCompletionsIfCacheValid( self,
+                                  request_data,
+                                  **kwargs ):
     with self._access_lock:
-      if ( not self._is_incomplete and
+      if ( ( not self._is_incomplete
+             or kwargs.get( 'ignore_incomplete' ) ) and
            ( self._use_start_column or self._IsQueryPrefix( request_data ) ) ):
         return super().GetCompletionsIfCacheValidNoLock( request_data )
       return None
