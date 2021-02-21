@@ -77,13 +77,25 @@ bool ContainsKey( Container &container, const Key &key ) {
 }
 
 
+template<typename C, typename = void>
+struct is_associative : std::false_type {};
+
+template<typename C>
+struct is_associative<C, std::void_t<typename C::mapped_type>> : std::true_type {};
+
 template <class Container, class Key, class Ret>
 Ret
 FindWithDefault( Container &container,
                  const Key &key,
                  Ret&& value ) {
-  static_assert( std::is_constructible_v< Ret, typename Container::mapped_type > );
-  typename Container::const_iterator it = container.find( key );
+  typename Container::const_iterator it = [ &key ]( auto&& c ) {
+    if constexpr ( is_associative<Container>::value ) {
+      return c.find( key );
+    } else {
+      return std::find_if( c.begin(), c.end(), [ &key ]( auto&& p ) {
+          return p.first == key; } );
+    }
+  }( container );
   if ( it != container.end() ) {
     return Ret{ it->second };
   }

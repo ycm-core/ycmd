@@ -37,7 +37,7 @@
 namespace py = pybind11;
 using namespace YouCompleteMe;
 
-bool HasClangSupport() {
+static bool HasClangSupport() {
 #ifdef USE_CLANG_COMPLETER
   return true;
 #else
@@ -45,14 +45,14 @@ bool HasClangSupport() {
 #endif // USE_CLANG_COMPLETER
 }
 
-PYBIND11_MAKE_OPAQUE( std::vector< std::string > );
+PYBIND11_MAKE_OPAQUE( std::vector< std::string > )
 #ifdef USE_CLANG_COMPLETER
-PYBIND11_MAKE_OPAQUE( std::vector< UnsavedFile > );
-PYBIND11_MAKE_OPAQUE( std::vector< Range > );
-PYBIND11_MAKE_OPAQUE( std::vector< CompletionData > );
-PYBIND11_MAKE_OPAQUE( std::vector< Diagnostic > );
-PYBIND11_MAKE_OPAQUE( std::vector< FixIt > );
-PYBIND11_MAKE_OPAQUE( std::vector< FixItChunk > );
+PYBIND11_MAKE_OPAQUE( std::vector< UnsavedFile > )
+PYBIND11_MAKE_OPAQUE( std::vector< Range > )
+PYBIND11_MAKE_OPAQUE( std::vector< CompletionData > )
+PYBIND11_MAKE_OPAQUE( std::vector< Diagnostic > )
+PYBIND11_MAKE_OPAQUE( std::vector< FixIt > )
+PYBIND11_MAKE_OPAQUE( std::vector< FixItChunk > )
 #endif // USE_CLANG_COMPLETER
 
 PYBIND11_MODULE( ycm_core, mod )

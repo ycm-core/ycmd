@@ -18,9 +18,11 @@
 #include "IdentifierUtils.h"
 #include "Utils.h"
 
+#include <array>
 #include <filesystem>
+#include <functional>
 #include <string_view>
-#include <unordered_map>
+#include <utility>
 
 namespace YouCompleteMe {
 
@@ -28,119 +30,23 @@ namespace fs = std::filesystem;
 
 namespace {
 
-// Only used as the equality comparer for the below unordered_map which stores
-// const char* pointers and not std::string but needs to hash based on string
-// values and not pointer values.
-struct StringEqualityComparer {
-  bool operator()( std::string_view a, std::string_view b ) const {
-    return a == b;
-  }
-};
-
 // List of languages Universal Ctags supports:
 //   ctags --list-languages
 // To map a language name to a filetype, see this file:
 //   :e $VIMRUNTIME/filetype.vim
-// This is a map of const char* and not std::string to prevent issues with
-// static initialization.
-const std::unordered_map < std::string_view, std::string_view
-      > LANG_TO_FILETYPE = {
-        { "Ada"                 , "ada"                 },
-        { "AnsiblePlaybook"     , "ansibleplaybook"     },
-        { "Ant"                 , "ant"                 },
-        { "Asm"                 , "asm"                 },
-        { "Asp"                 , "asp"                 },
-        { "Autoconf"            , "autoconf"            },
-        { "Automake"            , "automake"            },
-        { "Awk"                 , "awk"                 },
-        { "Basic"               , "basic"               },
-        { "BETA"                , "beta"                },
-        { "C"                   , "c"                   },
-        { "C#"                  , "cs"                  },
-        { "C++"                 , "cpp"                 },
-        { "Clojure"             , "clojure"             },
-        { "Cobol"               , "cobol"               },
-        { "CPreProcessor"       , "cpreprocessor"       },
-        { "CSS"                 , "css"                 },
-        { "ctags"               , "ctags"               },
-        { "CUDA"                , "cuda"                },
-        { "D"                   , "d"                   },
-        { "DBusIntrospect"      , "dbusintrospect"      },
-        { "Diff"                , "diff"                },
-        { "DosBatch"            , "dosbatch"            },
-        { "DTD"                 , "dtd"                 },
-        { "DTS"                 , "dts"                 },
-        { "Eiffel"              , "eiffel"              },
-        { "elm"                 , "elm"                 },
-        { "Erlang"              , "erlang"              },
-        { "Falcon"              , "falcon"              },
-        { "Flex"                , "flex"                },
-        { "Fortran"             , "fortran"             },
-        { "gdbinit"             , "gdb"                 },
-        { "Glade"               , "glade"               },
-        { "Go"                  , "go"                  },
-        { "HTML"                , "html"                },
-        { "Iniconf"             , "iniconf"             },
-        { "ITcl"                , "itcl"                },
-        { "Java"                , "java"                },
-        { "JavaProperties"      , "jproperties"         },
-        { "JavaScript"          , "javascript"          },
-        { "JSON"                , "json"                },
-        { "LdScript"            , "ldscript"            },
-        { "Lisp"                , "lisp"                },
-        { "Lua"                 , "lua"                 },
-        { "M4"                  , "m4"                  },
-        { "Make"                , "make"                },
-        { "man"                 , "man"                 },
-        { "MatLab"              , "matlab"              },
-        { "Maven2"              , "maven2"              },
-        { "Myrddin"             , "myrddin"             },
-        { "ObjectiveC"          , "objc"                },
-        { "OCaml"               , "ocaml"               },
-        { "Pascal"              , "pascal"              },
-        { "passwd"              , "passwd"              },
-        { "Perl"                , "perl"                },
-        { "Perl6"               , "perl6"               },
-        { "PHP"                 , "php"                 },
-        { "PlistXML"            , "plistxml"            },
-        { "pod"                 , "pod"                 },
-        { "Protobuf"            , "protobuf"            },
-        { "PuppetManifest"      , "puppet"              },
-        { "Python"              , "python"              },
-        { "PythonLoggingConfig" , "pythonloggingconfig" },
-        { "QemuHX"              , "qemuhx"              },
-        { "R"                   , "r"                   },
-        { "RelaxNG"             , "rng"                 },
-        { "reStructuredText"    , "rst"                 },
-        { "REXX"                , "rexx"                },
-        { "Robot"               , "robot"               },
-        { "RpmSpec"             , "spec"                },
-        { "RSpec"               , "rspec"               },
-        { "Ruby"                , "ruby"                },
-        { "Rust"                , "rust"                },
-        { "Scheme"              , "scheme"              },
-        { "Sh"                  , "sh"                  },
-        { "SLang"               , "slang"               },
-        { "SML"                 , "sml"                 },
-        { "SQL"                 , "sql"                 },
-        { "SVG"                 , "svg"                 },
-        { "SystemdUnit"         , "systemd"             },
-        { "SystemVerilog"       , "systemverilog"       },
-        { "Tcl"                 , "tcl"                 },
-        { "TclOO"               , "tcloo"               },
-        { "Tex"                 , "tex"                 },
-        { "TTCN"                , "ttcn"                },
-        { "Vera"                , "vera"                },
-        { "Verilog"             , "verilog"             },
-        { "VHDL"                , "vhdl"                },
-        { "Vim"                 , "vim"                 },
-        { "WindRes"             , "windres"             },
-        { "XSLT"                , "xslt"                },
-        { "YACC"                , "yacc"                },
-        { "Yaml"                , "yaml"                },
-        { "YumRepo"             , "yumrepo"             },
-        { "Zephir"              , "zephir"              }
-      };
+using namespace std::literals;
+constexpr std::array LANG_TO_FILETYPE = {
+  std::pair{ "C#"sv               , "cs"sv          },
+  std::pair{ "C++"sv              , "cpp"sv         },
+  std::pair{ "gdbinit"sv          , "gdb"sv         },
+  std::pair{ "JavaProperties"sv   , "jproperties"sv },
+  std::pair{ "ObjectiveC"sv       , "objc"sv        },
+  std::pair{ "PuppetManifest"sv   , "puppet"sv      },
+  std::pair{ "RelaxNG"sv          , "rng"sv         },
+  std::pair{ "reStructuredText"sv , "rst"sv         },
+  std::pair{ "RpmSpec"sv          , "spec"sv        },
+  std::pair{ "SystemdUnit"sv      , "systemd"sv     },
+};
 
 }  // unnamed namespace
 
@@ -159,38 +65,41 @@ FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
     }
   }();
 
-  for (auto&& line : lines) {
+  for ( auto&& line : lines ) {
     // Identifier name is from the start of the line to the first \t.
-    const size_t id_end = line.find( '\t' );
-    if ( id_end == std::string::npos ) {
+    const auto id_end = std::find( line.cbegin(), line.cend(), '\t' );
+    if ( id_end == line.cend() ) {
       continue;
     }
     // File path the identifier is in is the second field.
-    const size_t path_begin = line.find_first_not_of( '\t', id_end + 1 );
-    if ( path_begin == std::string::npos ) {
+    const auto path_begin = std::find_if( id_end + 1, line.cend(), [](char c) {
+      return c != '\t';
+    } );
+    if ( path_begin == line.cend() ) {
       continue;
     }
-    const size_t path_end = line.find( '\t', path_begin + 1 );
-    if ( path_end == std::string::npos ) {
+    const auto path_end = std::find( path_begin + 1, line.cend(), '\t' );
+    if ( path_end == line.cend() ) {
       continue;
     }
     // IdentifierCompleter depends on the "language:Foo" field.
-    // strlen( "language:" ) == 9
-    const size_t lang_begin = line.find( "language:", path_end + 1 ) + 9;
-    if ( lang_begin == std::string::npos + 9 ) {
+    const std::string_view lang_str = "language:";
+    auto searcher = std::default_searcher( lang_str.cbegin(), lang_str.cend() );
+    const auto lang_begin = searcher( path_end + 1, line.cend() ).second;
+    if ( lang_begin == line.cend() ) {
       continue;
     }
-    const size_t lang_end = [ &line, lang_begin ] {
-      auto end = line.find( '\t', lang_begin + 1 );
-      if (end == std::string::npos) {
-        end = line.back() == '\r' ? line.size() - 1 : line.size();
+    const auto lang_end = [ &line, lang_begin ] {
+      auto end = std::find( lang_begin + 1, line.cend(), '\t' );
+      if (end == line.cend() ) {
+        end = line.back() == '\r' ? line.cend() - 1 : line.cend();
       }
       return end;
     }();
-    std::string_view identifier(&line[ 0 ], id_end );
-    fs::path path( line.begin() + path_begin, line.begin() + path_end );
+    std::string_view identifier( line.data(), id_end - line.cbegin() );
+    fs::path path( path_begin, path_end );
     path = fs::weakly_canonical( path_to_tag_file.parent_path() / path );
-    std::string_view language( &line[ lang_begin ], lang_end - lang_begin );
+    std::string_view language( &*lang_begin, lang_end - lang_begin );
     std::string filetype( FindWithDefault( LANG_TO_FILETYPE,
                                            language,
                                            Lowercase( language ) ) );

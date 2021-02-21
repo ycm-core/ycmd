@@ -57,7 +57,7 @@ RawCodePoint FindCodePoint( std::string_view text ) {
 
   auto it = std::lower_bound( original.begin(), original.end(), text );
   if ( it != original.end() && text == *it ) {
-    size_t index = std::distance( original.begin(), it );
+    auto index = static_cast< size_t >( std::distance( original.begin(), it ) );
     return { *it,
              code_points.normal[ index ],
              code_points.folded_case[ index ],
@@ -111,6 +111,6 @@ CodePointSequence BreakIntoCodePoints( std::string_view text ) {
 
 const char* UnicodeDecodeError::what() const noexcept {
   return std::runtime_error::what();
-};
+}
 
 } // namespace YouCompleteMe
