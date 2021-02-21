@@ -7,6 +7,7 @@ import glob
 import subprocess
 import os.path as p
 import sys
+import urllib.request
 
 BASE_PYTEST_ARGS = [ '-v', '--color=yes' ]
 
@@ -31,6 +32,14 @@ os.environ[ 'PYTHONPATH' ] = (
     os.pathsep.join( python_path ) +
     os.pathsep +
     p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )
+
+LOMBOK_VERSION = '1.18.16'
+
+
+def DownloadFileTo( download_url, file_path ):
+  with urllib.request.urlopen( download_url ) as response:
+    with open( file_path, 'wb' ) as package_file:
+      package_file.write( response.read() )
 
 
 def OnWindows():
@@ -329,6 +338,23 @@ def SetUpGenericLSPCompleter():
   os.chdir( old_cwd )
 
 
+def SetUpJavaCompleter():
+  LOMBOR_DIR = p.join( DIR_OF_THIRD_PARTY, 'lombok', )
+  CACHE = p.join( LOMBOR_DIR, 'cache' )
+
+  jar_name = f'lombok-{ LOMBOK_VERSION }.jar'
+  url = f'https://projectlombok.org/downloads/{ jar_name }'
+
+  file_name = p.join( CACHE, jar_name )
+
+  if not p.exists( CACHE ):
+    os.makedirs( CACHE )
+
+  if not p.exists( file_name ):
+    print( f"Downloading lombok from { url }..." )
+    DownloadFileTo( url, file_name )
+
+
 def Main():
   parsed_args, pytests_args = ParseArguments()
   if parsed_args.dump_path:
@@ -338,6 +364,7 @@ def Main():
   print( 'Running tests on Python', platform.python_version() )
   if not parsed_args.skip_build:
     SetUpGenericLSPCompleter()
+    SetUpJavaCompleter()
   if not parsed_args.no_flake8:
     RunFlake8()
   BuildYcmdLibs( parsed_args )

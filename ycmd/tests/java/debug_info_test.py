@@ -20,7 +20,9 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entry,
                        has_entries,
-                       instance_of )
+                       has_items,
+                       instance_of,
+                       starts_with )
 
 from unittest.mock import patch
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
@@ -180,6 +182,34 @@ def DebugInfo_ExtraConf_SettingsValid_test( app ):
       'servers': contains_exactly( has_entries( {
         'name': 'jdt.ls',
         'is_running': instance_of( bool ) } ) ) } ) ) )
+
+
+@IsolatedYcmd( {
+  'extra_conf_globlist': PathToTestFile( 'lombok_project', '*' )
+} )
+def DebugInfo_JvmArgs_test( app ):
+  StartJavaCompleterServerInDirectory(
+    app, PathToTestFile( 'lombok_project', 'src' ) )
+
+  filepath = PathToTestFile( 'lombok_project',
+                             'src',
+                             'main',
+                             'java',
+                             'com',
+                             'ycmd',
+                             'App.java' )
+
+  request_data = BuildRequest( filepath = filepath,
+                               filetype = 'java' )
+
+  assert_that(
+    app.post_json( '/debug_info', request_data ).json,
+    has_entry( 'completer', has_entries( {
+      'servers': contains_exactly( has_entries( {
+        'executable': has_items( starts_with( '-javaagent:' ) ),
+      } ) )
+    } ) )
+  )
 
 
 def Dummy_test():

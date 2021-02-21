@@ -428,6 +428,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     super()._Reset()
 
 
+  def _GetJvmArgs( self, request_data ):
+    return self._settings.get( 'server', {} ).get( 'jvm_args', [] )
+
 
   def StartServer( self,
                    request_data,
@@ -462,8 +465,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
             self._workspace_root_path,
             wipe_config )
 
-        self._command = [
-          PATH_TO_JAVA,
+        self._command = [ PATH_TO_JAVA ] + self._GetJvmArgs( request_data ) + [
           '-Dfile.encoding=UTF-8',
           '-Declipse.application=org.eclipse.jdt.ls.core.id1',
           '-Dosgi.bundles.defaultStartLevel=4',
