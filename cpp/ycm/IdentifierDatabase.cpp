@@ -28,6 +28,22 @@
 
 namespace YouCompleteMe {
 
+namespace {
+struct CandidateHasher {
+       size_t operator() (const Candidate* c) const noexcept{
+               static absl::Hash< std::string > h;
+               return h(c->Text());
+       }
+};
+struct CandidateCompareEq {
+       bool operator() (const Candidate* a, const Candidate* b) const noexcept{
+               return a->Text() == b->Text();
+       }
+};
+} // namespace
+
+
+
 IdentifierDatabase::IdentifierDatabase()
   : candidate_repository_( Repository< Candidate >::Instance() ) {
 }
@@ -79,25 +95,27 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   }
   Word query_object( std::move( query ) );
 
-  absl::flat_hash_set< const Candidate * > seen_candidates;
+  absl::flat_hash_set< const Candidate *,
+                       CandidateHasher,
+                       CandidateCompareEq > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredElements() );
   std::vector< Result > results;
 
   {
     std::lock_guard locker( filetype_candidate_map_mutex_ );
-    auto& paths_to_candidates = *it->second;
+    auto& paths_to_candidates = it->second;
     for ( const auto& [ _, candidates ] : paths_to_candidates ) {
-      for ( const Candidate * candidate : *candidates ) {
-        if ( !seen_candidates.insert( candidate ).second ) {
+      for ( const Candidate& candidate : candidates ) {
+        if ( !seen_candidates.insert( &candidate ).second ) {
           continue;
         }
 
-        if ( candidate->IsEmpty() ||
-             !candidate->ContainsBytes( query_object ) ) {
+        if ( candidate.IsEmpty() ||
+             !candidate.ContainsBytes( query_object ) ) {
           continue;
         }
 
-        Result result = candidate->QueryMatchResult( query_object );
+        Result result = candidate.QueryMatchResult( query_object );
 
         if ( result.IsSubsequence() ) {
           results.push_back( result );
@@ -113,24 +131,11 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
 
 // WARNING: You need to hold the filetype_candidate_map_mutex_ before calling
 // this function and while using the returned set.
-std::set< const Candidate * > &IdentifierDatabase::GetCandidateSet(
+std::vector< Candidate > &IdentifierDatabase::GetCandidateSet(
   std::string&& filetype,
   std::string&& filepath ) {
-  std::unique_ptr< FilepathToCandidates > &path_to_candidates =
-    filetype_candidate_map_[ std::move( filetype ) ];
-
-  if ( !path_to_candidates ) {
-    path_to_candidates = std::make_unique< FilepathToCandidates >();
-  }
-
-  std::unique_ptr< std::set< const Candidate * > > &candidates =
-    ( *path_to_candidates )[ std::move( filepath ) ];
-
-  if ( !candidates ) {
-    candidates = std::make_unique< std::set< const Candidate * > >();
-  }
-
-  return *candidates;
+  return filetype_candidate_map_[ std::move( filetype ) ]
+                                [ std::move( filepath ) ];
 }
 
 
@@ -140,15 +145,20 @@ void IdentifierDatabase::AddIdentifiersNoLock(
   std::vector< std::string >&& new_candidates,
   std::string&& filetype,
   std::string&& filepath ) {
-  std::set< const Candidate *> &candidates =
+  std::vector< Candidate > &candidates =
     GetCandidateSet( std::move( filetype ), std::move( filepath ) );
 
-  std::vector< const Candidate * > repository_candidates =
-    candidate_repository_.GetElements(
-      std::move( new_candidates ) );
-
-  candidates.insert( repository_candidates.begin(),
-                     repository_candidates.end() );
+  for ( auto&& candidate_name : new_candidates ) {
+    auto it = std::find_if( candidates.begin(),
+                            candidates.end(),
+                            [ &candidate_name ]( const Candidate& c ) {
+                                return c.Text() == candidate_name;
+                            } );
+    if ( it == candidates.end() ) {
+      candidates.emplace_back( std::string( candidate_name ) );
+    }
+  }
+  candidate_repository_.GetCandidatesForStrings( std::move( new_candidates ) );
 }
 
 

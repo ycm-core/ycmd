@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "Candidate.h"
 #include "IdentifierCompleter.h"
 #include "Utils.h"
 #include "TestUtils.h"
