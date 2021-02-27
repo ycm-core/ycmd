@@ -89,12 +89,12 @@ std::vector< std::string > IdentifierCompleter::CandidatesForQueryAndType(
                                                  filetype,
                                                  max_candidates );
 
-  std::vector< std::string > candidates;
-  candidates.reserve( results.size() );
+  std::vector< std::string > candidates( results.size() );
 
-  for ( const Result & result : results ) {
-    candidates.emplace_back( result.Text() );
-  }
+  std::transform( results.begin(),
+                  results.end(),
+                  candidates.begin(),
+                  []( const Result& result ) { return result.Text(); } );
 
   return candidates;
 }
