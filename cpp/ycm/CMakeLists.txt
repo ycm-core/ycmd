@@ -443,3 +443,10 @@ if( USE_CLANG_TIDY )
 else()
   message( STATUS "NOT using clang-tidy for static analysis." )
 endif()
+
+###############################################################################
+
+if ( LTOAvailable )
+  message( STATUS "Link-time optimization enabled" )
+  set_target_properties( ycm_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
