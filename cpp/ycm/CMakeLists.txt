@@ -446,7 +446,9 @@ endif()
 
 ###############################################################################
 
-if ( LTOAvailable )
+if ( ${CMAKE_BUILD_TYPE} STREQUAL "Release" )
   message( STATUS "Link-time optimization enabled" )
   set_target_properties( ycm_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+  message( STATUS "Link-time optimization disabled" )
 endif()
