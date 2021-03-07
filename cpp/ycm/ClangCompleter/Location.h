@@ -29,8 +29,7 @@ struct Location {
   // Creates an invalid location
   Location()
     : line_number_( 0 ),
-      column_number_( 0 ),
-      filename_( "" ) {
+      column_number_( 0 ) {
   }
 
   Location( const std::string &filename,
