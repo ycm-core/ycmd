@@ -27,9 +27,7 @@ namespace YouCompleteMe {
 
 struct Location {
   // Creates an invalid location
-  Location()
-    : line_number_( 0 ),
-      column_number_( 0 ) {
+  Location() {
   }
 
   Location( const std::string &filename,
@@ -61,8 +59,8 @@ struct Location {
     return !filename_.empty();
   }
 
-  unsigned int line_number_;
-  unsigned int column_number_;
+  unsigned int line_number_{ 0 };
+  unsigned int column_number_{ 0 };
 
   // The full, absolute path
   std::string filename_;
