@@ -21,7 +21,7 @@
 #include <string>
 
 struct UnsavedFile {
-  UnsavedFile() {}
+  UnsavedFile() = default;
 
   std::string filename_;
   std::string contents_;
