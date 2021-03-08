@@ -27,8 +27,7 @@ namespace YouCompleteMe {
 
 struct Location {
   // Creates an invalid location
-  Location() {
-  }
+  Location() = default;
 
   Location( const std::string &filename,
             unsigned int line,
