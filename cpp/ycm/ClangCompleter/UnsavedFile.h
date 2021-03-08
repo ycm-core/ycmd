@@ -21,11 +21,11 @@
 #include <string>
 
 struct UnsavedFile {
-  UnsavedFile() : length_( 0 ) {}
+  UnsavedFile() {}
 
   std::string filename_;
   std::string contents_;
-  unsigned long length_;
+  unsigned long length_ { 0 };
 };
 
 
