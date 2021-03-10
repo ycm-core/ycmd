@@ -25,7 +25,6 @@
         "request": "launch",
 
         "cwd": "${workspaceRoot}",
-        "stopOnEntry": true,
         "console": "integratedTerminal",
         "justMyCode": true,
 
