@@ -66,11 +66,16 @@ protected:
 
 
 TEST_P( NormalizationTest, NormalizationFormDecompositionIsConform ) {
-  EXPECT_THAT( Character( tuple_.source ).Normal(), Equals( tuple_.nfd  ) );
-  EXPECT_THAT( Character( tuple_.nfc    ).Normal(), Equals( tuple_.nfd  ) );
-  EXPECT_THAT( Character( tuple_.nfd    ).Normal(), Equals( tuple_.nfd  ) );
-  EXPECT_THAT( Character( tuple_.nfkc   ).Normal(), Equals( tuple_.nfkd ) );
-  EXPECT_THAT( Character( tuple_.nfkd   ).Normal(), Equals( tuple_.nfkd ) );
+  EXPECT_THAT( Character( NormalizeInput( tuple_.source ) ).Normal(),
+               Equals( tuple_.nfd  ) );
+  EXPECT_THAT( Character( NormalizeInput( tuple_.nfc    ) ).Normal(),
+               Equals( tuple_.nfd  ) );
+  EXPECT_THAT( Character( NormalizeInput( tuple_.nfd    ) ).Normal(),
+               Equals( tuple_.nfd  ) );
+  EXPECT_THAT( Character( NormalizeInput( tuple_.nfkc   ) ).Normal(),
+               Equals( tuple_.nfkd ) );
+  EXPECT_THAT( Character( NormalizeInput( tuple_.nfkd   ) ).Normal(),
+               Equals( tuple_.nfkd ) );
 }
 
 
