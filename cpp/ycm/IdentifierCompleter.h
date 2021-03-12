@@ -43,8 +43,8 @@ public:
                        std::string&& filetype,
                        std::string&& filepath );
 
-  void AddIdentifiersToDatabase(
-    std::vector< std::string >& new_candidates,
+  void AddSingleIdentifierToDatabase(
+    std::string& new_candidate,
     std::string& filetype,
     std::string& filepath );
 

@@ -60,7 +60,9 @@ def CppBindings_IdentifierCompleter_test():
   identifiers.append( 'foo' )
   identifiers.append( 'bar' )
   identifiers.append( 'baz' )
-  identifier_completer.AddIdentifiersToDatabase( identifiers, 'foo', 'file' )
+  identifier_completer.ClearForFileAndAddIdentifiersToDatabase( identifiers,
+                                                                'foo',
+                                                                'file' )
   del identifiers
   query_fo_10 = identifier_completer.CandidatesForQueryAndType(
                                        'fo', 'foo', 10 )

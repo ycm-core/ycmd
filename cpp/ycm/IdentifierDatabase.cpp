@@ -30,15 +30,15 @@ namespace YouCompleteMe {
 
 namespace {
 struct CandidateHasher {
-       size_t operator() (const Candidate* c) const noexcept{
-               static absl::Hash< std::string > h;
-               return h(c->Text());
-       }
+  size_t operator() ( const Candidate* c ) const noexcept {
+    static absl::Hash< std::string > h;
+    return h(c->Text());
+  }
 };
 struct CandidateCompareEq {
-       bool operator() (const Candidate* a, const Candidate* b) const noexcept{
-               return a->Text() == b->Text();
-       }
+  bool operator() ( const Candidate* a, const Candidate* b ) const noexcept {
+    return a->Text() == b->Text();
+  }
 };
 } // namespace
 
@@ -49,34 +49,49 @@ IdentifierDatabase::IdentifierDatabase()
 }
 
 
-void IdentifierDatabase::AddIdentifiers(
+void IdentifierDatabase::RecreateIdentifiers(
   FiletypeIdentifierMap&& filetype_identifier_map ) {
   std::lock_guard locker( filetype_candidate_map_mutex_ );
 
   for ( auto&& [ filetype, paths_to_candidates ] : filetype_identifier_map ) {
     for ( auto&& [ filepath, identifiers ] : paths_to_candidates ) {
-      AddIdentifiersNoLock( std::move( identifiers ),
-                            std::string( filetype ),
-                            std::string( filepath ) );
+      RecreateIdentifiersNoLock( std::move( identifiers ),
+                                 std::string( filetype ),
+                                 std::string( filepath ) );
     }
   }
 }
 
 
-void IdentifierDatabase::AddIdentifiers(
+void IdentifierDatabase::AddSingleIdentifier(
+  std::string&& new_candidate,
+  std::string&& filetype,
+  std::string&& filepath ) {
+  std::lock_guard locker( filetype_candidate_map_mutex_ );
+  std::vector< std::string > candidate_vector( 1 );
+  auto candidate_pointer = candidate_repository_.GetElements(
+         { new_candidate } )[ 0 ];
+  auto& current_identifier_set = GetCandidateSet( std::move( filetype ),
+                                                  std::move( filepath ) );
+  auto it = std::find_if( current_identifier_set.begin(),
+                          current_identifier_set.end(),
+                          [ candidate_pointer ]( const Candidate& c ) {
+                                return c.Text() == candidate_pointer->Text();
+                          } );
+  if ( it == current_identifier_set.end() ) {
+    current_identifier_set.push_back( candidate_pointer->clone() );
+  }
+}
+
+
+void IdentifierDatabase::RecreateIdentifiers(
   std::vector< std::string >&& new_candidates,
   std::string&& filetype,
   std::string&& filepath ) {
   std::lock_guard locker( filetype_candidate_map_mutex_ );
-  AddIdentifiersNoLock( std::move( new_candidates ), std::move( filetype ), std::move( filepath ) );
-}
-
-
-void IdentifierDatabase::ClearCandidatesStoredForFile(
-  std::string&& filetype,
-  std::string&& filepath ) {
-  std::lock_guard locker( filetype_candidate_map_mutex_ );
-  GetCandidateSet( std::move( filetype ), std::move( filepath ) ).clear();
+  RecreateIdentifiersNoLock( std::move( new_candidates ),
+                             std::move( filetype ),
+                             std::move( filepath ) );
 }
 
 
@@ -141,25 +156,23 @@ std::vector< Candidate > &IdentifierDatabase::GetCandidateSet(
 
 // WARNING: You need to hold the filetype_candidate_map_mutex_ before calling
 // this function and while using the returned set.
-void IdentifierDatabase::AddIdentifiersNoLock(
+void IdentifierDatabase::RecreateIdentifiersNoLock(
   std::vector< std::string >&& new_candidates,
   std::string&& filetype,
   std::string&& filepath ) {
-  std::vector< Candidate > &candidates =
-    GetCandidateSet( std::move( filetype ), std::move( filepath ) );
 
-  for ( auto&& candidate_name : new_candidates ) {
-    auto it = std::find_if( candidates.begin(),
-                            candidates.end(),
-                            [ &candidate_name ]( const Candidate& c ) {
-                                return c.Text() == candidate_name;
-                            } );
-    if ( it == candidates.end() ) {
-      candidates.emplace_back( std::string( candidate_name ) );
-    }
-  }
-  candidate_repository_.GetCandidatesForStrings( std::move( new_candidates ) );
+  auto& current_identifier_set = GetCandidateSet( std::move( filetype ),
+                                                  std::move( filepath ) );
+  auto candidate_pointers = candidate_repository_.GetElements(
+                  std::move( new_candidates ) );
+  current_identifier_set.clear();
+  current_identifier_set.reserve( candidate_pointers.size() );
+  std::transform( candidate_pointers.begin(),
+                  candidate_pointers.end(),
+                  std::back_inserter( current_identifier_set ),
+                  []( const Candidate* candidate_ptr ) {
+                    return candidate_ptr->clone();
+                  } );
 }
-
 
 } // namespace YouCompleteMe
