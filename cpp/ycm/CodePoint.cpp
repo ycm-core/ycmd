@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CodePoint.h"
-#include "CodePointRepository.h"
+#include "Repository.h"
 
 #include <algorithm>
 #include <array>
@@ -105,7 +105,7 @@ CodePointSequence BreakIntoCodePoints( std::string_view text ) {
     iter += length;
   }
 
-  return CodePointRepository::Instance().GetCodePoints( code_points );
+  return Repository< CodePoint >::Instance().GetElements( std::move( code_points ) );
 }
 
 

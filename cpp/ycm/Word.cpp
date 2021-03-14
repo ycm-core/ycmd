@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "CharacterRepository.h"
+#include "Repository.h"
 #include "CodePoint.h"
 #include "Word.h"
 
@@ -272,7 +272,7 @@ std::vector< std::string > BreakCodePointsIntoCharacters(
 void Word::BreakIntoCharacters() {
   const CodePointSequence &code_points = BreakIntoCodePoints( text_ );
 
-  characters_ = CharacterRepository::Instance().GetCharacters(
+  characters_ = Repository< Character >::Instance().GetElements(
     BreakCodePointsIntoCharacters( code_points ) );
 }
 

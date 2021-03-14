@@ -17,7 +17,6 @@
 
 #include "ClangCompleter.h"
 #include "Candidate.h"
-#include "CandidateRepository.h"
 #include "ClangUtils.h"
 #include "CompletionData.h"
 #include "Result.h"

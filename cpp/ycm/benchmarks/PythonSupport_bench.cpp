@@ -16,9 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BenchUtils.h"
-#include "CandidateRepository.h"
-#include "CharacterRepository.h"
-#include "CodePointRepository.h"
+#include "Repository.h"
 #include "PythonSupport.h"
 
 #include <benchmark/benchmark.h>
@@ -28,9 +26,9 @@ namespace YouCompleteMe {
 class PythonSupportFixture : public benchmark::Fixture {
 public:
   void SetUp( const benchmark::State& ) {
-    CodePointRepository::Instance().ClearCodePoints();
-    CharacterRepository::Instance().ClearCharacters();
-    CandidateRepository::Instance().ClearCandidates();
+    Repository< CodePoint >::Instance().ClearElements();
+    Repository< Character >::Instance().ClearElements();
+    Repository< Candidate >::Instance().ClearElements();
   }
 };
 
@@ -53,8 +51,8 @@ BENCHMARK_DEFINE_F( PythonSupportFixture,
   pybind11::str candidate_property("insertion_text");
   for ( auto _ : state ) {
     state.PauseTiming();
-    CharacterRepository::Instance().ClearCharacters();
-    CandidateRepository::Instance().ClearCandidates();
+    Repository< Character >::Instance().ClearElements();
+    Repository< Candidate >::Instance().ClearElements();
     std::string query = "aA";
     state.ResumeTiming();
     FilterAndSortCandidates( candidates, candidate_property, query,

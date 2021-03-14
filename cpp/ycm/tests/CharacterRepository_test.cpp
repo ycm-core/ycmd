@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Character.h"
-#include "CharacterRepository.h"
+#include "Repository.h"
 #include "TestUtils.h"
 
 #include <gtest/gtest.h>
@@ -30,24 +30,24 @@ namespace YouCompleteMe {
 class CharacterRepositoryTest : public ::testing::Test {
 protected:
   CharacterRepositoryTest()
-    : repo_( CharacterRepository::Instance() ) {
+    : repo_( Repository< Character >::Instance() ) {
   }
 
   virtual void SetUp() {
-    repo_.ClearCharacters();
+    repo_.ClearElements();
   }
 
-  CharacterRepository &repo_;
+  Repository< Character > &repo_;
 };
 
 
 TEST_F( CharacterRepositoryTest, GetCharacters ) {
-  CharacterSequence character_objects = repo_.GetCharacters( {
+  CharacterSequence character_objects = repo_.GetElements( {
     NormalizeInput( "α" ),
     NormalizeInput( "ω" )
   } );
 
-  EXPECT_THAT( repo_.NumStoredCharacters(), 2 );
+  EXPECT_THAT( repo_.NumStoredElements(), 2 );
   EXPECT_THAT( character_objects, UnorderedElementsAre(
     Pointee( IsCharacterWithProperties< CharacterTuple >(
       { "α", "α", "α", "Α", true, true, false, false } ) ),
