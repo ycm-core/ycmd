@@ -176,7 +176,25 @@ def Settings( **kwargs ):
 
   if language == 'python':
     return {
-      'interpreter_path': PathToPythonUsedDuringBuild()
+      'interpreter_path': PathToPythonUsedDuringBuild(),
+      'ls': {
+        'python': {
+          'analysis': {
+            'extraPaths': [
+              p.join( DIR_OF_THIS_SCRIPT ),
+              p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
+              p.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
+              p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
+              p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
+              p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
+              p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ),
+              p.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
+              p.join( DIR_OF_THIRD_PARTY, 'waitress' )
+            ],
+            'useLibraryCodeForTypes': True
+          }
+        }
+      }
     }
 
   return {}
@@ -185,15 +203,16 @@ def Settings( **kwargs ):
 def PythonSysPath( **kwargs ):
   sys_path = kwargs[ 'sys_path' ]
 
-  interpreter_path = kwargs[ 'interpreter_path' ]
-
   sys_path[ 0:0 ] = [ p.join( DIR_OF_THIS_SCRIPT ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
                       p.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
                       p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
                       p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
-                      p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ),
+                      p.join( DIR_OF_WATCHDOG_DEPS,
+                              'watchdog',
+                              'build',
+                              'lib3' ),
                       p.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
                       p.join( DIR_OF_THIRD_PARTY, 'waitress' ) ]
 

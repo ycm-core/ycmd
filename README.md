@@ -328,7 +328,8 @@ Or, to use an unused  local port, set `port` to `*` and use `${port}` in the
 When plugging in a completer in this way, the `kwargs[ 'language' ]` will be set
 to the value of the `name` key, i.e. `gopls` in the above example.
 
-LSP completers currently supported without `language_server`:
+A number of LSP completers are currently supported without `language_server`,
+usch as:
 
 - Java
 - Rust
@@ -341,6 +342,9 @@ One can also override the root directory, with `project_directory`.
 def Settings( **kwargs ):
   return { 'project_directory': 'src/' } # The path may be absolute as well.
 ```
+
+Note: If an LSP based completer is configured for a language that's supported
+"built-in", it overrides the built-in support.
 
 ##### C-family settings
 

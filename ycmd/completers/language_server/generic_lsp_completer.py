@@ -22,12 +22,16 @@ from ycmd.completers.language_server import language_server_completer
 
 class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options, server_settings ):
+    utils.LOGGER.info( "Initializing generic LSP completer with: %s",
+                       server_settings )
+
     self._name = server_settings[ 'name' ]
     self._supported_filetypes = server_settings[ 'filetypes' ]
     self._project_root_files = server_settings.get( 'project_root_files', [] )
     self._capabilities = server_settings.get( 'capabilities', {} )
 
     self._command_line = server_settings.get( 'cmdline' )
+
     self._port = server_settings.get( 'port' )
     if self._port:
       connection_type = 'tcp'
@@ -37,9 +41,18 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
       connection_type = 'stdio'
 
     if self._command_line:
-      self._command_line[ 0 ] = utils.FindExecutable(
-        self._command_line[ 0 ] )
+      # We modify this, so take a copy
+      self._command_line = list( self._command_line )
+      cmd = utils.FindExecutable( self._command_line[ 0 ] )
 
+      if cmd is None:
+        utils.LOGGER.warn( "Unable to find any executable with the path %s. "
+                           "Cannot use %s completer.",
+                           self._command_line[ 0 ],
+                           self._name )
+        raise RuntimeError( f"Invalid cmdline: { str( self._command_line ) }" )
+
+      self._command_line[ 0 ] = cmd
       for idx in range( len( self._command_line ) ):
         self._command_line[ idx ] = string.Template(
           self._command_line[ idx ] ).safe_substitute( {
