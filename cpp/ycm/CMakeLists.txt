@@ -280,20 +280,20 @@ endif()
 file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp "#include <filesystem>\nint main( int argc, char ** argv ) {\n  std::filesystem::path p( argv[ 0 ] );\n  return p.string().length();\n}" )
 try_compile( STD_FS_NO_LIB_NEEDED ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
-	     CXX_STANDARD 17
-	     CXX_STANDARD_REQUIRED TRUE
-	     CXX_EXTENSIONS FALSE )
+             CXX_STANDARD 17
+             CXX_STANDARD_REQUIRED TRUE
+             CXX_EXTENSIONS FALSE )
 try_compile( STD_FS_NEEDS_STDCXXFS ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
-	     CXX_STANDARD 17
-	     CXX_STANDARD_REQUIRED TRUE
-	     CXX_EXTENSIONS FALSE
+             CXX_STANDARD 17
+             CXX_STANDARD_REQUIRED TRUE
+             CXX_EXTENSIONS FALSE
              LINK_LIBRARIES stdc++fs )
 try_compile( STD_FS_NEEDS_CXXFS ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
-	     CXX_STANDARD 17
-	     CXX_STANDARD_REQUIRED TRUE
-	     CXX_EXTENSIONS FALSE
+             CXX_STANDARD 17
+             CXX_STANDARD_REQUIRED TRUE
+             CXX_EXTENSIONS FALSE
              LINK_LIBRARIES c++fs )
 file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp )
 
@@ -324,6 +324,7 @@ target_include_directories(
   PUBLIC ${PYBIND11_INCLUDES_DIR}
   PUBLIC ${Python3_INCLUDE_DIRS}
   PUBLIC ${CLANG_INCLUDES_DIR}
+  PUBLIC ${CMAKE_SOURCE_DIR}/absl
   )
 
 if ( USE_CLANG_COMPLETER AND NOT LIBCLANG_TARGET )
@@ -337,6 +338,8 @@ target_link_libraries( ${PROJECT_NAME}
                        PUBLIC ${LIBCLANG_TARGET}
                        PUBLIC ${STD_FS_LIB}
                        PUBLIC ${EXTRA_LIBS}
+                       PUBLIC absl::flat_hash_map
+                       PUBLIC absl::flat_hash_set
                      )
 
 if( LIBCLANG_TARGET )

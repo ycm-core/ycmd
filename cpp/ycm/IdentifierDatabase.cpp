@@ -23,8 +23,8 @@
 #include "Result.h"
 #include "Utils.h"
 
+#include <absl/container/flat_hash_set.h>
 #include <memory>
-#include <unordered_set>
 
 namespace YouCompleteMe {
 
@@ -81,7 +81,7 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   }
   Word query_object( std::move( query ) );
 
-  std::unordered_set< const Candidate * > seen_candidates;
+  absl::flat_hash_set< const Candidate * > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
   std::vector< Result > results;
 
