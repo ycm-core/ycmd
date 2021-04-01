@@ -19,11 +19,14 @@
 #define UTILS_H_KEPMRPBH
 
 #include <algorithm>
-#include <cmath>
+#include <atomic>
+#include <condition_variable>
 #include <filesystem>
 #include <limits>
+#include <mutex>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -137,6 +140,51 @@ void PartialSort( std::vector< Element > &elements,
     std::partial_sort( elements.begin(),
                        elements.begin() + static_cast< diff >( max_elements ),
                        elements.end() );
+#if __has_include( <execution> )
+  } else if ( 256 <= std::min( nb_elements, max_elements ) ) {
+    const auto real_begin = elements.begin();
+    const auto real_end = elements.begin() + max_elements;
+    const auto n_threads = std::thread::hardware_concurrency();
+    const auto chunk_size = max_elements / n_threads;
+    auto begin = real_begin;
+    auto end = real_begin + chunk_size;
+    std::vector< std::thread > threads( n_threads );
+    //std::vector< std::atomic< bool > > finished( n_threads );
+    std::mutex cv_mutex;
+    std::condition_variable cv;
+    std::vector< bool > finished( n_threads );
+    for ( auto i = 0u; i < n_threads; ++i ) {
+      auto begin = real_begin + i * chunk_size;
+      auto end = real_end - begin < chunk_size ? real_end : begin + chunk_size;
+      threads[ i ] = std::thread( [ & ] ( auto begin, auto end, unsigned id ) {
+	                            std::sort( begin, end );
+				    if ( id % 2 == 0 ) {
+				      unsigned next_wait = 1;
+				      do {
+				        if ( id + next_wait > n_threads - 1 ) {
+					  break;
+					}
+					//while(!finished[ id + next_wait ].load( std::memory_order::memory_order_relaxed )) {}
+					std::unique_lock lock{ cv_mutex };
+					cv.wait( lock, [&] { return finished[ id + next_wait ] == true; } );
+					auto middle = begin + chunk_size * next_wait;
+					end = begin + chunk_size * next_wait * 2;
+				        std::inplace_merge( begin, middle, end );
+				      } while( ~id & (next_wait <<= 1) );
+				    }
+				    //finished[ id ].store( true, std::memory_order::memory_order_relaxed );
+				    {
+				    	std::unique_lock lock{ cv_mutex };
+					finished[ id ] = true;
+				    }
+				    cv.notify_all();
+				  },
+				  begin,
+				  end,
+		     		  i );
+    }
+    for ( auto&& t : threads ) { t.join(); }
+#endif
   } else {
     std::nth_element( elements.begin(),
                       elements.begin() + static_cast< diff >( max_elements ),
