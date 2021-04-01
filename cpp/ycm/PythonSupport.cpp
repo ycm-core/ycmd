@@ -21,6 +21,7 @@
 #include "Result.h"
 #include "Utils.h"
 
+#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -72,20 +73,53 @@ pybind11::list FilterAndSortCandidates(
     pybind11::gil_scoped_release unlock;
     Word query_object( std::move( query ) );
 
-    for ( size_t i = 0; i < num_candidates; ++i ) {
-      const Candidate *candidate = repository_candidates[ i ];
-
-      if ( candidate->IsEmpty() || !candidate->ContainsBytes( query_object ) ) {
-        continue;
-      }
-
-      Result result = candidate->QueryMatchResult( query_object );
-
-      if ( result.IsSubsequence() ) {
-        result_and_objects.emplace_back( result, i );
-      }
+#if __has_include( <execution> )
+    if ( num_candidates >= 256 ) {
+      result_and_objects.resize( repository_candidates.size() );
+      std::for_each(
+        std::execution::par_unseq,
+        repository_candidates.begin(),
+        repository_candidates.end(),
+        [ & ] ( const Candidate*& candidate ) mutable {
+          size_t i = &candidate - &*repository_candidates.begin();
+          const auto slot = result_and_objects.begin() + i;
+          if ( !candidate->IsEmpty() &&
+               candidate->ContainsBytes( query_object ) ) {
+            Result result = candidate->QueryMatchResult( query_object );
+            if ( result.IsSubsequence() ) {
+              *slot = { result, i };
+            }
+          }
+        }
+      );
+      result_and_objects.erase( std::remove_if(
+                                  std::execution::par_unseq,
+                                  result_and_objects.begin(),
+                                  result_and_objects.end(),
+                                  []( const ResultAnd< size_t >& result ) {
+                                    return !result.result_.IsSubsequence();
+                                  } ),
+                                result_and_objects.end() );
+    } else {
+#endif
+      result_and_objects.reserve( repository_candidates.size() );
+      std::for_each(
+        repository_candidates.begin(),
+        repository_candidates.end(),
+        [ &, i = size_t{ 0 } ] ( const Candidate* candidate ) mutable {
+          if ( !candidate->IsEmpty() &&
+               candidate->ContainsBytes( query_object ) ) {
+            Result result = candidate->QueryMatchResult( query_object );
+            if ( result.IsSubsequence() ) {
+              result_and_objects.emplace_back( result, i );
+            }
+          }
+	  ++i;
+        }
+      );
+#if __has_include( <execution> )
     }
-
+#endif
     PartialSort( result_and_objects, max_candidates );
   }
 

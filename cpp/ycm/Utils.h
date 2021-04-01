@@ -20,6 +20,9 @@
 
 #include <algorithm>
 #include <cmath>
+#if __has_include( <execution> )
+#  include <execution>
+#endif
 #include <filesystem>
 #include <limits>
 #include <string>
@@ -141,6 +144,16 @@ void PartialSort( std::vector< Element > &elements,
     std::partial_sort( elements.begin(),
                        elements.begin() + static_cast< diff >( max_elements ),
                        elements.end() );
+#if __has_include( <execution> )
+  } else if ( 256 <= std::min( nb_elements, max_elements ) ) {
+    std::nth_element( std::execution::par_unseq,
+                      elements.begin(),
+                      elements.begin() + max_elements,
+                      elements.end() );
+    std::sort( std::execution::par_unseq,
+               elements.begin(),
+               elements.begin() + max_elements );
+#endif
   } else {
     std::nth_element( elements.begin(),
                       elements.begin() + static_cast< diff >( max_elements ),
