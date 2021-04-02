@@ -11,4 +11,4 @@ javac -version
 :: Prevent the already installed version of Go to conflict with ours.
 set GOROOT=
 
-python run_tests.py --msvc %MSVC%
+python run_tests.py --msvc %MSVC% --no-parallel
