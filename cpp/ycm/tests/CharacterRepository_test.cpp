@@ -42,7 +42,10 @@ protected:
 
 
 TEST_F( CharacterRepositoryTest, GetCharacters ) {
-  CharacterSequence character_objects = repo_.GetCharacters( { "α", "ω" } );
+  CharacterSequence character_objects = repo_.GetCharacters( {
+    NormalizeInput( "α" ),
+    NormalizeInput( "ω" )
+  } );
 
   EXPECT_THAT( repo_.NumStoredCharacters(), 2 );
   EXPECT_THAT( character_objects, UnorderedElementsAre(

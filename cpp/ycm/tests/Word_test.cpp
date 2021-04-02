@@ -55,7 +55,7 @@ std::ostream& operator<<( std::ostream& os,
 TEST_P( WordTest, BreakIntoCharacters ) {
   std::vector< std::string > characters;
   for ( const auto &character : word_.characters_ ) {
-    characters.push_back( character );
+    characters.push_back( NormalizeInput( character ) );
   }
   EXPECT_THAT( Word( word_.text_ ).Characters(),
                ContainsPointees( repo_.GetCharacters(
