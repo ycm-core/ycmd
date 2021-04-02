@@ -601,24 +601,32 @@ class LanguageServerConnection( threading.Thread ):
 
   def _ServerToClientRequest( self, request ):
     method = request[ 'method' ]
-    if method == 'workspace/applyEdit':
-      self._collector.CollectApplyEdit( request, self )
-    elif method == 'workspace/configuration':
-      response = self._workspace_conf_handler( request )
-      if response is not None:
-        self.SendResponse( lsp.Accept( request, response ) )
-      else:
+    try:
+      if method == 'workspace/applyEdit':
+        self._collector.CollectApplyEdit( request, self )
+      elif method == 'workspace/configuration':
+        response = self._workspace_conf_handler( request )
+        if response is not None:
+          self.SendResponse( lsp.Accept( request, response ) )
+        else:
+          self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
+      elif method == 'client/registerCapability':
+        self._HandleDynamicRegistrations( request )
+      elif method == 'client/unregisterCapability':
+        for reg in request[ 'params' ][ 'unregisterations' ]:
+          if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
+            self._CancelWatchdogThreads()
+        self.SendResponse( lsp.Void( request ) )
+      else: # method unknown - reject
         self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
-    elif method == 'client/registerCapability':
-      self._HandleDynamicRegistrations( request )
-    elif method == 'client/unregisterCapability':
-      for reg in request[ 'params' ][ 'unregisterations' ]:
-        if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
-          self._CancelWatchdogThreads()
-      self.SendResponse( lsp.Void( request ) )
-    else:
-      # Reject the request
-      self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
+      return
+    except Exception:
+      LOGGER.exception( "Handling server to client request failed for request "
+                        "%s, rejecting it. This is probably a bug in ycmd.",
+                        request )
+
+    # unhandled, or failed; reject the request
+    self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
 
   def _DispatchMessage( self, message ):
     """Called in the message pump thread context when a complete message was
