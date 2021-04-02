@@ -80,7 +80,11 @@ def Subcommands_GoTo( app, test, command ):
     expect = {
       'response': requests.codes.ok,
       'data': contains_inanyorder( *[
-        LocationMatcher( PathToTestFile( 'goto', r[ 0 ] ), r[ 1 ], r[ 2 ] )
+        LocationMatcher(
+          PathToTestFile( 'goto', r[ 0 ] ),
+          r[ 1 ],
+          r[ 2 ],
+          **( {} if len( r ) < 4 else r[ 3 ] ) )
           for r in test[ 'response' ]
       ] )
     }
@@ -90,7 +94,9 @@ def Subcommands_GoTo( app, test, command ):
       'data': LocationMatcher( PathToTestFile( 'goto',
                                                test[ 'response' ][ 0 ] ),
                                test[ 'response' ][ 1 ],
-                               test[ 'response' ][ 2 ] )
+                               test[ 'response' ][ 2 ],
+                               **( {} if len( test[ 'response' ] ) < 4
+                                       else test[ 'response' ][ 3 ] ) )
     }
   else:
     expect = {
@@ -176,10 +182,13 @@ def Subcommands_GoTo_test( app, cmd, test ):
     'response': ( 'basic.py', 4, 7 ) },
 
   { 'request': ( 'basic.py', 1, 1, [ 'class C' ] ),
-    'response': ( 'child.py', 2, 7 ) },
+    'response': ( 'child.py', 2, 7, { 'description': 'class C' } ) },
 
   { 'request': ( 'basic.py', 1, 1, [ 'C.c' ] ),
-    'response': [ ( 'child.py', 3, 7 ), ( 'parent.py', 3, 7 ) ] },
+    'response': [
+      ( 'child.py', 3, 7, { 'description': 'def c' } ),
+      ( 'parent.py', 3, 7, { 'description': 'def c' } )
+    ] },
 
   { 'request': ( 'basic.py', 1, 1, [ 'nothing_here_mate' ] ),
     'response': 'Symbol not found' }

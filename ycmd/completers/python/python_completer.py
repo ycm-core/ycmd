@@ -309,7 +309,8 @@ class PythonCompleter( Completer ):
       filepath = definition.module_path or request_data[ 'filepath' ]
       return responses.BuildGoToResponse( filepath,
                                           definition.line,
-                                          column )
+                                          column,
+                                          definition.description )
 
     gotos = []
     for definition in definitions:

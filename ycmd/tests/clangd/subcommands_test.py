@@ -310,10 +310,22 @@ def Subcommands_GoToReferences_test( app, test ):
 @pytest.mark.parametrize( 'test', [
   # In same file - 1 result
   { 'req': ( 'goto.cc', 1, 1, [ 'out_of_line' ] ),
-    'res': ( 'goto.cc', 14, 13 ) },
+    'res': ( 'goto.cc', 14, 13, {
+      'description': 'Function: out_of_line',
+      'extra_data': { 'kind': 'Function', 'name': 'out_of_line', } }
+    ) },
   # In same file - multiple results
   { 'req': ( 'goto.cc', 1, 1, [ 'line' ] ),
-    'res': [ ( 'goto.cc', 6, 10 ), ( 'goto.cc', 14, 13 ) ] },
+    'res': [
+      ( 'goto.cc', 6, 10, {
+        'description': 'Function: in_line',
+        'extra_data': { 'kind': 'Function', 'name': 'in_line' },
+        } ),
+      ( 'goto.cc', 14, 13, {
+        'description': 'Function: out_of_line',
+        'extra_data': { 'kind': 'Function', 'name': 'out_of_line' },
+        } ),
+    ] },
   # None
   { 'req': ( 'goto.cc', 1, 1, [ '' ] ), 'res': 'Symbol not found' },
 
@@ -330,14 +342,30 @@ def Subcommands_GoToSymbol_test( app, test ):
   # In same file - multiple results
   { 'req': ( 'goto.cc', 1, 1 ),
     'res': [
-      ( 'goto.cc', 2, 1, { 'description': "Namespace: Local" } ),
-      ( 'goto.cc', 14, 1, { 'description': "Function: Local::out_of_line" } ),
-      ( 'goto.cc', 6, 5, { 'description': "Function: in_line" } ),
-      ( 'goto.cc', 11, 5, { 'description': 'Function: out_of_line' } ),
-      ( 'goto.cc', 19, 1, { 'description': "Function: test" } ),
-      ( 'goto.cc', 21, 1, { 'description': "Function: test" } ),
-      ( 'goto.cc', 30, 1, { 'description': "Function: unicode" } ),
-      ( 'goto.cc', 4, 5, { 'description': "Variable: x" } ),
+      ( 'goto.cc', 2, 1, {
+        'description': "Namespace: Local",
+        'extra_data': { 'kind': 'Namespace', 'name': 'Local' } } ),
+      ( 'goto.cc', 14, 1, {
+        'description': "Function: Local::out_of_line",
+        'extra_data': { 'kind': 'Function', 'name': 'Local::out_of_line' } } ),
+      ( 'goto.cc', 6, 5, {
+        'description': "Function: in_line",
+        'extra_data': { 'kind': 'Function', 'name': 'in_line' } } ),
+      ( 'goto.cc', 11, 5, {
+        'description': 'Function: out_of_line',
+        'extra_data': { 'kind': 'Function', 'name': 'out_of_line' } } ),
+      ( 'goto.cc', 19, 1, {
+        'description': "Function: test",
+        'extra_data': { 'kind': 'Function', 'name': 'test' } } ),
+      ( 'goto.cc', 21, 1, {
+        'description': "Function: test",
+        'extra_data': { 'kind': 'Function', 'name': 'test' } } ),
+      ( 'goto.cc', 30, 1, {
+        'description': "Function: unicode",
+        'extra_data': { 'kind': 'Function', 'name': 'unicode' } } ),
+      ( 'goto.cc', 4, 5, {
+        'description': "Variable: x",
+        'extra_data': { 'kind': 'Variable', 'name': 'x' } } ),
     ] },
 ] )
 @SharedYcmd
