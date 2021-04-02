@@ -20,16 +20,16 @@
 
 #include "Candidate.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <memory>
 #include <shared_mutex>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace YouCompleteMe {
 
-using CandidateHolder = std::unordered_map< std::string,
-                                            std::unique_ptr< Candidate > >;
+using CandidateHolder = absl::flat_hash_map< std::string,
+                                             std::unique_ptr< Candidate > >;
 
 
 // This singleton stores already built Candidate objects for candidate strings
