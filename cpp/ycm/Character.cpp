@@ -19,6 +19,7 @@
 #include "CodePoint.h"
 
 #include <algorithm>
+#include <cassert>
 
 namespace YouCompleteMe {
 
@@ -65,14 +66,8 @@ CodePointSequence CanonicalSort( CodePointSequence code_points ) {
 // Canonical Decomposition. See
 // https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G733
 CodePointSequence CanonicalDecompose( std::string_view text ) {
-  CodePointSequence code_points = BreakIntoCodePoints( text );
-  std::string normal;
-
-  for ( const auto &code_point : code_points ) {
-    normal.append( code_point->Normal() );
-  }
-
-  return CanonicalSort( BreakIntoCodePoints( normal ) );
+  assert( NormalizeInput( text ) == text );
+  return CanonicalSort( BreakIntoCodePoints( text ) );
 }
 
 } // unnamed namespace
@@ -104,6 +99,17 @@ Character::Character( std::string_view character )
         base_.append( code_point->FoldedCase() );
     }
   }
+}
+
+
+std::string NormalizeInput( std::string_view text ) {
+    CodePointSequence code_points = BreakIntoCodePoints( text );
+    std::string normal;
+
+    for ( const auto &code_point : code_points ) {
+      normal.append( code_point->Normal() );
+    }
+    return normal;
 }
 
 } // namespace YouCompleteMe

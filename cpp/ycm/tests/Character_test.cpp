@@ -141,7 +141,7 @@ protected:
 TEST( CharacterTest, ExceptionThrownWhenLeadingByteInCodePointIsInvalid ) {
   try {
     // Leading byte cannot start with bits '10'.
-    Character( "\xaf" );
+    Character( NormalizeInput( "\xaf" ) );
     FAIL() << "Expected UnicodeDecodeError exception.";
   } catch ( const UnicodeDecodeError &error ) {
     EXPECT_STREQ( error.what(), "Invalid leading byte in code point." );
@@ -154,7 +154,7 @@ TEST( CharacterTest, ExceptionThrownWhenLeadingByteInCodePointIsInvalid ) {
 TEST( CharacterTest, ExceptionThrownWhenCodePointIsOutOfBound ) {
   try {
     // Leading byte indicates a sequence of three bytes but only two are given.
-    Character( "\xe4\xbf" );
+    Character( NormalizeInput( "\xe4\xbf" ) );
     FAIL() << "Expected UnicodeDecodeError exception.";
   } catch ( const UnicodeDecodeError &error ) {
     EXPECT_STREQ( error.what(), "Invalid code point length." );
@@ -165,7 +165,7 @@ TEST( CharacterTest, ExceptionThrownWhenCodePointIsOutOfBound ) {
 
 
 TEST_P( CharacterTest, PropertiesAreCorrect ) {
-  EXPECT_THAT( Character( pair_.text ),
+  EXPECT_THAT( Character( NormalizeInput( pair_.text ) ),
                IsCharacterWithProperties( pair_.character_tuple ) );
 }
 
@@ -214,23 +214,44 @@ TEST( CharacterTest, Equality ) {
   // The lowercase of the Latin capital letter e with acute "É" (which can be
   // represented as the Latin capital letter "E" plus the combining acute
   // character) is the Latin small letter e with acute "é".
-  EXPECT_THAT( repo.GetCharacters( { "e", "é", "E", "É" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "e" ),
+                                     NormalizeInput( "é" ),
+                                     NormalizeInput( "E" ),
+                                     NormalizeInput( "É" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "é", "é" } ), CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "É", "É" } ), CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "e", "E" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "é" ),
+                                     NormalizeInput( "é" ) } ),
+	       CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "É" ),
+                                     NormalizeInput( "É" ) } ),
+	       CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "e" ),
+                                     NormalizeInput( "E" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "é", "É", "É" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "é" ),
+                                     NormalizeInput( "É" ),
+                                     NormalizeInput( "É" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "e", "é", "é", "E", "É", "É" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "e" ),
+                                     NormalizeInput( "é" ),
+                                     NormalizeInput( "é" ),
+                                     NormalizeInput( "E" ),
+                                     NormalizeInput( "É" ),
+                                     NormalizeInput( "É" ) } ),
                BaseCharactersAreEqual() );
 
   // The Greek capital letter omega "Ω" is the same character as the ohm sign
   // "Ω". The lowercase of both characters is the Greek small letter omega "ω".
-  EXPECT_THAT( repo.GetCharacters( { "Ω", "Ω" } ), CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "ω", "Ω", "Ω" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "Ω" ),
+                                     NormalizeInput( "Ω" ) } ),
+	       CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ω" ),
+                                     NormalizeInput( "Ω" ),
+                                     NormalizeInput( "Ω" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "ω", "Ω", "Ω" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ω" ),
+                                     NormalizeInput( "Ω" ),
+                                     NormalizeInput( "Ω" ) } ),
                BaseCharactersAreEqual() );
 
   // The Latin capital letter a with ring above "Å" (which can be represented as
@@ -239,32 +260,65 @@ TEST( CharacterTest, Equality ) {
   // characters is the Latin small letter a with ring above "å" (which can also
   // be represented as the Latin small letter "a" plus the combining ring above
   // character).
-  EXPECT_THAT( repo.GetCharacters( { "a", "å", "A", "Å" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "a" ),
+                                     NormalizeInput( "å" ),
+                                     NormalizeInput( "A" ),
+                                     NormalizeInput( "Å" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "å", "å" } ), CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "Å", "Å", "Å" } ), CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "å", "å", "Å", "Å", "Å" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "å" ),
+                                     NormalizeInput( "å" ) } ),
+	       CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "Å" ),
+                                     NormalizeInput( "Å" ),
+                                     NormalizeInput( "Å" ) } ),
+	       CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "å" ),
+                                     NormalizeInput( "å" ),
+                                     NormalizeInput( "Å" ),
+                                     NormalizeInput( "Å" ),
+                                     NormalizeInput( "Å" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "a", "å", "å", "A", "Å", "Å", "Å" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "a" ),
+                                     NormalizeInput( "å" ),
+                                     NormalizeInput( "å" ),
+                                     NormalizeInput( "A" ),
+                                     NormalizeInput( "Å" ),
+                                     NormalizeInput( "Å" ),
+                                     NormalizeInput( "Å" ) } ),
                BaseCharactersAreEqual() );
 
   // The uppercase of the Greek small letter sigma "σ" and Greek small letter
   // final sigma "ς" is the Greek capital letter sigma "Σ".
-  EXPECT_THAT( repo.GetCharacters( { "σ", "ς", "Σ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "σ" ),
+                                     NormalizeInput( "ς" ),
+                                     NormalizeInput( "Σ" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "σ", "ς", "Σ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "σ" ),
+                                     NormalizeInput( "ς" ),
+                                     NormalizeInput( "Σ" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "σ", "ς", "Σ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "σ" ),
+                                     NormalizeInput( "ς" ),
+                                     NormalizeInput( "Σ" ) } ),
                BaseCharactersAreEqual() );
 
   // The lowercase of the Greek capital theta symbol "ϴ" and capital letter
   // theta "Θ" is the Greek small letter theta "θ". There is also the Greek
   // theta symbol "ϑ" whose uppercase is "Θ".
-  EXPECT_THAT( repo.GetCharacters( { "θ", "ϑ", "ϴ", "Θ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "θ" ),
+                                     NormalizeInput( "ϑ" ),
+                                     NormalizeInput( "ϴ" ),
+                                     NormalizeInput( "Θ" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "θ", "ϑ", "ϴ", "Θ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "θ" ),
+                                     NormalizeInput( "ϑ" ),
+                                     NormalizeInput( "ϴ" ),
+                                     NormalizeInput( "Θ" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "θ", "ϑ", "ϴ", "Θ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "θ" ),
+                                     NormalizeInput( "ϑ" ),
+                                     NormalizeInput( "ϴ" ),
+                                     NormalizeInput( "Θ" ) } ),
                BaseCharactersAreEqual() );
 
   // In the Latin alphabet, the uppercase of "i" (with a dot) is "I" (without a
@@ -278,20 +332,39 @@ TEST( CharacterTest, Equality ) {
   // case is ignored. Similarly, "ı" plus the combining dot above character does
   // not match "İ" (with a dot) or "I" plus the combining dot above character
   // but "i" (with a dot) plus the combining dot above does.
-  EXPECT_THAT( repo.GetCharacters( { "i", "I", "ı", "ı̇", "i̇", "İ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
+                                     NormalizeInput( "I" ),
+                                     NormalizeInput( "ı" ),
+                                     NormalizeInput( "ı̇" ),
+                                     NormalizeInput( "i̇" ),
+                                     NormalizeInput( "İ" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "İ", "İ" } ), CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "i", "I" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "İ" ),
+                                     NormalizeInput( "İ" ) } ),
+	       CharactersAreEqual() );
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
+                                     NormalizeInput( "I" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "i̇", "İ", "İ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i̇" ),
+                                     NormalizeInput( "İ" ),
+                                     NormalizeInput( "İ" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "ı", "ı̇", "I", "İ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ı" ),
+                                     NormalizeInput( "ı̇" ),
+                                     NormalizeInput( "I" ),
+                                     NormalizeInput( "İ" ) } ),
                CharactersAreNotEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { "i", "ı" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
+                                     NormalizeInput( "ı" ) } ),
                BaseCharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "i", "i̇", "I", "İ", "İ" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
+                                     NormalizeInput( "i̇" ),
+                                     NormalizeInput( "I" ),
+                                     NormalizeInput( "İ" ),
+                                     NormalizeInput( "İ" ) } ),
                BaseCharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { "ı", "ı̇" } ),
+  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ı" ),
+                                     NormalizeInput( "ı̇" ) } ),
                BaseCharactersAreEqual() );
 }
 
@@ -299,54 +372,96 @@ TEST( CharacterTest, Equality ) {
 TEST( CharacterTest, SmartMatching ) {
   // The letter "é" and "É" appear twice in the tests as they can be represented
   // on one code point or two ("e"/"E" plus the combining acute character).
-  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_TRUE ( Character( "e" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "e" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "e" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "e" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "e" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "e" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "e" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 
-  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 
-  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "é" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_TRUE ( Character( "é" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "é" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 
-  EXPECT_FALSE( Character( "E" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_FALSE( Character( "E" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "E" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_TRUE ( Character( "E" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_TRUE ( Character( "E" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_TRUE ( Character( "E" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "E" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "E" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "E" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "E" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "E" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "E" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "É" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_TRUE ( Character( "É" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_TRUE ( Character( NormalizeInput( "É" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 
-  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "e" ) ) );
-  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "é" ) ) );
-  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "E" ) ) );
-  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "É" ) ) );
-  EXPECT_FALSE( Character( "è" ).MatchesSmart( Character( "É" ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "è" ) )
+                .MatchesSmart( Character( NormalizeInput( "e" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "è" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "è" ) )
+                .MatchesSmart( Character( NormalizeInput( "é" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "è" ) )
+                .MatchesSmart( Character( NormalizeInput( "E" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "è" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
+  EXPECT_FALSE( Character( NormalizeInput( "è" ) )
+                .MatchesSmart( Character( NormalizeInput( "É" ) ) ) );
 }
 
 } // namespace YouCompleteMe
