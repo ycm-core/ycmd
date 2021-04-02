@@ -83,7 +83,7 @@ if ( USE_CLANG_COMPLETER AND
 
   set( LIBCLANG_DOWNLOAD ON )
   set( LIBCLANG_URL
-       "https://dl.bintray.com/ycm-core/libclang/${LIBCLANG_FILENAME}" )
+       "https://github.com/ycm-core/llvm/releases/download/${CLANG_VERSION}/${LIBCLANG_FILENAME}" )
 
   # Check if the Clang archive is already downloaded and its checksum is
   # correct.  If this is not the case, remove it if needed and download it.
