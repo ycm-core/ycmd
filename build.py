@@ -1059,7 +1059,8 @@ def DownloadClangd( printer ):
   target_name, check_sum = target[ not IS_64BIT ]
   target_name = target_name.format( version = CLANGD_VERSION )
   file_name = f'{ target_name }.tar.bz2'
-  download_url = f'https://dl.bintray.com/ycm-core/clangd/{ file_name }'
+  download_url = ( 'https://github.com/ycm-core/llvm/releases/download/'
+                   f'{ CLANGD_VERSION }/{ file_name }' )
 
   file_name = p.join( CLANGD_CACHE_DIR, file_name )
 
