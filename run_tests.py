@@ -161,6 +161,9 @@ def ParseArguments():
   parser.add_argument( '--valgrind',
                        action = 'store_true',
                        help = 'Run tests inside valgrind.' )
+  parser.add_argument( '--no-parallel', action='store_true',
+                       help='Run tests in serial, default is to parallelize '
+                            'tests execution' )
 
   parsed_args, pytests_args = parser.parse_known_args()
 
@@ -285,6 +288,13 @@ def PytestTests( parsed_args, extra_pytests_args ):
     env[ 'PATH' ] = LIBCLANG_DIR + ';' + env[ 'PATH' ]
   else:
     env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
+
+  if not parsed_args.no_parallel:
+    # Execute tests in parallel with n workers where n = NUMCPUS. Tests are
+    # grouped by module for test functions and by class for test methods.Groups
+    # are distributed to available workers as whole units. This guarantees that
+    # all tests in a group run in the same process.
+    pytests_args += [ '-n', 'auto', '--dist', 'loadscope' ]
 
   subprocess.check_call( [ sys.executable, '-m', 'pytest' ] + pytests_args,
                          env=env )

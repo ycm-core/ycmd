@@ -10,3 +10,4 @@ pytest
 pytest-cov
 pytest-rerunfailures
 requests
+pytest-xdist
