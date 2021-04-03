@@ -1,6 +1,4 @@
 bottle   >= 0.12.18
 regex    >= 2020.2.20
 jedi     >= 0.16.0
-requests >= 2.22.0
-waitress >= 1.4.3
 watchdog >= 0.10.2
