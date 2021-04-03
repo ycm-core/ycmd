@@ -200,9 +200,13 @@ def Main():
   CloseStdin()
   handlers.wsgi_server = StoppableWSGIServer( handlers.app,
                                               host = args.host,
-                                              port = args.port,
-                                              threads = 30 )
-  handlers.wsgi_server.Run()
+                                              port = args.port )
+  if sys.stdin is not None:
+    print( f'serving on http://{ handlers.wsgi_server.server_name }:'
+           f'{ handlers.wsgi_server.server_port }' )
+  handlers.wsgi_server.serve_forever()
+  handlers.wsgi_server.server_close()
+  handlers.ServerCleanup()
 
 
 if __name__ == "__main__":
