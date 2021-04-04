@@ -271,6 +271,13 @@ def PytestTests( parsed_args, extra_pytests_args ):
     # contains Python files and its base name starts with "test".
     pytests_args += [ '--ignore=ycmd/tests/python/testdata', '--cov=ycmd' ]
 
+  if not parsed_args.no_parallel:
+    # Execute tests in parallel with n workers where n = NUMCPUS. Tests are
+    # grouped by module for test functions and by class for test methods.Groups
+    # are distributed to available workers as whole units. This guarantees that
+    # all tests in a group run in the same process.
+    pytests_args += [ '-n', 'auto', '--dist', 'loadscope' ]
+
   if extra_pytests_args:
     pytests_args.extend( extra_pytests_args )
   else:
@@ -288,13 +295,6 @@ def PytestTests( parsed_args, extra_pytests_args ):
     env[ 'PATH' ] = LIBCLANG_DIR + ';' + env[ 'PATH' ]
   else:
     env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
-
-  if not parsed_args.no_parallel:
-    # Execute tests in parallel with n workers where n = NUMCPUS. Tests are
-    # grouped by module for test functions and by class for test methods.Groups
-    # are distributed to available workers as whole units. This guarantees that
-    # all tests in a group run in the same process.
-    pytests_args += [ '-n', 'auto', '--dist', 'loadscope' ]
 
   subprocess.check_call( [ sys.executable, '-m', 'pytest' ] + pytests_args,
                          env=env )
