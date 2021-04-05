@@ -151,6 +151,7 @@ TOKEN_TYPES = [
   'enumMember',
   'event',
   'function',
+  'method',
   'member',
   'macro',
   'keyword',

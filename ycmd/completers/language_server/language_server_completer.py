@@ -137,7 +137,11 @@ class ResponseAbortedException( Exception ):
 
 class ResponseFailedException( Exception ):
   """Raised by LanguageServerConnection if a request returns an error"""
-  pass # pragma: no cover
+  def __init__( self, error ):
+    self.error_code = error.get( 'code' ) or 0
+    self.error_message = error.get( 'message' ) or "No message"
+    super().__init__( f'Request failed: { self.error_code }: '
+                      f'{ self.error_message }' )
 
 
 class IncompatibleCompletionException( Exception ):
@@ -212,11 +216,7 @@ class Response:
 
     if 'error' in self._message:
       error = self._message[ 'error' ]
-      raise ResponseFailedException(
-        'Request failed: '
-        f'{ error.get( "code" ) or 0 }'
-        ': '
-        f'{ error.get( "message" ) or "No message" }' )
+      raise ResponseFailedException( error )
 
     return self._message
 
@@ -1559,12 +1559,23 @@ class LanguageServerCompleter( Completer ):
       return {}
 
     request_id = self.GetConnection().NextRequestId()
-    response = self._connection.GetResponse(
-      request_id,
-      lsp.SemanticTokens(
-        request_id,
-        request_data ),
-      REQUEST_TIMEOUT_COMPLETION )
+
+    # Retry up to 3 times to avoid ContentModified errors
+    MAX_RETRY = 3
+    for i in range( MAX_RETRY ):
+      try:
+        response = self._connection.GetResponse(
+          request_id,
+          lsp.SemanticTokens(
+            request_id,
+            request_data ),
+          3 * REQUEST_TIMEOUT_COMPLETION )
+        break
+      except ResponseFailedException as e:
+        if i < ( MAX_RETRY - 1 ) and e.error_code == lsp.Errors.ContentModified:
+          continue
+        else:
+          raise
 
     if response is None:
       return {}
@@ -3411,6 +3422,23 @@ def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
     token_type = 0
     token_modifiers = 0
 
+    def DecodeModifiers( self, tokenModifiers ):
+      modifiers = []
+      bit_index = 0
+      while True:
+        bit_value = pow( 2, bit_index )
+
+        if bit_value > self.token_modifiers:
+          break
+
+        if self.token_modifiers & bit_value:
+          modifiers.append( tokenModifiers[ bit_index ] )
+
+        bit_index += 1
+
+      return modifiers
+
+
   last_token = Token()
   tokens = []
 
@@ -3444,7 +3472,7 @@ def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
         }
       ) ),
       'type': atlas.tokenTypes[ token.token_type ],
-      'modifiers': [] # TODO: bits represent indexes in atlas
+      'modifiers': token.DecodeModifiers( atlas.tokenModifiers )
     } )
 
     last_token = token
