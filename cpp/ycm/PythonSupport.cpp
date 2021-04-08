@@ -17,7 +17,7 @@
 
 #include "PythonSupport.h"
 #include "Candidate.h"
-#include "CandidateRepository.h"
+#include "Repository.h"
 #include "Result.h"
 #include "Utils.h"
 
@@ -48,7 +48,7 @@ std::vector< const Candidate * > CandidatesFromObjectList(
     }
   }
 
-  return CandidateRepository::Instance().GetCandidatesForStrings(
+  return Repository< Candidate >::Instance().GetElements(
            std::move( candidate_strings ) );
 }
 

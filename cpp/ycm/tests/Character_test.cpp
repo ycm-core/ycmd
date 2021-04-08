@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Character.h"
-#include "CharacterRepository.h"
+#include "Repository.h"
 #include "CodePoint.h"
 #include "TestUtils.h"
 
@@ -124,15 +124,15 @@ std::ostream& operator<<( std::ostream& os,
 class CharacterTest : public TestWithParam< TextCharacterPair > {
 protected:
   CharacterTest()
-    : repo_( CharacterRepository::Instance() ) {
+    : repo_( Repository< Character >::Instance() ) {
   }
 
   virtual void SetUp() {
-    repo_.ClearCharacters();
+    repo_.ClearElements();
     pair_ = GetParam();
   }
 
-  CharacterRepository &repo_;
+  Repository< Character > &repo_;
   const char* text_;
   TextCharacterPair pair_;
 };
@@ -209,49 +209,49 @@ INSTANTIATE_TEST_SUITE_P( UnicodeTest, CharacterTest, ValuesIn( tests ) );
 
 
 TEST( CharacterTest, Equality ) {
-  CharacterRepository &repo( CharacterRepository::Instance() );
+  Repository< Character >& repo( Repository< Character >::Instance() );
 
   // The lowercase of the Latin capital letter e with acute "É" (which can be
   // represented as the Latin capital letter "E" plus the combining acute
   // character) is the Latin small letter e with acute "é".
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "e" ),
-                                     NormalizeInput( "é" ),
-                                     NormalizeInput( "E" ),
-                                     NormalizeInput( "É" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "e" ),
+                                   NormalizeInput( "é" ),
+                                   NormalizeInput( "E" ),
+                                   NormalizeInput( "É" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "é" ),
-                                     NormalizeInput( "é" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "é" ),
+                                   NormalizeInput( "é" ) } ),
 	       CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "É" ),
-                                     NormalizeInput( "É" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "É" ),
+                                   NormalizeInput( "É" ) } ),
 	       CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "e" ),
-                                     NormalizeInput( "E" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "e" ),
+                                   NormalizeInput( "E" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "é" ),
-                                     NormalizeInput( "É" ),
-                                     NormalizeInput( "É" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "é" ),
+                                   NormalizeInput( "É" ),
+                                   NormalizeInput( "É" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "e" ),
-                                     NormalizeInput( "é" ),
-                                     NormalizeInput( "é" ),
-                                     NormalizeInput( "E" ),
-                                     NormalizeInput( "É" ),
-                                     NormalizeInput( "É" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "e" ),
+                                   NormalizeInput( "é" ),
+                                   NormalizeInput( "é" ),
+                                   NormalizeInput( "E" ),
+                                   NormalizeInput( "É" ),
+                                   NormalizeInput( "É" ) } ),
                BaseCharactersAreEqual() );
 
   // The Greek capital letter omega "Ω" is the same character as the ohm sign
   // "Ω". The lowercase of both characters is the Greek small letter omega "ω".
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "Ω" ),
-                                     NormalizeInput( "Ω" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "Ω" ),
+                                   NormalizeInput( "Ω" ) } ),
 	       CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ω" ),
-                                     NormalizeInput( "Ω" ),
-                                     NormalizeInput( "Ω" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "ω" ),
+                                   NormalizeInput( "Ω" ),
+                                   NormalizeInput( "Ω" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ω" ),
-                                     NormalizeInput( "Ω" ),
-                                     NormalizeInput( "Ω" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "ω" ),
+                                   NormalizeInput( "Ω" ),
+                                   NormalizeInput( "Ω" ) } ),
                BaseCharactersAreEqual() );
 
   // The Latin capital letter a with ring above "Å" (which can be represented as
@@ -260,65 +260,65 @@ TEST( CharacterTest, Equality ) {
   // characters is the Latin small letter a with ring above "å" (which can also
   // be represented as the Latin small letter "a" plus the combining ring above
   // character).
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "a" ),
-                                     NormalizeInput( "å" ),
-                                     NormalizeInput( "A" ),
-                                     NormalizeInput( "Å" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "a" ),
+                                   NormalizeInput( "å" ),
+                                   NormalizeInput( "A" ),
+                                   NormalizeInput( "Å" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "å" ),
-                                     NormalizeInput( "å" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "å" ),
+                                   NormalizeInput( "å" ) } ),
 	       CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "Å" ),
-                                     NormalizeInput( "Å" ),
-                                     NormalizeInput( "Å" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "Å" ),
+                                   NormalizeInput( "Å" ),
+                                   NormalizeInput( "Å" ) } ),
 	       CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "å" ),
-                                     NormalizeInput( "å" ),
-                                     NormalizeInput( "Å" ),
-                                     NormalizeInput( "Å" ),
-                                     NormalizeInput( "Å" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "å" ),
+                                   NormalizeInput( "å" ),
+                                   NormalizeInput( "Å" ),
+                                   NormalizeInput( "Å" ),
+                                   NormalizeInput( "Å" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "a" ),
-                                     NormalizeInput( "å" ),
-                                     NormalizeInput( "å" ),
-                                     NormalizeInput( "A" ),
-                                     NormalizeInput( "Å" ),
-                                     NormalizeInput( "Å" ),
-                                     NormalizeInput( "Å" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "a" ),
+                                   NormalizeInput( "å" ),
+                                   NormalizeInput( "å" ),
+                                   NormalizeInput( "A" ),
+                                   NormalizeInput( "Å" ),
+                                   NormalizeInput( "Å" ),
+                                   NormalizeInput( "Å" ) } ),
                BaseCharactersAreEqual() );
 
   // The uppercase of the Greek small letter sigma "σ" and Greek small letter
   // final sigma "ς" is the Greek capital letter sigma "Σ".
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "σ" ),
-                                     NormalizeInput( "ς" ),
-                                     NormalizeInput( "Σ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "σ" ),
+                                   NormalizeInput( "ς" ),
+                                   NormalizeInput( "Σ" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "σ" ),
-                                     NormalizeInput( "ς" ),
-                                     NormalizeInput( "Σ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "σ" ),
+                                   NormalizeInput( "ς" ),
+                                   NormalizeInput( "Σ" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "σ" ),
-                                     NormalizeInput( "ς" ),
-                                     NormalizeInput( "Σ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "σ" ),
+                                   NormalizeInput( "ς" ),
+                                   NormalizeInput( "Σ" ) } ),
                BaseCharactersAreEqual() );
 
   // The lowercase of the Greek capital theta symbol "ϴ" and capital letter
   // theta "Θ" is the Greek small letter theta "θ". There is also the Greek
   // theta symbol "ϑ" whose uppercase is "Θ".
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "θ" ),
-                                     NormalizeInput( "ϑ" ),
-                                     NormalizeInput( "ϴ" ),
-                                     NormalizeInput( "Θ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "θ" ),
+                                   NormalizeInput( "ϑ" ),
+                                   NormalizeInput( "ϴ" ),
+                                   NormalizeInput( "Θ" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "θ" ),
-                                     NormalizeInput( "ϑ" ),
-                                     NormalizeInput( "ϴ" ),
-                                     NormalizeInput( "Θ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "θ" ),
+                                   NormalizeInput( "ϑ" ),
+                                   NormalizeInput( "ϴ" ),
+                                   NormalizeInput( "Θ" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "θ" ),
-                                     NormalizeInput( "ϑ" ),
-                                     NormalizeInput( "ϴ" ),
-                                     NormalizeInput( "Θ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "θ" ),
+                                   NormalizeInput( "ϑ" ),
+                                   NormalizeInput( "ϴ" ),
+                                   NormalizeInput( "Θ" ) } ),
                BaseCharactersAreEqual() );
 
   // In the Latin alphabet, the uppercase of "i" (with a dot) is "I" (without a
@@ -332,39 +332,39 @@ TEST( CharacterTest, Equality ) {
   // case is ignored. Similarly, "ı" plus the combining dot above character does
   // not match "İ" (with a dot) or "I" plus the combining dot above character
   // but "i" (with a dot) plus the combining dot above does.
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
-                                     NormalizeInput( "I" ),
-                                     NormalizeInput( "ı" ),
-                                     NormalizeInput( "ı̇" ),
-                                     NormalizeInput( "i̇" ),
-                                     NormalizeInput( "İ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "i" ),
+                                   NormalizeInput( "I" ),
+                                   NormalizeInput( "ı" ),
+                                   NormalizeInput( "ı̇" ),
+                                   NormalizeInput( "i̇" ),
+                                   NormalizeInput( "İ" ) } ),
                CharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "İ" ),
-                                     NormalizeInput( "İ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "İ" ),
+                                   NormalizeInput( "İ" ) } ),
 	       CharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
-                                     NormalizeInput( "I" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "i" ),
+                                   NormalizeInput( "I" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i̇" ),
-                                     NormalizeInput( "İ" ),
-                                     NormalizeInput( "İ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "i̇" ),
+                                   NormalizeInput( "İ" ),
+                                   NormalizeInput( "İ" ) } ),
                CharactersAreEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ı" ),
-                                     NormalizeInput( "ı̇" ),
-                                     NormalizeInput( "I" ),
-                                     NormalizeInput( "İ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "ı" ),
+                                   NormalizeInput( "ı̇" ),
+                                   NormalizeInput( "I" ),
+                                   NormalizeInput( "İ" ) } ),
                CharactersAreNotEqualWhenCaseIsIgnored() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
-                                     NormalizeInput( "ı" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "i" ),
+                                   NormalizeInput( "ı" ) } ),
                BaseCharactersAreNotEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "i" ),
-                                     NormalizeInput( "i̇" ),
-                                     NormalizeInput( "I" ),
-                                     NormalizeInput( "İ" ),
-                                     NormalizeInput( "İ" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "i" ),
+                                   NormalizeInput( "i̇" ),
+                                   NormalizeInput( "I" ),
+                                   NormalizeInput( "İ" ),
+                                   NormalizeInput( "İ" ) } ),
                BaseCharactersAreEqual() );
-  EXPECT_THAT( repo.GetCharacters( { NormalizeInput( "ı" ),
-                                     NormalizeInput( "ı̇" ) } ),
+  EXPECT_THAT( repo.GetElements( { NormalizeInput( "ı" ),
+                                   NormalizeInput( "ı̇" ) } ),
                BaseCharactersAreEqual() );
 }
 

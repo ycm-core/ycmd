@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CodePoint.h"
-#include "CodePointRepository.h"
+#include "Repository.h"
 #include "TestUtils.h"
 
 #include <array>
@@ -45,15 +45,15 @@ std::ostream& operator<<( std::ostream& os,
 class CodePointTest : public TestWithParam< TextCodePointPair > {
 protected:
   CodePointTest()
-    : repo_( CodePointRepository::Instance() ) {
+    : repo_( Repository< CodePoint >::Instance() ) {
   }
 
   virtual void SetUp() {
-    repo_.ClearCodePoints();
+    repo_.ClearElements();
     pair_ = GetParam();
   }
 
-  CodePointRepository &repo_;
+  Repository< CodePoint > &repo_;
   TextCodePointPair pair_;
 };
 

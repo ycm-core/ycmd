@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CodePoint.h"
-#include "CodePointRepository.h"
+#include "Repository.h"
 #include "TestUtils.h"
 
 #include <gtest/gtest.h>
@@ -30,21 +30,21 @@ namespace YouCompleteMe {
 class CodePointRepositoryTest : public ::testing::Test {
 protected:
   CodePointRepositoryTest()
-    : repo_( CodePointRepository::Instance() ) {
+    : repo_( Repository< CodePoint >::Instance() ) {
   }
 
   virtual void SetUp() {
-    repo_.ClearCodePoints();
+    repo_.ClearElements();
   }
 
-  CodePointRepository &repo_;
+  Repository< CodePoint > &repo_;
 };
 
 
 TEST_F( CodePointRepositoryTest, GetCodePoints ) {
-  CodePointSequence code_point_objects = repo_.GetCodePoints( { "α", "ω" } );
+  CodePointSequence code_point_objects = repo_.GetElements( { "α", "ω" } );
 
-  EXPECT_THAT( repo_.NumStoredCodePoints(), 2 );
+  EXPECT_THAT( repo_.NumStoredElements(), 2 );
   EXPECT_THAT( code_point_objects, UnorderedElementsAre(
     Pointee( IsCodePointWithProperties< CodePointTuple >(
       { "α", "α", "Α", true, false, false, BreakProperty::OTHER } ) ),

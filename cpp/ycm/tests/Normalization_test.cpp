@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Character.h"
-#include "CharacterRepository.h"
+#include "Repository.h"
 #include "CodePoint.h"
 #include "TestUtils.h"
 
@@ -52,15 +52,15 @@ std::ostream& operator<<( std::ostream& os,
 class NormalizationTest : public TestWithParam< NormalizationTuple > {
 protected:
   NormalizationTest()
-    : repo_( CharacterRepository::Instance() ) {
+    : repo_( Repository< Character >::Instance() ) {
   }
 
   virtual void SetUp() {
-    repo_.ClearCharacters();
+    repo_.ClearElements();
     tuple_ = GetParam();
   }
 
-  CharacterRepository &repo_;
+  Repository< Character > &repo_;
   NormalizationTuple tuple_;
 };
 

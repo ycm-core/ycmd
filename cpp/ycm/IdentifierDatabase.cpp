@@ -18,8 +18,8 @@
 #include "IdentifierDatabase.h"
 
 #include "Candidate.h"
-#include "CandidateRepository.h"
 #include "IdentifierUtils.h"
+#include "Repository.h"
 #include "Result.h"
 #include "Utils.h"
 
@@ -29,7 +29,7 @@
 namespace YouCompleteMe {
 
 IdentifierDatabase::IdentifierDatabase()
-  : candidate_repository_( CandidateRepository::Instance() ) {
+  : candidate_repository_( Repository< Candidate >::Instance() ) {
 }
 
 
@@ -82,7 +82,7 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   Word query_object( std::move( query ) );
 
   absl::flat_hash_set< const Candidate * > seen_candidates;
-  seen_candidates.reserve( candidate_repository_.NumStoredCandidates() );
+  seen_candidates.reserve( candidate_repository_.NumStoredElements() );
   std::vector< Result > results;
 
   {
@@ -146,7 +146,7 @@ void IdentifierDatabase::AddIdentifiersNoLock(
     GetCandidateSet( std::move( filetype ), std::move( filepath ) );
 
   std::vector< const Candidate * > repository_candidates =
-    candidate_repository_.GetCandidatesForStrings(
+    candidate_repository_.GetElements(
       std::move( new_candidates ) );
 
   candidates.insert( repository_candidates.begin(),

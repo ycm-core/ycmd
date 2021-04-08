@@ -16,7 +16,7 @@
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Character.h"
-#include "CharacterRepository.h"
+#include "Repository.h"
 #include "TestUtils.h"
 #include "Word.h"
 
@@ -32,15 +32,15 @@ namespace YouCompleteMe {
 class WordTest : public TestWithParam< WordTuple > {
 protected:
   WordTest()
-    : repo_( CharacterRepository::Instance() ) {
+    : repo_( Repository< Character >::Instance() ) {
   }
 
   virtual void SetUp() {
-    repo_.ClearCharacters();
+    repo_.ClearElements();
     word_ = WordTuple( GetParam() );
   }
 
-  CharacterRepository &repo_;
+  Repository< Character > &repo_;
   WordTuple word_;
 };
 
@@ -58,7 +58,7 @@ TEST_P( WordTest, BreakIntoCharacters ) {
     characters.push_back( NormalizeInput( character ) );
   }
   EXPECT_THAT( Word( word_.text_ ).Characters(),
-               ContainsPointees( repo_.GetCharacters(
+               ContainsPointees( repo_.GetElements(
                                  std::move( characters ) ) ) );
 }
 
