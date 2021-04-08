@@ -372,6 +372,13 @@ definitions:
         $ref: "#/definitions/LineNumber"
       column_num:
         $ref: "#/definitions/ColumnNumber"
+      extra_data:
+        type: object
+        description: |-
+          Additional data specific to the response type. For GoTo requests,
+          this may include "kind" and "name" to specify additional data about
+          the GoTo target when doing a symbol search, such as GoToSymbol
+          or GoToDocumentOutline. If supplied, "kind" is a LSP symbol kind.
 
   UnresolvedFixIt:
     type: object

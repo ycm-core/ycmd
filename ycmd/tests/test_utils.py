@@ -136,7 +136,11 @@ def MessageMatcher( msg ):
   return has_entry( 'message', contains_string( msg ) )
 
 
-def LocationMatcher( filepath, line_num, column_num, description=None ):
+def LocationMatcher( filepath,
+                     line_num,
+                     column_num,
+                     description=None,
+                     extra_data=None ):
   entry = {
     'line_num': line_num,
     'column_num': column_num,
@@ -144,6 +148,8 @@ def LocationMatcher( filepath, line_num, column_num, description=None ):
   }
   if description is not None:
     entry[ 'description' ] = description
+  if extra_data is not None:
+    entry[ 'extra_data' ] = has_entries( **extra_data )
 
   return has_entries( entry )
 

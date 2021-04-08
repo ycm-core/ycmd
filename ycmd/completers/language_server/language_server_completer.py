@@ -2991,8 +2991,13 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     description = ( f'{ lsp.SYMBOL_KIND[ symbol[ "kind" ] ] }: '
                     f'{ symbol[ "name" ] }' )
 
-    return responses.BuildGoToResponseFromLocation( location,
+    goto = responses.BuildGoToResponseFromLocation( location,
                                                     description )
+    goto[ 'extra_data' ] = {
+      'kind': lsp.SYMBOL_KIND[ symbol[ 'kind' ] ],
+      'name': symbol[ 'name' ],
+    }
+    return goto
 
   locations = [ BuildGoToLocationFromSymbol( s ) for s in
                 sorted( symbols,
