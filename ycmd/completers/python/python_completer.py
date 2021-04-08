@@ -309,7 +309,8 @@ class PythonCompleter( Completer ):
       filepath = definition.module_path or request_data[ 'filepath' ]
       return responses.BuildGoToResponse( filepath,
                                           definition.line,
-                                          column )
+                                          column,
+                                          definition.description )
 
     gotos = []
     for definition in definitions:
@@ -384,9 +385,10 @@ class PythonCompleter( Completer ):
     # Jedi docs say:
     #   Searches a name in the whole project. If the project is very big, at
     #   some point Jedi will stop searching. However it’s also very much
-    #   recommended to not exhaust the generator. Just display the first ten
-    #   results to the user.
-    MAX_RESULTS = 10
+    #   recommended to not exhaust the generator.
+    MAX_RESULTS = self.user_options[ 'max_num_candidates' ]
+    if MAX_RESULTS < 0:
+      MAX_RESULTS = 100
 
     with self._jedi_lock:
       environent = self._EnvironmentForRequest( request_data )
