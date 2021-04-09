@@ -47,11 +47,13 @@ YCM_EXPORT inline char Lowercase( uint8_t ascii_character ) {
 
 
 YCM_EXPORT inline std::string Lowercase( std::string_view text ) {
-  std::string result;
-  result.reserve( text.size() );
-  for ( auto ascii_character : text ) {
-    result.push_back( Lowercase( static_cast< uint8_t >( ascii_character ) ) );
-  }
+  std::string result( text.size(), '\0' );
+  std::transform( text.begin(),
+                  text.end(),
+                  result.begin(),
+                  []( char c ) {
+                    return Lowercase( static_cast< uint8_t >( c ) );
+                  } );
   return result;
 }
 

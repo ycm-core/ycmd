@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "Candidate.h"
 #include "CodePoint.h"
 #include "IdentifierCompleter.h"
 #include "PythonSupport.h"
@@ -74,8 +75,8 @@ PYBIND11_MODULE( ycm_core, mod )
 
   py::class_< IdentifierCompleter >( mod, "IdentifierCompleter" )
     .def( py::init<>() )
-    .def( "AddIdentifiersToDatabase",
-          &IdentifierCompleter::AddIdentifiersToDatabase,
+    .def( "AddSingleIdentifierToDatabase",
+          &IdentifierCompleter::AddSingleIdentifierToDatabase,
           py::call_guard< py::gil_scoped_release >() )
     .def( "ClearForFileAndAddIdentifiersToDatabase",
           &IdentifierCompleter::ClearForFileAndAddIdentifiersToDatabase,

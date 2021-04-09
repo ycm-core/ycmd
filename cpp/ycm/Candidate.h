@@ -32,8 +32,11 @@ public:
 
   YCM_EXPORT explicit Candidate( std::string&& text );
   // Make class noncopyable
-  Candidate( const Candidate& ) = delete;
-  Candidate& operator=( const Candidate& ) = delete;
+private:
+  Candidate( const Candidate& ) = default;
+  Candidate& operator=( const Candidate& ) = default;
+public:
+  Candidate clone() const { return *this; }
   Candidate( Candidate&& ) = default;
   Candidate& operator=( Candidate&& ) = default;
   ~Candidate() = default;

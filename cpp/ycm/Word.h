@@ -38,8 +38,10 @@ class Word {
 public:
   YCM_EXPORT explicit Word( std::string&& text );
   // Make class noncopyable
-  Word( const Word& ) = delete;
-  Word& operator=( const Word& ) = delete;
+protected:
+  Word( const Word& ) = default;
+  Word& operator=( const Word& ) = default;
+public:
   Word( Word&& ) = default;
   Word& operator=( Word&& ) = default;
   ~Word() = default;

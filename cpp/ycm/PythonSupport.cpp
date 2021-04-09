@@ -32,19 +32,18 @@ std::vector< const Candidate * > CandidatesFromObjectList(
   const pybind11::list& candidates,
   pybind11::str candidate_property,
   size_t num_candidates ) {
-  std::vector< std::string > candidate_strings;
-  candidate_strings.reserve( num_candidates );
+  std::vector< std::string > candidate_strings( num_candidates );
+  auto it = candidate_strings.begin();
 
   if ( !PyUnicode_GET_LENGTH( candidate_property.ptr() ) ) {
     for ( size_t i = 0; i < num_candidates; ++i ) {
-        candidate_strings.emplace_back(
-            GetUtf8String( PyList_GET_ITEM( candidates.ptr(), i ) ) );
+      *it++ = GetUtf8String( PyList_GET_ITEM( candidates.ptr(), i ) );
     }
   } else {
     for ( size_t i = 0; i < num_candidates; ++i ) {
         auto element = PyDict_GetItem( PyList_GET_ITEM( candidates.ptr(), i ),
                                        candidate_property.ptr() );
-        candidate_strings.emplace_back( GetUtf8String( element ) );
+        *it++ = GetUtf8String( element );
     }
   }
 
