@@ -1529,8 +1529,8 @@ class LanguageServerCompleter( Completer ):
         else:
           begin, end = arg_label
         arg[ 'label' ] = [
-          utils.CodepointOffsetToByteOffset( sig_label, begin ),
-          utils.CodepointOffsetToByteOffset( sig_label, end ) ]
+          utils.CodepointOffsetToByteOffset( sig_label, begin + 1 ) - 1,
+          utils.CodepointOffsetToByteOffset( sig_label, end + 1 ) - 1 ]
     result.setdefault( 'activeParameter', 0 )
     result.setdefault( 'activeSignature', 0 )
     return result
