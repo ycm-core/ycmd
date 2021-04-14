@@ -50,7 +50,7 @@ def GetCompletions_Basic_test( app ):
     contains_exactly(
       CompletionEntryMatcher(
         'build_rocket',
-        '-> ()',
+        'fn(&self)',
         {
           'detailed_info': 'build_rocket\n\nDo not try at home',
           'menu_text':     'build_rocket',
@@ -59,7 +59,7 @@ def GetCompletions_Basic_test( app ):
       ),
       CompletionEntryMatcher(
         'build_shuttle',
-        '-> ()',
+        'fn(&self)',
         {
           'detailed_info': 'build_shuttle\n\n',
           'menu_text':     'build_shuttle',
