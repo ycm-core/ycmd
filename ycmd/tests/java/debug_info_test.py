@@ -32,7 +32,9 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               PathToTestFile,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory )
-from ycmd.tests.test_utils import BuildRequest, WaitUntilCompleterServerReady
+from ycmd.tests.test_utils import ( BuildRequest,
+                                    WaitUntilCompleterServerReady,
+                                    WithRetry )
 from ycmd import handlers
 from ycmd.completers.language_server import language_server_completer as lsc
 
@@ -187,6 +189,7 @@ def DebugInfo_ExtraConf_SettingsValid_test( app ):
         'is_running': instance_of( bool ) } ) ) } ) ) )
 
 
+@WithRetry
 @IsolatedYcmd( {
   'extra_conf_globlist': PathToTestFile( 'lombok_project', '*' )
 } )

@@ -24,9 +24,7 @@ from pprint import pformat
 import json
 import os
 
-from ycmd.tests.rust import ( PathToTestFile,
-                              SharedYcmd,
-                              StartRustCompleterServerInDirectory )
+from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
                                     PollForMessages,
@@ -60,6 +58,14 @@ DIAG_MATCHERS_PER_FILE = {
 def Diagnostics_DetailedDiags_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
   contents = ReadFile( filepath )
+  with open( filepath, 'w' ) as f:
+    f.write( contents )
+  event_data = BuildRequest( event_name = 'FileSave',
+                             contents = contents,
+                             filepath = filepath,
+                             filetype = 'rust' )
+  app.post_json( '/event_notification', event_data )
+
   WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
   request_data = BuildRequest( contents = contents,
                                filepath = filepath,
@@ -78,6 +84,13 @@ def Diagnostics_DetailedDiags_test( app ):
 def Diagnostics_FileReadyToParse_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
   contents = ReadFile( filepath )
+  with open( filepath, 'w' ) as f:
+    f.write( contents )
+  event_data = BuildRequest( event_name = 'FileSave',
+                             contents = contents,
+                             filepath = filepath,
+                             filetype = 'rust' )
+  app.post_json( '/event_notification', event_data )
 
   # It can take a while for the diagnostics to be ready.
   results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
@@ -91,7 +104,13 @@ def Diagnostics_Poll_test( app ):
   project_dir = PathToTestFile( 'common' )
   filepath = os.path.join( project_dir, 'src', 'main.rs' )
   contents = ReadFile( filepath )
-  StartRustCompleterServerInDirectory( app, project_dir )
+  with open( filepath, 'w' ) as f:
+    f.write( contents )
+  event_data = BuildRequest( event_name = 'FileSave',
+                             contents = contents,
+                             filepath = filepath,
+                             filetype = 'rust' )
+  app.post_json( '/event_notification', event_data )
 
   # Poll until we receive _all_ the diags asynchronously.
   to_see = sorted( DIAG_MATCHERS_PER_FILE.keys() )
