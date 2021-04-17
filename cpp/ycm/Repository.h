@@ -23,7 +23,19 @@
 #include "CodePoint.h"
 #include "Utils.h"
 
+#ifdef YCM_ABSEIL_SUPPORTED
 #include <absl/container/flat_hash_map.h>
+namespace YouCompleteMe {
+template< typename K, typename V >
+using HashMap = absl::flat_hash_map< K, V >;
+} // namespace YouCompleteMe
+#else
+#include <unordered_map>
+namespace YouCompleteMe {
+template< typename K, typename V >
+using HashMap = std::unordered_map< K, V >;
+} // namespace YouCompleteMe
+#endif
 #include <memory>
 #include <shared_mutex>
 #include <string>
@@ -38,7 +50,7 @@ namespace YouCompleteMe {
 template< typename T >
 class Repository {
 public:
-  using Holder = absl::flat_hash_map< std::string, std::unique_ptr< T > >;
+  using Holder = HashMap< std::string, std::unique_ptr< T > >;
   using Sequence = std::vector< const T* >;
   static Repository &Instance() {
     static Repository repo;

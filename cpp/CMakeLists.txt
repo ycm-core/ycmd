@@ -188,11 +188,18 @@ if( WIN32 OR CYGWIN OR MSYS AND NOT MSVC AND 64_BIT_PLATFORM )
   add_definitions( -DMS_WIN64 )
 endif()
 
+# CYGWIN needs handholding...
+if( CYGWIN )
+  set( NEEDS_EXTENSIONS ON )
+else()
+  set( NEEDS_EXTENSIONS OFF )
+endif()
+
 #############################################################################
 
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
-set( CMAKE_CXX_EXTENSIONS OFF )
+set( CMAKE_CXX_EXTENSIONS ${NEEDS_EXTENSIONS} )
 if ( NOT CPP17_AVAILABLE )
   # Platform-specific advice goes here. In particular, we have plenty of users
   # in corporate environments on RHEL/CentOS, where the default system compiler
