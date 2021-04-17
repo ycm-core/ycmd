@@ -19,6 +19,8 @@ from zipfile import ZipFile
 import tempfile
 import urllib.request
 
+IS_MSYS = 'MSYS' == os.environ.get( 'MSYSTEM' )
+
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 PY_VERSION = sys.version_info[ 0 : 3 ]
@@ -265,7 +267,7 @@ def GetGlobalPythonPrefix():
 def GetPossiblePythonLibraryDirectories():
   prefix = GetGlobalPythonPrefix()
 
-  if OnWindows():
+  if OnWindows() and not IS_MSYS:
     return [ p.join( prefix, 'libs' ) ]
   # On pyenv and some distributions, there is no Python dynamic library in the
   # directory returned by the LIBPL variable. Such library can be found in the
@@ -354,7 +356,7 @@ def CustomPythonCmakeArgs( args ):
 def GetGenerator( args ):
   if args.ninja:
     return 'Ninja'
-  if OnWindows():
+  if OnWindows() and not IS_MSYS:
     # The architecture must be specified through the -A option for the Visual
     # Studio 16 generator.
     if args.msvc == 16:
@@ -484,7 +486,7 @@ def GetCmakeCommonArgs( args ):
   cmake_args = [ '-G', GetGenerator( args ) ]
 
   # Set the architecture for the Visual Studio 16 generator.
-  if OnWindows() and args.msvc == 16 and not args.ninja:
+  if OnWindows() and args.msvc == 16 and not args.ninja and not IS_MSYS:
     arch = 'x64' if IS_64BIT else 'Win32'
     cmake_args.extend( [ '-A', arch ] )
 
