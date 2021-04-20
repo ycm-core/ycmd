@@ -204,7 +204,7 @@ jobs:
       run: python3 benchmark.py --msvc ${{ matrix.msvc }}
     - name: Run tests
       if: matrix.benchmark == false
-      run: python3 run_tests.py --msvc ${{ matrix.msvc }}
+      run: python3 run_tests.py --msvc ${{ matrix.msvc }} --no-parallel
     - name: Upload coverage data
       if: matrix.benchmark == false
       run: codecov --name ${{ matrix.runs-on }}-${{ matrix.python-arch }}
