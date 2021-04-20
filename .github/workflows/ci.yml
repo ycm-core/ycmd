@@ -19,16 +19,18 @@ jobs:
         include:
           - runs-on: ubuntu-20.04
             compiler: 'clang'
-            benchmark: false            
+            benchmark: false
             libclang: true
+            name_suffix: 'with Clang compiler - '
           - runs-on: ubuntu-20.04
             compiler: 'gcc'
             benchmark: false
             libclang: false
+            name_suffix: 'without libclang completer - '
     env:
       USE_CLANG_COMPLETER: ${{ matrix.libclang }}
       COVERAGE: ${{ !matrix.benchmark }}
-    name: "${{ matrix.runs-on }} - Compiler: ${{ matrix.compiler }} - Libclang enabled: ${{ matrix.libclang }} - Benchmark run: ${{ matrix.benchmark }}"
+    name: "${{ matrix.runs-on }} - ${{ matrix.name_suffix }}${{ matrix.benchmark && 'C++ Benchmark' || 'test run' }}"
     runs-on: ${{ matrix.runs-on }}
     steps:
     - uses: actions/checkout@v2
@@ -68,14 +70,14 @@ jobs:
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-7 100
         set -e
-    - name: Run pip and prepare codecov
+    - name: Run pip and prepare codecov - macOS only
       if: matrix.benchmark == false && runner.os == 'macOS'
       run: |
         set +e
         python3 -m pip install -r test_requirements.txt
         echo -e "import coverage\ncoverage.process_startup" > /Users/runner/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
         set -e
-    - name: Run pip and prepare codecov
+    - name: Run pip and prepare codecov - Linux only
       if: matrix.benchmark == false && runner.os == 'Linux'
       run: |
         set +e
@@ -102,7 +104,7 @@ jobs:
         set -e
 
   linux_lint:
-    name: "Linux lint"
+    name: "C++ Lint"
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -148,9 +150,9 @@ jobs:
       run: |
         set +e
         YCM_TESTRUN=1 python3 build.py --clang-completer --clang-tidy --valgrind
-        python3 run_tests.py --valgrind --skip-build --no-flake8 
+        python3 run_tests.py --valgrind --skip-build --no-flake8
         set -e
-      
+
   windows:
     strategy:
       fail-fast: false
@@ -172,7 +174,7 @@ jobs:
     env:
       USE_CLANG_COMPLETER: ${{ matrix.libclang }}
       COVERAGE: ${{ !matrix.benchmark }}
-    name: "${{ matrix.runs-on }} ${{ matrix.python-arch }} - Benchmark run: ${{ matrix.benchmark }}"
+    name: "Windows MSVC ${{ matrix.msvc }} ${{ matrix.python-arch }} - ${{ matrix.benchmark && 'C++ Benchmark' || 'test run' }}"
     steps:
     - uses: actions/checkout@v2
       with:
