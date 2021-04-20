@@ -1,0 +1,210 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  unix-like:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ ubuntu-20.04, macos-10.15 ]
+        compiler: [ 'gcc' ] # Only used on linux
+        libclang: [ true ] # Only used on linux
+        benchmark: [ true, false ]
+        include:
+          - runs-on: ubuntu-20.04
+            compiler: 'clang'
+            benchmark: false            
+            libclang: true
+          - runs-on: ubuntu-20.04
+            compiler: 'gcc'
+            benchmark: false
+            libclang: false
+    env:
+      USE_CLANG_COMPLETER: ${{ matrix.libclang }}
+      COVERAGE: ${{ !matrix.benchmark }}
+    name: "${{ matrix.runs-on }} - Compiler: ${{ matrix.compiler }} - Libclang enabled: ${{ matrix.libclang }} - Benchmark run: ${{ matrix.benchmark }}"
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Install Java
+      if: matrix.benchmark == false
+      uses: actions/setup-java@v2
+      with:
+        java-version: 11
+        distribution: 'adopt'
+    - name: Install Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+    - name: Install Go
+      if: matrix.benchmark == false
+      uses: actions/setup-go@v2
+      with:
+        stable: true
+    - name: Install GCC
+      if: runner.os == 'Linux' && matrix.compiler != 'clang'
+      run: |
+        set +e
+        sudo apt-get update
+        sudo apt-get install gcc-8 g++-8
+        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-8 100
+        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-8 100
+        set -e
+    - name: Install Clang
+      if: runner.os == 'Linux' && matrix.compiler == 'clang'
+      run: |
+        set +e
+        sudo apt-get update
+        sudo apt-get install clang-7
+        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
+        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-7 100
+        set -e
+    - name: Run pip and prepare codecov
+      if: matrix.benchmark == false && runner.os == 'macOS'
+      run: |
+        set +e
+        python3 -m pip install -r test_requirements.txt
+        echo -e "import coverage\ncoverage.process_startup" > /Users/runner/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
+        set -e
+    - name: Run pip and prepare codecov
+      if: matrix.benchmark == false && runner.os == 'Linux'
+      run: |
+        set +e
+        python3 -m pip install -r test_requirements.txt
+        echo -e "import coverage\ncoverage.process_startup" > /opt/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
+        set -e
+    - name: Run tests
+      if: matrix.benchmark == false
+      run: |
+        set +e
+        python3 run_tests.py
+        set -e
+    - name: Run benchmarks
+      if: matrix.benchmark == true
+      run: |
+        set +e
+        python3 benchmark.py
+        set -e
+    - name: Send coverage data
+      if: matrix.benchmark == false
+      run: |
+        set +e
+        codecov --name ${{ matrix.runs-on }}-${{ matrix.compiler }}-${{ matrix.libclang }}
+        set -e
+
+  linux_lint:
+    name: "Linux lint"
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Install Python
+      uses: deadsnakes/action@v2.1.1
+      with:
+        python-version: 3.9
+        debug: true
+    - name: Install GCC
+      run: |
+        set +e
+        sudo apt-get update
+        sudo apt-get install gcc-8 g++-8
+        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-8 100
+        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-8 100
+        set -e
+    - name: Install clang-tidy
+      run: |
+        set +e
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy libc6-dbg build-essential
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
+        set -e
+    - name: Install valgrind
+      run: |
+        set +e
+        wget https://sourceware.org/pub/valgrind/valgrind-3.16.1.tar.bz2
+        tar xf valgrind-3.16.1.tar.bz2
+        pushd valgrind-3.16.1
+        ./configure && make -j3 && sudo make install
+        popd
+        set -e
+    - name: Run pip
+      run: |
+        set +e
+        python3 -m pip install -r test_requirements.txt
+        set -e
+    - name: Lint
+      run: |
+        set +e
+        YCM_TESTRUN=1 python3 build.py --clang-completer --clang-tidy --valgrind
+        python3 run_tests.py --valgrind --skip-build --no-flake8 
+        set -e
+      
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ windows-2019 ]
+        benchmark: [ true, false ]
+        python-arch: [ 'x64', 'x86' ]
+        msvc: [ 16 ]
+        exclude:
+          - runs-on: windows-2019
+            benchmark: true
+            python-arch: 'x86'
+        include:
+          - runs-on: windows-2016
+            benchmark: false
+            python-arch: 'x64'
+            msvc: 15
+    runs-on: ${{ matrix.runs-on }}
+    env:
+      USE_CLANG_COMPLETER: ${{ matrix.libclang }}
+      COVERAGE: ${{ !matrix.benchmark }}
+    name: "${{ matrix.runs-on }} ${{ matrix.python-arch }} - Benchmark run: ${{ matrix.benchmark }}"
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Install Java
+      if: matrix.benchmark == false
+      uses: actions/setup-java@v2
+      with:
+        java-version: 11
+        distribution: 'adopt'
+    - name: Install Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+        architecture: ${{ matrix.python-arch }}
+    - name: Install Go
+      if: matrix.benchmark == false
+      uses: actions/setup-go@v2
+      with:
+        stable: true
+    - name: Run pip and prepare codecov
+      if: matrix.benchmark == false
+      run: |
+        python3 -m pip install -r test_requirements.txt
+        echo '__import__("coverage").process_startup()' > "C:\\hostedtoolcache\\windows\\python\\3.9.4\\x64\\lib\\site-packages\\sitecustomize.py"
+    - name: Run benchmarks
+      if: matrix.benchmark == true
+      run: python3 benchmark.py --msvc ${{ matrix.msvc }}
+    - name: Run tests
+      if: matrix.benchmark == false
+      run: python3 run_tests.py --msvc ${{ matrix.msvc }}
+    - name: Upload coverage data
+      if: matrix.benchmark == false
+      run: codecov --name ${{ matrix.runs-on }}-${{ matrix.python-arch }}
