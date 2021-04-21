@@ -46,7 +46,7 @@ def CheckCall( args, **kwargs ):
 
 def _CheckCallQuiet( args, status_message, **kwargs ):
   if status_message:
-    print( status_message + '...', flush = True )
+    print( status_message + '...', flush = True, end = '' )
 
   with tempfile.NamedTemporaryFile() as temp_file:
     _CheckCall( args, stdout=temp_file, stderr=subprocess.STDOUT, **kwargs )
