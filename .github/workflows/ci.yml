@@ -55,53 +55,36 @@ jobs:
     - name: Install GCC
       if: runner.os == 'Linux' && matrix.compiler != 'clang'
       run: |
-        set +e
         sudo apt-get update
         sudo apt-get install gcc-8 g++-8
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-8 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-8 100
-        set -e
     - name: Install Clang
       if: runner.os == 'Linux' && matrix.compiler == 'clang'
       run: |
-        set +e
         sudo apt-get update
         sudo apt-get install clang-7
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-7 100
-        set -e
     - name: Run pip and prepare codecov - macOS only
       if: matrix.benchmark == false && runner.os == 'macOS'
       run: |
-        set +e
         python3 -m pip install -r test_requirements.txt
         echo -e "import coverage\ncoverage.process_startup" > /Users/runner/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
-        set -e
     - name: Run pip and prepare codecov - Linux only
       if: matrix.benchmark == false && runner.os == 'Linux'
       run: |
-        set +e
         python3 -m pip install -r test_requirements.txt
         echo -e "import coverage\ncoverage.process_startup" > /opt/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
-        set -e
     - name: Run tests
       if: matrix.benchmark == false
-      run: |
-        set +e
-        python3 run_tests.py
-        set -e
+      run: python3 run_tests.py --no-parallel
     - name: Run benchmarks
       if: matrix.benchmark == true
-      run: |
-        set +e
-        python3 benchmark.py
-        set -e
+      run: python3 benchmark.py
     - name: Send coverage data
       if: matrix.benchmark == false
-      run: |
-        set +e
-        codecov --name ${{ matrix.runs-on }}-${{ matrix.compiler }}-${{ matrix.libclang }}
-        set -e
+      run: codecov --name "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
 
   linux_lint:
     name: "C++ Lint"
@@ -118,40 +101,29 @@ jobs:
         debug: true
     - name: Install GCC
       run: |
-        set +e
         sudo apt-get update
         sudo apt-get install gcc-8 g++-8
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-8 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-8 100
-        set -e
     - name: Install clang-tidy
       run: |
-        set +e
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo apt-get update
         sudo apt-get install -y clang-tidy libc6-dbg build-essential
         sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
-        set -e
     - name: Install valgrind
       run: |
-        set +e
         wget https://sourceware.org/pub/valgrind/valgrind-3.16.1.tar.bz2
         tar xf valgrind-3.16.1.tar.bz2
         pushd valgrind-3.16.1
         ./configure && make -j3 && sudo make install
         popd
-        set -e
     - name: Run pip
-      run: |
-        set +e
-        python3 -m pip install -r test_requirements.txt
-        set -e
+      run: python3 -m pip install -r test_requirements.txt
     - name: Lint
       run: |
-        set +e
         YCM_TESTRUN=1 python3 build.py --clang-completer --clang-tidy --valgrind
-        python3 run_tests.py --valgrind --skip-build --no-flake8
-        set -e
+        python3 run_tests.py --valgrind --skip-build --no-flake8 --no-parallel
 
   windows:
     strategy:
