@@ -69,7 +69,7 @@ def ShouldEnableRustCompleter( user_options ):
     else:
       return True
   else:
-    return bool( utils.FindExecutable( RA_EXECUTABLE ) )
+    return bool( RA_EXECUTABLE )
 
 
 class RustCompleter( language_server_completer.LanguageServerCompleter ):
