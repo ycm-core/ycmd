@@ -19,6 +19,8 @@ from zipfile import ZipFile
 import tempfile
 import urllib.request
 
+IS_MSYS = 'MSYS' == os.environ.get( 'MSYSTEM' )
+
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 PY_VERSION = sys.version_info[ 0 : 3 ]
@@ -31,15 +33,53 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 LIBCLANG_DIR = p.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 
+
+def CheckCall( args, **kwargs ):
+  quiet = kwargs.pop( 'quiet', False )
+  status_message = kwargs.pop( 'status_message', None )
+
+  if quiet:
+    _CheckCallQuiet( args, status_message, **kwargs )
+  else:
+    _CheckCall( args, **kwargs )
+
+
+def _CheckCallQuiet( args, status_message, **kwargs ):
+  if status_message:
+    print( status_message + '...', flush = True, end = '' )
+
+  with tempfile.NamedTemporaryFile() as temp_file:
+    _CheckCall( args, stdout=temp_file, stderr=subprocess.STDOUT, **kwargs )
+
+  if status_message:
+    print( "OK" )
+
+
+def _CheckCall( args, **kwargs ):
+  exit_message = kwargs.pop( 'exit_message', None )
+  stdout = kwargs.get( 'stdout', None )
+
+  try:
+    subprocess.check_call( args, **kwargs )
+  except subprocess.CalledProcessError as error:
+    if stdout is not None:
+      stdout.seek( 0 )
+      print( stdout.read().decode( 'utf-8' ) )
+      print( "FAILED" )
+
+    if exit_message:
+      sys.exit( exit_message )
+    sys.exit( error.returncode )
+
+
 for folder in os.listdir( DIR_OF_THIRD_PARTY ):
   abs_folder_path = p.join( DIR_OF_THIRD_PARTY, folder )
   if p.isdir( abs_folder_path ) and not os.listdir( abs_folder_path ):
-    sys.exit(
-      f'ERROR: folder { folder } in { DIR_OF_THIRD_PARTY } is empty; '
-      'you probably forgot to run:\n'
-      '\tgit submodule update --init --recursive\n'
+    print( "Updating submodules:" )
+    CheckCall(
+      [ "git", "submodule", "update", "--init", "--recursive" ],
+      exit_message = "Please run: git submodule update --init --recursive"
     )
-
 
 NO_DYNAMIC_PYTHON_ERROR = (
   'ERROR: found static Python library ({library}) but a dynamic one is '
@@ -78,7 +118,7 @@ JDTLS_SHA256 = (
   'df9c9b497ce86b1d57756b2292ad0f7bfaa76aed8a4b63a31c589e85018b7993'
 )
 
-RUST_TOOLCHAIN = 'nightly-2021-02-11'
+RUST_TOOLCHAIN = 'nightly-2021-04-14'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
@@ -109,7 +149,6 @@ def RemoveDirectory( directory ):
       try_number += 1
   raise RuntimeError(
     f'Cannot remove directory { directory } after { max_tries } tries.' )
-
 
 
 def RemoveDirectoryIfExists( directory_path ):
@@ -213,44 +252,8 @@ def NumCores():
     return 1
 
 
-def CheckCall( args, **kwargs ):
-  quiet = kwargs.pop( 'quiet', False )
-  status_message = kwargs.pop( 'status_message', None )
-
-  if quiet:
-    _CheckCallQuiet( args, status_message, **kwargs )
-  else:
-    _CheckCall( args, **kwargs )
 
 
-def _CheckCallQuiet( args, status_message, **kwargs ):
-  if status_message:
-    # __future__ not appear to support flush= on print_function
-    sys.stdout.write( status_message + '...' )
-    sys.stdout.flush()
-
-  with tempfile.NamedTemporaryFile() as temp_file:
-    _CheckCall( args, stdout=temp_file, stderr=subprocess.STDOUT, **kwargs )
-
-  if status_message:
-    print( "OK" )
-
-
-def _CheckCall( args, **kwargs ):
-  exit_message = kwargs.pop( 'exit_message', None )
-  stdout = kwargs.get( 'stdout', None )
-
-  try:
-    subprocess.check_call( args, **kwargs )
-  except subprocess.CalledProcessError as error:
-    if stdout is not None:
-      stdout.seek( 0 )
-      print( stdout.read().decode( 'utf-8' ) )
-      print( "FAILED" )
-
-    if exit_message:
-      sys.exit( exit_message )
-    sys.exit( error.returncode )
 
 
 def GetGlobalPythonPrefix():
@@ -265,7 +268,7 @@ def GetGlobalPythonPrefix():
 def GetPossiblePythonLibraryDirectories():
   prefix = GetGlobalPythonPrefix()
 
-  if OnWindows():
+  if OnWindows() and not IS_MSYS:
     return [ p.join( prefix, 'libs' ) ]
   # On pyenv and some distributions, there is no Python dynamic library in the
   # directory returned by the LIBPL variable. Such library can be found in the
@@ -354,7 +357,7 @@ def CustomPythonCmakeArgs( args ):
 def GetGenerator( args ):
   if args.ninja:
     return 'Ninja'
-  if OnWindows():
+  if OnWindows() and not IS_MSYS:
     # The architecture must be specified through the -A option for the Visual
     # Studio 16 generator.
     if args.msvc == 16:
@@ -484,7 +487,7 @@ def GetCmakeCommonArgs( args ):
   cmake_args = [ '-G', GetGenerator( args ) ]
 
   # Set the architecture for the Visual Studio 16 generator.
-  if OnWindows() and args.msvc == 16 and not args.ninja:
+  if OnWindows() and args.msvc == 16 and not args.ninja and not IS_MSYS:
     arch = 'x64' if IS_64BIT else 'Win32'
     cmake_args.extend( [ '-A', arch ] )
 

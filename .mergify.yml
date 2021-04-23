@@ -2,7 +2,18 @@ pull_request_rules:
   - name: Automatic merge on Azure Pipelines and Reviewable successes
     conditions:
       - base=master
-      - status-success=ycm-core.ycmd
+      - "#approved-reviews-by>=2"
+      - status-success=macos-10.15 - C++ Benchmark
+      - status-success=macos-10.15 - test run
+      - status-success=ubuntu-20.04 - C++ Benchmark
+      - status-success=ubuntu-20.04 - without libclang completer - test run
+      - status-success=ubuntu-20.04 - with Clang compiler - test run
+      - status-success=ubuntu-20.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 15 x64 - test run
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 16 x86 - test run
+      - status-success=Windows MSVC 16 x64 - C++ Benchmark
       - status-success=code-review/reviewable
     actions:
       merge:
@@ -13,7 +24,17 @@ pull_request_rules:
   - name: Manual merge on Azure Pipelines and Maintainer Override
     conditions:
       - base=master
-      - status-success=ycm-core.ycmd
+      - status-success=macos-10.15 - C++ Benchmark
+      - status-success=macos-10.15 - test run
+      - status-success=ubuntu-20.04 - C++ Benchmark
+      - status-success=ubuntu-20.04 - without libclang completer - test run
+      - status-success=ubuntu-20.04 - with Clang compiler - test run
+      - status-success=ubuntu-20.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 15 x64 - test run
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 16 x86 - test run
+      - status-success=Windows MSVC 16 x64 - C++ Benchmark
 
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"

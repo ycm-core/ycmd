@@ -142,6 +142,7 @@ def Subcommands_ServerNotInitialized_test( app ):
   Test( app, 'RefactorRename', [ 'test' ] )
 
 
+@WithRetry
 @SharedYcmd
 def Subcommands_Format_WholeFile_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
@@ -232,7 +233,7 @@ def Subcommands_GetDoc_NoDocumentation_test( app ):
                    'raises an error',
     'request': {
       'command': 'GetDoc',
-      'line_num': 4,
+      'line_num': 3,
       'column_num': 11,
       'filepath': PathToTestFile( 'common', 'src', 'test.rs' ),
     },
@@ -272,7 +273,7 @@ def Subcommands_GetType_UnknownType_test( app ):
     'description': 'GetType on a unknown type raises an error',
     'request': {
       'command': 'GetType',
-      'line_num': 2,
+      'line_num': 3,
       'column_num': 4,
       'filepath': PathToTestFile( 'common', 'src', 'test.rs' ),
     },
