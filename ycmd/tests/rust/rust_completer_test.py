@@ -27,7 +27,7 @@ def GetCompleter_RAFound_test():
   assert_that( GetCompleter( user_options_store.GetAll() ) )
 
 
-@patch( 'ycmd.completers.rust.rust_completer.RA_EXECUTABLE', 'does_not_exist' )
+@patch( 'ycmd.completers.rust.rust_completer.RA_EXECUTABLE', None )
 def GetCompleter_RANotFound_test( *args ):
   assert_that( not GetCompleter( user_options_store.GetAll() ) )
 
