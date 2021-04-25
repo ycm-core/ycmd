@@ -23,7 +23,22 @@
 #include "Result.h"
 #include "Utils.h"
 
+#ifdef YCM_ABSEIL_SUPPORTED
 #include <absl/container/flat_hash_set.h>
+namespace YouCompleteMe {
+template< typename T, typename H, typename Eq >
+using HashSet = absl::flat_hash_set< T, H, Eq >;
+template< typename T > using Hash = absl::Hash< T >;
+} // namespace YouCompleteMe
+#else
+#include <unordered_set>
+namespace YouCompleteMe {
+template< typename T, typename H, typename Eq >
+using HashSet = std::unordered_set< T, H, Eq >;
+template< typename T >
+using Hash = std::hash< T >;
+} // namespace YouCompleteMe
+#endif
 #include <memory>
 
 namespace YouCompleteMe {
@@ -31,7 +46,7 @@ namespace YouCompleteMe {
 namespace {
 struct CandidateHasher {
   size_t operator() ( const Candidate* c ) const noexcept {
-    static absl::Hash< std::string > h;
+    static Hash< std::string > h;
     return h(c->Text());
   }
 };
@@ -110,9 +125,9 @@ std::vector< Result > IdentifierDatabase::ResultsForQueryAndType(
   }
   Word query_object( std::move( query ) );
 
-  absl::flat_hash_set< const Candidate *,
-                       CandidateHasher,
-                       CandidateCompareEq > seen_candidates;
+  HashSet< const Candidate *,
+           CandidateHasher,
+           CandidateCompareEq > seen_candidates;
   seen_candidates.reserve( candidate_repository_.NumStoredElements() );
   std::vector< Result > results;
 

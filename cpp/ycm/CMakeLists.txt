@@ -282,18 +282,18 @@ try_compile( STD_FS_NO_LIB_NEEDED ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
              CXX_STANDARD 17
              CXX_STANDARD_REQUIRED TRUE
-             CXX_EXTENSIONS FALSE )
+             CXX_EXTENSIONS ${NEEDS_EXTENSIONS} )
 try_compile( STD_FS_NEEDS_STDCXXFS ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
              CXX_STANDARD 17
              CXX_STANDARD_REQUIRED TRUE
-             CXX_EXTENSIONS FALSE
+             CXX_EXTENSIONS ${NEEDS_EXTENSIONS}
              LINK_LIBRARIES stdc++fs )
 try_compile( STD_FS_NEEDS_CXXFS ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
              CXX_STANDARD 17
              CXX_STANDARD_REQUIRED TRUE
-             CXX_EXTENSIONS FALSE
+             CXX_EXTENSIONS ${NEEDS_EXTENSIONS}
              LINK_LIBRARIES c++fs )
 file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp )
 
@@ -307,15 +307,34 @@ else()
   message( FATAL_ERROR "Unknown compiler - C++17 filesystem library missing" )
 endif()
 
+# Check if Abseil supports this environment
+file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp "#include <absl/base/policy_checks.h>\nint main() {}" )
+try_compile( ABSL_SUPPORTED ${CMAKE_CURRENT_BINARY_DIR}
+             SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+             CMAKE_FLAGS -DINCLUDE_DIRECTORIES=${CMAKE_SOURCE_DIR}/absl
+             CXX_STANDARD 17
+             CXX_STANDARD_REQUIRED TRUE
+             CXX_EXTENSIONS ${NEEDS_EXTENSIONS} )
+file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp )
+
+if( ${ABSL_SUPPORTED} )
+  message( STATUS "Using Abseil hash tables" )
+  set( EXTRA_LIBS ${EXTRA_LIBS} absl::flat_hash_map absl::flat_hash_set )
+else()
+  message( STATUS "Using STL hash tables" )
+endif()
+
 #############################################################################
 
-add_library( ${PROJECT_NAME} SHARED
-             ${SERVER_SOURCES}
-           )
+add_library( ${PROJECT_NAME} SHARED ${SERVER_SOURCES})
+
+if ( ${ABSL_SUPPORTED} )
+  target_compile_definitions( ${PROJECT_NAME} PUBLIC YCM_ABSEIL_SUPPORTED )
+endif()
 
 # Makes MSVC conform to the standard
 if ( MSVC )
-  target_compile_options( ${PROJECT_NAME} PRIVATE "/permissive-" )
+  target_compile_options( ${PROJECT_NAME} PUBLIC "/permissive-" )
 endif()
 
 target_include_directories(
@@ -338,8 +357,6 @@ target_link_libraries( ${PROJECT_NAME}
                        PUBLIC ${LIBCLANG_TARGET}
                        PUBLIC ${STD_FS_LIB}
                        PUBLIC ${EXTRA_LIBS}
-                       PUBLIC absl::flat_hash_map
-                       PUBLIC absl::flat_hash_set
                      )
 
 if( LIBCLANG_TARGET )

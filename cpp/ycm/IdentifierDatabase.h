@@ -18,7 +18,19 @@
 #ifndef IDENTIFIERDATABASE_H_ZESX3CVR
 #define IDENTIFIERDATABASE_H_ZESX3CVR
 
+#ifdef YCM_ABSEIL_SUPPORTED
 #include <absl/container/flat_hash_map.h>
+namespace YouCompleteMe {
+template< typename K, typename V >
+using HashMap = absl::flat_hash_map< K, V >;
+} // namespace YouCompleteMe
+#else
+#include <unordered_map>
+namespace YouCompleteMe {
+template< typename K, typename V >
+using HashMap = std::unordered_map< K, V >;
+} // namespace YouCompleteMe
+#endif
 #include <memory>
 #include <shared_mutex>
 #include <string>
@@ -33,11 +45,10 @@ class Repository;
 
 
 // filepath -> identifiers
-using FilepathToIdentifiers = absl::flat_hash_map< std::string,
-                                        std::vector< std::string > >;
+using FilepathToIdentifiers = HashMap< std::string, std::vector< std::string > >;
 
 // filetype -> (filepath -> identifiers)
-using FiletypeIdentifierMap = absl::flat_hash_map< std::string, FilepathToIdentifiers >;
+using FiletypeIdentifierMap = HashMap< std::string, FilepathToIdentifiers >;
 
 
 // This class stores the database of identifiers the identifier completer has
