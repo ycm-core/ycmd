@@ -332,11 +332,6 @@ if ( ${ABSL_SUPPORTED} )
   target_compile_definitions( ${PROJECT_NAME} PUBLIC YCM_ABSEIL_SUPPORTED )
 endif()
 
-# Makes MSVC conform to the standard
-if ( MSVC )
-  target_compile_options( ${PROJECT_NAME} PUBLIC "/permissive-" )
-endif()
-
 target_include_directories(
   ${PROJECT_NAME}
   SYSTEM

@@ -182,6 +182,11 @@ if ( MSVC )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj /utf-8" )
 endif()
 
+# Makes MSVC conform to the standard
+if ( MSVC )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive- /Zc:__cplusplus /Zc:externConstexpr /Zc:inline /Zc:throwingNew" )
+endif()
+
 # Enables Python compilation for 64-bit Windows. Already defined by Python
 # headers when compiling with MSVC.
 if( WIN32 OR CYGWIN OR MSYS AND NOT MSVC AND 64_BIT_PLATFORM )
