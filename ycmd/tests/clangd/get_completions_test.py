@@ -114,9 +114,9 @@ def GetCompletions_ForcedWithNoTrigger_NoYcmdCaching_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_exactly(
+          CompletionEntryMatcher( 'do_something', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
-          CompletionEntryMatcher( 'do_something', 'void' ),
         ),
         'errors': empty(),
       } )
@@ -140,9 +140,9 @@ def GetCompletions_NotForced_NoYcmdCaching_test( app ):
       'response': requests.codes.ok,
       'data': has_entries( {
         'completions': contains_exactly(
+          CompletionEntryMatcher( 'do_something', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
           CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
-          CompletionEntryMatcher( 'do_something', 'void' ),
         ),
         'errors': empty(),
       } )
