@@ -39,7 +39,7 @@ def AssertRustCompleterServerIsRunning( app, is_running ):
                ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_RestartServer_test( app ):
   filepath = PathToTestFile( 'common', 'src', 'main.rs' )
   StartRustCompleterServerInDirectory( app, filepath )
@@ -60,7 +60,7 @@ def ServerManagement_RestartServer_test( app ):
   AssertRustCompleterServerIsRunning( app, True )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'shutil.rmtree', side_effect = OSError )
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
@@ -85,7 +85,7 @@ def ServerManagement_CloseServer_Unclean_test( wait_until, app ):
                ) )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_StopServerTwice_test( app ):
   StartRustCompleterServerInDirectory( app, PathToTestFile( 'common', 'src' ) )
 
@@ -111,7 +111,7 @@ def ServerManagement_StopServerTwice_test( app ):
   AssertRustCompleterServerIsRunning( app, False )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def ServerManagement_StartServer_Fails_test( app ):
   with patch( 'ycmd.completers.language_server.language_server_completer.'
               'LanguageServerConnection.AwaitServerConnection',

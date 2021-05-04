@@ -66,7 +66,7 @@ def DebugInfo_test( app ):
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def DebugInfo_ProjectDirectory_test( app ):
   project_dir = PathToTestFile( 'td' )
   StartGoCompleterServerInDirectory( app, project_dir )

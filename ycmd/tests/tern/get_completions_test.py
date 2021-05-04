@@ -470,7 +470,7 @@ def GetCompletions_Unicode_InFile_test( app ):
   } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def GetCompletions_ChangeStartColumn_test( app ):
   StartJavaScriptCompleterServerInDirectory( app, PathToTestFile( 'node' ) )
   RunTest( app, {

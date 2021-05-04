@@ -152,7 +152,7 @@ def Subcommands_GoTo_test( app ):
   } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def Subcommands_GoTo_RelativePath_test( app ):
   StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
   RunTest(
@@ -390,7 +390,7 @@ def Subcommands_RefactorRename_MultipleFiles_test( app ):
 
 # Needs to be isolated to prevent interfering with other tests (this test loads
 # an extra file into tern's project memory)
-@IsolatedYcmd
+@IsolatedYcmd()
 def Subcommands_RefactorRename_MultipleFiles_OnFileReadyToParse_test( app ):
   StartJavaScriptCompleterServerInDirectory( app, PathToTestFile() )
 
@@ -508,7 +508,7 @@ def Subcommands_RefactorRename_Unicode_test( app ):
   } )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
         MockProcessTerminationTimingOut )
 def Subcommands_StopServer_Timeout_test( app ):

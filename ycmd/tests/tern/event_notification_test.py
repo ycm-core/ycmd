@@ -31,7 +31,7 @@ from ycmd.tests.tern import IsolatedYcmd, PathToTestFile
 from ycmd import utils
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
   response = app.post_json( '/event_notification',
                             BuildRequest(
@@ -60,7 +60,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_cwd_test( app ):
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
   response = app.post_json( '/event_notification',
                             BuildRequest(
@@ -89,7 +89,7 @@ def EventNotification_OnFileReadyToParse_ProjectFile_parentdir_test( app ):
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = False )
 def EventNotification_OnFileReadyToParse_NoProjectFile_test(
@@ -210,7 +210,7 @@ def EventNotification_OnFileReadyToParse_NoProjectFile_test(
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.completers.javascript.tern_completer.GlobalConfigExists',
         return_value = True )
 def EventNotification_OnFileReadyToParse_UseGlobalConfig_test(

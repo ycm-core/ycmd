@@ -164,8 +164,9 @@ class PythonCompleter( Completer ):
 
 
   def _GetJediScript( self, request_data ):
+    self._UpdateDirtyFilesUnderLock( request_data )
     path = request_data[ 'filepath' ]
-    source = request_data[ 'file_data' ][ path ][ 'contents' ]
+    source = self._server_file_state[ path ].contents
     environment = self._EnvironmentForRequest( request_data )
     jedi_project = self._JediProjectForFile( request_data, environment )
     return jedi.Script( source,

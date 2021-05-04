@@ -51,29 +51,33 @@ class ClangCompleter( Completer ):
     self._include_cache = IncludeCache()
     self._diagnostic_store = None
     self._files_being_compiled = EphemeralValuesSet()
+    self._unsaved_files = ycm_core.UnsavedFileVector()
+    self.ChangeFileHandler = self.OpenFileHandler
 
 
   def SupportedFiletypes( self ):
     return CLANG_FILETYPES
 
 
+  def OpenFileHandler( self, file_state, filetypes, changes ):
+    # TODO: WAT?
+    contents = file_state.contents
+    if not contents or not file_state.filename:
+      return
+
+    unsaved_file = ycm_core.UnsavedFile()
+    utf8_contents = ToBytes( contents )
+    unsaved_file.contents_ = utf8_contents
+    unsaved_file.length_ = len( utf8_contents )
+    unsaved_file.filename_ = file_state.filename
+
+    self._unsaved_files.append( unsaved_file )
+
+
   def GetUnsavedFilesVector( self, request_data ):
-    files = ycm_core.UnsavedFileVector()
-    for filename, file_data in request_data[ 'file_data' ].items():
-      if not ClangAvailableForFiletypes( file_data[ 'filetypes' ] ):
-        continue
-      contents = file_data[ 'contents' ]
-      if not contents or not filename:
-        continue
-
-      unsaved_file = ycm_core.UnsavedFile()
-      utf8_contents = ToBytes( contents )
-      unsaved_file.contents_ = utf8_contents
-      unsaved_file.length_ = len( utf8_contents )
-      unsaved_file.filename_ = filename
-
-      files.append( unsaved_file )
-    return files
+    self._unsaved_files = ycm_core.UnsavedFileVector()
+    self._UpdateDirtyFilesUnderLock( request_data )
+    return self._unsaved_files
 
 
   def ShouldCompleteIncludeStatement( self, request_data ):
@@ -488,10 +492,6 @@ def DiagnosticsToDiagStructure( diagnostics ):
     structure[ diagnostic.location_.filename_ ][
       diagnostic.location_.line_number_ ].append( diagnostic )
   return structure
-
-
-def ClangAvailableForFiletypes( filetypes ):
-  return any( filetype in CLANG_FILETYPES for filetype in filetypes )
 
 
 def _FilterDiagnostics( diagnostics ):

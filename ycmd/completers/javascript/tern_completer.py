@@ -129,6 +129,8 @@ class TernCompleter( Completer ):
     self._server_started = False
     self._server_working_dir = None
     self._server_project_file = None
+    self._incomplete_files = []
+    self.ChangeFileHandler = self.OpenFileHandler
 
 
   def _WarnIfMissingTernProject( self, request_data ):
@@ -296,6 +298,14 @@ class TernCompleter( Completer ):
       return False
 
 
+  def OpenFileHandler( self, file_state, filetypes, changes ):
+    self._incomplete_files.append( {
+      'type': 'full',
+      'name': file_state.filename,
+      'text': file_state.contents
+    } )
+
+
   def _PostRequest( self, request, request_data ):
     """Send a raw request with the supplied request block, and
     return the server's response. If the server is not running, it is started.
@@ -309,20 +319,9 @@ class TernCompleter( Completer ):
     if not self._ServerIsRunning():
       raise ValueError( 'Not connected to server' )
 
-    def MakeIncompleteFile( name, file_data ):
-      return {
-        'type': 'full',
-        'name': name,
-        'text': file_data[ 'contents' ],
-      }
-
-    file_data = request_data.get( 'file_data', {} )
-
-    full_request = {
-      'files': [ MakeIncompleteFile( x, file_data[ x ] )
-                 for x in file_data.keys()
-                 if 'javascript' in file_data[ x ][ 'filetypes' ] ],
-    }
+    self._incomplete_files = []
+    self._UpdateDirtyFilesUnderLock( request_data )
+    full_request = { 'files': self._incomplete_files }
     full_request.update( request )
     try:
       response = urllib.request.urlopen(

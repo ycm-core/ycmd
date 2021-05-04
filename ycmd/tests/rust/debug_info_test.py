@@ -72,7 +72,7 @@ def DebugInfo_RlsVersion_test( app ):
   )
 
 
-@IsolatedYcmd
+@IsolatedYcmd()
 @patch( 'ycmd.completers.rust.rust_completer._GetCommandOutput',
         return_value = '' )
 def DebugInfo_NoRlsVersion_test( get_command_output, app ):

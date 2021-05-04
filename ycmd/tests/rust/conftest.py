@@ -76,26 +76,27 @@ SharedYcmd = pytest.mark.parametrize(
     indirect = True )
 
 
-"""Defines a decorator to be attached to tests of this package. This decorator
-passes a unique ycmd application as a parameter. It should be used on tests
-that change the server state in a irreversible way (ex: a semantic subserver
-is stopped or restarted) or expect a clean state (ex: no semantic subserver
-started, no .ycm_extra_conf.py loaded, etc). Use the optional parameter
-|custom_options| to give additional options and/or override the default ones.
+def IsolatedYcmd( custom_options = {} ):
+  """Defines a decorator to be attached to tests of this package. This decorator
+  passes a unique ycmd application as a parameter. It should be used on tests
+  that change the server state in a irreversible way (ex: a semantic subserver
+  is stopped or restarted) or expect a clean state (ex: no semantic subserver
+  started, no .ycm_extra_conf.py loaded, etc). Use the optional parameter
+  |custom_options| to give additional options and/or override the default ones.
 
-Example usage:
+  Example usage:
 
-  from ycmd.tests.python import IsolatedYcmd
+    from ycmd.tests.python import IsolatedYcmd
 
-  @IsolatedYcmd( { 'python_binary_path': '/some/path' } )
-  def CustomPythonBinaryPath_test( app ):
-    ...
-"""
-IsolatedYcmd = pytest.mark.parametrize(
+    @IsolatedYcmd( { 'python_binary_path': '/some/path' } )
+    def CustomPythonBinaryPath_test( app ):
+      ...
+  """
+  return pytest.mark.parametrize(
     # Name of the fixture/function argument
     'app',
     # Fixture parameters, passed to app() as request.param
-    [ ( 'isolated', ) ],
+    [ ( 'isolated', custom_options ) ],
     # Non-empty ids makes fixture parameters visible in pytest verbose output
     ids = [ '' ],
     # Execute the fixture, instead of passing parameters directly to the
