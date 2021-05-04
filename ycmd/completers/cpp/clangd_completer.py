@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020 ycmd contributors
+# Copyright (C) 2018-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -34,7 +34,7 @@ from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          PathsToAllParentFolders,
                          re )
 
-MIN_SUPPORTED_VERSION = ( 11, 0, 0 )
+MIN_SUPPORTED_VERSION = ( 12, 0, 0 )
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )
 NOT_CACHED = 'NOT_CACHED'
