@@ -41,8 +41,8 @@ else()
   include( FetchContent )
   FetchContent_Declare(
     gmock
-    URL https://github.com/google/googletest/archive/release-1.10.0.tar.gz
-    URL_HASH SHA256=9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb
+    GIT_REPOSITORY https://github.com/google/googletest
+    GIT_TAG f5e592d8ee5ffb1d9af5be7f715ce3576b8bf9c4
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gmock
   )
   FetchContent_GetProperties( gmock )
