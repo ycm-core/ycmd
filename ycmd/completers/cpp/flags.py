@@ -549,11 +549,15 @@ def AddMacIncludePaths( flags ):
        use_standard_cpp_includes and
        use_standard_system_includes and
        use_libcpp ):
-    if toolchain:
+    # Sometimes apple puts the stdlib in the platform, but it's also always in
+    # the toolchain. Pickt he platform one if it's there, else the toolchain
+    # one.
+    platform_stdlib = os.path.join( sysroot, 'usr/include/c++/v1' )
+    if os.path.exists( platform_stdlib ):
+      flags.extend( [ '-isystem', platform_stdlib ] )
+    elif toolchain:
       flags.extend( [
         '-isystem', os.path.join( toolchain, 'usr/include/c++/v1' ) ] )
-    flags.extend( [
-      '-isystem', os.path.join( sysroot, 'usr/include/c++/v1' ) ] )
 
   if use_standard_system_includes:
     flags.extend( [
