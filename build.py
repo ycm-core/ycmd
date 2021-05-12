@@ -535,26 +535,23 @@ def RunYcmdTests( args, build_dir ):
   else:
     new_env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
 
-  tests_cmd = [ p.join( tests_dir, 'ycm_core_tests' ) ]
+  tests_cmd = [ p.join( tests_dir, 'ycm_core_tests' ), '--gtest_brief' ]
   if args.core_tests != '*':
     tests_cmd.append( f'--gtest_filter={ args.core_tests }' )
-  if not args.valgrind:
-    CheckCall( tests_cmd,
-               env = new_env,
-               quiet = args.quiet,
-               status_message = 'Running ycmd tests' )
-  else:
+  if args.valgrind:
     new_env[ 'PYTHONMALLOC' ] = 'malloc'
-    cmd = [ 'valgrind',
+    tests_cmd = [ 'valgrind',
             '--gen-suppressions=all',
             '--error-exitcode=1',
             '--leak-check=full',
             '--show-leak-kinds=definite,indirect',
             '--errors-for-leak-kinds=definite,indirect',
             '--suppressions=' + p.join( DIR_OF_THIS_SCRIPT,
-                                        'valgrind.suppressions' ),
-            p.join( tests_dir, 'ycm_core_tests' ) ]
-    CheckCall( cmd, env = new_env )
+                                        'valgrind.suppressions' ) ] + tests_cmd
+  CheckCall( tests_cmd,
+      env = new_env,
+      quiet = args.quiet,
+      status_message = 'Running ycmd tests' )
 
 
 def RunYcmdBenchmarks( args, build_dir ):
