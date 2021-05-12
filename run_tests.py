@@ -230,6 +230,9 @@ def BuildYcmdLibs( args ):
 
 def PytestValgrind( parsed_args, extra_pytests_args ):
   pytests_args = BASE_PYTEST_ARGS
+  if parsed_args.quiet:
+    pytests_args[ 0 ] = '-q'
+
   if extra_pytests_args:
     pytests_args.extend( extra_pytests_args )
   else:
@@ -261,6 +264,8 @@ def PytestValgrind( parsed_args, extra_pytests_args ):
 
 def PytestTests( parsed_args, extra_pytests_args ):
   pytests_args = BASE_PYTEST_ARGS
+  if parsed_args.quiet:
+    pytests_args[ 0 ] = '-q'
 
   for key in COMPLETERS:
     if key not in parsed_args.completers:
