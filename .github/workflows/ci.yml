@@ -66,16 +66,11 @@ jobs:
         sudo apt-get install clang-7
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-7 100
-    - name: Run pip and prepare codecov - macOS only
-      if: matrix.benchmark == false && runner.os == 'macOS'
+    - name: Run pip and prepare codecov
+      if: matrix.benchmark == false
       run: |
         python3 -m pip install -r test_requirements.txt
-        echo -e "import coverage\ncoverage.process_startup" > /Users/runner/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
-    - name: Run pip and prepare codecov - Linux only
-      if: matrix.benchmark == false && runner.os == 'Linux'
-      run: |
-        python3 -m pip install -r test_requirements.txt
-        echo -e "import coverage\ncoverage.process_startup" > /opt/hostedtoolcache/Python/3.6.13/x64/lib/python3.6/site-packages/sitecustomize.py
+        echo -e "import coverage\ncoverage.process_startup()" > $(python -c "print(__import__('sysconfig').get_path('purelib'))")/sitecustomize.py
     - name: Run tests
       if: matrix.benchmark == false
       run: python3 run_tests.py --no-parallel
@@ -172,7 +167,8 @@ jobs:
       if: matrix.benchmark == false
       run: |
         python3 -m pip install -r test_requirements.txt
-        echo '__import__("coverage").process_startup()' > "C:\\hostedtoolcache\\windows\\python\\3.9.4\\x64\\lib\\site-packages\\sitecustomize.py"
+        echo -e "import coverage\ncoverage.process_startup()" > $(python -c "print(__import__('sysconfig').get_path('purelib'))")/sitecustomize.py
+      shell: bash
     - name: Run benchmarks
       if: matrix.benchmark == true
       run: python3 benchmark.py --msvc ${{ matrix.msvc }}
