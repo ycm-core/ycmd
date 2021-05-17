@@ -356,6 +356,7 @@ def FlagsForFile_AddMacIncludePaths_SysRoot_CommandLine_NoStdlib_test():
                      '/Library/Frameworks',
       '-fspell-checking' ) )
 
+
 @MacOnly
 @patch( 'os.path.exists', lambda path:
         path in [
@@ -390,6 +391,7 @@ def FlagsForFile_AddMacIncludePaths_Sysroot_Custom_WithStdlib_test():
       '-iframework', '/path/to/second/sys/root/System/Library/Frameworks',
       '-iframework', '/path/to/second/sys/root/Library/Frameworks',
       '-fspell-checking' ) )
+
 
 @MacOnly
 @patch( 'os.path.exists', lambda path: False )
