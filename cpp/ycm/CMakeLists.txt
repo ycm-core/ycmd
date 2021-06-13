@@ -201,7 +201,7 @@ include_directories(
 if ( USE_CLANG_COMPLETER )
   include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/ClangCompleter" )
-  add_definitions( -DUSE_CLANG_COMPLETER )
+  add_compile_definitions( USE_CLANG_COMPLETER )
   file( GLOB add_clang ClangCompleter/*.h ClangCompleter/*.cpp )
   list( APPEND SERVER_SOURCES ${add_clang} )
 endif()

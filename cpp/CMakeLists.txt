@@ -121,22 +121,22 @@ set( CMAKE_CXX_VISIBILITY_PRESET hidden )
 
 if ( DEFINED ENV{YCM_BENCHMARK} OR DEFINED ENV{YCM_TESTRUN})
   if ( MSVC )
-    add_definitions( -DYCM_EXPORT=__declspec\(\ dllexport\ \) )
+    add_compile_definitions( YCM_EXPORT=__declspec\(\ dllexport\ \) )
   elseif( CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG )
-    add_definitions(
-      -DYCM_EXPORT=__attribute__\(\(visibility\(\"default\"\)\)\) )
+    add_compile_definitions(
+      YCM_EXPORT=__attribute__\(\(visibility\(\"default\"\)\)\) )
   else()
-    add_definitions( -DYCM_EXPORT= )
+    add_compile_definitions( YCM_EXPORT= )
   endif()
 else()
-  add_definitions( -DYCM_EXPORT= )
+  add_compile_definitions( YCM_EXPORT= )
 endif()
 
 #############################################################################
 
 # MSVC has snprintf since version 14 which is newer than what we support.
 if ( MSVC )
-  add_definitions( -DHAVE_SNPRINTF )
+  add_compile_definitions( HAVE_SNPRINTF )
 endif()
 
 #############################################################################
@@ -149,27 +149,9 @@ endif()
 #############################################################################
 
 # Determining the presence of C++17 support in the compiler
-set( CPP17_AVAILABLE false )
-if ( CMAKE_CXX_COMPILER_ID STREQUAL "GNU"  )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8 )
-    set( CPP17_AVAILABLE true )
-  endif()
-elseif( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7 )
-    set( CPP17_AVAILABLE true )
-    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++17" )
-    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
-  endif()
-elseif( CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
-  if ( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11 )
-    set( CPP17_AVAILABLE true )
-    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++17" )
-    set( CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" )
-  endif()
-elseif( MSVC )
-  if ( NOT MSVC_VERSION LESS 1914 )
-    set( CPP17_AVAILABLE true )
-  endif()
+list( FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_17 HAS_CXX17)
+if( NOT HAS_CXX17 EQUAL -1 )
+  set( CPP17_AVAILABLE YES)
 endif()
 
 #############################################################################
@@ -178,7 +160,7 @@ endif()
 # number of sections that an object file can hold. This is needed for storing
 # the Unicode table. Also, force MSVC to treat source files as UTF-8 encoded.
 if ( MSVC )
-  add_definitions( /DUNICODE /D_UNICODE )
+  add_compile_definitions( UNICODE _UNICODE )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj /utf-8" )
 endif()
 
@@ -190,7 +172,7 @@ endif()
 # Enables Python compilation for 64-bit Windows. Already defined by Python
 # headers when compiling with MSVC.
 if( WIN32 OR CYGWIN OR MSYS AND NOT MSVC AND 64_BIT_PLATFORM )
-  add_definitions( -DMS_WIN64 )
+  add_compile_definitions( MS_WIN64 )
 endif()
 
 # CYGWIN needs handholding...
@@ -247,11 +229,7 @@ else()
     GIT_TAG 3b4a16abad2c2ddc494371cc39a2946e36d35d11
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/absl
   )
-  FetchContent_GetProperties( absl )
-  if ( NOT absl_POPULATED )
-    FetchContent_Populate( absl )
-  endif()
-  add_subdirectory( absl )
+  FetchContent_MakeAvailable( absl )
 endif()
 
 add_subdirectory( ycm )
