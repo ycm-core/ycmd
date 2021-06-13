@@ -382,9 +382,6 @@ def ParseArguments():
   parser.add_argument( '--ts-completer', action = 'store_true',
                        help = 'Enable JavaScript and TypeScript semantic '
                               'completion engine.' ),
-  parser.add_argument( '--system-boost', action = 'store_true',
-                       help = 'Use the system boost instead of bundled one. '
-                       'NOT RECOMMENDED OR SUPPORTED!' )
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
@@ -503,9 +500,6 @@ def GetCmakeArgs( parsed_args ):
 
   if parsed_args.system_libclang:
     cmake_args.append( '-DUSE_SYSTEM_LIBCLANG=ON' )
-
-  if parsed_args.system_boost:
-    cmake_args.append( '-DUSE_SYSTEM_BOOST=ON' )
 
   if parsed_args.enable_debug:
     cmake_args.append( '-DCMAKE_BUILD_TYPE=Debug' )
