@@ -33,11 +33,7 @@ else()
     URL_HASH SHA256=dccbdab796baa1043f04982147e67bb6e118fe610da2c65f88912d73987e700c
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/benchmark
   )
-  FetchContent_GetProperties( benchmark )
-  if ( NOT benchmark_POPULATED )
-    FetchContent_Populate( benchmark )
-  endif()
-  add_subdirectory( benchmark )
+  FetchContent_MakeAvailable( benchmark )
 endif()
 
 file( GLOB SOURCES *.h *.cpp )

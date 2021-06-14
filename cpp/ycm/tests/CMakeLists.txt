@@ -45,11 +45,7 @@ else()
     GIT_TAG f5e592d8ee5ffb1d9af5be7f715ce3576b8bf9c4
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gmock
   )
-  FetchContent_GetProperties( gmock )
-  if ( NOT benchmark_POPULATED )
-    FetchContent_Populate( gmock )
-  endif()
-  add_subdirectory( gmock )
+  FetchContent_MakeAvailable( gmock )
 endif()
 
 file( GLOB SOURCES *.h *.cpp )
