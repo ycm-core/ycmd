@@ -22,6 +22,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <filesystem>
+#include <functional>
 #include <future>
 #include <limits>
 #include <mutex>
