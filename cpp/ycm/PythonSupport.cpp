@@ -43,9 +43,9 @@ std::vector< const Candidate * > CandidatesFromObjectList(
     }
   } else {
     for ( size_t i = 0; i < num_candidates; ++i ) {
-        auto element = PyDict_GetItem( PyList_GET_ITEM( candidates.ptr(), i ),
-                                       candidate_property.ptr() );
-        *it++ = GetUtf8String( element );
+      auto element = PyDict_GetItem( PyList_GET_ITEM( candidates.ptr(), i ),
+                                     candidate_property.ptr() );
+      *it++ = GetUtf8String( element );
     }
   }
 
@@ -75,54 +75,60 @@ pybind11::list FilterAndSortCandidates(
     Word query_object( std::move( query ) );
 
     if ( num_candidates >= 256 ) {
-      // Because it all needs to end up in the same vector, and to avoid race conditions
-      // when using push_back, we manuall split the work instead of using C++17
       const auto n_threads = std::thread::hardware_concurrency();
-      std::vector< std::vector< ResultAnd< size_t > > > partial_candidates{ n_threads };
-      std::vector< std::thread > threads{ n_threads };
+      std::vector< decltype( result_and_objects ) > partial_results( n_threads );
+      std::vector< std::future< void > > futures( n_threads );
       auto begin = repository_candidates.begin();
-      auto end = repository_candidates.begin() + repository_candidates.size() / n_threads + 1;
-      for ( size_t i = 0; i < n_threads; ++i ) {
-        auto& partial = partial_candidates[ i ];
+      auto end = repository_candidates.begin() + num_candidates / n_threads + 1;
+      const auto chunk_size = end - begin;
+      for ( size_t thread_index = 0; thread_index < n_threads; ++thread_index ) {
+        auto& partial = partial_results[ thread_index ];
         partial.reserve( end - begin );
-	threads[ i ] = std::thread( [ & ] ( auto begin, auto end ) {
-	  std::for_each( begin,
-	  	         end,
-	  	         [ &, index = i * partial.size() ] ( const Candidate* candidate ) mutable {
-	  	           if ( !candidate->IsEmpty() &&
-	  		        candidate->ContainsBytes( query_object ) ) {
-	  		     Result result = candidate->QueryMatchResult( query_object );
-	  		     if ( result.IsSubsequence() ) {
-	  		       partial.emplace_back( result, index );
-	  		     }
-	  		   }
-	  		   index++;
-          } );
-	}, begin, end );
-	begin = end;
-	end = repository_candidates.end() - begin < static_cast< ptrdiff_t >( partial.size() ) ? repository_candidates.end() : begin + partial.size();
+        // TODO: These tasks could return partial results instead.
+        futures[ thread_index ] = tasks.push(
+          [ &, thread_index ] ( auto begin, auto end ) {
+            auto i = thread_index * chunk_size;
+            std::for_each(
+              begin,
+              end,
+              [ &, i ] ( const Candidate* candidate ) mutable {
+                if ( !candidate->IsEmpty() &&
+                     candidate->ContainsBytes( query_object ) ) {
+                  Result result = candidate->QueryMatchResult( query_object );
+                  if ( result.IsSubsequence() ) {
+                    partial.emplace_back( result, i );
+                  }
+                }
+                ++i;
+            } );
+        }, begin, end );
+        begin = end;
+        if ( repository_candidates.end() - begin < chunk_size ) {
+          end = repository_candidates.end();
+        } else {
+          end = begin + chunk_size;
+        }
       }
-      for ( auto&& thread : threads ) {
-        thread.join();
-      }
-      for ( auto& partial : partial_candidates ) {
+      for ( auto&& f : futures ) { f.get(); }
+      for ( auto& partial : partial_results ) {
         result_and_objects.insert( result_and_objects.end(),
-				   std::make_move_iterator( partial.begin() ),
-			           std::make_move_iterator( partial.end() ) );
+                                   std::make_move_iterator( partial.begin() ),
+                                   std::make_move_iterator( partial.end() ) );
       }
     } else {
-      std::for_each( repository_candidates.begin(),
-                     repository_candidates.end(),
-                     [ &, i = 0 ] ( const Candidate* candidate ) mutable {
-                       if ( !candidate->IsEmpty() &&
-                            candidate->ContainsBytes( query_object ) ) {
-                         Result result = candidate->QueryMatchResult( query_object );
-                         if ( result.IsSubsequence() ) {
-                           result_and_objects.emplace_back( result, i );
-                         }
-                       }
-                       ++i;
-      });
+      std::for_each(
+        repository_candidates.begin(),
+        repository_candidates.end(),
+        [ &, i = 0 ] ( const Candidate* candidate ) mutable {
+          if ( !candidate->IsEmpty() &&
+               candidate->ContainsBytes( query_object ) ) {
+            Result result = candidate->QueryMatchResult( query_object );
+            if ( result.IsSubsequence() ) {
+              result_and_objects.emplace_back( result, i );
+            }
+          }
+          ++i;
+      } );
     }
     PartialSort( result_and_objects, max_candidates );
   }
