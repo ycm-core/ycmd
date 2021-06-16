@@ -76,17 +76,15 @@ pybind11::list FilterAndSortCandidates(
 
     if ( num_candidates >= 256 ) {
       const auto n_threads = std::thread::hardware_concurrency();
-      std::vector< decltype( result_and_objects ) > partial_results( n_threads );
-      std::vector< std::future< void > > futures( n_threads );
+      std::vector< std::future< std::vector< ResultAnd< size_t > > > > futures( n_threads );
       auto begin = repository_candidates.begin();
       auto end = repository_candidates.begin() + num_candidates / n_threads + 1;
       const auto chunk_size = end - begin;
       for ( size_t thread_index = 0; thread_index < n_threads; ++thread_index ) {
-        auto& partial = partial_results[ thread_index ];
-        partial.reserve( end - begin );
-        // TODO: These tasks could return partial results instead.
         futures[ thread_index ] = tasks.push(
           [ &, thread_index ] ( auto begin, auto end ) {
+	    std::vector< ResultAnd< size_t > > partial;
+	    partial.reserve( end - begin );
             auto i = thread_index * chunk_size;
             std::for_each(
               begin,
@@ -101,6 +99,7 @@ pybind11::list FilterAndSortCandidates(
                 }
                 ++i;
             } );
+	    return partial;
         }, begin, end );
         begin = end;
         if ( repository_candidates.end() - begin < chunk_size ) {
@@ -109,8 +108,8 @@ pybind11::list FilterAndSortCandidates(
           end = begin + chunk_size;
         }
       }
-      for ( auto&& f : futures ) { f.get(); }
-      for ( auto& partial : partial_results ) {
+      for ( auto&& f : futures ) {
+	auto partial = f.get();
         result_and_objects.insert( result_and_objects.end(),
                                    std::make_move_iterator( partial.begin() ),
                                    std::make_move_iterator( partial.end() ) );
