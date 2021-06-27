@@ -455,7 +455,7 @@ class Completer( metaclass = abc.ABCMeta ):
     pass # pragma: no cover
 
 
-  def Langauge( self ):
+  def Language( self ):
     pass # pragma: no cover
 
 

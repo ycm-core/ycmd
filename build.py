@@ -428,6 +428,10 @@ def ParseArguments():
                        help = 'For developers: specify the cmake executable. '
                               'Useful for testing with specific versions, or '
                               'if the system is unable to find cmake.' )
+  parser.add_argument( '--force-sudo',
+                       action = 'store_true',
+                       help = 'Compiling with sudo causes problems. If you'
+                              ' know what you are doing, proceed.' )
 
   # These options are deprecated.
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
@@ -1150,8 +1154,14 @@ def DoCmakeBuilds( args ):
   BuildWatchdogModule( args )
 
 
-def Main():
+def Main(): # noqa: C901
   args = ParseArguments()
+
+  if 'SUDO_COMMAND' in os.environ:
+    if args.force_sudo:
+      print( 'Forcing build with sudo. If it breaks, keep the pieces.' )
+    else:
+      sys.exit( 'This script should not be run with sudo.' )
 
   if not args.skip_build:
     DoCmakeBuilds( args )

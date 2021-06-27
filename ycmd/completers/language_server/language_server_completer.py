@@ -2224,10 +2224,10 @@ class LanguageServerCompleter( Completer ):
 
       if self._resolve_completion_items:
         LOGGER.info( '%s: Language server requires resolve request',
-                     self.Langauge() )
+                     self.Language() )
       else:
         LOGGER.info( '%s: Language server does not require resolve request',
-                     self.Langauge() )
+                     self.Language() )
 
       self._is_completion_provider = (
           'completionProvider' in self._server_capabilities )
@@ -2250,7 +2250,7 @@ class LanguageServerCompleter( Completer ):
 
         self._sync_type = SYNC_TYPE[ sync ]
         LOGGER.info( '%s: Language server requires sync type of %s',
-                     self.Langauge(),
+                     self.Language(),
                      self._sync_type )
 
       # Update our semantic triggers if they are supplied by the server
