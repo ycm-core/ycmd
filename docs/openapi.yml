@@ -1266,6 +1266,27 @@ paths:
           schema:
             $ref: "#/definitions/ExceptionResponse"
 
+  /ready:
+    get:
+      summary: Check if the server is ready.
+      description: |-
+        Return `true` if the (sub)server is ready, `false` otherwise. The client
+        should use this endpoint to keep the server alive.
+      produces:
+        - application/json
+      parameters:
+        - name: subserver
+          in: query
+          description: |-
+            Subserver filetype for which the request is made. If a subserver
+            supports multiple filetypes, the parameter may hold any one of them.
+          required: false
+          type: string
+      responses:
+        200:
+          description: Server is ready.
+          schema:
+            $ref: "#/definitions/YesNo"
   /healthy:
     get:
       summary: Check if the server is healthy.

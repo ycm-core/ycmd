@@ -208,6 +208,18 @@
                     </tr>
                     <tr>
                             <td class="swagger--summary-path" rowspan="1">
+                                <a href="#path--ready">/ready</a>
+                            </td>
+                        <td>
+                            <a href="#operation--ready-get">GET</a>
+                        </td>
+                        <td>
+                            <p>Check if the server is ready.</p>
+        
+                        </td>
+                    </tr>
+                    <tr>
+                            <td class="swagger--summary-path" rowspan="1">
                                 <a href="#path--receive_messages">/receive_messages</a>
                             </td>
                         <td>
@@ -1534,6 +1546,83 @@
                                                 <div  class="panel panel-definition">
                                                     <div class="panel-body">
                                                                 <a class="json-schema-ref" href="#/definitions/ExceptionResponse">ExceptionResponse</a>
+                                                    </div>
+                                                </div></div>
+                                            
+                                            </div>                </dd>
+                            </dl>
+                        </section>
+                </div>
+            </div>
+        
+        <span id="path--ready"></span>
+            <div id="operation--ready-get" class="swagger--panel-operation-get panel">
+                <div class="panel-heading">
+                    <div class="operation-summary">Check if the server is ready.</div>
+                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/ready</strong></h3>
+                </div>
+                <div class="panel-body">
+                    <section class="sw-operation-description">
+                        <p>Return <code>true</code> if the (sub)server is ready, <code>false</code> otherwise. The client
+            should use this endpoint to keep the server alive.</p>
+            
+                    </section>
+            
+                    
+                        <section class="sw-request-params">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th class="sw-param-name"></th>
+                                    <th class="sw-param-description"></th>
+                                    <th class="sw-param-type"></th>
+                                    <th class="sw-param-data-type"></th>
+                                    <th class="sw-param-annotation"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                        <tr>
+                                            <td>
+                                                subserver
+                                            </td>
+                                            <td><p>Subserver filetype for which the request is made. If a subserver
+                                        supports multiple filetypes, the parameter may hold any one of them.</p>
+                                        </td>
+                                            <td>query</td>
+                                            <td>
+                                        <span class="json-property-type">string</span>
+                                        <span class="json-property-range" title="Value limits"></span>
+                                        
+                                            </td>
+                                            <td>
+                                            </td>
+                                        </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    
+                        <section class="sw-responses">
+                                <p><span class="label label-default">application/json</span> 
+                    </p>
+                    
+                            <dl>
+                                    <dt class="sw-response-200">
+                                        200 OK
+                                    
+                                    </dt>
+                                    <dd class="sw-response-200">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p>Server is ready.</p>
+                                            
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="col-md-6 sw-response-model">
+                                                <div  class="panel panel-definition">
+                                                    <div class="panel-body">
+                                                                <a class="json-schema-ref" href="#/definitions/YesNo">YesNo</a>
                                                     </div>
                                                 </div></div>
                                             
