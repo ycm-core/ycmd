@@ -1010,7 +1010,7 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
         'text': "Create local variable 'Wibble'",
         'kind': 'quickfix',
         'chunks': contains_exactly(
-          ChunkMatcher( 'Object Wibble;\n\t',
+          ChunkMatcher( 'Object Wibble;\n    ',
                         LocationMatcher( filepath, 19, 5 ),
                         LocationMatcher( filepath, 19, 5 ) ),
         ),
@@ -1034,13 +1034,13 @@ def Subcommands_FixIt_SingleDiag_MultipleOption_Insertion_test( app,
         ),
       } ),
       has_entries( {
-        'text': 'Generate toString()...',
+        'text': 'Generate toString()',
         'kind': 'source.generate.toString',
         'chunks': contains_exactly(
-          ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                        '\n\treturn "TestFactory []";\n}',
-                        LocationMatcher( filepath, 32, 4 ),
-                        LocationMatcher( filepath, 32, 4 ) ),
+          ChunkMatcher( '@Override\npublic String toString() {'
+                        '\n    return "TestFactory []";\n}\n\n',
+                        LocationMatcher( filepath, 23, 3 ),
+                        LocationMatcher( filepath, 23, 3 ) ),
         ),
       } ),
       has_entries( {
@@ -1095,11 +1095,11 @@ def Subcommands_FixIt_SingleDiag_SingleOption_Modify_test( app ):
         ),
       } ),
       has_entries( {
-        'text': 'Generate toString()...',
+        'text': 'Generate toString()',
         'kind': 'source.generate.toString',
         'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                        '\n\treturn "TestFactory []";\n}',
+                        '\n    return "TestFactory []";\n}',
                         LocationMatcher( filepath, 32, 4 ),
                         LocationMatcher( filepath, 32, 4 ) ),
         ),
@@ -1234,7 +1234,7 @@ def Subcommands_FixIt_MultipleDiags_test( app,
 
   ACTIONS = [
     has_entries( {
-      'text': "Generate toString()...",
+      'text': "Generate toString()",
       'chunks': instance_of( list ),
     } ),
     has_entries( {
@@ -1296,7 +1296,7 @@ def Subcommands_FixIt_Range_test( app ):
                 matches_regexp(
                   'private String \\w+;\n'
                   '\n'
-                  '\t@Override\n'
+                  '    @Override\n'
                   '      public void launch\\(\\) {\n'
                   '        AbstractTestWidget w = '
                   'factory.getWidget\\( "Test" \\);\n'
@@ -1305,7 +1305,7 @@ def Subcommands_FixIt_Range_test( app ):
                   '\n'
                   '        \\w+ = "Did something '
                   'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                  '\t\tSystem.out.println\\( \\w+' ),
+                  '        System.out.println\\( \\w+' ),
                 LocationMatcher( filepath, 29, 7 ),
                 LocationMatcher( filepath, 34, 73 ) ),
             ),
@@ -1328,7 +1328,7 @@ def Subcommands_FixIt_Range_test( app ):
                 matches_regexp(
                   'String \\w+ = "Did something '
                   'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                  '\t\tSystem.out.println\\( \\w+' ),
+                  '        System.out.println\\( \\w+' ),
                 LocationMatcher( filepath, 34, 9 ),
                 LocationMatcher( filepath, 34, 73 ) ),
             ),
@@ -1341,7 +1341,7 @@ def Subcommands_FixIt_Range_test( app ):
                 matches_regexp(
                   'String \\w+ = "Did something '
                   'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                  '\t\tSystem.out.println\\( \\w+' ),
+                  '        System.out.println\\( \\w+' ),
                 LocationMatcher( filepath, 34, 9 ),
                 LocationMatcher( filepath, 34, 73 ) ),
             ),
@@ -1392,7 +1392,7 @@ def Subcommands_FixIt_NoDiagnostics_test( app ):
                       'chunks': instance_of( list ) } ),
                     has_entries( { 'text': 'Organize imports',
                                    'chunks': instance_of( list ) } ),
-                    has_entries( { 'text': 'Generate toString()...',
+                    has_entries( { 'text': 'Generate toString()',
                                    'chunks': instance_of( list ) } ) ) } ) )
 
 
@@ -1485,11 +1485,11 @@ def Subcommands_FixIt_InvalidURI_test( app ):
         ),
       } ),
       has_entries( {
-        'text': 'Generate toString()...',
+        'text': 'Generate toString()',
         'kind': 'source.generate.toString',
         'chunks': contains_exactly(
           ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                        '\n\treturn "TestFactory []";\n}',
+                        '\n    return "TestFactory []";\n}',
                         LocationMatcher( '', 32, 4 ),
                         LocationMatcher( '', 32, 4 ) ),
         ),

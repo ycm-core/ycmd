@@ -212,11 +212,6 @@ DIAG_MATCHERS_PER_FILE = {
       'fixit_available': False
     } ),
   ),
-  PathToTestFile( DEFAULT_PROJECT_DIR, 'test.java' ): contains_exactly(
-    has_entries( {
-      'text': matches_regexp( 'test.java is not on the classpath .*' )
-    } )
-  ),
 }
 
 
