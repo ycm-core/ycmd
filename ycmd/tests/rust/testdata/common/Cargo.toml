@@ -7,7 +7,7 @@ edition = "2018"
 mockall = "0.10.2"
 
 [[bin]]
-name = "main"
+name = "common"
 path = "src/main.rs"
 
 [[bin]]
