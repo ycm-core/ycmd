@@ -1,5 +1,15 @@
 [package]
 name = "common"
 version = "0.1.0"
+edition = "2018"
 
 [dependencies]
+mockall = "0.10.2"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "procmacro"
+path = "src/macromain.rs"
