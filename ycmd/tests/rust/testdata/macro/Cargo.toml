@@ -5,7 +5,3 @@ edition = "2018"
 
 [dependencies]
 mockall = "0.10.2"
-
-[[bin]]
-name = "procmacro"
-path = "src/macromain.rs"
