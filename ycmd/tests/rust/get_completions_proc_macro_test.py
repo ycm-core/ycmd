@@ -23,7 +23,9 @@ from hamcrest import ( assert_that,
 from pprint import pformat
 
 
-from ycmd.tests.rust import PathToTestFile, SharedYcmd
+from ycmd.tests.rust import ( IsolatedYcmd,
+                              PathToTestFile,
+                              StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
                                     WithRetry )
@@ -31,9 +33,11 @@ from ycmd.utils import ReadFile
 
 
 @WithRetry
-@SharedYcmd
+@IsolatedYcmd
 def GetCompletions_Basic_test( app ):
-  filepath = PathToTestFile( 'common', 'src', 'macromain.rs' )
+  StartRustCompleterServerInDirectory( app, PathToTestFile( 'macro', 'src' ) )
+
+  filepath = PathToTestFile( 'macro', 'src', 'macromain.rs' )
   contents = ReadFile( filepath )
 
   completion_data = BuildRequest( filepath = filepath,
