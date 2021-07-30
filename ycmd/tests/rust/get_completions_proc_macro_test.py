@@ -25,6 +25,7 @@ from pprint import pformat
 
 from ycmd.tests.rust import ( IsolatedYcmd,
                               PathToTestFile,
+                              WaitUntilCompleterServerReady,
                               StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
@@ -35,10 +36,11 @@ from ycmd.utils import ReadFile
 @WithRetry
 @IsolatedYcmd
 def GetCompletions_Basic_test( app ):
-  StartRustCompleterServerInDirectory( app, PathToTestFile( 'macro', 'src' ) )
-
   filepath = PathToTestFile( 'macro', 'src', 'macromain.rs' )
   contents = ReadFile( filepath )
+
+  StartRustCompleterServerInDirectory( app, filepath )
+  WaitUntilCompleterServerReady( app, 'rust' )
 
   completion_data = BuildRequest( filepath = filepath,
                                   filetype = 'rust',
