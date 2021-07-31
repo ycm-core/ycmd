@@ -29,12 +29,14 @@ from ycmd.tests.rust import ( IsolatedYcmd,
                               StartRustCompleterServerInDirectory,
                               WaitForRustAnalyzerReadyMessage )
 from ycmd.tests.test_utils import ( BuildRequest,
-                                    CompletionEntryMatcher )
+                                    CompletionEntryMatcher,
+                                    WithRetry )
 from ycmd.utils import ReadFile
 
 
+@WithRetry
 @IsolatedYcmd
-def GetCompletions_Basic_test( app ):
+def GetCompletions_ProcMacro_test( app ):
   StartRustCompleterServerInDirectory( app, PathToTestFile( 'macro' ) )
 
   filepath = PathToTestFile( 'macro', 'src', 'main.rs' )

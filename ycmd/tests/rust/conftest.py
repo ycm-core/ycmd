@@ -54,8 +54,8 @@ def WaitForRustAnalyzerReadyMessage( app, request_data ):
   try:
     for message in PollForMessages( app, request_data ):
       print( f'Message { pformat( message ) }' )
-      if message.get( 'message', '' ) == \
-              "Initializing Rust completer: {'status': 'ready'}":
+      if ( message.get( 'message', '' ) ==
+              "Initializing Rust completer: {'status': 'ready'}" ):
         break
 
       # Eventually PollForMessages will throw a timeout exception and we'll fail
