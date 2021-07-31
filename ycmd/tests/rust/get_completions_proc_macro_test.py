@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from hamcrest import ( assert_that,
                        has_item,
                        empty,
@@ -25,14 +26,13 @@ from pprint import pformat
 
 from ycmd.tests.rust import ( IsolatedYcmd,
                               PathToTestFile,
-                              StartRustCompleterServerInDirectory )
+                              StartRustCompleterServerInDirectory,
+                              WaitForRustAnalyzerReadyMessage )
 from ycmd.tests.test_utils import ( BuildRequest,
-                                    CompletionEntryMatcher,
-                                    WithRetry )
+                                    CompletionEntryMatcher )
 from ycmd.utils import ReadFile
 
 
-@WithRetry
 @IsolatedYcmd
 def GetCompletions_Basic_test( app ):
   StartRustCompleterServerInDirectory( app, PathToTestFile( 'macro' ) )
@@ -46,8 +46,20 @@ def GetCompletions_Basic_test( app ):
                                   line_num = 33,
                                   column_num = 14 )
 
-  results = app.post_json( '/completions',
+  WaitForRustAnalyzerReadyMessage( app,
+                                    { 'filepath': filepath,
+                                      'contents': contents,
+                                      'filetype': 'rust' } )
+
+
+  results = []
+  expiration = time.time() + 60
+  while time.time() < expiration:
+    results = app.post_json( '/completions',
                            completion_data ).json[ 'completions' ]
+    if len( results ) > 0:
+      break
+    time.sleep( 0.25 )
 
   assert_that(
     results,
