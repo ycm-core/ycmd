@@ -17,10 +17,13 @@
 
 import os
 import pytest
+from pprint import pformat
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
                                     IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
+                                    PollForMessages,
+                                    PollForMessagesTimeoutException,
                                     SetUpApp,
                                     StopCompleterServer,
                                     WaitUntilCompleterServerReady )
@@ -45,6 +48,22 @@ def StartRustCompleterServerInDirectory( app, directory ):
                    event_name = 'FileReadyToParse',
                    filetype = 'rust' ) )
   WaitUntilCompleterServerReady( app, 'rust' )
+
+
+def WaitForRustAnalyzerReadyMessage( app, request_data ):
+  try:
+    for message in PollForMessages( app, request_data ):
+      print( f'Message { pformat( message ) }' )
+      if ( message.get( 'message', '' ) ==
+              "Initializing Rust completer: {'status': 'ready'}" ):
+        break
+
+      # Eventually PollForMessages will throw a timeout exception and we'll fail
+      # if we don't see all of the expected diags.
+  except PollForMessagesTimeoutException as e:
+    raise AssertionError(
+      str( e ) +
+      'Timed out waiting for rust analyzer to become ready. ' )
 
 
 @pytest.fixture
