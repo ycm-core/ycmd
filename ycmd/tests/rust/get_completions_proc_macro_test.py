@@ -26,8 +26,7 @@ from pprint import pformat
 
 from ycmd.tests.rust import ( IsolatedYcmd,
                               PathToTestFile,
-                              StartRustCompleterServerInDirectory,
-                              WaitForRustAnalyzerReadyMessage )
+                              StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
                                     WithRetry )
@@ -47,12 +46,6 @@ def GetCompletions_ProcMacro_test( app ):
                                   contents = contents,
                                   line_num = 33,
                                   column_num = 14 )
-
-  WaitForRustAnalyzerReadyMessage( app,
-                                    { 'filepath': filepath,
-                                      'contents': contents,
-                                      'filetype': 'rust' } )
-
 
   results = []
   expiration = time.time() + 60
