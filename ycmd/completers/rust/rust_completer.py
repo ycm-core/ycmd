@@ -146,10 +146,6 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
           self._server_progress = 'invalid'
         else:
           self._server_progress = 'ready'
-    # TODO: Once rustup catches up, we should drop this notification.
-    if notification[ 'method' ] == 'rust-analyzer/status':
-      if self._server_progress not in [ 'invalid', 'ready' ]:
-        self._server_progress = notification[ 'params' ][ 'status' ]
     if notification[ 'method' ] == 'window/showMessage':
       if ( notification[ 'params' ][ 'message' ] ==
            'rust-analyzer failed to discover workspace' ):
