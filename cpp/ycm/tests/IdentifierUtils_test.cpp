@@ -21,11 +21,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <filesystem>
 
 namespace YouCompleteMe {
 
-namespace fs = std::filesystem;
 using ::testing::ElementsAre;
 using ::testing::ContainerEq;
 using ::testing::IsEmpty;

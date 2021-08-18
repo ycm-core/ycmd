@@ -20,12 +20,12 @@
 
 #include "IdentifierDatabase.h"
 
-#include <filesystem>
+#include "Utils.h"
 
 namespace YouCompleteMe {
 
 YCM_EXPORT FiletypeIdentifierMap ExtractIdentifiersFromTagsFile(
-  const std::filesystem::path &path_to_tag_file );
+  const fs::path &path_to_tag_file );
 
 } // namespace YouCompleteMe
 

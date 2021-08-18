@@ -20,16 +20,14 @@
 
 #include "Character.h"
 #include "CodePoint.h"
+#include "Utils.h"
 #include "Word.h"
 
-#include <filesystem>
 #include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
 using ::testing::PrintToString;
-
-namespace fs = std::filesystem;
 
 namespace YouCompleteMe {
 

@@ -20,14 +20,19 @@
 
 #include <algorithm>
 #include <cmath>
-#include <filesystem>
 #include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 
+#if defined(USE_BOOST_FS)
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#else
+#include <filesystem>
 namespace fs = std::filesystem;
+#endif
 
 namespace YouCompleteMe {
 

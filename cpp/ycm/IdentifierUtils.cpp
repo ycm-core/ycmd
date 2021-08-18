@@ -19,14 +19,11 @@
 #include "Utils.h"
 
 #include <array>
-#include <filesystem>
 #include <functional>
 #include <string_view>
 #include <utility>
 
 namespace YouCompleteMe {
-
-namespace fs = std::filesystem;
 
 namespace {
 

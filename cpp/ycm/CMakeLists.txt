@@ -277,12 +277,19 @@ if ( UNIX AND NOT ( APPLE OR SYSTEM_IS_OPENBSD OR HAIKU ) )
 endif()
 
 # Check if we need to add -lstdc++fs or -lc++fs or nothing
-file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp "#include <filesystem>\nint main( int argc, char ** argv ) {\n  std::filesystem::path p( argv[ 0 ] );\n  return p.string().length();\n}" )
+file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp "#if defined(USE_BOOST_FS)\n#include <boost/filesystem.hpp>\nnamespace fs = boost::filesystem;\n#else\n#include <filesystem>\nnamespace fs = std::filesystem;\n#endif\nint main( int argc, char ** argv ) {\n  fs::path p( argv[ 0 ] );\n  return p.parent_path().string().length();\n}" )
 try_compile( STD_FS_NO_LIB_NEEDED ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
              CXX_STANDARD 17
              CXX_STANDARD_REQUIRED TRUE
              CXX_EXTENSIONS ${NEEDS_EXTENSIONS} )
+try_compile( STD_FS_NEEDS_BOOSTFS ${CMAKE_CURRENT_BINARY_DIR}
+             SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
+             CXX_STANDARD 17
+             CXX_STANDARD_REQUIRED TRUE
+             CXX_EXTENSIONS ${NEEDS_EXTENSIONS}
+             COMPILE_DEFINITIONS -DUSE_BOOST_FS
+             LINK_LIBRARIES boost_system boost_filesystem)
 try_compile( STD_FS_NEEDS_STDCXXFS ${CMAKE_CURRENT_BINARY_DIR}
              SOURCES ${CMAKE_CURRENT_BINARY_DIR}/main.cpp
              CXX_STANDARD 17
@@ -299,12 +306,19 @@ file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}/main.cpp )
 
 if( ${STD_FS_NEEDS_STDCXXFS} )
   set( STD_FS_LIB stdc++fs )
+  set( STD_FS_DEFINES "" )
 elseif( ${STD_FS_NEEDS_CXXFS} )
   set( STD_FS_LIB c++fs )
+  set( STD_FS_DEFINES "" )
 elseif( ${STD_FS_NO_LIB_NEEDED} )
   set( STD_FS_LIB "" )
+  set( STD_FS_DEFINES "" )
+elseif( ${STD_FS_NEEDS_BOOSTFS} )
+  message( STATUS "Using boost_filesystem" )
+  set( STD_FS_LIB boost_system boost_filesystem )
+  set( STD_FS_DEFINES -DUSE_BOOST_FS )
 else()
-  message( FATAL_ERROR "Unknown compiler - C++17 filesystem library missing" )
+  message( FATAL_ERROR "Unknown compiler - C++17 filesystem library and boost_filesystem both missing" )
 endif()
 
 # Check if Abseil supports this environment
@@ -347,6 +361,9 @@ if ( USE_CLANG_COMPLETER AND NOT LIBCLANG_TARGET )
                           "your configuration" )
 endif()
 
+target_compile_definitions( ${PROJECT_NAME}
+                            PUBLIC ${STD_FS_DEFINES}
+                          )
 target_link_libraries( ${PROJECT_NAME}
                        PUBLIC ${Python3_LIBRARIES}
                        PUBLIC ${LIBCLANG_TARGET}

@@ -19,18 +19,6 @@
 
 #include <whereami.c>
 
-namespace std {
-
-namespace filesystem {
-
-void PrintTo( const fs::path &path, std::ostream *os ) {
-  *os << path;
-}
-
-} // namespace filesystem
-
-} // namespace std
-
 namespace YouCompleteMe {
 
 std::ostream& operator<<( std::ostream& os, const CodePointTuple &code_point ) {

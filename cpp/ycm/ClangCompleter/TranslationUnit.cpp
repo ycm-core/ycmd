@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <filesystem>
 #include <memory>
 
 using std::unique_lock;
