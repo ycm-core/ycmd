@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from importlib import import_module
+from ycmd import responses
 from ycmd.completers.completer import Completer
 from ycmd.completers.all.identifier_completer import IdentifierCompleter
 from ycmd.completers.general.filename_completer import FilenameCompleter
@@ -41,6 +43,21 @@ class GeneralCompleterStore( Completer ):
                              self._filename_completer,
                              self._ultisnips_completer ]
 
+    if 'general_completers' in user_options:
+      general_completers = self._GetGeneralCompleters( user_options ) 
+      self._non_filename_completers += general_completers 
+
+
+  def _GetGeneralCompleters( self, user_options ):
+    general_completers = []
+    for general_completer in user_options.get( 'general_completers' ):
+      try:
+        module = import_module( general_completer.get( 'module' ) )
+        completer = module.GetCompleter( user_options )
+        general_completers.append( completer )
+      except ImportError:
+        pass
+    return general_completers
 
   def SupportedFiletypes( self ):
     return set()
