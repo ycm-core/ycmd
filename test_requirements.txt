@@ -8,6 +8,5 @@ coverage              >= 4.2
 codecov               >= 2.0.5
 pytest                == 6.1.1
 pytest-cov
-pytest-rerunfailures
+pytest-rerunfailures  == 9.1.1
 requests
-pytest-xdist
