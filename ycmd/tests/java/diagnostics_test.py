@@ -25,8 +25,7 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry,
-                       has_item,
-                       matches_regexp )
+                       has_item )
 
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
