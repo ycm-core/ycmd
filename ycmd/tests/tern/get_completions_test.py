@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 ycmd contributors
+# Copyright (C) 2015-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,8 +22,10 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries )
 from pprint import pformat
+from unittest import TestCase
 import requests
 
+from ycmd.tests.tern import setUpModule, tearDownModule # noqa
 from ycmd.tests.tern import ( IsolatedYcmd, PathToTestFile, SharedYcmd,
                               StartJavaScriptCompleterServerInDirectory )
 from ycmd.tests.test_utils import CombineRequest, CompletionEntryMatcher
@@ -77,424 +79,420 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def GetCompletions_NoQuery_test( app ):
-  RunTest( app, {
-    'description': 'semantic completion works for simple object no query',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'simple_test.js' ),
-      'line_num'  : 13,
-      'column_num': 43,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'a_simple_function',
-                                  'fn(param: ?) -> string' ),
-          CompletionEntryMatcher( 'basic_type', 'number' ),
-          CompletionEntryMatcher( 'object', 'object' ),
-          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
-          CompletionEntryMatcher( 'hasOwnProperty',
-                                  'fn(prop: string) -> bool' ),
-          CompletionEntryMatcher( 'isPrototypeOf',
-                                  'fn(obj: ?) -> bool' ),
-          CompletionEntryMatcher( 'propertyIsEnumerable',
-                                  'fn(prop: string) -> bool' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_Query_test( app ):
-  RunTest( app, {
-    'description': 'semantic completion works for simple object with query',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'simple_test.js' ),
-      'line_num'  : 14,
-      'column_num': 45,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'basic_type', 'number' ),
-          CompletionEntryMatcher( 'isPrototypeOf',
-                                  'fn(obj: ?) -> bool' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_Require_NoQuery_test( app ):
-  RunTest( app, {
-    'description': 'semantic completion works for simple object no query',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'requirejs_test.js' ),
-      'line_num'  : 2,
-      'column_num': 15,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'mine_bitcoin',
-                                  'fn(how_much: ?) -> number' ),
-          CompletionEntryMatcher( 'get_number', 'number' ),
-          CompletionEntryMatcher( 'get_string', 'string' ),
-          CompletionEntryMatcher( 'get_thing',
-                                  'fn(a: ?) -> number|string' ),
-          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
-          CompletionEntryMatcher( 'hasOwnProperty',
-                                  'fn(prop: string) -> bool' ),
-          CompletionEntryMatcher( 'isPrototypeOf',
-                                  'fn(obj: ?) -> bool' ),
-          CompletionEntryMatcher( 'propertyIsEnumerable',
-                                  'fn(prop: string) -> bool' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_Require_Query_test( app ):
-  RunTest( app, {
-    'description': 'semantic completion works for require object with query',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'requirejs_test.js' ),
-      'line_num'  : 3,
-      'column_num': 17,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'mine_bitcoin',
-                                  'fn(how_much: ?) -> number' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_Require_Query_LCS_test( app ):
-  RunTest( app, {
-    'description': ( 'completion works for require object '
-                     'with query not prefix' ),
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'requirejs_test.js' ),
-      'line_num'  : 4,
-      'column_num': 17,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'get_number', 'number' ),
-          CompletionEntryMatcher( 'get_thing',
-                                  'fn(a: ?) -> number|string' ),
-          CompletionEntryMatcher( 'get_string', 'string' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_DirtyNamedBuffers_test( app ):
-  # This tests that when we have dirty buffers in our editor, tern actually
-  # uses them correctly
-  RunTest( app, {
-    'description': ( 'completion works for require object '
-                     'with query not prefix' ),
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'requirejs_test.js' ),
-      'line_num'  : 18,
-      'column_num': 11,
-      'file_data': {
-        PathToTestFile( 'no_such_lib', 'no_such_file.js' ): {
-          'contents': (
-            'define( [], function() { return { big_endian_node: 1 } } )' ),
-          'filetypes': [ 'javascript' ]
-        }
+class GetCompletionsTest( TestCase ):
+  @SharedYcmd
+  def test_GetCompletions_NoQuery( self, app ):
+    RunTest( app, {
+      'description': 'semantic completion works for simple object no query',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'simple_test.js' ),
+        'line_num'  : 13,
+        'column_num': 43,
       },
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'big_endian_node', 'number' ),
-          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
-          CompletionEntryMatcher( 'hasOwnProperty',
-                                  'fn(prop: string) -> bool' ),
-          CompletionEntryMatcher( 'isPrototypeOf',
-                                  'fn(obj: ?) -> bool' ),
-          CompletionEntryMatcher( 'propertyIsEnumerable',
-                                  'fn(prop: string) -> bool' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_ReturnsDocsInCompletions_test( app ):
-  # This tests that we supply docs for completions
-  RunTest( app, {
-    'description': 'completions supply docs',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'requirejs_test.js' ),
-      'line_num'  : 8,
-      'column_num': 15,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher(
-            'a_function',
-            'fn(bar: ?) -> {a_value: string}', {
-              'detailed_info': ( 'fn(bar: ?) -> {a_value: string}\n'
-                                 'This is a short documentation string' ),
-            } ),
-          CompletionEntryMatcher( 'options', 'options' ),
-          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
-          CompletionEntryMatcher( 'hasOwnProperty',
-                                  'fn(prop: string) -> bool' ),
-          CompletionEntryMatcher( 'isPrototypeOf',
-                                  'fn(obj: ?) -> bool' ),
-          CompletionEntryMatcher( 'propertyIsEnumerable',
-                                  'fn(prop: string) -> bool' ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@SharedYcmd
-def GetCompletions_IgoreNonJSFiles_test( app ):
-  trivial1 = {
-    'filetypes': [ 'python' ],
-    'contents':  ReadFile( PathToTestFile( 'trivial.js' ) ),
-  }
-  trivial2 = {
-    'filetypes': [ 'javascript' ],
-    'contents':  ReadFile( PathToTestFile( 'trivial2.js' ) ),
-  }
-
-  request = {
-    'line_num': 1,
-    'column_num': 3,
-    'file_data': {
-      PathToTestFile( 'trivial.js' ): trivial1,
-      PathToTestFile( 'trivial2.js' ): trivial2,
-    },
-  }
-
-  app.post_json( '/event_notification', CombineRequest( request, {
-    'filepath': PathToTestFile( 'trivial2.js' ),
-    'event_name': 'FileReadyToParse',
-  } ) )
-
-  response = app.post_json( '/completions', CombineRequest( request, {
-    'filepath': PathToTestFile( 'trivial2.js' ),
-  } ) ).json
-
-  print( f'completer response: { pformat( response ) }' )
-
-  assert_that( response,
-    has_entries( {
-      'completion_start_column': 3,
-      # Note: we do *not* see X.y and X.z because tern is not told about
-      # the trivial.js file because we pretended it was Python
-      'completions': empty(),
-      'errors': empty(),
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'a_simple_function',
+                                    'fn(param: ?) -> string' ),
+            CompletionEntryMatcher( 'basic_type', 'number' ),
+            CompletionEntryMatcher( 'object', 'object' ),
+            CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+            CompletionEntryMatcher( 'hasOwnProperty',
+                                    'fn(prop: string) -> bool' ),
+            CompletionEntryMatcher( 'isPrototypeOf',
+                                    'fn(obj: ?) -> bool' ),
+            CompletionEntryMatcher( 'propertyIsEnumerable',
+                                    'fn(prop: string) -> bool' ),
+          ),
+          'errors': empty(),
+        } )
+      },
     } )
-  )
 
 
-@SharedYcmd
-def GetCompletions_IncludeMultiFileType_test( app ):
-  trivial1 = {
-    'filetypes': [ 'python', 'javascript' ],
-    'contents':  ReadFile( PathToTestFile( 'trivial.js' ) ),
-  }
-  trivial2 = {
-    'filetypes': [ 'javascript' ],
-    'contents':  ReadFile( PathToTestFile( 'trivial2.js' ) ),
-  }
-
-  request = {
-    'line_num': 1,
-    'column_num': 3,
-    'file_data': {
-      PathToTestFile( 'trivial.js' ): trivial1,
-      PathToTestFile( 'trivial2.js' ): trivial2,
-    },
-  }
-
-  app.post_json( '/event_notification', CombineRequest( request, {
-    'filepath': PathToTestFile( 'trivial2.js' ),
-    'event_name': 'FileReadyToParse',
-  } ) )
-
-  response = app.post_json( '/completions', CombineRequest( request, {
-    'filepath': PathToTestFile( 'trivial2.js' ),
-    # We must force the use of semantic engine because the previous test would
-    # have entered 'empty' results into the completion cache.
-    'force_semantic': True,
-  } ) ).json
-
-  print( f'completer response: { pformat( response, indent = 2 ) }' )
-
-  assert_that( response,
-    has_entries( {
-      'completion_start_column': 3,
-      # Note: This time, we *do* see the completions, because one of the 2
-      # filetypes for trivial.js is javascript.
-      'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'y', 'string' ),
-          CompletionEntryMatcher( 'z', 'string' ),
-          CompletionEntryMatcher( 'toString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
-          CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
-          CompletionEntryMatcher( 'hasOwnProperty',
-                                  'fn(prop: string) -> bool' ),
-          CompletionEntryMatcher( 'isPrototypeOf',
-                                  'fn(obj: ?) -> bool' ),
-          CompletionEntryMatcher( 'propertyIsEnumerable',
-                                  'fn(prop: string) -> bool' ),
-      ),
-      'errors': empty(),
+  @SharedYcmd
+  def test_GetCompletions_Query( self, app ):
+    RunTest( app, {
+      'description': 'semantic completion works for simple object with query',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'simple_test.js' ),
+        'line_num'  : 14,
+        'column_num': 45,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'basic_type', 'number' ),
+            CompletionEntryMatcher( 'isPrototypeOf',
+                                    'fn(obj: ?) -> bool' ),
+          ),
+          'errors': empty(),
+        } )
+      },
     } )
-  )
 
 
-@SharedYcmd
-def GetCompletions_Unicode_AfterLine_test( app ):
-  RunTest( app, {
-    'description': 'completions work with unicode chars in the file',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'unicode.js' ),
-      'line_num'  : 1,
-      'column_num': 16,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
-          CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
-        ),
-        'completion_start_column': 13,
+  @SharedYcmd
+  def test_GetCompletions_Require_NoQuery( self, app ):
+    RunTest( app, {
+      'description': 'semantic completion works for simple object no query',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'requirejs_test.js' ),
+        'line_num'  : 2,
+        'column_num': 15,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'mine_bitcoin',
+                                    'fn(how_much: ?) -> number' ),
+            CompletionEntryMatcher( 'get_number', 'number' ),
+            CompletionEntryMatcher( 'get_string', 'string' ),
+            CompletionEntryMatcher( 'get_thing',
+                                    'fn(a: ?) -> number|string' ),
+            CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+            CompletionEntryMatcher( 'hasOwnProperty',
+                                    'fn(prop: string) -> bool' ),
+            CompletionEntryMatcher( 'isPrototypeOf',
+                                    'fn(obj: ?) -> bool' ),
+            CompletionEntryMatcher( 'propertyIsEnumerable',
+                                    'fn(prop: string) -> bool' ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_Require_Query( self, app ):
+    RunTest( app, {
+      'description': 'semantic completion works for require object with query',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'requirejs_test.js' ),
+        'line_num'  : 3,
+        'column_num': 17,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'mine_bitcoin',
+                                    'fn(how_much: ?) -> number' ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_Require_Query_LCS( self, app ):
+    RunTest( app, {
+      'description': ( 'completion works for require object '
+                       'with query not prefix' ),
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'requirejs_test.js' ),
+        'line_num'  : 4,
+        'column_num': 17,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'get_number', 'number' ),
+            CompletionEntryMatcher( 'get_thing',
+                                    'fn(a: ?) -> number|string' ),
+            CompletionEntryMatcher( 'get_string', 'string' ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_DirtyNamedBuffers( self, app ):
+    # This tests that when we have dirty buffers in our editor, tern actually
+    # uses them correctly
+    RunTest( app, {
+      'description': ( 'completion works for require object '
+                       'with query not prefix' ),
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'requirejs_test.js' ),
+        'line_num'  : 18,
+        'column_num': 11,
+        'file_data': {
+          PathToTestFile( 'no_such_lib', 'no_such_file.js' ): {
+            'contents': (
+              'define( [], function() { return { big_endian_node: 1 } } )' ),
+            'filetypes': [ 'javascript' ]
+          }
+        },
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'big_endian_node', 'number' ),
+            CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+            CompletionEntryMatcher( 'hasOwnProperty',
+                                    'fn(prop: string) -> bool' ),
+            CompletionEntryMatcher( 'isPrototypeOf',
+                                    'fn(obj: ?) -> bool' ),
+            CompletionEntryMatcher( 'propertyIsEnumerable',
+                                    'fn(prop: string) -> bool' ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_ReturnsDocsInCompletions( self, app ):
+    # This tests that we supply docs for completions
+    RunTest( app, {
+      'description': 'completions supply docs',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'requirejs_test.js' ),
+        'line_num'  : 8,
+        'column_num': 15,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher(
+              'a_function',
+              'fn(bar: ?) -> {a_value: string}', {
+                'detailed_info': ( 'fn(bar: ?) -> {a_value: string}\n'
+                                   'This is a short documentation string' ),
+              } ),
+            CompletionEntryMatcher( 'options', 'options' ),
+            CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+            CompletionEntryMatcher( 'hasOwnProperty',
+                                    'fn(prop: string) -> bool' ),
+            CompletionEntryMatcher( 'isPrototypeOf',
+                                    'fn(obj: ?) -> bool' ),
+            CompletionEntryMatcher( 'propertyIsEnumerable',
+                                    'fn(prop: string) -> bool' ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_IgoreNonJSFiles( self, app ):
+    trivial1 = {
+      'filetypes': [ 'python' ],
+      'contents':  ReadFile( PathToTestFile( 'trivial.js' ) ),
+    }
+    trivial2 = {
+      'filetypes': [ 'javascript' ],
+      'contents':  ReadFile( PathToTestFile( 'trivial2.js' ) ),
+    }
+
+    request = {
+      'line_num': 1,
+      'column_num': 3,
+      'file_data': {
+        PathToTestFile( 'trivial.js' ): trivial1,
+        PathToTestFile( 'trivial2.js' ): trivial2,
+      },
+    }
+
+    app.post_json( '/event_notification', CombineRequest( request, {
+      'filepath': PathToTestFile( 'trivial2.js' ),
+      'event_name': 'FileReadyToParse',
+    } ) )
+
+    response = app.post_json( '/completions', CombineRequest( request, {
+      'filepath': PathToTestFile( 'trivial2.js' ),
+    } ) ).json
+
+    print( f'completer response: { pformat( response ) }' )
+
+    assert_that( response,
+      has_entries( {
+        'completion_start_column': 3,
+        # Note: we do *not* see X.y and X.z because tern is not told about
+        # the trivial.js file because we pretended it was Python
+        'completions': empty(),
         'errors': empty(),
       } )
-    },
-  } )
+    )
 
 
-@SharedYcmd
-def GetCompletions_Unicode_InLine_test( app ):
-  RunTest( app, {
-    'description': 'completions work with unicode chars in the file',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'unicode.js' ),
-      'line_num'  : 2,
-      'column_num': 18,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
-          CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
-        ),
-        'completion_start_column': 15,
-        'errors': empty(),
-      } )
-    },
-  } )
+  @SharedYcmd
+  def test_GetCompletions_IncludeMultiFileType( self, app ):
+    trivial1 = {
+      'filetypes': [ 'python', 'javascript' ],
+      'contents':  ReadFile( PathToTestFile( 'trivial.js' ) ),
+    }
+    trivial2 = {
+      'filetypes': [ 'javascript' ],
+      'contents':  ReadFile( PathToTestFile( 'trivial2.js' ) ),
+    }
 
+    request = {
+      'line_num': 1,
+      'column_num': 3,
+      'file_data': {
+        PathToTestFile( 'trivial.js' ): trivial1,
+        PathToTestFile( 'trivial2.js' ): trivial2,
+      },
+    }
 
-@SharedYcmd
-def GetCompletions_Unicode_InFile_test( app ):
-  RunTest( app, {
-    'description': 'completions work with unicode chars in the file',
-    'request': {
-      'filetype'  : 'javascript',
-      'filepath'  : PathToTestFile( 'unicode.js' ),
-      'line_num'  : 3,
-      'column_num': 16,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
-          CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
-        ),
-        'completion_start_column': 13,
-        'errors': empty(),
-      } )
-    },
-  } )
+    app.post_json( '/event_notification', CombineRequest( request, {
+      'filepath': PathToTestFile( 'trivial2.js' ),
+      'event_name': 'FileReadyToParse',
+    } ) )
 
-
-@IsolatedYcmd
-def GetCompletions_ChangeStartColumn_test( app ):
-  StartJavaScriptCompleterServerInDirectory( app, PathToTestFile( 'node' ) )
-  RunTest( app, {
-    'description': 'the completion_start_column is updated by tern',
-    'request': {
-      'filetype'      : 'javascript',
-      'filepath'      : PathToTestFile( 'node', 'node_test.js' ),
-      'line_num'      : 1,
-      'column_num'    : 17,
+    response = app.post_json( '/completions', CombineRequest( request, {
+      'filepath': PathToTestFile( 'trivial2.js' ),
+      # We must force the use of semantic engine because the previous test would
+      # have entered 'empty' results into the completion cache.
       'force_semantic': True,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( '"path"', 'path' )
+    } ) ).json
+
+    print( f'completer response: { pformat( response, indent = 2 ) }' )
+
+    assert_that( response,
+      has_entries( {
+        'completion_start_column': 3,
+        # Note: This time, we *do* see the completions, because one of the 2
+        # filetypes for trivial.js is javascript.
+        'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'y', 'string' ),
+            CompletionEntryMatcher( 'z', 'string' ),
+            CompletionEntryMatcher( 'toString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'toLocaleString', 'fn() -> string' ),
+            CompletionEntryMatcher( 'valueOf', 'fn() -> number' ),
+            CompletionEntryMatcher( 'hasOwnProperty',
+                                    'fn(prop: string) -> bool' ),
+            CompletionEntryMatcher( 'isPrototypeOf',
+                                    'fn(obj: ?) -> bool' ),
+            CompletionEntryMatcher( 'propertyIsEnumerable',
+                                    'fn(prop: string) -> bool' ),
         ),
-        'completion_start_column': 14,
         'errors': empty(),
       } )
-    },
-  } )
+    )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @SharedYcmd
+  def test_GetCompletions_Unicode_AfterLine( self, app ):
+    RunTest( app, {
+      'description': 'completions work with unicode chars in the file',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'unicode.js' ),
+        'line_num'  : 1,
+        'column_num': 16,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
+            CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
+          ),
+          'completion_start_column': 13,
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_Unicode_InLine( self, app ):
+    RunTest( app, {
+      'description': 'completions work with unicode chars in the file',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'unicode.js' ),
+        'line_num'  : 2,
+        'column_num': 18,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
+            CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
+          ),
+          'completion_start_column': 15,
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_Unicode_InFile( self, app ):
+    RunTest( app, {
+      'description': 'completions work with unicode chars in the file',
+      'request': {
+        'filetype'  : 'javascript',
+        'filepath'  : PathToTestFile( 'unicode.js' ),
+        'line_num'  : 3,
+        'column_num': 16,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'charAt', 'fn(i: number) -> string' ),
+            CompletionEntryMatcher( 'charCodeAt', 'fn(i: number) -> number' ),
+          ),
+          'completion_start_column': 13,
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @IsolatedYcmd()
+  def test_GetCompletions_ChangeStartColumn( self, app ):
+    StartJavaScriptCompleterServerInDirectory( app, PathToTestFile( 'node' ) )
+    RunTest( app, {
+      'description': 'the completion_start_column is updated by tern',
+      'request': {
+        'filetype'      : 'javascript',
+        'filepath'      : PathToTestFile( 'node', 'node_test.js' ),
+        'line_num'      : 1,
+        'column_num'    : 17,
+        'force_semantic': True,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( '"path"', 'path' )
+          ),
+          'completion_start_column': 14,
+          'errors': empty(),
+        } )
+      },
+    } )

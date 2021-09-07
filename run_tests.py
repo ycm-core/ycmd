@@ -9,8 +9,7 @@ import os.path as p
 import sys
 import urllib.request
 
-BASE_PYTEST_ARGS = [ '-v', '--color=yes' ]
-
+BASE_UNITTEST_ARGS = [ '-cb' ]
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
@@ -59,7 +58,6 @@ def RunFlake8():
 
 # Newer completers follow a standard convention of:
 #  - build: --<completer>-completer
-#  - test directory: ycmd/tests/<completer>
 #  - no aliases.
 SIMPLE_COMPLETERS = [
   'clangd',
@@ -69,38 +67,30 @@ SIMPLE_COMPLETERS = [
 
 # More complex or legacy cases can specify all of:
 #  - build: flags to add to build.py to include this completer
-#  - test: flags to add to run_tests.py when _not_ testing this completer
 #  - aliases?: list of completer aliases for the --completers option
 COMPLETERS = {
   'cfamily': {
     'build': [ '--clang-completer' ],
-    'test': [ '--ignore=ycmd/tests/clang' ],
     'aliases': [ 'c', 'cpp', 'c++', 'objc', 'clang', ]
   },
   'cs': {
     'build': [ '--cs-completer' ],
-    'test': [ '--ignore=ycmd/tests/cs' ],
     'aliases': [ 'omnisharp', 'csharp', 'c#' ]
   },
   'javascript': {
     'build': [ '--js-completer' ],
-    'test': [ '--ignore=ycmd/tests/tern' ],
     'aliases': [ 'js', 'tern' ]
   },
   'typescript': {
     'build': [ '--ts-completer' ],
-    'test': [ '--ignore=ycmd/tests/javascript',
-              '--ignore=ycmd/tests/typescript' ],
     'aliases': [ 'ts' ]
   },
   'python': {
     'build': [],
-    'test': [ '--ignore=ycmd/tests/python' ],
     'aliases': [ 'jedi', 'jedihttp', ]
   },
   'java': {
     'build': [ '--java-completer' ],
-    'test': [ '--ignore=ycmd/tests/java' ],
     'aliases': [ 'jdt' ],
   },
 }
@@ -109,7 +99,6 @@ COMPLETERS = {
 for completer in SIMPLE_COMPLETERS:
   COMPLETERS[ completer ] = {
     'build': [ '--{}-completer'.format( completer ) ],
-    'test': [ '--ignore=ycmd/tests/{}'.format( completer ) ],
   }
 
 
@@ -161,18 +150,15 @@ def ParseArguments():
   parser.add_argument( '--valgrind',
                        action = 'store_true',
                        help = 'Run tests inside valgrind.' )
-  parser.add_argument( '--no-parallel', action='store_true',
-                       help='Run tests in serial, default is to parallelize '
-                            'tests execution' )
 
-  parsed_args, pytests_args = parser.parse_known_args()
+  parsed_args, unittest_args = parser.parse_known_args()
 
   parsed_args.completers = FixupCompleters( parsed_args )
 
   if 'COVERAGE' in os.environ:
     parsed_args.coverage = ( os.environ[ 'COVERAGE' ] == 'true' )
 
-  return parsed_args, pytests_args
+  return parsed_args, unittest_args
 
 
 def FixupCompleters( parsed_args ):
@@ -228,26 +214,27 @@ def BuildYcmdLibs( args ):
     subprocess.check_call( build_cmd )
 
 
-def PytestValgrind( parsed_args, extra_pytests_args ):
-  pytests_args = BASE_PYTEST_ARGS
+def UnittestValgrind( parsed_args, extra_unittest_args ):
+  unittest_args = BASE_UNITTEST_ARGS
   if parsed_args.quiet:
-    pytests_args[ 0 ] = '-q'
+    unittest_args.append( '-q' )
 
-  if extra_pytests_args:
-    pytests_args.extend( extra_pytests_args )
+  if extra_unittest_args:
+    unittest_args.extend( extra_unittest_args )
   else:
-    pytests_args += glob.glob(
+    unittest_args += glob.glob(
       p.join( DIR_OF_THIS_SCRIPT, 'ycmd', 'tests', 'bindings', '*_test.py' ) )
-    pytests_args += glob.glob(
+    unittest_args += glob.glob(
       p.join( DIR_OF_THIS_SCRIPT, 'ycmd', 'tests', 'clang', '*_test.py' ) )
-    pytests_args += glob.glob(
+    unittest_args += glob.glob(
       p.join( DIR_OF_THIS_SCRIPT, 'ycmd', 'tests', '*_test.py' ) )
-    # Avoids needing all completers for a valgrind run
-    pytests_args += [ '-m', 'not valgrind_skip' ]
+    # # Avoids needing all completers for a valgrind run
+    # unittest_args += [ '-m', 'not valgrind_skip' ]
 
   new_env = os.environ.copy()
   new_env[ 'PYTHONMALLOC' ] = 'malloc'
   new_env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
+  new_env[ 'YCM_VALGRIND_RUN' ] = '1'
   cmd = [ 'valgrind',
           '--gen-suppressions=all',
           '--error-exitcode=1',
@@ -257,36 +244,26 @@ def PytestValgrind( parsed_args, extra_pytests_args ):
           '--suppressions=' + p.join( DIR_OF_THIS_SCRIPT,
                                       'valgrind.suppressions' ) ]
   subprocess.check_call( cmd +
-                         [ sys.executable, '-m', 'pytest' ] +
-                         pytests_args,
+                         [ sys.executable, '-m', 'unittest' ] +
+                         unittest_args,
                          env = new_env )
 
 
-def PytestTests( parsed_args, extra_pytests_args ):
-  pytests_args = BASE_PYTEST_ARGS
+def UnittestTests( parsed_args, extra_unittest_args ):
+  prefer_regular = any( p.isfile( arg ) for arg in extra_unittest_args )
+  unittest_args = BASE_UNITTEST_ARGS
+
+  if not prefer_regular:
+    unittest_args += [ '-p', '*_test.py' ]
+
   if parsed_args.quiet:
-    pytests_args[ 0 ] = '-q'
+    unittest_args.append( '-q' )
 
-  for key in COMPLETERS:
-    if key not in parsed_args.completers:
-      pytests_args.extend( COMPLETERS[ key ][ 'test' ] )
-
-  if parsed_args.coverage:
-    # We need to exclude the ycmd/tests/python/testdata directory since it
-    # contains Python files and its base name starts with "test".
-    pytests_args += [ '--ignore=ycmd/tests/python/testdata', '--cov=ycmd' ]
-
-  if not parsed_args.no_parallel:
-    # Execute tests in parallel with n workers where n = NUMCPUS. Tests are
-    # grouped by module for test functions and by class for test methods.Groups
-    # are distributed to available workers as whole units. This guarantees that
-    # all tests in a group run in the same process.
-    pytests_args += [ '-n', 'auto', '--dist', 'loadscope' ]
-
-  if extra_pytests_args:
-    pytests_args.extend( extra_pytests_args )
-  else:
-    pytests_args.append( p.join( DIR_OF_THIS_SCRIPT, 'ycmd' ) )
+  if extra_unittest_args:
+    unittest_args.extend( extra_unittest_args )
+  if not ( extra_unittest_args or prefer_regular ):
+    unittest_args.append( '-s' )
+    unittest_args.append( 'ycmd.tests' )
 
   env = os.environ.copy()
 
@@ -301,8 +278,16 @@ def PytestTests( parsed_args, extra_pytests_args ):
   else:
     env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
 
-  subprocess.check_call( [ sys.executable, '-m', 'pytest' ] + pytests_args,
-                         env=env )
+  if parsed_args.coverage:
+    executable = [ sys.executable, '-m', 'coverage', 'run' ]
+  else:
+    executable = [ sys.executable ]
+
+  unittest = [ '-m', 'unittest' ]
+  if not prefer_regular:
+    unittest.append( 'discover' )
+
+  subprocess.check_call( executable + unittest + unittest_args, env=env )
 
 
 # On Windows, distutils.spawn.find_executable only works for .exe files
@@ -371,7 +356,7 @@ def SetUpJavaCompleter():
 
 
 def Main():
-  parsed_args, pytests_args = ParseArguments()
+  parsed_args, unittest_args = ParseArguments()
   if parsed_args.dump_path:
     print( os.environ[ 'PYTHONPATH' ] )
     sys.exit()
@@ -384,9 +369,9 @@ def Main():
     RunFlake8()
   BuildYcmdLibs( parsed_args )
   if parsed_args.valgrind:
-    PytestValgrind( parsed_args, pytests_args )
+    UnittestValgrind( parsed_args, unittest_args )
   else:
-    PytestTests( parsed_args, pytests_args )
+    UnittestTests( parsed_args, unittest_args )
 
 
 if __name__ == "__main__":

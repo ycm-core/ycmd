@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2020 ycmd contributors
+# Copyright (C) 2013-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -29,8 +29,8 @@ from pprint import pformat
 from webtest import TestApp
 import bottle
 import contextlib
-import pytest
 import functools
+import logging
 import os
 import tempfile
 import time
@@ -43,13 +43,14 @@ from ycmd.completers.completer import Completer
 from ycmd.responses import BuildCompletionData
 from ycmd.utils import ( GetCurrentDirectory,
                          ImportCore,
+                         LOGGER,
                          OnMac,
                          OnWindows,
                          ToUnicode,
                          WaitUntilProcessIsTerminated )
 ycm_core = ImportCore()
 
-from unittest import skipIf
+from unittest import skipIf, skip
 
 TESTS_DIR = os.path.abspath( os.path.dirname( __file__ ) )
 TEST_OPTIONS = {
@@ -251,6 +252,7 @@ def TemporarySymlink( source, link ):
 
 def SetUpApp( custom_options = {} ):
   bottle.debug( True )
+  LOGGER.setLevel( logging.DEBUG )
   options = user_options_store.DefaultOptions()
   options.update( TEST_OPTIONS )
   options.update( custom_options )
@@ -382,7 +384,7 @@ def ExpectedFailure( reason, *exception_matchers ):
           raise test_exception
 
         # Failed for the right reason
-        pytest.skip( reason )
+        skip( reason )
       else:
         raise AssertionError( f'Test was expected to fail: { reason }' )
     return Wrapper
@@ -404,28 +406,33 @@ def TemporaryTestDir():
 
 
 def WithRetry( *args, **kwargs ):
-  """Decorator to be applied to tests that retries the test over and over"""
+  opts = { 'reruns': 20, 'reruns_delay': 0.5 }
+  opts.update( kwargs )
 
-  if len( args ) == 1 and callable( args[ 0 ] ):
-    # We are the decorator
-    f = args[ 0 ]
+  def Decorator( test ):
+    """Decorator to be applied to tests that retries the test over and over
+    until it passes or |timeout| seconds have passed."""
 
-    def ReturnDecorator( wrapper ):
-      return wrapper( f )
-  else:
-    # We need to return the decorator
-    def ReturnDecorator( wrapper ):
-      return wrapper
+    if 'YCM_TEST_NO_RETRY' in os.environ:
+      return test
 
-  if os.environ.get( 'YCM_TEST_NO_RETRY' ) == 'XFAIL':
-    return ReturnDecorator( pytest.mark.xfail( strict = False ) )
-  elif os.environ.get( 'YCM_TEST_NO_RETRY' ):
-    # This is a "null" decorator
-    return ReturnDecorator( lambda f: f )
-  else:
-    opts = { 'reruns': 20, 'reruns_delay': 0.5 }
-    opts.update( kwargs )
-    return ReturnDecorator( pytest.mark.flaky( **opts ) )
+    @functools.wraps( test )
+    def wrapper( *args, **kwargs ):
+      run = 0
+      while run < opts[ 'reruns' ]:
+        try:
+          test( *args, **kwargs )
+          return
+        except Exception as test_exception:
+          run += 1
+          if run == opts[ 'reruns' ]:
+            raise
+          elif os.environ.get( 'YCM_TEST_NO_RETRY', None ) == 'XFAIL':
+            return skip( 'Test failed as expected.' )
+          print( f'Test failed, retrying: { test_exception }' )
+          time.sleep( opts[ 'reruns_delay' ] )
+    return wrapper
+  return Decorator
 
 
 @contextlib.contextmanager
