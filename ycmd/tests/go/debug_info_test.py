@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 ycmd contributors
+# Copyright (C) 2016-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -21,7 +21,9 @@ from hamcrest import ( assert_that,
                        has_entry,
                        instance_of,
                        matches_regexp )
+from unittest import TestCase
 
+from ycmd.tests.go import setUpModule, tearDownModule # noqa
 from ycmd.tests.go import ( IsolatedYcmd,
                             PathToTestFile,
                             SharedYcmd,
@@ -29,81 +31,77 @@ from ycmd.tests.go import ( IsolatedYcmd,
 from ycmd.tests.test_utils import BuildRequest
 
 
-@SharedYcmd
-def DebugInfo_test( app ):
-  request_data = BuildRequest( filetype = 'go' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Go',
-      'servers': contains_exactly( has_entries( {
-        'name': 'gopls',
-        'is_running': instance_of( bool ),
-        'executable': contains_exactly( instance_of( str ),
-                                        instance_of( str ),
-                                        instance_of( str ),
-                                        instance_of( str ) ),
-        'address': None,
-        'port': None,
-        'pid': instance_of( int ),
-        'logfiles': contains_exactly( instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( {
-            'key': 'Server State',
-            'value': instance_of( str ),
-          } ),
-          has_entries( {
-            'key': 'Project Directory',
-            'value': PathToTestFile(),
-          } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
-          } ),
-        )
-      } ) ),
-    } ) )
-  )
+class DebugInfoTest( TestCase ):
+  @SharedYcmd
+  def test_DebugInfo( self, app ):
+    request_data = BuildRequest( filetype = 'go' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Go',
+        'servers': contains_exactly( has_entries( {
+          'name': 'gopls',
+          'is_running': instance_of( bool ),
+          'executable': contains_exactly( instance_of( str ),
+                                          instance_of( str ),
+                                          instance_of( str ),
+                                          instance_of( str ) ),
+          'address': None,
+          'port': None,
+          'pid': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'Server State',
+              'value': instance_of( str ),
+            } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': PathToTestFile(),
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
+            } ),
+          )
+        } ) ),
+      } ) )
+    )
 
 
-@IsolatedYcmd
-def DebugInfo_ProjectDirectory_test( app ):
-  project_dir = PathToTestFile( 'td' )
-  StartGoCompleterServerInDirectory( app, project_dir )
-  assert_that(
-    app.post_json( '/debug_info', BuildRequest( filetype = 'go' ) ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Go',
-      'servers': contains_exactly( has_entries( {
-        'name': 'gopls',
-        'is_running': instance_of( bool ),
-        'executable': contains_exactly( instance_of( str ),
-                                        instance_of( str ),
-                                        instance_of( str ),
-                                        instance_of( str ) ),
-        'address': None,
-        'port': None,
-        'pid': instance_of( int ),
-        'logfiles': contains_exactly( instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( {
-            'key': 'Server State',
-            'value': instance_of( str ),
-          } ),
-          has_entries( {
-            'key': 'Project Directory',
-            'value': PathToTestFile(),
-          } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
-          } ),
-        )
-      } ) ),
-    } ) )
-  )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @IsolatedYcmd()
+  def test_DebugInfo_ProjectDirectory( self, app ):
+    project_dir = PathToTestFile( 'td' )
+    StartGoCompleterServerInDirectory( app, project_dir )
+    assert_that(
+      app.post_json( '/debug_info', BuildRequest( filetype = 'go' ) ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Go',
+        'servers': contains_exactly( has_entries( {
+          'name': 'gopls',
+          'is_running': instance_of( bool ),
+          'executable': contains_exactly( instance_of( str ),
+                                          instance_of( str ),
+                                          instance_of( str ),
+                                          instance_of( str ) ),
+          'address': None,
+          'port': None,
+          'pid': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'Server State',
+              'value': instance_of( str ),
+            } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': PathToTestFile(),
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
+            } ),
+          )
+        } ) ),
+      } ) )
+    )

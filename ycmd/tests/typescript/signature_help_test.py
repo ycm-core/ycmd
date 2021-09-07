@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,8 +16,10 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import assert_that, contains_exactly, empty, equal_to, has_entries
+from unittest import TestCase
 import requests
 
+from ycmd.tests.typescript import setUpModule, tearDownModule # noqa
 from ycmd.tests.typescript import PathToTestFile, IsolatedYcmd, SharedYcmd
 from ycmd.tests.test_utils import ( CombineRequest,
                                     ParameterMatcher,
@@ -66,233 +68,231 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def Signature_Help_Available_test( app ):
-  response = app.get( '/signature_help_available',
-                      { 'subserver': 'typescript' } ).json
-  assert_that( response, SignatureAvailableMatcher( 'YES' ) )
+class SignatureHelpTest( TestCase ):
+  @SharedYcmd
+  def test_Signature_Help_Available( self, app ):
+    response = app.get( '/signature_help_available',
+                        { 'subserver': 'typescript' } ).json
+    assert_that( response, SignatureAvailableMatcher( 'YES' ) )
 
 
-# Triggering on '(', ',' and '<'
-@SharedYcmd
-def Signature_Help_Trigger_Paren_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after (',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 27,
-      'column_num': 29,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'single_argument_with_return(a: string): string',
-                              [ ParameterMatcher( 28, 37, '' ) ],
-                              '' )
-          ),
-        } ),
-      } )
-    }
-  } )
+  # Triggering on '(', ',' and '<'
+  @SharedYcmd
+  def test_Signature_Help_Trigger_Paren( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after (',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 27,
+        'column_num': 29,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher(
+                'single_argument_with_return(a: string): string',
+                [ ParameterMatcher( 28, 37, '' ) ],
+                '' )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@IsolatedYcmd( { 'disable_signature_help': True } )
-def Signature_Help_Trigger_Paren_Disabled_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after (',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 27,
-      'column_num': 29,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty()
-        } ),
-      } )
-    }
-  } )
+  @IsolatedYcmd( { 'disable_signature_help': True } )
+  def test_Signature_Help_Trigger_Paren_Disabled( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after (',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 27,
+        'column_num': 29,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': empty()
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_Trigger_Comma_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after ,',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 60,
-      'column_num': 32,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 1,
-          'signatures': contains_exactly(
-            SignatureMatcher(
-              ( 'multi_argument_no_return(løng_våriable_name: number, '
-                                          'untyped_argument: any): number' ),
-              [ ParameterMatcher( 25, 53, '' ),
-                ParameterMatcher( 55, 76, '' ) ],
-              '' )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_Signature_Help_Trigger_Comma( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after ,',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 60,
+        'column_num': 32,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 1,
+            'signatures': contains_exactly(
+              SignatureMatcher(
+                ( 'multi_argument_no_return(løng_våriable_name: number, '
+                                            'untyped_argument: any): number' ),
+                [ ParameterMatcher( 25, 53, '' ),
+                  ParameterMatcher( 55, 76, '' ) ],
+                '' )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_Trigger_AngleBracket_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after <',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 68,
-      'column_num': 9,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher(
-              'generic<TYPE extends ReturnValue>(t: SomeClass): string',
-              [ ParameterMatcher( 8, 32, '' ) ],
-              '' )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_Signature_Help_Trigger_AngleBracket( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after <',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 68,
+        'column_num': 9,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher(
+                'generic<TYPE extends ReturnValue>(t: SomeClass): string',
+                [ ParameterMatcher( 8, 32, '' ) ],
+                '' )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_Multiple_Signatures_test( app ):
-  RunTest( app, {
-    'description': 'Test overloaded methods',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 89,
-      'column_num': 18,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 1,
-          'activeParameter': 1,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'øverløåd(a: number): string',
-                              [ ParameterMatcher( 12, 21, '' ) ],
-                              '' ),
-            SignatureMatcher( 'øverløåd(a: string, b: number): string',
-                              [ ParameterMatcher( 12, 21, '' ),
-                                ParameterMatcher( 23, 32, '' ) ],
-                              '' )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_Signature_Help_Multiple_Signatures( self, app ):
+    RunTest( app, {
+      'description': 'Test overloaded methods',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 89,
+        'column_num': 18,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 1,
+            'activeParameter': 1,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'øverløåd(a: number): string',
+                                [ ParameterMatcher( 12, 21, '' ) ],
+                                '' ),
+              SignatureMatcher( 'øverløåd(a: string, b: number): string',
+                                [ ParameterMatcher( 12, 21, '' ),
+                                  ParameterMatcher( 23, 32, '' ) ],
+                                '' )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_NoSignatures_test( app ):
-  RunTest( app, {
-    'description': 'Test overloaded methods',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 68,
-      'column_num': 22,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty(),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_Signature_Help_NoSignatures( self, app ):
+    RunTest( app, {
+      'description': 'Test overloaded methods',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 68,
+        'column_num': 22,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': empty(),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_WithDoc_test( app ):
-  RunTest( app, {
-    'description': 'Test parameter documentation',
-    'request': {
-      'filetype': 'typescript',
-      'filepath': PathToTestFile( 'signatures.ts' ),
-      'line_num': 101,
-      'column_num': 26,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'single_argument_with_doc(a: string): string',
-                              [ ParameterMatcher( 25, 34, '- The argument' ) ],
-                              'A function with a single argument' ) )
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_Signature_Help_WithDoc( self, app ):
+    RunTest( app, {
+      'description': 'Test parameter documentation',
+      'request': {
+        'filetype': 'typescript',
+        'filepath': PathToTestFile( 'signatures.ts' ),
+        'line_num': 101,
+        'column_num': 26,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher(
+                'single_argument_with_doc(a: string): string',
+                [ ParameterMatcher( 25, 34, '- The argument' ) ],
+                'A function with a single argument' ) )
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_NoErrorWhenNoSignatureInfo_test( app ):
-  RunTest( app, {
-    'description': 'Test dodgy (',
-    'request': {
-      'filetype'  : 'typescript',
-      'filepath'  : PathToTestFile( 'signatures.ts' ),
-      'line_num'  : 103,
-      'column_num': 5,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty(),
-        } ),
-      } )
-    }
-  } )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @SharedYcmd
+  def test_Signature_Help_NoErrorWhenNoSignatureInfo( self, app ):
+    RunTest( app, {
+      'description': 'Test dodgy (',
+      'request': {
+        'filetype'  : 'typescript',
+        'filepath'  : PathToTestFile( 'signatures.ts' ),
+        'line_num'  : 103,
+        'column_num': 5,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': empty(),
+          } ),
+        } )
+      }
+    } )
