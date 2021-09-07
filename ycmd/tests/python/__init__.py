@@ -15,10 +15,43 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import functools
 import os
-from ycmd.tests.python.conftest import * # noqa
+
+from ycmd.tests.test_utils import ( ClearCompletionsCache,
+                                    IsolatedApp,
+                                    IgnoreExtraConfOutsideTestsFolder,
+                                    SetUpApp )
+
+shared_app = None
 
 
 def PathToTestFile( *args ):
   dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
   return os.path.join( dir_of_current_script, 'testdata', *args )
+
+
+def setUpModule():
+  global shared_app
+  shared_app = SetUpApp()
+
+
+def SharedYcmd( test ):
+  global shared_app
+
+  @functools.wraps( test )
+  def Wrapper( *args, **kwargs ):
+    ClearCompletionsCache()
+    with IgnoreExtraConfOutsideTestsFolder():
+      return test( args[ 0 ], shared_app, *args[ 1: ], **kwargs )
+  return Wrapper
+
+
+def IsolatedYcmd( custom_options = {} ):
+  def Decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( *args, **kwargs ):
+      with IsolatedApp( custom_options ) as app:
+        test( args[ 0 ], app, *args[ 1: ], **kwargs )
+    return Wrapper
+  return Decorator

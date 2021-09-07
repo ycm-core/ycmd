@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 ycmd contributors
+# Copyright (C) 2016-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,93 +16,92 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import assert_that, contains_exactly, has_entries
+from unittest import TestCase
 
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile
 from ycmd.tests.test_utils import BuildRequest, CompletionEntryMatcher
 from ycmd.utils import ReadFile
 
 
-@IsolatedYcmd()
-def EventNotification_OnBufferUnload_CloseFile_test( app ):
-  # Open main.ts file in a buffer.
-  main_filepath = PathToTestFile( 'buffer_unload', 'main.ts' )
-  main_contents = ReadFile( main_filepath )
+class EventNotificationTest( TestCase ):
+  @IsolatedYcmd()
+  def test_EventNotification_OnBufferUnload_CloseFile( self, app ):
+    # Open main.ts file in a buffer.
+    main_filepath = PathToTestFile( 'buffer_unload', 'main.ts' )
+    main_contents = ReadFile( main_filepath )
 
-  event_data = BuildRequest( filepath = main_filepath,
-                             filetype = 'typescript',
-                             contents = main_contents,
-                             event_name = 'BufferVisit' )
-  app.post_json( '/event_notification', event_data )
+    event_data = BuildRequest( filepath = main_filepath,
+                               filetype = 'typescript',
+                               contents = main_contents,
+                               event_name = 'BufferVisit' )
+    app.post_json( '/event_notification', event_data )
 
-  # Complete in main.ts buffer an object defined in imported.ts.
-  completion_data = BuildRequest( filepath = main_filepath,
-                                  filetype = 'typescript',
-                                  contents = main_contents,
-                                  line_num = 3,
-                                  column_num = 10 )
-  response = app.post_json( '/completions', completion_data )
-  assert_that( response.json, has_entries( {
-    'completions': contains_exactly( CompletionEntryMatcher( 'method' ) ) } ) )
+    # Complete in main.ts buffer an object defined in imported.ts.
+    completion_data = BuildRequest( filepath = main_filepath,
+                                    filetype = 'typescript',
+                                    contents = main_contents,
+                                    line_num = 3,
+                                    column_num = 10 )
+    response = app.post_json( '/completions', completion_data )
+    assert_that( response.json, has_entries( {
+      'completions': contains_exactly(
+        CompletionEntryMatcher( 'method' ) ) } ) )
 
-  # Open imported.ts file in another buffer.
-  imported_filepath = PathToTestFile( 'buffer_unload', 'imported.ts' )
-  imported_contents = ReadFile( imported_filepath )
+    # Open imported.ts file in another buffer.
+    imported_filepath = PathToTestFile( 'buffer_unload', 'imported.ts' )
+    imported_contents = ReadFile( imported_filepath )
 
-  event_data = BuildRequest( filepath = imported_filepath,
-                             filetype = 'typescript',
-                             contents = imported_contents,
-                             event_name = 'BufferVisit' )
-  app.post_json( '/event_notification', event_data )
+    event_data = BuildRequest( filepath = imported_filepath,
+                               filetype = 'typescript',
+                               contents = imported_contents,
+                               event_name = 'BufferVisit' )
+    app.post_json( '/event_notification', event_data )
 
-  # Modify imported.ts buffer without writing the changes to disk.
-  modified_imported_contents = imported_contents.replace( 'method',
-                                                          'modified_method' )
+    # Modify imported.ts buffer without writing the changes to disk.
+    modified_imported_contents = imported_contents.replace( 'method',
+                                                            'modified_method' )
 
-  # FIXME: TypeScript completer should not rely on the FileReadyToParse events
-  # to synchronize the contents of dirty buffers but use instead the file_data
-  # field of the request.
-  event_data = BuildRequest( filepath = imported_filepath,
-                             filetype = 'typescript',
-                             contents = modified_imported_contents,
-                             event_name = 'FileReadyToParse' )
-  app.post_json( '/event_notification', event_data )
+    # FIXME: TypeScript completer should not rely on the FileReadyToParse events
+    # to synchronize the contents of dirty buffers but use instead the file_data
+    # field of the request.
+    event_data = BuildRequest( filepath = imported_filepath,
+                               filetype = 'typescript',
+                               contents = modified_imported_contents,
+                               event_name = 'FileReadyToParse' )
+    app.post_json( '/event_notification', event_data )
 
-  # Complete at same location in main.ts buffer.
-  imported_data = {
-    imported_filepath: {
-      'filetypes': [ 'typescript' ],
-      'contents': modified_imported_contents
+    # Complete at same location in main.ts buffer.
+    imported_data = {
+      imported_filepath: {
+        'filetypes': [ 'typescript' ],
+        'contents': modified_imported_contents
+      }
     }
-  }
-  completion_data = BuildRequest( filepath = main_filepath,
-                                  filetype = 'typescript',
-                                  contents = main_contents,
-                                  line_num = 3,
-                                  column_num = 10,
-                                  file_data = imported_data )
-  response = app.post_json( '/completions', completion_data )
-  assert_that( response.json, has_entries( {
-    'completions': contains_exactly(
-                     CompletionEntryMatcher( 'modified_method' ) ) } ) )
+    completion_data = BuildRequest( filepath = main_filepath,
+                                    filetype = 'typescript',
+                                    contents = main_contents,
+                                    line_num = 3,
+                                    column_num = 10,
+                                    file_data = imported_data )
+    response = app.post_json( '/completions', completion_data )
+    assert_that( response.json, has_entries( {
+      'completions': contains_exactly(
+                       CompletionEntryMatcher( 'modified_method' ) ) } ) )
 
-  # Unload imported.ts buffer.
-  event_data = BuildRequest( filepath = imported_filepath,
-                             filetype = 'typescript',
-                             contents = imported_contents,
-                             event_name = 'BufferUnload' )
-  app.post_json( '/event_notification', event_data )
+    # Unload imported.ts buffer.
+    event_data = BuildRequest( filepath = imported_filepath,
+                               filetype = 'typescript',
+                               contents = imported_contents,
+                               event_name = 'BufferUnload' )
+    app.post_json( '/event_notification', event_data )
 
-  # Complete at same location in main.ts buffer.
-  completion_data = BuildRequest( filepath = main_filepath,
-                                  filetype = 'typescript',
-                                  contents = main_contents,
-                                  line_num = 3,
-                                  column_num = 10 )
-  response = app.post_json( '/completions', completion_data )
-  assert_that( response.json, has_entries( {
-    'completions': contains_exactly( CompletionEntryMatcher( 'method' ) ) } ) )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+    # Complete at same location in main.ts buffer.
+    completion_data = BuildRequest( filepath = main_filepath,
+                                    filetype = 'typescript',
+                                    contents = main_contents,
+                                    line_num = 3,
+                                    column_num = 10 )
+    response = app.post_json( '/completions', completion_data )
+    assert_that( response.json, has_entries( {
+      'completions': contains_exactly(
+        CompletionEntryMatcher( 'method' ) ) } ) )
