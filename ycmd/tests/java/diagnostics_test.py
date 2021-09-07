@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020 ycmd contributors
+# Copyright (C) 2017-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -27,12 +27,15 @@ from hamcrest import ( assert_that,
                        has_entry,
                        has_item,
                        matches_regexp )
+from unittest import TestCase
 
-from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
+from ycmd.tests.java import ( DEFAULT_PROJECT_DIR, # noqa
                               IsolatedYcmd,
                               PathToTestFile,
                               SharedYcmd,
-                              StartJavaCompleterServerInDirectory )
+                              StartJavaCompleterServerInDirectory,
+                              setUpModule,
+                              tearDownModule )
 
 from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
@@ -250,144 +253,6 @@ def _WaitForDiagnosticsForFile( app,
   return diags
 
 
-@WithRetry
-@SharedYcmd
-def Diagnostics_DetailedDiags_test( app ):
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-  WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
-  request_data = BuildRequest( contents = contents,
-                               filepath = filepath,
-                               filetype = 'java',
-                               line_num = 15,
-                               column_num = 19 )
-
-  results = app.post_json( '/detailed_diagnostic', request_data ).json
-  assert_that( results, has_entry(
-      'message',
-      'The value of the field TestFactory.Bar.testString is not used' ) )
-
-
-@WithRetry
-@SharedYcmd
-def FileReadyToParse_Diagnostics_Simple_test( app ):
-  filepath = ProjectPath( 'TestFactory.java' )
-  contents = ReadFile( filepath )
-
-  # It can take a while for the diagnostics to be ready
-  results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
-  print( f'completer response: { pformat( results ) }' )
-
-  assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
-
-
-@IsolatedYcmd()
-def FileReadyToParse_Diagnostics_FileNotOnDisk_test( app ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
-
-  contents = '''
-    package com.test;
-    class Test {
-      public String test
-    }
-  '''
-  filepath = ProjectPath( 'Test.java' )
-
-  event_data = BuildRequest( event_name = 'FileReadyToParse',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'java' )
-
-  results = app.post_json( '/event_notification', event_data ).json
-
-  # This is a new file, so the diagnostics can't possibly be available when the
-  # initial parse request is sent. We receive these asynchronously.
-  assert_that( results, empty() )
-
-  diag_matcher = contains_exactly( has_entries( {
-    'kind': 'ERROR',
-    'text': 'Syntax error, insert ";" to complete ClassBodyDeclarations '
-            '[1610612976]',
-    'location': LocationMatcher( filepath, 4, 21 ),
-    'location_extent': RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ),
-    'ranges': contains_exactly(
-      RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
-    'fixit_available': False
-  } ) )
-
-  # Poll until we receive the diags
-  for message in PollForMessages( app,
-                                  { 'filepath': filepath,
-                                    'contents': contents,
-                                    'filetype': 'java' } ):
-    if 'diagnostics' in message and message[ 'filepath' ] == filepath:
-      print( f'Message { pformat( message ) }' )
-      assert_that( message, has_entries( {
-        'diagnostics': diag_matcher,
-        'filepath': filepath
-      } ) )
-      break
-
-  # Now confirm that we _also_ get these from the FileReadyToParse request
-  for tries in range( 0, 60 ):
-    results = app.post_json( '/event_notification', event_data ).json
-    if results:
-      break
-    time.sleep( 0.5 )
-
-  print( f'completer response: { pformat( results ) }' )
-
-  assert_that( results, diag_matcher )
-
-
-@WithRetry
-@IsolatedYcmd()
-def Poll_Diagnostics_ProjectWide_Eclipse_test( app ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
-
-  filepath = TestLauncher
-  contents = ReadFile( filepath )
-
-  # Poll until we receive _all_ the diags asynchronously
-  to_see = sorted( DIAG_MATCHERS_PER_FILE.keys() )
-  seen = {}
-
-  try:
-    for message in PollForMessages( app,
-                                    { 'filepath': filepath,
-                                      'contents': contents,
-                                      'filetype': 'java' } ):
-      print( f'Message { pformat( message ) }' )
-      if 'diagnostics' in message:
-        seen[ message[ 'filepath' ] ] = True
-        if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
-          raise AssertionError( 'Received diagnostics for unexpected file '
-            f'{ message[ "filepath" ] }. Only expected { to_see }' )
-        assert_that( message, has_entries( {
-          'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
-          'filepath': message[ 'filepath' ]
-        } ) )
-
-      if sorted( seen.keys() ) == to_see:
-        break
-      else:
-        print( 'Seen diagnostics for {0}, still waiting for {1}'.format(
-          json.dumps( sorted( seen.keys() ), indent = 2 ),
-          json.dumps( [ x for x in to_see if x not in seen ], indent = 2 ) ) )
-
-      # Eventually PollForMessages will throw
-      # a timeout exception and we'll fail
-      # if we don't see all of the expected diags
-  except PollForMessagesTimeoutException as e:
-    raise AssertionError(
-      str( e ) +
-      'Timed out waiting for full set of diagnostics. '
-      f'Expected to see diags for { json.dumps( to_see, indent = 2 ) }, '
-      f'but only saw { json.dumps( sorted( seen.keys() ), indent = 2 ) }.' )
-
-
 @contextlib.contextmanager
 def PollingThread( app,
                    messages_for_filepath,
@@ -419,93 +284,51 @@ def PollingThread( app,
     assert not poller.is_alive()
 
 
-@WithRetry
-@IsolatedYcmd()
-def Poll_Diagnostics_ChangeFileContents_test( app ):
-  StartJavaCompleterServerInDirectory( app,
-                                       PathToTestFile( DEFAULT_PROJECT_DIR ) )
+class DiagnosticsTest( TestCase ):
+  @WithRetry()
+  @SharedYcmd
+  def test_Diagnostics_DetailedDiags( self, app ):
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+    WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
+    request_data = BuildRequest( contents = contents,
+                                 filepath = filepath,
+                                 filetype = 'java',
+                                 line_num = 15,
+                                 column_num = 19 )
 
-  filepath = youcompleteme_Test
-  old_contents = """package com.youcompleteme;
-
-public class Test {
-  public String test;
-}"""
-
-  messages_for_filepath = []
-
-  with PollingThread( app,
-                      messages_for_filepath,
-                      filepath,
-                      old_contents ):
-
-    new_contents = """package com.youcompleteme;
-
-public class Test {
-  public String test;
-  public String test;
-}"""
-
-    event_data = BuildRequest( event_name = 'FileReadyToParse',
-                               contents = new_contents,
-                               filepath = filepath,
-                               filetype = 'java' )
-    app.post_json( '/event_notification', event_data ).json
-
-    expiration = time.time() + 10
-    while True:
-      try:
-        assert_that(
-          messages_for_filepath,
-          has_item( has_entries( {
-            'filepath': filepath,
-            'diagnostics': contains_exactly(
-              has_entries( {
-                'kind': 'ERROR',
-                'text': 'Duplicate field Test.test [33554772]',
-                'location': LocationMatcher( youcompleteme_Test, 4, 17 ),
-                'location_extent': RangeMatcher( youcompleteme_Test,
-                                                 ( 4, 17 ),
-                                                 ( 4, 21 ) ),
-                'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
-                                                  ( 4, 17 ),
-                                                  ( 4, 21 ) ) ),
-                'fixit_available': False
-              } ),
-              has_entries( {
-                'kind': 'ERROR',
-                'text': 'Duplicate field Test.test [33554772]',
-                'location': LocationMatcher( youcompleteme_Test, 5, 17 ),
-                'location_extent': RangeMatcher( youcompleteme_Test,
-                                                 ( 5, 17 ),
-                                                 ( 5, 21 ) ),
-                'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
-                                                  ( 5, 17 ),
-                                                  ( 5, 21 ) ) ),
-                'fixit_available': False
-              } )
-            )
-          } ) )
-        )
-        break
-      except AssertionError:
-        if time.time() > expiration:
-          raise
-
-        time.sleep( 0.25 )
+    results = app.post_json( '/detailed_diagnostic', request_data ).json
+    assert_that( results, has_entry(
+        'message',
+        'The value of the field TestFactory.Bar.testString is not used' ) )
 
 
-@IsolatedYcmd()
-def FileReadyToParse_ServerNotReady_test( app ):
-  filepath = TestFactory
-  contents = ReadFile( filepath )
+  @WithRetry()
+  @SharedYcmd
+  def test_FileReadyToParse_Diagnostics_Simple( self, app ):
+    filepath = ProjectPath( 'TestFactory.java' )
+    contents = ReadFile( filepath )
 
-  StartJavaCompleterServerInDirectory( app, ProjectPath() )
+    # It can take a while for the diagnostics to be ready
+    results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
+    print( f'completer response: { pformat( results ) }' )
 
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+    assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
-  # It can take a while for the diagnostics to be ready
-  for tries in range( 0, 60 ):
+
+  @IsolatedYcmd()
+  def test_FileReadyToParse_Diagnostics_FileNotOnDisk( self, app ):
+    StartJavaCompleterServerInDirectory( app,
+                                         PathToTestFile( DEFAULT_PROJECT_DIR ) )
+
+    contents = '''
+    package com.test;
+    class Test {
+      public String test
+    }
+  '''
+    filepath = ProjectPath( 'Test.java' )
+
     event_data = BuildRequest( event_name = 'FileReadyToParse',
                                contents = contents,
                                filepath = filepath,
@@ -513,166 +336,273 @@ def FileReadyToParse_ServerNotReady_test( app ):
 
     results = app.post_json( '/event_notification', event_data ).json
 
-    if results:
-      break
-
-    time.sleep( 0.5 )
-
-  # To make the test fair, we make sure there are some results prior to the
-  # 'server not running' call
-  assert results
-
-  # Call the FileReadyToParse handler but pretend that the server isn't running
-  with patch.object( completer, 'ServerIsHealthy', return_value = False ):
-    event_data = BuildRequest( event_name = 'FileReadyToParse',
-                               contents = contents,
-                               filepath = filepath,
-                               filetype = 'java' )
-    results = app.post_json( '/event_notification', event_data ).json
+    # This is a new file, so the diagnostics can't possibly be available when
+    # the initial parse request is sent. We receive these asynchronously.
     assert_that( results, empty() )
 
+    diag_matcher = contains_exactly( has_entries( {
+      'kind': 'ERROR',
+      'text': 'Syntax error, insert ";" to complete ClassBodyDeclarations '
+              '[1610612976]',
+      'location': LocationMatcher( filepath, 4, 21 ),
+      'location_extent': RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ),
+      'ranges': contains_exactly(
+        RangeMatcher( filepath, ( 4, 21 ), ( 4, 25 ) ) ),
+      'fixit_available': False
+    } ) )
 
-@IsolatedYcmd()
-def FileReadyToParse_ChangeFileContents_test( app ):
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-
-  StartJavaCompleterServerInDirectory( app, ProjectPath() )
-
-  # It can take a while for the diagnostics to be ready
-  for tries in range( 0, 60 ):
-    event_data = BuildRequest( event_name = 'FileReadyToParse',
-                               contents = contents,
-                               filepath = filepath,
-                               filetype = 'java' )
-
-    results = app.post_json( '/event_notification', event_data ).json
-
-    if results:
-      break
-
-    time.sleep( 0.5 )
-
-  # To make the test fair, we make sure there are some results prior to the
-  # 'server not running' call
-  assert results
-
-  # Call the FileReadyToParse handler but pretend that the server isn't running
-  contents = 'package com.test; class TestFactory {}'
-  # It can take a while for the diagnostics to be ready
-  event_data = BuildRequest( event_name = 'FileReadyToParse',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'java' )
-
-  app.post_json( '/event_notification', event_data )
-
-  diags = None
-  try:
+    # Poll until we receive the diags
     for message in PollForMessages( app,
                                     { 'filepath': filepath,
                                       'contents': contents,
                                       'filetype': 'java' } ):
-      print( f'Message { pformat( message ) }' )
-      if 'diagnostics' in message and message[ 'filepath' ]  == filepath:
-        diags = message[ 'diagnostics' ]
-        if not diags:
+      if 'diagnostics' in message and message[ 'filepath' ] == filepath:
+        print( f'Message { pformat( message ) }' )
+        assert_that( message, has_entries( {
+          'diagnostics': diag_matcher,
+          'filepath': filepath
+        } ) )
+        break
+
+    # Now confirm that we _also_ get these from the FileReadyToParse request
+    for tries in range( 0, 60 ):
+      results = app.post_json( '/event_notification', event_data ).json
+      if results:
+        break
+      time.sleep( 0.5 )
+
+    print( f'completer response: { pformat( results ) }' )
+
+    assert_that( results, diag_matcher )
+
+
+  @WithRetry()
+  @IsolatedYcmd()
+  def test_Poll_Diagnostics_ProjectWide_Eclipse( self, app ):
+    StartJavaCompleterServerInDirectory( app,
+                                         PathToTestFile( DEFAULT_PROJECT_DIR ) )
+
+    filepath = TestLauncher
+    contents = ReadFile( filepath )
+
+    # Poll until we receive _all_ the diags asynchronously
+    to_see = sorted( DIAG_MATCHERS_PER_FILE.keys() )
+    seen = {}
+
+    try:
+      for message in PollForMessages( app,
+                                      { 'filepath': filepath,
+                                        'contents': contents,
+                                        'filetype': 'java' } ):
+        print( f'Message { pformat( message ) }' )
+        if 'diagnostics' in message:
+          seen[ message[ 'filepath' ] ] = True
+          if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
+            raise AssertionError( 'Received diagnostics for unexpected file '
+              f'{ message[ "filepath" ] }. Only expected { to_see }' )
+          assert_that( message, has_entries( {
+            'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
+            'filepath': message[ 'filepath' ]
+          } ) )
+
+        if sorted( seen.keys() ) == to_see:
           break
+        else:
+          print( 'Seen diagnostics for {0}, still waiting for {1}'.format(
+            json.dumps( sorted( seen.keys() ), indent = 2 ),
+            json.dumps( [ x for x in to_see if x not in seen ], indent = 2 ) ) )
 
-      # Eventually PollForMessages will throw a timeout exception and we'll fail
-      # if we don't see the diagnostics go empty
-  except PollForMessagesTimeoutException as e:
-    raise AssertionError(
-      f'{ e }. Timed out waiting for diagnostics to clear for updated file. '
-      f'Expected to see none, but diags were: { diags }' )
-
-  assert_that( diags, empty() )
-
-  # Close the file (ensuring no exception)
-  event_data = BuildRequest( event_name = 'BufferUnload',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'java' )
-  result = app.post_json( '/event_notification', event_data ).json
-  assert_that( result, equal_to( {} ) )
-
-  # Close the file again, someone erroneously (ensuring no exception)
-  event_data = BuildRequest( event_name = 'BufferUnload',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'java' )
-  result = app.post_json( '/event_notification', event_data ).json
-  assert_that( result, equal_to( {} ) )
+        # Eventually PollForMessages will throw
+        # a timeout exception and we'll fail
+        # if we don't see all of the expected diags
+    except PollForMessagesTimeoutException as e:
+      raise AssertionError(
+        str( e ) +
+        'Timed out waiting for full set of diagnostics. '
+        f'Expected to see diags for { json.dumps( to_see, indent = 2 ) }, '
+        f'but only saw { json.dumps( sorted( seen.keys() ), indent = 2 ) }.' )
 
 
-@IsolatedYcmd()
-def FileReadyToParse_ChangeFileContentsFileData_test( app ):
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-  unsaved_buffer_path = TestLauncher
-  file_data = {
-    unsaved_buffer_path: {
-      'contents': 'package com.test; public class TestLauncher {}',
-      'filetypes': [ 'java' ],
-    }
-  }
+  @WithRetry()
+  @IsolatedYcmd()
+  def test_Poll_Diagnostics_ChangeFileContents( self, app ):
+    StartJavaCompleterServerInDirectory( app,
+                                         PathToTestFile( DEFAULT_PROJECT_DIR ) )
 
-  StartJavaCompleterServerInDirectory( app, ProjectPath() )
+    filepath = youcompleteme_Test
+    old_contents = """package com.youcompleteme;
 
-  # It can take a while for the diagnostics to be ready
-  results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
-  assert results
+public class Test {
+  public String test;
+}"""
 
-  # Check that we have diagnostics for the saved file
-  diags = _WaitForDiagnosticsForFile( app,
-                                      filepath,
-                                      contents,
-                                      unsaved_buffer_path,
-                                      lambda d: d )
-  assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
+    messages_for_filepath = []
 
-  # Now update the unsaved file with new contents
-  event_data = BuildRequest( event_name = 'FileReadyToParse',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'java',
-                             file_data = file_data )
-  app.post_json( '/event_notification', event_data )
+    with PollingThread( app,
+                        messages_for_filepath,
+                        filepath,
+                        old_contents ):
 
-  # Check that we have no diagnostics for the dirty file
-  diags = _WaitForDiagnosticsForFile( app,
-                                      filepath,
-                                      contents,
-                                      unsaved_buffer_path,
-                                      lambda d: not d )
-  assert_that( diags, empty() )
+      new_contents = """package com.youcompleteme;
 
-  # Now send the request again, but don't include the unsaved file. It should be
-  # read from disk, causing the diagnostics for that file to appear.
-  event_data = BuildRequest( event_name = 'FileReadyToParse',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'java' )
-  app.post_json( '/event_notification', event_data )
+public class Test {
+  public String test;
+  public String test;
+}"""
 
-  # Check that we now have diagnostics for the previously-dirty file
-  diags = _WaitForDiagnosticsForFile( app,
-                                      filepath,
-                                      contents,
-                                      unsaved_buffer_path,
-                                      lambda d: d )
+      event_data = BuildRequest( event_name = 'FileReadyToParse',
+                                 contents = new_contents,
+                                 filepath = filepath,
+                                 filetype = 'java' )
+      app.post_json( '/event_notification', event_data ).json
 
-  assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
+      expiration = time.time() + 10
+      while True:
+        try:
+          assert_that(
+            messages_for_filepath,
+            has_item( has_entries( {
+              'filepath': filepath,
+              'diagnostics': contains_exactly(
+                has_entries( {
+                  'kind': 'ERROR',
+                  'text': 'Duplicate field Test.test [33554772]',
+                  'location': LocationMatcher( youcompleteme_Test, 4, 17 ),
+                  'location_extent': RangeMatcher( youcompleteme_Test,
+                                                   ( 4, 17 ),
+                                                   ( 4, 21 ) ),
+                  'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
+                                                    ( 4, 17 ),
+                                                    ( 4, 21 ) ) ),
+                  'fixit_available': False
+                } ),
+                has_entries( {
+                  'kind': 'ERROR',
+                  'text': 'Duplicate field Test.test [33554772]',
+                  'location': LocationMatcher( youcompleteme_Test, 5, 17 ),
+                  'location_extent': RangeMatcher( youcompleteme_Test,
+                                                   ( 5, 17 ),
+                                                   ( 5, 21 ) ),
+                  'ranges': contains_exactly( RangeMatcher( youcompleteme_Test,
+                                                    ( 5, 17 ),
+                                                    ( 5, 21 ) ) ),
+                  'fixit_available': False
+                } )
+              )
+            } ) )
+          )
+          break
+        except AssertionError:
+          if time.time() > expiration:
+            raise
+
+          time.sleep( 0.25 )
 
 
-@WithRetry
-@SharedYcmd
-def OnBufferUnload_ServerNotRunning_test( app ):
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+  @IsolatedYcmd()
+  def test_FileReadyToParse_ServerNotReady( self, app ):
+    filepath = TestFactory
+    contents = ReadFile( filepath )
 
-  with patch.object( completer, 'ServerIsHealthy', return_value = False ):
+    StartJavaCompleterServerInDirectory( app, ProjectPath() )
+
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+    # It can take a while for the diagnostics to be ready
+    for tries in range( 0, 60 ):
+      event_data = BuildRequest( event_name = 'FileReadyToParse',
+                                 contents = contents,
+                                 filepath = filepath,
+                                 filetype = 'java' )
+
+      results = app.post_json( '/event_notification', event_data ).json
+
+      if results:
+        break
+
+      time.sleep( 0.5 )
+
+    # To make the test fair, we make sure there are some results prior to the
+    # 'server not running' call
+    assert results
+
+    # Call the FileReadyToParse handler but pretend that the server isn't
+    # running
+    with patch.object( completer, 'ServerIsHealthy', return_value = False ):
+      event_data = BuildRequest( event_name = 'FileReadyToParse',
+                                 contents = contents,
+                                 filepath = filepath,
+                                 filetype = 'java' )
+      results = app.post_json( '/event_notification', event_data ).json
+      assert_that( results, empty() )
+
+
+  @IsolatedYcmd()
+  def test_FileReadyToParse_ChangeFileContents( self, app ):
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+
+    StartJavaCompleterServerInDirectory( app, ProjectPath() )
+
+    # It can take a while for the diagnostics to be ready
+    for tries in range( 0, 60 ):
+      event_data = BuildRequest( event_name = 'FileReadyToParse',
+                                 contents = contents,
+                                 filepath = filepath,
+                                 filetype = 'java' )
+
+      results = app.post_json( '/event_notification', event_data ).json
+
+      if results:
+        break
+
+      time.sleep( 0.5 )
+
+    # To make the test fair, we make sure there are some results prior to the
+    # 'server not running' call
+    assert results
+
+    # Call the FileReadyToParse handler but pretend that the server isn't
+    # running
+    contents = 'package com.test; class TestFactory {}'
+    # It can take a while for the diagnostics to be ready
+    event_data = BuildRequest( event_name = 'FileReadyToParse',
+                               contents = contents,
+                               filepath = filepath,
+                               filetype = 'java' )
+
+    app.post_json( '/event_notification', event_data )
+
+    diags = None
+    try:
+      for message in PollForMessages( app,
+                                      { 'filepath': filepath,
+                                        'contents': contents,
+                                        'filetype': 'java' } ):
+        print( f'Message { pformat( message ) }' )
+        if 'diagnostics' in message and message[ 'filepath' ]  == filepath:
+          diags = message[ 'diagnostics' ]
+          if not diags:
+            break
+
+    # Eventually PollForMessages will throw a timeout exception and we'll fail
+    # if we don't see the diagnostics go empty
+    except PollForMessagesTimeoutException as e:
+      raise AssertionError(
+        f'{ e }. Timed out waiting for diagnostics to clear for updated file. '
+        f'Expected to see none, but diags were: { diags }' )
+
+    assert_that( diags, empty() )
+
+    # Close the file (ensuring no exception)
+    event_data = BuildRequest( event_name = 'BufferUnload',
+                               contents = contents,
+                               filepath = filepath,
+                               filetype = 'java' )
+    result = app.post_json( '/event_notification', event_data ).json
+    assert_that( result, equal_to( {} ) )
+
+    # Close the file again, someone erroneously (ensuring no exception)
     event_data = BuildRequest( event_name = 'BufferUnload',
                                contents = contents,
                                filepath = filepath,
@@ -681,106 +611,177 @@ def OnBufferUnload_ServerNotRunning_test( app ):
     assert_that( result, equal_to( {} ) )
 
 
-@IsolatedYcmd()
-def PollForMessages_InvalidUri_test( app, *args ):
-  StartJavaCompleterServerInDirectory(
-    app,
-    PathToTestFile( 'simple_eclipse_project' ) )
+  @IsolatedYcmd()
+  def test_FileReadyToParse_ChangeFileContentsFileData( self, app ):
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+    unsaved_buffer_path = TestLauncher
+    file_data = {
+      unsaved_buffer_path: {
+        'contents': 'package com.test; public class TestLauncher {}',
+        'filetypes': [ 'java' ],
+      }
+    }
 
-  filepath = TestFactory
-  contents = ReadFile( filepath )
+    StartJavaCompleterServerInDirectory( app, ProjectPath() )
 
-  with patch(
-    'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
-    side_effect = lsp.InvalidUriException ):
+    # It can take a while for the diagnostics to be ready
+    results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'java' )
+    assert results
 
-    for tries in range( 0, 5 ):
-      response = app.post_json( '/receive_messages',
-                                BuildRequest(
-                                  filetype = 'java',
-                                  filepath = filepath,
-                                  contents = contents ) ).json
-      if response is True:
-        break
-      elif response is False:
-        raise AssertionError( 'Message poll was aborted unexpectedly' )
-      elif 'diagnostics' in response:
-        raise AssertionError( 'Did not expect diagnostics when file paths '
-                              'are invalid' )
+    # Check that we have diagnostics for the saved file
+    diags = _WaitForDiagnosticsForFile( app,
+                                        filepath,
+                                        contents,
+                                        unsaved_buffer_path,
+                                        lambda d: d )
+    assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
 
-      time.sleep( 0.5 )
+    # Now update the unsaved file with new contents
+    event_data = BuildRequest( event_name = 'FileReadyToParse',
+                               contents = contents,
+                               filepath = filepath,
+                               filetype = 'java',
+                               file_data = file_data )
+    app.post_json( '/event_notification', event_data )
 
-  assert_that( response, equal_to( True ) )
+    # Check that we have no diagnostics for the dirty file
+    diags = _WaitForDiagnosticsForFile( app,
+                                        filepath,
+                                        contents,
+                                        unsaved_buffer_path,
+                                        lambda d: not d )
+    assert_that( diags, empty() )
 
+    # Now send the request again, but don't include the unsaved file. It should
+    # be read from disk, causing the diagnostics for that file to appear.
+    event_data = BuildRequest( event_name = 'FileReadyToParse',
+                               contents = contents,
+                               filepath = filepath,
+                               filetype = 'java' )
+    app.post_json( '/event_notification', event_data )
 
-@IsolatedYcmd()
-@patch.object( completer, 'MESSAGE_POLL_TIMEOUT', 2 )
-def PollForMessages_ServerNotRunning_test( app ):
-  StartJavaCompleterServerInDirectory(
-    app,
-    PathToTestFile( 'simple_eclipse_project' ) )
+    # Check that we now have diagnostics for the previously-dirty file
+    diags = _WaitForDiagnosticsForFile( app,
+                                        filepath,
+                                        contents,
+                                        unsaved_buffer_path,
+                                        lambda d: d )
 
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'java',
-      command_arguments = [ 'StopServer' ],
-    ),
-  )
-
-  response = app.post_json( '/receive_messages',
-                            BuildRequest(
-                              filetype = 'java',
-                              filepath = filepath,
-                              contents = contents ) ).json
-
-  assert_that( response, equal_to( False ) )
-
-
-@IsolatedYcmd()
-def PollForMessages_AbortedWhenServerDies_test( app ):
-  StartJavaCompleterServerInDirectory(
-    app,
-    PathToTestFile( 'simple_eclipse_project' ) )
-
-  filepath = TestFactory
-  contents = ReadFile( filepath )
-
-  state = {
-    'aborted': False
-  }
-
-  def AwaitMessages():
-    max_tries = 20
-    for tries in range( 0, max_tries ):
-      response = app.post_json( '/receive_messages',
-                                BuildRequest(
-                                  filetype = 'java',
-                                  filepath = filepath,
-                                  contents = contents ) ).json
-      if response is False:
-        state[ 'aborted' ] = True
-        return
-
-    raise AssertionError(
-      f'The poll request was not aborted in { max_tries } tries' )
-
-  message_poll_task = StartThread( AwaitMessages )
-
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'java',
-      command_arguments = [ 'StopServer' ],
-    ),
-  )
-
-  message_poll_task.join()
-  assert_that( state[ 'aborted' ] )
+    assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @WithRetry()
+  @SharedYcmd
+  def test_OnBufferUnload_ServerNotRunning( self, app ):
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+    with patch.object( completer, 'ServerIsHealthy', return_value = False ):
+      event_data = BuildRequest( event_name = 'BufferUnload',
+                                 contents = contents,
+                                 filepath = filepath,
+                                 filetype = 'java' )
+      result = app.post_json( '/event_notification', event_data ).json
+      assert_that( result, equal_to( {} ) )
+
+
+  @IsolatedYcmd()
+  def test_PollForMessages_InvalidUri( self, app ):
+    StartJavaCompleterServerInDirectory(
+      app,
+      PathToTestFile( 'simple_eclipse_project' ) )
+
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+
+    with patch(
+      'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
+      side_effect = lsp.InvalidUriException ):
+
+      for tries in range( 0, 5 ):
+        response = app.post_json( '/receive_messages',
+                                  BuildRequest(
+                                    filetype = 'java',
+                                    filepath = filepath,
+                                    contents = contents ) ).json
+        if response is True:
+          break
+        elif response is False:
+          raise AssertionError( 'Message poll was aborted unexpectedly' )
+        elif 'diagnostics' in response:
+          raise AssertionError( 'Did not expect diagnostics when file paths '
+                                'are invalid' )
+
+        time.sleep( 0.5 )
+
+    assert_that( response, equal_to( True ) )
+
+
+  @IsolatedYcmd()
+  @patch.object( completer, 'MESSAGE_POLL_TIMEOUT', 2 )
+  def test_PollForMessages_ServerNotRunning( self, app ):
+    StartJavaCompleterServerInDirectory(
+      app,
+      PathToTestFile( 'simple_eclipse_project' ) )
+
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filetype = 'java',
+        command_arguments = [ 'StopServer' ],
+      ),
+    )
+
+    response = app.post_json( '/receive_messages',
+                              BuildRequest(
+                                filetype = 'java',
+                                filepath = filepath,
+                                contents = contents ) ).json
+
+    assert_that( response, equal_to( False ) )
+
+
+  @IsolatedYcmd()
+  def test_PollForMessages_AbortedWhenServerDies( self, app ):
+    StartJavaCompleterServerInDirectory(
+      app,
+      PathToTestFile( 'simple_eclipse_project' ) )
+
+    filepath = TestFactory
+    contents = ReadFile( filepath )
+
+    state = {
+      'aborted': False
+    }
+
+    def AwaitMessages():
+      max_tries = 20
+      for tries in range( 0, max_tries ):
+        response = app.post_json( '/receive_messages',
+                                  BuildRequest(
+                                    filetype = 'java',
+                                    filepath = filepath,
+                                    contents = contents ) ).json
+        if response is False:
+          state[ 'aborted' ] = True
+          return
+
+      raise AssertionError(
+        f'The poll request was not aborted in { max_tries } tries' )
+
+    message_poll_task = StartThread( AwaitMessages )
+
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filetype = 'java',
+        command_arguments = [ 'StopServer' ],
+      ),
+    )
+
+    message_poll_task.join()
+    assert_that( state[ 'aborted' ] )

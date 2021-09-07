@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -22,6 +22,7 @@ comment"""
 # flake8: noqa
 
 from hamcrest import assert_that, equal_to
+from unittest import TestCase
 from ycmd.completers.cpp import clang_completer
 
 
@@ -39,71 +40,72 @@ def _Check_FormatRawComment( comment, expected ):
     raise
 
 
-def ClangCompleter_FormatRawComment_SingleLine_Doxygen_test():
-  # - <whitespace>///
+class CommentStripTest( TestCase ):
+  def test_ClangCompleter_FormatRawComment_SingleLine_Doxygen( self ):
+    # - <whitespace>///
 
-  # Indent + /// +
-  _Check_FormatRawComment( '    /// Single line comment',
-                           'Single line comment' )
+    # Indent + /// +
+    _Check_FormatRawComment( '    /// Single line comment',
+                             'Single line comment' )
 
-  # No indent, Internal indent removed, trailing whitespace removed
-  _Check_FormatRawComment( '///      Single line comment    ',
-                           'Single line comment' )
+    # No indent, Internal indent removed, trailing whitespace removed
+    _Check_FormatRawComment( '///      Single line comment    ',
+                             'Single line comment' )
 
-  # Extra / prevents initial indent being removed
-  _Check_FormatRawComment( '////      Single line comment    ',
-                           '/      Single line comment' )
-  _Check_FormatRawComment( '////* Test	', '/* Test' )
-
-
-def ClangCompleter_FormatRawComment_SingleLine_InlineDoxygen_test():
-  # Inline-style comments with and without leading/trailing tokens
-  # - <whitespace>///<
-  _Check_FormatRawComment( '///<Test', 'Test' )
-  _Check_FormatRawComment( '  ///<Test */', 'Test' )
-  _Check_FormatRawComment( '///<Test  ', 'Test' )
-  _Check_FormatRawComment( '///< Test  ', 'Test' )
-  _Check_FormatRawComment( ' ///<< Test  ', '< Test' )
-  _Check_FormatRawComment( ' ///<! Test  ', '! Test' )
+    # Extra / prevents initial indent being removed
+    _Check_FormatRawComment( '////      Single line comment    ',
+                             '/      Single line comment' )
+    _Check_FormatRawComment( '////* Test	', '/* Test' )
 
 
-def ClangCompleter_FormatRawComment_SingleLine_InlineShort_test():
-  # - <whitespace>//<
-  _Check_FormatRawComment( '//<Test', 'Test' )
-  _Check_FormatRawComment( '	//<Test', 'Test' )
-  _Check_FormatRawComment( '//<Test', 'Test' )
-  _Check_FormatRawComment( '//< Test', 'Test' )
-  _Check_FormatRawComment( '//<< Test  ', '< Test' )
+  def test_ClangCompleter_FormatRawComment_SingleLine_InlineDoxygen( self ):
+    # Inline-style comments with and without leading/trailing tokens
+    # - <whitespace>///<
+    _Check_FormatRawComment( '///<Test', 'Test' )
+    _Check_FormatRawComment( '  ///<Test */', 'Test' )
+    _Check_FormatRawComment( '///<Test  ', 'Test' )
+    _Check_FormatRawComment( '///< Test  ', 'Test' )
+    _Check_FormatRawComment( ' ///<< Test  ', '< Test' )
+    _Check_FormatRawComment( ' ///<! Test  ', '! Test' )
 
 
-def ClangCompleter_FormatRawComment_SingleLine_InlineShortBang_test():
-  # - <whitespace>//!
-  _Check_FormatRawComment( '//!Test', 'Test' )
-  _Check_FormatRawComment( '	//<Test */	', 'Test' )
-  _Check_FormatRawComment( '//!Test  ', 'Test' )
-  _Check_FormatRawComment( '//! Test	', 'Test' )
-  _Check_FormatRawComment( '//!! Test  ', '! Test' )
+  def test_ClangCompleter_FormatRawComment_SingleLine_InlineShort( self ):
+    # - <whitespace>//<
+    _Check_FormatRawComment( '//<Test', 'Test' )
+    _Check_FormatRawComment( '	//<Test', 'Test' )
+    _Check_FormatRawComment( '//<Test', 'Test' )
+    _Check_FormatRawComment( '//< Test', 'Test' )
+    _Check_FormatRawComment( '//<< Test  ', '< Test' )
 
 
-def ClangCompleter_FormatRawComment_SingleLine_JavaDoc_test():
-  # - <whitespace>/*
-  # - <whitespace>/**
-  # - <whitespace>*/
-  _Check_FormatRawComment( '/*Test', 'Test' )
-  _Check_FormatRawComment( '	/** Test */    ', 'Test' )
-  _Check_FormatRawComment( '/*** Test', '* Test' )
+  def test_ClangCompleter_FormatRawComment_SingleLine_InlineShortBang( self ):
+    # - <whitespace>//!
+    _Check_FormatRawComment( '//!Test', 'Test' )
+    _Check_FormatRawComment( '	//<Test */	', 'Test' )
+    _Check_FormatRawComment( '//!Test  ', 'Test' )
+    _Check_FormatRawComment( '//! Test	', 'Test' )
+    _Check_FormatRawComment( '//!! Test  ', '! Test' )
 
 
-def ClangCompleter_FormatRawComment_MultiOneLine_JavaDoc_test():
-  # sic: This one isn't ideal, but it is (probably) uncommon
-  _Check_FormatRawComment( '/** Test */ /** Test2 */',
-                           'Test */ /** Test2' )
+  def test_ClangCompleter_FormatRawComment_SingleLine_JavaDoc( self ):
+    # - <whitespace>/*
+    # - <whitespace>/**
+    # - <whitespace>*/
+    _Check_FormatRawComment( '/*Test', 'Test' )
+    _Check_FormatRawComment( '	/** Test */    ', 'Test' )
+    _Check_FormatRawComment( '/*** Test', '* Test' )
 
 
-def ClangCompleter_FormatRawComment_MultiLine_Doxygen_Inbalance_test():
-  # The dedenting only applies to consistent indent
-  # Note trailing whitespace is intentional
-  _Check_FormatRawComment(
+  def test_ClangCompleter_FormatRawComment_MultiOneLine_JavaDoc( self ):
+    # sic: This one isn't ideal, but it is (probably) uncommon
+    _Check_FormatRawComment( '/** Test */ /** Test2 */',
+                             'Test */ /** Test2' )
+
+
+  def test_ClangCompleter_FormatRawComment_MultiLine_Doxygen_Inbalance( self ):
+    # The dedenting only applies to consistent indent
+    # Note trailing whitespace is intentional
+    _Check_FormatRawComment(
   """
       /// This is
       ///    a
@@ -125,11 +127,11 @@ Multi-line
 
 """ ) # noqa
 
-def ClangCompleter_FormatRawComment_MultiLine_JavaDoc_Inconsistent_test():
-  # The dedenting only applies to consistent indent, and leaves any subsequent
-  # indent intact
-  # Note trailing whitespace is intentional
-  _Check_FormatRawComment(
+  def test_ClangCompleter_FormatRawComment_MultiLine_JavaDoc_Inconsistent( self ):
+    # The dedenting only applies to consistent indent, and leaves any subsequent
+    # indent intact
+    # Note trailing whitespace is intentional
+    _Check_FormatRawComment(
   """
       /**  All of the 
     *  Lines in this	
@@ -143,16 +145,15 @@ Lines in this
 * Have a 2-space indent
 """ ) # noqa
 
+  def test_ClangCompleter_FormatRawComment_ZeroLine( self ):
+    _Check_FormatRawComment( '', '' )
 
-def ClangCompleter_FormatRawComment_ZeroLine_test():
-  _Check_FormatRawComment( '', '' )
 
-
-def ClangCompleter_FormatRawComment_MultiLine_empty_test():
-  # Note trailing whitespace is intentional
-  _Check_FormatRawComment(
+  def test_ClangCompleter_FormatRawComment_MultiLine_empty( self ):
+    # Note trailing whitespace is intentional
+    _Check_FormatRawComment(
   """
-	
+    
 
   *
 ///   
@@ -165,8 +166,3 @@ def ClangCompleter_FormatRawComment_MultiLine_empty_test():
 
 
 """ ) # noqa
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True

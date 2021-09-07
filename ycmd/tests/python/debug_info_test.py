@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 ycmd contributors
+# Copyright (C) 2016-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -20,48 +20,46 @@ from hamcrest import ( assert_that,
                        has_entry,
                        has_entries,
                        instance_of )
+from unittest import TestCase
 
+from ycmd.tests.python import setUpModule # noqa
 from ycmd.tests.python import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
 
 
-@SharedYcmd
-def DebugInfo_test( app ):
-  request_data = BuildRequest( filetype = 'python' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Python',
-      'items': contains_exactly(
-        has_entries( {
-          'key': 'Python interpreter',
-          'value': instance_of( str )
-        } ),
-        has_entries( {
-          'key': 'Python root',
-          'value': instance_of( str )
-        } ),
-        has_entries( {
-          'key': 'Python path',
-          'value': instance_of( str )
-        } ),
-        has_entries( {
-          'key': 'Python version',
-          'value': instance_of( str )
-        } ),
-        has_entries( {
-          'key': 'Jedi version',
-          'value': instance_of( str )
-        } ),
-        has_entries( {
-          'key': 'Parso version',
-          'value': instance_of( str )
-        } )
-      )
-    } ) )
-  )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+class DebugInfoTest( TestCase ):
+  @SharedYcmd
+  def test_DebugInfo( self, app ):
+    request_data = BuildRequest( filetype = 'python' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Python',
+        'items': contains_exactly(
+          has_entries( {
+            'key': 'Python interpreter',
+            'value': instance_of( str )
+          } ),
+          has_entries( {
+            'key': 'Python root',
+            'value': instance_of( str )
+          } ),
+          has_entries( {
+            'key': 'Python path',
+            'value': instance_of( str )
+          } ),
+          has_entries( {
+            'key': 'Python version',
+            'value': instance_of( str )
+          } ),
+          has_entries( {
+            'key': 'Jedi version',
+            'value': instance_of( str )
+          } ),
+          has_entries( {
+            'key': 'Parso version',
+            'value': instance_of( str )
+          } )
+        )
+      } ) )
+    )

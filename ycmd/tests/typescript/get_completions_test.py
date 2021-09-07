@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 ycmd contributors
+# Copyright (C) 2015-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -25,9 +25,11 @@ from hamcrest import ( assert_that,
                        matches_regexp,
                        raises )
 from webtest import AppError
-import pprint
+from unittest import TestCase
+import json
 import requests
 
+from ycmd.tests.typescript import setUpModule, tearDownModule # noqa
 from ycmd.tests.typescript import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
@@ -59,7 +61,7 @@ def RunTest( app, test ):
     } )
   )
 
-  print( f'completer response: { pprint.pformat( response.json ) }' )
+  print( 'completer response: ', json.dumps( response.json, indent = 2 ) )
 
   assert_that( response.status_code,
                equal_to( test[ 'expect' ][ 'response' ] ) )
@@ -67,294 +69,291 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def GetCompletions_Basic_test( app ):
-  RunTest( app, {
-    'description': 'Extra and detailed info when completions are methods',
-    'request': {
-      'line_num': 17,
-      'column_num': 6,
-      'filepath': PathToTestFile( 'test.ts' )
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher(
-            'methodA',
-            '(method) Foo.methodA(): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodA(): void\n\n'
-                               'Unicode string: 说话'
-            }
-          ),
-          CompletionEntryMatcher(
-            'methodB',
-            '(method) Foo.methodB(): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodB(): void'
-            }
-          ),
-          CompletionEntryMatcher(
-            'methodC',
-            '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodC(a: {\n'
-                               '    foo: string;\n'
-                               '    bar: number;\n'
-                               '}): void'
-            }
-          )
-        )
-      } )
-    }
-  } )
-
-  RunTest( app, {
-    'description': 'Filtering works',
-    'request': {
-      'line_num': 17,
-      'column_num': 7,
-      'filepath': PathToTestFile( 'test.ts' )
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher(
-            'methodA',
-            '(method) Foo.methodA(): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodA(): void\n\n'
-                               'Unicode string: 说话'
-            }
-          )
-        )
-      } )
-    }
-  } )
-
-
-@IsolatedYcmd( { 'disable_signature_help': True } )
-def GetCompletions_Basic_NoSigHelp_test( app ):
-  RunTest( app, {
-    'description': 'Extra and detailed info when completions are methods',
-    'request': {
-      'line_num': 17,
-      'column_num': 6,
-      'filepath': PathToTestFile( 'test.ts' )
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher(
-            'methodA',
-            '(method) Foo.methodA(): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodA(): void\n\n'
-                               'Unicode string: 说话'
-            }
-          ),
-          CompletionEntryMatcher(
-            'methodB',
-            '(method) Foo.methodB(): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodB(): void'
-            }
-          ),
-          CompletionEntryMatcher(
-            'methodC',
-            '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
-            extra_params = {
-              'kind': 'method',
-              'detailed_info': '(method) Foo.methodC(a: {\n'
-                               '    foo: string;\n'
-                               '    bar: number;\n'
-                               '}): void'
-            }
-          )
-        )
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-def GetCompletions_Keyword_test( app ):
-  RunTest( app, {
-    'description': 'No extra and detailed info when completion is a keyword',
-    'request': {
-      'line_num': 2,
-      'column_num': 5,
-      'filepath': PathToTestFile( 'test.ts' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item( {
-          'insertion_text': 'class',
-          'kind':           'keyword',
-          'extra_data':     {}
-        } )
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-def GetCompletions_AfterRestart_test( app ):
-  filepath = PathToTestFile( 'test.ts' )
-
-  app.post_json( '/run_completer_command',
-                BuildRequest( completer_target = 'filetype_default',
-                              command_arguments = [ 'RestartServer' ],
-                              filetype = 'typescript',
-                              filepath = filepath ) )
-
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'typescript',
-                                  contents = ReadFile( filepath ),
-                                  force_semantic = True,
-                                  line_num = 17,
-                                  column_num = 6 )
-
-  assert_that(
-    app.post_json( '/completions', completion_data ).json,
-    has_entries( {
-      'completions': contains_inanyorder(
-        CompletionEntryMatcher(
-          'methodA',
-          '(method) Foo.methodA(): void',
-          extra_params = { 'kind': 'method' }
-        ),
-        CompletionEntryMatcher(
-          'methodB',
-          '(method) Foo.methodB(): void',
-          extra_params = {
-            'kind': 'method',
-            'detailed_info': '(method) Foo.methodB(): void'
-          }
-        ),
-        CompletionEntryMatcher(
-          'methodC',
-          '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
-          extra_params = {
-            'kind': 'method',
-            'detailed_info': '(method) Foo.methodC(a: {\n'
-                             '    foo: string;\n'
-                             '    bar: number;\n'
-                             '}): void'
-          }
-        )
-      )
-    } )
-  )
-
-
-@IsolatedYcmd()
-def GetCompletions_ServerIsNotRunning_test( app ):
-  StopCompleterServer( app, filetype = 'typescript' )
-
-  filepath = PathToTestFile( 'test.ts' )
-  contents = ReadFile( filepath )
-
-  # Check that sending a request to TSServer (the response is ignored) raises
-  # the proper exception.
-  event_data = BuildRequest( filepath = filepath,
-                             filetype = 'typescript',
-                             contents = contents,
-                             event_name = 'BufferVisit' )
-
-  assert_that(
-    calling( app.post_json ).with_args( '/event_notification', event_data ),
-    raises( AppError, 'TSServer is not running.' ) )
-
-  # Check that sending a command to TSServer (the response is processed) raises
-  # the proper exception.
-  completion_data = BuildRequest( filepath = filepath,
-                                  filetype = 'typescript',
-                                  contents = contents,
-                                  force_semantic = True,
-                                  line_num = 17,
-                                  column_num = 6 )
-
-  assert_that(
-    calling( app.post_json ).with_args( '/completions', completion_data ),
-    raises( AppError, 'TSServer is not running.' ) )
-
-
-@SharedYcmd
-def GetCompletions_AutoImport_test( app ):
-  filepath = PathToTestFile( 'test.ts' )
-  RunTest( app, {
-    'description': 'Symbol from external module can be completed and '
-                   'its completion contains fixits to automatically import it',
-    'request': {
-      'line_num': 39,
-      'column_num': 5,
-      'filepath': filepath,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item( has_entries( {
-          'insertion_text':  'Bår',
-          'extra_menu_info': 'class Bår',
-          'detailed_info':   'class Bår',
-          'kind':            'class',
-          'extra_data': has_entries( {
-            'fixits': contains_inanyorder(
-              has_entries( {
-                'text': 'Import \'Bår\' from module "./unicode"',
-                'chunks': contains_exactly(
-                  ChunkMatcher(
-                    matches_regexp( '^import { Bår } from "./unicode";\r?\n' ),
-                    LocationMatcher( filepath, 1, 1 ),
-                    LocationMatcher( filepath, 1, 1 )
-                  )
-                ),
-                'location': LocationMatcher( filepath, 39, 5 )
-              } )
+class GetCompletionsTest( TestCase ):
+  @SharedYcmd
+  def test_GetCompletions_Basic( self, app ):
+    RunTest( app, {
+      'description': 'Extra and detailed info when completions are methods',
+      'request': {
+        'line_num': 17,
+        'column_num': 6,
+        'filepath': PathToTestFile( 'test.ts' )
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher(
+              'methodA',
+              '(method) Foo.methodA(): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodA(): void\n\n'
+                                 'Unicode string: 说话'
+              }
+            ),
+            CompletionEntryMatcher(
+              'methodB',
+              '(method) Foo.methodB(): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodB(): void'
+              }
+            ),
+            CompletionEntryMatcher(
+              'methodC',
+              '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodC(a: {\n'
+                                 '    foo: string;\n'
+                                 '    bar: number;\n'
+                                 '}): void'
+              }
             )
+          )
+        } )
+      }
+    } )
+
+    RunTest( app, {
+      'description': 'Filtering works',
+      'request': {
+        'line_num': 17,
+        'column_num': 7,
+        'filepath': PathToTestFile( 'test.ts' )
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher(
+              'methodA',
+              '(method) Foo.methodA(): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodA(): void\n\n'
+                                 'Unicode string: 说话'
+              }
+            )
+          )
+        } )
+      }
+    } )
+
+
+  @IsolatedYcmd( { 'disable_signature_help': True } )
+  def test_GetCompletions_Basic_NoSigHelp( self, app ):
+    RunTest( app, {
+      'description': 'Extra and detailed info when completions are methods',
+      'request': {
+        'line_num': 17,
+        'column_num': 6,
+        'filepath': PathToTestFile( 'test.ts' )
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher(
+              'methodA',
+              '(method) Foo.methodA(): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodA(): void\n\n'
+                                 'Unicode string: 说话'
+              }
+            ),
+            CompletionEntryMatcher(
+              'methodB',
+              '(method) Foo.methodB(): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodB(): void'
+              }
+            ),
+            CompletionEntryMatcher(
+              'methodC',
+              '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
+              extra_params = {
+                'kind': 'method',
+                'detailed_info': '(method) Foo.methodC(a: {\n'
+                                 '    foo: string;\n'
+                                 '    bar: number;\n'
+                                 '}): void'
+              }
+            )
+          )
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_Keyword( self, app ):
+    RunTest( app, {
+      'description': 'No extra and detailed info when completion is a keyword',
+      'request': {
+        'line_num': 2,
+        'column_num': 5,
+        'filepath': PathToTestFile( 'test.ts' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item( {
+            'insertion_text': 'class',
+            'kind':           'keyword',
+            'extra_data':     {}
           } )
-        } ) )
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_AfterRestart( self, app ):
+    filepath = PathToTestFile( 'test.ts' )
+
+    app.post_json( '/run_completer_command',
+                  BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'RestartServer' ],
+                                filetype = 'typescript',
+                                filepath = filepath ) )
+
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'typescript',
+                                    contents = ReadFile( filepath ),
+                                    force_semantic = True,
+                                    line_num = 17,
+                                    column_num = 6 )
+
+    assert_that(
+      app.post_json( '/completions', completion_data ).json,
+      has_entries( {
+        'completions': contains_inanyorder(
+          CompletionEntryMatcher(
+            'methodA',
+            '(method) Foo.methodA(): void',
+            extra_params = { 'kind': 'method' }
+          ),
+          CompletionEntryMatcher(
+            'methodB',
+            '(method) Foo.methodB(): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodB(): void'
+            }
+          ),
+          CompletionEntryMatcher(
+            'methodC',
+            '(method) Foo.methodC(a: { foo: string; bar: number; }): void',
+            extra_params = {
+              'kind': 'method',
+              'detailed_info': '(method) Foo.methodC(a: {\n'
+                               '    foo: string;\n'
+                               '    bar: number;\n'
+                               '}): void'
+            }
+          )
+        )
       } )
-    }
-  } )
+    )
 
 
-@SharedYcmd
-def GetCompletions_TypeScriptReact_DefaultTriggers_test( app ):
-  filepath = PathToTestFile( 'test.tsx' )
-  RunTest( app, {
-    'description': 'No need to force after a semantic trigger',
-    'request': {
-      'line_num': 17,
-      'column_num': 3,
-      'filepath': filepath,
-      'filetype': 'typescriptreact'
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item( has_entries( {
-          'insertion_text':  'foo',
-          'extra_menu_info': "(property) 'foo': number",
-          'detailed_info':   "(property) 'foo': number",
-          'kind':            'property',
-        } ) )
-      } )
-    }
-  } )
+  @IsolatedYcmd()
+  def test_GetCompletions_ServerIsNotRunning( self, app ):
+    StopCompleterServer( app, filetype = 'typescript' )
+
+    filepath = PathToTestFile( 'test.ts' )
+    contents = ReadFile( filepath )
+
+    # Check that sending a request to TSServer (the response is ignored) raises
+    # the proper exception.
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'typescript',
+                               contents = contents,
+                               event_name = 'BufferVisit' )
+
+    assert_that(
+      calling( app.post_json ).with_args( '/event_notification', event_data ),
+      raises( AppError, 'TSServer is not running.' ) )
+
+    # Check that sending a command to TSServer (the response is processed)
+    # raises the proper exception.
+    completion_data = BuildRequest( filepath = filepath,
+                                    filetype = 'typescript',
+                                    contents = contents,
+                                    force_semantic = True,
+                                    line_num = 17,
+                                    column_num = 6 )
+
+    assert_that(
+      calling( app.post_json ).with_args( '/completions', completion_data ),
+      raises( AppError, 'TSServer is not running.' ) )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @SharedYcmd
+  def test_GetCompletions_AutoImport( self, app ):
+    filepath = PathToTestFile( 'test.ts' )
+    RunTest( app, {
+      'description': 'Symbol from external module can be completed and its '
+                     'completion contains fixits to automatically import it',
+      'request': {
+        'line_num': 39,
+        'column_num': 5,
+        'filepath': filepath,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item( has_entries( {
+            'insertion_text':  'Bår',
+            'extra_menu_info': 'class Bår',
+            'detailed_info':   'class Bår',
+            'kind':            'class',
+            'extra_data': has_entries( {
+              'fixits': contains_inanyorder(
+                has_entries( {
+                  'text': 'Import \'Bår\' from module "./unicode"',
+                  'chunks': contains_exactly(
+                    ChunkMatcher(
+                      matches_regexp( '^import { Bår } from '
+                                      '"./unicode";\r?\n' ),
+                      LocationMatcher( filepath, 1, 1 ),
+                      LocationMatcher( filepath, 1, 1 )
+                    )
+                  ),
+                  'location': LocationMatcher( filepath, 39, 5 )
+                } )
+              )
+            } )
+          } ) )
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_TypeScriptReact_DefaultTriggers( self, app ):
+    filepath = PathToTestFile( 'test.tsx' )
+    RunTest( app, {
+      'description': 'No need to force after a semantic trigger',
+      'request': {
+        'line_num': 17,
+        'column_num': 3,
+        'filepath': filepath,
+        'filetype': 'typescriptreact'
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item( has_entries( {
+            'insertion_text':  'foo',
+            'extra_menu_info': "(property) 'foo': number",
+            'detailed_info':   "(property) 'foo': number",
+            'kind':            'property',
+          } ) )
+        } )
+      }
+    } )

@@ -30,11 +30,10 @@
 
         "debugOptions": [],
 
-        "module": "pytest",
+        "module": "unittest",
         "python": "${python}",
         "args": [
           "-v",
-          "--ignore=ycmd/tests/python/testdata",
           "${Test}"
         ],
         "env": {

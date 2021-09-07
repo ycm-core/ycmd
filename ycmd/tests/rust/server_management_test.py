@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -17,6 +17,7 @@
 
 from hamcrest import assert_that, contains_exactly, equal_to, has_entry
 from unittest.mock import patch
+from unittest import TestCase
 
 from ycmd.completers.language_server.language_server_completer import (
     LanguageServerConnectionTimeout )
@@ -39,92 +40,43 @@ def AssertRustCompleterServerIsRunning( app, is_running ):
                ) )
 
 
-@IsolatedYcmd
-def ServerManagement_RestartServer_test( app ):
-  filepath = PathToTestFile( 'common', 'src', 'main.rs' )
-  StartRustCompleterServerInDirectory( app, filepath )
+class ServerManagementTest( TestCase ):
+  @IsolatedYcmd()
+  def test_ServerManagement_RestartServer( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'main.rs' )
+    StartRustCompleterServerInDirectory( app, filepath )
 
-  AssertRustCompleterServerIsRunning( app, True )
+    AssertRustCompleterServerIsRunning( app, True )
 
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filepath = filepath,
-      filetype = 'rust',
-      command_arguments = [ 'RestartServer' ],
-    ),
-  )
-
-  WaitUntilCompleterServerReady( app, 'rust' )
-
-  AssertRustCompleterServerIsRunning( app, True )
-
-
-@IsolatedYcmd
-@patch( 'shutil.rmtree', side_effect = OSError )
-@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
-        MockProcessTerminationTimingOut )
-def ServerManagement_CloseServer_Unclean_test( wait_until, app ):
-  StartRustCompleterServerInDirectory( app, PathToTestFile( 'common', 'src' ) )
-
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'rust',
-      command_arguments = [ 'StopServer' ]
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filepath = filepath,
+        filetype = 'rust',
+        command_arguments = [ 'RestartServer' ],
+      ),
     )
-  )
 
-  request_data = BuildRequest( filetype = 'rust' )
-  assert_that( app.post_json( '/debug_info', request_data ).json,
-               has_entry(
-                 'completer',
-                 has_entry( 'servers', contains_exactly(
-                   has_entry( 'is_running', False )
-                 ) )
-               ) )
+    WaitUntilCompleterServerReady( app, 'rust' )
+
+    AssertRustCompleterServerIsRunning( app, True )
 
 
-@IsolatedYcmd
-def ServerManagement_StopServerTwice_test( app ):
-  StartRustCompleterServerInDirectory( app, PathToTestFile( 'common', 'src' ) )
+  @IsolatedYcmd()
+  @patch( 'shutil.rmtree', side_effect = OSError )
+  @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+          MockProcessTerminationTimingOut )
+  def test_ServerManagement_CloseServer_Unclean( self, app, *args ):
+    StartRustCompleterServerInDirectory( app,
+                                         PathToTestFile( 'common', 'src' ) )
 
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'rust',
-      command_arguments = [ 'StopServer' ],
-    ),
-  )
-
-  AssertRustCompleterServerIsRunning( app, False )
-
-  # Stopping a stopped server is a no-op
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filetype = 'rust',
-      command_arguments = [ 'StopServer' ],
-    ),
-  )
-
-  AssertRustCompleterServerIsRunning( app, False )
-
-
-@IsolatedYcmd
-def ServerManagement_StartServer_Fails_test( app ):
-  with patch( 'ycmd.completers.language_server.language_server_completer.'
-              'LanguageServerConnection.AwaitServerConnection',
-              side_effect = LanguageServerConnectionTimeout ):
-    resp = app.post_json( '/event_notification',
-                   BuildRequest(
-                     event_name = 'FileReadyToParse',
-                     filetype = 'rust',
-                     filepath = PathToTestFile( 'common', 'src', 'main.rs' ),
-                     contents = ""
-                   ) )
-
-    assert_that( resp.status_code, equal_to( 200 ) )
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filetype = 'rust',
+        command_arguments = [ 'StopServer' ]
+      )
+    )
 
     request_data = BuildRequest( filetype = 'rust' )
     assert_that( app.post_json( '/debug_info', request_data ).json,
@@ -136,6 +88,53 @@ def ServerManagement_StartServer_Fails_test( app ):
                  ) )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @IsolatedYcmd()
+  def test_ServerManagement_StopServerTwice( self, app ):
+    StartRustCompleterServerInDirectory( app,
+                                         PathToTestFile( 'common', 'src' ) )
+
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filetype = 'rust',
+        command_arguments = [ 'StopServer' ],
+      ),
+    )
+
+    AssertRustCompleterServerIsRunning( app, False )
+
+    # Stopping a stopped server is a no-op
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filetype = 'rust',
+        command_arguments = [ 'StopServer' ],
+      ),
+    )
+
+    AssertRustCompleterServerIsRunning( app, False )
+
+
+  @IsolatedYcmd()
+  def test_ServerManagement_StartServer_Fails( self, app ):
+    with patch( 'ycmd.completers.language_server.language_server_completer.'
+                'LanguageServerConnection.AwaitServerConnection',
+                side_effect = LanguageServerConnectionTimeout ):
+      resp = app.post_json( '/event_notification',
+                     BuildRequest(
+                       event_name = 'FileReadyToParse',
+                       filetype = 'rust',
+                       filepath = PathToTestFile( 'common', 'src', 'main.rs' ),
+                       contents = ""
+                     ) )
+
+      assert_that( resp.status_code, equal_to( 200 ) )
+
+      request_data = BuildRequest( filetype = 'rust' )
+      assert_that( app.post_json( '/debug_info', request_data ).json,
+                   has_entry(
+                     'completer',
+                     has_entry( 'servers', contains_exactly(
+                       has_entry( 'is_running', False )
+                     ) )
+                   ) )

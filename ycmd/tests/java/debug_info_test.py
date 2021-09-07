@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -27,6 +27,8 @@ from hamcrest import ( assert_that,
                        starts_with )
 
 from unittest.mock import patch
+from unittest import TestCase
+from ycmd.tests.java import setUpModule, tearDownModule # noqa
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
                               PathToTestFile,
@@ -42,222 +44,221 @@ import json
 import threading
 
 
-@IsolatedYcmd()
-def DebugInfo_HandleNotificationInPollThread_Throw_test( app ):
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-  StartJavaCompleterServerInDirectory( app, filepath )
+class DebugInfoTest( TestCase ):
+  @IsolatedYcmd()
+  def test_DebugInfo_HandleNotificationInPollThread_Throw( self, app ):
+    filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
+                               'src',
+                               'com',
+                               'youcompleteme',
+                               'Test.java' )
+    StartJavaCompleterServerInDirectory( app, filepath )
 
-  # This mock will be called in the message pump thread, so synchronize the
-  # result (thrown) using an Event
-  thrown = threading.Event()
+    # This mock will be called in the message pump thread, so synchronize the
+    # result (thrown) using an Event
+    thrown = threading.Event()
 
-  def ThrowOnLogMessage( msg ):
-    thrown.set()
-    raise RuntimeError( "ThrowOnLogMessage" )
+    def ThrowOnLogMessage( msg ):
+      thrown.set()
+      raise RuntimeError( "ThrowOnLogMessage" )
 
-  with patch.object( lsc.LanguageServerCompleter,
-                     'HandleNotificationInPollThread',
-                     side_effect = ThrowOnLogMessage ):
-    app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filepath = filepath,
-        filetype = 'java',
-        command_arguments = [ 'RestartServer' ],
-      ),
+    with patch.object( lsc.LanguageServerCompleter,
+                       'HandleNotificationInPollThread',
+                       side_effect = ThrowOnLogMessage ):
+      app.post_json(
+        '/run_completer_command',
+        BuildRequest(
+          filepath = filepath,
+          filetype = 'java',
+          command_arguments = [ 'RestartServer' ],
+        ),
+      )
+
+      # Ensure that we still process and handle messages even though a
+      # message-pump-thread-handler raised an error.
+      WaitUntilCompleterServerReady( app, 'java' )
+
+    # Prove that the exception was thrown.
+    assert_that( thrown.is_set(), equal_to( True ) )
+
+
+  @SharedYcmd
+  def test_DebugInfo( self, app ):
+    request_data = BuildRequest( filetype = 'java' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Java',
+        'servers': contains_exactly( has_entries( {
+          'name': 'jdt.ls',
+          'is_running': instance_of( bool ),
+          'executable': instance_of( list ),
+          'pid': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ),
+                                        instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( { 'key': 'Server State',
+                           'value': 'Initialized' } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': PathToTestFile( 'simple_eclipse_project' )
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': json.dumps(
+                { 'bundles': [] },
+                indent = 2,
+                sort_keys = True )
+            } ),
+            has_entries( { 'key': 'Startup Status',
+                           'value': 'Ready' } ),
+            has_entries( { 'key': 'Java Path',
+                           'value': instance_of( str ) } ),
+            has_entries( { 'key': 'Launcher Config.',
+                           'value': instance_of( str ) } ),
+            has_entries( { 'key': 'Workspace Path',
+                           'value': instance_of( str ) } ),
+            has_entries( { 'key': 'Extension Path',
+                           'value': contains_exactly( instance_of( str ) ) } ),
+          )
+        } ) )
+      } ) )
     )
 
-    # Ensure that we still process and handle messages even though a
-    # message-pump-thread-handler raised an error.
-    WaitUntilCompleterServerReady( app, 'java' )
 
-  # Prove that the exception was thrown.
-  assert_that( thrown.is_set(), equal_to( True ) )
+  @IsolatedYcmd( { 'extra_conf_globlist':
+                   PathToTestFile( 'extra_confs', '*' ) } )
+  def test_DebugInfo_ExtraConf_SettingsValid( self, app ):
+    StartJavaCompleterServerInDirectory(
+      app,
+      PathToTestFile( 'extra_confs', 'simple_extra_conf_project' ) )
 
+    filepath = PathToTestFile( 'extra_confs',
+                               'simple_extra_conf_project',
+                               'src',
+                               'ExtraConf.java' )
 
-@SharedYcmd
-def DebugInfo_test( app ):
-  request_data = BuildRequest( filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains_exactly( has_entries( {
-        'name': 'jdt.ls',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( list ),
-        'pid': instance_of( int ),
-        'logfiles': contains_exactly( instance_of( str ), instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( { 'key': 'Server State',
-                         'value': 'Initialized' } ),
-          has_entries( {
-            'key': 'Project Directory',
-            'value': PathToTestFile( 'simple_eclipse_project' )
-          } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': json.dumps(
-              { 'bundles': [] },
-              indent = 2,
-              sort_keys = True )
-          } ),
-          has_entries( { 'key': 'Startup Status',
-                         'value': 'Ready' } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Extension Path',
-                         'value': contains_exactly( instance_of( str ) ) } ),
-        )
+    request_data = BuildRequest( filepath = filepath,
+                                 filetype = 'java' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Java',
+        'servers': contains_exactly( has_entries( {
+          'name': 'jdt.ls',
+          'is_running': instance_of( bool ),
+          'executable': instance_of( list ),
+          'pid': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ),
+                                        instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( { 'key': 'Server State',
+                           'value': 'Initialized' } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': PathToTestFile( 'extra_confs',
+                                       'simple_extra_conf_project' )
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': json.dumps(
+                { 'java.rename.enabled': False, 'bundles': [] },
+                indent = 2,
+                sort_keys = True )
+            } ),
+            has_entries( { 'key': 'Startup Status',
+                           'value': 'Ready' } ),
+            has_entries( { 'key': 'Java Path',
+                           'value': instance_of( str ) } ),
+            has_entries( { 'key': 'Launcher Config.',
+                           'value': instance_of( str ) } ),
+            has_entries( { 'key': 'Workspace Path',
+                           'value': instance_of( str ) } ),
+            has_entries( { 'key': 'Extension Path',
+                           'value': contains_exactly( instance_of( str ) ) } ),
+          )
+        } ) )
       } ) )
-    } ) )
-  )
-
-
-@IsolatedYcmd( { 'extra_conf_globlist': PathToTestFile( 'extra_confs', '*' ) } )
-def DebugInfo_ExtraConf_SettingsValid_test( app ):
-  StartJavaCompleterServerInDirectory(
-    app,
-    PathToTestFile( 'extra_confs', 'simple_extra_conf_project' ) )
-
-  filepath = PathToTestFile( 'extra_confs',
-                             'simple_extra_conf_project',
-                             'src',
-                             'ExtraConf.java' )
-
-  request_data = BuildRequest( filepath = filepath,
+    )
+    # Make sure a didSave notification doesn't cause anything to error.
+    event_data = BuildRequest( event_name = 'FileSave',
+                               contents = 'asd',
+                               filepath = filepath,
                                filetype = 'java' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains_exactly( has_entries( {
-        'name': 'jdt.ls',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( list ),
-        'pid': instance_of( int ),
-        'logfiles': contains_exactly( instance_of( str ), instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( { 'key': 'Server State',
-                         'value': 'Initialized' } ),
-          has_entries( {
-            'key': 'Project Directory',
-            'value': PathToTestFile( 'extra_confs',
-                                     'simple_extra_conf_project' )
-          } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': json.dumps(
-              { 'java.rename.enabled': False, 'bundles': [] },
-              indent = 2,
-              sort_keys = True )
-          } ),
-          has_entries( { 'key': 'Startup Status',
-                         'value': 'Ready' } ),
-          has_entries( { 'key': 'Java Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Launcher Config.',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Workspace Path',
-                         'value': instance_of( str ) } ),
-          has_entries( { 'key': 'Extension Path',
-                         'value': contains_exactly( instance_of( str ) ) } ),
-        )
+    app.post_json( '/event_notification', event_data )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Java',
+        'servers': contains_exactly( has_entries( {
+          'name': 'jdt.ls',
+          'is_running': instance_of( bool ) } ) ) } ) ) )
+
+
+  @WithRetry()
+  @IsolatedYcmd( {
+    'extra_conf_globlist': PathToTestFile( 'lombok_project', '*' )
+  } )
+  def test_DebugInfo_JvmArgs( self, app ):
+    StartJavaCompleterServerInDirectory(
+      app, PathToTestFile( 'lombok_project', 'src' ) )
+
+    filepath = PathToTestFile( 'lombok_project',
+                               'src',
+                               'main',
+                               'java',
+                               'com',
+                               'ycmd',
+                               'App.java' )
+
+    request_data = BuildRequest( filepath = filepath,
+                                 filetype = 'java' )
+
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'servers': contains_exactly( has_entries( {
+          'executable': has_items( starts_with( '-javaagent:' ) ),
+        } ) )
       } ) )
-    } ) )
-  )
-  # Make sure a didSave notification doesn't cause anything to error.
-  event_data = BuildRequest( event_name = 'FileSave',
-                             contents = 'asd',
-                             filepath = filepath,
-                             filetype = 'java' )
-  app.post_json( '/event_notification', event_data )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': contains_exactly( has_entries( {
-        'name': 'jdt.ls',
-        'is_running': instance_of( bool ) } ) ) } ) ) )
+    )
 
 
-@WithRetry
-@IsolatedYcmd( {
-  'extra_conf_globlist': PathToTestFile( 'lombok_project', '*' )
-} )
-def DebugInfo_JvmArgs_test( app ):
-  StartJavaCompleterServerInDirectory(
-    app, PathToTestFile( 'lombok_project', 'src' ) )
+  @IsolatedYcmd()
+  @patch( 'watchdog.observers.api.BaseObserver.schedule',
+          side_effect = RuntimeError )
+  def test_DebugInfo_WorksAfterWatchdogErrors( self, app, *args ):
+    filepath = PathToTestFile( 'simple_eclipse_project',
+                               'src',
+                               'com',
+                               'test',
+                               'AbstractTestWidget.java' )
 
-  filepath = PathToTestFile( 'lombok_project',
-                             'src',
-                             'main',
-                             'java',
-                             'com',
-                             'ycmd',
-                             'App.java' )
-
-  request_data = BuildRequest( filepath = filepath,
-                               filetype = 'java' )
-
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'servers': contains_exactly( has_entries( {
-        'executable': has_items( starts_with( '-javaagent:' ) ),
-      } ) )
-    } ) )
-  )
-
-
-@IsolatedYcmd()
-@patch( 'watchdog.observers.api.BaseObserver.schedule',
-        side_effect = RuntimeError )
-def DebugInfo_WorksAfterWatchdogErrors_test( watchdog_schedule, app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'AbstractTestWidget.java' )
-
-  StartJavaCompleterServerInDirectory( app, filepath )
-  request_data = BuildRequest( filepath = filepath,
-                               filetype = 'java' )
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
-  connection = completer.GetConnection()
-  assert_that( calling( connection._HandleDynamicRegistrations ).with_args(
-      {
-        'params': { 'registrations': [
-          {
-            'method': 'workspace/didChangeWatchedFiles',
-            'registerOptions': {
-              'watchers': [ { 'globPattern': 'whatever' } ]
+    StartJavaCompleterServerInDirectory( app, filepath )
+    request_data = BuildRequest( filepath = filepath,
+                                 filetype = 'java' )
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+    connection = completer.GetConnection()
+    assert_that( calling( connection._HandleDynamicRegistrations ).with_args(
+        {
+          'params': { 'registrations': [
+            {
+              'method': 'workspace/didChangeWatchedFiles',
+              'registerOptions': {
+                'watchers': [ { 'globPattern': 'whatever' } ]
+              }
             }
-          }
-        ] }
-      }
-    ),
-    raises( RuntimeError ) )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Java',
-      'servers': has_items( has_entries( {
-        'name': 'jdt.ls',
-        'is_running': True
+          ] }
+        }
+      ),
+      raises( RuntimeError ) )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Java',
+        'servers': has_items( has_entries( {
+          'name': 'jdt.ls',
+          'is_running': True
+        } ) )
       } ) )
-    } ) )
-  )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+    )

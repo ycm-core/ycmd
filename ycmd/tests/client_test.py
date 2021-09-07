@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 ycmd contributors
+# Copyright (C) 2016-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -19,6 +19,7 @@ from base64 import b64decode, b64encode
 from hamcrest import assert_that, empty, equal_to, is_in
 from hmac import compare_digest
 from tempfile import NamedTemporaryFile
+from unittest import TestCase
 import functools
 import json
 import os
@@ -45,8 +46,8 @@ PATH_TO_YCMD = os.path.join( DIR_OF_THIS_SCRIPT, '..' )
 LOGFILE_FORMAT = 'server_{port}_{std}_'
 
 
-class Client_test:
-  def setup_method( self ):
+class ClientTest( TestCase ):
+  def setUp( self ):
     self._location = None
     self._port = None
     self._servers = []
@@ -58,7 +59,7 @@ class Client_test:
       b64encode( self._hmac_secret ) )
 
 
-  def teardown_method( self ):
+  def tearDown( self ):
     for server in self._servers:
       if server.is_running():
         server.terminate()
@@ -253,8 +254,3 @@ class Client_test:
             sys.stdout.write( '\n' )
 
     return Wrapper
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True

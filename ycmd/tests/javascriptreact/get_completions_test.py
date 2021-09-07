@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 ycmd contributors
+# Copyright (C) 2015-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -18,9 +18,11 @@
 import pprint
 import requests
 from hamcrest import assert_that, equal_to, has_entries, has_item
+from ycmd.tests.javascriptreact import setUpModule, tearDownModule # noqa
 from ycmd.tests.javascriptreact import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import CombineRequest
 from ycmd.utils import ReadFile
+from unittest import TestCase
 
 
 def RunTest( app, test ):
@@ -52,31 +54,27 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def GetCompletions_JavaScriptReact_DefaultTriggers_test( app ):
-  filepath = PathToTestFile( 'test.jsx' )
-  RunTest( app, {
-    'description': 'No need to force after a semantic trigger',
-    'request': {
-      'line_num': 7,
-      'column_num': 12,
-      'filepath': filepath,
-      'filetype': 'javascriptreact'
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item( has_entries( {
-          'insertion_text':  'alinkColor',
-          'extra_menu_info': '(property) Document.alinkColor: string',
-          'detailed_info':   '(property) Document.alinkColor: string',
-          'kind':            'property',
-        } ) )
-      } )
-    }
-  } )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+class GetCompletionsTest( TestCase ):
+  @SharedYcmd
+  def test_GetCompletions_JavaScriptReact_DefaultTriggers( self, app ):
+    filepath = PathToTestFile( 'test.jsx' )
+    RunTest( app, {
+      'description': 'No need to force after a semantic trigger',
+      'request': {
+        'line_num': 7,
+        'column_num': 12,
+        'filepath': filepath,
+        'filetype': 'javascriptreact'
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item( has_entries( {
+            'insertion_text':  'alinkColor',
+            'extra_menu_info': '(property) Document.alinkColor: string',
+            'detailed_info':   '(property) Document.alinkColor: string',
+            'kind':            'property',
+          } ) )
+        } )
+      }
+    } )

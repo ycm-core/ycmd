@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -21,9 +21,11 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry )
 from pprint import pformat
+from unittest import TestCase
 import json
 import os
 
+from ycmd.tests.rust import setUpModule, tearDownModule # noqa
 from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
@@ -53,101 +55,97 @@ DIAG_MATCHERS_PER_FILE = {
 }
 
 
-@WithRetry
-@SharedYcmd
-def Diagnostics_DetailedDiags_test( app ):
-  filepath = PathToTestFile( 'common', 'src', 'main.rs' )
-  contents = ReadFile( filepath )
-  with open( filepath, 'w' ) as f:
-    f.write( contents )
-  event_data = BuildRequest( event_name = 'FileSave',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'rust' )
-  app.post_json( '/event_notification', event_data )
-
-  WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
-  request_data = BuildRequest( contents = contents,
+class DiagnosticsTest( TestCase ):
+  @WithRetry()
+  @SharedYcmd
+  def test_Diagnostics_DetailedDiags( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'main.rs' )
+    contents = ReadFile( filepath )
+    with open( filepath, 'w' ) as f:
+      f.write( contents )
+    event_data = BuildRequest( event_name = 'FileSave',
+                               contents = contents,
                                filepath = filepath,
-                               filetype = 'rust',
-                               line_num = 14,
-                               column_num = 13 )
+                               filetype = 'rust' )
+    app.post_json( '/event_notification', event_data )
 
-  results = app.post_json( '/detailed_diagnostic', request_data ).json
-  assert_that( results, has_entry(
-      'message',
-      'no field `build_` on type `test::Builder`\nunknown field' ) )
+    WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
+    request_data = BuildRequest( contents = contents,
+                                 filepath = filepath,
+                                 filetype = 'rust',
+                                 line_num = 14,
+                                 column_num = 13 )
 
-
-@WithRetry
-@SharedYcmd
-def Diagnostics_FileReadyToParse_test( app ):
-  filepath = PathToTestFile( 'common', 'src', 'main.rs' )
-  contents = ReadFile( filepath )
-  with open( filepath, 'w' ) as f:
-    f.write( contents )
-  event_data = BuildRequest( event_name = 'FileSave',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'rust' )
-  app.post_json( '/event_notification', event_data )
-
-  # It can take a while for the diagnostics to be ready.
-  results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
-  print( f'completer response: { pformat( results ) }' )
-
-  assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
+    results = app.post_json( '/detailed_diagnostic', request_data ).json
+    assert_that( results, has_entry(
+        'message',
+        'no field `build_` on type `test::Builder`\nunknown field' ) )
 
 
-@SharedYcmd
-def Diagnostics_Poll_test( app ):
-  project_dir = PathToTestFile( 'common' )
-  filepath = os.path.join( project_dir, 'src', 'main.rs' )
-  contents = ReadFile( filepath )
-  with open( filepath, 'w' ) as f:
-    f.write( contents )
-  event_data = BuildRequest( event_name = 'FileSave',
-                             contents = contents,
-                             filepath = filepath,
-                             filetype = 'rust' )
-  app.post_json( '/event_notification', event_data )
+  @WithRetry()
+  @SharedYcmd
+  def test_Diagnostics_FileReadyToParse( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'main.rs' )
+    contents = ReadFile( filepath )
+    with open( filepath, 'w' ) as f:
+      f.write( contents )
+    event_data = BuildRequest( event_name = 'FileSave',
+                               contents = contents,
+                               filepath = filepath,
+                               filetype = 'rust' )
+    app.post_json( '/event_notification', event_data )
 
-  # Poll until we receive _all_ the diags asynchronously.
-  to_see = sorted( DIAG_MATCHERS_PER_FILE.keys() )
-  seen = {}
+    # It can take a while for the diagnostics to be ready.
+    results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
+    print( f'completer response: { pformat( results ) }' )
 
-  try:
-    for message in PollForMessages( app,
-                                    { 'filepath': filepath,
-                                      'contents': contents,
-                                      'filetype': 'rust' } ):
-      print( f'Message { pformat( message ) }' )
-      if 'diagnostics' in message:
-        if message[ 'diagnostics' ] == []:
-          # Sometimes we get empty diagnostics before the real ones.
-          continue
-        seen[ message[ 'filepath' ] ] = True
-        if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
-          raise AssertionError( 'Received diagnostics for unexpected file '
-            f'{ message[ "filepath" ] }. Only expected { to_see }' )
-        assert_that( message, has_entries( {
-          'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
-          'filepath': message[ 'filepath' ]
-        } ) )
-
-      if sorted( seen.keys() ) == to_see:
-        break
-
-      # Eventually PollForMessages will throw a timeout exception and we'll fail
-      # if we don't see all of the expected diags.
-  except PollForMessagesTimeoutException as e:
-    raise AssertionError(
-      str( e ) +
-      'Timed out waiting for full set of diagnostics. '
-      f'Expected to see diags for { json.dumps( to_see, indent = 2 ) }, '
-      f'but only saw { json.dumps( sorted( seen.keys() ), indent = 2 ) }.' )
+    assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @SharedYcmd
+  def test_Diagnostics_Poll( self, app ):
+    project_dir = PathToTestFile( 'common' )
+    filepath = os.path.join( project_dir, 'src', 'main.rs' )
+    contents = ReadFile( filepath )
+    with open( filepath, 'w' ) as f:
+      f.write( contents )
+    event_data = BuildRequest( event_name = 'FileSave',
+                               contents = contents,
+                               filepath = filepath,
+                               filetype = 'rust' )
+    app.post_json( '/event_notification', event_data )
+
+    # Poll until we receive _all_ the diags asynchronously.
+    to_see = sorted( DIAG_MATCHERS_PER_FILE.keys() )
+    seen = {}
+
+    try:
+      for message in PollForMessages( app,
+                                      { 'filepath': filepath,
+                                        'contents': contents,
+                                        'filetype': 'rust' } ):
+        print( f'Message { pformat( message ) }' )
+        if 'diagnostics' in message:
+          if message[ 'diagnostics' ] == []:
+            # Sometimes we get empty diagnostics before the real ones.
+            continue
+          seen[ message[ 'filepath' ] ] = True
+          if message[ 'filepath' ] not in DIAG_MATCHERS_PER_FILE:
+            raise AssertionError( 'Received diagnostics for unexpected file '
+              f'{ message[ "filepath" ] }. Only expected { to_see }' )
+          assert_that( message, has_entries( {
+            'diagnostics': DIAG_MATCHERS_PER_FILE[ message[ 'filepath' ] ],
+            'filepath': message[ 'filepath' ]
+          } ) )
+
+        if sorted( seen.keys() ) == to_see:
+          break
+
+    # Eventually PollForMessages will throw a timeout exception and we'll fail
+    # if we don't see all of the expected diags.
+    except PollForMessagesTimeoutException as e:
+      raise AssertionError(
+        str( e ) +
+        'Timed out waiting for full set of diagnostics. '
+        f'Expected to see diags for { json.dumps( to_see, indent = 2 ) }, '
+        f'but only saw { json.dumps( sorted( seen.keys() ), indent = 2 ) }.' )

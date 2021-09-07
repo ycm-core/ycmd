@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -20,9 +20,11 @@ from hamcrest import ( assert_that,
                        empty,
                        equal_to,
                        has_entries )
+from unittest import TestCase
 import requests
 
 from ycmd.utils import ReadFile
+from ycmd.tests.python import setUpModule # noqa
 from ycmd.tests.python import PathToTestFile, IsolatedYcmd, SharedYcmd
 from ycmd.tests.test_utils import ( CombineRequest,
                                     ParameterMatcher,
@@ -64,234 +66,230 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def Signature_Help_Available_test( app ):
-  response = app.get( '/signature_help_available',
-                      { 'subserver': 'python' } ).json
-  assert_that( response, SignatureAvailableMatcher( 'YES' ) )
+class SignatureHelpTest( TestCase ):
+  @SharedYcmd
+  def test_Signature_Help_Available( self, app ):
+    response = app.get( '/signature_help_available',
+                        { 'subserver': 'python' } ).json
+    assert_that( response, SignatureAvailableMatcher( 'YES' ) )
 
 
-@SharedYcmd
-def SignatureHelp_MethodTrigger_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after (',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'general_fallback',
-                                    'lang_python.py' ),
-      'line_num'  : 6,
-      'column_num': 10,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'def hack( obj )',
-                              [ ParameterMatcher( 10, 13 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_SignatureHelp_MethodTrigger( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after (',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'general_fallback',
+                                      'lang_python.py' ),
+        'line_num'  : 6,
+        'column_num': 10,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'def hack( obj )',
+                                [ ParameterMatcher( 10, 13 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@IsolatedYcmd( { 'disable_signature_help': True } )
-def SignatureHelp_MethodTrigger_Disabled_test( app ):
-  RunTest( app, {
-    'description': 'do not Trigger after (',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'general_fallback',
-                                    'lang_python.py' ),
-      'line_num'  : 6,
-      'column_num': 10,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty(),
-        } ),
-      } )
-    }
-  } )
+  @IsolatedYcmd( { 'disable_signature_help': True } )
+  def test_SignatureHelp_MethodTrigger_Disabled( self, app ):
+    RunTest( app, {
+      'description': 'do not Trigger after (',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'general_fallback',
+                                      'lang_python.py' ),
+        'line_num'  : 6,
+        'column_num': 10,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': empty(),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def SignatureHelp_MultipleParameters_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after ,',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'signature_help.py' ),
-      'line_num'  : 14,
-      'column_num': 50,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 1,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'def MultipleArguments( a, b, c )',
-                              [ ParameterMatcher( 23, 24 ),
-                                ParameterMatcher( 26, 27 ),
-                                ParameterMatcher( 29, 30 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_SignatureHelp_MultipleParameters( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after ,',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'signature_help.py' ),
+        'line_num'  : 14,
+        'column_num': 50,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 1,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'def MultipleArguments( a, b, c )',
+                                [ ParameterMatcher( 23, 24 ),
+                                  ParameterMatcher( 26, 27 ),
+                                  ParameterMatcher( 29, 30 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def SignatureHelp_CallWithinCall_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after , within a call-within-a-call',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'signature_help.py' ),
-      'line_num'  : 14,
-      'column_num': 43,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 1,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'def center( width: int, fillchar: str=... )',
-                              [ ParameterMatcher( 12, 22 ),
-                                ParameterMatcher( 24, 41 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_SignatureHelp_CallWithinCall( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after , within a call-within-a-call',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'signature_help.py' ),
+        'line_num'  : 14,
+        'column_num': 43,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 1,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'def center( width: int, fillchar: str=... )',
+                                [ ParameterMatcher( 12, 22 ),
+                                  ParameterMatcher( 24, 41 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def SignatureHelp_Constructor_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after , within a call-within-a-call',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'signature_help.py' ),
-      'line_num'  : 14,
-      'column_num': 61,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'class Class( argument )',
-                              [ ParameterMatcher( 13, 21 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_SignatureHelp_Constructor( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after , within a call-within-a-call',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'signature_help.py' ),
+        'line_num'  : 14,
+        'column_num': 61,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'class Class( argument )',
+                                [ ParameterMatcher( 13, 21 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def SignatureHelp_MultipleDefinitions_test( app ):
-  RunTest( app, {
-    'description': 'Jedi returns multiple signatures - both active',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'signature_help.py' ),
-      'line_num'  : 30,
-      'column_num': 27,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 2,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'def MultipleDefinitions( a, b, c )',
-                              [ ParameterMatcher( 25, 26 ),
-                                ParameterMatcher( 28, 29 ),
-                                ParameterMatcher( 31, 32 ) ] ),
+  @SharedYcmd
+  def test_SignatureHelp_MultipleDefinitions( self, app ):
+    RunTest( app, {
+      'description': 'Jedi returns multiple signatures - both active',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'signature_help.py' ),
+        'line_num'  : 30,
+        'column_num': 27,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 2,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'def MultipleDefinitions( a, b, c )',
+                                [ ParameterMatcher( 25, 26 ),
+                                  ParameterMatcher( 28, 29 ),
+                                  ParameterMatcher( 31, 32 ) ] ),
 
-            SignatureMatcher( 'def MultipleDefinitions( many,'
-                                                      ' more,'
-                                                      ' arguments,'
-                                                      ' to,'
-                                                      ' this,'
-                                                      ' one )',
-                              [ ParameterMatcher( 25, 29 ),
-                                ParameterMatcher( 31, 35 ),
-                                ParameterMatcher( 37, 46 ),
-                                ParameterMatcher( 48, 50 ),
-                                ParameterMatcher( 52, 56 ),
-                                ParameterMatcher( 58, 61 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-def SignatureHelp_MultipleDefinitions_OneActive_test( app ):
-  RunTest( app, {
-    'description': 'Jedi returns multiple signatures - both active',
-    'request': {
-      'filetype'  : 'python',
-      'filepath'  : PathToTestFile( 'signature_help.py' ),
-      'line_num'  : 30,
-      'column_num': 30,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 1,
-          'activeParameter': 3,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'def MultipleDefinitions( a, b, c )',
-                              [ ParameterMatcher( 25, 26 ),
-                                ParameterMatcher( 28, 29 ),
-                                ParameterMatcher( 31, 32 ) ] ),
-
-            SignatureMatcher( 'def MultipleDefinitions( many,'
-                                                      ' more,'
-                                                      ' arguments,'
-                                                      ' to,'
-                                                      ' this,'
-                                                      ' one )',
-                              [ ParameterMatcher( 25, 29 ),
-                                ParameterMatcher( 31, 35 ),
-                                ParameterMatcher( 37, 46 ),
-                                ParameterMatcher( 48, 50 ),
-                                ParameterMatcher( 52, 56 ),
-                                ParameterMatcher( 58, 61 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
+              SignatureMatcher( 'def MultipleDefinitions( many,'
+                                                        ' more,'
+                                                        ' arguments,'
+                                                        ' to,'
+                                                        ' this,'
+                                                        ' one )',
+                                [ ParameterMatcher( 25, 29 ),
+                                  ParameterMatcher( 31, 35 ),
+                                  ParameterMatcher( 37, 46 ),
+                                  ParameterMatcher( 48, 50 ),
+                                  ParameterMatcher( 52, 56 ),
+                                  ParameterMatcher( 58, 61 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @SharedYcmd
+  def test_SignatureHelp_MultipleDefinitions_OneActive( self, app ):
+    RunTest( app, {
+      'description': 'Jedi returns multiple signatures - both active',
+      'request': {
+        'filetype'  : 'python',
+        'filepath'  : PathToTestFile( 'signature_help.py' ),
+        'line_num'  : 30,
+        'column_num': 30,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 1,
+            'activeParameter': 3,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'def MultipleDefinitions( a, b, c )',
+                                [ ParameterMatcher( 25, 26 ),
+                                  ParameterMatcher( 28, 29 ),
+                                  ParameterMatcher( 31, 32 ) ] ),
+
+              SignatureMatcher( 'def MultipleDefinitions( many,'
+                                                        ' more,'
+                                                        ' arguments,'
+                                                        ' to,'
+                                                        ' this,'
+                                                        ' one )',
+                                [ ParameterMatcher( 25, 29 ),
+                                  ParameterMatcher( 31, 35 ),
+                                  ParameterMatcher( 37, 46 ),
+                                  ParameterMatcher( 48, 50 ),
+                                  ParameterMatcher( 52, 56 ),
+                                  ParameterMatcher( 58, 61 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )

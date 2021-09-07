@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+import functools
 import os
 
 from ycmd.completers.language_server import language_server_completer as lsc
-from ycmd.tests.language_server.conftest import * # noqa
+from ycmd.tests.test_utils import IsolatedApp, StopCompleterServer
 
 
 def PathToTestFile( *args ):
@@ -44,3 +45,16 @@ class MockConnection( lsc.LanguageServerConnection ):
 
   def ReadData( self, size = -1 ):
     return bytes( b'' )
+
+
+def IsolatedYcmd( custom_options = {} ):
+  def Decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( test_case_instance, *args, **kwargs ):
+      with IsolatedApp( custom_options ) as app:
+        try:
+          test( test_case_instance, app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'foo' )
+    return Wrapper
+  return Decorator

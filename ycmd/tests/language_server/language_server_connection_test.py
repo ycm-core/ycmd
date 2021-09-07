@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -18,164 +18,161 @@
 from unittest.mock import patch, MagicMock
 from ycmd.completers.language_server import language_server_completer as lsc
 from hamcrest import assert_that, calling, equal_to, raises
+from unittest import TestCase
 from ycmd.tests.language_server import MockConnection
 
 import queue
 
 
-def LanguageServerConnection_ReadPartialMessage_test():
-  connection = MockConnection()
+class LanguageServerConnectionTest( TestCase ):
+  def test_LanguageServerConnection_ReadPartialMessage( self ):
+    connection = MockConnection()
 
-  return_values = [
-    bytes( b'Content-Length: 10\n\n{"abc":' ),
-    bytes( b'""}' ),
-    lsc.LanguageServerConnectionStopped
-  ]
+    return_values = [
+      bytes( b'Content-Length: 10\n\n{"abc":' ),
+      bytes( b'""}' ),
+      lsc.LanguageServerConnectionStopped
+    ]
 
-  with patch.object( connection, 'ReadData', side_effect = return_values ):
-    with patch.object( connection, '_DispatchMessage' ) as dispatch_message:
+    with patch.object( connection, 'ReadData', side_effect = return_values ):
+      with patch.object( connection, '_DispatchMessage' ) as dispatch_message:
+        connection.run()
+        dispatch_message.assert_called_with( { 'abc': '' } )
+
+
+  def test_LanguageServerConnection_MissingHeader( self ):
+    connection = MockConnection()
+
+    return_values = [
+      bytes( b'Content-NOTLENGTH: 10\n\n{"abc":' ),
+      bytes( b'""}' ),
+      lsc.LanguageServerConnectionStopped
+    ]
+
+    with patch.object( connection, 'ReadData', side_effect = return_values ):
+      assert_that( calling( connection._ReadMessages ), raises( ValueError ) )
+
+
+  def test_LanguageServerConnection_RequestAbortCallback( self ):
+    connection = MockConnection()
+
+    return_values = [
+      lsc.LanguageServerConnectionStopped
+    ]
+
+    with patch.object( connection, 'ReadData', side_effect = return_values ):
+      callback = MagicMock()
+      response = connection.GetResponseAsync( 1,
+                                              bytes( b'{"test":"test"}' ),
+                                              response_callback = callback )
       connection.run()
-      dispatch_message.assert_called_with( { 'abc': '' } )
+      callback.assert_called_with( response, None )
 
 
-def LanguageServerConnection_MissingHeader_test():
-  connection = MockConnection()
+  def test_LanguageServerConnection_RequestAbortAwait( self ):
+    connection = MockConnection()
 
-  return_values = [
-    bytes( b'Content-NOTLENGTH: 10\n\n{"abc":' ),
-    bytes( b'""}' ),
-    lsc.LanguageServerConnectionStopped
-  ]
+    return_values = [
+      lsc.LanguageServerConnectionStopped
+    ]
 
-  with patch.object( connection, 'ReadData', side_effect = return_values ):
-    assert_that( calling( connection._ReadMessages ), raises( ValueError ) )
-
-
-def LanguageServerConnection_RequestAbortCallback_test():
-  connection = MockConnection()
-
-  return_values = [
-    lsc.LanguageServerConnectionStopped
-  ]
-
-  with patch.object( connection, 'ReadData', side_effect = return_values ):
-    callback = MagicMock()
-    response = connection.GetResponseAsync( 1,
-                                            bytes( b'{"test":"test"}' ),
-                                            response_callback = callback )
-    connection.run()
-    callback.assert_called_with( response, None )
-
-
-def LanguageServerConnection_RequestAbortAwait_test():
-  connection = MockConnection()
-
-  return_values = [
-    lsc.LanguageServerConnectionStopped
-  ]
-
-  with patch.object( connection, 'ReadData', side_effect = return_values ):
-    response = connection.GetResponseAsync( 1,
-                                            bytes( b'{"test":"test"}' ) )
-    connection.run()
-    assert_that( calling( response.AwaitResponse ).with_args( 10 ),
-                 raises( lsc.ResponseAbortedException ) )
-
-
-def LanguageServerConnection_ServerConnectionDies_test():
-  connection = MockConnection()
-
-  return_values = [
-    IOError
-  ]
-
-  with patch.object( connection, 'ReadData', side_effect = return_values ):
-    # No exception is thrown
-    connection.run()
-
-
-@patch( 'ycmd.completers.language_server.language_server_completer.'
-        'CONNECTION_TIMEOUT',
-        0.5 )
-def LanguageServerConnection_ConnectionTimeout_test():
-  connection = MockConnection()
-  with patch.object( connection,
-                     'TryServerConnectionBlocking',
-                     side_effect=RuntimeError ):
-    connection.Start()
-    assert_that( calling( connection.AwaitServerConnection ),
-                 raises( lsc.LanguageServerConnectionTimeout ) )
-
-  assert_that( connection.is_alive(), equal_to( False ) )
-
-
-def LanguageServerConnection_CloseTwice_test():
-  connection = MockConnection()
-  with patch.object( connection,
-                     'TryServerConnectionBlocking',
-                     side_effect=RuntimeError ):
-    connection.Close()
-    connection.Close()
-
-
-@patch.object( lsc, 'MAX_QUEUED_MESSAGES', 2 )
-def LanguageServerConnection_AddNotificationToQueue_RingBuffer_test():
-  connection = MockConnection()
-  notifications = connection._notifications
-
-  # Queue empty
-
-  assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
-
-  # Queue partially full, then drained
-
-  connection._AddNotificationToQueue( 'one' )
-
-  assert_that( notifications.get_nowait(), equal_to( 'one' ) )
-  assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
-
-  # Queue full, then drained
-
-  connection._AddNotificationToQueue( 'one' )
-  connection._AddNotificationToQueue( 'two' )
-
-  assert_that( notifications.get_nowait(), equal_to( 'one' ) )
-  assert_that( notifications.get_nowait(), equal_to( 'two' ) )
-  assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
-
-  # Queue full, then new notification, then drained
-
-  connection._AddNotificationToQueue( 'one' )
-  connection._AddNotificationToQueue( 'two' )
-  connection._AddNotificationToQueue( 'three' )
-
-  assert_that( notifications.get_nowait(), equal_to( 'two' ) )
-  assert_that( notifications.get_nowait(), equal_to( 'three' ) )
-  assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
-
-
-def LanguageServerConnection_RejectUnsupportedRequest_test():
-  connection = MockConnection()
-
-  return_values = [
-    bytes( b'Content-Length: 26\r\n\r\n{"id":"1","method":"test"}' ),
-    lsc.LanguageServerConnectionStopped
-  ]
-
-  expected_response = bytes( b'Content-Length: 79\r\n\r\n'
-                             b'{"error":{'
-                               b'"code":-32601,'
-                               b'"message":"Method not found"'
-                             b'},'
-                             b'"id":"1",'
-                             b'"jsonrpc":"2.0"}' )
-
-  with patch.object( connection, 'ReadData', side_effect = return_values ):
-    with patch.object( connection, 'WriteData' ) as write_data:
+    with patch.object( connection, 'ReadData', side_effect = return_values ):
+      response = connection.GetResponseAsync( 1,
+                                              bytes( b'{"test":"test"}' ) )
       connection.run()
-      write_data.assert_called_with( expected_response )
+      assert_that( calling( response.AwaitResponse ).with_args( 10 ),
+                   raises( lsc.ResponseAbortedException ) )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  def test_LanguageServerConnection_ServerConnectionDies( self ):
+    connection = MockConnection()
+
+    return_values = [
+      IOError
+    ]
+
+    with patch.object( connection, 'ReadData', side_effect = return_values ):
+      # No exception is thrown
+      connection.run()
+
+
+  @patch( 'ycmd.completers.language_server.language_server_completer.'
+          'CONNECTION_TIMEOUT',
+          0.5 )
+  def test_LanguageServerConnection_ConnectionTimeout( self ):
+    connection = MockConnection()
+    with patch.object( connection,
+                       'TryServerConnectionBlocking',
+                       side_effect=RuntimeError ):
+      connection.Start()
+      assert_that( calling( connection.AwaitServerConnection ),
+                   raises( lsc.LanguageServerConnectionTimeout ) )
+
+    assert_that( connection.is_alive(), equal_to( False ) )
+
+
+  def test_LanguageServerConnection_CloseTwice( self ):
+    connection = MockConnection()
+    with patch.object( connection,
+                       'TryServerConnectionBlocking',
+                       side_effect=RuntimeError ):
+      connection.Close()
+      connection.Close()
+
+
+  @patch.object( lsc, 'MAX_QUEUED_MESSAGES', 2 )
+  def test_LanguageServerConnection_AddNotificationToQueue_RingBuffer( self ):
+    connection = MockConnection()
+    notifications = connection._notifications
+
+    # Queue empty
+
+    assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
+
+    # Queue partially full, then drained
+
+    connection._AddNotificationToQueue( 'one' )
+
+    assert_that( notifications.get_nowait(), equal_to( 'one' ) )
+    assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
+
+    # Queue full, then drained
+
+    connection._AddNotificationToQueue( 'one' )
+    connection._AddNotificationToQueue( 'two' )
+
+    assert_that( notifications.get_nowait(), equal_to( 'one' ) )
+    assert_that( notifications.get_nowait(), equal_to( 'two' ) )
+    assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
+
+    # Queue full, then new notification, then drained
+
+    connection._AddNotificationToQueue( 'one' )
+    connection._AddNotificationToQueue( 'two' )
+    connection._AddNotificationToQueue( 'three' )
+
+    assert_that( notifications.get_nowait(), equal_to( 'two' ) )
+    assert_that( notifications.get_nowait(), equal_to( 'three' ) )
+    assert_that( calling( notifications.get_nowait ), raises( queue.Empty ) )
+
+
+  def test_LanguageServerConnection_RejectUnsupportedRequest( self ):
+    connection = MockConnection()
+
+    return_values = [
+      bytes( b'Content-Length: 26\r\n\r\n{"id":"1","method":"test"}' ),
+      lsc.LanguageServerConnectionStopped
+    ]
+
+    expected_response = bytes( b'Content-Length: 79\r\n\r\n'
+                               b'{"error":{'
+                                 b'"code":-32601,'
+                                 b'"message":"Method not found"'
+                               b'},'
+                               b'"id":"1",'
+                               b'"jsonrpc":"2.0"}' )
+
+    with patch.object( connection, 'ReadData', side_effect = return_values ):
+      with patch.object( connection, 'WriteData' ) as write_data:
+        connection.run()
+        write_data.assert_called_with( expected_response )

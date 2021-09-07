@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 ycmd contributors
+# Copyright (C) 2015-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -21,7 +21,9 @@ from hamcrest import ( assert_that,
                        has_entries )
 import pprint
 import requests
+from unittest import TestCase
 from ycmd.tests.test_utils import CombineRequest
+from ycmd.tests.javascriptreact import setUpModule, tearDownModule # noqa
 from ycmd.tests.javascriptreact import PathToTestFile, SharedYcmd
 from ycmd.utils import ReadFile
 
@@ -68,32 +70,28 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def Subcommands_GoToReferences_test( app ):
-  RunTest( app, {
-    'description': 'GoToReferences works',
-    'request': {
-      'command': 'GoToReferences',
-      'line_num': 6,
-      'column_num': 4,
-      'filepath': PathToTestFile( 'test.jsx' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': contains_inanyorder(
-        has_entries( { 'description': 'function HelloMessage({ name }) {',
-                       'line_num'   : 1,
-                       'column_num' : 10,
-                       'filepath'   : PathToTestFile( 'test.jsx' ) } ),
-        has_entries( { 'description': '  <HelloMessage name="Taylor" />,',
-                       'line_num'   : 6,
-                       'column_num' : 4,
-                       'filepath'   : PathToTestFile( 'test.jsx' ) } ),
-      )
-    }
-  } )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+class SubcommandsTest( TestCase ):
+  @SharedYcmd
+  def test_Subcommands_GoToReferences( self, app ):
+    RunTest( app, {
+      'description': 'GoToReferences works',
+      'request': {
+        'command': 'GoToReferences',
+        'line_num': 6,
+        'column_num': 4,
+        'filepath': PathToTestFile( 'test.jsx' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': contains_inanyorder(
+          has_entries( { 'description': 'function HelloMessage({ name }) {',
+                         'line_num'   : 1,
+                         'column_num' : 10,
+                         'filepath'   : PathToTestFile( 'test.jsx' ) } ),
+          has_entries( { 'description': '  <HelloMessage name="Taylor" />,',
+                         'line_num'   : 6,
+                         'column_num' : 4,
+                         'filepath'   : PathToTestFile( 'test.jsx' ) } ),
+        )
+      }
+    } )

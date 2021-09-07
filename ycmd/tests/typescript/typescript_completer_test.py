@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020 ycmd contributors
+# Copyright (C) 2017-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,32 +16,30 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest.mock import patch
+from unittest import TestCase
 from hamcrest import assert_that, equal_to
 
 from ycmd import user_options_store
 from ycmd.completers.typescript.typescript_completer import (
     ShouldEnableTypeScriptCompleter,
     FindTSServer )
+from ycmd.tests.typescript import setUpModule, tearDownModule # noqa
 
 
-def ShouldEnableTypeScriptCompleter_NodeAndTsserverFound_test():
-  user_options = user_options_store.GetAll()
-  assert_that( ShouldEnableTypeScriptCompleter( user_options ) )
+class TypescriptCompleterTest( TestCase ):
+  def test_ShouldEnableTypeScriptCompleter_NodeAndTsserverFound( self ):
+    user_options = user_options_store.GetAll()
+    assert_that( ShouldEnableTypeScriptCompleter( user_options ) )
 
 
-@patch( 'ycmd.utils.FindExecutable', return_value = None )
-def ShouldEnableTypeScriptCompleter_TsserverNotFound_test( *args ):
-  user_options = user_options_store.GetAll()
-  assert_that( not ShouldEnableTypeScriptCompleter( user_options ) )
+  @patch( 'ycmd.utils.FindExecutable', return_value = None )
+  def test_ShouldEnableTypeScriptCompleter_TsserverNotFound( self, *args ):
+    user_options = user_options_store.GetAll()
+    assert_that( not ShouldEnableTypeScriptCompleter( user_options ) )
 
 
-@patch( 'ycmd.utils.FindExecutableWithFallback',
-        wraps = lambda x, fb: x if x == 'tsserver' else None )
-@patch( 'os.path.isfile', return_value = True )
-def FindTSServer_CustomTsserverPath_test( *args ):
-  assert_that( 'tsserver', equal_to( FindTSServer( 'tsserver' ) ) )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @patch( 'ycmd.utils.FindExecutableWithFallback',
+          wraps = lambda x, fb: x if x == 'tsserver' else None )
+  @patch( 'os.path.isfile', return_value = True )
+  def test_FindTSServer_CustomTsserverPath( self, *args ):
+    assert_that( 'tsserver', equal_to( FindTSServer( 'tsserver' ) ) )

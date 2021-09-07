@@ -49,16 +49,16 @@ To run the full suite, just run `run_tests.py`. Options are:
   Windows only;
 * `--coverage`: generate code coverage data.
 
-Remaining arguments are passed to "pytest" directly. This means that you
+Remaining arguments are passed to "unittest" directly. This means that you
 can run a specific script or a specific test as follows:
 
 * Specific script: `./run_tests.py ycmd/tests/<module_name>.py`
-* Specific test: `./run_tests.py ycmd/tests/<module_name>.py:<function name>`
+* Specific test: `./run_tests.py -k <test name> ycmd/tests/<module_name>.py`
 
 For example:
 
 * `./run_tests.py ycmd/tests/subcommands_test.py`
-* `./run_tests.py ycmd/tests/subcommands_test.py:Subcommands_Basic_test`
+* `./run_tests.py -k Subcommands_Basic_test ycmd/tests/subcommands_test.py`
 
 NOTE: you must have UTF-8 support in your terminal when you do this, e.g.:
 
@@ -76,9 +76,8 @@ C++ coverage testing is available only on Linux/Mac and uses gcov.
 Stricly speaking, we use the `-coverage` option to your compiler, which in the
 case of GNU and LLVM compilers, generate gcov-compatible data.
 
-For Python, there's a coverage module which works nicely with `pytest`. This
-is very useful for highlighting areas of your code which are not covered by the
-automated integration tests.
+For Python, there's a coverage module. This is very useful for highlighting
+areas of your code which are not covered by the automated integration tests.
 
 Run it like this:
 
@@ -88,8 +87,7 @@ Run it like this:
 
 This will print a summary and generate HTML output in `./cover`.
 
-More information: https://coverage.readthedocs.org and
-https://pytest-cov.readthedocs.io/en/stable/
+More information: https://coverage.readthedocs.org
 
 ## Troubleshooting
 
