@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 ycmd contributors
+# Copyright (C) 2016-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -18,7 +18,8 @@
 from hamcrest import ( assert_that, contains_exactly, has_entries, has_entry,
                        instance_of, none )
 from unittest.mock import patch
-
+from unittest import TestCase
+from ycmd.tests.rust import setUpModule, tearDownModule # noqa
 from ycmd.tests.rust import ( IsolatedYcmd,
                               PathToTestFile,
                               SharedYcmd,
@@ -26,102 +27,99 @@ from ycmd.tests.rust import ( IsolatedYcmd,
 from ycmd.tests.test_utils import BuildRequest
 
 
-@SharedYcmd
-def DebugInfo_RlsVersion_test( app ):
-  request_data = BuildRequest( filetype = 'rust' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Rust',
-      'servers': contains_exactly( has_entries( {
-        'name': 'Rust Language Server',
-        'is_running': instance_of( bool ),
-        'executable': contains_exactly( instance_of( str ) ),
-        'pid': instance_of( int ),
-        'address': none(),
-        'port': none(),
-        'logfiles': contains_exactly( instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( {
-            'key': 'Server State',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Project Directory',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': '{}'
-          } ),
-          has_entries( {
-            'key': 'Project State',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Version',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Rust Root',
-            'value': instance_of( str )
-          } )
-        )
+class DebugInfoTest( TestCase ):
+  @SharedYcmd
+  def test_DebugInfo_RlsVersion( self, app ):
+    request_data = BuildRequest( filetype = 'rust' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Rust',
+        'servers': contains_exactly( has_entries( {
+          'name': 'Rust Language Server',
+          'is_running': instance_of( bool ),
+          'executable': contains_exactly( instance_of( str ) ),
+          'pid': instance_of( int ),
+          'address': none(),
+          'port': none(),
+          'logfiles': contains_exactly( instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'Server State',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': '{}'
+            } ),
+            has_entries( {
+              'key': 'Project State',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Version',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Rust Root',
+              'value': instance_of( str )
+            } )
+          )
+        } ) )
       } ) )
-    } ) )
-  )
+    )
 
 
-@IsolatedYcmd
-@patch( 'ycmd.completers.rust.rust_completer._GetCommandOutput',
-        return_value = '' )
-def DebugInfo_NoRlsVersion_test( get_command_output, app ):
-  StartRustCompleterServerInDirectory( app, PathToTestFile( 'common', 'src' ) )
+  @IsolatedYcmd()
+  @patch( 'ycmd.completers.rust.rust_completer._GetCommandOutput',
+          return_value = '' )
+  def test_DebugInfo_NoRlsVersion( self, app, *args ):
+    StartRustCompleterServerInDirectory( app,
+                                         PathToTestFile( 'common', 'src' ) )
 
-  request_data = BuildRequest( filetype = 'rust' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'Rust',
-      'servers': contains_exactly( has_entries( {
-        'name': 'Rust Language Server',
-        'is_running': instance_of( bool ),
-        'executable': contains_exactly( instance_of( str ) ),
-        'pid': instance_of( int ),
-        'address': none(),
-        'port': none(),
-        'logfiles': contains_exactly( instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( {
-            'key': 'Server State',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Project Directory',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Settings',
-            'value': '{}'
-          } ),
-          has_entries( {
-            'key': 'Project State',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'Version',
-            'value': none()
-          } ),
-          has_entries( {
-            'key': 'Rust Root',
-            'value': instance_of( str )
-          } )
-        )
+    request_data = BuildRequest( filetype = 'rust' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'Rust',
+        'servers': contains_exactly( has_entries( {
+          'name': 'Rust Language Server',
+          'is_running': instance_of( bool ),
+          'executable': contains_exactly( instance_of( str ) ),
+          'pid': instance_of( int ),
+          'address': none(),
+          'port': none(),
+          'logfiles': contains_exactly( instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'Server State',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': '{}'
+            } ),
+            has_entries( {
+              'key': 'Project State',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Version',
+              'value': none()
+            } ),
+            has_entries( {
+              'key': 'Rust Root',
+              'value': instance_of( str )
+            } )
+          )
+        } ) )
       } ) )
-    } ) )
-  )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+    )

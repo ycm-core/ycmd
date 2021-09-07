@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020 ycmd contributors
+# Copyright (C) 2018-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,16 +16,57 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import os
+import functools
 
 from hamcrest import assert_that, equal_to
 
 
-from ycmd.tests.clangd.conftest import * # noqa
+from ycmd.completers.cpp import clangd_completer
 from ycmd.tests.test_utils import ( CombineRequest,
-                                    WaitUntilCompleterServerReady )
+                                    WaitUntilCompleterServerReady,
+                                    ClearCompletionsCache,
+                                    IgnoreExtraConfOutsideTestsFolder,
+                                    IsolatedApp,
+                                    SetUpApp,
+                                    StopCompleterServer )
 from ycmd.utils import ReadFile
 
 shared_app = None
+
+
+def setUpModule():
+  global shared_app
+  shared_app = SetUpApp()
+
+
+def tearDownModule():
+  StopCompleterServer( shared_app, 'cpp' )
+
+
+def SharedYcmd( test ):
+  global shared_app
+
+  @functools.wraps( test )
+  def Wrapper( test_case_instance, *args, **kwargs ):
+    ClearCompletionsCache()
+    with IgnoreExtraConfOutsideTestsFolder():
+      return test( test_case_instance, shared_app, *args, **kwargs )
+  return Wrapper
+
+
+def IsolatedYcmd( custom_options = {} ):
+  def Decorator( test ):
+    @functools.wraps( test )
+    def Wrapper( test_case_instance, *args, **kwargs ):
+      with IsolatedApp( custom_options ) as app:
+        clangd_completer.CLANGD_COMMAND = clangd_completer.NOT_CACHED
+        try:
+          test( test_case_instance, app, *args, **kwargs )
+        finally:
+          StopCompleterServer( app, 'cpp' )
+    return Wrapper
+  return Decorator
 
 
 def RunAfterInitialized( app, test ):
@@ -79,3 +120,8 @@ def RunAfterInitialized( app, test ):
                  equal_to( test[ 'expect' ][ 'response' ] ) )
     assert_that( response.json, test[ 'expect' ][ 'data' ] )
   return response.json
+
+
+def PathToTestFile( *args ):
+  dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
+  return os.path.join( dir_of_current_script, 'testdata', *args )

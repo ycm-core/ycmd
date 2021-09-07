@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -16,9 +16,11 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import assert_that, contains_exactly, empty, equal_to, has_entries
+from unittest import TestCase
 import requests
 
 from ycmd.utils import ReadFile
+from ycmd.tests.go import setUpModule, tearDownModule # noqa
 from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( CombineRequest,
                                     ParameterMatcher,
@@ -68,100 +70,96 @@ def RunTest( app, test ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-@SharedYcmd
-def SignatureHelp_NoParams_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after (',
-    'request': {
-      'filetype'  : 'go',
-      'filepath'  : PathToTestFile( 'goto.go' ),
-      'line_num'  : 8,
-      'column_num': 11,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'dummy()', [] )
-          ),
-        } ),
-      } )
-    }
-  } )
+class SignatureHelpTest( TestCase ):
+  @SharedYcmd
+  def test_SignatureHelp_NoParams( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after (',
+      'request': {
+        'filetype'  : 'go',
+        'filepath'  : PathToTestFile( 'goto.go' ),
+        'line_num'  : 8,
+        'column_num': 11,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'dummy()', [] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def SignatureHelp_NullResponse_test( app ):
-  RunTest( app, {
-    'description': 'No error on null response',
-    'request': {
-      'filetype'  : 'go',
-      'filepath'  : PathToTestFile( 'td', 'signature_help.go' ),
-      'line_num'  : 11,
-      'column_num': 17,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty(),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_SignatureHelp_NullResponse( self, app ):
+    RunTest( app, {
+      'description': 'No error on null response',
+      'request': {
+        'filetype'  : 'go',
+        'filepath'  : PathToTestFile( 'td', 'signature_help.go' ),
+        'line_num'  : 11,
+        'column_num': 17,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': empty(),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def SignatureHelp_MethodTrigger_test( app ):
-  RunTest( app, {
-    'description': 'Trigger after (',
-    'request': {
-      'filetype'  : 'go',
-      'filepath'  : PathToTestFile( 'td', 'signature_help.go' ),
-      'line_num'  : 10,
-      'column_num': 18,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'add(x int, y int) int',
-                              [ ParameterMatcher( 4, 9 ),
-                                ParameterMatcher( 11, 16 ) ] )
-          ),
-        } ),
-      } )
-    }
-  } )
+  @SharedYcmd
+  def test_SignatureHelp_MethodTrigger( self, app ):
+    RunTest( app, {
+      'description': 'Trigger after (',
+      'request': {
+        'filetype'  : 'go',
+        'filepath'  : PathToTestFile( 'td', 'signature_help.go' ),
+        'line_num'  : 10,
+        'column_num': 18,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'errors': empty(),
+          'signature_help': has_entries( {
+            'activeSignature': 0,
+            'activeParameter': 0,
+            'signatures': contains_exactly(
+              SignatureMatcher( 'add(x int, y int) int',
+                                [ ParameterMatcher( 4, 9 ),
+                                  ParameterMatcher( 11, 16 ) ] )
+            ),
+          } ),
+        } )
+      }
+    } )
 
 
-@SharedYcmd
-def Signature_Help_Available_test( app ):
-  request = { 'filepath' : PathToTestFile( 'td', 'signature_help.go' ) }
-  app.post_json( '/event_notification',
-                 CombineRequest( request, {
-                   'event_name': 'FileReadyToParse',
-                   'filetype': 'go'
-                 } ),
-                 expect_errors = True )
-  WaitUntilCompleterServerReady( app, 'go' )
+  @SharedYcmd
+  def test_Signature_Help_Available( self, app ):
+    request = { 'filepath' : PathToTestFile( 'td', 'signature_help.go' ) }
+    app.post_json( '/event_notification',
+                   CombineRequest( request, {
+                     'event_name': 'FileReadyToParse',
+                     'filetype': 'go'
+                   } ),
+                   expect_errors = True )
+    WaitUntilCompleterServerReady( app, 'go' )
 
-  response = app.get( '/signature_help_available',
-                      { 'subserver': 'go' } ).json
-  assert_that( response, SignatureAvailableMatcher( 'YES' ) )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+    response = app.get( '/signature_help_available',
+                        { 'subserver': 'go' } ).json
+    assert_that( response, SignatureAvailableMatcher( 'YES' ) )

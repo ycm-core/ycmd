@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 ycmd contributors
+# Copyright (C) 2016-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -21,43 +21,41 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        instance_of )
+from unittest import TestCase
 
+from ycmd.tests.tern import setUpModule, tearDownModule # noqa
 from ycmd.tests.tern import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest
 
 
-@SharedYcmd
-def DebugInfo_test( app ):
-  request_data = BuildRequest( filetype = 'javascript' )
-  assert_that(
-    app.post_json( '/debug_info', request_data ).json,
-    has_entry( 'completer', has_entries( {
-      'name': 'JavaScript',
-      'servers': contains_exactly( has_entries( {
-        'name': 'Tern',
-        'is_running': instance_of( bool ),
-        'executable': instance_of( str ),
-        'pid': instance_of( int ),
-        'address': instance_of( str ),
-        'port': instance_of( int ),
-        'logfiles': contains_exactly( instance_of( str ),
-                              instance_of( str ) ),
-        'extras': contains_exactly(
-          has_entries( {
-            'key': 'configuration file',
-            'value': instance_of( str )
-          } ),
-          has_entries( {
-            'key': 'working directory',
-            'value': instance_of( str )
-          } )
-        ),
-      } ) ),
-      'items': empty()
-    } ) )
-  )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+class DebugInfoTest( TestCase ):
+  @SharedYcmd
+  def test_DebugInfo( self, app ):
+    request_data = BuildRequest( filetype = 'javascript' )
+    assert_that(
+      app.post_json( '/debug_info', request_data ).json,
+      has_entry( 'completer', has_entries( {
+        'name': 'JavaScript',
+        'servers': contains_exactly( has_entries( {
+          'name': 'Tern',
+          'is_running': instance_of( bool ),
+          'executable': instance_of( str ),
+          'pid': instance_of( int ),
+          'address': instance_of( str ),
+          'port': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ),
+                                instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'configuration file',
+              'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'working directory',
+              'value': instance_of( str )
+            } )
+          ),
+        } ) ),
+        'items': empty()
+      } ) )
+    )

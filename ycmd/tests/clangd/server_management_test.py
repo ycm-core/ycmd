@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2020 ycmd contributors
+# Copyright (C) 2011-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,6 +24,7 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        has_item )
+from unittest import TestCase
 
 from ycmd import handlers, utils
 from ycmd.tests.clangd import ( IsolatedYcmd, PathToTestFile,
@@ -66,113 +67,112 @@ def CheckStopped( app ):
   )
 
 
-@IsolatedYcmd()
-def ServerManagement_StopServer_Clean_test( app ):
-  StartClangd( app )
-  StopCompleterServer( app, 'cpp', '' )
-  CheckStopped( app )
-
-
-@IsolatedYcmd()
-@patch( 'os.remove', side_effect = OSError )
-@patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
-        MockProcessTerminationTimingOut )
-def ServerManagement_StopServer_Unclean_test( rm, app ):
-  StartClangd( app )
-  StopCompleterServer( app, 'cpp', '' )
-  CheckStopped( app )
-
-
-@IsolatedYcmd()
-def ServerManagement_StopServer_Twice_test( app ):
-  StartClangd( app )
-  StopCompleterServer( app, 'cpp', '' )
-  CheckStopped( app )
-  StopCompleterServer( app, 'cpp', '' )
-  CheckStopped( app )
-
-
-@IsolatedYcmd()
-def ServerManagement_StopServer_Killed_test( app ):
-  StartClangd( app )
-  process = psutil.Process( GetPid( app ) )
-  process.terminate()
-  process.wait( timeout = 5 )
-  StopCompleterServer( app, 'cpp', '' )
-  CheckStopped( app )
-
-
-@IsolatedYcmd()
-def ServerManagement_ServerDiesWhileShuttingDown_test( app ):
-  StartClangd( app )
-  process = psutil.Process( GetPid( app ) )
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
-
-  # We issue a shutdown but make sure it never reaches server by mocking
-  # WriteData in Connection. Then we kill the server and check shutdown still
-  # succeeds.
-  with patch.object( completer.GetConnection(), 'WriteData' ):
-    stop_server_task = utils.StartThread( StopCompleterServer, app, 'cpp', '' )
-    process.terminate()
-    stop_server_task.join()
-
-  CheckStopped( app )
-
-
-@IsolatedYcmd()
-def ServerManagement_ConnectionRaisesWhileShuttingDown_test( app ):
-  StartClangd( app )
-  process = psutil.Process( GetPid( app ) )
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
-
-  # We issue a shutdown but make sure it never reaches server by mocking
-  # WriteData in Connection. Then we kill the server and check shutdown still
-  # succeeds.
-  with patch.object( completer.GetConnection(), 'GetResponse',
-                     side_effect = RuntimeError ):
+class ServerManagementTest( TestCase ):
+  @IsolatedYcmd()
+  def test_ServerManagement_StopServer_Clean( self, app ):
+    StartClangd( app )
     StopCompleterServer( app, 'cpp', '' )
+    CheckStopped( app )
 
-  CheckStopped( app )
-  if process.is_running():
+
+  @IsolatedYcmd()
+  @patch( 'os.remove', side_effect = OSError )
+  @patch( 'ycmd.utils.WaitUntilProcessIsTerminated',
+          MockProcessTerminationTimingOut )
+  def test_ServerManagement_StopServer_Unclean( self, app, *args ):
+    StartClangd( app )
+    StopCompleterServer( app, 'cpp', '' )
+    CheckStopped( app )
+
+
+  @IsolatedYcmd()
+  def test_ServerManagement_StopServer_Twice( self, app ):
+    StartClangd( app )
+    StopCompleterServer( app, 'cpp', '' )
+    CheckStopped( app )
+    StopCompleterServer( app, 'cpp', '' )
+    CheckStopped( app )
+
+
+  @IsolatedYcmd()
+  def test_ServerManagement_StopServer_Killed( self, app ):
+    StartClangd( app )
+    process = psutil.Process( GetPid( app ) )
     process.terminate()
-    raise AssertionError( 'Termination failed' )
+    process.wait( timeout = 5 )
+    StopCompleterServer( app, 'cpp', '' )
+    CheckStopped( app )
 
 
-@IsolatedYcmd()
-def ServerManagement_RestartServer_test( app ):
-  StartClangd( app, PathToTestFile( 'basic.cpp' ) )
+  @IsolatedYcmd()
+  def test_ServerManagement_ServerDiesWhileShuttingDown( self, app ):
+    StartClangd( app )
+    process = psutil.Process( GetPid( app ) )
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
 
-  assert_that(
-    GetDebugInfo( app ),
-    CompleterProjectDirectoryMatcher( PathToTestFile() ) )
+    # We issue a shutdown but make sure it never reaches server by mocking
+    # WriteData in Connection. Then we kill the server and check shutdown still
+    # succeeds.
+    with patch.object( completer.GetConnection(), 'WriteData' ):
+      stop_server_task = utils.StartThread( StopCompleterServer,
+                                            app,
+                                            'cpp',
+                                            '' )
+      process.terminate()
+      stop_server_task.join()
 
-  app.post_json(
-    '/run_completer_command',
-    BuildRequest(
-      filepath = PathToTestFile( 'test-include', 'main.cpp' ),
-      filetype = 'cpp',
-      command_arguments = [ 'RestartServer' ],
-    ),
-  )
+    CheckStopped( app )
 
-  WaitUntilCompleterServerReady( app, 'cpp' )
 
-  assert_that(
-    GetDebugInfo( app ),
-    has_entry( 'completer', has_entries( {
-      'name': 'C-family',
-      'servers': contains_exactly( has_entries( {
-        'name': 'Clangd',
-        'is_running': True,
-        'extras': has_item( has_entries( {
-          'key': 'Project Directory',
-          'value': PathToTestFile( 'test-include' ),
+  @IsolatedYcmd()
+  def test_ServerManagement_ConnectionRaisesWhileShuttingDown( self, app ):
+    StartClangd( app )
+    process = psutil.Process( GetPid( app ) )
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
+
+    # We issue a shutdown but make sure it never reaches server by mocking
+    # WriteData in Connection. Then we kill the server and check shutdown still
+    # succeeds.
+    with patch.object( completer.GetConnection(), 'GetResponse',
+                       side_effect = RuntimeError ):
+      StopCompleterServer( app, 'cpp', '' )
+
+    CheckStopped( app )
+    if process.is_running():
+      process.terminate()
+      raise AssertionError( 'Termination failed' )
+
+
+  @IsolatedYcmd()
+  def test_ServerManagement_RestartServer( self, app ):
+    StartClangd( app, PathToTestFile( 'basic.cpp' ) )
+
+    assert_that(
+      GetDebugInfo( app ),
+      CompleterProjectDirectoryMatcher( PathToTestFile() ) )
+
+    app.post_json(
+      '/run_completer_command',
+      BuildRequest(
+        filepath = PathToTestFile( 'test-include', 'main.cpp' ),
+        filetype = 'cpp',
+        command_arguments = [ 'RestartServer' ],
+      ),
+    )
+
+    WaitUntilCompleterServerReady( app, 'cpp' )
+
+    assert_that(
+      GetDebugInfo( app ),
+      has_entry( 'completer', has_entries( {
+        'name': 'C-family',
+        'servers': contains_exactly( has_entries( {
+          'name': 'Clangd',
+          'is_running': True,
+          'extras': has_item( has_entries( {
+            'key': 'Project Directory',
+            'value': PathToTestFile( 'test-include' ),
+          } ) )
         } ) )
       } ) )
-    } ) )
-  )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+    )

@@ -1,5 +1,4 @@
-# Copyright (C) 2013 Google Inc.
-#               2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -18,35 +17,34 @@
 
 from hamcrest import assert_that, contains_exactly
 from unittest.mock import patch
+from unittest import TestCase
 
 from ycmd.tests import SharedYcmd
 from ycmd.tests.test_utils import BuildRequest, DummyCompleter, PatchCompleter
 
 
-@SharedYcmd
-@patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
-        return_value = { 'A': lambda x: x,
-                         'B': lambda x: x,
-                         'C': lambda x: x } )
-def Subcommands_Basic_test( get_subcmd_map, app ):
-  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-    subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
-    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-                 contains_exactly( 'A', 'B', 'C' ) )
+class SubcommandsTest( TestCase ):
+  @SharedYcmd
+  @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+          return_value = { 'A': lambda x: x,
+                           'B': lambda x: x,
+                           'C': lambda x: x } )
+  def test_Subcommands_Basic( self, app, *args ):
+    with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+      subcommands_data = BuildRequest( completer_target = 'dummy_filetype' )
+      assert_that( app.post_json( '/defined_subcommands',
+                                  subcommands_data ).json,
+                   contains_exactly( 'A', 'B', 'C' ) )
 
 
-@SharedYcmd
-@patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
-        return_value = { 'A': lambda x: x,
-                         'B': lambda x: x,
-                         'C': lambda x: x } )
-def Subcommands_NoExplicitCompleterTargetSpecified_test( get_subcmd_map, app ):
-  with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
-    subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
-    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-                 contains_exactly( 'A', 'B', 'C' ) )
-
-
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @SharedYcmd
+  @patch( 'ycmd.tests.test_utils.DummyCompleter.GetSubcommandsMap',
+          return_value = { 'A': lambda x: x,
+                           'B': lambda x: x,
+                           'C': lambda x: x } )
+  def test_Subcommands_NoExplicitCompleterTargetSpecified( self, app, *args ):
+    with PatchCompleter( DummyCompleter, 'dummy_filetype' ):
+      subcommands_data = BuildRequest( filetype = 'dummy_filetype' )
+      assert_that( app.post_json( '/defined_subcommands',
+                                  subcommands_data ).json,
+                   contains_exactly( 'A', 'B', 'C' ) )

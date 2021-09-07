@@ -73,7 +73,7 @@ jobs:
         echo -e "import coverage\ncoverage.process_startup()" > $(python -c "print(__import__('sysconfig').get_path('purelib'))")/sitecustomize.py
     - name: Run tests
       if: matrix.benchmark == false
-      run: python3 run_tests.py --no-parallel --quiet
+      run: python3 run_tests.py --quiet
     - name: Run benchmarks
       if: matrix.benchmark == true
       run: python3 benchmark.py --quiet
@@ -118,7 +118,7 @@ jobs:
     - name: Lint
       run: |
         YCM_TESTRUN=1 python3 build.py --clang-completer --clang-tidy --valgrind
-        python3 run_tests.py --valgrind --skip-build --no-flake8 --no-parallel --quiet
+        python3 run_tests.py --valgrind --skip-build --no-flake8 --quiet
 
   windows:
     strategy:
@@ -174,7 +174,7 @@ jobs:
       run: python3 benchmark.py --msvc ${{ matrix.msvc }} --quiet
     - name: Run tests
       if: matrix.benchmark == false
-      run: python3 run_tests.py --msvc ${{ matrix.msvc }} --no-parallel --quiet
+      run: python3 run_tests.py --msvc ${{ matrix.msvc }} --quiet
     - name: Upload coverage data
       if: matrix.benchmark == false
       run: codecov --name ${{ matrix.runs-on }}-${{ matrix.python-arch }} >null

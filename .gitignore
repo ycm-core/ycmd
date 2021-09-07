@@ -88,8 +88,10 @@ third_party/clangd
 
 # Rust
 third_party/rust-analyzer
+ycmd/tests/rust/testdata/common/Cargo.lock
+ycmd/tests/rust/testdata/macro/Cargo.lock
 ycmd/tests/rust/testdata/common/target
-ycmd/tests/rust/testdata/formatting/target
+ycmd/tests/rust/testdata/macro/target
 
 # generic LSP
 third_party/generic_server/node_modules

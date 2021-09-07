@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 ycmd contributors
+# Copyright (C) 2015-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -24,15 +24,17 @@ from hamcrest import ( assert_that,
                        has_entry,
                        matches_regexp )
 from unittest.mock import patch
+from unittest import TestCase
 from pprint import pformat
+import itertools
 import os
-import pytest
 import requests
 
 from ycmd import handlers
 from ycmd.completers.language_server.language_server_completer import (
   ResponseFailedException
 )
+from ycmd.tests.go import setUpModule, tearDownModule # noqa
 from ycmd.tests.go import ( PathToTestFile,
                             SharedYcmd,
                             StartGoCompleterServerInDirectory )
@@ -105,228 +107,6 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
   } )
 
 
-@SharedYcmd
-def Subcommands_DefinedSubcommands_test( app ):
-  subcommands_data = BuildRequest( completer_target = 'go' )
-
-  assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-               contains_inanyorder( 'Format',
-                                    'GetDoc',
-                                    'GetType',
-                                    'RefactorRename',
-                                    'GoTo',
-                                    'GoToDeclaration',
-                                    'GoToDefinition',
-                                    'GoToDocumentOutline',
-                                    'GoToReferences',
-                                    'GoToImplementation',
-                                    'GoToType',
-                                    'GoToSymbol',
-                                    'FixIt',
-                                    'RestartServer',
-                                    'ExecuteCommand' ) )
-
-
-@SharedYcmd
-def Subcommands_ServerNotInitialized_test( app ):
-  filepath = PathToTestFile( 'goto.go' )
-
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'go' ] )
-
-  @patch.object( completer, '_ServerIsInitialized', return_value = False )
-  def Test( app, cmd, arguments, *args ):
-    RunTest( app, {
-      'description': 'Subcommand ' + cmd + ' handles server not ready',
-      'request': {
-        'command': cmd,
-        'line_num': 1,
-        'column_num': 1,
-        'filepath': filepath,
-        'arguments': arguments,
-      },
-      'expect': {
-        'response': requests.codes.internal_server_error,
-        'data': ErrorMatcher( RuntimeError,
-                              'Server is initializing. Please wait.' ),
-      }
-    } )
-
-  Test( app, 'Format', [] )
-  Test( app, 'GetDoc', [] )
-  Test( app, 'GetType', [] )
-  Test( app, 'GoTo', [] )
-  Test( app, 'GoToDeclaration', [] )
-  Test( app, 'GoToDefinition', [] )
-  Test( app, 'GoToType', [] )
-  Test( app, 'FixIt', [] )
-
-
-@SharedYcmd
-def Subcommands_Format_WholeFile_test( app ):
-  # RLS can't execute textDocument/formatting if any file
-  # under the project root has errors, so we need to use
-  # a different project just for formatting.
-  # For further details check https://github.com/go-lang/rls/issues/1397
-  project_dir = PathToTestFile()
-  StartGoCompleterServerInDirectory( app, project_dir )
-
-  filepath = os.path.join( project_dir, 'goto.go' )
-
-  RunTest( app, {
-    'description': 'Formatting is applied on the whole file',
-    'request': {
-      'command': 'Format',
-      'filepath': filepath,
-      'options': {
-        'tab_size': 2,
-        'insert_spaces': True
-      }
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'fixits': contains_exactly( has_entries( {
-          'chunks': contains_exactly(
-            ChunkMatcher( '',
-                          LocationMatcher( filepath, 8, 1 ),
-                          LocationMatcher( filepath, 8, 5 ) ),
-            ChunkMatcher( '\t',
-                          LocationMatcher( filepath, 8, 5 ),
-                          LocationMatcher( filepath, 8, 5 ) ),
-            ChunkMatcher( '',
-                          LocationMatcher( filepath, 12, 1 ),
-                          LocationMatcher( filepath, 12, 5 ) ),
-            ChunkMatcher( '\t',
-                          LocationMatcher( filepath, 12, 5 ),
-                          LocationMatcher( filepath, 12, 5 ) ),
-          )
-        } ) )
-      } )
-    }
-  } )
-
-
-@ExpectedFailure( 'rangeFormat is not yet implemented',
-                  matches_regexp( '\nExpected: <200>\n     but: was <500>\n' ) )
-@SharedYcmd
-def Subcommands_Format_Range_test( app ):
-  project_dir = PathToTestFile()
-  StartGoCompleterServerInDirectory( app, project_dir )
-
-  filepath = os.path.join( project_dir, 'goto.go' )
-
-  RunTest( app, {
-    'description': 'Formatting is applied on some part of the file',
-    'request': {
-      'command': 'Format',
-      'filepath': filepath,
-      'range': {
-        'start': {
-          'line_num': 7,
-          'column_num': 1,
-        },
-        'end': {
-          'line_num': 9,
-          'column_num': 2
-        }
-      },
-      'options': {
-        'tab_size': 4,
-        'insert_spaces': False
-      }
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'fixits': contains_exactly( has_entries( {
-          'chunks': contains_exactly(
-            ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
-                          '\treturn param;\n'
-                          '}\n'
-                          '\n'
-                          'fn \n'
-                          'main()\n'
-                          '                                {\n'
-                          '        unformatted_function( false );\n'
-
-                          '}\n',
-                          LocationMatcher( filepath, 1, 1 ),
-                          LocationMatcher( filepath, 9, 1 ) ),
-          )
-        } ) )
-      } )
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_GetDoc_UnknownType_test( app ):
-  RunTest( app, {
-    'description': 'GetDoc on a unknown type raises an error',
-    'request': {
-      'command': 'GetDoc',
-      'line_num': 2,
-      'column_num': 4,
-      'filepath': PathToTestFile( 'td', 'test.go' ),
-    },
-    'expect': {
-      'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( RuntimeError, 'No documentation available.' )
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_GetDoc_Function_test( app ):
-  RunTest( app, {
-    'description': 'GetDoc on a function returns its type',
-    'request': {
-      'command': 'GetDoc',
-      'line_num': 9,
-      'column_num': 6,
-      'filepath': PathToTestFile( 'td', 'test.go' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entry( 'detailed_info', 'func Hello()\nNow with doc!' ),
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_GetType_UnknownType_test( app ):
-  RunTest( app, {
-    'description': 'GetType on a unknown type raises an error',
-    'request': {
-      'command': 'GetType',
-      'line_num': 2,
-      'column_num': 4,
-      'filepath': PathToTestFile( 'td', 'test.go' ),
-    },
-    'expect': {
-      'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( RuntimeError, 'Unknown type.' )
-    }
-  } )
-
-
-@SharedYcmd
-def Subcommands_GetType_Function_test( app ):
-  RunTest( app, {
-    'description': 'GetType on a function returns its type',
-    'request': {
-      'command': 'GetType',
-      'line_num': 9,
-      'column_num': 6,
-      'filepath': PathToTestFile( 'td', 'test.go' ),
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entry( 'message', 'func Hello()' ),
-    }
-  } )
-
-
 def RunGoToTest( app, command, test ):
   folder = PathToTestFile()
   filepath = PathToTestFile( test[ 'req' ][ 0 ] )
@@ -372,113 +152,334 @@ def RunGoToTest( app, command, test ):
   } )
 
 
-@pytest.mark.parametrize( 'command', [ 'GoToDeclaration',
-                                       'GoToDefinition',
-                                       'GoTo' ] )
-@pytest.mark.parametrize( 'test', [
-    # Struct
-    { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 13, 5 ),
-      'res': ( os.path.join( 'unicode', 'unicode.go' ), 10, 5 ) },
-    # Function
-    { 'req': ( 'goto.go', 8, 5 ), 'res': ( 'goto.go', 3, 6 ) },
-    # Keyword
-    { 'req': ( 'goto.go', 3, 2 ), 'res': 'Cannot jump to location' },
-  ] )
-@SharedYcmd
-def Subcommands_GoTo_test( app, command, test ):
-  RunGoToTest( app, command, test )
+class SubcommandsTest( TestCase ):
+  @SharedYcmd
+  def test_Subcommands_DefinedSubcommands( self, app ):
+    subcommands_data = BuildRequest( completer_target = 'go' )
+
+    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+                 contains_inanyorder( 'Format',
+                                      'GetDoc',
+                                      'GetType',
+                                      'RefactorRename',
+                                      'GoTo',
+                                      'GoToDeclaration',
+                                      'GoToDefinition',
+                                      'GoToDocumentOutline',
+                                      'GoToReferences',
+                                      'GoToImplementation',
+                                      'GoToType',
+                                      'GoToSymbol',
+                                      'FixIt',
+                                      'RestartServer',
+                                      'ExecuteCommand' ) )
 
 
-@pytest.mark.parametrize( 'test', [
-    # Works
-    { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 13, 5 ),
-      'res': ( os.path.join( 'unicode', 'unicode.go' ), 3, 6 ) },
-    # Fails
-    { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 11, 7 ),
-      'res': 'Cannot jump to location' } ] )
-@SharedYcmd
-def Subcommands_GoToType_test( app, test ):
-  RunGoToTest( app, 'GoToType', test )
+  @SharedYcmd
+  def test_Subcommands_ServerNotInitialized( self, app ):
+    filepath = PathToTestFile( 'goto.go' )
 
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'go' ] )
 
-@pytest.mark.parametrize( 'test', [
-    # Works
-    { 'req': ( 'thing.go', 3, 8 ),
-      'res': ( 'thing.go', 7, 6 ) },
-    # Fails
-    { 'req': ( 'thing.go', 12, 7 ),
-      'res': 'Cannot jump to location' } ] )
-@SharedYcmd
-def Subcommands_GoToImplementation_test( app, test ):
-  RunGoToTest( app, 'GoToImplementation', test )
-
-
-@SharedYcmd
-def Subcommands_FixIt_NullResponse_test( app ):
-  filepath = PathToTestFile( 'td', 'test.go' )
-  RunFixItTest( app,
-                'Gopls returned NULL for response[ \'result\' ]',
-                filepath, 1, 1, has_entry( 'fixits', empty() ) )
-
-
-@SharedYcmd
-def Subcommands_FixIt_Simple_test( app ):
-  filepath = PathToTestFile( 'fixit.go' )
-  fixit = has_entries( {
-    'fixits': contains_exactly(
-      has_entries( {
-        'text': "Organize Imports",
-        'chunks': contains_exactly(
-          ChunkMatcher( '',
-                        LocationMatcher( filepath, 2, 1 ),
-                        LocationMatcher( filepath, 3, 1 ) ),
-        ),
-        'kind': 'source.organizeImports',
-      } ),
-    )
-  } )
-  RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
-
-
-@SharedYcmd
-def Subcommands_RefactorRename_test( app ):
-  filepath = PathToTestFile( 'unicode', 'unicode.go' )
-  RunTest( app, {
-    'description': 'RefactorRename on a function renames all its occurences',
-    'request': {
-      'command': 'RefactorRename',
-      'arguments': [ 'xxx' ],
-      'line_num': 10,
-      'column_num': 17,
-      'filepath': filepath
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'fixits': contains_exactly( has_entries( {
-          'text': '',
-          'chunks': contains_exactly(
-            ChunkMatcher( 'xxx',
-                          LocationMatcher( filepath, 3, 6 ),
-                          LocationMatcher( filepath, 3, 10 ) ),
-            ChunkMatcher( 'xxx',
-                          LocationMatcher( filepath, 10, 16 ),
-                          LocationMatcher( filepath, 10, 20 ) ),
-          )
-        } ) )
+    @patch.object( completer, '_ServerIsInitialized', return_value = False )
+    def Test( app, cmd, arguments, *args ):
+      RunTest( app, {
+        'description': 'Subcommand ' + cmd + ' handles server not ready',
+        'request': {
+          'command': cmd,
+          'line_num': 1,
+          'column_num': 1,
+          'filepath': filepath,
+          'arguments': arguments,
+        },
+        'expect': {
+          'response': requests.codes.internal_server_error,
+          'data': ErrorMatcher( RuntimeError,
+                                'Server is initializing. Please wait.' ),
+        }
       } )
-    }
-  } )
+
+    Test( app, 'Format', [] )
+    Test( app, 'GetDoc', [] )
+    Test( app, 'GetType', [] )
+    Test( app, 'GoTo', [] )
+    Test( app, 'GoToDeclaration', [] )
+    Test( app, 'GoToDefinition', [] )
+    Test( app, 'GoToType', [] )
+    Test( app, 'FixIt', [] )
 
 
-@SharedYcmd
-def Subcommands_GoToReferences_test( app ):
-  filepath = os.path.join( 'unicode', 'unicode.go' )
-  test = { 'req': ( filepath, 10, 5 ), 'res': [ ( filepath, 10, 5 ),
-                                                ( filepath, 13, 5 ) ] }
-  RunGoToTest( app, 'GoToReferences', test )
+  @SharedYcmd
+  def test_Subcommands_Format_WholeFile( self, app ):
+    # RLS can't execute textDocument/formatting if any file
+    # under the project root has errors, so we need to use
+    # a different project just for formatting.
+    # For further details check https://github.com/go-lang/rls/issues/1397
+    project_dir = PathToTestFile()
+    StartGoCompleterServerInDirectory( app, project_dir )
+
+    filepath = os.path.join( project_dir, 'goto.go' )
+
+    RunTest( app, {
+      'description': 'Formatting is applied on the whole file',
+      'request': {
+        'command': 'Format',
+        'filepath': filepath,
+        'options': {
+          'tab_size': 2,
+          'insert_spaces': True
+        }
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'fixits': contains_exactly( has_entries( {
+            'chunks': contains_exactly(
+              ChunkMatcher( '',
+                            LocationMatcher( filepath, 8, 1 ),
+                            LocationMatcher( filepath, 8, 5 ) ),
+              ChunkMatcher( '\t',
+                            LocationMatcher( filepath, 8, 5 ),
+                            LocationMatcher( filepath, 8, 5 ) ),
+              ChunkMatcher( '',
+                            LocationMatcher( filepath, 12, 1 ),
+                            LocationMatcher( filepath, 12, 5 ) ),
+              ChunkMatcher( '\t',
+                            LocationMatcher( filepath, 12, 5 ),
+                            LocationMatcher( filepath, 12, 5 ) ),
+            )
+          } ) )
+        } )
+      }
+    } )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @ExpectedFailure(
+    'rangeFormat is not yet implemented',
+    matches_regexp( '\nExpected: <200>\n     but: was <500>\n' ) )
+  @SharedYcmd
+  def test_Subcommands_Format_Range( self, app ):
+    project_dir = PathToTestFile()
+    StartGoCompleterServerInDirectory( app, project_dir )
+
+    filepath = os.path.join( project_dir, 'goto.go' )
+
+    RunTest( app, {
+      'description': 'Formatting is applied on some part of the file',
+      'request': {
+        'command': 'Format',
+        'filepath': filepath,
+        'range': {
+          'start': {
+            'line_num': 7,
+            'column_num': 1,
+          },
+          'end': {
+            'line_num': 9,
+            'column_num': 2
+          }
+        },
+        'options': {
+          'tab_size': 4,
+          'insert_spaces': False
+        }
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'fixits': contains_exactly( has_entries( {
+            'chunks': contains_exactly(
+              ChunkMatcher( 'fn unformatted_function(param: bool) -> bool {\n'
+                            '\treturn param;\n'
+                            '}\n'
+                            '\n'
+                            'fn \n'
+                            'main()\n'
+                            '                                {\n'
+                            '        unformatted_function( false );\n'
+
+                            '}\n',
+                            LocationMatcher( filepath, 1, 1 ),
+                            LocationMatcher( filepath, 9, 1 ) ),
+            )
+          } ) )
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetDoc_UnknownType( self, app ):
+    RunTest( app, {
+      'description': 'GetDoc on a unknown type raises an error',
+      'request': {
+        'command': 'GetDoc',
+        'line_num': 2,
+        'column_num': 4,
+        'filepath': PathToTestFile( 'td', 'test.go' ),
+      },
+      'expect': {
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( RuntimeError, 'No documentation available.' )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetDoc_Function( self, app ):
+    RunTest( app, {
+      'description': 'GetDoc on a function returns its type',
+      'request': {
+        'command': 'GetDoc',
+        'line_num': 9,
+        'column_num': 6,
+        'filepath': PathToTestFile( 'td', 'test.go' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entry( 'detailed_info', 'func Hello()\nNow with doc!' ),
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetType_UnknownType( self, app ):
+    RunTest( app, {
+      'description': 'GetType on a unknown type raises an error',
+      'request': {
+        'command': 'GetType',
+        'line_num': 2,
+        'column_num': 4,
+        'filepath': PathToTestFile( 'td', 'test.go' ),
+      },
+      'expect': {
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( RuntimeError, 'Unknown type.' )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetType_Function( self, app ):
+    RunTest( app, {
+      'description': 'GetType on a function returns its type',
+      'request': {
+        'command': 'GetType',
+        'line_num': 9,
+        'column_num': 6,
+        'filepath': PathToTestFile( 'td', 'test.go' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entry( 'message', 'func Hello()' ),
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoTo( self, app ):
+    for command, test in itertools.product(
+      [ 'GoTo', 'GoToDeclaration', 'GoToDefinition' ],
+      [
+        # Struct
+        { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 13, 5 ),
+          'res': ( os.path.join( 'unicode', 'unicode.go' ), 10, 5 ) },
+        # Function
+        { 'req': ( 'goto.go', 8, 5 ), 'res': ( 'goto.go', 3, 6 ) },
+        # Keyword
+        { 'req': ( 'goto.go', 3, 2 ), 'res': 'Cannot jump to location' },
+      ] ):
+      with self.subTest( command = command, test = test ):
+        RunGoToTest( app, command, test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToType( self, app ):
+    for test in [
+      # Works
+      { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 13, 5 ),
+        'res': ( os.path.join( 'unicode', 'unicode.go' ), 3, 6 ) },
+      # Fails
+      { 'req': ( os.path.join( 'unicode', 'unicode.go' ), 11, 7 ),
+        'res': 'Cannot jump to location' } ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app, 'GoToType', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToImplementation( self, app ):
+    for test in [
+      # Works
+      { 'req': ( 'thing.go', 3, 8 ),
+        'res': ( 'thing.go', 7, 6 ) },
+      # Fails
+      { 'req': ( 'thing.go', 12, 7 ),
+        'res': 'Cannot jump to location' } ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app, 'GoToImplementation', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_FixIt_NullResponse( self, app ):
+    filepath = PathToTestFile( 'td', 'test.go' )
+    RunFixItTest( app,
+                  'Gopls returned NULL for response[ \'result\' ]',
+                  filepath, 1, 1, has_entry( 'fixits', empty() ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_FixIt_Simple( self, app ):
+    filepath = PathToTestFile( 'fixit.go' )
+    fixit = has_entries( {
+      'fixits': contains_exactly(
+        has_entries( {
+          'text': "Organize Imports",
+          'chunks': contains_exactly(
+            ChunkMatcher( '',
+                          LocationMatcher( filepath, 2, 1 ),
+                          LocationMatcher( filepath, 3, 1 ) ),
+          ),
+          'kind': 'source.organizeImports',
+        } ),
+      )
+    } )
+    RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
+
+
+  @SharedYcmd
+  def test_Subcommands_RefactorRename( self, app ):
+    filepath = PathToTestFile( 'unicode', 'unicode.go' )
+    RunTest( app, {
+      'description': 'RefactorRename on a function renames all its occurences',
+      'request': {
+        'command': 'RefactorRename',
+        'arguments': [ 'xxx' ],
+        'line_num': 10,
+        'column_num': 17,
+        'filepath': filepath
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'fixits': contains_exactly( has_entries( {
+            'text': '',
+            'chunks': contains_exactly(
+              ChunkMatcher( 'xxx',
+                            LocationMatcher( filepath, 3, 6 ),
+                            LocationMatcher( filepath, 3, 10 ) ),
+              ChunkMatcher( 'xxx',
+                            LocationMatcher( filepath, 10, 16 ),
+                            LocationMatcher( filepath, 10, 20 ) ),
+            )
+          } ) )
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToReferences( self, app ):
+    filepath = os.path.join( 'unicode', 'unicode.go' )
+    test = { 'req': ( filepath, 10, 5 ), 'res': [ ( filepath, 10, 5 ),
+                                                  ( filepath, 13, 5 ) ] }
+    RunGoToTest( app, 'GoToReferences', test )
