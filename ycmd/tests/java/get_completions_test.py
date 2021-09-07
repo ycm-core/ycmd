@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020 ycmd contributors
+# Copyright (C) 2017-2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -27,12 +27,14 @@ from hamcrest import ( assert_that,
                        has_key,
                        instance_of,
                        is_not )
+from unittest import TestCase
 
 from pprint import pformat
 import requests
 import os
 
 from ycmd import handlers
+from ycmd.tests.java import setUpModule, tearDownModule # noqa
 from ycmd.tests.java import ( DEFAULT_PROJECT_DIR,
                               IsolatedYcmd,
                               PathToTestFile,
@@ -48,6 +50,7 @@ from ycmd.tests.test_utils import ( ClearCompletionsCache,
 from ycmd.utils import ReadFile
 from unittest.mock import patch
 from ycmd.completers.completer import CompletionsChanged
+from ycmd.completers.language_server import language_server_protocol as lsapi
 
 
 def ProjectPath( *args ):
@@ -142,90 +145,30 @@ def WithObjectMethods( *args ):
   return list( PUBLIC_OBJECT_METHODS ) + list( args )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_NoQuery_test( app ):
-  RunTest( app, {
-    'description': 'semantic completion works for builtin types (no query)',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestFactory.java' ),
-      'line_num'  : 27,
-      'column_num': 12,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_items(
-            CompletionEntryMatcher( 'test', 'TestFactory.Bar.test : int', {
-              'kind': 'Field'
-            } ),
-            CompletionEntryMatcher( 'testString',
-                                    'TestFactory.Bar.testString : String',
-                                    {
-                                      'kind': 'Field'
-                                    } )
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_WithQuery_test( app ):
-  RunTest( app, {
-    'description': 'semantic completion works for builtin types (with query)',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestFactory.java' ),
-      'line_num'  : 27,
-      'column_num': 15,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'test', 'TestFactory.Bar.test : int', {
-              'kind': 'Field'
-            } ),
-            CompletionEntryMatcher( 'testString',
-                                    'TestFactory.Bar.testString : String',
-                                    {
-                                      'kind': 'Field'
-                                    } )
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_DetailFromCache_test( app ):
-  for i in range( 0, 2 ):
+class GetCompletionsTest( TestCase ):
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_NoQuery( self, app ):
     RunTest( app, {
-      'description': 'completion works when the elements come from the cache',
+      'description': 'semantic completion works for builtin types (no query)',
       'request': {
         'filetype'  : 'java',
-        'filepath'  : ProjectPath( 'TestLauncher.java' ),
-        'line_num'  : 32,
-        'column_num': 15,
+        'filepath'  : ProjectPath( 'TestFactory.java' ),
+        'line_num'  : 27,
+        'column_num': 12,
       },
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
-          'completion_start_column': 11,
-          'completions': has_item(
-            CompletionEntryMatcher(
-              'doSomethingVaguelyUseful',
-              'AbstractTestWidget.doSomethingVaguelyUseful() : void',
-              {
-                'kind': 'Method',
-                'menu_text': 'doSomethingVaguelyUseful() : void',
-              } )
+          'completions': has_items(
+              CompletionEntryMatcher( 'test', 'TestFactory.Bar.test : int', {
+                'kind': 'Field'
+              } ),
+              CompletionEntryMatcher( 'testString',
+                                      'TestFactory.Bar.testString : String',
+                                      {
+                                        'kind': 'Field'
+                                      } )
           ),
           'errors': empty(),
         } )
@@ -233,266 +176,277 @@ def GetCompletions_DetailFromCache_test( app ):
     } )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_Package_test( app ):
-  RunTest( app, {
-    'description': 'completion works for package statements',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'wobble', 'Wibble.java' ),
-      'line_num'  : 1,
-      'column_num': 18,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 9,
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'com.test.wobble', None, {
-            'kind': 'Module'
-          } ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_Import_Class_test( app ):
-  RunTest( app, {
-    'description': 'completion works for import statements with a single class',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestLauncher.java' ),
-      'line_num'  : 3,
-      'column_num': 34,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 34,
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'Tset', 'com.youcompleteme.testing.Tset', {
-            'menu_text': 'Tset - com.youcompleteme.testing',
-            'kind': 'Class',
-          } )
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_Import_Classes_test( app ):
-  filepath = ProjectPath( 'TestLauncher.java' )
-  RunTest( app, {
-    'description': 'completion works for imports with multiple classes',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : filepath,
-      'line_num'  : 4,
-      'column_num': 52,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 52,
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'A;', None, {
-            'menu_text': 'A - com.test.wobble',
-            'kind': 'Class',
-          } ),
-          CompletionEntryMatcher( 'A_Very_Long_Class_Here;', None, {
-            'menu_text': 'A_Very_Long_Class_Here - com.test.wobble',
-            'kind': 'Class',
-          } ),
-          CompletionEntryMatcher( 'Waggle;', None, {
-            'menu_text': 'Waggle - com.test.wobble',
-            'kind': 'Interface',
-          } ),
-          CompletionEntryMatcher( 'Wibble;', None, {
-            'menu_text': 'Wibble - com.test.wobble',
-            'kind': 'Enum',
-          } ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_Import_ModuleAndClass_test( app ):
-  filepath = ProjectPath( 'TestLauncher.java' )
-  RunTest( app, {
-    'description': 'completion works for imports of classes and modules',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : filepath,
-      'line_num'  : 3,
-      'column_num': 26,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 26,
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'testing.*;', None, {
-            'menu_text': 'com.youcompleteme.testing',
-            'kind': 'Module',
-          } ),
-          CompletionEntryMatcher( 'Test;', None, {
-            'menu_text': 'Test - com.youcompleteme',
-            'kind': 'Class',
-          } ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_WithFixIt_test( app ):
-  filepath = ProjectPath( 'TestFactory.java' )
-  RunTest( app, {
-    'description': 'semantic completion with when additional textEdit',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : filepath,
-      'line_num'  : 19,
-      'column_num': 25,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 22,
-        'completions': contains_inanyorder(
-          CompletionEntryMatcher( 'CUTHBERT',
-            'com.test.wobble.Wibble.CUTHBERT : Wibble',
-            {
-              'kind': 'EnumMember',
-              'extra_data': has_entries( {
-                'fixits': contains_exactly( has_entries( {
-                  'chunks': contains_exactly(
-                    ChunkMatcher( 'Wibble',
-                                  LocationMatcher( filepath, 19, 15 ),
-                                  LocationMatcher( filepath, 19, 21 ) ),
-                    # OK, so it inserts the import
-                    ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
-                                  LocationMatcher( filepath, 1, 18 ),
-                                  LocationMatcher( filepath, 3, 1 ) ),
-                  ),
-                } ) ),
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_WithQuery( self, app ):
+    RunTest( app, {
+      'description': 'semantic completion works for builtin types (with query)',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestFactory.java' ),
+        'line_num'  : 27,
+        'column_num': 15,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'test', 'TestFactory.Bar.test : int', {
+                'kind': 'Field'
               } ),
+              CompletionEntryMatcher( 'testString',
+                                      'TestFactory.Bar.testString : String',
+                                      {
+                                        'kind': 'Field'
+                                      } )
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_DetailFromCache( self, app ):
+    for i in range( 0, 2 ):
+      RunTest( app, {
+        'description': 'completion works when the elements come from the cache',
+        'request': {
+          'filetype'  : 'java',
+          'filepath'  : ProjectPath( 'TestLauncher.java' ),
+          'line_num'  : 32,
+          'column_num': 15,
+        },
+        'expect': {
+          'response': requests.codes.ok,
+          'data': has_entries( {
+            'completion_start_column': 11,
+            'completions': has_item(
+              CompletionEntryMatcher(
+                'doSomethingVaguelyUseful',
+                'AbstractTestWidget.doSomethingVaguelyUseful() : void',
+                {
+                  'kind': 'Method',
+                  'menu_text': 'doSomethingVaguelyUseful() : void',
+                } )
+            ),
+            'errors': empty(),
+          } )
+        },
+      } )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_Package( self, app ):
+    RunTest( app, {
+      'description': 'completion works for package statements',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'wobble', 'Wibble.java' ),
+        'line_num'  : 1,
+        'column_num': 18,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 9,
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'com.test.wobble', None, {
+              'kind': 'Module'
             } ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_RejectMultiLineInsertion_test( app ):
-  filepath = ProjectPath( 'TestLauncher.java' )
-  RunTest( app, {
-    'description': 'completion item discarded when not valid',
-    'request': {
-      'filetype'      : 'java',
-      'filepath'      : filepath,
-      'line_num'      : 28,
-      'column_num'    : 16,
-      'force_semantic': True
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 16,
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'TestLauncher',
-            'com.test.TestLauncher.TestLauncher(int test)',
-            {
-              'kind': 'Constructor'
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_Import_Class( self, app ):
+    RunTest( app, {
+      'description': 'completion works for import '
+                     'statements with a single class',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestLauncher.java' ),
+        'line_num'  : 3,
+        'column_num': 34,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 34,
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'Tset', 'com.youcompleteme.testing.Tset', {
+              'menu_text': 'Tset - com.youcompleteme.testing',
+              'kind': 'Class',
             } )
-          # Note: There would be a suggestion here for the _real_ thing we want,
-          # which is a TestLauncher.Launchable, but this would generate the code
-          # for an anonymous inner class via a completion TextEdit (not
-          # AdditionalTextEdit) which we don't support.
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_UnicodeIdentifier_test( app ):
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
-  RunTest( app, {
-    'description': 'Completion works for unicode identifier',
-    'request': {
-      'filetype'      : 'java',
-      'filepath'      : filepath,
-      'line_num'      : 16,
-      'column_num'    : 35,
-      'force_semantic': True
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 35,
-        'completions': has_items(
-          CompletionEntryMatcher( 'a_test', 'Test.TéstClass.a_test : int', {
-            'kind': 'Field',
-            'detailed_info': 'a_test : int\n\n',
-          } ),
-          CompletionEntryMatcher( 'åtest', 'Test.TéstClass.åtest : boolean', {
-            'kind': 'Field',
-            'detailed_info': 'åtest : boolean\n\n',
-          } ),
-          CompletionEntryMatcher( 'testywesty',
-                                  'Test.TéstClass.testywesty : String',
-                                  {
-                                    'kind': 'Field',
-                                  } ),
-        ),
-        'errors': empty(),
-      } )
-    },
-  } )
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_Import_Classes( self, app ):
+    filepath = ProjectPath( 'TestLauncher.java' )
+    RunTest( app, {
+      'description': 'completion works for imports with multiple classes',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : filepath,
+        'line_num'  : 4,
+        'column_num': 52,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 52,
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'A;', None, {
+              'menu_text': 'A - com.test.wobble',
+              'kind': 'Class',
+            } ),
+            CompletionEntryMatcher( 'A_Very_Long_Class_Here;', None, {
+              'menu_text': 'A_Very_Long_Class_Here - com.test.wobble',
+              'kind': 'Class',
+            } ),
+            CompletionEntryMatcher( 'Waggle;', None, {
+              'menu_text': 'Waggle - com.test.wobble',
+              'kind': 'Interface',
+            } ),
+            CompletionEntryMatcher( 'Wibble;', None, {
+              'menu_text': 'Wibble - com.test.wobble',
+              'kind': 'Enum',
+            } ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_ResolveFailed_test( app ):
-  filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
-                             'src',
-                             'com',
-                             'youcompleteme',
-                             'Test.java' )
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_Import_ModuleAndClass( self, app ):
+    filepath = ProjectPath( 'TestLauncher.java' )
+    RunTest( app, {
+      'description': 'completion works for imports of classes and modules',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : filepath,
+        'line_num'  : 3,
+        'column_num': 26,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 26,
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'testing.*;', None, {
+              'menu_text': 'com.youcompleteme.testing',
+              'kind': 'Module',
+            } ),
+            CompletionEntryMatcher( 'Test;', None, {
+              'menu_text': 'Test - com.youcompleteme',
+              'kind': 'Class',
+            } ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
 
-  from ycmd.completers.language_server import language_server_protocol as lsapi
 
-  def BrokenResolveCompletion( request_id, completion ):
-    return lsapi.BuildRequest( request_id, 'completionItem/FAIL', completion )
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_WithFixIt( self, app ):
+    filepath = ProjectPath( 'TestFactory.java' )
+    RunTest( app, {
+      'description': 'semantic completion with when additional textEdit',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : filepath,
+        'line_num'  : 19,
+        'column_num': 25,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 22,
+          'completions': contains_inanyorder(
+            CompletionEntryMatcher( 'CUTHBERT',
+              'com.test.wobble.Wibble.CUTHBERT : Wibble',
+              {
+                'kind': 'EnumMember',
+                'extra_data': has_entries( {
+                  'fixits': contains_exactly( has_entries( {
+                    'chunks': contains_exactly(
+                      ChunkMatcher( 'Wibble',
+                                    LocationMatcher( filepath, 19, 15 ),
+                                    LocationMatcher( filepath, 19, 21 ) ),
+                      # OK, so it inserts the import
+                      ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
+                                    LocationMatcher( filepath, 1, 18 ),
+                                    LocationMatcher( filepath, 3, 1 ) ),
+                    ),
+                  } ) ),
+                } ),
+              } ),
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
 
-  with patch( 'ycmd.completers.language_server.language_server_protocol.'
-              'ResolveCompletion',
-              side_effect = BrokenResolveCompletion ):
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_RejectMultiLineInsertion( self, app ):
+    filepath = ProjectPath( 'TestLauncher.java' )
+    RunTest( app, {
+      'description': 'completion item discarded when not valid',
+      'request': {
+        'filetype'      : 'java',
+        'filepath'      : filepath,
+        'line_num'      : 28,
+        'column_num'    : 16,
+        'force_semantic': True
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 16,
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'TestLauncher',
+              'com.test.TestLauncher.TestLauncher(int test)',
+              {
+                'kind': 'Constructor'
+              } )
+            # Note: There would be a suggestion here for the _real_ thing we
+            # want, which is a TestLauncher.Launchable, but this would generate
+            # the code for an anonymous inner class via a completion TextEdit
+            # (not AdditionalTextEdit) which we don't support.
+          ),
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_UnicodeIdentifier( self, app ):
+    filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
+                               'src',
+                               'com',
+                               'youcompleteme',
+                               'Test.java' )
     RunTest( app, {
       'description': 'Completion works for unicode identifier',
       'request': {
@@ -527,140 +481,150 @@ def GetCompletions_ResolveFailed_test( app ):
     } )
 
 
-@WithRetry
-@IsolatedYcmd()
-def GetCompletions_ServerNotInitialized_test( app ):
-  filepath = PathToTestFile( 'simple_eclipse_project',
-                             'src',
-                             'com',
-                             'test',
-                             'AbstractTestWidget.java' )
-
-  completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_ResolveFailed( self, app ):
+    filepath = PathToTestFile( DEFAULT_PROJECT_DIR,
+                               'src',
+                               'com',
+                               'youcompleteme',
+                               'Test.java' )
 
 
-  def MockHandleInitializeInPollThread( self, response ):
-    pass
+    def BrokenResolveCompletion( request_id, completion ):
+      return lsapi.BuildRequest( request_id, 'completionItem/FAIL', completion )
+
+    with patch( 'ycmd.completers.language_server.language_server_protocol.'
+                'ResolveCompletion',
+                side_effect = BrokenResolveCompletion ):
+      RunTest( app, {
+        'description': 'Completion works for unicode identifier',
+        'request': {
+          'filetype'      : 'java',
+          'filepath'      : filepath,
+          'line_num'      : 16,
+          'column_num'    : 35,
+          'force_semantic': True
+        },
+        'expect': {
+          'response': requests.codes.ok,
+          'data': has_entries( {
+            'completion_start_column': 35,
+            'completions': has_items(
+              CompletionEntryMatcher( 'a_test', 'Test.TéstClass.a_test : int', {
+                'kind': 'Field',
+                'detailed_info': 'a_test : int\n\n',
+              } ),
+              CompletionEntryMatcher(
+                'åtest', 'Test.TéstClass.åtest : boolean', {
+                  'kind': 'Field',
+                  'detailed_info': 'åtest : boolean\n\n',
+                } ),
+              CompletionEntryMatcher( 'testywesty',
+                                      'Test.TéstClass.testywesty : String',
+                                      {
+                                        'kind': 'Field',
+                                      } ),
+            ),
+            'errors': empty(),
+          } )
+        },
+      } )
 
 
-  with patch.object( completer,
-                     '_HandleInitializeInPollThread',
-                     MockHandleInitializeInPollThread ):
-    RunTest( app, {
-      'description': 'Completion works for unicode identifier',
+  @WithRetry()
+  @IsolatedYcmd()
+  def test_GetCompletions_ServerNotInitialized( self, app ):
+    filepath = PathToTestFile( 'simple_eclipse_project',
+                               'src',
+                               'com',
+                               'test',
+                               'AbstractTestWidget.java' )
+
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
+
+
+    def MockHandleInitializeInPollThread( self, response ):
+      pass
+
+
+    with patch.object( completer,
+                       '_HandleInitializeInPollThread',
+                       MockHandleInitializeInPollThread ):
+      RunTest( app, {
+        'description': 'Completion works for unicode identifier',
+        'request': {
+          'filetype'      : 'java',
+          'filepath'      : filepath,
+          'line_num'      : 16,
+          'column_num'    : 35,
+          'force_semantic': True
+        },
+        'expect': {
+          'response': requests.codes.ok,
+          'data': has_entries( {
+            'errors': empty(),
+            'completions': empty(),
+            'completion_start_column': 6
+          } ),
+        }
+      } )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_MoreThan10_NoResolve_ThenResolve( self, app ):
+    ClearCompletionsCache()
+    request, response = RunTest( app, {
+      'description': "More than 10 candiates after filtering, don't resolve",
       'request': {
-        'filetype'      : 'java',
-        'filepath'      : filepath,
-        'line_num'      : 16,
-        'column_num'    : 35,
-        'force_semantic': True
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
+        'line_num'  : 6,
+        'column_num': 7,
       },
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
+          'completions': has_item(
+            CompletionEntryMatcher(
+              'useAString',
+              'MethodsWithDocumentation.useAString(String s) : void',
+              {
+                'kind': 'Method',
+                # This is the un-resolved info (no documentation)
+                'detailed_info': 'useAString(String s) : void\n\n',
+                'extra_data': has_entries( {
+                  'resolve': instance_of( int )
+                } )
+              }
+            ),
+          ),
+          'completion_start_column': 7,
           'errors': empty(),
-          'completions': empty(),
-          'completion_start_column': 6
-        } ),
-      }
+        } )
+      },
     } )
 
+    # We know the item we want is there, pull out the resolve ID
+    resolve = None
+    for item in response[ 'completions' ]:
+      if item[ 'insertion_text' ] == 'useAString':
+        resolve = item[ 'extra_data' ][ 'resolve' ]
+        break
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_MoreThan10_NoResolve_ThenResolve_test( app ):
-  ClearCompletionsCache()
-  request, response = RunTest( app, {
-    'description': "More than 10 candiates after filtering, don't resolve",
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
-      'line_num'  : 6,
-      'column_num': 7,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item(
-          CompletionEntryMatcher(
-            'useAString',
-            'MethodsWithDocumentation.useAString(String s) : void',
-            {
-              'kind': 'Method',
-              # This is the un-resolved info (no documentation)
-              'detailed_info': 'useAString(String s) : void\n\n',
-              'extra_data': has_entries( {
-                'resolve': instance_of( int )
-              } )
-            }
-          ),
-        ),
-        'completion_start_column': 7,
-        'errors': empty(),
-      } )
-    },
-  } )
+    assert resolve is not None
 
-  # We know the item we want is there, pull out the resolve ID
-  resolve = None
-  for item in response[ 'completions' ]:
-    if item[ 'insertion_text' ] == 'useAString':
-      resolve = item[ 'extra_data' ][ 'resolve' ]
-      break
+    request[ 'resolve' ] = resolve
+    # Do this twice to prove that the request is idempotent
+    for i in range( 2 ):
+      response = app.post_json( '/resolve_completion', request ).json
 
-  assert resolve is not None
+      print( f"Resolve response: { pformat( response ) }" )
 
-  request[ 'resolve' ] = resolve
-  # Do this twice to prove that the request is idempotent
-  for i in range( 2 ):
-    response = app.post_json( '/resolve_completion', request ).json
-
-    print( f"Resolve response: { pformat( response ) }" )
-
-    nl = os.linesep
-    assert_that( response, has_entries( {
-      'completion': CompletionEntryMatcher(
-          'useAString',
-          'MethodsWithDocumentation.useAString(String s) : void',
-          {
-            'kind': 'Method',
-            # This is the resolved info (no documentation)
-            'detailed_info': 'useAString(String s) : void\n'
-                             '\n'
-                             f'Multiple lines of description here.{ nl }'
-                             f'{ nl }'
-                             f' *  **Parameters:**{ nl }'
-                             f'    { nl }'
-                             f'     *  **s** a string'
-          }
-        ),
-      'errors': empty(),
-    } ) )
-
-    # The item is resoled
-    assert_that( response[ 'completion' ], is_not( has_key( 'resolve' ) ) )
-    assert_that( response[ 'completion' ], is_not( has_key( 'item' ) ) )
-
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_FewerThan10_Resolved_test( app ):
-  ClearCompletionsCache()
-  nl = os.linesep
-  request, response = RunTest( app, {
-    'description': "More than 10 candiates after filtering, don't resolve",
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
-      'line_num'  : 6,
-      'column_num': 10,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item(
-          CompletionEntryMatcher(
+      nl = os.linesep
+      assert_that( response, has_entries( {
+        'completion': CompletionEntryMatcher(
             'useAString',
             'MethodsWithDocumentation.useAString(String s) : void',
             {
@@ -675,232 +639,273 @@ def GetCompletions_FewerThan10_Resolved_test( app ):
                                f'     *  **s** a string'
             }
           ),
-        ),
-        'completion_start_column': 7,
         'errors': empty(),
-      } )
-    },
-  } )
-  # All items are resolved
-  assert_that( response[ 'completions' ][ 0 ], is_not( has_key( 'resolve' ) ) )
-  assert_that( response[ 'completions' ][ 0 ], is_not( has_key( 'item' ) ) )
-  assert_that( response[ 'completions' ][ -1 ], is_not( has_key( 'resolve' ) ) )
-  assert_that( response[ 'completions' ][ -1 ], is_not( has_key( 'item' ) ) )
+      } ) )
+
+      # The item is resoled
+      assert_that( response[ 'completion' ], is_not( has_key( 'resolve' ) ) )
+      assert_that( response[ 'completion' ], is_not( has_key( 'item' ) ) )
 
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad_test( app ):
-  ClearCompletionsCache()
-  request, response = RunTest( app, {
-    'description': "More than 10 candiates after filtering, don't resolve",
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
-      'line_num'  : 6,
-      'column_num': 7,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item(
-          CompletionEntryMatcher(
-            'useAString',
-            'MethodsWithDocumentation.useAString(String s) : void',
-            {
-              'kind': 'Method',
-              # This is the un-resolved info (no documentation)
-              'detailed_info': 'useAString(String s) : void\n\n',
-              'extra_data': has_entries( {
-                'resolve': instance_of( int )
-              } )
-            }
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_FewerThan10_Resolved( self, app ):
+    ClearCompletionsCache()
+    nl = os.linesep
+    request, response = RunTest( app, {
+      'description': "More than 10 candiates after filtering, don't resolve",
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
+        'line_num'  : 6,
+        'column_num': 10,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item(
+            CompletionEntryMatcher(
+              'useAString',
+              'MethodsWithDocumentation.useAString(String s) : void',
+              {
+                'kind': 'Method',
+                # This is the resolved info (no documentation)
+                'detailed_info': 'useAString(String s) : void\n'
+                                 '\n'
+                                 f'Multiple lines of description here.{ nl }'
+                                 f'{ nl }'
+                                 f' *  **Parameters:**{ nl }'
+                                 f'    { nl }'
+                                 f'     *  **s** a string'
+              }
+            ),
           ),
-        ),
-        'completion_start_column': 7,
-        'errors': empty(),
-      } )
-    },
-  } )
-
-  # We know the item we want is there, pull out the resolve ID
-  resolve = None
-  for item in response[ 'completions' ]:
-    if item[ 'insertion_text' ] == 'useAString':
-      resolve = item[ 'extra_data' ][ 'resolve' ]
-      break
-
-  assert resolve is not None
-
-  request[ 'resolve' ] = resolve
-  # Use a different position - should mean the cache is not valid for request
-  request[ 'column_num' ] = 20
-  response = app.post_json( '/resolve_completion', request ).json
-
-  print( f"Resolve response: { pformat( response ) }" )
-
-  assert_that( response, has_entries( {
-    'completion': None,
-    'errors': contains_exactly( ErrorMatcher( CompletionsChanged ) )
-  } ) )
+          'completion_start_column': 7,
+          'errors': empty(),
+        } )
+      },
+    } )
+    # All items are resolved
+    assert_that( response[ 'completions' ][ 0 ],
+                 is_not( has_key( 'resolve' ) ) )
+    assert_that( response[ 'completions' ][ 0 ],
+                 is_not( has_key( 'item' ) ) )
+    assert_that( response[ 'completions' ][ -1 ],
+                 is_not( has_key( 'resolve' ) ) )
+    assert_that( response[ 'completions' ][ -1 ],
+                 is_not( has_key( 'item' ) ) )
 
 
 
-@WithRetry
-@UnixOnly
-@SharedYcmd
-def GetCompletions_MoreThan10ForceSemantic_test( app ):
-  ClearCompletionsCache()
-  RunTest( app, {
-    'description': 'When forcing we pass the query, which reduces candidates',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestLauncher.java' ),
-      'line_num'  : 4,
-      'column_num': 15,
-      'force_semantic': True
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'com.youcompleteme.*;', None, {
-            'kind': 'Module',
-            'detailed_info': 'com.youcompleteme\n\n',
-          } ),
-          CompletionEntryMatcher( 'com.youcompleteme.testing.*;', None, {
-            'kind': 'Module',
-            'detailed_info': 'com.youcompleteme.testing\n\n',
-          } ),
-        ),
-        'completion_start_column': 8,
-        'errors': empty(),
-      } )
-    },
-  } )
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_MoreThan10_NoResolve_ThenResolveCacheBad( self, app ):
+    ClearCompletionsCache()
+    request, response = RunTest( app, {
+      'description': "More than 10 candiates after filtering, don't resolve",
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestWithDocumentation.java' ),
+        'line_num'  : 6,
+        'column_num': 7,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item(
+            CompletionEntryMatcher(
+              'useAString',
+              'MethodsWithDocumentation.useAString(String s) : void',
+              {
+                'kind': 'Method',
+                # This is the un-resolved info (no documentation)
+                'detailed_info': 'useAString(String s) : void\n\n',
+                'extra_data': has_entries( {
+                  'resolve': instance_of( int )
+                } )
+              }
+            ),
+          ),
+          'completion_start_column': 7,
+          'errors': empty(),
+        } )
+      },
+    } )
+
+    # We know the item we want is there, pull out the resolve ID
+    resolve = None
+    for item in response[ 'completions' ]:
+      if item[ 'insertion_text' ] == 'useAString':
+        resolve = item[ 'extra_data' ][ 'resolve' ]
+        break
+
+    assert resolve is not None
+
+    request[ 'resolve' ] = resolve
+    # Use a different position - should mean the cache is not valid for request
+    request[ 'column_num' ] = 20
+    response = app.post_json( '/resolve_completion', request ).json
+
+    print( f"Resolve response: { pformat( response ) }" )
+
+    assert_that( response, has_entries( {
+      'completion': None,
+      'errors': contains_exactly( ErrorMatcher( CompletionsChanged ) )
+    } ) )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_ForceAtTopLevel_NoImport_test( app ):
-  RunTest( app, {
-    'description': 'When forcing semantic completion, pass the query to server',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
-      'line_num'  : 30,
-      'column_num': 20,
-      'force_semantic': True,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'TestFactory', None, {
-            'kind': 'Class',
-            'menu_text': 'TestFactory - com.test',
-          } ),
-        ),
-        'completion_start_column': 12,
-        'errors': empty(),
-      } )
-    },
-  } )
 
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_NoForceAtTopLevel_NoImport_test( app ):
-  RunTest( app, {
-    'description': 'When not forcing semantic completion, use no context',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
-      'line_num'  : 30,
-      'column_num': 20,
-      'force_semantic': False,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': contains_exactly(
-          CompletionEntryMatcher( 'TestFactory', '[ID]', {} ),
-        ),
-        'completion_start_column': 12,
-        'errors': empty(),
-      } )
-    },
-  } )
-
-
-@WithRetry
-@SharedYcmd
-def GetCompletions_ForceAtTopLevel_WithImport_test( app ):
-  filepath = ProjectPath( 'TestWidgetImpl.java' )
-  RunTest( app, {
-    'description': 'Top level completions have import FixIts',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : filepath,
-      'line_num'  : 34,
-      'column_num': 16,
-      'force_semantic': True,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completions': has_item(
-          CompletionEntryMatcher( 'InputStreamReader', None, {
-            'kind': 'Class',
-            'menu_text': 'InputStreamReader - java.io',
-            'extra_data': has_entries( {
-              'fixits': contains_exactly( has_entries( {
-                'chunks': contains_exactly(
-                  ChunkMatcher( '\n\nimport java.io.InputStreamReader;\n\n',
-                                LocationMatcher( filepath, 1, 18 ),
-                                LocationMatcher( filepath, 3, 1 ) ),
-                ),
-              } ) ),
+  @WithRetry()
+  @UnixOnly
+  @SharedYcmd
+  def test_GetCompletions_MoreThan10ForceSemantic( self, app ):
+    ClearCompletionsCache()
+    RunTest( app, {
+      'description': 'When forcing we pass the query, which reduces candidates',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestLauncher.java' ),
+        'line_num'  : 4,
+        'column_num': 15,
+        'force_semantic': True
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'com.youcompleteme.*;', None, {
+              'kind': 'Module',
+              'detailed_info': 'com.youcompleteme\n\n',
             } ),
-          } ),
-        ),
-        'completion_start_column': 12,
-        'errors': empty(),
-      } )
-    },
-  } )
+            CompletionEntryMatcher( 'com.youcompleteme.testing.*;', None, {
+              'kind': 'Module',
+              'detailed_info': 'com.youcompleteme.testing\n\n',
+            } ),
+          ),
+          'completion_start_column': 8,
+          'errors': empty(),
+        } )
+      },
+    } )
 
 
-@WithRetry
-@SharedYcmd
-def GetCompletions_UseServerTriggers_test( app ):
-  filepath = ProjectPath( 'TestWidgetImpl.java' )
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_ForceAtTopLevel_NoImport( self, app ):
+    RunTest( app, {
+      'description': 'When forcing semantic completion, '
+                     'pass the query to server',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
+        'line_num'  : 30,
+        'column_num': 20,
+        'force_semantic': True,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'TestFactory', None, {
+              'kind': 'Class',
+              'menu_text': 'TestFactory - com.test',
+            } ),
+          ),
+          'completion_start_column': 12,
+          'errors': empty(),
+        } )
+      },
+    } )
 
-  RunTest( app, {
-    'description': 'We use the semantic triggers from the server (@ here)',
-    'request': {
-      'filetype'  : 'java',
-      'filepath'  : filepath,
-      'line_num'  : 24,
-      'column_num': 7,
-      'force_semantic': False,
-    },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': has_entries( {
-        'completion_start_column': 4,
-        'completions': has_item(
-          CompletionEntryMatcher( 'Override', None, {
-            'kind': 'Interface',
-            'menu_text': 'Override - java.lang',
-          } )
-        )
-      } )
-    }
-  } )
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_NoForceAtTopLevel_NoImport( self, app ):
+    RunTest( app, {
+      'description': 'When not forcing semantic completion, use no context',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
+        'line_num'  : 30,
+        'column_num': 20,
+        'force_semantic': False,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'TestFactory', '[ID]', {} ),
+          ),
+          'completion_start_column': 12,
+          'errors': empty(),
+        } )
+      },
+    } )
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_ForceAtTopLevel_WithImport( self, app ):
+    filepath = ProjectPath( 'TestWidgetImpl.java' )
+    RunTest( app, {
+      'description': 'Top level completions have import FixIts',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : filepath,
+        'line_num'  : 34,
+        'column_num': 16,
+        'force_semantic': True,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item(
+            CompletionEntryMatcher( 'InputStreamReader', None, {
+              'kind': 'Class',
+              'menu_text': 'InputStreamReader - java.io',
+              'extra_data': has_entries( {
+                'fixits': contains_exactly( has_entries( {
+                  'chunks': contains_exactly(
+                    ChunkMatcher( '\n\nimport java.io.InputStreamReader;\n\n',
+                                  LocationMatcher( filepath, 1, 18 ),
+                                  LocationMatcher( filepath, 3, 1 ) ),
+                  ),
+                } ) ),
+              } ),
+            } ),
+          ),
+          'completion_start_column': 12,
+          'errors': empty(),
+        } )
+      },
+    } )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_GetCompletions_UseServerTriggers( self, app ):
+    filepath = ProjectPath( 'TestWidgetImpl.java' )
+
+    RunTest( app, {
+      'description': 'We use the semantic triggers from the server (@ here)',
+      'request': {
+        'filetype'  : 'java',
+        'filepath'  : filepath,
+        'line_num'  : 24,
+        'column_num': 7,
+        'force_semantic': False,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 4,
+          'completions': has_item(
+            CompletionEntryMatcher( 'Override', None, {
+              'kind': 'Interface',
+              'menu_text': 'Override - java.lang',
+            } )
+          )
+        } )
+      }
+    } )

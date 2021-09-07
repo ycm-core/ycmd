@@ -1,4 +1,4 @@
-# Copyright (C) 2020 ycmd contributors
+# Copyright (C) 2021 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -19,9 +19,10 @@ from hamcrest import assert_that, equal_to
 from threading import Event
 import time
 import requests
-import pytest
+import os
+import unittest
 
-from ycmd.tests.client_test import Client_test
+from ycmd.tests.client_test import ClientTest
 from ycmd.utils import StartThread
 
 # Time to wait (int seconds) for all the servers to shutdown. Tweak for the CI
@@ -29,10 +30,10 @@ from ycmd.utils import StartThread
 SUBSERVER_SHUTDOWN_TIMEOUT = 120
 
 
-class Shutdown_test( Client_test ):
+class ShutdownTest( ClientTest ):
 
-  @Client_test.CaptureLogfiles
-  def FromHandlerWithoutSubserver_test( self ):
+  @ClientTest.CaptureLogfiles
+  def test_FromHandlerWithoutSubserver( self ):
     self.Start()
     self.AssertServersAreRunning()
 
@@ -48,9 +49,8 @@ class Shutdown_test( Client_test ):
     self.AssertLogfilesAreRemoved()
 
 
-  @pytest.mark.valgrind_skip
-  @Client_test.CaptureLogfiles
-  def FromHandlerWithSubservers_test( self ):
+  @ClientTest.CaptureLogfiles
+  def test_FromHandlerWithSubservers( self ):
     self.Start()
 
     filetypes = [ 'cpp',
@@ -75,8 +75,8 @@ class Shutdown_test( Client_test ):
     self.AssertLogfilesAreRemoved()
 
 
-  @Client_test.CaptureLogfiles
-  def FromWatchdogWithoutSubserver_test( self ):
+  @ClientTest.CaptureLogfiles
+  def test_FromWatchdogWithoutSubserver( self ):
     self.Start( idle_suicide_seconds = 2, check_interval_seconds = 1 )
     self.AssertServersAreRunning()
 
@@ -84,9 +84,8 @@ class Shutdown_test( Client_test ):
     self.AssertLogfilesAreRemoved()
 
 
-  @pytest.mark.valgrind_skip
-  @Client_test.CaptureLogfiles
-  def FromWatchdogWithSubservers_test( self ):
+  @ClientTest.CaptureLogfiles
+  def test_FromWatchdogWithSubservers( self ):
     all_servers_are_running = Event()
 
     def KeepServerAliveInAnotherThread():
@@ -119,6 +118,16 @@ class Shutdown_test( Client_test ):
     self.AssertLogfilesAreRemoved()
 
 
-def Dummy_test():
-  # Workaround for https://github.com/pytest-dev/pytest-rerunfailures/issues/51
-  assert True
+def load_tests( loader: unittest.TestLoader, tests, pattern ):
+  suite = unittest.TestSuite()
+  test_names = loader.getTestCaseNames( ShutdownTest )
+  if os.environ.get( 'YCM_VALGRIND_RUN' ):
+    def allowed_tests( name: str ):
+      return 'WithoutSubserver' in name
+  else:
+    def allowed_tests( name: str ):
+      return True
+  tests = loader.loadTestsFromNames( filter( allowed_tests, test_names ),
+                                     ShutdownTest )
+  suite.addTests( tests )
+  return suite
