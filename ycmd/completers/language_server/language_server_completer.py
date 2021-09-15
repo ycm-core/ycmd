@@ -808,7 +808,7 @@ class TCPSingleStreamConnection( LanguageServerConnection ):
 
 
   def WriteData( self, data ):
-    assert self._connection_event.isSet()
+    assert self._connection_event.is_set()
     assert self._client_socket
 
     total_sent = 0
@@ -825,7 +825,7 @@ class TCPSingleStreamConnection( LanguageServerConnection ):
 
 
   def ReadData( self, size=-1 ):
-    assert self._connection_event.isSet()
+    assert self._connection_event.is_set()
     assert self._client_socket
 
     chunks = []

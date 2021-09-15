@@ -63,7 +63,7 @@ class DeferredResponse:
 
   def result( self ):
     self._event.wait( timeout = self._timeout )
-    if not self._event.isSet():
+    if not self._event.is_set():
       raise RuntimeError( 'Response Timeout' )
     message = self._message
     if not message[ 'success' ]:
