@@ -1159,7 +1159,8 @@ def Main(): # noqa: C901
 
   if os.geteuid() == 0:
     if args.force_sudo:
-      print( 'Forcing build with root privileges. If it breaks, keep the pieces.' )
+      print( 'Forcing build with root privileges. '
+             'If it breaks, keep the pieces.' )
     else:
       sys.exit( 'This script should not be run with root privileges.' )
 
