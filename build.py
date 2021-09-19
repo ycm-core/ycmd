@@ -1157,7 +1157,7 @@ def DoCmakeBuilds( args ):
 def Main(): # noqa: C901
   args = ParseArguments()
 
-  if os.geteuid() == 0:
+  if platform.system() == "Linux" and os.geteuid() == 0:
     if args.force_sudo:
       print( 'Forcing build with root privileges. '
              'If it breaks, keep the pieces.' )
