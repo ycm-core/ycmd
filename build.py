@@ -931,6 +931,7 @@ def CheckJavaVersion( required_version ):
   try:
     new_env = os.environ.copy()
     new_env.pop( 'JAVA_TOOL_OPTIONS', None )
+    new_env.pop( '_JAVA_OPTIONS', None )
     java_version = int(
       subprocess.check_output(
         [ java, p.join( DIR_OF_THIS_SCRIPT, 'CheckJavaVersion.java' ) ],
