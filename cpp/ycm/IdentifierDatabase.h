@@ -98,12 +98,10 @@ private:
 
 
   // filepath -> ( candidate )
-  using FilepathToCandidates =
-    std::unordered_map < std::string, std::vector< Candidate > >;
+  using FilepathToCandidates = HashMap< std::string, std::vector< Candidate > >;
 
   // filetype -> ( filepath -> ( candidate ) )
-  using FiletypeCandidateMap =
-    std::unordered_map < std::string, FilepathToCandidates >;
+  using FiletypeCandidateMap = HashMap< std::string, FilepathToCandidates >;
 
 
   Repository< Candidate > &candidate_repository_;
