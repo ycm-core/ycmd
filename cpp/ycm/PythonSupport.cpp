@@ -15,6 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+#if defined(_MSC_VER)
+    #include <BaseTsd.h>
+    typedef SSIZE_T ssize_t;
+#endif
+
 #include "PythonSupport.h"
 #include "Candidate.h"
 #include "Repository.h"
