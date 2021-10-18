@@ -101,8 +101,8 @@ class UtilitiesTest( TestCase ):
           side_effect = [ None,
                           ( 5, 0, 0 ),
                           clangd_completer.MIN_SUPPORTED_VERSION,
-                          ( 12, 0, 0 ),
-                          ( 12, 10, 10 ),
+                          ( 13, 0, 0 ),
+                          ( 13, 10, 10 ),
                           ( 100, 100, 100 ) ] )
   def test_ClangdCompleter_CheckClangdVersion( *args ):
     assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
