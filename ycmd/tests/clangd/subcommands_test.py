@@ -480,10 +480,10 @@ def FixIt_Check_SubexprExtract_Resolved( results ):
     'fixits': contains_exactly( has_entries( {
         'text': 'Extract subexpression to variable',
         'chunks': contains_exactly(
-          ChunkMatcher( 'auto dummy = i + 3;\n  ',
+          ChunkMatcher( 'auto placeholder = i + 3;\n  ',
                         LineColMatcher( 84, 3 ),
                         LineColMatcher( 84, 3 ) ),
-          ChunkMatcher( 'dummy',
+          ChunkMatcher( 'placeholder',
                         LineColMatcher( 84, 14 ),
                         LineColMatcher( 84, 21 ) ),
         )
@@ -793,7 +793,7 @@ class SubcommandsTest( TestCase ):
           } ),
       ] },
       # None
-      { 'req': ( 'goto.cc', 1, 1, [ '' ] ), 'res': 'Symbol not found' },
+      { 'req': ( 'goto.cc', 1, 1, [ 'none' ] ), 'res': 'Symbol not found' },
 
       # Note we don't actually have any testdata that has a full index, so we
       # can't test multiple files easily, but that's really a clangd thing, not
