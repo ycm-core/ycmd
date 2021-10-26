@@ -30,47 +30,47 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION 12.0.0 )
+  set( CLANG_VERSION 13.0.0 )
 
   if ( APPLE )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-x86_64-apple-darwin" )
     set( LIBCLANG_SHA256
-         "e3a703b97a01c2a35cbd25498609ec0db5a0e7025077c09efb2f1af273d13fbe" )
+         "61f8a3f93a2cfe809332ee9e7b8b3716d3f31009f1f0e32170ffd10051636233" )
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win64" )
       set( LIBCLANG_SHA256
-           "3d34f5df6270ed69731eb6d9f8e077b6efae3eed39df70a5616007dc29acf5f6" )
+           "071d576d8d0d995c5f6fe2280ab6c63d16636208c9da82a60ac553ceb444428a" )
     else()
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win32" )
       set( LIBCLANG_SHA256
-           "3823025d32ff03f6d010e84f1727f63119f49bcf56309f3e29d8dd08cb7f42ea" )
+           "beb685861b28f98615dd8fe1846dce56ee1c70765a514109de9276a5cb3aa69a" )
     endif()
   elseif ( SYSTEM_IS_FREEBSD )
     if ( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-amd64-unknown-freebsd11" )
+           "libclang-${CLANG_VERSION}-amd64-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "00e4aceec213dc17b82485ee46edce1c2fb5b4742d234ca79fce33ebbff31d93" )
+           "f277b299c395a34cfc44f6e0f802f1818ccff1a7c79bc03d775393dbed45279d" )
     else()
       set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-i386-unknown-freebsd11" )
+           "libclang-${CLANG_VERSION}-i386-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "e94fd35b48dac10e04846fc4a6d1a8b5b2392c20618b9b36b1f6b11f7ec6b64b" )
+           "61df6d6a50c7f5f9480404e3ae6ef2c206075209c1b34f3775caeed1caa9b0df" )
     endif()
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( LIBCLANG_SHA256
-         "5a8007c70b617109c2816543fe8fc9baf0a250a0054063ef624763a97db88808" )
+         "a01151de5f4dedb2a7c497e7a860442ab376b4bb1cb7226158cc138c7cd1f155" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-armv7a-linux-gnueabihf" )
     set( LIBCLANG_SHA256
-         "38b3ac02ae89907a75da159d72567481d2a705c56d41d4fc6e699ab6db13010f" )
+         "ecd2f0d93b8bd05e05726e85722af14643b09f2feaa331a2b2a3804cef797884" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64)" )
     set( LIBCLANG_DIRNAME
          "libclang-${CLANG_VERSION}-x86_64-unknown-linux-gnu" )
     set( LIBCLANG_SHA256
-         "dc7b08d63fcf504fdbcfc5b96c446beee8ee79dc96e8d315666b20030c41e29a" )
+         "8ddd9d3dbc26e2eea572f3fa36f279f8247e2c4c65529872fe52a21321424b68" )
   else()
     message( FATAL_ERROR
       "No prebuilt Clang ${CLANG_VERSION} binaries for this system. "
@@ -118,12 +118,12 @@ if ( USE_CLANG_COMPLETER AND
 
   # We determine PATH_TO_LLVM_ROOT by searching the libclang library path in
   # CMake build folder.
-  file( GLOB_RECURSE PATH_TO_LIBCLANG ${CMAKE_BINARY_DIR}/libclang.* )
-  if ( NOT PATH_TO_LIBCLANG )
+  file( GLOB_RECURSE PATH_TO_LIBCLANG_WITH_SYMLINKS ${CMAKE_BINARY_DIR}/libclang.* )
+  if ( NOT PATH_TO_LIBCLANG_WITH_SYMLINKS )
     message( FATAL_ERROR "Cannot find path to libclang in prebuilt binaries" )
   endif()
   # file( GLOB_RECURSE ... ) returns a list of files. Take the first one.
-  list( GET PATH_TO_LIBCLANG 0 PATH_TO_LIBCLANG )
+  list( GET PATH_TO_LIBCLANG_WITH_SYMLINKS 0 PATH_TO_LIBCLANG  )
   # We know that LLVM root is parent to the directory containing libclang so we
   # need to go up two directories:
   #
@@ -369,11 +369,13 @@ if( LIBCLANG_TARGET )
       COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "${LIBCLANG_DIR}"
     )
   else()
-    add_custom_command(
-      TARGET ${PROJECT_NAME}
-      POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "${LIBCLANG_DIR}"
-    )
+    foreach( LIBCLANG_FILE ${PATH_TO_LIBCLANG_WITH_SYMLINKS} )
+      add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND cp -a ${LIBCLANG_FILE} "${LIBCLANG_DIR}"
+      )
+    endforeach()
   endif()
 endif()
 
