@@ -1016,32 +1016,32 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '413b1d86af75637d5381e6b6613b41e60756ad411d7a22644d1a9d7b1b3b69df' ),
+        '5f4f8612af3f10bb52fd97d6196ac1653802f04f179d2069cf2c1fa861e167b5' ),
       ( 'clangd-{version}-win32',
-        '232157d85a6277976127f07a204e4c43d2c91c35cc4b6620a0d03b8490ebd67c' ) ]
+        '1554db0f7e7a8b1e98746aa2e9f650d753cfbdc4ad5892d4b94725b7701bc635' ) ]
   if OnMac():
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        'aa8c8bc45ff290f146cc520d4b505adf3b68145b226fe60a2ee80af344ef90c6' ) ]
+        '07f8ee76b47a021c1dc646339a0de564682ed3eb38c9af7c621a13462b372234' ) ]
   if OnFreeBSD():
     return [
       ( 'clangd-{version}-amd64-unknown-freebsd13',
-        '562dd61bba882e542eea4974dee8368c5d16db90ba792870465df30ed86d7679' ),
+        'eba47cc50bea3bebd5f8a8d1c8890dd1d93bf5c7759306f56ea6edb7ee9df23e' ),
       ( 'clangd-{version}-i386-unknown-freebsd13',
-        'e3a660c422cc8f2aa04f20ef4e75a228129354a974a66e44c23facac81a82ca3' ) ]
+        'b5c9e316be51a09cb72a0eec865d990877ce1312aff1612b776735a920aeac05' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'dd14bd1114e0b5a2a4064b586216ffdbc292959876afb08cd796c575c69b1d69' ) ]
+        'e4696956476680522f388e1650cd088d6c299ae71c371c397b5cec492b9ced4c' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        '6fb30244ab3d83712742824a49cf1b86e96d87acafb76ce7fe5ee77b976e4776' ) ]
+        'e2e8aa20b7b4d9b3c0955211f42950120d650a4fb4bef3e4140bdf147b903e8e' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '923e1d84e485665312db8f41a2eb9da75c3291ac77d098e27827dd594de224d9' ) ]
+        '5fc913b474a142a1796a598167a1227552eb4346b5f500a0594c876165f408ad' ) ]
   sys.exit( CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                                   platform = 'this system' ) )
 
