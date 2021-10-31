@@ -433,6 +433,12 @@ class TypeScriptCompleter( Completer ):
 
   def GetSubcommandsMap( self ):
     return {
+      'GetIncomingCalls'  : ( lambda self, request_data, args:
+                              self._CallHierarchy( request_data,
+                                                   [ 'Incoming' ] ) ),
+      'GetOutgoingCalls'  : ( lambda self, request_data, args:
+                              self._CallHierarchy( request_data,
+                                                   [ 'Outgoing' ] ) ),
       'RestartServer'     : ( lambda self, request_data, args:
                               self._RestartServer( request_data ) ),
       'StopServer'        : ( lambda self, request_data, args:
@@ -668,6 +674,44 @@ class TypeScriptCompleter( Completer ):
       'file': filename,
       'includeLinePosition': True
     } )
+
+
+  def _CallHierarchy( self, request_data, args ):
+    self._Reload( request_data )
+    prepare_response = self._SendRequest( 'definition', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_codepoint' ]
+    } )
+    if not prepare_response:
+      raise RuntimeError( f'No { args[ 0 ].lower() } calls found.' )
+    assert len( prepare_response ) == 1
+
+    response = self._SendRequest( f'provideCallHierarchy{ args[ 0 ] }Calls', {
+      'file':   request_data[ 'filepath' ],
+      'line':   request_data[ 'line_num' ],
+      'offset': request_data[ 'column_codepoint' ]
+    } )
+
+    goto_response = []
+    for hierarchy_item in response:
+      description = hierarchy_item.get( 'from', hierarchy_item.get( 'to' ) )
+      filepath = description[ 'file' ]
+      start_position = hierarchy_item[ 'fromSpans' ][ 0 ][ 'start' ]
+      goto_line = start_position[ 'line' ]
+      line_value = GetFileLines( request_data, filepath )[ goto_line - 1 ]
+      goto_column = utils.CodepointOffsetToByteOffset(
+        line_value,
+        start_position[ 'offset' ] )
+      goto_response.append( responses.BuildGoToResponse(
+        filepath,
+        goto_line,
+        goto_column,
+        description[ 'name' ] ) )
+
+    if goto_response:
+      return goto_response
+    raise RuntimeError( f'No { args[ 0 ].lower() } calls found.' )
 
 
   def _GoToDefinition( self, request_data ):
