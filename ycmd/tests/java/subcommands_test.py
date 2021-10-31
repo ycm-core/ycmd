@@ -169,6 +169,8 @@ class SubcommandsTest( TestCase ):
                    'GoToDefinition',
                    'GoToDocumentOutline',
                    'GoTo',
+                   'GoToCallers',
+                   'GoToCallees',
                    'GetDoc',
                    'GetType',
                    'GoToImplementation',
@@ -1946,6 +1948,77 @@ class SubcommandsTest( TestCase ):
                      test[ 'request' ][ 'col' ],
                      'GoToImplementation',
                      has_entries( test[ 'response' ] ) )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_Subcommands_GoToCallers( self, app ):
+    for test in [
+      { 'request': { 'line': 6, 'col': 17, 'filepath': TEST_JAVA },
+        'response': [ has_entries( {
+          'line_num': 12,
+          'column_num': 10,
+          'filepath': TEST_JAVA } ) ],
+        'description': 'GoToCallers on a function call.' },
+      { 'request': { 'line': 20, 'col': 16, 'filepath': TEST_JAVA },
+        'response': [ has_entries( {
+          'line_num': 15,
+          'column_num': 41,
+          'filepath': TEST_JAVA } ) ],
+        'description': 'GoToCallers on a class name '
+                       'produces constructor calls' },
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app,
+                     test[ 'description' ],
+                     test[ 'request' ][ 'filepath' ],
+                     test[ 'request' ][ 'line' ],
+                     test[ 'request' ][ 'col' ],
+                     'GoToCallers',
+                     contains_inanyorder( *test[ 'response' ] ) )
+
+
+  @WithRetry()
+  @SharedYcmd
+  def test_Subcommands_GoToCallees( self, app ):
+    for test in [
+      { 'request': { 'line': 26, 'col': 22, 'filepath': TESTLAUNCHER_JAVA },
+        'response': [
+          has_entries( {
+            'filepath': TESTLAUNCHER_JAVA,
+            'line_num': 27,
+            'column_num': 22 } ),
+          has_entries( {
+            'filepath': TESTLAUNCHER_JAVA,
+            'line_num': 27,
+            'column_num': 22 } ),
+          has_entries( {
+            'filepath': TESTLAUNCHER_JAVA,
+            'line_num': 28,
+            'column_num':  5 } ),
+          has_entries( {
+            'filepath': TESTLAUNCHER_JAVA,
+            'line_num': 28,
+            'column_num':  5 } ),
+          has_entries( {
+            'filepath': TESTLAUNCHER_JAVA,
+            'line_num': 28,
+            'column_num': 12 } ),
+          has_entries( {
+            'filepath': TESTLAUNCHER_JAVA,
+            'line_num': 37,
+            'column_num':  5 } ),
+        ],
+        'description': 'Basic GoToCallees test.' }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app,
+                     test[ 'description' ],
+                     test[ 'request' ][ 'filepath' ],
+                     test[ 'request' ][ 'line' ],
+                     test[ 'request' ][ 'col' ],
+                     'GoToCallees',
+                      contains_inanyorder( *test[ 'response' ] ) )
 
 
   @WithRetry()
