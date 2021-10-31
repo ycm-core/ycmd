@@ -143,6 +143,8 @@ class SubcommandsTest( TestCase ):
                                       'GetDoc',
                                       'GetType',
                                       'GoTo',
+                                      'GoToCallees',
+                                      'GoToCallers',
                                       'GoToDeclaration',
                                       'GoToDefinition',
                                       'GoToDocumentOutline',

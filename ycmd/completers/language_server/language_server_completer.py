@@ -50,7 +50,7 @@ MAX_QUEUED_MESSAGES = 250
 
 PROVIDERS_MAP = {
   'codeActionProvider': (
-    lambda self, request_data, args: self.GetCodeActions( request_data, args )
+    lambda self, request_data, args: self.GetCodeActions( request_data )
   ),
   'declarationProvider': (
     lambda self, request_data, args: self.GoTo( request_data,
@@ -1655,6 +1655,7 @@ class LanguageServerCompleter( Completer ):
         lambda self, request_data, args: self._RestartServer( request_data )
       ),
     } )
+
     if hasattr( self, 'GetDoc' ):
       commands[ 'GetDoc' ] = (
         lambda self, request_data, args: self.GetDoc( request_data )
@@ -1663,6 +1664,18 @@ class LanguageServerCompleter( Completer ):
       commands[ 'GetType' ] = (
         lambda self, request_data, args: self.GetType( request_data )
       )
+
+    if ( self._server_capabilities and
+         'callHierarchyProvider' in self._server_capabilities ):
+      commands[ 'GoToCallees' ] = (
+        lambda self, request_data, args:
+            self.CallHierarchy( request_data, [ 'outgoing' ] )
+      )
+      commands[ 'GoToCallers' ] = (
+        lambda self, request_data, args:
+            self.CallHierarchy( request_data, [ 'incoming' ] )
+      )
+
     commands.update( self.GetCustomSubcommands() )
 
     return self._DiscoverSubcommandSupport( commands )
@@ -2357,10 +2370,15 @@ class LanguageServerCompleter( Completer ):
 
   def _GoToRequest( self, request_data, handler ):
     request_id = self.GetConnection().NextRequestId()
-    result = self.GetConnection().GetResponse(
-      request_id,
-      getattr( lsp, handler )( request_id, request_data ),
-      REQUEST_TIMEOUT_COMMAND )[ 'result' ]
+
+    try:
+      result = self.GetConnection().GetResponse(
+        request_id,
+        getattr( lsp, handler )( request_id, request_data ),
+        REQUEST_TIMEOUT_COMMAND )[ 'result' ]
+    except ResponseFailedException:
+      result = None
+
     if not result:
       raise RuntimeError( 'Cannot jump to location' )
     if not isinstance( result, list ):
@@ -2434,7 +2452,61 @@ class LanguageServerCompleter( Completer ):
 
 
 
-  def GetCodeActions( self, request_data, args ):
+  def CallHierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.PrepareCallHierarchy( request_id, request_data )
+    prepare_response = self.GetConnection().GetResponse(
+        request_id,
+        message,
+        REQUEST_TIMEOUT_COMMAND )
+    preparation_item = prepare_response.get( 'result' ) or []
+    if not preparation_item:
+      raise RuntimeError( f'No { args[ 0 ] } calls found.' )
+
+    assert len( preparation_item ) == 1, (
+             'Not available: Multiple hierarchies were received, '
+             'this is not currently supported.' )
+
+    preparation_item = preparation_item[ 0 ]
+
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.CallHierarchy( request_id, args[ 0 ], preparation_item )
+    response = self.GetConnection().GetResponse( request_id,
+                                                 message,
+                                                 REQUEST_TIMEOUT_COMMAND )
+
+    result = response.get( 'result' ) or []
+    goto_response = []
+    for hierarchy_item in result:
+      description = hierarchy_item.get( 'from', hierarchy_item.get( 'to' ) )
+      filepath = lsp.UriToFilePath( description[ 'uri' ] )
+      start_position = hierarchy_item[ 'fromRanges' ][ 0 ][ 'start' ]
+      goto_line = start_position[ 'line' ]
+      try:
+        line_value = GetFileLines( request_data, filepath )[ goto_line ]
+      except IndexError:
+        continue
+      goto_column = utils.CodepointOffsetToByteOffset(
+        line_value,
+        lsp.UTF16CodeUnitsToCodepoints(
+          line_value,
+          start_position[ 'character' ] ) )
+      goto_response.append( responses.BuildGoToResponse(
+        filepath,
+        goto_line + 1,
+        goto_column + 1,
+        description[ 'name' ] ) )
+
+    if goto_response:
+      return goto_response
+    raise RuntimeError( f'No { args[ 0 ] } calls found.' )
+
+
+  def GetCodeActions( self, request_data ):
     """Performs the codeAction request and returns the result as a FixIt
     response."""
     if not self.ServerIsReady():
