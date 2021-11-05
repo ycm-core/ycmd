@@ -234,6 +234,9 @@ class CsharpCompleter( Completer ):
          self._SolutionSubcommand( request_data,
                                    method = '_GoToSymbol',
                                    args = args ) ),
+      'OrganizeImports'                  : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_OrganizeImports' ) ),
       'RefactorRename'                   : ( lambda self, request_data, args:
          self._SolutionSubcommand( request_data,
                                    method = '_RefactorRename',
@@ -689,6 +692,23 @@ class CsharpSolutionCompleter( object ):
     if not message:
       raise RuntimeError( 'No type info available.' )
     return responses.BuildDisplayMessageResponse( message )
+
+
+  def _OrganizeImports( self, request_data ):
+    request = self._DefaultParameters( request_data )
+    request[ 'WantsTextChanges' ] = True
+    result = self._GetResponse( '/fixusings', request )
+    fixit = responses.FixIt(
+      _BuildLocation(
+        request_data,
+        request_data[ 'filepath' ],
+        request_data[ 'line_num' ],
+        request_data[ 'column_codepoint' ] ),
+      _LinePositionSpanTextChangeToFixItChunks(
+        result[ 'Changes' ],
+        request_data[ 'filepath' ],
+        request_data ) )
+    return responses.BuildFixItResponse( [ fixit ] )
 
 
   def _Format( self, request_data ):
