@@ -407,10 +407,24 @@ def ParseArguments():
                                 'specified directory, and do not delete the '
                                 'build output. This is useful for incremental '
                                 'builds, and required for coverage data' )
+
+  # Historically, "verbose" mode was the default and --quiet was added. Now,
+  # quiet is the default (but the argument is still allowed, to avoid breaking
+  # scripts), and --verbose is added to get the full output.
   parser.add_argument( '--quiet',
                        action = 'store_true',
+                       default = True, # This argument is deprecated
                        help = 'Quiet installation mode. Just print overall '
-                              'progress and errors' )
+                              'progress and errors. This is the default, so '
+                              'this flag is actually ignored. Ues --verbose '
+                              'to see more output.' )
+  parser.add_argument( '--verbose',
+                       action = 'store_false',
+                       dest = 'quiet',
+                       help = 'Verbose installation mode; prints output from '
+                              'build operations. Useful for debugging '
+                              'build failures.' )
+
   parser.add_argument( '--skip-build',
                        action = 'store_true',
                        help = "Don't build ycm_core lib, just install deps" )
@@ -1164,22 +1178,37 @@ def Main(): # noqa: C901
     else:
       sys.exit( 'This script should not be run with sudo.' )
 
-  if not args.skip_build:
-    DoCmakeBuilds( args )
-  if args.cs_completer or args.omnisharp_completer or args.all_completers:
-    EnableCsCompleter( args )
-  if args.go_completer or args.gocode_completer or args.all_completers:
-    EnableGoCompleter( args )
-  if args.js_completer or args.tern_completer or args.all_completers:
-    EnableJavaScriptCompleter( args )
-  if args.rust_completer or args.racer_completer or args.all_completers:
-    EnableRustCompleter( args )
-  if args.java_completer or args.all_completers:
-    EnableJavaCompleter( args )
-  if args.ts_completer or args.all_completers:
-    EnableTypeScriptCompleter( args )
-  if args.clangd_completer or args.all_completers:
-    EnableClangdCompleter( args )
+  try:
+    if not args.skip_build:
+      DoCmakeBuilds( args )
+    if args.cs_completer or args.omnisharp_completer or args.all_completers:
+      EnableCsCompleter( args )
+    if args.go_completer or args.gocode_completer or args.all_completers:
+      EnableGoCompleter( args )
+    if args.js_completer or args.tern_completer or args.all_completers:
+      EnableJavaScriptCompleter( args )
+    if args.rust_completer or args.racer_completer or args.all_completers:
+      EnableRustCompleter( args )
+    if args.java_completer or args.all_completers:
+      EnableJavaCompleter( args )
+    if args.ts_completer or args.all_completers:
+      EnableTypeScriptCompleter( args )
+    if args.clangd_completer or args.all_completers:
+      EnableClangdCompleter( args )
+  except:
+    if args.quiet:
+      sys.stderr.write( '\nThe installation failed. Please re-run the command, '
+                        'adding the --verbose flag to see detailed output. If '
+                        'you think this is a bug and you raise an issue, you '
+                        'MUST include the *full verbose* output.\n' )
+      sys.stderr.write( '\n' )
+      import shlex
+      sys.stderr.write( 'For example, run this: '
+                        + shlex.join(
+                            [ sys.executable ] + sys.argv + [ '--verbose' ]
+                          )
+                        + '\n' )
+
 
 
 if __name__ == '__main__':
