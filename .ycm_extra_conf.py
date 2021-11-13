@@ -186,9 +186,6 @@ def PythonSysPath( **kwargs ):
   sys_path = kwargs[ 'sys_path' ]
 
   interpreter_path = kwargs[ 'interpreter_path' ]
-  major_version = subprocess.check_output( [
-    interpreter_path, '-c', 'import sys; print( sys.version_info[ 0 ] )' ]
-  ).rstrip().decode( 'utf8' )
 
   sys_path[ 0:0 ] = [ p.join( DIR_OF_THIS_SCRIPT ),
                       p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
