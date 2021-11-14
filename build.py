@@ -19,6 +19,21 @@ from zipfile import ZipFile
 import tempfile
 import urllib.request
 
+
+class InstallationFailed( Exception ):
+  def __init__( self, message = None, exit_code = 1 ):
+    self.message = message
+    self.exit_code = exit_code
+
+  def Print( self ):
+    if self.message:
+      print( '', file = sys.stderr )
+      print( self.message, file = sys.stderr )
+
+  def Exit( self ):
+    sys.exit( self.exit_code )
+
+
 IS_MSYS = 'MSYS' == os.environ.get( 'MSYSTEM' )
 
 IS_64BIT = sys.maxsize > 2**32
@@ -85,11 +100,11 @@ RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
   'ERROR: the build failed.\n\n'
-  'NOTE: it is *highly* unlikely that this is a bug but rather\n'
-  'that this is a problem with the configuration of your system\n'
-  'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
-  'and if you\'re sure that it is a bug, please raise an issue on the\n'
-  'issue tracker, including the entire output of this script\n'
+  'NOTE: it is *highly* unlikely that this is a bug but rather '
+  'that this is a problem with the configuration of your system '
+  'or a missing dependency. Please carefully read CONTRIBUTING.md '
+  'and if you\'re sure that it is a bug, please raise an issue on the '
+  'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
 CLANGD_VERSION = '13.0.0'
@@ -164,8 +179,8 @@ def FindExecutableOrDie( executable, message ):
   path = FindExecutable( executable )
 
   if not path:
-    sys.exit( f"ERROR: Unable to find executable '{ executable }'. "
-              f"{ message }" )
+    raise InstallationFailed(
+      f"ERROR: Unable to find executable '{ executable }'. { message }" )
 
   return path
 
@@ -249,8 +264,9 @@ def _CheckCall( args, **kwargs ):
       print( "FAILED" )
 
     if exit_message:
-      sys.exit( exit_message )
-    sys.exit( error.returncode )
+      raise InstallationFailed( exit_message )
+
+    raise InstallationFailed( exit_code = error.returncode )
 
 
 def GetGlobalPythonPrefix():
@@ -280,7 +296,8 @@ def GetPossiblePythonLibraryDirectories():
 def FindPythonLibraries():
   include_dir = sysconfig.get_config_var( 'INCLUDEPY' )
   if not p.isfile( p.join( include_dir, 'Python.h' ) ):
-    sys.exit( NO_PYTHON_HEADERS_ERROR.format( include_dir = include_dir ) )
+    raise InstallationFailed(
+      NO_PYTHON_HEADERS_ERROR.format( include_dir = include_dir ) )
 
   library_dirs = GetPossiblePythonLibraryDirectories()
 
@@ -326,10 +343,11 @@ def FindPythonLibraries():
   if static_libraries and not OnWindows():
     dynamic_flag = ( '--enable-framework' if OnMac() else
                      '--enable-shared' )
-    sys.exit( NO_DYNAMIC_PYTHON_ERROR.format( library = static_libraries[ 0 ],
-                                              flag = dynamic_flag ) )
+    raise InstallationFailed(
+      NO_DYNAMIC_PYTHON_ERROR.format( library = static_libraries[ 0 ],
+                                      flag = dynamic_flag ) )
 
-  sys.exit( NO_PYTHON_LIBRARY_ERROR )
+  raise InstallationFailed( NO_PYTHON_LIBRARY_ERROR )
 
 
 def CustomPythonCmakeArgs( args ):
@@ -407,10 +425,24 @@ def ParseArguments():
                                 'specified directory, and do not delete the '
                                 'build output. This is useful for incremental '
                                 'builds, and required for coverage data' )
+
+  # Historically, "verbose" mode was the default and --quiet was added. Now,
+  # quiet is the default (but the argument is still allowed, to avoid breaking
+  # scripts), and --verbose is added to get the full output.
   parser.add_argument( '--quiet',
                        action = 'store_true',
+                       default = True, # This argument is deprecated
                        help = 'Quiet installation mode. Just print overall '
-                              'progress and errors' )
+                              'progress and errors. This is the default, so '
+                              'this flag is actually ignored. Ues --verbose '
+                              'to see more output.' )
+  parser.add_argument( '--verbose',
+                       action = 'store_false',
+                       dest = 'quiet',
+                       help = 'Verbose installation mode; prints output from '
+                              'build operations. Useful for debugging '
+                              'build failures.' )
+
   parser.add_argument( '--skip-build',
                        action = 'store_true',
                        help = "Don't build ycm_core lib, just install deps" )
@@ -463,8 +495,9 @@ def ParseArguments():
   if ( args.system_libclang and
        not args.clang_completer and
        not args.all_completers ):
-    sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
-              '--clang-completer or --all as well.' )
+    raise InstallationFailed(
+      'ERROR: you can\'t pass --system-libclang without also passing '
+      '--clang-completer or --all as well.' )
   return args
 
 
@@ -476,8 +509,9 @@ def FindCmake( args ):
 
   cmake = PathToFirstExistingExecutable( cmake_exe )
   if cmake is None:
-    sys.exit( "ERROR: Unable to find cmake executable in any of"
-              f" { cmake_exe }. CMake is required to build ycmd" )
+    raise InstallationFailed(
+      "ERROR: Unable to find cmake executable in any of"
+      f" { cmake_exe }. CMake is required to build ycmd" )
   return cmake
 
 
@@ -587,8 +621,8 @@ def ExitIfYcmdLibInUseOnWindows():
     open( p.join( ycmd_library ), 'a' ).close()
   except IOError as error:
     if error.errno == errno.EACCES:
-      sys.exit( 'ERROR: ycmd library is currently in use. '
-                'Stop all ycmd instances before compilation.' )
+      raise InstallationFailed( 'ERROR: ycmd library is currently in use. '
+                                'Stop all ycmd instances before compilation.' )
 
 
 def GetCMakeBuildConfiguration( args ):
@@ -1042,8 +1076,9 @@ def GetClangdTarget():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
         '5fc913b474a142a1796a598167a1227552eb4346b5f500a0594c876165f408ad' ) ]
-  sys.exit( CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
-                                                  platform = 'this system' ) )
+  raise InstallationFailed(
+    CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
+                                          platform = 'this system' ) )
 
 
 def DownloadClangd( printer ):
@@ -1074,7 +1109,8 @@ def DownloadClangd( printer ):
     printer( f"Downloading Clangd from { download_url }..." )
     DownloadFileTo( download_url, file_name )
     if not CheckFileIntegrity( file_name, check_sum ):
-      sys.exit( 'ERROR: downloaded Clangd archive does not match checksum.' )
+      raise InstallationFailed(
+        'ERROR: downloaded Clangd archive does not match checksum.' )
 
   printer( f"Extracting Clangd to { CLANGD_OUTPUT_DIR }..." )
   with tarfile.open( file_name ) as package_tar:
@@ -1155,6 +1191,21 @@ def DoCmakeBuilds( args ):
   BuildWatchdogModule( args )
 
 
+def PrintReRunMessage():
+  print( '',
+         'The installation failed; please see above for the actual error. '
+         'In order to get more information, please re-run the command, '
+         'adding the --verbose flag. If you think this is a bug and you '
+         'raise an issue, you MUST include the *full verbose* output.',
+         '',
+         'For example, run:' + shlex.join( [ sys.executable ] +
+                                           sys.argv +
+                                           [ '--verbose' ] ),
+         '',
+         file = sys.stderr,
+         sep = '\n' )
+
+
 def Main(): # noqa: C901
   args = ParseArguments()
 
@@ -1164,22 +1215,34 @@ def Main(): # noqa: C901
     else:
       sys.exit( 'This script should not be run with sudo.' )
 
-  if not args.skip_build:
-    DoCmakeBuilds( args )
-  if args.cs_completer or args.omnisharp_completer or args.all_completers:
-    EnableCsCompleter( args )
-  if args.go_completer or args.gocode_completer or args.all_completers:
-    EnableGoCompleter( args )
-  if args.js_completer or args.tern_completer or args.all_completers:
-    EnableJavaScriptCompleter( args )
-  if args.rust_completer or args.racer_completer or args.all_completers:
-    EnableRustCompleter( args )
-  if args.java_completer or args.all_completers:
-    EnableJavaCompleter( args )
-  if args.ts_completer or args.all_completers:
-    EnableTypeScriptCompleter( args )
-  if args.clangd_completer or args.all_completers:
-    EnableClangdCompleter( args )
+  try:
+    if not args.skip_build:
+      DoCmakeBuilds( args )
+    if args.cs_completer or args.omnisharp_completer or args.all_completers:
+      EnableCsCompleter( args )
+    if args.go_completer or args.gocode_completer or args.all_completers:
+      EnableGoCompleter( args )
+    if args.js_completer or args.tern_completer or args.all_completers:
+      EnableJavaScriptCompleter( args )
+    if args.rust_completer or args.racer_completer or args.all_completers:
+      EnableRustCompleter( args )
+    if args.java_completer or args.all_completers:
+      EnableJavaCompleter( args )
+    if args.ts_completer or args.all_completers:
+      EnableTypeScriptCompleter( args )
+    if args.clangd_completer or args.all_completers:
+      EnableClangdCompleter( args )
+  except InstallationFailed as e:
+    e.Print()
+    if args.quiet:
+      PrintReRunMessage()
+    e.Exit()
+  except Exception as e:
+    if args.quiet:
+      print( f"FAILED with exception { type( e ).__name__ }: { e }" )
+      PrintReRunMessage()
+    else:
+      raise
 
 
 if __name__ == '__main__':
