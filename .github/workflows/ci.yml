@@ -73,10 +73,10 @@ jobs:
         echo -e "import coverage\ncoverage.process_startup()" > $(python -c "print(__import__('sysconfig').get_path('purelib'))")/sitecustomize.py
     - name: Run tests
       if: matrix.benchmark == false
-      run: python3 run_tests.py --quiet
+      run: python3 run_tests.py
     - name: Run benchmarks
       if: matrix.benchmark == true
-      run: python3 benchmark.py --quiet
+      run: python3 benchmark.py
     - name: Send coverage data
       if: matrix.benchmark == false
       run: codecov --name "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests" 1>/dev/null
@@ -175,10 +175,10 @@ jobs:
       shell: bash
     - name: Run benchmarks
       if: matrix.benchmark == true
-      run: python3 benchmark.py --msvc ${{ matrix.msvc }} --quiet
+      run: python3 benchmark.py --msvc ${{ matrix.msvc }}
     - name: Run tests
       if: matrix.benchmark == false
-      run: python3 run_tests.py --msvc ${{ matrix.msvc }} --quiet
+      run: python3 run_tests.py --msvc ${{ matrix.msvc }}
     - name: Upload coverage data
       if: matrix.benchmark == false
       run: codecov --name ${{ matrix.runs-on }}-${{ matrix.python-arch }} >null
