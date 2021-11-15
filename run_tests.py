@@ -286,6 +286,7 @@ def UnittestTests( parsed_args, extra_unittest_args ):
   unittest = [ '-m', 'unittest' ]
   if not prefer_regular:
     unittest.append( 'discover' )
+  unittest.append( '-v' )
 
   subprocess.check_call( executable + unittest + unittest_args, env=env )
 
