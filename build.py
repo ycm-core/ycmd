@@ -377,6 +377,8 @@ def GetGenerator( args ):
     # Studio 16 generator.
     if args.msvc == 16:
       return 'Visual Studio 16'
+    if args.msvc == 17:
+      return 'Visual Studio 17 2022'
     return f"Visual Studio { args.msvc }{ ' Win64' if IS_64BIT else '' }"
   return 'Unix Makefiles'
 
@@ -403,7 +405,7 @@ def ParseArguments():
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
-  parser.add_argument( '--msvc', type = int, choices = [ 15, 16 ],
+  parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
                        default = 16, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--ninja', action = 'store_true',
@@ -518,8 +520,8 @@ def FindCmake( args ):
 def GetCmakeCommonArgs( args ):
   cmake_args = [ '-G', GetGenerator( args ) ]
 
-  # Set the architecture for the Visual Studio 16 generator.
-  if OnWindows() and args.msvc == 16 and not args.ninja and not IS_MSYS:
+  # Set the architecture for the Visual Studio 16/17 generator.
+  if OnWindows() and args.msvc >= 16 and not args.ninja and not IS_MSYS:
     arch = 'x64' if IS_64BIT else 'Win32'
     cmake_args.extend( [ '-A', arch ] )
 

@@ -124,15 +124,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ windows-2019 ]
+        runs-on: [ windows-2022 ]
         benchmark: [ true, false ]
         python-arch: [ 'x64', 'x86' ]
-        msvc: [ 16 ]
+        msvc: [ 17 ]
         exclude:
-          - runs-on: windows-2019
+          - runs-on: windows-2022
             benchmark: true
             python-arch: 'x86'
         include:
+          - runs-on: windows-2019
+            benchmark: false
+            python-arch: 'x64'
+            msvc: 16
           - runs-on: windows-2016
             benchmark: false
             python-arch: 'x64'
