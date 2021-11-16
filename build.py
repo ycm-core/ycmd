@@ -521,8 +521,7 @@ def GetCmakeCommonArgs( args ):
   cmake_args = [ '-G', GetGenerator( args ) ]
 
   # Set the architecture for the Visual Studio 16/17 generator.
-  is_1617 = args.msvc == 16 or args.msvc == 17
-  if OnWindows() and is_1617 and not args.ninja and not IS_MSYS:
+  if OnWindows() and args.msvc >= 16 and not args.ninja and not IS_MSYS:
     arch = 'x64' if IS_64BIT else 'Win32'
     cmake_args.extend( [ '-A', arch ] )
 
