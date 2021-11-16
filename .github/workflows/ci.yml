@@ -92,7 +92,7 @@ jobs:
     - name: Install Python
       uses: deadsnakes/action@v2.1.1
       with:
-        python-version: 3.9
+        python-version: '3.10'
         debug: true
     - name: Install GCC
       run: |
@@ -156,7 +156,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
         architecture: ${{ matrix.python-arch }}
     - name: Install Go
       if: matrix.benchmark == false
