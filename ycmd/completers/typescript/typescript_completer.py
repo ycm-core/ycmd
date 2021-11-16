@@ -207,6 +207,10 @@ class TypeScriptCompleter( Completer ):
     environ = os.environ.copy()
     environ[ 'TSS_LOG' ] = tsserver_log
 
+    # TSServer runs out of memory on larger projects. This is the value that
+    # VSCode uses.
+    environ[ 'NODE_OPTIONS' ] = '--max_old_space_size=3072'
+
     LOGGER.info( 'TSServer log file: %s', self._logfile )
 
     # We need to redirect the error stream to the output one on Windows.
