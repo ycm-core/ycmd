@@ -9,7 +9,7 @@ import os.path as p
 import sys
 import urllib.request
 
-BASE_UNITTEST_ARGS = [ '-cb' ]
+BASE_UNITTEST_ARGS = [ '-cv' ]
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
 DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
@@ -286,7 +286,6 @@ def UnittestTests( parsed_args, extra_unittest_args ):
   unittest = [ '-m', 'unittest' ]
   if not prefer_regular:
     unittest.append( 'discover' )
-  unittest.append( '-v' )
 
   subprocess.check_call( executable + unittest + unittest_args, env=env )
 
