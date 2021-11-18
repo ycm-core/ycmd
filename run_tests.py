@@ -295,7 +295,8 @@ def UnittestTests( parsed_args, extra_unittest_args ):
     unittest.append( 'discover' )
 
   unittest_cmd = executable + unittest + unittest_args
-  print( f"Running unittest:\n{ shlex.join( unittest_cmd ) }",
+  cmd_string = ' '.join( shlex.quote( arg ) for arg in unittest_cmd )
+  print( f"Running unittest:\n{ cmd_string }",
          file = sys.stderr )
   subprocess.check_call( unittest_cmd, env=env )
 

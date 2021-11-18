@@ -1200,9 +1200,10 @@ def PrintReRunMessage():
          'adding the --verbose flag. If you think this is a bug and you '
          'raise an issue, you MUST include the *full verbose* output.',
          '',
-         'For example, run:' + shlex.join( [ sys.executable ] +
-                                           sys.argv +
-                                           [ '--verbose' ] ),
+         'For example, run:' + ' '.join( shlex.quote( arg )
+                                         for arg in [ sys.executable ] +
+                                                    sys.argv +
+                                                    [ '--verbose' ] ),
          '',
          file = sys.stderr,
          sep = '\n' )
