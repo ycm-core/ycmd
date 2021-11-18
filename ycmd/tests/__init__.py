@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from ycmd.utils import ImportAndCheckCore, CORE_COMPATIBLE_STATUS
+if ImportAndCheckCore() != CORE_COMPATIBLE_STATUS:
+  raise RuntimeError( "Could NOT import core!" )
+
 import functools
 import os
 from ycmd.tests.test_utils import ClearCompletionsCache, IsolatedApp, SetUpApp

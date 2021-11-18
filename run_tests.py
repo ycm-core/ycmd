@@ -6,6 +6,7 @@ import os
 import glob
 import subprocess
 import os.path as p
+import shlex
 import sys
 import urllib.request
 
@@ -250,7 +251,12 @@ def UnittestValgrind( parsed_args, extra_unittest_args ):
 
 
 def UnittestTests( parsed_args, extra_unittest_args ):
-  prefer_regular = any( p.isfile( arg ) for arg in extra_unittest_args )
+  # if any extra arg is a specific file, or the '--' token, then assume the
+  # arguments are unittest-aware test selection:
+  #  - don't use discover
+  #  - don't set the pattern to search for
+  prefer_regular = any( arg == '--' or p.isfile( arg )
+                        for arg in extra_unittest_args )
   unittest_args = BASE_UNITTEST_ARGS
 
   if not prefer_regular:
@@ -261,6 +267,7 @@ def UnittestTests( parsed_args, extra_unittest_args ):
 
   if extra_unittest_args:
     unittest_args.extend( extra_unittest_args )
+
   if not ( extra_unittest_args or prefer_regular ):
     unittest_args.append( '-s' )
     unittest_args.append( 'ycmd.tests' )
@@ -287,7 +294,10 @@ def UnittestTests( parsed_args, extra_unittest_args ):
   if not prefer_regular:
     unittest.append( 'discover' )
 
-  subprocess.check_call( executable + unittest + unittest_args, env=env )
+  unittest_cmd = executable + unittest + unittest_args
+  print( f"Running unittest:\n{ shlex.join( unittest_cmd ) }",
+         file = sys.stderr )
+  subprocess.check_call( unittest_cmd, env=env )
 
 
 # On Windows, distutils.spawn.find_executable only works for .exe files

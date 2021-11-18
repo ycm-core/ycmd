@@ -1913,7 +1913,7 @@ class LanguageServerCompleter( Completer ):
         uri = lsp.FilePathToUri( lsp.UriToFilePath( params[ 'uri' ] ) )
       except lsp.InvalidUriException:
         # Ignore diagnostics for URIs we don't recognise
-        LOGGER.exception( 'Ignoring diagnostics for unrecognized URI' )
+        LOGGER.debug( f'Ignoring diagnostics for unrecognized URI: { uri }' )
         return
       with self._latest_diagnostics_mutex:
         self._latest_diagnostics[ uri ] = params[ 'diagnostics' ]
