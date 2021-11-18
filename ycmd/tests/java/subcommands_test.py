@@ -1055,7 +1055,7 @@ class SubcommandsTest( TestCase ):
               ),
             } ),
             has_entries( {
-              'text': 'Generate toString()...',
+              'text': 'Generate toString()',
               'kind': 'source.generate.toString',
               'chunks': contains_exactly(
                 ChunkMatcher( '\n\n@Override\npublic String toString() {'
@@ -1101,10 +1101,6 @@ class SubcommandsTest( TestCase ):
                                'test',
                                'TestFactory.java' )
 
-    # TODO: As there is only one option, we automatically apply it.
-    # In Java case this might not be the right thing. It's a code assist, not a
-    # FixIt really. Perhaps we should change the client to always ask for
-    # confirmation?
     fixits = has_entries( {
       'fixits': contains_inanyorder(
         has_entries( {
@@ -1117,11 +1113,11 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': 'Generate toString()...',
+          'text': 'Generate toString()',
           'kind': 'source.generate.toString',
           'chunks': contains_exactly(
             ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                          '\n\treturn "TestFactory []";\n}',
+                          '\n    return "TestFactory []";\n}',
                           LocationMatcher( filepath, 32, 4 ),
                           LocationMatcher( filepath, 32, 4 ) ),
           ),
@@ -1262,7 +1258,7 @@ class SubcommandsTest( TestCase ):
 
         ACTIONS = [
           has_entries( {
-            'text': "Generate toString()...",
+            'text': "Generate toString()",
             'chunks': instance_of( list ),
           } ),
           has_entries( {
@@ -1421,7 +1417,7 @@ class SubcommandsTest( TestCase ):
                         'chunks': instance_of( list ) } ),
                       has_entries( { 'text': 'Organize imports',
                                      'chunks': instance_of( list ) } ),
-                      has_entries( { 'text': 'Generate toString()...',
+                      has_entries( { 'text': 'Generate toString()',
                                      'chunks': instance_of( list ) } ) ) } ) )
 
 
@@ -1517,11 +1513,11 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': 'Generate toString()...',
+          'text': 'Generate toString()',
           'kind': 'source.generate.toString',
           'chunks': contains_exactly(
             ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                          '\n\treturn "TestFactory []";\n}',
+                          '\n    return "TestFactory []";\n}',
                           LocationMatcher( '', 32, 4 ),
                           LocationMatcher( '', 32, 4 ) ),
           ),
