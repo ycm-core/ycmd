@@ -1052,32 +1052,32 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '5f4f8612af3f10bb52fd97d6196ac1653802f04f179d2069cf2c1fa861e167b5' ),
+        'a9f84b169c53fe27c70f01fc5981f448a67e8507543b759a6d3067f1c71e6525' ),
       ( 'clangd-{version}-win32',
-        '1554db0f7e7a8b1e98746aa2e9f650d753cfbdc4ad5892d4b94725b7701bc635' ) ]
+        'b89a00ee761a56ff187d6960435d9fe4f087c0e2f3f59e68bbce629a51faf48a' ) ]
   if OnMac():
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '07f8ee76b47a021c1dc646339a0de564682ed3eb38c9af7c621a13462b372234' ) ]
+        '113f2e8940f9bcc49e150b233e8ed1119eaedf2e026c80551d719c6cf22b2ec8' ) ]
   if OnFreeBSD():
     return [
       ( 'clangd-{version}-amd64-unknown-freebsd13',
-        'eba47cc50bea3bebd5f8a8d1c8890dd1d93bf5c7759306f56ea6edb7ee9df23e' ),
+        '3e002c0d02eec5cd20cd632352b137d40d0f0ec3c705ddc43c9abfb5510ed665' ),
       ( 'clangd-{version}-i386-unknown-freebsd13',
-        'b5c9e316be51a09cb72a0eec865d990877ce1312aff1612b776735a920aeac05' ) ]
+        '2f9564a67ce4bd981505db0035512d0bddf4d9c1abc02613edcfb2422e4807ad' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'e4696956476680522f388e1650cd088d6c299ae71c371c397b5cec492b9ced4c' ) ]
+        'd6c6b7c94df88b15b465b66593e40c114053871e386d99cae0166e405df269ab' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        'e2e8aa20b7b4d9b3c0955211f42950120d650a4fb4bef3e4140bdf147b903e8e' ) ]
+        '9201d5f5466ac45192ad382cf9624f9a9a578b97ed0e8daa9c77dc6e04665e7a' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '5fc913b474a142a1796a598167a1227552eb4346b5f500a0594c876165f408ad' ) ]
+        'dc0e073a7e57562f6811a70349ff7f05afbb5c151e1e306215c2fc31c468944c' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
