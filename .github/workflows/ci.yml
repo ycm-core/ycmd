@@ -39,10 +39,12 @@ jobs:
         fetch-depth: 0
 
     - uses: actions/cache@v2
-      if: matrix.libclang == true
+      if: matrix.libclang == true && matrix.benchmark == false
       with:
-        key: v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
         restore-keys: |
+          v3-libclang-${{ runner.os }}-
+          v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
           v2-libclang-${{ runner.os }}-
           v1-libclang-${{ runner.os }}-
         path: |
@@ -191,10 +193,12 @@ jobs:
         fetch-depth: 0
 
     - uses: actions/cache@v2
-      if: matrix.libclang == true
+      if: matrix.libclang == true && matrix.benchmark == false
       with:
-        key: v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
         restore-keys: |
+          v3-libclang-${{ runner.os }}-
+          v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
           v2-libclang-${{ runner.os }}-
           v1-libclang-${{ runner.os }}-
         path: |
