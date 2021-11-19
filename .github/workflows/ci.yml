@@ -41,8 +41,9 @@ jobs:
     - uses: actions/cache@v2
       if: matrix.libclang == true
       with:
-        key: v1-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        key: v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
         restore-keys: |
+          v2-libclang-${{ runner.os }}-
           v1-libclang-${{ runner.os }}-
         path: |
           clang_archives
@@ -51,8 +52,9 @@ jobs:
     - uses: actions/cache@v2
       if: matrix.benchmark == false
       with:
-        key: v1-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
         restore-keys: |
+          v2-deps-${{ runner.os }}-
           v1-deps-${{ runner.os }}-
         path: |
           third-party/clangd/cache
@@ -64,8 +66,9 @@ jobs:
     - uses: actions/cache@v2
       if: matrix.benchmark == false
       with:
-        key: v1-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
         restore-keys: |
+          v2-testdeps-${{ runner.os }}-
           v1-testdeps-${{ runner.os }}-
         path: |
           third-party/lombok/cache
@@ -190,8 +193,9 @@ jobs:
     - uses: actions/cache@v2
       if: matrix.libclang == true
       with:
-        key: v1-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        key: v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
         restore-keys: |
+          v2-libclang-${{ runner.os }}-
           v1-libclang-${{ runner.os }}-
         path: |
           clang_archives
@@ -200,8 +204,9 @@ jobs:
     - uses: actions/cache@v2
       if: matrix.benchmark == false
       with:
-        key: v1-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
         restore-keys: |
+          v2-deps-${{ runner.os }}-
           v1-deps-${{ runner.os }}-
         path: |
           third-party/clangd/cache
@@ -213,8 +218,9 @@ jobs:
     - uses: actions/cache@v2
       if: matrix.benchmark == false
       with:
-        key: v1-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
         restore-keys: |
+          v2-testdeps-${{ runner.os }}-
           v1-testdeps-${{ runner.os }}-
         path: |
           third-party/lombok/cache
