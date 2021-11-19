@@ -37,6 +37,41 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - uses: actions/cache@v2
+      if: matrix.libclang == true
+      with:
+        key: v1-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        restore-keys: |
+          v1-libclang-${{ runner.os }}-
+        path: |
+          clang_archives
+      name: Cache libclang
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v1-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        restore-keys: |
+          v1-deps-${{ runner.os }}-
+        path: |
+          third-party/clangd/cache
+          third_party/eclipse.jdt.ls/target/cache
+          third_party/go
+          third_party/omnisharp-roslyn/v[0-9]*
+      name: Cache dependencies
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v1-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        restore-keys: |
+          v1-testdeps-${{ runner.os }}-
+        path: |
+          third-party/lombok/cache
+          ~/.npm
+      name: Cache test deps
+
     - name: Install Java
       if: matrix.benchmark == false
       uses: actions/setup-java@v2
@@ -151,6 +186,41 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - uses: actions/cache@v2
+      if: matrix.libclang == true
+      with:
+        key: v1-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        restore-keys: |
+          v1-libclang-${{ runner.os }}-
+        path: |
+          clang_archives
+      name: Cache libclang
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v1-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        restore-keys: |
+          v1-deps-${{ runner.os }}-
+        path: |
+          third-party/clangd/cache
+          third_party/eclipse.jdt.ls/target/cache
+          third_party/go
+          third_party/omnisharp-roslyn/v[0-9]*
+      name: Cache dependencies
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v1-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        restore-keys: |
+          v1-testdeps-${{ runner.os }}-
+        path: |
+          third-party/lombok/cache
+          ~/.npm
+      name: Cache test deps
+
     - name: Install Java
       if: matrix.benchmark == false
       uses: actions/setup-java@v2
