@@ -36,6 +36,10 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DiagnosticRange.cs" />
+    <Compile Include="MaxDiagnostics.cs" />
+    <Compile Include="Unicode.cs" />
+    <Compile Include="GetDocTestCase.cs" />
     <Compile Include="ContinuousTest.cs" />
     <Compile Include="FixItTestCase.cs" />
     <Compile Include="GetTypeTestCase.cs" />
@@ -43,6 +47,7 @@
     <Compile Include="ImportTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ZeroColumnDiagnostic.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
