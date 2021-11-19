@@ -1052,32 +1052,36 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        'a9f84b169c53fe27c70f01fc5981f448a67e8507543b759a6d3067f1c71e6525' ),
+        'ca4c9b7c0350a936e921b3e3dc6bdd51a6e905d65eac26b23ede7774158d2305' ),
       ( 'clangd-{version}-win32',
-        'b89a00ee761a56ff187d6960435d9fe4f087c0e2f3f59e68bbce629a51faf48a' ) ]
+        'a2eab3a4b23b700a16b9ef3e6b5b122438fcf016ade88dd8e10d1f81bde9386e' ) ]
   if OnMac():
+    if OnArm():
+      return [
+        ( 'clangd-{version}-arm64-apple-darwin',
+          '68be75dbe52893cba5d75486e598e51032f7f67b24c748655aace932152d4421' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '113f2e8940f9bcc49e150b233e8ed1119eaedf2e026c80551d719c6cf22b2ec8' ) ]
+        'eacbe2d7df6e57e6053f60be798e9f64d3e57556a0b2c58cf0c5599fdf9e793d' ) ]
   if OnFreeBSD():
     return [
       ( 'clangd-{version}-amd64-unknown-freebsd13',
-        '3e002c0d02eec5cd20cd632352b137d40d0f0ec3c705ddc43c9abfb5510ed665' ),
+        'bc6a11bd22251f4996290384baa59854b88537ce9105da2c64d0c70992cc548b' ),
       ( 'clangd-{version}-i386-unknown-freebsd13',
-        '2f9564a67ce4bd981505db0035512d0bddf4d9c1abc02613edcfb2422e4807ad' ) ]
+        '5ea931ca15b02c667fc3ad4d08266447b8212a83b43c80e644e3989645d63e2b' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'd6c6b7c94df88b15b465b66593e40c114053871e386d99cae0166e405df269ab' ) ]
+        'f0e9cea316217a40298d48ef81198ac1b41e6686fc7f7631a6ce54dd75a6989e' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        '9201d5f5466ac45192ad382cf9624f9a9a578b97ed0e8daa9c77dc6e04665e7a' ) ]
+        'bb52085decd18621f5c15b884dde6a327e3193b69bfc4b3a49c5f4459242e522' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        'dc0e073a7e57562f6811a70349ff7f05afbb5c151e1e306215c2fc31c468944c' ) ]
+        '10a64c468d1dd2a384e0e5fd4eb2582fd9f1dfa706b6d2d2bb88fb0fbfc2718d' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
