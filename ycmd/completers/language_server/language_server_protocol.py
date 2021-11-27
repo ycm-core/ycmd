@@ -165,6 +165,7 @@ TOKEN_TYPES = [
 
 TOKEN_MODIFIERS = []
 
+
 class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme
   was not supported. Only the file: scheme is supported"""

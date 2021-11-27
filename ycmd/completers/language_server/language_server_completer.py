@@ -1560,22 +1560,13 @@ class LanguageServerCompleter( Completer ):
 
     request_id = self.GetConnection().NextRequestId()
 
-    # Retry up to 3 times to avoid ContentModified errors
-    MAX_RETRY = 3
-    for i in range( MAX_RETRY ):
-      try:
-        response = self._connection.GetResponse(
-          request_id,
-          lsp.SemanticTokens(
-            request_id,
-            request_data ),
-          3 * REQUEST_TIMEOUT_COMPLETION )
-        break
-      except ResponseFailedException as e:
-        if i < ( MAX_RETRY - 1 ) and e.error_code == lsp.Errors.ContentModified:
-          continue
-        else:
-          raise
+    body = lsp.SemanticTokens( request_id, request_data )
+
+    for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
+      response = self._connection.GetResponse(
+        request_id,
+        body,
+        3 * REQUEST_TIMEOUT_COMPLETION )
 
     if response is None:
       return {}
@@ -3478,3 +3469,15 @@ def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
     last_token = token
 
   return tokens
+
+
+def RetryOnFailure( expected_error_codes, num_retries = 3 ):
+  for i in range( num_retries ):
+    try:
+      yield
+      break
+    except ResponseFailedException as e:
+      if i < ( num_retries - 1 ) and e.error_code in expected_error_codes:
+        continue
+      else:
+        raise
