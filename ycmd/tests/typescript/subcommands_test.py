@@ -141,6 +141,8 @@ class SubcommandsTest( TestCase ):
       contains_inanyorder(
         'Format',
         'GoTo',
+        'GoToCallees',
+        'GoToCallers',
         'GoToDeclaration',
         'GoToDefinition',
         'GoToImplementation',
@@ -820,6 +822,48 @@ class SubcommandsTest( TestCase ):
       'expect': {
         'response': requests.codes.internal_server_error,
         'data': ErrorMatcher( RuntimeError, 'Could not find type definition.' )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToCallers( self, app ):
+    RunTest( app, {
+      'description': 'Basic GoToCallers works.',
+      'request': {
+        'command': 'GoToCallers',
+        'line_num': 30,
+        'column_num': 3,
+        'filepath': PathToTestFile( 'test.ts' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': contains_inanyorder(
+          LocationMatcher( PathToTestFile( 'file2.ts' ), 1, 11 ),
+          LocationMatcher( PathToTestFile( 'file3.ts' ), 2,  5 ),
+          LocationMatcher( PathToTestFile( 'test.ts' ), 34,  5 ),
+        )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToCallees( self, app ):
+    filepath = PathToTestFile( 'signatures.ts' )
+    RunTest( app, {
+      'description': 'Basic GoToCallees works.',
+      'request': {
+        'command': 'GoToCallees',
+        'line_num': 53,
+        'column_num': 3,
+        'filepath': filepath,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_items(
+          LocationMatcher( filepath, 56, 15 ),
+          LocationMatcher( filepath, 58, 10 )
+        )
       }
     } )
 

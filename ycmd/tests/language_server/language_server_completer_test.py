@@ -1060,7 +1060,7 @@ class LanguageServerCompleterTest( TestCase ):
                          side_effect = [ fixit_response ] ):
         with patch( 'ycmd.completers.language_server.language_server_protocol.'
                     'CodeAction' ) as code_action:
-          assert_that( completer.GetCodeActions( request_data, [] ),
+          assert_that( completer.GetCodeActions( request_data ),
                        has_entry( 'fixits', empty() ) )
           assert_that(
             # Range passed to lsp.CodeAction.

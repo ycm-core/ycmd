@@ -105,6 +105,8 @@ class SubcommandsTest( TestCase ):
       contains_inanyorder(
         'Format',
         'GoTo',
+        'GoToCallees',
+        'GoToCallers',
         'GoToDeclaration',
         'GoToDefinition',
         'GoToImplementation',
@@ -608,6 +610,27 @@ class SubcommandsTest( TestCase ):
       'expect': {
         'response': requests.codes.ok,
         'data': LocationMatcher( PathToTestFile( 'test.js' ), 1, 7 )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToCallers( self, app ):
+    RunTest( app, {
+      'description': 'Basic GoToCallers works.',
+      'request': {
+        'command': 'GoToCallers',
+        'line_num': 27,
+        'column_num': 3,
+        'filepath': PathToTestFile( 'test.js' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': contains_inanyorder(
+          LocationMatcher( PathToTestFile( 'file2.js' ), 1, 11 ),
+          LocationMatcher( PathToTestFile( 'file3.js' ), 2,  5 ),
+          LocationMatcher( PathToTestFile( 'test.js' ), 31,  5 ),
+        )
       }
     } )
 
