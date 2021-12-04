@@ -158,6 +158,8 @@ FILETYPE_TO_IDENTIFIER_REGEX[ 'elisp' ] = (
   FILETYPE_TO_IDENTIFIER_REGEX[ 'clojure' ] )
 FILETYPE_TO_IDENTIFIER_REGEX[ 'lisp' ] = (
   FILETYPE_TO_IDENTIFIER_REGEX[ 'clojure' ] )
+FILETYPE_TO_IDENTIFIER_REGEX[ 'racket' ] = (
+  FILETYPE_TO_IDENTIFIER_REGEX[ 'scheme' ] )
 
 
 def CommentAndStringRegexForFiletype( filetype ):
