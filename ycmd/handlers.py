@@ -196,8 +196,7 @@ def GetSemanticTokens():
       request_data[ 'filetypes' ] )
     semantic_tokens = filetype_completer.ComputeSemanticTokens( request_data )
   except Exception as exception:
-    LOGGER.exception(
-      'Exception from semantic completer during tokens request' )
+    LOGGER.exception( 'Exception from semantic completer during tokens request' )
     errors = [ BuildExceptionResponse( exception, traceback.format_exc() ) ]
 
   # No fallback for signature help. The general completer is unlikely to be able

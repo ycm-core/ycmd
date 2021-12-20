@@ -1043,6 +1043,7 @@ class LanguageServerCompleter( Completer ):
     self._project_directory = None
     self._settings = {}
     self._extra_conf_dir = None
+    self._semantic_token_atlas = None
 
 
   def GetCompleterName( self ):
@@ -1543,23 +1544,12 @@ class LanguageServerCompleter( Completer ):
     if not self._ServerIsInitialized():
       return {}
 
+    if not self._semantic_token_atlas:
+      return {}
+
     self._UpdateServerWithCurrentFileContents( request_data )
 
-    server_config = self._server_capabilities.get( 'semanticTokensProvider' )
-    if server_config is None:
-      return {}
-
-    atlas = TokenAtlas( server_config[ 'legend' ] )
-
-    server_full_support = server_config.get( 'full' )
-    if server_full_support == {}:
-      server_full_support = True
-
-    if not server_full_support:
-      return {}
-
     request_id = self.GetConnection().NextRequestId()
-
     body = lsp.SemanticTokens( request_id, request_data )
 
     for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
@@ -1574,7 +1564,7 @@ class LanguageServerCompleter( Completer ):
     filename = request_data[ 'filepath' ]
     contents = GetFileLines( request_data, filename )
     result = response.get( 'result' ) or {}
-    tokens = _DecodeSemanticTokens( atlas,
+    tokens = _DecodeSemanticTokens( self._semantic_token_atlas,
                                     result.get( 'data' ) or [],
                                     filename,
                                     contents )
@@ -2291,6 +2281,21 @@ class LanguageServerCompleter( Completer ):
     return server_trigger_characters
 
 
+  def _SetUpSemanticTokenAtlas( self, capabilities: dict ):
+    server_config = capabilities.get( 'semanticTokensProvider' )
+    if server_config is None:
+      return
+
+    server_full_support = server_config.get( 'full' )
+    if server_full_support == {}:
+      server_full_support = True
+
+    if not server_full_support:
+      return
+
+    self._semantic_token_atlas = TokenAtlas( server_config[ 'legend' ] )
+
+
   def _HandleInitializeInPollThread( self, response ):
     """Called within the context of the LanguageServerConnection's message pump
     when the initialize request receives a response."""
@@ -2307,6 +2312,8 @@ class LanguageServerCompleter( Completer ):
 
       self._is_completion_provider = (
           'completionProvider' in self._server_capabilities )
+
+      self._SetUpSemanticTokenAtlas( self._server_capabilities )
 
       if 'textDocumentSync' in self._server_capabilities:
         sync = self._server_capabilities[ 'textDocumentSync' ]
@@ -3404,6 +3411,8 @@ class TokenAtlas:
 
 
 def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
+  # We decode the tokens on the server because that's not blocking the user,
+  # whereas decoding in the client would be.
   assert len( token_data ) % 5 == 0
 
   class Token:
