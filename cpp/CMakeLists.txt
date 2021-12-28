@@ -149,7 +149,7 @@ endif()
 #############################################################################
 
 # Determining the presence of C++17 support in the compiler
-list( FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_17 HAS_CXX17)
+list( FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_17 HAS_CXX17 )
 if( NOT HAS_CXX17 EQUAL -1 )
   set( CPP17_AVAILABLE true)
   if( CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
