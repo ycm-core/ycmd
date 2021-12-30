@@ -361,6 +361,13 @@ target_link_libraries( ${PROJECT_NAME}
 
 if( LIBCLANG_TARGET )
   set( LIBCLANG_DIR "${CMAKE_SOURCE_DIR}/../third_party/clang/lib" )
+  # add rpath to libclang and remove rpath to temporary directory
+  if ( NOT MSVC )
+    set_target_properties( ${PROJECT_NAME} PROPERTIES
+      BUILD_WITH_INSTALL_RPATH ON
+      SKIP_BUILD_RPATH FALSE
+      INSTALL_RPATH ${LIBCLANG_DIR} )
+  endif ()
   # Remove all previous libclang libraries.
   file( GLOB LIBCLANG_FILEPATHS "${LIBCLANG_DIR}/libclang*" )
   foreach( FILEPATH ${LIBCLANG_FILEPATHS} )
