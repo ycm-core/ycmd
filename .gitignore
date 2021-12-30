@@ -109,4 +109,3 @@ third_party/regex-build
 # CMake FetchContent output directories
 cpp/ycm/benchmarks/benchmark/
 cpp/ycm/tests/gmock/
-cpp/absl

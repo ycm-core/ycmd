@@ -16,3 +16,6 @@
 [submodule "third_party/mrab-regex"]
 	path = third_party/mrab-regex
 	url = https://bitbucket.org/mrabarnett/mrab-regex.git
+[submodule "cpp/absl"]
+	path = cpp/absl
+	url = https://github.com/abseil/abseil-cpp
