@@ -313,11 +313,12 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
   def SwitchSourceHeader( self, request_data ):
     request_id = self.GetConnection().NextRequestId()
-    uri = lsp.FilePathToUri(request_data['filepath'])
-    request  = lsp.BuildRequest(request_id, "textDocument/switchSourceHeader", {"uri": uri})
-    response = self.GetConnection().GetResponse(request_id, request, 30)
-    filepath = lsp.UriToFilePath( response['result'] )
-    return responses.BuildGoToResponse(filepath, 1, 1, "switch")
+    uri = lsp.FilePathToUri( request_data[ 'filepath' ] )
+    request  = lsp.BuildRequest( request_id, "textDocument/switchSourceHeader",
+            { "uri": uri } )
+    response = self.GetConnection().GetResponse( request_id, request, 30 )
+    filepath = lsp.UriToFilePath( response[ 'result' ] )
+    return responses.BuildGoToResponse( filepath, 1, 1, "switch" )
 
 
   def ShouldCompleteIncludeStatement( self, request_data ):
