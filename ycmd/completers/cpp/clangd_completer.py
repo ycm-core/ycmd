@@ -301,12 +301,23 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       'GetDocImprecise': (
         lambda self, request_data, args: self.GetDoc( request_data )
       ),
+      'SwitchSourceHeader': (
+        lambda self, request_data, args: self.SwitchSourceHeader( request_data )
+      ),
       # To handle the commands below we need extensions to LSP. One way to
       # provide those could be to use workspace/executeCommand requset.
       # 'GetParent': (
       #   lambda self, request_data, args: self.GetType( request_data )
       # )
     }
+
+  def SwitchSourceHeader( self, request_data ):
+    request_id = self.GetConnection().NextRequestId()
+    uri = lsp.FilePathToUri(request_data['filepath'])
+    request  = lsp.BuildRequest(request_id, "textDocument/switchSourceHeader", {"uri": uri})
+    response = self.GetConnection().GetResponse(request_id, request, 30)
+    filepath = lsp.UriToFilePath( response['result'] )
+    return responses.BuildGoToResponse(filepath, 1, 1, "switch")
 
 
   def ShouldCompleteIncludeStatement( self, request_data ):
