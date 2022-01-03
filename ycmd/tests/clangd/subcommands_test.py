@@ -754,6 +754,16 @@ class SubcommandsTest( TestCase ):
       with self.subTest( test = test, cmd = cmd ):
         RunGoToTest_all( app, 'test-include', cmd, test )
 
+  @SharedYcmd
+  def test_Subcommands_SwitchSourceHeader( self, app ):
+    for test in [
+            { 'req': ( 'switch-source-header/a.cpp', 1, 1 ),
+              'res': ( 'switch-source-header/a.h', 1, 1 ) },
+            { 'req': ( 'switch-source-header/a.h', 1, 1 ),
+              'res': ( 'switch-source-header/a.cpp', 1, 1 ) },
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest_all( app, '', 'SwitchSourceHeader', test )
 
   @SharedYcmd
   def test_Subcommands_GoToReferences( self, app ):
