@@ -47,7 +47,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
                                     LocationMatcher,
-                                    WindowsOnly )
+                                    WindowsOnly,
+                                    MacOnly )
 from ycmd.utils import ImportCore, ReadFile
 ycm_core = ImportCore()
 
@@ -1501,6 +1502,40 @@ int main()
           'completions': has_item(
             CompletionEntryMatcher( 'do_something', 'void' ),
           ),
+          'errors': empty(),
+        } )
+      }
+    } )
+
+
+  # This test is isolated to make sure we trigger c hook for clangd, instead of
+  # fetching completer from cache.
+  @MacOnly
+  @IsolatedYcmd()
+  def test_GetCompletions_objcpp( self, app ):
+    RunTest( app, {
+      'description': 'Completion of Objective-C++ files',
+      'request': {
+        'filetype'  : 'objcpp',
+        'filepath'  : PathToTestFile( 'objc', 'complete-lambdas.mm' ),
+        'compilation_flags': [ '-x', 'objective-c++', '-std=c++11' ],
+        'line_num'  : 14,
+        'column_num': 5,
+        'force_semantic': True,
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completion_start_column': 3,
+          'completions': has_item( has_entries( {
+            'insertion_text':
+            '(id)instanceMethod:(int)value withOther:(int)other',
+            'menu_text':
+            '( id )instanceMethod:(int )value withOther:(int )other',
+            'detailed_info':
+            ' ( id )instanceMethod:(int )value withOther:(int )other\n',
+            'kind':            'FUNCTION',
+          } ) ),
           'errors': empty(),
         } )
       }

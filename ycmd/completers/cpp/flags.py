@@ -365,7 +365,12 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
     return flags
 
   # Libclang has already added `-xcuda` for us.
-  if any( fl.endswith( '.cu' ) or fl.endswith( '.cuh' )
+  if any( fl.lower().endswith( '.cu' ) or fl.lower().endswith( '.cuh' )
+          for fl in reversed( flags ) ):
+    return flags
+
+  # Libclang will add "-x objective-c" and "-x objective-c++" automatically
+  if any( fl.lower().endswith( '.m' ) or fl.lower().endswith( '.mm' )
           for fl in reversed( flags ) ):
     return flags
 
