@@ -53,7 +53,8 @@ def _MakeRelativePathsInFlagsAbsoluteTest( test ):
     contains_exactly( *test[ 'expect' ] ) )
 
 
-def _AddLanguageFlagWhenAppropriateTester( compiler, language_flag = [] ):
+def _AddLanguageFlagWhenAppropriateTester( compiler, filename,
+                                           language_flag = [] ):
   to_removes = [
     [],
     [ '/usr/bin/ccache' ],
@@ -62,11 +63,12 @@ def _AddLanguageFlagWhenAppropriateTester( compiler, language_flag = [] ):
   expected = [ '-foo', '-bar' ]
 
   for to_remove in to_removes:
-    assert_that( [ compiler ] + language_flag + expected,
+    assert_that( [ compiler ] + language_flag + [ '-c', filename ] + expected,
                  equal_to( flags._AddLanguageFlagWhenAppropriate(
-                             to_remove + [ compiler ] + expected,
-                             ShouldAllowWinStyleFlags( to_remove +
-                                                       [ compiler ] +
+                           to_remove + [ compiler, '-c', filename ] + expected,
+                           ShouldAllowWinStyleFlags( to_remove +
+                                                     [ compiler, '-c',
+                                                       filename ] +
                                                        expected ) ) ) )
 
 
@@ -1335,7 +1337,15 @@ class FlagsTest( TestCase ):
     for compiler in [ 'cc', 'gcc', 'clang',
                       '/usr/bin/cc', '/some/other/path', 'some_command' ]:
       with self.subTest( compiler = compiler ):
-        _AddLanguageFlagWhenAppropriateTester( compiler )
+        _AddLanguageFlagWhenAppropriateTester( compiler,  'dummy.c' )
+
+
+  def test_AddLanguageFlagWhenAppropriate_ObjectivCCompiler( self ):
+    for compiler in [ 'cc', 'gcc', 'clang',
+                      '/usr/bin/cc', '/some/other/path', 'some_command' ]:
+      with self.subTest( compiler = compiler ):
+        _AddLanguageFlagWhenAppropriateTester( compiler, 'dummy.m',
+                                               [ '-x', 'objective-c' ] )
 
 
   def test_AddLanguageFlagWhenAppropriate_CppCompiler( self ):
@@ -1346,7 +1356,20 @@ class FlagsTest( TestCase ):
        '/some/other/path++-4.9.3', 'some_command++-5.1',
        '/some/other/path++-4.9.31', 'some_command++-5.10' ]:
       with self.subTest( compiler = compiler ):
-        _AddLanguageFlagWhenAppropriateTester( compiler, [ '-x', 'c++' ] )
+        _AddLanguageFlagWhenAppropriateTester( compiler, 'dummy.cc',
+                                               [ '-x', 'c++' ] )
+
+
+  def test_AddLanguageFlagWhenAppropriate_ObjectiveCppCompiler( self ):
+    for compiler in [ 'c++', 'g++', 'clang++', '/usr/bin/c++',
+       '/some/other/path++', 'some_command++',
+       'c++-5', 'g++-5.1', 'clang++-3.7.3', '/usr/bin/c++-5',
+       'c++-5.11', 'g++-50.1.49', 'clang++-3.12.3', '/usr/bin/c++-10',
+       '/some/other/path++-4.9.3', 'some_command++-5.1',
+       '/some/other/path++-4.9.31', 'some_command++-5.10' ]:
+      with self.subTest( compiler = compiler ):
+        _AddLanguageFlagWhenAppropriateTester( compiler, 'dummy.mm',
+                                               [ '-x', 'objective-c++' ] )
 
 
   def test_CompilationDatabase_NoDatabase( self ):
@@ -1550,6 +1573,76 @@ class FlagsTest( TestCase ):
                             '-Wall',
                             '-x',
                             'cuda' ) )
+
+
+  def test_CompilationDatabase_ObjectiveCLanguageFlags( self ):
+    with TemporaryTestDir() as tmp_dir:
+      compile_commands = [
+        {
+          'directory': tmp_dir,
+          'command': 'clang -Wall {}'.format( './test.m' ),
+          'file': os.path.join( tmp_dir, 'test.m' ),
+        },
+      ]
+
+      with TemporaryClangProject( tmp_dir, compile_commands ):
+        # If we ask for a header file, it returns the equivalent objc file
+        assert_that(
+          flags.Flags().FlagsForFile(
+            os.path.join( tmp_dir, 'test.h' ),
+            add_extra_clang_flags = False )[ 0 ],
+          contains_exactly( 'clang',
+                            '-Wall',
+                            '-x',
+                            'objective-c-header' ) )
+
+      with TemporaryClangProject( tmp_dir, compile_commands ):
+        # If we ask for a header file, it returns the equivalent objc file
+        assert_that(
+          flags.Flags().FlagsForFile(
+            os.path.join( tmp_dir, 'test.m' ),
+            add_extra_clang_flags = False )[ 0 ],
+          contains_exactly( 'clang',
+                            '-x',
+                            'objective-c',
+                            '-Wall' ) )
+
+
+  def test_CompilationDatabase_ObjectiveCppLanguageFlags( self ):
+    with TemporaryTestDir() as tmp_dir:
+      compile_commands = [
+        {
+          'directory': tmp_dir,
+          'command': 'clang++ -Wall {}'.format( './test.mm' ),
+          'file': os.path.join( tmp_dir, 'test.mm' ),
+        },
+      ]
+
+      with TemporaryClangProject( tmp_dir, compile_commands ):
+        # If we ask for a header file, it returns the equivalent objcpp file
+        assert_that(
+          flags.Flags().FlagsForFile(
+            os.path.join( tmp_dir, 'test.h' ),
+            add_extra_clang_flags = False )[ 0 ],
+          contains_exactly( 'clang++',
+                            '-x',
+                            'c++',
+                            '--driver-mode=g++',
+                            '-Wall',
+                            '-x',
+                            'objective-c++-header' ) )
+
+      with TemporaryClangProject( tmp_dir, compile_commands ):
+        # If we ask for a header file, it returns the equivalent objcpp file
+        assert_that(
+          flags.Flags().FlagsForFile(
+            os.path.join( tmp_dir, 'test.mm' ),
+            add_extra_clang_flags = False )[ 0 ],
+          contains_exactly( 'clang++',
+                            '-x',
+                            'objective-c++',
+                            '--driver-mode=g++',
+                            '-Wall' ) )
 
 
   def test_MakeRelativePathsInFlagsAbsolute( self ):

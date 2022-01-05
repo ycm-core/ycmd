@@ -369,6 +369,12 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
           for fl in reversed( flags ) ):
     return flags
 
+  if any( fl.endswith( '.mm' ) for fl in reversed( flags ) ):
+    return [ first_flag, '-x', 'objective-c++' ] + flags[ 1: ]
+
+  if any( fl.endswith( '.m' ) for fl in reversed( flags ) ):
+    return [ first_flag, '-x', 'objective-c' ] + flags[ 1: ]
+
   # NOTE: This is intentionally NOT checking for enable_windows_style_flags.
   #
   # The first flag is now either an absolute path, a Windows style flag or a
