@@ -369,6 +369,11 @@ def _AddLanguageFlagWhenAppropriate( flags, enable_windows_style_flags ):
           for fl in reversed( flags ) ):
     return flags
 
+  # Libclang will add "-x objective-c" and "-x objective-c++" automatically
+  if any( fl.endswith( '.m' ) or fl.endswith( '.mm' )
+          for fl in reversed( flags ) ):
+    return flags
+
   # NOTE: This is intentionally NOT checking for enable_windows_style_flags.
   #
   # The first flag is now either an absolute path, a Windows style flag or a
