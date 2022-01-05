@@ -29,7 +29,8 @@ from pprint import pprint
 from unittest import TestCase
 from ycmd.tests.clang import setUpModule # noqa
 from ycmd.tests.clang import SharedYcmd, IsolatedYcmd, PathToTestFile
-from ycmd.tests.test_utils import BuildRequest, LocationMatcher, RangeMatcher
+from ycmd.tests.test_utils import ( BuildRequest, LocationMatcher,
+                                    RangeMatcher )
 from ycmd.utils import ReadFile
 
 
@@ -390,6 +391,240 @@ int main() {
         'location_extent': RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ),
         'ranges': empty(),
         'text': equal_to( "use of undeclared identifier 'undeclared'" ),
+        'fixit_available': False
+      } ),
+    ) )
+
+
+  @SharedYcmd
+  def test_Diagnostics_ObjectiveC( self, app ):
+    filepath = PathToTestFile( 'objc', 'objc-diags.m' )
+
+    event_data = BuildRequest( filepath = filepath,
+                               contents = ReadFile( filepath ),
+                               event_name = 'FileReadyToParse',
+                               filetype = 'objc',
+                               compilation_flags = [ '-x', 'objective-c' ] )
+
+    response = app.post_json( '/event_notification', event_data ).json
+
+    pprint( response )
+
+    assert_that( response, contains_inanyorder(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 5, 10 ),
+        'location_extent': RangeMatcher( filepath, ( 5, 10 ), ( 5, 12 ) ),
+        'ranges': empty(),
+        'text': equal_to( "string literal must be prefixed by '@'" ),
+        'fixit_available': True
+      } )
+    ) )
+
+
+  @SharedYcmd
+  def test_Diagnostics_ObjectiveCpp( self, app ):
+    filepath = PathToTestFile( 'objc', 'objc-cxx-keyword-identifiers.mm' )
+
+    event_data = BuildRequest( filepath = filepath,
+                               contents = ReadFile( filepath ),
+                               event_name = 'FileReadyToParse',
+                               filetype = 'objcpp',
+                               compilation_flags = [ '-x', 'objective-c++' ] )
+
+    response = app.post_json( '/event_notification', event_data ).json
+
+    pprint( response )
+
+    assert_that( response, contains_inanyorder(
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 7, 7 ),
+        'location_extent': RangeMatcher( filepath, ( 7, 7 ), ( 7, 12 ) ),
+        'ranges': contains_exactly(
+                    RangeMatcher( filepath, ( 7, 3 ), ( 7, 6 ) ) ),
+        'text': equal_to( "expected member name or ';' after declaration "
+                          "specifiers; 'throw' is a keyword in Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 10, 12 ),
+        'location_extent': RangeMatcher( filepath, ( 10, 12 ), ( 10, 17 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 13, 17 ),
+        'location_extent': RangeMatcher( filepath, ( 13, 17 ), ( 13, 22 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 19, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 19, 11 ), ( 19, 14 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'new' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 23, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 23, 11 ), ( 23, 17 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'delete' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 26, 13 ),
+        'location_extent': RangeMatcher( filepath, ( 26, 13 ), ( 26, 16 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'try' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 30, 44 ),
+        'location_extent': RangeMatcher( filepath, ( 30, 44 ), ( 30, 49 ) ),
+        'ranges': contains_exactly(
+                    RangeMatcher( filepath, ( 30, 34 ), ( 30, 37 ) ) ),
+        'text': equal_to( "expected member name or ';' after declaration "
+                          "specifiers; 'throw' is a keyword in Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 32, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 32, 11 ), ( 32, 16 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 33, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 33, 11 ), ( 33, 20 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'constexpr' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 37, 23 ),
+        'location_extent': RangeMatcher( filepath, ( 37, 23 ), ( 37, 26 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'new' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 43, 17 ),
+        'location_extent': RangeMatcher( filepath, ( 43, 17 ), ( 43, 24 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'virtual' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 45, 10 ),
+        'location_extent': RangeMatcher( filepath, ( 45, 10 ), ( 45, 15 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'throw' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 47, 11 ),
+        'location_extent': RangeMatcher( filepath, ( 47, 11 ), ( 47, 16 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'WARNING' ),
+        'location': LocationMatcher( filepath, 40, 17 ),
+        'location_extent': RangeMatcher( filepath, ( 40, 17 ), ( 40, 20 ) ),
+        'ranges': empty(),
+        'text': equal_to( "method definition for 'foo:' not found" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'WARNING' ),
+        'location': LocationMatcher( filepath, 28, 12 ),
+        'location_extent': RangeMatcher( filepath, ( 28, 12 ), ( 28, 15 ) ),
+        'ranges': empty(),
+        'text': equal_to( "class 'Foo' defined without specifying "
+                          "a base class" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 52, 17 ),
+        'location_extent': RangeMatcher( filepath, ( 52, 17 ), ( 52, 22 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'WARNING' ),
+        'location': LocationMatcher( filepath, 10, 12 ),
+        'location_extent': RangeMatcher( filepath, ( 10, 12 ), ( 10, 17 ) ),
+        'ranges': empty(),
+        'text': equal_to( "class 'class' defined without specifying "
+                          "a base class" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 55, 22 ),
+        'location_extent': RangeMatcher( filepath, ( 55, 22 ), ( 55, 27 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 59, 22 ),
+        'location_extent': RangeMatcher( filepath, ( 59, 22 ), ( 59, 32 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'const_cast' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 60, 25 ),
+        'location_extent': RangeMatcher( filepath, ( 60, 25 ), ( 60, 30 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'class' is a keyword in "
+                          "Objective-C++" ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': equal_to( 'ERROR' ),
+        'location': LocationMatcher( filepath, 64, 19 ),
+        'location_extent': RangeMatcher( filepath, ( 64, 19 ), ( 64, 25 ) ),
+        'ranges': empty(),
+        'text': equal_to( "expected identifier; 'delete' is a keyword in "
+                          "Objective-C++" ),
         'fixit_available': False
       } ),
     ) )
