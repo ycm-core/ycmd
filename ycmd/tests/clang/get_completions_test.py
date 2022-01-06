@@ -47,8 +47,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
                                     LocationMatcher,
-                                    WindowsOnly,
-                                    MacOnly )
+                                    WindowsOnly )
 from ycmd.utils import ImportCore, ReadFile
 ycm_core = ImportCore()
 
@@ -1510,7 +1509,6 @@ int main()
 
   # This test is isolated to make sure we trigger c hook for clangd, instead of
   # fetching completer from cache.
-  @MacOnly
   @IsolatedYcmd()
   def test_GetCompletions_objcpp( self, app ):
     RunTest( app, {
