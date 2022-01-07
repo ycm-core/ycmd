@@ -63,13 +63,13 @@ def _AddLanguageFlagWhenAppropriateTester( compiler, filename,
   expected = [ '-foo', '-bar' ]
 
   for to_remove in to_removes:
-    assert_that( [ compiler ] + language_flag + [ '-c', filename ] + expected,
+    assert_that( [ compiler ] + language_flag + expected + [ filename ],
                  equal_to( flags._AddLanguageFlagWhenAppropriate(
-                           to_remove + [ compiler, '-c', filename ] + expected,
+                           to_remove + [ compiler ] + expected + [ filename ],
                            ShouldAllowWinStyleFlags( to_remove +
-                                                     [ compiler, '-c',
-                                                       filename ] +
-                                                       expected ) ) ) )
+                                                     [ compiler ] +
+                                                     expected +
+                                                     [ filename ] ) ) ) )
 
 
 class FlagsTest( TestCase ):
