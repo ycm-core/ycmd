@@ -591,7 +591,8 @@ class SubcommandsTest( TestCase ):
                                                'GoToReferences',
                                                'GoToSymbol',
                                                'RefactorRename',
-                                               'RestartServer' ] ) )
+                                               'RestartServer',
+                                               'SwitchSourceHeader' ] ) )
         },
         'route': '/defined_subcommands',
     } )
