@@ -1,3 +1,21 @@
+# https://blog.mergify.com/strict-mode-deprecation/
+queue_rules:
+  - name: default
+    # These define the conditions to get out of the merge queue
+    conditions:
+      - status-success=macos-10.15 - C++ Benchmark
+      - status-success=macos-10.15 - test run
+      - status-success=ubuntu-20.04 - C++ Benchmark
+      - status-success=ubuntu-20.04 - without libclang completer - test run
+      - status-success=ubuntu-20.04 - with Clang compiler - test run
+      - status-success=ubuntu-20.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 15 x64 - test run
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+
 pull_request_rules:
   - name: Automatic merge on Azure Pipelines and Reviewable successes
     conditions:
@@ -17,9 +35,9 @@ pull_request_rules:
       - status-success=Windows MSVC 17 x64 - C++ Benchmark
       - status-success=code-review/reviewable
     actions:
-      merge:
+      queue:
         method: merge
-        strict: smart
+        name: default
       comment:
         message: Thanks for sending a PR!
   - name: Manual merge on Azure Pipelines and Maintainer Override
@@ -43,8 +61,8 @@ pull_request_rules:
 
       - label="Ship It!"
     actions:
-      merge:
+      queue:
         method: merge
-        strict: smart
+        name: default
       comment:
         message: Thanks for sending a PR!
