@@ -115,6 +115,20 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'See the YCM docs for details on how to use a custom Clangd.' )
 
 
+def FindLatestMSVC():
+    import winreg
+    aReg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+    msvc = None
+    for i in [17, 16, 15]:
+        try:
+            aKey = winreg.OpenKey(aReg, rf'SOFTWARE\Microsoft\VisualStudio\{i}.0')
+            print(f"Found {i}")
+            msvc = i
+            break
+        except FileNotFoundError:
+            pass
+    return msvc
+
 def RemoveDirectory( directory ):
   try_number = 0
   max_tries = 10
@@ -409,9 +423,16 @@ def ParseArguments():
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
-  parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
-                       default = 16, help = 'Choose the Microsoft Visual '
-                       'Studio version (default: %(default)s).' )
+  if OnWindows():
+      latest_msvc = FindLatestMSVC()
+      if latest_msvc is None:
+          # TODO: raise?
+          # raise FileNotFoundError("Could not find a valid MSVC version")
+          latest_msvc = 16
+      parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
+                          default=latest_msvc,
+                          help= 'Choose the Microsoft Visual Studio version '
+                                '(default: %(default)s).' )
   parser.add_argument( '--ninja', action = 'store_true',
                        help = 'Use Ninja build system.' )
   parser.add_argument( '--all',
