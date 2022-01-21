@@ -302,7 +302,8 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
         'symbolKind': {
           'valueSet': list( range( 1, len( SYMBOL_KIND ) ) ),
         }
-      }
+      },
+      'workspaceFolders': True,
     },
     'textDocument': {
       'codeAction': {
@@ -378,7 +379,17 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
     'capabilities': UpdateDict( capabilities, extra_capabilities ),
+    'workspaceFolders': WorkspaceFolders( project_directory ),
   } )
+
+
+def WorkspaceFolders( *args ):
+  return [
+    {
+      'url': FilePathToUri( f ),
+      'name': os.path.basename( f )
+    } for f in args
+  ]
 
 
 def Initialized():
