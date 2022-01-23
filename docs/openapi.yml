@@ -372,6 +372,10 @@ definitions:
         $ref: "#/definitions/LineNumber"
       column_num:
         $ref: "#/definitions/ColumnNumber"
+      file_only:
+        type: boolean
+        description: |-
+          If present, the line_num and column_num can be ignored.
       extra_data:
         type: object
         description: |-
