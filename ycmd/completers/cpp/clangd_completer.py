@@ -297,8 +297,8 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       'GetDocImprecise': (
         lambda self, request_data, args: self.GetDoc( request_data )
       ),
-      'SwitchSourceHeader': (
-        lambda self, request_data, args: self.SwitchSourceHeader( request_data )
+      'GoToAlternateFile': (
+        lambda self, request_data, args: self.GoToAlternateFile( request_data )
       ),
       # To handle the commands below we need extensions to LSP. One way to
       # provide those could be to use workspace/executeCommand requset.
@@ -307,7 +307,7 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
       # )
     }
 
-  def SwitchSourceHeader( self, request_data ):
+  def GoToAlternateFile( self, request_data ):
     request_id = self.GetConnection().NextRequestId()
     uri = lsp.FilePathToUri( request_data[ 'filepath' ] )
     request  = lsp.BuildRequest( request_id, "textDocument/switchSourceHeader",
