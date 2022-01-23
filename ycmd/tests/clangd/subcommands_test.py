@@ -595,7 +595,7 @@ class SubcommandsTest( TestCase ):
                                                'GoToType',
                                                'RefactorRename',
                                                'RestartServer',
-                                               'SwitchSourceHeader' ] ) )
+                                               'GoToAlternateFile' ] ) )
         },
         'route': '/defined_subcommands',
     } )
@@ -759,15 +759,15 @@ class SubcommandsTest( TestCase ):
         RunGoToTest_all( app, 'test-include', cmd, test )
 
   @SharedYcmd
-  def test_Subcommands_SwitchSourceHeader( self, app ):
+  def test_Subcommands_GoToAlternateFile( self, app ):
     for test in [
-            { 'req': ( 'switch-source-header/a.cpp', 1, 1 ),
-              'res': ( 'switch-source-header/a.h', 1, 1 ) },
-            { 'req': ( 'switch-source-header/a.h', 1, 1 ),
-              'res': ( 'switch-source-header/a.cpp', 1, 1 ) },
+            { 'req': ( 'go-to-alternate-file/a.cpp', 1, 1 ),
+              'res': ( 'go-to-alternate-file/a.h', 1, 1 ) },
+            { 'req': ( 'go-to-alternate-file/a.h', 1, 1 ),
+              'res': ( 'go-to-alternate-file/a.cpp', 1, 1 ) },
     ]:
       with self.subTest( test = test ):
-        RunGoToTest_all( app, '', 'SwitchSourceHeader', test )
+        RunGoToTest_all( app, '', 'GoToAlternateFile', test )
 
   @SharedYcmd
   def test_Subcommands_GoToReferences( self, app ):
