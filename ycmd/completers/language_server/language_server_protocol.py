@@ -386,7 +386,7 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
 def WorkspaceFolders( *args ):
   return [
     {
-      'url': FilePathToUri( f ),
+      'uri': FilePathToUri( f ),
       'name': os.path.basename( f )
     } for f in args
   ]
