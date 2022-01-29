@@ -67,8 +67,11 @@ class NoDiagnosticSupport( ServerError ):
 
 
 # column_num is a byte offset
-def BuildGoToResponse( filepath, line_num, column_num, description = None,
-        file_only = False ):
+def BuildGoToResponse( filepath,
+                       line_num,
+                       column_num,
+                       description = None,
+                       file_only = False ):
   return BuildGoToResponseFromLocation(
     Location( line = line_num,
               column = column_num,
@@ -76,8 +79,9 @@ def BuildGoToResponse( filepath, line_num, column_num, description = None,
     description, file_only )
 
 
-def BuildGoToResponseFromLocation( location, description = None,
-        file_only = False ):
+def BuildGoToResponseFromLocation( location,
+                                   description = None,
+                                   file_only = False ):
   """Build a GoTo response from a responses.Location object."""
   response = BuildLocationData( location )
   if description:
