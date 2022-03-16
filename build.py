@@ -254,6 +254,7 @@ def _CheckCallQuiet( args, status_message, **kwargs ):
 def _CheckCall( args, **kwargs ):
   exit_message = kwargs.pop( 'exit_message', None )
   stdout = kwargs.get( 'stdout', None )
+  on_failure = kwargs.pop( 'on_failure', None )
 
   try:
     subprocess.check_call( args, **kwargs )
@@ -263,10 +264,12 @@ def _CheckCall( args, **kwargs ):
       print( stdout.read().decode( 'utf-8' ) )
       print( "FAILED" )
 
-    if exit_message:
+    if on_failure:
+      on_failure( exit_message, error.returncode )
+    elif exit_message:
       raise InstallationFailed( exit_message )
-
-    raise InstallationFailed( exit_code = error.returncode )
+    else:
+      raise InstallationFailed( exit_code = error.returncode )
 
 
 def GetGlobalPythonPrefix():
@@ -863,10 +866,17 @@ def EnableGoCompleter( args ):
   new_env[ 'GOPATH' ] = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
-  CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.7.1' ],
+
+  gopls = 'golang.org/x/tools/gopls@v0.7.1'
+  CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,
-             status_message = 'Building gopls for go completion' )
+             status_message = 'Building gopls for go completion',
+             on_failure = lambda msg, code: CheckCall(
+               [ go, 'get', gopls ],
+               env = new_env,
+               quiet = args.quiet,
+               status_message = 'Trying legacy get get' ) )
 
 
 def WriteToolchainVersion( version ):
