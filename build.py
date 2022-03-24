@@ -1226,11 +1226,12 @@ def PrintReRunMessage():
 def Main(): # noqa: C901
   args = ParseArguments()
 
-  if 'SUDO_COMMAND' in os.environ:
+  if not OnWindows() and os.geteuid() == 0:
     if args.force_sudo:
-      print( 'Forcing build with sudo. If it breaks, keep the pieces.' )
+      print( 'Forcing build with root privileges. '
+             'If it breaks, keep the pieces.' )
     else:
-      sys.exit( 'This script should not be run with sudo.' )
+      sys.exit( 'This script should not be run with root privileges.' )
 
   try:
     if not args.skip_build:
