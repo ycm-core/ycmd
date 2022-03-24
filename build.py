@@ -19,6 +19,21 @@ from zipfile import ZipFile
 import tempfile
 import urllib.request
 
+
+class InstallationFailed( Exception ):
+  def __init__( self, message = None, exit_code = 1 ):
+    self.message = message
+    self.exit_code = exit_code
+
+  def Print( self ):
+    if self.message:
+      print( '', file = sys.stderr )
+      print( self.message, file = sys.stderr )
+
+  def Exit( self ):
+    sys.exit( self.exit_code )
+
+
 IS_MSYS = 'MSYS' == os.environ.get( 'MSYSTEM' )
 
 IS_64BIT = sys.maxsize > 2**32
@@ -74,25 +89,25 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   )$
 """
 
-JDTLS_MILESTONE = '0.68.0'
-JDTLS_BUILD_STAMP = '202101202016'
+JDTLS_MILESTONE = '1.6.0'
+JDTLS_BUILD_STAMP = '202110200520'
 JDTLS_SHA256 = (
-  'df9c9b497ce86b1d57756b2292ad0f7bfaa76aed8a4b63a31c589e85018b7993'
+  '09650af5c9dc39f0b40981bcdaa2170cbbc5bb003ac90cdb07fbb57381ac47b2'
 )
 
-RUST_TOOLCHAIN = 'nightly-2021-07-29'
+RUST_TOOLCHAIN = 'nightly-2021-10-26'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
   'ERROR: the build failed.\n\n'
-  'NOTE: it is *highly* unlikely that this is a bug but rather\n'
-  'that this is a problem with the configuration of your system\n'
-  'or a missing dependency. Please carefully read CONTRIBUTING.md\n'
-  'and if you\'re sure that it is a bug, please raise an issue on the\n'
-  'issue tracker, including the entire output of this script\n'
+  'NOTE: it is *highly* unlikely that this is a bug but rather '
+  'that this is a problem with the configuration of your system '
+  'or a missing dependency. Please carefully read CONTRIBUTING.md '
+  'and if you\'re sure that it is a bug, please raise an issue on the '
+  'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '12.0.0'
+CLANGD_VERSION = '13.0.0'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -164,8 +179,8 @@ def FindExecutableOrDie( executable, message ):
   path = FindExecutable( executable )
 
   if not path:
-    sys.exit( f"ERROR: Unable to find executable '{ executable }'. "
-              f"{ message }" )
+    raise InstallationFailed(
+      f"ERROR: Unable to find executable '{ executable }'. { message }" )
 
   return path
 
@@ -239,6 +254,7 @@ def _CheckCallQuiet( args, status_message, **kwargs ):
 def _CheckCall( args, **kwargs ):
   exit_message = kwargs.pop( 'exit_message', None )
   stdout = kwargs.get( 'stdout', None )
+  on_failure = kwargs.pop( 'on_failure', None )
 
   try:
     subprocess.check_call( args, **kwargs )
@@ -248,9 +264,12 @@ def _CheckCall( args, **kwargs ):
       print( stdout.read().decode( 'utf-8' ) )
       print( "FAILED" )
 
-    if exit_message:
-      sys.exit( exit_message )
-    sys.exit( error.returncode )
+    if on_failure:
+      on_failure( exit_message, error.returncode )
+    elif exit_message:
+      raise InstallationFailed( exit_message )
+    else:
+      raise InstallationFailed( exit_code = error.returncode )
 
 
 def GetGlobalPythonPrefix():
@@ -280,7 +299,8 @@ def GetPossiblePythonLibraryDirectories():
 def FindPythonLibraries():
   include_dir = sysconfig.get_config_var( 'INCLUDEPY' )
   if not p.isfile( p.join( include_dir, 'Python.h' ) ):
-    sys.exit( NO_PYTHON_HEADERS_ERROR.format( include_dir = include_dir ) )
+    raise InstallationFailed(
+      NO_PYTHON_HEADERS_ERROR.format( include_dir = include_dir ) )
 
   library_dirs = GetPossiblePythonLibraryDirectories()
 
@@ -326,10 +346,11 @@ def FindPythonLibraries():
   if static_libraries and not OnWindows():
     dynamic_flag = ( '--enable-framework' if OnMac() else
                      '--enable-shared' )
-    sys.exit( NO_DYNAMIC_PYTHON_ERROR.format( library = static_libraries[ 0 ],
-                                              flag = dynamic_flag ) )
+    raise InstallationFailed(
+      NO_DYNAMIC_PYTHON_ERROR.format( library = static_libraries[ 0 ],
+                                      flag = dynamic_flag ) )
 
-  sys.exit( NO_PYTHON_LIBRARY_ERROR )
+  raise InstallationFailed( NO_PYTHON_LIBRARY_ERROR )
 
 
 def CustomPythonCmakeArgs( args ):
@@ -359,6 +380,8 @@ def GetGenerator( args ):
     # Studio 16 generator.
     if args.msvc == 16:
       return 'Visual Studio 16'
+    if args.msvc == 17:
+      return 'Visual Studio 17 2022'
     return f"Visual Studio { args.msvc }{ ' Win64' if IS_64BIT else '' }"
   return 'Unix Makefiles'
 
@@ -385,7 +408,7 @@ def ParseArguments():
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
-  parser.add_argument( '--msvc', type = int, choices = [ 15, 16 ],
+  parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
                        default = 16, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
   parser.add_argument( '--ninja', action = 'store_true',
@@ -407,10 +430,24 @@ def ParseArguments():
                                 'specified directory, and do not delete the '
                                 'build output. This is useful for incremental '
                                 'builds, and required for coverage data' )
+
+  # Historically, "verbose" mode was the default and --quiet was added. Now,
+  # quiet is the default (but the argument is still allowed, to avoid breaking
+  # scripts), and --verbose is added to get the full output.
   parser.add_argument( '--quiet',
                        action = 'store_true',
+                       default = True, # This argument is deprecated
                        help = 'Quiet installation mode. Just print overall '
-                              'progress and errors' )
+                              'progress and errors. This is the default, so '
+                              'this flag is actually ignored. Ues --verbose '
+                              'to see more output.' )
+  parser.add_argument( '--verbose',
+                       action = 'store_false',
+                       dest = 'quiet',
+                       help = 'Verbose installation mode; prints output from '
+                              'build operations. Useful for debugging '
+                              'build failures.' )
+
   parser.add_argument( '--skip-build',
                        action = 'store_true',
                        help = "Don't build ycm_core lib, just install deps" )
@@ -463,8 +500,9 @@ def ParseArguments():
   if ( args.system_libclang and
        not args.clang_completer and
        not args.all_completers ):
-    sys.exit( 'ERROR: you can\'t pass --system-libclang without also passing '
-              '--clang-completer or --all as well.' )
+    raise InstallationFailed(
+      'ERROR: you can\'t pass --system-libclang without also passing '
+      '--clang-completer or --all as well.' )
   return args
 
 
@@ -476,16 +514,17 @@ def FindCmake( args ):
 
   cmake = PathToFirstExistingExecutable( cmake_exe )
   if cmake is None:
-    sys.exit( "ERROR: Unable to find cmake executable in any of"
-              f" { cmake_exe }. CMake is required to build ycmd" )
+    raise InstallationFailed(
+      "ERROR: Unable to find cmake executable in any of"
+      f" { cmake_exe }. CMake is required to build ycmd" )
   return cmake
 
 
 def GetCmakeCommonArgs( args ):
   cmake_args = [ '-G', GetGenerator( args ) ]
 
-  # Set the architecture for the Visual Studio 16 generator.
-  if OnWindows() and args.msvc == 16 and not args.ninja and not IS_MSYS:
+  # Set the architecture for the Visual Studio 16/17 generator.
+  if OnWindows() and args.msvc >= 16 and not args.ninja and not IS_MSYS:
     arch = 'x64' if IS_64BIT else 'Win32'
     cmake_args.extend( [ '-A', arch ] )
 
@@ -587,8 +626,8 @@ def ExitIfYcmdLibInUseOnWindows():
     open( p.join( ycmd_library ), 'a' ).close()
   except IOError as error:
     if error.errno == errno.EACCES:
-      sys.exit( 'ERROR: ycmd library is currently in use. '
-                'Stop all ycmd instances before compilation.' )
+      raise InstallationFailed( 'ERROR: ycmd library is currently in use. '
+                                'Stop all ycmd instances before compilation.' )
 
 
 def GetCMakeBuildConfiguration( args ):
@@ -771,44 +810,44 @@ def GetCsCompleterDataForPlatform():
   ####################################
   DATA = {
     'win32': {
-      'version': 'v1.35.4',
+      'version': 'v1.37.11',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.35.4/omnisharp.http-win-x86.zip' ),
+                        's/download/v1.37.11/omnisharp.http-win-x86.zip' ),
       'file_name': 'omnisharp.http-win-x86.zip',
-      'check_sum': ( 'f6a44ec4e9edfbb4cb13626b09859d3dcd9b92e202f00b484d3c5956'
-                     '4dfa236b' ),
+      'check_sum': ( '461544056b144c97e8413de8c1aa1ddd9e2902f5a9f2223af8046d65'
+                     '4d95f2a0' ),
     },
     'win64': {
-      'version': 'v1.35.4',
+      'version': 'v1.37.11',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.35.4/omnisharp.http-win-x64.zip' ),
+                        's/download/v1.37.11/omnisharp.http-win-x64.zip' ),
       'file_name': 'omnisharp.http-win-x64.zip',
-      'check_sum': ( '18ea074d099592c211929754cbc616e9b640b4143d60b20b374e015b'
-                     '97932703' ),
+      'check_sum': ( '7f6f0abfac00d028b90aaf1f56813e4fbb73d84bdf2c4704862aa976'
+                     '1b61a59c' ),
     },
     'macos': {
-      'version': 'v1.35.4',
+      'version': 'v1.37.11',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.35.4/omnisharp.http-osx.tar.gz' ),
+                        's/download/v1.37.11/omnisharp.http-osx.tar.gz' ),
       'file_name': 'omnisharp.http-osx.tar.gz',
-      'check_sum': ( '5e7e4870605ea53c1588d6a11e31a277b062b29477c3486d43a3c609'
-                     '99f1cae8' ),
+      'check_sum': ( '84b84a8a3cb8fd3986ea795d9230457c43bf130b482fcb77fef57c67'
+                     'e151828a' ),
     },
     'linux32': {
-      'version': 'v1.35.4',
+      'version': 'v1.37.11',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.35.4/omnisharp.http-linux-x86.tar.gz' ),
+                        's/download/v1.37.11/omnisharp.http-linux-x86.tar.gz' ),
       'file_name': 'omnisharp.http-linux-x86.tar.gz',
-      'check_sum': ( '5998daa508e79e2e1f1bbf018ef59a7b82420506cb6fa3fa75a54248'
-                     '94f89c19' ),
+      'check_sum': ( 'a5ab39380a5d230c75f08bf552980cdc5bd8c31a43348acbfa66f1f4'
+                     '6f12851f' ),
     },
     'linux64': {
-      'version': 'v1.35.4',
+      'version': 'v1.37.11',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.35.4/omnisharp.http-linux-x64.tar.gz' ),
+                        's/download/v1.37.11/omnisharp.http-linux-x64.tar.gz' ),
       'file_name': 'omnisharp.http-linux-x64.tar.gz',
-      'check_sum': ( 'a1b89e5cb67afedfc17515eae565c58a31c36d660dde7f15e4de4ef8'
-                     '5e464b1c' ),
+      'check_sum': ( '9a6e9a246babd777229eebb57f0bee86e7ef5da271c67275eae5ed9d'
+                     '7b0ad563' ),
     },
   }
   if OnWindows():
@@ -827,10 +866,17 @@ def EnableGoCompleter( args ):
   new_env[ 'GOPATH' ] = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
-  CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.7.1' ],
+
+  gopls = 'golang.org/x/tools/gopls@v0.7.1'
+  CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,
-             status_message = 'Building gopls for go completion' )
+             status_message = 'Building gopls for go completion',
+             on_failure = lambda msg, code: CheckCall(
+               [ go, 'get', gopls ],
+               env = new_env,
+               quiet = args.quiet,
+               status_message = 'Trying legacy get get' ) )
 
 
 def WriteToolchainVersion( version ):
@@ -931,6 +977,7 @@ def CheckJavaVersion( required_version ):
   try:
     new_env = os.environ.copy()
     new_env.pop( 'JAVA_TOOL_OPTIONS', None )
+    new_env.pop( '_JAVA_OPTIONS', None )
     java_version = int(
       subprocess.check_output(
         [ java, p.join( DIR_OF_THIS_SCRIPT, 'CheckJavaVersion.java' ) ],
@@ -1015,34 +1062,39 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        'c9e4f11822a60b49b9cd0be0673302c7595df09ce2eed4c030559b4102589c54' ),
+        'ca4c9b7c0350a936e921b3e3dc6bdd51a6e905d65eac26b23ede7774158d2305' ),
       ( 'clangd-{version}-win32',
-        'f7cbd73e99783687898a7370b8ae8875ac25e97ef2b1a9fc7c7e3c4b2fc8e5c5' ) ]
+        'a2eab3a4b23b700a16b9ef3e6b5b122438fcf016ade88dd8e10d1f81bde9386e' ) ]
   if OnMac():
+    if OnArm():
+      return [
+        ( 'clangd-{version}-arm64-apple-darwin',
+          '68be75dbe52893cba5d75486e598e51032f7f67b24c748655aace932152d4421' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '4982c5e56274102ce0c830aad4cdbe21efd51883e5fc2cbe05ef29e4b820e6ec' ) ]
+        'eacbe2d7df6e57e6053f60be798e9f64d3e57556a0b2c58cf0c5599fdf9e793d' ) ]
   if OnFreeBSD():
     return [
-      ( 'clangd-{version}-amd64-unknown-freebsd11',
-        '0aaf368d65d03299c593a5a2eac9eeb6b7a15f6348096b225b6428dc254e7d25' ),
-      ( 'clangd-{version}-i386-unknown-freebsd11',
-        'b0e5b88fb628a9b21e50c92136b184326f48d6b5f99d779694dfc361614f641e' ) ]
+      ( 'clangd-{version}-amd64-unknown-freebsd13',
+        'bc6a11bd22251f4996290384baa59854b88537ce9105da2c64d0c70992cc548b' ),
+      ( 'clangd-{version}-i386-unknown-freebsd13',
+        '5ea931ca15b02c667fc3ad4d08266447b8212a83b43c80e644e3989645d63e2b' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        '5057ef4fafd5aaf7aefb0916603314e58658a166e76a33ea5c3810dabe2b2480' ) ]
+        'f0e9cea316217a40298d48ef81198ac1b41e6686fc7f7631a6ce54dd75a6989e' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        '31588fef3fcab8c5859a6372406921029ea16d80e2119ca532ee384330b177ce' ) ]
+        'bb52085decd18621f5c15b884dde6a327e3193b69bfc4b3a49c5f4459242e522' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '0bb712b8d2a2d6861ea28b11167fc01c21336e5bce8682caab60257e32d9bba1' ) ]
-  sys.exit( CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
-                                                  platform = 'this system' ) )
+        '10a64c468d1dd2a384e0e5fd4eb2582fd9f1dfa706b6d2d2bb88fb0fbfc2718d' ) ]
+  raise InstallationFailed(
+    CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
+                                          platform = 'this system' ) )
 
 
 def DownloadClangd( printer ):
@@ -1073,7 +1125,8 @@ def DownloadClangd( printer ):
     printer( f"Downloading Clangd from { download_url }..." )
     DownloadFileTo( download_url, file_name )
     if not CheckFileIntegrity( file_name, check_sum ):
-      sys.exit( 'ERROR: downloaded Clangd archive does not match checksum.' )
+      raise InstallationFailed(
+        'ERROR: downloaded Clangd archive does not match checksum.' )
 
   printer( f"Extracting Clangd to { CLANGD_OUTPUT_DIR }..." )
   with tarfile.open( file_name ) as package_tar:
@@ -1154,6 +1207,22 @@ def DoCmakeBuilds( args ):
   BuildWatchdogModule( args )
 
 
+def PrintReRunMessage():
+  print( '',
+         'The installation failed; please see above for the actual error. '
+         'In order to get more information, please re-run the command, '
+         'adding the --verbose flag. If you think this is a bug and you '
+         'raise an issue, you MUST include the *full verbose* output.',
+         '',
+         'For example, run:' + ' '.join( shlex.quote( arg )
+                                         for arg in [ sys.executable ] +
+                                                    sys.argv +
+                                                    [ '--verbose' ] ),
+         '',
+         file = sys.stderr,
+         sep = '\n' )
+
+
 def Main(): # noqa: C901
   args = ParseArguments()
 
@@ -1164,22 +1233,34 @@ def Main(): # noqa: C901
     else:
       sys.exit( 'This script should not be run with root privileges.' )
 
-  if not args.skip_build:
-    DoCmakeBuilds( args )
-  if args.cs_completer or args.omnisharp_completer or args.all_completers:
-    EnableCsCompleter( args )
-  if args.go_completer or args.gocode_completer or args.all_completers:
-    EnableGoCompleter( args )
-  if args.js_completer or args.tern_completer or args.all_completers:
-    EnableJavaScriptCompleter( args )
-  if args.rust_completer or args.racer_completer or args.all_completers:
-    EnableRustCompleter( args )
-  if args.java_completer or args.all_completers:
-    EnableJavaCompleter( args )
-  if args.ts_completer or args.all_completers:
-    EnableTypeScriptCompleter( args )
-  if args.clangd_completer or args.all_completers:
-    EnableClangdCompleter( args )
+  try:
+    if not args.skip_build:
+      DoCmakeBuilds( args )
+    if args.cs_completer or args.omnisharp_completer or args.all_completers:
+      EnableCsCompleter( args )
+    if args.go_completer or args.gocode_completer or args.all_completers:
+      EnableGoCompleter( args )
+    if args.js_completer or args.tern_completer or args.all_completers:
+      EnableJavaScriptCompleter( args )
+    if args.rust_completer or args.racer_completer or args.all_completers:
+      EnableRustCompleter( args )
+    if args.java_completer or args.all_completers:
+      EnableJavaCompleter( args )
+    if args.ts_completer or args.all_completers:
+      EnableTypeScriptCompleter( args )
+    if args.clangd_completer or args.all_completers:
+      EnableClangdCompleter( args )
+  except InstallationFailed as e:
+    e.Print()
+    if args.quiet:
+      PrintReRunMessage()
+    e.Exit()
+  except Exception as e:
+    if args.quiet:
+      print( f"FAILED with exception { type( e ).__name__ }: { e }" )
+      PrintReRunMessage()
+    else:
+      raise
 
 
 if __name__ == '__main__':

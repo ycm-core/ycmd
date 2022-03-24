@@ -16,7 +16,7 @@ DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 
 def ParseArguments():
   parser = argparse.ArgumentParser()
-  parser.add_argument( '--msvc', type = int, choices = [ 14, 15, 16 ],
+  parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
                        default = 16, help = 'Choose the Microsoft Visual '
                        'Studio version (default: %(default)s).' )
 

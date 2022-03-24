@@ -106,13 +106,13 @@ std::string GetUtf8String( pybind11::handle value ) {
   // pybind will already convert to utf8 when converting to std::string.
   // For `bytes` the contents are left untouched:
   if ( PyUnicode_CheckExact( value.ptr() ) ) {
-    ssize_t size = 0;
+    ptrdiff_t size = 0;
     const char* buffer = nullptr;
     buffer = PyUnicode_AsUTF8AndSize( value.ptr(), &size );
     return { buffer, static_cast< size_t >( size ) };
   }
   if ( PyBytes_CheckExact( value.ptr() ) ) {
-    ssize_t size = 0;
+    ptrdiff_t size = 0;
     char* buffer = nullptr;
     PyBytes_AsStringAndSize( value.ptr(), &buffer, &size );
     return { buffer, static_cast< size_t >( size ) };
@@ -120,7 +120,7 @@ std::string GetUtf8String( pybind11::handle value ) {
 
   // Otherwise go through Python's built-in `str`.
   pybind11::str keep_alive( value );
-  ssize_t size = 0;
+  ptrdiff_t size = 0;
   const char* buffer =
       PyUnicode_AsUTF8AndSize( keep_alive.ptr(), &size );
   return { buffer, static_cast< size_t >( size ) };

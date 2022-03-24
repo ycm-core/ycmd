@@ -90,15 +90,15 @@ public:
   CodePoint( CodePoint&& ) = default;
   CodePoint& operator=( CodePoint&& ) = default;
 
-  inline std::string Normal() const {
+  inline const std::string &Normal() const {
     return normal_;
   }
 
-  inline std::string FoldedCase() const {
+  inline const std::string &FoldedCase() const {
     return folded_case_;
   }
 
-  inline std::string SwappedCase() const {
+  inline const std::string &SwappedCase() const {
     return swapped_case_;
   }
 

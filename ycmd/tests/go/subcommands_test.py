@@ -31,13 +31,8 @@ import os
 import requests
 
 from ycmd import handlers
-from ycmd.completers.language_server.language_server_completer import (
-  ResponseFailedException
-)
 from ycmd.tests.go import setUpModule, tearDownModule # noqa
-from ycmd.tests.go import ( PathToTestFile,
-                            SharedYcmd,
-                            StartGoCompleterServerInDirectory )
+from ycmd.tests.go import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
@@ -123,7 +118,7 @@ def RunGoToTest( app, command, test ):
 
     expect = {
       'response': requests.codes.ok,
-      'data': contains_exactly( *[
+      'data': contains_inanyorder( *[
         LocationMatcher(
           os.path.join( folder, location[ 0 ] ),
           location[ 1 ],
@@ -143,7 +138,7 @@ def RunGoToTest( app, command, test ):
   else:
     expect = {
       'response': requests.codes.internal_server_error,
-      'data': ErrorMatcher( ResponseFailedException )
+      'data': ErrorMatcher( RuntimeError, response )
     }
 
   RunTest( app, {
@@ -163,6 +158,8 @@ class SubcommandsTest( TestCase ):
                                       'GetType',
                                       'RefactorRename',
                                       'GoTo',
+                                      'GoToCallers',
+                                      'GoToCallees',
                                       'GoToDeclaration',
                                       'GoToDefinition',
                                       'GoToDocumentOutline',
@@ -211,14 +208,7 @@ class SubcommandsTest( TestCase ):
 
   @SharedYcmd
   def test_Subcommands_Format_WholeFile( self, app ):
-    # RLS can't execute textDocument/formatting if any file
-    # under the project root has errors, so we need to use
-    # a different project just for formatting.
-    # For further details check https://github.com/go-lang/rls/issues/1397
-    project_dir = PathToTestFile()
-    StartGoCompleterServerInDirectory( app, project_dir )
-
-    filepath = os.path.join( project_dir, 'goto.go' )
+    filepath = PathToTestFile( 'goto.go' )
 
     RunTest( app, {
       'description': 'Formatting is applied on the whole file',
@@ -259,10 +249,7 @@ class SubcommandsTest( TestCase ):
     matches_regexp( '\nExpected: <200>\n     but: was <500>\n' ) )
   @SharedYcmd
   def test_Subcommands_Format_Range( self, app ):
-    project_dir = PathToTestFile()
-    StartGoCompleterServerInDirectory( app, project_dir )
-
-    filepath = os.path.join( project_dir, 'goto.go' )
+    filepath = PathToTestFile( 'goto.go' )
 
     RunTest( app, {
       'description': 'Formatting is applied on some part of the file',
@@ -479,7 +466,51 @@ class SubcommandsTest( TestCase ):
 
   @SharedYcmd
   def test_Subcommands_GoToReferences( self, app ):
-    filepath = os.path.join( 'unicode', 'unicode.go' )
+    filepath = PathToTestFile( 'unicode', 'unicode.go' )
     test = { 'req': ( filepath, 10, 5 ), 'res': [ ( filepath, 10, 5 ),
                                                   ( filepath, 13, 5 ) ] }
     RunGoToTest( app, 'GoToReferences', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToCallees( self, app ):
+    filepath = PathToTestFile( 'call_hierarchy.go' )
+    for test in [
+      { 'req': ( filepath, 4, 6 ),
+        'res': [ ( filepath, 5, 2 ) ] },
+      { 'req': ( filepath, 8, 6 ),
+        'res': [ ( filepath, 9, 2 ), ] },
+      { 'req': ( filepath, 11, 6 ),
+        'res': [
+          ( filepath, 12, 2 ),
+          ( filepath, 13, 2 ) ] },
+      { 'req': ( filepath, 15, 6 ),
+        'res': [
+          ( filepath, 16, 2 ),
+          ( filepath, 17, 2 ),
+          ( filepath, 18, 2 ) ] },
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app, 'GoToCallees', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToCallers( self, app ):
+    filepath = PathToTestFile( 'call_hierarchy.go' )
+    for test in [
+      { 'req': ( filepath, 3, 6 ),
+        'res': [ ( filepath, 5, 2 ) ] },
+      { 'req': ( filepath, 8, 6 ),
+        'res': [
+          ( filepath, 9, 2 ),
+          ( filepath, 12, 2 ),
+          ( filepath, 16, 2 ) ] },
+      { 'req': ( filepath, 11, 6 ),
+        'res': [
+          ( filepath, 13, 2 ),
+          ( filepath, 17, 2 ) ] },
+      { 'req': ( filepath, 15, 6 ),
+        'res': [ ( filepath, 18, 2 ) ] }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app, 'GoToCallers', test )

@@ -480,10 +480,10 @@ def FixIt_Check_SubexprExtract_Resolved( results ):
     'fixits': contains_exactly( has_entries( {
         'text': 'Extract subexpression to variable',
         'chunks': contains_exactly(
-          ChunkMatcher( 'auto dummy = i + 3;\n  ',
+          ChunkMatcher( 'auto placeholder = i + 3;\n  ',
                         LineColMatcher( 84, 3 ),
                         LineColMatcher( 84, 3 ) ),
-          ChunkMatcher( 'dummy',
+          ChunkMatcher( 'placeholder',
                         LineColMatcher( 84, 14 ),
                         LineColMatcher( 84, 21 ) ),
         )
@@ -580,6 +580,8 @@ class SubcommandsTest( TestCase ):
                                                'GetType',
                                                'GetTypeImprecise',
                                                'GoTo',
+                                               'GoToCallees',
+                                               'GoToCallers',
                                                'GoToDeclaration',
                                                'GoToDefinition',
                                                'GoToDocumentOutline',
@@ -606,6 +608,8 @@ class SubcommandsTest( TestCase ):
       'GetType',
       'GetTypeImprecise',
       'GoTo',
+      'GoToCallees',
+      'GoToCallers',
       'GoToDeclaration',
       'GoToDefinition',
       'GoToInclude',
@@ -793,7 +797,7 @@ class SubcommandsTest( TestCase ):
           } ),
       ] },
       # None
-      { 'req': ( 'goto.cc', 1, 1, [ '' ] ), 'res': 'Symbol not found' },
+      { 'req': ( 'goto.cc', 1, 1, [ 'none' ] ), 'res': 'Symbol not found' },
 
       # Note we don't actually have any testdata that has a full index, so we
       # can't test multiple files easily, but that's really a clangd thing, not
@@ -866,6 +870,24 @@ class SubcommandsTest( TestCase ):
     ]:
       with self.subTest( test = test ):
         RunGoToTest_all( app, '', 'GoToImplementation', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToCallers( self, app ):
+    for test in [
+      { 'req': ( 'call_hierarchy.cc', 1, 6 ), # Simple case.
+        'res': [ ( 'call_hierarchy.cc', 4, 10 ) ] },
+      { 'req': ( 'call_hierarchy.cc', 6, 6 ),
+        'res': [
+          ( 'call_hierarchy.cc', 15, 3 ), # More than one location in response.
+          ( 'call_hierarchy.cc', 11, 3 ),
+          ( 'call_hierarchy.cc',  7, 3 ), # Recursive call.
+      ] },
+      { 'req': ( 'call_hierarchy.cc', 3, 6 ), # Top of call hierarchy.
+        'res': 'No incoming calls found.' }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest_all( app, '', 'GoToCallers', test )
 
 
   @SharedYcmd

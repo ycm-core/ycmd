@@ -37,6 +37,46 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - uses: actions/cache@v2
+      if: matrix.libclang == true && matrix.benchmark == false
+      with:
+        key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        restore-keys: |
+          v3-libclang-${{ runner.os }}-
+          v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+          v2-libclang-${{ runner.os }}-
+          v1-libclang-${{ runner.os }}-
+        path: |
+          clang_archives
+      name: Cache libclang
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        restore-keys: |
+          v2-deps-${{ runner.os }}-
+          v1-deps-${{ runner.os }}-
+        path: |
+          third-party/clangd/cache
+          third_party/eclipse.jdt.ls/target/cache
+          third_party/go
+          third_party/omnisharp-roslyn/v[0-9]*
+      name: Cache dependencies
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        restore-keys: |
+          v2-testdeps-${{ runner.os }}-
+          v1-testdeps-${{ runner.os }}-
+        path: |
+          third-party/lombok/cache
+          ~/.npm
+      name: Cache test deps
+
     - name: Install Java
       if: matrix.benchmark == false
       uses: actions/setup-java@v2
@@ -92,7 +132,7 @@ jobs:
     - name: Install Python
       uses: deadsnakes/action@v2.1.1
       with:
-        python-version: 3.9
+        python-version: '3.10'
         debug: true
     - name: Install GCC
       run: |
@@ -124,15 +164,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ windows-2019 ]
+        runs-on: [ windows-2022 ]
         benchmark: [ true, false ]
         python-arch: [ 'x64', 'x86' ]
-        msvc: [ 16 ]
+        msvc: [ 17 ]
         exclude:
-          - runs-on: windows-2019
+          - runs-on: windows-2022
             benchmark: true
             python-arch: 'x86'
         include:
+          - runs-on: windows-2019
+            benchmark: false
+            python-arch: 'x64'
+            msvc: 16
           - runs-on: windows-2016
             benchmark: false
             python-arch: 'x64'
@@ -147,6 +191,46 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - uses: actions/cache@v2
+      if: matrix.libclang == true && matrix.benchmark == false
+      with:
+        key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        restore-keys: |
+          v3-libclang-${{ runner.os }}-
+          v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+          v2-libclang-${{ runner.os }}-
+          v1-libclang-${{ runner.os }}-
+        path: |
+          clang_archives
+      name: Cache libclang
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        restore-keys: |
+          v2-deps-${{ runner.os }}-
+          v1-deps-${{ runner.os }}-
+        path: |
+          third-party/clangd/cache
+          third_party/eclipse.jdt.ls/target/cache
+          third_party/go
+          third_party/omnisharp-roslyn/v[0-9]*
+      name: Cache dependencies
+
+    - uses: actions/cache@v2
+      if: matrix.benchmark == false
+      with:
+        key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        restore-keys: |
+          v2-testdeps-${{ runner.os }}-
+          v1-testdeps-${{ runner.os }}-
+        path: |
+          third-party/lombok/cache
+          ~/.npm
+      name: Cache test deps
+
     - name: Install Java
       if: matrix.benchmark == false
       uses: actions/setup-java@v2
@@ -156,7 +240,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
         architecture: ${{ matrix.python-arch }}
     - name: Install Go
       if: matrix.benchmark == false

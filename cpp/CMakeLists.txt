@@ -232,7 +232,7 @@ if ( NOT CPP17_AVAILABLE )
   message( FATAL_ERROR "Your C++ compiler does NOT fully support C++17." )
 endif()
 
-find_package( Python3 3.6...3.10 REQUIRED COMPONENTS Interpreter Development )
+find_package( Python3 3.6 REQUIRED COMPONENTS Interpreter Development )
 
 #############################################################################
 

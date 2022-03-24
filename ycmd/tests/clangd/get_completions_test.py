@@ -117,9 +117,9 @@ class GetCompletionsTest( TestCase ):
         'response': requests.codes.ok,
         'data': has_entries( {
           'completions': contains_exactly(
-            CompletionEntryMatcher( 'do_something', 'void' ),
             CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
             CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
+            CompletionEntryMatcher( 'do_something', 'void' ),
           ),
           'errors': empty(),
         } )
@@ -143,9 +143,9 @@ class GetCompletionsTest( TestCase ):
         'response': requests.codes.ok,
         'data': has_entries( {
           'completions': contains_exactly(
-            CompletionEntryMatcher( 'do_something', 'void' ),
             CompletionEntryMatcher( 'DO_SOMETHING_TO', 'void' ),
             CompletionEntryMatcher( 'DO_SOMETHING_WITH', 'void' ),
+            CompletionEntryMatcher( 'do_something', 'void' ),
           ),
           'errors': empty(),
         } )

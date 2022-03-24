@@ -72,7 +72,10 @@ class GetCompletionsTest( TestCase ):
           'completions': has_item( has_entries( {
             'insertion_text':  'alinkColor',
             'extra_menu_info': '(property) Document.alinkColor: string',
-            'detailed_info':   '(property) Document.alinkColor: string',
+             'detailed_info':  '(property) Document.alinkColor: string\n'
+                               '\n'
+                               'Sets or gets the color of all active links '
+                               'in the document.',
             'kind':            'property',
           } ) )
         } )

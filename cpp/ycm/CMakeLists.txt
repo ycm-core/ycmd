@@ -30,47 +30,53 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION 12.0.0 )
+  set( CLANG_VERSION 13.0.0 )
 
   if ( APPLE )
-    set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-x86_64-apple-darwin" )
-    set( LIBCLANG_SHA256
-         "e3a703b97a01c2a35cbd25498609ec0db5a0e7025077c09efb2f1af273d13fbe" )
+    if ( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
+      set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-arm64-apple-darwin" )
+      set( LIBCLANG_SHA256
+           "46486411f44c5c21f248590f3749492d455ae28ac4ad71e531ebb59417a339c0" )
+    else()
+      set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-x86_64-apple-darwin" )
+      set( LIBCLANG_SHA256
+           "09a7562be4f2c608e82de01c996899ffffc79d130af5414278a8bd0ae84d352e" )
+    endif()
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win64" )
       set( LIBCLANG_SHA256
-           "3d34f5df6270ed69731eb6d9f8e077b6efae3eed39df70a5616007dc29acf5f6" )
+           "82a467174053ed10f87e77fc79c20776ebc7521356b4b8f1e3290714a4b48cf5" )
     else()
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win32" )
       set( LIBCLANG_SHA256
-           "3823025d32ff03f6d010e84f1727f63119f49bcf56309f3e29d8dd08cb7f42ea" )
+           "988c8152dbf8fd9fa9eda2a2c8c97acef7f688cefe37c5f1624f9db69a1ea142" )
     endif()
   elseif ( SYSTEM_IS_FREEBSD )
     if ( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-amd64-unknown-freebsd11" )
+           "libclang-${CLANG_VERSION}-amd64-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "00e4aceec213dc17b82485ee46edce1c2fb5b4742d234ca79fce33ebbff31d93" )
+           "ca3cf651f570f53f507cde65b7501626a002f15e13038ee1c9ddfd8bfaf6ed3b" )
     else()
       set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-i386-unknown-freebsd11" )
+           "libclang-${CLANG_VERSION}-i386-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "e94fd35b48dac10e04846fc4a6d1a8b5b2392c20618b9b36b1f6b11f7ec6b64b" )
+           "95b2b75ca59e4d401d1195fdfa62bf6a019d3bbfdedf37d649bb8d1b57623012" )
     endif()
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( LIBCLANG_SHA256
-         "5a8007c70b617109c2816543fe8fc9baf0a250a0054063ef624763a97db88808" )
+         "2ca6a11236f1572c90a450406131711ce3a260c952d89a7004f3351550fc3e10" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-armv7a-linux-gnueabihf" )
     set( LIBCLANG_SHA256
-         "38b3ac02ae89907a75da159d72567481d2a705c56d41d4fc6e699ab6db13010f" )
+         "d7490f7c3470f41052319bcf4b40a36a6534a6a8b9357ccf3facff8109a59517" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64)" )
     set( LIBCLANG_DIRNAME
          "libclang-${CLANG_VERSION}-x86_64-unknown-linux-gnu" )
     set( LIBCLANG_SHA256
-         "dc7b08d63fcf504fdbcfc5b96c446beee8ee79dc96e8d315666b20030c41e29a" )
+         "9a5bee818a4995bc52e91588059bef42728d046808206bfb93977f4e3109e50c" )
   else()
     message( FATAL_ERROR
       "No prebuilt Clang ${CLANG_VERSION} binaries for this system. "
@@ -118,12 +124,12 @@ if ( USE_CLANG_COMPLETER AND
 
   # We determine PATH_TO_LLVM_ROOT by searching the libclang library path in
   # CMake build folder.
-  file( GLOB_RECURSE PATH_TO_LIBCLANG ${CMAKE_BINARY_DIR}/libclang.* )
-  if ( NOT PATH_TO_LIBCLANG )
+  file( GLOB_RECURSE PATH_TO_LIBCLANG_WITH_SYMLINKS ${CMAKE_BINARY_DIR}/libclang.* )
+  if ( NOT PATH_TO_LIBCLANG_WITH_SYMLINKS )
     message( FATAL_ERROR "Cannot find path to libclang in prebuilt binaries" )
   endif()
   # file( GLOB_RECURSE ... ) returns a list of files. Take the first one.
-  list( GET PATH_TO_LIBCLANG 0 PATH_TO_LIBCLANG )
+  list( GET PATH_TO_LIBCLANG_WITH_SYMLINKS 0 PATH_TO_LIBCLANG  )
   # We know that LLVM root is parent to the directory containing libclang so we
   # need to go up two directories:
   #
@@ -156,8 +162,7 @@ endif()
 if ( USE_CLANG_COMPLETER )
   message( STATUS "Using libclang to provide semantic completion for C/C++/ObjC" )
 else()
-  message( STATUS "NOT using libclang, no semantic completion for "
-                  "C/C++/ObjC will be available" )
+  message( STATUS "Not using libclang for C/C++/ObjC." )
 endif()
 
 if ( NOT LIBCLANG_FILENAME AND PATH_TO_LLVM_ROOT )
@@ -369,11 +374,13 @@ if( LIBCLANG_TARGET )
       COMMAND ${CMAKE_COMMAND} -E copy "${PATH_TO_LLVM_ROOT}/bin/libclang.dll" "${LIBCLANG_DIR}"
     )
   else()
-    add_custom_command(
-      TARGET ${PROJECT_NAME}
-      POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy "${LIBCLANG_TARGET}" "${LIBCLANG_DIR}"
-    )
+    foreach( LIBCLANG_FILE ${PATH_TO_LIBCLANG_WITH_SYMLINKS} )
+      add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND cp -a ${LIBCLANG_FILE} "${LIBCLANG_DIR}"
+      )
+    endforeach()
   endif()
 endif()
 
@@ -452,6 +459,4 @@ if( USE_CLANG_TIDY )
   else()
     message( STATUS "clang-tidy not found" )
   endif()
-else()
-  message( STATUS "NOT using clang-tidy for static analysis." )
 endif()

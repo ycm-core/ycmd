@@ -143,6 +143,8 @@ class SubcommandsTest( TestCase ):
                                       'GetDoc',
                                       'GetType',
                                       'GoTo',
+                                      'GoToCallees',
+                                      'GoToCallers',
                                       'GoToDeclaration',
                                       'GoToDefinition',
                                       'GoToDocumentOutline',
@@ -492,7 +494,7 @@ class SubcommandsTest( TestCase ):
                      'codeAction returns empty response',
       'request': {
         'command': 'FixIt',
-        'line_num': 22,
+        'line_num': 16,
         'column_num': 1,
         'filepath': filepath
       },

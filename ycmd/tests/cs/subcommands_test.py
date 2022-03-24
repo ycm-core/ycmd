@@ -879,3 +879,33 @@ class SubcommandsTest( TestCase ):
               LocationMatcher( filepath, 9, 4 )
             ),
           ) } ) ) } ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_OrganizeImports( self, app ):
+    filepath = PathToTestFile( 'testy', 'ImportTest.cs' )
+    with WrapOmniSharpServer( app, filepath ):
+      request = BuildRequest( command_arguments = [ 'OrganizeImports' ],
+                              line_num = 11,
+                              column_num = 2,
+                              contents = ReadFile( filepath ),
+                              filetype = 'cs',
+                              filepath = filepath )
+
+      response = app.post_json( '/run_completer_command', request ).json
+      print( 'completer response = ', response )
+      assert_that( response, has_entries( {
+        'fixits': contains_exactly( has_entries( {
+          'location': LocationMatcher( filepath, 11, 2 ),
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              '    ',
+              LocationMatcher( filepath, 5, 1 ),
+              LocationMatcher( filepath, 5, 2 ),
+            ),
+            ChunkMatcher(
+              '',
+              LocationMatcher( filepath, 1, 1 ),
+              LocationMatcher( filepath, 3, 1 ),
+            )
+          ) } ) ) } ) )

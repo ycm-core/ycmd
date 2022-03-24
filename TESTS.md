@@ -45,7 +45,7 @@ To run the full suite, just run `run_tests.py`. Options are:
   everything is built;
 * `--no-completers`: do not build or test with listed semantic completion engine(s);
 * `--completers`: only build and test with listed semantic completion engine(s);
-* `--msvc`: the Microsoft Visual C++ version to build with (default: 15).
+* `--msvc`: the Microsoft Visual C++ version to build with (default: 16).
   Windows only;
 * `--coverage`: generate code coverage data.
 
