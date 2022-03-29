@@ -349,7 +349,7 @@ class CsharpCompleter( Completer ):
       omnisharp_server = responses.DebugInfoServer(
         name = 'OmniSharp',
         handle = completer._omnisharp_phandle,
-        executable = PATH_TO_ROSLYN_OMNISHARP,
+        executable = self._roslyn_path,
         address = 'localhost',
         port = completer._omnisharp_port,
         logfiles = [ completer._filename_stdout, completer._filename_stderr ],
@@ -431,7 +431,7 @@ class CsharpSolutionCompleter( object ):
 
     self._ChooseOmnisharpPort()
 
-    command = [ PATH_TO_OMNISHARP_ROSLYN_BINARY,
+    command = [ self._roslyn_path,
                 '-p',
                 str( self._omnisharp_port ),
                 '-s',
@@ -439,7 +439,7 @@ class CsharpSolutionCompleter( object ):
 
     if ( not utils.OnWindows()
          and self._roslyn_path.endswith( '.exe' ) ):
-      command.insert( 0, self._mono_path )
+      command[ : 0 ] = [ self._mono_path, '--assembly-loader=strict' ]
 
     LOGGER.info( 'Starting OmniSharp server with: %s', command )
 
