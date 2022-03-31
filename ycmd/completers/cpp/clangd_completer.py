@@ -34,6 +34,10 @@ from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          PathsToAllParentFolders,
                          re )
 
+# NOTES: We currently bundle 14.0.0, but as this is very new, we still allow the
+# use of earlier version to avoid breaking users who have set
+# g:ycm_clangd_binary_path. In general, we should only update this if we make
+# changes to this CLangdCompleter that would not be backward compatible.
 MIN_SUPPORTED_VERSION = ( 13, 0, 0 )
 INCLUDE_REGEX = re.compile(
   '(\\s*#\\s*(?:include|import)\\s*)(?:"[^"]*|<[^>]*)' )

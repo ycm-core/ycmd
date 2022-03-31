@@ -1421,10 +1421,11 @@ class FlagsTest( TestCase ):
             add_extra_clang_flags = False ),
           contains_exactly(
             contains_exactly( 'clang++',
-                      '-x',
-                      'c++',
-                      '--driver-mode=g++',
-                      '-Wall' ),
+                              '-x',
+                              'c++',
+                              '--driver-mode=g++',
+                              '-Wall',
+                              '--' ),
             os.path.join( tmp_dir, 'test1.cc' )
           )
         )
@@ -1440,7 +1441,8 @@ class FlagsTest( TestCase ):
                       '-x',
                       'c++',
                       '--driver-mode=g++',
-                      '-Wall' ),
+                      '-Wall',
+                      '--' ),
             os.path.join( tmp_dir, 'some_dir', 'test1.cc' )
           )
         )
@@ -1465,12 +1467,13 @@ class FlagsTest( TestCase ):
             os.path.join( tmp_dir, 'test.h' ),
             add_extra_clang_flags = False )[ 0 ],
           contains_exactly( 'clang++',
-                    '-x',
-                    'c++',
-                    '--driver-mode=g++',
-                    '-Wall',
-                    '-x',
-                    'c++-header' ) )
+                            '-x',
+                            'c++',
+                            '--driver-mode=g++',
+                            '-Wall',
+                            '-x',
+                            'c++-header',
+                            '--' ) )
 
 
   def test_CompilationDatabase_HeaderFile_DifferentNameFromSourceFile( self ):
@@ -1492,12 +1495,13 @@ class FlagsTest( TestCase ):
             os.path.join( tmp_dir, 'not_in_the_db.h' ),
             add_extra_clang_flags = False )[ 0 ],
           contains_exactly( 'clang++',
-                    '-x',
-                    'c++',
-                    '--driver-mode=g++',
-                    '-Wall',
-                    '-x',
-                    'c++-header' ) )
+                            '-x',
+                            'c++',
+                            '--driver-mode=g++',
+                            '-Wall',
+                            '-x',
+                            'c++-header',
+                            '--' ) )
 
 
   def test_CompilationDatabase_ExplicitHeaderFileEntry( self ):
@@ -1549,7 +1553,8 @@ class FlagsTest( TestCase ):
                             '--driver-mode=g++',
                             '-Wall',
                             '-x',
-                            'cuda' ) )
+                            'cuda',
+                            '--' ) )
 
 
   def test_MakeRelativePathsInFlagsAbsolute( self ):
