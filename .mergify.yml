@@ -10,7 +10,6 @@ queue_rules:
       - status-success=ubuntu-20.04 - with Clang compiler - test run
       - status-success=ubuntu-20.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 15 x64 - test run
       - status-success=Windows MSVC 16 x64 - test run
       - status-success=Windows MSVC 17 x64 - test run
       - status-success=Windows MSVC 17 x86 - test run
@@ -28,7 +27,6 @@ pull_request_rules:
       - status-success=ubuntu-20.04 - with Clang compiler - test run
       - status-success=ubuntu-20.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 15 x64 - test run
       - status-success=Windows MSVC 16 x64 - test run
       - status-success=Windows MSVC 17 x64 - test run
       - status-success=Windows MSVC 17 x86 - test run
@@ -40,6 +38,7 @@ pull_request_rules:
         name: default
       comment:
         message: Thanks for sending a PR!
+
   - name: Manual merge on Azure Pipelines and Maintainer Override
     conditions:
       - base=master
@@ -50,7 +49,6 @@ pull_request_rules:
       - status-success=ubuntu-20.04 - with Clang compiler - test run
       - status-success=ubuntu-20.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 15 x64 - test run
       - status-success=Windows MSVC 16 x64 - test run
       - status-success=Windows MSVC 17 x64 - test run
       - status-success=Windows MSVC 17 x86 - test run
@@ -59,6 +57,31 @@ pull_request_rules:
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
 
+      - label="Ship It!"
+    actions:
+      queue:
+        method: merge
+        name: default
+      comment:
+        message: Thanks for sending a PR!
+
+  - name: Manual merge on Pipelines and Maintainer Override from owner PR
+    conditions:
+      - base=master
+      - author=puremourning
+      - status-success=macos-10.15 - C++ Benchmark
+      - status-success=macos-10.15 - test run
+      - status-success=ubuntu-20.04 - C++ Benchmark
+      - status-success=ubuntu-20.04 - without libclang completer - test run
+      - status-success=ubuntu-20.04 - with Clang compiler - test run
+      - status-success=ubuntu-20.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+
+      - "#changes-requested-reviews-by=0"
       - label="Ship It!"
     actions:
       queue:
