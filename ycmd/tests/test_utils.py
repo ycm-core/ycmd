@@ -64,6 +64,7 @@ ClangOnly = skipIf( not ycm_core.HasClangSupport(),
                     'Only when Clang support available' )
 MacOnly = skipIf( not OnMac(), 'Mac only' )
 UnixOnly = skipIf( OnWindows(), 'Unix only' )
+NotMac = functools.partial( skipIf, OnMac() )
 
 EMPTY_SIGNATURE_HELP = has_entries( {
   'activeParameter': 0,
