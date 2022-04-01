@@ -177,10 +177,6 @@ jobs:
             benchmark: false
             python-arch: 'x64'
             msvc: 16
-          - runs-on: windows-2016
-            benchmark: false
-            python-arch: 'x64'
-            msvc: 15
     runs-on: ${{ matrix.runs-on }}
     env:
       USE_CLANG_COMPLETER: ${{ matrix.libclang }}
