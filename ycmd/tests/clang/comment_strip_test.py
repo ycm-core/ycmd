@@ -19,8 +19,12 @@
 method/variable,etc. headers in order to remove non-data-ink from the raw
 comment"""
 
-# flake8: noqa
 
+from ycmd.utils import ImportAndCheckCore, CORE_COMPATIBLE_STATUS
+if ImportAndCheckCore() != CORE_COMPATIBLE_STATUS:
+  raise RuntimeError( "Could NOT import core!" )
+
+# flake8: noqa
 from hamcrest import assert_that, equal_to
 from unittest import TestCase
 from ycmd.completers.cpp import clang_completer

@@ -36,7 +36,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
                                     WaitUntilCompleterServerReady,
                                     WindowsOnly,
-                                    WithRetry )
+                                    WithRetry,
+                                    NotMac )
 from ycmd.utils import ReadFile
 
 
@@ -773,6 +774,7 @@ int main()
     } )
 
 
+  @NotMac( "CUDA tests fail in CI" )
   @WithRetry()
   @IsolatedYcmd()
   def test_GetCompletions_cuda( self, app ):
@@ -799,6 +801,7 @@ int main()
     } )
 
 
+  @NotMac( "CUDA tests fail in CI on mac" )
   @IsolatedYcmd( { 'clangd_args': [ '-header-insertion-decorators=1' ] } )
   def test_GetCompletions_WithHeaderInsertionDecorators( self, app ):
     RunTest( app, {
