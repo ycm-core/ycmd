@@ -618,17 +618,10 @@ def _RefactoringToFixIt( refactoring ):
       # the replacement text extracted from new_text
       chunks.append( responses.FixItChunk(
         new_text[ new_start : new_end ],
-        # FIXME: new_end must be equal to or after new_start, so we should make
-        # OffsetToPosition take 2 offsets and return them rather than repeating
-        # work
-        responses.Range( _OffsetToPosition( old_start,
-                                            filename,
-                                            old_text,
-                                            newlines ),
-                         _OffsetToPosition( old_end,
-                                            filename,
-                                            old_text,
-                                            newlines ) )
+        responses.Range( *_OffsetToPosition( ( old_start, old_end ),
+                                             filename,
+                                             old_text,
+                                             newlines ) )
       ) )
 
   return responses.FixIt( responses.Location( 1, 1, 'none' ),
@@ -637,21 +630,26 @@ def _RefactoringToFixIt( refactoring ):
                           kind = responses.FixIt.Kind.REFACTOR )
 
 
-def _OffsetToPosition( offset, filename, text, newlines ):
+def _OffsetToPosition( start_end, filename, text, newlines ):
   """Convert the 0-based codepoint offset |offset| to a position (line/col) in
   |text|. |filename| is the full path of the file containing |text| and
   |newlines| is a cache of the 0-based character offsets of all the \n
   characters in |text| (plus one extra). Returns responses.Position."""
 
+  loc = ()
   for index, newline in enumerate( newlines ):
-    if newline >= offset:
-      start_of_line = newlines[ index - 1 ] + 1 if index > 0 else 0
-      column = offset - start_of_line
-      line_value = text[ start_of_line : newline ]
-      return responses.Location( index + 1,
-                                 CodepointOffsetToByteOffset( line_value,
-                                                              column + 1 ),
-                                 filename )
+    for offset in start_end[ len( loc ): ]:
+      if newline >= offset:
+        start_of_line = newlines[ index - 1 ] + 1 if index > 0 else 0
+        column = offset - start_of_line
+        line_value = text[ start_of_line : newline ]
+        loc += ( responses.Location( index + 1,
+                                     CodepointOffsetToByteOffset( line_value,
+                                                                  column + 1 ),
+                                     filename ), )
+    if len( loc ) == 2:
+      break
+  return loc
 
   # Invalid position - it's outside of the text. Just return the last
   # position in the text. This is an internal error.
