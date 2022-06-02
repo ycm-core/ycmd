@@ -293,6 +293,14 @@ class PythonCompleter( Completer ):
                            self._GetDoc( request_data ) ),
       'RefactorRename' : ( lambda self, request_data, args:
                            self._RefactorRename( request_data, args ) ),
+      'RefactorInline' : ( lambda self, request_data, args:
+                           self._RefactorInline( request_data, args ) ),
+      'RefactorExtractVariable' : ( lambda self, request_data, args:
+                                    self._RefactorExtractVariable( request_data,
+                                                                   args ) ),
+      'RefactorExtractFunction' : ( lambda self, request_data, args:
+                                    self._RefactorExtractFunction( request_data,
+                                                                   args ) ),
     }
 
 
@@ -464,15 +472,71 @@ class PythonCompleter( Completer ):
         _RefactoringToFixIt( refactoring )
       ] )
 
+  def _RefactorInline( self, request_data, args ):
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).inline(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1 )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
+  def _RefactorExtractVariable( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify a new name' )
+
+    new_name = args[ 0 ]
+    if 'range' in request_data:
+      range_end = request_data[ 'range' ].get( 'end', {} )
+      until_line = range_end.get( 'line_num', None )
+      until_column = range_end.get( 'column_num', None )
+    else:
+      until_line = None
+      until_column = None
+
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).extract_variable(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1,
+        new_name = new_name,
+        until_line = until_line,
+        until_column = until_column )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
+  def _RefactorExtractFunction( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify a new name' )
+
+    new_name = args[ 0 ]
+    if 'range' in request_data:
+      range_end = request_data[ 'range' ].get( 'end', {} )
+      until_line = range_end.get( 'line_num', None )
+      until_column = range_end.get( 'column_num', None )
+    else:
+      until_line = None
+      until_column = None
+
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).extract_function(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1,
+        new_name = new_name,
+        until_line = until_line,
+        until_column = until_column )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
   # Jedi has the following refactorings:
-  #  - renmae (RefactorRename)
+  #  - rename (RefactorRename)
   #  - inline variable
   #  - extract variable (requires argument)
   #  - extract function (requires argument)
-  #
-  # We could add inline variable via FixIt, but for the others we have no way to
-  # ask for the argument on "resolve" of the FixIt. We could add
-  # Refactor Inline ... but that would be inconsistent.
 
 
   def DebugInfo( self, request_data ):
