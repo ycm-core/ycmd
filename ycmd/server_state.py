@@ -27,8 +27,13 @@ def _GetGenericLSPCompleter( user_options, filetype ):
   custom_lsp = user_options[ 'language_server' ]
   for server_settings in custom_lsp:
     if filetype in server_settings[ 'filetypes' ]:
-      return generic_lsp_completer.GenericLSPCompleter(
-          user_options, server_settings )
+      try:
+        return generic_lsp_completer.GenericLSPCompleter(
+            user_options, server_settings )
+      except Exception:
+        LOGGER.exception( "Unable to instantiate generic completer for "
+                          f"filetype { filetype }" )
+        # We might just use a built-in completer
   return None
 
 
@@ -61,14 +66,14 @@ class ServerState:
       except KeyError:
         pass
 
-      try:
-        module = import_module( f'ycmd.completers.{ filetype }.hook' )
-        completer = module.GetCompleter( self._user_options )
-      except ImportError:
-        completer = None
+      completer = _GetGenericLSPCompleter( self._user_options, filetype )
 
       if completer is None:
-        completer = _GetGenericLSPCompleter( self._user_options, filetype )
+        try:
+          module = import_module( f'ycmd.completers.{ filetype }.hook' )
+          completer = module.GetCompleter( self._user_options )
+        except ImportError:
+          completer = None
 
       supported_filetypes = { filetype }
       if completer:
