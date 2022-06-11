@@ -137,7 +137,11 @@ class ResponseAbortedException( Exception ):
 
 class ResponseFailedException( Exception ):
   """Raised by LanguageServerConnection if a request returns an error"""
-  pass # pragma: no cover
+  def __init__( self, error ):
+    self.error_code = error.get( 'code' ) or 0
+    self.error_message = error.get( 'message' ) or "No message"
+    super().__init__( f'Request failed: { self.error_code }: '
+                      f'{ self.error_message }' )
 
 
 class IncompatibleCompletionException( Exception ):
@@ -212,11 +216,7 @@ class Response:
 
     if 'error' in self._message:
       error = self._message[ 'error' ]
-      raise ResponseFailedException(
-        'Request failed: '
-        f'{ error.get( "code" ) or 0 }'
-        ': '
-        f'{ error.get( "message" ) or "No message" }' )
+      raise ResponseFailedException( error )
 
     return self._message
 
@@ -1043,6 +1043,7 @@ class LanguageServerCompleter( Completer ):
     self._project_directory = None
     self._settings = {}
     self._extra_conf_dir = None
+    self._semantic_token_atlas = None
 
 
   def GetCompleterName( self ):
@@ -1279,7 +1280,7 @@ class LanguageServerCompleter( Completer ):
     if not self._is_completion_provider:
       return None, False
 
-    self._UpdateServerWithFileContents( request_data )
+    self._UpdateServerWithCurrentFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
 
@@ -1496,6 +1497,7 @@ class LanguageServerCompleter( Completer ):
     else:
       return responses.SignatureHelpAvailalability.NOT_AVAILABLE
 
+
   def ComputeSignaturesInner( self, request_data ):
     if not self.ServerIsReady():
       return {}
@@ -1503,11 +1505,10 @@ class LanguageServerCompleter( Completer ):
     if not self._server_capabilities.get( 'signatureHelpProvider' ):
       return {}
 
-    self._UpdateServerWithFileContents( request_data )
+    self._UpdateServerWithCurrentFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
     msg = lsp.SignatureHelp( request_id, request_data )
-
     response = self.GetConnection().GetResponse( request_id,
                                                  msg,
                                                  REQUEST_TIMEOUT_COMPLETION )
@@ -1534,6 +1535,43 @@ class LanguageServerCompleter( Completer ):
     result.setdefault( 'activeParameter', 0 )
     result.setdefault( 'activeSignature', 0 )
     return result
+
+
+  def ComputeSemanticTokens( self, request_data ):
+    if not self._initialize_event.wait( REQUEST_TIMEOUT_COMPLETION ):
+      return {}
+
+    if not self._ServerIsInitialized():
+      return {}
+
+    if not self._semantic_token_atlas:
+      return {}
+
+    self._UpdateServerWithCurrentFileContents( request_data )
+
+    request_id = self.GetConnection().NextRequestId()
+    body = lsp.SemanticTokens( request_id, request_data )
+
+    for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
+      response = self._connection.GetResponse(
+        request_id,
+        body,
+        3 * REQUEST_TIMEOUT_COMPLETION )
+
+    if response is None:
+      return {}
+
+    filename = request_data[ 'filepath' ]
+    contents = GetFileLines( request_data, filename )
+    result = response.get( 'result' ) or {}
+    tokens = _DecodeSemanticTokens( self._semantic_token_atlas,
+                                    result.get( 'data' ) or [],
+                                    filename,
+                                    contents )
+
+    return {
+      'tokens': tokens
+    }
 
 
   def GetDetailedDiagnostic( self, request_data ):
@@ -1991,6 +2029,14 @@ class LanguageServerCompleter( Completer ):
     return False
 
 
+  def _UpdateServerWithCurrentFileContents( self, request_data ):
+    file_name = request_data[ 'filepath' ]
+    contents = GetFileContents( request_data, file_name )
+    filetypes = request_data[ 'filetypes' ]
+    with self._server_info_mutex:
+      self._RefreshFileContentsUnderLock( file_name, contents, filetypes )
+
+
   def _UpdateServerWithFileContents( self, request_data ):
     """Update the server with the current contents of all open buffers, and
     close any buffers no longer open.
@@ -2003,6 +2049,32 @@ class LanguageServerCompleter( Completer ):
       self._PurgeMissingFilesUnderLock( files_to_purge )
 
 
+  def _RefreshFileContentsUnderLock( self, file_name, contents, file_types ):
+    file_state = self._server_file_state[ file_name ]
+    action = file_state.GetDirtyFileAction( contents )
+
+    LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
+                  file_name,
+                  file_state.state,
+                  action )
+
+    if action == lsp.ServerFileState.OPEN_FILE:
+      msg = lsp.DidOpenTextDocument( file_state,
+                                     file_types,
+                                     contents )
+
+      self.GetConnection().SendNotification( msg )
+    elif action == lsp.ServerFileState.CHANGE_FILE:
+      # FIXME: DidChangeTextDocument doesn't actually do anything
+      # different from DidOpenTextDocument other than send the right
+      # message, because we don't actually have a mechanism for generating
+      # the diffs. This isn't strictly necessary, but might lead to
+      # performance problems.
+      msg = lsp.DidChangeTextDocument( file_state, contents )
+
+      self.GetConnection().SendNotification( msg )
+
+
   def _UpdateDirtyFilesUnderLock( self, request_data ):
     for file_name, file_data in request_data[ 'file_data' ].items():
       if not self._AnySupportedFileType( file_data[ 'filetypes' ] ):
@@ -2013,29 +2085,10 @@ class LanguageServerCompleter( Completer ):
                        self.SupportedFiletypes() )
         continue
 
-      file_state = self._server_file_state[ file_name ]
-      action = file_state.GetDirtyFileAction( file_data[ 'contents' ] )
+      self._RefreshFileContentsUnderLock( file_name,
+                                          file_data[ 'contents' ],
+                                          file_data[ 'filetypes' ] )
 
-      LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
-                    file_name,
-                    file_state.state,
-                    action )
-
-      if action == lsp.ServerFileState.OPEN_FILE:
-        msg = lsp.DidOpenTextDocument( file_state,
-                                       file_data[ 'filetypes' ],
-                                       file_data[ 'contents' ] )
-
-        self.GetConnection().SendNotification( msg )
-      elif action == lsp.ServerFileState.CHANGE_FILE:
-        # FIXME: DidChangeTextDocument doesn't actually do anything
-        # different from DidOpenTextDocument other than send the right
-        # message, because we don't actually have a mechanism for generating
-        # the diffs. This isn't strictly necessary, but might lead to
-        # performance problems.
-        msg = lsp.DidChangeTextDocument( file_state, file_data[ 'contents' ] )
-
-        self.GetConnection().SendNotification( msg )
 
 
   def _UpdateSavedFilesUnderLock( self, request_data ):
@@ -2228,6 +2281,21 @@ class LanguageServerCompleter( Completer ):
     return server_trigger_characters
 
 
+  def _SetUpSemanticTokenAtlas( self, capabilities: dict ):
+    server_config = capabilities.get( 'semanticTokensProvider' )
+    if server_config is None:
+      return
+
+    server_full_support = server_config.get( 'full' )
+    if server_full_support == {}:
+      server_full_support = True
+
+    if not server_full_support:
+      return
+
+    self._semantic_token_atlas = TokenAtlas( server_config[ 'legend' ] )
+
+
   def _HandleInitializeInPollThread( self, response ):
     """Called within the context of the LanguageServerConnection's message pump
     when the initialize request receives a response."""
@@ -2244,6 +2312,8 @@ class LanguageServerCompleter( Completer ):
 
       self._is_completion_provider = (
           'completionProvider' in self._server_capabilities )
+
+      self._SetUpSemanticTokenAtlas( self._server_capabilities )
 
       if 'textDocumentSync' in self._server_capabilities:
         sync = self._server_capabilities[ 'textDocumentSync' ]
@@ -3332,3 +3402,91 @@ class WatchdogHandler( PatternMatchingEventHandler ):
       with self._server._server_info_mutex:
         msg = lsp.DidChangeWatchedFiles( event.src_path, 'delete' )
         self._server.GetConnection().SendNotification( msg )
+
+
+class TokenAtlas:
+  def __init__( self, legend ):
+    self.tokenTypes = legend[ 'tokenTypes' ]
+    self.tokenModifiers = legend[ 'tokenModifiers' ]
+
+
+def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
+  # We decode the tokens on the server because that's not blocking the user,
+  # whereas decoding in the client would be.
+  assert len( token_data ) % 5 == 0
+
+  class Token:
+    line = 0
+    start_character = 0
+    num_characters = 0
+    token_type = 0
+    token_modifiers = 0
+
+    def DecodeModifiers( self, tokenModifiers ):
+      modifiers = []
+      bit_index = 0
+      while True:
+        bit_value = pow( 2, bit_index )
+
+        if bit_value > self.token_modifiers:
+          break
+
+        if self.token_modifiers & bit_value:
+          modifiers.append( tokenModifiers[ bit_index ] )
+
+        bit_index += 1
+
+      return modifiers
+
+
+  last_token = Token()
+  tokens = []
+
+  for token_index in range( 0, len( token_data ), 5 ):
+    token = Token()
+
+    token.line = last_token.line + token_data[ token_index ]
+
+    token.start_character = token_data[ token_index + 1 ]
+    if token.line == last_token.line:
+      token.start_character += last_token.start_character
+
+    token.num_characters = token_data[ token_index + 2 ]
+
+    token.token_type = token_data[ token_index + 3 ]
+    token.token_modifiers = token_data[ token_index + 4 ]
+
+    tokens.append( {
+      'range': responses.BuildRangeData( _BuildRange(
+        contents,
+        filename,
+        {
+          'start': {
+            'line': token.line,
+            'character': token.start_character,
+          },
+          'end': {
+            'line': token.line,
+            'character': token.start_character + token.num_characters,
+          }
+        }
+      ) ),
+      'type': atlas.tokenTypes[ token.token_type ],
+      'modifiers': token.DecodeModifiers( atlas.tokenModifiers )
+    } )
+
+    last_token = token
+
+  return tokens
+
+
+def RetryOnFailure( expected_error_codes, num_retries = 3 ):
+  for i in range( num_retries ):
+    try:
+      yield
+      break
+    except ResponseFailedException as e:
+      if i < ( num_retries - 1 ) and e.error_code in expected_error_codes:
+        continue
+      else:
+        raise

@@ -137,6 +137,34 @@ SYMBOL_KIND = [
   'TypeParameter',
 ]
 
+TOKEN_TYPES = [
+  'namespace',
+  'type',
+  'class',
+  'enum',
+  'interface',
+  'struct',
+  'typeParameter',
+  'parameter',
+  'variable',
+  'property',
+  'enumMember',
+  'event',
+  'function',
+  'method',
+  'member',
+  'macro',
+  'keyword',
+  'modifier',
+  'comment',
+  'string',
+  'number',
+  'regexp',
+  'operator',
+]
+
+TOKEN_MODIFIERS = []
+
 
 class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme
@@ -327,6 +355,17 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
             'markdown'
           ],
         },
+        'semanticTokens': {
+          'requests': {
+            'range': False,
+            'full': {
+              'delta': False
+            }
+          },
+          'tokenTypes': TOKEN_TYPES,
+          'tokenModifiers': TOKEN_MODIFIERS,
+          'tokenFormats': [ 'relative' ]
+        }
       },
       'synchronization': {
         'didSave': True
@@ -445,9 +484,7 @@ def DidCloseTextDocument( file_state ):
 
 def Completion( request_id, request_data, codepoint ):
   return BuildRequest( request_id, 'textDocument/completion', {
-    'textDocument': {
-      'uri': FilePathToUri( request_data[ 'filepath' ] ),
-    },
+    'textDocument': TextDocumentIdentifier( request_data ),
     'position': Position( request_data[ 'line_num' ],
                           request_data[ 'line_value' ],
                           codepoint ),
@@ -497,9 +534,7 @@ def Implementation( request_id, request_data ):
 
 def CodeAction( request_id, request_data, best_match_range, diagnostics ):
   return BuildRequest( request_id, 'textDocument/codeAction', {
-    'textDocument': {
-      'uri': FilePathToUri( request_data[ 'filepath' ] ),
-    },
+    'textDocument': TextDocumentIdentifier( request_data ),
     'range': best_match_range,
     'context': {
       'diagnostics': diagnostics,
@@ -509,9 +544,7 @@ def CodeAction( request_id, request_data, best_match_range, diagnostics ):
 
 def Rename( request_id, request_data, new_name ):
   return BuildRequest( request_id, 'textDocument/rename', {
-    'textDocument': {
-      'uri': FilePathToUri( request_data[ 'filepath' ] ),
-    },
+    'textDocument': TextDocumentIdentifier( request_data ),
     'newName': new_name,
     'position': Position( request_data[ 'line_num' ],
                           request_data[ 'line_value' ],
@@ -533,11 +566,15 @@ def DocumentSymbol( request_id, request_data ):
   } )
 
 
+def TextDocumentIdentifier( request_data ):
+  return {
+    'uri': FilePathToUri( request_data[ 'filepath' ] ),
+  }
+
+
 def BuildTextDocumentPositionParams( request_data ):
   return {
-    'textDocument': {
-      'uri': FilePathToUri( request_data[ 'filepath' ] ),
-    },
+    'textDocument': TextDocumentIdentifier( request_data ),
     'position': Position( request_data[ 'line_num' ],
                           request_data[ 'line_value' ],
                           request_data[ 'column_codepoint' ] )
@@ -577,18 +614,14 @@ def CallHierarchy( request_id, direction, item ):
 
 def Formatting( request_id, request_data ):
   return BuildRequest( request_id, 'textDocument/formatting', {
-    'textDocument': {
-      'uri': FilePathToUri( request_data[ 'filepath' ] ),
-    },
+    'textDocument': TextDocumentIdentifier( request_data ),
     'options': FormattingOptions( request_data )
   } )
 
 
 def RangeFormatting( request_id, request_data ):
   return BuildRequest( request_id, 'textDocument/rangeFormatting', {
-    'textDocument': {
-      'uri': FilePathToUri( request_data[ 'filepath' ] ),
-    },
+    'textDocument': TextDocumentIdentifier( request_data ),
     'range': Range( request_data ),
     'options': FormattingOptions( request_data )
   } )
@@ -650,6 +683,18 @@ def ExecuteCommand( request_id, command, arguments ):
     'command': command,
     'arguments': arguments
   } )
+
+
+def SemanticTokens( request_id, request_data, previous_result_id = None ):
+  if 'range' in request_data:
+    return BuildRequest( request_id, 'textDocument/semanticTokens/range', {
+      'textDocument': TextDocumentIdentifier( request_data ),
+      'range': Range( request_data )
+    } )
+  else:
+    return BuildRequest( request_id, 'textDocument/semanticTokens/full', {
+      'textDocument': TextDocumentIdentifier( request_data ),
+    } )
 
 
 def FilePathToUri( file_name ):
