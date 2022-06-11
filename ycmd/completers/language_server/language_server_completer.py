@@ -617,6 +617,10 @@ class LanguageServerConnection( threading.Thread ):
           if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
             self._CancelWatchdogThreads()
         self.SendResponse( lsp.Void( request ) )
+      elif method == 'workspace/workspaceFolders':
+        self.SendResponse(
+          lsp.Accept( request,
+                      lsp.WorkspaceFolders( self._project_directory ) ) )
       else: # method unknown - reject
         self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
       return
