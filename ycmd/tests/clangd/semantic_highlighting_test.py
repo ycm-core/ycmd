@@ -82,7 +82,6 @@ class SignatureHelpTest( TestCase ):
   @IsolatedYcmd
   def test_none( self, app ):
     RunTest( app, {
-      'description': 'trigger after (',
       'request': {
         'filetype': 'cpp',
         'filepath': PathToTestFile( 'tokens.manual.cpp' ),
@@ -103,7 +102,6 @@ class SignatureHelpTest( TestCase ):
   @SharedYcmd
   def test_basic( self, app ):
     RunTest( app, {
-      'description': 'trigger after (',
       'request': {
         'filetype'  : 'cpp',
         'filepath'  : PathToTestFile( 'tokens.manual.cpp' ),
@@ -132,7 +130,6 @@ class SignatureHelpTest( TestCase ):
   @SharedYcmd
   def test_multiple( self, app ):
     RunTest( app, {
-      'description': 'trigger after (',
       'request': {
         'filetype'  : 'cpp',
         'filepath'  : PathToTestFile( 'tokens.manual.cpp' ),
