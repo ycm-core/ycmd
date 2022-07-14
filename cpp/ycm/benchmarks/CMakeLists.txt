@@ -16,7 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 project( ycm_core_benchmarks )
-cmake_minimum_required( VERSION 3.14 )
+cmake_minimum_required( VERSION 3.12 )
 
 # We don't want to test the benchmark library.
 set( BENCHMARK_ENABLE_TESTING
