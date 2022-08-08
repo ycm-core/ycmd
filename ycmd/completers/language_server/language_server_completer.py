@@ -1578,6 +1578,57 @@ class LanguageServerCompleter( Completer ):
     }
 
 
+  def ComputeInlayHints( self, request_data ):
+    if not self._initialize_event.wait( REQUEST_TIMEOUT_COMPLETION ):
+      return []
+
+    if not self._ServerIsInitialized():
+      return []
+
+    if not self._server_capabilities.get( 'inlayHintProvider' ):
+      return []
+
+    self._UpdateServerWithCurrentFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    body = lsp.InlayHints( request_id, request_data )
+
+    for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
+      response = self._connection.GetResponse(
+        request_id,
+        body,
+        3 * REQUEST_TIMEOUT_COMPLETION )
+
+    if response is None:
+      return []
+
+    file_contents = GetFileLines( request_data, request_data[ 'filepath' ] )
+
+    def BuildLabel( label ):
+      if isinstance( label, list ):
+        return ' '.join( l[ 'value' ] for l in label )
+      return label
+
+    def BuildInlayHint( inlay_hint: dict ):
+      inlay_hint.update( {
+        'position': responses.BuildLocationData(
+          _BuildLocationAndDescription(
+            request_data[ 'filepath' ],
+            file_contents,
+            inlay_hint[ 'position' ] )[ 0 ]
+        ),
+        'label': BuildLabel( inlay_hint[ 'label' ] ),
+        'fixits': [
+          TextEditToChunks( request_data,
+                            request_data[ 'filepath' ],
+                            text_edit )
+          for text_edit in inlay_hint.get( 'textEdits', [] )
+        ]
+      } )
+      return inlay_hint
+
+    return [ BuildInlayHint( h ) for h in response.get( 'result' ) or [] ]
+
+
   def GetDetailedDiagnostic( self, request_data ):
     self._UpdateServerWithFileContents( request_data )
 
@@ -3117,11 +3168,11 @@ def _LocationListToGoTo( request_data, positions ):
     if len( positions ) > 1:
       return [
         responses.BuildGoToResponseFromLocation(
-          *_PositionToLocationAndDescription( request_data, position ) )
+          *_LspLocationToLocationAndDescription( request_data, position ) )
         for position in positions
       ]
     return responses.BuildGoToResponseFromLocation(
-      *_PositionToLocationAndDescription( request_data, positions[ 0 ] ) )
+      *_LspLocationToLocationAndDescription( request_data, positions[ 0 ] ) )
   except ( IndexError, KeyError ):
     raise RuntimeError( 'Cannot jump to location' )
 
@@ -3130,7 +3181,7 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
   """Convert a list of LSP SymbolInformation into a YCM GoTo response"""
 
   def BuildGoToLocationFromSymbol( symbol ):
-    location, line_value = _PositionToLocationAndDescription(
+    location, line_value = _LspLocationToLocationAndDescription(
       request_data,
       symbol[ 'location' ] )
 
@@ -3157,10 +3208,10 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     return locations
 
 
-def _PositionToLocationAndDescription( request_data, position ):
-  """Convert a LSP position to a ycmd location."""
+def _LspLocationToLocationAndDescription( request_data, location ):
+  """Convert a LSP Location to a ycmd location."""
   try:
-    filename = lsp.UriToFilePath( position[ 'uri' ] )
+    filename = lsp.UriToFilePath( location[ 'uri' ] )
     file_contents = GetFileLines( request_data, filename )
   except lsp.InvalidUriException:
     LOGGER.debug( 'Invalid URI, file contents not available in GoTo' )
@@ -3176,7 +3227,7 @@ def _PositionToLocationAndDescription( request_data, position ):
 
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       position[ 'range' ][ 'start' ] )
+                                       location[ 'range' ][ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):

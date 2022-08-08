@@ -373,6 +373,10 @@ class Completer( metaclass = abc.ABCMeta ):
     return {}
 
 
+  def ComputeInlayHints( self, request_data ):
+    return []
+
+
   def DefinedSubcommands( self ):
     subcommands = sorted( self.GetSubcommandsMap().keys() )
     try:

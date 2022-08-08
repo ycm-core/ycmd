@@ -154,8 +154,14 @@ def BuildSignatureHelpResponse( signature_info, errors = None ):
 
 def BuildSemanticTokensResponse( semantic_tokens, errors = None ):
   return {
-    'semantic_tokens':
-      semantic_tokens if semantic_tokens else {},
+    'semantic_tokens': semantic_tokens if semantic_tokens else {},
+    'errors': errors if errors else [],
+  }
+
+
+def BuildInlayHintsResponse( inlay_hints, errors = None ):
+  return {
+    'inlay_hints': inlay_hints if inlay_hints else [],
     'errors': errors if errors else [],
   }
 
