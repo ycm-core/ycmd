@@ -31,6 +31,7 @@ from ycmd.responses import ( BuildExceptionResponse,
                              BuildSignatureHelpResponse,
                              BuildSignatureHelpAvailableResponse,
                              BuildSemanticTokensResponse,
+                             BuildInlayHintsResponse,
                              SignatureHelpAvailalability,
                              UnknownExtraConf )
 from ycmd.request_wrap import RequestWrap
@@ -204,6 +205,33 @@ def GetSemanticTokens():
   # to offer anything of for that here.
   return _JsonResponse(
       BuildSemanticTokensResponse( semantic_tokens, errors = errors ) )
+
+
+@app.post( '/inlay_hints' )
+def GetInlayHints():
+  LOGGER.info( 'Received inlay hints request' )
+  request_data = RequestWrap( request.json )
+
+  if not _server_state.FiletypeCompletionUsable( request_data[ 'filetypes' ],
+                                                 silent = True ):
+    return _JsonResponse( BuildInlayHintsResponse( None ) )
+
+  errors = None
+  inlay_hints = None
+
+  try:
+    filetype_completer = _server_state.GetFiletypeCompleter(
+      request_data[ 'filetypes' ] )
+    inlay_hints = filetype_completer.ComputeInlayHints( request_data )
+  except Exception as exception:
+    LOGGER.exception(
+      'Exception from semantic completer during tokens request' )
+    errors = [ BuildExceptionResponse( exception, traceback.format_exc() ) ]
+
+  # No fallback for signature help. The general completer is unlikely to be able
+  # to offer anything of for that here.
+  return _JsonResponse(
+      BuildInlayHintsResponse( inlay_hints, errors = errors ) )
 
 
 @app.post( '/filter_and_sort_candidates' )

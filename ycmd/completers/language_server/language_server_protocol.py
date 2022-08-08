@@ -371,6 +371,8 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
       'synchronization': {
         'didSave': True
       },
+      'inlay_hint': {
+      }
     },
   }
   return BuildRequest( request_id, 'initialize', {
@@ -696,7 +698,7 @@ def ExecuteCommand( request_id, command, arguments ):
   } )
 
 
-def SemanticTokens( request_id, request_data, previous_result_id = None ):
+def SemanticTokens( request_id, request_data ):
   if 'range' in request_data:
     return BuildRequest( request_id, 'textDocument/semanticTokens/range', {
       'textDocument': TextDocumentIdentifier( request_data ),
@@ -706,6 +708,14 @@ def SemanticTokens( request_id, request_data, previous_result_id = None ):
     return BuildRequest( request_id, 'textDocument/semanticTokens/full', {
       'textDocument': TextDocumentIdentifier( request_data ),
     } )
+
+
+def InlayHints( request_id, request_data ):
+  # range is mandatory
+  return BuildRequest( request_id, 'textDocument/inlayHint', {
+    'textDocument': TextDocumentIdentifier( request_data ),
+    'range': Range( request_data )
+  } )
 
 
 def FilePathToUri( file_name ):
