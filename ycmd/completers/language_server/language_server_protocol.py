@@ -358,7 +358,7 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
         },
         'semanticTokens': {
           'requests': {
-            'range': False,
+            'range': True,
             'full': {
               'delta': False
             }
@@ -698,8 +698,8 @@ def ExecuteCommand( request_id, command, arguments ):
   } )
 
 
-def SemanticTokens( request_id, request_data ):
-  if 'range' in request_data:
+def SemanticTokens( request_id, range_supported, request_data ):
+  if 'range' in request_data and range_supported:
     return BuildRequest( request_id, 'textDocument/semanticTokens/range', {
       'textDocument': TextDocumentIdentifier( request_data ),
       'range': Range( request_data )

@@ -1551,10 +1551,13 @@ class LanguageServerCompleter( Completer ):
     if not self._semantic_token_atlas:
       return {}
 
+    range_supported = self._server_capabilities[ 'semanticTokensProvider' ].get(
+      'range', False )
+
     self._UpdateServerWithCurrentFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
-    body = lsp.SemanticTokens( request_id, request_data )
+    body = lsp.SemanticTokens( request_id, range_supported, request_data )
 
     for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
       response = self._connection.GetResponse(
