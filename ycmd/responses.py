@@ -269,6 +269,7 @@ class FixItChunk:
     self.replacement_text = replacement_text
     self.range = range
 
+
 def BuildDiagnosticData( diagnostic ):
   kind = ( diagnostic.kind_.name if hasattr( diagnostic.kind_, 'name' )
            else diagnostic.kind_ )
