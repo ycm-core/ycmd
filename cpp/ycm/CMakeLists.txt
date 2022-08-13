@@ -57,13 +57,13 @@ if ( USE_CLANG_COMPLETER AND
       set( LIBCLANG_DIRNAME
            "libclang-${CLANG_VERSION}-amd64-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "0d3e808e04d4ebb6023402310316799b6c9c4220763fd13d7691dc24969ce4c4" )
+          "6efd6cc111939766dde6873fbd371280c13ffbb3c7fae193d5f66bd988ccf440" )
     else()
       set( LIBCLANG_DIRNAME
            "libclang-${CLANG_VERSION}-i386-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "6efd6cc111939766dde6873fbd371280c13ffbb3c7fae193d5f66bd988ccf440" )
-    endif()
+           "0d3e808e04d4ebb6023402310316799b6c9c4220763fd13d7691dc24969ce4c4" )
+   endif()
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( LIBCLANG_SHA256
