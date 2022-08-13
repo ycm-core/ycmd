@@ -1606,10 +1606,10 @@ class LanguageServerCompleter( Completer ):
 
     file_contents = GetFileLines( request_data, request_data[ 'filepath' ] )
 
-    def BuildLabel( label ):
-      if isinstance( label, list ):
-        return ' '.join( l[ 'value' ] for l in label )
-      return label
+    def BuildLabel( label_or_labels ):
+      if isinstance( label_or_labels, list ):
+        return ' '.join( label[ 'value' ] for label in label_or_labels )
+      return label_or_labels
 
     def BuildInlayHint( inlay_hint: dict ):
       inlay_hint.update( {
