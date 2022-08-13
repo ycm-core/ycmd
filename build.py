@@ -107,7 +107,7 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '13.0.0'
+CLANGD_VERSION = '14.0.0'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -254,6 +254,7 @@ def _CheckCallQuiet( args, status_message, **kwargs ):
 def _CheckCall( args, **kwargs ):
   exit_message = kwargs.pop( 'exit_message', None )
   stdout = kwargs.get( 'stdout', None )
+  on_failure = kwargs.pop( 'on_failure', None )
 
   try:
     subprocess.check_call( args, **kwargs )
@@ -263,10 +264,12 @@ def _CheckCall( args, **kwargs ):
       print( stdout.read().decode( 'utf-8' ) )
       print( "FAILED" )
 
-    if exit_message:
+    if on_failure:
+      on_failure( exit_message, error.returncode )
+    elif exit_message:
       raise InstallationFailed( exit_message )
-
-    raise InstallationFailed( exit_code = error.returncode )
+    else:
+      raise InstallationFailed( exit_code = error.returncode )
 
 
 def GetGlobalPythonPrefix():
@@ -863,10 +866,17 @@ def EnableGoCompleter( args ):
   new_env[ 'GOPATH' ] = p.join( DIR_OF_THIS_SCRIPT, 'third_party', 'go' )
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
-  CheckCall( [ go, 'get', 'golang.org/x/tools/gopls@v0.7.1' ],
+
+  gopls = 'golang.org/x/tools/gopls@v0.7.1'
+  CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,
-             status_message = 'Building gopls for go completion' )
+             status_message = 'Building gopls for go completion',
+             on_failure = lambda msg, code: CheckCall(
+               [ go, 'get', gopls ],
+               env = new_env,
+               quiet = args.quiet,
+               status_message = 'Trying legacy get get' ) )
 
 
 def WriteToolchainVersion( version ):
@@ -1052,36 +1062,36 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        'ca4c9b7c0350a936e921b3e3dc6bdd51a6e905d65eac26b23ede7774158d2305' ),
+        '529c5b782d926536aedcb2d7a3c8a813fa05ada9193ec4119b28deb3f83634b2' ),
       ( 'clangd-{version}-win32',
-        'a2eab3a4b23b700a16b9ef3e6b5b122438fcf016ade88dd8e10d1f81bde9386e' ) ]
+        '6c7f0985370ebede0f61ff66a1b4886079f199bc346c2baa941de9ad76e907a7' ) ]
   if OnMac():
     if OnArm():
       return [
         ( 'clangd-{version}-arm64-apple-darwin',
-          '68be75dbe52893cba5d75486e598e51032f7f67b24c748655aace932152d4421' ) ]
+          '6b4bed9378a9ac3d84720dbcf76e4c60b0afc27567d42d7837f9da8b039d13c5' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        'eacbe2d7df6e57e6053f60be798e9f64d3e57556a0b2c58cf0c5599fdf9e793d' ) ]
+        '867342cffc04ab3c1936121ed643e07df666119afad6518835a26306db8767ce' ) ]
   if OnFreeBSD():
     return [
       ( 'clangd-{version}-amd64-unknown-freebsd13',
-        'bc6a11bd22251f4996290384baa59854b88537ce9105da2c64d0c70992cc548b' ),
+        '5db1f95eea87d216d7a7490c207918962cddfdee6387594f6f6043ae21dde22f' ),
       ( 'clangd-{version}-i386-unknown-freebsd13',
-        '5ea931ca15b02c667fc3ad4d08266447b8212a83b43c80e644e3989645d63e2b' ) ]
+        'b9f6d0be1476dfb71ee16d12639b7fe425dc90097d81fbf2bdd0cb7248338ca2' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'f0e9cea316217a40298d48ef81198ac1b41e6686fc7f7631a6ce54dd75a6989e' ) ]
+        'c5e2ac2f9381f6c1bf2305af0458360160a86c8dbd369c923a71c673f391142d' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        'bb52085decd18621f5c15b884dde6a327e3193b69bfc4b3a49c5f4459242e522' ) ]
+        '86b4582d551b8d5558b4bdd1060fbb3ec9ae4e0c7c6f9489db1a4088f5e71ef3' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '10a64c468d1dd2a384e0e5fd4eb2582fd9f1dfa706b6d2d2bb88fb0fbfc2718d' ) ]
+        '9c17b5550ba927aa3f661300b4258109d3a23aecdd97fef81185d0d0b5529d36' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
@@ -1216,11 +1226,12 @@ def PrintReRunMessage():
 def Main(): # noqa: C901
   args = ParseArguments()
 
-  if 'SUDO_COMMAND' in os.environ:
+  if not OnWindows() and os.geteuid() == 0:
     if args.force_sudo:
-      print( 'Forcing build with sudo. If it breaks, keep the pieces.' )
+      print( 'Forcing build with root privileges. '
+             'If it breaks, keep the pieces.' )
     else:
-      sys.exit( 'This script should not be run with sudo.' )
+      sys.exit( 'This script should not be run with root privileges.' )
 
   try:
     if not args.skip_build:

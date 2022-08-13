@@ -30,53 +30,53 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION 13.0.0 )
+  set( CLANG_VERSION 14.0.0 )
 
   if ( APPLE )
     if ( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-arm64-apple-darwin" )
       set( LIBCLANG_SHA256
-           "46486411f44c5c21f248590f3749492d455ae28ac4ad71e531ebb59417a339c0" )
+           "04ed0ebe78f8128d41585dae96ba01f15e253483db6d98d361f3bb0fba5ee135" )
     else()
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-x86_64-apple-darwin" )
       set( LIBCLANG_SHA256
-           "09a7562be4f2c608e82de01c996899ffffc79d130af5414278a8bd0ae84d352e" )
+           "3f46d66cc2345f7bbf6394b16a9232bf291ab992bd7a5a4380800c92c1c409b3" )
     endif()
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win64" )
       set( LIBCLANG_SHA256
-           "82a467174053ed10f87e77fc79c20776ebc7521356b4b8f1e3290714a4b48cf5" )
+           "22b1497fb261b402761c3a0fd7cb59badda0e99156a8661d44953939e123c0c4" )
     else()
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win32" )
       set( LIBCLANG_SHA256
-           "988c8152dbf8fd9fa9eda2a2c8c97acef7f688cefe37c5f1624f9db69a1ea142" )
+           "74cd1a0de17877c6d291979ddfc696969a0aa1c3b47122396f61c0e9286a3a9d" )
     endif()
   elseif ( SYSTEM_IS_FREEBSD )
     if ( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME
            "libclang-${CLANG_VERSION}-amd64-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "ca3cf651f570f53f507cde65b7501626a002f15e13038ee1c9ddfd8bfaf6ed3b" )
+          "6efd6cc111939766dde6873fbd371280c13ffbb3c7fae193d5f66bd988ccf440" )
     else()
       set( LIBCLANG_DIRNAME
            "libclang-${CLANG_VERSION}-i386-unknown-freebsd13" )
       set( LIBCLANG_SHA256
-           "95b2b75ca59e4d401d1195fdfa62bf6a019d3bbfdedf37d649bb8d1b57623012" )
-    endif()
+           "0d3e808e04d4ebb6023402310316799b6c9c4220763fd13d7691dc24969ce4c4" )
+   endif()
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( LIBCLANG_SHA256
-         "2ca6a11236f1572c90a450406131711ce3a260c952d89a7004f3351550fc3e10" )
+         "e11048e3fceaba016a4521c2138166a006abaa5c4eba23e4b2f2b354e81a130b" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-armv7a-linux-gnueabihf" )
     set( LIBCLANG_SHA256
-         "d7490f7c3470f41052319bcf4b40a36a6534a6a8b9357ccf3facff8109a59517" )
+         "321fd6679a5776c6f5df6169343032ac4b300aac8228e232c23067fdbcbbb7cb" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64)" )
     set( LIBCLANG_DIRNAME
          "libclang-${CLANG_VERSION}-x86_64-unknown-linux-gnu" )
     set( LIBCLANG_SHA256
-         "9a5bee818a4995bc52e91588059bef42728d046808206bfb93977f4e3109e50c" )
+         "a5b70d17102484cd4b5dbd1d63206bd0a41b130359428a0b2d7817eba768e3f4" )
   else()
     message( FATAL_ERROR
       "No prebuilt Clang ${CLANG_VERSION} binaries for this system. "
@@ -361,6 +361,13 @@ target_link_libraries( ${PROJECT_NAME}
 
 if( LIBCLANG_TARGET )
   set( LIBCLANG_DIR "${CMAKE_SOURCE_DIR}/../third_party/clang/lib" )
+  # add rpath to libclang and remove rpath to temporary directory
+  if ( NOT MSVC )
+    set_target_properties( ${PROJECT_NAME} PROPERTIES
+      BUILD_WITH_INSTALL_RPATH ON
+      SKIP_BUILD_RPATH FALSE
+      INSTALL_RPATH ${LIBCLANG_DIR} )
+  endif ()
   # Remove all previous libclang libraries.
   file( GLOB LIBCLANG_FILEPATHS "${LIBCLANG_DIR}/libclang*" )
   foreach( FILEPATH ${LIBCLANG_FILEPATHS} )

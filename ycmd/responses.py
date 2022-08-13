@@ -96,8 +96,8 @@ def BuildDisplayMessageResponse( text ):
 
 
 def BuildDetailedInfoResponse( text ):
-  """ Returns the response object for displaying detailed information about types
-  and usage, such as within a preview window"""
+  """ Returns the response object for displaying detailed information about
+  types and usage, such as within a preview window"""
   return {
     'detailed_info': text
   }
@@ -148,6 +148,14 @@ def BuildSignatureHelpResponse( signature_info, errors = None ):
   return {
     'signature_help':
       signature_info if signature_info else EMPTY_SIGNATURE_INFO,
+    'errors': errors if errors else [],
+  }
+
+
+def BuildSemanticTokensResponse( semantic_tokens, errors = None ):
+  return {
+    'semantic_tokens':
+      semantic_tokens if semantic_tokens else {},
     'errors': errors if errors else [],
   }
 

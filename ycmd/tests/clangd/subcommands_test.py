@@ -590,6 +590,7 @@ class SubcommandsTest( TestCase ):
                                                'GoToInclude',
                                                'GoToReferences',
                                                'GoToSymbol',
+                                               'GoToType',
                                                'RefactorRename',
                                                'RestartServer' ] ) )
         },

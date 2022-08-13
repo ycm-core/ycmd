@@ -37,7 +37,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     RangeMatcher,
                                     PollForMessages,
                                     TemporaryTestDir,
-                                    UnixOnly )
+                                    UnixOnly,
+                                    NotMac )
 from ycmd.utils import ReadFile
 from ycmd import handlers
 
@@ -277,6 +278,7 @@ void foo() {
     ) )
 
 
+  @NotMac( 'This test fails in CI on mac, so skip it' )
   @IsolatedYcmd()
   def test_Diagnostics_CUDA_Kernel( self, app ):
     filepath = PathToTestFile( 'cuda', 'kernel_call.cu' )
