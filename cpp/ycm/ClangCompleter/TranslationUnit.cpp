@@ -482,9 +482,21 @@ void TranslationUnit::UpdateLatestDiagnostics() {
                         clang_disposeDiagnostic ),
         clang_translation_unit_ );
 
-    if ( diagnostic.kind_ != DiagnosticKind::INFORMATION ) {
-      latest_diagnostics_.push_back( diagnostic );
+    if ( diagnostic.kind_ == DiagnosticKind::INFORMATION ) {
+        continue;
     }
+
+    // Sometimes libclang returns invalid ranges causing ycm in trouble
+    // Specially editing incomplete macros
+    diagnostic.ranges_.erase( std::remove_if( diagnostic.ranges_.begin(),
+                                              diagnostic.ranges_.end(),
+                                              []( const auto &range ) -> bool {
+        return range.start_.line_number_ == 0 ||
+               range.start_.column_number_ == 0 ||
+               range.end_.line_number_ == 0 ||
+               range.end_.column_number_ == 0;
+        } ), diagnostic.ranges_.end() );
+    latest_diagnostics_.push_back( diagnostic );
   }
 }
 

@@ -292,6 +292,7 @@ def GetPossiblePythonLibraryDirectories():
   return [
     sysconfig.get_config_var( 'LIBPL' ),
     p.join( prefix, 'lib64' ),
+    p.join( prefix, 'lib/64' ),
     p.join( prefix, 'lib' )
   ]
 

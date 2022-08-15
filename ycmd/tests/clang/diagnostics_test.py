@@ -265,8 +265,6 @@ int main() {
         'location': LocationMatcher( filepath, 8, 7 ),
         'location_extent': RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) ),
         'ranges': contains_exactly(
-          # FIXME: empty ranges from libclang should be ignored.
-          RangeMatcher( '', ( 0, 0 ), ( 0, 0 ) ),
           RangeMatcher( filepath, ( 8, 7 ), ( 8, 11 ) )
         ),
         'text': equal_to( 'constructor cannot have a return type' ),
