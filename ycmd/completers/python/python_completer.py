@@ -293,6 +293,14 @@ class PythonCompleter( Completer ):
                            self._GetDoc( request_data ) ),
       'RefactorRename' : ( lambda self, request_data, args:
                            self._RefactorRename( request_data, args ) ),
+      'RefactorInline' : ( lambda self, request_data, args:
+                           self._RefactorInline( request_data, args ) ),
+      'RefactorExtractVariable' : ( lambda self, request_data, args:
+                                    self._RefactorExtractVariable( request_data,
+                                                                   args ) ),
+      'RefactorExtractFunction' : ( lambda self, request_data, args:
+                                    self._RefactorExtractFunction( request_data,
+                                                                   args ) ),
     }
 
 
@@ -464,15 +472,71 @@ class PythonCompleter( Completer ):
         _RefactoringToFixIt( refactoring )
       ] )
 
+  def _RefactorInline( self, request_data, args ):
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).inline(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1 )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
+  def _RefactorExtractVariable( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify a new name' )
+
+    new_name = args[ 0 ]
+    if 'range' in request_data:
+      range_end = request_data[ 'range' ].get( 'end', {} )
+      until_line = range_end.get( 'line_num', None )
+      until_column = range_end.get( 'column_num', None )
+    else:
+      until_line = None
+      until_column = None
+
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).extract_variable(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1,
+        new_name = new_name,
+        until_line = until_line,
+        until_column = until_column )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
+  def _RefactorExtractFunction( self, request_data, args ):
+    if len( args ) < 1:
+      raise RuntimeError( 'Must specify a new name' )
+
+    new_name = args[ 0 ]
+    if 'range' in request_data:
+      range_end = request_data[ 'range' ].get( 'end', {} )
+      until_line = range_end.get( 'line_num', None )
+      until_column = range_end.get( 'column_num', None )
+    else:
+      until_line = None
+      until_column = None
+
+    with self._jedi_lock:
+      refactoring = self._GetJediScript( request_data ).extract_function(
+        line = request_data[ 'line_num' ],
+        column = request_data[ 'column_codepoint' ] - 1,
+        new_name = new_name,
+        until_line = until_line,
+        until_column = until_column )
+
+      return responses.BuildFixItResponse( [
+        _RefactoringToFixIt( refactoring )
+      ] )
+
   # Jedi has the following refactorings:
-  #  - renmae (RefactorRename)
+  #  - rename (RefactorRename)
   #  - inline variable
   #  - extract variable (requires argument)
   #  - extract function (requires argument)
-  #
-  # We could add inline variable via FixIt, but for the others we have no way to
-  # ask for the argument on "resolve" of the FixIt. We could add
-  # Refactor Inline ... but that would be inconsistent.
 
 
   def DebugInfo( self, request_data ):
@@ -554,17 +618,10 @@ def _RefactoringToFixIt( refactoring ):
       # the replacement text extracted from new_text
       chunks.append( responses.FixItChunk(
         new_text[ new_start : new_end ],
-        # FIXME: new_end must be equal to or after new_start, so we should make
-        # OffsetToPosition take 2 offsets and return them rather than repeating
-        # work
-        responses.Range( _OffsetToPosition( old_start,
-                                            filename,
-                                            old_text,
-                                            newlines ),
-                         _OffsetToPosition( old_end,
-                                            filename,
-                                            old_text,
-                                            newlines ) )
+        responses.Range( *_OffsetToPosition( ( old_start, old_end ),
+                                             filename,
+                                             old_text,
+                                             newlines ) )
       ) )
 
   return responses.FixIt( responses.Location( 1, 1, 'none' ),
@@ -573,21 +630,26 @@ def _RefactoringToFixIt( refactoring ):
                           kind = responses.FixIt.Kind.REFACTOR )
 
 
-def _OffsetToPosition( offset, filename, text, newlines ):
+def _OffsetToPosition( start_end, filename, text, newlines ):
   """Convert the 0-based codepoint offset |offset| to a position (line/col) in
   |text|. |filename| is the full path of the file containing |text| and
   |newlines| is a cache of the 0-based character offsets of all the \n
   characters in |text| (plus one extra). Returns responses.Position."""
 
+  loc = ()
   for index, newline in enumerate( newlines ):
-    if newline >= offset:
-      start_of_line = newlines[ index - 1 ] + 1 if index > 0 else 0
-      column = offset - start_of_line
-      line_value = text[ start_of_line : newline ]
-      return responses.Location( index + 1,
-                                 CodepointOffsetToByteOffset( line_value,
-                                                              column + 1 ),
-                                 filename )
+    for offset in start_end[ len( loc ): ]:
+      if newline >= offset:
+        start_of_line = newlines[ index - 1 ] + 1 if index > 0 else 0
+        column = offset - start_of_line
+        line_value = text[ start_of_line : newline ]
+        loc += ( responses.Location( index + 1,
+                                     CodepointOffsetToByteOffset( line_value,
+                                                                  column + 1 ),
+                                     filename ), )
+    if len( loc ) == 2:
+      break
+  return loc
 
   # Invalid position - it's outside of the text. Just return the last
   # position in the text. This is an internal error.
