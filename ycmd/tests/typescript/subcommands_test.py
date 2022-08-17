@@ -384,6 +384,9 @@ class SubcommandsTest( TestCase ):
               ChunkMatcher( '    ',
                             LocationMatcher( filepath, 11,  1 ),
                             LocationMatcher( filepath, 11,  3 ) ),
+              ChunkMatcher( ' ',
+                            LocationMatcher( filepath, 11,  6 ),
+                            LocationMatcher( filepath, 11,  6 ) ),
             )
           } ) )
         } )
@@ -439,6 +442,9 @@ class SubcommandsTest( TestCase ):
               ChunkMatcher( '\t',
                             LocationMatcher( filepath, 11,  1 ),
                             LocationMatcher( filepath, 11,  3 ) ),
+              ChunkMatcher( ' ',
+                            LocationMatcher( filepath, 11,  6 ),
+                            LocationMatcher( filepath, 11,  6 ) ),
             )
           } ) )
         } )
@@ -944,16 +950,16 @@ class SubcommandsTest( TestCase ):
                 matches_regexp(
                   'import \\* as lib from "library";\r?\n'
                   'import func, { func1, func2 } from "library";\r?\n' ),
-                LocationMatcher( filepath,  1, 1 ),
-                LocationMatcher( filepath,  2, 1 ) ),
+                LocationMatcher( filepath, 1, 1 ),
+                LocationMatcher( filepath, 2, 1 ) ),
               ChunkMatcher(
                 '',
-                LocationMatcher( filepath,  5, 1 ),
-                LocationMatcher( filepath,  6, 1 ) ),
+                LocationMatcher( filepath, 2, 1 ),
+                LocationMatcher( filepath, 3, 1 ) ),
               ChunkMatcher(
                 '',
-                LocationMatcher( filepath,  9, 1 ),
-                LocationMatcher( filepath, 10, 1 ) ),
+                LocationMatcher( filepath, 3, 1 ),
+                LocationMatcher( filepath, 4, 1 ) ),
             )
           } ) )
         } )
