@@ -1613,6 +1613,7 @@ class LanguageServerCompleter( Completer ):
 
     def BuildInlayHint( inlay_hint: dict ):
       inlay_hint.update( {
+        'kind': lsp.INLAY_HINT_KIND[ inlay_hint[ 'kind' ] ],
         'position': responses.BuildLocationData(
           _BuildLocationAndDescription(
             request_data[ 'filepath' ],

@@ -165,6 +165,12 @@ TOKEN_TYPES = [
 
 TOKEN_MODIFIERS = []
 
+INLAY_HINT_KIND = [
+  None,
+  "Type",
+  "Parameter"
+]
+
 
 class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme
