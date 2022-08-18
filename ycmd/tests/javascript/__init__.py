@@ -39,10 +39,8 @@ def setUpModule():
   subserver, should be done here."""
   global shared_app
 
-  with patch( 'ycmd.completers.javascript.hook.'
-              'ShouldEnableTernCompleter', return_value = False ):
-    shared_app = SetUpApp()
-    WaitUntilCompleterServerReady( shared_app, 'javascript' )
+  shared_app = SetUpApp( { 'disable_tern': True } )
+  WaitUntilCompleterServerReady( shared_app, 'javascript' )
 
 
 def tearDownModule():
