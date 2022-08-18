@@ -362,17 +362,18 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
             'markdown'
           ],
         },
-        'semanticTokens': {
-          'requests': {
-            'range': True,
-            'full': {
-              'delta': False
-            }
-          },
-          'tokenTypes': TOKEN_TYPES,
-          'tokenModifiers': TOKEN_MODIFIERS,
-          'tokenFormats': [ 'relative' ]
-        }
+      },
+      'semanticTokens': {
+        'requests': {
+          'range': True,
+          'full': {
+            'delta': False
+          }
+        },
+        'tokenTypes': TOKEN_TYPES,
+        'tokenModifiers': TOKEN_MODIFIERS,
+        'formats': [ 'relative' ],
+        'augmentSyntaxTokens': True,
       },
       'synchronization': {
         'didSave': True
