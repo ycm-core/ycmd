@@ -1588,7 +1588,7 @@ class LanguageServerCompleter( Completer ):
     if not self._ServerIsInitialized():
       return []
 
-    if not self._server_capabilities.get( 'inlayHintProvider' ):
+    if 'inlayHintProvider' not in self._server_capabilities:
       return []
 
     self._UpdateServerWithCurrentFileContents( request_data )
