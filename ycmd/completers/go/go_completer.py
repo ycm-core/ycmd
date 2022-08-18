@@ -98,7 +98,19 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def DefaultSettings( self, request_data ):
-    return { 'hoverKind': 'Structured' }
+    return {
+      'hoverKind': 'Structured',
+      'hints': {
+        'assignVariableTypes': True,
+        'compositeLiteralFields': True,
+        'compositeLiteralTypes': True,
+        'constantValues': True,
+        'functionTypeParameters': True,
+        'parameterNames': True,
+        'rangeVariableTypes': True,
+      }
+    }
+
 
 
   def ExtraCapabilities( self ):
