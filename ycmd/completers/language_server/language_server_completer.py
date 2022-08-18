@@ -1612,7 +1612,7 @@ class LanguageServerCompleter( Completer ):
       return label_or_labels
 
     def BuildInlayHint( inlay_hint: dict ):
-      inlay_hint.update( {
+      return {
         'kind': lsp.INLAY_HINT_KIND[ inlay_hint[ 'kind' ] ],
         'position': responses.BuildLocationData(
           _BuildLocationAndDescription(
@@ -1621,14 +1621,9 @@ class LanguageServerCompleter( Completer ):
             inlay_hint[ 'position' ] )[ 0 ]
         ),
         'label': BuildLabel( inlay_hint[ 'label' ] ),
-        'fixits': [
-          TextEditToChunks( request_data,
-                            request_data[ 'filepath' ],
-                            text_edit )
-          for text_edit in inlay_hint.get( 'textEdits', [] )
-        ]
-      } )
-      return inlay_hint
+        'paddingLeft': inlay_hint.get( 'paddingLeft', False ),
+        'paddingRight': inlay_hint.get( 'paddingRight', False ),
+      }
 
     return [ BuildInlayHint( h ) for h in response.get( 'result' ) or [] ]
 
