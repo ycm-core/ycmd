@@ -64,7 +64,8 @@ class DebugInfoTest( TestCase ):
               'key': 'Settings',
               'value': is_json_string_matching( has_entries( {
                 'hints': is_not( empty() ),
-                'hoverKind': 'Structured'
+                'hoverKind': 'Structured',
+                'semanticTokens': True
               } ) ),
             } ),
           )
@@ -105,7 +106,8 @@ class DebugInfoTest( TestCase ):
               'key': 'Settings',
               'value': is_json_string_matching( has_entries( {
                 'hints': is_not( empty() ),
-                'hoverKind': 'Structured'
+                'hoverKind': 'Structured',
+                'semanticTokens': True
               } ) ),
             } ),
           )
