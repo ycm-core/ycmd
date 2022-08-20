@@ -24,6 +24,9 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        has_item )
+from hamcrest.core.base_matcher import BaseMatcher
+from hamcrest.core import helpers
+
 from unittest.mock import patch
 from pprint import pformat
 from webtest import TestApp
@@ -521,3 +524,15 @@ def PollForMessages( app, request_data, timeout = 60 ):
         f'Message poll response was wrong type: { type( response ).__name__ }' )
 
     time.sleep( 0.25 )
+
+
+class is_json_string_matching( BaseMatcher ):
+  def __init__( self, matcher ):
+    self._matcher = helpers.wrap_matcher.wrap_matcher( matcher )
+
+  def _matches( self, item ):
+    value = json.loads( item )
+    return self._matcher.matches( value )
+
+  def describe_to( self, description ):
+    return self._matcher.describe_to( description )

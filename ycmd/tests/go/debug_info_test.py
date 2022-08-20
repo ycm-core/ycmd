@@ -20,7 +20,8 @@ from hamcrest import ( assert_that,
                        has_entries,
                        has_entry,
                        instance_of,
-                       matches_regexp )
+                       is_not,
+                       empty )
 from unittest import TestCase
 
 from ycmd.tests.go import setUpModule, tearDownModule # noqa
@@ -28,7 +29,7 @@ from ycmd.tests.go import ( IsolatedYcmd,
                             PathToTestFile,
                             SharedYcmd,
                             StartGoCompleterServerInDirectory )
-from ycmd.tests.test_utils import BuildRequest
+from ycmd.tests.test_utils import BuildRequest, is_json_string_matching
 
 
 class DebugInfoTest( TestCase ):
@@ -61,7 +62,11 @@ class DebugInfoTest( TestCase ):
             } ),
             has_entries( {
               'key': 'Settings',
-              'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
+              'value': is_json_string_matching( has_entries( {
+                'hints': is_not( empty() ),
+                'hoverKind': 'Structured',
+                'semanticTokens': True
+              } ) ),
             } ),
           )
         } ) ),
@@ -99,7 +104,11 @@ class DebugInfoTest( TestCase ):
             } ),
             has_entries( {
               'key': 'Settings',
-              'value': matches_regexp( '{\n  "hoverKind": "Structured"\n}' )
+              'value': is_json_string_matching( has_entries( {
+                'hints': is_not( empty() ),
+                'hoverKind': 'Structured',
+                'semanticTokens': True
+              } ) ),
             } ),
           )
         } ) ),

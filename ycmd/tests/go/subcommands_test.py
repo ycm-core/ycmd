@@ -225,17 +225,11 @@ class SubcommandsTest( TestCase ):
         'data': has_entries( {
           'fixits': contains_exactly( has_entries( {
             'chunks': contains_exactly(
-              ChunkMatcher( '',
+              ChunkMatcher( '\t',
                             LocationMatcher( filepath, 8, 1 ),
                             LocationMatcher( filepath, 8, 5 ) ),
               ChunkMatcher( '\t',
-                            LocationMatcher( filepath, 8, 5 ),
-                            LocationMatcher( filepath, 8, 5 ) ),
-              ChunkMatcher( '',
                             LocationMatcher( filepath, 12, 1 ),
-                            LocationMatcher( filepath, 12, 5 ) ),
-              ChunkMatcher( '\t',
-                            LocationMatcher( filepath, 12, 5 ),
                             LocationMatcher( filepath, 12, 5 ) ),
             )
           } ) )

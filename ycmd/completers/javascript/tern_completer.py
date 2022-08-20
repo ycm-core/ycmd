@@ -54,11 +54,15 @@ SERVER_HOST = '127.0.0.1'
 LOGFILE_FORMAT = 'tern_{port}_{std}_'
 
 
-def ShouldEnableTernCompleter():
+def ShouldEnableTernCompleter( user_options ):
   """Returns whether or not the tern completer is 'installed'. That is whether
   or not the tern submodule has a 'node_modules' directory. This is pretty much
   the only way we can know if the user added '--js-completer' on
   install or manually ran 'npm install' in the tern submodule directory."""
+
+  if user_options.get( 'disable_tern' ):
+    LOGGER.info( 'Not using Tern completer: disabled by user' )
+    return False
 
   if not PATH_TO_NODE:
     LOGGER.warning( 'Not using Tern completer: unable to find node' )

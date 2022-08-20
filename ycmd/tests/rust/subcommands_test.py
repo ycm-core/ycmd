@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
+                       has_item,
                        contains_exactly,
                        contains_inanyorder,
                        empty,
@@ -383,7 +384,7 @@ class SubcommandsTest( TestCase ):
           # Keyword
           { 'req': ( 'main.rs',  3,  2 ), 'res': 'Cannot jump to location' },
         ],
-        [ 'GoToDefinition', 'GoToDeclaration', 'GoTo' ] ):
+        [ 'GoToDefinition', 'GoTo' ] ):
       with self.subTest( test = test, command = command ):
         RunGoToTest( app, command, test )
 
@@ -520,7 +521,7 @@ class SubcommandsTest( TestCase ):
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
-          'fixits': contains_exactly( has_entries( {
+          'fixits': has_item( has_entries( {
             'chunks': contains_exactly(
               ChunkMatcher( 'pub(crate) ',
                             LocationMatcher( filepath, 17, 1 ),

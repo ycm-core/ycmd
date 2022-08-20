@@ -95,7 +95,7 @@ JDTLS_SHA256 = (
   '09650af5c9dc39f0b40981bcdaa2170cbbc5bb003ac90cdb07fbb57381ac47b2'
 )
 
-RUST_TOOLCHAIN = 'nightly-2021-10-26'
+RUST_TOOLCHAIN = 'nightly-2022-08-17'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
@@ -868,7 +868,7 @@ def EnableGoCompleter( args ):
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
 
-  gopls = 'golang.org/x/tools/gopls@v0.7.1'
+  gopls = 'golang.org/x/tools/gopls@v0.9.4'
   CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,

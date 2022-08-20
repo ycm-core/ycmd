@@ -165,6 +165,12 @@ TOKEN_TYPES = [
 
 TOKEN_MODIFIERS = []
 
+INLAY_HINT_KIND = [
+  None,
+  "Type",
+  "Parameter"
+]
+
 
 class InvalidUriException( Exception ):
   """Raised when trying to convert a server URI to a file path but the scheme
@@ -356,21 +362,24 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
             'markdown'
           ],
         },
-        'semanticTokens': {
-          'requests': {
-            'range': False,
-            'full': {
-              'delta': False
-            }
-          },
-          'tokenTypes': TOKEN_TYPES,
-          'tokenModifiers': TOKEN_MODIFIERS,
-          'tokenFormats': [ 'relative' ]
-        }
+      },
+      'semanticTokens': {
+        'requests': {
+          'range': True,
+          'full': {
+            'delta': False
+          }
+        },
+        'tokenTypes': TOKEN_TYPES,
+        'tokenModifiers': TOKEN_MODIFIERS,
+        'formats': [ 'relative' ],
+        'augmentSyntaxTokens': True,
       },
       'synchronization': {
         'didSave': True
       },
+      'inlay_hint': {
+      }
     },
   }
   return BuildRequest( request_id, 'initialize', {
@@ -696,8 +705,8 @@ def ExecuteCommand( request_id, command, arguments ):
   } )
 
 
-def SemanticTokens( request_id, request_data, previous_result_id = None ):
-  if 'range' in request_data:
+def SemanticTokens( request_id, range_supported, request_data ):
+  if 'range' in request_data and range_supported:
     return BuildRequest( request_id, 'textDocument/semanticTokens/range', {
       'textDocument': TextDocumentIdentifier( request_data ),
       'range': Range( request_data )
@@ -706,6 +715,14 @@ def SemanticTokens( request_id, request_data, previous_result_id = None ):
     return BuildRequest( request_id, 'textDocument/semanticTokens/full', {
       'textDocument': TextDocumentIdentifier( request_data ),
     } )
+
+
+def InlayHints( request_id, request_data ):
+  # range is mandatory
+  return BuildRequest( request_id, 'textDocument/inlayHint', {
+    'textDocument': TextDocumentIdentifier( request_data ),
+    'range': Range( request_data )
+  } )
 
 
 def FilePathToUri( file_name ):

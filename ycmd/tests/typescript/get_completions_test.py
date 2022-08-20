@@ -315,7 +315,7 @@ class GetCompletionsTest( TestCase ):
             'extra_data': has_entries( {
               'fixits': contains_inanyorder(
                 has_entries( {
-                  'text': 'Import \'Bår\' from module "./unicode"',
+                  'text': 'Add import from "./unicode"',
                   'chunks': contains_exactly(
                     ChunkMatcher(
                       matches_regexp( '^import { Bår } from '
