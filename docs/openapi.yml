@@ -682,6 +682,57 @@ definitions:
         items:
           $ref: "#/definitions/DiagnosticData"
 
+  SemanticToken:
+    type: object
+    description: |-
+      A item describing the type of token covered by the supplied range.
+    required:
+       - range
+       - type
+       - modifiers
+    properties:
+      range:
+        $ref: '#/definitions/Range'
+      type:
+        type: string
+        description: |-
+          One of the token types supported by LSP, or custom ones provided by
+          the semantic engine. Should be mapped to some syntax group understood
+          by the client.
+      modifiers:
+        type: array
+        description: List of token modifiers, provided by the sematnic engine
+        items: string
+
+  InlayHint:
+    type: object
+    description: |-
+      An inlay hint to be rendered in the docuemnt body but not part of the
+      text. Includes optional padding before and after and a kind, which is one
+      of the LSP or tsserver kinds.
+    required:
+       - kind
+       - position
+       - label
+       - paddingLeft
+       - paddingRight
+    properties:
+      kind:
+        type: string
+        enum:
+          - Type
+          - Parameter
+          - Enum
+      position:
+        $ref: '#/definitions/Location'
+      label:
+        type: string
+        description: Text to display
+      paddingLeft:
+        type: boolean
+      paddingRight:
+        type: boolean
+
 paths:
   /event_notification:
     post:
@@ -1704,6 +1755,105 @@ paths:
             The fixit has been resolved and a FixIt response is returned.
           schema:
             $ref: "#/definitions/SubcommandResponse"
+        500:
+          description: An error occurred
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
+  /semantic_tokens:
+    post:
+      summary: Compute semantic tokens for a range, or the whole document
+      description: |-
+        Compute and return semantic tokens
+      produces:
+        application/json
+      parameters:
+        - name: request_data
+          in: body
+          description: |-
+            The context data, including the current cursor position, and details
+            of dirty buffers.
+          required: true
+          schema:
+            type: object
+            required:
+              - filepath
+              - file_data
+            properties:
+              filepath:
+                $ref: "#/definitions/FilePath"
+              file_data:
+                $ref: "#/definitions/FileDataMap"
+              range:
+                $ref: "#/definitions/Range"
+      responses:
+        200:
+          description: |-
+            Hints created, or not supported (emtpy list)
+          schema:
+            type: object
+            required:
+              - semantic_tokens
+              - errors
+            properties:
+              semantic_tokens:
+                type: object
+                properties:
+                  tokens:
+                    $ref: "#/definitions/SemanticToken"
+              errors:
+                type: array
+                items:
+                  $ref: "#/definitions/Exception"
+        500:
+          description: An error occurred
+          schema:
+            $ref: "#/definitions/ExceptionResponse"
+  /inlay_hints:
+    post:
+      summary: Compute inlay hints for a range
+      description: |-
+        Compute and return inlay hints for a document range.
+      produces:
+        application/json
+      parameters:
+        - name: request_data
+          in: body
+          description: |-
+            The context data, including the current cursor position, and details
+            of dirty buffers.
+          required: true
+          schema:
+            type: object
+            required:
+              - filepath
+              - file_data
+              - range
+            properties:
+              filepath:
+                $ref: "#/definitions/FilePath"
+              file_data:
+                $ref: "#/definitions/FileDataMap"
+              range:
+                $ref: "#/definitions/Range"
+      responses:
+        200:
+          description: |-
+            Hints created, or not supported (emtpy list)
+          schema:
+            type: object
+            required:
+              - inlay_hints
+              - errors
+            properties:
+              inlay_hints:
+                type: array
+                items:
+                  $ref: "#/definitions/InlayHint"
+              errors:
+                type: array
+                items:
+                  $ref: "#/definitions/Exception"
+
         500:
           description: An error occurred
           schema:
