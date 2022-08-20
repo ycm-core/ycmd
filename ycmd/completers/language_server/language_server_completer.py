@@ -1612,8 +1612,13 @@ class LanguageServerCompleter( Completer ):
       return label_or_labels
 
     def BuildInlayHint( inlay_hint: dict ):
+      try:
+        kind = lsp.INLAY_HINT_KIND[ inlay_hint[ 'kind' ] ]
+      except KeyError:
+        kind = 'Unknown'
+
       return {
-        'kind': lsp.INLAY_HINT_KIND[ inlay_hint[ 'kind' ] ],
+        'kind': kind,
         'position': responses.BuildLocationData(
           _BuildLocationAndDescription(
             request_data[ 'filepath' ],
