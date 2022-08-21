@@ -18,6 +18,7 @@
 #ifndef CODE_POINT_H_3W0LNCLY
 #define CODE_POINT_H_3W0LNCLY
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
