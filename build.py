@@ -132,23 +132,23 @@ def FindLatestMSVC( quiet ):
       try:
         latest_v = int( latest_full_v.split( '.' )[ 0 ] )
       except ValueError:
-        raise ValueError( "{latest_full_v=} is not a version number." )
+        raise ValueError( f"{latest_full_v} is not a version number." )
 
       if not quiet:
-        print( f'vswhere -latest returned version {latest_full_v=}' )
+        print( f'vswhere -latest returned version {latest_full_v}' )
 
       if latest_v not in ACCEPTABLE_VERSIONS:
         if latest_v > 17:
           if not quiet:
-            print( f'MSVC Version {latest_full_v=} is newer than expected.' )
+            print( f'MSVC Version {latest_full_v} is newer than expected.' )
         else:
           raise ValueError(
-            f'vswhere returned {latest_full_v=} which is unexpected.'
+            f'vswhere returned {latest_full_v} which is unexpected.'
             'Pass --msvc <version> argument.' )
       return latest_v
     else:
       if not quiet:
-        print( f'vswhere returned nothing usable, {latest_full_v=}' )
+        print( f'vswhere returned nothing usable, {latest_full_v}' )
 
   # Fall back to registry parsing, which works at least until MSVC 2019 (16)
   # but is likely failing on MSVC 2022 (17)
