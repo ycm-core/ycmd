@@ -115,57 +115,57 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'See the YCM docs for details on how to use a custom Clangd.' )
 
 
-def FindLatestMSVC(quiet):
-  ACCEPTABLE_VERSIONS = [17, 16, 15]
+def FindLatestMSVC( quiet ):
+  ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
 
-  VSWHERE_EXE = os.path.join(os.environ['ProgramFiles(x86)'],
+  VSWHERE_EXE = os.path.join( os.environ[ 'ProgramFiles(x86)' ],
                              'Microsoft Visual Studio',
-                             'Installer', 'vswhere.exe')
+                             'Installer', 'vswhere.exe' )
 
-  if os.path.exists(VSWHERE_EXE):
+  if os.path.exists( VSWHERE_EXE ):
     if not quiet:
-      print("Calling vswhere -latest -installationVersion")
+      print( "Calling vswhere -latest -installationVersion" )
     latest_full_v = subprocess.check_output(
-      [VSWHERE_EXE, '-latest', '-property', 'installationVersion']
+      [ VSWHERE_EXE, '-latest', '-property', 'installationVersion' ]
     ).strip().decode()
     if '.' in latest_full_v:
       try:
-        latest_v = int(latest_full_v.split('.')[0])
+        latest_v = int( latest_full_v.split( '.' )[ 0 ] )
       except ValueError:
-        raise ValueError("{latest_full_v=} is not a version number.")
+        raise ValueError( "{latest_full_v=} is not a version number." )
 
       if not quiet:
-        print(f'vswhere -latest returned version {latest_full_v=}')
+        print( f'vswhere -latest returned version {latest_full_v=}' )
 
       if latest_v not in ACCEPTABLE_VERSIONS:
         if latest_v > 17:
           if not quiet:
-            print(f'MSVC Version {latest_full_v=} is newer than expected.')
+            print( f'MSVC Version {latest_full_v=} is newer than expected.' )
         else:
           raise ValueError(
             f'vswhere returned {latest_full_v=} which is unexpected.'
-            'Pass --msvc <version> argument.')
+            'Pass --msvc <version> argument.' )
       return latest_v
     else:
       if not quiet:
-        print(f'vswhere returned nothing usable, {latest_full_v=}')
+        print( f'vswhere returned nothing usable, {latest_full_v=}' )
 
   # Fall back to registry parsing, which works at least until MSVC 2019 (16)
   # but is likely failing on MSVC 2022 (17)
   if not quiet:
-    print("vswhere method failed, falling back to searching the registry")
+    print( "vswhere method failed, falling back to searching the registry" )
 
   import winreg
-  handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+  handle = winreg.ConnectRegistry( None, winreg.HKEY_LOCAL_MACHINE )
   msvc = None
   for i in ACCEPTABLE_VERSIONS:
     if not quiet:
-      print('Trying to find '
-            rf'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\{i}.0')
+      print( 'Trying to find '
+             rf'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\{i}.0' )
     try:
-      winreg.OpenKey(handle, rf'SOFTWARE\Microsoft\VisualStudio\{i}.0')
+      winreg.OpenKey( handle, rf'SOFTWARE\Microsoft\VisualStudio\{i}.0' )
       if not quiet:
-        print(f"Found MSVC version {i}")
+        print( f"Found MSVC version {i}" )
       msvc = i
       break
     except FileNotFoundError:
@@ -468,7 +468,7 @@ def ParseArguments():
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
   if OnWindows():
-      parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
+    parser.add_argument( '--msvc', type = int, choices = [ 15, 16, 17 ],
                           default=None,
                           help= 'Choose the Microsoft Visual Studio version '
                                 '(default: %(default)s).' )
@@ -551,9 +551,9 @@ def ParseArguments():
     args.enable_debug = True
 
   if OnWindows() and args.msvc is None:
-    args.msvc = FindLatestMSVC(args.quiet)
+    args.msvc = FindLatestMSVC( args.quiet )
     if args.msvc is None:
-      raise FileNotFoundError("Could not find a valid MSVC version.")
+      raise FileNotFoundError( "Could not find a valid MSVC version." )
 
   if args.core_tests:
     os.environ[ 'YCM_TESTRUN' ] = '1'
