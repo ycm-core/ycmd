@@ -199,7 +199,7 @@ def BuildYcmdLibs( args ):
       if key in args.completers:
         build_cmd.extend( COMPLETERS[ key ][ 'build' ] )
 
-    if args.msvc:
+    if args.msvc and platform.system() == 'Windows':
       build_cmd.extend( [ '--msvc', str( args.msvc ) ] )
 
     if args.coverage:
