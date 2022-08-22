@@ -162,14 +162,14 @@ def FindLatestMSVC(quiet):
     if not quiet:
       print('Trying to find '
             rf'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\{i}.0')
-      try:
-        winreg.OpenKey(handle, rf'SOFTWARE\Microsoft\VisualStudio\{i}.0')
-        if not quiet:
-          print(f"Found MSVC version {i}")
-          msvc = i
-          break
-      except FileNotFoundError:
-        pass
+    try:
+      winreg.OpenKey(handle, rf'SOFTWARE\Microsoft\VisualStudio\{i}.0')
+      if not quiet:
+        print(f"Found MSVC version {i}")
+      msvc = i
+      break
+    except FileNotFoundError:
+      pass
   return msvc
 
 
