@@ -1551,10 +1551,13 @@ class LanguageServerCompleter( Completer ):
     if not self._semantic_token_atlas:
       return {}
 
+    range_supported = self._server_capabilities[ 'semanticTokensProvider' ].get(
+      'range', False )
+
     self._UpdateServerWithCurrentFileContents( request_data )
 
     request_id = self.GetConnection().NextRequestId()
-    body = lsp.SemanticTokens( request_id, request_data )
+    body = lsp.SemanticTokens( request_id, range_supported, request_data )
 
     for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
       response = self._connection.GetResponse(
@@ -1576,6 +1579,58 @@ class LanguageServerCompleter( Completer ):
     return {
       'tokens': tokens
     }
+
+
+  def ComputeInlayHints( self, request_data ):
+    if not self._initialize_event.wait( REQUEST_TIMEOUT_COMPLETION ):
+      return []
+
+    if not self._ServerIsInitialized():
+      return []
+
+    if 'inlayHintProvider' not in self._server_capabilities:
+      return []
+
+    self._UpdateServerWithCurrentFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    body = lsp.InlayHints( request_id, request_data )
+
+    for _ in RetryOnFailure( [ lsp.Errors.ContentModified ] ):
+      response = self._connection.GetResponse(
+        request_id,
+        body,
+        3 * REQUEST_TIMEOUT_COMPLETION )
+
+    if response is None:
+      return []
+
+    file_contents = GetFileLines( request_data, request_data[ 'filepath' ] )
+
+    def BuildLabel( label_or_labels ):
+      if isinstance( label_or_labels, list ):
+        return ' '.join( label[ 'value' ] for label in label_or_labels )
+      return label_or_labels
+
+    def BuildInlayHint( inlay_hint: dict ):
+      try:
+        kind = lsp.INLAY_HINT_KIND[ inlay_hint[ 'kind' ] ]
+      except KeyError:
+        kind = 'Unknown'
+
+      return {
+        'kind': kind,
+        'position': responses.BuildLocationData(
+          _BuildLocationAndDescription(
+            request_data[ 'filepath' ],
+            file_contents,
+            inlay_hint[ 'position' ] )[ 0 ]
+        ),
+        'label': BuildLabel( inlay_hint[ 'label' ] ),
+        'paddingLeft': inlay_hint.get( 'paddingLeft', False ),
+        'paddingRight': inlay_hint.get( 'paddingRight', False ),
+      }
+
+    return [ BuildInlayHint( h ) for h in response.get( 'result' ) or [] ]
 
 
   def GetDetailedDiagnostic( self, request_data ):
@@ -3117,11 +3172,11 @@ def _LocationListToGoTo( request_data, positions ):
     if len( positions ) > 1:
       return [
         responses.BuildGoToResponseFromLocation(
-          *_PositionToLocationAndDescription( request_data, position ) )
+          *_LspLocationToLocationAndDescription( request_data, position ) )
         for position in positions
       ]
     return responses.BuildGoToResponseFromLocation(
-      *_PositionToLocationAndDescription( request_data, positions[ 0 ] ) )
+      *_LspLocationToLocationAndDescription( request_data, positions[ 0 ] ) )
   except ( IndexError, KeyError ):
     raise RuntimeError( 'Cannot jump to location' )
 
@@ -3130,7 +3185,7 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
   """Convert a list of LSP SymbolInformation into a YCM GoTo response"""
 
   def BuildGoToLocationFromSymbol( symbol ):
-    location, line_value = _PositionToLocationAndDescription(
+    location, line_value = _LspLocationToLocationAndDescription(
       request_data,
       symbol[ 'location' ] )
 
@@ -3157,10 +3212,10 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     return locations
 
 
-def _PositionToLocationAndDescription( request_data, position ):
-  """Convert a LSP position to a ycmd location."""
+def _LspLocationToLocationAndDescription( request_data, location ):
+  """Convert a LSP Location to a ycmd location."""
   try:
-    filename = lsp.UriToFilePath( position[ 'uri' ] )
+    filename = lsp.UriToFilePath( location[ 'uri' ] )
     file_contents = GetFileLines( request_data, filename )
   except lsp.InvalidUriException:
     LOGGER.debug( 'Invalid URI, file contents not available in GoTo' )
@@ -3176,7 +3231,7 @@ def _PositionToLocationAndDescription( request_data, position ):
 
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       position[ 'range' ][ 'start' ] )
+                                       location[ 'range' ][ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):

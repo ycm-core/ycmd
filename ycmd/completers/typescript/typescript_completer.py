@@ -30,7 +30,7 @@ from ycmd import extra_conf_store
 from ycmd import responses
 from ycmd import utils
 from ycmd.completers.completer import Completer
-from ycmd.completers.completer_utils import GetFileLines
+from ycmd.completers.completer_utils import GetFileLines, GetFileContents
 from ycmd.utils import LOGGER, re
 
 SERVER_NOT_RUNNING_MESSAGE = 'TSServer is not running.'
@@ -188,6 +188,21 @@ class TypeScriptCompleter( Completer ):
     with self._tsserver_lock:
       self._tsserver_version = version
 
+    # TODO: We should probably make this configurable in ycm_extra_conf.py along
+    # with all the other preferences
+    self._SendCommand( 'configure',  {
+      'preferences': {
+        'includeInlayParameterNameHints': "all",
+        'includeInlayParameterNameHintsWhenArgumentMatchesName': True,
+        'includeInlayFunctionParameterTypeHints': True,
+        'includeInlayVariableTypeHints': True,
+        'includeInlayVariableTypeHintsWhenTypeMatchesName': True,
+        'includeInlayPropertyDeclarationTypeHints': True,
+        'includeInlayFunctionLikeReturnTypeHints': True,
+        'includeInlayEnumMemberValueHints': True,
+      }
+    } )
+
 
   def _StartServer( self ):
     with self._tsserver_lock:
@@ -286,6 +301,8 @@ class TypeScriptCompleter( Completer ):
     content = self._tsserver_handle.stdout.read( content_length )
     if utils.OnWindows() and content.endswith( b'\r' ):
       content += self._tsserver_handle.stdout.read( 1 )
+
+    LOGGER.debug( "RX (tsserver): %s", content )
     return json.loads( utils.ToUnicode( content ) )
 
 
@@ -307,8 +324,11 @@ class TypeScriptCompleter( Completer ):
   def _WriteRequest( self, request ):
     """Write a request to TSServer stdin."""
 
-    serialized_request = utils.ToBytes(
-        json.dumps( request, separators = ( ',', ':' ) ) + '\n' )
+
+    req = json.dumps( request, separators = ( ',', ':' ) )
+    LOGGER.debug( 'TX (tsserver): %s', req )
+    serialized_request = utils.ToBytes( req + '\n' )
+
     with self._write_lock:
       try:
         self._tsserver_handle.stdin.write( serialized_request )
@@ -484,6 +504,54 @@ class TypeScriptCompleter( Completer ):
   def OnBufferUnload( self, request_data ):
     filename = request_data[ 'filepath' ]
     self._SendCommand( 'close', { 'file': filename } )
+
+
+  def ComputeInlayHints( self, request_data ):
+    self._Reload( request_data )
+
+    # Cache the offsets of all the newlines in the file. These are used to
+    # calculate the line/column values from the offsets retuned by the diff
+    # scanner
+    contents = GetFileContents( request_data, request_data[ 'filepath' ] )
+    lines = GetFileLines( request_data, request_data[ 'filepath' ] )
+    newlines = [ -1 ] + [ i for i, c in enumerate( contents ) if c == '\n' ]
+    newlines.append( len( contents ) )
+
+    def LocationToOffset( location ):
+      try:
+        return (
+          newlines[ location[ 'line_num' ] - 1 ]
+          + utils.ByteOffsetToCodepointOffset( lines,
+                                               location[ 'column_num' ] )
+        )
+      except IndexError:
+        raise RuntimeError( "Invalid range" )
+
+    r = request_data[ 'range' ]
+    start = LocationToOffset( r[ 'start' ] )
+    end = LocationToOffset( r[ 'end' ] )
+
+    hints = self._SendRequest( 'provideInlayHints', {
+      'file':   request_data[ 'filepath' ],
+      'start':  start,
+      'length': end - start,
+    } )
+
+    result = [ {
+      'kind': h[ 'kind' ],
+      'label': h[ 'text' ],
+      'position': responses.BuildLocationData(
+          _BuildLocation( lines,
+                          request_data[ 'filepath' ],
+                          h[ 'position' ][ 'line' ],
+                          h[ 'position' ][ 'offset' ] ) ),
+      'paddingLeft': h.get( 'whitespaceBefore', False ),
+      'paddingRight': h.get( 'whitespaceAfter', False ),
+    } for h in hints ]
+
+    LOGGER.debug( "INLAY HINTS: %s", result )
+    return result
+
 
 
   def OnFileReadyToParse( self, request_data ):

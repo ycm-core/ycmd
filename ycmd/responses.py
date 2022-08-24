@@ -154,8 +154,14 @@ def BuildSignatureHelpResponse( signature_info, errors = None ):
 
 def BuildSemanticTokensResponse( semantic_tokens, errors = None ):
   return {
-    'semantic_tokens':
-      semantic_tokens if semantic_tokens else {},
+    'semantic_tokens': semantic_tokens if semantic_tokens else {},
+    'errors': errors if errors else [],
+  }
+
+
+def BuildInlayHintsResponse( inlay_hints, errors = None ):
+  return {
+    'inlay_hints': inlay_hints if inlay_hints else [],
     'errors': errors if errors else [],
   }
 
@@ -201,50 +207,10 @@ class UnresolvedFixIt:
     self.kind = kind
 
 
-class FixIt:
-  """A set of replacements (of type FixItChunk) to be applied to fix a single
-  diagnostic. This can be used for any type of refactoring command, not just
-  quick fixes. The individual chunks may span multiple files.
-
-  NOTE: All offsets supplied in both |location| and (the members of) |chunks|
-  must be byte offsets into the UTF-8 encoded version of the appropriate
-  buffer.
-  """
-  class Kind:
-    """These are LSP kinds that we use outside of LSP completers."""
-    REFACTOR = 'refactor'
-
-
-  def __init__( self, location, chunks, text = '', kind = None ):
-    """location of type Location, chunks of type list<FixItChunk>"""
-    self.location = location
-    self.chunks = chunks
-    self.text = text
-    self.kind = kind
-
-
-class FixItChunk:
-  """An individual replacement within a FixIt (aka Refactor)"""
-
-  def __init__( self, replacement_text, range ):
-    """replacement_text of type string, range of type Range"""
-    self.replacement_text = replacement_text
-    self.range = range
-
-
-class Range:
-  """Source code range relating to a diagnostic or FixIt (aka Refactor)."""
-
-  def __init__( self, start, end ):
-    "start of type Location, end of type Location"""
-    self.start_ = start
-    self.end_ = end
-
-
 class Location:
   """Source code location for a diagnostic or FixIt (aka Refactor)."""
 
-  def __init__( self, line, column, filename ):
+  def __init__( self, line: int, column: int, filename: str ):
     """Line is 1-based line, column is 1-based column byte offset, filename is
     absolute path of the file"""
     self.line_number_ = line
@@ -262,6 +228,46 @@ class Location:
       # strict breach of our own protocol. Perhaps completers should be required
       # to simply skip such a location.
       self.filename_ = filename
+
+
+class Range:
+  """Source code range relating to a diagnostic or FixIt (aka Refactor)."""
+
+  def __init__( self, start: Location, end: Location ):
+    "start of type Location, end of type Location"""
+    self.start_ = start
+    self.end_ = end
+
+
+class FixIt:
+  """A set of replacements (of type FixItChunk) to be applied to fix a single
+  diagnostic. This can be used for any type of refactoring command, not just
+  quick fixes. The individual chunks may span multiple files.
+
+  NOTE: All offsets supplied in both |location| and (the members of) |chunks|
+  must be byte offsets into the UTF-8 encoded version of the appropriate
+  buffer.
+  """
+  class Kind:
+    """These are LSP kinds that we use outside of LSP completers."""
+    REFACTOR = 'refactor'
+
+
+  def __init__( self, location: Location, chunks, text = '', kind = None ):
+    """location of type Location, chunks of type list<FixItChunk>"""
+    self.location = location
+    self.chunks = chunks
+    self.text = text
+    self.kind = kind
+
+
+class FixItChunk:
+  """An individual replacement within a FixIt (aka Refactor)"""
+
+  def __init__( self, replacement_text: str, range: Range ):
+    """replacement_text of type string, range of type Range"""
+    self.replacement_text = replacement_text
+    self.range = range
 
 
 def BuildDiagnosticData( diagnostic ):

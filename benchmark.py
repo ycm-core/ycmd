@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 
 import argparse
+import platform
 import os
 import os.path as p
 import subprocess
@@ -31,7 +32,7 @@ def BuildYcmdLibsAndRunBenchmark( args, extra_args ):
 
   os.environ[ 'YCM_BENCHMARK' ] = '1'
 
-  if args.msvc:
+  if args.msvc and platform.system() == 'Windows':
     build_cmd.extend( [ '--msvc', str( args.msvc ) ] )
 
   subprocess.check_call( build_cmd )

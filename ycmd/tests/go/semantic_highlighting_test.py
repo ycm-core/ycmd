@@ -18,7 +18,7 @@
 import json
 import requests
 from unittest import TestCase
-from hamcrest import assert_that, empty, equal_to, has_entries
+from hamcrest import assert_that, is_not, empty, equal_to, has_entries
 
 from ycmd.tests.go import setUpModule, tearDownModule # noqa
 from ycmd.tests.go import PathToTestFile, SharedYcmd
@@ -85,7 +85,7 @@ class SignatureHelpTest( TestCase ):
         'response': requests.codes.ok,
         'data': has_entries( {
           'errors': empty(),
-          'semantic_tokens': empty()
+          'semantic_tokens': is_not( empty() )
         } )
       },
     } )
