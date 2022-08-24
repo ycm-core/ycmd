@@ -47,6 +47,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     CompletionEntryMatcher,
                                     ErrorMatcher,
                                     LocationMatcher,
+                                    TemporaryClangProject,
+                                    TemporaryTestDir,
                                     WindowsOnly )
 from ycmd.utils import ImportCore, ReadFile
 ycm_core = ImportCore()
@@ -137,6 +139,43 @@ class GetCompletionsTest( TestCase ):
         } )
       },
     } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_In_HeaderFile_WithCompDB( self, app ):
+    import shutil
+    import os
+    with TemporaryTestDir() as tmp_dir:
+      shutil.copy( PathToTestFile( 'headerfileflags.cc' ), tmp_dir )
+      shutil.copy( PathToTestFile( 'headerfileflags.h' ), tmp_dir )
+      compile_commands = [
+        {
+          'directory': tmp_dir,
+          'command': 'clang++ -x c++ -I. -Wall',
+          'file': os.path.join( tmp_dir, 'headerfileflags.cc' ),
+        },
+      ]
+      with TemporaryClangProject( tmp_dir, compile_commands ):
+        RunTest( app, {
+          'description': 'completion works in header files using cdb',
+          'request': {
+            'filetype'  : 'cpp',
+            'filepath'  : os.path.join( tmp_dir, 'headerfileflags.h' ),
+            'line_num'  : 11,
+            'column_num': 7
+          },
+          'expect': {
+            'response': requests.codes.ok,
+            'data': has_entries( {
+              'completions': has_item(
+                CompletionEntryMatcher( 'foo', 'int' ),
+              ),
+              'errors': empty(),
+            } )
+          },
+        } )
+
+
 
 
   # This test is isolated to make sure we trigger c hook for clangd, instead of
