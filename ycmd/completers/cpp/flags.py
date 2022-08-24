@@ -54,7 +54,8 @@ FILE_FLAGS_TO_SKIP = { '-MF',
                        '-MT',
                        '-MQ',
                        '-o',
-                       '--serialize-diagnostics' }
+                       '--serialize-diagnostics',
+                       '--' }
 
 # Use a regex to correctly detect c++/c language for both versioned and
 # non-versioned compiler executable names suffixes
