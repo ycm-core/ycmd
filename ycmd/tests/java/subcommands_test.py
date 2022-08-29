@@ -23,6 +23,7 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry,
+                       has_items,
                        instance_of,
                        is_not,
                        matches_regexp )
@@ -2116,13 +2117,9 @@ class SubcommandsTest( TestCase ):
         'filepath': TEST_JAVA,
       },
       'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( { 'fixits': contains_exactly(
-          has_entries( { 'text': 'Generate Getters and Setters',
-            'chunks': instance_of( list ) } ),
-          has_entries( { 'text': 'Change modifiers to final where possible',
-            'chunks': instance_of( list ) } ),
-        ) } ),
+        # THough, now, jdt.ls just throws an Internal error.
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( ResponseFailedException )
       }
     } )
 
@@ -2162,8 +2159,8 @@ class SubcommandsTest( TestCase ):
       'description': 'Request error handles the error',
       'request': {
         'command': 'FixIt',
-        'line_num': 99,
-        'column_num': 99,
+        'line_num': 27,
+        'column_num': 1,
         'filepath': TEST_JAVA,
         'file_data': {
           '!/bin/sh': {
@@ -2177,21 +2174,23 @@ class SubcommandsTest( TestCase ):
           TESTLAUNCHER_JAVA: {
             'filetypes': [ 'some', 'java', 'junk', 'also' ],
             'contents': ReadFile( TESTLAUNCHER_JAVA ),
-          },
-          '!/usr/bin/sh': {
-            'filetypes': [ 'java' ],
-            'contents': '\n',
-          },
+          }
         }
       },
       'expect': {
         'response': requests.codes.ok,
-        'data': has_entries( { 'fixits': contains_exactly(
-          has_entries( { 'text': 'Generate Getters and Setters',
-            'chunks': instance_of( list ) } ),
-          has_entries( { 'text': 'Change modifiers to final where possible',
-            'chunks': instance_of( list ) } ),
-        ) } ),
+        'data': has_entries(
+          {
+            'fixits': has_items(
+              has_entries( {
+                'text': 'Generate Getters and Setters',
+                'chunks': instance_of( list ) } ),
+              has_entries( {
+                'text': 'Change modifiers to final where possible',
+                'chunks': instance_of( list ) } )
+            )
+          }
+        ),
       }
     } )
 
