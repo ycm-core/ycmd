@@ -18,7 +18,7 @@
 # Must not import ycm_core here! Vim imports completer, which imports this file.
 # We don't want ycm_core inside Vim.
 from collections import defaultdict
-from ycmd.utils import LOGGER, ToUnicode, re, ReadFile, SplitLines
+from ycmd.utils import ToUnicode, re, ReadFile, SplitLines
 
 
 class PreparedTriggers:
@@ -227,7 +227,6 @@ def GetFileContents( request_data, filename ):
   try:
     return ToUnicode( ReadFile( filename ) )
   except ( OSError, UnicodeError ):
-    LOGGER.warning( 'Error reading file "%s"', filename )
     return ''
 
 

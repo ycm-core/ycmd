@@ -791,7 +791,7 @@ class GetCompletionsTest( TestCase ):
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd
   def test_GetCompletions_ForceAtTopLevel_NoImport( self, app ):
     RunTest( app, {
       'description': 'When forcing semantic completion, '
@@ -845,7 +845,7 @@ class GetCompletionsTest( TestCase ):
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd
   def test_GetCompletions_ForceAtTopLevel_WithImport( self, app ):
     filepath = ProjectPath( 'TestWidgetImpl.java' )
     RunTest( app, {

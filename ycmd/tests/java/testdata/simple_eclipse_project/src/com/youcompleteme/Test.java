@@ -24,3 +24,4 @@ public class Test {
     public boolean åtest;
   }
 }
+

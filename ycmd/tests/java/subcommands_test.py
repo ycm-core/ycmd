@@ -23,10 +23,10 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry,
+                       has_items,
                        instance_of,
                        is_not,
                        matches_regexp )
-from pprint import pformat
 import itertools
 import requests
 import json
@@ -107,8 +107,6 @@ def RunTest( app, test, contents = None ):
         expect_errors = True
       )
 
-      print( f'completer response: { pformat( response.json ) }' )
-
       assert_that( response.status_code,
                    equal_to( test[ 'expect' ][ 'response' ] ) )
 
@@ -116,6 +114,9 @@ def RunTest( app, test, contents = None ):
       break
     except AssertionError:
       if time.time() > expiry:
+        print( 'completer response: '
+               f'{ json.dumps( response.json, indent=2 ) }' )
+
         raise
 
       time.sleep( 0.25 )
@@ -1088,6 +1089,10 @@ class SubcommandsTest( TestCase ):
                               LocationMatcher( filepath, 25, 5 ) ),
               ),
             } ),
+            has_entries( {
+              'kind': 'quickassist',
+              'text': "Add Javadoc for 'Wimble'"
+            } ),
           )
         } )
 
@@ -1146,6 +1151,9 @@ class SubcommandsTest( TestCase ):
               LocationMatcher( filepath, 25, 5 ) ),
           ),
         } ),
+        has_entries( {
+          'text': "Add Javadoc for 'getWidget'"
+        } ),
       )
     } )
 
@@ -1178,11 +1186,11 @@ class SubcommandsTest( TestCase ):
         # FixIt (and nonetheless, the previous tests ensure that we correctly
         # populate the chunks list; the contents all come from jdt.ls)
         has_entries( {
-          'text': "Create getter and setter for 'testString'",
+          'text': "Organize imports",
           'chunks': instance_of( list )
         } ),
         has_entries( {
-          'text': "Organize imports",
+          'text': "Generate Getter and Setter for 'testString'",
           'chunks': instance_of( list )
         } ),
         has_entries( {
@@ -1190,7 +1198,28 @@ class SubcommandsTest( TestCase ):
           'chunks': instance_of( list )
         } ),
         has_entries( {
+          'text': "Generate Getters",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Generate Setters",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Generate Getter for 'testString'",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Generate Setter for 'testString'",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
           'text': 'Change modifiers to final where possible',
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'kind': 'quickassist',
+          'text': "Add Javadoc for 'testString'",
           'chunks': instance_of( list )
         } ),
       )
@@ -1269,6 +1298,10 @@ class SubcommandsTest( TestCase ):
           } ),
           has_entries( {
             'text': 'Change modifiers to final where possible',
+            'chunks': instance_of( list ),
+          } ),
+          has_entries( {
+            'text': "Add Javadoc for 'getWidget'",
             'chunks': instance_of( list ),
           } ),
         ]
@@ -1395,6 +1428,10 @@ class SubcommandsTest( TestCase ):
               'text': 'Change modifiers to final where possible',
               'chunks': instance_of( list ),
             } ),
+            has_entries( {
+              'text': "Add Javadoc for 'launch'",
+              'chunks': instance_of( list ),
+            } ),
           )
         } )
       }
@@ -1460,8 +1497,17 @@ class SubcommandsTest( TestCase ):
           'chunks': instance_of( list ),
         } ),
         has_entries( {
+          'text': "Generate Getters",
+        } ),
+        has_entries( {
+          'text': "Generate Setters",
+        } ),
+        has_entries( {
           'text': "Generate Getters and Setters",
           'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': "Add Javadoc for 'DoWhatever'"
         } ),
       )
     } )
@@ -1523,6 +1569,9 @@ class SubcommandsTest( TestCase ):
                           LocationMatcher( '', 32, 4 ),
                           LocationMatcher( '', 32, 4 ) ),
           ),
+        } ),
+        has_entries( {
+          'text': "Add Javadoc for 'getWidget'"
         } ),
       )
     } )
@@ -1637,6 +1686,9 @@ class SubcommandsTest( TestCase ):
               ChunkMatcher( '\n    ',
                             LocationMatcher( TEST_JAVA, 24, 27 ),
                             LocationMatcher( TEST_JAVA, 25,  3 ) ),
+              ChunkMatcher( '\n',
+                            LocationMatcher( TEST_JAVA, 26, 2 ),
+                            LocationMatcher( TEST_JAVA, 28, 1 ) ),
             )
           } ) )
         } )
@@ -1723,6 +1775,9 @@ class SubcommandsTest( TestCase ):
               ChunkMatcher( '\n\t',
                             LocationMatcher( TEST_JAVA, 24, 27 ),
                             LocationMatcher( TEST_JAVA, 25,  3 ) ),
+              ChunkMatcher( '\n',
+                            LocationMatcher( TEST_JAVA, 26, 2 ),
+                            LocationMatcher( TEST_JAVA, 28, 1 ) ),
             )
           } ) )
         } )
@@ -2116,13 +2171,9 @@ class SubcommandsTest( TestCase ):
         'filepath': TEST_JAVA,
       },
       'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( { 'fixits': contains_exactly(
-          has_entries( { 'text': 'Generate Getters and Setters',
-            'chunks': instance_of( list ) } ),
-          has_entries( { 'text': 'Change modifiers to final where possible',
-            'chunks': instance_of( list ) } ),
-        ) } ),
+        # THough, now, jdt.ls just throws an Internal error.
+        'response': requests.codes.internal_server_error,
+        'data': ErrorMatcher( ResponseFailedException )
       }
     } )
 
@@ -2162,8 +2213,8 @@ class SubcommandsTest( TestCase ):
       'description': 'Request error handles the error',
       'request': {
         'command': 'FixIt',
-        'line_num': 99,
-        'column_num': 99,
+        'line_num': 27,
+        'column_num': 1,
         'filepath': TEST_JAVA,
         'file_data': {
           '!/bin/sh': {
@@ -2177,21 +2228,23 @@ class SubcommandsTest( TestCase ):
           TESTLAUNCHER_JAVA: {
             'filetypes': [ 'some', 'java', 'junk', 'also' ],
             'contents': ReadFile( TESTLAUNCHER_JAVA ),
-          },
-          '!/usr/bin/sh': {
-            'filetypes': [ 'java' ],
-            'contents': '\n',
-          },
+          }
         }
       },
       'expect': {
         'response': requests.codes.ok,
-        'data': has_entries( { 'fixits': contains_exactly(
-          has_entries( { 'text': 'Generate Getters and Setters',
-            'chunks': instance_of( list ) } ),
-          has_entries( { 'text': 'Change modifiers to final where possible',
-            'chunks': instance_of( list ) } ),
-        ) } ),
+        'data': has_entries(
+          {
+            'fixits': has_items(
+              has_entries( {
+                'text': 'Generate Getters and Setters',
+                'chunks': instance_of( list ) } ),
+              has_entries( {
+                'text': 'Change modifiers to final where possible',
+                'chunks': instance_of( list ) } )
+            )
+          }
+        ),
       }
     } )
 
