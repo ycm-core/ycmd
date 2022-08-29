@@ -1069,7 +1069,7 @@ def EnableJavaCompleter( switches ):
     sys.stdout.write( 'Installing jdt.ls for Java support...' )
     sys.stdout.flush()
 
-  CheckJavaVersion( 11 )
+  CheckJavaVersion( 17 )
 
   TARGET = p.join( DIR_OF_THIRD_PARTY, 'eclipse.jdt.ls', 'target', )
   REPOSITORY = p.join( TARGET, 'repository' )
