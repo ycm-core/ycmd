@@ -27,7 +27,6 @@ from hamcrest import ( assert_that,
                        instance_of,
                        is_not,
                        matches_regexp )
-from pprint import pformat
 import itertools
 import requests
 import json
@@ -108,8 +107,6 @@ def RunTest( app, test, contents = None ):
         expect_errors = True
       )
 
-      print( f'completer response: { pformat( response.json ) }' )
-
       assert_that( response.status_code,
                    equal_to( test[ 'expect' ][ 'response' ] ) )
 
@@ -117,6 +114,9 @@ def RunTest( app, test, contents = None ):
       break
     except AssertionError:
       if time.time() > expiry:
+        print( 'completer response: '
+               f'{ json.dumps( response.json, indent=2 ) }' )
+
         raise
 
       time.sleep( 0.25 )
@@ -1089,6 +1089,10 @@ class SubcommandsTest( TestCase ):
                               LocationMatcher( filepath, 25, 5 ) ),
               ),
             } ),
+            has_entries( {
+              'kind': 'quickassist',
+              'text': "Add Javadoc for 'Wimble'"
+            } ),
           )
         } )
 
@@ -1147,6 +1151,9 @@ class SubcommandsTest( TestCase ):
               LocationMatcher( filepath, 25, 5 ) ),
           ),
         } ),
+        has_entries( {
+          'text': "Add Javadoc for 'getWidget'"
+        } ),
       )
     } )
 
@@ -1179,11 +1186,11 @@ class SubcommandsTest( TestCase ):
         # FixIt (and nonetheless, the previous tests ensure that we correctly
         # populate the chunks list; the contents all come from jdt.ls)
         has_entries( {
-          'text': "Create getter and setter for 'testString'",
+          'text': "Organize imports",
           'chunks': instance_of( list )
         } ),
         has_entries( {
-          'text': "Organize imports",
+          'text': "Generate Getter and Setter for 'testString'",
           'chunks': instance_of( list )
         } ),
         has_entries( {
@@ -1191,7 +1198,28 @@ class SubcommandsTest( TestCase ):
           'chunks': instance_of( list )
         } ),
         has_entries( {
+          'text': "Generate Getters",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Generate Setters",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Generate Getter for 'testString'",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Generate Setter for 'testString'",
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
           'text': 'Change modifiers to final where possible',
+          'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'kind': 'quickassist',
+          'text': "Add Javadoc for 'testString'",
           'chunks': instance_of( list )
         } ),
       )
@@ -1270,6 +1298,10 @@ class SubcommandsTest( TestCase ):
           } ),
           has_entries( {
             'text': 'Change modifiers to final where possible',
+            'chunks': instance_of( list ),
+          } ),
+          has_entries( {
+            'text': "Add Javadoc for 'getWidget'",
             'chunks': instance_of( list ),
           } ),
         ]
@@ -1396,6 +1428,10 @@ class SubcommandsTest( TestCase ):
               'text': 'Change modifiers to final where possible',
               'chunks': instance_of( list ),
             } ),
+            has_entries( {
+              'text': "Add Javadoc for 'launch'",
+              'chunks': instance_of( list ),
+            } ),
           )
         } )
       }
@@ -1461,8 +1497,17 @@ class SubcommandsTest( TestCase ):
           'chunks': instance_of( list ),
         } ),
         has_entries( {
+          'text': "Generate Getters",
+        } ),
+        has_entries( {
+          'text': "Generate Setters",
+        } ),
+        has_entries( {
           'text': "Generate Getters and Setters",
           'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': "Add Javadoc for 'DoWhatever'"
         } ),
       )
     } )
@@ -1524,6 +1569,9 @@ class SubcommandsTest( TestCase ):
                           LocationMatcher( '', 32, 4 ),
                           LocationMatcher( '', 32, 4 ) ),
           ),
+        } ),
+        has_entries( {
+          'text': "Add Javadoc for 'getWidget'"
         } ),
       )
     } )
@@ -1638,6 +1686,9 @@ class SubcommandsTest( TestCase ):
               ChunkMatcher( '\n    ',
                             LocationMatcher( TEST_JAVA, 24, 27 ),
                             LocationMatcher( TEST_JAVA, 25,  3 ) ),
+              ChunkMatcher( '\n',
+                            LocationMatcher( TEST_JAVA, 26, 2 ),
+                            LocationMatcher( TEST_JAVA, 28, 1 ) ),
             )
           } ) )
         } )
@@ -1724,6 +1775,9 @@ class SubcommandsTest( TestCase ):
               ChunkMatcher( '\n\t',
                             LocationMatcher( TEST_JAVA, 24, 27 ),
                             LocationMatcher( TEST_JAVA, 25,  3 ) ),
+              ChunkMatcher( '\n',
+                            LocationMatcher( TEST_JAVA, 26, 2 ),
+                            LocationMatcher( TEST_JAVA, 28, 1 ) ),
             )
           } ) )
         } )
