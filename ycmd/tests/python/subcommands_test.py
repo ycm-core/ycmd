@@ -42,7 +42,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
 
 TYPESHED_PATH = os.path.normpath(
   PathToTestFile( '..', '..', '..', '..', 'third_party', 'jedi_deps', 'jedi',
-    'jedi', 'third_party', 'typeshed', 'stdlib', '2and3', 'builtins.pyi' ) )
+    'jedi', 'third_party', 'typeshed', 'stdlib', '3', 'builtins.pyi' ) )
 
 
 class JediDef:
@@ -154,7 +154,7 @@ class SubcommandsTest( TestCase ):
           { 'request': ( 'basic.py', 1,  4 ),
             'response': ( 'basic.py', 1, 1 ) },
           { 'request': ( 'basic.py', 1, 12 ),
-            'response': ( TYPESHED_PATH, 947, 7 ) },
+            'response': ( TYPESHED_PATH, 742, 7 ) },
           { 'request': ( 'basic.py', 2,  2 ),
             'response': ( 'basic.py', 1, 1 ) },
           # Class
@@ -381,7 +381,7 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToType( self, app ):
     for test in [
       { 'request':  ( 'basic.py', 2, 1 ),
-        'response': ( TYPESHED_PATH, 947, 7 ) },
+        'response': ( TYPESHED_PATH, 742, 7 ) },
       { 'request':  ( 'basic.py', 8, 1 ),
         'response': ( 'basic.py', 4, 7 ) },
       { 'request':  ( 'basic.py', 3, 1 ),
