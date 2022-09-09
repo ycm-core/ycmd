@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
+                       has_items,
                        contains_exactly,
                        contains_string,
                        equal_to,
@@ -165,7 +166,7 @@ def FixIt_Check_cpp11_Ins( results ):
   # First fixit
   #   switch(A()) { // expected-error{{explicit conversion to}}
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
       'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
@@ -192,7 +193,7 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
   # Similar to FixIt_Check_cpp11_1 but inserts split across lines
   #
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
       'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
@@ -218,7 +219,7 @@ def FixIt_Check_cpp11_InsMultiLine( results ):
 def FixIt_Check_cpp11_Del( results ):
   # Removal of ::
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
       'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
@@ -236,8 +237,9 @@ def FixIt_Check_cpp11_Del( results ):
 
 def FixIt_Check_cpp11_Repl( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
       'kind': 'quickfix',
+      'text': "change 'bar' to 'foo'",
       'chunks': contains_exactly(
         has_entries( {
           'replacement_text': equal_to( 'foo' ),
@@ -254,7 +256,7 @@ def FixIt_Check_cpp11_Repl( results ):
 
 def FixIt_Check_cpp11_DelAdd( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly(
+    'fixits': has_items(
       has_entries( {
         'kind': 'quickfix',
         'chunks': contains_exactly(
@@ -299,7 +301,7 @@ def FixIt_Check_cpp11_DelAdd( results ):
 
 def FixIt_Check_objc( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
       'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
@@ -322,7 +324,7 @@ def FixIt_Check_objc_NoFixIt( results ):
 
 def FixIt_Check_cpp11_MultiFirst( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly(
+    'fixits': has_items(
       # first fix-it at 54,16
       has_entries( {
         'kind': 'quickfix',
@@ -343,7 +345,7 @@ def FixIt_Check_cpp11_MultiFirst( results ):
 
 def FixIt_Check_cpp11_MultiSecond( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly(
+    'fixits': has_items(
       # second fix-it at 54,52
       has_entries( {
         'kind': 'quickfix',
@@ -384,7 +386,7 @@ def FixIt_Check_cpp11_MultiSecond( results ):
 
 def FixIt_Check_unicode_Ins( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
       'kind': 'quickfix',
       'chunks': contains_exactly(
         has_entries( {
@@ -402,7 +404,7 @@ def FixIt_Check_unicode_Ins( results ):
 
 def FixIt_Check_cpp11_Note( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly(
+    'fixits': has_items(
       # First note: put parens around it
       has_entries( {
         'kind': 'quickfix',
@@ -435,7 +437,7 @@ def FixIt_Check_cpp11_Note( results ):
 
 def FixIt_Check_cpp11_SpellCheck( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly(
+    'fixits': has_items(
       # Change to SpellingIsNotMyStrongPoint
       has_entries( {
         'kind': 'quickfix',
@@ -460,7 +462,7 @@ def FixIt_Check_cpp11_SpellCheck( results ):
 
 def FixIt_Check_cuda( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly(
+    'fixits': has_items(
       has_entries( {
         'kind': 'quickfix',
         'text': contains_string(
@@ -477,7 +479,7 @@ def FixIt_Check_cuda( results ):
 
 def FixIt_Check_SubexprExtract_Resolved( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
         'text': 'Extract subexpression to variable',
         'chunks': contains_exactly(
           ChunkMatcher( 'auto placeholder = i + 3;\n  ',
@@ -493,7 +495,7 @@ def FixIt_Check_SubexprExtract_Resolved( results ):
 
 def FixIt_Check_RawStringReplace_Resolved( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
         'text': 'Convert to raw string',
         'chunks': contains_exactly(
           ChunkMatcher( 'R"(\\\\r\\asd\n\\v)"',
@@ -506,7 +508,7 @@ def FixIt_Check_RawStringReplace_Resolved( results ):
 
 def FixIt_Check_MacroExpand_Resolved( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
         'text': "Expand macro 'DECLARE_INT'",
         'chunks': contains_exactly(
           ChunkMatcher( 'int i',
@@ -519,7 +521,7 @@ def FixIt_Check_MacroExpand_Resolved( results ):
 
 def FixIt_Check_AutoExpand_Resolved( results ):
   assert_that( results, has_entries( {
-    'fixits': contains_exactly( has_entries( {
+    'fixits': has_items( has_entries( {
         'text': "Expand auto type",
         'chunks': contains_exactly(
           ChunkMatcher( 'const char *',
