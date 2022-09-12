@@ -109,23 +109,28 @@ class SubcommandsTest( TestCase ):
                               filetype = 'cs',
                               filepath = fixit_test )
       response = app.post_json( '/run_completer_command', request ).json
+
       assert_that( response, has_entries( {
         'fixits': contains_exactly(
           has_entries( {
-            'text': 'Introduce constant',
+            'text': 'Introduce parameter for \'5\'',
             'command': has_entries( { 'index': 0 } ),
             'resolve': True } ),
           has_entries( {
-            'text': 'Convert to binary',
+            'text': 'Introduce parameter for all occurrences of \'5\'',
             'command': has_entries( { 'index': 1 } ),
             'resolve': True } ),
           has_entries( {
-            'text': 'Convert to hex',
+            'text': 'Convert to binary',
             'command': has_entries( { 'index': 2 } ),
+            'resolve': True } ),
+          has_entries( {
+            'text': 'Convert to hex',
+            'command': has_entries( { 'index': 3 } ),
             'resolve': True } ),
         ) } ) )
       request.pop( 'command_arguments' )
-      request.update( { 'fixit': response[ 'fixits' ][ 1 ] } )
+      request.update( { 'fixit': response[ 'fixits' ][ 2 ] } )
       response = app.post_json( '/resolve_fixit', request ).json
       assert_that( response, has_entries( {
         'fixits': contains_exactly( has_entries( {
