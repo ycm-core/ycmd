@@ -83,6 +83,10 @@ jobs:
       with:
         java-version: 17
         distribution: 'adopt'
+    - name: Install .NET 6
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.x.x'
     - name: Install Python
       uses: actions/setup-python@v2
       with:
@@ -233,6 +237,10 @@ jobs:
       with:
         java-version: 17
         distribution: 'adopt'
+    - name: Install .NET 6
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.x.x'
     - name: Install Python
       uses: actions/setup-python@v2
       with:
