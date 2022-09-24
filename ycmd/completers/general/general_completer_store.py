@@ -17,6 +17,9 @@
 
 from ycmd.completers.completer import Completer
 from ycmd.completers.all.identifier_completer import IdentifierCompleter
+from ycmd.completers.all.example_language_model_completer import (
+  ExampleLanguageModelCompleter
+)
 from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd.completers.general.ultisnips_completer import UltiSnipsCompleter
 
@@ -32,12 +35,19 @@ class GeneralCompleterStore( Completer ):
   def __init__( self, user_options ):
     super().__init__( user_options )
     self._identifier_completer = IdentifierCompleter( user_options )
+    self._example_language_model_completer = ExampleLanguageModelCompleter(
+      user_options
+    )
     self._filename_completer = FilenameCompleter( user_options )
     self._ultisnips_completer = UltiSnipsCompleter( user_options )
-    self._non_filename_completers = [ self._identifier_completer ]
+    self._non_filename_completers = [
+      self._identifier_completer,
+      self._example_language_model_completer
+    ]
     if user_options.get( 'use_ultisnips_completer', True ):
       self._non_filename_completers.append( self._ultisnips_completer )
     self._all_completers = [ self._identifier_completer,
+                             self._example_language_model_completer,
                              self._filename_completer,
                              self._ultisnips_completer ]
 
