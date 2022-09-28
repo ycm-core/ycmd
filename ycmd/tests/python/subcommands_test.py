@@ -38,7 +38,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     LocationMatcher,
                                     ErrorMatcher,
-                                    ExpectedFailure )
+                                    ExpectedFailure,
+                                    UnixOnly )
 
 TYPESHED_PATH = os.path.normpath(
   PathToTestFile( '..', '..', '..', '..', 'third_party', 'jedi_deps', 'jedi',
@@ -699,6 +700,9 @@ class SubcommandsTest( TestCase ):
 
 
   @SharedYcmd
+  # broken on windows in jedi 0.18.1:
+  # https://github.com/davidhalter/jedi/issues/1877
+  @UnixOnly
   def test_Subcommands_RefactorRename_MultiFIle( self, app ):
     one = PathToTestFile( 'rename', 'one.py' )
     two = PathToTestFile( 'rename', 'two.py' )
