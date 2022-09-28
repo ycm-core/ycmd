@@ -107,7 +107,7 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '15.0.0'
+CLANGD_VERSION = '15.0.1'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -1128,18 +1128,18 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '6dc5d885857904f661540864a92e044a9ead8efc104adf02698a441fe54fda82' ),
+        'e5da88a729d1c9d00c8a965bdbfdf081a9c7a1602d5cdf7cd75aacea72180195' ),
       ( 'clangd-{version}-win32',
-        '7ed56b64b06336aab00785fbcb0e4c00693b52dcc76cf300616634d3fd554ab2' ) ]
+        'e5be596af3b4ab5f648e6a3b67bb60a3e97f6567d2b3c43a38f30158792e2641' ) ]
   if OnMac():
     if OnArm():
       return [
         ( 'clangd-{version}-arm64-apple-darwin',
-          '709b5d0e3c0b267177227bb3be7931e9923c1eb618e962d709eb3a579e539d59' ) ]
+          '7a606e37b03a795bf673116ef6c58cb888e7bd01199602bcae549c90927f124f' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '1286e93cfcc7201e48989c53da47d7cd49e653ee09ff94e4f82d99fa33fd4743' ) ]
-  # FreeBSD binaries are not yet available for clang 15
+        '0be7dc9042584a84524f57d62bde0ef168b3e00a02205053cfe5f73a13475c97' ) ]
+  # FreeBSD binaries are not yet available for clang 15.0.1
   #
   # if OnFreeBSD():
   #   return [
@@ -1150,16 +1150,16 @@ def GetClangdTarget():
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        '1659eef1ea33859d884f3f7d9a0ec40e3b1a032f2b0f3fb89acb36239669ea42' ) ]
+        '2497705a703c0ed5b5ef8717e247b87d084729d6cae20176e0f4dc8e33fff24b' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        'a31632d6d2cd28239b553a30da6b6700c7ddb7b64881e3fd9b795baf61c67fff' ) ]
+        '615262e7827f0ab273445390d9a0f4d841ba7fc75326483466651a846f4f5586' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        'e1d23a6bfecdcc6eb3a5ded82e6939a4767621f6b7a736d5817d22c48860c563' ) ]
+        '8bf1177483daf10012f4e98ae4a6eec4f737bd1b6c8823b3b9b4a670479fcf58' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
