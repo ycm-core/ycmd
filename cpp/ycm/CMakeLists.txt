@@ -30,53 +30,55 @@ if ( USE_CLANG_COMPLETER AND
      NOT PATH_TO_LLVM_ROOT AND
      NOT EXTERNAL_LIBCLANG_PATH )
 
-  set( CLANG_VERSION 14.0.0 )
+  set( CLANG_VERSION 15.0.1 )
 
   if ( APPLE )
     if ( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-arm64-apple-darwin" )
       set( LIBCLANG_SHA256
-           "04ed0ebe78f8128d41585dae96ba01f15e253483db6d98d361f3bb0fba5ee135" )
+           "91d0c94cea43abe36d1fc954f78bc44dc77773fdf4680dd0958f05a8c859fcae" )
     else()
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-x86_64-apple-darwin" )
       set( LIBCLANG_SHA256
-           "3f46d66cc2345f7bbf6394b16a9232bf291ab992bd7a5a4380800c92c1c409b3" )
+           "f004735cb8bfd56a8ea3c0ed21d1c8c02127ea23ce62eda38143270650a902fe" )
     endif()
   elseif ( WIN32 )
     if( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win64" )
       set( LIBCLANG_SHA256
-           "22b1497fb261b402761c3a0fd7cb59badda0e99156a8661d44953939e123c0c4" )
+           "6e3196a4b92b5313898e51745c51d95410efd08fb2f1fabeba7205537ef7fed8" )
     else()
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win32" )
       set( LIBCLANG_SHA256
-           "74cd1a0de17877c6d291979ddfc696969a0aa1c3b47122396f61c0e9286a3a9d" )
+           "3e0f81aeb47ad1f748abc51a5b37cdb5086a9aaac03955c1fdd0930b41887e11" )
     endif()
-  elseif ( SYSTEM_IS_FREEBSD )
-    if ( 64_BIT_PLATFORM )
-      set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-amd64-unknown-freebsd13" )
-      set( LIBCLANG_SHA256
-          "6efd6cc111939766dde6873fbd371280c13ffbb3c7fae193d5f66bd988ccf440" )
-    else()
-      set( LIBCLANG_DIRNAME
-           "libclang-${CLANG_VERSION}-i386-unknown-freebsd13" )
-      set( LIBCLANG_SHA256
-           "0d3e808e04d4ebb6023402310316799b6c9c4220763fd13d7691dc24969ce4c4" )
-   endif()
+  # FreeBSD binaries are not yet available for llvm 15.0,1
+  #
+  # elseif ( SYSTEM_IS_FREEBSD )
+  #   if ( 64_BIT_PLATFORM )
+  #     set( LIBCLANG_DIRNAME
+  #          "libclang-${CLANG_VERSION}-amd64-unknown-freebsd13" )
+  #     set( LIBCLANG_SHA256
+  #         "" )
+  #   else()
+  #     set( LIBCLANG_DIRNAME
+  #          "libclang-${CLANG_VERSION}-i386-unknown-freebsd13" )
+  #     set( LIBCLANG_SHA256
+  #          "" )
+  #  endif()
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-aarch64-linux-gnu" )
     set( LIBCLANG_SHA256
-         "e11048e3fceaba016a4521c2138166a006abaa5c4eba23e4b2f2b354e81a130b" )
+         "294ffae61aab3198dc26b8cb891475ab4c08ab4e20f826c687260730350a3eaf" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)" )
     set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-armv7a-linux-gnueabihf" )
     set( LIBCLANG_SHA256
-         "321fd6679a5776c6f5df6169343032ac4b300aac8228e232c23067fdbcbbb7cb" )
+         "e8ebe03b6fc558699f8ce389dd3693a9ac8cf4170b436cc0123fd923eba057d6" )
   elseif ( CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64)" )
     set( LIBCLANG_DIRNAME
          "libclang-${CLANG_VERSION}-x86_64-unknown-linux-gnu" )
     set( LIBCLANG_SHA256
-         "a5b70d17102484cd4b5dbd1d63206bd0a41b130359428a0b2d7817eba768e3f4" )
+         "89e8fdb6e7b694226405c6c2b8f5ef26f7683b4328bca7d7e611314189a75aa9" )
   else()
     message( FATAL_ERROR
       "No prebuilt Clang ${CLANG_VERSION} binaries for this system. "

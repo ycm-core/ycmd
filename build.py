@@ -107,7 +107,7 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '14.0.0'
+CLANGD_VERSION = '15.0.1'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -1128,36 +1128,38 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '529c5b782d926536aedcb2d7a3c8a813fa05ada9193ec4119b28deb3f83634b2' ),
+        'e5da88a729d1c9d00c8a965bdbfdf081a9c7a1602d5cdf7cd75aacea72180195' ),
       ( 'clangd-{version}-win32',
-        '6c7f0985370ebede0f61ff66a1b4886079f199bc346c2baa941de9ad76e907a7' ) ]
+        'e5be596af3b4ab5f648e6a3b67bb60a3e97f6567d2b3c43a38f30158792e2641' ) ]
   if OnMac():
     if OnArm():
       return [
         ( 'clangd-{version}-arm64-apple-darwin',
-          '6b4bed9378a9ac3d84720dbcf76e4c60b0afc27567d42d7837f9da8b039d13c5' ) ]
+          '7a606e37b03a795bf673116ef6c58cb888e7bd01199602bcae549c90927f124f' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '867342cffc04ab3c1936121ed643e07df666119afad6518835a26306db8767ce' ) ]
-  if OnFreeBSD():
-    return [
-      ( 'clangd-{version}-amd64-unknown-freebsd13',
-        '5db1f95eea87d216d7a7490c207918962cddfdee6387594f6f6043ae21dde22f' ),
-      ( 'clangd-{version}-i386-unknown-freebsd13',
-        'b9f6d0be1476dfb71ee16d12639b7fe425dc90097d81fbf2bdd0cb7248338ca2' ) ]
+        '0be7dc9042584a84524f57d62bde0ef168b3e00a02205053cfe5f73a13475c97' ) ]
+  # FreeBSD binaries are not yet available for clang 15.0.1
+  #
+  # if OnFreeBSD():
+  #   return [
+  #     ( 'clangd-{version}-amd64-unknown-freebsd13',
+  #       '' ),
+  #     ( 'clangd-{version}-i386-unknown-freebsd13',
+  #       '' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'c5e2ac2f9381f6c1bf2305af0458360160a86c8dbd369c923a71c673f391142d' ) ]
+        '2497705a703c0ed5b5ef8717e247b87d084729d6cae20176e0f4dc8e33fff24b' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        '86b4582d551b8d5558b4bdd1060fbb3ec9ae4e0c7c6f9489db1a4088f5e71ef3' ) ]
+        '615262e7827f0ab273445390d9a0f4d841ba7fc75326483466651a846f4f5586' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '9c17b5550ba927aa3f661300b4258109d3a23aecdd97fef81185d0d0b5529d36' ) ]
+        '8bf1177483daf10012f4e98ae4a6eec4f737bd1b6c8823b3b9b4a670479fcf58' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
