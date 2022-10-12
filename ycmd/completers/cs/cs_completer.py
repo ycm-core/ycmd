@@ -381,7 +381,13 @@ class CsharpCompleter( Completer ):
       # to be confirmed
       path_to_solutionfile = solutiondetection.FindSolutionPath( filepath )
       if not path_to_solutionfile:
-        raise RuntimeError( 'Autodetection of solution file failed.' )
+        path_to_solutionfile = os.getcwd()
+        LOGGER.info( 'Autodetection of solution file failed, '
+                    'trying current directory ({0}).'
+                    .format( path_to_solutionfile ) )
+      else:
+        LOGGER.info( 'Loading solution file {0}'
+                    .format( path_to_solutionfile ) )
       self._solution_for_file[ filepath ] = path_to_solutionfile
 
     return self._solution_for_file[ filepath ]
