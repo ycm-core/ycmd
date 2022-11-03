@@ -878,8 +878,8 @@ def GetCsCompleterDataForPlatform():
     'win32': {
       'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.39.2/omnisharp.http-win-x86-net6.0.zip'
-                         ),
+                        's/download/v1.39.2/omnisharp.http-win-x86-net6.0.'
+                        'zip' ),
       'file_name': 'omnisharp.http-win-x86-net6.0.zip',
       'check_sum': ( 'd6814b0a1e501e9b3c72eadf13b06f31e8bbd8e2e04568754f2dd4e5'
                      '07310633' ),
@@ -887,8 +887,8 @@ def GetCsCompleterDataForPlatform():
     'win64': {
       'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.39.2/omnisharp.http-win-x64-net6.0.zip'
-                         ),
+                        's/download/v1.39.2/omnisharp.http-win-x64-net6.0.'
+                        'zip' ),
       'file_name': 'omnisharp.http-win-x64-net6.0.zip',
       'check_sum': ( 'a1f31b0efb535e38beb76a8daaeeab2fac7488452197ac588335be43'
                      'f3bd46bb' ),
