@@ -876,44 +876,49 @@ def GetCsCompleterDataForPlatform():
   ####################################
   DATA = {
     'win32': {
-      'version': 'v1.37.11',
+      'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.37.11/omnisharp.http-win-x86.zip' ),
-      'file_name': 'omnisharp.http-win-x86.zip',
-      'check_sum': ( '461544056b144c97e8413de8c1aa1ddd9e2902f5a9f2223af8046d65'
-                     '4d95f2a0' ),
+                        's/download/v1.39.2/omnisharp.http-win-x86-net6.0.'
+                        'zip' ),
+      'file_name': 'omnisharp.http-win-x86-net6.0.zip',
+      'check_sum': ( 'd6814b0a1e501e9b3c72eadf13b06f31e8bbd8e2e04568754f2dd4e5'
+                     '07310633' ),
     },
     'win64': {
-      'version': 'v1.37.11',
+      'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.37.11/omnisharp.http-win-x64.zip' ),
-      'file_name': 'omnisharp.http-win-x64.zip',
-      'check_sum': ( '7f6f0abfac00d028b90aaf1f56813e4fbb73d84bdf2c4704862aa976'
-                     '1b61a59c' ),
+                        's/download/v1.39.2/omnisharp.http-win-x64-net6.0.'
+                        'zip' ),
+      'file_name': 'omnisharp.http-win-x64-net6.0.zip',
+      'check_sum': ( 'a1f31b0efb535e38beb76a8daaeeab2fac7488452197ac588335be43'
+                     'f3bd46bb' ),
     },
     'macos': {
-      'version': 'v1.37.11',
+      'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.37.11/omnisharp.http-osx.tar.gz' ),
-      'file_name': 'omnisharp.http-osx.tar.gz',
-      'check_sum': ( '84b84a8a3cb8fd3986ea795d9230457c43bf130b482fcb77fef57c67'
-                     'e151828a' ),
+                        's/download/v1.39.2/omnisharp.http-osx-x64-net6.0.tar.'
+                        'gz' ),
+      'file_name': 'omnisharp.http-osx-x64-net6.0.tar.gz',
+      'check_sum': ( '33163bdd54428b8a2a10ca987a577e7f9776d85bf2e892c756d45789'
+                     '351c3782' ),
     },
     'linux32': {
-      'version': 'v1.37.11',
+      'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.37.11/omnisharp.http-linux-x86.tar.gz' ),
-      'file_name': 'omnisharp.http-linux-x86.tar.gz',
-      'check_sum': ( 'a5ab39380a5d230c75f08bf552980cdc5bd8c31a43348acbfa66f1f4'
-                     '6f12851f' ),
+                        's/download/v1.39.2/omnisharp.http-linux-x64-net6.0.ta'
+                        'r.gz' ),
+      'file_name': 'omnisharp.http-linux-x64-net6.0.tar.gz',
+      'check_sum': ( '7c37055febe0fbcc1f0cddc62143665665baeb163f96beda5fade0e3'
+                     'd0048680' ),
     },
     'linux64': {
-      'version': 'v1.37.11',
+      'version': 'v1.39.2',
       'download_url': ( 'https://github.com/OmniSharp/omnisharp-roslyn/release'
-                        's/download/v1.37.11/omnisharp.http-linux-x64.tar.gz' ),
-      'file_name': 'omnisharp.http-linux-x64.tar.gz',
-      'check_sum': ( '9a6e9a246babd777229eebb57f0bee86e7ef5da271c67275eae5ed9d'
-                     '7b0ad563' ),
+                        's/download/v1.39.2/omnisharp.http-linux-x64-net6.0.ta'
+                        'r.gz' ),
+      'file_name': 'omnisharp.http-linux-x64-net6.0.tar.gz',
+      'check_sum': ( '7c37055febe0fbcc1f0cddc62143665665baeb163f96beda5fade0e3'
+                     'd0048680' ),
     },
   }
   if OnWindows():
