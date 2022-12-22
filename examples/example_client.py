@@ -15,10 +15,12 @@
 # limitations under the License.
 
 import sys
-import platform
-if sys.version_info[ 0 ] < 3:
-  sys.exit( 'example_client.py requires Python 3.6+; detected Python ' +
-            platform.python_version() )
+
+PY_VERSION = sys.version_info[ 0 : 3 ]
+if PY_VERSION < ( 3, 10, 0 ):
+  sys.exit( 'ycmd requires Python >= 3.10.0; '
+            'your version of Python is ' + sys.version +
+            '\nHint: Try running python3 ' + ' '.join( sys.argv ) )
 
 from base64 import b64encode, b64decode
 from hmac import compare_digest, new

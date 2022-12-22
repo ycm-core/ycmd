@@ -18,7 +18,8 @@
 import sys
 import os
 
-if sys.version_info[ 0 ] < 3:
+PY_VERSION = sys.version_info[ 0 : 3 ]
+if PY_VERSION < ( 3, 10, 0 ):
   sys.exit( 8 )
 
 ROOT_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), '..' ) )
