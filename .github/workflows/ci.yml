@@ -234,7 +234,7 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: 17
-        distribution: 'adopt'
+        distribution: 'temurin'
     - name: Install Python
       uses: actions/setup-python@v2
       with:
