@@ -56,6 +56,7 @@ def RunGoToTest_all( app, filename, command, test ):
   }
   common_response = {
     'filepath': os.path.abspath( PathToTestFile( filename ) ),
+    'file_only': False,
   }
 
   if 'extra_conf' in test:
@@ -103,6 +104,7 @@ def RunGoToIncludeTest( app, command, test ):
     'filepath'   : PathToTestFile( 'test-include', test[ 'response' ] ),
     'line_num'   : 1,
     'column_num' : 1,
+    'file_only'  : False,
   }
 
   actual_response = app.post_json( '/run_completer_command', goto_data ).json
