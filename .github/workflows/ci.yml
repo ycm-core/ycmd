@@ -87,7 +87,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.10'
+        python-version: '3.8'
 
     - name: Install Go
       if: matrix.benchmark == false
@@ -134,7 +134,7 @@ jobs:
     - name: Install Python
       uses: deadsnakes/action@v2.1.1
       with:
-        python-version: '3.10'
+        python-version: '3.8'
         debug: true
     - name: Install GCC
       run: |
@@ -238,7 +238,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.10'
+        python-version: '3.8'
         architecture: ${{ matrix.python-arch }}
     - name: Install Go
       if: matrix.benchmark == false
