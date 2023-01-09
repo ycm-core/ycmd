@@ -39,7 +39,7 @@ tests][test-setup].**
 
 This is all for Ubuntu Linux. Details on getting ycmd running on other OS's can
 be found in [YCM's instructions][ycm-install] (ignore the Vim-specific parts).
-Note that **ycmd runs on Python 3.6.0+.**
+Note that **ycmd runs on Python 3.8.0+.**
 
 First, install the minimal dependencies:
 ```
