@@ -566,7 +566,6 @@ class LanguageServerConnection( threading.Thread ):
             except Exception:
               LOGGER.exception( 'Received invalid protocol data from server: '
                                  + str( line ) )
-              raise
 
         read_bytes += 1
 
