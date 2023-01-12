@@ -913,7 +913,7 @@ class TypeScriptCompleter( Completer ):
 
     interface = _GetInterfaceDocumentation(info.get("tags", []))
     interface = '' if interface is None else (interface + '\n\n')
-    message = f'{ info[ "displayString" ] }\n\n{interface}{info[ "documentation" ]}'
+    message = f'{info["displayString"]}\n\n{interface}{info["documentation"]}'
     return responses.BuildDetailedInfoResponse( message )
 
 
@@ -1148,7 +1148,7 @@ def _GetInterfaceDocumentation(tags):
   for tag in tags:
     if tag["name"] == "param":
       text = tag["text"]
-      match = re.search("\s", text)
+      match = re.search(r"\s", text)
       index = len(text) if match is None else match.start(0)
       interface.append((text[:index], text[index + 1 :].strip()))
 
