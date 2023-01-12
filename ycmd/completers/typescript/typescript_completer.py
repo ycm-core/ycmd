@@ -911,7 +911,9 @@ class TypeScriptCompleter( Completer ):
       'offset': request_data[ 'column_codepoint' ]
     } )
 
-    message = f'{ info[ "displayString" ] }\n\n{info[ "documentation" ]}'
+    interface = _GetInterfaceDocumentation(info.get("tags", []))
+    interface = '' if interface is None else (interface + '\n\n')
+    message = f'{ info[ "displayString" ] }\n\n{interface}{info[ "documentation" ]}'
     return responses.BuildDetailedInfoResponse( message )
 
 
@@ -1128,11 +1130,39 @@ def _BuildCompletionExtraMenuAndDetailedInfo( request_data, entry ):
     extra_menu_info = re.sub( '\\s+', ' ', signature )
     detailed_info = [ signature ]
 
+  interface = _GetInterfaceDocumentation(entry.get("tags", []))
+  if interface is not None:
+      detailed_info.append(interface)
+
   docs = entry.get( 'documentation', [] )
   detailed_info += [ doc[ 'text' ].strip() for doc in docs if doc ]
   detailed_info = '\n\n'.join( detailed_info )
 
   return extra_menu_info, detailed_info
+
+
+def _GetInterfaceDocumentation(tags):
+  interface = []
+  returns = None
+
+  for tag in tags:
+    if tag["name"] == "param":
+      text = tag["text"]
+      match = re.search("\s", text)
+      index = len(text) if match is None else match.start(0)
+      interface.append((text[:index], text[index + 1 :].strip()))
+
+    elif tag["name"] in ["return", "returns"]:
+      returns = tag.get("text")
+
+  if returns is not None:
+    interface.append(("return", returns))
+
+  if len(interface) == 0:
+      return None
+
+  length = max(len(name) for name, _ in interface)
+  return '\n'.join(f'{name.rjust(length)}: {text}' for name, text in interface)
 
 
 def _BuildCompletionFixIts( request_data, entry ):
