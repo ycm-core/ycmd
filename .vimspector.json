@@ -48,6 +48,16 @@
       "configuration": {
         "request": "attach"
       }
+    },
+    "python - current script": {
+      "adapter": "debugpy",
+      "configuration": {
+        "request": "launch",
+        "cwd": "${workspaceRoot}",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "program": "${file}"
+      }
     }
   }
 }
