@@ -613,6 +613,8 @@ def GetCmakeArgs( parsed_args ):
   if parsed_args.enable_debug:
     cmake_args.append( '-DCMAKE_BUILD_TYPE=Debug' )
     cmake_args.append( '-DUSE_DEV_FLAGS=ON' )
+  elif parsed_args.ninja:
+    cmake_args.append( '-DCMAKE_BUILD_TYPE=Release' )
 
   # coverage is not supported for c++ on MSVC
   if not OnWindows() and parsed_args.enable_coverage:
