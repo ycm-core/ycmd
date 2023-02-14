@@ -427,6 +427,9 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 def CompilationDatabaseExists( file_dir ):
   for folder in PathsToAllParentFolders( file_dir ):
     if os.path.exists( os.path.join( folder, 'compile_commands.json' ) ):
-      return True
+      if os.path.getsize( os.path.join( folder, 'compile_commands.json' ) ) < 32:
+        return False
+      else:
+        return True
 
   return False
