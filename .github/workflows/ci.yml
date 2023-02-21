@@ -33,7 +33,7 @@ jobs:
     name: "${{ matrix.runs-on }} - ${{ matrix.name_suffix }}${{ matrix.benchmark && 'C++ Benchmark' || 'test run' }}"
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
@@ -127,7 +127,7 @@ jobs:
     name: "C++ Lint"
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
@@ -185,7 +185,7 @@ jobs:
       COVERAGE: ${{ !matrix.benchmark }}
     name: "Windows MSVC ${{ matrix.msvc }} ${{ matrix.python-arch }} - ${{ matrix.benchmark && 'C++ Benchmark' || 'test run' }}"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
