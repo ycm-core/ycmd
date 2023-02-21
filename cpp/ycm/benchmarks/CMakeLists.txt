@@ -29,8 +29,8 @@ else()
   include( FetchContent )
   FetchContent_Declare(
     benchmark
-    URL https://github.com/google/benchmark/archive/v1.7.1.tar.gz
-    URL_HASH SHA256=6430e4092653380d9dc4ccb45a1e2dc9259d581f4866dc0759713126056bc1d7
+    GIT_REPOSITORY https://github.com/google/benchmark
+    GIT_TAG 3b19d7222db7babfdc9b3949408b2294c3bbb540
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/benchmark
   )
   FetchContent_GetProperties( benchmark )
