@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ ubuntu-20.04, macos-10.15 ]
+        runs-on: [ ubuntu-20.04, macos-12 ]
         compiler: [ 'gcc' ] # Only used on linux
         libclang: [ true ] # Only used on linux
         benchmark: [ true, false ]
