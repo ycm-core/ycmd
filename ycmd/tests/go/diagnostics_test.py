@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( any_of,
-                       assert_that,
+from hamcrest import ( assert_that,
                        contains_exactly,
                        contains_inanyorder,
                        has_entries,
@@ -43,8 +42,7 @@ DIAG_MATCHERS_PER_FILE = {
   MAIN_FILEPATH: contains_inanyorder(
     has_entries( {
       'kind': 'ERROR',
-      'text': any_of( starts_with( 'undeclared name: diagnostics_test' ),
-                      starts_with( 'undefined: diagnostics_test' ) ),
+      'text': starts_with( 'undeclared name: diagnostics_test' ),
       'location': LocationMatcher( MAIN_FILEPATH, 12, 5 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 12, 5 ), ( 12, 21 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
@@ -71,8 +69,7 @@ class DiagnosticsTest( TestCase ):
 
     results = app.post_json( '/detailed_diagnostic', request_data ).json
     assert_that( results,
-                 any_of( has_entry( 'message', 'undeclared name: diagnostics_test' ),
-                         has_entry( 'message', 'undefined: diagnostics_test' ) ) )
+                 has_entry( 'message', 'undeclared name: diagnostics_test' ) )
 
 
   @WithRetry()
