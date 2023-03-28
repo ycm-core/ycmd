@@ -328,6 +328,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return server_trigger_characters + [ ',' ]
 
 
+  def GetTriggerCharacters( self, server_trigger_characters ):
+    return list( filter( lambda t: t != ' ', server_trigger_characters ) )
+
+
   def GetCustomSubcommands( self ):
     return {
       'OrganizeImports': (
