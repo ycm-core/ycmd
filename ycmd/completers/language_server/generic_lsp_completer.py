@@ -32,6 +32,8 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
 
     self._command_line = server_settings.get( 'cmdline' )
 
+    self._server_settings = server_settings
+
     self._port = server_settings.get( 'port' )
     if self._port:
       connection_type = 'tcp'
@@ -121,3 +123,8 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
       sections_to_config_map = self._settings.get( 'config_sections', {} )
       return [ sections_to_config_map.get( item.get( 'section', '' ) )
                for item in request[ 'params' ][ 'items' ] ]
+
+
+  def GetTriggerCharacters( self, server_trigger_characters ):
+    return self._server_settings.get( 'triggerCharacters',
+                                      server_trigger_characters )

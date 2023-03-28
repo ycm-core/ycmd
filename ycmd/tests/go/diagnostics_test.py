@@ -71,8 +71,10 @@ class DiagnosticsTest( TestCase ):
 
     results = app.post_json( '/detailed_diagnostic', request_data ).json
     assert_that( results,
-                 any_of( has_entry( 'message', 'undeclared name: diagnostics_test' ),
-                         has_entry( 'message', 'undefined: diagnostics_test' ) ) )
+                 any_of( has_entry( 'message',
+                                    'undeclared name: diagnostics_test' ),
+                         has_entry( 'message',
+                                    'undefined: diagnostics_test' ) ) )
 
 
   @WithRetry()

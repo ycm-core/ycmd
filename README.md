@@ -285,6 +285,9 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `capabilities'`: Overrides the default LSP capabilities of ycmd.
   - If you enable `workspace/configuration` support, check the extra conf
     details, relevant to LSP servers.
+- `triggerCharacters`: Override the LSP server's trigger characters for
+  completion. This can be useful when the server obnoxiously requests completion
+  on every character or for example on whitespace characters.
 
 ```json
 {
@@ -292,7 +295,8 @@ wouldn't usually know about. The value is a list of dictionaries containing:
     "name": "gopls",
     "cmdline": [ "/path/to/gopls", "-rpc.trace" ],
     "filetypes": [ "go" ],
-    "project_root_files": [ "go.mod" ]
+    "project_root_files": [ "go.mod" ],
+    "tirggerCharacters": [ "." ]
   } ]
 }
 ```
