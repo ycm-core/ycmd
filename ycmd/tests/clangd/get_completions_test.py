@@ -156,7 +156,7 @@ class GetCompletionsTest( TestCase ):
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd()
   def test_GetCompletions_ForcedWithNoTrigger( self, app ):
     RunTest( app, {
       'description': 'semantic completion with force query=DO_SO',
