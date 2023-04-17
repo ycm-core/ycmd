@@ -107,7 +107,7 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '15.0.1'
+CLANGD_VERSION = '16.0.1'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -215,10 +215,6 @@ def OnMac():
 
 def OnWindows():
   return platform.system() == 'Windows'
-
-
-def OnFreeBSD():
-  return platform.system() == 'FreeBSD'
 
 
 def OnAArch64():
@@ -1131,38 +1127,30 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        'e5da88a729d1c9d00c8a965bdbfdf081a9c7a1602d5cdf7cd75aacea72180195' ),
+        'a0a7b16f6f92d545c84baff5e4bdb56897e955689ffc7407c915cc9d3c69a945' ),
       ( 'clangd-{version}-win32',
-        'e5be596af3b4ab5f648e6a3b67bb60a3e97f6567d2b3c43a38f30158792e2641' ) ]
+        '870de4d2a45380eba7c6b6640e2cb870219dd2025ed3bcb58101fd1d17f51d75' ) ]
   if OnMac():
     if OnArm():
       return [
         ( 'clangd-{version}-arm64-apple-darwin',
-          '7a606e37b03a795bf673116ef6c58cb888e7bd01199602bcae549c90927f124f' ) ]
+          'c5b0a314c00e4ce839ce1f4ee1ed46116f839949b7874affa759e10589340948' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        '0be7dc9042584a84524f57d62bde0ef168b3e00a02205053cfe5f73a13475c97' ) ]
-  # FreeBSD binaries are not yet available for clang 15.0.1
-  #
-  # if OnFreeBSD():
-  #   return [
-  #     ( 'clangd-{version}-amd64-unknown-freebsd13',
-  #       '' ),
-  #     ( 'clangd-{version}-i386-unknown-freebsd13',
-  #       '' ) ]
+        '826c85889a1c288418e2c05b91e40158cde06f2e79f1e951d4983de2652a6d2c' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        '2497705a703c0ed5b5ef8717e247b87d084729d6cae20176e0f4dc8e33fff24b' ) ]
+        '79f4a0a20342479c0e29573cf58810e0daabbf00178cf042edf6e1acb20a8602' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        '615262e7827f0ab273445390d9a0f4d841ba7fc75326483466651a846f4f5586' ) ]
+        'e521f21021885aaeb94e631949db6c0a65cc9c5c9c708afe4a42a058eb91ebca' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '8bf1177483daf10012f4e98ae4a6eec4f737bd1b6c8823b3b9b4a670479fcf58' ) ]
+        '51e69f6f5394ed6990cd7d938c53135ef2b5f8d2da1026eb291ffb3c81968847' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )

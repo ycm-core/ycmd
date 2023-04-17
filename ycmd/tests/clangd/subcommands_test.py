@@ -522,7 +522,7 @@ def FixIt_Check_MacroExpand_Resolved( results ):
 def FixIt_Check_AutoExpand_Resolved( results ):
   assert_that( results, has_entries( {
     'fixits': has_items( has_entries( {
-        'text': "Expand auto type",
+        'text': "Replace with deduced type",
         'chunks': contains_exactly(
           ChunkMatcher( 'const char *',
                         LineColMatcher( 80, 1 ),
@@ -752,7 +752,6 @@ class SubcommandsTest( TestCase ):
         { 'req': ( 'main.cpp',  6, 11 ), 'res': ( 'system/c.hpp', 1, 1 ) },
         # Expected failures
         { 'req': ( 'main.cpp',  7,  1 ), 'res': 'Cannot jump to location' },
-        { 'req': ( 'main.cpp', 10, 13 ), 'res': 'Cannot jump to location' },
       ],
       [ 'GoToImprecise', 'GoToInclude', 'GoTo' ] ):
       with self.subTest( test = test, cmd = cmd ):
@@ -789,7 +788,7 @@ class SubcommandsTest( TestCase ):
         RunGoToTest_all( app, '', 'GoToReferences', test )
 
 
-  @SharedYcmd
+  @IsolatedYcmd()
   def test_Subcommands_GoToSymbol( self, app ):
     for test in [
       # In same file - 1 result

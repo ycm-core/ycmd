@@ -108,7 +108,7 @@ jobs:
         sudo apt-get install clang-7
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-7 100
-    - name: Run pip and prepare codecov
+    - name: Run pip and prepare coverage
       if: matrix.benchmark == false
       run: |
         python3 -m pip install -r test_requirements.txt
@@ -119,9 +119,15 @@ jobs:
     - name: Run benchmarks
       if: matrix.benchmark == true
       run: python3 benchmark.py --quiet
-    - name: Send coverage data
+    - name: Combine and summarise coverage
       if: matrix.benchmark == false
-      run: codecov --name "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests" 1>/dev/null
+      run: coverage combine && coverage xml
+    - name: Upload coverage data
+      uses: codecov/codecov-action@v3
+      if: matrix.benchmark == false
+      with:
+        name: "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
+        gcov: true
 
   linux_lint:
     name: "C++ Lint"
@@ -245,7 +251,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         stable: true
-    - name: Run pip and prepare codecov
+    - name: Run pip and prepare coverage
       if: matrix.benchmark == false
       run: |
         python3 -m pip install -r test_requirements.txt
@@ -257,6 +263,12 @@ jobs:
     - name: Run tests
       if: matrix.benchmark == false
       run: python3 run_tests.py --msvc ${{ matrix.msvc }} --quiet
-    - name: Upload coverage data
+    - name: Combine and summarise coverage
       if: matrix.benchmark == false
-      run: codecov --name ${{ matrix.runs-on }}-${{ matrix.python-arch }} >null
+      run: coverage combine && coverage xml
+    - name: Upload coverage data
+      uses: codecov/codecov-action@v3
+      if: matrix.benchmark == false
+      with:
+        name: "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
+        gcov: true

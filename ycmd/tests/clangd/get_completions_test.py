@@ -156,7 +156,7 @@ class GetCompletionsTest( TestCase ):
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd()
   def test_GetCompletions_ForcedWithNoTrigger( self, app ):
     RunTest( app, {
       'description': 'semantic completion with force query=DO_SO',
@@ -372,7 +372,7 @@ int main()
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd( { 'clangd_uses_ycmd_caching': 1 } )
   def test_GetCompletions_ForceSemantic_YcmdCache( self, app ):
     RunTest( app, {
       'description': 'completions are returned when using ycmd filtering',
@@ -397,8 +397,9 @@ int main()
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
-          'completions': contains_exactly( CompletionEntryMatcher( 'foobar' ),
-                                   CompletionEntryMatcher( 'floozar' ) ),
+          'completions': contains_exactly(
+            CompletionEntryMatcher( 'foobar' ),
+            CompletionEntryMatcher( 'floozar' ) ),
           'errors': empty()
         } )
       },
@@ -614,7 +615,7 @@ int main()
         'response': requests.codes.ok,
         'data': has_entries( {
           'completion_start_column': 11,
-          'completions': contains_exactly(
+          'completions': has_items(
             CompletionEntryMatcher( 'a.hpp"' ),
             CompletionEntryMatcher( 'b.hpp"' ),
             CompletionEntryMatcher( 'c.hpp"' ),
