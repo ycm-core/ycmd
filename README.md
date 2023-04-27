@@ -296,7 +296,7 @@ wouldn't usually know about. The value is a list of dictionaries containing:
     "cmdline": [ "/path/to/gopls", "-rpc.trace" ],
     "filetypes": [ "go" ],
     "project_root_files": [ "go.mod" ],
-    "tirggerCharacters": [ "." ]
+    "triggerCharacters": [ "." ]
   } ]
 }
 ```
