@@ -3,7 +3,7 @@ import os.path as p
 
 DIR_OF_THIS_SCRIPT = p.dirname( p.abspath( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, '..', '..', '..', '..', '..', 'third_party' )
-PATH_TO_LOMBOK = p.join( DIR_OF_THIRD_PARTY, 'lombok', 'cache', 'lombok-1.18.16.jar' )
+PATH_TO_LOMBOK = p.join( DIR_OF_THIRD_PARTY, 'lombok', 'cache', 'lombok-1.18.26.jar' )
 
 
 def Settings( **kwargs ):

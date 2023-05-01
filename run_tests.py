@@ -33,7 +33,7 @@ os.environ[ 'PYTHONPATH' ] = (
     os.pathsep +
     p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )
 
-LOMBOK_VERSION = '1.18.16'
+LOMBOK_VERSION = '1.18.26'
 
 
 def DownloadFileTo( download_url, file_path ):
@@ -355,7 +355,7 @@ def SetUpJavaCompleter():
 
   jar_name = f'lombok-{ LOMBOK_VERSION }.jar'
   url = (
-    f'https://github.com/ycm-core/llvm/releases/download/14.0.5/{ jar_name }'
+    f'https://github.com/ycm-core/llvm/releases/download/16.0.1/{ jar_name }'
   )
   file_name = p.join( CACHE, jar_name )
 
