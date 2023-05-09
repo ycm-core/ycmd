@@ -337,6 +337,11 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
             'plaintext',
             'markdown'
           ],
+          # Buggy servers (jdt.ls) now require this to be set even though it's
+          # the historical default
+          'resolveSupport': {
+            'properties': [ 'documentation', 'detail' ]
+          },
         },
       },
       'documentSymbol': {

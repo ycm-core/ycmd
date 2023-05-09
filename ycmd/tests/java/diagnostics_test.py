@@ -72,6 +72,7 @@ youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
+  PathToTestFile( DEFAULT_PROJECT_DIR ): empty(),
   TestFactory: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
