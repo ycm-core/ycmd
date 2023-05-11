@@ -2048,7 +2048,7 @@ class LanguageServerCompleter( Completer ):
       try:
         filepath = lsp.UriToFilePath( uri )
       except lsp.InvalidUriException:
-        LOGGER.exception( 'Ignoring diagnostics for unrecognized URI' )
+        LOGGER.debug( 'Ignoring diagnostics for unrecognized URI %s', uri )
         return None
 
       with self._server_info_mutex:
