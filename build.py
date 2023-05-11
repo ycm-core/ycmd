@@ -95,7 +95,7 @@ JDTLS_SHA256 = (
   '2363d8c01d5a8260a3d55f8fa008828d26a7b0acf9b173fafca4471ee81a701f'
 )
 
-RUST_TOOLCHAIN = 'nightly-2022-08-17'
+DEFAULT_RUST_TOOLCHAIN = 'nightly-2023-05-11'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
@@ -455,6 +455,14 @@ def ParseArguments():
                        help = 'Enable Go semantic completion engine.' )
   parser.add_argument( '--rust-completer', action = 'store_true',
                        help = 'Enable Rust semantic completion engine.' )
+  parser.add_argument( '--rust-toolchain-version',
+                       action = 'store',
+                       default = DEFAULT_RUST_TOOLCHAIN,
+                       help = 'For advanced users ***NO SUPPORT***, specify '
+                              'the rust toolchain version to install from '
+                              'rustup. Only the default vaule "' +
+                               DEFAULT_RUST_TOOLCHAIN + '" is tested/'
+                              'supported by the maintainers of YCM/ycmd' )
   parser.add_argument( '--java-completer', action = 'store_true',
                        help = 'Enable Java semantic completion engine.' ),
   parser.add_argument( '--ts-completer', action = 'store_true',
@@ -958,13 +966,23 @@ def ReadToolchainVersion():
     return None
 
 
+def RustToolchainNeedsRefresh( cur, req ):
+  if cur == 'stable' and req == 'stable':
+    return True
+
+  return cur != req
+
+
 def EnableRustCompleter( switches ):
+  cur_toolchain_version = ReadToolchainVersion()
+  req_toolchain_version = switches.rust_toolchain_version
+
   if switches.quiet:
-    sys.stdout.write( 'Installing rust-analyzer for Rust support...' )
+    sys.stdout.write( f'Installing rust-analyzer "{req_toolchain_version}" '
+                        'for Rust support...' )
     sys.stdout.flush()
 
-  toolchain_version = ReadToolchainVersion()
-  if toolchain_version != RUST_TOOLCHAIN:
+  if RustToolchainNeedsRefresh( cur_toolchain_version, req_toolchain_version ):
     install_dir = mkdtemp( prefix = 'rust_install_' )
 
     new_env = os.environ.copy()
@@ -992,7 +1010,7 @@ def EnableRustCompleter( switches ):
     rustup = p.join( install_dir, 'bin', 'rustup' )
 
     try:
-      CheckCall( [ rustup, 'toolchain', 'install', RUST_TOOLCHAIN ],
+      CheckCall( [ rustup, 'toolchain', 'install', req_toolchain_version ],
                  env = new_env,
                  quiet = switches.quiet )
 
@@ -1001,12 +1019,12 @@ def EnableRustCompleter( switches ):
                          'rustfmt',
                          'clippy' ]:
         CheckCall( [ rustup, 'component', 'add', component,
-                     '--toolchain', RUST_TOOLCHAIN ],
+                     '--toolchain', req_toolchain_version ],
                    env = new_env,
                    quiet = switches.quiet )
 
       toolchain_dir = subprocess.check_output(
-        [ rustup, 'run', RUST_TOOLCHAIN, 'rustc', '--print', 'sysroot' ],
+        [ rustup, 'run', req_toolchain_version, 'rustc', '--print', 'sysroot' ],
         env = new_env
       ).rstrip().decode( 'utf8' )
 
@@ -1017,7 +1035,7 @@ def EnableRustCompleter( switches ):
       for folder in os.listdir( toolchain_dir ):
         shutil.move( p.join( toolchain_dir, folder ), RUST_ANALYZER_DIR )
 
-      WriteToolchainVersion( RUST_TOOLCHAIN )
+      WriteToolchainVersion( req_toolchain_version )
     finally:
       RemoveDirectory( install_dir )
 
