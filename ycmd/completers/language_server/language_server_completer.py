@@ -2110,18 +2110,18 @@ class LanguageServerCompleter( Completer ):
 
 
   def _RefreshFileContentsUnderLock( self, file_name, contents, file_types ):
-    file_state = self._server_file_state[ file_name ]
+    file_state: lsp.ServerFileState = self._server_file_state[ file_name ]
+    old_state = file_state.state
     action = file_state.GetDirtyFileAction( contents )
 
-    LOGGER.debug( 'Refreshing file %s: State is %s/action %s',
+    LOGGER.debug( 'Refreshing file %s: State is %s -> %s/action %s',
                   file_name,
+                  old_state,
                   file_state.state,
                   action )
 
     if action == lsp.ServerFileState.OPEN_FILE:
-      msg = lsp.DidOpenTextDocument( file_state,
-                                     file_types,
-                                     contents )
+      msg = lsp.DidOpenTextDocument( file_state, file_types, contents )
 
       self.GetConnection().SendNotification( msg )
     elif action == lsp.ServerFileState.CHANGE_FILE:
@@ -2131,7 +2131,6 @@ class LanguageServerCompleter( Completer ):
       # the diffs. This isn't strictly necessary, but might lead to
       # performance problems.
       msg = lsp.DidChangeTextDocument( file_state, contents )
-
       self.GetConnection().SendNotification( msg )
 
 
