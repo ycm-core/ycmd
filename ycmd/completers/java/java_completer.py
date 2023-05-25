@@ -317,6 +317,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._Reset()
     self._command = []
 
+    self.RegisterOnFileReadyToParse(
+      lambda self, request_data: self._RefreshCurrentFileDiags( request_data )
+    )
+
 
   def DefaultSettings( self, request_data ):
     return {
@@ -325,20 +329,45 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       # This disables re-checking every open file on every change to every file.
       # But can lead to stale diagnostics. Unfortunately, this can be kind of
       # annoying, so we don't enable it by default. JDT does re-validate if you
-      # force load a file, but there isn't a nice way to force it to revalidate
-      # a specific file e.g. OnFileReadyToParse, so far as i know.
-      # If users have perf problems, they can set this in the .ycm_extra_conf.py
+      # force load a file, but there is a way to force it using a custom
+      # server-comand 'java.project.refreshDiagnostics', which we trigger in
+      # OnFileReadyToParse. If this is buggy/slow or bad, users can disable it
+      # by setting this
       #
       #    def Settings( **kwargs ):
       #      return {
       #        'ls': {
-      #          'java.edit.validateAllOpenBuffersOnChanges': False
+      #          'java.edit.validateAllOpenBuffersOnChanges': True
       #        }
       #      }
       #
-      # 'java.edit.validateAllOpenBuffersOnChanges': False
+      'java.edit.validateAllOpenBuffersOnChanges': False
     }
 
+
+  def _RefreshCurrentFileDiags( self, request_data ):
+    if not self.ServerIsReady():
+      # I guess just do this later...
+      return
+
+    ls =  self._settings.get( 'ls', {} )
+    if ls.get( 'java.edit.validateAllOpenBuffersOnChanges', True ):
+      # JDT is configured to update diags on every change; no need to refresh
+      return
+
+    # We need to force a refresh for this buffer. There's no response to this,
+    # so we just fire-an-forget it - that's why we're not using
+    # GetCommandResponse here...
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.ExecuteCommand(
+      request_id,
+      'java.project.refreshDiagnostics',
+      [
+        lsp.FilePathToUri( request_data[ 'filepath' ] ),
+        'thisFile', # thisFile or anyNonProjectFile
+        False, # syntaxOnly
+      ] )
+    self.GetConnection().GetResponseAsync( request_id, message )
 
   def SupportedFiletypes( self ):
     return [ 'java' ]
