@@ -114,24 +114,24 @@ def ShouldEnableJavaCompleter( user_options ):
     LOGGER.warning( "Not enabling java completion: Couldn't find java 11" )
     return False
 
-  if not os.path.exists( LANGUAGE_SERVER_HOME ):
+  if not _PathToLauncherJar( user_options ):
     LOGGER.warning( 'Not using java completion: jdt.ls is not installed' )
-    return False
-
-  if not _PathToLauncherJar():
-    LOGGER.warning( 'Not using java completion: jdt.ls is not built' )
     return False
 
   return True
 
 
-def _PathToLauncherJar():
+def _LanguageServerHome( user_options ):
+  return user_options.get( 'java_jdtls_repository_path', LANGUAGE_SERVER_HOME )
+
+
+def _PathToLauncherJar( user_options ):
   # The file name changes between version of eclipse, so we use a glob as
   # recommended by the language server developers. There should only be one.
   launcher_jars = glob.glob(
     os.path.abspath(
       os.path.join(
-        LANGUAGE_SERVER_HOME,
+        _LanguageServerHome( user_options ),
         'plugins',
         'org.eclipse.equinox.launcher_*.jar' ) ) )
 
@@ -183,7 +183,7 @@ def _CollectExtensionBundles( extension_path ):
   return extension_bundles
 
 
-def _LauncherConfiguration( workspace_root, wipe_config ):
+def _LauncherConfiguration( user_options, workspace_root, wipe_config ):
   if utils.OnMac():
     config = 'config_mac'
   elif utils.OnWindows():
@@ -211,9 +211,10 @@ def _LauncherConfiguration( workspace_root, wipe_config ):
   working_config = os.path.abspath( os.path.join( workspace_root,
                                                   config ) )
   working_config_file = os.path.join( working_config, CONFIG_FILENAME )
-  base_config_file = os.path.abspath( os.path.join( LANGUAGE_SERVER_HOME,
-                                                    config,
-                                                    CONFIG_FILENAME ) )
+  base_config_file = os.path.abspath(
+    os.path.join( _LanguageServerHome( user_options ),
+                  config,
+                  CONFIG_FILENAME ) )
 
   if os.path.isdir( working_config ):
     if wipe_config:
@@ -285,7 +286,10 @@ def _WorkspaceDirForProject( workspace_root_path,
 
 class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def __init__( self, user_options ):
+    # Stuff used by _Reset have to be set here as super().__init__() calls it.
     self._workspace_path = None
+    self._user_options = user_options
+
     super().__init__( user_options )
 
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
@@ -316,7 +320,23 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def DefaultSettings( self, request_data ):
     return {
-      'bundles': self._bundles
+      'bundles': self._bundles,
+
+      # This disables re-checking every open file on every change to every file.
+      # But can lead to stale diagnostics. Unfortunately, this can be kind of
+      # annoying, so we don't enable it by default. JDT does re-validate if you
+      # force load a file, but there isn't a nice way to force it to revalidate
+      # a specific file e.g. OnFileReadyToParse, so far as i know.
+      # If users have perf problems, they can set this in the .ycm_extra_conf.py
+      #
+      #    def Settings( **kwargs ):
+      #      return {
+      #        'ls': {
+      #          'java.edit.validateAllOpenBuffersOnChanges': False
+      #        }
+      #      }
+      #
+      # 'java.edit.validateAllOpenBuffersOnChanges': False
     }
 
 
@@ -420,7 +440,7 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
         LOGGER.exception( 'Failed to clean up workspace dir %s',
                           self._workspace_path )
 
-    self._launcher_path = _PathToLauncherJar()
+    self._launcher_path = _PathToLauncherJar( self._user_options )
     self._launcher_config = None
     self._workspace_path = None
     self._java_project_dir = None
@@ -466,8 +486,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
             shutil.rmtree( self._workspace_path )
 
         self._launcher_config = _LauncherConfiguration(
-            self._workspace_root_path,
-            wipe_config )
+          self._user_options,
+          self._workspace_root_path,
+          wipe_config )
 
         self._command = [ PATH_TO_JAVA ] + self._GetJvmArgs( request_data ) + [
           '-Dfile.encoding=UTF-8',
