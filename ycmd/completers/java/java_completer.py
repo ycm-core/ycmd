@@ -45,7 +45,8 @@ PATH_TO_JAVA = None
 PROJECT_FILE_TAILS = [
   '.project',
   'pom.xml',
-  'build.gradle'
+  'build.gradle',
+  'build.gradle.kts'
 ]
 
 DEFAULT_WORKSPACE_ROOT_PATH = os.path.abspath( os.path.join(
