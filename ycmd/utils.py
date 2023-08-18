@@ -143,7 +143,7 @@ def ToBytes( value ):
   if not value:
     return b''
 
-  if type( value ) == bytes:
+  if type( value ) is bytes:
     return value
 
   if isinstance( value, str ):

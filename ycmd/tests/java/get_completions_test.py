@@ -799,7 +799,7 @@ class GetCompletionsTest( TestCase ):
       'request': {
         'filetype'  : 'java',
         'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
-        'line_num'  : 30,
+        'line_num'  : 28,
         'column_num': 20,
         'force_semantic': True,
       },
@@ -827,7 +827,7 @@ class GetCompletionsTest( TestCase ):
       'request': {
         'filetype'  : 'java',
         'filepath'  : ProjectPath( 'TestWidgetImpl.java' ),
-        'line_num'  : 30,
+        'line_num'  : 28,
         'column_num': 20,
         'force_semantic': False,
       },
@@ -853,7 +853,7 @@ class GetCompletionsTest( TestCase ):
       'request': {
         'filetype'  : 'java',
         'filepath'  : filepath,
-        'line_num'  : 34,
+        'line_num'  : 32,
         'column_num': 16,
         'force_semantic': True,
       },
@@ -892,7 +892,7 @@ class GetCompletionsTest( TestCase ):
       'request': {
         'filetype'  : 'java',
         'filepath'  : filepath,
-        'line_num'  : 24,
+        'line_num'  : 22,
         'column_num': 7,
         'force_semantic': False,
       },
