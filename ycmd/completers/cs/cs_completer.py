@@ -903,7 +903,7 @@ def _BuildLocation( request_data, filename, line_num, column_num ):
   if column_num <= 0:
     column_num = 1
   contents = GetFileLines( request_data, filename )
-  line_value = contents[ min( len( contents ), line_num - 1 ) ]
+  line_value = contents[ min( len( contents ) - 1, line_num - 1 ) ]
   return responses.Location(
       line_num,
       CodepointOffsetToByteOffset( line_value, column_num ),
