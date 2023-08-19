@@ -297,7 +297,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 11,
+                               line_num = 9,
                                column_num = 7,
                                contents = contents,
                                command_arguments = [ 'GetDoc' ],
@@ -323,7 +323,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 28,
+                               line_num = 26,
                                column_num = 1,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -352,7 +352,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 11,
+                               line_num = 9,
                                column_num = 7,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -375,7 +375,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 14,
+                               line_num = 12,
                                column_num = 3,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -399,7 +399,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 12,
+                               line_num = 10,
                                column_num = 18,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -422,7 +422,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 16,
+                               line_num = 14,
                                column_num = 17,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -447,7 +447,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 15,
+                               line_num = 13,
                                column_num = 9,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -471,7 +471,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 20,
+                               line_num = 18,
                                column_num = 15,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -520,7 +520,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 15,
+                               line_num = 13,
                                column_num = 13,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -702,7 +702,7 @@ class SubcommandsTest( TestCase ):
                                     'TestWidgetImpl.java' ),
         'column_num': 15,
         'description': "  public void doSomethingVaguelyUseful() {",
-        'line_num': 20
+        'line_num': 18
       } ) ) )
 
 
@@ -763,7 +763,7 @@ class SubcommandsTest( TestCase ):
                                     'test',
                                     'TestWidgetImpl.java' ) ,
         'description': "Class: TestWidgetImpl",
-        'line_num': 11,
+        'line_num': 9,
         'column_num': 7,
       } ),
       has_entries( {
@@ -913,8 +913,8 @@ class SubcommandsTest( TestCase ):
                 LocationMatcher( TestLauncher, 32, 35 ) ),
               ChunkMatcher(
                 'a_quite_long_string',
-                LocationMatcher( TestWidgetImpl, 20, 15 ),
-                LocationMatcher( TestWidgetImpl, 20, 39 ) ),
+                LocationMatcher( TestWidgetImpl, 18, 15 ),
+                LocationMatcher( TestWidgetImpl, 18, 39 ) ),
             ),
             'location': LocationMatcher( TestLauncher, 32, 13 )
           } ) )
