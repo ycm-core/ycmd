@@ -38,7 +38,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: matrix.libclang == true && matrix.benchmark == false
       with:
         key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
@@ -51,7 +51,7 @@ jobs:
           clang_archives
       name: Cache libclang
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: matrix.benchmark == false
       with:
         key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
@@ -65,7 +65,7 @@ jobs:
           third_party/omnisharp-roslyn/v[0-9]*
       name: Cache dependencies
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: matrix.benchmark == false
       with:
         key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
@@ -85,13 +85,13 @@ jobs:
         distribution: 'adopt'
 
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
 
     - name: Install Go
       if: matrix.benchmark == false
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         stable: true
     - name: Install GCC
@@ -196,7 +196,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: matrix.libclang == true && matrix.benchmark == false
       with:
         key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
@@ -209,7 +209,7 @@ jobs:
           clang_archives
       name: Cache libclang
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: matrix.benchmark == false
       with:
         key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
@@ -223,7 +223,7 @@ jobs:
           third_party/omnisharp-roslyn/v[0-9]*
       name: Cache dependencies
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: matrix.benchmark == false
       with:
         key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
@@ -242,13 +242,13 @@ jobs:
         java-version: 17
         distribution: 'temurin'
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
         architecture: ${{ matrix.python-arch }}
     - name: Install Go
       if: matrix.benchmark == false
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         stable: true
     - name: Run pip and prepare coverage
