@@ -620,8 +620,8 @@ def Position( line_num, line_value, column_codepoint ):
   }
 
 
-def PrepareCallHierarchy( request_id, request_data ):
-  return BuildRequest( request_id, 'textDocument/prepareCallHierarchy', {
+def PrepareHierarchy( request_id, request_data, kind ):
+  return BuildRequest( request_id, f'textDocument/prepare{ kind }Hierarchy', {
     'textDocument': {
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
@@ -631,8 +631,8 @@ def PrepareCallHierarchy( request_id, request_data ):
   } )
 
 
-def CallHierarchy( request_id, direction, item ):
-  return BuildRequest( request_id, f'callHierarchy/{ direction }Calls', {
+def Hierarchy( request_id, kind, direction, item ):
+  return BuildRequest( request_id, f'{ kind }Hierarchy/{ direction }', {
     'item': item
   } )
 

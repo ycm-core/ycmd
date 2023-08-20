@@ -313,6 +313,9 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def GoToAlternateFile( self, request_data ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
     request_id = self.GetConnection().NextRequestId()
     uri = lsp.FilePathToUri( request_data[ 'filepath' ] )
     request  = lsp.BuildRequest( request_id,
