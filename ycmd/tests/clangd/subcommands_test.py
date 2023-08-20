@@ -582,6 +582,8 @@ class SubcommandsTest( TestCase ):
                                                'GetType',
                                                'GetTypeImprecise',
                                                'GoTo',
+                                               'GoToSubtypes',
+                                               'GoToSupertypes',
                                                'GoToCallees',
                                                'GoToCallers',
                                                'GoToDeclaration',
@@ -605,6 +607,7 @@ class SubcommandsTest( TestCase ):
   @SharedYcmd
   def test_Subcommands_ServerNotInitialized( self, app ):
     for cmd in [
+      'ExecuteCommand',
       'FixIt',
       'Format',
       'GetDoc',
@@ -612,14 +615,20 @@ class SubcommandsTest( TestCase ):
       'GetType',
       'GetTypeImprecise',
       'GoTo',
+      'GoToSubtypes',
+      'GoToSupertypes',
       'GoToCallees',
       'GoToCallers',
       'GoToDeclaration',
       'GoToDefinition',
-      'GoToInclude',
+      'GoToDocumentOutline',
+      'GoToImprecise',
       'GoToImplementation',
+      'GoToInclude',
       'GoToReferences',
+      'GoToType',
       'RefactorRename',
+      'GoToAlternateFile'
     ]:
       with self.subTest( cmd = cmd ):
         completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
@@ -889,7 +898,7 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToCallers( self, app ):
     for test in [
       { 'req': ( 'call_hierarchy.cc', 1, 6 ), # Simple case.
-        'res': [ ( 'call_hierarchy.cc', 4, 10 ) ] },
+        'res': ( 'call_hierarchy.cc', 4, 10 ) },
       { 'req': ( 'call_hierarchy.cc', 6, 6 ),
         'res': [
           ( 'call_hierarchy.cc', 15, 3 ), # More than one location in response.
@@ -901,6 +910,44 @@ class SubcommandsTest( TestCase ):
     ]:
       with self.subTest( test = test ):
         RunGoToTest_all( app, '', 'GoToCallers', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToSubtypes( self, app ):
+    for test in [
+      { 'req': ( 'type_hierarchy.cc', 1, 8 ), # Simple case.
+        'res': ( 'type_hierarchy.cc', 4, 8 ) },
+      { 'req': ( 'type_hierarchy.cc', 2, 8 ), # Multiple inheritance
+        'res': [
+          ( 'type_hierarchy.cc', 3, 8 ),
+          ( 'type_hierarchy.cc', 4, 8 ),
+      ] },
+      { 'req': ( 'type_hierarchy.cc', 4, 8 ), # Bottom of the type hierarchy
+        'res': 'No subtypes found.' },
+      { 'req': ( 'type_hierarchy.cc', 5, 3 ), # Called on a variable - works.
+        'res': ( 'type_hierarchy.cc', 4, 8 ) }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest_all( app, '', 'GoToSubtypes', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToSupertypes( self, app ):
+    for test in [
+      { 'req': ( 'type_hierarchy.cc', 3, 8 ), # Simple case.
+        'res': ( 'type_hierarchy.cc', 2, 8 ) },
+      { 'req': ( 'type_hierarchy.cc', 4, 8 ), # Multiple inheritance
+        'res': [
+          ( 'type_hierarchy.cc', 2, 8 ),
+          ( 'type_hierarchy.cc', 1, 8 ),
+      ] },
+      { 'req': ( 'type_hierarchy.cc', 1, 8 ), # Bottom of the type hierarchy
+        'res': 'No supertypes found.' },
+      { 'req': ( 'type_hierarchy.cc', 6, 4 ), # Called on a variable - works.
+        'res': ( 'type_hierarchy.cc', 2, 8 ) }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest_all( app, '', 'GoToSupertypes', test )
 
 
   @SharedYcmd

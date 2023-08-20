@@ -1768,14 +1768,34 @@ class LanguageServerCompleter( Completer ):
 
     if ( self._server_capabilities and
          _IsCapabilityProvided( self._server_capabilities,
+                                'typeHierarchyProvider' ) ):
+      commands[ 'GoToSupertypes' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ 'type',
+                                            'supertypes',
+                                            'supertypes' ] )
+      )
+      commands[ 'GoToSubtypes' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ 'type',
+                                            'subtypes',
+                                            'subtypes' ] )
+      )
+
+    if ( self._server_capabilities and
+         _IsCapabilityProvided( self._server_capabilities,
                                 'callHierarchyProvider' ) ):
       commands[ 'GoToCallees' ] = (
         lambda self, request_data, args:
-            self.CallHierarchy( request_data, [ 'outgoing' ] )
+            self.Hierarchy( request_data, [ 'call',
+                                            'outgoingCalls',
+                                            'outgoing calls' ] )
       )
       commands[ 'GoToCallers' ] = (
         lambda self, request_data, args:
-            self.CallHierarchy( request_data, [ 'incoming' ] )
+            self.Hierarchy( request_data, [ 'call',
+                                            'incomingCalls',
+                                            'incoming calls' ] )
       )
 
     commands.update( self.GetCustomSubcommands() )
@@ -2583,20 +2603,21 @@ class LanguageServerCompleter( Completer ):
 
 
 
-  def CallHierarchy( self, request_data, args ):
+  def Hierarchy( self, request_data, args ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
+    kind, subkind, error_kind = args
     self._UpdateServerWithFileContents( request_data )
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.PrepareCallHierarchy( request_id, request_data )
+    message = lsp.PrepareHierarchy( request_id, request_data, kind.title() )
     prepare_response = self.GetConnection().GetResponse(
         request_id,
         message,
         REQUEST_TIMEOUT_COMMAND )
     preparation_item = prepare_response.get( 'result' ) or []
     if not preparation_item:
-      raise RuntimeError( f'No { args[ 0 ] } calls found.' )
+      raise RuntimeError( f'No { error_kind } found.' )
 
     assert len( preparation_item ) == 1, (
              'Not available: Multiple hierarchies were received, '
@@ -2605,36 +2626,19 @@ class LanguageServerCompleter( Completer ):
     preparation_item = preparation_item[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.CallHierarchy( request_id, args[ 0 ], preparation_item )
+    message = lsp.Hierarchy( request_id, kind, subkind, preparation_item )
     response = self.GetConnection().GetResponse( request_id,
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
-
     result = response.get( 'result' ) or []
-    goto_response = []
-    for hierarchy_item in result:
-      description = hierarchy_item.get( 'from', hierarchy_item.get( 'to' ) )
-      filepath = lsp.UriToFilePath( description[ 'uri' ] )
-      start_position = hierarchy_item[ 'fromRanges' ][ 0 ][ 'start' ]
-      goto_line = start_position[ 'line' ]
-      try:
-        line_value = GetFileLines( request_data, filepath )[ goto_line ]
-      except IndexError:
-        continue
-      goto_column = utils.CodepointOffsetToByteOffset(
-        line_value,
-        lsp.UTF16CodeUnitsToCodepoints(
-          line_value,
-          start_position[ 'character' ] ) )
-      goto_response.append( responses.BuildGoToResponse(
-        filepath,
-        goto_line + 1,
-        goto_column + 1,
-        description[ 'name' ] ) )
-
-    if goto_response:
-      return goto_response
-    raise RuntimeError( f'No { args[ 0 ] } calls found.' )
+    if kind == 'call':
+      for hierarchy_item in result:
+        hierarchy_item[ 'range' ] = hierarchy_item[ 'fromRanges' ][ 0 ]
+        hierarchy_item[ 'uri' ] = hierarchy_item.get(
+            'from', hierarchy_item.get( 'to' ) )[ 'uri' ]
+    return _LocationListToGoTo( request_data,
+                                result,
+                                f'No { error_kind } found.' )
 
 
   def GetCodeActions( self, request_data ):
@@ -2843,6 +2847,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def ExecuteCommand( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
     if not args:
       raise ValueError( 'Must specify a command to execute' )
 
@@ -3168,7 +3175,9 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
   return start_codepoint
 
 
-def _LocationListToGoTo( request_data, positions ):
+def _LocationListToGoTo( request_data,
+                         positions,
+                         error = 'Cannot jump to location ' ):
   """Convert a LSP list of locations to a ycmd GoTo response."""
   try:
     if len( positions ) > 1:
@@ -3180,7 +3189,7 @@ def _LocationListToGoTo( request_data, positions ):
     return responses.BuildGoToResponseFromLocation(
       *_LspLocationToLocationAndDescription( request_data, positions[ 0 ] ) )
   except ( IndexError, KeyError ):
-    raise RuntimeError( 'Cannot jump to location' )
+    raise RuntimeError( error )
 
 
 def _SymbolInfoListToGoTo( request_data, symbols ):

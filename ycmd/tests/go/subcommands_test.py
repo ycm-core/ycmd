@@ -471,9 +471,9 @@ class SubcommandsTest( TestCase ):
     filepath = PathToTestFile( 'call_hierarchy.go' )
     for test in [
       { 'req': ( filepath, 4, 6 ),
-        'res': [ ( filepath, 5, 2 ) ] },
+        'res': ( filepath, 5, 2 ) },
       { 'req': ( filepath, 8, 6 ),
-        'res': [ ( filepath, 9, 2 ), ] },
+        'res': ( filepath, 9, 2 ), },
       { 'req': ( filepath, 11, 6 ),
         'res': [
           ( filepath, 12, 2 ),
@@ -493,7 +493,7 @@ class SubcommandsTest( TestCase ):
     filepath = PathToTestFile( 'call_hierarchy.go' )
     for test in [
       { 'req': ( filepath, 3, 6 ),
-        'res': [ ( filepath, 5, 2 ) ] },
+        'res': ( filepath, 5, 2 ) },
       { 'req': ( filepath, 8, 6 ),
         'res': [
           ( filepath, 9, 2 ),
@@ -504,7 +504,7 @@ class SubcommandsTest( TestCase ):
           ( filepath, 13, 2 ),
           ( filepath, 17, 2 ) ] },
       { 'req': ( filepath, 15, 6 ),
-        'res': [ ( filepath, 18, 2 ) ] }
+        'res': ( filepath, 18, 2 ) }
     ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToCallers', test )
