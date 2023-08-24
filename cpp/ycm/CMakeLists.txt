@@ -418,6 +418,12 @@ endif()
 
 #############################################################################
 
+if ( CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12 )
+  target_compile_options( ${PROJECT_NAME} PRIVATE "-Wno-bidi-chars" )
+endif()
+
+#############################################################################
+
 if( SYSTEM_IS_SUNOS )
   # SunOS needs this setting for thread support
   target_compile_options( ${PROJECT_NAME} PUBLIC "-pthreads" )
