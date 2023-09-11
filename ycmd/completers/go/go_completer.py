@@ -78,25 +78,6 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
     return [ 'go' ]
 
 
-  def _SetUpSemanticTokenAtlas( self, capabilities: dict ):
-    if 'semanticTokensProvider' not in capabilities:
-      # gopls is broken and doesn't provide a legend, instead assuming the
-      # tokens specified by the client are the legend. This is broken, but
-      # easily worked around:
-      #
-      # https://github.com/golang/go/issues/54531
-      import ycmd.completers.language_server.language_server_protocol as lsp
-      capabilities[ 'semanticTokensProvider' ] = {
-        'full': True,
-        'legend': {
-          'tokenTypes': lsp.TOKEN_TYPES,
-          'tokenModifiers': lsp.TOKEN_MODIFIERS
-        }
-      }
-
-    return super()._SetUpSemanticTokenAtlas( capabilities )
-
-
   def GetDoc( self, request_data ):
     assert self._settings[ 'ls' ][ 'hoverKind' ] == 'Structured'
     try:
