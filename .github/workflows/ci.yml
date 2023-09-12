@@ -93,7 +93,8 @@ jobs:
       if: matrix.benchmark == false
       uses: actions/setup-go@v4
       with:
-        stable: true
+        go-version: stable
+        cache: true
     - name: Install GCC
       if: runner.os == 'Linux' && matrix.compiler != 'clang'
       run: |
@@ -237,7 +238,7 @@ jobs:
 
     - name: Install Java
       if: matrix.benchmark == false
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: 17
         distribution: 'temurin'
@@ -250,7 +251,8 @@ jobs:
       if: matrix.benchmark == false
       uses: actions/setup-go@v4
       with:
-        stable: true
+        go-version: stable
+        cache: true
     - name: Run pip and prepare coverage
       if: matrix.benchmark == false
       run: |
