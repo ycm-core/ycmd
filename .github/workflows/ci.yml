@@ -128,6 +128,7 @@ jobs:
       if: matrix.benchmark == false
       with:
         name: "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
+        token: ${{ secrets.CODECOV_TOKEN }}
         gcov: true
 
   linux_lint:
@@ -273,4 +274,4 @@ jobs:
       if: matrix.benchmark == false
       with:
         name: "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
-        gcov: true
+        token: ${{ secrets.CODECOV_TOKEN }}
