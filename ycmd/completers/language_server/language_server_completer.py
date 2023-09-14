@@ -1496,7 +1496,8 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       return responses.SignatureHelpAvailalability.PENDING
 
-    if bool( self._server_capabilities.get( 'signatureHelpProvider' ) ):
+    if _IsCapabilityProvided( self._server_capabilities,
+                              'signatureHelpProvider' ):
       return responses.SignatureHelpAvailalability.AVAILABLE
     else:
       return responses.SignatureHelpAvailalability.NOT_AVAILABLE
@@ -1506,7 +1507,8 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       return {}
 
-    if not self._server_capabilities.get( 'signatureHelpProvider' ):
+    if not _IsCapabilityProvided( self._server_capabilities,
+                                  'signatureHelpProvider' ):
       return {}
 
     self._UpdateServerWithCurrentFileContents( request_data )
@@ -1551,8 +1553,9 @@ class LanguageServerCompleter( Completer ):
     if not self._semantic_token_atlas:
       return {}
 
-    range_supported = self._server_capabilities[ 'semanticTokensProvider' ].get(
-      'range', False )
+    range_supported = _IsCapabilityProvided(
+        self._server_capabilities[ 'semanticTokensProvider' ],
+        'range' )
 
     self._UpdateServerWithCurrentFileContents( request_data )
 
@@ -1588,7 +1591,8 @@ class LanguageServerCompleter( Completer ):
     if not self._ServerIsInitialized():
       return []
 
-    if 'inlayHintProvider' not in self._server_capabilities:
+    if not _IsCapabilityProvided( self._server_capabilities,
+                                  'inlayHintProvider' ):
       return []
 
     self._UpdateServerWithCurrentFileContents( request_data )
@@ -1763,7 +1767,8 @@ class LanguageServerCompleter( Completer ):
       )
 
     if ( self._server_capabilities and
-         'callHierarchyProvider' in self._server_capabilities ):
+         _IsCapabilityProvided( self._server_capabilities,
+                                'callHierarchyProvider' ) ):
       commands[ 'GoToCallees' ] = (
         lambda self, request_data, args:
             self.CallHierarchy( request_data, [ 'outgoing' ] )
@@ -1787,9 +1792,10 @@ class LanguageServerCompleter( Completer ):
 
     for providers in provider_list:
       if isinstance( providers, tuple ):
-        if all( capabilities.get( provider ) for provider in providers ):
+        if all( _IsCapabilityProvided( capabilities, provider )
+                for provider in providers ):
           return providers
-      if capabilities.get( providers ):
+      if _IsCapabilityProvided( capabilities, providers ):
         return providers
     return None
 
@@ -2202,9 +2208,9 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       return
 
-    if 'textDocumentSync' in self._server_capabilities:
-      sync = self._server_capabilities[ 'textDocumentSync' ]
-      if isinstance( sync, dict ) and sync.get( 'save' ) not in [ None, False ]:
+    sync = self._server_capabilities.get( 'textDocumentSync' )
+    if sync is not None:
+      if isinstance( sync, dict ) and _IsCapabilityProvided( sync, 'save' ):
         save = sync[ 'save' ]
         file_name = request_data[ 'filepath' ]
         contents = None
@@ -2345,11 +2351,7 @@ class LanguageServerCompleter( Completer ):
     if server_config is None:
       return
 
-    server_full_support = server_config.get( 'full' )
-    if server_full_support == {}:
-      server_full_support = True
-
-    if not server_full_support:
+    if not _IsCapabilityProvided( server_config, 'full' ):
       return
 
     self._semantic_token_atlas = TokenAtlas( server_config[ 'legend' ] )
@@ -2374,8 +2376,8 @@ class LanguageServerCompleter( Completer ):
 
       self._SetUpSemanticTokenAtlas( self._server_capabilities )
 
-      if 'textDocumentSync' in self._server_capabilities:
-        sync = self._server_capabilities[ 'textDocumentSync' ]
+      sync = self._server_capabilities.get( 'textDocumentSync' )
+      if sync is not None:
         SYNC_TYPE = [
           'None',
           'Full',
@@ -3537,6 +3539,11 @@ def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
     last_token = token
 
   return tokens
+
+
+def _IsCapabilityProvided( capabilities, query ):
+  capability = capabilities.get( query )
+  return bool( capability ) or capability == {}
 
 
 def RetryOnFailure( expected_error_codes, num_retries = 3 ):
