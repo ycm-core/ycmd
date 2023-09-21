@@ -42,6 +42,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     LineColMatcher,
                                     LocationMatcher,
                                     ErrorMatcher,
+                                    UnixOnly,
                                     WithRetry,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
@@ -1073,7 +1074,8 @@ class SubcommandsTest( TestCase ):
                             test[ 2 ] )
 
 
-  @SharedYcmd
+  @UnixOnly
+  @IsolatedYcmd()
   def test_Subcommands_GetDoc( self, app ):
     for test, cmd in itertools.product( [
         # from local file
@@ -1085,7 +1087,8 @@ class SubcommandsTest( TestCase ):
         # from header
         [ { 'line_num': 6, 'column_num': 10 },
           has_entry( 'detailed_info', equal_to(
-            'function docstring_from_header_file\n\n→ void\ndocstring\n\n'
+            'function docstring_from_header_file\nprovided by "docstring.h"'
+            '\n\n→ void\ndocstring\n\n'
             'void docstring_from_header_file()' ) ),
           requests.codes.ok ],
         # no docstring
