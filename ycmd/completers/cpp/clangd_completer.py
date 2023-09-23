@@ -34,7 +34,7 @@ from ycmd.utils import ( CLANG_RESOURCE_DIR,
                          PathsToAllParentFolders,
                          re )
 
-# NOTES: We currently bundle 14.0.0, but as this is very new, we still allow the
+# NOTES: We currently bundle 17.0.1, but as this is very new, we still allow the
 # use of earlier version to avoid breaking users who have set
 # g:ycm_clangd_binary_path. In general, we should only update this if we make
 # changes to this CLangdCompleter that would not be backward compatible.
