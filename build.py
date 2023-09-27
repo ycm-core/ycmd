@@ -126,7 +126,8 @@ def FindLatestMSVC( quiet ):
     if not quiet:
       print( "Calling vswhere -latest -installationVersion" )
     latest_full_v = subprocess.check_output(
-      [ VSWHERE_EXE, '-latest', '-property', 'installationVersion' ]
+      [ VSWHERE_EXE, '-latest', '-prerelease', '-property',
+       'installationVersion' ]
     ).strip().decode()
     if '.' in latest_full_v:
       try:
