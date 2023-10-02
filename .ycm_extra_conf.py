@@ -28,7 +28,7 @@
 #
 # For more information, please refer to <http://unlicense.org/>
 
-from distutils.sysconfig import get_python_inc
+from sysconfig import get_path
 import platform
 import os.path as p
 import subprocess
@@ -71,7 +71,7 @@ flags = [
 '-isystem',
 'cpp/BoostParts',
 '-isystem',
-get_python_inc(),
+get_path( 'include' ),
 '-isystem',
 'cpp/llvm/include',
 '-isystem',
