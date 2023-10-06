@@ -2611,30 +2611,13 @@ class LanguageServerCompleter( Completer ):
                                                  REQUEST_TIMEOUT_COMMAND )
 
     result = response.get( 'result' ) or []
-    goto_response = []
     for hierarchy_item in result:
-      description = hierarchy_item.get( 'from', hierarchy_item.get( 'to' ) )
-      filepath = lsp.UriToFilePath( description[ 'uri' ] )
-      start_position = hierarchy_item[ 'fromRanges' ][ 0 ][ 'start' ]
-      goto_line = start_position[ 'line' ]
-      try:
-        line_value = GetFileLines( request_data, filepath )[ goto_line ]
-      except IndexError:
-        continue
-      goto_column = utils.CodepointOffsetToByteOffset(
-        line_value,
-        lsp.UTF16CodeUnitsToCodepoints(
-          line_value,
-          start_position[ 'character' ] ) )
-      goto_response.append( responses.BuildGoToResponse(
-        filepath,
-        goto_line + 1,
-        goto_column + 1,
-        description[ 'name' ] ) )
-
-    if goto_response:
-      return goto_response
-    raise RuntimeError( f'No { args[ 0 ] } calls found.' )
+      hierarchy_item[ 'range' ] = hierarchy_item[ 'fromRanges' ][ 0 ]
+      hierarchy_item[ 'uri' ] = hierarchy_item.get(
+          'from', hierarchy_item.get( 'to' ) )[ 'uri' ]
+    return _LocationListToGoTo( request_data,
+                                result,
+                                f'No { args[ 0 ] } calls found.' )
 
 
   def GetCodeActions( self, request_data ):
@@ -2843,6 +2826,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def ExecuteCommand( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
     if not args:
       raise ValueError( 'Must specify a command to execute' )
 
@@ -3168,7 +3154,9 @@ def _GetCompletionItemStartCodepointOrReject( text_edit, request_data ):
   return start_codepoint
 
 
-def _LocationListToGoTo( request_data, positions ):
+def _LocationListToGoTo( request_data,
+                         positions,
+                         error = 'Cannot jump to location' ):
   """Convert a LSP list of locations to a ycmd GoTo response."""
   try:
     if len( positions ) > 1:
@@ -3180,7 +3168,7 @@ def _LocationListToGoTo( request_data, positions ):
     return responses.BuildGoToResponseFromLocation(
       *_LspLocationToLocationAndDescription( request_data, positions[ 0 ] ) )
   except ( IndexError, KeyError ):
-    raise RuntimeError( 'Cannot jump to location' )
+    raise RuntimeError( error )
 
 
 def _SymbolInfoListToGoTo( request_data, symbols ):

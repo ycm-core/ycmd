@@ -606,6 +606,7 @@ class SubcommandsTest( TestCase ):
   @SharedYcmd
   def test_Subcommands_ServerNotInitialized( self, app ):
     for cmd in [
+      'ExecuteCommand',
       'FixIt',
       'Format',
       'GetDoc',
@@ -617,10 +618,14 @@ class SubcommandsTest( TestCase ):
       'GoToCallers',
       'GoToDeclaration',
       'GoToDefinition',
-      'GoToInclude',
+      'GoToDocumentOutline',
+      'GoToImprecise',
       'GoToImplementation',
+      'GoToInclude',
       'GoToReferences',
+      'GoToType',
       'RefactorRename',
+      'GoToAlternateFile',
     ]:
       with self.subTest( cmd = cmd ):
         completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
@@ -890,7 +895,7 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToCallers( self, app ):
     for test in [
       { 'req': ( 'call_hierarchy.cc', 1, 6 ), # Simple case.
-        'res': [ ( 'call_hierarchy.cc', 4, 10 ) ] },
+        'res': ( 'call_hierarchy.cc', 4, 10 ) },
       { 'req': ( 'call_hierarchy.cc', 6, 6 ),
         'res': [
           ( 'call_hierarchy.cc', 15, 3 ), # More than one location in response.

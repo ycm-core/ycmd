@@ -2077,16 +2077,16 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToCallers( self, app ):
     for test in [
       { 'request': { 'line': 6, 'col': 17, 'filepath': TEST_JAVA },
-        'response': [ has_entries( {
+        'response':  has_entries( {
           'line_num': 12,
           'column_num': 10,
-          'filepath': TEST_JAVA } ) ],
+          'filepath': TEST_JAVA } ) ,
         'description': 'GoToCallers on a function call.' },
       { 'request': { 'line': 20, 'col': 16, 'filepath': TEST_JAVA },
-        'response': [ has_entries( {
+        'response': has_entries( {
           'line_num': 15,
           'column_num': 41,
-          'filepath': TEST_JAVA } ) ],
+          'filepath': TEST_JAVA } ),
         'description': 'GoToCallers on a class name '
                        'produces constructor calls' },
     ]:
@@ -2097,7 +2097,7 @@ class SubcommandsTest( TestCase ):
                      test[ 'request' ][ 'line' ],
                      test[ 'request' ][ 'col' ],
                      'GoToCallers',
-                     contains_inanyorder( *test[ 'response' ] ) )
+                     test[ 'response' ] )
 
 
   @WithRetry()
