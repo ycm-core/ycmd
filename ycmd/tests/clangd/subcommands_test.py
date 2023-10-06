@@ -606,6 +606,7 @@ class SubcommandsTest( TestCase ):
   @SharedYcmd
   def test_Subcommands_ServerNotInitialized( self, app ):
     for cmd in [
+      'ExecuteCommand',
       'FixIt',
       'Format',
       'GetDoc',
@@ -617,10 +618,14 @@ class SubcommandsTest( TestCase ):
       'GoToCallers',
       'GoToDeclaration',
       'GoToDefinition',
-      'GoToInclude',
+      'GoToDocumentOutline',
+      'GoToImprecise',
       'GoToImplementation',
+      'GoToInclude',
       'GoToReferences',
+      'GoToType',
       'RefactorRename',
+      'GoToAlternateFile',
     ]:
       with self.subTest( cmd = cmd ):
         completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
