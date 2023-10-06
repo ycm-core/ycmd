@@ -2843,6 +2843,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def ExecuteCommand( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
     if not args:
       raise ValueError( 'Must specify a command to execute' )
 
