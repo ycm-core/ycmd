@@ -265,7 +265,7 @@ class TypeScriptCompleter( Completer ):
         LOGGER.info( 'Received %s event from TSServer',  eventname )
         continue
       if msgtype != 'response':
-        LOGGER.error( 'Unsupported message type', msgtype )
+        LOGGER.error( 'Unsupported message type: %s', msgtype )
         continue
 
       seq = message[ 'request_seq' ]
@@ -373,9 +373,8 @@ class TypeScriptCompleter( Completer ):
 
     filename = request_data[ 'filepath' ]
     contents = request_data[ 'file_data' ][ filename ][ 'contents' ]
-    tmpfile = NamedTemporaryFile( delete = False )
-    tmpfile.write( utils.ToBytes( contents ) )
-    tmpfile.close()
+    with NamedTemporaryFile( delete = False ) as tmpfile:
+      tmpfile.write( utils.ToBytes( contents ) )
     self._SendRequest( 'reload', {
       'file':    filename,
       'tmpfile': tmpfile.name

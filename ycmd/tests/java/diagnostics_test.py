@@ -450,7 +450,7 @@ public class Test {
     completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
 
     # It can take a while for the diagnostics to be ready
-    for tries in range( 0, 60 ):
+    for _ in range( 0, 60 ):
       event_data = BuildRequest( event_name = 'FileReadyToParse',
                                  contents = contents,
                                  filepath = filepath,
@@ -486,7 +486,7 @@ public class Test {
     StartJavaCompleterServerInDirectory( app, ProjectPath() )
 
     # It can take a while for the diagnostics to be ready
-    for tries in range( 0, 60 ):
+    for _ in range( 0, 60 ):
       event_data = BuildRequest( event_name = 'FileReadyToParse',
                                  contents = contents,
                                  filepath = filepath,
@@ -641,7 +641,7 @@ public class Test {
       'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
       side_effect = lsp.InvalidUriException ):
 
-      for tries in range( 0, 5 ):
+      for _ in range( 0, 5 ):
         response = app.post_json( '/receive_messages',
                                   BuildRequest(
                                     filetype = 'java',
@@ -701,7 +701,7 @@ public class Test {
 
     def AwaitMessages():
       max_tries = 20
-      for tries in range( 0, max_tries ):
+      for _ in range( 0, max_tries ):
         response = app.post_json( '/receive_messages',
                                   BuildRequest(
                                     filetype = 'java',

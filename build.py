@@ -130,7 +130,7 @@ def FindLatestMSVC( quiet ):
     ).strip().decode()
     if '.' in latest_full_v:
       try:
-        latest_v = int( latest_full_v.split( '.' )[ 0 ] )
+        latest_v = int( latest_full_v.split( '.', 1 )[ 0 ] )
       except ValueError:
         raise ValueError( f"{ latest_full_v } is not a version number." )
 
@@ -464,10 +464,10 @@ def ParseArguments():
                                DEFAULT_RUST_TOOLCHAIN + '" is tested/'
                               'supported by the maintainers of YCM/ycmd' )
   parser.add_argument( '--java-completer', action = 'store_true',
-                       help = 'Enable Java semantic completion engine.' ),
+                       help = 'Enable Java semantic completion engine.' )
   parser.add_argument( '--ts-completer', action = 'store_true',
                        help = 'Enable JavaScript and TypeScript semantic '
-                              'completion engine.' ),
+                              'completion engine.' )
   parser.add_argument( '--system-libclang', action = 'store_true',
                        help = 'Use system libclang instead of downloading one '
                        'from llvm.org. NOT RECOMMENDED OR SUPPORTED!' )
@@ -834,7 +834,6 @@ def CleanCsCompleter( build_dir, version ):
     if os.path.isfile( file_path ):
       os.remove( file_path )
     elif os.path.isdir( file_path ):
-      import shutil
       shutil.rmtree( file_path )
 
 
@@ -953,14 +952,14 @@ def EnableGoCompleter( args ):
 
 def WriteToolchainVersion( version ):
   path = p.join( RUST_ANALYZER_DIR, 'TOOLCHAIN_VERSION' )
-  with open( path, 'w' ) as f:
+  with open( path, 'w', encoding = 'utf8' ) as f:
     f.write( version )
 
 
 def ReadToolchainVersion():
   try:
     filepath = p.join( RUST_ANALYZER_DIR, 'TOOLCHAIN_VERSION' )
-    with open( filepath ) as f:
+    with open( filepath, encoding = 'utf8' ) as f:
       return f.read().strip()
   except OSError:
     return None
@@ -1234,7 +1233,7 @@ def EnableClangdCompleter( Args ):
 
 def WritePythonUsedDuringBuild():
   path = p.join( DIR_OF_THIS_SCRIPT, 'PYTHON_USED_DURING_BUILDING' )
-  with open( path, 'w' ) as f:
+  with open( path, 'w', encoding = 'utf8' ) as f:
     f.write( sys.executable )
 
 

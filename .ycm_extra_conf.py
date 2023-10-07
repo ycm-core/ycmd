@@ -29,9 +29,7 @@
 # For more information, please refer to <http://unlicense.org/>
 
 from sysconfig import get_path
-import platform
 import os.path as p
-import subprocess
 
 DIR_OF_THIS_SCRIPT = p.abspath( p.dirname( __file__ ) )
 DIR_OF_THIRD_PARTY = p.join( DIR_OF_THIS_SCRIPT, 'third_party' )
@@ -120,7 +118,7 @@ def FindCorrespondingSourceFile( filename ):
 def PathToPythonUsedDuringBuild():
   try:
     filepath = p.join( DIR_OF_THIS_SCRIPT, 'PYTHON_USED_DURING_BUILDING' )
-    with open( filepath ) as f:
+    with open( filepath, encoding = 'utf8' ) as f:
       return f.read().strip()
   except OSError:
     return None

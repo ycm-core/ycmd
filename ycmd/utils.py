@@ -91,7 +91,7 @@ def OpenForStdHandle( filepath ):
   # Since this function is used for logging purposes, we don't want the output
   # to be delayed. This means line buffering for text mode.
   # See https://docs.python.org/2/library/io.html#io.open
-  return open( filepath, mode = 'w', buffering = 1 )
+  return open( filepath, mode = 'w', buffering = 1, encoding = 'utf8' )
 
 
 def MakeSafeFileNameString( s ):
@@ -490,7 +490,7 @@ def LoadYcmCoreDependencies():
 def ImportCore():
   """Imports and returns the ycm_core module. This function exists for easily
   mocking this import in tests."""
-  import ycm_core as ycm_core
+  import ycm_core
   return ycm_core
 
 
