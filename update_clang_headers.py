@@ -39,7 +39,7 @@ def ExtractTar( uncompressed_data, destination ):
     tar_file.extractall( destination )
 
   # Determine the directory name
-  return os.path.join( destination, a_member.name.split( '/' )[ 0 ] )
+  return os.path.join( destination, a_member.name.split( '/', 1 )[ 0 ] )
 
 
 def ExtractLZMA( compressed_data, destination ):

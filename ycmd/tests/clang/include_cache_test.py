@@ -102,7 +102,7 @@ class IncludeCacheTest( TestCase ):
       include_cache = IncludeCache()
       assert_that( include_cache._cache, equal_to( {} ) )
       foo_path = os.path.join( tmp_dir, 'foo' )
-      with open( foo_path, 'w' ) as foo_file:
+      with open( foo_path, 'w', encoding = 'utf8' ) as foo_file:
         foo_file.write( 'foo' )
 
       old_includes = include_cache.GetIncludes( tmp_dir )
@@ -124,7 +124,7 @@ class IncludeCacheTest( TestCase ):
       sleep( 2 )
 
       bar_path = os.path.join( tmp_dir, 'bar' )
-      with open( bar_path, 'w' ) as bar_file:
+      with open( bar_path, 'w', encoding = 'utf8' ) as bar_file:
         bar_file.write( 'bar' )
 
       new_includes = include_cache.GetIncludes( tmp_dir )

@@ -436,9 +436,9 @@ class ClangCompleter( Completer ):
 
     database_item = responses.DebugInfoItem(
       key = 'compilation database path',
-      value = '{0}'.format( database_directory ) )
+      value = f'{ database_directory }' )
     flags_item = responses.DebugInfoItem(
-      key = 'flags', value = '{0}'.format( list( flags ) ) )
+      key = 'flags', value = f'{ list( flags ) }' )
     filename_item = responses.DebugInfoItem(
       key = 'translation unit', value = filename )
 

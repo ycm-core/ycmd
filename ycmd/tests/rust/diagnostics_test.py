@@ -110,7 +110,7 @@ class DiagnosticsTest( TestCase ):
   def test_Diagnostics_DetailedDiags( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
     contents = ReadFile( filepath )
-    with open( filepath, 'w' ) as f:
+    with open( filepath, 'w', encoding = 'utf8' ) as f:
       f.write( contents )
     event_data = BuildRequest( event_name = 'FileSave',
                                contents = contents,
@@ -136,7 +136,7 @@ class DiagnosticsTest( TestCase ):
   def test_Diagnostics_FileReadyToParse( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
     contents = ReadFile( filepath )
-    with open( filepath, 'w' ) as f:
+    with open( filepath, 'w', encoding = 'utf8' ) as f:
       f.write( contents )
     event_data = BuildRequest( event_name = 'FileSave',
                                contents = contents,
@@ -157,7 +157,7 @@ class DiagnosticsTest( TestCase ):
     project_dir = PathToTestFile( 'common' )
     filepath = os.path.join( project_dir, 'src', 'main.rs' )
     contents = ReadFile( filepath )
-    with open( filepath, 'w' ) as f:
+    with open( filepath, 'w', encoding = 'utf8' ) as f:
       f.write( contents )
     event_data = BuildRequest( event_name = 'FileSave',
                                contents = contents,
