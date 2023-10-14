@@ -611,6 +611,28 @@ class SubcommandsTest( TestCase ):
 
 
   @SharedYcmd
+  def test_Subcommands_GetDoc_FreeFunction_WithTags( self, app ):
+    RunTest( app, {
+      'description': 'GetDoc shows documentation of param and returns tags',
+      'request': {
+        'command': 'GetDoc',
+        'line_num': 101,
+        'column_num': 12,
+        'filepath': PathToTestFile( 'signatures.ts' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'detailed_info': 'function single_argument_with_doc(a: string): string\n\n'
+                           'A function with a single argument\n\n'
+                           'a - The argument\n'
+                           'returns - The hashed input'
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
   def test_Subcommands_GoToReferences( self, app ):
     RunTest( app, {
       'description': 'GoToReferences works',
