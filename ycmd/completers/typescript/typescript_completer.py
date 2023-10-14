@@ -911,7 +911,12 @@ class TypeScriptCompleter( Completer ):
       'offset': request_data[ 'column_codepoint' ]
     } )
 
+    extra_info = _AggregateTagsFromDocstring( info )
+
     message = f'{ info[ "displayString" ] }\n\n{ info[ "documentation" ] }'
+    if extra_info:
+      message += f'\n\n{ extra_info }'
+
     return responses.BuildDetailedInfoResponse( message )
 
 
@@ -1117,6 +1122,19 @@ def _LogLevel():
   return 'verbose' if LOGGER.isEnabledFor( logging.DEBUG ) else 'normal'
 
 
+def _AggregateTagsFromDocstring( info ):
+  extra_info = []
+  for tag in info.get( 'tags', [] ):
+    tag_name = tag[ 'name' ]
+    tag_text = tag.get( 'text' )
+    if tag_name in ( 'returns', 'return' ) and tag_text:
+      extra_info.append( 'returns ' + tag_text )
+    elif tag_text:
+      extra_info.append( tag_text )
+
+  return '\n'.join( extra_info )
+
+
 def _BuildCompletionExtraMenuAndDetailedInfo( request_data, entry ):
   signature = _DisplayPartsToString( entry[ 'displayParts' ] )
   if entry[ 'name' ] == signature:
@@ -1130,6 +1148,11 @@ def _BuildCompletionExtraMenuAndDetailedInfo( request_data, entry ):
 
   docs = entry.get( 'documentation', [] )
   detailed_info += [ doc[ 'text' ].strip() for doc in docs if doc ]
+
+  extra_info = _AggregateTagsFromDocstring( entry )
+  if extra_info:
+    detailed_info.append( extra_info )
+
   detailed_info = '\n\n'.join( detailed_info )
 
   return extra_menu_info, detailed_info

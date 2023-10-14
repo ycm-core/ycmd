@@ -75,7 +75,10 @@ class GetCompletionsTest( TestCase ):
              'detailed_info':  '(property) Document.alinkColor: string\n'
                                '\n'
                                'Sets or gets the color of all active links '
-                               'in the document.',
+                               'in the document.\n'
+                               '\n'
+                               '[MDN Reference](https://developer.mozilla.org/'
+                               'docs/Web/API/Document/alinkColor)',
             'kind':            'property',
           } ) )
         } )
