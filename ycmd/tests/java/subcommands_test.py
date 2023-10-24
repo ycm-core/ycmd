@@ -297,7 +297,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 11,
+                               line_num = 9,
                                column_num = 7,
                                contents = contents,
                                command_arguments = [ 'GetDoc' ],
@@ -323,7 +323,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 28,
+                               line_num = 26,
                                column_num = 1,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -352,7 +352,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 11,
+                               line_num = 9,
                                column_num = 7,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -375,7 +375,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 14,
+                               line_num = 12,
                                column_num = 3,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -399,7 +399,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 12,
+                               line_num = 10,
                                column_num = 18,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -422,7 +422,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 16,
+                               line_num = 14,
                                column_num = 17,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -447,7 +447,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 15,
+                               line_num = 13,
                                column_num = 9,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -471,7 +471,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 20,
+                               line_num = 18,
                                column_num = 15,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -520,7 +520,7 @@ class SubcommandsTest( TestCase ):
 
     event_data = BuildRequest( filepath = filepath,
                                filetype = 'java',
-                               line_num = 15,
+                               line_num = 13,
                                column_num = 13,
                                contents = contents,
                                command_arguments = [ 'GetType' ],
@@ -625,6 +625,7 @@ class SubcommandsTest( TestCase ):
         'response': requests.codes.ok,
         'data': contains_inanyorder(
           LocationMatcher( filepath, 8, 35 ),
+          LocationMatcher( filepath, 5, 21 ),
           LocationMatcher( PathToTestFile( 'multiple_projects',
                                            'src',
                                            'input',
@@ -662,26 +663,47 @@ class SubcommandsTest( TestCase ):
 
     response = app.post_json( '/run_completer_command', event_data ).json
 
-    assert_that( response, contains_exactly( has_entries( {
-             'filepath': PathToTestFile( 'simple_eclipse_project',
-                                         'src',
-                                         'com',
-                                         'test',
-                                         'TestFactory.java' ),
-             'column_num': 9,
-             'description': "      w.doSomethingVaguelyUseful();",
-             'line_num': 28
-           } ),
-           has_entries( {
-             'filepath': PathToTestFile( 'simple_eclipse_project',
-                                         'src',
-                                         'com',
-                                         'test',
-                                         'TestLauncher.java' ),
-             'column_num': 11,
-             'description': "        w.doSomethingVaguelyUseful();",
-             'line_num': 32
-           } ) ) )
+    assert_that( response, contains_inanyorder(
+      has_entries( {
+        'filepath': PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'AbstractTestWidget.java' ),
+        'column_num': 15,
+        'description': "  public void doSomethingVaguelyUseful();",
+        'line_num': 10
+      } ),
+      has_entries( {
+        'filepath': PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestFactory.java' ),
+        'column_num': 9,
+        'description': "      w.doSomethingVaguelyUseful();",
+        'line_num': 28
+      } ),
+      has_entries( {
+        'filepath': PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestLauncher.java' ),
+        'column_num': 11,
+        'description': "        w.doSomethingVaguelyUseful();",
+        'line_num': 32
+      } ),
+      has_entries( {
+        'filepath': PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestWidgetImpl.java' ),
+        'column_num': 15,
+        'description': "  public void doSomethingVaguelyUseful() {",
+        'line_num': 18
+      } ) ) )
 
 
   @WithRetry()
@@ -741,7 +763,7 @@ class SubcommandsTest( TestCase ):
                                     'test',
                                     'TestWidgetImpl.java' ) ,
         'description': "Class: TestWidgetImpl",
-        'line_num': 11,
+        'line_num': 9,
         'column_num': 7,
       } ),
       has_entries( {
@@ -891,8 +913,8 @@ class SubcommandsTest( TestCase ):
                 LocationMatcher( TestLauncher, 32, 35 ) ),
               ChunkMatcher(
                 'a_quite_long_string',
-                LocationMatcher( TestWidgetImpl, 20, 15 ),
-                LocationMatcher( TestWidgetImpl, 20, 39 ) ),
+                LocationMatcher( TestWidgetImpl, 18, 15 ),
+                LocationMatcher( TestWidgetImpl, 18, 39 ) ),
             ),
             'location': LocationMatcher( TestLauncher, 32, 13 )
           } ) )
@@ -1093,6 +1115,16 @@ class SubcommandsTest( TestCase ):
               'kind': 'quickassist',
               'text': "Add Javadoc for 'Wimble'"
             } ),
+            has_entries( {
+              'text': "Sort Members for 'TestFactory.java'"
+            } ),
+            has_entries( {
+              'text': "Add all missing imports"
+            } ),
+            # NOTE: bug (it seems) in jdt.ls, reports this code action 2x
+            has_entries( {
+              'text': "Add all missing imports"
+            } ),
           )
         } )
 
@@ -1153,6 +1185,12 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'text': "Add Javadoc for 'getWidget'"
+        } ),
+        has_entries( {
+          'text': "Sort Members for 'TestFactory.java'"
+        } ),
+        has_entries( {
+          'text': "Add all missing imports"
         } ),
       )
     } )
@@ -1221,6 +1259,12 @@ class SubcommandsTest( TestCase ):
           'kind': 'quickassist',
           'text': "Add Javadoc for 'testString'",
           'chunks': instance_of( list )
+        } ),
+        has_entries( {
+          'text': "Sort Members for 'TestFactory.java'"
+        } ),
+        has_entries( {
+          'text': "Add all missing imports"
         } ),
       )
     } )
@@ -1303,6 +1347,12 @@ class SubcommandsTest( TestCase ):
           has_entries( {
             'text': "Add Javadoc for 'getWidget'",
             'chunks': instance_of( list ),
+          } ),
+          has_entries( {
+            'text': "Sort Members for 'TestFactory.java'"
+          } ),
+          has_entries( {
+            'text': "Add all missing imports"
           } ),
         ]
 
@@ -1432,6 +1482,9 @@ class SubcommandsTest( TestCase ):
               'text': "Add Javadoc for 'launch'",
               'chunks': instance_of( list ),
             } ),
+            has_entries( {
+              'text': "Sort Members for 'TestLauncher.java'"
+            } ),
           )
         } )
       }
@@ -1448,12 +1501,17 @@ class SubcommandsTest( TestCase ):
                                'test',
                                'TestFactory.java' )
 
+    # No FixIts is no lonber possible due to .. well all this crap
     RunFixItTest( app, "no FixIts means you gotta code it yo' self",
                   filepath, 1, 1, has_entries( {
                     'fixits': contains_inanyorder(
                       has_entries( {
                         'text': 'Change modifiers to final where possible',
                         'chunks': instance_of( list ) } ),
+                      has_entries( {
+                        'text': "Sort Members for 'TestFactory.java'" } ),
+                      has_entries( {
+                        'text': "Add all missing imports" } ),
                       has_entries( { 'text': 'Organize imports',
                                      'chunks': instance_of( list ) } ),
                       has_entries( { 'text': 'Generate toString()',
@@ -1508,6 +1566,9 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'text': "Add Javadoc for 'DoWhatever'"
+        } ),
+        has_entries( {
+          'text': "Sort Members for 'Test.java'",
         } ),
       )
     } )
@@ -1572,6 +1633,12 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'text': "Add Javadoc for 'getWidget'"
+        } ),
+        has_entries( {
+          'text': "Sort Members for 'TestFactory.java'"
+        } ),
+        has_entries( {
+          'text': "Add all missing imports"
         } ),
       )
     } )

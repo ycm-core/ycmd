@@ -6,8 +6,6 @@ package com.test;
  * This concrete implementation is the equivalent of the main function in other
  * languages
  */
-
-
 class TestWidgetImpl implements AbstractTestWidget {
   private String info;
 

@@ -93,7 +93,7 @@ def _SolutionTestCheckHeuristics( candidates, tokens, i ):
   # 1. is there a solution named just like the subdirectory with the source?
   if ( not selection and i < len( tokens ) - 1 and
        f'{ tokens[ i + 1 ] }.sln' in candidates ):
-    selection = os.path.join( path, f'{ tokens[ i + 1] }.sln' )
+    selection = os.path.join( path, f'{ tokens[ i + 1 ] }.sln' )
     LOGGER.info( 'Selected solution file %s as it matches source subfolder',
                  selection )
 

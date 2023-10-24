@@ -532,7 +532,18 @@ struct S{static int h();};
                   contains_string( source_file ), 2, 20 ),
                 'location_extent': RangeMatcher(
                   contains_string( source_file ), ( 2, 20 ), ( 2, 21 ) )
-              } )
+              } ),
+              has_entries( {
+                'kind': equal_to( 'WARNING' ),
+                'text': "Included header header.h is not used directly "
+                        "(fix available) [unused-includes]",
+                'ranges': contains_exactly( RangeMatcher(
+                  contains_string( source_file ), ( 1, 1 ), ( 1, 20 ) ) ),
+                'location': LocationMatcher(
+                  contains_string( source_file ), 1, 1 ),
+                'location_extent': RangeMatcher(
+                  contains_string( source_file ), ( 1, 1 ), ( 1, 20 ) )
+              } ),
             ) } ) )
           break
 

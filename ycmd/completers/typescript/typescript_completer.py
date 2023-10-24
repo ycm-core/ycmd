@@ -214,7 +214,7 @@ class TypeScriptCompleter( Completer ):
       return
 
     self._logfile = utils.CreateLogfile( LOGFILE_FORMAT )
-    tsserver_log = f'-file { self._logfile } -level {_LogLevel()}'
+    tsserver_log = f'-file { self._logfile } -level { _LogLevel() }'
     # TSServer gets the configuration for the log file through the
     # environment variable 'TSS_LOG'. This seems to be undocumented but
     # looking at the source code it seems like this is the way:
@@ -911,7 +911,7 @@ class TypeScriptCompleter( Completer ):
       'offset': request_data[ 'column_codepoint' ]
     } )
 
-    message = f'{ info[ "displayString" ] }\n\n{info[ "documentation" ]}'
+    message = f'{ info[ "displayString" ] }\n\n{ info[ "documentation" ] }'
     return responses.BuildDetailedInfoResponse( message )
 
 

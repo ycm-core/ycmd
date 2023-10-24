@@ -18,6 +18,14 @@
 import sys
 import os
 
+if 'YCMD_DEBUGPY_PORT' in os.environ:
+  try:
+    import debugpy
+    debugpy.listen( ( '127.0.0.1', int( os.environ[ 'YCMD_DEBUGPY_PORT' ] ) ) )
+    debugpy.wait_for_client()
+  except ImportError:
+    pass
+
 PY_VERSION = sys.version_info[ 0 : 3 ]
 if PY_VERSION < ( 3, 8, 0 ):
   sys.exit( 8 )

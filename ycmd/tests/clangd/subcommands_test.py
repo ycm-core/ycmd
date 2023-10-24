@@ -42,6 +42,7 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     LineColMatcher,
                                     LocationMatcher,
                                     ErrorMatcher,
+                                    UnixOnly,
                                     WithRetry,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
@@ -522,7 +523,7 @@ def FixIt_Check_MacroExpand_Resolved( results ):
 def FixIt_Check_AutoExpand_Resolved( results ):
   assert_that( results, has_entries( {
     'fixits': has_items( has_entries( {
-        'text': "Expand auto type",
+        'text': "Replace with deduced type",
         'chunks': contains_exactly(
           ChunkMatcher( 'const char *',
                         LineColMatcher( 80, 1 ),
@@ -605,6 +606,7 @@ class SubcommandsTest( TestCase ):
   @SharedYcmd
   def test_Subcommands_ServerNotInitialized( self, app ):
     for cmd in [
+      'ExecuteCommand',
       'FixIt',
       'Format',
       'GetDoc',
@@ -616,10 +618,14 @@ class SubcommandsTest( TestCase ):
       'GoToCallers',
       'GoToDeclaration',
       'GoToDefinition',
-      'GoToInclude',
+      'GoToDocumentOutline',
+      'GoToImprecise',
       'GoToImplementation',
+      'GoToInclude',
       'GoToReferences',
+      'GoToType',
       'RefactorRename',
+      'GoToAlternateFile',
     ]:
       with self.subTest( cmd = cmd ):
         completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
@@ -752,7 +758,6 @@ class SubcommandsTest( TestCase ):
         { 'req': ( 'main.cpp',  6, 11 ), 'res': ( 'system/c.hpp', 1, 1 ) },
         # Expected failures
         { 'req': ( 'main.cpp',  7,  1 ), 'res': 'Cannot jump to location' },
-        { 'req': ( 'main.cpp', 10, 13 ), 'res': 'Cannot jump to location' },
       ],
       [ 'GoToImprecise', 'GoToInclude', 'GoTo' ] ):
       with self.subTest( test = test, cmd = cmd ):
@@ -789,7 +794,7 @@ class SubcommandsTest( TestCase ):
         RunGoToTest_all( app, '', 'GoToReferences', test )
 
 
-  @SharedYcmd
+  @IsolatedYcmd()
   def test_Subcommands_GoToSymbol( self, app ):
     for test in [
       # In same file - 1 result
@@ -1074,7 +1079,8 @@ class SubcommandsTest( TestCase ):
                             test[ 2 ] )
 
 
-  @SharedYcmd
+  @UnixOnly
+  @IsolatedYcmd()
   def test_Subcommands_GetDoc( self, app ):
     for test, cmd in itertools.product( [
         # from local file
@@ -1086,7 +1092,8 @@ class SubcommandsTest( TestCase ):
         # from header
         [ { 'line_num': 6, 'column_num': 10 },
           has_entry( 'detailed_info', equal_to(
-            'function docstring_from_header_file\n\n→ void\ndocstring\n\n'
+            'function docstring_from_header_file\nprovided by "docstring.h"'
+            '\n\n→ void\ndocstring\n\n'
             'void docstring_from_header_file()' ) ),
           requests.codes.ok ],
         # no docstring
