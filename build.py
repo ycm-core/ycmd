@@ -939,7 +939,7 @@ def EnableGoCompleter( args ):
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
 
-  gopls = 'golang.org/x/tools/gopls@v0.13.2'
+  gopls = 'golang.org/x/tools/gopls@v0.14.0'
   CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,
