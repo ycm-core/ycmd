@@ -59,7 +59,7 @@ GRAPHEME_BREAK_PROPERTY_REGEX = re.compile(
 BREAK_PROPERTY_TOTAL = re.compile(
   r'# Total code points: (?P<total>\d+)' )
 # See
-# https://www.unicode.org/reports/tr29/tr29-37.html#Grapheme_Cluster_Break_Property_Values
+# https://www.unicode.org/reports/tr29#Grapheme_Cluster_Break_Property_Values
 GRAPHEME_BREAK_PROPERTY_MAP = {
   # "Other" is the term used in the Unicode data while "Any" is used in the
   # docs.
@@ -188,7 +188,7 @@ def GetUnicodeVersion():
   raise RuntimeError( 'Cannot find the version of the Unicode Standard.' )
 
 
-# See https://www.unicode.org/reports/tr44/tr44-26.html#UnicodeData.txt
+# See https://www.unicode.org/reports/tr44#UnicodeData.txt
 def GetUnicodeData():
   data = Download(
     'https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt' )
@@ -232,7 +232,7 @@ def GetUnicodeData():
 
 
 # See
-# https://www.unicode.org/reports/tr44/tr44-26.html#GraphemeBreakProperty.txt
+# https://www.unicode.org/reports/tr44#GraphemeBreakProperty.txt
 # https://www.unicode.org/reports/tr44/#Indic_Conjunct_Break
 def GetBreakProperty( data_url, break_property_regex ):
   data = Download( data_url )
@@ -275,7 +275,7 @@ def GetBreakProperty( data_url, break_property_regex ):
   return break_data
 
 
-# See https://www.unicode.org/reports/tr44/tr44-26.html#SpecialCasing.txt
+# See https://www.unicode.org/reports/tr44#SpecialCasing.txt
 def GetSpecialFolding():
   data = Download(
     'https://www.unicode.org/Public/UCD/latest/ucd/SpecialCasing.txt' )
@@ -301,7 +301,7 @@ def GetSpecialFolding():
   return folding_data
 
 
-# See https://www.unicode.org/reports/tr44/tr44-26.html#CaseFolding.txt
+# See https://www.unicode.org/reports/tr44#CaseFolding.txt
 def GetCaseFolding():
   data = Download(
     'https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt' )
@@ -324,7 +324,7 @@ def GetCaseFolding():
 
 
 def GetEmojiData():
-  data = Download( 'https://www.unicode.org/Public/15.1.0/ucd/emoji/emoji-data.txt' )
+  data = Download( 'https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt' )
 
   nb_code_points = 0
   emoji_data = defaultdict( list )
@@ -362,7 +362,7 @@ def GetEmojiData():
 
 
 # Decompose a hangul syllable using the algorithm described in
-# https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G61399
+# https://www.unicode.org/versions/latest/ch03.pdf#G61399
 def DecomposeHangul( code_point ):
   index = int( code_point, 16 ) - HANGUL_BASE
   if index < 0 or index >= HANGUL_LVT_COUNT:
@@ -379,7 +379,7 @@ def DecomposeHangul( code_point ):
 
 # Recursively decompose a Unicode code point into a list of code points
 # according to canonical decomposition.
-# See https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G733
+# See https://www.unicode.org/versions/latest/ch03.pdf#G733
 def Decompose( code_point, unicode_data ):
   code_points = DecomposeHangul( code_point )
   if code_points:
@@ -471,7 +471,7 @@ def GetCodePoints():
     break_property = GRAPHEME_BREAK_PROPERTY_MAP[ break_property ]
     indic_conjunct_break = INDIC_CONJUNCT_BREAK_PROPERTY_MAP[ indic_conjunct_break ]
     combining_class = int( value[ 'ccc' ] )
-    # See https://unicode.org/reports/tr44/tr44-26.html#General_Category_Values
+    # See https://unicode.org/reports/tr44#General_Category_Values
     # for the list of categories.
     if ( code_point != normal_code_point or
          code_point != folded_code_point or
