@@ -239,11 +239,12 @@ def GetBreakProperty( data_url, break_property_regex ):
 
   nb_code_points = 0
   break_data = {}
-  found_first_codepoint = False # For core properties, we only care about indic conjunct break properties
+  found_first_codepoint = False
   for line in data:
     # Check if the number of code points collected for each property is the same
     # as the number indicated in the document.
     match = BREAK_PROPERTY_TOTAL.search( line )
+    # For core properties, we only care about indic conjunct break properties
     if match and found_first_codepoint:
       total = int( match.group( 'total' ) )
       if nb_code_points != total:
@@ -324,7 +325,8 @@ def GetCaseFolding():
 
 
 def GetEmojiData():
-  data = Download( 'https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt' )
+  data = Download(
+    'https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt' )
 
   nb_code_points = 0
   emoji_data = defaultdict( list )
@@ -431,8 +433,12 @@ def Foldcase( code_points, unicode_data, case_folding ):
 def GetCodePoints():
   code_points = []
   unicode_data = GetUnicodeData()
-  grapheme_break_data = GetBreakProperty( 'https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt', GRAPHEME_BREAK_PROPERTY_REGEX )
-  indic_conjunct_break_data = GetBreakProperty( 'https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt', INDIC_CONJUNCT_BREAK_PROPERTY_REGEX )
+  grapheme_break_data = GetBreakProperty(
+    'https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt',
+    GRAPHEME_BREAK_PROPERTY_REGEX )
+  indic_conjunct_break_data = GetBreakProperty(
+    'https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt',
+    INDIC_CONJUNCT_BREAK_PROPERTY_REGEX )
   special_folding = GetSpecialFolding()
   case_folding = GetCaseFolding()
   emoji_data = GetEmojiData()
@@ -469,9 +475,10 @@ def GetCodePoints():
         raise RuntimeError( 'Cannot handle Extended_Pictographic combined with '
                             '{} property'.format( break_property ) )
     break_property = GRAPHEME_BREAK_PROPERTY_MAP[ break_property ]
-    indic_conjunct_break = INDIC_CONJUNCT_BREAK_PROPERTY_MAP[ indic_conjunct_break ]
+    indic_conjunct_break = INDIC_CONJUNCT_BREAK_PROPERTY_MAP[
+      indic_conjunct_break ]
     combining_class = int( value[ 'ccc' ] )
-    # See https://unicode.org/reports/tr44#General_Category_Values
+    # See https://www.unicode.org/reports/tr44#General_Category_Values
     # for the list of categories.
     if ( code_point != normal_code_point or
          code_point != folded_code_point or
@@ -582,7 +589,7 @@ def GenerateUnicodeTable( header_path, code_points ):
 
 def GenerateNormalizationTestCases( output_file ):
   test_contents = Download(
-      'https://unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt' )
+      'https://www.unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt' )
   hex_codepoint = '(?:[A-F0-9]{4,} ?)+'
   pattern = f'(?:{ hex_codepoint };){{5}}'
   pattern = re.compile( pattern )
