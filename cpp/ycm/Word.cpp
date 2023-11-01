@@ -51,8 +51,6 @@ IndicConjunctBreakAllowedResult IndicConjunctBreakAllowed( IndicBreakProperty pr
         case IndicBreakProperty::EXTEND:
         case IndicBreakProperty::LINKER:
           return { !within_indic_conjunct_modifier, within_indic_conjunct_modifier };
-        case IndicBreakProperty::CONSONANT:
-          return { !within_indic_conjunct_modifier, false };
         default:
           return { true, false };
       }
