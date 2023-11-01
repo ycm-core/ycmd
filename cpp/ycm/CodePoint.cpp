@@ -88,11 +88,11 @@ CodePoint::CodePoint( RawCodePoint&& code_point )
     is_letter_( code_point.is_letter ),
     is_punctuation_( code_point.is_punctuation ),
     is_uppercase_( code_point.is_uppercase ),
-    break_property_(
-      static_cast< BreakProperty >( code_point.break_property ) ),
+    grapheme_break_property_(
+      static_cast< GraphemeBreakProperty >( code_point.grapheme_break_property ) ),
     combining_class_( code_point.combining_class ),
-    indic_property_(
-      static_cast< IndicBreakProperty >( code_point.indic_break_property ) ) {
+    indic_conjunct_break_property_(
+      static_cast< IndicConjunctBreakProperty >( code_point.indic_conjunct_break_property ) ) {
 }
 
 

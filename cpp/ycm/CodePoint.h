@@ -29,7 +29,7 @@ namespace YouCompleteMe {
 // http://www.unicode.org/reports/tr29#Grapheme_Cluster_Break_Property_Values
 // NOTE: The properties must take the same value as the ones defined in the
 // update_unicode.py script.
-enum class BreakProperty : uint8_t {
+enum class GraphemeBreakProperty : uint8_t {
   OTHER              =  0,
   CR                 =  1,
   LF                 =  2,
@@ -49,7 +49,7 @@ enum class BreakProperty : uint8_t {
 // See https://www.unicode.org/reports/tr44/#Indic_Conjunct_Break
 // NOTE: The properties must take the same value as the ones defined in the
 // update_unicode.py script.
-enum class IndicBreakProperty : uint8_t {
+enum class IndicConjunctBreakProperty : uint8_t {
   None      =  0,
   LINKER    =  1,
   CONSONANT =  2,
@@ -67,9 +67,9 @@ struct RawCodePoint {
   bool is_letter;
   bool is_punctuation;
   bool is_uppercase;
-  uint8_t break_property;
+  uint8_t grapheme_break_property;
   uint8_t combining_class;
-  uint8_t indic_break_property;
+  uint8_t indic_conjunct_break_property;
 };
 
 
@@ -125,16 +125,16 @@ public:
     return is_uppercase_;
   }
 
-  inline BreakProperty GetBreakProperty() const {
-    return break_property_;
+  inline GraphemeBreakProperty GetGraphemeBreakProperty() const {
+    return grapheme_break_property_;
   }
 
   inline uint8_t CombiningClass() const {
     return combining_class_;
   }
 
-  inline IndicBreakProperty GetIndicBreakProperty() const {
-    return indic_property_;
+  inline IndicConjunctBreakProperty GetIndicConjunctBreakProperty() const {
+    return indic_conjunct_break_property_;
   }
 
   inline bool operator< ( const CodePoint &other ) const {
@@ -150,9 +150,9 @@ private:
   bool is_letter_;
   bool is_punctuation_;
   bool is_uppercase_;
-  BreakProperty break_property_;
+  GraphemeBreakProperty grapheme_break_property_;
   uint8_t combining_class_;
-  IndicBreakProperty indic_property_;
+  IndicConjunctBreakProperty indic_conjunct_break_property_;
 };
 
 

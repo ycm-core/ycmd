@@ -89,10 +89,10 @@ Character::Character( std::string_view character )
     is_punctuation_ |= code_point->IsPunctuation();
     is_uppercase_ |= code_point->IsUppercase();
 
-    switch ( code_point->GetBreakProperty() ) {
-      case BreakProperty::PREPEND:
-      case BreakProperty::EXTEND:
-      case BreakProperty::SPACINGMARK:
+    switch ( code_point->GetGraphemeBreakProperty() ) {
+      case GraphemeBreakProperty::PREPEND:
+      case GraphemeBreakProperty::EXTEND:
+      case GraphemeBreakProperty::SPACINGMARK:
         is_base_ = false;
         break;
       default:

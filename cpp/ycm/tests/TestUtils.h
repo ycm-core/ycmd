@@ -39,7 +39,7 @@ namespace YouCompleteMe {
 //   std::vector< std::tuple< ... > > tuples{ { ... } }
 struct CodePointTuple {
   CodePointTuple()
-    : CodePointTuple( "", "", "", false, false, false, BreakProperty::OTHER ) {
+    : CodePointTuple( "", "", "", false, false, false, GraphemeBreakProperty::OTHER ) {
   }
 
   CodePointTuple( const CodePoint &code_point )
@@ -49,7 +49,7 @@ struct CodePointTuple {
                       code_point.IsLetter(),
                       code_point.IsPunctuation(),
                       code_point.IsUppercase(),
-                      code_point.GetBreakProperty() ) {
+                      code_point.GetGraphemeBreakProperty() ) {
   }
 
   CodePointTuple( std::string_view normal,
@@ -58,14 +58,14 @@ struct CodePointTuple {
                   bool is_letter,
                   bool is_punctuation,
                   bool is_uppercase,
-                  BreakProperty break_property )
+                  GraphemeBreakProperty grapheme_break_property )
     : normal_( normal ),
       folded_case_( folded_case ),
       swapped_case_( swapped_case ),
       is_letter_( is_letter ),
       is_punctuation_( is_punctuation ),
       is_uppercase_( is_uppercase ),
-      break_property_( break_property ) {
+      grapheme_break_property_( grapheme_break_property ) {
   }
 
   bool operator== ( const CodePointTuple &other ) const {
@@ -75,7 +75,7 @@ struct CodePointTuple {
            is_letter_ == other.is_letter_ &&
            is_punctuation_ == other.is_punctuation_ &&
            is_uppercase_ == other.is_uppercase_ &&
-           break_property_ == other.break_property_;
+           grapheme_break_property_ == other.grapheme_break_property_;
   };
 
   std::string normal_;
@@ -84,7 +84,7 @@ struct CodePointTuple {
   bool is_letter_;
   bool is_punctuation_;
   bool is_uppercase_;
-  BreakProperty break_property_;
+  GraphemeBreakProperty grapheme_break_property_;
 };
 
 
