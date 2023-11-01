@@ -558,10 +558,8 @@ def GenerateUnicodeTable( header_path, code_points ):
         d[ 'size' ] = max( CppLength( cp ), d[ 'size' ] )
 
   for t, d in table.items():
-    if t == 'combining_class':
-      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}}'
-    else:
-      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}},'
+    d[ 'output' ].write( '}},' )
+    d[ 'output' ] = d[ 'output' ].getvalue()
 
   code_points = '\n'.join( [ table[ 'original' ][ 'output' ],
                              table[ 'normal' ][ 'output' ],
