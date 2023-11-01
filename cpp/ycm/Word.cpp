@@ -34,38 +34,41 @@ struct GraphemeBreakAllowedResult {
 struct IndicConjunctBreakAllowedResult {
   bool break_allowed;
   bool within_indic_conjunct_modifier;
+  bool seen_linker;
 };
 
-IndicConjunctBreakAllowedResult IndicConjunctBreakAllowed( IndicBreakProperty previous_indic_property, IndicBreakProperty indic_property, bool within_indic_conjunct_modifier ) {
+IndicConjunctBreakAllowedResult IndicConjunctBreakAllowed( IndicBreakProperty previous_indic_property, IndicBreakProperty indic_property, bool within_indic_conjunct_modifier, bool seen_linker ) {
   switch( previous_indic_property ) {
     case IndicBreakProperty::CONSONANT:
       switch( indic_property ) {
         case IndicBreakProperty::EXTEND:
         case IndicBreakProperty::LINKER:
-          return { false, true };
+          return { false, true, false };
         default:
-          return { true, false };
+          return { true, false, false };
       }
     case IndicBreakProperty::EXTEND:
       switch( indic_property ) {
         case IndicBreakProperty::EXTEND:
         case IndicBreakProperty::LINKER:
-          return { !within_indic_conjunct_modifier, within_indic_conjunct_modifier };
+          return { !within_indic_conjunct_modifier, within_indic_conjunct_modifier, seen_linker };
+        case IndicBreakProperty::CONSONANT:
+          return { !seen_linker, false, false };
         default:
-          return { true, false };
+          return { true, false, false };
       }
     case IndicBreakProperty::LINKER:
       switch( indic_property ) {
         case IndicBreakProperty::EXTEND:
         case IndicBreakProperty::LINKER:
-          return { !within_indic_conjunct_modifier, within_indic_conjunct_modifier };
+          return { !within_indic_conjunct_modifier, within_indic_conjunct_modifier, within_indic_conjunct_modifier };
         case IndicBreakProperty::CONSONANT:
-          return { !within_indic_conjunct_modifier, false };
+          return { !within_indic_conjunct_modifier, false, within_indic_conjunct_modifier };
         default:
-          return { true, false };
+          return { true, false, true };
       }
     default:
-      return { true, false };
+      return { true, false, false };
   }
 }
 
@@ -247,6 +250,7 @@ std::vector< std::string > BreakCodePointsIntoCharacters(
   bool is_regional_indicator_nb_odd = false;
   bool within_emoji_modifier = false;
   bool within_indic_conjunct_modifier = false;
+  bool seen_linker = false;
 
   for ( ; code_point_pos != code_points.end() ; ++previous_code_point_pos,
                                                 ++code_point_pos ) {
@@ -260,8 +264,9 @@ std::vector< std::string > BreakCodePointsIntoCharacters(
     within_emoji_modifier = new_within_emoji;
     is_regional_indicator_nb_odd = new_odd_regional_indicator;
 
-    auto [ indic_conjunct_break_allowed, new_within_indic ] = IndicConjunctBreakAllowed( previous_indic_property, indic_property, within_indic_conjunct_modifier );
+    auto [ indic_conjunct_break_allowed, new_within_indic, new_seen_linker ] = IndicConjunctBreakAllowed( previous_indic_property, indic_property, within_indic_conjunct_modifier, seen_linker );
     within_indic_conjunct_modifier = new_within_indic;
+    seen_linker = new_seen_linker;
 
     if ( grapheme_break_allowed && indic_conjunct_break_allowed ) {
       characters.push_back( character );

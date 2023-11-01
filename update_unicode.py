@@ -434,7 +434,8 @@ def GetCodePoints():
   code_points = []
   unicode_data = GetUnicodeData()
   grapheme_break_data = GetBreakProperty(
-    'https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt',
+    'https://www.unicode.org/Public/UCD/latest'
+      '/ucd/auxiliary/GraphemeBreakProperty.txt',
     GRAPHEME_BREAK_PROPERTY_REGEX )
   indic_conjunct_break_data = GetBreakProperty(
     'https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt',
