@@ -764,7 +764,7 @@ def BuildRegexModule( script_args ):
   lib_dir = p.join( DIR_OF_THIRD_PARTY, 'regex-build' )
 
   try:
-    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex' ) )
+    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex-github' ) )
 
     RemoveDirectoryIfExists( build_dir )
     RemoveDirectoryIfExists( lib_dir )
