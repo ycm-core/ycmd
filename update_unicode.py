@@ -434,7 +434,8 @@ def GetCodePoints():
   code_points = []
   unicode_data = GetUnicodeData()
   grapheme_break_data = GetBreakProperty(
-    'https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt',
+    'https://www.unicode.org/Public/UCD/latest'
+      '/ucd/auxiliary/GraphemeBreakProperty.txt',
     GRAPHEME_BREAK_PROPERTY_REGEX )
   indic_conjunct_break_data = GetBreakProperty(
     'https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt',
@@ -558,10 +559,8 @@ def GenerateUnicodeTable( header_path, code_points ):
         d[ 'size' ] = max( CppLength( cp ), d[ 'size' ] )
 
   for t, d in table.items():
-    if t == 'combining_class':
-      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}}'
-    else:
-      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}},'
+    d[ 'output' ].write( '}},' )
+    d[ 'output' ] = d[ 'output' ].getvalue()
 
   code_points = '\n'.join( [ table[ 'original' ][ 'output' ],
                              table[ 'normal' ][ 'output' ],

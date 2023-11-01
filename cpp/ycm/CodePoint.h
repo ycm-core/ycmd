@@ -46,6 +46,15 @@ enum class BreakProperty : uint8_t {
   LVT                = 13,
   EXTPICT            = 18
 };
+// See https://www.unicode.org/reports/tr44/#Indic_Conjunct_Break
+// NOTE: The properties must take the same value as the ones defined in the
+// update_unicode.py script.
+enum class IndicBreakProperty : uint8_t {
+  None      =  0,
+  LINKER    =  1,
+  CONSONANT =  2,
+  EXTEND    =  3,
+};
 
 
 // This is the structure used to store the data in the Unicode table. See the
@@ -60,6 +69,7 @@ struct RawCodePoint {
   bool is_uppercase;
   uint8_t break_property;
   uint8_t combining_class;
+  uint8_t indic_break_property;
 };
 
 
@@ -123,6 +133,10 @@ public:
     return combining_class_;
   }
 
+  inline IndicBreakProperty GetIndicBreakProperty() const {
+    return indic_property_;
+  }
+
   inline bool operator< ( const CodePoint &other ) const {
     return combining_class_ < other.combining_class_;
   }
@@ -138,6 +152,7 @@ private:
   bool is_uppercase_;
   BreakProperty break_property_;
   uint8_t combining_class_;
+  IndicBreakProperty indic_property_;
 };
 
 
