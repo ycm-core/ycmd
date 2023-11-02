@@ -43,13 +43,14 @@ struct CodePointTuple {
   }
 
   CodePointTuple( const CodePoint &code_point )
-    : CodePointTuple( code_point.Normal().c_str(),
-                      code_point.FoldedCase().c_str(),
-                      code_point.SwappedCase().c_str(),
+    : CodePointTuple( code_point.Normal(),
+                      code_point.FoldedCase(),
+                      code_point.SwappedCase(),
                       code_point.IsLetter(),
                       code_point.IsPunctuation(),
                       code_point.IsUppercase(),
-                      code_point.GetGraphemeBreakProperty() ) {
+                      code_point.GetGraphemeBreakProperty(),
+                      code_point.GetIndicConjunctBreakProperty() ) {
   }
 
   CodePointTuple( std::string_view normal,
@@ -58,14 +59,16 @@ struct CodePointTuple {
                   bool is_letter,
                   bool is_punctuation,
                   bool is_uppercase,
-                  GraphemeBreakProperty grapheme_break_property )
+                  GraphemeBreakProperty grapheme_break_property,
+                  IndicConjunctBreakProperty indic_conjunct_break_property = IndicConjunctBreakProperty::None )
     : normal_( normal ),
       folded_case_( folded_case ),
       swapped_case_( swapped_case ),
       is_letter_( is_letter ),
       is_punctuation_( is_punctuation ),
       is_uppercase_( is_uppercase ),
-      grapheme_break_property_( grapheme_break_property ) {
+      grapheme_break_property_( grapheme_break_property ),
+      indic_conjunct_break_property_( indic_conjunct_break_property ) {
   }
 
   bool operator== ( const CodePointTuple &other ) const {
@@ -75,7 +78,8 @@ struct CodePointTuple {
            is_letter_ == other.is_letter_ &&
            is_punctuation_ == other.is_punctuation_ &&
            is_uppercase_ == other.is_uppercase_ &&
-           grapheme_break_property_ == other.grapheme_break_property_;
+           grapheme_break_property_ == other.grapheme_break_property_ &&
+           indic_conjunct_break_property_ == other.indic_conjunct_break_property_;
   };
 
   std::string normal_;
@@ -85,6 +89,7 @@ struct CodePointTuple {
   bool is_punctuation_;
   bool is_uppercase_;
   GraphemeBreakProperty grapheme_break_property_;
+  IndicConjunctBreakProperty indic_conjunct_break_property_;
 };
 
 

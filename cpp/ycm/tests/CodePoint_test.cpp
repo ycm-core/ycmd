@@ -83,7 +83,9 @@ const TextCodePointPair tests[] = {
                 GraphemeBreakProperty::CONTROL } },
 
   // Combining grave accent
-  { "̀", { "̀", "̀", "̀", false, false, false, GraphemeBreakProperty::EXTEND } },
+  { "̀", { "̀", "̀", "̀", false, false, false,
+                GraphemeBreakProperty::EXTEND,
+                IndicConjunctBreakProperty::EXTEND } },
   // Bengali vowel sign Aa
   { "া", { "া", "া", "া", false, false, false, GraphemeBreakProperty::EXTEND } },
   // Zero-width non-joiner
@@ -94,7 +96,7 @@ const TextCodePointPair tests[] = {
 
   // Zero-width joiner
   { "‍", { "‍", "‍", "‍", false, false, false,
-                GraphemeBreakProperty::ZWJ } },
+                GraphemeBreakProperty::ZWJ, IndicConjunctBreakProperty::EXTEND } },
 
   // Regional indicator symbol letter b
   { "🇧", { "🇧", "🇧", "🇧", false, false, false,
@@ -181,6 +183,20 @@ const TextCodePointPair tests[] = {
   { "𐰬", { "𐰬", "𐰬", "𐰬", true,  false, false, GraphemeBreakProperty::OTHER } },
   { "𐬿", { "𐬿", "𐬿", "𐬿", false, true,  false, GraphemeBreakProperty::OTHER } },
   { "𝛁", { "𝛁", "𝛁", "𝛁", false, false, false, GraphemeBreakProperty::OTHER } },
+
+  // Indic conjunct properties
+  // Devanagari sign virama
+  { "्", { "्", "्", "्", false, false, false,
+                GraphemeBreakProperty::EXTEND,
+                IndicConjunctBreakProperty::LINKER } },
+  // Oriya letter wa
+  { "ୱ", { "ୱ", "ୱ", "ୱ", true, false, false,
+                GraphemeBreakProperty::OTHER,
+                IndicConjunctBreakProperty::CONSONANT } },
+  // Tibetan mark tsa -phru
+  { "༹", { "༹", "༹", "༹", false, false, false,
+                GraphemeBreakProperty::EXTEND,
+                IndicConjunctBreakProperty::EXTEND } },
 };
 
 
