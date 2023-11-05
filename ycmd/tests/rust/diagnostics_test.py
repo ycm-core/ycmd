@@ -79,7 +79,7 @@ class DiagnosticsTest( TestCase ):
     results = app.post_json( '/detailed_diagnostic', request_data ).json
     assert_that( results, has_entry(
         'message',
-        'no field `build_` on type `test::Builder`\nunknown field' ) )
+        'no field `build_` on type `test::Builder`\nunknown field [E0609]' ) )
 
 
   @WithRetry()

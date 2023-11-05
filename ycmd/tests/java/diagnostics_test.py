@@ -301,7 +301,8 @@ class DiagnosticsTest( TestCase ):
     results = app.post_json( '/detailed_diagnostic', request_data ).json
     assert_that( results, has_entry(
         'message',
-        'The value of the field TestFactory.Bar.testString is not used' ) )
+        'The value of the field TestFactory.Bar.testString '
+        'is not used [570425421]' ) )
 
 
   @WithRetry()

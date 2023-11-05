@@ -74,7 +74,8 @@ class DiagnosticsTest( TestCase ):
                  any_of( has_entry( 'message',
                                     'undeclared name: diagnostics_test' ),
                          has_entry( 'message',
-                                    'undefined: diagnostics_test' ) ) )
+                                    'undefined: diagnostics_test'
+                                    ' [UndeclaredName]' ) ) )
 
 
   @WithRetry()
