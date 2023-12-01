@@ -115,7 +115,7 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'See the YCM docs for details on how to use a custom Clangd.' )
 
 
-def FindLatestMSVC( quiet ):
+def FindLatestMSVC( quiet, preview=False ):
   ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
 
   VSWHERE_EXE = os.path.join( os.environ[ 'ProgramFiles(x86)' ],
@@ -123,12 +123,13 @@ def FindLatestMSVC( quiet ):
                              'Installer', 'vswhere.exe' )
 
   if os.path.exists( VSWHERE_EXE ):
+    vswhere_args = [ VSWHERE_EXE,
+                     '-latest', '-property', 'installationVersion' ]
+    if preview:
+      vswhere_args.append( '-prerelease' )
     if not quiet:
-      print( "Calling vswhere -latest -installationVersion" )
-    latest_full_v = subprocess.check_output(
-      [ VSWHERE_EXE, '-latest', '-prerelease', '-property',
-       'installationVersion' ]
-    ).strip().decode()
+      print( "Calling", *vswhere_args )
+    latest_full_v = subprocess.check_output( vswhere_args ).strip().decode()
     if '.' in latest_full_v:
       try:
         latest_v = int( latest_full_v.split( '.' )[ 0 ] )
@@ -535,6 +536,10 @@ def ParseArguments():
                        action = 'store_true',
                        help = 'Compiling with sudo causes problems. If you'
                               ' know what you are doing, proceed.' )
+  parser.add_argument( '--preview-msvc',
+                       action = 'store_true',
+                       help = 'Allow compiling against latest MSVC Preview'
+                              ' version.' )
 
   # These options are deprecated.
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
@@ -556,7 +561,7 @@ def ParseArguments():
     args.enable_debug = True
 
   if OnWindows() and args.msvc is None:
-    args.msvc = FindLatestMSVC( args.quiet )
+    args.msvc = FindLatestMSVC( args.quiet, args.preview_msvc )
     if args.msvc is None:
       raise FileNotFoundError( "Could not find a valid MSVC version." )
 
