@@ -349,7 +349,7 @@ class CsharpCompleter( Completer ):
       omnisharp_server = responses.DebugInfoServer(
         name = 'OmniSharp',
         handle = completer._omnisharp_phandle,
-        executable = PATH_TO_ROSLYN_OMNISHARP,
+        executable = ' '.join( completer._omnisharp_command ),
         address = 'localhost',
         port = completer._omnisharp_port,
         logfiles = [ completer._filename_stdout, completer._filename_stderr ],
@@ -398,6 +398,7 @@ class CsharpSolutionCompleter( object ):
     self._keep_logfiles = keep_logfiles
     self._filename_stderr = None
     self._filename_stdout = None
+    self._omnisharp_command = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
@@ -420,6 +421,24 @@ class CsharpSolutionCompleter( object ):
       return self._StartServerNoLock()
 
 
+  def _ConstructOmnisharpCommand( self ):
+    if self._omnisharp_command:
+      return self._omnisharp_command
+
+    self._ChooseOmnisharpPort()
+    self._omnisharp_command = [ self._roslyn_path,
+                                '-p',
+                                str( self._omnisharp_port ),
+                                '-s',
+                                str( self._solution_path ) ]
+
+    if ( not utils.OnWindows()
+         and self._roslyn_path.endswith( '.exe' ) ):
+      self._omnisharp_command.insert( 0, self._mono_path )
+
+    return self._omnisharp_command
+
+
   def _StartServerNoLock( self ):
     """ Start the OmniSharp server if not already running. Use a lock to avoid
     starting the server multiple times for the same solution. """
@@ -429,19 +448,9 @@ class CsharpSolutionCompleter( object ):
     LOGGER.info( 'Starting OmniSharp server' )
     LOGGER.info( 'Loading solution file %s', self._solution_path )
 
-    self._ChooseOmnisharpPort()
-
-    command = [ PATH_TO_OMNISHARP_ROSLYN_BINARY,
-                '-p',
-                str( self._omnisharp_port ),
-                '-s',
-                str( self._solution_path ) ]
-
-    if ( not utils.OnWindows()
-         and self._roslyn_path.endswith( '.exe' ) ):
-      command.insert( 0, self._mono_path )
-
-    LOGGER.info( 'Starting OmniSharp server with: %s', command )
+    self._ConstructOmnisharpCommand()
+    LOGGER.info( 'Starting OmniSharp server with: %s',
+                 self._omnisharp_command )
 
     solutionfile = os.path.basename( self._solution_path )
     self._filename_stdout = utils.CreateLogfile(
@@ -456,7 +465,7 @@ class CsharpSolutionCompleter( object ):
     with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
       with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
         self._omnisharp_phandle = utils.SafePopen(
-            command, stdout = fstdout, stderr = fstderr )
+            self._omnisharp_command, stdout = fstdout, stderr = fstderr )
 
     LOGGER.info( 'Started OmniSharp server' )
 
@@ -513,6 +522,7 @@ class CsharpSolutionCompleter( object ):
 
 
   def _CleanUp( self ):
+    self._omnisharp_command = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if not self._keep_logfiles:
