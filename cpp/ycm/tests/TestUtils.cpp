@@ -40,7 +40,8 @@ std::ostream& operator<<( std::ostream& os, const CodePointTuple &code_point ) {
              << PrintToString( code_point.is_letter_ ) << ", "
              << PrintToString( code_point.is_punctuation_ ) << ", "
              << PrintToString( code_point.is_uppercase_ ) << ", "
-             << PrintToString( code_point.break_property_ ) << " }";
+             << PrintToString( code_point.grapheme_break_property_ ) << ", "
+             << PrintToString( code_point.indic_conjunct_break_property_ ) << " }";
   return os;
 }
 

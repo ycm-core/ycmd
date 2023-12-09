@@ -47,9 +47,9 @@ TEST_F( CodePointRepositoryTest, GetCodePoints ) {
   EXPECT_THAT( repo_.NumStoredElements(), 2 );
   EXPECT_THAT( code_point_objects, UnorderedElementsAre(
     Pointee( IsCodePointWithProperties< CodePointTuple >(
-      { "α", "α", "Α", true, false, false, BreakProperty::OTHER } ) ),
+      { "α", "α", "Α", true, false, false, GraphemeBreakProperty::OTHER } ) ),
     Pointee( IsCodePointWithProperties< CodePointTuple >(
-      { "ω", "ω", "Ω", true, false, false, BreakProperty::OTHER } ) )
+      { "ω", "ω", "Ω", true, false, false, GraphemeBreakProperty::OTHER } ) )
   ) );
 }
 

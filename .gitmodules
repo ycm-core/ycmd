@@ -13,6 +13,6 @@
 [submodule "third_party/watchdog"]
 	path = third_party/watchdog_deps/watchdog
 	url = https://github.com/gorakhargosh/watchdog
-[submodule "third_party/mrab-regex"]
-	path = third_party/mrab-regex
-	url = https://bitbucket.org/mrabarnett/mrab-regex.git
+[submodule "third_party/mrab-regex-github"]
+	path = third_party/mrab-regex-github
+	url = https://github.com/mrabarnett/mrab-regex
