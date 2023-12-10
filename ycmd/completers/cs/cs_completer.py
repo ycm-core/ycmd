@@ -349,7 +349,7 @@ class CsharpCompleter( Completer ):
       omnisharp_server = responses.DebugInfoServer(
         name = 'OmniSharp',
         handle = completer._omnisharp_phandle,
-        executable = ' '.join( completer._omnisharp_command ),
+        executable = ' '.join( completer._ConstructOmnisharpCommand() ),
         address = 'localhost',
         port = completer._omnisharp_port,
         logfiles = [ completer._filename_stdout, completer._filename_stderr ],
@@ -448,9 +448,8 @@ class CsharpSolutionCompleter( object ):
     LOGGER.info( 'Starting OmniSharp server' )
     LOGGER.info( 'Loading solution file %s', self._solution_path )
 
-    self._ConstructOmnisharpCommand()
-    LOGGER.info( 'Starting OmniSharp server with: %s',
-                 self._omnisharp_command )
+    command = self._ConstructOmnisharpCommand()
+    LOGGER.info( 'Starting OmniSharp server with: %s', command )
 
     solutionfile = os.path.basename( self._solution_path )
     self._filename_stdout = utils.CreateLogfile(
@@ -465,7 +464,7 @@ class CsharpSolutionCompleter( object ):
     with utils.OpenForStdHandle( self._filename_stderr ) as fstderr:
       with utils.OpenForStdHandle( self._filename_stdout ) as fstdout:
         self._omnisharp_phandle = utils.SafePopen(
-            self._omnisharp_command, stdout = fstdout, stderr = fstderr )
+            command, stdout = fstdout, stderr = fstderr )
 
     LOGGER.info( 'Started OmniSharp server' )
 
