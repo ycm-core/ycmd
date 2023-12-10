@@ -204,22 +204,25 @@ class DebugInfoTest( TestCase ):
     assert_that( not GetCompleter( user_options_store.GetAll() ) )
 
 
-  def _RoslynFromUserOption_popen_mock(*args, **kwargs):
+  @staticmethod
+  def _RoslynFromUserOption_popen_mock( *args, **kwargs ):
     assert_that( args[0][1], equal_to( 'my_roslyn.exe' ) )
+    # Need to redirect to real binary to allow test to pass
     args[0][1] = PATH_TO_OMNISHARP_ROSLYN_BINARY
     return _mockable_popen(*args, **kwargs)
 
-  @patch( 'os.path.isfile', return_value = True )
+
   @patch( 'subprocess.Popen', wraps = _RoslynFromUserOption_popen_mock )
+  @patch( 'os.path.isfile', return_value = True )
   @IsolatedYcmd( { 'roslyn_binary_path': 'my_roslyn.exe' } )
-  def test_GetCompleter_RoslynFromUserOption( self, app, *args ):
+  def test_GetCompleter_RoslynFromUserOption( self, app, popen_mock, *args ):
     filepath = PathToTestFile( 'testy', 'Program.cs' )
     contents = ReadFile( filepath )
-    import subprocess
     with WrapOmniSharpServer( app, filepath ):
-      request = BuildRequest( filepath = filepath, filetype = 'cs' )
-      response = app.post_json( '/debug_info', request )
-      subprocess.Popen.assert_called()
+        request = BuildRequest( filepath = filepath, filetype = 'cs' )
+        app.post_json( '/debug_info', request )
+
+    popen_mock.assert_called()
 
 
   @patch( 'os.path.isfile', return_value = False )
