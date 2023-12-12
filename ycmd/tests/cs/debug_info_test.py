@@ -208,11 +208,11 @@ class DebugInfoTest( TestCase ):
   @IsolatedYcmd( { 'roslyn_binary_path': 'my_roslyn.exe' } )
   def test_GetCompleter_RoslynFromUserOption( self, app, *args ):
     # `@patch` does not play nice with functions defined at class scope
-    def _popen_mock( *args, **kwargs ):
-      assert_that( args[ 0 ][ 1 ], equal_to( 'my_roslyn.exe' ) )
+    def _popen_mock( cmdline, **kwargs ):
+      assert_that( cmdline[ 1 ], equal_to( 'my_roslyn.exe' ) )
       # Need to redirect to real binary to allow test to pass
-      args[ 0 ][ 1 ] = PATH_TO_OMNISHARP_ROSLYN_BINARY
-      return _mockable_popen( *args, **kwargs )
+      cmdline[ 1 ] = PATH_TO_OMNISHARP_ROSLYN_BINARY
+      return _mockable_popen( cmdline, **kwargs )
 
     filepath = PathToTestFile( 'testy', 'Program.cs' )
     with patch( 'subprocess.Popen', wraps = _popen_mock ) as popen_mock:
