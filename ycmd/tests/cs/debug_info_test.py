@@ -209,9 +209,10 @@ class DebugInfoTest( TestCase ):
   def test_GetCompleter_RoslynFromUserOption( self, app, *args ):
     # `@patch` does not play nice with functions defined at class scope
     def _popen_mock( cmdline, **kwargs ):
-      assert_that( cmdline[ 1 ], equal_to( 'my_roslyn.exe' ) )
+      i = cmdline[ 0 ].endswith( 'mono' )
+      assert_that( cmdline[ i ], equal_to( 'my_roslyn.exe' ) )
       # Need to redirect to real binary to allow test to pass
-      cmdline[ 1 ] = PATH_TO_OMNISHARP_ROSLYN_BINARY
+      cmdline[ i ] = PATH_TO_OMNISHARP_ROSLYN_BINARY
       return _mockable_popen( cmdline, **kwargs )
 
     filepath = PathToTestFile( 'testy', 'Program.cs' )
