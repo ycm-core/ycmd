@@ -1922,6 +1922,8 @@ class LanguageServerCompleter( Completer ):
       handler( self, request_data )
     ClearOneshotHandlers()
 
+    self._UpdateServerWithFileContents( request_data )
+
     # Return the latest diagnostics that we have received.
     #
     # NOTE: We also return diagnostics asynchronously via the long-polling
