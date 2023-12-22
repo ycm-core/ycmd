@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from ycmd.utils import ReadFile
 from hamcrest import ( assert_that,
                        contains_exactly,
                        contains_string,
@@ -536,3 +537,10 @@ class is_json_string_matching( BaseMatcher ):
 
   def describe_to( self, description ):
     return self._matcher.describe_to( description )
+
+
+def GetTestFileContents( filename ):
+  try:
+    return ReadFile( filename )
+  except IOError:
+    return ''

@@ -19,6 +19,7 @@ import contextlib
 import os
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
+                                    GetTestFileContents,
                                     IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
                                     SetUpApp,
@@ -61,6 +62,7 @@ def StartJavaCompleterServerWithFile( app, file_path ):
                  BuildRequest(
                    event_name = 'FileReadyToParse',
                    filepath = file_path,
+                   contents = GetTestFileContents( file_path ),
                    filetype = 'java' ) )
   WaitUntilCompleterServerReady( app, 'java', SERVER_STARTUP_TIMEOUT )
 

@@ -19,6 +19,7 @@ import functools
 import os
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ClearCompletionsCache,
+                                    GetTestFileContents,
                                     IgnoreExtraConfOutsideTestsFolder,
                                     IsolatedApp,
                                     SetUpApp,
@@ -41,9 +42,11 @@ def tearDownModule():
 
 
 def StartGoCompleterServerInDirectory( app, directory ):
+  main_file = os.path.join( directory, 'goto.go' )
   app.post_json( '/event_notification',
                  BuildRequest(
-                   filepath = os.path.join( directory, 'goto.go' ),
+                   filepath = main_file,
+                   contents = GetTestFileContents( main_file ),
                    event_name = 'FileReadyToParse',
                    filetype = 'go' ) )
   WaitUntilCompleterServerReady( app, 'go' )
