@@ -46,17 +46,20 @@ std::array< bool, {size} > is_punctuation;
 std::array< bool, {size} > is_uppercase;
 std::array< uint8_t, {size} > break_property;
 std::array< uint8_t, {size} > combining_class;
+std::array< uint8_t, {size} > indic_conjunct_break;
 }};
 static const RawCodePointArray code_points = {{
 {code_points}
 }};""" )
 UNICODE_VERSION_REGEX = re.compile( r'Version (?P<version>\d+(?:\.\d+){2})' )
+INDIC_CONJUNCT_BREAK_PROPERTY_REGEX = re.compile(
+  r'^(?P<value>[A-F0-9.]+)\s+; (?P<skip>\w+); (?P<property>\w+) # .*$' )
 GRAPHEME_BREAK_PROPERTY_REGEX = re.compile(
   r'^(?P<value>[A-F0-9.]+)\s+; (?P<property>\w+) # .*$' )
-GRAPHEME_BREAK_PROPERTY_TOTAL = re.compile(
+BREAK_PROPERTY_TOTAL = re.compile(
   r'# Total code points: (?P<total>\d+)' )
 # See
-# https://www.unicode.org/reports/tr29/tr29-37.html#Grapheme_Cluster_Break_Property_Values
+# https://www.unicode.org/reports/tr29#Grapheme_Cluster_Break_Property_Values
 GRAPHEME_BREAK_PROPERTY_MAP = {
   # "Other" is the term used in the Unicode data while "Any" is used in the
   # docs.
@@ -77,6 +80,14 @@ GRAPHEME_BREAK_PROPERTY_MAP = {
   # "ExtPict" is used in the GraphemeBreakTest.txt file for
   # Extended_Pictographic.
   'ExtPict'            : 18,
+}
+# See
+# https://www.unicode.org/reports/tr44/#Indic_Conjunct_Break
+INDIC_CONJUNCT_BREAK_PROPERTY_MAP = {
+  'None'      :  0,
+  'Linker'    :  1,
+  'Consonant' :  2,
+  'Extend'    :  3,
 }
 SPECIAL_FOLDING_REGEX = re.compile(
   r'^(?P<code>[A-F0-9]+); (?P<lower>.*); (?P<title>.*); (?P<upper>.*); '
@@ -100,7 +111,7 @@ HANGUL_LVT_COUNT = HANGUL_L_COUNT * HANGUL_VT_COUNT
 
 def Download( url ):
   with urllib.request.urlopen( url ) as response:
-    return response.read().splitlines()
+    return response.read().decode( 'utf8' ).splitlines()
 
 
 # Encode a Unicode code point in UTF-8 binary form.
@@ -177,7 +188,7 @@ def GetUnicodeVersion():
   raise RuntimeError( 'Cannot find the version of the Unicode Standard.' )
 
 
-# See https://www.unicode.org/reports/tr44/tr44-26.html#UnicodeData.txt
+# See https://www.unicode.org/reports/tr44#UnicodeData.txt
 def GetUnicodeData():
   data = Download(
     'https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt' )
@@ -221,27 +232,31 @@ def GetUnicodeData():
 
 
 # See
-# https://www.unicode.org/reports/tr44/tr44-26.html#GraphemeBreakProperty.txt
-def GetGraphemeBreakProperty():
-  data = Download( 'https://www.unicode.org/'
-    'Public/UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt' )
+# https://www.unicode.org/reports/tr44#GraphemeBreakProperty.txt
+# https://www.unicode.org/reports/tr44/#Indic_Conjunct_Break
+def GetBreakProperty( data_url, break_property_regex ):
+  data = Download( data_url )
 
   nb_code_points = 0
   break_data = {}
+  found_first_codepoint = False
   for line in data:
     # Check if the number of code points collected for each property is the same
     # as the number indicated in the document.
-    match = GRAPHEME_BREAK_PROPERTY_TOTAL.search( line )
-    if match:
+    match = BREAK_PROPERTY_TOTAL.search( line )
+    # For core properties, we only care about indic conjunct break properties
+    if match and found_first_codepoint:
       total = int( match.group( 'total' ) )
       if nb_code_points != total:
         raise RuntimeError(
           'Expected {} code points. Got {}.'.format( total, nb_code_points ) )
       nb_code_points = 0
 
-    match = GRAPHEME_BREAK_PROPERTY_REGEX.search( line )
+    match = break_property_regex.search( line )
     if not match:
       continue
+    else:
+      found_first_codepoint = True
 
     value = match.group( 'value' )
     prop = match.group( 'property' )
@@ -261,7 +276,7 @@ def GetGraphemeBreakProperty():
   return break_data
 
 
-# See https://www.unicode.org/reports/tr44/tr44-26.html#SpecialCasing.txt
+# See https://www.unicode.org/reports/tr44#SpecialCasing.txt
 def GetSpecialFolding():
   data = Download(
     'https://www.unicode.org/Public/UCD/latest/ucd/SpecialCasing.txt' )
@@ -287,7 +302,7 @@ def GetSpecialFolding():
   return folding_data
 
 
-# See https://www.unicode.org/reports/tr44/tr44-26.html#CaseFolding.txt
+# See https://www.unicode.org/reports/tr44#CaseFolding.txt
 def GetCaseFolding():
   data = Download(
     'https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt' )
@@ -310,7 +325,8 @@ def GetCaseFolding():
 
 
 def GetEmojiData():
-  data = Download( 'https://unicode.org/Public/emoji/latest/emoji-data.txt' )
+  data = Download(
+    'https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt' )
 
   nb_code_points = 0
   emoji_data = defaultdict( list )
@@ -348,7 +364,7 @@ def GetEmojiData():
 
 
 # Decompose a hangul syllable using the algorithm described in
-# https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G61399
+# https://www.unicode.org/versions/latest/ch03.pdf#G61399
 def DecomposeHangul( code_point ):
   index = int( code_point, 16 ) - HANGUL_BASE
   if index < 0 or index >= HANGUL_LVT_COUNT:
@@ -365,7 +381,7 @@ def DecomposeHangul( code_point ):
 
 # Recursively decompose a Unicode code point into a list of code points
 # according to canonical decomposition.
-# See https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G733
+# See https://www.unicode.org/versions/latest/ch03.pdf#G733
 def Decompose( code_point, unicode_data ):
   code_points = DecomposeHangul( code_point )
   if code_points:
@@ -417,7 +433,13 @@ def Foldcase( code_points, unicode_data, case_folding ):
 def GetCodePoints():
   code_points = []
   unicode_data = GetUnicodeData()
-  break_data = GetGraphemeBreakProperty()
+  grapheme_break_data = GetBreakProperty(
+    'https://www.unicode.org/Public/UCD/latest'
+      '/ucd/auxiliary/GraphemeBreakProperty.txt',
+    GRAPHEME_BREAK_PROPERTY_REGEX )
+  indic_conjunct_break_data = GetBreakProperty(
+    'https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt',
+    INDIC_CONJUNCT_BREAK_PROPERTY_REGEX )
   special_folding = GetSpecialFolding()
   case_folding = GetCaseFolding()
   emoji_data = GetEmojiData()
@@ -444,8 +466,9 @@ def GetCodePoints():
     swapped_code_point = lower_code_point if is_uppercase else upper_code_point
     is_letter = general_category.startswith( 'L' )
     is_punctuation = general_category.startswith( 'P' )
-    break_property = break_data.get( key, 'Other' )
+    break_property = grapheme_break_data.get( key, 'Other' )
     emoji_property = emoji_data.get( key, [] )
+    indic_conjunct_break = indic_conjunct_break_data.get( key, 'None' )
     if 'Extended_Pictographic' in emoji_property:
       if break_property == 'Other':
         break_property = 'ExtPict'
@@ -453,8 +476,10 @@ def GetCodePoints():
         raise RuntimeError( 'Cannot handle Extended_Pictographic combined with '
                             '{} property'.format( break_property ) )
     break_property = GRAPHEME_BREAK_PROPERTY_MAP[ break_property ]
+    indic_conjunct_break = INDIC_CONJUNCT_BREAK_PROPERTY_MAP[
+      indic_conjunct_break ]
     combining_class = int( value[ 'ccc' ] )
-    # See https://unicode.org/reports/tr44/tr44-26.html#General_Category_Values
+    # See https://www.unicode.org/reports/tr44#General_Category_Values
     # for the list of categories.
     if ( code_point != normal_code_point or
          code_point != folded_code_point or
@@ -463,7 +488,8 @@ def GetCodePoints():
          is_punctuation or
          is_uppercase or
          break_property or
-         combining_class ):
+         combining_class or
+         indic_conjunct_break ):
       code_points.append( {
         'original': code_point,
         'normal': normal_code_point,
@@ -473,7 +499,8 @@ def GetCodePoints():
         'is_punctuation': is_punctuation,
         'is_uppercase': is_uppercase,
         'break_property': break_property,
-        'combining_class': combining_class
+        'combining_class': combining_class,
+        'indic_conjunct_break': indic_conjunct_break,
       } )
   return code_points
 
@@ -517,6 +544,7 @@ def GenerateUnicodeTable( header_path, code_points ):
     'is_uppercase': { 'output': StringIO(), 'converter': CppBool },
     'break_property': { 'output': StringIO(), 'converter': str },
     'combining_class': { 'output': StringIO(), 'converter': str },
+    'indic_conjunct_break': { 'output': StringIO(), 'converter': str },
   }
 
   for d in table.values():
@@ -531,10 +559,8 @@ def GenerateUnicodeTable( header_path, code_points ):
         d[ 'size' ] = max( CppLength( cp ), d[ 'size' ] )
 
   for t, d in table.items():
-    if t == 'combining_class':
-      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}}'
-    else:
-      d[ 'output' ] = d[ 'output' ].getvalue().rstrip( ',' ) + '}},'
+    d[ 'output' ].write( '}},' )
+    d[ 'output' ] = d[ 'output' ].getvalue()
 
   code_points = '\n'.join( [ table[ 'original' ][ 'output' ],
                              table[ 'normal' ][ 'output' ],
@@ -544,7 +570,8 @@ def GenerateUnicodeTable( header_path, code_points ):
                              table[ 'is_punctuation' ][ 'output' ],
                              table[ 'is_uppercase' ][ 'output' ],
                              table[ 'break_property' ][ 'output' ],
-                             table[ 'combining_class' ][ 'output' ] ] )
+                             table[ 'combining_class' ][ 'output' ],
+                             table[ 'indic_conjunct_break' ][ 'output' ] ] )
 
   contents = UNICODE_TABLE_TEMPLATE.format(
     unicode_version = unicode_version,
@@ -561,7 +588,7 @@ def GenerateUnicodeTable( header_path, code_points ):
 
 def GenerateNormalizationTestCases( output_file ):
   test_contents = Download(
-      'https://unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt' )
+      'https://www.unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt' )
   hex_codepoint = '(?:[A-F0-9]{4,} ?)+'
   pattern = f'(?:{ hex_codepoint };){{5}}'
   pattern = re.compile( pattern )

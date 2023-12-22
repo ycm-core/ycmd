@@ -770,7 +770,7 @@ def BuildRegexModule( script_args ):
   lib_dir = p.join( DIR_OF_THIRD_PARTY, 'regex-build' )
 
   try:
-    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex' ) )
+    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex-github' ) )
 
     RemoveDirectoryIfExists( build_dir )
     RemoveDirectoryIfExists( lib_dir )
@@ -945,7 +945,7 @@ def EnableGoCompleter( args ):
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
 
-  gopls = 'golang.org/x/tools/gopls@v0.13.2'
+  gopls = 'golang.org/x/tools/gopls@v0.14.0'
   CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,

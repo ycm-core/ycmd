@@ -1670,6 +1670,12 @@ class LanguageServerCompleter( Completer ):
       distance = _DistanceOfPointToRange( point, diagnostic[ 'range' ] )
       if minimum_distance is None or distance < minimum_distance:
         message = diagnostic[ 'message' ]
+        try:
+          code = diagnostic[ 'code' ]
+          message += f' [{ code }]'
+        except KeyError:
+          pass
+
         if distance == 0:
           break
         minimum_distance = distance
@@ -2843,6 +2849,9 @@ class LanguageServerCompleter( Completer ):
 
 
   def ExecuteCommand( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
     if not args:
       raise ValueError( 'Must specify a command to execute' )
 
