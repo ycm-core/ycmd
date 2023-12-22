@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from ycmd.utils import ReadFile
 from hamcrest import ( assert_that,
                        contains_exactly,
                        contains_string,
@@ -76,9 +77,22 @@ EMPTY_SIGNATURE_HELP = has_entries( {
 } )
 
 
+def GetTestFileContents( filename ):
+  try:
+    return ReadFile( filename )
+  except IOError:
+    return ''
+
+
 def BuildRequest( **kwargs ):
   filepath = kwargs[ 'filepath' ] if 'filepath' in kwargs else '/foo'
-  contents = kwargs[ 'contents' ] if 'contents' in kwargs else ''
+  contents = (
+    kwargs[ 'contents' ]
+    if 'contents' in kwargs
+    else GetTestFileContents( filepath )
+      if 'filepath' in kwargs
+      else ''
+  )
   filetype = kwargs[ 'filetype' ] if 'filetype' in kwargs else 'foo'
   filetypes = kwargs[ 'filetypes' ] if 'filetypes' in kwargs else [ filetype ]
 
