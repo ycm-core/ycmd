@@ -650,12 +650,3 @@ def _OffsetToPosition( start_end, filename, text, newlines ):
     if len( loc ) == 2:
       break
   return loc
-
-  # Invalid position - it's outside of the text. Just return the last
-  # position in the text. This is an internal error.
-  LOGGER.error( "Invalid offset %s in file %s with text %s and newlines %s",
-                offset,
-                filename,
-                text,
-                newlines )
-  raise RuntimeError( "Invalid file offset in diff" )

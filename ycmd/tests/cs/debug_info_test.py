@@ -193,14 +193,14 @@ class DebugInfoTest( TestCase ):
 
   @patch( 'ycmd.completers.cs.cs_completer.PATH_TO_OMNISHARP_ROSLYN_BINARY',
           None )
-  def test_GetCompleter_RoslynNotFound( *args ):
+  def test_GetCompleter_RoslynNotFound( self, *args ):
     assert_that( not GetCompleter( user_options_store.GetAll() ) )
 
 
   @patch( 'ycmd.completers.cs.cs_completer.FindExecutableWithFallback',
           wraps = lambda x, fb: x if x == 'roslyn' else fb )
   @patch( 'os.path.isfile', return_value = True )
-  def test_GetCompleter_RoslynFromUserOption( *args ):
+  def test_GetCompleter_RoslynFromUserOption( self, *args ):
     user_options = user_options_store.GetAll().copy(
         roslyn_binary_path = 'roslyn' )
     assert_that( GetCompleter( user_options )._roslyn_path,

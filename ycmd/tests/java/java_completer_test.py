@@ -37,7 +37,7 @@ DEFAULT_OPTIONS = user_options_store.DefaultOptions()
 class JavaCompleterTest( TestCase ):
   @patch( 'ycmd.completers.java.java_completer.utils.FindExecutable',
           return_value = '' )
-  def test_ShouldEnableJavaCompleter_NoJava( *args ):
+  def test_ShouldEnableJavaCompleter_NoJava( self, *args ):
     assert_that( java_completer.ShouldEnableJavaCompleter( DEFAULT_OPTIONS ),
                  equal_to( False ) )
 
@@ -238,5 +238,5 @@ class JavaCompleterTest( TestCase ):
 
   @patch( 'ycmd.completers.java.hook.ShouldEnableJavaCompleter',
           return_value = False )
-  def test_JavaHook_JavaNotEnabled( *args ):
+  def test_JavaHook_JavaNotEnabled( self, *args ):
     assert_that( hook.GetCompleter( {} ), equal_to( None ) )

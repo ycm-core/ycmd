@@ -463,7 +463,7 @@ def TemporaryClangProject( tmp_dir, compile_commands ):
   """
   path = os.path.join( tmp_dir, 'compile_commands.json' )
 
-  with open( path, 'w' ) as f:
+  with open( path, 'w', encoding = 'utf8' ) as f:
     f.write( ToUnicode( json.dumps( compile_commands, indent = 2 ) ) )
 
   try:
@@ -474,7 +474,7 @@ def TemporaryClangProject( tmp_dir, compile_commands ):
 
 def WaitForDiagnosticsToBeReady( app, filepath, contents, filetype, **kwargs ):
   results = None
-  for tries in range( 0, 60 ):
+  for _ in range( 0, 60 ):
     event_data = BuildRequest( event_name = 'FileReadyToParse',
                                contents = contents,
                                filepath = filepath,

@@ -55,8 +55,7 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
     user_options.update( custom_options )
     super().__init__( user_options )
 
-    self._connection = MockConnection(
-        lambda request: self.WorkspaceConfigurationResponse( request ) )
+    self._connection = MockConnection( self.WorkspaceConfigurationResponse )
     self._started = False
 
   def Language( self ):

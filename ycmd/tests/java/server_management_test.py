@@ -432,7 +432,7 @@ class ServerManagementTest( TestCase ):
     process = psutil.Process( pid )
     process.terminate()
 
-    for tries in range( 0, 10 ):
+    for _ in range( 0, 10 ):
       request_data = BuildRequest( filetype = 'java' )
       debug_info = app.post_json( '/debug_info', request_data ).json
       if not debug_info[ 'completer' ][ 'servers' ][ 0 ][ 'is_running' ]:
