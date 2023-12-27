@@ -17,12 +17,19 @@
 
 from hamcrest import ( assert_that, contains_exactly, empty, equal_to,
                        has_entries, has_entry, instance_of )
+
+from subprocess import Popen as _mockable_popen
+
 from unittest.mock import patch
 from unittest import TestCase
 
+from ycmd.completers.cs.cs_completer import PATH_TO_OMNISHARP_ROSLYN_BINARY
 from ycmd.completers.cs.hook import GetCompleter
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
-from ycmd.tests.cs import PathToTestFile, SharedYcmd
+from ycmd.tests.cs import ( PathToTestFile,
+                            SharedYcmd,
+                            IsolatedYcmd,
+                            WrapOmniSharpServer )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     WaitUntilCompleterServerReady )
 from ycmd import user_options_store
@@ -197,14 +204,24 @@ class DebugInfoTest( TestCase ):
     assert_that( not GetCompleter( user_options_store.GetAll() ) )
 
 
-  @patch( 'ycmd.completers.cs.cs_completer.FindExecutableWithFallback',
-          wraps = lambda x, fb: x if x == 'roslyn' else fb )
   @patch( 'os.path.isfile', return_value = True )
-  def test_GetCompleter_RoslynFromUserOption( *args ):
-    user_options = user_options_store.GetAll().copy(
-        roslyn_binary_path = 'roslyn' )
-    assert_that( GetCompleter( user_options )._roslyn_path,
-                 equal_to( 'roslyn' ) )
+  @IsolatedYcmd( { 'roslyn_binary_path': 'my_roslyn.exe' } )
+  def test_GetCompleter_RoslynFromUserOption( self, app, *args ):
+    # `@patch` does not play nice with functions defined at class scope
+    def _popen_mock( cmdline, **kwargs ):
+      exe_index = 1 if cmdline[ 0 ].endswith( 'mono' ) else 0
+      assert_that( cmdline[ exe_index ], equal_to( 'my_roslyn.exe' ) )
+      # Need to redirect to real binary to allow test to pass
+      cmdline[ exe_index ] = PATH_TO_OMNISHARP_ROSLYN_BINARY
+      return _mockable_popen( cmdline, **kwargs )
+
+    filepath = PathToTestFile( 'testy', 'Program.cs' )
+    with patch( 'subprocess.Popen', wraps = _popen_mock ) as popen_mock:
+      with WrapOmniSharpServer( app, filepath ):
+        request = BuildRequest( filepath = filepath, filetype = 'cs' )
+        app.post_json( '/debug_info', request )
+
+    popen_mock.assert_called()
 
 
   @patch( 'os.path.isfile', return_value = False )
