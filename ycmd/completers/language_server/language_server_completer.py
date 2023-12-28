@@ -1005,7 +1005,8 @@ class LanguageServerCompleter( Completer ):
     self._on_file_ready_to_parse_handlers = []
     self.RegisterOnFileReadyToParse(
       lambda self, request_data:
-        self._UpdateServerWithFileContents( request_data )
+        self._UpdateServerWithFileContents( request_data ),
+      True # once
     )
 
     self._signature_help_disabled = user_options[ 'disable_signature_help' ]
@@ -1898,6 +1899,12 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsHealthy():
       return
 
+    def ClearOneshotHandlers():
+      self._on_file_ready_to_parse_handlers = [
+        ( handler, once ) for handler, once
+        in self._on_file_ready_to_parse_handlers if not once
+      ]
+
     # If we haven't finished initializing yet, we need to queue up all functions
     # registered on the FileReadyToParse event and in particular
     # _UpdateServerWithFileContents in reverse order of registration. This
@@ -1905,13 +1912,17 @@ class LanguageServerCompleter( Completer ):
     # messages. This is important because server start up can be quite slow and
     # we must not block the user, while we must keep the server synchronized.
     if not self._initialize_event.is_set():
-      for handler in reversed( self._on_file_ready_to_parse_handlers ):
+      for handler, _ in reversed( self._on_file_ready_to_parse_handlers ):
         self._OnInitializeComplete( partial( handler,
                                              request_data = request_data ) )
+      ClearOneshotHandlers()
       return
 
-    for handler in reversed( self._on_file_ready_to_parse_handlers ):
+    for handler, _ in reversed( self._on_file_ready_to_parse_handlers ):
       handler( self, request_data )
+    ClearOneshotHandlers()
+
+    self._UpdateServerWithFileContents( request_data )
 
     # Return the latest diagnostics that we have received.
     #
@@ -2480,8 +2491,8 @@ class LanguageServerCompleter( Completer ):
     self._on_initialize_complete_handlers.append( handler )
 
 
-  def RegisterOnFileReadyToParse( self, handler ):
-    self._on_file_ready_to_parse_handlers.append( handler )
+  def RegisterOnFileReadyToParse( self, handler, once=False ):
+    self._on_file_ready_to_parse_handlers.append( ( handler, once ) )
 
 
   def GetHoverResponse( self, request_data ):
