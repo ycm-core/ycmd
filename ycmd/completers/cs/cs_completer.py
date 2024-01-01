@@ -241,6 +241,9 @@ class CsharpCompleter( Completer ):
          self._SolutionSubcommand( request_data,
                                    method = '_RefactorRename',
                                    args = args ) ),
+      'GoToDocumentOutline'              : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_GoToDocumentOutline' ) ),
     }
 
 
@@ -659,6 +662,29 @@ class CsharpSolutionCompleter( object ):
         return goto_locations
     else:
       raise RuntimeError( 'No symbols found' )
+
+
+  def _GoToDocumentOutline( self, request_data ):
+    request = self._DefaultParameters( request_data )
+    response = self._GetResponse( '/currentfilemembersasflat', request )
+    if response:
+      goto_locations = []
+      for ref in response:
+        ref_file = ref[ 'FileName' ]
+        ref_line = ref[ 'Line' ]
+        lines = GetFileLines( request_data, ref_file )
+        line = lines[ min( len( lines ), ref_line - 1 ) ]
+        goto_locations.append(
+          responses.BuildGoToResponseFromLocation(
+            _BuildLocation( request_data,
+                            ref_file,
+                            ref_line,
+                            ref[ 'Column' ] ),
+            line ) )
+      return goto_locations
+    else:
+      raise RuntimeError( 'No symbols found' )
+
 
   def _GoToReferences( self, request_data ):
     """ Jump to references of identifier under cursor """
