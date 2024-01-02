@@ -666,9 +666,9 @@ class CsharpSolutionCompleter( object ):
 
   def _GoToDocumentOutline( self, request_data ):
     request = self._DefaultParameters( request_data )
-    goto_locations = []
     response = self._GetResponse( '/currentfilemembersasflat', request )
-    if response is not None:
+    if response is not None and len( response ) > 0:
+      goto_locations = []
       for ref in response:
         ref_file = ref[ 'FileName' ]
         ref_line = ref[ 'Line' ]
@@ -681,8 +681,9 @@ class CsharpSolutionCompleter( object ):
                             ref_line,
                             ref[ 'Column' ] ),
             line ) )
-    return goto_locations
-
+      return goto_locations
+    else:
+      raise RuntimeError( 'No symbols found' )
 
   def _GoToReferences( self, request_data ):
     """ Jump to references of identifier under cursor """
