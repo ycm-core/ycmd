@@ -666,9 +666,9 @@ class CsharpSolutionCompleter( object ):
 
   def _GoToDocumentOutline( self, request_data ):
     request = self._DefaultParameters( request_data )
+    goto_locations = []
     response = self._GetResponse( '/currentfilemembersasflat', request )
-    if response:
-      goto_locations = []
+    if response is not None:
       for ref in response:
         ref_file = ref[ 'FileName' ]
         ref_line = ref[ 'Line' ]
@@ -681,9 +681,7 @@ class CsharpSolutionCompleter( object ):
                             ref_line,
                             ref[ 'Column' ] ),
             line ) )
-      return goto_locations
-    else:
-      raise RuntimeError( 'Failed to get response for current document members' )
+    return goto_locations
 
 
   def _GoToReferences( self, request_data ):
