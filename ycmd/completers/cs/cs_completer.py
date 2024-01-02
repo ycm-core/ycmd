@@ -683,7 +683,7 @@ class CsharpSolutionCompleter( object ):
             line ) )
       return goto_locations
     else:
-      raise RuntimeError( 'No symbols found' )
+      raise RuntimeError( 'Failed to get response for current document members' )
 
 
   def _GoToReferences( self, request_data ):
