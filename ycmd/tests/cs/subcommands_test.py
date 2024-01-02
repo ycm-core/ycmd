@@ -974,8 +974,6 @@ class SubcommandsTest( TestCase ):
   @SharedYcmd
   def test_Subcommands_GoToDocumentOutline_Empty( self, app ):
 
-    # we reuse the ImportTest.cs file as it contains a good selection of
-    # symbols/ symbol types.
     filepath = PathToTestFile( 'testy', 'Empty.cs' )
     with WrapOmniSharpServer( app, filepath ):
 
