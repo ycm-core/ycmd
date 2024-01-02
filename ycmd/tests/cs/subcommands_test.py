@@ -919,8 +919,8 @@ class SubcommandsTest( TestCase ):
     filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
     with WrapOmniSharpServer( app, filepath ):
 
-      # the command name and file are the only relevant arguments for this subcommand.
-      # our current cursor position in the file doesn't matter.
+      # the command name and file are the only relevant arguments for this
+      # subcommand, our current cursor position in the file doesn't matter.
       request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
                               line_num = 11,
                               column_num = 2,
@@ -977,8 +977,8 @@ class SubcommandsTest( TestCase ):
     filepath = PathToTestFile( 'testy', 'Empty.cs' )
     with WrapOmniSharpServer( app, filepath ):
 
-      # the command name and file are the only relevant arguments for this subcommand.
-      # our current cursor position in the file doesn't matter.
+      # the command name and file are the only relevant arguments for this
+      # subcommand.  our current cursor position in the file doesn't matter.
       request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
                               line_num = 0,
                               column_num = 0,
