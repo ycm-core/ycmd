@@ -986,8 +986,11 @@ class SubcommandsTest( TestCase ):
                               filetype = 'cs',
                               filepath = filepath )
 
-      response = app.post_json( '/run_completer_command', request ).json
+      response = app.post_json( '/run_completer_command',
+                                request,
+                                expect_errors = True ).json
 
       print( 'completer response = ', response )
 
-      assert_that( response, empty() )
+      assert_that( response, ErrorMatcher( RuntimeError,
+                                           'No symbols found' ) )
