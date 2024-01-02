@@ -25,8 +25,6 @@ from unittest.mock import patch
 from unittest import TestCase
 import os.path
 
-from hamcrest.library.collection.issequence_containinginorder import contains
-
 from ycmd import user_options_store
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
 from ycmd.tests.cs import ( IsolatedYcmd,
