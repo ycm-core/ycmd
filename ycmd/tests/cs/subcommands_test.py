@@ -972,3 +972,26 @@ class SubcommandsTest( TestCase ):
             PathToTestFile( 'testy', 'GotoTestCase.cs' ), 49, 15 ),
         )
       )
+
+  @SharedYcmd
+  def test_Subcommands_GoToDocumentOutline_Empty( self, app ):
+
+    # we reuse the ImportTest.cs file as it contains a good selection of
+    # symbols/ symbol types.
+    filepath = PathToTestFile( 'testy', 'Empty.cs' )
+    with WrapOmniSharpServer( app, filepath ):
+
+      # the command name and file are the only relevant arguments for this subcommand.
+      # our current cursor position in the file doesn't matter.
+      request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
+                              line_num = 0,
+                              column_num = 0,
+                              contents = ReadFile( filepath ),
+                              filetype = 'cs',
+                              filepath = filepath )
+
+      response = app.post_json( '/run_completer_command', request ).json
+
+      print( 'completer response = ', response )
+
+      assert_that( response, empty() )
