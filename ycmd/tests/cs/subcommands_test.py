@@ -25,6 +25,8 @@ from unittest.mock import patch
 from unittest import TestCase
 import os.path
 
+from hamcrest.library.collection.issequence_containinginorder import contains
+
 from ycmd import user_options_store
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
 from ycmd.tests.cs import ( IsolatedYcmd,
@@ -909,3 +911,64 @@ class SubcommandsTest( TestCase ):
               LocationMatcher( filepath, 3, 1 ),
             )
           ) } ) ) } ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToDocumentOutline( self, app ):
+
+    # we reuse the ImportTest.cs file as it contains a good selection of
+    # symbols/ symbol types.
+    filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
+    with WrapOmniSharpServer( app, filepath ):
+
+      # the command name and file are the only relevant arguments for this subcommand.
+      # our current cursor position in the file doesn't matter.
+      request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
+                              line_num = 11,
+                              column_num = 2,
+                              contents = ReadFile( filepath ),
+                              filetype = 'cs',
+                              filepath = filepath )
+
+      response = app.post_json( '/run_completer_command', request ).json
+
+      print( 'completer response = ', response )
+
+      assert_that( response,
+        has_items(
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 6, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 26, 12 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 30, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 35, 12 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 39, 12 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 43, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 48, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 8, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 13, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 17, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 21, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 27, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 31, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 36, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 40, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 44, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 49, 15 ),
+        )
+      )
