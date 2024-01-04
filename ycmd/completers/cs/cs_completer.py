@@ -681,7 +681,9 @@ class CsharpSolutionCompleter( object ):
                             ref_line,
                             ref[ 'Column' ] ),
             line ) )
-      return goto_locations
+      if len( goto_locations ) > 1:
+        return goto_locations
+      return goto_locations[ 0 ]
     else:
       raise RuntimeError( 'No symbols found' )
 

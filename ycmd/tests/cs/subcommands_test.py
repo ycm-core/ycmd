@@ -914,25 +914,13 @@ class SubcommandsTest( TestCase ):
   @SharedYcmd
   def test_Subcommands_GoToDocumentOutline( self, app ):
 
-    # we reuse the ImportTest.cs file as it contains a good selection of
-    # symbols/ symbol types.
-    filepath = PathToTestFile( 'testy', 'GotoTestCase.cs' )
-    with WrapOmniSharpServer( app, filepath ):
-
-      # the command name and file are the only relevant arguments for this
-      # subcommand, our current cursor position in the file doesn't matter.
-      request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
-                              line_num = 11,
-                              column_num = 2,
-                              contents = ReadFile( filepath ),
-                              filetype = 'cs',
-                              filepath = filepath )
-
-      response = app.post_json( '/run_completer_command', request ).json
-
-      print( 'completer response = ', response )
-
-      assert_that( response,
+    for filepath, expected in [
+      ( PathToTestFile( 'testy', 'Empty.cs' ),
+        ErrorMatcher( RuntimeError, 'No symbols found' ) ),
+      ( PathToTestFile( 'testy', 'SingleEntity.cs' ),
+        LocationMatcher(
+          PathToTestFile( 'testy', 'SingleEntity.cs' ), 6, 8 ) ),
+      ( PathToTestFile( 'testy', 'GotoTestCase.cs' ),
         has_items(
           LocationMatcher(
             PathToTestFile( 'testy', 'GotoTestCase.cs' ), 6, 8 ),
@@ -967,30 +955,22 @@ class SubcommandsTest( TestCase ):
           LocationMatcher(
             PathToTestFile( 'testy', 'GotoTestCase.cs' ), 44, 15 ),
           LocationMatcher(
-            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 49, 15 ),
-        )
-      )
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 49, 15 ) ) )
+    ]:
+      with self.subTest( filepath = filepath, expected = expected ):
+        with WrapOmniSharpServer( app, filepath ):
 
-  @SharedYcmd
-  def test_Subcommands_GoToDocumentOutline_Empty( self, app ):
+          # the command name and file are the only relevant arguments for this
+          # subcommand.  our current cursor position in the file doesn't matter.
+          request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
+                                  line_num = 0,
+                                  column_num = 0,
+                                  contents = ReadFile( filepath ),
+                                  filetype = 'cs',
+                                  filepath = filepath )
 
-    filepath = PathToTestFile( 'testy', 'Empty.cs' )
-    with WrapOmniSharpServer( app, filepath ):
-
-      # the command name and file are the only relevant arguments for this
-      # subcommand.  our current cursor position in the file doesn't matter.
-      request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
-                              line_num = 0,
-                              column_num = 0,
-                              contents = ReadFile( filepath ),
-                              filetype = 'cs',
-                              filepath = filepath )
-
-      response = app.post_json( '/run_completer_command',
-                                request,
-                                expect_errors = True ).json
-
-      print( 'completer response = ', response )
-
-      assert_that( response, ErrorMatcher( RuntimeError,
-                                           'No symbols found' ) )
+          response = app.post_json( '/run_completer_command',
+                                    request,
+                                    expect_errors = True ).json
+          print( 'completer response = ', response )
+          assert_that( response, expected )
