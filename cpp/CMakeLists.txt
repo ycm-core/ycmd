@@ -244,7 +244,7 @@ else()
   FetchContent_Declare(
     absl
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp
-    GIT_TAG 3b4a16abad2c2ddc494371cc39a2946e36d35d11
+    GIT_TAG fb3621f4f897824c0dbe0615fa94543df6192f30
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/absl
   )
   FetchContent_MakeAvailable( absl )
