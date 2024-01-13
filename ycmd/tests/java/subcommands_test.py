@@ -537,6 +537,37 @@ class SubcommandsTest( TestCase ):
                  ErrorMatcher( RuntimeError, 'Unknown type' ) )
 
 
+  @SharedYcmd
+  def test_Subcommands_GoToDeclaration_NoLocation( self, app ):
+    filepath = PathToTestFile( 'simple_eclipse_project',
+                               'src',
+                               'com',
+                               'test',
+                               'TestLauncher.java' )
+    contents = ReadFile( filepath )
+
+    # Virtual call of getWidgetInfo - don't know the concrete implementation.
+    # Here GoToDefinition jumps to the interface method declaration and
+    # GoToDeclaration does nothing...
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'java',
+                               line_num = 34,
+                               column_num = 59,
+                               contents = contents,
+                               command_arguments = [ 'GoToDeclaration' ],
+                               completer_target = 'filetype_default' )
+
+    response = app.post_json( '/run_completer_command',
+                              event_data,
+                              expect_errors = True )
+
+    assert_that( response.status_code,
+                 equal_to( requests.codes.internal_server_error ) )
+
+    assert_that( response.json,
+                 ErrorMatcher( RuntimeError, 'Cannot jump to location' ) )
+
+
   @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoTo_NoLocation( self, app ):
@@ -1020,9 +1051,11 @@ class SubcommandsTest( TestCase ):
               'text': "Create constant 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( '\n\nprivate static final String Wibble = null;',
+                ChunkMatcher( '\n\nprivate static final String Wibble = null;'
+                              '\n\n  private void Wimble( Wibble w ) {'
+                              '\n    if ( w == Wibble',
                               LocationMatcher( filepath, 16, 4 ),
-                              LocationMatcher( filepath, 16, 4 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
@@ -1056,27 +1089,29 @@ class SubcommandsTest( TestCase ):
               'text': "Create local variable 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( 'Object Wibble;\n    ',
+                ChunkMatcher( 'Object Wibble;\n    if ( w == Wibble',
                               LocationMatcher( filepath, 19, 5 ),
-                              LocationMatcher( filepath, 19, 5 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
               'text': "Create field 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( '\n\nprivate Object Wibble;',
+                ChunkMatcher( '\n\nprivate Object Wibble;'
+                              '\n\n  private void Wimble( Wibble w ) {'
+                              '\n    if ( w == Wibble',
                               LocationMatcher( filepath, 16, 4 ),
-                              LocationMatcher( filepath, 16, 4 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
               'text': "Create parameter 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( ', Object Wibble',
+                ChunkMatcher( ', Object Wibble ) {\n    if ( w == Wibble',
                               LocationMatcher( filepath, 18, 32 ),
-                              LocationMatcher( filepath, 18, 32 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
@@ -1485,6 +1520,10 @@ class SubcommandsTest( TestCase ):
             has_entries( {
               'text': "Sort Members for 'TestLauncher.java'"
             } ),
+            has_entries( {
+              'text': 'Surround with try/catch',
+              'chunks': instance_of( list )
+            } ),
           )
         } )
       }
@@ -1545,8 +1584,17 @@ class SubcommandsTest( TestCase ):
           'text': "Create method 'doUnicødeTes(String)'",
           'kind': 'quickfix',
           'chunks': contains_exactly(
-            ChunkMatcher( 'private void doUnicødeTes(String test2) {\n}\n\n\n',
-                          LocationMatcher( TEST_JAVA, 20, 3 ),
+            ChunkMatcher(
+              'doUnicødeTes( test );\n\n'
+              '    TéstClass tésting_with_unicøde = new TéstClass();\n'
+              '    return tésting_with_unicøde.a_test;\n'
+              '  }\n\n\n'
+              '  private void doUnicødeTes(String test2) {\n'
+              '    // TODO Auto-generated method stub\n'
+              '    throw new UnsupportedOperationException('
+              '"Unimplemented method \'doUnicødeTes\'");\n'
+              '}\n\n\n',
+                          LocationMatcher( TEST_JAVA, 13, 10 ),
                           LocationMatcher( TEST_JAVA, 20, 3 ) ),
           ),
         } ),
@@ -2012,7 +2060,7 @@ class SubcommandsTest( TestCase ):
                         'filepath': TEST_JAVA },
           'description': 'GoTo works for unicode identifiers' }
       ],
-      [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ] ):
+      [ 'GoTo', 'GoToDefinition' ] ):
       with self.subTest( command = command, test = test ):
         RunGoToTest( app,
                      test[ 'description' ],
@@ -2021,6 +2069,31 @@ class SubcommandsTest( TestCase ):
                      test[ 'request' ][ 'col' ],
                      command,
                      has_entries( test[ 'response' ] ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToDeclaration( self, app ):
+    source = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestWidgetImpl.java' )
+    destination = PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'AbstractTestWidget.java' )
+    # Seems to be the only place GoToDeclaration actually works.
+    RunGoToTest( app,
+                 'GoToDeclaration works on an override definition.',
+                 source,
+                 23,
+                 17,
+                 'GoToDeclaration',
+                 has_entries( {
+                   'line_num': 17,
+                   'column_num': 17,
+                   'filepath': destination } ) )
 
 
   @SharedYcmd
