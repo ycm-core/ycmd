@@ -1497,7 +1497,8 @@ class LanguageServerCompleterTest( TestCase ):
     # Point inside range.
     _Check_Distance( ( 0, 4 ), ( 0, 2 ), ( 0, 5 ) , 0 )
     # Point to the right of range.
-    _Check_Distance( ( 0, 8 ), ( 0, 2 ), ( 0, 5 ) , 3 )
+    # +1 because diags are half-open ranges.
+    _Check_Distance( ( 0, 8 ), ( 0, 2 ), ( 0, 5 ) , 4 )
 
 
   def test_LanguageServerCompleter_DistanceOfPointToRange_MultiLineRange(
@@ -1507,4 +1508,5 @@ class LanguageServerCompleterTest( TestCase ):
     # Point inside range.
     _Check_Distance( ( 1, 4 ), ( 0, 2 ), ( 3, 5 ) , 0 )
     # Point to the right of range.
-    _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 3 )
+    # +1 because diags are half-open ranges.
+    _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 4 )
