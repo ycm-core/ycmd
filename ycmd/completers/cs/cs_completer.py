@@ -633,31 +633,23 @@ class CsharpSolutionCompleter( object ):
     if quickfixes:
       if len( quickfixes ) == 1:
         ref = quickfixes[ 0 ]
-        ref_file = ref[ 'FileName' ]
-        ref_line = ref[ 'Line' ]
-        lines = GetFileLines( request_data, ref_file )
-        line = lines[ min( len( lines ), ref_line - 1 ) ]
         return responses.BuildGoToResponseFromLocation(
           _BuildLocation(
             request_data,
-            ref_file,
-            ref_line,
+            ref[ 'FileName' ],
+            ref[ 'Line' ],
             ref[ 'Column' ] ),
-          line )
+          ref[ 'Text' ] )
       else:
         goto_locations = []
         for ref in quickfixes:
-          ref_file = ref[ 'FileName' ]
-          ref_line = ref[ 'Line' ]
-          lines = GetFileLines( request_data, ref_file )
-          line = lines[ min( len( lines ), ref_line - 1 ) ]
           goto_locations.append(
             responses.BuildGoToResponseFromLocation(
               _BuildLocation( request_data,
-                              ref_file,
-                              ref_line,
+                              ref[ 'FileName' ],
+                              ref[ 'Line' ],
                               ref[ 'Column' ] ),
-              line ) )
+              ref[ 'Text' ] ) )
 
         return goto_locations
     else:
@@ -670,17 +662,13 @@ class CsharpSolutionCompleter( object ):
     if response is not None and len( response ) > 0:
       goto_locations = []
       for ref in response:
-        ref_file = ref[ 'FileName' ]
-        ref_line = ref[ 'Line' ]
-        lines = GetFileLines( request_data, ref_file )
-        line = lines[ min( len( lines ), ref_line - 1 ) ]
         goto_locations.append(
           responses.BuildGoToResponseFromLocation(
             _BuildLocation( request_data,
-                            ref_file,
-                            ref_line,
+                            ref[ 'FileName' ],
+                            ref[ 'Line' ],
                             ref[ 'Column' ] ),
-            line ) )
+            ref[ 'Text' ] ) )
       if len( goto_locations ) > 1:
         return goto_locations
       return goto_locations[ 0 ]
