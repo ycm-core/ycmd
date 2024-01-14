@@ -1656,6 +1656,9 @@ class LanguageServerCompleter( Completer ):
       return responses.BuildDisplayMessageResponse(
           'No diagnostics for current file.' )
 
+    # Prefer errors to warnings and warnings to infos.
+    diagnostics.sort( key = lambda d: d[ 'severity' ] )
+
     current_column = lsp.CodepointsToUTF16CodeUnits(
         GetFileLines( request_data, current_file )[ current_line_lsp ],
         request_data[ 'column_codepoint' ] )

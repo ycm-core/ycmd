@@ -316,6 +316,9 @@ class CsharpCompleter( Completer ):
     if not diagnostics:
       raise ValueError( NO_DIAGNOSTIC_MESSAGE )
 
+    # Prefer errors to warnings and warnings to infos.
+    diagnostics.sort( key = _CsDiagnosticToLspSeverity )
+
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
@@ -980,3 +983,11 @@ def _ModifiedFilesToFixIt( changes, request_data ):
         request_data[ 'line_num' ],
         request_data[ 'column_codepoint' ] ),
       chunks )
+
+
+def _CsDiagnosticToLspSeverity( diagnostic ):
+  if diagnostic.kind_ == 'ERROR':
+    return 1
+  if diagnostic.kind_ == 'WARNING':
+    return 2
+  return 3
