@@ -656,6 +656,9 @@ class TypeScriptCompleter( Completer ):
     if not ts_diagnostics_on_line:
       raise ValueError( NO_DIAGNOSTIC_MESSAGE )
 
+    # Prefer errors to warnings and warnings to infos.
+    ts_diagnostics_on_line.sort( key = _TsDiagToLspSeverity )
+
     closest_ts_diagnostic = None
     distance_to_closest_ts_diagnostic = None
 
@@ -1264,3 +1267,12 @@ def _BuildTsFormatRange( request_data ):
 
 def _DisplayPartsToString( parts ):
   return ''.join( [ p[ 'text' ] for p in parts ] )
+
+
+def _TsDiagToLspSeverity( diag ):
+  category = diag[ 'category' ]
+  if category == 'error':
+    return 1
+  if category == 'warning':
+    return 2
+  return 3

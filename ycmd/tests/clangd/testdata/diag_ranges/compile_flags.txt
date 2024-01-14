@@ -1,0 +1,4 @@
+-Wno-error
+-Wfor-loop-analysis
+-Wno-error=for-loop-analysis
+-Werror=uninitialized
