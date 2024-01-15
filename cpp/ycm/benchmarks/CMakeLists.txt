@@ -33,11 +33,7 @@ else()
     GIT_TAG 3b19d7222db7babfdc9b3949408b2294c3bbb540
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/benchmark
   )
-  FetchContent_GetProperties( benchmark )
-  if ( NOT benchmark_POPULATED )
-    FetchContent_Populate( benchmark )
-  endif()
-  add_subdirectory( benchmark )
+  FetchContent_MakeAvailable( benchmark )
 endif()
 
 file( GLOB SOURCES *.h *.cpp )
