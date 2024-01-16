@@ -2527,9 +2527,7 @@ class LanguageServerCompleter( Completer ):
     except ResponseFailedException:
       result = None
 
-    if not result:
-      raise RuntimeError( 'Cannot jump to location' )
-    if not isinstance( result, list ):
+    if result and not isinstance( result, list ):
       return [ result ]
     return result
 
@@ -2544,15 +2542,18 @@ class LanguageServerCompleter( Completer ):
 
     self._UpdateServerWithFileContents( request_data )
 
-    if len( handlers ) == 1:
-      result = self._GoToRequest( request_data, handlers[ 0 ] )
-    else:
-      for handler in handlers:
-        result = self._GoToRequest( request_data, handler )
-        if len( result ) > 1 or not _CursorInsideLocation( request_data,
-                                                           result[ 0 ] ):
-          break
+    result = []
+    for handler in handlers:
+      new_result = self._GoToRequest( request_data, handler )
+      if new_result:
+        result = new_result
+      if len( result ) > 1 or ( result and
+                                not _CursorInsideLocation( request_data,
+                                                           result[ 0 ] ) ):
+        break
 
+    if not result:
+      raise RuntimeError( 'Cannot jump to location' )
     return _LocationListToGoTo( request_data, result )
 
 
