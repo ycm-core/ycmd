@@ -447,6 +447,15 @@ def ApplyEditResponse( request, applied ):
   return Accept( request, msg )
 
 
+def DidChangeWorkspaceFolders( new_folder ):
+  return BuildNotification( 'workspace/didChangeWorkspaceFolders', {
+    'event': {
+      'removed': [],
+      'added': WorkspaceFolders( new_folder )
+    }
+  } )
+
+
 def DidChangeWatchedFiles( path, kind ):
   return BuildNotification( 'workspace/didChangeWatchedFiles', {
     'changes': [ {
