@@ -404,6 +404,10 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return self._java_project_dir
 
 
+  def GetWorkspaceForFilepath( self, filepath ):
+    return _FindProjectDir( os.path.dirname( filepath ) )
+
+
   def _WipeWorkspace( self, request_data, args ):
     with_config = False
     if len( args ) > 0 and '--with-config' in args:

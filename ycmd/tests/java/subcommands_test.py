@@ -632,46 +632,92 @@ class SubcommandsTest( TestCase ):
     'extra_conf_globlist': PathToTestFile( 'multiple_projects', '*' )
   } )
   def test_Subcommands_GoToReferences_MultipleProjects( self, app ):
-    filepath = PathToTestFile( 'multiple_projects',
-                               'src',
-                               'core',
-                               'java',
-                               'com',
-                               'puremourning',
-                               'widget',
-                               'core',
-                               'Utils.java' )
-    StartJavaCompleterServerWithFile( app, filepath )
-
-
-    RunTest( app, {
-      'description': 'GoToReferences works across multiple projects',
-      'request': {
-        'command': 'GoToReferences',
-        'filepath': filepath,
-        'line_num': 5,
-        'column_num': 22,
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': contains_inanyorder(
-          LocationMatcher( filepath, 8, 35 ),
-          LocationMatcher( filepath, 5, 21 ),
-          LocationMatcher( PathToTestFile( 'multiple_projects',
+    utils_java = PathToTestFile( 'multiple_projects',
+                                 'src',
+                                 'core',
+                                 'java',
+                                 'com',
+                                 'puremourning',
+                                 'widget',
+                                 'core',
+                                 'Utils.java' )
+    input_app = PathToTestFile( 'multiple_projects',
+                                'src',
+                                'input',
+                                'java',
+                                'com',
+                                'puremourning',
+                                'widget',
+                                'input',
+                                'InputApp.java' )
+    abstract_test_widget = PathToTestFile( 'simple_eclipse_project',
                                            'src',
-                                           'input',
-                                           'java',
                                            'com',
-                                           'puremourning',
-                                           'widget',
-                                           'input',
-                                           'InputApp.java' ),
-                           8,
-                           16 )
-        )
-      }
-    } )
+                                           'test',
+                                           'AbstractTestWidget.java' )
+    test_factory = PathToTestFile( 'simple_eclipse_project',
+                                   'src',
+                                   'com',
+                                   'test',
+                                   'TestFactory.java' )
+    test_launcher = PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestLauncher.java' )
+    test_widget_impl = PathToTestFile( 'simple_eclipse_project',
+                                       'src',
+                                       'com',
+                                       'test',
+                                       'TestWidgetImpl.java' )
+    for desc, request, expect in [
+        ( 'GoToReferences works across multiple projects',
+          {
+            'command': 'GoToReferences',
+            'filepath': utils_java,
+            'line_num': 5,
+            'column_num': 22,
+          },
+          {
+            'response': requests.codes.ok,
+            'data': contains_inanyorder(
+              LocationMatcher( utils_java, 8, 35 ),
+              LocationMatcher( utils_java, 5, 21 ),
+              LocationMatcher( input_app, 8, 16 )
+            )
+          } ),
+        ( 'GoToReferences works in an unrelated project at the same time',
+          {
+            'command': 'GoToReferences',
+            'filepath': abstract_test_widget,
+            'line_num': 10,
+            'column_num': 15,
+          },
+          {
+            'response': requests.codes.ok,
+            'data': contains_inanyorder(
+              # NOTE: Yes, jdt doubles the references in the second project.
+              LocationMatcher( abstract_test_widget, 10, 15 ),
+              LocationMatcher( test_factory, 28, 9 ),
+              LocationMatcher( test_launcher, 32, 11 ),
+              LocationMatcher( test_widget_impl, 18, 15 ),
+              LocationMatcher( abstract_test_widget, 10, 15 ),
+              LocationMatcher( test_factory, 28, 9 ),
+              LocationMatcher( test_launcher, 32, 11 ),
+              LocationMatcher( test_widget_impl, 18, 15 )
+            )
+          } ),
+    ]:
+      with self.subTest( desc = desc, request = request, expect = expect ):
+        filepath = request[ 'filepath' ]
+        StartJavaCompleterServerWithFile( app, filepath )
 
+
+        RunTest( app, {
+          'description': desc,
+          'request': request,
+          'expect': expect
+        } )
 
 
   @WithRetry()
