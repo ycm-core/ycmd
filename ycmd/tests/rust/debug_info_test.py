@@ -15,8 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains_exactly, has_entries, has_entry,
-                       instance_of, none )
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       has_entries,
+                       has_entry,
+                       has_items,
+                       instance_of,
+                       none )
 from unittest.mock import patch
 from unittest import TestCase
 from ycmd.tests.rust import setUpModule, tearDownModule # noqa
@@ -51,6 +56,10 @@ class DebugInfoTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',
@@ -102,6 +111,10 @@ class DebugInfoTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': instance_of( str )
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',

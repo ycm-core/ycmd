@@ -2959,6 +2959,8 @@ class LanguageServerCompleter( Completer ):
                                       ServerStateDescription() ),
              responses.DebugInfoItem( 'Project Directory',
                                       self._project_directory ),
+             responses.DebugInfoItem( 'Open Workspaces',
+                                      self._server_workspace_dirs ),
              responses.DebugInfoItem(
                'Settings',
                json.dumps( self._settings.get( 'ls', {} ),

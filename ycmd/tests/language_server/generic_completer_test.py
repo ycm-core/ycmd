@@ -209,6 +209,10 @@ class GenericCompleterTest( TestCase ):
               'value': PathToTestFile( 'generic_server' ),
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': '{}'
             } ),
@@ -255,6 +259,10 @@ class GenericCompleterTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'generic_server' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
             } ),
             has_entries( {
               'key': 'Settings',
@@ -308,6 +316,10 @@ class GenericCompleterTest( TestCase ):
               has_entries( {
                 'key': 'Project Directory',
                 'value': None,
+              } ),
+              has_entries( {
+                'key': 'Open Workspaces',
+                'value': has_items(),
               } ),
               has_entries( {
                 'key': 'Settings',
@@ -509,6 +521,10 @@ class GenericCompleterTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'generic_server', 'foo' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
             } ),
             has_entries( {
               'key': 'Settings',
