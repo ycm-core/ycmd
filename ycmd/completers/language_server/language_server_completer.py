@@ -2361,10 +2361,15 @@ class LanguageServerCompleter( Completer ):
       # the settings on the Initialize request are somehow subtly different from
       # the settings supplied in didChangeConfiguration, though it's not exactly
       # clear how/where that is specified.
+      additional_workspace_dirs = self._settings.get(
+                                    'additional_workspace_dirs',
+                                    [] )
+      self._server_workspace_dirs.update( additional_workspace_dirs )
       msg = lsp.Initialize( request_id,
                             self._project_directory,
                             self.ExtraCapabilities(),
-                            self._settings.get( 'ls', {} ) )
+                            self._settings.get( 'ls', {} ),
+                            additional_workspace_dirs )
 
       def response_handler( response, message ):
         if message is None:
