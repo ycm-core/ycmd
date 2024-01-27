@@ -59,6 +59,10 @@ class DebugInfoTest( TestCase ):
               'value': None,
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': '{}',
             } ),
@@ -94,6 +98,10 @@ class DebugInfoTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile(),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',
@@ -135,6 +143,10 @@ class DebugInfoTest( TestCase ):
               'value': PathToTestFile( 'extra_conf' ),
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': '{}',
             } ),
@@ -173,6 +185,10 @@ class DebugInfoTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'extra_conf' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',
@@ -217,6 +233,10 @@ class DebugInfoTest( TestCase ):
               'value': PathToTestFile(),
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': '{}',
             } ),
@@ -258,6 +278,10 @@ class DebugInfoTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'extra_conf' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',
@@ -307,6 +331,10 @@ class DebugInfoTest( TestCase ):
                 has_entries( {
                   'key': 'Project Directory',
                   'value': tmp_dir,
+                } ),
+                has_entries( {
+                  'key': 'Open Workspaces',
+                  'value': has_items()
                 } ),
                 has_entries( {
                   'key': 'Settings',
@@ -366,6 +394,10 @@ def Settings( **kwargs ):
                     'value': tmp_dir,
                   } ),
                   has_entries( {
+                    'key': 'Open Workspaces',
+                    'value': has_items()
+                  } ),
+                  has_entries( {
                     'key': 'Settings',
                     'value': '{}',
                   } ),
@@ -420,6 +452,10 @@ def Settings( **kwargs ):
                   'value': tmp_dir,
                 } ),
                 has_entries( {
+                  'key': 'Open Workspaces',
+                  'value': has_items()
+                } ),
+                has_entries( {
                   'key': 'Settings',
                   'value': '{}',
                 } ),
@@ -458,6 +494,10 @@ def Settings( **kwargs ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'extra_conf' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',
