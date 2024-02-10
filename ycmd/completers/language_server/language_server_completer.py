@@ -1787,6 +1787,18 @@ class LanguageServerCompleter( Completer ):
 
     if ( self._server_capabilities and
          _IsCapabilityProvided( self._server_capabilities,
+                                'typeHierarchyProvider' ) ):
+      commands[ 'TypeHierarchy' ] = (
+        lambda self, request_data, args:
+            self.InitialHierarchy( request_data, [ *args, 'type' ] )
+      )
+      commands[ 'ResolveTypeHierarchyItem' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ *args, 'type' ] )
+      )
+
+    if ( self._server_capabilities and
+         _IsCapabilityProvided( self._server_capabilities,
                                 'callHierarchyProvider' ) ):
       commands[ 'GoToCallees' ] = (
         lambda self, request_data, args:
@@ -1795,6 +1807,14 @@ class LanguageServerCompleter( Completer ):
       commands[ 'GoToCallers' ] = (
         lambda self, request_data, args:
             self.CallHierarchy( request_data, [ 'incoming' ] )
+      )
+      commands[ 'CallHierarchy' ] = (
+        lambda self, request_data, args:
+            self.InitialHierarchy( request_data, [ *args, 'call' ] )
+      )
+      commands[ 'ResolveCallHierarchyItem' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ *args, 'call' ] )
       )
 
     commands.update( self.GetCustomSubcommands() )
@@ -2643,6 +2663,49 @@ class LanguageServerCompleter( Completer ):
     return _SymbolInfoListToGoTo( request_data, result )
 
 
+  def InitialHierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    direction, kind = args
+    
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.PrepareHierarchy( request_id, request_data, kind.title() )
+    prepare_response = self.GetConnection().GetResponse(
+        request_id,
+        message,
+        REQUEST_TIMEOUT_COMMAND )
+    preparation_item = prepare_response.get( 'result' ) or []
+    if not preparation_item:
+      raise RuntimeError( f'No { direction } { kind } found.' )
+
+    assert len( preparation_item ) == 1, (
+             'Not available: Multiple hierarchies were received, '
+             'this is not currently supported.' )
+
+    return preparation_item
+
+
+  def Hierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+    
+    preparation_item, direction, kind = args
+    if kind == 'call':
+      direction += 'Calls'
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.Hierarchy( request_id, kind, direction, preparation_item )
+    response = self.GetConnection().GetResponse( request_id,
+                                                 message,
+                                                 REQUEST_TIMEOUT_COMMAND )
+
+    result = response.get( 'result' )
+    if result:
+      return result
+    raise RuntimeError( f'No { direction } { kind } found.' )
+
 
   def CallHierarchy( self, request_data, args ):
     if not self.ServerIsReady():
@@ -2650,7 +2713,7 @@ class LanguageServerCompleter( Completer ):
 
     self._UpdateServerWithFileContents( request_data )
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.PrepareCallHierarchy( request_id, request_data )
+    message = lsp.PrepareHierarchy( request_id, request_data, 'Call' )
     prepare_response = self.GetConnection().GetResponse(
         request_id,
         message,
@@ -2666,7 +2729,7 @@ class LanguageServerCompleter( Completer ):
     preparation_item = preparation_item[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.CallHierarchy( request_id, args[ 0 ], preparation_item )
+    message = lsp.Hierarchy( request_id, 'call', args[ 0 ] + 'Calls', preparation_item )
     response = self.GetConnection().GetResponse( request_id,
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
