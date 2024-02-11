@@ -1790,7 +1790,7 @@ class LanguageServerCompleter( Completer ):
                                 'typeHierarchyProvider' ) ):
       commands[ 'TypeHierarchy' ] = (
         lambda self, request_data, args:
-            self.InitialHierarchy( request_data, [ *args, 'type' ] )
+            self.InitialHierarchy( request_data, [ 'type' ] )
       )
       commands[ 'ResolveTypeHierarchyItem' ] = (
         lambda self, request_data, args:
@@ -1810,7 +1810,7 @@ class LanguageServerCompleter( Completer ):
       )
       commands[ 'CallHierarchy' ] = (
         lambda self, request_data, args:
-            self.InitialHierarchy( request_data, [ *args, 'call' ] )
+            self.InitialHierarchy( request_data, [ 'call' ] )
       )
       commands[ 'ResolveCallHierarchyItem' ] = (
         lambda self, request_data, args:
@@ -2667,7 +2667,7 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
-    direction, kind = args
+    kind = args[ 0 ]
 
     self._UpdateServerWithFileContents( request_data )
     request_id = self.GetConnection().NextRequestId()
@@ -2678,7 +2678,7 @@ class LanguageServerCompleter( Completer ):
         REQUEST_TIMEOUT_COMMAND )
     preparation_item = prepare_response.get( 'result' ) or []
     if not preparation_item:
-      raise RuntimeError( f'No { direction } { kind } found.' )
+      raise RuntimeError( f'No { kind } hierarchy found.' )
 
     assert len( preparation_item ) == 1, (
              'Not available: Multiple hierarchies were received, '
