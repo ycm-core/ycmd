@@ -2645,7 +2645,8 @@ class LanguageServerCompleter( Completer ):
       responses.BuildGoToResponseFromLocation(
         *_LspLocationToLocationAndDescription( request_data, location ) )
       for location in preparation_item ]
-    preparation_item[ 0 ][ 'kind' ] = lsp.SYMBOL_KIND[ preparation_item[ 0 ][ 'kind' ] ]
+    kind_string = lsp.SYMBOL_KIND[ preparation_item[ 0 ][ 'kind' ] ]
+    preparation_item[ 0 ][ 'kind' ] = kind_string
     return preparation_item
 
 
@@ -2661,7 +2662,8 @@ class LanguageServerCompleter( Completer ):
       preparation_item = preparation_item[ name_and_kind_key ]
     else:
       del preparation_item[ 'locations' ]
-      preparation_item[ 'kind' ] = lsp.SYMBOL_KIND.index( preparation_item[ 'kind' ] )
+      kind_number = lsp.SYMBOL_KIND.index( preparation_item[ 'kind' ] )
+      preparation_item[ 'kind' ] = kind_number
 
     if kind == 'call':
       direction += 'Calls'
@@ -2677,7 +2679,8 @@ class LanguageServerCompleter( Completer ):
       for item in result:
         if kind == 'call':
           name_and_kind_key = 'to' if direction == 'outgoing' else 'from'
-          item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ name_and_kind_key ][ 'kind' ] ]
+          kind_string = lsp.SYMBOL_KIND[ item[ name_and_kind_key ][ 'kind' ] ]
+          item[ 'kind' ] = kind_string
           item[ 'name' ] = item[ name_and_kind_key ][ 'name' ]
           lsp_locations = [ {
             'uri': item[ name_and_kind_key ][ 'uri' ],
