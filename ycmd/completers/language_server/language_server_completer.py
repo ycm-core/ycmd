@@ -2668,7 +2668,7 @@ class LanguageServerCompleter( Completer ):
       raise RuntimeError( 'Server is initializing. Please wait.' )
 
     direction, kind = args
-    
+
     self._UpdateServerWithFileContents( request_data )
     request_id = self.GetConnection().NextRequestId()
     message = lsp.PrepareHierarchy( request_id, request_data, kind.title() )
@@ -2684,14 +2684,28 @@ class LanguageServerCompleter( Completer ):
              'Not available: Multiple hierarchies were received, '
              'this is not currently supported.' )
 
+    preparation_item[ 0 ][ 'locations' ] = [
+      responses.BuildGoToResponseFromLocation(
+        *_LspLocationToLocationAndDescription( request_data, location ) )
+      for location in preparation_item ]
+    preparation_item[ 0 ][ 'kind' ] = lsp.SYMBOL_KIND[ preparation_item[ 0 ][ 'kind' ] ]
     return preparation_item
 
 
   def Hierarchy( self, request_data, args ):
     if not self.ServerIsReady():
       raise RuntimeError( 'Server is initializing. Please wait.' )
-    
+
     preparation_item, direction, kind = args
+
+    # Remove ycmd things
+    if 'fromRanges' in preparation_item:
+      name_and_kind_key = 'to' if direction == 'outgoing' else 'from'
+      preparation_item = preparation_item[ name_and_kind_key ]
+    else:
+      del preparation_item[ 'locations' ]
+      preparation_item[ 'kind' ] = lsp.SYMBOL_KIND.index( preparation_item[ 'kind' ] )
+
     if kind == 'call':
       direction += 'Calls'
     self._UpdateServerWithFileContents( request_data )
@@ -2703,6 +2717,25 @@ class LanguageServerCompleter( Completer ):
 
     result = response.get( 'result' )
     if result:
+      for item in result:
+        if kind == 'call':
+          name_and_kind_key = 'to' if direction == 'outgoing' else 'from'
+          item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ name_and_kind_key ][ 'kind' ] ]
+          item[ 'name' ] = item[ name_and_kind_key ][ 'name' ]
+          lsp_locations = [ {
+            'uri': item[ name_and_kind_key ][ 'uri' ],
+            'range': r }
+            for r in item[ 'fromRanges' ] ]
+          item[ 'locations' ] = [
+            responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, location ) )
+            for location in lsp_locations ]
+        else:
+          item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ 'kind' ] ]
+          item[ 'locations' ] = [
+            responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, location ) )
+            for location in [ item ] ]
       return result
     raise RuntimeError( f'No { direction } { kind } found.' )
 
@@ -2729,7 +2762,10 @@ class LanguageServerCompleter( Completer ):
     preparation_item = preparation_item[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.Hierarchy( request_id, 'call', args[ 0 ] + 'Calls', preparation_item )
+    message = lsp.Hierarchy( request_id,
+                             'call',
+                             args[ 0 ] + 'Calls',
+                             preparation_item )
     response = self.GetConnection().GetResponse( request_id,
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
