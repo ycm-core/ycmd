@@ -194,8 +194,6 @@ def Main():
                                     args.stderr,
                                     args.keep_logfiles )
   atexit.register( handlers.ServerCleanup )
-  from bottle import TemplatePlugin
-  handlers.app.uninstall(TemplatePlugin)
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
                                         args.check_interval_seconds ) )
   handlers.app.install( HmacPlugin( hmac_secret ) )
