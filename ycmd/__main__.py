@@ -203,6 +203,7 @@ def Main():
                                     args.stderr,
                                     args.keep_logfiles )
   atexit.register( handlers.ServerCleanup )
+  handlers.app.uninstall( True )
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
                                         args.check_interval_seconds ) )
   handlers.app.install( HmacPlugin( hmac_secret ) )
