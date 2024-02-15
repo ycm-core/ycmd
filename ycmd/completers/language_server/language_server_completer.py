@@ -1236,6 +1236,9 @@ class LanguageServerCompleter( Completer ):
   def _RestartServer( self, request_data, *args, **kwargs ):
     self.Shutdown()
     self._StartAndInitializeServer( request_data, *args, **kwargs )
+    self._OnInitializeComplete(
+      lambda self: self._UpdateServerWithFileContents( request_data )
+    )
 
 
   def _ServerIsInitialized( self ):
