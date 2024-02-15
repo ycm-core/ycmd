@@ -358,9 +358,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
       'OrganizeImports': (
         lambda self, request_data, args: self.OrganizeImports( request_data )
       ),
-      'OpenProject': (
-        lambda self, request_data, args: self._OpenProject( request_data, args )
-      ),
       'WipeWorkspace': (
         lambda self, request_data, args: self._WipeWorkspace( request_data,
                                                               args )
@@ -416,25 +413,6 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     self._RestartServer( request_data,
                          wipe_workspace = True,
                          wipe_config = with_config )
-
-
-  def _OpenProject( self, request_data, args ):
-    if len( args ) != 1:
-      raise ValueError( "Usage: OpenProject <project directory>" )
-
-    project_directory = args[ 0 ]
-
-    # If the dir is not absolute, calculate it relative to the working dir of
-    # the client (if supplied).
-    if not os.path.isabs( project_directory ):
-      if 'working_dir' not in request_data:
-        raise ValueError( "Project directory must be absolute" )
-
-      project_directory = os.path.normpath( os.path.join(
-        request_data[ 'working_dir' ],
-        project_directory ) )
-
-    self._RestartServer( request_data, project_directory = project_directory )
 
 
   def _Reset( self ):

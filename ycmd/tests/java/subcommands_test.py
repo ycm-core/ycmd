@@ -178,7 +178,6 @@ class SubcommandsTest( TestCase ):
                    'GoToReferences',
                    'GoToType',
                    'GoToSymbol',
-                   'OpenProject',
                    'OrganizeImports',
                    'RefactorRename',
                    'RestartServer',
