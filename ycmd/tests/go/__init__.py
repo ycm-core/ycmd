@@ -73,7 +73,7 @@ def IsolatedYcmd( custom_options = {} ):
   return Decorator
 
 
-def PathToTestFile( *args ):
+def PathToTestFile( *args, module_dir = 'go_module' ):
   dir_of_current_script = os.path.dirname( os.path.abspath( __file__ ) )
   # GOPLS doesn't work if any parent directory is named "testdata"
-  return os.path.join( dir_of_current_script, 'go_module', *args )
+  return os.path.join( dir_of_current_script, module_dir, *args )

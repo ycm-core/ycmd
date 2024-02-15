@@ -1,9 +1,13 @@
 package main
 
+import "example.com/owner/module/td"
+
 type thinger interface {
-	DoThing()
+  DoThing()
 }
 
 type thing string
 
-func (thing) DoThing() {}
+func (thing) DoThing() {
+  td.Hello()
+}

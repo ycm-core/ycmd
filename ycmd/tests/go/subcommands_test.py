@@ -32,7 +32,10 @@ import requests
 
 from ycmd import handlers
 from ycmd.tests.go import setUpModule, tearDownModule # noqa
-from ycmd.tests.go import PathToTestFile, SharedYcmd
+from ycmd.tests.go import ( PathToTestFile,
+                            SharedYcmd,
+                            IsolatedYcmd,
+                            StartGoCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
@@ -391,10 +394,10 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToImplementation( self, app ):
     for test in [
       # Works
-      { 'req': ( 'thing.go', 3, 8 ),
-        'res': ( 'thing.go', 7, 6 ) },
+      { 'req': ( 'thing.go', 5, 8 ),
+        'res': ( 'thing.go', 9, 6 ) },
       # Fails
-      { 'req': ( 'thing.go', 12, 7 ),
+      { 'req': ( 'thing.go', 10, 1 ),
         'res': 'Cannot jump to location' } ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToImplementation', test )
@@ -508,3 +511,20 @@ class SubcommandsTest( TestCase ):
     ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToCallers', test )
+
+
+  @IsolatedYcmd()
+  def test_Subcommands_GoTo_WorksAfterSwitchingProjects( self, app ):
+    project_dir = PathToTestFile( module_dir = 'go_module_2' )
+    StartGoCompleterServerInDirectory( app, project_dir )
+    go_module_2_main = PathToTestFile( 'main.go', module_dir = 'go_module_2' )
+    thing_go = PathToTestFile( 'thing.go' )
+    td_test_go = PathToTestFile( 'td', 'test.go' )
+    for test in [
+      { 'req': ( go_module_2_main, 6, 3 ),
+        'res': ( go_module_2_main, 3, 6 ) },
+      { 'req': ( thing_go, 12, 8 ),
+        'res': ( td_test_go, 9, 6 ) }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app, 'GoTo', test )
