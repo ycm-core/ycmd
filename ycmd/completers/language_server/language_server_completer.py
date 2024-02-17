@@ -1663,9 +1663,14 @@ class LanguageServerCompleter( Completer ):
       return responses.BuildDisplayMessageResponse(
           'No diagnostics for current file.' )
 
+    # Prefer errors to warnings and warnings to infos.
+    diagnostics.sort( key = lambda d: d[ 'severity' ] )
+
+    # request_data uses 1-based offsets, but LSP diagnostics use 0-based.
+    # It's easier to shift this one offset by -1 than to shift all diag ranges.
     current_column = lsp.CodepointsToUTF16CodeUnits(
         GetFileLines( request_data, current_file )[ current_line_lsp ],
-        request_data[ 'column_codepoint' ] )
+        request_data[ 'column_codepoint' ] ) - 1
     minimum_distance = None
 
     message = 'No diagnostics for current line.'
@@ -2981,13 +2986,15 @@ def _DistanceOfPointToRange( point, range ):
   # Single-line range.
   if start[ 'line' ] == end[ 'line' ]:
     # 0 if point is within range, otherwise distance from start/end.
-    return max( 0, point[ 'character' ] - end[ 'character' ],
+    # +1 takes into account that, visually, end is one character farther.
+    return max( 0, point[ 'character' ] - end[ 'character' ] + 1,
                 start[ 'character' ] - point[ 'character' ] )
 
   if start[ 'line' ] == point[ 'line' ]:
     return max( 0, start[ 'character' ] - point[ 'character' ] )
   if end[ 'line' ] == point[ 'line' ]:
-    return max( 0, point[ 'character' ] - end[ 'character' ] )
+    # +1 takes into account that, visually, end is one character farther.
+    return max( 0, point[ 'character' ] - end[ 'character' ] + 1 )
   # If not on the first or last line, then point is within range for sure.
   return 0
 

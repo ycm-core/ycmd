@@ -151,6 +151,23 @@ void foo() {
                  has_entry( 'message', contains_string( "Expected ';'" ) ) )
 
 
+  @IsolatedYcmd( { 'clangd_args': [ '--clang-tidy=0' ] } )
+  def test_Diagnostics_WarningAndErrorOnSameColumn( self, app ):
+    for col in [ 2, 22 ]:
+      with self.subTest( col = col ):
+        filepath = PathToTestFile( 'diag_ranges', 'detailed_diagnostic.cc' )
+        request = { 'filepath': filepath, 'filetype': 'cpp', 'column_num': col }
+        test = { 'request': request, 'route': '/receive_messages' }
+        RunAfterInitialized( app, test )
+        diag_data = BuildRequest( line_num = 3,
+                                  filepath = filepath,
+                                  filetype = 'cpp' )
+        result = app.post_json( '/detailed_diagnostic', diag_data ).json
+        assert_that( result,
+                     has_entry( 'message',
+                                 contains_string( 'uninitialized' ) ) )
+
+
   @IsolatedYcmd()
   def test_Diagnostics_Multiline( self, app ):
     contents = """
