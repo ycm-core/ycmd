@@ -33,12 +33,16 @@ import requests
 
 from ycmd import handlers
 from ycmd.tests.rust import setUpModule, tearDownModule # noqa
-from ycmd.tests.rust import PathToTestFile, SharedYcmd
+from ycmd.tests.rust import ( PathToTestFile,
+                              SharedYcmd,
+                              IsolatedYcmd,
+                              StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     ExpectedFailure,
                                     LocationMatcher,
+                                    WaitForDiagnosticsToBeReady,
                                     WithRetry )
 from ycmd.utils import ReadFile
 
@@ -47,8 +51,9 @@ RESPONSE_TIMEOUT = 5
 
 
 def RunTest( app, test, contents = None ):
+  filepath = test[ 'request' ][ 'filepath' ]
   if not contents:
-    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
+    contents = ReadFile( filepath )
 
   def CombineRequest( request, data ):
     kw = request
@@ -66,6 +71,10 @@ def RunTest( app, test, contents = None ):
                                  'filetype': 'rust',
                                  } ),
                  expect_errors = True )
+
+  # rust-analyzer sometimes needs a bit of time after opening a new file.
+  # Probably to relax after some hard work...
+  WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
 
   # We also ignore errors here, but then we check the response code
   # ourself. This is to allow testing of requests returning errors.
@@ -88,8 +97,8 @@ def RunTest( app, test, contents = None ):
   assert_that( response.json, test[ 'expect' ][ 'data' ] )
 
 
-def RunGoToTest( app, command, test ):
-  folder = PathToTestFile( 'common', 'src' )
+def RunGoToTest( app, command, test, *, project_root = 'common' ):
+  folder = PathToTestFile( project_root, 'src' )
   filepath = os.path.join( folder, test[ 'req' ][ 0 ] )
   request = {
     'command': command,
@@ -531,3 +540,22 @@ class SubcommandsTest( TestCase ):
         } )
       },
     } )
+
+
+  @IsolatedYcmd()
+  def test_Subcommands_GoTo_WorksAfterChangingProject( self, app ):
+    filepath = PathToTestFile( 'macro', 'src', 'main.rs' )
+    StartRustCompleterServerInDirectory( app, filepath )
+
+    for test, root in [
+        (
+          { 'req': ( 'main.rs', 31, 24 ), 'res': ( 'main.rs', 14, 9 ) },
+          'macro'
+        ),
+        (
+          { 'req': ( 'main.rs', 13, 19 ), 'res': ( 'test.rs', 4, 12 ) },
+          'common'
+        ),
+    ]:
+      with self.subTest( test = test, root = root ):
+        RunGoToTest( app, 'GoTo', test, project_root = root )

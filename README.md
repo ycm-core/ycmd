@@ -285,6 +285,8 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `capabilities'`: Overrides the default LSP capabilities of ycmd.
   - If you enable `workspace/configuration` support, check the extra conf
     details, relevant to LSP servers.
+- `additional_workspace_dirs`: Specifies statically known workspaces that should
+  be open on LSP server startup.
 - `triggerCharacters`: Override the LSP server's trigger characters for
   completion. This can be useful when the server obnoxiously requests completion
   on every character or for example on whitespace characters.

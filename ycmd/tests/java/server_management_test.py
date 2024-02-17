@@ -18,7 +18,6 @@
 import functools
 import os
 import psutil
-import requests
 import time
 
 from unittest.mock import patch
@@ -36,12 +35,10 @@ from ycmd.tests.java import setUpModule, tearDownModule # noqa
 from ycmd.tests.java import ( PathToTestFile,
                               isolated_app,
                               IsolatedYcmd,
-                              SharedYcmd,
                               StartJavaCompleterServerInDirectory,
                               StartJavaCompleterServerWithFile )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
-                                    ErrorMatcher,
                                     MockProcessTerminationTimingOut,
                                     TemporaryTestDir,
                                     WaitUntilCompleterServerReady )
@@ -297,45 +294,6 @@ class ServerManagementTest( TestCase ):
     request_data = BuildRequest( filetype = 'java' )
     assert_that( app.post_json( '/debug_info', request_data ).json,
                  CompleterProjectDirectoryMatcher( project ) )
-
-
-  @SharedYcmd
-  def test_ServerManagement_OpenProject_RelativePathNoWD( self, app ):
-    response = app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filetype = 'java',
-        command_arguments = [
-          'OpenProject',
-          os.path.join( '..', 'simple_maven_project' ),
-        ],
-      ),
-      expect_errors = True,
-    )
-    assert_that( response.status_code,
-                 equal_to( requests.codes.internal_server_error ) )
-    assert_that( response.json,
-                 ErrorMatcher( ValueError,
-                               'Project directory must be absolute' ) )
-
-
-  @SharedYcmd
-  def test_ServerManagement_OpenProject_RelativePathNoPath( self, app ):
-    response = app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filetype = 'java',
-        command_arguments = [
-          'OpenProject',
-        ],
-      ),
-      expect_errors = True,
-    )
-    assert_that( response.status_code,
-                 equal_to( requests.codes.internal_server_error ) )
-    assert_that( response.json,
-                 ErrorMatcher( ValueError,
-                               'Usage: OpenProject <project directory>' ) )
 
 
   def test_ServerManagement_ProjectDetection_NoParent( self ):

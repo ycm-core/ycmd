@@ -294,7 +294,11 @@ def BuildResponse( request, parameters ):
   return _BuildMessageData( message )
 
 
-def Initialize( request_id, project_directory, extra_capabilities, settings ):
+def Initialize( request_id,
+                project_directory,
+                extra_capabilities,
+                settings,
+                workspaces ):
   """Build the Language Server initialize request"""
 
   capabilities = {
@@ -393,7 +397,7 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
     'capabilities': UpdateDict( capabilities, extra_capabilities ),
-    'workspaceFolders': WorkspaceFolders( project_directory ),
+    'workspaceFolders': WorkspaceFolders( *workspaces ),
   } )
 
 
@@ -445,6 +449,15 @@ def Accept( request, result ):
 def ApplyEditResponse( request, applied ):
   msg = { 'applied': applied }
   return Accept( request, msg )
+
+
+def DidChangeWorkspaceFolders( new_folder ):
+  return BuildNotification( 'workspace/didChangeWorkspaceFolders', {
+    'event': {
+      'removed': [],
+      'added': WorkspaceFolders( new_folder )
+    }
+  } )
 
 
 def DidChangeWatchedFiles( path, kind ):
