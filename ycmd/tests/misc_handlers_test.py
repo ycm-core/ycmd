@@ -21,6 +21,7 @@ from unittest.mock import patch
 from unittest import TestCase
 import requests
 
+from ycmd.web_plumbing import RouteNotFound
 from ycmd.tests import IsolatedYcmd, PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     DummyCompleter,
@@ -97,7 +98,7 @@ class MiscHandlersTest( TestCase ):
 
   @SharedYcmd
   def test_MiscHandlers_EventNotification_ReturnJsonOnBigFileError( self, app ):
-    # We generate a content greater than Bottle.MEMFILE_MAX (10MB)
+    # We generate a content greater than web_plumbing._MEMFILE_MAX (10MB)
     contents = "foo " * 5000000
     event_data = BuildRequest( contents = contents,
                                event_name = 'FileReadyToParse' )
@@ -273,3 +274,12 @@ class MiscHandlersTest( TestCase ):
           ErrorMatcher( RuntimeError, '' )
         )
       } ) )
+
+
+  @SharedYcmd
+  def test_MiscHandlers_RouteNotFound( self, app ):
+    with PatchCompleter( DummyCompleter, filetype = 'dummy_filetype' ):
+      response = app.get( '/not_found', expect_errors = True ).json
+      assert_that( response, ErrorMatcher( RouteNotFound, "'/not_found'" ) )
+      response = app.post( '/not_found', expect_errors = True ).json
+      assert_that( response, ErrorMatcher( RouteNotFound, "'/not_found'" ) )
