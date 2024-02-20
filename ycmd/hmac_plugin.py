@@ -16,11 +16,11 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from base64 import b64decode, b64encode
-from bottle import request, abort, response
 from hmac import compare_digest
 from urllib.parse import urlparse
 from ycmd import hmac_utils
 from ycmd.utils import LOGGER, ToBytes, ToUnicode
+from ycmd.web_plumbing import abort
 
 HTTP_UNAUTHORIZED = 401
 
@@ -47,20 +47,22 @@ class HmacPlugin:
 
 
   def __call__( self, callback ):
-    def wrapper( *args, **kwargs ):
+    def wrapper( request, response ):
       if not HostHeaderCorrect( request ):
         LOGGER.info( 'Dropping request with bad Host header' )
         abort( HTTP_UNAUTHORIZED, 'Unauthorized, received bad Host header.' )
         return
 
-      body = ToBytes( request.body.read() )
-      if not RequestAuthenticated( request.method, request.path, body,
+      if not RequestAuthenticated( request.method,
+                                   request.path,
+                                   request.body,
+                                   request.headers,
                                    self._hmac_secret ):
         LOGGER.info( 'Dropping request with bad HMAC' )
         abort( HTTP_UNAUTHORIZED, 'Unauthorized, received bad HMAC.' )
         return
-      body = callback( *args, **kwargs )
-      SetHmacHeader( body, self._hmac_secret )
+      body = callback( request, response )
+      SetHmacHeader( body, self._hmac_secret, response )
       return body
     return wrapper
 
@@ -70,8 +72,8 @@ def HostHeaderCorrect( request ):
   return host == '127.0.0.1' or host == 'localhost'
 
 
-def RequestAuthenticated( method, path, body, hmac_secret ):
-  if _HMAC_HEADER not in request.headers:
+def RequestAuthenticated( method, path, body, headers, hmac_secret ):
+  if _HMAC_HEADER not in headers:
     return False
 
   return compare_digest(
@@ -80,10 +82,10 @@ def RequestAuthenticated( method, path, body, hmac_secret ):
         ToBytes( path ),
         ToBytes( body ),
         ToBytes( hmac_secret ) ),
-      ToBytes( b64decode( request.headers[ _HMAC_HEADER ] ) ) )
+      ToBytes( b64decode( headers[ _HMAC_HEADER ] ) ) )
 
 
-def SetHmacHeader( body, hmac_secret ):
+def SetHmacHeader( body, hmac_secret, response ):
   value = b64encode( hmac_utils.CreateHmac( ToBytes( body ),
                                             ToBytes( hmac_secret ) ) )
   response.set_header( _HMAC_HEADER, ToUnicode( value ) )
