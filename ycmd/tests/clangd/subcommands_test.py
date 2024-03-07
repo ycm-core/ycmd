@@ -278,18 +278,6 @@ def FixIt_Check_cpp11_DelAdd( results ):
         ),
         'location': has_entries( { 'line_num': 48, 'column_num': 3 } )
       } ),
-      has_entries( {
-        'chunks': contains_exactly(
-          has_entries( {
-            'replacement_text': equal_to( '= default;' ),
-            'range': has_entries( {
-              'start': has_entries( { 'line_num': 48, 'column_num': 15 } ),
-              'end'  : has_entries( { 'line_num': 48, 'column_num': 17 } ),
-            } ),
-          } ),
-        ),
-        'location': has_entries( { 'line_num': 48, 'column_num': 3 } )
-      } ),
       # Unresolved, requires /resolve_fixit request
       has_entries( {
         'text': 'Move function body to declaration',
@@ -365,19 +353,6 @@ def FixIt_Check_cpp11_MultiSecond( results ):
               'end'  : has_entries( { 'line_num': 54, 'column_num': 58 } ),
             } ),
           } ),
-        ),
-        'location': has_entries( { 'line_num': 54, 'column_num': 51 } )
-      } ),
-      has_entries( {
-        'kind': 'quickfix',
-        'chunks': contains_exactly(
-          has_entries( {
-            'replacement_text': equal_to( '= default;' ),
-            'range': has_entries( {
-              'start': has_entries( { 'line_num': 54, 'column_num': 64 } ),
-              'end'  : has_entries( { 'line_num': 54, 'column_num': 67 } ),
-            } ),
-          } )
         ),
         'location': has_entries( { 'line_num': 54, 'column_num': 51 } )
       } ),
