@@ -354,6 +354,7 @@ if( LIBCLANG_TARGET )
     set_target_properties( ${PROJECT_NAME} PROPERTIES
       BUILD_WITH_INSTALL_RPATH ON
       SKIP_BUILD_RPATH FALSE
+      INSTALL_RPATH_USE_LINK_PATH ON
       INSTALL_RPATH ${LIBCLANG_DIR} )
   endif ()
   # Remove all previous libclang libraries.
