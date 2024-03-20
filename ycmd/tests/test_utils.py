@@ -31,7 +31,6 @@ from hamcrest.core import helpers
 from unittest.mock import patch
 from pprint import pformat
 from webtest import TestApp
-import bottle
 import contextlib
 import functools
 import logging
@@ -269,7 +268,6 @@ def TemporarySymlink( source, link ):
 
 
 def SetUpApp( custom_options = {} ):
-  bottle.debug( True )
   LOGGER.setLevel( logging.DEBUG )
   options = user_options_store.DefaultOptions()
   options.update( TEST_OPTIONS )

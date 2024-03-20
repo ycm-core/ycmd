@@ -36,19 +36,10 @@ DIR_OF_WATCHDOG_DEPS = os.path.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
 DIR_OF_REQUESTS_DEPS = os.path.join( DIR_OF_THIRD_PARTY, 'requests_deps' )
 sys.path[ 0:0 ] = [
     os.path.join( ROOT_DIR ),
-    os.path.join( DIR_OF_THIRD_PARTY, 'bottle' ),
     os.path.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
-    os.path.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
     os.path.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
     os.path.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
-    os.path.join( DIR_OF_REQUESTS_DEPS, 'requests' ),
-    os.path.join( DIR_OF_REQUESTS_DEPS, 'chardet' ),
-    os.path.join( DIR_OF_REQUESTS_DEPS, 'certifi' ),
-    os.path.join( DIR_OF_REQUESTS_DEPS, 'idna' ),
-    os.path.join( DIR_OF_REQUESTS_DEPS, 'urllib3', 'src' ),
-    os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ),
-    os.path.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
-    os.path.join( DIR_OF_THIRD_PARTY, 'waitress' ) ]
+    os.path.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ) ]
 sys.path.append( os.path.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'numpydoc' ) )
 
 import atexit
@@ -203,7 +194,6 @@ def Main():
                                     args.stderr,
                                     args.keep_logfiles )
   atexit.register( handlers.ServerCleanup )
-  handlers.app.uninstall( True )
   handlers.app.install( WatchdogPlugin( args.idle_suicide_seconds,
                                         args.check_interval_seconds ) )
   handlers.app.install( HmacPlugin( hmac_secret ) )
