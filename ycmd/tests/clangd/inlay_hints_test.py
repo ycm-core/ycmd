@@ -21,10 +21,10 @@ from unittest import TestCase
 from hamcrest import assert_that, contains, empty, equal_to, has_entries
 
 from ycmd.tests.clangd import setUpModule, tearDownModule # noqa
-from ycmd.tests.clangd import PathToTestFile, SharedYcmd, IsolatedYcmd
+from ycmd.tests.clangd import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
-                                    RangeMatcher,
+                                    LocationMatcher,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
@@ -66,7 +66,7 @@ def RunTest( app, test ):
 
   # We also ignore errors here, but then we check the response code ourself.
   # This is to allow testing of requests returning errors.
-  response = app.post_json( '/semantic_tokens',
+  response = app.post_json( '/inlay_hints',
                             BuildRequest( **request ),
                             expect_errors = True )
 
@@ -79,21 +79,31 @@ def RunTest( app, test ):
 
 
 class SignatureHelpTest( TestCase ):
-  @IsolatedYcmd()
+  @SharedYcmd
   def test_none( self, app ):
+    filepath = PathToTestFile( 'template.cc' )
     RunTest( app, {
       'request': {
         'filetype': 'cpp',
-        'filepath': PathToTestFile( 'tokens.manual.cpp' ),
-        'contents': ''
+        'filepath': filepath,
+        'range': {
+          'start': {
+            'line_num': 0,
+            'column_num': 0,
+            'filepath': filepath
+          },
+          'end': {
+            'line_num': 2,
+            'column_num': 0,
+            'filepath': filepath
+          },
+        }
       },
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
           'errors': empty(),
-          'semantic_tokens': has_entries( {
-            'tokens': empty()
-          } ),
+          'inlay_hints': empty(),
         } )
       },
     } )
@@ -101,27 +111,35 @@ class SignatureHelpTest( TestCase ):
 
   @SharedYcmd
   def test_basic( self, app ):
+    filepath = PathToTestFile( 'inlay_hints_basic.cpp' )
     RunTest( app, {
       'request': {
         'filetype'  : 'cpp',
-        'filepath'  : PathToTestFile( 'tokens.manual.cpp' ),
-        'contents': '#define MACRO( x, y ) do { ( x ) = ( y ); } while (0)'
+        'filepath': filepath,
+        'range': {
+          'start': {
+            'line_num': 0,
+            'column_num': 0,
+            'filepath': filepath
+          },
+          'end': {
+            'line_num': 2,
+            'column_num': 0,
+            'filepath': filepath
+          },
+        }
       },
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
           'errors': empty(),
-          'semantic_tokens': has_entries( {
-            'tokens': contains(
-              has_entries( {
-                'range': RangeMatcher( PathToTestFile( 'tokens.manual.cpp' ),
-                                       ( 1, 9 ),
-                                       ( 1, 14 ) ),
-                'type': 'macro',
-                'modifiers': contains( 'declaration', 'globalScope' )
-              } )
-            )
-          } ),
+          'inlay_hints': contains(
+            has_entries( {
+              'kind': 'Parameter',
+              'position': LocationMatcher( filepath, 2, 16 ),
+              'label': 'b:'
+            } ),
+          ),
         } )
       },
     } )
@@ -129,35 +147,40 @@ class SignatureHelpTest( TestCase ):
 
   @SharedYcmd
   def test_multiple( self, app ):
+    filepath = PathToTestFile( 'inlay_hints_multiple.cpp' )
     RunTest( app, {
       'request': {
         'filetype'  : 'cpp',
-        'filepath'  : PathToTestFile( 'tokens.manual.cpp' ),
-        'contents':
-            '#define MACRO( x, y ) ( x );\n\nnamespace Test {}'
+        'filepath': filepath,
+        'range': {
+          'start': {
+            'line_num': 0,
+            'column_num': 0,
+            'filepath': filepath
+          },
+          'end': {
+            'line_num': 2,
+            'column_num': 0,
+            'filepath': filepath
+          },
+        }
       },
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
           'errors': empty(),
-          'semantic_tokens': has_entries( {
-            'tokens': contains(
-              has_entries( {
-                'range': RangeMatcher( PathToTestFile( 'tokens.manual.cpp' ),
-                                       ( 1, 9 ),
-                                       ( 1, 14 ) ),
-                'type': 'macro',
-                'modifiers': contains( 'declaration', 'globalScope' )
-              } ),
-              has_entries( {
-                'range': RangeMatcher( PathToTestFile( 'tokens.manual.cpp' ),
-                                       ( 3, 11 ),
-                                       ( 3, 15 ) ),
-                'type': 'namespace',
-                'modifiers': contains( 'declaration', 'globalScope' )
-              } )
-            )
-          } ),
+          'inlay_hints': contains(
+            has_entries( {
+              'kind': 'Parameter',
+              'position': LocationMatcher( filepath, 2, 16 ),
+              'label': 'a:'
+            } ),
+            has_entries( {
+              'kind': 'Parameter',
+              'position': LocationMatcher( filepath, 2, 19 ),
+              'label': 'b:'
+            } )
+          ),
         } )
       },
     } )
