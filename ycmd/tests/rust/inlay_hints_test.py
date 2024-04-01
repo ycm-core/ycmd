@@ -20,11 +20,11 @@ import requests
 from unittest import TestCase
 from hamcrest import assert_that, contains, empty, equal_to, has_entries
 
-from ycmd.tests.clangd import setUpModule, tearDownModule # noqa
-from ycmd.tests.clangd import PathToTestFile, SharedYcmd, IsolatedYcmd
+from ycmd.tests.rust import setUpModule, tearDownModule # noqa
+from ycmd.tests.rust import PathToTestFile, SharedYcmd
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CombineRequest,
-                                    RangeMatcher,
+                                    LocationMatcher,
                                     WaitUntilCompleterServerReady )
 from ycmd.utils import ReadFile
 
@@ -33,7 +33,7 @@ def RunTest( app, test ):
   """
   Method to run a simple completion test and verify the result
 
-  Note: Compile commands are extracted from a compile_flags.txt file by clangd
+  Note: Compile commands are extracted from a compile_flags.txt file by rust
   by iteratively looking at the directory containing the source file and its
   ancestors.
 
@@ -46,7 +46,7 @@ def RunTest( app, test ):
   """
 
   request = test[ 'request' ]
-  filetype = request.get( 'filetype', 'cpp' )
+  filetype = request.get( 'filetype', 'rust' )
   if 'contents' not in request:
     contents = ReadFile( request[ 'filepath' ] )
     request[ 'contents' ] = contents
@@ -66,7 +66,7 @@ def RunTest( app, test ):
 
   # We also ignore errors here, but then we check the response code ourself.
   # This is to allow testing of requests returning errors.
-  response = app.post_json( '/semantic_tokens',
+  response = app.post_json( '/inlay_hints',
                             BuildRequest( **request ),
                             expect_errors = True )
 
@@ -79,85 +79,37 @@ def RunTest( app, test ):
 
 
 class SignatureHelpTest( TestCase ):
-  @IsolatedYcmd()
-  def test_none( self, app ):
-    RunTest( app, {
-      'request': {
-        'filetype': 'cpp',
-        'filepath': PathToTestFile( 'tokens.manual.cpp' ),
-        'contents': ''
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'errors': empty(),
-          'semantic_tokens': has_entries( {
-            'tokens': empty()
-          } ),
-        } )
-      },
-    } )
-
-
   @SharedYcmd
   def test_basic( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'test.rs' )
     RunTest( app, {
       'request': {
-        'filetype'  : 'cpp',
-        'filepath'  : PathToTestFile( 'tokens.manual.cpp' ),
-        'contents': '#define MACRO( x, y ) do { ( x ) = ( y ); } while (0)'
+        'filetype'  : 'rust',
+        'filepath': filepath,
+        'range': {
+          'start': {
+            'line_num': 1,
+            'column_num': 1,
+            'filepath': filepath
+          },
+          'end': {
+            'line_num': 15,
+            'column_num': 1,
+            'filepath': filepath
+          },
+        }
       },
       'expect': {
         'response': requests.codes.ok,
         'data': has_entries( {
           'errors': empty(),
-          'semantic_tokens': has_entries( {
-            'tokens': contains(
-              has_entries( {
-                'range': RangeMatcher( PathToTestFile( 'tokens.manual.cpp' ),
-                                       ( 1, 9 ),
-                                       ( 1, 14 ) ),
-                'type': 'macro',
-                'modifiers': contains( 'declaration', 'globalScope' )
-              } )
-            )
-          } ),
-        } )
-      },
-    } )
-
-
-  @SharedYcmd
-  def test_multiple( self, app ):
-    RunTest( app, {
-      'request': {
-        'filetype'  : 'cpp',
-        'filepath'  : PathToTestFile( 'tokens.manual.cpp' ),
-        'contents':
-            '#define MACRO( x, y ) ( x );\n\nnamespace Test {}'
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'errors': empty(),
-          'semantic_tokens': has_entries( {
-            'tokens': contains(
-              has_entries( {
-                'range': RangeMatcher( PathToTestFile( 'tokens.manual.cpp' ),
-                                       ( 1, 9 ),
-                                       ( 1, 14 ) ),
-                'type': 'macro',
-                'modifiers': contains( 'declaration', 'globalScope' )
-              } ),
-              has_entries( {
-                'range': RangeMatcher( PathToTestFile( 'tokens.manual.cpp' ),
-                                       ( 3, 11 ),
-                                       ( 3, 15 ) ),
-                'type': 'namespace',
-                'modifiers': contains( 'declaration', 'globalScope' )
-              } )
-            )
-          } ),
+          'inlay_hints': contains(
+            has_entries( {
+              'kind': 'Type',
+              'position': LocationMatcher( filepath, 12, 10 ),
+              'label': ':  Builder '
+            } ),
+          ),
         } )
       },
     } )
