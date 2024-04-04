@@ -1,4 +1,5 @@
-/*===---- __stddef_wchar.h - Definition of wchar_t -------------------------===
+/*===---- arm_bf16.h - ARM BF16 intrinsics -----------------------------------===
+ *
  *
  * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
  * See https://llvm.org/LICENSE.txt for license information.
@@ -7,17 +8,13 @@
  *===-----------------------------------------------------------------------===
  */
 
-#if !defined(__cplusplus) || (defined(_MSC_VER) && !_NATIVE_WCHAR_T_DEFINED)
+#ifndef __ARM_BF16_H
+#define __ARM_BF16_H
 
-#ifndef _WCHAR_T
-#define _WCHAR_T
+typedef __bf16 bfloat16_t;
+#define __ai static __inline__ __attribute__((__always_inline__, __nodebug__))
 
-#ifdef _MSC_EXTENSIONS
-#define _WCHAR_T_DEFINED
-#endif
 
-typedef __WCHAR_TYPE__ wchar_t;
-
-#endif
+#undef __ai
 
 #endif
