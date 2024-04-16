@@ -65,19 +65,20 @@ def Overwrite( src, dest ):
 
 
 def UpdateClangHeaders( version, temp_dir ):
-  src_name = 'clang-{version}.src'.format( version = version )
-  archive_name = src_name + '.tar.xz'
+  # The headers do not seem to differ between archives, so pick the smallest
+  archive_name = f'clang+llvm-{ version }-arm64-apple-darwin.tar.xz'
 
-  compressed_data = Download( 'https://github.com/llvm/llvm-project/releases/'
-                              f'download/llvmorg-{ version }/{ archive_name }' )
+  compressed_data = Download( 'https://github.com/ycm-core/llvm/releases/'
+                              f'download/{ version }/{ archive_name }' )
   print( f'Extracting { archive_name }' )
   src = ExtractLZMA( compressed_data, temp_dir )
 
   print( 'Updating Clang headers...' )
   includes_dir = os.path.join(
     DIR_OF_THIRD_PARTY, 'clang', 'lib', 'clang', version, 'include' )
-  Overwrite( os.path.join( src, 'lib', 'Headers' ), includes_dir )
-  os.remove( os.path.join( includes_dir, 'CMakeLists.txt' ) )
+  Overwrite( os.path.join(
+                src, 'lib', 'clang', version.split( '.', 1 )[ 0 ], 'include' ),
+             includes_dir )
 
   Overwrite( os.path.join( src, 'include', 'clang-c' ),
              os.path.join( DIR_OF_THIS_SCRIPT, 'cpp', 'llvm', 'include',
