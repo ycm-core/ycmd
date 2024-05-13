@@ -2699,10 +2699,9 @@ class LanguageServerCompleter( Completer ):
 
     preparation_item, direction, kind = args
 
-    # Remove ycmd things
-    if 'fromRanges' in preparation_item:
-      name_and_kind_key = 'to' if direction == 'outgoing' else 'from'
-      preparation_item = preparation_item[ name_and_kind_key ]
+    if item := ( preparation_item.get( 'from' ) or
+                 preparation_item.get( 'to' ) ):
+      preparation_item = item
     else:
       del preparation_item[ 'locations' ]
       kind_number = lsp.SYMBOL_KIND.index( preparation_item[ 'kind' ] )
