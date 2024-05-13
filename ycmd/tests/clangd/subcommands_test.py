@@ -571,6 +571,10 @@ class SubcommandsTest( TestCase ):
                                                'GoToType',
                                                'RefactorRename',
                                                'RestartServer',
+                                               'ResolveCallHierarchyItem',
+                                               'ResolveTypeHierarchyItem',
+                                               'CallHierarchy',
+                                               'TypeHierarchy',
                                                'GoToAlternateFile' ] ) )
         },
         'route': '/defined_subcommands',

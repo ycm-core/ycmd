@@ -171,6 +171,8 @@ class SubcommandsTest( TestCase ):
                                       'GoToType',
                                       'GoToSymbol',
                                       'FixIt',
+                                      'CallHierarchy',
+                                      'ResolveCallHierarchyItem',
                                       'RestartServer',
                                       'ExecuteCommand' ) )
 

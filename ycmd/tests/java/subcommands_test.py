@@ -180,6 +180,10 @@ class SubcommandsTest( TestCase ):
                    'GoToSymbol',
                    'OrganizeImports',
                    'RefactorRename',
+                   'CallHierarchy',
+                   'TypeHierarchy',
+                   'ResolveCallHierarchyItem',
+                   'ResolveTypeHierarchyItem',
                    'RestartServer',
                    'WipeWorkspace' ) )
 

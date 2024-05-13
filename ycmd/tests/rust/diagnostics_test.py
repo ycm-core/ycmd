@@ -56,22 +56,22 @@ DIAG_MATCHERS_PER_FILE = {
       'kind': 'WARNING',
       'text': 'unused variable: `a`\n`#[warn(unused_variables)]` '
               'on by default [unused_variables]',
-      'location': LocationMatcher( MAIN_FILEPATH, 20, 9 ),
-      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 20, 9 ), ( 20, 10 ) ),
+      'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
-                                        ( 20, 9 ),
-                                        ( 20, 10 ) ) ),
+                                        ( 21, 9 ),
+                                        ( 21, 10 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'HINT',
       'text': 'if this is intentional, '
               'prefix it with an underscore: `_a` [unused_variables]',
-      'location': LocationMatcher( MAIN_FILEPATH, 20, 9 ),
-      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 20, 9 ), ( 20, 10 ) ),
+      'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
-                                        ( 20, 9 ),
-                                        ( 20, 10 ) ) ),
+                                        ( 21, 9 ),
+                                        ( 21, 10 ) ) ),
       'fixit_available': False
     } ),
   ),
