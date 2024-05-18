@@ -2720,7 +2720,7 @@ class LanguageServerCompleter( Completer ):
     if result:
       for item in result:
         if kind == 'call':
-          name_and_kind_key = 'to' if direction == 'outgoing' else 'from'
+          name_and_kind_key = 'to' if direction == 'outgoingCalls' else 'from'
           kind_string = lsp.SYMBOL_KIND[ item[ name_and_kind_key ][ 'kind' ] ]
           item[ 'kind' ] = kind_string
           item[ 'name' ] = item[ name_and_kind_key ][ 'name' ]
