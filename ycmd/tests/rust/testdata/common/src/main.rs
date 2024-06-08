@@ -1,3 +1,4 @@
+mod hierarchies;
 mod test;
 
 use test::*;

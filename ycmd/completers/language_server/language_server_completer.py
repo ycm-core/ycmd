@@ -1685,7 +1685,7 @@ class LanguageServerCompleter( Completer ):
         message = diagnostic[ 'message' ]
         try:
           code = diagnostic[ 'code' ]
-          message += f' [{ code }]'
+          message += f' [{ code }]' # noqa
         except KeyError:
           pass
 
@@ -2739,7 +2739,11 @@ class LanguageServerCompleter( Completer ):
               *_LspLocationToLocationAndDescription( request_data, location ) )
             for location in [ item ] ]
       return result
-    raise RuntimeError( f'No { direction } { kind } found.' )
+    if kind == 'call':
+      raise RuntimeError(
+          f'No { direction.rstrip( "Calls" ) } { kind }s found.' )
+    else:
+      raise RuntimeError( f'No { direction } found.' )
 
 
   def CallHierarchy( self, request_data, args ):
