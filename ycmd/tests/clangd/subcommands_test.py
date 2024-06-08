@@ -18,6 +18,7 @@
 from hamcrest import ( assert_that,
                        has_items,
                        contains_exactly,
+                       contains_inanyorder,
                        contains_string,
                        equal_to,
                        has_entries,
@@ -96,6 +97,39 @@ def RunGoToTest_all( app, folder, command, test ):
     'route'  : '/run_completer_command',
     'expect' : expect
   } )
+
+
+def RunHierarchyTest( app,
+                      kind,
+                      direction,
+                      location,
+                      expected,
+                      code ):
+  file, line, column = location
+  contents = ReadFile( file )
+  request = {
+    'completer_target' : 'filetype_default',
+    'command_arguments': [ f'{ kind.title() }Hierarchy' ],
+    'line_num'         : line,
+    'column_num'       : column,
+    'filepath'         : file,
+    'contents'         : contents,
+    'filetype'         : 'cpp'
+  }
+  test = { 'request': request,
+           'route': '/run_completer_command' }
+  prepare_hierarchy_response = RunAfterInitialized( app, test )
+  request[ 'command_arguments' ] = [
+    f'Resolve{ kind.title() }HierarchyItem',
+    prepare_hierarchy_response[ 0 ],
+    direction
+  ]
+  test[ 'expect' ] = {
+    'response': code,
+    'data': expected
+  }
+  RunAfterInitialized( app, test )
+
 
 
 def RunGetSemanticTest( app,
@@ -605,6 +639,8 @@ class SubcommandsTest( TestCase ):
       'GoToType',
       'RefactorRename',
       'GoToAlternateFile',
+      'CallHierarchy',
+      'TypeHierarchy',
     ]:
       with self.subTest( cmd = cmd ):
         completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
@@ -1285,3 +1321,122 @@ class SubcommandsTest( TestCase ):
       'route': '/run_completer_command'
     }
     RunAfterInitialized( app, test )
+
+
+  @SharedYcmd
+  def test_Subcommands_SupertypeHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.cc' )
+    for location, response, code in [
+      [ ( filepath, 16, 8 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 13, 8 )
+                     ) ),
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 12, 8 )
+                     ) ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 13, 8 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 12, 8 )
+                     ) ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 12, 8 ),
+        ErrorMatcher( RuntimeError, 'No supertypes found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'type', 'supertypes', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_SubtypeHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.cc' )
+    for location, response, code in [
+      [ ( filepath, 12, 8 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 13, 8 )
+                     ) ),
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 15, 8 )
+                     ) ),
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 16, 8 )
+                     ) ) ),
+        requests.codes.ok ],
+      [ ( filepath, 13, 8 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 16, 8 )
+                     ) ) ),
+        requests.codes.ok ],
+      [ ( filepath, 16, 8 ),
+        ErrorMatcher( RuntimeError, 'No subtypes found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'type', 'subtypes', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_IncomingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.cc' )
+    for location, response, code in [
+      [ ( filepath, 1, 5 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 4, 12 ),
+                       LocationMatcher( filepath, 4, 18 )
+                     ) ),
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 9, 12 )
+                     ) ) ),
+        requests.codes.ok ],
+      [ ( filepath, 3, 5 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 8, 13 )
+                     ) ) ),
+        requests.codes.ok ],
+      [ ( filepath, 7, 5 ),
+        ErrorMatcher( RuntimeError, 'No incoming calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'incoming', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_NoHierarchyFound( self, app ):
+    for kind in [ 'call', 'type' ]:
+      with self.subTest( kind = kind ):
+        filepath = PathToTestFile( 'hierarchies.cc' )
+        request = {
+          'completer_target' : 'filetype_default',
+          'command_arguments': [ f'{ kind.title() }Hierarchy' ],
+          'line_num'         : 2,
+          'column_num'       : 1,
+          'filepath'         : filepath,
+          'filetype'         : 'cpp'
+        }
+        test = { 'request': request,
+                 'route': '/run_completer_command',
+                 'expect': {
+                   'response': requests.codes.server_error,
+                   'data': ErrorMatcher( RuntimeError,
+                                         f'No { kind } hierarchy found.' ) } }
+        RunAfterInitialized( app, test )
