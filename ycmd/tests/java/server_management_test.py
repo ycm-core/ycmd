@@ -39,8 +39,11 @@ from ycmd.tests.java import ( PathToTestFile,
                               StartJavaCompleterServerWithFile )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
+                                    LocationMatcher,
                                     MockProcessTerminationTimingOut,
+                                    RangeMatcher,
                                     TemporaryTestDir,
+                                    WaitForDiagnosticsToBeReady,
                                     WaitUntilCompleterServerReady )
 from ycmd import utils, handlers
 
@@ -294,6 +297,45 @@ class ServerManagementTest( TestCase ):
     request_data = BuildRequest( filetype = 'java' )
     assert_that( app.post_json( '/debug_info', request_data ).json,
                  CompleterProjectDirectoryMatcher( project ) )
+
+
+  @TidyJDTProjectFiles( PathToTestFile( 'gradle-init' ) )
+  @IsolatedYcmd()
+  def test_ServerManagement_ProjectDetection_GradleMultipleGradleFiles( self,
+                                                                        app ):
+    testfile = PathToTestFile( 'gradle-init',
+                               'app',
+                               'src',
+                               'main',
+                               'java',
+                               'org',
+                               'example',
+                               'app',
+                               'App.java' )
+    project = PathToTestFile( 'gradle-init' )
+
+    StartJavaCompleterServerWithFile( app, testfile )
+
+    # Run the debug info to check that we have the correct project dir
+    request_data = BuildRequest( filetype = 'java' )
+    assert_that( app.post_json( '/debug_info', request_data ).json,
+                 CompleterProjectDirectoryMatcher( project ) )
+
+    # Check that we successfully actually parse the project too
+    contents = utils.ReadFile( testfile )
+    diags = WaitForDiagnosticsToBeReady( app, testfile, contents, 'java' )
+    assert_that( diags, has_item(
+      has_entries( {
+        'kind': 'WARNING',
+        'text': 'The value of the local variable unused is not used '
+                '[536870973]',
+        'location': LocationMatcher( testfile, 16, 16 ),
+        'location_extent': RangeMatcher( testfile, ( 16, 16 ), ( 16, 22 ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( testfile, ( 16, 16 ), ( 16, 22 ) ) ),
+        'fixit_available': False
+      } ),
+    ) )
 
 
   def test_ServerManagement_ProjectDetection_NoParent( self ):
