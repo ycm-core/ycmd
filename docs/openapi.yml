@@ -190,7 +190,49 @@ definitions:
 
     additionalProperties:
       $ref: "#/definitions/FileData"
-
+  Hierarchy:
+    type: object
+    required:
+      - kind
+      - locations
+    description: |-
+      An object returned, in a list, as a response to hierarchy requests.
+      The object may contain additional properties, which are used to identify
+      the hierarchy tree node, by the subservers.
+    properties:
+      kind:
+        type: string
+        enum:
+          - File
+          - Module
+          - Namespace
+          - Package
+          - Class
+          - Method
+          - Property
+          - Field
+          - Constructor
+          - Enum
+          - Interface
+          - Function
+          - Variable
+          - Constant
+          - String
+          - Number
+          - Boolean
+          - Array
+          - Object
+          - Key
+          - Null
+          - EnumMember
+          - Struct
+          - Event
+          - Operator
+          - TypeParameter
+      locations:
+        type: array
+        items:
+          $ref: "#/defintions/Location"
   # Due to the way the API combines keys at the top level, we are not able to
   # compose this item per-request. So this definition must be copy-pasted for
   # some requests.
@@ -368,6 +410,22 @@ definitions:
           If present, this is a single *GoTo response* and this value
           contains the absolute path of the buffer containing the
           target location (identified in `line_num` and `column_num`).
+      kind:
+        type: string
+        description: |-
+          If present, this is a *Hierarchy response* and this value
+          describes the kind of symbol a node in the call/type hierarchy
+          tree is referring to.
+        hierarchy details:
+          $ref: "#/definitions/Hierarchy"
+      locations:
+        type: array
+        description: |-
+          If present, this is a *Hierarchy response* and this value
+          contains a list of locations that a node in the call/type
+          hierarchy tree is referring to.
+        hierarchy details:
+          $ref: "#/definitions/Hierarchy"
       line_num:
         $ref: "#/definitions/LineNumber"
       column_num:
@@ -886,6 +944,21 @@ paths:
           messages are typically multiple lines (such as the documentation and
           signature for a method) and are best displayed in a panel or preview
           area (or equivalent).
+        - A *Hierarchy* response. This is identified where the type of the
+          response is a list of objects containing `kind` and `locations`
+          properties.
+          Hierarchy requests work similarly to those in the LSP specification.
+          If a completer supports call/type hierarchies, the initial request
+          should be sent through `TypeHierarchy`/`CallHierarchy` subcommand.
+          Resolving any item in the hierarchy tree is done by subsequent
+          `ResolveCallHierarchyItem` and `ResolveTypeHierarchyItem` requests.
+          When resolving a hierarchy item, the arguments following
+          the subcommand name are the item being resolved and the direction in
+          which the item should be resolved.
+          For call hierarchies, the directions are `incoming` and `outgoing`.
+          For type hierarchies, the directions are `subtypes` and `supertypes`.
+          Note that, except for the root node of the hierarchy, resolving an
+          item in both directions is discouraged.
         - A *GoTo* response. This is identified where the response type cannot
           be determined by any of the above methods. A GoTo response may contain
           either a single location (e.g. for `GoToDeclaration`), or a list of
