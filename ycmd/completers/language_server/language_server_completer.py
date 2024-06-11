@@ -2735,12 +2735,9 @@ class LanguageServerCompleter( Completer ):
             for location in lsp_locations ]
 
           if direction == 'incomingCalls':
-            loc = {
-              'uri': hierarchy_item[ 'uri' ],
-              'range': hierarchy_item[ 'range' ]
-            }
             item[ 'root_location' ] = responses.BuildGoToResponseFromLocation(
-              *_LspLocationToLocationAndDescription( request_data, loc ) )
+              *_LspLocationToLocationAndDescription( request_data,
+                                                     hierarchy_item ) )
         else:
           item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ 'kind' ] ]
           item[ 'locations' ] = [
@@ -3413,9 +3410,10 @@ def _LspLocationToLocationAndDescription( request_data, location ):
                       'GoTo location' )
     file_contents = []
 
+  range = location.get( 'selectionRange' ) or location[ 'range' ]
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       location[ 'range' ][ 'start' ] )
+                                       range[ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):
