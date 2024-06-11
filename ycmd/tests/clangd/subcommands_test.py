@@ -1395,22 +1395,25 @@ class SubcommandsTest( TestCase ):
     for location, response, code in [
       [ ( filepath, 1, 5 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 4, 12 ),
-                       LocationMatcher( filepath, 4, 18 )
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 9, 12 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 4, 12 ),
+                           LocationMatcher( filepath, 4, 18 ) ),
+            'root_location': LocationMatcher( filepath, 3, 5 )
+          } ),
+          has_entries( {
+            'locations': contains_exactly( LocationMatcher( filepath, 9, 12 ) ),
+            'root_location': LocationMatcher( filepath, 7, 5 )
+          } )
+        ),
         requests.codes.ok ],
       [ ( filepath, 3, 5 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 8, 13 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly( LocationMatcher( filepath, 8, 13 ) ),
+            'root_location': LocationMatcher( filepath, 7, 5 )
+          } )
+        ),
         requests.codes.ok ],
       [ ( filepath, 7, 5 ),
         ErrorMatcher( RuntimeError, 'No incoming calls found.' ),

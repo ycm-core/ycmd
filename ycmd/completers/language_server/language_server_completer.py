@@ -2721,17 +2721,26 @@ class LanguageServerCompleter( Completer ):
       for item in result:
         if kind == 'call':
           name_and_kind_key = 'to' if direction == 'outgoingCalls' else 'from'
-          kind_string = lsp.SYMBOL_KIND[ item[ name_and_kind_key ][ 'kind' ] ]
+          hierarchy_item = item[ name_and_kind_key ]
+          kind_string = lsp.SYMBOL_KIND[ hierarchy_item[ 'kind' ] ]
           item[ 'kind' ] = kind_string
-          item[ 'name' ] = item[ name_and_kind_key ][ 'name' ]
+          item[ 'name' ] = hierarchy_item[ 'name' ]
           lsp_locations = [ {
-            'uri': item[ name_and_kind_key ][ 'uri' ],
+            'uri': hierarchy_item[ 'uri' ],
             'range': r }
             for r in item[ 'fromRanges' ] ]
           item[ 'locations' ] = [
             responses.BuildGoToResponseFromLocation(
               *_LspLocationToLocationAndDescription( request_data, location ) )
             for location in lsp_locations ]
+
+          if direction == 'incomingCalls':
+            loc = {
+              'uri': hierarchy_item[ 'uri' ],
+              'range': hierarchy_item[ 'range' ]
+            }
+            item[ 'root_location' ] = responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, loc ) )
         else:
           item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ 'kind' ] ]
           item[ 'locations' ] = [

@@ -629,22 +629,33 @@ class SubcommandsTest( TestCase ):
     for location, response, code in [
       [ ( filepath, 1, 4 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 6, 5 ),
-                       LocationMatcher( filepath, 6, 11 )
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 11, 5 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 6, 5 ),
+                           LocationMatcher( filepath, 6, 11 ) ),
+            # rust-analyzer always returns column 1 for root_location,
+            # which is useless for us... unfortunately.
+            'root_location': LocationMatcher( filepath, 5, 1 )
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 5 ) ),
+            # rust-analyzer always returns column 1 for root_location,
+            # which is useless for us... unfortunately.
+            'root_location': LocationMatcher( filepath, 9, 1 )
+          } )
+        ),
         requests.codes.ok ],
       [ ( filepath, 5, 4 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 10, 13 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 13 ) ),
+            # rust-analyzer always returns column 1 for root_location,
+            # which is useless for us... unfortunately.
+            'root_location': LocationMatcher( filepath, 9, 1 )
+          } )
+        ),
         requests.codes.ok ],
       [ ( filepath, 9, 4 ),
         ErrorMatcher( RuntimeError, 'No incoming calls found.' ),

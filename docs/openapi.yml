@@ -233,6 +233,13 @@ definitions:
         type: array
         items:
           $ref: "#/defintions/Location"
+      root_location:
+        type: object
+        description: |-
+          In call hierarchies, it is useful to differentiate between the call
+          site (which end up in the `locations` property) and the calling
+          function. This property, if present, represents the latter.
+        $ref: "#/definitions/Location"
   # Due to the way the API combines keys at the top level, we are not able to
   # compose this item per-request. So this definition must be copy-pasted for
   # some requests.
