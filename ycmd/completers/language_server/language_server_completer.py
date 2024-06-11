@@ -3299,9 +3299,10 @@ def _LspLocationToLocationAndDescription( request_data, location ):
                       'GoTo location' )
     file_contents = []
 
+  range = location.get( 'selectionRange' ) or location[ 'range' ]
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       location[ 'range' ][ 'start' ] )
+                                       range[ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):
