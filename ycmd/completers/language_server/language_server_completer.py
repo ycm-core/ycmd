@@ -2686,7 +2686,9 @@ class LanguageServerCompleter( Completer ):
 
     preparation_item[ 0 ][ 'locations' ] = [
       responses.BuildGoToResponseFromLocation(
-        *_LspLocationToLocationAndDescription( request_data, location ) )
+        *_LspLocationToLocationAndDescription( request_data,
+                                               location,
+                                               'selectionRange' ) )
       for location in preparation_item ]
     kind_string = lsp.SYMBOL_KIND[ preparation_item[ 0 ][ 'kind' ] ]
     preparation_item[ 0 ][ 'kind' ] = kind_string
@@ -2735,12 +2737,10 @@ class LanguageServerCompleter( Completer ):
             for location in lsp_locations ]
 
           if direction == 'incomingCalls':
-            loc = {
-              'uri': hierarchy_item[ 'uri' ],
-              'range': hierarchy_item[ 'range' ]
-            }
             item[ 'root_location' ] = responses.BuildGoToResponseFromLocation(
-              *_LspLocationToLocationAndDescription( request_data, loc ) )
+              *_LspLocationToLocationAndDescription( request_data,
+                                                     hierarchy_item,
+                                                     'selectionRange' ) )
         else:
           item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ 'kind' ] ]
           item[ 'locations' ] = [
@@ -3396,7 +3396,9 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     return locations
 
 
-def _LspLocationToLocationAndDescription( request_data, location ):
+def _LspLocationToLocationAndDescription( request_data,
+                                          location,
+                                          range_property = 'range' ):
   """Convert a LSP Location to a ycmd location."""
   try:
     filename = lsp.UriToFilePath( location[ 'uri' ] )
@@ -3413,9 +3415,10 @@ def _LspLocationToLocationAndDescription( request_data, location ):
                       'GoTo location' )
     file_contents = []
 
+  range = location[ range_property ]
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       location[ 'range' ][ 'start' ] )
+                                       range[ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):

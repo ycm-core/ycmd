@@ -635,14 +635,14 @@ class SubcommandsTest( TestCase ):
                            LocationMatcher( filepath, 6, 11 ) ),
             # rust-analyzer always returns column 1 for root_location,
             # which is useless for us... unfortunately.
-            'root_location': LocationMatcher( filepath, 5, 1 )
+            'root_location': LocationMatcher( filepath, 5, 4 )
           } ),
           has_entries( {
             'locations': contains_exactly(
                            LocationMatcher( filepath, 11, 5 ) ),
             # rust-analyzer always returns column 1 for root_location,
             # which is useless for us... unfortunately.
-            'root_location': LocationMatcher( filepath, 9, 1 )
+            'root_location': LocationMatcher( filepath, 9, 4 )
           } )
         ),
         requests.codes.ok ],
@@ -653,7 +653,7 @@ class SubcommandsTest( TestCase ):
                            LocationMatcher( filepath, 10, 13 ) ),
             # rust-analyzer always returns column 1 for root_location,
             # which is useless for us... unfortunately.
-            'root_location': LocationMatcher( filepath, 9, 1 )
+            'root_location': LocationMatcher( filepath, 9, 4 )
           } )
         ),
         requests.codes.ok ],

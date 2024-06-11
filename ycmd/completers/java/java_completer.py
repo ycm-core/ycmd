@@ -650,3 +650,18 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
 
   def GetCommandLine( self ):
     return self._command
+
+
+  def Hierarchy( self, request_data, args ):
+    # JDT.LS is a special snowflake and needs special snowflake treatement
+    # See: https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3184
+    result = super().Hierarchy( request_data, args )
+    preparation_item, direction, kind = args
+    if kind == 'call' and direction == 'incoming':
+      for item in result:
+        # The base class does almost the same,
+        # but uses `selectionRange` instead of `range`.
+        item[ 'root_location' ] = responses.BuildGoToResponseFromLocation(
+          *language_server_completer._LspLocationToLocationAndDescription(
+            request_data, item[ 'from' ] ) )
+    return result
