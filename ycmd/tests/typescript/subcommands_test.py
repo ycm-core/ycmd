@@ -1205,22 +1205,30 @@ class SubcommandsTest( TestCase ):
     for location, response, code in [
       [ ( filepath, 9, 10 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 10, 11 ),
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 11, 14 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 11 ) ),
+            'kind': 'function',
+            'name': 'g'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 14 ) ),
+            'kind': 'function',
+            'name': 'f'
+          } )
+        ),
         requests.codes.ok ],
       [ ( filepath, 5, 10 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 6, 10 ),
-                       LocationMatcher( filepath, 6, 16 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 6, 10 ),
+                           LocationMatcher( filepath, 6, 16 ) ),
+            'kind': 'function',
+            'name': 'f'
+          } ),
+        ),
         requests.codes.ok ],
       [ ( filepath, 1, 10 ),
         ErrorMatcher( RuntimeError, 'No outgoing calls found.' ),
@@ -1240,12 +1248,16 @@ class SubcommandsTest( TestCase ):
             'locations': contains_exactly(
                            LocationMatcher( filepath, 6, 10 ),
                            LocationMatcher( filepath, 6, 16 ) ),
-            'root_location': LocationMatcher( filepath, 5, 10 )
+            'root_location': LocationMatcher( filepath, 5, 10 ),
+            'name': 'g',
+            'kind': 'function'
           } ),
           has_entries( {
             'locations': contains_exactly(
                            LocationMatcher( filepath, 11, 14 ) ),
-            'root_location': LocationMatcher( filepath, 9, 10 )
+            'root_location': LocationMatcher( filepath, 9, 10 ),
+            'name': 'h',
+            'kind': 'function'
           } )
         ),
         requests.codes.ok ],
@@ -1254,7 +1266,9 @@ class SubcommandsTest( TestCase ):
           has_entries( {
             'locations': contains_exactly(
                              LocationMatcher( filepath, 10, 11 ) ),
-            'root_location': LocationMatcher( filepath, 9, 10 )
+            'root_location': LocationMatcher( filepath, 9, 10 ),
+            'name': 'h',
+            'kind': 'function'
           } )
         ),
         requests.codes.ok ],

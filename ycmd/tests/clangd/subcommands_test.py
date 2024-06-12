@@ -1329,22 +1329,31 @@ class SubcommandsTest( TestCase ):
     for location, response, code in [
       [ ( filepath, 16, 8 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 13, 8 )
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 12, 8 )
-                     ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 13, 8 )
+                         ),
+            'name': 'B1',
+            'kind': 'Struct'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 8 )
+                         ),
+            'name': 'B0',
+            'kind': 'Struct'
+          } ),
         ),
         requests.codes.ok ],
       [ ( filepath, 13, 8 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 12, 8 )
-                     ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 8 )
+                         ),
+            'name': 'B0',
+            'kind': 'Struct'
+          } ),
         ),
         requests.codes.ok ],
       [ ( filepath, 12, 8 ),
@@ -1361,18 +1370,28 @@ class SubcommandsTest( TestCase ):
     for location, response, code in [
       [ ( filepath, 12, 8 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 13, 8 )
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 15, 8 )
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 16, 8 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 13, 8 )
+                         ),
+            'name': 'B1',
+            'kind': 'Struct'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 15, 8 )
+                         ),
+            'name': 'D0',
+            'kind': 'Struct'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 16, 8 )
+                         ),
+            'name': 'D1',
+            'kind': 'Struct'
+          } ),
+        ),
         requests.codes.ok ],
       [ ( filepath, 13, 8 ),
         contains_inanyorder(
@@ -1399,11 +1418,15 @@ class SubcommandsTest( TestCase ):
             'locations': contains_exactly(
                            LocationMatcher( filepath, 4, 12 ),
                            LocationMatcher( filepath, 4, 18 ) ),
-            'root_location': LocationMatcher( filepath, 3, 5 )
+            'root_location': LocationMatcher( filepath, 3, 5 ),
+            'name': 'g',
+            'kind': 'Function'
           } ),
           has_entries( {
             'locations': contains_exactly( LocationMatcher( filepath, 9, 12 ) ),
-            'root_location': LocationMatcher( filepath, 7, 5 )
+            'root_location': LocationMatcher( filepath, 7, 5 ),
+            'name': 'h',
+            'kind': 'Function'
           } )
         ),
         requests.codes.ok ],
@@ -1411,7 +1434,9 @@ class SubcommandsTest( TestCase ):
         contains_inanyorder(
           has_entries( {
             'locations': contains_exactly( LocationMatcher( filepath, 8, 13 ) ),
-            'root_location': LocationMatcher( filepath, 7, 5 )
+            'root_location': LocationMatcher( filepath, 7, 5 ),
+            'name': 'h',
+            'kind': 'Function'
           } )
         ),
         requests.codes.ok ],

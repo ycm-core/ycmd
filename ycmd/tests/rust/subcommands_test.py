@@ -598,14 +598,19 @@ class SubcommandsTest( TestCase ):
     for location, response, code in [
       [ ( filepath, 9, 4 ),
         contains_inanyorder(
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 10, 13 ),
-                     ) ),
-          has_entry( 'locations',
-                     contains_exactly(
-                       LocationMatcher( filepath, 11, 5 )
-                     ) ) ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 13 ) ),
+            'kind': 'Function',
+            'name': 'g'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 5 ) ),
+            'kind': 'Function',
+            'name': 'f'
+          } )
+        ),
         requests.codes.ok ],
       [ ( filepath, 5, 4 ),
         contains_inanyorder(
@@ -633,16 +638,16 @@ class SubcommandsTest( TestCase ):
             'locations': contains_exactly(
                            LocationMatcher( filepath, 6, 5 ),
                            LocationMatcher( filepath, 6, 11 ) ),
-            # rust-analyzer always returns column 1 for root_location,
-            # which is useless for us... unfortunately.
-            'root_location': LocationMatcher( filepath, 5, 4 )
+            'root_location': LocationMatcher( filepath, 5, 4 ),
+            'name': 'g',
+            'kind': 'Function'
           } ),
           has_entries( {
             'locations': contains_exactly(
                            LocationMatcher( filepath, 11, 5 ) ),
-            # rust-analyzer always returns column 1 for root_location,
-            # which is useless for us... unfortunately.
-            'root_location': LocationMatcher( filepath, 9, 4 )
+            'root_location': LocationMatcher( filepath, 9, 4 ),
+            'name': 'h',
+            'kind': 'Function'
           } )
         ),
         requests.codes.ok ],
@@ -651,9 +656,9 @@ class SubcommandsTest( TestCase ):
           has_entries( {
             'locations': contains_exactly(
                            LocationMatcher( filepath, 10, 13 ) ),
-            # rust-analyzer always returns column 1 for root_location,
-            # which is useless for us... unfortunately.
-            'root_location': LocationMatcher( filepath, 9, 4 )
+            'root_location': LocationMatcher( filepath, 9, 4 ),
+            'name': 'h',
+            'kind': 'Function'
           } )
         ),
         requests.codes.ok ],
