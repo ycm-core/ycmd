@@ -89,13 +89,13 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   )$
 """
 
-JDTLS_MILESTONE = '1.31.0'
-JDTLS_BUILD_STAMP = '202401111522'
+JDTLS_MILESTONE = '1.36.0'
+JDTLS_BUILD_STAMP = '202405301306'
 JDTLS_SHA256 = (
-  '6c25f62d0b74d1dd92ab19afbafbe5041eb06c2b853eab57f7f42fe6feb01f7c'
+  '028e274d06f4a61cad4ffd56f89ef414a8f65613c6d05d9467651b7fb03dae7b'
 )
 
-DEFAULT_RUST_TOOLCHAIN = 'nightly-2023-08-18'
+DEFAULT_RUST_TOOLCHAIN = 'nightly-2024-06-11'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
@@ -945,7 +945,7 @@ def EnableGoCompleter( args ):
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
 
-  gopls = 'golang.org/x/tools/gopls@v0.14.0'
+  gopls = 'golang.org/x/tools/gopls@v0.15.3'
   CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,
