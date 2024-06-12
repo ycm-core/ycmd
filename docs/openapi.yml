@@ -195,6 +195,7 @@ definitions:
     required:
       - kind
       - locations
+      - name
     description: |-
       An object returned, in a list, as a response to hierarchy requests.
       The object may contain additional properties, which are used to identify
@@ -233,6 +234,10 @@ definitions:
         type: array
         items:
           $ref: "#/defintions/Location"
+      name:
+        type: string
+        description: |-
+          The name of the symbol represented by the hierarchy item.
       root_location:
         type: object
         description: |-
