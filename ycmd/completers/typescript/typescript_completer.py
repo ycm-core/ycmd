@@ -493,6 +493,11 @@ class TypeScriptCompleter( Completer ):
                               self._RefactorRename( request_data, args ) ),
       'Format'            : ( lambda self, request_data, args:
                               self._Format( request_data ) ),
+      'CallHierarchy'     : ( lambda self, request_data, args:
+                              self._InitialHierarchy(
+                                request_data, [ 'call' ] ) ),
+      'ResolveCallHierarchyItem': ( lambda self, request_data, args:
+                                    self._Hierarchy( request_data, args ) ),
     }
 
 
@@ -751,6 +756,36 @@ class TypeScriptCompleter( Completer ):
     } )
 
 
+  def _InitialHierarchy( self, request_data, args ):
+    self._Reload( request_data )
+    response = self._SendRequest( 'prepareCallHierarchy', {
+      'file': request_data[ 'filepath' ],
+      'line': request_data[ 'line_num' ],
+      'offset': request_data[ 'column_codepoint' ]
+    } )
+
+    if isinstance( response, dict ):
+      response = [ response ]
+
+    assert len( response ) == 1, (
+             'Not available: Multiple hierarchies were received, '
+             'this is not currently supported.' )
+
+    response[ 0 ][ 'locations' ] = []
+    for loc in response:
+      start_position = response[ 0 ][ 'selectionSpan' ][ 'start' ]
+      goto_line = start_position[ 'line' ]
+      goto_column = utils.CodepointOffsetToByteOffset(
+        request_data[ 'line_value' ],
+        start_position[ 'offset' ] )
+      response[ 0 ][ 'locations' ].append( responses.BuildGoToResponse(
+        request_data[ 'filepath' ],
+        goto_line,
+        goto_column,
+        request_data[ 'line_value' ] ) )
+    return response
+
+
   def _CallHierarchy( self, request_data, args ):
     self._Reload( request_data )
 
@@ -782,6 +817,53 @@ class TypeScriptCompleter( Completer ):
     if goto_response:
       return goto_response
     raise RuntimeError( f'No { args[ 0 ].lower() } calls found.' )
+
+
+  def _Hierarchy( self, request_data, args ):
+    self._Reload( request_data )
+    preparation_item, direction = args
+    if item := ( preparation_item.get( 'from' ) or
+                 preparation_item.get( 'to' ) ):
+      preparation_item = item
+    start_loc = preparation_item[ 'selectionSpan' ][ 'start' ]
+    start_loc[ 'file' ] = preparation_item[ 'file' ]
+    response = self._SendRequest(
+        f'provideCallHierarchy{ direction.title() }Calls',
+        start_loc )
+    if response:
+      for item in response:
+        root_object = item.get( 'to' ) or item[ 'from' ]
+        filepath = root_object[ 'file' ]
+        item[ 'locations' ] = []
+        item[ 'name' ] = root_object[ 'name' ]
+        item[ 'kind' ] = root_object[ 'kind' ]
+        for loc in item[ 'fromSpans' ]:
+          start_position = loc[ 'start' ]
+          goto_line = start_position[ 'line' ]
+          line_value = GetFileLines( request_data, filepath )[ goto_line - 1 ]
+          goto_column = utils.CodepointOffsetToByteOffset(
+            line_value,
+            start_position[ 'offset' ] )
+          item[ 'locations' ].append( responses.BuildGoToResponse(
+            filepath,
+            goto_line,
+            goto_column,
+            line_value
+          ) )
+        if direction == 'incoming':
+          start_position = root_object[ 'selectionSpan' ][ 'start' ]
+          goto_line = start_position[ 'line' ]
+          line_value = GetFileLines( request_data, filepath )[ goto_line - 1 ]
+          goto_column = utils.CodepointOffsetToByteOffset(
+            line_value,
+            start_position[ 'offset' ] )
+          item[ 'root_location' ] = responses.BuildGoToResponse(
+              filepath,
+              goto_line,
+              goto_column,
+              line_value )
+      return response
+    raise RuntimeError( f'No { direction } calls found.' )
 
 
   def _GoToDefinition( self, request_data ):
