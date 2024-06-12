@@ -50,7 +50,29 @@ DIAG_MATCHERS_PER_FILE = {
                                         ( 14, 13 ),
                                         ( 14, 19 ) ) ),
       'fixit_available': False
-    } )
+    } ),
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'unused variable: `a`\n`#[warn(unused_variables)]` '
+              'on by default [unused_variables]',
+      'location': LocationMatcher( MAIN_FILEPATH, 20, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 20, 9 ), ( 20, 10 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 20, 9 ),
+                                        ( 20, 10 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'HINT',
+      'text': 'if this is intentional, '
+              'prefix it with an underscore: `_a` [unused_variables]',
+      'location': LocationMatcher( MAIN_FILEPATH, 20, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 20, 9 ), ( 20, 10 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 20, 9 ),
+                                        ( 20, 10 ) ) ),
+      'fixit_available': False
+    } ),
   )
 }
 
@@ -102,6 +124,7 @@ class DiagnosticsTest( TestCase ):
     assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
+  @WithRetry()
   @SharedYcmd
   def test_Diagnostics_Poll( self, app ):
     project_dir = PathToTestFile( 'common' )

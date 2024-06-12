@@ -70,9 +70,9 @@ class DiagnosticsTest( TestCase ):
           'kind': 'ERROR',
           'text': 'Expected 1-2 arguments, but got 0.',
           'location': LocationMatcher( filepath, 37, 5 ),
-          'location_extent': RangeMatcher( filepath, ( 37, 5 ), ( 37, 12 ) ),
+          'location_extent': RangeMatcher( filepath, ( 37, 5 ), ( 37, 10 ) ),
           'ranges': contains_exactly(
-            RangeMatcher( filepath, ( 37, 5 ), ( 37, 12 ) ) ),
+            RangeMatcher( filepath, ( 37, 5 ), ( 37, 10 ) ) ),
           'fixit_available': False
         } ),
         has_entries( {
