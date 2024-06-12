@@ -118,7 +118,9 @@ class SubcommandsTest( TestCase ):
         'FixIt',
         'OrganizeImports',
         'RefactorRename',
-        'RestartServer'
+        'RestartServer',
+        'CallHierarchy',
+        'ResolveCallHierarchyItem'
       )
     )
 
