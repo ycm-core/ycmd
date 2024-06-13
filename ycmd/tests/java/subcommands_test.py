@@ -74,6 +74,12 @@ TSET_JAVA = PathToTestFile( 'simple_eclipse_project',
                             'testing',
                             'Tset.java' )
 
+HIERARCHIES_JAVA = PathToTestFile( 'simple_eclipse_project',
+                                   'src',
+                                   'com',
+                                   'test',
+                                   'Hierarchies.java' )
+
 
 def RunTest( app, test, contents = None ):
   if not contents:
@@ -107,11 +113,12 @@ def RunTest( app, test, contents = None ):
         expect_errors = True
       )
 
-      assert_that( response.status_code,
-                   equal_to( test[ 'expect' ][ 'response' ] ) )
+      if 'expect' in test:
+        assert_that( response.status_code,
+                     equal_to( test[ 'expect' ][ 'response' ] ) )
 
-      assert_that( response.json, test[ 'expect' ][ 'data' ] )
-      break
+        assert_that( response.json, test[ 'expect' ][ 'data' ] )
+      return response.json
     except AssertionError:
       if time.time() > expiry:
         print( 'completer response: '
@@ -120,6 +127,32 @@ def RunTest( app, test, contents = None ):
         raise
 
       time.sleep( 0.25 )
+
+
+def RunHierarchyTest( app, kind, direction, location, expected, code ):
+  file, line, column = location
+  request = {
+    'completer_target' : 'filetype_default',
+    'command': f'{ kind.title() }Hierarchy',
+    'line_num'         : line,
+    'column_num'       : column,
+    'filepath'         : file,
+  }
+  test = { 'request': request,
+           'route': '/run_completer_command' }
+  prepare_hierarchy_response = RunTest( app, test )
+  request.update( {
+    'command': f'Resolve{ kind.title() }HierarchyItem',
+    'arguments': [
+      prepare_hierarchy_response[ 0 ],
+      direction
+    ]
+  } )
+  test[ 'expect' ] = {
+    'response': code,
+    'data': expected
+  }
+  RunTest( app, test )
 
 
 def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
@@ -2632,3 +2665,120 @@ class SubcommandsTest( TestCase ):
         'data': ''
       }
     } )
+
+
+  @SharedYcmd
+  def test_Subcommands_OutgoingCallHierarchy( self, app ):
+    filepath = HIERARCHIES_JAVA
+    for location, response, code in [
+      [ ( filepath, 15, 14 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 16, 13 ) ),
+            'kind': 'Method',
+            'name': 'g() : int'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 17, 16 ) ),
+            'kind': 'Method',
+            'name': 'f() : int'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 11, 14 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'kind': 'Method',
+            'name': 'f() : int'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'kind': 'Method',
+            'name': 'f() : int'
+          } ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 7, 14 ),
+        ErrorMatcher( RuntimeError, 'No outgoing calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'outgoing', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_IncomingCallHierarchy( self, app ):
+    filepath = HIERARCHIES_JAVA
+    for location, response, code in [
+      [ ( filepath, 7, 14 ),
+        contains_inanyorder(
+          # Once again JDT repeats items...
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'root_location': LocationMatcher( filepath, 11, 3 ),
+            'name': 'g() : int',
+            'kind': 'Method'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'root_location': LocationMatcher( filepath, 11, 3 ),
+            'name': 'g() : int',
+            'kind': 'Method'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 17, 16 ) ),
+            'root_location': LocationMatcher( filepath, 15, 3 ),
+            'name': 'h() : int',
+            'kind': 'Method'
+          } ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 11, 14 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 16, 13 ) ),
+            'root_location': LocationMatcher( filepath, 15, 3 ),
+            'name': 'h() : int',
+            'kind': 'Method'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 15, 14 ),
+        ErrorMatcher( RuntimeError, 'No incoming calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'incoming', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_NoHierarchyFound( self, app ):
+    filepath = HIERARCHIES_JAVA
+    request = {
+      'completer_target' : 'filetype_default',
+      'command': 'CallHierarchy',
+      'line_num'         : 2,
+      'column_num'       : 1,
+      'filepath'         : filepath,
+      'filetype'         : 'go'
+    }
+    test = { 'request': request,
+             'route': '/run_completer_command',
+             'expect': {
+               'response': requests.codes.server_error,
+               'data': ErrorMatcher(
+                   RuntimeError, 'No call hierarchy found.' ) } }
+    RunTest( app, test )
