@@ -695,15 +695,10 @@ class SubcommandsTest( TestCase ):
           {
             'response': requests.codes.ok,
             'data': contains_inanyorder(
-              # NOTE: Yes, jdt doubles the references in the second project.
               LocationMatcher( abstract_test_widget, 10, 15 ),
               LocationMatcher( test_factory, 28, 9 ),
               LocationMatcher( test_launcher, 32, 11 ),
               LocationMatcher( test_widget_impl, 18, 15 ),
-              LocationMatcher( abstract_test_widget, 10, 15 ),
-              LocationMatcher( test_factory, 28, 9 ),
-              LocationMatcher( test_launcher, 32, 11 ),
-              LocationMatcher( test_widget_impl, 18, 15 )
             )
           } ),
     ]:
@@ -1193,7 +1188,7 @@ class SubcommandsTest( TestCase ):
             } ),
             has_entries( {
               'kind': 'quickassist',
-              'text': "Add Javadoc for 'Wimble'"
+              'text': "Add Javadoc comment"
             } ),
             has_entries( {
               'text': "Sort Members for 'TestFactory.java'"
@@ -1264,7 +1259,7 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': "Add Javadoc for 'getWidget'"
+          'text': "Add Javadoc comment"
         } ),
         has_entries( {
           'text': "Sort Members for 'TestFactory.java'"
@@ -1337,7 +1332,7 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'kind': 'quickassist',
-          'text': "Add Javadoc for 'testString'",
+          'text': "Add Javadoc comment",
           'chunks': instance_of( list )
         } ),
         has_entries( {
@@ -1345,6 +1340,9 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'text': "Add all missing imports"
+        } ),
+        has_entries( {
+          'text': "Add @SuppressWarnings 'unused' to 'testString'"
         } ),
       )
     } )
@@ -1425,7 +1423,7 @@ class SubcommandsTest( TestCase ):
             'chunks': instance_of( list ),
           } ),
           has_entries( {
-            'text': "Add Javadoc for 'getWidget'",
+            'text': "Add Javadoc comment",
             'chunks': instance_of( list ),
           } ),
           has_entries( {
@@ -1559,7 +1557,7 @@ class SubcommandsTest( TestCase ):
               'chunks': instance_of( list ),
             } ),
             has_entries( {
-              'text': "Add Javadoc for 'launch'",
+              'text': "Add Javadoc comment",
               'chunks': instance_of( list ),
             } ),
             has_entries( {
@@ -1658,7 +1656,7 @@ class SubcommandsTest( TestCase ):
           'chunks': instance_of( list ),
         } ),
         has_entries( {
-          'text': "Add Javadoc for 'DoWhatever'"
+          'text': "Add Javadoc comment"
         } ),
         has_entries( {
           'text': "Sort Members for 'Test.java'",
@@ -1725,7 +1723,7 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': "Add Javadoc for 'getWidget'"
+          'text': "Add Javadoc comment"
         } ),
         has_entries( {
           'text': "Sort Members for 'TestFactory.java'"
