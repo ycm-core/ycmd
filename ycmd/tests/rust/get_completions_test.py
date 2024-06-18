@@ -42,7 +42,7 @@ class GetCompletionsTest( TestCase ):
     completion_data = BuildRequest( filepath = filepath,
                                     filetype = 'rust',
                                     contents = contents,
-                                    line_num = 14,
+                                    line_num = 15,
                                     column_num = 19 )
 
     results = app.post_json( '/completions',

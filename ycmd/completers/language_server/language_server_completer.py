@@ -1685,7 +1685,7 @@ class LanguageServerCompleter( Completer ):
         message = diagnostic[ 'message' ]
         try:
           code = diagnostic[ 'code' ]
-          message += f' [{ code }]'
+          message += f' [{ code }]' # noqa
         except KeyError:
           pass
 
@@ -1787,6 +1787,18 @@ class LanguageServerCompleter( Completer ):
 
     if ( self._server_capabilities and
          _IsCapabilityProvided( self._server_capabilities,
+                                'typeHierarchyProvider' ) ):
+      commands[ 'TypeHierarchy' ] = (
+        lambda self, request_data, args:
+            self.InitialHierarchy( request_data, [ 'type' ] )
+      )
+      commands[ 'ResolveTypeHierarchyItem' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ *args, 'type' ] )
+      )
+
+    if ( self._server_capabilities and
+         _IsCapabilityProvided( self._server_capabilities,
                                 'callHierarchyProvider' ) ):
       commands[ 'GoToCallees' ] = (
         lambda self, request_data, args:
@@ -1795,6 +1807,14 @@ class LanguageServerCompleter( Completer ):
       commands[ 'GoToCallers' ] = (
         lambda self, request_data, args:
             self.CallHierarchy( request_data, [ 'incoming' ] )
+      )
+      commands[ 'CallHierarchy' ] = (
+        lambda self, request_data, args:
+            self.InitialHierarchy( request_data, [ 'call' ] )
+      )
+      commands[ 'ResolveCallHierarchyItem' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ *args, 'call' ] )
       )
 
     commands.update( self.GetCustomSubcommands() )
@@ -2643,6 +2663,97 @@ class LanguageServerCompleter( Completer ):
     return _SymbolInfoListToGoTo( request_data, result )
 
 
+  def InitialHierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    kind = args[ 0 ]
+
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.PrepareHierarchy( request_id, request_data, kind.title() )
+    prepare_response = self.GetConnection().GetResponse(
+        request_id,
+        message,
+        REQUEST_TIMEOUT_COMMAND )
+    preparation_item = prepare_response.get( 'result' ) or []
+    if not preparation_item:
+      raise RuntimeError( f'No { kind } hierarchy found.' )
+
+    assert len( preparation_item ) == 1, (
+             'Not available: Multiple hierarchies were received, '
+             'this is not currently supported.' )
+
+    preparation_item[ 0 ][ 'locations' ] = [
+      responses.BuildGoToResponseFromLocation(
+        *_LspLocationToLocationAndDescription( request_data,
+                                               location,
+                                               'selectionRange' ) )
+      for location in preparation_item ]
+    kind_string = lsp.SYMBOL_KIND[ preparation_item[ 0 ][ 'kind' ] ]
+    preparation_item[ 0 ][ 'kind' ] = kind_string
+    return preparation_item
+
+
+  def Hierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    preparation_item, direction, kind = args
+
+    if item := ( preparation_item.get( 'from' ) or
+                 preparation_item.get( 'to' ) ):
+      preparation_item = item
+    else:
+      del preparation_item[ 'locations' ]
+      kind_number = lsp.SYMBOL_KIND.index( preparation_item[ 'kind' ] )
+      preparation_item[ 'kind' ] = kind_number
+
+    if kind == 'call':
+      direction += 'Calls'
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.Hierarchy( request_id, kind, direction, preparation_item )
+    response = self.GetConnection().GetResponse( request_id,
+                                                 message,
+                                                 REQUEST_TIMEOUT_COMMAND )
+
+    result = response.get( 'result' )
+    if result:
+      for item in result:
+        if kind == 'call':
+          name_and_kind_key = 'to' if direction == 'outgoingCalls' else 'from'
+          hierarchy_item = item[ name_and_kind_key ]
+          kind_string = lsp.SYMBOL_KIND[ hierarchy_item[ 'kind' ] ]
+          item[ 'kind' ] = kind_string
+          item[ 'name' ] = hierarchy_item[ 'name' ]
+          lsp_locations = [ {
+            'uri': hierarchy_item[ 'uri' ],
+            'range': r }
+            for r in item[ 'fromRanges' ] ]
+          item[ 'locations' ] = [
+            responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, location ) )
+            for location in lsp_locations ]
+
+          if direction == 'incomingCalls':
+            item[ 'root_location' ] = responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data,
+                                                     hierarchy_item,
+                                                     'selectionRange' ) )
+        else:
+          item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ 'kind' ] ]
+          item[ 'locations' ] = [
+            responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, location ) )
+            for location in [ item ] ]
+      return result
+    if kind == 'call':
+      raise RuntimeError(
+          f'No { direction.rstrip( "Calls" ) } { kind }s found.' )
+    else:
+      raise RuntimeError( f'No { direction } found.' )
+
 
   def CallHierarchy( self, request_data, args ):
     if not self.ServerIsReady():
@@ -2650,7 +2761,7 @@ class LanguageServerCompleter( Completer ):
 
     self._UpdateServerWithFileContents( request_data )
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.PrepareCallHierarchy( request_id, request_data )
+    message = lsp.PrepareHierarchy( request_id, request_data, 'Call' )
     prepare_response = self.GetConnection().GetResponse(
         request_id,
         message,
@@ -2666,7 +2777,10 @@ class LanguageServerCompleter( Completer ):
     preparation_item = preparation_item[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.CallHierarchy( request_id, args[ 0 ], preparation_item )
+    message = lsp.Hierarchy( request_id,
+                             'call',
+                             args[ 0 ] + 'Calls',
+                             preparation_item )
     response = self.GetConnection().GetResponse( request_id,
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
@@ -3282,7 +3396,9 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     return locations
 
 
-def _LspLocationToLocationAndDescription( request_data, location ):
+def _LspLocationToLocationAndDescription( request_data,
+                                          location,
+                                          range_property = 'range' ):
   """Convert a LSP Location to a ycmd location."""
   try:
     filename = lsp.UriToFilePath( location[ 'uri' ] )
@@ -3299,9 +3415,10 @@ def _LspLocationToLocationAndDescription( request_data, location ):
                       'GoTo location' )
     file_contents = []
 
+  range = location[ range_property ]
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       location[ 'range' ][ 'start' ] )
+                                       range[ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):

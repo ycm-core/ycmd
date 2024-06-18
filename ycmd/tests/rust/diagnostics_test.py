@@ -45,33 +45,33 @@ DIAG_MATCHERS_PER_FILE = {
       'kind': 'ERROR',
       'text':
           'no field `build_` on type `test::Builder`\nunknown field [E0609]',
-      'location': LocationMatcher( MAIN_FILEPATH, 14, 13 ),
-      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 14, 13 ), ( 14, 19 ) ),
+      'location': LocationMatcher( MAIN_FILEPATH, 15, 13 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 15, 13 ), ( 15, 19 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
-                                        ( 14, 13 ),
-                                        ( 14, 19 ) ) ),
+                                        ( 15, 13 ),
+                                        ( 15, 19 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'WARNING',
       'text': 'unused variable: `a`\n`#[warn(unused_variables)]` '
               'on by default [unused_variables]',
-      'location': LocationMatcher( MAIN_FILEPATH, 20, 9 ),
-      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 20, 9 ), ( 20, 10 ) ),
+      'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
-                                        ( 20, 9 ),
-                                        ( 20, 10 ) ) ),
+                                        ( 21, 9 ),
+                                        ( 21, 10 ) ) ),
       'fixit_available': False
     } ),
     has_entries( {
       'kind': 'HINT',
       'text': 'if this is intentional, '
               'prefix it with an underscore: `_a` [unused_variables]',
-      'location': LocationMatcher( MAIN_FILEPATH, 20, 9 ),
-      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 20, 9 ), ( 20, 10 ) ),
+      'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
-                                        ( 20, 9 ),
-                                        ( 20, 10 ) ) ),
+                                        ( 21, 9 ),
+                                        ( 21, 10 ) ) ),
       'fixit_available': False
     } ),
   ),
@@ -122,7 +122,7 @@ class DiagnosticsTest( TestCase ):
     request_data = BuildRequest( contents = contents,
                                  filepath = filepath,
                                  filetype = 'rust',
-                                 line_num = 14,
+                                 line_num = 15,
                                  column_num = 13 )
 
     results = app.post_json( '/detailed_diagnostic', request_data ).json
