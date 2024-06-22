@@ -229,7 +229,6 @@ def UnittestValgrind( parsed_args, extra_unittest_args ):
     # unittest_args += [ '-m', 'not valgrind_skip' ]
 
   new_env = os.environ.copy()
-  new_env[ 'PYTHONMALLOC' ] = 'malloc'
   new_env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
   new_env[ 'YCM_VALGRIND_RUN' ] = '1'
   cmd = [ 'valgrind',

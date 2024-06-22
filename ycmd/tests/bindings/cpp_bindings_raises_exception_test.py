@@ -21,7 +21,8 @@ from hamcrest import assert_that, calling, raises
 from unittest import TestCase
 ycm_core = ImportCore()
 
-READONLY_MESSAGE = 'can\'t set attribute'
+READONLY_MESSAGE = ( 'can\'t set attribute'
+                     '|property (\'\' )?of \'\\w+\' object has no setter' )
 
 
 class CppBindingsExceptionTest( TestCase ):
