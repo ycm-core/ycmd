@@ -56,6 +56,10 @@ if ( not os.path.isfile( PATH_TO_OMNISHARP_ROSLYN_BINARY )
 LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
+def MonoRequired( roslyn_path: str ):
+    return not utils.OnWindows() and roslyn_path.endswith( '.exe' )
+
+
 def ShouldEnableCsCompleter( user_options ):
   user_roslyn_path = user_options[ 'roslyn_binary_path' ]
   if user_roslyn_path and not os.path.isfile( user_roslyn_path ):
@@ -67,12 +71,19 @@ def ShouldEnableCsCompleter( user_options ):
     roslyn = user_roslyn_path
   else:
     roslyn = PATH_TO_OMNISHARP_ROSLYN_BINARY
-  mono = FindExecutableWithFallback( user_options[ 'mono_binary_path' ],
-                                     FindExecutable( 'mono' ) )
-  if roslyn and ( mono or utils.OnWindows() ):
-    return True
-  LOGGER.info( 'No mono executable at %s', mono )
-  return False
+
+  if not roslyn:
+    LOGGER.info( 'No roslyn executable at %s', roslyn )
+    return False
+
+  if MonoRequired( roslyn ):
+    mono = FindExecutableWithFallback( user_options[ 'mono_binary_path' ],
+                                       FindExecutable( 'mono' ) )
+    if not mono:
+      LOGGER.info( 'No mono executable at %s', mono )
+      return False
+
+  return True
 
 
 class CsharpCompleter( Completer ):
@@ -438,8 +449,7 @@ class CsharpSolutionCompleter( object ):
                                 '-s',
                                 str( self._solution_path ) ]
 
-    if ( not utils.OnWindows()
-         and self._roslyn_path.endswith( '.exe' ) ):
+    if ( MonoRequired( self._roslyn_path ) ):
       self._omnisharp_command.insert( 0, self._mono_path )
 
     return self._omnisharp_command
