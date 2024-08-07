@@ -57,7 +57,7 @@ LOGFILE_FORMAT = 'omnisharp_{port}_{sln}_{std}_'
 
 
 def MonoRequired( roslyn_path: str ):
-    return not utils.OnWindows() and roslyn_path.endswith( '.exe' )
+  return not utils.OnWindows() and roslyn_path.endswith( '.exe' )
 
 
 def ShouldEnableCsCompleter( user_options ):
