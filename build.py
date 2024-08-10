@@ -115,6 +115,37 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'See the YCM docs for details on how to use a custom Clangd.' )
 
 
+def UseVsWhere( quiet, vswhere_args ):
+  ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
+
+  if not quiet:
+    print( "Calling", *vswhere_args )
+  latest_full_v = subprocess.check_output( vswhere_args ).strip().decode()
+  if '.' in latest_full_v:
+    try:
+      latest_v = int( latest_full_v.split( '.' )[ 0 ] )
+    except ValueError:
+      raise ValueError( f"{ latest_full_v } is not a version number." )
+
+    if not quiet:
+      print( f'vswhere -latest returned version { latest_full_v }' )
+
+    if latest_v not in ACCEPTABLE_VERSIONS:
+      if latest_v > 17:
+        if not quiet:
+          print( f'MSVC Version { latest_full_v } is newer than expected.' )
+      else:
+        raise ValueError(
+          f'vswhere returned { latest_full_v } which is unexpected.'
+          'Pass --msvc <version> argument.' )
+    return latest_v
+  else:
+    if not quiet:
+      print( f'vswhere returned nothing usable, { latest_full_v }' )
+
+  return None
+
+
 def FindLatestMSVC( quiet, preview=False ):
   ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
 
@@ -127,30 +158,16 @@ def FindLatestMSVC( quiet, preview=False ):
                      '-latest', '-property', 'installationVersion' ]
     if preview:
       vswhere_args.append( '-prerelease' )
+
+    if msvc := UseVsWhere( quiet, vswhere_args ):
+      return msvc
+
     if not quiet:
-      print( "Calling", *vswhere_args )
-    latest_full_v = subprocess.check_output( vswhere_args ).strip().decode()
-    if '.' in latest_full_v:
-      try:
-        latest_v = int( latest_full_v.split( '.' )[ 0 ] )
-      except ValueError:
-        raise ValueError( f"{ latest_full_v } is not a version number." )
+      print( 'Retrying vswhere for Build Tools' )
 
-      if not quiet:
-        print( f'vswhere -latest returned version { latest_full_v }' )
-
-      if latest_v not in ACCEPTABLE_VERSIONS:
-        if latest_v > 17:
-          if not quiet:
-            print( f'MSVC Version { latest_full_v } is newer than expected.' )
-        else:
-          raise ValueError(
-            f'vswhere returned { latest_full_v } which is unexpected.'
-            'Pass --msvc <version> argument.' )
-      return latest_v
-    else:
-      if not quiet:
-        print( f'vswhere returned nothing usable, { latest_full_v }' )
+    vswhere_args += [ '-products', 'Microsoft.VisualStudio.Product.BuildTools' ]
+    if msvc := UseVsWhere( quiet, vswhere_args ):
+      return msvc
 
   # Fall back to registry parsing, which works at least until MSVC 2019 (16)
   # but is likely failing on MSVC 2022 (17)
