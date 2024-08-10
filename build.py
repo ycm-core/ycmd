@@ -114,10 +114,10 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'or use your system Clangd. '
   'See the YCM docs for details on how to use a custom Clangd.' )
 
+ACCEPTABLE_MSVC_VERSIONS = [ 17, 16, 15 ]
+
 
 def UseVsWhere( quiet, vswhere_args ):
-  ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
-
   if not quiet:
     print( "Calling", *vswhere_args )
   latest_full_v = subprocess.check_output( vswhere_args ).strip().decode()
@@ -130,7 +130,7 @@ def UseVsWhere( quiet, vswhere_args ):
     if not quiet:
       print( f'vswhere -latest returned version { latest_full_v }' )
 
-    if latest_v not in ACCEPTABLE_VERSIONS:
+    if latest_v not in ACCEPTABLE_MSVC_VERSIONS:
       if latest_v > 17:
         if not quiet:
           print( f'MSVC Version { latest_full_v } is newer than expected.' )
@@ -147,8 +147,6 @@ def UseVsWhere( quiet, vswhere_args ):
 
 
 def FindLatestMSVC( quiet, preview=False ):
-  ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
-
   VSWHERE_EXE = os.path.join( os.environ[ 'ProgramFiles(x86)' ],
                              'Microsoft Visual Studio',
                              'Installer', 'vswhere.exe' )
@@ -177,7 +175,7 @@ def FindLatestMSVC( quiet, preview=False ):
   import winreg
   handle = winreg.ConnectRegistry( None, winreg.HKEY_LOCAL_MACHINE )
   msvc = None
-  for i in ACCEPTABLE_VERSIONS:
+  for i in ACCEPTABLE_MSVC_VERSIONS:
     if not quiet:
       print( 'Trying to find '
              rf'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\{ i }.0' )
