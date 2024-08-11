@@ -29,13 +29,12 @@ PATH_TO_ROSLYN_OMNISHARP = os.path.join(
   os.path.abspath( os.path.dirname( __file__ ) ),
   '..', '..', '..', 'third_party', 'omnisharp-roslyn'
 )
-PATH_TO_OMNISHARP_ROSLYN_BINARY = os.path.join(
-  PATH_TO_ROSLYN_OMNISHARP, 'Omnisharp.exe' )
-if ( not os.path.isfile( PATH_TO_OMNISHARP_ROSLYN_BINARY )
-     and os.path.isfile( os.path.join(
-       PATH_TO_ROSLYN_OMNISHARP, 'omnisharp', 'OmniSharp.exe' ) ) ):
-  PATH_TO_OMNISHARP_ROSLYN_BINARY = (
-    os.path.join( PATH_TO_ROSLYN_OMNISHARP, 'omnisharp', 'OmniSharp.exe' ) )
+if utils.OnWindows():
+  PATH_TO_OMNISHARP_ROSLYN_BINARY = os.path.join(
+    PATH_TO_ROSLYN_OMNISHARP, 'OmniSharp.exe' )
+else:
+  PATH_TO_OMNISHARP_ROSLYN_BINARY = os.path.join(
+    PATH_TO_ROSLYN_OMNISHARP, 'OmniSharp' )
 
 
 def MonoRequired( roslyn_path: str ):

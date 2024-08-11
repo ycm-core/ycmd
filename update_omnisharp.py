@@ -23,11 +23,10 @@ URL_FORMAT = {
                "releases/{version}/{file_name}" ),
 }
 FILE_NAME = {
-    'win32': 'omnisharp-win-x86.zip',
-    'win64': 'omnisharp-win-x64.zip',
-    'macos': 'omnisharp-osx.tar.gz',
-  'linux32': 'omnisharp-linux-x86.tar.gz',
-  'linux64': 'omnisharp-linux-x64.tar.gz',
+    'win32': 'omnisharp-win-x86-net6.0.zip',
+    'win64': 'omnisharp-win-x64-net6.0.zip',
+    'macos': 'omnisharp-osx-arm64-net6.0.tar.gz',
+  'linux64': 'omnisharp-linux-x64-net6.0.tar.gz',
 }
 
 
