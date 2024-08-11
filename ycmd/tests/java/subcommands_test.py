@@ -102,7 +102,7 @@ def RunTest( app, test, contents = None ):
   while True:
     try:
       response = app.post_json(
-        '/run_completer_command',
+        test.get( 'route', '/run_completer_command' ),
         CombineRequest( test[ 'request' ], {
           'completer_target': 'filetype_default',
           'contents': contents,
@@ -155,20 +155,36 @@ def RunHierarchyTest( app, kind, direction, location, expected, code ):
   RunTest( app, test )
 
 
-def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
-  RunTest( app, {
+def RunFixItTest( app,
+                  description,
+                  filepath,
+                  line,
+                  col,
+                  fixits_for_line,
+                  extra_request_data = None ):
+  test = {
     'description': description,
     'request': {
       'command': 'FixIt',
+      'filepath': filepath,
       'line_num': line,
       'column_num': col,
-      'filepath': filepath,
     },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': fixits_for_line,
-    }
-  } )
+  }
+
+  if extra_request_data is not None:
+    test[ 'request' ].update( extra_request_data )
+
+  unresolved_fixits = RunTest( app, test )
+  resolved_fixits = { 'fixits': [] }
+  for unresolved_fixit in unresolved_fixits[ 'fixits' ]:
+    test[ 'request' ][ 'fixit' ] = unresolved_fixit
+    test[ 'route' ] = '/resolve_fixit'
+    result = RunTest( app, test )
+    if result[ 'fixits' ]:
+      resolved_fixits[ 'fixits' ].append( result[ 'fixits' ][ 0 ] )
+  print( 'completer response: ', json.dumps( resolved_fixits ) )
+  assert_that( resolved_fixits, fixits_for_line )
 
 
 @WithRetry()
@@ -1491,12 +1507,111 @@ class SubcommandsTest( TestCase ):
                                'com',
                                'test',
                                'TestLauncher.java' )
-    RunTest( app, {
-      'description': 'Formatting is applied on some part of the file '
-                     'with tabs composed of 4 spaces',
-      'request': {
-        'command': 'FixIt',
-        'filepath': filepath,
+    fixits_for_range = has_entries( {
+      'fixits': contains_inanyorder(
+        has_entries( {
+          'text': 'Extract to field',
+          'kind': 'refactor.extract.field',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              matches_regexp(
+                'private String \\w+;\n'
+                '\n'
+                '    @Override\n'
+                '      public void launch\\(\\) {\n'
+                '        AbstractTestWidget w = '
+                'factory.getWidget\\( "Test" \\);\n'
+                '        '
+                'w.doSomethingVaguelyUseful\\(\\);\n'
+                '\n'
+                '        \\w+ = "Did something '
+                'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                '        System.out.println\\( \\w+' ),
+              LocationMatcher( filepath, 29, 7 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Extract to method',
+          'kind': 'refactor.extract.function',
+          'chunks': contains_exactly(
+            # This one is a wall of text that rewrites 35 lines
+            ChunkMatcher( instance_of( str ),
+                          LocationMatcher( filepath, 1, 1 ),
+                          LocationMatcher( filepath, 35, 8 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Extract to local variable (replace all occurrences)',
+          'kind': 'refactor.extract.variable',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              matches_regexp(
+                'String \\w+ = "Did something '
+                'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                '        System.out.println\\( \\w+' ),
+              LocationMatcher( filepath, 34, 9 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Extract to local variable',
+          'kind': 'refactor.extract.variable',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              matches_regexp(
+                'String \\w+ = "Did something '
+                'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                '        System.out.println\\( \\w+' ),
+              LocationMatcher( filepath, 34, 9 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Introduce Parameter...',
+          'kind': 'refactor.introduce.parameter',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              'String string) {\n'
+              '        AbstractTestWidget w = '
+              'factory.getWidget( "Test" );\n'
+              '        w.doSomethingVaguelyUseful();\n'
+              '\n'
+              '        System.out.println( string',
+              LocationMatcher( filepath, 30, 26 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Organize imports',
+          'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': 'Change modifiers to final where possible',
+          'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': "Add Javadoc comment",
+          'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': "Sort Members for 'TestLauncher.java'"
+        } ),
+        has_entries( {
+          'text': 'Surround with try/catch',
+          'chunks': instance_of( list )
+        } ),
+      )
+    } )
+    RunFixItTest(
+      app,
+      'Formatting is applied on some part of the '
+        'file with tabs composed of 4 spaces',
+      filepath,
+      1,
+      1,
+      fixits_for_range,
+      extra_request_data = {
         'range': {
           'start': {
             'line_num': 34,
@@ -1506,109 +1621,9 @@ class SubcommandsTest( TestCase ):
             'line_num': 34,
             'column_num': 73
           }
-        },
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'fixits': contains_inanyorder(
-            has_entries( {
-              'text': 'Extract to field',
-              'kind': 'refactor.extract.field',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  matches_regexp(
-                    'private String \\w+;\n'
-                    '\n'
-                    '    @Override\n'
-                    '      public void launch\\(\\) {\n'
-                    '        AbstractTestWidget w = '
-                    'factory.getWidget\\( "Test" \\);\n'
-                    '        '
-                    'w.doSomethingVaguelyUseful\\(\\);\n'
-                    '\n'
-                    '        \\w+ = "Did something '
-                    'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                    '        System.out.println\\( \\w+' ),
-                  LocationMatcher( filepath, 29, 7 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Extract to method',
-              'kind': 'refactor.extract.function',
-              'chunks': contains_exactly(
-                # This one is a wall of text that rewrites 35 lines
-                ChunkMatcher( instance_of( str ),
-                              LocationMatcher( filepath, 1, 1 ),
-                              LocationMatcher( filepath, 35, 8 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Extract to local variable (replace all occurrences)',
-              'kind': 'refactor.extract.variable',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  matches_regexp(
-                    'String \\w+ = "Did something '
-                    'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                    '        System.out.println\\( \\w+' ),
-                  LocationMatcher( filepath, 34, 9 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Extract to local variable',
-              'kind': 'refactor.extract.variable',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  matches_regexp(
-                    'String \\w+ = "Did something '
-                    'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                    '        System.out.println\\( \\w+' ),
-                  LocationMatcher( filepath, 34, 9 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Introduce Parameter...',
-              'kind': 'refactor.introduce.parameter',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  'String string) {\n'
-                  '        AbstractTestWidget w = '
-                  'factory.getWidget( "Test" );\n'
-                  '        w.doSomethingVaguelyUseful();\n'
-                  '\n'
-                  '        System.out.println( string',
-                  LocationMatcher( filepath, 30, 26 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Organize imports',
-              'chunks': instance_of( list ),
-            } ),
-            has_entries( {
-              'text': 'Change modifiers to final where possible',
-              'chunks': instance_of( list ),
-            } ),
-            has_entries( {
-              'text': "Add Javadoc comment",
-              'chunks': instance_of( list ),
-            } ),
-            has_entries( {
-              'text': "Sort Members for 'TestLauncher.java'"
-            } ),
-            has_entries( {
-              'text': 'Surround with try/catch',
-              'chunks': instance_of( list )
-            } ),
-          )
-        } )
+        }
       }
-    } )
-
+    )
 
 
   @WithRetry()
@@ -1787,19 +1802,13 @@ class SubcommandsTest( TestCase ):
     with patch(
       'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
       side_effect = lsp.InvalidUriException ):
-      RunTest( app, {
-        'description': 'Invalid URIs do not make us crash',
-        'request': {
-          'command': 'FixIt',
-          'line_num': 27,
-          'column_num': 12,
-          'filepath': filepath,
-        },
-        'expect': {
-          'response': requests.codes.ok,
-          'data': fixits,
-        }
-      } )
+      RunFixItTest(
+        app,
+        'Invalid URIs do not make us crash',
+        filepath,
+        27,
+        12,
+        fixits )
 
 
   @WithRetry()
@@ -2380,7 +2389,7 @@ class SubcommandsTest( TestCase ):
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd()
   def test_Subcommands_IndexOutOfRange( self, app ):
     RunTest( app, {
       'description': 'Request with invalid position does not crash',
@@ -2458,10 +2467,10 @@ class SubcommandsTest( TestCase ):
             'fixits': has_items(
               has_entries( {
                 'text': 'Generate Getters and Setters',
-                'chunks': instance_of( list ) } ),
+                'resolve': True } ),
               has_entries( {
                 'text': 'Change modifiers to final where possible',
-                'chunks': instance_of( list ) } )
+                'resolve': True } )
             )
           }
         ),

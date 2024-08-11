@@ -71,7 +71,7 @@ def RunTest( app, test, contents = None ):
   # We also ignore errors here, but then we check the response code
   # ourself. This is to allow testing of requests returning errors.
   response = app.post_json(
-    '/run_completer_command',
+    test.get( 'route', '/run_completer_command' ),
     CombineRequest( test[ 'request' ], {
       'completer_target': 'filetype_default',
       'contents': contents,
@@ -91,8 +91,14 @@ def RunTest( app, test, contents = None ):
   return response.json
 
 
-def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
-  RunTest( app, {
+def RunFixItTest( app,
+                  description,
+                  filepath,
+                  line,
+                  col,
+                  fixits_for_line,
+                  chosen_fixit = None ):
+  test = {
     'description': description,
     'request': {
       'command': 'FixIt',
@@ -104,7 +110,17 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
       'response': requests.codes.ok,
       'data': fixits_for_line,
     }
-  } )
+  }
+  if chosen_fixit is not None:
+    test_no_expect = test.copy()
+    test_no_expect.pop( 'expect' )
+    response = RunTest( app, test_no_expect )
+    request = test[ 'request' ]
+    request.update( {
+      'fixit': response[ 'fixits' ][ chosen_fixit ]
+    } )
+    test[ 'route' ] = '/resolve_fixit'
+  RunTest( app, test )
 
 
 def RunHierarchyTest( app, kind, direction, location, expected, code ):
@@ -445,9 +461,6 @@ class SubcommandsTest( TestCase ):
                   filepath, 1, 1, has_entry( 'fixits', empty() ) )
 
 
-  @ExpectedFailure(
-    'Gopls bug. See https://github.com/golang/go/issues/68904',
-    matches_regexp( 'Browse free symbols' ) )
   @SharedYcmd
   def test_Subcommands_FixIt_Simple( self, app ):
     filepath = PathToTestFile( 'fixit.go' )
@@ -464,7 +477,7 @@ class SubcommandsTest( TestCase ):
         } ),
       )
     } )
-    RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
+    RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit, 0 )
 
 
   @SharedYcmd
