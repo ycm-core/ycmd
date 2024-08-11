@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from functools import partial
+from pathlib import Path
 import abc
 import collections
 import contextlib
@@ -2306,8 +2307,8 @@ class LanguageServerCompleter( Completer ):
 
 
   def GetProjectRootFiles( self ):
-    """Returns a list of files that indicate the root of the project.
-    It should be easier to override just this method than the whole
+    """Returns a list of globs matching files that indicate the root of the
+    project.  It should be easier to override just this method than the whole
     GetProjectDirectory."""
     return []
 
@@ -2362,7 +2363,7 @@ class LanguageServerCompleter( Completer ):
     if project_root_files:
       for folder in utils.PathsToAllParentFolders( filepath ):
         for root_file in project_root_files:
-          if os.path.isfile( os.path.join( folder, root_file ) ):
+          if next( Path( folder ).glob( root_file ), [] ):
             return folder
     return None if strict else os.path.dirname( filepath )
 
