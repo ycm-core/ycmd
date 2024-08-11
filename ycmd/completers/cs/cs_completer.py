@@ -38,6 +38,10 @@ if ( not os.path.isfile( PATH_TO_OMNISHARP_ROSLYN_BINARY )
     os.path.join( PATH_TO_ROSLYN_OMNISHARP, 'omnisharp', 'OmniSharp.exe' ) )
 
 
+def MonoRequired( roslyn_path: str ):
+  return not utils.OnWindows() and roslyn_path.endswith( '.exe' )
+
+
 def ShouldEnableCsCompleter( user_options ):
   user_roslyn_path = user_options[ 'roslyn_binary_path' ]
   if user_roslyn_path and not os.path.isfile( user_roslyn_path ):
@@ -49,10 +53,17 @@ def ShouldEnableCsCompleter( user_options ):
     roslyn = user_roslyn_path
   else:
     roslyn = PATH_TO_OMNISHARP_ROSLYN_BINARY
-  if roslyn:
-    return True
-  LOGGER.info( 'No mono executable at %s', mono )
-  return False
+  if not roslyn:
+    return False
+
+  if MonoRequired( roslyn ):
+    mono = FindExecutableWithFallback( user_options[ 'mono_binary_path' ],
+                                       FindExecutable( 'mono' ) )
+    if not mono:
+      LOGGER.info( 'No mono executable at %s', mono )
+      return False
+
+  return True
 
 
 class CsharpCompleter( language_server_completer.LanguageServerCompleter ):
@@ -62,6 +73,8 @@ class CsharpCompleter( language_server_completer.LanguageServerCompleter ):
       self._roslyn_path = user_options[ 'roslyn_binary_path' ]
     else:
       self._roslyn_path = PATH_TO_OMNISHARP_ROSLYN_BINARY
+    self._mono = FindExecutableWithFallback( user_options[ 'mono_binary_path' ],
+                                             FindExecutable( 'mono' ) )
 
 
   def GetServerName( self ):
@@ -77,6 +90,8 @@ class CsharpCompleter( language_server_completer.LanguageServerCompleter ):
     cmdline = [ self._roslyn_path, '-lsp' ]
     if utils.LOGGER.isEnabledFor( logging.DEBUG ):
       cmdline += [ '-v' ]
+    if MonoRequired( self._roslyn_path ):
+      cmdline.insert( 0, self._mono )
     return cmdline
 
 
