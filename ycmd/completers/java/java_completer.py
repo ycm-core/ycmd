@@ -635,13 +635,13 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
     return self._ResolveFixit( request_data, fixit )
 
 
-  def CodeActionCommandToFixIt( self, request_data, command ):
+  def CodeActionToFixIt( self, request_data, code_action ):
     # JDT wants us to special case `java.apply.workspaceEdit`
     # https://github.com/eclipse/eclipse.jdt.ls/issues/376
-    if command[ 'command' ][ 'command' ] == 'java.apply.workspaceEdit':
-      command[ 'edit' ] = command.pop( 'command' )[ 'arguments' ][ 0 ]
-      return super().CodeActionLiteralToFixIt( request_data, command )
-    return super().CodeActionCommandToFixIt( request_data, command )
+    if code_action[ 'command' ][ 'command' ] == 'java.apply.workspaceEdit':
+      code_action[ 'edit' ] = code_action.pop( 'command' )[ 'arguments' ][ 0 ]
+      return super().CodeActionLiteralToFixIt( request_data, code_action )
+    return super().CodeActionCommandToFixIt( request_data, code_action )
 
 
   def GetServerName( self ):

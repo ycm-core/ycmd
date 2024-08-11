@@ -2855,34 +2855,30 @@ class LanguageServerCompleter( Completer ):
                                             code_actions[ 'result' ] )
 
 
+  def CodeActionToFixIt( self, request_data, code_action ):
+    capabilities = self._server_capabilities[ 'codeActionProvider' ]
+    if ( ( isinstance( capabilities, dict ) and
+           capabilities.get( 'resolveProvider' ) ) or
+         'command' in code_action ):
+      # If server is a code action resolve provider, either we are obligated
+      # to resolve, or we have a command in the code action response.
+      # If server does not want us to resolve, but sends a command anyway,
+      # we still need to lazily execute that command.
+      return responses.UnresolvedFixIt( code_action,
+                                        code_action[ 'title' ],
+                                        code_action.get( 'kind' ) )
+    # No resoving here - just a simple code action literal.
+    return self.CodeActionLiteralToFixIt( request_data, code_action )
+
+
   def CodeActionResponseToFixIts( self, request_data, code_actions ):
     if code_actions is None:
       return responses.BuildFixItResponse( [] )
 
     fixits = []
     for code_action in code_actions:
-      if 'edit' in code_action:
-        # TODO: Start supporting a mix of WorkspaceEdits and Commands
-        # once there's a need for such
-        assert 'command' not in code_action
+      fixits.append( self.CodeActionToFixIt( request_data, code_action ) )
 
-        # This is a WorkspaceEdit literal
-        fixits.append( self.CodeActionLiteralToFixIt( request_data,
-                                                      code_action ) )
-        continue
-
-      # Either a CodeAction or a Command
-      assert 'command' in code_action
-
-      action_command = code_action[ 'command' ]
-      if isinstance( action_command, dict ):
-        # CodeAction with a 'command' rather than 'edit'
-        fixits.append( self.CodeActionCommandToFixIt( request_data,
-                                                      code_action ) )
-        continue
-
-      # It is a Command
-      fixits.append( self.CommandToFixIt( request_data, code_action ) )
 
     # Show a list of actions to the user to select which one to apply.
     # This is (probably) a more common workflow for "code action".
@@ -2986,10 +2982,48 @@ class LanguageServerCompleter( Completer ):
 
 
   def _ResolveFixit( self, request_data, fixit ):
-    if not fixit[ 'resolve' ]:
-      return { 'fixits': [ fixit ] }
+    code_action = fixit[ 'command' ]
+    capabilities = self._server_capabilities[ 'codeActionProvider' ]
+    if ( isinstance( capabilities, dict ) and
+         capabilities.get( 'resolveProvider' ) ):
+      # Resolve through codeAction/resolve request, before resolving commands.
+      # If the server is an asshole, it might be a code action resolve
+      # provider, but send a LSP Command instead. We can not resolve those with
+      # codeAction/resolve!
+      if ( 'command' not in code_action or
+           isinstance( code_action[ 'command' ], str ) ):
+        request_id = self.GetConnection().NextRequestId()
+        msg = lsp.CodeActionResolve( request_id, code_action )
+        code_action = self.GetConnection().GetResponse(
+            request_id,
+            msg,
+            REQUEST_TIMEOUT_COMMAND )[ 'result' ]
 
-    unresolved_fixit = fixit[ 'command' ]
+    result = []
+    if 'edit' in code_action:
+      result.append( self.CodeActionLiteralToFixIt( request_data,
+                                                    code_action ) )
+
+    if 'command' in code_action:
+      assert not result, 'Code actions with edit and command is not supported.'
+      if isinstance( code_action[ 'command' ], str ):
+        unresolved_command_fixit = self.CommandToFixIt( request_data,
+                                                        code_action )
+      else:
+        unresolved_command_fixit = self.CodeActionCommandToFixIt(
+            request_data,
+            code_action )
+      result.append( self._ResolveFixitCommand( request_data,
+                                                unresolved_command_fixit ) )
+
+    return responses.BuildFixItResponse( result )
+
+
+  def _ResolveFixitCommand( self, request_data, fixit ):
+    if isinstance( fixit, responses.FixIt ):
+      return fixit
+
+    unresolved_fixit = fixit.command
     collector = EditCollector()
     with self.GetConnection().CollectApplyEdits( collector ):
       self.GetCommandResponse(
@@ -3001,19 +3035,23 @@ class LanguageServerCompleter( Completer ):
     response = collector.requests
     assert len( response ) < 2
     if not response:
-      return responses.BuildFixItResponse( [ responses.FixIt(
+      return responses.FixIt(
         responses.Location( request_data[ 'line_num' ],
                             request_data[ 'column_num' ],
                             request_data[ 'filepath' ] ),
-        [] ) ] )
+        [] )
     fixit = WorkspaceEditToFixIt(
       request_data,
       response[ 0 ][ 'edit' ],
       unresolved_fixit[ 'title' ] )
-    return responses.BuildFixItResponse( [ fixit ] )
+    return fixit
 
 
   def ResolveFixit( self, request_data ):
+    fixit = request_data[ 'fixit' ]
+    if 'command' not in fixit:
+      # Somebody has sent us an already resolved fixit.
+      return { 'fixits': [ fixit ] }
     return self._ResolveFixit( request_data, request_data[ 'fixit' ] )
 
 

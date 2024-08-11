@@ -326,8 +326,13 @@ def Initialize( request_id,
                           'refactor.inline',
                           'refactor.rewrite',
                           'source',
-                          'source.organizeImports' ]
+                          'source.organizeImports',
+                          'source.fixAll' ]
           }
+        },
+        'dataSupport': True,
+        'resolveSupport': {
+          'properties': [ 'edit', 'command' ]
         }
       },
       'completion': {
@@ -578,6 +583,10 @@ def CodeAction( request_id, request_data, best_match_range, diagnostics ):
       'diagnostics': diagnostics,
     },
   } )
+
+
+def CodeActionResolve( request_id, code_action ):
+  return BuildRequest( request_id, 'codeAction/resolve', code_action )
 
 
 def Rename( request_id, request_data, new_name ):
