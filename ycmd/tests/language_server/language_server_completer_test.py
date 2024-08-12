@@ -103,6 +103,56 @@ def _Check_Distance( point, start, end, expected ):
 
 
 class LanguageServerCompleterTest( TestCase ):
+  @IsolatedYcmd()
+  def test_LanguageServerCompleter_DocumentSymbol_Hierarchical( self, app ):
+    completer = MockCompleter()
+    completer._server_capabilities = { 'documentSymbolProvider': True }
+    request_data = RequestWrap( BuildRequest() )
+    server_response = {
+      'result': [
+        {
+          "name": "testy",
+          "kind": 3,
+          "range": {
+            "start": { "line": 2, "character": 0 },
+            "end": { "line": 12, "character": 1 }
+          },
+          "children": [
+            {
+              "name": "MainClass",
+              "kind": 5,
+              "range": {
+                "start": { "line": 4, "character": 1 },
+                "end": { "line": 11, "character": 2 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+    with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+      with patch.object( completer.GetConnection(),
+                         'GetResponse',
+                         return_value = server_response ):
+        document_outline = completer.GoToDocumentOutline( request_data )
+        print( f'result: { document_outline }' )
+        assert_that( document_outline, contains_exactly(
+          has_entries( {
+            'line_num': 3,
+            'column_num': 1,
+            'filepath': '/foo',
+            'description': 'Namespace: testy',
+          } ),
+          has_entries( {
+            'line_num': 5,
+            'column_num': 2,
+            'filepath': '/foo',
+            'description': 'Class: MainClass',
+          } )
+        ) )
+
+
   @IsolatedYcmd( { 'global_ycm_extra_conf':
                    PathToTestFile( 'extra_confs', 'settings_extra_conf.py' ) } )
   def test_LanguageServerCompleter_ExtraConf_ServerReset( self, app ):
