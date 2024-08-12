@@ -2638,7 +2638,7 @@ class LanguageServerCompleter( Completer ):
       REQUEST_TIMEOUT_COMMAND )
 
     result = response.get( 'result' ) or []
-    return _SymbolInfoListToGoTo( request_data, result )
+    return _LspSymbolListToGoTo( request_data, result )
 
 
   def GoToDocumentOutline( self, request_data ):
@@ -2655,12 +2655,11 @@ class LanguageServerCompleter( Completer ):
 
     result = response.get( 'result' ) or []
 
-    # We should only receive SymbolInformation (not DocumentSymbol)
     if any( 'range' in s for s in result ):
-      raise ValueError(
-        "Invalid server response; DocumentSymbol not supported" )
+      LOGGER.debug( 'Hierarchical DocumentSymbol not supported.' )
+      result = _FlattenDocumentSymbolHierarchy( result )
 
-    return _SymbolInfoListToGoTo( request_data, result )
+    return _LspSymbolListToGoTo( request_data, result )
 
 
   def InitialHierarchy( self, request_data, args ):
@@ -3396,26 +3395,10 @@ def _LocationListToGoTo( request_data, positions ):
     raise RuntimeError( 'Cannot jump to location' )
 
 
-def _SymbolInfoListToGoTo( request_data, symbols ):
+def _LspSymbolListToGoTo( request_data, symbols ):
   """Convert a list of LSP SymbolInformation into a YCM GoTo response"""
 
-  def BuildGoToLocationFromSymbol( symbol ):
-    location, line_value = _LspLocationToLocationAndDescription(
-      request_data,
-      symbol[ 'location' ] )
-
-    description = ( f'{ lsp.SYMBOL_KIND[ symbol[ "kind" ] ] }: '
-                    f'{ symbol[ "name" ] }' )
-
-    goto = responses.BuildGoToResponseFromLocation( location,
-                                                    description )
-    goto[ 'extra_data' ] = {
-      'kind': lsp.SYMBOL_KIND[ symbol[ 'kind' ] ],
-      'name': symbol[ 'name' ],
-    }
-    return goto
-
-  locations = [ BuildGoToLocationFromSymbol( s ) for s in
+  locations = [ _BuildGoToLocationFromSymbol( s, request_data ) for s in
                 sorted( symbols,
                         key = lambda s: ( s[ 'kind' ], s[ 'name' ] ) ) ]
 
@@ -3425,6 +3408,38 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     return locations[ 0 ]
   else:
     return locations
+
+
+def _FlattenDocumentSymbolHierarchy( symbols ):
+  result = []
+  for s in symbols:
+    result.append( s )
+    if children := s.get( 'children' ):
+      result.extend( _FlattenDocumentSymbolHierarchy( children ) )
+  return result
+
+
+def _BuildGoToLocationFromSymbol( symbol, request_data ):
+  """ Convert a LSP SymbolInfo or DocumentSymbol into a YCM GoTo response"""
+  lsp_location = symbol.get( 'location' )
+  if not lsp_location: # This is a DocumentSymbol
+    lsp_location = symbol
+    lsp_location[ 'uri' ] = lsp.FilePathToUri( request_data[ 'filepath' ] )
+
+  location, line_value = _LspLocationToLocationAndDescription(
+    request_data,
+    lsp_location )
+
+  description = ( f'{ lsp.SYMBOL_KIND[ symbol[ "kind" ] ] }: '
+                  f'{ symbol[ "name" ] }' )
+
+  goto = responses.BuildGoToResponseFromLocation( location,
+                                                  description )
+  goto[ 'extra_data' ] = {
+    'kind': lsp.SYMBOL_KIND[ symbol[ 'kind' ] ],
+    'name': symbol[ 'name' ],
+  }
+  return goto
 
 
 def _LspLocationToLocationAndDescription( request_data,
