@@ -499,7 +499,7 @@ class SubcommandsTest( TestCase ):
                                  filepath = filepath )
 
     response = app.post_json( '/run_completer_command', gettype_data ).json
-    assert_that( response, has_entry( 'detailed_info',
+    assert_that( response, has_entry( 'message',
                                       '(local variable) string str' ) )
 
 
@@ -517,7 +517,7 @@ class SubcommandsTest( TestCase ):
                                  filepath = filepath )
 
     response = app.post_json( '/run_completer_command', gettype_data ).json
-    assert_that( response, has_entry( 'detailed_info',
+    assert_that( response, has_entry( 'message',
                                       '(local variable) string str' ) )
 
 
@@ -536,7 +536,68 @@ class SubcommandsTest( TestCase ):
 
     response = app.post_json( '/run_completer_command', gettype_data ).json
     assert_that( response, has_entry(
-      'detailed_info', '(field) int GetTypeTestCase.an_int_with_docs' ) )
+      'message', '(field) int GetTypeTestCase.an_int_with_docs' ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetDoc_Invalid( self, app ):
+    filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+    contents = ReadFile( filepath )
+
+    getdoc_data = BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'GetDoc' ],
+                                line_num = 1,
+                                column_num = 1,
+                                contents = contents,
+                                filetype = 'cs',
+                                filepath = filepath )
+
+    response = app.post_json( '/run_completer_command',
+                              getdoc_data,
+                              expect_errors = True ).json
+    assert_that( response, ErrorMatcher( RuntimeError,
+                                         'No documentation available.' ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetDoc_Variable( self, app ):
+    filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+    contents = ReadFile( filepath )
+
+    getdoc_data = BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'GetDoc' ],
+                                line_num = 13,
+                                column_num = 28,
+                                contents = contents,
+                                filetype = 'cs',
+                                filepath = filepath )
+
+    response = app.post_json( '/run_completer_command', getdoc_data ).json
+    assert_that( response,
+                 has_entry( 'detailed_info',
+                            '(field) int GetDocTestCase.an_int\n\n'
+                            'an integer, or something' ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetDoc_Function( self, app ):
+    filepath = PathToTestFile( 'testy', 'GetDocTestCase.cs' )
+    contents = ReadFile( filepath )
+
+    getdoc_data = BuildRequest( completer_target = 'filetype_default',
+                                command_arguments = [ 'GetDoc' ],
+                                line_num = 37,
+                                column_num = 27,
+                                contents = contents,
+                                filetype = 'cs',
+                                filepath = filepath )
+
+    response = app.post_json( '/run_completer_command', getdoc_data ).json
+    # And here LSP OmniSharp-Roslyn messes up the formatting.
+    assert_that( response, has_entry( 'detailed_info',
+      'int GetDocTestCase.DoATest()\n\n'
+      'Very important method\\. With multiple lines of '
+      'commentary And Format\\- \\-ting' ) )
 
 
   @IsolatedYcmd()

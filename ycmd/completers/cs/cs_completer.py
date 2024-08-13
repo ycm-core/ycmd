@@ -99,9 +99,28 @@ class CsharpCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def GetType( self, request_data ):
-    raw_hover = self.GetHoverResponse( request_data )
-    value = raw_hover[ 'value' ]
-    if not value:
+    hover_value = self.GetHoverResponse( request_data )[ 'value' ]
+    if not hover_value:
       raise RuntimeError( 'No type found.' )
-    value = value.split( '\n' )[ 1 ]
-    return responses.BuildDetailedInfoResponse( value )
+    value = hover_value.split( '\n', maxsplit = 2 )[ 1 ]
+    return responses.BuildDisplayMessageResponse( value )
+
+
+  def GetDoc( self, request_data ):
+    hover_value = self.GetHoverResponse( request_data )[ 'value' ]
+    if not hover_value:
+      raise RuntimeError( 'No documentation available.' )
+    # The response looks like this:
+    #
+    # ```csharp
+    # type info
+    # ```
+    #
+    # docstring
+    #
+    # The idea is to get rid of silly markdown backticks.
+    lines = hover_value.splitlines()
+    del lines[ 2 ]
+    del lines[ 0 ]
+    result = '\n'.join( lines )
+    return responses.BuildDetailedInfoResponse( result )
