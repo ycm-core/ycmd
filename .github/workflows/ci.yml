@@ -91,7 +91,7 @@ jobs:
 
     - name: Install Go
       if: matrix.benchmark == false
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: stable
         cache: false
@@ -250,7 +250,7 @@ jobs:
         architecture: ${{ matrix.python-arch }}
     - name: Install Go
       if: matrix.benchmark == false
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: stable
         cache: false
