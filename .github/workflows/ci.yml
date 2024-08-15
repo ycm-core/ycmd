@@ -93,7 +93,8 @@ jobs:
       if: matrix.benchmark == false
       uses: actions/setup-go@v5
       with:
-        go-version: stable
+        # HACK : Our gopls is not compatible with Go 1.23+
+        go-version: '<1.23'
         cache: false
     - name: Install mono
       if: runner.os == 'Linux' && matrix.benchmark == false
@@ -254,7 +255,8 @@ jobs:
       if: matrix.benchmark == false
       uses: actions/setup-go@v5
       with:
-        go-version: stable
+        # HACK : Our gopls is not compatible with Go 1.23+
+        go-version: '<1.23'
         cache: false
     - name: Run pip and prepare coverage
       if: matrix.benchmark == false
