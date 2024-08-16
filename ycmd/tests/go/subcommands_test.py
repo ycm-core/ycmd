@@ -434,6 +434,9 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, 'GoToImplementation', test )
 
 
+  @ExpectedFailure(
+    'Gopls bug. See https://github.com/golang/go/issues/68904',
+    matches_regexp( 'Browse free symbols' ) )
   @SharedYcmd
   def test_Subcommands_FixIt_NullResponse( self, app ):
     filepath = PathToTestFile( 'td', 'test.go' )
@@ -442,6 +445,9 @@ class SubcommandsTest( TestCase ):
                   filepath, 1, 1, has_entry( 'fixits', empty() ) )
 
 
+  @ExpectedFailure(
+    'Gopls bug. See https://github.com/golang/go/issues/68904',
+    matches_regexp( 'Browse free symbols' ) )
   @SharedYcmd
   def test_Subcommands_FixIt_Simple( self, app ):
     filepath = PathToTestFile( 'fixit.go' )
