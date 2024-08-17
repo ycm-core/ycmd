@@ -316,7 +316,8 @@ def FixIt_Check_cpp11_DelAdd( results ):
       has_entries( {
         'text': 'Move function body to declaration',
         'resolve': True,
-        'command': has_entries( { 'command': 'clangd.applyTweak' } )
+        'command': has_entries( { 'command': has_entries( {
+          'command': 'clangd.applyTweak' } ) } )
       } ),
     )
   } ) )

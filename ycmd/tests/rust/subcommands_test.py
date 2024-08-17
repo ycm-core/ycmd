@@ -64,7 +64,7 @@ def RunTest( app, test, contents = None ):
   # is mainly because we (may) want to test scenarios where the completer
   # throws an exception and the easiest way to do that is to throw from
   # within the FlagsForFile function.
-  app.post_json( '/event_notification',
+  app.post_json( test.get( 'route', '/run_completer_command' ),
                  CombineRequest( test[ 'request' ], {
                                  'event_name': 'FileReadyToParse',
                                  'contents': contents,
@@ -79,7 +79,7 @@ def RunTest( app, test, contents = None ):
   # We also ignore errors here, but then we check the response code
   # ourself. This is to allow testing of requests returning errors.
   response = app.post_json(
-    '/run_completer_command',
+    test.get( 'route', '/run_completer_command' ),
     CombineRequest( test[ 'request' ], {
       'completer_target': 'filetype_default',
       'contents': contents,
@@ -97,6 +97,19 @@ def RunTest( app, test, contents = None ):
                  equal_to( test[ 'expect' ][ 'response' ] ) )
     assert_that( response.json, test[ 'expect' ][ 'data' ] )
   return response.json
+
+
+def RunFixItTest( app, test ):
+  if 'chosen_fixit' in test:
+    test_no_expect = test.copy()
+    test_no_expect.pop( 'expect' )
+    response = RunTest( app, test_no_expect )
+    request = test[ 'request' ]
+    request.update( {
+      'fixit': response[ 'fixits' ][ test[ 'chosen_fixit' ] ]
+    } )
+    test[ 'route' ] = '/resolve_fixit'
+  RunTest( app, test )
 
 
 def RunHierarchyTest( app, kind, direction, location, expected, code ):
@@ -530,7 +543,7 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_FixIt_EmptyResponse( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
-    RunTest( app, {
+    RunFixItTest( app, {
       'description': 'FixIt on a line with no '
                      'codeAction returns empty response',
       'request': {
@@ -550,8 +563,9 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_FixIt_Basic( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
-    RunTest( app, {
+    RunFixItTest( app, {
       'description': 'Simple FixIt test',
+      'chosen_fixit': 2,
       'request': {
         'command': 'FixIt',
         'line_num': 18,
