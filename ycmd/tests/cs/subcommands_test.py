@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from hamcrest import ( assert_that,
+                       contains_inanyorder,
                        empty,
                        has_entries,
                        has_entry,
@@ -24,8 +25,9 @@ from hamcrest import ( assert_that,
 from unittest.mock import patch
 from unittest import TestCase
 import os.path
+import requests
 
-from ycmd import user_options_store
+from ycmd import handlers, user_options_store
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
 from ycmd.tests.cs import ( IsolatedYcmd,
                             PathToTestFile,
@@ -76,6 +78,60 @@ def StopServer_KeepLogFiles( app ):
 
 
 class SubcommandsTest( TestCase ):
+  @SharedYcmd
+  def test_Subcommands_DefinedSubcommands( self, app ):
+    subcommands_data = BuildRequest( completer_target = 'cs' )
+
+    assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
+                 contains_inanyorder( 'FixIt',
+                                      'Format',
+                                      'GetDoc',
+                                      'GetType',
+                                      'GoTo',
+                                      'GoToDeclaration',
+                                      'GoToDefinition',
+                                      'GoToDocumentOutline',
+                                      'GoToImplementation',
+                                      'GoToReferences',
+                                      'GoToSymbol',
+                                      'GoToType',
+                                      'RefactorRename',
+                                      'RestartServer' ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_ServerNotInitialized( self, app ):
+    filepath = PathToTestFile( 'testy', 'Program.cs' )
+
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'cs' ] )
+
+    @patch.object( completer, '_ServerIsInitialized', return_value = False )
+    def Test( app, cmd, arguments ):
+      request = BuildRequest( completer_target = 'filetype_default',
+                              command_arguments = [ cmd ],
+                              line_num = 1,
+                              column_num = 15,
+                              contents = ReadFile( filepath ),
+                              filetype = 'cs',
+                              filepath = filepath )
+      response = app.post_json( '/run_completer_command', request, expect_errors = True ).json
+      assert_that( response, ErrorMatcher( RuntimeError, 'Server is initializing. Please wait.' ) )
+
+    Test( app, 'FixIt' )
+    Test( app, 'Format' )
+    Test( app, 'GetDoc' )
+    Test( app, 'GetType' )
+    Test( app, 'GoTo' )
+    Test( app, 'GoToDeclaration' )
+    Test( app, 'GoToDefinition' )
+    Test( app, 'GoToDocumentOutline' )
+    Test( app, 'GoToImplementation' )
+    Test( app, 'GoToReferences' )
+    Test( app, 'GoToSymbol' )
+    Test( app, 'GoToType' )
+    Test( app, 'RefactorRename' )
+
+
   @SharedYcmd
   def test_Subcommands_FixIt_NoFixitsFound( self, app ):
     fixit_test = PathToTestFile( 'testy', 'FixItTestCase.cs' )
