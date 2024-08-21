@@ -25,7 +25,6 @@ from hamcrest import ( assert_that,
 from unittest.mock import patch
 from unittest import TestCase
 import os.path
-import requests
 
 from ycmd import handlers, user_options_store
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
@@ -114,8 +113,12 @@ class SubcommandsTest( TestCase ):
                               contents = ReadFile( filepath ),
                               filetype = 'cs',
                               filepath = filepath )
-      response = app.post_json( '/run_completer_command', request, expect_errors = True ).json
-      assert_that( response, ErrorMatcher( RuntimeError, 'Server is initializing. Please wait.' ) )
+      response = app.post_json( '/run_completer_command',
+                                request,
+                                expect_errors = True ).json
+      assert_that( response,
+                   ErrorMatcher( RuntimeError,
+                   'Server is initializing. Please wait.' ) )
 
     Test( app, 'FixIt' )
     Test( app, 'Format' )
