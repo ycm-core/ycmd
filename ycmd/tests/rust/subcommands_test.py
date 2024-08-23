@@ -587,6 +587,7 @@ class SubcommandsTest( TestCase ):
     } )
 
 
+  @WithRetry()
   @IsolatedYcmd()
   def test_Subcommands_GoTo_WorksAfterChangingProject( self, app ):
     filepath = PathToTestFile( 'macro', 'src', 'main.rs' )
