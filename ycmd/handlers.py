@@ -99,6 +99,14 @@ def ResolveFixit( request, response ):
   return _JsonResponse( completer.ResolveFixit( request_data ), response )
 
 
+@app.post( '/next_fixit' )
+def ResolveFixit( request, response ):
+  request_data = RequestWrap( request.json )
+  completer = _GetCompleterForRequestData( request_data )
+
+  return _JsonResponse( completer.NextFixIt( request_data ), response )
+
+
 @app.post( '/completions' )
 def GetCompletions( request, response ):
   request_data = RequestWrap( request.json )

@@ -260,12 +260,13 @@ class FixIt:
     REFACTOR = 'refactor'
 
 
-  def __init__( self, location: Location, chunks, text = '', kind = None ):
+  def __init__( self, location: Location, chunks, text = '', kind = None, keep_going = False ):
     """location of type Location, chunks of type list<FixItChunk>"""
     self.location = location
     self.chunks = chunks
     self.text = text
     self.kind = kind
+    self.keep_going = keep_going
 
 
 class FixItChunk:
@@ -334,7 +335,8 @@ def BuildFixItResponse( fixits ):
         'chunks' : [ BuildFixitChunkData( x ) for x in fixit.chunks ],
         'text': fixit.text,
         'kind': fixit.kind,
-        'resolve': False
+        'resolve': False,
+        'keep_going': fixit.keep_going
       }
 
     if result[ 'kind' ] is None:
