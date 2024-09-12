@@ -100,7 +100,7 @@ def ResolveFixit( request, response ):
 
 
 @app.post( '/next_fixit' )
-def ResolveFixit( request, response ):
+def NextFixit( request, response ):
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
