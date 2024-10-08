@@ -27,7 +27,7 @@ namespace YouCompleteMe {
 // This class represents a UTF-8 character. It takes a UTF-8 encoded string
 // corresponding to a grapheme cluster (see
 // https://www.unicode.org/glossary/#grapheme_cluster), normalize it through NFD
-// (see https://www.unicode.org/versions/latest/ch03.pdf#G49621), and
+// (see https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49621), and
 // compute the folded and swapped case versions of the normalized character. It
 // also holds some properties like if the character is a letter or a
 // punctuation, and if it is uppercase.
