@@ -91,7 +91,7 @@ struct RawCodePoint {
 //  - its breaking property: used to split a word into characters.
 //  - its combining class: used to sort a sequence of code points according to
 //    the Canonical Ordering algorithm (see
-//    https://www.unicode.org/versions/latest/ch03.pdf#G49591).
+//    https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49591).
 class CodePoint {
 public:
   YCM_EXPORT explicit CodePoint( std::string_view code_point );

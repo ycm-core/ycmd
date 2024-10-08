@@ -364,7 +364,7 @@ def GetEmojiData():
 
 
 # Decompose a hangul syllable using the algorithm described in
-# https://www.unicode.org/versions/latest/ch03.pdf#G61399
+# https://www.unicode.org/versions/latest/core-spec/chapter-3/#G61399
 def DecomposeHangul( code_point ):
   index = int( code_point, 16 ) - HANGUL_BASE
   if index < 0 or index >= HANGUL_LVT_COUNT:
@@ -381,7 +381,7 @@ def DecomposeHangul( code_point ):
 
 # Recursively decompose a Unicode code point into a list of code points
 # according to canonical decomposition.
-# See https://www.unicode.org/versions/latest/ch03.pdf#G733
+# See https://www.unicode.org/versions/latest/core-spec/chapter-3/#G733
 def Decompose( code_point, unicode_data ):
   code_points = DecomposeHangul( code_point )
   if code_points:

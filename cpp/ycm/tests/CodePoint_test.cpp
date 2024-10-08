@@ -87,16 +87,21 @@ const TextCodePointPair tests[] = {
                 GraphemeBreakProperty::EXTEND,
                 IndicConjunctBreakProperty::EXTEND } },
   // Bengali vowel sign Aa
-  { "া", { "া", "া", "া", false, false, false, GraphemeBreakProperty::EXTEND } },
+  { "া", { "া", "া", "া", false, false, false,
+                 GraphemeBreakProperty::EXTEND,
+                 IndicConjunctBreakProperty::EXTEND } },
   // Zero-width non-joiner
   { "‌", { "‌", "‌", "‌", false, false, false,
                 GraphemeBreakProperty::EXTEND } },
   // Combining cyrillic millions sign
-  { "҈", { "҈", "҈", "҈", false, false, false, GraphemeBreakProperty::EXTEND } },
+  { "҈", { "҈", "҈", "҈", false, false, false,
+                GraphemeBreakProperty::EXTEND,
+                IndicConjunctBreakProperty::EXTEND } },
 
   // Zero-width joiner
   { "‍", { "‍", "‍", "‍", false, false, false,
-                GraphemeBreakProperty::ZWJ, IndicConjunctBreakProperty::EXTEND } },
+                GraphemeBreakProperty::ZWJ,
+		IndicConjunctBreakProperty::EXTEND } },
 
   // Regional indicator symbol letter b
   { "🇧", { "🇧", "🇧", "🇧", false, false, false,
