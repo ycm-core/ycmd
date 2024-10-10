@@ -48,11 +48,11 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
       cmd = utils.FindExecutable( self._command_line[ 0 ] )
 
       if cmd is None:
-        utils.LOGGER.warn( "Unable to find any executable with the path %s. "
-                           "Cannot use %s completer.",
-                           self._command_line[ 0 ],
-                           self._name )
-        raise RuntimeError( f"Invalid cmdline: { str( self._command_line ) }" )
+        utils.LOGGER.warning( "Unable to find any executable with the path %s. "
+                              "Cannot use %s completer.",
+                              self._command_line[ 0 ],
+                              self._name )
+        raise RuntimeError( f"Invalid cmdline: { self._command_line }" )
 
       self._command_line[ 0 ] = cmd
       for idx in range( len( self._command_line ) ):

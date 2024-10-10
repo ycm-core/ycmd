@@ -99,7 +99,7 @@ class FlagsTest( TestCase ):
       assert_that( filename, equal_to( '/foo' ) )
 
 
-  def test_FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved( *args ):
+  def test_FlagsForFile_BadNonUnicodeFlagsAreAlsoRemoved( self, *args ):
     flags_object = flags.Flags()
 
     def Settings( **kwargs ):
