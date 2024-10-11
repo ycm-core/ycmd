@@ -568,6 +568,10 @@ def ParseArguments():
   parser.add_argument( '--js-completer', action = 'store_true',
                        help = argparse.SUPPRESS )
 
+  parser.add_argument( '--regex', action = argparse.BooleanOptionalAction,
+                       default = True,
+                       help = 'Choose whether to build the regex module. '
+                              'Defaults to True.' )
   args = parser.parse_args()
 
   # coverage is not supported for c++ on MSVC
@@ -800,8 +804,8 @@ def BuildRegexModule( script_args ):
                  exit_message = 'Failed to build regex module.',
                  quiet = script_args.quiet,
                  status_message = 'Building regex module' )
-    except ImportError:
-      pass # Swallow the error - ycmd will fall back to the standard `re`.
+    except ( ImportError, subprocess.CalledProcessError ):
+      print( 'Building regex module failed. Falling back to re builtin.' )
 
   finally:
     RemoveDirectoryIfExists( build_dir )
@@ -1301,8 +1305,12 @@ def DoCmakeBuilds( args ):
   BuildYcmdLib( cmake, cmake_common_args, args )
   WritePythonUsedDuringBuild()
 
-  BuildRegexModule( args )
   BuildWatchdogModule( args )
+
+  # NOTE: Keep BuildRegexModule() as the final step.
+  # If it fails, at least everything mandatory has been built.
+  if args.regex:
+    BuildRegexModule( args )
 
 
 def PrintReRunMessage():
