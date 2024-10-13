@@ -520,19 +520,19 @@ rd = 4;
       source_contents = """#include "header.h"
 int main() {return S::h();}
 """
-      with open( source_file, 'w' ) as sf:
+      with open( source_file, 'w', encoding = 'utf8' ) as sf:
         sf.write( source_contents )
 
       header_file = os.path.join( tmp_dir, 'header.h' )
       old_header_content = """#pragma once
 struct S{static int h();};
 """
-      with open( header_file, 'w' ) as hf:
+      with open( header_file, 'w', encoding = 'utf8' ) as hf:
         hf.write( old_header_content )
 
       flags_file = os.path.join( tmp_dir, 'compile_flags.txt' )
       flags_content = """-xc++"""
-      with open( flags_file, 'w' ) as ff:
+      with open( flags_file, 'w', encoding = 'utf8' ) as ff:
         ff.write( flags_content )
 
       messages_request = { 'contents': source_contents,
@@ -548,7 +548,7 @@ struct S{static int h();};
       new_header_content = """#pragma once
   static int h();
   """
-      with open( header_file, 'w' ) as f:
+      with open( header_file, 'w', encoding = 'utf8' ) as f:
         f.write( new_header_content )
 
       # Send BufferSaved notification for the header
@@ -594,7 +594,7 @@ struct S{static int h();};
           break
 
       # Restore original content
-      with open( header_file, 'w' ) as f:
+      with open( header_file, 'w', encoding = 'utf8' ) as f:
         f.write( old_header_content )
 
       # Send BufferSaved notification for the header
@@ -617,5 +617,5 @@ struct S{static int h();};
           break
 
       # Assert no dirty files
-      with open( header_file, 'r' ) as f:
+      with open( header_file, 'r', encoding = 'utf8' ) as f:
         assert_that( f.read(), equal_to( old_header_content ) )

@@ -191,9 +191,9 @@ def BuildYcmdLibs( args ):
       '--core-tests'
     ]
 
-    for key in COMPLETERS:
+    for key, value in COMPLETERS.items():
       if key in args.completers:
-        build_cmd.extend( COMPLETERS[ key ][ 'build' ] )
+        build_cmd.extend( value[ 'build' ] )
 
     if args.msvc and platform.system() == 'Windows':
       build_cmd.extend( [ '--msvc', str( args.msvc ) ] )

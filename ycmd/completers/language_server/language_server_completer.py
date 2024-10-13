@@ -565,8 +565,8 @@ class LanguageServerConnection( threading.Thread ):
               key, value = utils.ToUnicode( line ).split( ':', 1 )
               headers[ key.strip() ] = value.strip()
             except Exception:
-              LOGGER.exception( 'Received invalid protocol data from server: '
-                                 + str( line ) )
+              LOGGER.exception(
+                'Received invalid protocol data from server: %s', line )
               raise
 
         read_bytes += 1
@@ -1102,7 +1102,7 @@ class LanguageServerCompleter( Completer ):
         self._project_directory,
         lambda globs: WatchdogHandler( self, globs ),
         self._port,
-        lambda request: self.WorkspaceConfigurationResponse( request ),
+        self.WorkspaceConfigurationResponse,
         self.GetDefaultNotificationHandler() )
     else:
       self._stderr_file = utils.CreateLogfile(
@@ -1122,7 +1122,7 @@ class LanguageServerCompleter( Completer ):
           lambda globs: WatchdogHandler( self, globs ),
           self._server_handle.stdin,
           self._server_handle.stdout,
-          lambda request: self.WorkspaceConfigurationResponse( request ),
+          self.WorkspaceConfigurationResponse,
           self.GetDefaultNotificationHandler() )
       )
 
@@ -3071,7 +3071,7 @@ class LanguageServerCompleter( Completer ):
     if response is not None:
       return response
 
-    if len( edits ):
+    if edits:
       fixits = [ WorkspaceEditToFixIt(
         request_data,
         e[ 'edit' ],
@@ -3427,7 +3427,7 @@ def _BuildGoToLocationFromSymbol( symbol, request_data ):
     lsp_location = symbol
     lsp_location[ 'uri' ] = lsp.FilePathToUri( request_data[ 'filepath' ] )
 
-  location, line_value = _LspLocationToLocationAndDescription(
+  location, _ = _LspLocationToLocationAndDescription(
     request_data,
     lsp_location )
 

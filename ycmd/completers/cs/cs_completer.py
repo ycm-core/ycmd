@@ -393,7 +393,7 @@ class CsharpCompleter( Completer ):
     return self._solution_for_file[ filepath ]
 
 
-class CsharpSolutionCompleter( object ):
+class CsharpSolutionCompleter:
   def __init__( self,
                 solution_path,
                 keep_logfiles,

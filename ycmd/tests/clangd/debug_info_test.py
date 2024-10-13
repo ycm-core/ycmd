@@ -364,7 +364,7 @@ class DebugInfoTest( TestCase ):
 
       with TemporaryClangProject( tmp_dir, database ):
         extra_conf = os.path.join( tmp_dir, '.ycm_extra_conf.py' )
-        with open( extra_conf, 'w' ) as f:
+        with open( extra_conf, 'w', encoding = 'utf8' ) as f:
           f.write( '''
 def Settings( **kwargs ):
   return { 'flags': [ '-x', 'c++', '-I', 'ycm' ] }

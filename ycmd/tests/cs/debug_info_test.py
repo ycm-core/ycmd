@@ -200,7 +200,7 @@ class DebugInfoTest( TestCase ):
 
   @patch( 'ycmd.completers.cs.cs_completer.PATH_TO_OMNISHARP_ROSLYN_BINARY',
           None )
-  def test_GetCompleter_RoslynNotFound( *args ):
+  def test_GetCompleter_RoslynNotFound( self, *args ):
     assert_that( not GetCompleter( user_options_store.GetAll() ) )
 
 

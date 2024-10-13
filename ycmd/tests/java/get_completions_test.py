@@ -209,7 +209,7 @@ class GetCompletionsTest( TestCase ):
   @WithRetry()
   @SharedYcmd
   def test_GetCompletions_DetailFromCache( self, app ):
-    for i in range( 0, 2 ):
+    for _ in range( 0, 2 ):
       RunTest( app, {
         'description': 'completion works when the elements come from the cache',
         'request': {
@@ -617,7 +617,7 @@ class GetCompletionsTest( TestCase ):
 
     request[ 'resolve' ] = resolve
     # Do this twice to prove that the request is idempotent
-    for i in range( 2 ):
+    for _ in range( 2 ):
       response = app.post_json( '/resolve_completion', request ).json
 
       print( f"Resolve response: { pformat( response ) }" )

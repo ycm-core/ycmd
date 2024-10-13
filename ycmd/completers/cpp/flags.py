@@ -673,13 +673,12 @@ def UserIncludePaths( user_flags, filename ):
       it = iter( user_flags )
       for user_flag in it:
         user_flag_len = len( user_flag )
-        for flag in include_flags:
+        for flag, container in include_flags.items():
           if user_flag.startswith( flag ):
             flag_len = len( flag )
             include_path = ( next( it ) if user_flag_len == flag_len else
                              user_flag[ flag_len: ] )
             if include_path:
-              container = include_flags[ flag ]
               container.append( ToUnicode( include_path ) )
             break
     except StopIteration:
