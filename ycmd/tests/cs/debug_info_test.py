@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021 ycmd contributors
+# Copyright (C) 2024 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -15,217 +15,55 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( assert_that, contains_exactly, empty, equal_to,
-                       has_entries, has_entry, instance_of )
-
-from subprocess import Popen as _mockable_popen
-
-from unittest.mock import patch
+from hamcrest import ( assert_that,
+                       contains_exactly,
+                       has_entries,
+                       has_entry,
+                       has_items,
+                       instance_of )
 from unittest import TestCase
 
-from ycmd.completers.cs.cs_completer import PATH_TO_OMNISHARP_ROSLYN_BINARY
-from ycmd.completers.cs.hook import GetCompleter
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
-from ycmd.tests.cs import ( PathToTestFile,
-                            SharedYcmd,
-                            IsolatedYcmd,
-                            WrapOmniSharpServer )
-from ycmd.tests.test_utils import ( BuildRequest,
-                                    WaitUntilCompleterServerReady )
-from ycmd import user_options_store
-from ycmd.utils import ReadFile
-
-
-def SolutionSelectCheck( app, sourcefile, reference_solution,
-                         extra_conf_store = None ):
-  # reusable test: verify that the correct solution (reference_solution) is
-  #   detected for a given source file (and optionally a given extra_conf)
-  if extra_conf_store:
-    app.post_json( '/load_extra_conf_file',
-                   { 'filepath': extra_conf_store } )
-
-  result = app.post_json( '/debug_info',
-                          BuildRequest( completer_target = 'filetype_default',
-                                        filepath = sourcefile,
-                                        filetype = 'cs' ) ).json
-
-  assert_that(
-    result,
-    has_entry( 'completer', has_entries( {
-      'name': 'C#',
-      'servers': contains_exactly( has_entries( {
-        'extras': contains_exactly( has_entries( {
-          'key': 'solution',
-          'value': reference_solution
-        } ) )
-      } ) )
-    } ) )
-  )
+from ycmd.tests.cs import PathToTestFile, SharedYcmd
+from ycmd.tests.test_utils import BuildRequest, is_json_string_matching
 
 
 class DebugInfoTest( TestCase ):
   @SharedYcmd
-  def test_DebugInfo_ServerIsRunning( self, app ):
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
-    contents = ReadFile( filepath )
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cs',
-                               contents = contents,
-                               event_name = 'FileReadyToParse' )
-
-    app.post_json( '/event_notification', event_data )
-    WaitUntilCompleterServerReady( app, 'cs' )
-
-    request_data = BuildRequest( filepath = filepath,
-                                 filetype = 'cs' )
-    assert_that(
-      app.post_json( '/debug_info', request_data ).json,
-      has_entry( 'completer', has_entries( {
-        'name': 'C#',
-        'servers': contains_exactly( has_entries( {
-          'name': 'OmniSharp',
-          'is_running': True,
-          'executable': instance_of( str ),
-          'pid': instance_of( int ),
-          'address': instance_of( str ),
-          'port': instance_of( int ),
-          'logfiles': contains_exactly( instance_of( str ),
-                                instance_of( str ) ),
-          'extras': contains_exactly( has_entries( {
-            'key': 'solution',
-            'value': instance_of( str )
-          } ) )
-        } ) ),
-        'items': empty()
-      } ) )
-    )
-
-
-  @SharedYcmd
-  def test_DebugInfo_ServerIsNotRunning_NoSolution( self, app ):
+  def test_DebugInfo( self, app ):
     request_data = BuildRequest( filetype = 'cs' )
     assert_that(
       app.post_json( '/debug_info', request_data ).json,
       has_entry( 'completer', has_entries( {
-        'name': 'C#',
+        'name': 'Csharp',
         'servers': contains_exactly( has_entries( {
-          'name': 'OmniSharp',
-          'is_running': False,
-          'executable': instance_of( str ),
-          'pid': None,
+          'name': 'OmniSharp-Roslyn',
+          'is_running': instance_of( bool ),
+          'executable': contains_exactly( instance_of( str ),
+                                          instance_of( str ),
+                                          instance_of( str ) ),
           'address': None,
           'port': None,
-          'logfiles': empty()
+          'pid': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'Server State',
+              'value': instance_of( str ),
+            } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': PathToTestFile(),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': is_json_string_matching( has_entries( {} ) ),
+            } ),
+          )
         } ) ),
-        'items': empty()
       } ) )
     )
-
-
-  @SharedYcmd
-  def test_DebugInfo_UsesSubfolderHint( self, app ):
-    SolutionSelectCheck( app,
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-named-like-folder',
-                                         'testy', 'Program.cs' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-named-like-folder',
-                                         'testy.sln' ) )
-
-
-  @SharedYcmd
-  def test_DebugInfo_UsesSuperfolderHint( self, app ):
-    SolutionSelectCheck( app,
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-named-like-folder',
-                                         'not-testy', 'Program.cs' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-named-like-folder',
-                                         'solution-named-like-folder.sln' ) )
-
-
-  @SharedYcmd
-  def test_DebugInfo_ExtraConfStoreAbsolute( self, app ):
-    SolutionSelectCheck( app,
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-abs',
-                                         'testy', 'Program.cs' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'testy2.sln' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-abs',
-                                         '.ycm_extra_conf.py' ) )
-
-
-  @SharedYcmd
-  def test_DebugInfo_ExtraConfStoreRelative( self, app ):
-    SolutionSelectCheck( app,
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-rel',
-                                         'testy', 'Program.cs' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-rel',
-                                         'testy2.sln' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-rel',
-                                         '.ycm_extra_conf.py' ) )
-
-
-  @SharedYcmd
-  def test_DebugInfo_ExtraConfStoreNonexisting( self, app ):
-    SolutionSelectCheck( app,
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-bad',
-                                         'testy', 'Program.cs' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-bad',
-                                         'testy2.sln' ),
-                         PathToTestFile( 'testy-multiple-solutions',
-                                         'solution-not-named-like-folder',
-                                         'extra-conf-bad',
-                                         'testy', '.ycm_extra_conf.py' ) )
-
-
-  def test_GetCompleter_RoslynFound( self ):
-    assert_that( GetCompleter( user_options_store.GetAll() ) )
-
-
-  @patch( 'ycmd.completers.cs.cs_completer.PATH_TO_OMNISHARP_ROSLYN_BINARY',
-          None )
-  def test_GetCompleter_RoslynNotFound( *args ):
-    assert_that( not GetCompleter( user_options_store.GetAll() ) )
-
-
-  @patch( 'os.path.isfile', return_value = True )
-  @IsolatedYcmd( { 'roslyn_binary_path': 'my_roslyn.exe' } )
-  def test_GetCompleter_RoslynFromUserOption( self, app, *args ):
-    # `@patch` does not play nice with functions defined at class scope
-    def _popen_mock( cmdline, **kwargs ):
-      exe_index = 1 if cmdline[ 0 ].endswith( 'mono' ) else 0
-      assert_that( cmdline[ exe_index ], equal_to( 'my_roslyn.exe' ) )
-      # Need to redirect to real binary to allow test to pass
-      cmdline[ exe_index ] = PATH_TO_OMNISHARP_ROSLYN_BINARY
-      return _mockable_popen( cmdline, **kwargs )
-
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
-    with patch( 'subprocess.Popen', wraps = _popen_mock ) as popen_mock:
-      with WrapOmniSharpServer( app, filepath ):
-        request = BuildRequest( filepath = filepath, filetype = 'cs' )
-        app.post_json( '/debug_info', request )
-
-    popen_mock.assert_called()
-
-
-  @patch( 'os.path.isfile', return_value = False )
-  def test_GetCompleter_CustomPathToServer_NotAFile( self, *args ):
-    user_options = user_options_store.GetAll().copy(
-      roslyn_binary_path = 'does-not-exist' )
-    assert_that( not GetCompleter( user_options ) )
