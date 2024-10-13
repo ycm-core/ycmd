@@ -268,6 +268,44 @@ class FixIt:
     self.kind = kind
 
 
+class DeleteChunk:
+  def __init__( self, filepath ):
+    self.filepath = filepath
+    self.kind = 'delete'
+
+  def ToYcmdProtocol( self ):
+    return {
+      'filepath': self.filepath,
+      'kind': self.kind
+    }
+
+
+class CreateChunk:
+  def __init__( self, filepath ):
+    self.filepath = filepath
+    self.kind = 'create'
+
+  def ToYcmdProtocol( self ):
+    return {
+      'filepath': self.filepath,
+      'kind': self.kind
+    }
+
+
+class RenameChunk:
+  def __init__( self, old_filepath, new_filepath ):
+    self.old_filepath = old_filepath
+    self.new_filepath = new_filepath
+    self.kind = 'rename'
+
+  def ToYcmdProtocol( self ):
+    return {
+      'new_filepath': self.new_filepath,
+      'old_filepath': self.old_filepath,
+      'kind': self.kind
+    }
+
+
 class FixItChunk:
   """An individual replacement within a FixIt (aka Refactor)"""
 
@@ -275,6 +313,12 @@ class FixItChunk:
     """replacement_text of type string, range of type Range"""
     self.replacement_text = replacement_text
     self.range = range
+
+  def ToYcmdProtocol( self ):
+    return {
+      'replacement_text': self.replacement_text,
+      'range': BuildRangeData( self.range ),
+    }
 
 
 def BuildDiagnosticData( diagnostic ):
@@ -314,12 +358,6 @@ def BuildFixItResponse( fixits ):
   can be used to apply arbitrary changes to arbitrary files and is suitable for
   both quick fix and refactor operations"""
 
-  def BuildFixitChunkData( chunk ):
-    return {
-      'replacement_text': chunk.replacement_text,
-      'range': BuildRangeData( chunk.range ),
-    }
-
   def BuildFixItData( fixit ):
     if hasattr( fixit, 'resolve' ):
       result = {
@@ -331,7 +369,7 @@ def BuildFixItResponse( fixits ):
     else:
       result = {
         'location': BuildLocationData( fixit.location ),
-        'chunks' : [ BuildFixitChunkData( x ) for x in fixit.chunks ],
+        'chunks' : [ x.ToYcmdProtocol() for x in fixit.chunks ],
         'text': fixit.text,
         'kind': fixit.kind,
         'resolve': False

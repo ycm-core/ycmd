@@ -3590,8 +3590,8 @@ def WorkspaceEditToFixIt( request_data,
   if not workspace_edit:
     return None
 
+  chunks = []
   if 'changes' in workspace_edit:
-    chunks = []
     # We sort the filenames to make the response stable. Edits are applied in
     # strict sequence within a file, but apply to files in arbitrary order.
     # However, it's important for the response to be stable for the tests.
@@ -3599,12 +3599,28 @@ def WorkspaceEditToFixIt( request_data,
       chunks.extend( TextEditToChunks( request_data,
                                        uri,
                                        workspace_edit[ 'changes' ][ uri ] ) )
-  else:
-    chunks = []
+  if 'documentChanges' in workspace_edit:
     for text_document_edit in workspace_edit[ 'documentChanges' ]:
-      uri = text_document_edit[ 'textDocument' ][ 'uri' ]
-      edits = text_document_edit[ 'edits' ]
-      chunks.extend( TextEditToChunks( request_data, uri, edits ) )
+      kind = text_document_edit.get( 'kind', '' )
+      if 'edits' in text_document_edit:
+        uri = text_document_edit[ 'textDocument' ][ 'uri' ]
+        edits = text_document_edit[ 'edits' ]
+        chunks.extend( TextEditToChunks( request_data, uri, edits ) )
+      elif kind == 'rename':
+        chunks.append(
+            responses.RenameChunk(
+              old_filepath = lsp.UriToFilePath(
+                text_document_edit[ 'oldUri' ] ),
+              new_filepath = lsp.UriToFilePath(
+                text_document_edit[ 'newUri' ] ) ) )
+      elif kind == 'delete':
+        chunks.append(
+            responses.DeleteChunk(
+              lsp.UriToFilePath( text_document_edit[ 'uri' ] ) ) )
+      elif kind == 'create':
+        chunks.append(
+            responses.CreateChunk(
+              lsp.UriToFilePath( text_document_edit[ 'uri' ] ) ) )
   return responses.FixIt(
     responses.Location( request_data[ 'line_num' ],
                         request_data[ 'column_num' ],
