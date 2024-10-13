@@ -268,6 +268,22 @@ class FixIt:
     self.kind = kind
 
 
+class DeleteChunk:
+  def __init__( self, filepath ):
+    self.filepath = filepath
+    self.kind = 'delete'
+
+class CreateChunk:
+  def __init__( self, filepath ):
+    self.filepath = filepath
+    self.kind = 'create'
+
+class RenameChunk:
+  def __init__( self, old_filepath, new_filepath ):
+    self.old_filepath = old_filepath
+    self.new_filepath = new_filepath
+    self.kind = 'rename'
+
 class FixItChunk:
   """An individual replacement within a FixIt (aka Refactor)"""
 
@@ -315,10 +331,22 @@ def BuildFixItResponse( fixits ):
   both quick fix and refactor operations"""
 
   def BuildFixitChunkData( chunk ):
-    return {
-      'replacement_text': chunk.replacement_text,
-      'range': BuildRangeData( chunk.range ),
-    }
+    if hasattr( chunk, 'replacement_text' ):
+      return {
+        'replacement_text': chunk.replacement_text,
+        'range': BuildRangeData( chunk.range ),
+      }
+    elif hasattr( chunk, 'new_filepath' ):
+      return {
+        'new_filepath': chunk.new_filepath,
+        'old_filepath': chunk.old_filepath,
+        'kind': chunk.kind
+      }
+    else:
+      return {
+        'filepath': chunk.filepath,
+        'kind': chunk.kind
+      }
 
   def BuildFixItData( fixit ):
     if hasattr( fixit, 'resolve' ):
